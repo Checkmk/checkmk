@@ -729,7 +729,7 @@ class BuiltinTagConfig(cmk.gui.tags.TagConfig):
 
     def _initialize(self):
         self.tag_groups = []
-        self.aux_tag_list = cmk.gui.tags.BuiltinAuxtagList()
+        self.aux_tag_list = cmk.gui.tags.BuiltinAuxTagList()
 
     def _builtin_tag_groups(self):
         return [

@@ -144,7 +144,7 @@ def test_tag_config_load(test_cfg):
 def test_tag_config_get_topic_choices(test_cfg):
     cfg = tags.TagConfig()
     cfg.tag_groups.append(
-        tags.HosttagGroup({
+        tags.TagGroup({
             "id": "tgid",
             "title": "Title",
             "topic": "Topigzr",
@@ -154,7 +154,7 @@ def test_tag_config_get_topic_choices(test_cfg):
                 "aux_tags": [],
             }],
         }))
-    cfg.tag_groups.append(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg.tag_groups.append(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
     cfg.aux_tag_list.append(tags.AuxTag(("bla", "BOOM/BLUB")))
 
     assert sorted(cfg.get_topic_choices()) == sorted([
@@ -193,7 +193,7 @@ def test_tag_config_get_tag_group(test_cfg):
     cfg.parse_config(TagConfigFile().load_for_reading())
 
     assert cfg.get_tag_group("xyz") is None
-    assert isinstance(cfg.get_tag_group("networking"), tags.HosttagGroup)
+    assert isinstance(cfg.get_tag_group("networking"), tags.TagGroup)
 
 
 def test_tag_config_get_aux_tags(test_cfg):
@@ -240,54 +240,53 @@ def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
 
 def test_tag_config_insert_tag_group(test_cfg):
     cfg = tags.TagConfig()
-    cfg.insert_tag_group(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
 
     assert cfg.tag_groups[-1].id == "tgid2"
 
     with pytest.raises(MKUserError, match="already used"):
-        cfg.insert_tag_group(
-            tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+        cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
 
     with pytest.raises(MKUserError, match="Please specify"):
-        tg = tags.HosttagGroup()
+        tg = tags.TagGroup()
         tg.id = ""
         cfg.insert_tag_group(tg)
 
     with pytest.raises(MKUserError, match="Please specify"):
-        tg = tags.HosttagGroup()
+        tg = tags.TagGroup()
         tg.id = "abc"
         tg.title = ""
         cfg.insert_tag_group(tg)
 
     with pytest.raises(MKUserError, match="Only one tag may be empty"):
-        tg = tags.HosttagGroup(("tgid3", "Topics/titlor", [
+        tg = tags.TagGroup(("tgid3", "Topics/titlor", [
             (None, "tagid2", []),
             ("", "tagid3", []),
         ]))
         cfg.insert_tag_group(tg)
 
     with pytest.raises(MKUserError, match="must be unique"):
-        tg = tags.HosttagGroup(("tgid4", "Topics/titlor", [
+        tg = tags.TagGroup(("tgid4", "Topics/titlor", [
             ("ding", "tagid2", []),
             ("ding", "tagid3", []),
         ]))
         cfg.insert_tag_group(tg)
 
     with pytest.raises(MKUserError, match="already being used"):
-        tg = tags.HosttagGroup(("tgid5", "Topics/titlor", [
+        tg = tags.TagGroup(("tgid5", "Topics/titlor", [
             ("tgid2", "tagid2", []),
         ]))
         cfg.insert_tag_group(tg)
 
     cfg.aux_tag_list.append(tags.AuxTag(("bla", "BLAAAA")))
     with pytest.raises(MKUserError, match="already being used as aux"):
-        tg = tags.HosttagGroup(("tgid6", "Topics/titlor", [
+        tg = tags.TagGroup(("tgid6", "Topics/titlor", [
             ("bla", "tagid2", []),
         ]))
         cfg.insert_tag_group(tg)
 
     with pytest.raises(MKUserError, match="at least one tag"):
-        tg = tags.HosttagGroup(("tgid7", "Topics/titlor", []))
+        tg = tags.TagGroup(("tgid7", "Topics/titlor", []))
         cfg.insert_tag_group(tg)
 
 
@@ -295,11 +294,10 @@ def test_tag_config_update_tag_group(test_cfg):
     cfg = tags.TagConfig()
 
     with pytest.raises(MKUserError, match="Unknown tag group"):
-        cfg.update_tag_group(
-            tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+        cfg.update_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
 
-    cfg.insert_tag_group(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
-    cfg.update_tag_group(tags.HosttagGroup(("tgid2", "title", [("tgid2", "tagid2", [])])))
+    cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg.update_tag_group(tags.TagGroup(("tgid2", "title", [("tgid2", "tagid2", [])])))
     assert cfg.tag_groups[-1].title == "title"
 
 
@@ -309,7 +307,7 @@ def test_tag_config_save(test_cfg, mocker):
     config_file = TagConfigFile()
 
     cfg = tags.TagConfig()
-    cfg.insert_tag_group(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
     config_file.save(cfg.get_dict_format())
 
     export_mock.assert_called_once()
@@ -322,12 +320,12 @@ def test_tag_config_save(test_cfg, mocker):
 
 def test_iadd_tag_config():
     cfg1 = tags.TagConfig()
-    cfg1.insert_tag_group(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg1.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
     cfg1.aux_tag_list.append(tags.AuxTag(("bla", "BLAAAA")))
 
     cfg2 = tags.TagConfig()
-    cfg2.insert_tag_group(tags.HosttagGroup(("tgid3", "Topics/titlor", [("tgid3", "tagid3", [])])))
-    cfg2.insert_tag_group(tags.HosttagGroup(("tgid2", "BLAAA", [("tgid2", "tagid2", [])])))
+    cfg2.insert_tag_group(tags.TagGroup(("tgid3", "Topics/titlor", [("tgid3", "tagid3", [])])))
+    cfg2.insert_tag_group(tags.TagGroup(("tgid2", "BLAAA", [("tgid2", "tagid2", [])])))
     cfg2.aux_tag_list.append(tags.AuxTag(("blub", "BLUB")))
     cfg2.aux_tag_list.append(tags.AuxTag(("bla", "BLUB")))
 

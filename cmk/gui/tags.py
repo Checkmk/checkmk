@@ -38,7 +38,7 @@ def transform_pre_16_tags(tag_groups, aux_tags):
     return cfg.get_dict_format()
 
 
-def _parse_hosttag_title(title):
+def _parse_legacy_title(title):
     if '/' in title:
         return title.split('/', 1)
     return None, title
@@ -51,11 +51,11 @@ def _validate_tag_id(tag_id, varname):
                        "0-9, _ and - are allowed."))
 
 
-class Hosttag(object):
+class ABCTag(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
-        super(Hosttag, self).__init__()
+        super(ABCTag, self).__init__()
         self._initialize()
 
     def _initialize(self):
@@ -86,7 +86,7 @@ class Hosttag(object):
         self.id, self.title = tag_info[:2]
 
 
-class AuxTag(Hosttag):
+class AuxTag(ABCTag):
     is_aux_tag = True
 
     def __init__(self, data=None):
@@ -102,7 +102,7 @@ class AuxTag(Hosttag):
 
     def _parse_legacy_format(self, tag_info):
         super(AuxTag, self)._parse_legacy_format(tag_info)
-        self.topic, self.title = _parse_hosttag_title(self.title)
+        self.topic, self.title = _parse_legacy_title(self.title)
 
     def get_legacy_format(self):
         return self.id, TagConfig.get_merged_topic_and_title(self)
@@ -114,7 +114,7 @@ class AuxTag(Hosttag):
         return response
 
 
-class AuxtagList(object):
+class AuxTagList(object):
     def __init__(self):
         self._tags = []
 
@@ -186,26 +186,26 @@ class AuxtagList(object):
         return [(aux_tag.id, aux_tag.title) for aux_tag in self._tags]
 
 
-class BuiltinAuxtagList(AuxtagList):
+class BuiltinAuxTagList(AuxTagList):
     def append(self, aux_tag):
         self._append(aux_tag)
 
 
-class GroupedHosttag(Hosttag):
+class GroupedTag(ABCTag):
     is_aux_tag = False
 
     def __init__(self, group, data=None):
-        super(GroupedHosttag, self).__init__()
+        super(GroupedTag, self).__init__()
         self.group = group
         self.aux_tag_ids = []
         self.parse_config(data)
 
     def _parse_from_dict(self, tag_info):
-        super(GroupedHosttag, self)._parse_from_dict(tag_info)
+        super(GroupedTag, self)._parse_from_dict(tag_info)
         self.aux_tag_ids = tag_info["aux_tags"]
 
     def _parse_legacy_format(self, tag_info):
-        super(GroupedHosttag, self)._parse_legacy_format(tag_info)
+        super(GroupedTag, self)._parse_legacy_format(tag_info)
 
         if len(tag_info) == 3:
             self.aux_tag_ids = tag_info[2]
@@ -217,9 +217,9 @@ class GroupedHosttag(Hosttag):
         return {"id": self.id, "title": self.title, "aux_tags": self.aux_tag_ids}
 
 
-class HosttagGroup(object):
+class TagGroup(object):
     def __init__(self, data=None):
-        super(HosttagGroup, self).__init__()
+        super(TagGroup, self).__init__()
         self._initialize()
 
         if data:
@@ -239,17 +239,17 @@ class HosttagGroup(object):
         self.id = group_info["id"]
         self.title = group_info["title"]
         self.topic = group_info.get("topic")
-        self.tags = [GroupedHosttag(self, tag) for tag in group_info["tags"]]
+        self.tags = [GroupedTag(self, tag) for tag in group_info["tags"]]
 
     def _parse_legacy_format(self, group_info):
         self._initialize()
         group_id, group_title, tag_list = group_info[:3]
 
         self.id = group_id
-        self.topic, self.title = _parse_hosttag_title(group_title)
+        self.topic, self.title = _parse_legacy_title(group_title)
 
         for tag in tag_list:
-            self.tags.append(GroupedHosttag(self, tag))
+            self.tags.append(GroupedTag(self, tag))
 
     @property
     def is_checkbox_tag_group(self):
@@ -300,7 +300,7 @@ class TagConfig(object):
 
     def _initialize(self):
         self.tag_groups = []
-        self.aux_tag_list = AuxtagList()
+        self.aux_tag_list = AuxTagList()
 
     def __iadd__(self, other):
         tg_ids = [tg.id for tg in self.tag_groups]
@@ -333,7 +333,7 @@ class TagConfig(object):
     def get_tag_groups_by_topic(self):
         by_topic = {}
         for tag_group in self.tag_groups:
-            topic = tag_group.topic or _('Host tags')
+            topic = tag_group.topic or _('Tags')
             by_topic.setdefault(topic, []).append(tag_group)
         return sorted(by_topic.items(), key=lambda x: x[0])
 
@@ -368,7 +368,7 @@ class TagConfig(object):
     def get_aux_tags_by_topic(self):
         by_topic = {}
         for aux_tag in self.aux_tag_list.get_tags():
-            topic = aux_tag.topic or _('Host tags')
+            topic = aux_tag.topic or _('Tags')
             by_topic.setdefault(topic, []).append(aux_tag)
         return sorted(by_topic.items(), key=lambda x: x[0])
 
@@ -410,13 +410,13 @@ class TagConfig(object):
 
     def _parse_from_dict(self, tag_info):  # new style
         for tag_group in tag_info["tag_groups"]:
-            self.tag_groups.append(HosttagGroup(tag_group))
+            self.tag_groups.append(TagGroup(tag_group))
         for aux_tag in tag_info["aux_tags"]:
             self.aux_tag_list.append(AuxTag(aux_tag))
 
     def _parse_legacy_format(self, taggroup_info, auxtags_info):  # legacy style
         for tag_group_tuple in taggroup_info:
-            self.tag_groups.append(HosttagGroup(tag_group_tuple))
+            self.tag_groups.append(TagGroup(tag_group_tuple))
 
         for aux_tag_tuple in auxtags_info:
             self.aux_tag_list.append(AuxTag(aux_tag_tuple))
@@ -462,7 +462,7 @@ class TagConfig(object):
                                     (tag_group.id, tmp_group.title))
 
         if not tag_group.title:
-            raise MKUserError("title", _("Please specify a title for your host tag group."))
+            raise MKUserError("title", _("Please specify a title for your tag group."))
 
         have_none_tag = False
         for nr, tag in enumerate(tag_group.tags):
@@ -505,14 +505,6 @@ class TagConfig(object):
             raise MKUserError("id_0", _("Please specify at least one tag."))
         if len(tag_group.tags) == 1 and tag_group.tags[0] is None:
             raise MKUserError("id_0", _("Tags with only one choice must have an ID."))
-
-    # Convert manually crafted host tags tags WATO-style. This
-    # makes the migration easier
-    def _convert_manual_host_tags(self, host_tags):
-        for taggroup in host_tags:
-            for nr, entry in enumerate(taggroup[2]):
-                if len(entry) <= 2:
-                    taggroup[2][nr] = entry + ([],)
 
     def get_legacy_format(self):  # Convert new style to old style
         tag_groups_response = []

@@ -1,0 +1,13 @@
+Title: oracle_logswitches: Fix interchanged lower levels
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552551807
+Class: fix
+
+Previously the warn and crit levels have been interchanged.
+This werk fixes this issue.
+
+CMK-1784

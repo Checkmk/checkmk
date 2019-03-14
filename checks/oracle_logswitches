@@ -44,7 +44,7 @@ def check_oracle_logswitches(item, params, info):
     if isinstance(params, tuple):
         params = {
             'levels': (params[2], params[3]),
-            'levels_lower': (params[1], params[0]),
+            'levels_lower': (params[0], params[1]),
         }
 
     for line in info:

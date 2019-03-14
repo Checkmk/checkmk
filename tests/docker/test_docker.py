@@ -57,9 +57,7 @@ def _image_name(version):
 
 
 def _prepare_build():
-    assert subprocess.Popen(["make", "needed-packages"],
-                            stdout=open(os.devnull, "w"),
-                            cwd=build_path).wait() == 0
+    assert subprocess.Popen(["make", "needed-packages"], cwd=build_path).wait() == 0
 
 
 def _build(request, client, version, add_args=None):

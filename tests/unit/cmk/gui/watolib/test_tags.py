@@ -48,13 +48,13 @@ wato_aux_tags += [("bla", u"bläää")]
 
 
 def test_tag_config():
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     assert cfg.tag_groups == []
     assert cfg.aux_tag_list.get_tags() == []
 
 
 def test_tag_config_load(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.parse_config(TagConfigFile().load_for_reading())
 
     assert len(cfg.tag_groups) == 2
@@ -76,7 +76,7 @@ def test_tag_config_load(test_cfg):
 
 
 def test_tag_config_get_topic_choices(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.tag_groups.append(
         tags.HosttagGroup({
             "id": "tgid",
@@ -99,7 +99,7 @@ def test_tag_config_get_topic_choices(test_cfg):
 
 
 def test_tag_config_remove_tag_group(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.parse_config(TagConfigFile().load_for_reading())
 
     assert cfg.get_tag_group("xyz") is None
@@ -111,7 +111,7 @@ def test_tag_config_remove_tag_group(test_cfg):
 
 
 def test_tag_config_remove_aux_tag(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.parse_config(TagConfigFile().load_for_reading())
 
     assert "xyz" not in cfg.aux_tag_list.get_tag_ids()
@@ -123,7 +123,7 @@ def test_tag_config_remove_aux_tag(test_cfg):
 
 
 def test_tag_config_get_tag_group(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.parse_config(TagConfigFile().load_for_reading())
 
     assert cfg.get_tag_group("xyz") is None
@@ -131,13 +131,13 @@ def test_tag_config_get_tag_group(test_cfg):
 
 
 def test_tag_config_get_aux_tags(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.parse_config(TagConfigFile().load_for_reading())
     assert [a.id for a in cfg.get_aux_tags()] == ["bla"]
 
 
 def test_get_aux_tags_by_tags(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.parse_config(TagConfigFile().load_for_reading())
     assert cfg.get_aux_tags_by_tag() == {
         'critical': [],
@@ -151,14 +151,14 @@ def test_get_aux_tags_by_tags(test_cfg):
 
 
 def test_tag_config_get_tag_ids(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.parse_config(TagConfigFile().load_for_reading())
     assert cfg.get_tag_ids() == set(
         ['bla', 'critical', 'dmz', 'lan', 'offline', 'prod', 'test', 'wan'])
 
 
 def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.parse_config(TagConfigFile().load_for_reading())
     assert cfg.get_tag_ids_with_group_prefix() == set([
         'bla',
@@ -173,7 +173,7 @@ def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
 
 
 def test_tag_config_insert_tag_group(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.insert_tag_group(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
 
     assert cfg.tag_groups[-1].id == "tgid2"
@@ -226,7 +226,7 @@ def test_tag_config_insert_tag_group(test_cfg):
 
 
 def test_tag_config_update_tag_group(test_cfg):
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
 
     with pytest.raises(MKUserError, match="Unknown tag group"):
         cfg.update_tag_group(
@@ -242,24 +242,24 @@ def test_tag_config_save(test_cfg, mocker):
 
     config_file = TagConfigFile()
 
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.insert_tag_group(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
     config_file.save(cfg.get_dict_format())
 
     export_mock.assert_called_once()
 
-    cfg = tags.HosttagsConfiguration()
+    cfg = tags.TagConfig()
     cfg.parse_config(config_file.load_for_reading())
     assert len(cfg.tag_groups) == 1
     assert cfg.tag_groups[0].id == "tgid2"
 
 
-def test_iadd_hosttags_configuration():
-    cfg1 = tags.HosttagsConfiguration()
+def test_iadd_tag_config():
+    cfg1 = tags.TagConfig()
     cfg1.insert_tag_group(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
     cfg1.aux_tag_list.append(tags.AuxTag(("bla", "BLAAAA")))
 
-    cfg2 = tags.HosttagsConfiguration()
+    cfg2 = tags.TagConfig()
     cfg2.insert_tag_group(tags.HosttagGroup(("tgid3", "Topics/titlor", [("tgid3", "tagid3", [])])))
     cfg2.insert_tag_group(tags.HosttagGroup(("tgid2", "BLAAA", [("tgid2", "tagid2", [])])))
     cfg2.aux_tag_list.append(tags.AuxTag(("blub", "BLUB")))

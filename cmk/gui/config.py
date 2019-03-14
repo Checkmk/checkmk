@@ -70,7 +70,7 @@ if cmk.is_managed_edition():
 sites = {}
 multisite_users = {}
 admin_users = []
-tags = cmk.gui.tags.HosttagsConfiguration()
+tags = cmk.gui.tags.TagConfig()
 
 # hard coded in various permissions
 builtin_role_ids = ["user", "admin", "guest"]
@@ -218,13 +218,13 @@ def _prepare_tag_config():
         tag_config = cmk.gui.tags.transform_pre_16_tags(wato_host_tags, wato_aux_tags)
 
     # We don't want to access the plain config data structure during GUI code processing
-    tags = cmk.gui.tags.HosttagsConfiguration()
+    tags = cmk.gui.tags.TagConfig()
     tags.parse_config(tag_config)
 
     # Merge builtin tags with configured tags. The logic favors the configured tags, even
     # when the user config should not conflict with the builtin tags. This is something
     # which could be left over from pre 1.5 setups.
-    tags += BuiltinHosttagsConfiguration()
+    tags += BuiltinTagConfig()
 
 
 def execute_post_config_load_hooks():
@@ -719,9 +719,9 @@ def save_user_file(name, data, user_id, unlock=False):
 #   '----------------------------------------------------------------------'
 
 
-class BuiltinHosttagsConfiguration(cmk.gui.tags.HosttagsConfiguration):
+class BuiltinTagConfig(cmk.gui.tags.TagConfig):
     def __init__(self):
-        super(BuiltinHosttagsConfiguration, self).__init__()
+        super(BuiltinTagConfig, self).__init__()
         self.parse_config({
             "tag_groups": self._builtin_tag_groups(),
             "aux_tags": self._builtin_aux_tags(),

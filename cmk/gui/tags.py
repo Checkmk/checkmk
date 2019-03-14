@@ -33,7 +33,7 @@ from cmk.gui.exceptions import MKUserError
 
 
 def transform_pre_16_tags(tag_groups, aux_tags):
-    cfg = HosttagsConfiguration()
+    cfg = TagConfig()
     cfg.parse_config((tag_groups, aux_tags))
     return cfg.get_dict_format()
 
@@ -105,7 +105,7 @@ class AuxTag(Hosttag):
         self.topic, self.title = _parse_hosttag_title(self.title)
 
     def get_legacy_format(self):
-        return self.id, HosttagsConfiguration.get_merged_topic_and_title(self)
+        return self.id, TagConfig.get_merged_topic_and_title(self)
 
     def get_dict_format(self):
         response = {"id": self.id, "title": self.title}
@@ -274,7 +274,7 @@ class HosttagGroup(object):
 
     def get_legacy_format(self):
         return self.id,\
-               HosttagsConfiguration.get_merged_topic_and_title(self),\
+               TagConfig.get_merged_topic_and_title(self),\
                self.get_tags_legacy_format()
 
     def get_tags_legacy_format(self):
@@ -290,12 +290,12 @@ class HosttagGroup(object):
         return choices
 
 
-class HosttagsConfiguration(object):
+class TagConfig(object):
     """Container object encapsulating a whole set of configured
     tag groups with auxiliary tags"""
 
     def __init__(self):
-        super(HosttagsConfiguration, self).__init__()
+        super(TagConfig, self).__init__()
         self._initialize()
 
     def _initialize(self):

@@ -2087,7 +2087,9 @@ mk_ora_db_connect () {
             P_TNSALIAS_P=$ORACLE_SID
         fi
 
-        if [ -n "$P_TNSALIAS_P" ]; then
+        # PREFIX / POSTFIX makes no sense for ASM
+        # => only 1 Instance with known connection possible
+        if [ -n "$P_TNSALIAS_P" -a ! "${ORACLE_SID:0:1}" = '+'  ]; then
             PREFIX_SID="PREFIX_$sid"
             PREFIX_SID=${!PREFIX_SID}
             if [ -n "$PREFIX_SID" ]; then

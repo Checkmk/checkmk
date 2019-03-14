@@ -1,0 +1,12 @@
+Title: mk_oracle: Bugfix for PREFIX_+ASM: bad substitution
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552558330
+Class: fix
+
+This PREFIX_+ASM: bad substitution is shown when
+wallet+tnsnames.ora for ASM has been configured.
+This issue has been introduced with Werk 6492.

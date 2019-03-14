@@ -3541,7 +3541,7 @@ class RulespecExtraServiceConfNotesUrl(ServiceRulespec):
             help=_("With this setting you can set links to documentations "
                    "for each service"),
             attrencode=True,
-            size = 80,
+            size=80,
         )
 
 
@@ -3563,7 +3563,7 @@ class RulespecExtraHostConfNotesUrl(HostRulespec):
             help=_("With this setting you can set links to documentations "
                    "for Hosts"),
             attrencode=True,
-            size = 80,
+            size=80,
         )
 
 

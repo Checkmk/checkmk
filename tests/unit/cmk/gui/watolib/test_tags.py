@@ -47,6 +47,72 @@ wato_aux_tags += [("bla", u"bläää")]
         tags_mk.unlink()  # pylint: disable=no-member
 
 
+def test_convert_pre_16_tags():
+    dict_config = cmk.gui.tags.transform_pre_16_tags(
+        [
+            ('criticality', u'Criticality', [
+                ('prod', u'Productive system', []),
+                ('critical', u'Business critical', []),
+                ('test', u'Test system', []),
+                ('offline', u'Do not monitor this host', []),
+            ]),
+            ('networking', u'Networking Segment', [
+                ('lan', u'Local network (low latency)', []),
+                ('wan', u'WAN (high latency)', []),
+                ('dmz', u'DMZ (low latency, secure access)', []),
+            ]),
+        ],
+        [("bla", u"blüb")],
+    )
+
+    assert dict_config == {
+        'aux_tags': [{
+            'id': 'bla',
+            'title': u'bl\xfcb'
+        }],
+        'tag_groups': [
+            {
+                'id': 'criticality',
+                'tags': [{
+                    'aux_tags': [],
+                    'id': 'prod',
+                    'title': u'Productive system'
+                }, {
+                    'aux_tags': [],
+                    'id': 'critical',
+                    'title': u'Business critical'
+                }, {
+                    'aux_tags': [],
+                    'id': 'test',
+                    'title': u'Test system'
+                }, {
+                    'aux_tags': [],
+                    'id': 'offline',
+                    'title': u'Do not monitor this host'
+                }],
+                'title': u'Criticality'
+            },
+            {
+                'id': 'networking',
+                'tags': [{
+                    'aux_tags': [],
+                    'id': 'lan',
+                    'title': u'Local network (low latency)'
+                }, {
+                    'aux_tags': [],
+                    'id': 'wan',
+                    'title': u'WAN (high latency)'
+                }, {
+                    'aux_tags': [],
+                    'id': 'dmz',
+                    'title': u'DMZ (low latency, secure access)'
+                }],
+                'title': u'Networking Segment'
+            },
+        ],
+    }
+
+
 def test_tag_config():
     cfg = tags.TagConfig()
     assert cfg.tag_groups == []

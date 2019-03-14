@@ -1,6 +1,6 @@
 RRDTOOL := rrdtool
 # Note: We actually use the snapshot f1edd121a from 2017-06-11
-RRDTOOL_VERS := 1.7.0
+RRDTOOL_VERS := 1.7.1
 RRDTOOL_DIR := $(RRDTOOL)-$(RRDTOOL_VERS)
 
 RRDTOOL_BUILD := $(BUILD_HELPER_DIR)/$(RRDTOOL_DIR)-build

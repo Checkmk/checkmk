@@ -1,0 +1,12 @@
+Title: oracle_instance: Bugfix for creation_date in inventory
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552558123
+Class: fix
+
+The support for Multitenant Database changed the agent
+format for oracle_instance. That introduced a problem
+in the inventory for HW/SW inventory.

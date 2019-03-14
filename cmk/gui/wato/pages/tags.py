@@ -425,10 +425,10 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
         self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(
             self._tag_group_id)
         if not self._untainted_tag_group:
-            self._untainted_tag_group = cmk.gui.tags.HosttagGroup()
+            self._untainted_tag_group = cmk.gui.tags.TagGroup()
 
         self._tag_group = self._untainted_hosttags_config.get_tag_group(
-            self._tag_group_id) or cmk.gui.tags.HosttagGroup()
+            self._tag_group_id) or cmk.gui.tags.TagGroup()
 
     def _get_taggroup_id(self):
         return html.request.var("edit", html.request.var("tag_id"))
@@ -457,7 +457,7 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
         changed_hosttags_config = cmk.gui.tags.TagConfig()
         changed_hosttags_config.parse_config(self._tag_config_file.load_for_modification())
 
-        changed_tag_group = cmk.gui.tags.HosttagGroup(tag_group_spec)
+        changed_tag_group = cmk.gui.tags.TagGroup(tag_group_spec)
         self._tag_group = changed_tag_group
 
         if self._new:

@@ -79,7 +79,7 @@ def check_mail_loop_arguments(params):
         args += ['--critical=%d' % params['duration'][1]]
 
     if 'subject' in params:
-        args += ' --subject=%s' % quote_shell_string(params['subject'])
+        args += ['--subject=%s' % params['subject']]
 
     return args
 

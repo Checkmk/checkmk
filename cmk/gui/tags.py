@@ -61,6 +61,7 @@ class ABCTag(object):
     def _initialize(self):
         self.id = None
         self.title = None
+        self.topic = None
 
     def validate(self):
         if not self.id:
@@ -91,7 +92,6 @@ class AuxTag(ABCTag):
 
     def __init__(self, data=None):
         super(AuxTag, self).__init__()
-        self.topic = None
         if data:
             self.parse_config(data)
 
@@ -103,9 +103,6 @@ class AuxTag(ABCTag):
     def _parse_legacy_format(self, tag_info):
         super(AuxTag, self)._parse_legacy_format(tag_info)
         self.topic, self.title = _parse_legacy_title(self.title)
-
-    def get_legacy_format(self):
-        return self.id, TagConfig.get_merged_topic_and_title(self)
 
     def get_dict_format(self):
         response = {"id": self.id, "title": self.title}
@@ -170,12 +167,6 @@ class AuxTagList(object):
     def get_tag_ids(self):
         return {tag.id for tag in self._tags}
 
-    def get_legacy_format(self):
-        response = []
-        for aux_tag in self._tags:
-            response.append(aux_tag.get_legacy_format())
-        return response
-
     def get_dict_format(self):
         response = []
         for tag in self._tags:
@@ -209,9 +200,6 @@ class GroupedTag(ABCTag):
 
         if len(tag_info) == 3:
             self.aux_tag_ids = tag_info[2]
-
-    def get_legacy_format(self):
-        return self.id, self.title, self.aux_tag_ids
 
     def get_dict_format(self):
         return {"id": self.id, "title": self.title, "aux_tags": self.aux_tag_ids}
@@ -252,6 +240,12 @@ class TagGroup(object):
             self.tags.append(GroupedTag(self, tag))
 
     @property
+    def choice_title(self):
+        if self.topic:
+            return "%s / %s" % (self.topic, self.title)
+        return self.title
+
+    @property
     def is_checkbox_tag_group(self):
         return len(self.tags) == 1
 
@@ -270,17 +264,6 @@ class TagGroup(object):
         for tag in self.tags:
             response["tags"].append(tag.get_dict_format())
 
-        return response
-
-    def get_legacy_format(self):
-        return self.id,\
-               TagConfig.get_merged_topic_and_title(self),\
-               self.get_tags_legacy_format()
-
-    def get_tags_legacy_format(self):
-        response = []
-        for tag in self.tags:
-            response.append(tag.get_legacy_format())
         return response
 
     def get_tag_choices(self):
@@ -310,12 +293,6 @@ class TagConfig(object):
 
         self.aux_tag_list += other.aux_tag_list
         return self
-
-    @staticmethod
-    def get_merged_topic_and_title(entity):
-        if entity.topic:
-            return "%s/%s" % (entity.topic, entity.title)
-        return entity.title
 
     def get_topic_choices(self):
         names = set([])
@@ -352,7 +329,7 @@ class TagConfig(object):
         self.tag_groups.remove(group)
 
     def get_tag_group_choices(self):
-        return [(tg.id, self.get_merged_topic_and_title(tg)) for tg in self.tag_groups]
+        return [(tg.id, tg.choice_title) for tg in self.tag_groups]
 
     # TODO: Clean this up and make call sites directly call the wrapped function
     def get_aux_tags(self):
@@ -389,15 +366,6 @@ class TagConfig(object):
         response.update(self.aux_tag_list.get_tag_ids())
         return response
 
-    def parse_config(self, data):
-        self._initialize()
-        if isinstance(data, dict):
-            self._parse_from_dict(data)
-        else:
-            self._parse_legacy_format(data[0], data[1])
-
-        self.validate_config()
-
     def get_tag_or_aux_tag(self, tag_id):
         for tag_group in self.tag_groups:
             for grouped_tag in tag_group.tags:
@@ -407,6 +375,15 @@ class TagConfig(object):
         for aux_tag in self.aux_tag_list.get_tags():
             if aux_tag.id == tag_id:
                 return aux_tag
+
+    def parse_config(self, data):
+        self._initialize()
+        if isinstance(data, dict):
+            self._parse_from_dict(data)
+        else:
+            self._parse_legacy_format(data[0], data[1])
+
+        self.validate_config()
 
     def _parse_from_dict(self, tag_info):  # new style
         for tag_group in tag_info["tag_groups"]:
@@ -505,14 +482,6 @@ class TagConfig(object):
             raise MKUserError("id_0", _("Please specify at least one tag."))
         if len(tag_group.tags) == 1 and tag_group.tags[0] is None:
             raise MKUserError("id_0", _("Tags with only one choice must have an ID."))
-
-    def get_legacy_format(self):  # Convert new style to old style
-        tag_groups_response = []
-        for tag_group in self.tag_groups:
-            tag_groups_response.append(tag_group.get_legacy_format())
-
-        aux_tags_response = self.aux_tag_list.get_legacy_format()
-        return tag_groups_response, aux_tags_response
 
     def get_dict_format(self):
         result = {"tag_groups": [], "aux_tags": []}

@@ -133,6 +133,7 @@ long_options = [
     'help',
     'status-dir=',
     'status-suffix=',
+    'subject=',
     "debug",
 ]
 

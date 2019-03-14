@@ -50,7 +50,7 @@ setversion:
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' Dockerfile
 
 needed-packages: ../omd/distros/DEBIAN_9.mk
-	echo -e 'needed-packages:\n\t@echo \$$(OS_PACKAGES) > needed-packages\n' | \
+	echo -e '.PHONY: needed-packages\nneeded-packages:\n\t@echo \$$(OS_PACKAGES) > needed-packages\n' | \
 	    make -f - -f ../omd/distros/DEBIAN_9.mk --no-print-directory needed-packages
 
 check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image

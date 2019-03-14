@@ -91,9 +91,9 @@ def _export_hosttags_to_php(cfg):
     path = php_api_dir + '/hosttags.php'
     store.mkdir(php_api_dir)
 
-    tag_config = cmk.gui.tags.HosttagsConfiguration()
+    tag_config = cmk.gui.tags.TagConfig()
     tag_config.parse_config(cfg)
-    tag_config += config.BuiltinHosttagsConfiguration()
+    tag_config += config.BuiltinTagConfig()
 
     # need an extra lock file, since we move the auth.php.tmp file later
     # to auth.php. This move is needed for not having loaded incomplete

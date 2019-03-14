@@ -80,13 +80,13 @@ class ModeTags(WatoMode):
 
     def __init__(self):
         super(ModeTags, self).__init__()
-        self._builtin_config = config.BuiltinHosttagsConfiguration()
+        self._builtin_config = config.BuiltinTagConfig()
 
         self._tag_config_file = TagConfigFile()
-        self._tag_config = cmk.gui.tags.HosttagsConfiguration()
+        self._tag_config = cmk.gui.tags.TagConfig()
         self._tag_config.parse_config(self._tag_config_file.load_for_reading())
 
-        self._effective_config = cmk.gui.tags.HosttagsConfiguration()
+        self._effective_config = cmk.gui.tags.TagConfig()
         self._effective_config.parse_config(self._tag_config.get_dict_format())
         self._effective_config += self._builtin_config
 
@@ -271,12 +271,12 @@ class ModeEditHosttagConfiguration(WatoMode):
     def __init__(self):
         super(ModeEditHosttagConfiguration, self).__init__()
         self._tag_config_file = TagConfigFile()
-        self._untainted_hosttags_config = cmk.gui.tags.HosttagsConfiguration()
+        self._untainted_hosttags_config = cmk.gui.tags.TagConfig()
         self._untainted_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
-        self._effective_config = cmk.gui.tags.HosttagsConfiguration()
+        self._effective_config = cmk.gui.tags.TagConfig()
         self._effective_config.parse_config(self._untainted_hosttags_config.get_dict_format())
-        self._effective_config += cmk.gui.config.BuiltinHosttagsConfiguration()
+        self._effective_config += cmk.gui.config.BuiltinTagConfig()
 
     def _get_topic_valuespec(self):
         return OptionalDropdownChoice(
@@ -347,7 +347,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
                     _("This tag id is already being used in the host tag group %s") %
                     tag_group.title)
 
-        changed_hosttags_config = cmk.gui.tags.HosttagsConfiguration()
+        changed_hosttags_config = cmk.gui.tags.TagConfig()
         changed_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
         if self._new:
@@ -454,7 +454,7 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
         vs.validate_value(tag_group_spec, "tag_group")
 
         # Create new object with existing host tags
-        changed_hosttags_config = cmk.gui.tags.HosttagsConfiguration()
+        changed_hosttags_config = cmk.gui.tags.TagConfig()
         changed_hosttags_config.parse_config(self._tag_config_file.load_for_modification())
 
         changed_tag_group = cmk.gui.tags.HosttagGroup(tag_group_spec)

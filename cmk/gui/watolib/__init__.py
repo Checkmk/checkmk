@@ -512,7 +512,7 @@ def _create_sample_config():
 
 
 def _initialize_tag_config():
-    tag_config = cmk.gui.tags.HosttagsConfiguration().parse_config((
+    tag_config = cmk.gui.tags.TagConfig().parse_config((
         [
             ('criticality', u'Criticality', [
                 ('prod', u'Productive system', []),
@@ -528,8 +528,6 @@ def _initialize_tag_config():
         ],
         [],
     ))
-
     TagConfigFile().save(tag_config.get_dict_format())
-
     # Make sure the host tag attributes are immediately declared!
     config.tags = tag_config

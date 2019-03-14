@@ -1,10 +1,22 @@
 import java.text.SimpleDateFormat
 
-def DISTRO_LIST = ["ubuntu-18.04", "centos-6"]
+properties([
+  parameters([
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
+  ])
+])
+
 def PACKAGE_BUILDS = [:]
 def AGENT_LIST = ["linux-64bit", "linux-32bit", "windows" ]
 def AGENT_BUILDS= [:]
 
+DISTRO_LIST = DISTROS.split(' ');
+
+println("Building for the following Distros:")
+println(DISTRO_LIST)
+currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST
+
+def DOCKER_BUILDS = [:]
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
 def CMK_VERS = dateFormat.format(date)

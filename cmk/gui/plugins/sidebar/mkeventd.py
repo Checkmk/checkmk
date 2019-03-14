@@ -136,7 +136,6 @@ class SidebarSnapinCustomers(SidebarSnapin):
 
     #snapin_mkeventd_performance select {
         margin-bottom: 2px;
-        width: 100%%;
     }
 
     table.mkeventd_performance td {

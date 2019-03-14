@@ -510,18 +510,10 @@ function virtual_host_tree_enter(path)
     def styles(self):
         return """
 #snapin_tag_tree select {
-    background-color: #6DA1B8;
-    border-color: #123A4A;
-    color: #FFFFFF;
     font-size: 8pt;
-    height: 19px;
     margin-bottom: 2px;
     margin-top: -2px;
-    padding: 0;
-    width: 230px;
-
     float: right;
-    width: 100%;
 }
 
 #snapin_tag_tree form img.iconbutton {

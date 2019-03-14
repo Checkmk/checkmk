@@ -344,12 +344,6 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
     width: 100%;
     border-spacing: 0;
 }
-#snapin_wato_foldertree select {
-    padding: 0;
-    width:   100%;
-    height: 19px;
-    margin-bottom: 2px;
-}
 #snapin_wato_foldertree table td.label {
     width: 1px;
 }

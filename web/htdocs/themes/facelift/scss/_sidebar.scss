@@ -36,6 +36,278 @@ Boston, MA 02110-1301 USA.
 '-------------------------------------------------------------------------*/
 
 
+body.side {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  font-family: arial, helvetica, sans-serif;
+  font-size: 14px;
+  font-weight: $theme-font-weight-global;
+  background: $theme-color-table-border-dark;
+}
+
+body.side.screenshotmode {
+    background-image: url("");
+}
+
+/* Top logo part */
+#side_header {
+  position: relative;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  height: 64px;
+  margin: 0;
+  background: $theme-color-sidebar-background;
+  border: none;
+  border-bottom: 1px solid $theme-color-sidebar-border;
+  border-radius: 0;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+#side_bg {
+  display: none;
+}
+
+#side_header > a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  text-decoration: none;
+  background-image: url("images/mk-logo.png");
+  background-position: 16px center;
+  background-repeat: no-repeat;
+  background-size: auto 30px;
+}
+
+#side_fold {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 15;
+  width: 10px;
+  height: 100%;
+  cursor: pointer;
+}
+
+#side_fold:hover {
+  background-image: url("images/side_fold.png");
+  background-position: 5% 65%;
+  background-repeat: no-repeat;
+}
+
+#side_version {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 54;
+  max-width: 150px;
+  font-size: 11px;
+  color: #fff;
+  text-align: right;
+}
+
+#side_version a  {
+  font-size: 8px;
+  font-weight: $theme-font-weight-bold;
+  line-height: 1;
+  letter-spacing: $theme-letter-spacing-table;
+  color: $theme-color-text-light;
+  text-decoration: none;
+  text-rendering: optimizeLegibility;
+  background: none;
+}
+
+#side_version a:hover  {
+  text-decoration: underline;
+}
+
+#side_version span.unack_werks {
+  position: absolute;
+  top: 5px;
+  right: -12px;
+  z-index: 15;
+  padding: 2px;
+  color: #fff;
+  cursor: pointer;
+  background-color: #f00;
+  border-radius: 10px;
+}
+
+/* Scrolling part with snapins */
+#side_content {
+  position: absolute;
+  top: 64px;
+  z-index: 5;
+  width: 100%;
+  padding-left: 0;
+  overflow: hidden;
+  color: #000;
+}
+
+#side_content.scroll {
+  overflow-y: scroll;
+}
+
+/* The footer of the sidebar */
+#side_footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  height: 48px;
+  padding: 4px 16px;
+  margin: 0;
+  background: $theme-color-sidebar-background;
+  border: none;
+  border-top: 1px solid $theme-color-sidebar-border;
+  border-radius: 0;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+#side_footer img.iconbutton {
+  position: relative;
+  top: 4px;
+  left: 0;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  margin-right: 5px;
+  font-size: 9px;
+  background-color: $theme-color-sidebar-background;
+  border: 1px solid $theme-color-table-border-dark-2;
+  border-radius: 5px;
+  box-shadow: none;
+}
+
+#side_footer div.copyright {
+  position: relative;
+  top: 13px;
+  right: 0;
+  bottom: 5px;
+  float: right;
+  font-size: $theme-font-size-small;
+  font-weight: $theme-font-weight-bold;
+  letter-spacing: $theme-letter-spacing-table;
+  color: $theme-color-text-light;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+#side_footer div.copyright a, #side_footer div.copyright body.main .popup_menu span,
+body.main .popup_menu #side_footer div.copyright span {
+  color: $theme-color-text-light;
+  text-decoration: none;
+}
+
+span#msg_label {
+  position: relative;
+  top: -6px;
+  left: -10px;
+  z-index: 15;
+  padding: 1px;
+  font-size: $theme-font-size-global;
+  color: #f00;
+  background-color: #fff;
+  border-radius: 5px;
+}
+
+/* General layout of snapins */
+body.side div.snapin, div.add_snapin div.snapin  {
+  width: 100%;
+  padding: 0;
+  margin: 4px 0;
+  overflow: hidden;
+  background: $theme-color-sidebar-background;
+  border: none;
+  border-top: 1px solid $theme-color-table-border-dark-2;
+  border-bottom: 1px solid $theme-color-table-border-dark-2;
+  border-radius: 0;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+/* Header of the snapin */
+div.snapin div.head {
+  height: auto;
+  padding: 8px;
+  line-height: 20px;
+  color: $theme-color-text-light;
+  text-align: left;
+  background: transparent;
+}
+
+div.snapin div.head.open {
+  padding-bottom: 0;
+}
+
+div.snapin div.head b.heading {
+  font-size: $theme-font-size-main;
+  font-weight: 500;
+  letter-spacing: $theme-letter-spacing-table;
+  text-transform: uppercase;
+}
+
+/* close button on header */
+div.snapin div.closesnapin {
+  float: right;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  margin-top: 6px;
+  margin-right: 6px;
+  line-height: 0;
+}
+
+div.snapin div.closesnapin img {
+  width: 8px;
+  height: 8px;
+}
+
+div.snapin div.minisnapin {
+  float: right;
+  width: 8px;
+  height: 8px;
+  margin: 6px 6px 0 0;
+  line-height: 0;
+  cursor: pointer;
+  background-image: url("images/icon_minisnapin.png");
+}
+
+div.snapin div.head.closed div.minisnapin {
+  background-image: url("images/icon_maxisnapin.png");
+}
+
+div.snapin div.content {
+  top: 64px;
+  width: 100%;
+  padding: 8px;
+  color: #fff;
+  background-color: $theme-color-sidebar-background;
+  box-sizing: border-box;
+}
+
+/* TODO: No important styles */
+div.snapin select {
+  width: 100%;
+  height: 100%;
+  padding: 8px !important;
+  font-size: 11px;
+  color: $theme-color-text;
+  background: $theme-color-white;
+  background-image: none !important;
+  border: 1px solid $theme-color-table-border !important;
+  border-radius: $theme-border-radius;
+  box-shadow: none;
+}
+
 // Styles for wiki and quicksearch sidebar snapins
 #snapin_container_wiki div.content {
   font-weight: bold;

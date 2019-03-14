@@ -105,7 +105,6 @@ class Performance(SidebarSnapin):
         return """
 #snapin_performance select {
     margin-bottom: 2px;
-    width: 100%%;
 }
 table.performance {
     width: %dpx;

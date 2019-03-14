@@ -45,7 +45,7 @@ div.content {
   width: 100%;
   top: 64px; }
 
-input, input[type=text], input[type=password], select, textarea, div.snapin select, div.snapin textarea, #mk_side_search_field, #snapin_tag_tree select {
+input, input[type=text], input[type=password], select, textarea, div.snapin textarea, #mk_side_search_field {
   border-radius: $theme-border-radius;
   background-image: none !important;
   background: $theme-color-white;
@@ -55,9 +55,6 @@ input, input[type=text], input[type=password], select, textarea, div.snapin sele
   box-shadow: none;
   border: 1px solid $theme-color-table-border !important;
   }
-  #snapin_tag_tree select {
-    background: $theme-color-white !important;
-    color: $theme-color-text !important; }
   .tag_tree {
     font-size: $theme-font-size-main;
   }
@@ -752,27 +749,12 @@ td.title {
   display: table-cell; }
 
 /* Sidebar */
-body.side {
-  background: $theme-color-table-border-dark;
-  font-size: 14px;
-  font-weight: $theme-font-weight-global;
-  width: 100%; }
   body.side p {
     color: $theme-color-darkgrey; }
   body.side .link, body.side .title {
     color: $theme-color-lightgrey; }
 
-#side_header {
-  margin: 0px;
-  border: none;
-  border-radius: 0px;
-  width: 100%;
-  height: 64px;
-  background: $theme-color-sidebar-background;
-  box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid $theme-color-sidebar-border;
-  box-sizing: border-box; }
-  #side_header > a, body.main .popup_menu #side_header > span {
+  body.main .popup_menu #side_header > span {
     width: 100%;
     height: 100%;
     margin: 0px;
@@ -780,98 +762,15 @@ body.side {
     background-size: auto 30px;
     background-position: 16px center;
     background-repeat: no-repeat; }
-  #side_header #side_version {
-    top: 20px;
-    right: 24px; }
-    #side_header #side_version a, #side_header #side_version body.main .popup_menu span, body.main .popup_menu #side_header #side_version span {
-      font-size: 8px;
-      font-weight: $theme-font-weight-bold;
-      letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-text-light;
-      line-height: 1;
-      text-rendering: optimizeLegibility;
-      background: none; }
-
-#side_bg {
-  display: none; }
-
-#side_content {
-  top: 64px; }
-  div#check_mk_sidebar > div#side_content {
-    padding-left: 0px !important; }
 
 #hover_menu div.message {
   color: $theme-color-white;
   background-color: $theme-color-black; }
 
-#side_footer {
-  box-sizing: border-box;
-  margin: 0px;
-  border: none;
-  border-radius: 0px;
-  border-top: 1px solid $theme-color-sidebar-border;
-  width: 100%;
-  background: $theme-color-sidebar-background;
-  box-shadow: none;
-  padding: 4px 16px;
-  height: 48px; }
-  #side_footer img.iconbutton {
-    left: 0px;
-    border: 1px solid $theme-color-table-border-dark-2;
-    box-shadow: none;
-    background-color: $theme-color-sidebar-background; }
-  #side_footer div.copyright {
-    font-size: $theme-font-size-small;
-    text-transform: uppercase;
-    font-weight: $theme-font-weight-bold;
-    letter-spacing: $theme-letter-spacing-table;
-    color: $theme-color-text-light;
-    position: relative;
-    float: right;
-    top: 13px;
-    right: 0; }
-    #side_footer div.copyright a, #side_footer div.copyright body.main .popup_menu span, body.main .popup_menu #side_footer div.copyright span {
-      text-decoration: none;
-      color: $theme-color-text-light; }
-
-body.side div.snapin, div.add_snapin div.snapin  {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 0px 0px;
-  margin: 0px;
-  border: none;
-  background: $theme-color-sidebar-background;
-  border-radius: 0px;
-  box-shadow: none;
-  border-top: 1px solid $theme-color-table-border-dark-2;
-  border-bottom: 1px solid $theme-color-table-border-dark-2;
-  margin: 4px 0px; }
-  div.snapin div.head {
-    padding: 8px;
-    height: auto;
-    background: transparent;
-    color: $theme-color-text-light;
-    text-align: left; }
-    div.snapin div.head b.heading {
-      font-size: $theme-font-size-main;
-      text-transform: uppercase;
-      letter-spacing: $theme-letter-spacing-table;
-      font-weight: 500; }
-    div.snapin div.head.open {
-      padding-bottom: 0px; }
-  div.snapin div.content {
-    box-sizing: border-box;
-    padding: 8px;
-    width: 100%;
-    top: 64px;
-    background-color: $theme-color-sidebar-background !important; }
     div.snapin div.content div.foldable a.iconlink, div.snapin div.content div.foldable body.main .popup_menu span.iconlink, body.main .popup_menu div.snapin div.content div.foldable span.iconlink {
       padding: 4px 0px; }
       div.snapin div.content div.foldable a.iconlink:last-of-type, div.snapin div.content div.foldable body.main .popup_menu span.iconlink:last-of-type, body.main .popup_menu div.snapin div.content div.foldable span.iconlink:last-of-type {
         padding-bottom: 12px; }
-  div.snapin div.minisnapin {
-    float: right;
-    margin: 6px 6px 0px 0px; }
   div.snapin div.footnotelink {
     text-align: right; }
     div.snapin div.footnotelink a.link, div.snapin div.footnotelink body.main .popup_menu span.link, body.main .popup_menu div.snapin div.footnotelink span.link {
@@ -889,8 +788,6 @@ body.side div.snapin, div.add_snapin div.snapin  {
       div.snapin div.footnotelink a.link::before, div.snapin div.footnotelink body.main .popup_menu span.link::before, body.main .popup_menu div.snapin div.footnotelink span.link::before {
         content: '···';
         margin-right: 8px; }
-  div.snapin:last-child {
-    margin-bottom: 4px; }
   div.snapin table.allhosts td a.link, div.snapin table.allhosts td body.main .popup_menu span.link, body.main .popup_menu div.snapin table.allhosts td span.link {
     padding: 7px 4px; }
 
@@ -941,15 +838,6 @@ table.cmc_stats, table.mkeventd_performance, table.performance {
     letter-spacing: $theme-letter-spacing-table;
     font-weight: $theme-font-weight-global; }
 
-#snapin_nagios_legacy h3 {
-  margin-top: 32px;
-  margin-bottom: 8px; }
-#snapin_nagios_legacy ul.link {
-  padding: 0px 16px;
-  display: block; }
-#snapin_nagios_legacy a.link, #snapin_nagios_legacy body.main .popup_menu span.link, body.main .popup_menu #snapin_nagios_legacy span.link {
-  padding: 8px 0px; }
-
 #snapin_wato_foldertree table {
   border-spacing: 16px; }
 
@@ -957,13 +845,10 @@ table.cmc_stats, table.mkeventd_performance, table.performance {
   box-sizing: border-box;
   border-radius: $theme-border-radius;
   background: $theme-color-lightgrey;
-  width: 100%;
-  padding: 8px;
-  height: auto;
   color: $theme-color-nuance-7;
   font-size: $theme-font-size-main;
   clear: both;
-  margin: 8px 0px 16px; }
+  margin: 8px 0 2px; }
 
 div.statebullet {
   border-radius: 50%;
@@ -1014,12 +899,6 @@ div.add_snapin div.snapinadder, div.add_snapin div.snapinadder:hover {
     background-color: $theme-color-sidebar-background; }
   div.add_snapin div.snapinadder .content {
     color: $theme-color-text; }
-
-div#side_footer span#msg_label {
-    left: -10px;
-    top: -6px;
-    font-size: $theme-font-size-global;
-}
 
 .checkbox label::before {
   box-shadow: none;

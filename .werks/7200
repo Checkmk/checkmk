@@ -1,0 +1,12 @@
+Title: check_mail_loop: Fixed 'option --subject not recognized'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p13
+Date: 1552553063
+
+When used in WATO, the 'subject' parameter was not called correctly in the check command.
+This has been fixed.

@@ -666,7 +666,8 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
         return discovery_result
 
     def _do_discovery(self, discovery_result, request):
-        services_to_save, remove_disabled_rule, add_disabled_rule = {}, [], []
+        autochecks_to_save, remove_disabled_rule, add_disabled_rule, saved_services = {}, set(
+        ), set(), set()
         apply_changes = False
         for table_source, check_type, _checkgroup, item, paramstring, _params, \
             descr, _state, _output, _perfdata in discovery_result.check_table:
@@ -691,24 +692,29 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
 
             if table_source == DiscoveryState.UNDECIDED:
                 if table_target == DiscoveryState.MONITORED:
-                    services_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = paramstring
+                    saved_services.add(descr)
                 elif table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.append(descr)
+                    add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.VANISHED:
                 if table_target != DiscoveryState.REMOVED:
-                    services_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = paramstring
+                    saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.append(descr)
+                    add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.MONITORED:
                 if table_target in [
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
                 ]:
-                    services_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = paramstring
+
                 if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.append(descr)
+                    add_disabled_rule.add(descr)
+                else:
+                    saved_services.add(descr)
 
             elif table_source == DiscoveryState.IGNORED:
                 if table_target in [
@@ -716,28 +722,31 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
                         DiscoveryState.UNDECIDED,
                         DiscoveryState.VANISHED,
                 ]:
-                    remove_disabled_rule.append(descr)
+                    remove_disabled_rule.add(descr)
                 if table_target in [
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
                 ]:
-                    services_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = paramstring
+                    saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.append(descr)
+                    add_disabled_rule.add(descr)
 
             elif table_source in [
                     DiscoveryState.CLUSTERED_NEW,
                     DiscoveryState.CLUSTERED_OLD,
             ]:
-                services_to_save[(check_type, item)] = paramstring
+                autochecks_to_save[(check_type, item)] = paramstring
+                saved_services.add(descr)
 
         if apply_changes:
             need_sync = False
             if remove_disabled_rule or add_disabled_rule:
+                add_disabled_rule = add_disabled_rule - remove_disabled_rule - saved_services
                 self._save_host_service_enable_disable_rules(remove_disabled_rule,
                                                              add_disabled_rule)
                 need_sync = True
-            self._save_services(services_to_save, need_sync)
+            self._save_services(autochecks_to_save, need_sync)
 
     def _save_services(self, checks, need_sync):
         message = _("Saved check configuration of host '%s' with %d services") % \
@@ -781,7 +790,7 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
         # Check whether or not the service still needs a host specific setting after removing
         # the host specific setting above and remove all services from the service list
         # that are fine without an additional change.
-        for service in services[:]:
+        for service in list(services):
             value_without_host_rule = ruleset.analyse_ruleset(self._host.name(), service)[0]
             if (not value and value_without_host_rule in [None, False]) \
                or value == value_without_host_rule:

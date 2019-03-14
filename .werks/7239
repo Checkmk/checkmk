@@ -1,0 +1,10 @@
+Title: Service discovery: Fix creating disabled services rule for services with special characters
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1552549690
+Class: fix
+
+Services with e.g. "[" in their names could not be disabled using the service discovery page.

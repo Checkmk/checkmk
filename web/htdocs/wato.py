@@ -3230,7 +3230,7 @@ class ModeDiscovery(WatoMode):
             return
 
         def _compile_patterns(services):
-            return ["%s$" % s.replace("\\", "\\\\") for s in services]
+            return ["%s$" % re.escape(s) for s in services]
 
         rulesets = watolib.AllRulesets()
         rulesets.load()

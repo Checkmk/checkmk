@@ -87,11 +87,21 @@ class RulespecCheckgroupParametersOracleJobs(CheckParameterRulespecWithItem):
                  )),
                 ("status_disabled_jobs",
                  MonitoringState(
-                     title="Status of service in case of disabled job", default_value=0)),
+                     title=_("Status of service in case of disabled job"),
+                     default_value=0,
+                 )),
                 ("status_missing_jobs",
                  MonitoringState(
-                     title=_("Status of service in case of missing job."),
+                     title=_("Status of service in case of missing job"),
                      default_value=2,
+                 )),
+                ("missinglog",
+                 MonitoringState(
+                     default_value=1,
+                     title=_("State in case of Job has no log information"),
+                     help=_("It is possible that a job has no log informations. This also means "
+                            "that the job has no last running state as this is obtained from the log. "
+                             "The last run state is ignored when no log information is found."),
                  )),
             ],
         )

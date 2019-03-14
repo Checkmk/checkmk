@@ -1754,15 +1754,17 @@ do_custom_sqls () {
                 "Section item: $MK_CUSTOM_SQLS_ITEM" "Custom SQLS query: $MK_CUSTOM_SQLS_SECTION_QUERY"\
                 "Max cache age: $max_cache_age"
 
-        if [ -z "$max_cache_age" ]; then
-            local output=
-            output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_custom_sqls" "yes")
-            logging "[${MK_SID}] [${section}] [custom_sql]" "Custom SQLS query output: $output"
-            handle_custom_sql_errors "$output"
-
+        if [ "$MK_ORA_DEBUG_CONNECT" = "1" ]; then
+            do_testmode_custom_sql 
         else
-            run_cached "$max_cache_age" do_async_custom_sqls "_custom_sql_${MK_CUSTOM_SQLS_SECTION}"
-
+            if [ -z "$max_cache_age" ]; then
+                local output=
+                output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_custom_sqls" "yes")
+                logging "[${MK_SID}] [${section}] [custom_sql]" "Custom SQLS query output: $output"
+                handle_custom_sql_errors "$output"
+            else
+                run_cached "$max_cache_age" do_async_custom_sqls "_custom_sql_${MK_CUSTOM_SQLS_SECTION}"
+            fi
         fi
     done
 }
@@ -2265,6 +2267,13 @@ do_testmode () {
     echo
 }
 
+do_testmode_custom_sql() {
+    echo "---custom SQL ----------------------------------------------------------"
+    echo "    section:                ${section}"
+    echo "    SQL:                    ${sql}"
+    echo "    MAX_CACHE_AGE:          ${max_cache_age}"
+    echo "------------------------------------------------------------------------"
+}
 
 do_checks () {
     local excluded=

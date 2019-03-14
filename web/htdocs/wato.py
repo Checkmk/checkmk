@@ -3072,7 +3072,7 @@ class ModeDiscovery(WatoMode):
 
     def _do_discovery(self, host):
         check_table = self._get_check_table()
-        services_to_save, remove_disabled_rule, add_disabled_rule, saved_services = {}, set(), set(), set()
+        services_to_save, remove_disabled_rule, add_disabled_rule = {}, [], []
         apply_changes = False
         for table_source, check_type, checkgroup, item, paramstring, params, \
             descr, state, output, perfdata in check_table:
@@ -3084,42 +3084,36 @@ class ModeDiscovery(WatoMode):
             if table_source == self.SERVICE_UNDECIDED:
                 if table_target == self.SERVICE_MONITORED:
                     services_to_save[(check_type, item)] = paramstring
-                    saved_services.add(descr)
                 elif table_target == self.SERVICE_IGNORED:
-                    add_disabled_rule.add(descr)
+                    add_disabled_rule.append(descr)
 
             elif table_source == self.SERVICE_VANISHED:
                 if table_target != self.SERVICE_REMOVED:
                     services_to_save[(check_type, item)] = paramstring
-                    saved_services.add(descr)
                 if table_target == self.SERVICE_IGNORED:
-                    add_disabled_rule.add(descr)
+                    add_disabled_rule.append(descr)
 
             elif table_source == self.SERVICE_MONITORED:
                 if table_target in [self.SERVICE_MONITORED, self.SERVICE_IGNORED]:
                     services_to_save[(check_type, item)] = paramstring
-                    saved_services.add(descr)
                 if table_target == self.SERVICE_IGNORED:
-                    add_disabled_rule.add(descr)
+                    add_disabled_rule.append(descr)
 
             elif table_source == self.SERVICE_IGNORED:
                 if table_target in [self.SERVICE_MONITORED, self.SERVICE_UNDECIDED,
                                     self.SERVICE_VANISHED]:
-                    remove_disabled_rule.add(descr)
+                    remove_disabled_rule.append(descr)
                 if table_target in [self.SERVICE_MONITORED, self.SERVICE_IGNORED]:
                     services_to_save[(check_type, item)] = paramstring
-                    saved_services.add(descr)
                 if table_target == self.SERVICE_IGNORED:
-                    add_disabled_rule.add(descr)
+                    add_disabled_rule.append(descr)
 
             elif table_source in [self.SERVICE_CLUSTERED_NEW, self.SERVICE_CLUSTERED_OLD]:
                 services_to_save[(check_type, item)] = paramstring
-                saved_services.add(descr)
 
         if apply_changes:
             need_sync = False
             if remove_disabled_rule or add_disabled_rule:
-                add_disabled_rule = add_disabled_rule - remove_disabled_rule - saved_services
                 self._save_host_service_enable_disable_rules(remove_disabled_rule, add_disabled_rule)
                 need_sync = True
             self._save_services(services_to_save, need_sync)

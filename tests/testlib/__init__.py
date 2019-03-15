@@ -903,7 +903,7 @@ class Site(object):
 
     def _missing_but_required_wato_files(self):
         required_files = [
-            "etc/check_mk/conf.d/wato/rules.mk", "etc/check_mk/multisite.d/wato/hosttags.mk",
+            "etc/check_mk/conf.d/wato/rules.mk", "etc/check_mk/multisite.d/wato/tags.mk",
             "etc/check_mk/conf.d/wato/global.mk", "var/check_mk/web/automation",
             "var/check_mk/web/automation/automation.secret"
         ]

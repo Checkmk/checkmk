@@ -1,5 +1,5 @@
 Title: Jira: Notification plugin
-Level: 1
+Level: 2
 Component: notifications
 Compatible: compat
 Edition: cre
@@ -13,21 +13,22 @@ You can create issues for Host an Service Problems and optional set a resolution
 In Jira you have to add two custom fields to your project screen as described <a href "https://confluence.atlassian.com/adminjiraserver/adding-a-custom-field-938847222.html">here</a>.
 
 In Check_MK, under "WATO - Notifications", create a new notification rule and select Jira.
+
 Parameters to set:
-<i>JIRA URL<i>: The URL to your Jira environment
-<i>User Name<i>: Jira username 
-<i>Password<i>: Jira password
-<i>Project ID<i>: The Project ID the issues should be created in
-<i>Issue type ID<i>: The issue type ID
-<i>Host custom field ID<i>: The first custom field ID you created in Jira
-<i>Service custom field ID<i>: The second custom field ID you created in Jira
-<i>Monitoring URL<i>: URL of your Check_MK environment to create hyperlinks back to Check_MK (eg. https://server/site)
-<i>Priority ID<i>: The priority ID (optional)
-<i>Summary for host notifications<i>: The summary the created host issue should use (optional)
-<i>Summary for service notifications<i>: The summary the created service issue shoud use (optional)
-<i>Label<i>: Label for Jira issues. If not set, 'monitoring' will be used. (optional)
-<i>Activate resultion with following resolution transistion ID<i>: If set, the created issue will be resolved with the configured resolution ID (optional)
-<i>Set optional timeout for connections to JIRA<i>: Timeout in seconds, default is 10 (optional)
+LI:JIRA URL: The URL to your Jira environment
+LI:User Name: Jira username
+LI:Password: Jira password
+LI:Project ID: The Project ID the issues should be created in
+LI:Issue type ID: The issue type ID
+LI:Host custom field ID: The first custom field ID you created in Jira
+LI:Service custom field ID: The second custom field ID you created in Jira
+LI:Monitoring URL: URL of your Check_MK environment to create hyperlinks back to Check_MK (eg. https://server/site)
+LI:Priority ID: The priority ID (optional)
+LI:Summary for host notifications: The summary the created host issue should use (optional)
+LI:Summary for service notifications: The summary the created service issue shoud use (optional)
+LI:Label: Label for Jira issues. If not set, 'monitoring' will be used. (optional)
+LI:Activate resultion with following resolution transistion ID: If set, the created issue will be resolved with the configured resolution ID (optional)
+LI:Set optional timeout for connections to JIRA: Timeout in seconds, default is 10 (optional)
 
 You need different Jira IDs to open/resolve issues. There are different ways to get this IDs:
 LI: <a href="https://confluence.atlassian.com/jirakb/how-to-get-project-id-from-the-jira-user-interface-827341414.html">Jira_support</a>

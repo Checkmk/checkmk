@@ -237,12 +237,9 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress, inve
     console.step("Executing inventory plugins")
     import cmk_base.inventory_plugins as inventory_plugins
     console.verbose("Plugins:")
-    for section_name, plugin in inventory_plugins.inv_info.items():
+    for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
         section_content = multi_host_sections.get_section_content(
             hostname, ipaddress, section_name, for_discovery=False)
-        if section_content is None:  # No data for this check type
-            continue
-
         # TODO: Don't we need to take config.check_info[check_plugin_name]["handle_empty_info"]:
         #       like it is done in checking.execute_check()? Standardize this!
         if not section_content:  # section not present (None or [])

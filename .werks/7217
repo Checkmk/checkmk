@@ -1,0 +1,21 @@
+Title: HW/SW-Inventory: Execution order of plugins
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552656409
+Class: fix
+
+The order in which the HW/SW inventory plugins are executed is now deterministic.
+Previously dependencies between inventory plugins could lead to missing data if
+the plugins happend to be executed in the wrong order.
+
+Plugins are now executed in alphabetical order by default. You can force a plugin
+to be executed after another plugin by setting the <tt>depends_on</tt> key in
+the inventory info variable <tt>inv_info</tt>. For instance writing
+<tt>inv_info['plugin_a'] = {
+    ...
+    'depends_on' = ['plugin_b'],
+}</tt>
+will enforce "plugin_b" to be executed before "plugin_a".

@@ -112,6 +112,7 @@ def inv_cisco_vlans(info, params):
 
 
 inv_info['inv_cisco_vlans'] = {
+    'depends_on': ['inv_if'],
     "inv_function": inv_cisco_vlans,
     'snmp_info': (
         ".1.3.6.1.4.1.9.9.68.1.2.2.1",

@@ -14,11 +14,14 @@ $(MONITORING_PLUGINS)-install: $(MONITORING_PLUGINS_INSTALL)
 
 MONITORING_PLUGINS_CONFIGUREOPTS := \
     --prefix=$(OMD_ROOT) \
-    --libexecdir=$(OMD_ROOT)/lib/nagios/plugins
+    --libexecdir=$(OMD_ROOT)/lib/nagios/plugins \
+    --with-snmpget-command=$(OMD_ROOT)/bin/snmpget \
+    --with-snmpgetnext-command=$(OMD_ROOT)/bin/snmpgetnext
 
 $(MONITORING_PLUGINS_BUILD): $(MONITORING_PLUGINS_PATCHING)
 	cd $(MONITORING_PLUGINS_DIR) ; ./configure $(MONITORING_PLUGINS_CONFIGUREOPTS)
 	$(MAKE) -C $(MONITORING_PLUGINS_DIR) all
+	$(RM) plugins-scripts/check_ifoperstatus plugins-scripts/check_ifstatus
 	$(TOUCH) $@
 
 $(MONITORING_PLUGINS_INSTALL): $(MONITORING_PLUGINS_BUILD)

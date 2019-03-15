@@ -431,7 +431,7 @@ class FilterAddressFamily(Filter):
         family = html.request.var("address_family", "both")
         if family == "both":
             return ""
-        return "Filter: host_custom_variables = ADDRESS_FAMILY %s\n" % livestatus.lqencode(family)
+        return "Filter: tags = address_family ip-v%s-only\n" % livestatus.lqencode(family)
 
 
 @filter_registry.register
@@ -470,23 +470,23 @@ class FilterAddressFamilies(Filter):
             return ""
 
         elif family == "both":
-            return "Filter: host_custom_variables ~ TAGS (^|[ ])ip-v4($|[ ])\n" \
-                   "Filter: host_custom_variables ~ TAGS (^|[ ])ip-v6($|[ ])\n"
+            return "Filter: tags = ip-v4 ip-v4\n" \
+                   "Filter: tags = ip-v6 ip-v6\n" \
+                   "Or: 2\n"
         else:
             if family[0] == "4":
                 tag = "ip-v4"
             elif family[0] == "6":
                 tag = "ip-v6"
-            filt = "Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])\n" % livestatus.lqencode(
-                tag)
+            filt = "Filter: tags = %s %s\n" % (livestatus.lqencode(tag), livestatus.lqencode(tag))
 
             if family.endswith("_only"):
                 if family[0] == "4":
                     tag = "ip-v6"
                 elif family[0] == "6":
                     tag = "ip-v4"
-                filt += "Filter: host_custom_variables !~ TAGS (^|[ ])%s($|[ ])\n" % livestatus.lqencode(
-                    tag)
+                filt += "Filter: tags != %s %s\n" % (livestatus.lqencode(tag),
+                                                     livestatus.lqencode(tag))
 
             return filt
 
@@ -2464,10 +2464,6 @@ class FilterHostTags(Filter):
             html.close_tr()
         html.close_table()
 
-    def hosttag_filter(self, negate, tag):
-        return 'Filter: host_custom_variables %s TAGS (^|[ ])%s($|[ ])' % (negate and '!~' or '~',
-                                                                           livestatus.lqencode(tag))
-
     def filter(self, infoname):
         headers = []
 
@@ -2476,33 +2472,24 @@ class FilterHostTags(Filter):
         num = 0
         while html.request.has_var('host_tag_%d_op' % num):
             prefix = 'host_tag_%d' % num
+            num += 1
+
             op = html.request.var(prefix + '_op')
+            tag_group = config.tags.get_tag_group(html.request.var(prefix + '_grp'))
             tag = html.request.var(prefix + '_val')
 
-            if op:
-                if tag:  # positive host tag
-                    headers.append(self.hosttag_filter(op != "is", tag))
-                else:
-                    # empty host tag. Darn. We need to create a filter that excludes all other host tags
-                    # of the group
-                    tag_group = config.tags.get_tag_group(html.request.var(prefix + '_grp'))
-                    if tag_group:
-                        grouptags = [t for t in tag_group.get_tag_ids() if t]
-                        if grouptags:
-                            for tag in grouptags:
-                                headers.append(self.hosttag_filter(False, tag))
+            if not tag_group or not op:
+                continue
 
-                            if len(grouptags) > 1:
-                                headers.append("Or: %d" % len(grouptags))
-
-                            if op == "is":
-                                headers.append("Negate:")
-
-            num += 1
+            headers.append(self._hosttag_filter(tag_group.id, tag, negate=op != "is"))
 
         if headers:
             return '\n'.join(headers) + '\n'
         return ''
+
+    def _hosttag_filter(self, tag_group, tag, negate):
+        return "Filter: host_tags %s %s %s" % (
+            '!=' if negate else '=', livestatus.lqencode(tag_group), livestatus.lqencode(tag))
 
     def double_height(self):
         return True
@@ -2542,10 +2529,6 @@ class FilterHostAuxTags(Filter):
             html.checkbox('%s_%d_neg' % (self.prefix, num), False, label=_("negate"))
             html.close_nobr()
 
-    def host_auxtags_filter(self, tag, negate):
-        return "Filter: host_custom_variables %s~ TAGS (^|[ ])%s($|[ ])" % (
-            negate, livestatus.lqencode(tag))
-
     def filter(self, infoname):
         headers = []
 
@@ -2555,13 +2538,17 @@ class FilterHostAuxTags(Filter):
         while html.request.has_var('%s_%d' % (self.prefix, num)):
             this_tag = html.request.var('%s_%d' % (self.prefix, num))
             if this_tag:
-                negate = ("!" if html.get_checkbox('%s_%d_neg' % (self.prefix, num)) else "")
-                headers.append(self.host_auxtags_filter(this_tag, negate))
+                negate = html.get_checkbox('%s_%d_neg' % (self.prefix, num))
+                headers.append(self._host_auxtags_filter(this_tag, negate))
             num += 1
 
         if headers:
             return '\n'.join(headers) + '\n'
         return ''
+
+    def _host_auxtags_filter(self, tag, negate):
+        return "Filter: host_tags %s '%s' '%s'" % (
+            "!=" if negate else "=", livestatus.lqencode(tag), livestatus.lqencode(tag))
 
     def double_height(self):
         return True

@@ -3,7 +3,7 @@
 # pylint: disable=redefined-outer-name
 
 import collections
-import pytest
+import pytest  # type: ignore
 
 from testlib import web, create_linux_test_host  # pylint: disable=unused-import
 
@@ -45,6 +45,32 @@ def test_host_table(default_cfg, site):
     rows = site.live.query("GET hosts")
     assert isinstance(rows, list)
     assert len(rows) >= 2  # header + min 1 host
+
+
+def test_host_custom_variables(default_cfg, site):
+    rows = site.live.query(
+        "GET hosts\nColumns: custom_variables tags\nFilter: name = livestatus-test-host\n")
+    assert isinstance(rows, list)
+    assert len(rows) == 1
+    custom_variables, tags = rows[0]
+    assert custom_variables == {
+        u'ADDRESS_FAMILY': u'4',
+        u'TAGS': u'/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp wato',
+        u'FILENAME': u'/wato/hosts.mk',
+        u'ADDRESS_4': u'127.0.0.1',
+        u'ADDRESS_6': u'',
+    }
+    assert tags == {
+        u'address_family': u'ip-v4-only',
+        u'agent': u'cmk-agent',
+        u'criticality': u'prod',
+        u'ip-v4': u'ip-v4',
+        u'networking': u'lan',
+        u'piggyback': u'auto-piggyback',
+        u'site': u'heute',
+        u'snmp': u'no-snmp',
+        u'tcp': u'tcp',
+    }
 
 
 host_equal_queries = {

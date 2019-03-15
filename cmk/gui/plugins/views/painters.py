@@ -64,13 +64,14 @@ from cmk.gui.plugins.views import (
     format_plugin_output,
     display_options,
     link_to_view,
-    get_host_tags,
     get_perfdata_nth_value,
     get_graph_timerange_from_painter_options,
     paint_age,
     paint_nagiosflag,
     replace_action_url_macros,
     render_cache_info,
+    render_tag_groups,
+    get_tag_groups,
 )
 
 #   .--Painter Options-----------------------------------------------------.
@@ -5100,7 +5101,7 @@ class PainterHostTags(Painter):
 
     @property
     def title(self):
-        return _("Host tags (raw)")
+        return _("Host tags")
 
     @property
     def short_title(self):
@@ -5108,14 +5109,14 @@ class PainterHostTags(Painter):
 
     @property
     def columns(self):
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_tags"]
 
     @property
     def sorter(self):
-        return 'host'
+        return "host"
 
     def render(self, row, cell):
-        return "", get_host_tags(row)
+        return "", render_tag_groups(get_tag_groups(row, "host"))
 
 
 @painter_registry.register
@@ -5134,28 +5135,29 @@ class PainterHostTagsWithTitles(Painter):
 
     @property
     def columns(self):
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_tags"]
 
     @property
     def sorter(self):
-        return 'host'
+        return "host"
 
     def render(self, row, cell):
-        output = ''
-        misc_tags = []
-        for tag_id in get_host_tags(row).split():
-            tag = config.tags.get_tag_or_aux_tag(tag_id)
-            if not tag:
-                misc_tags.append(tag_id)
+        entries = self._get_entries(row)
+        return "", "<br>".join(["%s: %s" % e for e in sorted(entries)])
+
+    def _get_entries(self, row):
+        entries = []
+        for tag_group_id, tag_id in get_tag_groups(row, "host").items():
+            tag_group = config.tags.get_tag_group(tag_group_id)
+            if tag_group:
+                entries.append((tag_group.title, dict(tag_group.get_tag_choices()).get(
+                    tag_id, tag_id)))
                 continue
 
-            if tag.is_aux_tag:
-                misc_tags.append(tag.title)
+            aux_tag_title = dict(config.tags.aux_tag_list.get_choices()).get(tag_group_id)
+            if aux_tag_title:
+                entries.append((aux_tag_title, aux_tag_title))
                 continue
 
-            output += tag.group.title + ': ' + tag.title + '<br />\n'
-
-        if misc_tags:
-            output += _('Misc:') + ' ' + ', '.join(misc_tags)
-
-        return "", output
+            entries.append((tag_group_id, tag_id))
+        return entries

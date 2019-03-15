@@ -1535,4 +1535,17 @@ table.data.job_table> tbody > tr > td.job_pid{
     text-align: right;
 }
 
-
+span.tag_group {
+  display: inline-block;
+  max-width: 100%;
+  padding: 1px 5px;
+  margin: 0 3px 0 0;
+  overflow: hidden;
+  text-align: left;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}

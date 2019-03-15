@@ -338,10 +338,15 @@ def active_check_arguments(hostname, description, args):
 #   '----------------------------------------------------------------------'
 
 
-def get_host_attributes(hostname, tags):
+def get_host_attributes(hostname, config_cache):
     attrs = _extra_host_attributes(hostname)
 
-    attrs["_TAGS"] = " ".join(tags)
+    # Pre 1.6 legacy attribute. We have changed our whole code to use the
+    # livestatus column "tags" which is populated by all attributes starting with
+    # "__TAG_" instead. We may deprecate this is one day.
+    attrs["_TAGS"] = " ".join(sorted(config_cache.tags_of_host(hostname)))
+
+    attrs.update(_get_tag_attributes(config_cache.tag_groups_of_host(hostname)))
 
     if "alias" not in attrs:
         attrs["alias"] = config.alias_of(hostname, hostname)
@@ -396,6 +401,10 @@ def get_host_attributes(hostname, tags):
         attrs["_CUSTOMER"] = config.current_customer  # pylint: disable=no-member
 
     return attrs
+
+
+def _get_tag_attributes(tags):
+    return {u"__TAG_%s" % k: unicode(v) for k, v in tags.iteritems()}
 
 
 def _extra_host_attributes(hostname):

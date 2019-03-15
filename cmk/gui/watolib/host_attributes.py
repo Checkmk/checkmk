@@ -27,7 +27,7 @@
 hosts. Examples are the IP address and the host tags."""
 
 import abc
-from typing import Optional, Any, Set, List, Tuple, Type, Text  # pylint: disable=unused-import
+from typing import Dict, Optional, Any, Set, List, Tuple, Type, Text  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
@@ -373,10 +373,11 @@ class ABCHostAttribute(object):
         that are represented by the current HTML variables."""
         return crit == value
 
-    def get_tag_list(self, value):
-        # type: (Any) -> List[str]
-        """Host tags to set for this host"""
-        return []
+    def get_tag_groups(self, value):
+        # type: (Any) -> Dict[str, str]
+        """Each attribute may set multiple tag groups for a host
+        This is used for calculating the effective host tags when writing the hosts.mk"""
+        return {}
 
     @property
     def is_checkbox_tag(self):
@@ -819,29 +820,16 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec):
     def is_tag_attribute(self):
         return True
 
-    # TODO: Can we move this to some other place?
-    def get_tag_value(self, tags):
-        """Special function for computing the setting of a specific
-        tag group from the total list of tags of a host"""
-        for grouped_tag in self._tag_group.tags:
-            if grouped_tag.id in tags:
-                return grouped_tag.id
-        return None
+    def get_tag_groups(self, value):
+        """Return set of tag groups to set (handles secondary tags)"""
+        tag_groups = {self._tag_group.id: value}
 
-    # TODO: Can we move this to some other place?
-    def get_tag_list(self, value):
-        """Return list of host tags to set (handles secondary tags)"""
+        # add optional aux tags
         for grouped_tag in self._tag_group.tags:
             if grouped_tag.id == value:
-                taglist = []
+                tag_groups.update({t: t for t in grouped_tag.aux_tag_ids})
 
-                if grouped_tag.id is not None:
-                    taglist.append(grouped_tag.id)
-
-                taglist += grouped_tag.aux_tag_ids
-
-                return taglist
-        return []  # No matching tag
+        return tag_groups
 
 
 class ABCHostAttributeHostTagList(ABCHostAttributeTag):
@@ -888,8 +876,16 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag):
 
     def from_html_vars(self, varprefix):
         if super(ABCHostAttributeHostTagCheckbox, self).from_html_vars(varprefix):
-            return self._tag_group.get_tag_choices()[0][0]
+            return self._tag_value()
         return None
+
+    def _tag_value(self):
+        return self._tag_group.get_tag_choices()[0][0]
+
+    def get_tag_groups(self, value):
+        if not value:
+            return {}
+        return super(ABCHostAttributeHostTagCheckbox, self).get_tag_groups(self._tag_value())
 
 
 class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):

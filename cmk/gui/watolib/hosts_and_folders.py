@@ -29,6 +29,7 @@ import time
 import re
 import shutil
 import cStringIO
+from typing import Dict  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.store as store
@@ -507,31 +508,27 @@ class CREFolder(BaseFolder):
         for host_name_with_tags in variables["all_hosts"]:
             parts = host_name_with_tags.split('|')
             host_name = parts[0]
-            host_tags = self._cleanup_host_tags(parts[1:])
-            host = self._create_host_from_variables(host_name, host_tags, nodes_of, variables)
+            host = self._create_host_from_variables(host_name, nodes_of, variables)
             self._hosts[host_name] = host
 
-    def _create_host_from_variables(self, host_name, host_tags, nodes_of, variables):
+    def _create_host_from_variables(self, host_name, nodes_of, variables):
         cluster_nodes = nodes_of.get(host_name)
 
         # If we have a valid entry in host_attributes then the hosts.mk file contained
         # valid WATO information from a last save and we use that
         if host_name in variables["host_attributes"]:
             attributes = variables["host_attributes"][host_name]
-
             attributes = self._transform_old_attributes(attributes)
 
         else:
-            host_tags = self._transform_old_agent_type_in_tag_list(host_tags)
-
             # Otherwise it is an import from some manual old version of from some
             # CMDB and we reconstruct the attributes. That way the folder inheritance
             # information is not available and all tags are set explicitely
+            # 1.6: Tag transform from all_hosts has been dropped
             attributes = {}
             alias = self._get_alias_from_extra_conf(host_name, variables)
             if alias is not None:
                 attributes["alias"] = alias
-            attributes.update(self._get_attributes_from_tags(host_tags))
             for attribute_key, config_dict in [
                 ("ipaddress", "ipaddresses"),
                 ("ipv6address", "ipv6addresses"),
@@ -541,31 +538,6 @@ class CREFolder(BaseFolder):
                     attributes[attribute_key] = variables[config_dict][host_name]
 
         return Host(self, host_name, attributes, cluster_nodes)
-
-    # Old tag group trans:
-    #('agent', u'Agent type',
-    #    [
-    #        ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-    #        ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-    #        ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
-    #        ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-    #        ('ping',      u'No Agent', []),
-    #    ],
-    #)
-    #
-    def _transform_old_agent_type_in_tag_list(self, host_tags):
-        if "snmp-only" in host_tags:
-            host_tags.remove("snmp-only")
-            host_tags.append("snmp-v2")
-            # snmp must be already in this list
-
-        if "snmp-tcp" in host_tags:
-            host_tags.remove("snmp-tcp")
-            host_tags.append("snmp-v2")
-            host_tags.append("cmk-agent")
-            # snmp and tcp must be already in this list
-
-        return host_tags
 
     def _transform_old_attributes(self, attributes):
         """Mangle all attribute structures read from the disk to prepare it for the current logic"""
@@ -636,6 +608,7 @@ class CREFolder(BaseFolder):
             "ALL_HOSTS": ALL_HOSTS,
             "ALL_SERVICES": ALL_SERVICES,
             "all_hosts": [],
+            "host_tags": {},
             "clusters": {},
             "ipaddresses": {},
             "ipv6addresses": {},
@@ -686,6 +659,7 @@ class CREFolder(BaseFolder):
         hostnames.sort()
         custom_macros = {}  # collect value for attributes that are to be present in Nagios
         cleaned_hosts = {}
+        host_tags = {}
 
         attribute_mappings = [
             # host attr, cmk_base variable name, value, title
@@ -709,6 +683,10 @@ class CREFolder(BaseFolder):
             if tagstext:
                 tagstext += "|"
             hostentry = '"%s|%swato|/" + FOLDER_PATH + "/"' % (hostname, tagstext)
+
+            tag_groups = host.tag_groups()
+            if tag_groups:
+                host_tags[hostname] = tag_groups
 
             if host.is_cluster():
                 clusters.append((hostentry, host.cluster_nodes()))
@@ -767,6 +745,8 @@ class CREFolder(BaseFolder):
                 out.write('\n  %s : %s,\n' % (entry, repr(nodes)))
             out.write("})\n")
 
+        out.write("\nhost_tags.update(%s)\n" % format_config_value(host_tags))
+
         for attribute_name, cmk_base_varname, dictionary, title in attribute_mappings:
             if dictionary:
                 out.write("\n# %s\n" % title)
@@ -803,21 +783,6 @@ class CREFolder(BaseFolder):
         out.write("host_attributes.update(\n%s)\n" % format_config_value(cleaned_hosts))
 
         store.save_file(self.hosts_file_path(), out.getvalue())
-
-    # Remove dynamic tags like "wato" and the folder path.
-    def _cleanup_host_tags(self, tags):
-        return [tag for tag in tags if tag not in ["wato", "//"] and not tag.startswith("/wato/")]
-
-    def _get_attributes_from_tags(self, host_tags):
-        # Retrieve setting for each individual host tag. This is needed for
-        # reading in hosts.mk files where host_attributes is missing. Can
-        # we drop this one day?
-        attributes = {}
-        for attr in host_attribute_registry.attributes():
-            if attr.is_tag_attribute:
-                tagvalue = attr.get_tag_value(host_tags)
-                attributes[attr.name()] = tagvalue
-        return attributes
 
     def _get_alias_from_extra_conf(self, host_name, variables):
         aliases = self._host_extra_conf(host_name, variables["extra_host_conf"]["alias"])
@@ -1929,26 +1894,29 @@ class CREHost(WithPermissionsAndAttributes):
     def parents(self):
         return self.effective_attribute("parents", [])
 
-    def tags(self):
-        # Compute tags from settings of each individual tag. We've got
-        # the current value for each individual tag. Also other attributes
-        # can set tags (e.g. the SiteAttribute)
+    def tag_groups(self):
+        # type: () -> dict
+        """Compute tags from host attributes
+        Each tag attribute may set multiple tags.  can set tags (e.g. the SiteAttribute)"""
+
         if self._cached_host_tags is not None:
             return self._cached_host_tags  # Cached :-)
 
-        tags = set([])
+        tag_groups = {}  # type: Dict[str, str]
         effective = self.effective_attributes()
         for attr in host_attribute_registry.attributes():
             value = effective.get(attr.name())
-            tags.update(attr.get_tag_list(value))
+            tag_groups.update(attr.get_tag_groups(value))
 
         # When a host as been configured not to use the agent and not to use
         # SNMP, it needs to get the ping tag assigned.
         # Because we need information from multiple attributes to get this
         # information, we need to add this decision here.
         # Skip this in case no-ip is configured: A ping check is useless in this case
-        if "no-snmp" in tags and "no-agent" in tags and not "no-ip" in tags:
-            tags.add("ping")
+        if tag_groups["snmp"] == "no-snmp" \
+           and tag_groups["agent"] == "no-agent" \
+           and tag_groups["address_family"] != "no-ip":
+            tag_groups["ping"] = "ping"
 
         # The following code is needed to migrate host/rule matching from <1.5
         # to 1.5 when a user did not modify the "agent type" tag group.  (See
@@ -1956,14 +1924,29 @@ class CREHost(WithPermissionsAndAttributes):
         aux_tag_ids = [t.id for t in config.tags.aux_tag_list.get_tags()]
 
         # Be compatible to: Agent type -> SNMP v2 or v3
-        if "no-agent" in tags and "snmp-v2" in tags and "snmp-only" in aux_tag_ids:
-            tags.add("snmp-only")
-        # Be compatible to: Agent type -> Dual: SNMP + TCP
-        if "cmk-agent" in tags and "snmp-v2" in tags and "snmp-tcp" in aux_tag_ids:
-            tags.add("snmp-tcp")
+        if tag_groups["agent"] == "no-agent" and tag_groups["snmp"] == "snmp-v2" \
+           and "snmp-only" in aux_tag_ids:
+            tag_groups["snmp-only"] = "snmp-only"
 
-        self._cached_host_tags = tags
+        # Be compatible to: Agent type -> Dual: SNMP + TCP
+        if tag_groups["agent"] == "cmk-agent" and tag_groups["snmp"] == "snmp-v2" \
+           and "snmp-tcp" in aux_tag_ids:
+            tag_groups["snmp-tcp"] = "snmp-tcp"
+
+        self._cached_host_tags = tag_groups
+        return tag_groups
+
+    # TODO: Can we remove this?
+    def tags(self):
+        # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
+        # but there was a single tag group added with it's leading tag group id. This
+        # was the internal "site" tag that is created by HostAttributeSite.
+        tags = set(v for k, v in self.tag_groups().items() if k != "site")
+        tags.add("site:%s" % self.tag_groups()["site"])
         return tags
+
+    def is_ping_host(self):
+        return self.tag_groups().get("ping") == "ping"
 
     def tag(self, taggroup_name):
         effective = self.effective_attributes()

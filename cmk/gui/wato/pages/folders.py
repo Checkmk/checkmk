@@ -34,6 +34,7 @@ import cmk.gui.utils as utils
 from cmk.gui.table import table_element
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
+import cmk.gui.view_utils
 
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
@@ -567,15 +568,8 @@ class ModeFolder(WatoMode):
                 [self._render_contact_group(contact_group_names, g) for g in host_contact_groups]))
 
         if not config.wato_hide_hosttags:
-            # Raw tags
-            #
-            # Optimize wraps:
-            # 1. add <nobr> round the single tags to prevent wrap within tags
-            # 2. add "zero width space" (&#8203;)
-            tag_title = "|".join(['%s' % t for t in host.tags()])
-            table.cell(_("Tags"), help_txt=tag_title, css="tag-ellipsis")
-            html.write("<b style='color: #888;'>|</b>&#8203;".join(
-                ['<nobr>%s</nobr>' % t for t in host.tags()]))
+            table.cell(_("Tags"), css="tag-ellipsis")
+            html.write(cmk.gui.view_utils.render_tag_groups(host.tag_groups()))
 
         # Located in folder
         if self._folder.is_search_folder():

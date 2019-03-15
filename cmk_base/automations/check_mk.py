@@ -1315,8 +1315,7 @@ class AutomationActiveCheck(Automation):
     def _replace_core_macros(self, hostname, commandline):
         config_cache = config.get_config_cache()
         macros = core_config.get_host_macros_from_attributes(
-            hostname, core_config.get_host_attributes(hostname,
-                                                      config_cache.tags_of_host(hostname)))
+            hostname, core_config.get_host_attributes(hostname, config_cache))
         self._load_resource_file(macros)
         for varname, value in macros.items():
             commandline = commandline.replace(varname, "%s" % value)

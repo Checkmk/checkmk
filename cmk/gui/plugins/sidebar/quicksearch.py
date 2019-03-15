@@ -821,7 +821,7 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
         return _("Hosttag")
 
     def get_livestatus_columns(self, livestatus_table):
-        return ["custom_variables"]
+        return ["tags"]
 
     def get_livestatus_filters(self, livestatus_table, used_filters):
         filter_lines = []
@@ -830,8 +830,15 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
             raise MKGeneralException("You can only set up to three 'tg:' filters")
 
         for entry in used_filters.get(self.get_filter_shortname()):
-            filter_lines.append("Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])" %
-                                livestatus.lqencode(entry))
+            if ":" not in entry:
+                # Be compatible to pre 1.6 filtering for some time (no
+                # tag-group:tag-value, but tag-value only)
+                filter_lines.append("Filter: tag_values >= %s" % livestatus.lqencode(entry))
+                continue
+
+            tag_key, tag_value = entry.split(":", 1)
+            filter_lines.append("Filter: tags = %s %s" % (livestatus.lqencode(tag_key),
+                                                          livestatus.lqencode(tag_value)))
 
         if len(filter_lines) > 1:
             filter_lines.append("And: %d" % len(filter_lines))
@@ -853,10 +860,16 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
         hosttag_to_group_dict = self._get_hosttag_dict()
 
         for idx, entry in enumerate(used_filters.get(self.get_filter_shortname())):
-            if entry in hosttag_to_group_dict:
-                url_infos.append(("host_tag_%d_grp" % idx, hosttag_to_group_dict[entry]))
-                url_infos.append(("host_tag_%d_op" % idx, "is"))
-                url_infos.append(("host_tag_%d_val" % idx, entry))
+            if ":" not in entry and entry in hosttag_to_group_dict:
+                # Be compatible to pre 1.6 filtering for some time (no
+                # tag-group:tag-value, but tag-value only)
+                tag_key, tag_value = hosttag_to_group_dict[entry], entry
+            else:
+                tag_key, tag_value = entry.split(":", 1)
+
+            url_infos.append(("host_tag_%d_grp" % idx, tag_key))
+            url_infos.append(("host_tag_%d_op" % idx, "is"))
+            url_infos.append(("host_tag_%d_val" % idx, tag_value))
 
         return "", url_infos
 

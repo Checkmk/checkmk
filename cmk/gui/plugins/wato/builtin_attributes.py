@@ -724,12 +724,14 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
                                    "multiple sites."),
         )
 
-    def get_tag_list(self, value):
+    def get_tag_groups(self, value):
         if value is False:
-            return ["site:"]
-        elif value is not None:
-            return ["site:" + value]
-        return []
+            return {"site": ""}
+
+        if value is not None:
+            return {"site": value}
+
+        return {}
 
 
 @host_attribute_registry.register

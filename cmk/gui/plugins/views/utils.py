@@ -55,6 +55,7 @@ from cmk.gui.globals import html, current_app
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
+from cmk.gui.view_utils import render_tag_groups  # pylint: disable=unused-import
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -989,17 +990,8 @@ def url_to_view(row, view_name):
         return filename + "?" + html.urlencode_vars([("view_name", view_name)] + url_vars)
 
 
-def get_host_tags(row):
-    if isinstance(row.get("host_custom_variables"), dict):
-        return row["host_custom_variables"].get("TAGS", "")
-
-    if not isinstance(row.get("host_custom_variable_names"), list):
-        return ""
-
-    for name, val in zip(row["host_custom_variable_names"], row["host_custom_variable_values"]):
-        if name == "TAGS":
-            return val
-    return ""
+def get_tag_groups(row, what):
+    return row.get("%s_tags" % what, {}) or {}
 
 
 def get_graph_timerange_from_painter_options():
@@ -1143,10 +1135,7 @@ def cmp_ip_address(column, r1, r2):
 
 
 def get_custom_var(row, key):
-    for name, val in zip(row["custom_variable_names"], row["custom_variable_values"]):
-        if name == key:
-            return val
-    return ""
+    return row["custom_variables"].get(key, "")
 
 
 def get_perfdata_nth_value(row, n, remove_unit=False):

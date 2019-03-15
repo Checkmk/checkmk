@@ -5,7 +5,6 @@ def test_perl_modules(site):
         "File::stat",
         "File::Find",
         "File::Path",
-        "Net::SNMP",
         "SNMP",
         "Nagios::Plugin",
         "Test::Simple",

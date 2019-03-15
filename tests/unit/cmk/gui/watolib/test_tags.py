@@ -234,6 +234,9 @@ def test_builtin_tags_get_effective_tag_groups():
     merged_cfg = tags.HosttagsConfiguration()
     merged_cfg._parse_legacy_format(merged, [])
     assert sorted(merged_cfg.get_tag_ids()) == sorted([
+        None,
+        'piggyback',
+        'no-piggyback',
         'all-agents',
         'cmk-agent',
         'ip-v4-only',

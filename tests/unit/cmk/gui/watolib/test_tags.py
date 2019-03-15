@@ -249,8 +249,6 @@ def test_builtin_tags_get_effective_tag_groups():
         'snmp-v2',
         'special-agents',
         'tgid2',
-        'piggyback',
-        'no-piggyback',
     ])
 
 

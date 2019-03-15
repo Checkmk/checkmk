@@ -71,7 +71,7 @@ def pagerduty_msg(context):
 
     host_url, service_url = cmk_links(context)
 
-    if context.get('SERVICESTATE', None):
+    if context.get('WHAT', None) == "SERVICE":
         state = context["SERVICESTATE"]
         incident_key = '{SERVICEDESC}/{HOSTNAME}:{HOSTADDRESS}'.format(**context).replace(" ", "")
         incident = "{SERVICESTATE}: {SERVICEDESC} on {HOSTNAME}".format(**context)

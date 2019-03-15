@@ -1,0 +1,16 @@
+Title: Differentiation of host & service problems notifications
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1552646385
+
+
+For REST notification plugins like Slack, PagerDuty and VictorOPS. Problems
+where classified by the presence of the SERVICESTATE context variable. But
+in the RAW edition this variable is completed by its macro and thus the
+classification leads to host problems to be described as service problems
+too. Classifying after the WHAT context variable solves the issue.

@@ -51,7 +51,7 @@ def slack_msg(context):
 
     extend_context_with_link_urls(context, '<{}|{}>')
 
-    if context.get('SERVICESTATE', None):
+    if context.get('WHAT', None) == "SERVICE":
         color = COLORS.get(context["SERVICESTATE"])
         title = "Service {NOTIFICATIONTYPE} notification".format(**context)
         text = "Host: {LINKEDHOSTNAME} (IP: {HOSTADDRESS})\nService: {LINKEDSERVICEDESC}\nState: {SERVICESTATE}".format(

@@ -100,7 +100,7 @@ def victorops_msg(context):
 
     extend_context_with_link_urls(context, '{0}')
 
-    if context.get('SERVICESTATE', None):
+    if context.get('WHAT', None) == "SERVICE":
         state = translate_states(context["SERVICESTATE"])
         entity_id = '{SERVICEDESC}/{HOSTNAME}:{HOSTADDRESS}'.format(**context).replace(" ", "")
         title = "{SERVICEDESC} on {HOSTNAME}".format(**context)

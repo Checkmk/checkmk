@@ -11,6 +11,7 @@ expected_plugins = [
     'mkeventd',
     'pagerduty',
     'pushover',
+    'servicenow',
     'slack',
     'spectrum',
     'victorops',

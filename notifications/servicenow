@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+# Servicenow
+# Bulk: no
+
+import sys
+from cmk.notification_plugins import servicenow
+
+if __name__ == "__main__":
+    sys.exit(servicenow.main())

@@ -1,12 +1,17 @@
-# example of Check MK configuration file
+# Default Check MK configuration file
+# Copyright Mathias Kettner GmbH
 
 # global must be presented
 # IMPORTANT notes
 
-# @user -> is
+# @user -> is ProgramData/CheckMk/Agent/plugins
+# @core -> is Program Files(x86)/check_mk_service/plugins
+# @data -> is ProgramData/CheckMk/Agent/
+# @local -> is ProgramData/CheckMk/Agent/local
 
 # 1. use http://www.yamllint.com/ for example to validate your yamllint
 # 2. Windows filenames contains backslash \, ergo you have to write either "c:\\windows" or 'c:\windows' 
+
 global:
     # use name to have mor clear logs just for user
     # Descriptive name of the configuration file
@@ -69,7 +74,6 @@ global:
     # Just output certain sections (e.g. for upper hosts)
     sections:
         - check_mk 
-        - openhardwaremonitor
         - mrpe
         - skype
         - spool
@@ -90,6 +94,7 @@ global:
         - logwatch
     disabled_sections:
     # forced to not use
+        - openhardwaremonitor
         - _logfiles
         - winperf_xxx
         - badname
@@ -159,11 +164,9 @@ winperf:
     # changes only section name winperf_******
     prefix: winperf
 
-    # [+]
     # default value,  increase for heavy loaded machine
     timeout: 10
     
-    # [+]
     # Select counters to extract. The following counters
     # are needed by checks shipped with check_mk.
     # id is OS is
@@ -175,8 +178,6 @@ winperf:
           name: if
         - id: 638
           name: tcp_conn
-#        - id: 10332 
-#          name: msx_queues
         - id: Terminal Services
           name: ts_sessions
 
@@ -230,7 +231,7 @@ fileinfo:
         - "this\\is\\not\\recommended\\" # double quoating uses escape sequences
         # - 'c:\Users\Public\**\Desktop.ini' works, 8 files to control
         # - 'c:\Windows\Resources\**\aero\aero*.*' works too, you will get two files in 'c:\Windows\Resources\Themes\aero\'
-        - 'c:\dev\shared_public\*.*' # typical test folder, should be provided by dev ops/developers
+        - 'c:\dev\shared_public\*.*' # typical test folder, provided during development
 
 logwatch:
     enabled: yes
@@ -245,9 +246,6 @@ logwatch:
         - name: 'System'
           level: warn # allowed crit, warn, all, off
           context: no
-        # FUTURE RELEASE
-        #- name: '*'
-        #  enabled: off
         # this entry is show missing output, do not use in production
         - name: 'Demo'
           level: 'crit' # allowed crit, warn, all, off
@@ -277,10 +275,10 @@ plugins:
     # folders are scanned top -> down
     # duplicated files will be removed
     folders: 
-        - '@core\'       # [+] folder with Check MK plugins(installation)
-        - '@user\'       # [+] folder in ProgramData/CheckMk/agent/plugins
-        - 'c:\__mydlx\'  # [+] absolute path here
-        - 'c:\__zx\'     # 
+        - '@core\'        # folder with Check MK plugins(installation)
+        - '@user\'        # folder in ProgramData/CheckMk/agent/plugins
+        - 'd:\myplugins\' # absolute path here
+        - 'c:\__zx\'      # 
 
     # example: mk_inventory.vbs
     # plugin is executed asynchronous
@@ -292,24 +290,28 @@ plugins:
     execution:
         # execution pattern for  windows-updates.vbs:
         # all parameters below are DEFAULT set for every entry
-        - pattern     : 'mk_inventory.vbs'  # [+] Plugin name or absolute path . * and ? are allowed
-          run         : no                  # [+] execute this plugin. This is default
-          async       : yes                 # [+] async plugin is a bit special. This Long running something, normally you will get delayed data
-          timeout     : 120                 # [+] after 120 seconds process will be killed.
-          cache_age   : 3600                # [+] only combined with async
-          retry_count : 3                   # [+]
+        - pattern     : '@user\mk_inventory.vbs'  # Plugin name or absolute path . * and ? are allowed
+          run         : yes                 # execute this plugin if plugin found
+          async       : yes                 # async plugin is a bit special. Normally you will get delayed data.
+          timeout     : 120                 # after 120 seconds process will be killed.
+          cache_age   : 3600                # only combined with async, upto 3600 seconds we may reuse plugin output
+          retry_count : 3                   # failure on start plugin, before stopping
           cmd_line    : ''                  # [-] command line
           description : 'In free form'      # [-] will be stored in the log
 
-        - pattern     : 'win_license.bat'   # [+] Plugin name. * and ? are allowed
-          run         : no                 # [+] execute this plugin.
+        - pattern     : '@user\win_license.bat'   # Plugin name. * and ? are allowed
+          run         : no                  # do not execute this plugin even if plugin found
 
-        - pattern     : '@user\*.*'           # in the user folder. DO NOT REMOVE THIS ENTRY
-          timeout     : 10                  # [+] after 10 seconds process will be killed.
-          run         : yes                 # [+] ALL FOUND files ARE DISABLED this Current Default Behavior
+        - pattern     : '@user\*.*'         # in the ProgramData folder. DO NOT REMOVE THIS ENTRY
+          timeout     : 10                  # after 10 seconds process will be killed.
+          run         : yes                 # ALL FOUND files ARE DISABLED this Current Default Behavior
 
-        - pattern     : '*'                 # [+] in the user folder. DO NOT REMOVE THIS ENTRY
-          run         : no                  # [+] ALL FOUND files ARE DISABLED this Current Default Behavior
+        - pattern     : '@core\*.*'         # in the ProgramFiles folder. DO NOT REMOVE THIS ENTRY
+          timeout     : 10                  # after 10 seconds process will be killed.
+          run         : no                  # ALL FOUND files ARE DISABLED this Default Behavior
+
+        - pattern     : '*'                 # This is safety entry. Try not use plugins outside your predefined folder
+          run         : no                  # ALL FOUND files ARE DISABLED this Current Default Behavior
                                             # set this parameter to yes to change behavior like Legacy Agent 
 
 # The same as plugins with same parameters
@@ -352,11 +354,3 @@ mrpe:
         - include sk = @data\mrpe_checks.cfg
         - include = @data\mrpe_checks.cfg
 
-    # below is alternative approach
-    # not supported, still possible, just example
-    check:
-        - Console 'c:\windows\system32\mode.com' CON CP /STATUS
-        - Codepage 'c:\windows\system32\chcp.com'
-
-    include:
-        - sk @user\mrpe_checks.cfg

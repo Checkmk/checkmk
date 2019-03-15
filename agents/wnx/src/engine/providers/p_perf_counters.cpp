@@ -109,7 +109,7 @@ wtools::perf::DataSequence LoadWinPerfData(const std::wstring& Key,
     if (ret.has_value()) {
         result = wtools::perf::ReadPerformanceDataFromRegistry(Key);
         if (result.len_ == 0) {
-            XLOG::l("Obtained no data from counter {}", ConvertToUTF8(Key));
+            XLOG::t.t("Obtained no data from counter {}", ConvertToUTF8(Key));
             return {};
         }
 
@@ -119,7 +119,7 @@ wtools::perf::DataSequence LoadWinPerfData(const std::wstring& Key,
                 wtools::ConvertToUTF8(Key));
         ret = wtools::perf::FindPerfIndexInRegistry(Key);
         if (!ret.has_value()) {
-            XLOG::l.t("Key value cannot be processed '{}'", ConvertToUTF8(Key));
+            XLOG::t.t("Key value cannot be processed '{}'", ConvertToUTF8(Key));
             return {};
         }
 

@@ -206,6 +206,13 @@ private:
     SECURITY_ATTRIBUTES sa_;
 };
 
+// process terminators
+bool KillProcess(uint32_t ProcessId, int Code = -1) noexcept;
+
+// process terminator
+// used to kill OpenHardwareMonitor
+bool KillProcess(const std::wstring& Name, int Code = 9) noexcept;
+
 // WIN32 described method of killing process tree
 inline void KillProcessTree(uint32_t ProcessId) {
     // snapshot
@@ -221,7 +228,7 @@ inline void KillProcessTree(uint32_t ProcessId) {
     do {
         // process.th32ProcessId is the PID.
         if (process.th32ParentProcessID == ProcessId) {
-            cma::tools::win::KillProcess(process.th32ProcessID);
+            KillProcess(process.th32ProcessID);
         }
 
     } while (Process32Next(snapshot, &process));
@@ -295,7 +302,7 @@ public:
         }
 
         if (exit_code_ == STILL_ACTIVE) {
-            auto success = cma::tools::win::KillProcess(proc_id, -1);
+            auto success = KillProcess(proc_id, -1);
             if (!success)
                 xlog::v("Failed kill {} status {}", proc_id, GetLastError());
         }
@@ -411,11 +418,7 @@ private:
     // Entry point for the service. It registers the handler function for
     // the service and starts the service. NO RETURN FROM HERE when service
     // running.
-    static void WINAPI ServiceMain(DWORD Argc, wchar_t** Argv) {
-        // Register the handler function for the service
-        xlog::l("Service Main").print();
-        s_controller_->Start(Argc, Argv);
-    }
+    static void WINAPI ServiceMain(DWORD Argc, wchar_t** Argv);
 
     void Start(DWORD Argc, wchar_t** Argv);
     void Stop();
@@ -715,6 +718,7 @@ std::string ConditionallyConvertFromUTF16(const std::vector<T>& Data) {
     if (convert_required) {
         auto raw_data = reinterpret_cast<const wchar_t*>(Data.data() + 2);
         std::wstring wdata(raw_data, raw_data + (Data.size() - 2) / 2);
+        if (wdata.empty()) return {};
         if (wdata.back() != 0) wdata += L'\0';
         data = wtools::ConvertToUTF8(wdata);
     } else {
@@ -918,10 +922,24 @@ private:
 };
 
 HMODULE LoadWindowsLibrary(const std::wstring DllPath);
+
 // Look into the registry in order to find out, which
 // event logs are available
 // return false only when something wrong with registry
 std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath);
+
+// gtest [+]
+// returns data from the root machine registry
+uint32_t GetRegistryValue(const std::wstring Key, const std::wstring Value,
+                          uint32_t Default) noexcept;
+
+// gtest [+]
+// returns data from the root machine registry
+bool SetRegistryValue(const std::wstring Key, const std::wstring Value,
+                      uint32_t Data) noexcept;
+
+std::wstring GetRegistryValue(const std::wstring Key, const std::wstring Value,
+                              const std::wstring Default) noexcept;
 
 }  // namespace wtools
 

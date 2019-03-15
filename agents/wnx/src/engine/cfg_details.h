@@ -23,8 +23,8 @@ namespace cma::cfg::details {
 inline std::wstring FindServiceImagePath(const std::wstring ServiceValidName) {
     std::wstring key_path = L"System\\CurrentControlSet\\services\\";
     key_path += ServiceValidName;
-    std::wstring service_path_new = cma::tools::win::GetRegistryValue(
-        key_path, L"ImagePath", std::wstring());
+    std::wstring service_path_new =
+        wtools::GetRegistryValue(key_path, L"ImagePath", std::wstring());
 
     // check for very short strings
     if (service_path_new.length() < 2) return {};
@@ -141,7 +141,10 @@ class ConfigInfo {
             checkStatus();
             data_.clear();
             bad_ = false;
-            if (!exists()) return;
+            if (!exists()) {
+                XLOG::d.t("{} is absent, return", path_.u8string());
+                return;
+            }
 
             auto raw_data = cma::tools::ReadFileInVector(path_.wstring());
             if (raw_data.has_value()) {
@@ -325,7 +328,8 @@ public:
     LoadCfgStatus loadAggregated(const std::wstring& ConfigFileName,
                                  bool SaveOnSuccess, bool RestoreOnFail);
 
-    static bool smartMerge(YAML::Node Target, YAML::Node Src);
+    static bool smartMerge(YAML::Node Target, YAML::Node Src,
+                           bool MergeSequences = false);
 
     // THIS IS ONLY FOR TESTING
     bool loadDirect(const std::filesystem::path FullPath);

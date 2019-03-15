@@ -16,7 +16,8 @@
 
 namespace cma::cfg::cvt {
 
-YAML::Node LoadIni(std::filesystem::path IniFile) {
+// this function is deprecated
+YAML::Node LoadIni(const std::filesystem::path IniFile) {
     namespace fs = std::filesystem;
     if (IniFile.empty()) {
         XLOG::l("Empty file name to load");

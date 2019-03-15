@@ -18,7 +18,8 @@
 #include "cfg.h"
 
 namespace cma::cfg::cvt {
-YAML::Node LoadIni(std::filesystem::path IniFile);
+//
+[[deprecated]] YAML::Node LoadIni(const std::filesystem::path IniFile);
 
 }  // namespace cma::cfg::cvt
 

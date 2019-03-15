@@ -58,6 +58,7 @@ const char* const kPluginsExecution = "execution";        // seq
 const char* const kPluginMaxWait = "max_wait";            // int
 const char* const kPluginAsyncStart = "async_start";      // bool
 
+const char* const kLocalUserFolder = "@local";   // to be replaced
 const char* const kPluginUserFolder = "@user";   // to be replaced
 const char* const kPluginCoreFolder = "@core";   // to be replaced
 const char* const kProgramDataFolder = "@data";  // to be replaced

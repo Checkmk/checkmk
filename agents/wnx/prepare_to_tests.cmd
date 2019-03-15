@@ -1,4 +1,5 @@
 @echo off
+powershell Write-Host "%0 is running..."  -Foreground Green
 set prdata=ProgramData
 if "%1" == "" set root=%cd%\..\..\artefacts&& goto exec_me
 set root=%1
@@ -16,7 +17,7 @@ mkdir %root%\pdb 2> nul
 
 powershell Write-Host "Installation simulation Root Folder: plugins, ohm, yml"  -Foreground Green
 copy ..\windows\plugins\*.*         	%root%\plugins\ > nul || powershell Write-Host "Failed plugins copy" -Foreground Red	&& exit 3
-copy .\test_files\ohm\cli\*.*       	%root%\bin\ > nul     || powershell Write-Host "Failed ohm copy" -Foreground Red		&& exit 4
+copy .\test_files\ohm\cli\*.*       	%root%\bin\ > nul     || powershell Write-Host "Failed ohm copy. Try to kill Open Hardware Monitor: taskkill /F /IM OpenhardwareMonitorCLI.exe" -Foreground Red		&& exit 4
 copy .\install\resources\check_mk.yml  	%root%\ > nul         || powershell Write-Host "Failed check_mk.yml copy" -Foreground Red	&& exit 5
 
 powershell Write-Host "1. Test machine preparation: Shared Folder"  -Foreground Green

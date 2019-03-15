@@ -2,9 +2,9 @@
 <?define CompanyName = "Mathias Kettner GmbH"?>
 <?define ProductName = "Check MK Service"?>
 <?define ProductVersion = "0.9.1"?>
-<?define ProductId = "{C3BDE55B-4C42-48D0-8792-B1DE5174C201}"?>
-<?define ProductUpgradeCode = "83F434E9-EA96-4881-AA93-E21B27285C04"?>
-<?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1D7D"?>
+<?define ProductId = "{C3BDE55B-4C42-48D0-8792-B1DE5174C202}"?>
+<?define ProductUpgradeCode = "83F434E9-EA96-4881-AA93-E21B27285C05"?>
+<?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1D7E"?>
 <?define FolderName = "check_mk_service"?>
 <?define ServiceName = "CheckMkService"?>
 <?define ServiceDisplayName = "Check MK Service"?>
@@ -61,6 +61,9 @@
     <Feature Id="utils" Title="Utils Folder" Level="1">
       <ComponentRef Id="utils"/>
     </Feature>
+    <Feature Id="install" Title="Install Folder" Level="1">
+      <ComponentRef Id="install"/>
+    </Feature>
 
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">
@@ -80,7 +83,14 @@
             </Component>
           </Directory>
           <Directory Id="plugins" Name="plugins">
-            <Component Id="plugins" Guid="{040A6E7A-CED1-4431-954D-5735AC5F28C0}"
+            <Component Id="plugins" Guid="{A6E4AC5A-B0CB-461D-A8E4-4C0C8436E2E3}"
+              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+              Win64="no" Location="either">
+              <CreateFolder/>
+            </Component>
+          </Directory>
+          <Directory Id="install" Name="install">
+            <Component Id="install" Guid="{040A6E7A-CED1-4431-954D-5735AC5F28C0}"
               SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
               Win64="no" Location="either">
               <CreateFolder/>
@@ -130,6 +140,21 @@
       </Component>
     </DirectoryRef>
     
+    <DirectoryRef Id="install">
+      <Component Id="check_mk_ini_" Guid="{9B0003D1-BBF0-4F6D-8CFE-7F74C1EDE1B0}">
+        <File Id="check_mk_ini"
+              Source="resources\check_mk.ini"
+              KeyPath="yes"
+              Checksum="yes"/>
+      </Component>
+      <Component Id="plugins_cap_" Guid="{01620CDE-E8AD-4DB9-926D-430D8C140340}">
+        <File Id="plugins_cap"
+              Source="resources\plugins.cap"
+              KeyPath="yes"
+              Checksum="yes"/>
+      </Component>
+    </DirectoryRef>
+
     <DirectoryRef Id="plugins">
       <Component Id="cmp14A70A7296CB588F156BBC06BA51D2E3" Guid="{55386E71-BCE4-4E58-A7C1-7506317CF388}">
         <File Id="fil0D8E5C0605B7AABBE4E3650D150DC37F" KeyPath="yes" Source = "..\..\windows\plugins\ad_replication.bat" />
@@ -166,12 +191,6 @@
       </Component>
       <Component Id="cmp657B6B6F132543FC84EC56F7B0DAB6ED" Guid="{1C2AEC02-1673-4B40-B147-0B001188DC5A}">
         <File Id="filE5741C46E1FC38FBCAF8323A42CEC30F" KeyPath="yes" Source="..\..\windows\plugins\mk_inventory.vbs" />
-      </Component>
-      <Component Id="cmpE49721CD85FA6F467FC6F8A98C98EE13" Guid="{47001A61-8AA8-42F5-B3BF-D4467421984D}">
-        <File Id="fil5C7A5DDEFAF93792B6D86C12D177B18E" KeyPath="yes" Source="..\..\windows\plugins\mk_jolokia.exe" />
-      </Component>
-      <Component Id="cmpDACF75671E447FD9EAEE1BD03903C858" Guid="{ED1F13C5-2F63-4832-9C5B-8EEFFBC87C6A}">
-        <File Id="filC4611EAA0C6771016EF0DEEB589E3DB9" KeyPath="yes" Source="..\..\windows\plugins\mk_logwatch.exe" />
       </Component>
       <Component Id="cmpDD7387A69094F0C08D755786377BE916" Guid="{3477B066-6AC0-4031-A8AF-3C79571E4C39}">
         <File Id="fil4184D51F5A0121840C425BBCB6B53F42" KeyPath="yes" Source="..\..\windows\plugins\mk_mysql.vbs" />
@@ -253,6 +272,8 @@
       <ComponentRef Id="plugin_player64_" />
       <ComponentRef Id="perf_counters32_" />
       <ComponentRef Id="perf_counters64_" />
+      <ComponentRef Id="check_mk_ini_" />
+      <ComponentRef Id="plugins_cap_" />
     </Feature>
 
     <Feature Id="plugins_binaries" Title="Plugins for Windows" Level="1">
@@ -268,8 +289,6 @@
       <ComponentRef Id="cmp2A9B7CC157BFEF8A29D75CC2F64A5A02" />
       <ComponentRef Id="cmpC93DA459EC69F6EE0183382A29CB8174" />
       <ComponentRef Id="cmp657B6B6F132543FC84EC56F7B0DAB6ED" />
-      <ComponentRef Id="cmpE49721CD85FA6F467FC6F8A98C98EE13" />
-      <ComponentRef Id="cmpDACF75671E447FD9EAEE1BD03903C858" />
       <ComponentRef Id="cmpDD7387A69094F0C08D755786377BE916" />
       <ComponentRef Id="cmp5ADA772C7BDFD80499DCC49F48A4D27D" />
       <ComponentRef Id="cmp06FAFC985397646477170C3A9EC578DF" />
@@ -326,7 +345,7 @@
                  Guid="{3343809F-E2EF-4D9F-9FA5-AD1AC0968916}">
         <File Id="check_mk_svc32.exe"
               Source="..\build\check_mk_service\Win32\Release\check_mk_service32.exe"
-              Name="cmk_service32.exe"
+              Name="check_mk_agent.exe"
               KeyPath="yes"
               Checksum="yes"/>
         <Condition>NOT VersionNT64</Condition>
@@ -338,7 +357,8 @@
           DisplayName="$(var.ServiceDisplayName)"
           Description="$(var.ServiceDescription), 32-bit"
           Start="demand"
-          Account="LocalSystem"
+          Account="[SERVICEACCOUNT]"
+          Password="[SERVICEPASSWORD]"
           ErrorControl="ignore"
           Interactive="no"/>
         <ServiceControl Id="StartService32"
@@ -353,7 +373,7 @@
                  Guid="{CDDCFF83-A111-4048-BCA2-0DEB2A043A42}">
         <File Id="check_mk_svc64.exe"
               Source="..\build\check_mk_service\x64\Release\check_mk_service64.exe"
-              Name="cmk_service64.exe"
+              Name="check_mk_agent.exe"
               KeyPath="yes"
               Checksum="yes"/>
         <Condition>VersionNT64</Condition>
@@ -365,7 +385,8 @@
           DisplayName="$(var.ServiceDisplayName)"
           Description="$(var.ServiceDescription), 64-bit"
           Start="demand"
-          Account="LocalSystem"
+          Account="[SERVICEACCOUNT]"
+          Password="[SERVICEPASSWORD]"
           ErrorControl="ignore"
           Interactive="no"/>
         <ServiceControl Id="StartService64"

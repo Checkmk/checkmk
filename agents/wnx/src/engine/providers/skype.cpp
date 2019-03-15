@@ -24,6 +24,8 @@
 #include "providers/p_perf_counters.h"
 #include "providers/skype.h"
 
+extern bool G_SkypeTesting;
+
 namespace cma::provider {
 
 void SkypeProvider::loadConfig() {
@@ -92,34 +94,48 @@ std::vector<std::wstring>* GetSkypeCountersVector() {
 std::wstring SkypeProvider::makeSubSection(const std::wstring& RegName) {
     using namespace wtools;
 
+    auto reg_name = wtools::ConvertToUTF8(RegName);
+    if (G_SkypeTesting) XLOG::d.t("Skyping Perf Counter '{}'", reg_name);
+
     uint32_t key_index = 0;
     auto data = details::LoadWinPerfData(RegName, key_index);
     if (data.len_ == 0) {
-        XLOG::d("Not found in registry Skype Perf Counter '{}'",
-                wtools::ConvertToUTF8(RegName));
+        XLOG::t.w("Not found in registry Skype Perf Counter '{}'", reg_name);
         return {};
     }
 
     auto object = perf::FindPerfObject(data, key_index);
-    if (!object) return {};
+    if (!object) {
+        if (G_SkypeTesting)
+            XLOG::d("Not found index {}, for value '{}'", key_index, reg_name);
+        return {};
+    }
+    if (G_SkypeTesting)
+        XLOG::d.t("index {}, for value '{}'", key_index, reg_name);
 
     // first line generate
-    std::wstring wide = L"[" + std::wstring(RegName) + L"]\ninstances";
+    std::wstring wide = L"[" + std::wstring(RegName) + L"]\ninstance";
 
     // second line and data
     const PERF_COUNTER_BLOCK* block = nullptr;
-    auto counters = wtools::perf::GenerateCounters(object, block);
-    auto name_map = wtools::perf::GenerateNameMap();
+    auto counters = perf::GenerateCounters(object, block);
+    auto name_map = perf::GenerateNameMap();
     auto counter_names = perf::GenerateCounterNames(object, name_map);
 
+    if (G_SkypeTesting)
+        XLOG::d.t("scanning {} names and {} counters and map {}",
+                  counter_names.size(), counters.size(), name_map.size());
+
     for (auto& counter_name : counter_names) {
+        if (G_SkypeTesting)
+            XLOG::d.t("scanning {} name", wtools::ConvertToUTF8(counter_name));
         wide += L"," + counter_name;
     }
     wide += L"\n";
 
     // main table
-    auto instance_names = wtools::perf::GenerateInstanceNames(object);
-    auto instances = wtools::perf::GenerateInstances(object);
+    auto instance_names = perf::GenerateInstanceNames(object);
+    auto instances = perf::GenerateInstances(object);
 
     std::vector<std::vector<ULONGLONG>> columns;
     for (const auto& counter : counters) {
@@ -129,26 +145,35 @@ std::wstring SkypeProvider::makeSubSection(const std::wstring& RegName) {
         } else {
             v.emplace_back(perf::GetValueFromBlock(*counter, block));
         }
+        if (G_SkypeTesting)
+            XLOG::d.t("columns[{}] added {} values", columns.size(), v.size());
         columns.push_back(v);
     }
 
-    for (size_t row = 0; row < columns[0].size(); row++) {
-        auto instance_name = instances.size() ? instance_names[row] : L"";
-        wide += L"\"" + instance_name + L"\"";  // "Instance" or ""
+    if (G_SkypeTesting) XLOG::d.t("scanning {} columns", columns.size());
+
+    const auto row_count = columns[0].size();
+    for (size_t row = 0; row < row_count; row++) {
+        auto instance_name =
+            row < instance_names.size() ? instance_names[row] : L"\"\"";
+        wide += instance_name;  // Instance or ""
 
         for (auto column : columns) wide += L"," + std::to_wstring(column[row]);
         wide += L"\n";
     }
-    if (columns[0].size() == 0) return {};
+    if (G_SkypeTesting) {
+        // always provide output
+        XLOG::d.t("columns[0] size  is {}", columns[0].size());
+        return wide;
+    }
 
-    return wide;
+    return columns[0].size() ? wide : L"";
 }
 
 std::string SkypeProvider::makeBody() const {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering");
 
-    auto out_string = makeFirstLine();
     std::wstring wide;
 
     for (auto& registry_name : SkypeCounterNames) {
@@ -156,17 +181,18 @@ std::string SkypeProvider::makeBody() const {
         wide += makeSubSection(registry_name);
     }
 
-    if (wide.empty()) {
-        return "";
+    if (wide.size() || G_SkypeTesting) {
+        // stupid? stupid. This is Windows and Legacy code.
+        // #TODO make this code not such stupid. Thank you.
+        wide += makeSubSection(SkypeAspSomeCounter);
+
+        auto out_string = makeFirstLine();
+        out_string += wtools::ConvertToUTF8(wide);
+        return out_string;
     }
 
-    // stupid? stupid. This is Windows and Legacy code.
-    // #TODO make this code not such stupid. Thank you.
-    wide += makeSubSection(SkypeAspSomeCounter);
-
-    out_string += wtools::ConvertToUTF8(wide);
-
-    return out_string;
+    XLOG::t(XLOG_FUNC + " nothing");
+    return "";
 }
 
 }  // namespace cma::provider

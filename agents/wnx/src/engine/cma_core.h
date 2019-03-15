@@ -1,4 +1,4 @@
-// core undeifned functionaliaty
+// core common functionaliaty
 // probably "file" is better name
 
 #pragma once

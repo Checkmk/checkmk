@@ -29,8 +29,8 @@ constexpr const char* kCarrierNullName = "null";
 constexpr const char* kCarrierFileName = "file";
 constexpr const char* kCarrierDumpName = "dump";
 
-inline std::string BuildPort(const std::string& CarrierName,
-                             const std::string& Address) {
+inline std::string BuildPortName(const std::string& CarrierName,
+                                 const std::string& Address) noexcept {
     return CarrierName + kCarrierNameDelimiter + Address;
 }
 

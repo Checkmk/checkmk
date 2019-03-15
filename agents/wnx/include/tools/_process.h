@@ -219,23 +219,6 @@ inline std::wstring GetCurrentFolder() noexcept {
     return dir;
 }
 
-// process terminator
-inline bool KillProcess(uint32_t ProcessId, int Code = -1) {
-    auto handle = OpenProcess(PROCESS_TERMINATE, FALSE, ProcessId);
-    if (!handle) return true;
-    ON_OUT_OF_SCOPE(CloseHandle(handle));
-
-    if (!TerminateProcess(handle, Code)) {
-        // - we have no problem(process already dead) - ignore
-        // - we have problem: either code is invalid or something wrong
-        // with Windows in all cases just report
-        xlog::d("Cannot terminate process %d gracefully, error %d", ProcessId,
-                GetLastError());
-    }
-
-    return true;
-}
-
 }  // namespace win
 
 inline bool IsFileExist(const std::wstring& File) noexcept {

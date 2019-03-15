@@ -17,8 +17,13 @@
 
 #include "external_port.h"  // windows api abstracted
 
+#include "cap.h"
 #include "cfg.h"
 #include "cvt.h"
+#include "upgrade.h"
+
+// out of namespace
+bool G_SkypeTesting = false;
 
 namespace cma {
 
@@ -267,7 +272,61 @@ int ExecMainService() {
     }
     XLOG::l.i("Server is stopping");
     processor->stopService();
+    XLOG::setup::DuplicateOnStdio(false);
+
+    return 0;
+}
+
+// on -cap
+int ExecCap() {
     XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::EnableDebugLog(true);
+    XLOG::setup::EnableTraceLog(true);
+    XLOG::l.i("Installing...");
+    cma::cfg::cap::Install();
+    XLOG::l.i("End of!");
+    return 0;
+}
+
+// on -start_legacy
+int ExecStartLegacy() {
+    using namespace cma::cfg::upgrade;
+
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::EnableDebugLog(true);
+    XLOG::setup::EnableTraceLog(true);
+    FindActivateStartLegacyAgent();
+    XLOG::l.i("End of!");
+
+    return 0;
+}
+
+// on -stop_legacy
+int ExecStopLegacy() {
+    using namespace cma::cfg::upgrade;
+
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::EnableDebugLog(true);
+    XLOG::setup::EnableTraceLog(true);
+    FindStopDeactivateLegacyAgent();
+    XLOG::l.i("End of!");
+
+    return 0;
+}
+
+// on -upgrade
+int ExecUpgradeParam(bool Force) {
+    using namespace cma::cfg::upgrade;
+
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::EnableDebugLog(true);
+    XLOG::setup::EnableTraceLog(true);
+    UpgradeLegacy(Force);
+    XLOG::l.i("End of!");
 
     return 0;
 }
@@ -288,7 +347,9 @@ const wchar_t* GetMultiSzEntry(wchar_t*& Pos, const wchar_t* End) {
 // on -skype
 // verify that skype business is present
 int ExecSkypeTest() {
+    G_SkypeTesting = true;
     XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
     ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false););
     XLOG::l.i("<<<Skype testing>>>");
     cma::provider::SkypeProvider skype;
@@ -330,23 +391,33 @@ int ExecSkypeTest() {
     //    skype.generateContent();
     XLOG::l.i("<<<Skype testing END>>>");
     return 0;
-}  // namespace cma::provider
+}
 
 // normal BLOCKING FOR EVER CALL
 // blocking call from the Windows Service Manager
+// exception free
+// returns -1 on failure
 int ServiceAsService(
     std::chrono::milliseconds Delay,
-    std::function<bool(const void* Processor)> InternalCallback) {
+    std::function<bool(const void* Processor)> InternalCallback) noexcept {
     using namespace cma::srv;
-    using namespace std::chrono;
-    int counter = 0;
-    auto processor = new ServiceProcessor(Delay, InternalCallback);
-    wtools::ServiceController service_controller(processor);
-    auto ret = service_controller.registerAndRun(
-        cma::srv::kServiceName);  // we will stay here till service will be
-                                  // stopped itself or from outside
 
-    return ret ? 0 : -1;
+    // infinite loop to protect from exception
+    while (1) {
+        try {
+            auto processor = new ServiceProcessor(Delay, InternalCallback);
+            wtools::ServiceController service_controller(processor);
+            auto ret = service_controller.registerAndRun(
+                cma::srv::kServiceName);  // we will stay here till service will
+                                          // be stopped itself or from outside
+            return ret ? 0 : -1;
+        } catch (const std::exception& e) {
+            XLOG::l.crit("Exception hit {} in main proc", e.what());
+        } catch (...) {
+            XLOG::l.crit("Unknown Exception in main proc");
+        }
+    }
+    // unreachable
 }
 
 }  // namespace srv

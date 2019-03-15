@@ -19,12 +19,32 @@
 
 #include "fmt/format.h"
 
+// Popular Data Structures Here
+// I am not sure...
+namespace cma {
+using ByteVector = std::vector<unsigned char>;
+}
+
 namespace cma::tools {
+
+inline void sleep(int Milliseconds) noexcept {
+    using namespace std::chrono;
+    std::this_thread::sleep_until(steady_clock::now() +
+                                  milliseconds(Milliseconds));
+}
 
 // gtest [+]
 inline bool IsEqual(const std::string& Left, const std::string& Right) {
     return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
                       [](char LeftChar, char RightChar) {
+                          return std::tolower(LeftChar) ==
+                                 std::tolower(RightChar);
+                      });
+}
+
+inline bool IsEqual(const std::wstring& Left, const std::wstring& Right) {
+    return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
+                      [](wchar_t LeftChar, wchar_t RightChar) {
                           return std::tolower(LeftChar) ==
                                  std::tolower(RightChar);
                       });
@@ -227,92 +247,6 @@ uint64_t ConvertToUint64(const T& Str, uint64_t Default) noexcept {
 #if defined(WINDOWS_OS)
 
 namespace win {
-// gtest [+]
-// returns data from the root machine registry
-inline uint32_t GetRegistryValue(const std::wstring Key,
-                                 const std::wstring Value,
-                                 uint32_t Default) noexcept {
-    HKEY hkey = 0;
-    auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
-    if (ERROR_SUCCESS == result && hkey) {
-        ON_OUT_OF_SCOPE(RegCloseKey(hkey));
-        DWORD type = REG_DWORD;
-        uint32_t buffer;
-        DWORD count = sizeof(buffer);
-        auto ret = RegQueryValueExW(hkey, Value.c_str(), 0, &type,
-                                    reinterpret_cast<LPBYTE>(&buffer), &count);
-        if (ret == ERROR_SUCCESS && count && type == REG_DWORD) {
-            return buffer;
-        }
-
-        // failure here
-        xlog::d(XLOG_FLINE + "Absent %ls%ls query return code %d", Key.c_str(),
-                Value.c_str(), ret);
-        return Default;
-    }
-
-    return Default;
-}
-
-inline std::wstring GetRegistryValue(const std::wstring Key,
-                                     const std::wstring Value,
-                                     const std::wstring Default) noexcept {
-    HKEY hkey = 0;
-    auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
-    if (ERROR_SUCCESS == result && hkey) {
-        ON_OUT_OF_SCOPE(RegCloseKey(hkey));
-        DWORD type = REG_SZ;
-        wchar_t buffer[512];
-        DWORD count = sizeof(buffer);
-        auto ret = RegQueryValueExW(hkey, Value.c_str(), 0, &type,
-                                    reinterpret_cast<LPBYTE>(buffer), &count);
-
-        // check for errors
-        auto type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
-        if (count == 0 || !type_ok) {
-            // failure here
-            xlog::l(XLOG_FLINE + "Absent %ls %ls query return code %d",
-                    Key.c_str(), Value.c_str(), ret);
-            return Default;
-        }
-
-        if (ret == ERROR_SUCCESS) {
-            return buffer;
-        }
-
-        if (ret == ERROR_MORE_DATA) {
-            // realloc required
-            DWORD type = REG_SZ;
-            auto buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
-            ON_OUT_OF_SCOPE(delete[] buffer_big);
-            DWORD count = sizeof(count);
-            ret =
-                RegQueryValueExW(hkey, Value.c_str(), 0, &type,
-                                 reinterpret_cast<LPBYTE>(buffer_big), &count);
-
-            // check for errors
-            type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
-            if (count == 0 || !type_ok) {
-                // failure here
-                xlog::l(XLOG_FLINE + "Absent %ls %ls query return code %d",
-                        Key.c_str(), Value.c_str(), ret);
-                return Default;
-            }
-
-            if (ret == ERROR_SUCCESS) {
-                return buffer_big;
-            }
-            // failure here
-            xlog::l(XLOG_FLINE + "Absent %ls%ls query return code %d",
-                    Key.c_str(), Value.c_str(), ret);
-        }
-    }
-    // failure here
-    xlog::l(XLOG_FLINE + "Cannot open Key %ls query return code %d",
-            Key.c_str(), result);
-    return Default;
-}
-
 template <typename T>
 inline bool SetEnv(const T* EnvVarName, const T* EnvVarValue) {}
 

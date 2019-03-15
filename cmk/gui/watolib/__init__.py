@@ -321,7 +321,7 @@ def init_wato_datastructures(with_wato_lock=False):
 
 
 def _need_to_create_sample_config():
-    if os.path.exists(multisite_dir() + "hosttags.mk") \
+    if os.path.exists(multisite_dir() + "tags.mk") \
         or os.path.exists(wato_root_dir() + "rules.mk") \
         or os.path.exists(wato_root_dir() + "groups.mk") \
         or os.path.exists(wato_root_dir() + "notifications.mk") \

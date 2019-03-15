@@ -57,6 +57,9 @@ from cmk.gui.plugins.wato import (
     HTTPProxyReference,
 )
 
+from cmk.gui.plugins.wato.utils import (
+    PasswordFromStore,)
+
 
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures
@@ -631,6 +634,188 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                      help=_("Here you can configure timeout settings."),
                      default_value=10,
                  )),
+            ],
+        )
+
+
+@notification_parameter_registry.register
+class NotificationParameterServiceNow(NotificationParameter):
+    @property
+    def ident(self):
+        return "servicenow"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            optional_keys=[
+                'urgency', 'impact', 'timeout', 'host_short_desc', 'svc_short_desc', 'host_desc',
+                'svc_desc', 'ack_state', 'dt_state'
+            ],
+            elements=[
+                ("url",
+                 HTTPUrl(
+                     title=_("Servicenow URL"),
+                     help=_("Configure your servicenow URL here (eg. https://myservicenow.com)."),
+                     allow_empty=False,
+                 )),
+                ("username", TextAscii(
+                    title=_("Username"),
+                    size=40,
+                    allow_empty=False,
+                )),
+                ("password", PasswordFromStore(
+                    title=_("Password of the user"),
+                    allow_empty=False,
+                )),
+                ("caller",
+                 TextAscii(
+                     title=_("Caller ID"),
+                     help=_("Caller is the user in behalf of whom the incident is being reported "
+                            "within servicenow. Please enter the name of the caller here."),
+                 )),
+                ("host_short_desc",
+                 TextAscii(
+                     title=_("Short description for host incidents"),
+                     help=_("Text that should be set in field <tt>Short description</tt> "
+                            "for host notifications."),
+                     default_value="Check_MK: $HOSTNAME$ - $HOSTSHORTSTATE$",
+                     size=64,
+                 )),
+                ("svc_short_desc",
+                 TextAscii(
+                     title=_("Short description for service incidents"),
+                     help=_("Text that should be set in field <tt>Short description</tt> "
+                            "for service notifications."),
+                     default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $SERVICESHORTSTATE$",
+                     size=68,
+                 )),
+                ("host_desc",
+                 TextAreaUnicode(
+                     title=_("Description for host incidents"),
+                     help=_("Text that should be set in field <tt>Description</tt> "
+                            "for host notifications."),
+                     rows=7,
+                     cols=58,
+                     monospaced=True,
+                     default_value="""Host: $HOSTNAME$
+Event:    $EVENT_TXT$
+Output:   $HOSTOUTPUT$
+Perfdata: $HOSTPERFDATA$
+$LONGHOSTOUTPUT$
+""")),
+                ("svc_desc",
+                 TextAreaUnicode(
+                     title=_("Description for service incidents"),
+                     help=_("Text that should be set in field <tt>Description</tt> "
+                            "for service notifications."),
+                     rows=11,
+                     cols=58,
+                     monospaced=True,
+                     default_value="""Host: $HOSTNAME$
+Service:  $SERVICEDESC$
+Event:    $EVENT_TXT$
+Output:   $SERVICEOUTPUT$
+Perfdata: $SERVICEPERFDATA$
+$LONGSERVICEOUTPUT$
+""")),
+                ("urgency",
+                 DropdownChoice(
+                     title=_("Urgency"),
+                     help=_("See <a href=\"https://docs.servicenow.com/bundle/"
+                            "helsinki-it-service-management/page/product/incident-management/"
+                            "reference/r_PrioritizationOfIncidents.html\" target=\"_blank\">"
+                            "ServiceNow Incident</a> for more information."),
+                     choices=[
+                         ("low", _("Low")),
+                         ("medium", _("Medium")),
+                         ("high", _("High")),
+                     ],
+                     default_value="low",
+                 )),
+                ("impact",
+                 DropdownChoice(
+                     title=_("Impact"),
+                     help=_("See <a href=\"https://docs.servicenow.com/bundle/"
+                            "helsinki-it-service-management/page/product/incident-management/"
+                            "reference/r_PrioritizationOfIncidents.html\" target=\"_blank\">"
+                            "ServiceNow Incident</a> for more information."),
+                     choices=[
+                         ("low", _("Low")),
+                         ("medium", _("Medium")),
+                         ("high", _("High")),
+                     ],
+                     default_value="minor",
+                 )),
+                ("ack_state",
+                 Dictionary(
+                     title=_("Settings for incident state in case of acknowledgement"),
+                     help=_("Here you can define the state of the incident in case of an "
+                            "acknowledgement of the affected host or service problem."),
+                     elements=[
+                         ("start",
+                          DropdownChoice(
+                              title=_("State of incident if acknowledgement is set"),
+                              help=_("Here you can define the state of the incident in case of an "
+                                     "acknowledgement of the host or service problem."),
+                              choices=[
+                                  ("none", _("Don't change state")),
+                                  ("new", _("New")),
+                                  ("progress", _("In Progress")),
+                                  ("hold", _("On Hold")),
+                                  ("resolved", _("Resolved")),
+                                  ("closed", _("Closed")),
+                                  ("canceled", _("Canceled")),
+                              ],
+                              default_value="none",
+                          )),
+                     ],
+                 )),
+                ("dt_state",
+                 Dictionary(
+                     title=_("Settings for incident state in case of downtime"),
+                     help=_("Here you can define the state of the incident in case of a "
+                            "downtime of the affected host or service."),
+                     elements=[
+                         ("start",
+                          DropdownChoice(
+                              title=_("State of incident if downtime is set"),
+                              help=_("Here you can define the state of the incident in case of an "
+                                     "acknowledgement of the host or service problem."),
+                              choices=[
+                                  ("none", _("Don't change state")),
+                                  ("new", _("New")),
+                                  ("progress", _("In Progress")),
+                                  ("hold", _("On Hold")),
+                                  ("resolved", _("Resolved")),
+                                  ("closed", _("Closed")),
+                                  ("canceled", _("Canceled")),
+                              ],
+                              default_value="none",
+                          )),
+                         ("end",
+                          DropdownChoice(
+                              title=_("State of incident if downtime expires"),
+                              help=_("Here you can define the state of the incident in case of an "
+                                     "ending acknowledgement of the host or service problem."),
+                              choices=[
+                                  ("none", _("Don't change state")),
+                                  ("new", _("New")),
+                                  ("progress", _("In Progress")),
+                                  ("hold", _("On Hold")),
+                                  ("resolved", _("Resolved")),
+                                  ("closed", _("Closed")),
+                                  ("canceled", _("Canceled")),
+                              ],
+                              default_value="none",
+                          )),
+                     ],
+                 )),
+                ("timeout",
+                 TextAscii(
+                     title=_("Set optional timeout for connections to servicenow"),
+                     help=_("Here you can configure timeout settings in seconds."),
+                     default_value=10,
+                     size=3)),
             ],
         )
 

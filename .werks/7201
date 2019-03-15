@@ -1,0 +1,15 @@
+Title: Servicenow: Notification plugin
+Level: 2
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552645826
+Class: feature
+
+Check_MK now supports integration with Servicenow.
+You can create, update and close incidents for Host an Service Problems.
+
+Please see the inline help of the notification method rule within wato for detailed options.
+
+CMK-1167

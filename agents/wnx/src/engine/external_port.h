@@ -14,6 +14,9 @@
 
 #include "common/cfg_info.h"
 
+#include "cfg.h"
+#include "encryption.h"
+
 namespace cma::world {
 using ReplyFunc =
     std::function<std::vector<uint8_t>(const std::string IpAddress)>;
@@ -73,7 +76,8 @@ public:
             }
 
             if (send_back.size()) {
-                do_write(send_back.data(), send_back.size());
+                auto crypt = cma::encrypt::MakeCrypt();
+                do_write(send_back.data(), send_back.size(), crypt.get());
                 XLOG::l.i("Send {} bytes of data", send_back.size());
 
                 if (tgt::IsDebug()) {
@@ -100,12 +104,16 @@ private:
         return ip;
     }
     void do_read();
-    void do_write(const void* Data, std::size_t Length);
+    size_t allocCryptBuffer(const cma::encrypt::Commander* Crypt) noexcept;
+    void do_write(const void* Data, std::size_t Length,
+                  cma::encrypt::Commander* Crypt);
 
     asio::ip::tcp::socket socket_;
     enum { kMaxLength = 1024 };
     char data_[kMaxLength];
     const bool mode_one_shot_ = cma::cfg::IsOneShotMode();
+    const size_t segment_size_ = 48 * 1024;
+    std::unique_ptr<char> crypt_buf_;
 };
 
 }  // namespace cma::world
@@ -122,9 +130,8 @@ namespace cma::world {
 class ExternalPort : public std::enable_shared_from_this<ExternalPort> {
 public:
     // ctor&dtor
-    ExternalPort(wtools::BaseServiceProcessor* Owner,
-                 uint16_t Port = cma::cfg::kMainPort)
-        : port_(Port)
+    ExternalPort(wtools::BaseServiceProcessor* Owner, uint16_t Port = 0)
+        : default_port_(Port)
         , shutdown_thread_(false)
         , io_started_(false)
         , owner_(Owner) {}
@@ -146,15 +153,19 @@ public:
     void reloadConfig() {}
     bool isIoStarted() const { return io_started_; }
 
+    auto defaultPort() const { return default_port_; }
+
 private:
     wtools::BaseServiceProcessor* owner_ = nullptr;
     // Internal class from  ASIO documentation
     class server {
     public:
-        server(asio::io_context& io_context, short port,
+        server(asio::io_context& io_context, bool Ipv6, short port,
                cma::world::ReplyFunc Reply)
-            : acceptor_(io_context,
-                        asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port))
+            : acceptor_(
+                  io_context,
+                  asio::ip::tcp::endpoint(
+                      Ipv6 ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), port))
             , socket_(io_context) {
 #if 0
             // Binding from ASIO example
@@ -174,10 +185,33 @@ private:
         // this is the only entry point
         void do_accept(cma::world::ReplyFunc Reply) {
             acceptor_.async_accept(socket_, [this, Reply](std::error_code ec) {
-                if (!ec) {
-                    auto x = std::make_shared<world::AsioSession>(
-                        std::move(socket_));
-                    x->start(Reply);
+                if (ec.value()) {
+                    XLOG::l("Error on connection {} '{}'", ec.value(),
+                            ec.message());
+                } else {
+                    try {
+                        auto remote_ep = socket_.remote_endpoint();
+                        auto addr = remote_ep.address();
+                        auto ip = addr.to_string();
+                        XLOG::d.i("Connected from '{}' ipv6 {}", ip,
+                                  addr.is_v6());
+
+                        auto x =
+                            std::make_shared<AsioSession>(std::move(socket_));
+
+                        // only_from checking
+                        // we are doping it always
+                        if (!cma::cfg::groups::global.isIpAddressAllowed(ip)) {
+                            XLOG::d.i("Address '{}' is not allowed", ip);
+                            return;
+                        }
+
+                        // #TODO blocking call here. This is not a good idea
+                        x->start(Reply);
+                    } catch (const std::exception& e) {
+                        XLOG::l(XLOG_FLINE + " Thrown unexpected exception {}",
+                                e.what());
+                    }
                 }
 
                 if (!mode_one_shot_)
@@ -217,7 +251,7 @@ protected:
         shutdown_thread_ = true;
     }
 
-    uint16_t port_ = cma::cfg::kMainPort;  // work port
+    uint16_t default_port_ = 0;  // work port
     const bool mode_one_shot_ = cma::cfg::IsOneShotMode();
 
     void ioThreadProc(cma::world::ReplyFunc Reply);

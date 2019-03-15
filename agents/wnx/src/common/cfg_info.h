@@ -140,6 +140,7 @@ constexpr const wchar_t* kAgentMrpe = L"mrpe";            // mrpe
 constexpr const wchar_t* kCache = L"cache";          // owned by agent
 constexpr const wchar_t* kUserPlugins = L"plugins";  // owned by user
 constexpr const wchar_t* kLocal = L"local";          // owned by user
+constexpr const wchar_t* kInstall = L"install";      // owned by site
 constexpr const wchar_t* kBakery = L"bakery";        // owned by site
 constexpr const wchar_t* kState = L"state";          // owned by plugins
 constexpr const wchar_t* kPluginConfig = L"config";  // owned by plugins

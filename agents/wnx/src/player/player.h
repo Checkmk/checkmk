@@ -188,7 +188,7 @@ public:
 
             if (KillWhatLeft) {
                 for (auto pid : waiting_processes) {
-                    cma::tools::win::KillProcess(pid, -1);
+                    wtools::KillProcess(pid, -1);
                     XLOG::d("Process {} killed", pid);  // not normal situation
                 }
             }

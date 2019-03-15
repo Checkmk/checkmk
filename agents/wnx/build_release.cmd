@@ -10,6 +10,7 @@ rem REMOTE_MACHINE - final artefacts
 rem LOCAL_IMAGES_EXE - exe
 rem LOCAL_IMAGE_PDB - pdb
 rem WNX_BUILD - in the future this is name of subfloder to build out
+rem creates # artefacts in the output folder
 
 set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts
@@ -26,6 +27,8 @@ set LOCAL_IMAGES_EXE=%arte%\exe
 
 if "%1" == "SIMULATE_OK" powershell Write-Host "Successful Build" -Foreground Green && echo aaa > %arte%\check_mk_service.msi  && exit 0
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foreground Red && del %arte%\check_mk_service.msi  && exit 8
+
+call %cur_dir%\clean_artefacts.cmd 
 
 powershell Write-Host "Building MSI..." -Foreground Green
 set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\msbuild.exe"
@@ -73,9 +76,12 @@ powershell Write-Host "Unit test SUCCESS" -Foreground Green
 popd
 powershell Write-Host "Unit test failed" -Foreground Red 
 powershell Write-Host "Killing msi in artefacts" -Foreground Red 
-del %REMOTE_MACHINE%\check_mk_service.msi
+call %cur_dir%\clean_artefacts.cmd 
 exit 100
 :end
+copy %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent.msi
+copy %REMOTE_MACHINE%\check_mk_service32.exe %REMOTE_MACHINE%\check_mk_agent.exe
+copy %REMOTE_MACHINE%\check_mk_service64.exe %REMOTE_MACHINE%\check_mk_agent-64.exe
 
 
 

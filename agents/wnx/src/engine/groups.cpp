@@ -67,7 +67,8 @@ void Global::loadFromMainConfig() {
 
         execute_ = GetArray<string>(groups::kGlobal, vars::kExecute);
 
-        only_from_ = GetArray<string>(groups::kGlobal, vars::kOnlyFrom);
+        auto only_from = GetArray<string>(groups::kGlobal, vars::kOnlyFrom);
+        fillOnlyFrom(only_from);
 
         enabled_sections_ =
             GetArray<string>(groups::kGlobal, vars::kSectionsEnabled);
@@ -223,6 +224,7 @@ std::string ReplacePredefinedMarkers(const std::string Path) {
     const std::pair<const std::string, const std::wstring> pairs[] = {
         {vars::kPluginCoreFolder, GetSystemPluginsDir()},
         {vars::kPluginUserFolder, GetUserPluginsDir()},
+        {vars::kLocalUserFolder, GetLocalDir()},
         {vars::kProgramDataFolder, GetUserDir()}
 
     };

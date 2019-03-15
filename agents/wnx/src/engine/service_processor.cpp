@@ -20,44 +20,16 @@ namespace cma::srv {
 
 // Implementation of the Windows signals
 
-//
-
-/*
-void ServiceProcessor::processStarterThread() {
-    XLOG::t("main Wait Loop");
-    HANDLE job;
-    cma::tools::RunStdCommandAsJob(
-        job, L"C:\\ProgramData\\CheckMK\\Agent\\plugins\\delay120.cmd");
-    while (1) {
-        using namespace std::chrono;
-
-        // wait and check
-        std::unique_lock<std::mutex> l(lock_stopper_);
-        auto stop_requested =
-            stop_thread_.wait_until(l, steady_clock::now() + 1000ms,
-                                    [this]() { return stop_requested_; });
-        if (stop_requested) {
-            XLOG::d("Stop request is set");
-            break;  // signaled stop
-        }
-    }
-    TerminateJobObject(job, 0);
-    CloseHandle(job);
-    XLOG::t("main Wait Loop END");
-}
-*/
-
+// starter
 void ServiceProcessor::startService() {
     if (thread_.joinable()) {
-        xlog::l("Attempt to start service twice, no way!").print();
+        XLOG::l("Attempt to start service twice, no way!");
         return;
     }
+
     thread_ = std::thread(&ServiceProcessor::mainThread, this, &external_port_);
-    /*
-        process_thread_ =
-            std::thread(&ServiceProcessor::processStarterThread, this);
-    */
-    XLOG::t("Successful start of thread");
+
+    XLOG::l.t("Successful start of thread");
 }
 
 void ServiceProcessor::startServiceAsLegacyTest() {
@@ -85,10 +57,12 @@ void ServiceProcessor::stopService() {
 // #TODO - implement
 // this is not so simple we have to pause main IO thread
 // and I do not know what todo with external port
-void ServiceProcessor::pauseService() {}
+void ServiceProcessor::pauseService() { XLOG::l.t("PAUSE is not implemented"); }
 
 // #TODO - implement
-void ServiceProcessor::continueService() {}
+void ServiceProcessor::continueService() {
+    XLOG::l.t("CONTINUE is not implemented");
+}
 
 void ServiceProcessor::shutdownService() { stopService(); }
 
@@ -181,7 +155,7 @@ void ServiceProcessor::preLoadConfig() {
 int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     using namespace cma::cfg;
 
-    vf_.resize(0);
+    vf_.clear();
     max_timeout_ = 0;
 
 #if 0
@@ -371,7 +345,7 @@ bool TheMiniProcess::stop() {
         lk.unlock();
         XLOG::l("Killing process {}", process_id_);
         wtools::KillProcessTree(pid);
-        cma::tools::win::KillProcess(pid);
+        wtools::KillProcess(pid);
         return true;
     }
     return false;

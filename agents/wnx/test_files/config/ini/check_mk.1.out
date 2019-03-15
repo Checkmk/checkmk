@@ -1,0 +1,874 @@
+<<<check_mk>>>
+Version: 1.5.0p12
+BuildDate: Feb 16 2019
+AgentOS: windows
+Hostname: sasv0166
+Architecture: 64bit
+WorkingDirectory: C:\Windows\system32
+ConfigFile: C:\Program Files (x86)\check_mk\check_mk.ini
+LocalConfigFile: C:\Program Files (x86)\check_mk\check_mk_local.ini
+AgentDirectory: C:\Program Files (x86)\check_mk
+PluginsDirectory: C:\Program Files (x86)\check_mk\plugins
+StateDirectory: C:\Program Files (x86)\check_mk\state
+ConfigDirectory: C:\Program Files (x86)\check_mk\config
+TempDirectory: C:\Program Files (x86)\check_mk\temp
+LogDirectory: C:\Program Files (x86)\check_mk\log
+SpoolDirectory: C:\Program Files (x86)\check_mk\spool
+LocalDirectory: C:\Program Files (x86)\check_mk\local
+ScriptStatistics: Plugin C:1 E:0 T:0 Local C:0 E:0 T:0
+OnlyFrom: 127.0.0.1/32 172.22.237.25/32 172.22.237.24/32 195.95.137.6/32 0:0:0:0:0:0:0:1/128 0:0:0:0:0:ffff:ac16:ed19/128 0:0:0:0:0:ffff:ac16:ed18/128 0:0:0:0:0:ffff:c35f:8906/128
+<<<uptime>>>
+1321509
+<<<df:sep(9)>>>
+C:\	NTFS	51887100	19632652	32254448	38%	C:\
+D:\	NTFS	62783404	22985088	39798316	37%	D:\
+E:\	NTFS	52297596	4536236	47761360	9%	E:\
+P:\	NTFS	16744316	15764252	980064	95%	P:\
+<<<ps:sep(9)>>>
+(SYSTEM,64,4,0,0,0,0,48758200625000,0,4,1325125)	System Idle Process
+(SYSTEM,3392,276,0,4,0,0,64070468750,9751,101,1321525)	System
+(SYSTEM,4308,1144,0,244,0,0,2031250,55,2,1321525)	smss.exe
+(SYSTEM,56328,6252,0,360,2,951718750,3651250000,750,12,1321461)	csrss.exe
+(\\NT AUTHORITY\SYSTEM,2147524656,4052,0,412,0,156250,3750000,87,1,1321454)	wininit.exe
+(SYSTEM,40000,3428,0,420,1,156250,4687500,96,8,1321454)	csrss.exe
+(\\NT AUTHORITY\SYSTEM,2147535952,5740,0,464,1,0,3437500,128,4,1321454)	winlogon.exe
+(SYSTEM,2147518684,11152,0,508,6,23689531250,37628593750,327,3,1321444)	services.exe
+(\\NT AUTHORITY\SYSTEM,2147533032,18736,0,516,9,2276406250,1656718750,1158,8,1321444)	lsass.exe
+(\\NT AUTHORITY\SYSTEM,2147533888,13212,0,588,5,72500000,83125000,511,10,1321439)	svchost.exe
+(\\NT AUTHORITY\NETWORK SERVICE,2147518648,9768,0,620,5,2523750000,1848437500,402,10,1321439)	svchost.exe
+(\\NT AUTHORITY\LOCAL SERVICE,2147545168,19876,0,724,16,1701406250,3177968750,685,18,1321438)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,2147636016,31196,0,752,16,1875000,5000000,356,10,1321438)	LogonUI.exe
+(\\Window Manager\DWM-1,2147582812,28792,0,764,16,625000,1406250,189,10,1321438)	dwm.exe
+(\\NT AUTHORITY\SYSTEM,2147697592,84588,0,792,66,21553281250,16403281250,1476,49,1321438)	svchost.exe
+(\\NT AUTHORITY\LOCAL SERVICE,2147596820,16280,0,832,8,24531250,30937500,463,18,1321438)	svchost.exe
+(\\NT AUTHORITY\NETWORK SERVICE,2148794624,26408,0,980,14,568593750,835937500,862,18,1321438)	svchost.exe
+(\\NT AUTHORITY\LOCAL SERVICE,2147556760,15008,0,552,11,31640468750,17499375000,405,20,1321437)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,2147558648,10516,0,1116,4,36250000,43281250,441,10,1321436)	spoolsv.exe
+(\\WW-INTERN\svc_ctms_hk,1696876,113656,0,1148,200,271875000,119062500,510,27,1321435)	emmaintag.exe
+(\\NT AUTHORITY\SYSTEM,28508,7028,0,1236,3,506250000,514375000,156,6,1321430)	CO-sysmsg.exe
+(\\NT AUTHORITY\SYSTEM,69512,10696,0,1264,5,73593750,43281250,173,4,1321430)	p_ctmag.exe
+(\\NT AUTHORITY\SYSTEM,2147586028,11484,0,1292,3,312500,2343750,221,8,1321429)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,36964,7136,0,1316,3,3593750,3750000,102,4,1321429)	p_ctmat.exe
+(\\NT AUTHORITY\SYSTEM,57336,4248,0,1324,1,468750,625000,85,2,1321429)	pg_ctl.exe
+(\\NT AUTHORITY\SYSTEM,2147508128,2824,0,1332,0,312500,156250,49,1,1321429)	conhost.exe
+(\\NT AUTHORITY\SYSTEM,65732,9024,0,1348,4,16406250,12031250,140,2,1321429)	p_ctmatw.exe
+(\\NT AUTHORITY\SYSTEM,2147508128,2820,0,1356,0,156250,312500,50,1,1321429)	conhost.exe
+(\\NT AUTHORITY\SYSTEM,4143760,66320,0,1448,264,59687500,26406250,199,16,1321428)	EM_Msgapi_Service.exe
+(\\NT AUTHORITY\SYSTEM,4163684,152644,0,1472,237,145781250,32031250,310,22,1321428)	EM_WSapi_Service.exe
+(\\NT AUTHORITY\SYSTEM,2216016,106116,0,1500,7,570000000,5796562500,2617,3,1321428)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2147508428,3048,0,1508,0,85625000,329375000,101,2,1321428)	conhost.exe
+(\\NT AUTHORITY\SYSTEM,2214584,4540,0,1556,2,3750000,14687500,2485,3,1321427)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2148358936,14412,0,1076,8,47968750,9062500,440,13,1321426)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,2147585236,60636,0,1176,54,145000000,84062500,157,5,1321426)	WmiApSrv.exe
+(\\NT AUTHORITY\SYSTEM,60612,6092,0,2052,1,625000,1562500,119,2,1321426)	RSCDsvc.exe
+(\\NT AUTHORITY\SYSTEM,125600,38036,0,2120,25,145937500,192500000,1181,3,1321426)	RSCD.exe
+(\\NT AUTHORITY\NETWORK SERVICE,2147573748,28404,0,2220,19,18260468750,52189687500,804,12,1321425)	WmiPrvSE.exe
+(\\NT AUTHORITY\SYSTEM,2147590372,32708,0,2228,24,5144687500,890837500000,363,10,1321425)	WmiPrvSE.exe
+(\\NT AUTHORITY\SYSTEM,2212528,1057776,0,2652,8,13281250,79531250,2483,2,1321424)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2212528,19240,0,2660,7,1562500,5000000,2482,2,1321424)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2212528,22640,0,2668,7,625000,2343750,2482,2,1321424)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2216624,8636,0,2676,10,9218750,270625000,2483,2,1321424)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2210480,4696,0,2684,2,2812500,13906250,2486,2,1321424)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2212528,5584,0,2692,3,573281250,1034062500,2484,2,1321424)	postgres.exe
+(\\NT AUTHORITY\NETWORK SERVICE,2147688268,71260,0,2648,63,50781250,69218750,830,37,1321415)	svchost.exe
+(\\NT AUTHORITY\NETWORK SERVICE,2147509248,5260,0,2468,1,625000,3593750,114,3,1321414)	svchost.exe
+(\\WW-INTERN\svc_ctms_hk,38216,13860,0,3548,7,3583593750,3290625000,130,1,1321397)	Naming_Service.exe
+(\\WW-INTERN\svc_ctms_hk,2147508128,2892,0,3540,0,1093750,625000,50,1,1321397)	conhost.exe
+(\\WW-INTERN\svc_ctms_hk,2161148,408184,0,3904,436,1628593750,294375000,631,46,1321383)	javaw.exe
+(\\WW-INTERN\svc_ctms_hk,2068644,297512,0,2208,372,330312500,57812500,334,26,1321373)	javaw.exe
+(\\WW-INTERN\svc_ctms_hk,1808388,159176,0,2612,224,5150000000,1533593750,1817,90,1321346)	emcms.exe
+(\\WW-INTERN\svc_ctms_hk,2147508428,3048,0,1228,0,1250000,2812500,50,2,1321346)	conhost.exe
+(\\WW-INTERN\svc_ctms_hk,2153972,375868,0,1164,466,871718750,144843750,675,51,1321345)	emforecastsrv.exe
+(\\WW-INTERN\svc_ctms_hk,2147508428,3052,0,1856,0,1875000,4531250,50,2,1321345)	conhost.exe
+(\\WW-INTERN\svc_ctms_hk,2147499084,2768,0,2572,1,468750,1093750,39,1,1321344)	cmd.exe
+(\\WW-INTERN\svc_ctms_hk,2147508428,3108,0,576,0,781250,1562500,51,2,1321344)	conhost.exe
+(\\WW-INTERN\svc_ctms_hk,2450136,713340,0,952,694,200549218750,58868750000,7026,112,1321343)	emguisrv.exe
+(\\WW-INTERN\svc_ctms_hk,2147508428,3108,0,2248,0,781250,2031250,51,2,1321343)	conhost.exe
+(\\WW-INTERN\svc_ctms_hk,1676192,148080,0,3176,152,6917343750,2316406250,492,24,1321342)	emgtw.exe
+(\\WW-INTERN\svc_ctms_hk,2147508428,3068,0,3200,0,1093750,2031250,50,2,1321342)	conhost.exe
+(\\WW-INTERN\svc_ctms_hk,1675580,168856,0,2088,171,8095781250,1661093750,504,24,1321341)	emgtw.exe
+(\\WW-INTERN\svc_ctms_hk,2147508428,3080,0,548,0,156250,3281250,50,2,1321341)	conhost.exe
+(\\WW-INTERN\svc_ctms_hk,1672348,135860,0,5008,184,529843750,92031250,557,32,1321336)	java.exe
+(\\WW-INTERN\svc_ctms_hk,1630972,83760,0,5996,198,680625000,624687500,331,17,1321329)	emcmsg.exe
+(\\WW-INTERN\svc_ctms_hk,2147508428,3088,0,6044,0,937500,1250000,50,2,1321329)	conhost.exe
+(\\NT AUTHORITY\SYSTEM,110276,14868,0,5884,17,125506093750,139891250000,310,8,1321295)	BESClient.exe
+(\\NT AUTHORITY\SYSTEM,87168,15916,0,5964,7,137187500,211093750,421,4,1321293)	csia.exe
+(\\NT AUTHORITY\NETWORK SERVICE,2147525748,7324,0,5056,2,2500000,5312500,170,9,1321293)	msdtc.exe
+(\\NT AUTHORITY\SYSTEM,2147510932,4912,0,6520,1,1718750,3281250,117,2,1313307)	svchost.exe
+(\\NT AUTHORITY\LOCAL SERVICE,2147509236,4160,0,6536,0,1406250,1875000,91,1,1313290)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,63824,8432,0,5368,2,1406250,2343750,126,2,1304259)	VGAuthService.exe
+(\\NT AUTHORITY\SYSTEM,2225724,87348,0,3068,11,12187500,16875000,2513,3,1304246)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225724,88708,0,6608,11,14531250,11406250,2500,3,1304246)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2237028,706396,0,7228,18,9032656250,6365000000,2649,3,1304246)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2237020,295284,0,5444,17,2337968750,1647812500,2630,3,1304246)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,37408,0,280,10,47656250,52812500,2500,3,1304239)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2147582668,20108,0,2512,9,2586406250,2952031250,315,10,1304237)	vmtoolsd.exe
+(\\NT AUTHORITY\SYSTEM,2225544,105236,0,8112,11,47187500,34062500,2528,3,1304236)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,102080,0,2912,11,114062500,61250000,2527,3,1304235)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,45068,0,6776,10,63281250,62031250,2504,3,1304231)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,29656,0,4528,10,2031250,2968750,2506,3,1304225)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2237084,191784,0,6788,18,1020312500,591562500,2907,3,1304225)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2237084,187956,0,356,19,1625937500,901562500,2913,3,1304225)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2226780,213404,0,7176,12,337968750,198281250,2618,3,1303017)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2234968,213272,0,1988,14,301093750,183906250,2576,3,1303017)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225724,87104,0,8132,10,9218750,10312500,2510,3,1280500)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225724,95580,0,3224,11,16093750,8125000,2504,3,1278544)	postgres.exe
+(\\WW-INTERN\admdi3spo,2147512296,4804,0,7764,1,468750,781250,113,3,1247198)	taskeng.exe
+(\\NT AUTHORITY\SYSTEM,2224592,58852,0,3284,9,5937500,6875000,2492,3,1225602)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2224592,53860,0,2424,10,3125000,4375000,2493,3,1225602)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2224592,162736,0,1304,10,15937500,7656250,2489,3,1225559)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2224592,169964,0,6228,10,19218750,8125000,2488,3,1225559)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,43488,0,7160,10,5000000,1718750,2508,3,859077)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,42540,0,1872,10,29218750,27343750,2506,3,743211)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,36888,0,7800,10,3125000,2343750,2497,3,602705)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,16408,0,6892,9,468750,1093750,2494,3,178601)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,81320,13240,0,4908,7,597031250,1045625000,184,7,154627)	check_mk_agent.exe
+(\\NT AUTHORITY\SYSTEM,2221448,13844,0,6884,9,937500,3437500,2492,3,145997)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,62372,6620,0,5396,2,20937500,156250,111,3,89857)	bdredline.exe
+(\\NT AUTHORITY\SYSTEM,82048,7664,0,2920,5,4375000,5781250,252,19,89856)	epupdateservice.exe
+(SYSTEM,73584,3084,0,3940,4,468750,625000,176,15,89856)	epprotectedservice.exe
+(\\NT AUTHORITY\SYSTEM,502336,46716,0,6784,113,775625000,426250000,1342,85,89856)	epsecurityservice.exe
+(\\NT AUTHORITY\SYSTEM,114824,1548,0,8028,8,17500000,20312500,458,21,89852)	epag.exe
+(\\NT AUTHORITY\SYSTEM,113932,13384,0,7432,9,7656250,2812500,858,24,89851)	epintegrationservice.exe
+(\\NT AUTHORITY\SYSTEM,2225544,15624,0,2160,10,0,312500,2493,3,37614)	postgres.exe
+(\\WW-INTERN\admdi3spo,2147498516,2964,0,5584,1,28281250,111875000,39,1,37591)	cmd.exe
+(\\WW-INTERN\admdi3spo,2147513892,3344,0,364,0,3906250,19843750,49,2,37591)	conhost.exe
+(\\NT AUTHORITY\SYSTEM,2251152,78620,0,76,12,13906250,7656250,2607,3,24107)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,30332,0,6552,10,0,625000,2504,3,16002)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2221448,13620,0,1272,9,0,312500,2490,3,15998)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,37840,0,2952,10,7343750,6093750,2515,3,15844)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,24920,0,5028,10,7031250,4218750,2497,3,15363)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,26196,0,2432,10,8125000,4843750,2497,3,13826)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2250100,37964,0,2552,11,6718750,5625000,2561,3,12796)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2237020,105188,0,6968,18,237812500,57968750,2761,3,10986)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,26280,0,6652,10,9531250,5781250,2500,3,6608)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,22860,0,2352,10,4843750,4375000,2498,3,5101)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,29512,0,6336,12,28750000,11875000,2524,3,3837)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,27792,0,8104,10,24531250,10000000,2524,3,2932)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2237060,59692,0,4072,17,80156250,18125000,2713,3,1857)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,21012,0,3948,10,312500,312500,2499,3,1814)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,26372,0,8140,11,10156250,5937500,2529,3,1602)	postgres.exe
+(\\NT AUTHORITY\SYSTEM,2225544,18208,0,3052,10,781250,312500,2495,3,1556)	postgres.exe
+(SYSTEM,60256,15388,0,5576,1,625000,2968750,230,9,607)	csrss.exe
+(\\NT AUTHORITY\SYSTEM,2147535224,5244,0,7372,1,156250,625000,142,2,607)	winlogon.exe
+(\\Window Manager\DWM-3,2147618244,38832,0,5544,8,937500,1875000,201,8,607)	dwm.exe
+(\\WW-INTERN\admddp4pk,201268,724,0,2296,19,937500,937500,500,22,605)	epconsole.exe
+(\\WW-INTERN\admddp4pk,2147569940,6748,0,7856,1,156250,1093750,220,7,605)	rdpclip.exe
+(\\WW-INTERN\admddp4pk,2147840944,8692,0,848,3,0,1093750,209,5,605)	taskhostex.exe
+(\\WW-INTERN\admddp4pk,2147988580,102756,0,7680,41,21562500,45625000,1282,39,605)	explorer.exe
+(\\WW-INTERN\admddp4pk,203508,2388,0,6436,8,1250000,2968750,346,9,598)	BESClientUI.exe
+(\\NT AUTHORITY\SYSTEM,2225544,19500,0,1836,10,312500,468750,2502,3,533)	postgres.exe
+(\\NT AUTHORITY\LOCAL SERVICE,2147527396,10040,0,4540,4,468750,1875000,218,6,268)	WmiPrvSE.exe
+(\\NT AUTHORITY\SYSTEM,2225544,18248,0,2192,10,0,156250,2501,3,237)	postgres.exe
+(\\WW-INTERN\admdi3spo,12824,1880,0,7652,0,0,0,13,1,33)	sleep.exe
+(\\NT AUTHORITY\SYSTEM,2147492064,1184,0,8036,1,0,0,8,1,1)	cmd.exe
+(\\NT AUTHORITY\SYSTEM,2147498004,1420,0,4084,0,0,0,4,1,1)	conhost.exe
+<<<mem>>>
+MemTotal:      10484764 kB
+MemFree:       4706308 kB
+SwapTotal:     16161792 kB
+SwapFree:      13874020 kB
+PageTotal:     26646556 kB
+PageFree:      18580328 kB
+VirtualTotal:  137438953344 kB
+VirtualFree:   137438872024 kB
+<<<fileinfo:sep(124)>>>
+1551432419
+<<<services>>>
+AeLookupSvc running/demand Application Experience
+ALG stopped/demand Application Layer Gateway Service
+AppIDSvc stopped/demand Application Identity
+Appinfo stopped/demand Application Information
+AppMgmt stopped/demand Application Management
+AppReadiness stopped/demand App Readiness
+AppXSvc stopped/demand AppX Deployment Service (AppXSVC)
+AudioEndpointBuilder stopped/demand Windows Audio Endpoint Builder
+Audiosrv stopped/demand Windows Audio
+AxInstSV stopped/demand ActiveX Installer (AxInstSV)
+BESClient running/auto IBM BigFix Client
+BFE running/auto Base Filtering Engine
+BITS running/demand Background Intelligent Transfer Service
+BrokerInfrastructure running/auto Background Tasks Infrastructure Service
+Browser stopped/disabled Computer Browser
+CertPropSvc running/demand Certificate Propagation
+COMSysApp stopped/demand COM+ System Application
+Control-MEM_Configuration_Agent running/auto Control-M/Enterprise Manager Configuration Agent
+CorreLog_Message running/auto CorreLog Syslog Message Service
+CryptSvc running/auto Cryptographic Services
+CscService stopped/disabled Offline Files
+ctmag running/auto Control-M/Agent
+ctmfw_service stopped/demand Control-M/Agent FileWatcher
+DcomLaunch running/auto DCOM Server Process Launcher
+defragsvc stopped/demand Optimize drives
+DeviceAssociationService stopped/demand Device Association Service
+DeviceInstall stopped/demand Device Install Service
+Dhcp running/auto DHCP Client
+DiagTrack running/auto Diagnostics Tracking Service
+Dnscache running/auto DNS Client
+dot3svc stopped/demand Wired AutoConfig
+DPS running/auto Diagnostic Policy Service
+DsmSvc stopped/demand Device Setup Manager
+Eaphost stopped/demand Extensible Authentication Protocol
+EFS stopped/demand Encrypting File System (EFS)
+EM900_PG running/auto Control-M PostgreSQL for EM 900
+EM_Msgapi_Service running/auto Control-M Web Services and Messaging API - Messaging Server
+EM_WSapi_Service running/auto Control-M Web Services and Messaging API - Web Services Server
+End_Point_Operations_Management_Agent stopped/disabled End Point Operations Management Agent
+epag running/auto Bitdefender Endpoint Agent
+EPIntegrationService running/auto Bitdefender Endpoint Integration Service
+EPProtectedService running/auto Bitdefender Endpoint Protected Service
+epredline running/auto Bitdefender Endpoint Redline Service
+EPSecurityService running/auto Bitdefender Endpoint Security Service
+EPUpdateService running/auto Bitdefender Endpoint Update Service
+EventLog running/auto Windows Event Log
+EventSystem running/auto COM+ Event System
+fdPHost stopped/demand Function Discovery Provider Host
+FDResPub stopped/demand Function Discovery Resource Publication
+Flexera_Software_Corporate_Software_Inspector_Agent running/auto Flexera Software Corporate Software Inspector Agent
+FontCache running/auto Windows Font Cache Service
+FontCache3.0.0.0 stopped/demand Windows Presentation Foundation Font Cache 3.0.0.0
+gpsvc running/auto Group Policy Client
+hidserv stopped/demand Human Interface Device Service
+hkmsvc stopped/demand Health Key and Certificate Management
+IEEtwCollectorService stopped/demand Internet Explorer ETW Collector Service
+IKEEXT running/auto IKE and AuthIP IPsec Keying Modules
+iphlpsvc stopped/disabled IP Helper
+KeyIso stopped/demand CNG Key Isolation
+KPSSVC stopped/demand KDC Proxy Server service (KPS)
+KtmRm stopped/demand KtmRm for Distributed Transaction Coordinator
+LanmanServer running/auto Server
+LanmanWorkstation running/auto Workstation
+lltdsvc stopped/demand Link-Layer Topology Discovery Mapper
+lmhosts running/auto TCP/IP NetBIOS Helper
+LSM running/auto Local Session Manager
+MMCSS stopped/demand Multimedia Class Scheduler
+MpsSvc running/auto Windows Firewall
+MSDTC running/auto Distributed Transaction Coordinator
+MSiSCSI stopped/demand Microsoft iSCSI Initiator Service
+msiserver stopped/demand Windows Installer
+napagent stopped/demand Network Access Protection Agent
+NcaSvc stopped/demand Network Connectivity Assistant
+NcbService running/demand Network Connection Broker
+Netlogon running/auto Netlogon
+Netman stopped/demand Network Connections
+netprofm running/demand Network List Service
+NetTcpPortSharing stopped/disabled Net.Tcp Port Sharing Service
+NlaSvc running/auto Network Location Awareness
+nsi running/auto Network Store Interface Service
+PerfHost stopped/demand Performance Counter DLL Host
+pla stopped/demand Performance Logs & Alerts
+PlugPlay running/demand Plug and Play
+PolicyAgent running/demand IPsec Policy Agent
+Power running/auto Power
+PrintNotify stopped/demand Printer Extensions and Notifications
+ProfSvc running/auto User Profile Service
+RasAuto stopped/demand Remote Access Auto Connection Manager
+RasMan stopped/demand Remote Access Connection Manager
+RemoteAccess stopped/disabled Routing and Remote Access
+RemoteRegistry stopped/auto Remote Registry
+RpcEptMapper running/auto RPC Endpoint Mapper
+RpcLocator stopped/demand Remote Procedure Call (RPC) Locator
+RpcSs running/auto Remote Procedure Call (RPC)
+RSCDsvc running/auto BMC BladeLogic Server Automation RSCD Agent
+RSoPProv stopped/demand Resultant Set of Policy Provider
+sacsvr stopped/demand Special Administration Console Helper
+SamSs running/auto Security Accounts Manager
+SCardSvr stopped/disabled Smart Card
+ScDeviceEnum running/demand Smart Card Device Enumeration Service
+Schedule running/auto Task Scheduler
+SCPolicySvc stopped/demand Smart Card Removal Policy
+seclogon stopped/demand Secondary Logon
+SENS running/auto System Event Notification Service
+SessionEnv running/demand Remote Desktop Configuration
+SharedAccess stopped/disabled Internet Connection Sharing (ICS)
+ShellHWDetection running/auto Shell Hardware Detection
+smphost stopped/demand Microsoft Storage Spaces SMP
+SNMPTRAP stopped/demand SNMP Trap
+Spooler running/auto Print Spooler
+sppsvc stopped/auto Software Protection
+SSDPSRV stopped/disabled SSDP Discovery
+SstpSvc stopped/demand Secure Socket Tunneling Protocol Service
+stisvc stopped/demand Windows Image Acquisition (WIA)
+svsvc stopped/demand Spot Verifier
+swprv stopped/demand Microsoft Software Shadow Copy Provider
+SysMain stopped/demand Superfetch
+SystemEventsBroker running/auto System Events Broker
+TabletInputService running/demand Touch Keyboard and Handwriting Panel Service
+TapiSrv stopped/demand Telephony
+TermService running/demand Remote Desktop Services
+Themes running/auto Themes
+THREADORDER stopped/demand Thread Ordering Server
+TieringEngineService stopped/demand Storage Tiers Management
+TimeBroker running/demand Time Broker
+TrkWks running/auto Distributed Link Tracking Client
+TrustedInstaller stopped/demand Windows Modules Installer
+UALSVC running/auto User Access Logging Service
+UI0Detect stopped/demand Interactive Services Detection
+UmRdpService running/demand Remote Desktop Services UserMode Port Redirector
+upnphost stopped/disabled UPnP Device Host
+VaultSvc stopped/demand Credential Manager
+vds stopped/demand Virtual Disk
+vmicguestinterface stopped/demand Hyper-V Guest Service Interface
+vmicheartbeat stopped/demand Hyper-V Heartbeat Service
+vmickvpexchange stopped/demand Hyper-V Data Exchange Service
+vmicrdv stopped/demand Hyper-V Remote Desktop Virtualization Service
+vmicshutdown stopped/demand Hyper-V Guest Shutdown Service
+vmictimesync stopped/demand Hyper-V Time Synchronization Service
+vmicvss stopped/demand Hyper-V Volume Shadow Copy Requestor
+VMTools running/auto VMware Tools
+VSS stopped/demand Volume Shadow Copy
+W32Time running/demand Windows Time
+Wcmsvc running/auto Windows Connection Manager
+WcsPlugInService stopped/demand Windows Color System
+WdiServiceHost stopped/demand Diagnostic Service Host
+WdiSystemHost stopped/demand Diagnostic System Host
+WebClient stopped/demand WebClient
+Wecsvc stopped/demand Windows Event Collector
+WEPHOSTSVC stopped/demand Windows Encryption Provider Host Service
+wercplsupport stopped/demand Problem Reports and Solutions Control Panel Support
+WerSvc stopped/demand Windows Error Reporting Service
+WiaRpc stopped/demand Still Image Acquisition Events
+WinHttpAutoProxySvc running/demand WinHTTP Web Proxy Auto-Discovery Service
+Winmgmt running/auto Windows Management Instrumentation
+WinRM running/auto Windows Remote Management (WS-Management)
+wlidsvc stopped/demand Microsoft Account Sign-in Assistant
+wmiApSrv running/auto WMI Performance Adapter
+WPDBusEnum stopped/demand Portable Device Enumerator Service
+WSService stopped/demand Windows Store Service (WSService)
+wuauserv running/demand Windows Update
+wudfsvc stopped/demand Windows Driver Foundation - User-mode Driver Framework
+VGAuthService running/auto VMware Alias Manager and Ticket Service
+VMwareCAFCommAmqpListener stopped/demand VMware CAF AMQP Communication Service
+VMwareCAFManagementAgentHost stopped/demand VMware CAF Management Agent Service
+vmvss stopped/demand VMware Snapshot Provider
+Check_MK_Agent running/auto Check_MK_Agent
+<<<winperf_if>>>
+1551432419.06 510 2533196
+1 instances: vmxnet3_Ethernet_Adapter
+-122 203905255668 bulk_count
+-110 148666714 bulk_count
+-244 99632270 bulk_count
+-58 49034444 bulk_count
+10 10000000000 large_rawcount
+-246 63388310144 bulk_count
+14 97386895 bulk_count
+16 2245358 bulk_count
+18 17 large_rawcount
+20 0 large_rawcount
+22 0 large_rawcount
+-4 140516945524 bulk_count
+26 49008608 bulk_count
+28 25836 bulk_count
+30 0 large_rawcount
+32 0 large_rawcount
+34 0 large_rawcount
+1086 0 large_rawcount
+1088 16 large_rawcount
+1090 39083608 bulk_count
+1092 0 bulk_count
+1094 7167 large_rawcount
+<<<winperf_phydisk>>>
+1551432419.08 234 2533196
+5 instances: 0_C: 1_E: 2_P: 3_D: _Total
+-36 0 0 0 0 0 rawcount
+-34 61807828000 6568850000 3599854000 53824725000 31450314250 type(20570500)
+-34 131959060190773755 131959060190773755 131959060190773755 131959060190773755 131959060190773755 type(40030500)
+1166 61807828000 6568850000 3599854000 53824725000 125801257000 type(550500)
+-32 25349538000 143427000 338136000 12691960000 9630765250 type(20570500)
+-32 131959060190773755 131959060190773755 131959060190773755 131959060190773755 131959060190773755 type(40030500)
+1168 25349538000 143427000 338136000 12691960000 38523061000 type(550500)
+-30 36458290000 6425423000 3261718000 41132765000 21819549000 type(20570500)
+-30 131959060190773755 131959060190773755 131959060190773755 131959060190773755 131959060190773755 type(40030500)
+1170 36458290000 6425423000 3261718000 41132765000 87278196000 type(550500)
+-28 2772232377 1664018454 911913575 749955919 1803153029 average_timer
+-28 4206544 946137 157886 5721144 11031711 average_base
+-26 2126567530 36332870 85656476 3215122230 1168711810 average_timer
+-26 536701 6350 7623 158782 709456 average_base
+-24 645664847 1627685584 826257099 1829800984 634441218 average_timer
+-24 3669843 939787 150263 5562362 10322255 average_base
+-22 4206544 946137 157886 5721144 11031711 counter
+-20 536701 6350 7623 158782 709456 counter
+-18 3669843 939787 150263 5562362 10322255 counter
+-16 84026163200 5838944768 14603016704 88292828160 192760952832 bulk_count
+-14 16040964608 45128192 129908224 2719017984 18935019008 bulk_count
+-12 67985198592 5793816576 14473108480 85573810176 173825933824 bulk_count
+-10 84026163200 5838944768 14603016704 88292828160 192760952832 average_bulk
+-10 4206544 946137 157886 5721144 11031711 average_base
+-8 16040964608 45128192 129908224 2719017984 18935019008 average_bulk
+-8 536701 6350 7623 158782 709456 average_base
+-6 67985198592 5793816576 14473108480 85573810176 173825933824 average_bulk
+-6 3669843 939787 150263 5562362 10322255 average_base
+1248 13112863577000 13145174638000 13148237988000 13123630255000 13132476614500 type(20570500)
+1248 131959060190773755 131959060190773755 131959060190773755 131959060190773755 131959060190773755 type(40030500)
+1250 321389 48864 0 947103 1317356 counter
+<<<winperf_processor>>>
+1551432419.08 238 2533196
+5 instances: 0 1 2 3 _Total
+-232 11787563281250 11316426093750 12657005468750 12997209687500 12189551132812 100nsec_timer_inv
+-96 779189062500 844309531250 365690625000 152344218750 535383359375 100nsec_timer
+-94 648348593750 1054363593750 192403125000 65545156250 490165117187 100nsec_timer
+-90 527757545 467409226 201968358 127443316 1324578445 counter
+458 882500000 12312187500 140312500 90156250 3356289062 100nsec_timer
+460 1403750000 1682343750 416250000 181406250 920937500 100nsec_timer
+1096 65983557 146454219 16304575 10226359 238968710 counter
+1098 0 1 0 0 1 rawcount
+1508 11411856279612 11203923019146 12622723341891 12982443065932 12055236426645 100nsec_timer
+1510 465936759074 535794514960 171836817076 46333784815 304975468981 100nsec_timer
+1512 10945919520538 10668128504186 12450886524815 12936109281117 11750260957664 100nsec_timer
+1514 0 0 0 0 0 100nsec_timer
+1516 93463217 114315857 36055000 10056784 253890858 bulk_count
+1518 278901821 188845957 107155434 87839428 662742640 bulk_count
+1520 0 0 0 0 0 bulk_count
+<<<logwatch>>>
+[[[Application]]]
+[[[HardwareEvents]]]
+[[[Key Management Service]]]
+[[[System]]]
+[[[Windows PowerShell]]]
+<<<dotnet_clrmemory:sep(44)>>>
+AllocatedBytesPersec,Caption,Description,FinalizationSurvivors,Frequency_Object,Frequency_PerfTime,Frequency_Sys100NS,Gen0heapsize,Gen0PromotedBytesPerSec,Gen1heapsize,Gen1PromotedBytesPerSec,Gen2heapsize,LargeObjectHeapsize,Name,NumberBytesinallHeaps,NumberGCHandles,NumberGen0Collections,NumberGen1Collections,NumberGen2Collections,NumberInducedGC,NumberofPinnedObjects,NumberofSinkBlocksinuse,NumberTotalcommittedBytes,NumberTotalreservedBytes,PercentTimeinGC,PercentTimeinGC_Base,ProcessID,PromotedFinalizationMemoryfromGen0,PromotedMemoryfromGen0,PromotedMemoryfromGen1,Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS
+0,,,0,0,2533196,10000000,0,0,0,0,0,0,_Global_,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3347644788672,131959096191240000
+<<<wmi_cpuload:sep(44)>>>
+[system_perf]
+AlignmentFixupsPersec,Caption,ContextSwitchesPersec,Description,ExceptionDispatchesPersec,FileControlBytesPersec,FileControlOperationsPersec,FileDataOperationsPersec,FileReadBytesPersec,FileReadOperationsPersec,FileWriteBytesPersec,FileWriteOperationsPersec,FloatingEmulationsPersec,Frequency_Object,Frequency_PerfTime,Frequency_Sys100NS,Name,PercentRegistryQuotaInUse,PercentRegistryQuotaInUse_Base,Processes,ProcessorQueueLength,SystemCallsPersec,SystemUpTime,Threads,Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS
+0,,3368221903,,124805852,74055043407,2046256014,1253500036,2346004566782,1140504418,223643296902,112995618,0,10000000,2533196,10000000,,114383720,4294967295,136,0,1352978270,131945844886280300,1408,131959060191398808,3347644854542,131959096191390000
+[computer_system]
+AdminPasswordStatus,AutomaticManagedPagefile,AutomaticResetBootOption,AutomaticResetCapability,BootOptionOnLimit,BootOptionOnWatchDog,BootROMSupported,BootupState,Caption,ChassisBootupState,CreationClassName,CurrentTimeZone,DaylightInEffect,Description,DNSHostName,Domain,DomainRole,EnableDaylightSavingsTime,FrontPanelResetStatus,HypervisorPresent,InfraredSupported,InitialLoadInfo,InstallDate,KeyboardPasswordStatus,LastLoadInfo,Manufacturer,Model,Name,NameFormat,NetworkServerModeEnabled,NumberOfLogicalProcessors,NumberOfProcessors,OEMLogoBitmap,OEMStringArray,PartOfDomain,PauseAfterReset,PCSystemType,PCSystemTypeEx,PowerManagementCapabilities,PowerManagementSupported,PowerOnPasswordStatus,PowerState,PowerSupplyState,PrimaryOwnerContact,PrimaryOwnerName,ResetCapability,ResetCount,ResetLimit,Roles,Status,SupportContactDescription,SystemStartupDelay,SystemStartupOptions,SystemStartupSetting,SystemType,ThermalState,TotalPhysicalMemory,UserName,WakeUpType,Workgroup
+1,0,1,1,3,3,1,Normal boot,SASV0166,3,Win32_ComputerSystem,60,0,AT/AT COMPATIBLE,sasv0166,ww-intern.de,3,1,3,1,0,,,3,,VMware, Inc.,VMware7,1,SASV0166,,1,4,4,,<array>,1,3932100000,1,1,,,0,0,3,,W&W Informatik GmbH,1,65535,65535,<array>,OK,,,,,x64-based PC,3,10736398336,,6,
+<<<>>>
+<<<win_netstat:cached(1551432419,50)>>>
+
+Active Connections
+
+  Proto  Local Address          Foreign Address        State
+  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:443            0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:3389           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:4750           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:5432           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:5985           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:6556           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:8009           0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:13075          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:17006          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:47001          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49152          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49153          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49154          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49156          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49167          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49173          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49211          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49215          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49533          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49534          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49569          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49587          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49592          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49598          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49603          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49608          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49615          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49623          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49744          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:49796          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:55514          0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:64971          0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:5432         127.0.0.1:54386        ESTABLISHED
+  TCP    127.0.0.1:5432         127.0.0.1:54387        ESTABLISHED
+  TCP    127.0.0.1:5432         127.0.0.1:54390        ESTABLISHED
+  TCP    127.0.0.1:5432         127.0.0.1:54391        ESTABLISHED
+  TCP    127.0.0.1:5432         127.0.0.1:54437        ESTABLISHED
+  TCP    127.0.0.1:5432         127.0.0.1:54440        ESTABLISHED
+  TCP    127.0.0.1:5432         127.0.0.1:54459        ESTABLISHED
+  TCP    127.0.0.1:5432         127.0.0.1:54486        ESTABLISHED
+  TCP    127.0.0.1:5432         127.0.0.1:54487        ESTABLISHED
+  TCP    127.0.0.1:7035         0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:7035         127.0.0.1:49175        ESTABLISHED
+  TCP    127.0.0.1:8005         0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:48080        0.0.0.0:0              LISTENING
+  TCP    127.0.0.1:49175        127.0.0.1:7035         ESTABLISHED
+  TCP    127.0.0.1:49320        127.0.0.1:49321        ESTABLISHED
+  TCP    127.0.0.1:49321        127.0.0.1:49320        ESTABLISHED
+  TCP    127.0.0.1:49322        127.0.0.1:49323        ESTABLISHED
+  TCP    127.0.0.1:49323        127.0.0.1:49322        ESTABLISHED
+  TCP    127.0.0.1:49648        127.0.0.1:49649        ESTABLISHED
+  TCP    127.0.0.1:49649        127.0.0.1:49648        ESTABLISHED
+  TCP    127.0.0.1:49650        127.0.0.1:49651        ESTABLISHED
+  TCP    127.0.0.1:49651        127.0.0.1:49650        ESTABLISHED
+  TCP    127.0.0.1:49652        127.0.0.1:49653        ESTABLISHED
+  TCP    127.0.0.1:49653        127.0.0.1:49652        ESTABLISHED
+  TCP    127.0.0.1:49654        127.0.0.1:49655        ESTABLISHED
+  TCP    127.0.0.1:49655        127.0.0.1:49654        ESTABLISHED
+  TCP    127.0.0.1:49656        127.0.0.1:49657        ESTABLISHED
+  TCP    127.0.0.1:49657        127.0.0.1:49656        ESTABLISHED
+  TCP    127.0.0.1:49658        127.0.0.1:49659        ESTABLISHED
+  TCP    127.0.0.1:49659        127.0.0.1:49658        ESTABLISHED
+  TCP    127.0.0.1:49660        127.0.0.1:49661        ESTABLISHED
+  TCP    127.0.0.1:49661        127.0.0.1:49660        ESTABLISHED
+  TCP    127.0.0.1:49662        127.0.0.1:49663        ESTABLISHED
+  TCP    127.0.0.1:49663        127.0.0.1:49662        ESTABLISHED
+  TCP    127.0.0.1:49664        127.0.0.1:49665        ESTABLISHED
+  TCP    127.0.0.1:49665        127.0.0.1:49664        ESTABLISHED
+  TCP    127.0.0.1:49666        127.0.0.1:49667        ESTABLISHED
+  TCP    127.0.0.1:49667        127.0.0.1:49666        ESTABLISHED
+  TCP    127.0.0.1:49668        127.0.0.1:49669        ESTABLISHED
+  TCP    127.0.0.1:49669        127.0.0.1:49668        ESTABLISHED
+  TCP    127.0.0.1:49670        127.0.0.1:49671        ESTABLISHED
+  TCP    127.0.0.1:49671        127.0.0.1:49670        ESTABLISHED
+  TCP    127.0.0.1:49719        127.0.0.1:49720        ESTABLISHED
+  TCP    127.0.0.1:49720        127.0.0.1:49719        ESTABLISHED
+  TCP    127.0.0.1:49721        127.0.0.1:49722        ESTABLISHED
+  TCP    127.0.0.1:49722        127.0.0.1:49721        ESTABLISHED
+  TCP    127.0.0.1:49723        127.0.0.1:49724        ESTABLISHED
+  TCP    127.0.0.1:49724        127.0.0.1:49723        ESTABLISHED
+  TCP    127.0.0.1:49725        127.0.0.1:49726        ESTABLISHED
+  TCP    127.0.0.1:49726        127.0.0.1:49725        ESTABLISHED
+  TCP    127.0.0.1:49727        127.0.0.1:49728        ESTABLISHED
+  TCP    127.0.0.1:49728        127.0.0.1:49727        ESTABLISHED
+  TCP    127.0.0.1:49729        127.0.0.1:49730        ESTABLISHED
+  TCP    127.0.0.1:49730        127.0.0.1:49729        ESTABLISHED
+  TCP    127.0.0.1:49732        127.0.0.1:49733        ESTABLISHED
+  TCP    127.0.0.1:49733        127.0.0.1:49732        ESTABLISHED
+  TCP    127.0.0.1:49734        127.0.0.1:49735        ESTABLISHED
+  TCP    127.0.0.1:49735        127.0.0.1:49734        ESTABLISHED
+  TCP    127.0.0.1:49736        127.0.0.1:49737        ESTABLISHED
+  TCP    127.0.0.1:49737        127.0.0.1:49736        ESTABLISHED
+  TCP    127.0.0.1:49738        127.0.0.1:49739        ESTABLISHED
+  TCP    127.0.0.1:49739        127.0.0.1:49738        ESTABLISHED
+  TCP    127.0.0.1:49740        127.0.0.1:49741        ESTABLISHED
+  TCP    127.0.0.1:49741        127.0.0.1:49740        ESTABLISHED
+  TCP    127.0.0.1:49742        127.0.0.1:49743        ESTABLISHED
+  TCP    127.0.0.1:49743        127.0.0.1:49742        ESTABLISHED
+  TCP    127.0.0.1:49771        127.0.0.1:49772        ESTABLISHED
+  TCP    127.0.0.1:49772        127.0.0.1:49771        ESTABLISHED
+  TCP    127.0.0.1:49773        127.0.0.1:49774        ESTABLISHED
+  TCP    127.0.0.1:49774        127.0.0.1:49773        ESTABLISHED
+  TCP    127.0.0.1:49775        127.0.0.1:49776        ESTABLISHED
+  TCP    127.0.0.1:49776        127.0.0.1:49775        ESTABLISHED
+  TCP    127.0.0.1:49777        127.0.0.1:49778        ESTABLISHED
+  TCP    127.0.0.1:49778        127.0.0.1:49777        ESTABLISHED
+  TCP    127.0.0.1:49779        127.0.0.1:49780        ESTABLISHED
+  TCP    127.0.0.1:49780        127.0.0.1:49779        ESTABLISHED
+  TCP    127.0.0.1:49796        127.0.0.1:49894        ESTABLISHED
+  TCP    127.0.0.1:49850        127.0.0.1:49851        ESTABLISHED
+  TCP    127.0.0.1:49851        127.0.0.1:49850        ESTABLISHED
+  TCP    127.0.0.1:49852        127.0.0.1:49853        ESTABLISHED
+  TCP    127.0.0.1:49853        127.0.0.1:49852        ESTABLISHED
+  TCP    127.0.0.1:49894        127.0.0.1:49796        ESTABLISHED
+  TCP    127.0.0.1:54386        127.0.0.1:5432         ESTABLISHED
+  TCP    127.0.0.1:54387        127.0.0.1:5432         ESTABLISHED
+  TCP    127.0.0.1:54390        127.0.0.1:5432         ESTABLISHED
+  TCP    127.0.0.1:54391        127.0.0.1:5432         ESTABLISHED
+  TCP    127.0.0.1:54437        127.0.0.1:5432         ESTABLISHED
+  TCP    127.0.0.1:54440        127.0.0.1:5432         ESTABLISHED
+  TCP    127.0.0.1:54459        127.0.0.1:5432         ESTABLISHED
+  TCP    127.0.0.1:54486        127.0.0.1:5432         ESTABLISHED
+  TCP    127.0.0.1:54487        127.0.0.1:5432         ESTABLISHED
+  TCP    127.0.0.1:63970        127.0.0.1:63969        TIME_WAIT
+  TCP    127.0.0.1:63972        127.0.0.1:63971        TIME_WAIT
+  TCP    127.0.0.1:64079        127.0.0.1:64078        TIME_WAIT
+  TCP    127.0.0.1:64081        127.0.0.1:64080        TIME_WAIT
+  TCP    172.22.150.230:139     0.0.0.0:0              LISTENING
+  TCP    172.22.150.230:445     172.22.154.208:49921   ESTABLISHED
+  TCP    172.22.150.230:3389    172.25.8.200:52685     ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:49662   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:51858   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:51908   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:51981   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:53815   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:53818   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:54423   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:54482   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:55937   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:55938   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:56835   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:57182   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:59949   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:61104   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:61150   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:61474   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:62833   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:63213   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.150.230:63707   ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:49242    ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:53890    ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:53982    ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:54287    ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:55177    ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:59479    ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:60360    ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:61120    ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:61654    ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:62429    ESTABLISHED
+  TCP    172.22.150.230:5432    172.22.157.57:62457    ESTABLISHED
+  TCP    172.22.150.230:6060    0.0.0.0:0              LISTENING
+  TCP    172.22.150.230:6443    0.0.0.0:0              LISTENING
+  TCP    172.22.150.230:6556    172.22.237.24:47696    TIME_WAIT
+  TCP    172.22.150.230:6556    172.22.237.24:54944    ESTABLISHED
+  TCP    172.22.150.230:13075   172.16.148.50:49881    ESTABLISHED
+  TCP    172.22.150.230:13075   172.16.148.50:49882    ESTABLISHED
+  TCP    172.22.150.230:13075   172.16.148.152:51262   ESTABLISHED
+  TCP    172.22.150.230:13075   172.16.148.152:51263   ESTABLISHED
+  TCP    172.22.150.230:13075   172.16.148.169:50035   ESTABLISHED
+  TCP    172.22.150.230:13075   172.16.148.169:50036   ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.150.230:54589   ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.150.230:54590   ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.150.230:57877   ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.150.230:63848   ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49254    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49255    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49260    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49261    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49280    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49285    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49290    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49291    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49542    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49543    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49547    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49548    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49552    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49553    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49682    ESTABLISHED
+  TCP    172.22.150.230:13075   172.22.157.57:49718    ESTABLISHED
+  TCP    172.22.150.230:13075   172.25.17.218:50063    ESTABLISHED
+  TCP    172.22.150.230:13075   172.25.17.218:50064    ESTABLISHED
+  TCP    172.22.150.230:49216   0.0.0.0:0              LISTENING
+  TCP    172.22.150.230:49216   172.22.150.230:63900   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63914   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63928   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63929   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63930   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63931   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63932   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63934   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63935   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63942   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63943   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63944   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63945   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63960   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63961   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63968   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63973   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63975   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63976   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63977   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63978   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63979   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:63989   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64011   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64014   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64017   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64025   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64037   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64038   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64047   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64048   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64057   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64058   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64075   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64076   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64077   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64088   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64090   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64091   TIME_WAIT
+  TCP    172.22.150.230:49216   172.22.150.230:64092   TIME_WAIT
+  TCP    172.22.150.230:49406   0.0.0.0:0              LISTENING
+  TCP    172.22.150.230:49533   172.22.150.230:54494   ESTABLISHED
+  TCP    172.22.150.230:49533   172.22.150.230:54535   ESTABLISHED
+  TCP    172.22.150.230:49533   172.22.150.230:64010   TIME_WAIT
+  TCP    172.22.150.230:49533   172.22.150.230:64016   TIME_WAIT
+  TCP    172.22.150.230:49533   172.22.157.57:49560    ESTABLISHED
+  TCP    172.22.150.230:49534   172.22.150.230:54493   ESTABLISHED
+  TCP    172.22.150.230:49534   172.22.150.230:54541   ESTABLISHED
+  TCP    172.22.150.230:49534   172.22.150.230:64012   TIME_WAIT
+  TCP    172.22.150.230:49534   172.22.150.230:64018   TIME_WAIT
+  TCP    172.22.150.230:49534   172.22.157.57:49559    ESTABLISHED
+  TCP    172.22.150.230:49569   172.16.148.50:49883    ESTABLISHED
+  TCP    172.22.150.230:49569   172.16.148.152:51264   ESTABLISHED
+  TCP    172.22.150.230:49569   172.16.148.169:50037   ESTABLISHED
+  TCP    172.22.150.230:49569   172.22.150.230:53436   ESTABLISHED
+  TCP    172.22.150.230:49569   172.22.150.230:54438   ESTABLISHED
+  TCP    172.22.150.230:49569   172.25.17.218:50065    ESTABLISHED
+  TCP    172.22.150.230:49587   172.16.148.50:49900    ESTABLISHED
+  TCP    172.22.150.230:49587   172.16.148.152:51284   ESTABLISHED
+  TCP    172.22.150.230:49587   172.16.148.169:50071   ESTABLISHED
+  TCP    172.22.150.230:49587   172.25.17.218:50091    ESTABLISHED
+  TCP    172.22.150.230:49598   172.22.150.230:54545   ESTABLISHED
+  TCP    172.22.150.230:49598   172.22.150.230:63850   ESTABLISHED
+  TCP    172.22.150.230:49598   172.22.157.57:49575    ESTABLISHED
+  TCP    172.22.150.230:49598   172.22.157.57:49699    ESTABLISHED
+  TCP    172.22.150.230:49603   172.22.157.57:49580    ESTABLISHED
+  TCP    172.22.150.230:49603   172.22.157.57:49698    ESTABLISHED
+  TCP    172.22.150.230:49636   0.0.0.0:0              LISTENING
+  TCP    172.22.150.230:49645   0.0.0.0:0              LISTENING
+  TCP    172.22.150.230:49645   172.22.150.230:63899   TIME_WAIT
+  TCP    172.22.150.230:49645   172.22.150.230:63903   TIME_WAIT
+  TCP    172.22.150.230:49645   172.22.150.230:63982   TIME_WAIT
+  TCP    172.22.150.230:49645   172.22.150.230:63998   TIME_WAIT
+  TCP    172.22.150.230:49645   172.22.150.230:64007   TIME_WAIT
+  TCP    172.22.150.230:49645   172.22.150.230:64021   TIME_WAIT
+  TCP    172.22.150.230:49645   172.22.150.230:64024   TIME_WAIT
+  TCP    172.22.150.230:49645   172.22.150.230:64029   TIME_WAIT
+  TCP    172.22.150.230:49645   172.22.150.230:64032   TIME_WAIT
+  TCP    172.22.150.230:49662   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:51858   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:51908   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:51981   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:52914   172.22.186.28:7083     ESTABLISHED
+  TCP    172.22.150.230:52915   172.22.186.24:7083     ESTABLISHED
+  TCP    172.22.150.230:53436   172.22.150.230:49569   ESTABLISHED
+  TCP    172.22.150.230:53815   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:53818   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:54423   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:54438   172.22.150.230:49569   ESTABLISHED
+  TCP    172.22.150.230:54482   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:54493   172.22.150.230:49534   ESTABLISHED
+  TCP    172.22.150.230:54494   172.22.150.230:49533   ESTABLISHED
+  TCP    172.22.150.230:54535   172.22.150.230:49533   ESTABLISHED
+  TCP    172.22.150.230:54541   172.22.150.230:49534   ESTABLISHED
+  TCP    172.22.150.230:54545   172.22.150.230:49598   ESTABLISHED
+  TCP    172.22.150.230:54589   172.22.150.230:13075   ESTABLISHED
+  TCP    172.22.150.230:54590   172.22.150.230:13075   ESTABLISHED
+  TCP    172.22.150.230:55322   172.22.157.57:49279    ESTABLISHED
+  TCP    172.22.150.230:55323   172.22.157.57:49289    ESTABLISHED
+  TCP    172.22.150.230:55324   172.22.157.57:49253    ESTABLISHED
+  TCP    172.22.150.230:55325   172.22.157.57:49259    ESTABLISHED
+  TCP    172.22.150.230:55363   172.22.157.57:49541    ESTABLISHED
+  TCP    172.22.150.230:55487   172.22.157.57:49686    ESTABLISHED
+  TCP    172.22.150.230:55937   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:55938   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:56835   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:57182   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:57877   172.22.150.230:13075   ESTABLISHED
+  TCP    172.22.150.230:58599   172.22.156.86:2369     ESTABLISHED
+  TCP    172.22.150.230:59612   172.22.2.170:23710     ESTABLISHED
+  TCP    172.22.150.230:59622   172.22.2.170:23711     ESTABLISHED
+  TCP    172.22.150.230:59623   172.22.2.170:23712     ESTABLISHED
+  TCP    172.22.150.230:59949   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:61104   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:61150   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:61474   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:61517   172.22.156.86:2370     ESTABLISHED
+  TCP    172.22.150.230:62833   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:63155   172.22.186.23:8443     ESTABLISHED
+  TCP    172.22.150.230:63213   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:63676   172.22.145.118:445     ESTABLISHED
+  TCP    172.22.150.230:63707   172.22.150.230:5432    ESTABLISHED
+  TCP    172.22.150.230:63848   172.22.150.230:13075   ESTABLISHED
+  TCP    172.22.150.230:63850   172.22.150.230:49598   ESTABLISHED
+  TCP    172.22.150.230:63852   172.22.157.57:49716    ESTABLISHED
+  TCP    172.22.150.230:63907   172.22.150.230:49406   TIME_WAIT
+  TCP    172.22.150.230:63911   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63912   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63918   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63919   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63926   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63927   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63933   172.22.157.57:49201    TIME_WAIT
+  TCP    172.22.150.230:63939   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63940   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63946   172.22.186.23:7074     TIME_WAIT
+  TCP    172.22.150.230:63947   172.22.186.23:7074     TIME_WAIT
+  TCP    172.22.150.230:63951   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63952   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63958   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63959   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63965   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63966   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63986   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63987   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63994   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:63995   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:64003   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:64004   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:64036   172.22.150.230:49406   TIME_WAIT
+  TCP    172.22.150.230:64044   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:64045   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:64066   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:64067   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:64073   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:64074   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:64085   172.22.150.230:13075   TIME_WAIT
+  TCP    172.22.150.230:64086   172.22.150.230:13075   TIME_WAIT
+
+Active Connections
+
+  Proto  Local Address          Foreign Address        State
+  TCP    [::]:135               [::]:0                 LISTENING
+  TCP    [::]:443               [::]:0                 LISTENING
+  TCP    [::]:445               [::]:0                 LISTENING
+  TCP    [::]:3389              [::]:0                 LISTENING
+  TCP    [::]:4750              [::]:0                 LISTENING
+  TCP    [::]:5432              [::]:0                 LISTENING
+  TCP    [::]:5985              [::]:0                 LISTENING
+  TCP    [::]:6556              [::]:0                 LISTENING
+  TCP    [::]:8009              [::]:0                 LISTENING
+  TCP    [::]:13075             [::]:0                 LISTENING
+  TCP    [::]:47001             [::]:0                 LISTENING
+  TCP    [::]:49152             [::]:0                 LISTENING
+  TCP    [::]:49153             [::]:0                 LISTENING
+  TCP    [::]:49154             [::]:0                 LISTENING
+  TCP    [::]:49156             [::]:0                 LISTENING
+  TCP    [::]:49167             [::]:0                 LISTENING
+  TCP    [::]:49173             [::]:0                 LISTENING
+  TCP    [::]:49211             [::]:0                 LISTENING
+  TCP    [::]:49215             [::]:0                 LISTENING
+  TCP    [::]:49569             [::]:0                 LISTENING
+  TCP    [::]:49587             [::]:0                 LISTENING
+  TCP    [::]:49592             [::]:0                 LISTENING
+  TCP    [::]:49598             [::]:0                 LISTENING
+  TCP    [::]:49603             [::]:0                 LISTENING
+  TCP    [::]:49608             [::]:0                 LISTENING
+  TCP    [::]:49615             [::]:0                 LISTENING
+  TCP    [::]:49623             [::]:0                 LISTENING
+  TCP    [::]:64971             [::]:0                 LISTENING
+  TCP    [::1]:49264            [::1]:49265            ESTABLISHED
+  TCP    [::1]:49265            [::1]:49264            ESTABLISHED
+  TCP    [::1]:49564            [::1]:49565            ESTABLISHED
+  TCP    [::1]:49565            [::1]:49564            ESTABLISHED
+  TCP    [::1]:49585            [::1]:49586            ESTABLISHED
+  TCP    [::1]:49586            [::1]:49585            ESTABLISHED
+  TCP    [::1]:49590            [::1]:49591            ESTABLISHED
+  TCP    [::1]:49591            [::1]:49590            ESTABLISHED
+  TCP    [::1]:49596            [::1]:49597            ESTABLISHED
+  TCP    [::1]:49597            [::1]:49596            ESTABLISHED
+  TCP    [::1]:49601            [::1]:49602            ESTABLISHED
+  TCP    [::1]:49602            [::1]:49601            ESTABLISHED
+  TCP    [::1]:49606            [::1]:49607            ESTABLISHED
+  TCP    [::1]:49607            [::1]:49606            ESTABLISHED
+  TCP    [::1]:49613            [::1]:49614            ESTABLISHED
+  TCP    [::1]:49614            [::1]:49613            ESTABLISHED
+  TCP    [::1]:49621            [::1]:49622            ESTABLISHED
+  TCP    [::1]:49622            [::1]:49621            ESTABLISHED
+  TCP    [fe80::e825:8a7a:985b:291b%12]:5432  [fe80::e825:8a7a:985b:291b%12]:58458  ESTABLISHED
+  TCP    [fe80::e825:8a7a:985b:291b%12]:5432  [fe80::e825:8a7a:985b:291b%12]:58459  ESTABLISHED
+  TCP    [fe80::e825:8a7a:985b:291b%12]:5432  [fe80::e825:8a7a:985b:291b%12]:58530  ESTABLISHED
+  TCP    [fe80::e825:8a7a:985b:291b%12]:5432  [fe80::e825:8a7a:985b:291b%12]:58531  ESTABLISHED
+  TCP    [fe80::e825:8a7a:985b:291b%12]:58458  [fe80::e825:8a7a:985b:291b%12]:5432  ESTABLISHED
+  TCP    [fe80::e825:8a7a:985b:291b%12]:58459  [fe80::e825:8a7a:985b:291b%12]:5432  ESTABLISHED
+  TCP    [fe80::e825:8a7a:985b:291b%12]:58530  [fe80::e825:8a7a:985b:291b%12]:5432  ESTABLISHED
+  TCP    [fe80::e825:8a7a:985b:291b%12]:58531  [fe80::e825:8a7a:985b:291b%12]:5432  ESTABLISHED
+
+<<<>>>
+<<<systemtime>>>
+1551432419
+<<<winperf_tcp_conn>>>
+1551432419.16 638 2533196
+2 573186078 counter
+4 218 rawcount
+6 1464283 rawcount
+8 1491070 rawcount
+10 1103 rawcount
+12 713907 rawcount
+14 251133389 counter
+16 322052689 counter
+18 41936 counter
+<<<winperf_ts_sessions>>>
+1551432419.17 1920 2533196
+2 1 rawcount
+4 2 rawcount
+6 3 rawcount

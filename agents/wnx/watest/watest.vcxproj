@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -130,6 +130,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -169,6 +170,7 @@ check_watest.cmd watest
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -295,14 +297,17 @@ check_watest.cmd watest
     <ClCompile Include="test-cap.cpp" />
     <ClCompile Include="test-carrier.cpp" />
     <ClCompile Include="test-cvt.cpp" />
+    <ClCompile Include="test-encryption.cpp" />
     <ClCompile Include="test-eventlog.cpp" />
     <ClCompile Include="test-external-port.cpp" />
     <ClCompile Include="test-log.cpp" />
     <ClCompile Include="test-mrpe.cpp" />
     <ClCompile Include="test-ohm.cpp" />
+    <ClCompile Include="test-onlyfrom.cpp" />
     <ClCompile Include="test-player-cmdline.cpp" />
     <ClCompile Include="test-player.cpp" />
     <ClCompile Include="test-plugin.cpp" />
+    <ClCompile Include="test-realtime.cpp" />
     <ClCompile Include="test-section_fileinfo.cpp" />
     <ClCompile Include="test-section_logwatchevent.cpp" />
     <ClCompile Include="test-section_providers.cpp" />
@@ -313,6 +318,7 @@ check_watest.cmd watest
     <ClCompile Include="test-skype.cpp" />
     <ClCompile Include="test-spool.cpp" />
     <ClCompile Include="test-tools.cpp" />
+    <ClCompile Include="test-upgrade.cpp" />
     <ClCompile Include="test-winperf.cpp" />
     <ClCompile Include="test-wtools.cpp" />
     <ClCompile Include="test-yaml.cpp">
@@ -337,7 +343,14 @@ check_watest.cmd watest
     <None Include="..\test_files\config\check_mk_dev_malformed.yml" />
     <None Include="..\test_files\config\check_mk_dev_minimum.yml" />
     <None Include="..\test_files\config\check_mk_dev_utf16.yml" />
+    <None Include="..\wnxtest\wnxtest.vcxproj" />
     <None Include="check_watest.cmd" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\engine\engine.vcxproj">
+      <Project>{343045b4-f20a-4e48-ab2f-83e1c22c9710}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

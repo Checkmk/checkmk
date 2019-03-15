@@ -180,6 +180,15 @@
     <ClInclude Include="cap.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="upgrade.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="onlyfrom.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="encryption.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -378,6 +387,15 @@
       <Filter>lwa</Filter>
     </ClCompile>
     <ClCompile Include="cap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="upgrade.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="onlyfrom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="encryption.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

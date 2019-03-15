@@ -12,6 +12,7 @@
 #include "logger.h"
 
 #include "on_start.h"
+#include "onlyfrom.h"
 
 namespace cma::cfg {
 // bit mask
@@ -29,11 +30,25 @@ enum Error {
 
 };
 
+namespace dirs {
+constexpr const wchar_t* kCapInstallDir = L"install";
+}
+
 namespace files {
+
 // names of file
+constexpr const wchar_t* kDefaultMainConfigName = L"check_mk";
 constexpr const wchar_t* kDefaultMainConfig = L"check_mk.yml";
+
+constexpr const wchar_t* kCapFile = L"plugins.cap";
+constexpr const wchar_t* kIniFile = L"check_mk.ini";
+
+// extensions
 constexpr const wchar_t* kDefaultBakeryExt = L".bakery.yml";
 constexpr const wchar_t* kDefaultUserExt = L".user.yml";
+
+// special
+constexpr const std::string_view kUpgradeProtocol = "upgrade.protocol";
 
 // located in test_files/config
 // constexpr const wchar_t* kDefaultDevConfig = L"check_mk_dev.yml";
@@ -99,6 +114,7 @@ std::wstring GetSystemPluginsDir() noexcept;
 std::wstring GetRootDir() noexcept;
 std::wstring GetUserDir() noexcept;
 std::wstring GetBakeryDir() noexcept;
+std::filesystem::path GetBakeryFile() noexcept;
 std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
 std::wstring GetPluginConfigDir() noexcept;
@@ -262,7 +278,8 @@ std::vector<T> GetArray(std::string Section, std::string Name,
         if (val.IsDefined() && val.IsSequence())
             return ConvertNode2Sequence<T>(val);
         else
-            XLOG::d.e("Absent/Empty node {}.{} type is {}", Section, Name,
+            // this is OK when nothing inside
+            XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
                       val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
@@ -472,10 +489,82 @@ public:
         return cma::tools::Find(disabled_sections_, Name);
     }
 
+    bool isIpAddressAllowed(const std::string_view Ip) const {
+        if (!of::IsAddress(Ip)) {
+            XLOG::d(XLOG_FUNC + " Bad param in {}", Ip);
+            return false;
+        }
+        std::lock_guard lk(lock_);
+
+        // empty only from vector allowes any connection
+        if (only_from_.size() == 0) return true;
+
+        for (auto& o : only_from_) {
+            if (of::IsValid(o, Ip)) return true;
+        }
+
+        return false;
+    }
+
+    std::vector<std::string> getOnlyFrom() const {
+        std::lock_guard lk(lock_);
+        return only_from_;
+    }
+
+    std::optional<std::string> getPasword() {
+        std::lock_guard lk(lock_);
+        if (encrypt_) return password_;
+        return {};
+    }
+
 private:
     // called from ctor or loader
     void calcDerivatives();
     void setDefaults();
+
+    // check contents of only_from from the yml and fills array correct
+    // * for ipv6-mode added mapped addresses of ipv4-entries and normal
+    // ipv6-entries
+    // * for non ipv6-mode added only ipv4-entries
+    int fillOnlyFrom(const std::vector<std::string> Only) {
+        only_from_.clear();
+
+        for (auto& entry : Only) {
+            if (!of::IsAddress(entry) && !of::IsNetwork(entry)) {
+                XLOG::d("Bad param in ini {}", entry);
+                continue;
+            }
+
+            bool only_v4 = !ipv6_;
+            bool entry_ipv6 = of::IsIpV6(entry);
+
+            // skipping ipv6 entries in ipv4 mode
+            if (only_v4 && entry_ipv6) continue;
+
+            only_from_.push_back(entry);
+
+            // skipping because of
+            // * in ipv4-mode no mapping
+            // * for ipv6-entry no mapping too
+            if (only_v4 || entry_ipv6) continue;
+
+            // ipv6-mode:
+            if (of::IsAddressV4(entry)) {
+                // V4 address we are mapping to ipv6
+                auto mapped = of::MapToV6Address(entry);
+                if (mapped.empty()) continue;
+
+                only_from_.push_back(mapped);
+            } else if (of::IsNetworkV4(entry)) {
+                // V4 network we are mapping to ipv6
+                auto mapped = of::MapToV6Network(entry);
+                if (mapped.empty()) continue;
+
+                only_from_.push_back(mapped);
+            }
+        }
+        return static_cast<int>(only_from_.size());
+    }
 
 private:
     // node from the config file
@@ -520,7 +609,7 @@ private:
     friend class AgentConfig;
     FRIEND_TEST(AgentConfig, GlobalTest);
 #endif
-};
+};  // namespace cma::cfg
 
 struct WinPerf : public Group {
 public:

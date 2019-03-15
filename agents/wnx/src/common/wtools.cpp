@@ -15,9 +15,12 @@
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
+#include "cap.h"
 #include "cfg.h"
 #include "logger.h"
 #include "wtools.h"
+
+#include "upgrade.h"
 
 #pragma comment(lib, "wbemuuid.lib")  /// Microsoft Specific
 
@@ -25,6 +28,11 @@ namespace wtools {
 std::mutex ServiceController::s_lock_;
 ServiceController* ServiceController::s_controller_ = nullptr;
 
+void WINAPI ServiceController::ServiceMain(DWORD Argc, wchar_t** Argv) {
+    // Register the handler function for the service
+    XLOG::l.i("Service Main");
+    s_controller_->Start(Argc, Argv);
+}
 
 // no return from here
 // can print on screen
@@ -41,6 +49,7 @@ bool ServiceController::registerAndRun(const wchar_t* ServiceName,  //
         return false;
     }
 
+    // strange code below
     auto allocated = new wchar_t[wcslen(ServiceName) + 1];
 #pragma warning(push)
 #pragma warning(disable : 4996)  //_CRT_SECURE_NO_WARNINGS
@@ -58,20 +67,23 @@ bool ServiceController::registerAndRun(const wchar_t* ServiceName,  //
     // control dispatcher thread for the calling process. This call
     // returns when the service has stopped. The process should simply
     // terminate when the call returns. Two words: Blocks Here
-    DWORD ret = 0;
     try {
-        ret = StartServiceCtrlDispatcher(serviceTable);
+        auto ret = StartServiceCtrlDispatcher(serviceTable);
         if (!ret) {
-            XLOG::l(XLOG::kStdio)("Cannot Start Service '{}' error = '{}'",
-                                  ConvertToUTF8(ServiceName), GetLastError());
+            XLOG::l(XLOG::kStdio)
+                .crit("Cannot Start Service '{}' error = [{}]",
+                      ConvertToUTF8(ServiceName), GetLastError());
         }
+        return ret == 0;
+    } catch (std::exception& e) {
+        XLOG::l(XLOG::kStdio)
+            .crit("Exception '{}' in Service start with error {}", e.what(),
+                  GetLastError());
     } catch (...) {
-        XLOG::l(XLOG::kStdio)("Exception in Service start with error {}",
-                              GetLastError());
-        ret = -1;
+        XLOG::l(XLOG::kStdio)
+            .crit("Exception in Service start with error {}", GetLastError());
     }
-	
-    return ret == 0;
+    return false;
 }
 
 //
@@ -99,17 +111,22 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
                     uint32_t dwStartType, const wchar_t* Dependencies,
                     const wchar_t* Account, const wchar_t* Password) {
     wchar_t service_path[MAX_PATH];
+    XLOG::setup::ColoredOutputOnStdio(true);
 
-    if (::GetModuleFileName(NULL, service_path, ARRAYSIZE(service_path)) == 0) {
-        XLOG::l.crit("GetModuleFileName failed w/err {:#X}", GetLastError());
+    auto ret = ::GetModuleFileName(NULL, service_path, ARRAYSIZE(service_path));
+    if (ret == 0) {
+        XLOG::l(XLOG::kStdio)
+            .crit("GetModuleFileName failed w/err {:#X}", GetLastError());
         return false;
     }
 
     // Open the local default service control manager database
     auto service_manager = ::OpenSCManager(
         NULL, NULL, SC_MANAGER_CONNECT | SC_MANAGER_CREATE_SERVICE);
+
     if (!service_manager) {
-        XLOG::l.crit("OpenSCManager failed w/err {:#X}", GetLastError());
+        XLOG::l(XLOG::kStdio)
+            .crit("OpenSCManager failed w/err {:#X}", GetLastError());
         return false;
     }
 
@@ -131,13 +148,13 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
                                    Password       // Password of the account
     );
     if (!service) {
-        std::cout << XLOG::l.crit("CreateService failed w/err {}",
-                                  GetLastError());
+        XLOG::l(XLOG::kStdio)
+            .crit("CreateService failed w/err {}", GetLastError());
         return false;
     }
     ON_OUT_OF_SCOPE(CloseServiceHandle(service););
 
-    XLOG::l.i("'{}' is installed.", ConvertToUTF8(ServiceName));
+    XLOG::l(XLOG::kStdio).i("'{}' is installed.", ConvertToUTF8(ServiceName));
     return true;
 }
 
@@ -154,11 +171,12 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
 //   error in the standard output stream for users to diagnose the problem.
 //
 bool UninstallService(const wchar_t* ServiceName) {
+    XLOG::setup::ColoredOutputOnStdio(true);
     // Open the local default service control manager database
     auto service_manager = ::OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (!service_manager) {
-        xlog::l(L"OpenSCManager failed w/err 0x%08lx\n", GetLastError())
-            .print();
+        XLOG::l(XLOG::kStdio)
+            .crit("OpenSCManager failed w/err {:#X}", GetLastError());
         return false;
     }
     ON_OUT_OF_SCOPE(::CloseServiceHandle(service_manager););
@@ -167,40 +185,43 @@ bool UninstallService(const wchar_t* ServiceName) {
     auto service = ::OpenService(service_manager, ServiceName,
                                  SERVICE_STOP | SERVICE_QUERY_STATUS | DELETE);
     if (!service) {
-        xlog::l(L"OpenService failed w/err 0x%08lx\n", GetLastError()).print();
+        XLOG::l(XLOG::kStdio)
+            .crit("OpenService failed w/err {:#X}", GetLastError());
         return false;
     }
     ON_OUT_OF_SCOPE(::CloseServiceHandle(service););
 
     // Try to stop the service
     SERVICE_STATUS ssSvcStatus = {};
+    auto service_name = wtools::ConvertToUTF8(ServiceName);
     if (::ControlService(service, SERVICE_CONTROL_STOP, &ssSvcStatus)) {
-        xlog::l(L"Stopping %s.", ServiceName).print();
+        XLOG::l(XLOG::kStdio).i("Stopping '{}'.", service_name);
         Sleep(1000);
 
         while (::QueryServiceStatus(service, &ssSvcStatus)) {
             if (ssSvcStatus.dwCurrentState == SERVICE_STOP_PENDING) {
-                xlog::l(L".").print();
+                xlog::sendStringToStdio(".");
                 Sleep(1000);
             } else
                 break;
         }
 
         if (ssSvcStatus.dwCurrentState == SERVICE_STOPPED) {
-            xlog::l(L"\n%s is stopped.\n", ServiceName).print();
+            XLOG::l(XLOG::kStdio).i("\n{} is stopped.", service_name);
         } else {
-            xlog::l(L"\n%s failed to stop.\n", ServiceName).print();
+            XLOG::l(XLOG::kStdio).i("\n{} failed to stop.", service_name);
         }
     }
 
     // Now remove the service by calling DeleteService.
     if (!::DeleteService(service)) {
-        xlog::l(L"DeleteService failed w/err 0x%08lx\n", GetLastError())
-            .print();
+        XLOG::l(XLOG::kStdio)
+            .i("DeleteService failed w/err {:#X}\n", GetLastError());
         return false;
     }
 
-    xlog::l(L"%s is removed.\n", ServiceName).print();
+    XLOG::l(XLOG::kStdio)
+        .i("%s is removed.\n", wtools::ConvertToUTF8(ServiceName));
     return true;
 }
 
@@ -278,22 +299,29 @@ void ServiceController::Stop() {
 //   * Argv - array of command line arguments
 //
 void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
-    if (!processor_) return;  // #TODO: trace
+    if (!processor_) {
+        XLOG::l.crit("Unbelievable, but process_ is nullptr");
+        return;
+    }
 
     // Register the handler function for the service
     status_handle_ =
         RegisterServiceCtrlHandler(name_.get(), ServiceCtrlHandler);
+
     if (!status_handle_) {
-        XLOG::l(XLOG::kStdio)("I cannot register damned handlers %d",
+        XLOG::l(XLOG::kStdio)("I cannot register damned handlers {}",
                               GetLastError());
-        throw GetLastError();  // crash here
+        throw GetLastError();  // crash here - we have rights
         return;
     }
-    xlog::l("Damned handlers registered");
+    XLOG::l.i("Damned handlers registered");
 
     try {
         // Tell SCM that the service is starting.
         setServiceStatus(SERVICE_START_PENDING);
+
+        cma::cfg::upgrade::UpgradeLegacy(false);
+        cma::cfg::cap::Install();
 
         // Perform service-specific initialization.
         processor_->startService();
@@ -1364,6 +1392,145 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath) {
         entries.push_back(key_name);
     };
     return entries;
+}
+
+// gtest [+]
+// returns data from the root machine registry
+uint32_t GetRegistryValue(const std::wstring Key, const std::wstring Value,
+                          uint32_t Default) noexcept {
+    HKEY hkey = 0;
+    auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
+    if (ERROR_SUCCESS == ret && hkey) {
+        ON_OUT_OF_SCOPE(RegCloseKey(hkey));
+        DWORD type = REG_DWORD;
+        uint32_t buffer;
+        DWORD count = sizeof(buffer);
+        ret = RegQueryValueExW(hkey, Value.c_str(), 0, &type,
+                               reinterpret_cast<LPBYTE>(&buffer), &count);
+        if (ret == ERROR_SUCCESS && count && type == REG_DWORD) {
+            return buffer;
+        }
+    }
+    // failure here
+    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]",
+              ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()), ret);
+    return Default;
+}
+
+// gtest [+]
+// returns data from the root machine registry
+bool SetRegistryValue(const std::wstring Key, const std::wstring Value,
+                      uint32_t Data) noexcept {
+    auto ret = RegSetKeyValue(HKEY_LOCAL_MACHINE, Key.c_str(), Value.c_str(),
+                              REG_DWORD, &Data, 4);
+    if (ret != 0) XLOG::d("Bad with reg set value {}", ret);
+
+    return ret == ERROR_SUCCESS;
+}
+
+std::wstring GetRegistryValue(const std::wstring Key, const std::wstring Value,
+                              const std::wstring Default) noexcept {
+    HKEY hkey = 0;
+    auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
+    if (ERROR_SUCCESS == result && hkey) {
+        ON_OUT_OF_SCOPE(RegCloseKey(hkey));
+        DWORD type = REG_SZ;
+        wchar_t buffer[512];
+        DWORD count = sizeof(buffer);
+        auto ret = RegQueryValueExW(hkey, Value.c_str(), 0, &type,
+                                    reinterpret_cast<LPBYTE>(buffer), &count);
+
+        // check for errors
+        auto type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
+        if (count == 0 || !type_ok) {
+            // failure here
+            XLOG::t.t(XLOG_FLINE + "Absent on {}\\{} query return [{}]",
+                      ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()),
+                      ret);
+            return Default;
+        }
+
+        if (ret == ERROR_SUCCESS) {
+            return buffer;
+        }
+
+        if (ret == ERROR_MORE_DATA) {
+            // realloc required
+            DWORD type = REG_SZ;
+            auto buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
+            ON_OUT_OF_SCOPE(delete[] buffer_big);
+            DWORD count = sizeof(count);
+            ret =
+                RegQueryValueExW(hkey, Value.c_str(), 0, &type,
+                                 reinterpret_cast<LPBYTE>(buffer_big), &count);
+
+            // check for errors
+            type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
+            if (count == 0 || !type_ok) {
+                // failure here
+                XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query return [{}]",
+                          ConvertToUTF8(Key.c_str()),
+                          ConvertToUTF8(Value.c_str()), ret);
+                return Default;
+            }
+
+            if (ret == ERROR_SUCCESS) {
+                return buffer_big;
+            }
+            // failure here
+            XLOG::t.t(XLOG_FLINE + "Bad key {}\\{} query return [{}]",
+                      ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()),
+                      ret);
+            return Default;
+        }
+    }
+    // failure here
+    XLOG::t.t(XLOG_FLINE + "Cannot open Key {} query return code {}",
+              ConvertToUTF8(Key.c_str()), result);
+    return Default;
+}
+
+// process terminators
+bool KillProcess(uint32_t ProcessId, int Code) noexcept {
+    auto handle = OpenProcess(PROCESS_TERMINATE, FALSE, ProcessId);
+    if (!handle) return true;
+    ON_OUT_OF_SCOPE(CloseHandle(handle));
+
+    if (!TerminateProcess(handle, Code)) {
+        // - we have no problem(process already dead) - ignore
+        // - we have problem: either code is invalid or something wrong
+        // with Windows in all cases just report
+        xlog::d("Cannot terminate process %d gracefully, error %d", ProcessId,
+                GetLastError());
+    }
+
+    return true;
+}
+
+// process terminator
+// used to kill OpenHardwareMonitor
+bool KillProcess(const std::wstring& Name, int Code) noexcept {
+    auto snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
+    if (snapshot == nullptr) return false;
+
+    ON_OUT_OF_SCOPE(CloseHandle(snapshot));
+
+    PROCESSENTRY32 entry32;
+    entry32.dwSize = sizeof(entry32);
+    auto result = Process32First(snapshot, &entry32);
+    while (result) {
+        if (cma::tools::IsEqual(entry32.szExeFile, Name)) {
+            auto process =
+                OpenProcess(PROCESS_TERMINATE, 0, (DWORD)entry32.th32ProcessID);
+            if (process) {
+                TerminateProcess(process, Code);
+                CloseHandle(process);
+            }
+        }
+        result = Process32Next(snapshot, &entry32);
+    }
+
+    return true;
 }
 
 }  // namespace wtools

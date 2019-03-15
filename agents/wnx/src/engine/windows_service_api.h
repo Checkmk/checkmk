@@ -24,13 +24,18 @@ int InstallMainService();                       // on -install
 int RemoveMainService();                        // on -remove
 int TestMainService(const std::wstring& What);  // on -test
 int ExecMainService();                          // on -exec
-int ExecSkypeTest();                            // on -skype :hidden
+int ExecStartLegacy();                          // on -start_legacy
+int ExecStopLegacy();                           // on -stop_legacy
+int ExecCap();                                  // on -cap
+int ExecUpgradeParam(bool Force);               // om -upgrade
+
+int ExecSkypeTest();  // on -skype :hidden
 int ExecCvtIniYaml(std::filesystem::path IniFile,
                    std::filesystem::path YamlFile,
                    bool DianosticMessages);  // on -cvt
 int ServiceAsService(std::chrono::milliseconds Delay,
                      std::function<bool(const void* Processor)>
-                         InternalCallback);  // service execution
+                         InternalCallback) noexcept;  // service execution
 
 // NAMES
 constexpr const wchar_t* kServiceName = L"CheckMkService";

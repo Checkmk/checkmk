@@ -116,6 +116,13 @@ std::wstring GetBakeryDir() noexcept {
     return details::G_ConfigInfo.getBakeryDir();
 }
 
+std::filesystem::path GetBakeryFile() noexcept {
+    std::filesystem::path bakery = details::G_ConfigInfo.getBakeryDir();
+    bakery /= files::kDefaultMainConfig;
+    bakery.replace_extension(files::kDefaultBakeryExt);
+    return bakery;
+}
+
 std::wstring GetRootDir() noexcept {
     return details::G_ConfigInfo.getRootDir();
 }
@@ -281,7 +288,7 @@ static std::vector<std::filesystem::path> FillExternalCommandPaths() {
     return v;
 }
 
-// Typically called ONLY bu ConfigInfo
+// Typically called ONLY by ConfigInfo
 bool Folders::setRoot(const std::wstring& ServiceValidName,  // look in registry
                       const std::wstring& RootFolder         // look in disk
 )
@@ -332,13 +339,19 @@ bool Folders::setRoot(const std::wstring& ServiceValidName,  // look in registry
         return false;
     }
 
-    root_ = full[0];
+    root_ = full[0].lexically_normal();
 
     return true;
 }  // namespace cma::cfg::details
 
 void Folders::createDataFolderStructure(const std::wstring& AgentDataFolder) {
-    data_ = makeDefaultDataFolder(AgentDataFolder);
+    try {
+        std::filesystem::path folder = AgentDataFolder;
+        data_ = makeDefaultDataFolder(folder.lexically_normal().wstring());
+    } catch (const std::exception& e) {
+        XLOG::l.bp("Cannot create Default Data Folder , exception : {}",
+                   e.what());
+    }
 }
 
 void Folders::cleanAll() {
@@ -365,6 +378,7 @@ static auto CreateTree(const std::filesystem::path& Path) {
                      dirs::kUserPlugins,    // user plugins
                      dirs::kLocal,          // user local plugins
                      dirs::kTemp,           //
+                     dirs::kInstall,        // for installing data
                      dirs::kPluginConfig};  //
 
     for (auto dir : dir_list) {
@@ -453,7 +467,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& ConfigFileNames,
         // this is standard method
         fs::path root_yaml = GetRootDir();
         root_yaml /= name;
-        XLOG::d("Found root config on path {}", root_yaml.u8string());
+        XLOG::l.i("Found root config on path {}", root_yaml.u8string());
         usable_name = name;
         break;
     }
@@ -735,8 +749,9 @@ static bool IsYamlScalar(YAML::Node Node) {
     return Node.IsScalar();
 }
 
-// #TODO logging
-bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src) {
+// #TODO logging, unit testing and simplifying. This is trash!
+bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src,
+                            bool MergeSequences) {
     // we are scanning source
     for (YAML::const_iterator it = Src.begin(); it != Src.end(); ++it) {
         auto& f = it->first;
@@ -752,9 +767,8 @@ bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src) {
             if (IsYamlMap(s)) {
                 for (YAML::const_iterator itx = s.begin(); itx != s.end();
                      ++itx) {
-                    smartMerge(grp, s);
-                    // auto namex = itx->first.as<std::string>();
-                    // grp[namex] = itx->second;
+                    auto merge_seq = name == groups::kWinPerf;
+                    smartMerge(grp, s, merge_seq);
                 }
             } else {
                 XLOG::l.bp(XLOG_FLINE + " expected map from source {}", name);
@@ -762,7 +776,25 @@ bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src) {
             continue;
         } else if (IsYamlSeq(grp)) {
             if (IsYamlSeq(s)) {
-                grp = s;
+                if (MergeSequences) {
+                    for (auto entry : s) {
+                        if (!entry.IsDefined() || !entry.IsMap()) continue;
+                        auto s_name = entry["id"].as<std::string>("*");
+                        if (s_name == "*") continue;  // strange entry
+                        bool found = false;
+                        for (auto g_entry : grp) {
+                            if (!entry.IsDefined() || !entry.IsMap()) continue;
+
+                            auto t_name = g_entry["id"].as<std::string>("*");
+                            if (t_name == s_name) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) grp.push_back(entry);
+                    }
+                } else
+                    grp = s;
             } else {
                 XLOG::l.bp(XLOG_FLINE + " bad my bad");
             }
@@ -774,14 +806,14 @@ bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src) {
                 XLOG::l.bp(XLOG_FLINE + " bad src");
             }
         }
-    }
 
-    if (0) {
-        std::filesystem::path temp_folder = "c:\\dev\\shared";
-        auto path = temp_folder / "out";
+        if (0) {
+            std::filesystem::path temp_folder = "c:\\dev\\shared";
+            auto path = temp_folder / "out";
 
-        std::ofstream ofs(path.u8string());
-        ofs << Target;
+            std::ofstream ofs(path.u8string());
+            ofs << Target;
+        }
     }
 
     return true;
@@ -798,6 +830,7 @@ std::vector<ConfigInfo::YamlData> ConfigInfo::buildYamlData(
     yamls[2].path_.replace_extension(files::kDefaultUserExt);
 
     for (auto& yd : yamls) {
+        XLOG::d.t("Loading {}", yd.path_.u8string());
         yd.loadFile();
     }
 

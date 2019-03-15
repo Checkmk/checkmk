@@ -101,6 +101,18 @@
     <ClCompile Include="test-cap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test-upgrade.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test-realtime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test-encryption.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test-onlyfrom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\test_files\config\check_mk.old.example.yml">
@@ -133,5 +145,7 @@
     <None Include="..\prepare_to_tests.cmd">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\wnxtest\wnxtest.vcxproj" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -98,11 +98,13 @@ static int XLogType2Marker(xlog::Type Lt) {
 // get base global variable
 // modifies it!
 static auto CalcLogParam(const xlog::LogParam& Param, int Modifications) {
+    using namespace xlog::internal;
+
     auto& lp = Param;
     auto directions = lp.directions_;
     auto flags = lp.flags_;
     using namespace fmt::v5;
-    xlog::internal::Colors c = xlog::internal::Colors::kColorDefault;
+    auto c = Colors::kDefault;
 
     if (Modifications & Mods::kStdio) directions |= xlog::kStdioPrint;
     if (Modifications & Mods::kNoStdio) directions &= ~xlog::kStdioPrint;
@@ -125,17 +127,17 @@ static auto CalcLogParam(const xlog::LogParam& Param, int Modifications) {
             marker = "[ERROR:CRITICAL] ";
             flags &= ~xlog::kNoPrefix;
             directions |= xlog::kEventPrint;
-            c = xlog::internal::Colors::kColorRed;
+            c = Colors::kPinkLight;
             break;
 
         case Mods::kError:
             marker = "[Err  ] ";
-            c = xlog::internal::Colors::kColorRed;
+            c = Colors::kRed;
             break;
 
         case Mods::kWarning:
             marker = "[Warn ] ";
-            c = xlog::internal::Colors::kColorYellow;
+            c = Colors::kYellow;
             break;
 
         case Mods::kTrace:
@@ -144,7 +146,7 @@ static auto CalcLogParam(const xlog::LogParam& Param, int Modifications) {
         case Mods::kInfo:
         default:
             // nothing here, empty.
-            c = xlog::internal::Colors::kColorGreen;
+            c = xlog::internal::Colors::kGreen;
             break;
     }
 
@@ -168,11 +170,17 @@ void Emitter::postProcessAndPrint(const std::string& String) {
     }
 
     // USUAL
-    auto normal = formatString(flags, (prefix_ascii + marker_ascii).c_str(),
-                               String.c_str());
-    if (XLOG::details::IsDuplicatedOnStdio())
-        directions |= Directions::kStdioPrint;
-    sendString(directions, normal.c_str(), c);
+    if (directions & Directions::kDebuggerPrint) {
+        auto normal = formatString(flags, (prefix_ascii + marker_ascii).c_str(),
+                                   String.c_str());
+        sendStringToDebugger(normal.c_str());
+    }
+
+    if (directions & Directions::kStdioPrint ||
+        XLOG::details::IsDuplicatedOnStdio()) {
+        auto normal = formatString(flags, nullptr, String.c_str());
+        sendStringToStdio(normal.c_str(), c);
+    }
 
     // FILE
     if (directions & xlog::kFilePrint) {

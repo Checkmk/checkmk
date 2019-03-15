@@ -237,7 +237,7 @@ private:
         // Periodically check if the service is stopping.
         cma::MailSlot mailbox("WinAgent", 0);
         using namespace cma::carrier;
-        internal_port_ = BuildPort(kCarrierMailslotName, mailbox.GetName());
+        internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
         try {
             bool io_started = false;
             mailbox.ConstructThread(SystemMailboxCallback, 20, this);
@@ -291,6 +291,8 @@ private:
             XLOG::l.i("Thread is stopped");
         } catch (const std::exception& e) {
             XLOG::l.crit("Not expected exception '{}'. Fix it!", e.what());
+        } catch (...) {
+            XLOG::l.bp("Not expected exception. Fix it!");
         }
         internal_port_ = "";
     }

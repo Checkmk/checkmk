@@ -225,3 +225,26 @@ def test_service_depends_on(monkeypatch):
     assert config.service_depends_on("test-host", "svc2") == []
     assert config.service_depends_on("test-host", "svc1") == ["dep1"]
     assert config.service_depends_on("test-host", "svc1-abc") == ["dep1", "dep2-abc"]
+
+
+def test_host_tags_default():
+    assert isinstance(config.host_tags, dict)
+
+
+def test_host_tags_of_host(monkeypatch):
+    _setup_host(monkeypatch, "test-host", ["abc"])
+    monkeypatch.setattr(config, "host_tags", {
+        "test-host": {
+            "tag_group": "abc",
+        },
+    })
+
+    config.get_config_cache().initialize()
+
+    cfg = config.HostConfig("xyz")
+    assert cfg.tag_groups == {}
+    assert config.get_config_cache().tag_groups_of_host("xyz") == {}
+
+    cfg = config.HostConfig("test-host")
+    assert cfg.tag_groups == {"tag_group": "abc"}
+    assert config.get_config_cache().tag_groups_of_host("test-host") == {"tag_group": "abc"}

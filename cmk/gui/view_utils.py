@@ -28,6 +28,7 @@ import re
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 
 
 # There is common code with modules/events.py:format_plugin_output(). Please check
@@ -120,3 +121,9 @@ def check_limit(rows, limit, user):
         del rows[limit:]
         return False
     return True
+
+
+def render_tag_groups(tag_groups):
+    return HTML("").join(
+        html.render_span("%s:%s" % (tg_id, tag), class_="tag_group")
+        for tg_id, tag in sorted(tag_groups.items()))

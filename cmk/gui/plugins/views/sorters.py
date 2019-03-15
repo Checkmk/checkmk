@@ -42,7 +42,7 @@ from cmk.gui.plugins.views import (
     cmp_service_name_equiv,
     cmp_string_list,
     cmp_ip_address,
-    get_host_tags,
+    get_tag_groups,
     get_perfdata_nth_value,
 )
 
@@ -163,14 +163,16 @@ class SorterHost(Sorter):
 
     @property
     def title(self):
-        return _("Host Tags (raw)")
+        return _("Host Tags")
 
     @property
     def columns(self):
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_tags"]
 
     def cmp(self, r1, r2):
-        return cmp(get_host_tags(r1), get_host_tags(r2))
+        tag_groups_1 = sorted(get_tag_groups(r1, "host").items())
+        tag_groups_2 = sorted(get_tag_groups(r2, "host").items())
+        return cmp(tag_groups_1, tag_groups_2)
 
 
 @sorter_registry.register
@@ -185,7 +187,7 @@ class SorterServicelevel(Sorter):
 
     @property
     def columns(self):
-        return ['custom_variable_names', 'custom_variable_values']
+        return ['custom_variables']
 
     def cmp(self, r1, r2):
         return cmp_custom_variable(r1, r2, 'EC_SL', cmp_simple_number)

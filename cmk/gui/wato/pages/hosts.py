@@ -327,7 +327,7 @@ class CreateHostMode(HostMode):
 
         self._host = watolib.Folder.current().host(hostname)
 
-        if "ping" not in self._host.tags():
+        if not self._host.is_ping_host():
             create_msg = _('Successfully created the host. Now you should do a '
                            '<a href="%s">service discovery</a> in order to auto-configure '
                            'all services to be checked on this host.') % \

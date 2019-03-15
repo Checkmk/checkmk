@@ -164,6 +164,12 @@ class AuxTagList(object):
                 return True
         return False
 
+    def get_aux_tag(self, aux_tag_id):
+        for aux_tag in self._tags:
+            if aux_tag_id == aux_tag.id:
+                return aux_tag
+        return
+
     def get_tag_ids(self):
         return {tag.id for tag in self._tags}
 
@@ -252,6 +258,12 @@ class TagGroup(object):
     @property
     def default_value(self):
         return self.tags[0].id
+
+    def get_tag(self, tag_id):
+        for tag in self.tags:
+            if tag_id == tag.id:
+                return tag
+        return
 
     def get_tag_ids(self):
         return {tag.id for tag in self.tags}

@@ -94,6 +94,7 @@ from cmk.gui.plugins.views.utils import (
     get_all_views,
     painter_exists,
     PainterOptions,
+    get_tag_groups,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -101,12 +102,12 @@ from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
     view_title, multisite_builtin_views, view_hooks, inventory_displayhints, register_command_group,
     transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output,
-    link_to_view, url_to_view, get_host_tags, row_id, group_value, view_is_enabled, paint_age,
-    declare_1to1_sorter, declare_simple_sorter, cmp_simple_number, cmp_simple_string,
-    cmp_insensitive_string, cmp_num_split, cmp_custom_variable, cmp_service_name_equiv,
-    cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value, query_data,
-    do_query_data, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell,
-    register_legacy_command, register_painter, register_sorter,
+    link_to_view, url_to_view, row_id, group_value, view_is_enabled, paint_age, declare_1to1_sorter,
+    declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
+    cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
+    get_custom_var, get_perfdata_nth_value, query_data, do_query_data, join_row, get_view_infos,
+    replace_action_url_macros, Cell, JoinCell, register_legacy_command, register_painter,
+    register_sorter,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -614,15 +615,7 @@ def _register_host_tag_painters():
 
 
 def _paint_host_tag(row, tgid):
-    tags_of_host = get_host_tags(row).split()
-
-    tag_group = config.tags.get_tag_group(tgid)
-    if tag_group:
-        for grouped_tag in tag_group.tags:
-            if grouped_tag.id in tags_of_host:
-                return "", grouped_tag.title
-
-    return "", _("N/A")
+    return "", _get_tag_group_value(row, "host", tgid)
 
 
 def _register_host_tag_sorters():
@@ -631,27 +624,25 @@ def _register_host_tag_sorters():
             "host_tag_" + tag_group.id, {
                 "_tag_group_id": tag_group.id,
                 "title": _("Host tag:") + ' ' + tag_group.title,
-                "columns": ["host_custom_variable_names", "host_custom_variable_values"],
+                "columns": ["host_custom_variables"],
                 "cmp": lambda self, r1, r2: _cmp_host_tag(r1, r2, self._spec["_tag_group_id"]),
             })
 
 
 def _cmp_host_tag(r1, r2, tgid):
-    tags1 = get_host_tags(r1).split()
-    tags2 = get_host_tags(r2).split()
+    return cmp(_get_tag_group_value(r1, "host", tgid), _get_tag_group_value(r2, "host", tgid))
 
-    val1 = _('N/A')
-    val2 = _('N/A')
 
-    tag_group = config.tags.get_tag_group(tgid)
+def _get_tag_group_value(row, what, tag_group_id):
+    tag_id = get_tag_groups(row, "host").get(tag_group_id)
+
+    tag_group = config.tags.get_tag_group(tag_group_id)
     if tag_group:
-        for grouped_tag in tag_group.tags:
-            if grouped_tag.id in tags1:
-                val1 = grouped_tag.title
-            if grouped_tag.id in tags2:
-                val2 = grouped_tag.title
+        label = dict(tag_group.get_tag_choices()).get(tag_id, _("N/A"))
+    else:
+        label = tag_id
 
-    return cmp(val1, val2)
+    return label or _("N/A")
 
 
 #.

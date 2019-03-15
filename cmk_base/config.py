@@ -2786,6 +2786,7 @@ class HostConfig(object):
 
         tags = self._config_cache.tags_of_host(self.hostname)
         self.tags = tags
+        self.tag_groups = host_tags.get(hostname, {})
 
         # Basic types
         self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
@@ -2930,11 +2931,17 @@ class ConfigCache(object):
             parts = tagged_host.split("|")
             self._hosttags[parts[0]] = set(parts[1:])
 
+    # TODO: Rename to tag_list_of_hosts, check all call sites and remove this
     def tags_of_host(self, hostname):
         """Returns the list of all configured tags of a host. In case
         a host has no tags configured or is not known, it returns an
         empty list."""
         return self._hosttags.get(hostname, [])
+
+    # TODO: Rename to tags_of_host
+    def tag_groups_of_host(self, hostname):
+        """Returns the dict of all configured tag groups and values of a host"""
+        return host_tags.get(hostname, {})
 
     def set_all_processed_hosts(self, all_processed_hosts):
         self._all_processed_hosts = set(all_processed_hosts)

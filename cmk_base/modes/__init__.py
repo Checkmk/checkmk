@@ -153,7 +153,8 @@ class Modes(object):
 
                 num_found = 0
                 for hostname in valid_hosts:
-                    if config.hosttags_match_taglist(config_cache.tags_of_host(hostname), tagspec):
+                    if config.hosttags_match_taglist(
+                            config_cache.tag_list_of_host(hostname), tagspec):
                         hostlist.append(hostname)
                         num_found += 1
                 if num_found == 0:

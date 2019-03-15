@@ -136,11 +136,12 @@ def create_config(outfile, hostnames):
         hostnames = config.all_active_hosts()
 
     cfg = NagiosConfig(outfile, hostnames)
+    config_cache = config.get_config_cache()
 
     _output_conf_header(cfg)
 
     for hostname in hostnames:
-        _create_nagios_config_host(cfg, hostname)
+        _create_nagios_config_host(cfg, config_cache, hostname)
 
     _create_nagios_config_contacts(cfg, hostnames)
     _create_nagios_config_hostgroups(cfg)
@@ -162,14 +163,14 @@ def _output_conf_header(cfg):
 """)
 
 
-def _create_nagios_config_host(cfg, hostname):
+def _create_nagios_config_host(cfg, config_cache, hostname):
     cfg.outfile.write("\n# ----------------------------------------------------\n")
     cfg.outfile.write("# %s\n" % hostname)
     cfg.outfile.write("# ----------------------------------------------------\n")
-    host_attrs = core_config.get_host_attributes(hostname, config.tags_of_host(hostname))
+    host_attrs = core_config.get_host_attributes(hostname, config_cache)
     if config.generate_hostconf:
         _create_nagios_hostdefs(cfg, hostname, host_attrs)
-    _create_nagios_servicedefs(cfg, hostname, host_attrs)
+    _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs)
 
 
 def _create_nagios_hostdefs(cfg, hostname, attrs):
@@ -251,7 +252,7 @@ def _create_nagios_hostdefs(cfg, hostname, attrs):
     cfg.outfile.write(_format_nagios_object("host", host_spec).encode("utf-8"))
 
 
-def _create_nagios_servicedefs(cfg, hostname, host_attrs):
+def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
     outfile = cfg.outfile
     import cmk_base.check_table as check_table
 
@@ -260,8 +261,6 @@ def _create_nagios_servicedefs(cfg, hostname, host_attrs):
     #    |_ \
     #   ___) |
     #  |____/   3. Services
-
-    config_cache = config.get_config_cache()
 
     def do_omit_service(hostname, description):
         if config.service_ignored(hostname, None, description):

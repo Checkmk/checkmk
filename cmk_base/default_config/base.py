@@ -133,6 +133,7 @@ active_checks = {}  # WATO variant for fully formalized checks
 special_agents = {}  # WATO variant for datasource_programs
 custom_checks = []  # WATO variant for free-form custom checks without formalization
 all_hosts = []
+host_tags = {}  # store host tag config per host
 # TODO: This is a derived variable. Should be handled like others
 # (hosttags, service_service_levels, ...)
 host_paths = {}

@@ -2616,7 +2616,7 @@ class PainterHost(Painter):
 
     @property
     def title(self):
-        return _("Hostname, with configurable colors")
+        return _("Hostname")
 
     @property
     def short_title(self):

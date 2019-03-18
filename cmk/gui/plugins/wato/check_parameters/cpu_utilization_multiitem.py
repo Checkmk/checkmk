@@ -27,6 +27,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
+    Integer,
     Percentage,
     TextAscii,
     Tuple,
@@ -74,6 +75,17 @@ class RulespecCheckgroupParametersCpuUtilizationMultiitem(CheckParameterRulespec
                         ],
                     ),
                 ),
+                ("average",
+                 Integer(
+                     title=_("Averaging"),
+                     help=
+                     _("Average the CPU utilization over the specified time period before levels are applied."
+                      ),
+                     unit=_("minutes"),
+                     minvalue=1,
+                     default_value=15,
+                     label=_("Compute average over last "),
+                 )),
             ],
         )
 

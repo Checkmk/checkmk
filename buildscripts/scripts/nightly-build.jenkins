@@ -10,7 +10,7 @@ properties([
 ])
 
 def PACKAGE_BUILDS = [:]
-def AGENT_LIST = ["linux-64bit", "linux-32bit", "windows" ]
+def AGENT_LIST = ["linux-64bit", "linux-32bit", "windows", "windows-legacy" ]
 def AGENT_BUILDS= [:]
 
 DISTRO_LIST = DISTROS.split(' ');
@@ -31,18 +31,20 @@ node {
         docker.image(IMAGE).pull()
         docker.image(IMAGE).inside('-u 0:0 -v /var/jenkins_home/daily-data/:/var/jenkins_home/daily-data/ --network ci_local-infra') {
             stage('checkout sources') {
-               sh "rm -rf ${DAILY_DATA}"
-               sh 'rm -rf *'
-               // Add line to delete folders older than 10 days
-               dir("${DAILY_DATA}/git") {
+                sh "rm -rf ${DAILY_DATA}"
+                sh 'rm -rf *'
+                // Add line to delete folders older than 10 days
+                dir("${DAILY_DATA}/git") {
                     checkout(scm)
+                    // Actually Dependent on Edition. For now set to Enterprise!
+                    sh """
+                        rm -rf managed
+                        make NEW_VERSION=${CMK_VERS} setversion
+                    """
+                    dir('agents/wnx') {
+                        stash name: 'WinSRC', include: '**/*'
+                    }
                 }
-                // Actually Dependent on Edition. For now set to Enterprise!
-                sh """
-                    cd ${DAILY_DATA}/git
-                    rm -rf managed
-                    make NEW_VERSION=${CMK_VERS} setversion
-                """
             }
         }
     }
@@ -50,51 +52,67 @@ node {
 
 AGENT_LIST.each { AGENT ->
     AGENT_BUILDS['build agent ' + AGENT] = {
-        node {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image('agent-builder-' + AGENT).pull()
-                docker.image('agent-builder-' + AGENT).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra") {
-                    stage('build agent ' + AGENT) {
-                        if (AGENT == 'linux-64bit') {
-                            AGENT = ''
-                        } else if (AGENT == 'linux-32bit') {
-                            AGENT = '-32'
-                        } else {
-                            AGENT = '-windows'
-                        }
+        if (AGENT == 'windows') {
+            node('windows') {
+//                bat 'deltree *'
+                dir('agents/wnx') {
+                    unstash name: 'WinSRC'
+                }
+                bat 'cd agents\\wnx && call build_release.cmd'
+                dir('artefacts') {
+                    stash name: 'WinMSI', includes: 'check_mk_agent*'
+                }
+            }
+        }
+        else {
+            node {
+                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                    docker.image('agent-builder-' + AGENT).pull()
+                    docker.image('agent-builder-' + AGENT).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra") {
+                        stage('build agent ' + AGENT) {
+                            if (AGENT == 'linux-64bit') {
+                                AGENT = ''
+                            } else if (AGENT == 'linux-32bit') {
+                                AGENT = '-32'
+                            } else {
+                                AGENT = '-windows'
+                            }
 
-                        sh 'rm -rf *'
-                        sh "mkdir agent-updater${AGENT}-work agent-updater${AGENT}-dest"
-                        sh "mount -t overlay overlay -o lowerdir=${DAILY_DATA}/git,upperdir=${WORKSPACE}/agent-updater${AGENT}-dest,workdir=${WORKSPACE}/agent-updater${AGENT}-work ${WORKSPACE}/agent-updater${AGENT}-dest"
-                        if (AGENT == '-windows') {
-                            sh script: """
-                                cd agent-updater${AGENT}-dest/agents/windows/
-                                CHROOT_BUILD_DIR=${WORKSPACE}/agent-updater${AGENT}-dest \
-                                    CHROOT_NAME="agent-builder-windows" \
-                                    ./build-agent
-                            """
-                            sh script: """
-                                cd agent-updater${AGENT}-dest/enterprise/agents/windows/plugins
-                                CHROOT_BUILD_DIR=${WORKSPACE}/agent-updater${AGENT}-dest \
-                                    make
-                            """
-                            sh """
-                                mkdir -p ${DAILY_DATA}/agent-updater
-                                cp agent-updater${AGENT}-dest/agents/windows/check_mk_agent* ${DAILY_DATA}/agent-updater
-                                cp agent-updater${AGENT}-dest/enterprise/agents/windows/plugins/cmk-update-agent.exe ${DAILY_DATA}/agent-updater
-                            """
-                        } else { // Linux Agents (64 and 32 bit)
-                            sh script: """cd agent-updater${AGENT}-dest/enterprise/agents/plugins \
-                                && CHROOT_BUILD_DIR=${WORKSPACE}/agent-updater${AGENT}-dest \
-                                    BITNESS_SUFFIX='${AGENT}' \
-                                    make
-                            """
-                            sh """
-                                mkdir -p ${DAILY_DATA}/agent-updater${AGENT}
-                                cp agent-updater${AGENT}-dest/enterprise/agents/plugins/cmk-update-agent${AGENT} ${DAILY_DATA}/agent-updater
-                            """
+                            sh 'rm -rf *'
+                            sh "mkdir agent${AGENT}-work agent${AGENT}-dest"
+                            sh "mount -t overlay overlay -o lowerdir=${DAILY_DATA}/git,upperdir=${WORKSPACE}/agent${AGENT}-dest,workdir=${WORKSPACE}/agent${AGENT}-work ${WORKSPACE}/agent${AGENT}-dest"
+                            if (AGENT == '-windows') {
+                                sh script: """
+                                    cd agent${AGENT}-dest/agents/windows/
+                                    CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
+                                        CHROOT_NAME="agent-builder-windows" \
+                                        ./build-agent
+                                """
+                                sh script: """
+                                    cd agent${AGENT}-dest/enterprise/agents/windows/plugins
+                                    CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
+                                        make
+                                """
+                                sh """
+                                    mkdir -p ${DAILY_DATA}/agents
+                                    cp agent${AGENT}-dest/agents/windows/check_mk_agent-64.exe ${DAILY_DATA}/agents/check_mk_agent_legacy-64.exe
+                                    cp agent${AGENT}-dest/agents/windows/check_mk_agent.exe ${DAILY_DATA}/agents/check_mk_agent_legacy.exe
+                                    cp agent${AGENT}-dest/agents/windows/check_mk_agent.msi ${DAILY_DATA}/agents/check_mk_agent_legacy.msi
+                                    cp agent${AGENT}-dest/enterprise/agents/windows/plugins/cmk-update-agent.exe ${DAILY_DATA}/agents/
+                                """
+                            } else { // Linux Agents (64 and 32 bit)
+                                sh script: """cd agent${AGENT}-dest/enterprise/agents/plugins \
+                                    && CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
+                                        BITNESS_SUFFIX='${AGENT}' \
+                                        make
+                                """
+                                sh """
+                                    mkdir -p ${DAILY_DATA}/agent${AGENT}
+                                    cp agent${AGENT}-dest/enterprise/agents/plugins/cmk-update-agent${AGENT} ${DAILY_DATA}/agents
+                                """
+                            }
+                            sh "until umount agent${AGENT}-dest; do sleep 1; done"
                         }
-                        sh "until umount agent-updater${AGENT}-dest; do sleep 1; done"
                     }
                 }
             }
@@ -109,12 +127,16 @@ node {
         docker.image(IMAGE).pull()
         docker.image(IMAGE).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} --network ci_local-infra") {
             stage('create tarball') {
+               sh 'rm -rf *'
+               sh "pip install backports.functools_lru_cache"
+               unstash name: 'WinMSI'
+               sh "mv check_mk_agent* ${DAILY_DATA}/agents/"
                dir("${DAILY_DATA}/git") {
-                    sh "cp ${DAILY_DATA}/agent-updater/cmk-update-agent enterprise/agents/plugins/"
-                    sh "cp ${DAILY_DATA}/agent-updater/cmk-update-agent-32 enterprise/agents/plugins/"
-                    sh "cp ${DAILY_DATA}/agent-updater/cmk-update-agent.exe enterprise/agents/windows/plugins/"
-                    sh "cp ${DAILY_DATA}/agent-updater/check_mk_agent.msi agents/windows"
-                    sh "cp ${DAILY_DATA}/agent-updater/check_mk_agent*.exe agents/windows"
+                    sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
+                    sh "cp ${DAILY_DATA}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
+                    sh "cp ${DAILY_DATA}/agents/cmk-update-agent.exe enterprise/agents/windows/plugins/"
+                    sh "cp ${DAILY_DATA}/agents/check_mk_agent*.msi agents/windows"
+                    sh "cp ${DAILY_DATA}/agents/check_mk_agent*.exe agents/windows"
                     sh 'make dist || cat /root/.npm/_logs/*-debug.log'
                 }
             }

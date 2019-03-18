@@ -1,0 +1,13 @@
+Title: Prevent automatic discovery of duplicate services with the same service description
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1552918330
+Class: fix
+
+Hosts using snmp as well as tcp checks may run into a scenario where discovered snmp checks share the same service description as the tcp based checks.
+One example is the service description <tt>Uptime</tt>, which is created by the <tt>snmp_uptime</tt> and <tt>uptime</tt> check.
+
+In case of identical service descriptions, the tcp based check wins and the snmp based check is ignored.

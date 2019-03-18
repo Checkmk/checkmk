@@ -695,6 +695,17 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
                 elif on_error == "warn":
                     console.error("Discovery of '%s' failed: %s\n" % (check_plugin_name, e))
 
+
+        check_table_formatted = {}
+        for (check_type, item, _paramstring) in discovered_services:
+            check_table_formatted[(check_type, item)] = (None, config.service_description(hostname, check_type, item))
+
+        check_table_formatted = check_table.remove_duplicate_checks(check_table_formatted)
+        for entry in discovered_services[:]:
+            check_type, item = entry[:2]
+            if (check_type, item) not in check_table_formatted:
+                discovered_services.remove(entry)
+
         return discovered_services
 
     except KeyboardInterrupt:

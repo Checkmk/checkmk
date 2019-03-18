@@ -342,6 +342,10 @@ class LogDataSource(DataSourceLivestatus):
         return "log"
 
     @property
+    def table(self):
+        return RowTableLivestatus("log")
+
+    @property
     def infos(self):
         return ["log", "host", "service", "contact", "command"]
 

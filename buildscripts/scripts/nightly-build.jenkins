@@ -186,10 +186,14 @@ node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         IMAGE = 'ubuntu-18.04-common'
         docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} --network ci_local-infra") {
+        docker.image(IMAGE).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} -v /bauwelt/etc/.gnupg:/bauwelt/etc/.gnupg --network ci_local-infra") {
             stage('Archive artifacts') {
                 dir("${DAILY_DATA}/downloads") {
-                    sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.{deb,rpm} ."
+                    sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*_amd64.deb . || true"
+                    sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.rpm . || true"
+                    withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
+                        sh "${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh"
+                    }
                     archiveArtifacts "*"
                 }
             }

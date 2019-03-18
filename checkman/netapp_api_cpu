@@ -8,6 +8,10 @@ description:
 
  Returns {WARN}/{CRIT} if the current utilization is above the given levels.
 
+ The {WARN}/{CRIT} levels may be configured with WATO rule group
+ {CPU utilization of Devices with Modules}. It is possible to configure
+ averaging of the CPU utilization via parameter {Averaging}.
+
 inventory:
  Creates one check.
 

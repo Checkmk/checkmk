@@ -1,0 +1,12 @@
+Title: netapp_api_cpu: Optional averaging of CPU utilization in cluster mode
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552902773
+Class: feature
+
+Users can now configure averaging for the CPU utilization of NetApp devices using
+the WATO rule {CPU utilization of Devices with Modules}. If configured, the CPU
+utilization is averaged over the specified time period before levels are applied.

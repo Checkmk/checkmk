@@ -229,7 +229,8 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress,
     console.step("Executing inventory plugins")
     import cmk_base.inventory_plugins as inventory_plugins
     console.verbose("Plugins:")
-    for section_name, plugin in inventory_plugins.inv_info.items():
+
+    for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
         section_content = multi_host_sections.get_section_content(hostname, ipaddress,
                                                                   section_name, for_discovery=False)
         if section_content is None: # No data for this check type

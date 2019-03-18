@@ -151,3 +151,48 @@ def _get_inventory_context():
         ("inv_tree_list", cmk_base.inventory.inv_tree_list),
         ("inv_tree", cmk_base.inventory.inv_tree),
     ]
+
+
+def sorted_inventory_plugins():
+
+    # First resolve *all* dependencies. This ensures that there
+    # are no cyclic dependencies, and that the 'depends on'
+    # relation is transitive.
+    resolved_dependencies = {}
+
+    def resolve_plugin_dependencies(plugin_name, known_dependencies=None):
+        '''recursively aggregate all plugin dependencies'''
+        if known_dependencies is None:
+            known_dependencies = set()
+        if plugin_name in resolved_dependencies:
+            known_dependencies.update(resolved_dependencies[plugin_name])
+            return known_dependencies
+
+        try:
+            direct_dependencies = set(inv_info[plugin_name].get('depends_on', []))
+        except KeyError:
+            raise MKGeneralException("unknown plugin dependency: %r" % plugin_name)
+
+        new_dependencies = direct_dependencies - known_dependencies
+        known_dependencies.update(new_dependencies)
+        for dependency in new_dependencies:
+            known_dependencies = resolve_plugin_dependencies(dependency, known_dependencies)
+        return known_dependencies
+
+    for plugin_name in inv_info:
+        resolved_dependencies[plugin_name] = resolve_plugin_dependencies(plugin_name)
+        if plugin_name in resolved_dependencies[plugin_name]:
+            raise MKGeneralException("cyclic plugin dependencies for %r" % plugin_name)
+
+    # The plugins are now a partially ordered set with respect to
+    # the 'depends on' relation. That means we can iteratively
+    # yield the minimal elements
+    remaining_plugins = set(inv_info.keys())
+    yielded_plugins = set()
+    while remaining_plugins:
+        for plugin_name in sorted(remaining_plugins):
+            dependencies = resolved_dependencies[plugin_name]
+            if dependencies <= yielded_plugins:
+                yield plugin_name, inv_info[plugin_name]
+                yielded_plugins.add(plugin_name)
+                remaining_plugins.remove(plugin_name)

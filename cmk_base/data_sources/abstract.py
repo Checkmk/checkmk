@@ -359,7 +359,16 @@ class DataSource(object):
 
     # TODO: Refactor the returned data of this method and self._summary_result()
     # to some wrapped object like CheckResult(...)
-    def get_summary_result(self):
+    def get_summary_result_for_discovery(self):
+        return self._get_summary_result(for_checking=False)
+
+    def get_summary_result_for_inventory(self):
+        return self._get_summary_result(for_checking=False)
+
+    def get_summary_result_for_checking(self):
+        return self._get_summary_result()
+
+    def _get_summary_result(self, for_checking=True):
         """Returns a three element tuple of state, output and perfdata (list) that summarizes
         the execution result of this data source.
 
@@ -367,7 +376,7 @@ class DataSource(object):
         "Check_MK HW/SW Inventory" services."""
 
         if not self._exception:
-            return self._summary_result()
+            return self._summary_result(for_checking)
 
         exc_msg = "%s" % self._exception
 
@@ -385,7 +394,7 @@ class DataSource(object):
 
         return status, exc_msg + check_api_utils.state_markers[status], []
 
-    def _summary_result(self):
+    def _summary_result(self, for_checking):
         """Produce a source specific summary result in case no exception occured.
 
         When an exception occured while processing a data source, the generic
@@ -646,7 +655,7 @@ class CheckMKAgentDataSource(DataSource):
         return HostSections(sections, agent_cache_info, piggybacked_raw_data, persisted_sections)
 
     # TODO: refactor
-    def _summary_result(self):
+    def _summary_result(self, for_checking):
         agent_info = self._get_agent_info()
         agent_version = agent_info["version"]
         output = []

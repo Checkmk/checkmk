@@ -110,7 +110,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
             item_state.save(hostname)
 
         for source in sources.get_data_sources():
-            source_state, source_output, source_perfdata = source.get_summary_result()
+            source_state, source_output, source_perfdata = source.get_summary_result_for_checking()
             if source_output != "":
                 status = max(status, source_state)
                 infotexts.append("[%s] %s" % (source.id(), source_output))

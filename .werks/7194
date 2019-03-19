@@ -1,0 +1,11 @@
+Title: ceph_df: Support changed output format
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1553008761
+Class: fix
+
+Dependent on the version of ceph the output format differs w.r.t. how the size
+of used storage is represented. This werk adds support for all known formats.

@@ -1,0 +1,13 @@
+Title: Fixed possible exception when filtering views using non ASCII characters
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1553012514
+Class: fix
+
+A GUI timeout or UnicodeDecodeError messages could occur when trying to filter
+views using non ASCII characters, like e.g. Umlauts. This could e.g. occur for
+users when trying to view service detail pages of services that have such
+characters in their names.

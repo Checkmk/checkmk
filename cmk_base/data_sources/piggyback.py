@@ -67,7 +67,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         self._logger.verbose("Execute data source")
         return self._execute(), False
 
-    def _summary_result(self):
+    def _summary_result(self, for_checking):
         """Returns useful information about the data source execution
 
         Return only summary information in case there is piggyback data"""

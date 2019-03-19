@@ -235,18 +235,19 @@ class TCPDataSource(CheckMKAgentDataSource):
         return 1, ", invalid access configuration: %s%s" \
                   % (", ".join(infotexts), state_markers[1])
 
-    def _summary_result(self):
+    def _summary_result(self, for_checking):
         agent_info = self._get_agent_info()
-        status, output, perfdata = super(TCPDataSource, self)._summary_result()
+        status, output, perfdata = super(TCPDataSource, self)._summary_result(for_checking)
         infotexts = [output]
 
-        for sub_status, sub_output in [
-                self._sub_result_version(agent_info),
-                self._sub_result_only_from(agent_info),
-        ]:
-            status = max(status, sub_status)
-            if sub_output:
-                infotexts.append(sub_output)
+        if for_checking:
+            for sub_status, sub_output in [
+                    self._sub_result_version(agent_info),
+                    self._sub_result_only_from(agent_info),
+            ]:
+                status = max(status, sub_status)
+                if sub_output:
+                    infotexts.append(sub_output)
 
         return status, ", ".join(infotexts), perfdata
 

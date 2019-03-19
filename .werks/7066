@@ -1,0 +1,13 @@
+Title: k8s_stats.network: prefer lnx_if check if present
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1553011735
+Class: fix
+
+When the check_mk_agent was used together with the Kubernetes
+special agent duplicate interfaces were discovered. Now the
+lnx_if check from the check_mk_agent is preferred over the
+k8s_stats.network check from the special agent.

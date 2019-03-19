@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,6 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 
+def _sanitize_line(line):
+    """Merges units to values in case values and units are contained in separate line elements."""
+    units = ("k", "K", "B", "M", "G", "T", "P", "E", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB")
+    sanitized_line = []
+    for word in line:
+        if word in units and sanitized_line:
+            sanitized_line[-1] += word
+        else:
+            sanitized_line.append(word)
+    return sanitized_line
+
+
 def parse_ceph_df(info):
     parsed = {}
     section = None
@@ -40,6 +52,7 @@ def parse_ceph_df(info):
             section = "pools"
             continue
 
+        line = _sanitize_line(line)
         if section == "global":
             if line == ['SIZE', 'AVAIL', 'RAW', 'USED', '%RAW', 'USED', 'OBJECTS']:
                 global_headers = ['SIZE', 'AVAIL', 'RAW USED', '%RAW USED', 'OBJECTS']
@@ -70,13 +83,23 @@ def parse_ceph_df(info):
                 parsed.setdefault(line[0], dict(zip(pools_headers[1:], line[1:])))
 
     def parse_byte_values(value_str):
-        if value_str.endswith("T"):
+        """
+        Returns the used storage in mebibytes.
+        """
+        # sanitize to possible units to single representation
+        value_str = value_str.rstrip("iB")
+
+        if value_str.endswith("E"):
+            return float(value_str[:-1]) * 1024**4
+        elif value_str.endswith("P"):
+            return float(value_str[:-1]) * 1024**3
+        elif value_str.endswith("T"):
             return float(value_str[:-1]) * 1024**2
         elif value_str.endswith("G"):
             return float(value_str[:-1]) * 1024
         elif value_str.endswith("M"):
             return float(value_str[:-1])
-        elif value_str.endswith("k"):
+        elif value_str.lower().endswith("k"):
             return float(value_str[:-1]) / 1024
         elif value_str == 'N/A':
             return 0.0

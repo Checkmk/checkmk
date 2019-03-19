@@ -25,18 +25,32 @@
 # Boston, MA 02110-1301 USA.
 
 
-@discover
-def discover_k8s_stats_network(key, value):
-    if key == 'network':
-        return set([interface.get('name') for interface in value['interfaces']])
+def discover_k8s_stats_network(parsed):
+    # don't use the k8s check if the check_mk_agent delivers interface data
+    parsed, lnx_info = parsed
+    if lnx_info:
+        return
+
+    for key, value in parsed.iteritems():
+        if key != 'network':
+            continue
+
+        for interface in value['interface']:
+            yield interface.get('name'), {}
 
 
-@discover
-def discover_k8s_stats_fs(key, value):
+def discover_k8s_stats_fs(parsed):
+    parsed, _ = parsed
     ignore_fs = ['tmpfs', 'rootfs']
-    if key == 'filesystem':
+
+    for key, value in parsed.iteritems():
+        if key != 'filesystem':
+            continue
+
         devices = [disk.get('device') for disk in value]
-        return set([x for x in devices if x not in ignore_fs])
+        for device in devices:
+            if device not in ignore_fs:
+                yield device, {}
 
 
 def k8s_network_err_pac(device, params, now):
@@ -65,7 +79,9 @@ def k8s_network_err_pac(device, params, now):
         yield status, infotext, perf_data
 
 
-def check_k8s_stats_network(item, params, metrics):
+def check_k8s_stats_network(item, params, parsed):
+    metrics, _ = parsed
+
     device = sum([
         collections.Counter(device)
         for device in metrics['network']['interfaces']
@@ -98,7 +114,9 @@ def check_k8s_stats_network(item, params, metrics):
         yield check_levels(rate, dsname, params.get('discards'), unit='1/s', infoname=name)
 
 
-def check_k8s_stats_fs(item, params, metrics):
+def check_k8s_stats_fs(item, params, parsed):
+    metrics, _ = parsed
+
     disk = sum([
         collections.Counter(device)
         for device in metrics['filesystem']
@@ -118,6 +136,7 @@ def check_k8s_stats_fs(item, params, metrics):
 
 check_info['k8s_stats'] = {
     'parse_function': parse_k8s,
+    'extra_sections': ['lnx_if'],
 }
 
 check_info['k8s_stats.network'] = {

@@ -3239,7 +3239,7 @@ def query_action_data(what, host, site, svcdesc):
 def ajax_popup_action_menu():
     site    = html.var('site')
     host    = html.var('host')
-    svcdesc = html.var('service')
+    svcdesc = html.get_unicode_input('service')
     what    = 'service' if svcdesc else 'host'
 
     weblib.prepare_display_options(globals())

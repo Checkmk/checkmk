@@ -569,7 +569,7 @@ def _unsplit(s):
 
 def _get_logfile_timespan(path):
     try:
-        with path.open() as f:
+        with path.open(encoding="utf-8") as f:
             first_entry = float(f.readline().split('\t', 1)[0])
         last_entry = path.stat().st_mtime
         return first_entry, last_entry

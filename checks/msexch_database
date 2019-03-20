@@ -83,6 +83,12 @@ def parse_msexch_database(info):
         if delocalize_func is not None:
             instance, counter, value = delocalize_func(instance, counter, value)
 
+        # The entries for log verifier contain an ID as the last part
+        # which changes upon reboot of the exchange server. Therefore,
+        # we just remove them here as a workaround.
+        if '/log verifier' in instance:
+            instance = instance.rsplit(' ', 1)[0]
+
         try:
             parsed.setdefault(instance, {})[counter] = float(value)
         except ValueError:

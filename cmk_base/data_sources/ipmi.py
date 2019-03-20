@@ -201,8 +201,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
         return output
 
-
-    def _summary_result(self):
+    def _summary_result(self, for_checking):
         return 0, "Version: %s" % self._get_ipmi_version(), []
 
 

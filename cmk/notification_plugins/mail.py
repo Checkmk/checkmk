@@ -906,47 +906,83 @@ def render_elements(context, elements):
            utils.substitute_context(tmpl_html, context)
 
 
-def main():
-    if bulk_mode:
-        attachments = []
-        content_txt = ""
-        content_html = ""
-        parameters, contexts = utils.read_bulk_contexts()
+class BulkEmailContent(object):
+    def __init__(self, context_function):
+        self.attachments = []
+        self.content_txt = ""
+        self.content_html = ""
+        parameters, contexts = context_function()
         hosts = set([])
         for context in contexts:
             context.update(parameters)
             utils.html_escape_context(context)
             txt, html, att = construct_content(context)
-            content_txt += txt
-            content_html += html
-            attachments += att
-            mailto = context['CONTACTEMAIL']  # Assume the same in each context
-            subject = context['SUBJECT']
+            self.content_txt += txt
+            self.content_html += html
+            self.attachments += att
             hosts.add(context["HOSTNAME"])
 
+        last_context = contexts[-1]
+        self.mailto = last_context['CONTACTEMAIL']  # Assume the same in each context
+
         # Use the single context subject in case there is only one context in the bulk
-        if len(contexts) > 1:
-            subject = utils.get_bulk_notification_subject(contexts, hosts)
-    else:
+        self.subject = (utils.get_bulk_notification_subject(contexts, hosts)
+                        if len(contexts) > 1 else last_context['SUBJECT'])
+
+        # TODO: cleanup duplicate code with SingleEmailContent
+        # TODO: the context is only needed because of SMPT settings used in send_mail
+        self.from_address = last_context.get("PARAMETER_FROM") or default_from_address()
+        self.reply_to = last_context.get("PARAMETER_REPLY_TO")
+        self.context = last_context
+
+
+class SingleEmailContent(object):
+    def __init__(self, context_function):
         # gather all options from env
-        context = utils.collect_context()
+        context = context_function()
         utils.html_escape_context(context)
         content_txt, content_html, attachments = construct_content(context)
-        mailto = context['CONTACTEMAIL']
-        subject = context['SUBJECT']
 
-    if not mailto:  # e.g. empty field in user database
+        self.content_txt = content_txt
+        self.content_html = content_html
+        self.attachments = attachments
+        self.mailto = context['CONTACTEMAIL']
+        self.subject = context['SUBJECT']
+
+        # TODO: cleanup duplicate code with BulkEmailContent
+        # TODO: the context is only needed because of SMPT settings used in send_mail
+        self.from_address = context.get("PARAMETER_FROM") or default_from_address()
+        self.reply_to = context.get("PARAMETER_REPLY_TO")
+        self.context = context
+
+
+def main():
+    if bulk_mode:
+        content = BulkEmailContent(utils.read_bulk_contexts)
+    else:
+        content = SingleEmailContent(utils.collect_context)
+
+    if not content.mailto:  # e.g. empty field in user database
         sys.stderr.write("Cannot send HTML email: empty destination email address\n")
         sys.exit(2)
 
-    # Create the mail and send it
-    from_address = context.get("PARAMETER_FROM") or default_from_address()
-    reply_to = context.get("PARAMETER_REPLY_TO")
-    m = multipart_mail(mailto, subject, from_address, reply_to, content_txt, content_html,
-                       attachments)
+    m = multipart_mail(
+        content.mailto,
+        content.subject,
+        content.from_address,
+        content.reply_to,
+        content.content_txt,
+        content.content_html,
+        content.attachments,
+    )
 
     try:
-        sys.exit(send_mail(m, mailto, from_address, context))
+        sys.exit(send_mail(
+            m,
+            content.mailto,
+            content.from_address,
+            content.context,
+        ))
     except Exception as e:
         sys.stderr.write("Unhandled exception: %s\n" % e)
         # unhandled exception, don't retry this...

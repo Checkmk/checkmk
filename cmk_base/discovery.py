@@ -270,8 +270,8 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
                 else:
                     counts["removed"] += 1
 
-            # Silently keep clustered services
             elif check_source.startswith("clustered_"):
+                # Silently keep clustered services
                 new_items[(check_plugin_name, item)] = paramstring
 
             else:
@@ -995,11 +995,11 @@ def _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_err
             else:
                 continue # ignore
 
-        if hostname != config.host_of_clustered_service(hostname, descr):
-            if check_source == "vanished":
-                del services[(check_plugin_name, item)] # do not show vanished clustered services here
-            else:
-                services[(check_plugin_name, item)] = ("clustered_" + check_source, paramstring)
+        clustername = config.host_of_clustered_service(hostname, descr)
+        if hostname != clustername:
+            if config.service_ignored(clustername, check_plugin_name, descr):
+                check_source = "ignored"
+            services[(check_plugin_name, item)] = ("clustered_" + check_source, paramstring)
 
     _merge_manual_services(services, hostname, on_error)
     return services

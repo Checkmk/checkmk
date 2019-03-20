@@ -2073,9 +2073,15 @@ mk_ora_db_connect () {
     fi
 
     offset=${offset:-0}
-    ORADBUSER=${SQLS_DBUSER:-$(echo "${ORACFGLINE}" | cut -d":" -f$((1+offset)))}
-    DBPASSWORD=${SQLS_DBPASSWORD:-$(echo "${ORACFGLINE}" | cut -d":" -f$((2+offset)))}
-    DBSYSCONNECT=${SQLS_DBSYSCONNECT:-$(echo "${ORACFGLINE}" | cut -d":" -f$((3+offset)))}
+    if [ -n "$SQLS_DBUSER" ]; then
+        ORADBUSER=${SQLS_DBUSER}
+        DBPASSWORD=${SQLS_DBPASSWORD}
+        DBSYSCONNECT=${SQLS_DBSYSCONNECT:-}
+    else
+        ORADBUSER=$(echo "${ORACFGLINE}" | cut -d":" -f$((1+offset)))
+        DBPASSWORD=$(echo "${ORACFGLINE}" | cut -d":" -f$((2+offset)))
+        DBSYSCONNECT=$(echo "${ORACFGLINE}" | cut -d":" -f$((3+offset)))
+    fi
     DBHOST=$(echo "${ORACFGLINE}" | cut -d":" -f$((4+offset)))
     DBPORT=$(echo "${ORACFGLINE}" | cut -d":" -f$((5+offset)))
 
@@ -2130,7 +2136,10 @@ mk_ora_db_connect () {
         # => use the wallet with tnsnames.ora or EZCONNECT
         TNSALIAS=${TNSALIAS:-"localhost:1521/${ORACLE_SID}"}
     else
-        assysdbaconnect=${DBSYSCONNECT:-}
+        if [ "${DBSYSCONNECT}" ]; then
+            assysdbaconnect=" as "${DBSYSCONNECT}
+        fi
+
         TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST:-"localhost"})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
 
         # ORADBUSER = '/'? => ignore DBPASSWORD and use the wallet

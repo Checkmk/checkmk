@@ -1,0 +1,16 @@
+Title: Check_MK Discovery/Inventory: Removed duplicate agent info monitoring
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p14
+Date: 1553005141
+
+Previously the agent information about agent version and only-from
+configuration was checked by the {{Check_MK}}, {{Check_MK Discovery}}
+and {{Check_MK HW/SW Inventory}} service.
+
+We removed this duplicate agent information monitoring from the
+{{Check_MK Discovery}} and {{Check_MK HW/SW Inventory}} service.

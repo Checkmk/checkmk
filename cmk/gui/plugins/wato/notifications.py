@@ -670,7 +670,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                 ("caller",
                  TextAscii(
                      title=_("Caller ID"),
-                     help=_("Caller is the user in behalf of whom the incident is being reported "
+                     help=_("Caller is the user on behalf of whom the incident is being reported "
                             "within servicenow. Please enter the name of the caller here."),
                  )),
                 ("host_short_desc",

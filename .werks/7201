@@ -8,7 +8,7 @@ Date: 1552645826
 Class: feature
 
 Check_MK now supports integration with Servicenow.
-You can create, update and close incidents for Host an Service Problems.
+You can create, update and close incidents for Host and Service Problems.
 
 Please see the inline help of the notification method rule within wato for detailed options.
 

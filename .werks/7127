@@ -1,0 +1,13 @@
+Title: msexch_database: Fixed disappearance of services caused by dynamically generated IDs
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.4.0p39
+Date: 1553063899
+Class: fix
+
+After a reboot of the exchange server the databases get dynamically
+generated IDs. These IDs were part of the items which led to vanished services.
+This has been fixed now. You have to perform a re-discovery on the
+affected hosts.

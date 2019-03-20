@@ -165,7 +165,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         agent_info = self._get_agent_info()
         agent_version = agent_info["version"]
 
-        status, output, perfdata = super(TCPDataSource, self)._summary_result()
+        status, output, perfdata = super(TCPDataSource, self)._summary_result(for_checking)
 
         if for_checking:
             expected_version = config.agent_target_version(self._hostname)

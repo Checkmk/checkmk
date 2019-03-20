@@ -38,7 +38,8 @@ except ImportError:
         exit()
 
 opt_verbose = '--verbose' in sys.argv
-opt_debug   = '--debug' in sys.argv
+opt_debug = '--debug' in sys.argv
+
 
 class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
     """
@@ -58,6 +59,7 @@ class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
 
     https_request = http_request
 
+
 class HTTPSValidatingConnection(HTTPSConnection):
     def __init__(self, host, ca_file, key_file, cert_file):
         HTTPSConnection.__init__(self, host, key_file=key_file, cert_file=cert_file)
@@ -68,11 +70,19 @@ class HTTPSValidatingConnection(HTTPSConnection):
     def connect(self):
         HTTPConnection.connect(self)
         if self.__ca_file:
-            self.sock = ssl.wrap_socket(self.sock, keyfile=self.key_file, certfile=self.cert_file,
-                                        ca_certs=self.__ca_file, cert_reqs=ssl.CERT_REQUIRED)
+            self.sock = ssl.wrap_socket(
+                self.sock,
+                keyfile=self.key_file,
+                certfile=self.cert_file,
+                ca_certs=self.__ca_file,
+                cert_reqs=ssl.CERT_REQUIRED)
         else:
-            self.sock = ssl.wrap_socket(self.sock, keyfile=self.key_file, certfile=self.cert_file,
-                                        ca_certs=self.__ca_file, cert_reqs=ssl.CERT_NONE)
+            self.sock = ssl.wrap_socket(
+                self.sock,
+                keyfile=self.key_file,
+                certfile=self.cert_file,
+                ca_certs=self.__ca_file,
+                cert_reqs=ssl.CERT_NONE)
 
 
 class HTTPSAuthHandler(urllib2.HTTPSHandler):
@@ -88,8 +98,9 @@ class HTTPSAuthHandler(urllib2.HTTPSHandler):
         return self.do_open(self.getConnection, req)
 
     def getConnection(self, host, timeout):
-        return HTTPSValidatingConnection(host, ca_file=self.__ca_file,
-                                         key_file=self.__key, cert_file=self.__cert)
+        return HTTPSValidatingConnection(
+            host, ca_file=self.__ca_file, key_file=self.__key, cert_file=self.__cert)
+
 
 def fetch_url_get(base_url, path, function):
     if path:
@@ -115,10 +126,10 @@ def fetch_url_post(base_url, path, service_url, service_user, service_password, 
     segments = path.split("/")
 
     data = {
-        "type":      function.upper(),
-        "mbean":     segments[0],
+        "type": function.upper(),
+        "mbean": segments[0],
         "attribute": segments[1],
-        "target":    {
+        "target": {
             "url": service_url,
         },
     }
@@ -142,13 +153,22 @@ def fetch_url_post(base_url, path, service_url, service_user, service_password, 
         return []
     return json_data
 
-def fetch_var(protocol, server, port, path, suburi, itemspec, service_url, service_user,
-              service_password, function="read"):
+
+def fetch_var(protocol,
+              server,
+              port,
+              path,
+              suburi,
+              itemspec,
+              service_url,
+              service_user,
+              service_password,
+              function="read"):
     base_url = "%s://%s:%d/%s" % (protocol, server, port, suburi)
 
     if service_url is not None:
-        json_data = fetch_url_post(base_url, path,
-                                   service_url, service_user, service_password, function)
+        json_data = fetch_url_post(base_url, path, service_url, service_user, service_password,
+                                   function)
     else:
         json_data = fetch_url_get(base_url, path, function)
 
@@ -173,6 +193,7 @@ def fetch_var(protocol, server, port, path, suburi, itemspec, service_url, servi
         return []
     val = obj.get('value', None)
     return make_item_list((), val, itemspec)
+
 
 # convert single values into lists of items in
 # case value is a 1-levelled or 2-levelled dict
@@ -199,10 +220,12 @@ def make_item_list(path, value, itemspec):
             result += make_item_list(path + item, subvalue, [])
         return result
 
+
 # Example:
 # key = 'Catalina:host=localhost,path=\\/,type=Manager'
 # itemsepc = [ "path" ]
 # --> "/"
+
 
 def extract_item(key, itemspec):
     path = key.split(":", 1)[-1]
@@ -225,9 +248,9 @@ def extract_item(key, itemspec):
 
 
 def fetch_metric(inst, path, title, itemspec, inst_add=None):
-    values = fetch_var(inst["protocol"], inst["server"], inst["port"], path,
-                        inst["suburi"], itemspec,
-                        inst["service_url"], inst["service_user"], inst["service_password"])
+    values = fetch_var(inst["protocol"], inst["server"], inst["port"], path, inst["suburi"],
+                       itemspec, inst["service_url"], inst["service_user"],
+                       inst["service_password"])
 
     for subinstance, value in values:
         if not subinstance and not title:
@@ -258,19 +281,19 @@ def query_instance(inst):
     # Prepare user/password authentication via HTTP Auth
     password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
     if inst.get("password"):
-        password_mngr.add_password(None, "%s://%s:%d/" %
-                (inst["protocol"], inst["server"], inst["port"]), inst["user"], inst["password"])
+        password_mngr.add_password(None,
+                                   "%s://%s:%d/" % (inst["protocol"], inst["server"], inst["port"]),
+                                   inst["user"], inst["password"])
 
     handlers = []
     if inst["protocol"] == "https":
-        if inst["mode"] == 'https' and (inst["client_key"] is None or
-                                        inst["client_cert"] is None):
+        if inst["mode"] == 'https' and (inst["client_key"] is None or inst["client_cert"] is None):
             sys.stdout.write('<<<jolokia_info>>>\n')
             sys.stderr.write("ERROR: https set up as authentication method but certificate "
-                                "wasn't provided\n")
+                             "wasn't provided\n")
             return
-        handlers.append(HTTPSAuthHandler(inst["cert_path"],
-                                         inst["client_key"], inst["client_cert"]))
+        handlers.append(
+            HTTPSAuthHandler(inst["cert_path"], inst["client_key"], inst["client_cert"]))
     if inst["mode"] == 'digest':
         handlers.append(urllib2.HTTPDigestAuthHandler(password_mngr))
     elif inst["mode"] == "basic_preemptive":
@@ -283,8 +306,8 @@ def query_instance(inst):
         urllib2.install_opener(opener)
 
     # Determine type of server
-    server_info = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"],
-                            "", None, None, None)
+    server_info = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"], "",
+                            None, None, None)
 
     sys.stdout.write('<<<jolokia_info>>>\n')
     if server_info:
@@ -300,7 +323,6 @@ def query_instance(inst):
         sys.stdout.write('<<<jolokia_metrics>>>\n')
         sys.stdout.write("%s ERROR\n" % (inst["instance"],))
         return
-
 
     mbean_search_results = {}
 
@@ -322,8 +344,17 @@ def query_instance(inst):
                 paths = mbean_search_results[mbean]
             else:
                 try:
-                    paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
-                                      inst["suburi"], "", None, None, None, function="search")[0][1]
+                    paths = fetch_var(
+                        inst["protocol"],
+                        inst["server"],
+                        inst["port"],
+                        mbean,
+                        inst["suburi"],
+                        "",
+                        None,
+                        None,
+                        None,
+                        function="search")[0][1]
                 except IndexError:
                     paths = []
                 mbean_search_results[mbean] = paths
@@ -331,12 +362,13 @@ def query_instance(inst):
             for mbean_exp in paths:
                 queries.append((inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec))
         else:
-            queries.append( (inst, mbean + "/" + path, title, itemspec) )
+            queries.append((inst, mbean + "/" + path, title, itemspec))
 
         for inst, mbean_path, title, itemspec in queries:
             try:
-                for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title, itemspec):
-                    sys.stdout.write("%s %s %s\n" % (out_item, out_title, out_value) )
+                for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title,
+                                                                   itemspec):
+                    sys.stdout.write("%s %s %s\n" % (out_item, out_title, out_value))
             except IOError:
                 return
             except socket.timeout:
@@ -350,126 +382,152 @@ def query_instance(inst):
     if custom_vars:
         sys.stdout.write('<<<jolokia_generic>>>\n')
     for var in custom_vars:
-            mbean, path, title, itemspec, do_search, value_type = var
-            queries = []
-            if do_search:
-                if mbean in mbean_search_results:
-                    paths = mbean_search_results[mbean]
-                else:
-                    try:
-                        paths = fetch_var(inst["protocol"], inst["server"], inst["port"], mbean,
-                                          inst["suburi"], "", None, None, None, function="search")[0][1]
-                    except IndexError:
-                        paths = []
-                    mbean_search_results[mbean] = paths
-
-                for mbean_exp in paths:
-                    queries.append((inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec))
+        mbean, path, title, itemspec, do_search, value_type = var
+        queries = []
+        if do_search:
+            if mbean in mbean_search_results:
+                paths = mbean_search_results[mbean]
             else:
-                queries.append( (inst, mbean + "/" + path, title, itemspec) )
-
-            for inst, mbean_path, title, itemspec in queries:
                 try:
-                    for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title, itemspec):
-                        sys.stdout.write("%s %s %s %s\n" % (out_item, out_title, out_value, value_type) )
-                except IOError:
-                    return
-                except socket.timeout:
-                    return
-                except:
-                    if opt_debug:
-                        raise
-                    # Simply ignore exceptions. Need to be removed for debugging
-                    continue
+                    paths = fetch_var(
+                        inst["protocol"],
+                        inst["server"],
+                        inst["port"],
+                        mbean,
+                        inst["suburi"],
+                        "",
+                        None,
+                        None,
+                        None,
+                        function="search")[0][1]
+                except IndexError:
+                    paths = []
+                mbean_search_results[mbean] = paths
+
+            for mbean_exp in paths:
+                queries.append((inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec))
+        else:
+            queries.append((inst, mbean + "/" + path, title, itemspec))
+
+        for inst, mbean_path, title, itemspec in queries:
+            try:
+                for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title,
+                                                                   itemspec):
+                    sys.stdout.write("%s %s %s %s\n" % (out_item, out_title, out_value, value_type))
+            except IOError:
+                return
+            except socket.timeout:
+                return
+            except:
+                if opt_debug:
+                    raise
+                # Simply ignore exceptions. Need to be removed for debugging
+                continue
 
 
 # Default configuration for all instances
-protocol         = "http"
-server           = "localhost"
-port             = 8080
-user             = "monitoring"
-password         = None
-mode             = "digest"
-suburi           = "jolokia"
-instance         = None
-cert_path        = None
-client_cert      = None
-client_key       = None
-service_url      = None
-service_user     = None
+protocol = "http"
+server = "localhost"
+port = 8080
+user = "monitoring"
+password = None
+mode = "digest"
+suburi = "jolokia"
+instance = None
+cert_path = None
+client_cert = None
+client_key = None
+service_url = None
+service_user = None
 service_password = None
-product          = None
+product = None
 
 global_vars = [
-  ( "java.lang:type=Memory",                           "NonHeapMemoryUsage/used", "NonHeapMemoryUsage",      [], False),
-  ( "java.lang:type=Memory",                           "NonHeapMemoryUsage/max",  "NonHeapMemoryMax",        [], False),
-  ( "java.lang:type=Memory",                           "HeapMemoryUsage/used",    "HeapMemoryUsage",         [], False),
-  ( "java.lang:type=Memory",                           "HeapMemoryUsage/max",     "HeapMemoryMax",           [], False),
-  ( "java.lang:type=Threading",                        "ThreadCount",             "ThreadCount",             [], False),
-  ( "java.lang:type=Threading",                        "DaemonThreadCount",       "DeamonThreadCount",       [], False),
-  ( "java.lang:type=Threading",                        "PeakThreadCount",         "PeakThreadCount",         [], False),
-  ( "java.lang:type=Threading",                        "TotalStartedThreadCount", "TotalStartedThreadCount", [], False),
-  ( "java.lang:type=Runtime",                          "Uptime",                  "Uptime",                  [], False),
-  ( "java.lang:type=GarbageCollector,name=*",          "CollectionCount",         "",                        [], False),
-  ( "java.lang:type=GarbageCollector,name=*",          "CollectionTime",          "",                        [], False),
-  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/used",              "PermGenUsage",            [], False),
-  ( "java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/max",               "PermGenMax",              [], False),
-
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHits",             "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHits",              "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryHitPercentage",   "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheMisses",             "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHitPercentage",     "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "MemoryStoreObjectCount",  "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "DiskStoreObjectCount",    "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheMissPercentage",     "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHitPercentage",      "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHitPercentage",    "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryMisses",          "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapStoreObjectCount", "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "WriterQueueLength",       "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "WriterMaxQueueSize",      "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapMisses",           "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryHits",            "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "AssociatedCacheName",     "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "ObjectCount",             "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskMisses",            "", [], True),
-  ( "net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits",               "", [], True),
+    ("java.lang:type=Memory", "NonHeapMemoryUsage/used", "NonHeapMemoryUsage", [], False),
+    ("java.lang:type=Memory", "NonHeapMemoryUsage/max", "NonHeapMemoryMax", [], False),
+    ("java.lang:type=Memory", "HeapMemoryUsage/used", "HeapMemoryUsage", [], False),
+    ("java.lang:type=Memory", "HeapMemoryUsage/max", "HeapMemoryMax", [], False),
+    ("java.lang:type=Threading", "ThreadCount", "ThreadCount", [], False),
+    ("java.lang:type=Threading", "DaemonThreadCount", "DeamonThreadCount", [], False),
+    ("java.lang:type=Threading", "PeakThreadCount", "PeakThreadCount", [], False),
+    ("java.lang:type=Threading", "TotalStartedThreadCount", "TotalStartedThreadCount", [], False),
+    ("java.lang:type=Runtime", "Uptime", "Uptime", [], False),
+    ("java.lang:type=GarbageCollector,name=*", "CollectionCount", "", [], False),
+    ("java.lang:type=GarbageCollector,name=*", "CollectionTime", "", [], False),
+    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/used", "PermGenUsage", [], False),
+    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/max", "PermGenMax", [], False),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHits",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHits",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "InMemoryHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheMisses",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "OnDiskHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "MemoryStoreObjectCount", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "DiskStoreObjectCount", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "CacheMissPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "CacheHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "OffHeapHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "InMemoryMisses", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "OffHeapStoreObjectCount", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "WriterQueueLength", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "WriterMaxQueueSize", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapMisses",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryHits",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "AssociatedCacheName", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "ObjectCount",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskMisses",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits", "",
+     [], True),
 ]
 
-
 specific_vars = {
-  "weblogic" : [
-      ( "*:*",                               "CompletedRequestCount",            None, [ "ServerRuntime" ] , False),
-      ( "*:*",                               "QueueLength",                      None, [ "ServerRuntime" ] , False),
-      ( "*:*",                               "StandbyThreadCount",               None, [ "ServerRuntime" ] , False),
-      ( "*:*",                               "PendingUserRequestCount",          None, [ "ServerRuntime" ] , False),
-      ( "*:Name=ThreadPoolRuntime,*",        "ExecuteThreadTotalCount",          None, [ "ServerRuntime" ] , False),
-      ( "*:*",                               "ExecuteThreadIdleCount",           None, [ "ServerRuntime" ] , False),
-      ( "*:*",                               "HoggingThreadCount",               None, [ "ServerRuntime" ] , False),
-      ( "*:Type=WebAppComponentRuntime,*",   "OpenSessionsCurrentCount",         None, [ "ServerRuntime",     "ApplicationRuntime" ] , False),
-  ],
-  "tomcat" : [
-      ( "*:type=Manager,*",                  "activeSessions,maxActiveSessions", None, [ "path",              "context" ] , False),
-      ( "*:j2eeType=Servlet,name=default,*", "stateName",                        None, [ "WebModule" ] , False),
-      # Check not yet working
-      ( "*:j2eeType=Servlet,name=default,*", "requestCount",                     None, [ "WebModule" ], False),
-      ( "*:name=*,type=ThreadPool",          "maxThreads",                       None, [], False),
-      ( "*:name=*,type=ThreadPool",          "currentThreadCount",               None, [], False),
-      ( "*:name=*,type=ThreadPool",          "currentThreadsBusy",               None, [], False),
-     # too wide location for addressing the right info
-     # ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
-  ],
-  "jboss" : [
-      ( "*:type=Manager,*",                  "activeSessions,maxActiveSessions", None, [ "path",              "context" ] , False),
-  ],
+    "weblogic": [
+        ("*:*", "CompletedRequestCount", None, ["ServerRuntime"], False),
+        ("*:*", "QueueLength", None, ["ServerRuntime"], False),
+        ("*:*", "StandbyThreadCount", None, ["ServerRuntime"], False),
+        ("*:*", "PendingUserRequestCount", None, ["ServerRuntime"], False),
+        ("*:Name=ThreadPoolRuntime,*", "ExecuteThreadTotalCount", None, ["ServerRuntime"], False),
+        ("*:*", "ExecuteThreadIdleCount", None, ["ServerRuntime"], False),
+        ("*:*", "HoggingThreadCount", None, ["ServerRuntime"], False),
+        ("*:Type=WebAppComponentRuntime,*", "OpenSessionsCurrentCount", None,
+         ["ServerRuntime", "ApplicationRuntime"], False),
+    ],
+    "tomcat": [
+        ("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"], False),
+        ("*:j2eeType=Servlet,name=default,*", "stateName", None, ["WebModule"], False),
+        # Check not yet working
+        ("*:j2eeType=Servlet,name=default,*", "requestCount", None, ["WebModule"], False),
+        ("*:name=*,type=ThreadPool", "maxThreads", None, [], False),
+        ("*:name=*,type=ThreadPool", "currentThreadCount", None, [], False),
+        ("*:name=*,type=ThreadPool", "currentThreadsBusy", None, [], False),
+        # too wide location for addressing the right info
+        # ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
+    ],
+    "jboss": [("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"],
+               False),],
 }
-
 
 #   ( '*:j2eeType=WebModule,name=/--/localhost/-/%(app)s,*/state', None, [ "name" ]),
 #   ( '*:j2eeType=Servlet,WebModule=/--/localhost/-/%(app)s,name=%(servlet)s,*/requestCount', None, [ "WebModule", "name" ]),
 #   ( "Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=*", None, [ "WebModule", "name" ]),
-
 
 # List of instances to monitor. Each instance is a dict where
 # the global configuration values can be overridden.
@@ -498,22 +556,22 @@ socket.setdefaulttimeout(1.0)
 # instances in his configuration, we will use this (a list
 # of dicts).
 for inst in instances:
-    for varname,              value in [
-        ("protocol",         protocol),
-        ("server",           server),
-        ("port",             port),
-        ("user",             user),
-        ("password",         password),
-        ("mode",             mode),
-        ("suburi",           suburi),
-        ("instance",         instance),
-        ("cert_path",        cert_path),
-        ("client_cert",      client_cert),
-        ("client_key",       client_key),
-        ("service_url",      service_url),
-        ("service_user",     service_user),
+    for varname, value in [
+        ("protocol", protocol),
+        ("server", server),
+        ("port", port),
+        ("user", user),
+        ("password", password),
+        ("mode", mode),
+        ("suburi", suburi),
+        ("instance", instance),
+        ("cert_path", cert_path),
+        ("client_cert", client_cert),
+        ("client_key", client_key),
+        ("service_url", service_url),
+        ("service_user", service_user),
         ("service_password", service_password),
-        ( "product",  product ),
+        ("product", product),
     ]:
         if varname not in inst:
             inst[varname] = value

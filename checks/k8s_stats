@@ -35,8 +35,9 @@ def discover_k8s_stats_network(parsed):
         if key != 'network':
             continue
 
-        for interface in value['interface']:
-            yield interface.get('name'), {}
+        interfaces = {i.get('name') for i in value['interfaces']}
+        for interface in interfaces:
+            yield interface, {}
 
 
 def discover_k8s_stats_fs(parsed):
@@ -47,7 +48,7 @@ def discover_k8s_stats_fs(parsed):
         if key != 'filesystem':
             continue
 
-        devices = [disk.get('device') for disk in value]
+        devices = {disk.get('device') for disk in value}
         for device in devices:
             if device not in ignore_fs:
                 yield device, {}

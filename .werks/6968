@@ -1,0 +1,13 @@
+Title: Fixed CMC crashes caused by a race condition
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p14
+Date: 1553090873
+
+Activating a new configuration during a long-running query for graph data
+could lead to a CMC crash because of an internal race condition.  This has
+been fixed.

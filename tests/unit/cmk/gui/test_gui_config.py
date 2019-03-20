@@ -828,7 +828,7 @@ def test_default_tags():
             'no-ip',
         ],
         "piggyback": [
-            None,
+            "auto-piggyback",
             "piggyback",
             "no-piggyback",
         ],

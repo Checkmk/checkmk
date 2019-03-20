@@ -391,7 +391,7 @@ def mode_dump_agent(hostname):
         # Show errors of problematic data sources
         has_errors = False
         for source in sources.get_data_sources():
-            source_state, source_output, _source_perfdata = source.get_summary_result()
+            source_state, source_output, _source_perfdata = source.get_summary_result_for_checking()
             if source_state != 0:
                 console.error("ERROR [%s]: %s\n" % (source.id(), source_output))
                 has_errors = True

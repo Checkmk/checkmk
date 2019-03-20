@@ -915,6 +915,7 @@ def main():
         hosts = set([])
         for context in contexts:
             context.update(parameters)
+            utils.html_escape_context(context)
             txt, html, att = construct_content(context)
             content_txt += txt
             content_html += html
@@ -926,10 +927,10 @@ def main():
         # Use the single context subject in case there is only one context in the bulk
         if len(contexts) > 1:
             subject = utils.get_bulk_notification_subject(contexts, hosts)
-
     else:
         # gather all options from env
         context = utils.collect_context()
+        utils.html_escape_context(context)
         content_txt, content_html, attachments = construct_content(context)
         mailto = context['CONTACTEMAIL']
         subject = context['SUBJECT']

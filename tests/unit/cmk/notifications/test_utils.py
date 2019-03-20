@@ -88,3 +88,30 @@ def test_get_bulk_notification_subject(context, hosts, result):
 def test_api_endpoint_url(monkeypatch, value, result):
     monkeypatch.setattr('cmk.utils.password_store.extract', lambda x: 'http://secret.host')
     assert utils.retrieve_from_passwordstore(value) == result
+
+
+@pytest.mark.parametrize(
+    "input_context,expected_context",
+    [
+        # If not explicitly allowed as unescaped...
+        (
+            {
+                'PARAMETER_INSERT_HTML_SECTION': '<h1>Important</h1>'
+            },
+            {
+                'PARAMETER_INSERT_HTML_SECTION': '<h1>Important</h1>'
+            },
+        ),
+        # ... all variables should be escaped
+        (
+            {
+                'SERVICEOUTPUT': '<h1>Important</h1>'
+            },
+            {
+                'SERVICEOUTPUT': '&lt;h1&gt;Important&lt;/h1&gt;'
+            },
+        ),
+    ])
+def test_escape_context(input_context, expected_context):
+    utils.html_escape_context(input_context)
+    assert input_context == expected_context

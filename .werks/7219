@@ -1,0 +1,12 @@
+Title: agent_vsphere: Missing data in case of mutliline snapshot description
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1553083211
+
+In case a description of a VM snapshot consisted of multiple lines, no
+data about the corresponding VM has been obtained.

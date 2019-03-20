@@ -906,10 +906,7 @@ def create_search_pattern(tokens):
 
 
 def get_pattern(pattern, line):
-    if not line:
-        return []
-    p = re.compile(pattern, re.MULTILINE)
-    return p.findall(line)
+    return re.findall(pattern, line, re.DOTALL) if line else []
 
 
 # TODO: Refactor to requests

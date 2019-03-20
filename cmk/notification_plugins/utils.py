@@ -94,7 +94,14 @@ def cmk_links(context):
     return None, None
 
 
-def replace_variable_context(template, context):
+def html_escape_context(context):
+    unescaped_variables = {'PARAMETER_INSERT_HTML_SECTION'}
+    for variable, value in context.iteritems():
+        if variable not in unescaped_variables:
+            context[variable] = html_escape(value)
+
+
+def add_debug_output(template, context):
     ascii_output = ""
     html_output = "<table class=context>\n"
     elements = context.items()
@@ -114,7 +121,7 @@ def substitute_context(template, context):
 
     # Debugging of variables. Create content only on demand
     if "$CONTEXT_ASCII$" in template or "$CONTEXT_HTML$" in template:
-        template = replace_variable_context(template, context)
+        template = add_debug_output(template, context)
 
     if re.search(r"\$[A-Z_][A-Z_0-9]*\$", template):
         # Second pass to replace nested variables inside e.g. SERVICENOTESURL

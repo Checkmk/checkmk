@@ -409,11 +409,11 @@ def query_instance(inst):
         else:
             queries.append((inst, mbean + "/" + path, title, itemspec))
 
-        for inst, mbean_path, title, itemspec in queries:
+        for query_tuple in queries:
             try:
-                for out_item, out_title, out_value in fetch_metric(inst, mbean_path, title,
-                                                                   itemspec):
-                    sys.stdout.write("%s %s %s %s\n" % (out_item, out_title, out_value, value_type))
+                for metric in fetch_metric(*query_tuple):
+                    out_items = metric + (value_type,)
+                    sys.stdout.write("%s %s %s %s\n" % out_items)
             except IOError:
                 return
             except socket.timeout:

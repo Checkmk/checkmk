@@ -766,7 +766,7 @@ class BuiltinTagConfig(cmk.gui.tags.TagConfig):
                 'topic': _('Data sources'),
                 'tags': [
                     {
-                        "id": None,
+                        "id": "auto-piggyback",
                         "title": _("Legacy: Automatically detect piggyback usage"),
                         "aux_tags": []
                     },

@@ -1,0 +1,12 @@
+Title: jolokia_generic: Discovery no longer crashes upon misconfiguration
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1553062266
+Class: fix
+
+A misconfiguration of the jolokia plugin could lead to a crash
+of the discovery of the jolokia_generic services. The offending
+output lines are now skipped.

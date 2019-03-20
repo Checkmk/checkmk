@@ -1152,10 +1152,13 @@ def get_logfile_timespan(path):
     try:
         with path.open(encoding="utf-8") as f:
             first_entry = float(f.readline().split('\t', 1)[0])
-        last_entry = path.stat().st_mtime
-        return first_entry, last_entry
     except Exception:
-        return 0.0, 0.0
+        first_entry = 0.0
+    try:
+        last_entry = path.stat().st_mtime
+    except Exception:
+        last_entry = 0.0
+    return first_entry, last_entry
 
 
 #.

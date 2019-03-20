@@ -1008,11 +1008,10 @@ def create_search_pattern(tokens):
         pattern_elements.append("<%(token)s>(.*?)</%(token)s>" % {"token": token})
     return ".*?".join(pattern_elements)
 
+
 def get_pattern(pattern, line):
-    if not line:
-        return []
-    p = re.compile(pattern, re.MULTILINE)
-    return p.findall(line)
+    return re.findall(pattern, line, re.DOTALL) if line else []
+
 
 if tracefile:
     tracefile.write("Tracefile %s Host address: %s\n" %

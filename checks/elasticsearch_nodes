@@ -1,0 +1,102 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<elasticsearch_nodes>>>
+# mynode1 open_file_descriptors 434
+# mynode1 max_file_descriptors 4096
+# mynode1 cpu_percent 0
+# mynode1 cpu_total_in_millis 167010
+# mynode1 mem_total_virtual_in_bytes 7126290432
+# mynode2 open_file_descriptors 430
+# mynode2 max_file_descriptors 4096
+# mynode2 cpu_percent 0
+# mynode2 cpu_total_in_millis 151810
+# mynode2 mem_total_virtual_in_bytes 7107313664
+
+nodes_info = {
+    'open_file_descriptors': 'Open file descriptors',
+    'max_file_descriptors': 'Max file descriptors',
+    'cpu_percent': 'CPU used',
+    'cpu_total_in_millis': 'CPU total in ms',
+    'mem_total_virtual_in_bytes': 'Total virtual memory'
+}
+
+
+def parse_elasticsearch_nodes(info):
+    parsed = {}
+
+    for name, desc, value in info:
+        try:
+            inst = parsed.setdefault(name, {desc: [value, nodes_info[desc]]})
+            inst[desc] = [value, nodes_info[desc]]
+
+        except (IndexError, ValueError):
+            pass
+
+    return parsed
+
+
+factory_settings["elasticsearch_nodes"] = {"cpu_levels": (75.0, 90.0)}
+
+
+@get_parsed_item_data
+def check_elasticsearch_nodes(item, params, parsed):
+    for desc, values in parsed.iteritems():
+        if desc == "cpu_percent":
+            value = float(values[0])
+        else:
+            value = int(values[0])
+        infotext = values[1]
+
+        if desc == "mem_total_virtual_in_bytes":
+            yield check_levels(
+                value,
+                desc,
+                params.get(desc),
+                human_readable_func=get_bytes_human_readable,
+                infoname=infotext)
+        elif desc == "cpu_percent":
+            yield check_levels(
+                value,
+                desc,
+                params.get(desc),
+                human_readable_func=get_percent_human_readable,
+                infoname=infotext)
+        else:
+            yield check_levels(
+                value, desc, params.get(desc), human_readable_func=int, infoname=infotext)
+
+
+check_info["elasticsearch_nodes"] = {
+    "parse_function": parse_elasticsearch_nodes,
+    "check_function": check_elasticsearch_nodes,
+    "inventory_function": discover(),
+    "default_levels_variable": "elasticsearch_nodes",
+    "service_description": "Elasticsearch Node %s",
+    "has_perfdata": True,
+    "group": "elasticsearch_nodes",
+    "includes": ["cpu_util.include"],
+}

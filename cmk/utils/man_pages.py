@@ -170,6 +170,7 @@ catalog_titles = {
         "activemq"      : "Apache ActiveMQ",
         "artec"         : "ARTEC",
         "db2"           : "IBM DB2",
+        "elasticsearch" : "Elasticsearch",
         "mongodb"       : "MongoDB",
         "citrix"        : "Citrix",
         "netscaler"     : "Citrix Netscaler",

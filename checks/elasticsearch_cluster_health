@@ -1,0 +1,206 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<elasticsearch_cluster_health>>>
+# status green
+# number_of_nodes 5
+# unassigned_shards 0
+# number_of_pending_tasks 0
+# number_of_in_flight_fetch 0
+# timed_out False
+# active_primary_shards 0
+# task_max_waiting_in_queue_millis 0
+# cluster_name My-cluster
+# relocating_shards 0
+# active_shards_percent_as_number 100.0
+# active_shards 0
+# initializing_shards 0
+# number_of_data_nodes 5
+# delayed_unassigned_shards 0
+
+cluster_info = {
+    'status': 'Status',
+    'cluster_name': 'Name',
+    'number_of_nodes': 'Nodes',
+    'number_of_data_nodes': 'Data nodes'
+}
+shards_info = {
+    'active_shards': "Active",
+    'active_shards_percent_as_number': "Active in percent",
+    'active_primary_shards': "Active primary",
+    'unassigned_shards': "Unassigned",
+    'initializing_shards': "Initializing",
+    'relocating_shards': "Relocating",
+    'delayed_unassigned_shards': "Delayed unassigned",
+    'number_of_in_flight_fetch': "Ongoing shard info requests",
+}
+tasks_info = {
+    'number_of_pending_tasks': 'Pending tasks',
+    "timed_out": 'Timed out',
+    'task_max_waiting_in_queue_millis': 'Task max waiting'
+}
+
+
+def parse_elasticsearch_cluster_health(info):
+    parsed = {}
+
+    for line in info:
+        try:
+            if any(s in line for s in cluster_info):
+                if "status" in line:
+                    inst = handle_cluster_state(parsed, line)
+                else:
+                    inst = parsed.setdefault(("Info"), {line[0]: [line[1], cluster_info[line[0]]]})
+            if any(s in line for s in shards_info):
+                inst = parsed.setdefault(("Shards"), {line[0]: [line[1], shards_info[line[0]]]})
+            if any(s in line for s in tasks_info):
+                inst = parsed.setdefault(("Tasks"), {line[0]: [line[1], tasks_info[line[0]]]})
+            if any(s in inst.keys() for s in cluster_info) and "status" not in line:
+                inst[line[0]] = line[1], cluster_info[line[0]]
+            elif any(s in inst.keys() for s in shards_info):
+                inst[line[0]] = line[1], shards_info[line[0]]
+            elif any(s in inst.keys() for s in tasks_info):
+                inst[line[0]] = line[1], tasks_info[line[0]]
+
+        except (IndexError, ValueError):
+            pass
+
+    return parsed
+
+
+def inventory_elasticsearch_cluster_health(parsed):
+    yield None, {}
+
+
+def check_elasticsearch_cluster_health(no_item, params, parsed):
+    for info, values in sorted(parsed['Info'].iteritems()):
+        value = values[0]
+        infotext = values[1]
+
+        if info == "cluster_name":
+            yield 0, "%s: %s" % (infotext, value)
+        elif info == "status":
+            infotext = "Status:"
+            if params.get(value):
+                yield params[value], "%s %s (State changed by WATO rule)" % (infotext, value)
+            else:
+                yield 0, "%s %s" % (infotext, value)
+        else:
+            warn, crit = params.get(info) or (None, None)
+            yield check_levels(
+                int(value),
+                info, (None, None, warn, crit),
+                human_readable_func=int,
+                infoname=infotext)
+
+
+def handle_cluster_state(parsed, line):
+    state = 0
+    if line[1] == "yellow":
+        state = 1
+    else:
+        state = 2
+
+    inst = parsed.setdefault("Info", {line[0]: [line[1], state]})
+
+    return inst
+
+
+check_info["elasticsearch_cluster_health"] = {
+    'parse_function': parse_elasticsearch_cluster_health,
+    "check_function": check_elasticsearch_cluster_health,
+    'inventory_function': inventory_elasticsearch_cluster_health,
+    "service_description": "Elasticsearch Cluster Health",
+    "group": "elasticsearch_cluster_health",
+    "has_perfdata": True,
+}
+
+factory_settings["elasticsearch_cluster_shards"] = {
+    "active_shards_percent_as_number": (100.0, 50.0)
+}
+
+
+def check_elasticsearch_cluster_health_shards(no_item, params, parsed):
+    for shard, values in sorted(parsed['Shards'].iteritems()):
+        value = values[0]
+        infotext = values[1]
+        warn, crit = params.get(shard) or (None, None)
+
+        if shard == "active_primary_shards" or shard == "active_shards":
+            yield check_levels(
+                int(value),
+                shard, (None, None, warn, crit),
+                human_readable_func=int,
+                infoname=infotext)
+        elif shard == "active_shards_percent_as_number":
+            yield check_levels(
+                float(value),
+                shard, (None, None, warn, crit),
+                human_readable_func=get_percent_human_readable,
+                infoname=infotext)
+        else:
+            yield check_levels(
+                int(value),
+                shard, (warn, crit, None, None),
+                human_readable_func=int,
+                infoname=infotext)
+
+
+check_info["elasticsearch_cluster_health.shards"] = {
+    'parse_function': parse_elasticsearch_cluster_health,
+    "check_function": check_elasticsearch_cluster_health_shards,
+    'inventory_function': inventory_elasticsearch_cluster_health,
+    "default_levels_variable": "elasticsearch_cluster_shards",
+    "service_description": "Elasticsearch Cluster Shards",
+    "group": "elasticsearch_cluster_shards",
+    "has_perfdata": True,
+}
+
+
+def check_elasticsearch_cluster_health_tasks(no_item, params, parsed):
+    for task, values in sorted(parsed['Tasks'].iteritems()):
+        value = values[0]
+        infotext = values[1]
+
+        if task == "timed_out":
+            state = 0
+            if value != "False":
+                state = 1
+            yield state, "%s: %s" % (infotext, value)
+        else:
+            value = int(value)
+            warn, crit = params.get(task) or (None, None)
+            yield check_levels(value, task, (warn, crit, None, None), infoname=infotext)
+
+
+check_info["elasticsearch_cluster_health.tasks"] = {
+    "parse_function": parse_elasticsearch_cluster_health,
+    "check_function": check_elasticsearch_cluster_health_tasks,
+    'inventory_function': inventory_elasticsearch_cluster_health,
+    "service_description": "Elasticsearch Cluster Tasks",
+    "group": "elasticsearch_cluster_tasks",
+    "has_perfdata": True,
+}

@@ -1,0 +1,11 @@
+Title: Event history: Fix incomplete information when using time filters (eg. Recent Events view)
+Level: 2
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1553095186
+Class: fix
+
+An encoding issue would lead to queries as used by the event history to skip files with non-ASCII characters
+in the first line, leading to events archived in that file's timerange to be omitted. This has been fixed.

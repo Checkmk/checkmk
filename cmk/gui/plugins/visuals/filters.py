@@ -87,16 +87,13 @@ class FilterText(Filter):
             negate = ""
 
         if current_value:
-            if isinstance(current_value, unicode):
-                current_value = current_value.encode("utf-8")
             return "Filter: %s %s%s %s\n" % (
                 self.column,
                 negate,
                 self.op,
                 livestatus.lqencode(current_value),
             )
-        else:
-            return ""
+        return ""
 
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self.column])]
@@ -295,15 +292,12 @@ class FilterHostnameOrAlias(FilterUnicode):
             negate = ""
 
         if current_value:
-            if isinstance(current_value, unicode):
-                current_value = current_value.encode("utf-8")
             return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((
                 negate,
                 self.op,
                 livestatus.lqencode(current_value),
             ) * 2)
-        else:
-            return ""
+        return ""
 
 
 class FilterIPAddress(Filter):

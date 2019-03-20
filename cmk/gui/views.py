@@ -2302,7 +2302,7 @@ def query_action_data(what, host, site, svcdesc):
 def ajax_popup_action_menu():
     site = html.request.var('site')
     host = html.request.var('host')
-    svcdesc = html.request.var('service')
+    svcdesc = html.request.get_unicode_input('service')
     what = 'service' if svcdesc else 'host'
 
     display_options.load_from_html()

@@ -380,7 +380,7 @@ def query_instance(inst):
                 continue
 
     if custom_vars:
-        sys.stdout.write('<<<jolokia_generic>>>\n')
+        sys.stdout.write('<<<jolokia_generic:sep(0)>>>\n')
     for var in custom_vars:
         mbean, path, title, itemspec, do_search, value_type = var
         queries = []
@@ -413,7 +413,8 @@ def query_instance(inst):
             try:
                 for metric in fetch_metric(*query_tuple):
                     out_items = metric + (value_type,)
-                    sys.stdout.write("%s %s %s %s\n" % out_items)
+                    output_line = chr(0).join(str(i) for i in out_items)
+                    sys.stdout.write(output_line + "\n")
             except IOError:
                 return
             except socket.timeout:

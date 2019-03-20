@@ -5286,6 +5286,84 @@ metric_info["elapsed_time"] = {
     "color": "11/a",
 }
 
+metric_info["active_primary_shards"] = {
+    "title": _("Active primary shards"),
+    "unit": "count",
+    "color": "25/b",
+}
+
+metric_info["active_shards"] = {
+    "title": _("Active shards"),
+    "unit": "count",
+    "color": "25/a",
+}
+
+metric_info["active_shards_percent_as_number"] = {
+    "title": _("Active shards in percent"),
+    "unit": "%",
+    "color": "25/b",
+}
+
+metric_info["number_of_data_nodes"] = {
+    "title": _("Data nodes"),
+    "unit": "count",
+    "color": "22/b",
+}
+
+metric_info["delayed_unassigned_shards"] = {
+    "title": _("Delayed unassigned shards"),
+    "unit": "count",
+    "color": "16/b",
+}
+
+metric_info["initializing_shards"] = {
+    "title": _("Initializing shards"),
+    "unit": "count",
+    "color": "14/b",
+}
+
+metric_info["number_of_nodes"] = {
+    "title": _("Nodes"),
+    "unit": "count",
+    "color": "16/b",
+}
+
+metric_info["relocating_shards"] = {
+    "title": _("Relocating shards"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["unassigned_shards"] = {
+    "title": _("Unassigned shards"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["number_of_pending_tasks"] = {
+    "title": _("Pending Tasks"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["number_of_in_flight_fetch"] = {
+    "title": _("Ongoing shard info requests"),
+    "unit": "count",
+    "color": "15/a",
+}
+
+metric_info["task_max_waiting_in_queue_millis"] = {
+    "title": _("Task max waiting in queue"),
+    "unit": "1/s",
+    "color": "14/a",
+}
+
+metric_info["open_file_descriptors"] = {
+    "title": _("Number of open file descriptors"),
+    "unit": "count",
+    "color": "14/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -10533,5 +10611,24 @@ graph_info["licenses"] = {
             "licenses",
             "area",
         ),
+    ],
+}
+
+graph_info["shards_allocation"] = {
+    "title": _("Shard allocation over time"),
+    "metrics": [
+        ("active_shards", "line"),
+        ("active_primary_shards", "line"),
+        ("relocating_shards", "line"),
+        ("initializing_shards", "line"),
+        ("unassigned_shards", "line"),
+    ],
+}
+
+graph_info["nodes_by_type"] = {
+    "title": _("Running nodes by nodes type"),
+    "metrics": [
+        ("number_of_nodes", "area"),
+        ("number_of_data_nodes", "area"),
     ],
 }

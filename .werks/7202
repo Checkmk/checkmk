@@ -1,0 +1,24 @@
+Title: Elasticsearch Monitoring
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1553111397
+Class: feature
+
+7202 Elasticsearch Monitoring
+
+A special agent and first checks to support monitoring of Elasticsearch cluster, nodes and indices.
+
+With this werk it is possible to monitor the cluster and node states of an elasticsearch instance.
+
+LI: elasticsearch_cluster_health: State of the cluster (eg. green/yellow/red), Name, Number of nodes, Number of data nodes
+LI: elasticsearch_cluster_health.shards: Number of shards in different states
+LI: elasticsearch_cluster_health.tasks: Pending tasks, Task max waiting, Time out of tasks
+LI: elasticsearch_nodes: Total virtual memory, CPU usage, Number of open file descriptors of nodes
+
+For each check it is possible to set parameter in the associated WATO rule.
+Checks for Cluster, Indices and Shard statistics follow soon.
+
+Thanks to Fabian Binder for creating the initial version of the agent and checks!

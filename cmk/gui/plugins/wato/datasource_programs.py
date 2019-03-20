@@ -59,6 +59,8 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.plugins.wato.utils import (
+    PasswordFromStore,)
 
 
 @rulespec_group_registry.register
@@ -2083,4 +2085,78 @@ class RulespecSpecialAgentsVnxQuotas(HostRulespec):
                 ("nas_db", TextAscii(title=_("NAS DB path"))),
             ],
             optional_keys=[],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsElasticsearch(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:elasticsearch"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            optional_keys=["user", "password"],
+            title=_("Check state of elasticsearch"),
+            help=_("Requests data about elasticsearch clusters, nodes and indices."),
+            elements=[
+                ("hosts",
+                 ListOfStrings(
+                     title=_("Hostnames to query"),
+                     help=
+                     _("Use this option to set which host should be checked by the special agent. If the "
+                       "connection to the first server fails, the next server will be queried (fallback). "
+                       "The check will only output data from the first host that sends a response."
+                      ),
+                     size=32,
+                     allow_empty=False,
+                 )),
+                ("user", TextAscii(title=_("Username"), size=32, allow_empty=True)),
+                ("password", PasswordFromStore(
+                    title=_("Password of the user"),
+                    allow_empty=False,
+                )),
+                ("protocol",
+                 DropdownChoice(
+                     title=_("Protocol"),
+                     choices=[
+                         ("http", "HTTP"),
+                         ("https", "HTTPS"),
+                     ],
+                     default_value="https")),
+                ("port",
+                 Integer(
+                     title=_("Port"),
+                     help=
+                     _("Use this option to query a port which is different from standard port 9200."
+                      ),
+                     default_value=9200,
+                     allow_empty=False,
+                 )),
+                (
+                    "infos",
+                    ListChoice(
+                        title=_("Informations to query"),
+                        help=_("Defines what information to query. "
+                               "Checks for Cluster, Indices and Shard statistics follow soon."),
+                        choices=[
+                            ("cluster_health", _("Cluster health")),
+                            ("nodes", _("Node statistics")),
+                            ("stats", _("Cluster, Indices and Shard statistics")),
+                        ],
+                        default_value=["cluster_health", "nodes", "stats"],
+                        allow_empty=False,
+                    ),
+                ),
+            ],
         )

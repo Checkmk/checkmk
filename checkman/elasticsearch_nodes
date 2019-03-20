@@ -1,0 +1,16 @@
+title: Elasticsearch: Nodes
+agents: elasticsearch
+catalog: app/elasticsearch
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of elasticsearch nodes.
+ You can check for used total virtual memory, cpu usage and
+ the number of open file descriptors per node.
+
+inventory:
+ One check for each node will be created
+
+item:
+ one item will be created
+

@@ -99,7 +99,13 @@ syslog_facilities = ["kern", "user", "mail", "daemon", "auth", "syslog", "lpr", 
                      "local0", "local1", "local2", "local3", "local4", "local5", "local6", "local7",
                      None, None, None, None, None, None, None, "snmptrap"]
 
+# Be aware: The order here is important. It must match the order of the fields
+# in the history file entries (See get_event_history_from_file). The fields in
+# the file are currectly in the same order as StatusTableHistory.columns.
+#
+# Please note: Keep this in sync with livestatus/src/TableEventConsole.cc.
 grepping_filters = [
+    'event_id',
     'event_text',
     'event_comment',
     'event_host',
@@ -1050,14 +1056,21 @@ def flush_event_history_files(settings, config):
         expire_logfiles(settings, config, True)
 
 
-def get_event_history_from_file(settings, table_history, query):
+def get_event_history_from_file(settings, table_history, status_logger, query):
     filters, limit = query.filters, query.limit
     history_entries = []
     if not settings.paths.history_dir.value.exists():
         return []
 
-    # Optimization: use grep in order to reduce amount
-    # of read lines based on some frequently used filters.
+    status_logger.debug("Filters: %r", filters)
+    status_logger.debug("Limit: %r", limit)
+
+    # Optimization: use grep in order to reduce amount of read lines based on
+    # some frequently used filters.
+    #
+    # It's ok if the filters don't match 100% accurately on the right lines. If in
+    # doubt, you can output more lines than necessary. This is only a kind of
+    # prefiltering.
     greptexts = []
     for filter_name, opfunc, args in filters:
         # Make sure that the greptexts are in the same order as in the
@@ -1065,15 +1078,19 @@ def get_event_history_from_file(settings, table_history, query):
         try:
             nr = grepping_filters.index(filter_name)
             if opfunc in [filter_operators['='], filter_operators['~~']]:
-                greptexts.append((nr, args))
+                greptexts.append((nr, str(args)))
         except Exception:
             pass
 
     greptexts.sort()
     greptexts = [x[1] for x in greptexts]
 
+    status_logger.debug("Texts for grep: %r", greptexts)
+
     time_filters = [f for f in filters
                     if f[0].split("_")[-1] == "time"]
+
+    status_logger.debug("Time filters: %r", time_filters)
 
     # We do not want to open all files. So our strategy is:
     # look for "time" filters and first apply the filter to
@@ -3542,17 +3559,18 @@ class StatusTableHistory(StatusTable):
         ("history_addinfo", ""),
     ] + StatusTableEvents.columns
 
-    def __init__(self, settings, config, table_events):
+    def __init__(self, settings, config, table_events, logger):
         super(StatusTableHistory, self).__init__()
         self.settings = settings
         self._config = config
         self._table_events = table_events
+        self._logger = logger
 
     def _enumerate(self, query):
         if self._config['archive_mode'] == 'mongodb':
             return get_event_history_from_mongodb(self.settings, self._table_events, query)
         else:
-            return get_event_history_from_file(self.settings, self, query)
+            return get_event_history_from_file(self.settings, self, self._logger, query)
 
 
 class StatusTableRules(StatusTable):
@@ -3608,7 +3626,7 @@ class StatusServer(ECServerThread):
         self._reopen_sockets = False
 
         self.table_events = table_events # alias for reflection Kung Fu :-P
-        self.table_history = StatusTableHistory(settings, config, table_events)
+        self.table_history = StatusTableHistory(settings, config, table_events, self._logger)
         self.table_rules = StatusTableRules(event_status)
         self.table_status = StatusTableStatus(event_server)
         self._perfcounters = perfcounters

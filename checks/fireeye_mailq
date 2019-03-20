@@ -38,9 +38,13 @@ factory_settings['fireeye_mailq'] = {
 }
 
 def parse_fireeye_mailq(info):
+    try:
+        queue_infos = info[0]
+    except IndexError:
+        return {}
     parsed = {}
     for index, item in enumerate(['Deferred', 'Hold', 'Incoming', 'Active', 'Drop']):
-        parsed.update({item: info[0][index]})
+        parsed.update({item: queue_infos[index]})
     return parsed
 
 

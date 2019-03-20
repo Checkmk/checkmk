@@ -1,0 +1,10 @@
+Title: fireeye_mailq: Missing SNMP device data causes an "IndexError: list index out of range" error
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1553063264
+Class: fix
+
+

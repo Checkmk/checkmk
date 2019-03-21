@@ -32,7 +32,7 @@ import traceback
 import urllib
 
 import requests
-import urllib3
+import urllib3  # type: ignore
 
 import cmk.utils.password_store
 
@@ -150,7 +150,7 @@ def init_auth():
     auth_obj = None
     if username and password:
         if auth_mode == 'kerberos':
-            from requests_kerberos import HTTPKerberosAuth
+            from requests_kerberos import HTTPKerberosAuth  # type: ignore
 
             from subprocess import Popen, PIPE
             kinit = Popen(["kinit", username], stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -187,7 +187,7 @@ if debug:
 try:
     r = requests.get(url, timeout=timeout, auth=auth, proxies=proxies)
     r.raise_for_status()
-    json = r.text
+    raw_response = r.text
 except requests.Timeout:
     sys.stdout.write('ERROR: Socket timeout while opening URL: %s\n' % (url))
     sys.exit(3)
@@ -199,14 +199,14 @@ except Exception, e:
         'ERROR: Exception while opening URL: %s - %s\n%s' % (url, e, traceback.format_exc()))
     sys.exit(3)
 
-if json.startswith("ERROR:"):
-    sys.stdout.write(json.rstrip() + "\n")
+if raw_response.startswith("ERROR:"):
+    sys.stdout.write(raw_response.rstrip() + "\n")
     sys.exit(3)
 
 try:
-    obj = eval(json)
+    obj = eval(raw_response)
 except Exception, e:
-    sys.stdout.write('ERROR: Invalid json response (%s): %s\n' % (e, json))
+    sys.stdout.write('ERROR: Invalid response (%s): %s\n' % (e, raw_response))
     sys.exit(3)
 
 if len(obj) == 1:
@@ -215,7 +215,7 @@ if len(obj) == 1:
     sys.exit(3)
 
 if not isinstance(obj, list):
-    sys.stdout.write('ERROR: Invalid response: %s\n' % (json.replace("\n", "")))
+    sys.stdout.write('ERROR: Invalid response: %s\n' % (raw_response.replace("\n", "")))
     sys.exit(3)
 
 headers = obj[0]

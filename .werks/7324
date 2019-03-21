@@ -1,0 +1,12 @@
+Title: Fix inefficient event history filtering by event ID
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1553161471
+
+Queries for specific event IDs were not optimized for the event history queries
+which are issues e.g. by the GUI when clicking on the detail page of one event.

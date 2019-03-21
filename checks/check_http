@@ -46,19 +46,17 @@ def _get_family_and_address(settings):
 def _certificate_args(address_family, address, settings):
     args = []
 
-    if "cert_host" in settings:
-        if settings.get('proxy'):
-            args += ['-I', settings['proxy']]
-            args += ['-H', settings['cert_host']]
-            args.append('--ssl')
-            args += ['-j', 'CONNECT']
-        elif settings.get("sni"):
-            args += ['-H', settings['cert_host']]
-        else:
-            args += ['-I', settings['cert_host']]
-            args += ['-H', address]
-    else:
-        args += ["-I", address]
+    server = settings.get('cert_host', address)
+    proxy = settings.get('proxy')
+
+    args += ['-I', proxy or server]
+
+    if proxy:
+        args += ['-H', server]
+        args.append('--ssl')
+        args += ['-j', 'CONNECT']
+    elif settings.get("sni"):
+        args += ['-H', server]
 
     if address_family == 'ipv6':
         args += ['-6']

@@ -35,7 +35,7 @@ pytestmark = pytest.mark.checks
              'cert_days': (10, 20),
              'cert_host': 'www.test123.com'
          }),
-         ['-I', 'www.test123.com', '-H', '$_HOSTADDRESS_4$', '-C', '10,20'],
+         ['-I', 'www.test123.com', '-C', '10,20'],
      )])
 def test_check_http_argument_parsing(check_manager, params, expected_args):
     """Tests if all required arguments are present. The tests do not check the order of arguments."""

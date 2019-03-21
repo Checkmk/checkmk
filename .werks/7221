@@ -1,0 +1,12 @@
+Title: check_http: Use proxy settings for certificate check
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1553168564
+Class: fix
+
+Previously the proxy settings had been ignored when checking a certificate
+unless the option "Check Certificate of different IP / DNS Name" had been used.
+

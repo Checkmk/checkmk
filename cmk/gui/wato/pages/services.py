@@ -98,6 +98,8 @@ class DiscoveryState(object):
     LEGACY = "legacy"
     CLUSTERED_OLD = "clustered_old"
     CLUSTERED_NEW = "clustered_new"
+    CLUSTERED_VANISHED = "clustered_vanished"
+    CLUSTERED_IGNORED = "clustered_ignored"
     ACTIVE_IGNORED = "active_ignored"
     CUSTOM_IGNORED = "custom_ignored"
     LEGACY_IGNORED = "legacy_ignored"
@@ -112,6 +114,8 @@ class DiscoveryState(object):
             cls.REMOVED,
             cls.CLUSTERED_OLD,
             cls.CLUSTERED_NEW,
+            cls.CLUSTERED_VANISHED,
+            cls.CLUSTERED_IGNORED,
         ]
 
 
@@ -736,6 +740,18 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
                     DiscoveryState.CLUSTERED_NEW,
                     DiscoveryState.CLUSTERED_OLD,
             ]:
+                autochecks_to_save[(check_type, item)] = paramstring
+                saved_services.add(descr)
+
+            elif table_source in [
+                    DiscoveryState.CLUSTERED_VANISHED,
+                    DiscoveryState.CLUSTERED_IGNORED,
+            ]:
+                # We keep vanished clustered services on the node with the following reason:
+                # If a service is mapped to a cluster then there are already operations
+                # for adding, removing, etc. of this service on the cluster. Therefore we
+                # do not allow any operation for this clustered service on the related node.
+                # We just display the clustered service state (OLD, NEW, VANISHED).
                 autochecks_to_save[(check_type, item)] = paramstring
                 saved_services.add(descr)
 
@@ -1421,6 +1437,15 @@ class DiscoveryPageRenderer(object):
                     "monitoring."),
             ),
             TableGroupEntry(
+                DiscoveryState.CLUSTERED_VANISHED,
+                show_bulk_actions=False,
+                title=_("Vanished clustered services (located on cluster host)"),
+                help_text=_(
+                    "These services have been found on this host and have been mapped to "
+                    "a cluster host by a rule in the set <i>Clustered services</i> but disappeared "
+                    "from this host."),
+            ),
+            TableGroupEntry(
                 DiscoveryState.MONITORED,
                 show_bulk_actions=True,
                 title=_("Monitored services"),
@@ -1485,6 +1510,15 @@ class DiscoveryPageRenderer(object):
                     "a cluster host by a rule in the set <i>Clustered services</i>, but are not "
                     "yet added to the active monitoring. Please either add them or permanently disable "
                     "them."),
+            ),
+            TableGroupEntry(
+                table_group=DiscoveryState.CLUSTERED_IGNORED,
+                show_bulk_actions=False,
+                title=_("Disabled clustered services (located on cluster host)"),
+                help_text=_(
+                    "These services have been found on this host and have been mapped to "
+                    "a cluster host by a rule in the set <i>Clustered services</i> but disabled via "
+                    "<i>Disabled services</i> or <i>Disabled checks</i>."),
             ),
             TableGroupEntry(
                 table_group=DiscoveryState.ACTIVE_IGNORED,

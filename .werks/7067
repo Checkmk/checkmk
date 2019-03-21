@@ -1,0 +1,15 @@
+Title: mail: escape notification context
+Level: 1
+Component: notifications
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p14
+Date: 1553092068
+
+The notification context which contains e.g. the host name
+and the service description is now escaped properly, i.e.
+'<' is replaced by '&lt;' and so on. Only the HTML section
+which can be specified in the options of a notification
+rule is not escaped.

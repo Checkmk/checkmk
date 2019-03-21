@@ -1,0 +1,21 @@
+Title: Unreachable site errors respect site filters
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1553017709
+
+When reports are being created while some distributed site is offline, the
+report is prefixed by a "error report" page that is added to inform the user
+that the report was created in such a situation and some data may be missing
+for this reason.
+
+The error message looks like this: "Not all sites have been queried. Some
+information is missing."
+
+The errors were shown for all sites, even when a specific site was queried.
+This was a problem, especially in Check_MK Managed Services Edition
+environments when creating customer specific reports in the management sites.

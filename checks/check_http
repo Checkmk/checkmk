@@ -85,23 +85,19 @@ def _certificate_args(address_family, address, settings):
 
 
 def _url_args(address_family, address, settings):
-    def _omit_ip(settings):
-        if "virthost" in settings:
-            return settings["virthost"][1]
-        return False
+
+    # get virthost settings:
+    # TODO: when did 'vhost' dissapear from WATO?
+    vhost, omit_ip = settings.get("virthost", (settings.get("vhost"), False))
 
     args = []
 
-    if (not _omit_ip(settings)) and ("proxy" not in settings):
+    if (not omit_ip) and ("proxy" not in settings):
         args += ["-I", address]
     elif "proxy" in settings:
         args += ["-I", settings["proxy"]]
 
-    if "vhost" in settings:
-        args += ["-H", settings["vhost"]]
-
-    if "virthost" in settings:
-        vhost = settings["virthost"][0]
+    if vhost:
         args += ["-H", vhost]
 
     if address_family == 'ipv6':

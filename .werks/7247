@@ -1,0 +1,16 @@
+Title: ps.perf: Fixed incomplete counter cleanup routine, leading to ever-growing counter state files
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1553175847
+Class: fix
+
+The ps check regularly creates counter values with dyamic names and save them into the counter state file.
+There is a cleanup routine which removes outdated counters.
+
+This cleanup routine failed at cleaning up counter values from the deprecated ps.perf check.
+As a result the check counters file did steadily grow. This has been fixed. The cleanup now also
+checks for outdated ps.perf counters.
+

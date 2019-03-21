@@ -97,7 +97,7 @@ def ps_get_counters_to_delete(pids):
     counters_to_delete = []
     for ident, state in get_all_item_states().items():
         ident_type = type(ident)
-        if ident_type == tuple and ident[0] == "ps":
+        if ident_type == tuple and ident[0] in ["ps", "ps.perf"]:
             check_ident = ident[2]
         elif ident_type != tuple and (ident.startswith("ps_stat") or ident.startswith("ps_wmic")):
             check_ident = ident

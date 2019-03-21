@@ -199,6 +199,10 @@ except Exception, e:
         'ERROR: Exception while opening URL: %s - %s\n%s' % (url, e, traceback.format_exc()))
     sys.exit(3)
 
+if json.startswith("ERROR:"):
+    sys.stdout.write(json.rstrip() + "\n")
+    sys.exit(3)
+
 try:
     obj = eval(json)
 except Exception, e:

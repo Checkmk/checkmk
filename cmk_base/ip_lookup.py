@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import socket
+import errno
+import os
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -189,7 +191,7 @@ def _update_ip_lookup_cache(cache_id, ipa):
     ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
 
     # Read already known data
-    cache_path = cmk.utils.paths.var_dir + '/ipaddresses.cache'
+    cache_path = _cache_path()
     try:
         data_from_file = cmk.utils.store.load_data_from_file(cache_path, default={}, lock=True)
 
@@ -206,13 +208,20 @@ def _update_ip_lookup_cache(cache_id, ipa):
         cmk.utils.store.release_lock(cache_path)
 
 
+def _cache_path():
+    return cmk.utils.paths.var_dir + "/ipaddresses.cache"
+
+
 def update_dns_cache():
-    # Temporarily disable *use* of cache, we want to force an update
-    # TODO: Cleanup this hacky config override! Better add some global flag
-    # that is exactly meant for this situation.
-    config.use_dns_cache = False
     updated = 0
     failed = []
+
+    console.verbose("Cleaning up existing DNS cache...\n")
+    try:
+        os.unlink(_cache_path())
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise
 
     console.verbose("Updating DNS cache...\n")
     for hostname in config.all_active_hosts():

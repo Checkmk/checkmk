@@ -56,12 +56,10 @@
 
 
 def parse_netstat(info):
-
     def split_ip_address(ip_address):
         if ":" in ip_address:
             return ip_address.rsplit(":", 1)
-        else:
-            return ip_address.rsplit(".", 1)
+        return ip_address.rsplit(".", 1)
 
     connections = []
     for line in info:

@@ -5812,7 +5812,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         if duration == 0.0:
             duration = 10.0
 
-        return duration
+        self._expected_duration = duration
 
 
 

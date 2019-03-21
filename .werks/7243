@@ -1,0 +1,13 @@
+Title: Fixed wrong sorting of perfometers when some services have no metrics
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1553091264
+
+When sorting a list of services by the perfometer column, this did not work
+correctly in case there were services in this list that have no metrics at
+all.

@@ -283,6 +283,9 @@ class Perfometers(object):
         return perfometers
 
     def _perfometer_possible(self, perfometer, translated_metrics):
+        if not translated_metrics:
+            return False
+
         if self._skip_perfometer_by_trivial_metrics(perfometer["_required_names"],
                                                     translated_metrics):
             return False

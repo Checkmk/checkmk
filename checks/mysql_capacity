@@ -91,7 +91,7 @@ def check_mysql_size(item, params, parsed):
             if size == 'NULL':
                 return 3, "Missing information - Size is reported as 'NULL'"
             size = int(size)
-            infotext = "Size is %s" % get_bytes_human_readable(size)
+            infotext = "Size: %s" % get_bytes_human_readable(size)
             if params:
                 state = 0
                 warn, crit = params
@@ -99,11 +99,12 @@ def check_mysql_size(item, params, parsed):
                 crit_b = crit * 1024
                 perfdata = [("database_size", size, warn_b, crit_b)]
                 if size > crit_b:
-                   state = 2
-                   infotext += " (critical at %s)" % get_bytes_human_readable(crit_b)
+                    state = 2
                 elif size > warn_b:
-                   state = 1
-                   infotext += " (warning at %s)" % get_bytes_human_readable(crit_b)
+                    state = 1
+                if state:
+                    infotext += " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn_b),
+                                                           get_bytes_human_readable(crit_b))
             else:
                 state = 0
                 perfdata = [("database_size", size)]

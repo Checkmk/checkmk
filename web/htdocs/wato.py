@@ -2915,8 +2915,7 @@ class ModeDiscovery(WatoMode):
                 # for adding, removing, etc. of this service on the cluster. Therefore we
                 # do not allow any operation for this clustered service on the related node.
                 # We just display the clustered service state (OLD, NEW, VANISHED).
-                autochecks_to_save[(check_type, item)] = paramstring
-                saved_services.add(descr)
+                services_to_save[(check_type, item)] = paramstring
 
         if apply_changes:
             need_sync = False

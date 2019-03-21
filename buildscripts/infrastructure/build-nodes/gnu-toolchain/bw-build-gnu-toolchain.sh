@@ -12,9 +12,7 @@ PREFIX="/opt/gcc-${GCC_VERSION}"
 
 BUILD_DIR=/tmp/build-gcc-toolchain
 
-#NEXUS="http://nexus.lan.tribe29.com/repository/archives/"
-NEXUS="http://devrechner.lan.mathias-kettner.de:8081/repository/archives/"
-#NEXUS="http://10.9.1.101:8081/repository/archives/"
+NEXUS="http://nexus:8081/repository/archives/"
 
 function download-sources {
     # To avoid repeated downloads of the sources + the prerequisites, we

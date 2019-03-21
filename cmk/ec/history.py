@@ -73,7 +73,7 @@ class History(object):
     def get(self, query):
         if self._config['archive_mode'] == 'mongodb':
             return _get_mongodb(self, query)
-        return _get_files(self, logger, query)
+        return _get_files(self, self._logger, query)
 
     def housekeeping(self):
         if self._config['archive_mode'] == 'mongodb':

@@ -1,0 +1,15 @@
+Title: check_bi_aggr: Improve GUI application error handling
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p14
+Date: 1553167995
+
+When the webservice detects an error -- such as an authentication problem -- it
+does not output the expected data structure, but a string starting with
+"ERROR:". This is now correctly being detected and the error is output as check
+output, rather than a nasty parsing exception.
+

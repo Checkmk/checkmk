@@ -30,6 +30,7 @@ import sys
 import time
 import traceback
 import urllib
+import ast
 
 import requests
 import urllib3  # type: ignore
@@ -204,7 +205,7 @@ if raw_response.startswith("ERROR:"):
     sys.exit(3)
 
 try:
-    obj = eval(raw_response)
+    obj = ast.literal_eval(raw_response)
 except Exception, e:
     sys.stdout.write('ERROR: Invalid response (%s): %s\n' % (e, raw_response))
     sys.exit(3)

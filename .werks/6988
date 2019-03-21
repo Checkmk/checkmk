@@ -1,0 +1,12 @@
+Title: netstat: Fix crashing check on AIX 7
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1553179510
+Class: fix
+
+The netstat command separates the port from the IP address with a dot (.) instead
+of a colon (:) on some AIX versions, which the check previously could not parse
+correctly. This has been fixed.

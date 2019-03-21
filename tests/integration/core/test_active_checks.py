@@ -85,7 +85,8 @@ def test_active_check_macros(test_cfg, site, web):
         "$HOSTNAME$": "test-host",
         "$_HOSTTAGS$": " ".join(
             sorted([
-                "/wato/", "ip-v4", "ip-v4-only", "lan", "no-agent", "no-snmp", "ping", "prod",
+                "/wato/", "auto-piggyback", "ip-v4", "ip-v4-only", "lan", "no-agent", "no-snmp",
+                "ping", "prod",
                 "site:%s" % site.id, "wato"
             ])),
         "$_HOSTADDRESS_4$": "127.0.0.1",

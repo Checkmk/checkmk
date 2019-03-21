@@ -28,6 +28,7 @@ import email
 import getopt
 import imaplib
 import os
+import ast
 import poplib
 import random
 import re
@@ -44,13 +45,13 @@ cmk.utils.password_store.replace_passwords()
 def parse_exception(exc):
     exc = str(exc)
     if exc[0] == '{':
-        exc = "%d - %s" % eval(exc).values()[0]
+        exc = "%d - %s" % ast.literal_eval(exc).values()[0]
     return str(exc)
 
 
 def bail_out(rc, s):
     stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    sys.stdout.write('%s - %s\n' % (stxt, parse_exception(s)))
+    sys.stdout.write('%s - %s\n' % (stxt, s))
     sys.exit(rc)
 
 

@@ -27,6 +27,7 @@
 import os
 import re
 import sys
+import ast
 import time
 import email
 import base64
@@ -43,7 +44,7 @@ cmk.utils.password_store.replace_passwords()
 def parse_exception(exc):
     exc = str(exc)
     if exc[0] == '{':
-        exc = "%d - %s" % eval(exc).values()[0]
+        exc = "%d - %s" % ast.literal_eval(exc).values()[0]
     return str(exc)
 
 
@@ -52,7 +53,7 @@ def bail_out(rc, s, perfdata=None):
         perfdata = []
 
     stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    sys.stdout.write('%s - %s' % (stxt, parse_exception(s)))
+    sys.stdout.write('%s - %s' % (stxt, s))
     if perfdata:
         sys.stdout.write(
             ' | %s' % (' '.join(['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata])))

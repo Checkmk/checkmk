@@ -1023,11 +1023,11 @@ def get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
             else:
                 continue # ignore
 
-        if hostname != host_of_clustered_service(hostname, descr):
-            if check_source == "vanished":
-                del services[(check_type, item)] # do not show vanished clustered services here
-            else:
-                services[(check_type, item)] = ("clustered_" + check_source, paramstring)
+        clustername = host_of_clustered_service(hostname, descr)
+        if hostname != clustername:
+            if service_ignored(clustername, check_type, descr):
+                check_source = "ignored"
+            services[(check_type, item)] = ("clustered_" + check_source, paramstring)
 
     merge_manual_services(services, hostname, on_error)
     return services

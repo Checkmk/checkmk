@@ -1,0 +1,11 @@
+Title: Display vanished and disabled clustered services on discovery page of the nodes
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p39
+Date: 1553149689
+
+

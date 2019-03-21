@@ -2771,6 +2771,8 @@ class ModeDiscovery(WatoMode):
     SERVICE_LEGACY         = "legacy"
     SERVICE_CLUSTERED_OLD  = "clustered_old"
     SERVICE_CLUSTERED_NEW  = "clustered_new"
+    SERVICE_CLUSTERED_VANISHED = "clustered_vanished"
+    SERVICE_CLUSTERED_IGNORED = "clustered_ignored"
     SERVICE_ACTIVE_IGNORED = "active_ignored"
     SERVICE_CUSTOM_IGNORED = "custom_ignored"
     SERVICE_LEGACY_IGNORED = "legacy_ignored"
@@ -2906,6 +2908,15 @@ class ModeDiscovery(WatoMode):
 
             elif table_source in [self.SERVICE_CLUSTERED_NEW, self.SERVICE_CLUSTERED_OLD]:
                 services_to_save[(check_type, item)] = paramstring
+
+            elif table_source in [self.SERVICE_CLUSTERED_VANISHED, self.SERVICE_CLUSTERED_IGNORED]:
+                # We keep vanished clustered services on the node with the following reason:
+                # If a service is mapped to a cluster then there are already operations
+                # for adding, removing, etc. of this service on the cluster. Therefore we
+                # do not allow any operation for this clustered service on the related node.
+                # We just display the clustered service state (OLD, NEW, VANISHED).
+                autochecks_to_save[(check_type, item)] = paramstring
+                saved_services.add(descr)
 
         if apply_changes:
             need_sync = False
@@ -3387,6 +3398,9 @@ class ModeDiscovery(WatoMode):
               "If the actually monitored things are really not relevant for the monitoring "
               "anymore then you should remove them in order to avoid UNKNOWN services in the "
               "monitoring.")),
+            (self.SERVICE_CLUSTERED_VANISHED,  False, _("Vanished clustered services (located on cluster host)"),
+            _("These services have been found on this host and have been mapped to "
+              "a cluster host by a rule in the set <i>Clustered services</i> but disappeared from this host.")),
             (self.SERVICE_MONITORED,      True, _("Monitored services"),
             _("These services had been found by a discovery and are currently configured "
               "to be monitored.")),
@@ -3414,6 +3428,10 @@ class ModeDiscovery(WatoMode):
               "a cluster host by a rule in the set <i>Clustered services</i>, but are not "
               "yet added to the active monitoring. Please either add them or permanently disable "
               "them.")),
+            (self.SERVICE_CLUSTERED_IGNORED,  False, _("Disabled clustered services (located on cluster host)"),
+            _("These services have been found on this host and have been mapped to "
+              "a cluster host by a rule in the set <i>Clustered services</i> but disabled via "
+              "<i>Disabled services</i> or <i>Disabled checks</i>.")),
             (self.SERVICE_ACTIVE_IGNORED, False, _("Disabled active checks"),
             _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
               "call classical check plugins. They have been added by a rule in the section "

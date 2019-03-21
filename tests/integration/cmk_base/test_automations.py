@@ -323,6 +323,8 @@ def test_automation_update_dns_cache(test_cfg, site, web):
         web.add_host("update-dns-cache-host")
         web.add_host("localhost")
 
+        site.write_file(cache_path, "{('bla', 4): '127.0.0.1'}")
+
         data = _execute_automation(site, "update-dns-cache")
         assert isinstance(data, tuple)
         assert len(data) == 2
@@ -335,6 +337,7 @@ def test_automation_update_dns_cache(test_cfg, site, web):
         cache = eval(site.read_file(cache_path))
         assert isinstance(cache, dict)
         assert cache[("localhost", 4)] == "127.0.0.1"
+        assert ("bla", 4) not in cache
 
     finally:
         web.delete_host("localhost")

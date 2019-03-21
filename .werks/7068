@@ -1,0 +1,16 @@
+Title: Truncate values of the notification context which are too long
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1553180240
+Class: fix
+
+If the the value stored in the notification context was larger than
+the OS limit MAX_ARG_STRLEN a failed notification was produced and
+the error 'OSError: [Errno 7] Argument list too long' appeared in
+the notify.log. This was usually the case for very long values in
+the long outputs of a service like e.g. fileinfo.groups. Now the
+values are truncated and the text 'Attention: Removed remaining
+content because it was too long.' is shown at the end.

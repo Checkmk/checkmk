@@ -206,24 +206,6 @@ def _update_ip_lookup_cache(cache_id, ipa):
         cmk.store.release_lock(cache_path)
 
 
-# TODO: remove unused code?
-def _write_ip_lookup_cache():
-    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
-
-    cache_path = cmk.paths.var_dir + '/ipaddresses.cache'
-
-    # Read already known data
-    data_from_file = cmk.store.load_data_from_file(cache_path,
-                                                   default={},
-                                                   lock=True)
-    data_from_file.update(ip_lookup_cache)
-    # The lock from the previous call is released in the following function
-    # (I don't like this)
-    # TODO: this file always grows... there should be a cleanup mechanism
-    #       maybe on "cmk --update-dns-cache"
-    cmk.store.save_data_to_file(cache_path, data_from_file, pretty=False)
-
-
 def update_dns_cache():
     # Temporarily disable *use* of cache, we want to force an update
     # TODO: Cleanup this hacky config override! Better add some global flag

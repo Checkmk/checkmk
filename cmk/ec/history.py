@@ -73,7 +73,7 @@ class History(object):
     def get(self, query):
         if self._config['archive_mode'] == 'mongodb':
             return _get_mongodb(self, query)
-        return _get_files(self, query)
+        return _get_files(self, logger, query)
 
     def housekeeping(self):
         if self._config['archive_mode'] == 'mongodb':
@@ -408,15 +408,22 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
             logger.exception("Error expiring log files: %s" % e)
 
 
-def _get_files(history, query):
+def _get_files(history, logger, query):
     filters, limit = query.filters, query.limit
     history_entries = []
     if not history._settings.paths.history_dir.value.exists():
         return []
 
-    # Optimization: use grep in order to reduce amount
-    # of read lines based on some frequently used filters.
+    logger.debug("Filters: %r", filters)
+    logger.debug("Limit: %r", limit)
+
+    # Be aware: The order here is important. It must match the order of the fields
+    # in the history file entries (See get_event_history_from_file). The fields in
+    # the file are currectly in the same order as StatusTableHistory.columns.
+    #
+    # Please note: Keep this in sync with livestatus/src/TableEventConsole.cc.
     grepping_filters = [
+        'event_id',
         'event_text',
         'event_comment',
         'event_host',
@@ -428,6 +435,13 @@ def _get_files(history, query):
         'event_ipaddress',
         'event_core_host',
     ]
+
+    # Optimization: use grep in order to reduce amount of read lines based on
+    # some frequently used filters.
+    #
+    # It's ok if the filters don't match 100% accurately on the right lines. If in
+    # doubt, you can output more lines than necessary. This is only a kind of
+    # prefiltering.
     greptexts = []
     for column_name, operator_name, _predicate, argument in filters:
         # Make sure that the greptexts are in the same order as in the
@@ -435,14 +449,16 @@ def _get_files(history, query):
         try:
             nr = grepping_filters.index(column_name)
             if operator_name in ['=' '~~']:
-                greptexts.append((nr, argument))
+                greptexts.append((nr, str(argument)))
         except Exception:
             pass
 
     greptexts.sort()
     greptexts = [x[1] for x in greptexts]
+    logger.debug("Texts for grep: %r", greptexts)
 
     time_filters = [f for f in filters if f[0].split("_")[-1] == "time"]
+    logger.debug("Time filters: %r", time_filters)
 
     # We do not want to open all files. So our strategy is:
     # look for "time" filters and first apply the filter to

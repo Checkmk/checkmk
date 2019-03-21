@@ -35,7 +35,7 @@
 # attached graphs and such neat stuff. Sweet!
 
 
-import os, re, sys, subprocess, socket
+import cgi, os, re, sys, subprocess, socket
 import urllib
 import urllib2
 import base64
@@ -421,14 +421,21 @@ def substitute_context(template, context):
 
     # Debugging of variables. Create content only on demand
     if "$CONTEXT_ASCII$" in template or "$CONTEXT_HTML$" in template:
-        template = replace_variable_context(template, context)
+        template = add_debug_output(template, context)
 
     # Remove the rest of the variables and make them empty
     template = re.sub("\$[A-Z_][A-Z_0-9]*\$", "", template)
     return template
 
 
-def replace_variable_context(template, context):
+def html_escape_context(context):
+    unescaped_variables = {'PARAMETER_INSERT_HTML_SECTION'}
+    for variable, value in context.iteritems():
+        if variable not in unescaped_variables:
+            context[variable] = cgi.escape(value)
+
+
+def add_debug_output(template, context):
     ascii_output = ""
     html_output = "<table class=context>\n"
     elements = context.items()
@@ -1003,6 +1010,7 @@ def main():
         hosts = set([])
         for context in contexts:
             context.update(parameters)
+            html_escape_context(context)
             txt, html, att = construct_content(context)
             content_txt += txt
             content_html += html
@@ -1022,6 +1030,7 @@ def main():
             for (var, value)
             in os.environ.items()
             if var.startswith("NOTIFY_")])
+        html_escape_context(context)
         content_txt, content_html, attachments = construct_content(context)
         mailto = context['CONTACTEMAIL']
         subject = context['SUBJECT']

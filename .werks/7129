@@ -1,0 +1,12 @@
+Title: mysql_capacity: Show correct levels information
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p39
+Date: 1553150025
+
+Previously the crit level was shown if the warn or crit level
+was reached. Now both are displayed if any level is reached.

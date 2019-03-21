@@ -1,0 +1,11 @@
+Title: Check_Discovery: Automatic discovery of hosts now correctly ignores unreachable hosts
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1553184609
+Class: fix
+
+Hosts with a state differing from <tt>UP</tt> will no longer be considered in the
+automatic check discovery routine.

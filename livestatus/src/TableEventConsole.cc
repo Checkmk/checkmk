@@ -115,6 +115,15 @@ private:
         for (const auto &column_name : grepping_filters) {
             if (auto svr = _query->stringValueRestrictionFor(column_name)) {
                 os << "\nFilter: " << column_name << " = " << *svr;
+            } else {
+                auto glb = _query->greatestLowerBoundFor(column_name);
+                auto lub = _query->leastUpperBoundFor(column_name);
+                if (glb && lub && glb == lub) {
+                    os << "\nFilter: " << column_name << " = " << *glb;
+                }
+                // NOTE: We could emit >= or <= constraints for cases where we
+                // know only one bound or the bounds are different, but the EC
+                // can't make use of that currently.
             }
         }
     }

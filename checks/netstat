@@ -75,12 +75,9 @@ def parse_netstat(info):
     return connections
 
 
-def check_netstat(item, params, info):
-    connections = parse_netstat(info)
-    return check_netstat_generic(item, params, connections)
-
 check_info["netstat"] = {
-    'check_function'        : check_netstat,
+    'parse_function'        : parse_netstat,
+    'check_function'        : check_netstat_generic,
     'service_description'   : "TCP Connection %s",
     'group'                 : "tcp_connections",
     'includes'              : [ "netstat.include" ],

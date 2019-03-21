@@ -28,6 +28,7 @@ import sys, getopt, requests, traceback
 import urllib
 import os
 import time
+import ast
 
 import cmk.password_store
 cmk.password_store.replace_passwords()
@@ -199,7 +200,7 @@ if json.startswith("ERROR:"):
     sys.exit(3)
 
 try:
-    obj = eval(json)
+    obj = ast.literal_eval(json)
 except Exception, e:
     sys.stdout.write('ERROR: Invalid json response (%s): %s\n' % (e, json))
     sys.exit(3)

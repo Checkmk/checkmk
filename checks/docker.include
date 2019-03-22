@@ -44,7 +44,7 @@ def docker_get_version(info):
 
 
 def docker_get_short_id(string):
-    return string.split(":", 1)[-1][:12]
+    return string.rsplit(":", 1)[-1][:12]
 
 
 def docker_format_labels(obj):

@@ -3,24 +3,13 @@ import os
 
 pytestmark = pytest.mark.checks
 
-execfile(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include'))
+execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include'))
 
 
-@pytest.mark.parametrize('indata,outdata', [
-    ("123GB (42%)", 123000000000),
-    ("0 B", 0),
-    ("2B", 2),
-    ("23 kB", 23000),
-    ("", None),
+@pytest.mark.parametrize('indata,expected', [
+    ("docker-pullable://nginx@sha256:e3456c851a152494c3e4ff5fcc26f240206abac0c9d794affb40e0714846c451",
+     "e3456c851a15"),
 ])
-def test_parse_legacy_docker_get_bytes(indata, outdata):
-    parsed = _legacy_docker_get_bytes(indata)
-    assert outdata == parsed
-
-
-@pytest.mark.parametrize('indata,outdata', [
-    ("sha256:8b15606a9e3e430cb7ba739fde2fbb3734a19f8a59a825ffa877f9be49059817", "8b15606a9e3e"),
-])
-def test_parse_legacy_docker_trunk_id(indata, outdata):
-    parsed = _legacy_docker_trunk_id(indata)
-    assert outdata == parsed
+def test_parse_short_id(indata, expected):
+    actual = docker_get_short_id(indata)
+    assert actual == expected

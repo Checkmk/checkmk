@@ -20,19 +20,22 @@ namespace cma {
 // Related to Service Agent Logic
 namespace srv {
 class ServiceProcessor;
-int InstallMainService();                       // on -install
-int RemoveMainService();                        // on -remove
-int TestMainService(const std::wstring& What);  // on -test
-int ExecMainService();                          // on -exec
-int ExecStartLegacy();                          // on -start_legacy
-int ExecStopLegacy();                           // on -stop_legacy
-int ExecCap();                                  // on -cap
-int ExecUpgradeParam(bool Force);               // om -upgrade
+int InstallMainService();                                     // on -install
+int RemoveMainService();                                      // on -remove
+int TestMainService(const std::wstring& What, int Interval);  // on -test
+int ExecMainService();                                        // on -exec
+int ExecStartLegacy();             // on -start_legacy
+int ExecStopLegacy();              // on -stop_legacy
+int ExecCap();                     // on -cap
+int ExecUpgradeParam(bool Force);  // om -upgrade
 
 int ExecSkypeTest();  // on -skype :hidden
 int ExecCvtIniYaml(std::filesystem::path IniFile,
                    std::filesystem::path YamlFile,
                    bool DianosticMessages);  // on -cvt
+int ExecSection(const std::wstring& SecName,
+                int RepeatPause,          // if 0 no repeat
+                bool DianosticMessages);  // on -section
 int ServiceAsService(std::chrono::milliseconds Delay,
                      std::function<bool(const void* Processor)>
                          InternalCallback) noexcept;  // service execution

@@ -1,5 +1,6 @@
+//
 // check_mk_service.cpp : This file contains ONLY the 'main' function.
-
+//
 // Precompiled
 #include <pch.h>
 // system C
@@ -31,36 +32,43 @@ static void ServiceUsage(const std::wstring &Comment) {
     if (Comment != L"") {
         printf("Error: %ls\n", Comment.c_str());
     }
-    xlog::sendStringToStdio("Usage:\n", Colors::kGreen);
+    xlog::sendStringToStdio("Normal Usage:\n", Colors::kGreen);
     printf(
-        "\t%s.exe <%ls|%ls|%ls|%ls|%ls|%ls\n"
+        "\t%s.exe <%ls|%ls|%ls>\n"
         "\t%-10ls - install as a service\n"
         "\t%-10ls - remove service\n"
-        "\t%-10ls - legacy test\n"
-        "\t%-10ls - short test\n"
-        "\t%-10ls - usage\n"
-        "\t%-10ls - exec as app\n",
+        "\t%-10ls - usage\n",
         kServiceExeName,  // service name from th project definitions
         // first Row
-        kInstallParam, kRemoveParam, kLegacyTestParam, kTestParam, kHelpParam,
-        kExecParam,
+        kInstallParam, kRemoveParam, kHelpParam,
         // second row
-        kInstallParam, kRemoveParam, kLegacyTestParam, kTestParam, kHelpParam,
-        kExecParam);
+        kInstallParam, kRemoveParam, kHelpParam);
 
-    xlog::sendStringToStdio("To Convert Legacy Agent Ini Files:\n",
-                            Colors::kGreen);
+    xlog::sendStringToStdio("Common Testing:\n", Colors::kCyan);
     printf(
-        "\t%s.exe <%ls <inifile> [yamlfile]>\n"
-        "\t%-10ls - convert INI file into the YML\n",
+        "\t%s.exe <%ls|%ls [self seconds]|%ls>\n"
+        "\t%-10ls - legacy test\n"
+        "\t%-10ls - short test. If self added, then agent simulates connection from monitoring site with seconds period\n"
+        "\t%-10ls - exec as app(adhoc)\n",
+        kServiceExeName,  // service name from th project definitions
+        // first Row
+        kLegacyTestParam, kTestParam, kExecParam,
+        // second row
+        kLegacyTestParam, kTestParam, kExecParam);
+
+    xlog::sendStringToStdio(
+        "To Convert Legacy Agent Ini File into Agent Yml file:\n",
+        Colors::kPink);
+    printf(
+        "\t%s.exe %ls <inifile> [yamlfile]\n"
+        "\tinifile - from Legacy Agent\n"
+        "\tyamlfile - name of an output file(optional)\n",
         kServiceExeName,  // service name from th project definitions
                           // first Row
-        kCvtParam,
-        // second row
         kCvtParam);
 
     xlog::sendStringToStdio("To Activate/Deactivate Legacy Agent:\n",
-                            Colors::kGreen);
+                            Colors::kPink);
     printf(
         "\t%s.exe <%ls|%ls>\n"
         "\t%-10ls - stop and deactivate legacy agent\n"
@@ -72,36 +80,80 @@ static void ServiceUsage(const std::wstring &Comment) {
         // second row
         kStopLegacyParam, kStartLegacyParam);
 
-    xlog::sendStringToStdio("To Upgrade Legacy Agent:\n", Colors::kGreen);
+    xlog::sendStringToStdio("To Upgrade Legacy Agent:\n", Colors::kPink);
     printf(
-        "\t%s.exe <%ls> [force]\n"
-        "\t%-10ls - upgrade configuration of legacy agent\n"
+        "\t%s.exe %ls [force]\n"
         "\tforce - optional parameter to force upgrading\n",
         kServiceExeName,  // service name from th project definitions
 
         // first Row
-        kUpgradeParam,
-        // second row
         kUpgradeParam);
 
     xlog::sendStringToStdio(
         "To Install Bakery Files, plugins.cap and check_mk.ini, in install folder:\n",
-        Colors::kGreen);
+        Colors::kPink);
+    printf("\t%s.exe %ls\n",
+           kServiceExeName,  // service name from th project definitions
+
+           // first Row
+           kCapParam);
+
+    xlog::sendStringToStdio("To test Sections individually:\n", Colors::kCyan);
     printf(
-        "\t%s.exe <%ls>\n"
-        "\t%-10ls - upgrade configuration of legacy agent\n",
+        "\t%s.exe %ls <name> [number [trace]] \n"
+        "\t\tname - allowed only df\n"
+        "\t\tnumber - not 0: pause between tests in seconds, count of tests are infinite. 0 - test once\n"
+        "\t\ttrace - log output on the stdio\n"
+        "\t\t\t example '%s -section df 5 trace'\n"
+        "\t\t\t test section df infinitely long with pause 5 seconds and log output on stdio\n",
         kServiceExeName,  // service name from th project definitions
 
         // first Row
-        kCapParam,
-        // second row
-        kCapParam);
+        kSectionParam,
+        // example row
+        kServiceExeName);
 }
 
 namespace cma {
 bool G_Service = false;
 StartTypes AppDefaultType() {
     return G_Service ? StartTypes::kService : StartTypes::kExe;
+}
+
+template <typename T>
+auto ToInt(const T W, int Dflt = 0) noexcept {
+    try {
+        return std::stoi(W);
+    } catch (const std::exception &) {
+        return Dflt;
+    }
+}
+
+template <typename T>
+auto ToUInt64(const T W, uint64_t Dflt = 0) noexcept {
+    try {
+        return std::stoull(W);
+    } catch (const std::exception &) {
+        return Dflt;
+    }
+}
+
+template <typename T>
+auto CvtToInt64(const T W, int64_t Dflt = 0) noexcept {
+    try {
+        return std::stoll(W);
+    } catch (const std::exception &) {
+        return Dflt;
+    }
+}
+
+template <typename T>
+auto ToUint(const T W, uint32_t Dflt = 0) noexcept {
+    try {
+        return static_cast<uint32_t>(std::stoul(W));
+    } catch (const std::exception &) {
+        return Dflt;
+    }
 }
 
 // Command Lines
@@ -161,14 +213,15 @@ int MainFunction(int argc, wchar_t **Argv) {
     if (param == kInstallParam) {
         XLOG::l(XLOG::kStdio | XLOG::kInfo)("service to INSTALL");
         return cma::srv::InstallMainService();
-    } else if (param == kRemoveParam) {
+    } else if (param == kRemoveParam && argc > 2) {
         XLOG::l(XLOG::kStdio | XLOG::kInfo)("service to REMOVE");
         return cma::srv::RemoveMainService();
     } else if (param == kTestParam) {
         std::wstring param = argc > 2 ? Argv[2] : L"";
-        return cma::srv::TestMainService(param);
+        auto interval = argc > 3 ? ToInt(Argv[3]) : 0;
+        return cma::srv::TestMainService(param, interval);
     } else if (param == kLegacyTestParam) {
-        return cma::srv::TestMainService(L"legacy");
+        return cma::srv::TestMainService(L"legacy", 0);
     } else if (param == kExecParam) {
         return cma::srv::ExecMainService();
     } else if (param == kSkypeParam) {
@@ -186,6 +239,11 @@ int MainFunction(int argc, wchar_t **Argv) {
         std::wstring ini = argc > 2 ? Argv[2] : L"";
         std::wstring yml = argc > 3 ? Argv[3] : L"";
         return cma::srv::ExecCvtIniYaml(ini, yml, true);
+    } else if (param == kSectionParam && argc > 2) {
+        std::wstring section = Argv[2];
+        int delay = argc > 3 ? ToInt(Argv[3]) : 0;
+        bool diag = argc > 4 ? std::wstring(Argv[4]) == L"trace" : false;
+        return cma::srv::ExecSection(section, delay, diag);
     } else if (param == kHelpParam) {
         ServiceUsage(std::wstring(L""));
         return 0;

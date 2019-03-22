@@ -151,13 +151,14 @@ static void CheckForCommand(std::string& Command) {
 }
 
 // on -test self
-int TestMainServiceSelf() {
+int TestMainServiceSelf(int Interval) {
     XLOG::setup::DuplicateOnStdio(true);
     XLOG::setup::ColoredOutputOnStdio(true);
     bool stop = false;
 
+    if (Interval < 1) Interval = 1;
     // not a best method to call thread, but this is only for VISUAL testing
-    std::thread kick_and_print([&stop]() {
+    std::thread kick_and_print([&stop, Interval]() {
         auto port = cma::cfg::groups::global.port();
 
         using namespace asio;
@@ -210,7 +211,7 @@ int TestMainServiceSelf() {
             socket.close();
             // methods below is not a good still we do not want
             // to over complicate the code just for testing purposes
-            for (int i = 0; i < 25; i++) {
+            for (int i = 0; i < Interval; i++) {
                 if (stop) break;
                 cma::tools::sleep(1000);
             }
@@ -226,7 +227,7 @@ int TestMainServiceSelf() {
 }
 
 // on -test
-int TestMainService(const std::wstring& What) {
+int TestMainService(const std::wstring& What, int Interval) {
     using namespace std::chrono;
     if (What == L"port") {
         // simple test for ExternalPort. will be disabled in production.
@@ -271,7 +272,7 @@ int TestMainService(const std::wstring& What) {
         sp.startServiceAsLegacyTest();
         sp.stopService();
     } else if (What == L"self") {
-        TestMainServiceSelf();
+        TestMainServiceSelf(Interval);
     } else {
         XLOG::setup::DuplicateOnStdio(true);
         XLOG::setup::ColoredOutputOnStdio(true);
@@ -320,6 +321,38 @@ int ExecCvtIniYaml(std::filesystem::path IniFile,
         XLOG::l(flag) << "Exception: '" << e.what() << "' in ExecCvtIniYaml"
                       << std::endl;
         return 1;
+    }
+
+    return 0;
+}
+
+std::vector<std::wstring> SupportedSections{
+    wtools::ConvertToUTF16(cma::section::kDfName)};
+
+// on -section
+// NOT GTESTED
+int ExecSection(const std::wstring& SecName, int RepeatPause,
+                bool DianosticMessages) {
+    //
+    XLOG::setup::ColoredOutputOnStdio(true);
+    if (DianosticMessages) {
+        XLOG::setup::DuplicateOnStdio(true);
+        XLOG::setup::EnableDebugLog(true);
+        XLOG::setup::EnableTraceLog(true);
+    }
+
+    while (1) {
+        if (SecName == wtools::ConvertToUTF16(cma::section::kDfName)) {
+            provider::Df df;
+            auto x = df.generateContent(cma::section::kUseEmbeddedName, true);
+            XLOG::stdio("{}", x);
+        } else {
+            XLOG::l("Section {} not supported", wtools::ConvertToUTF8(SecName));
+            break;
+        }
+
+        if (RepeatPause <= 0) break;
+        cma::tools::sleep(RepeatPause * 1000);
     }
 
     return 0;

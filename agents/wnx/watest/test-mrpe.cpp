@@ -1,5 +1,5 @@
-// test-mrpe.cpp
-
+// watest.cpp : This file contains the 'main' function. Program execution begins
+// and ends there.
 //
 #include "pch.h"
 
@@ -25,8 +25,8 @@
 Typic output:
 
 <<<mrpe>>>
-(mode.com) Console 0 Status von Gerät CON: 1 --------------------- 1
-Codepage:        437 (chcp.com) sk 1 Geben Sie das Kennwort für "sk" ein:
+(mode.com) Console 0 Status von Gert CON: 1 --------------------- 1
+Codepage:        437 (chcp.com) sk 1 Geben Sie das Kennwort fuer "sk" ein:
 */
 
 namespace cma::provider {  // to become friendly for wtools classes

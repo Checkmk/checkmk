@@ -1,5 +1,5 @@
-// test-tools.cpp
-
+//
+// test-tools.cpp :
 
 #include "pch.h"
 
@@ -11,6 +11,7 @@
 #include "cfg.h"
 #include "glob_match.h"
 #include "test-tools.h"
+#include "test-utf-names.h"
 
 namespace tst {
 void SafeCleanTempDir() {
@@ -377,9 +378,9 @@ TEST(JoinVectorTest, All) {
 
 TEST(LowerUpper, All) {
     {
-        std::wstring w = L"zZa???";
+        std::wstring w = test_cyrillic;
         cma::tools::WideUpper(w);
-        std::wstring w_u = L"ZZA???";
+        std::wstring w_u = test_cyrillic_upper;
         EXPECT_EQ(w, w_u);
     }
     {
@@ -389,9 +390,9 @@ TEST(LowerUpper, All) {
     }
 
     {
-        std::wstring w = L"zZa???";
+        std::wstring w = test_cyrillic;
         cma::tools::WideLower(w);
-        std::wstring w_l = L"zza???";
+        std::wstring w_l = test_cyrillic_lower;
         EXPECT_EQ(w, w_l);
     }
     {

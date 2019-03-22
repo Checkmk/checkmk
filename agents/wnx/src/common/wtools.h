@@ -531,13 +531,13 @@ private:
 // one is deprecated, second is windows only
 // nice, yes?
 // gtest [+]
-inline std::string ConvertToUTF8(const std::wstring& Src) noexcept {
+inline std::string ConvertToUTF8(const std::wstring_view Src) noexcept {
     using namespace std;
 #if defined(WINDOWS_OS)
     // Windows only
     auto in_len = static_cast<int>(Src.length());
     auto out_len =
-        ::WideCharToMultiByte(CP_UTF8, 0, Src.c_str(), in_len, NULL, 0, 0, 0);
+        ::WideCharToMultiByte(CP_UTF8, 0, Src.data(), in_len, NULL, 0, 0, 0);
     if (out_len == 0) return {};
 
     std::string str;
@@ -549,7 +549,7 @@ inline std::string ConvertToUTF8(const std::wstring& Src) noexcept {
     }
 
     // convert
-    ::WideCharToMultiByte(CP_UTF8, 0, Src.c_str(), -1, str.data(), out_len, 0,
+    ::WideCharToMultiByte(CP_UTF8, 0, Src.data(), -1, str.data(), out_len, 0,
                           0);
     return str;
 #else
@@ -566,10 +566,10 @@ inline std::string ConvertToUTF8(const std::wstring& Src) noexcept {
 // standard Windows converter from Microsoft
 // WINDOWS ONLY
 // gtest [+] in yaml
-inline std::wstring ConvertToUTF16(const std::string& Src) noexcept {
+inline std::wstring ConvertToUTF16(const std::string_view Src) noexcept {
 #if defined(WINDOWS_OS)
     auto in_len = static_cast<int>(Src.length());
-    auto utf8_str = Src.c_str();
+    auto utf8_str = Src.data();
     auto out_len = MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, NULL, 0);
     std::wstring wstr;
     try {

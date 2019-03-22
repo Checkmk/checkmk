@@ -1,6 +1,6 @@
-
-
+//
 // check_mk_service.h : This file contains ONLY the 'main' function.
+//
 #pragma once
 #ifndef check_mk_service_h__
 #define check_mk_service_h__
@@ -19,6 +19,7 @@ constexpr const wchar_t* kStopLegacyParam = L"-stop_legacy";    //
 constexpr const wchar_t* kStartLegacyParam = L"-start_legacy";  //
 constexpr const wchar_t* kUpgradeParam = L"-upgrade";           // upgrade LWA
 constexpr const wchar_t* kCapParam = L"-cap";                   // install files
+constexpr const wchar_t* kSectionParam = L"-section";           // dump section
 
 // Service name and Targeting
 #if defined(CMK_SERVICE_NAME)

@@ -427,9 +427,13 @@ class TagConfig(object):
     # TODO: cleanup this mess
     # This validation is quite gui specific, I do not want to introduce this into the base classes
     def _validate_group(self, tag_group):
-        if len(tag_group.id) == 0:
+        if not tag_group.id:
             raise MKUserError("tag_id", _("Please specify an ID for your tag group."))
         _validate_tag_id(tag_group.id, "tag_id")
+
+        if tag_group.id == "site":
+            raise MKUserError("tag_id",
+                              _("The tag group %s is reserved for internal use.") % tag_group.id)
 
         for tmp_group in self.tag_groups:
             if tmp_group == tag_group:

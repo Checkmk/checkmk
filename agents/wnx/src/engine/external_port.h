@@ -208,9 +208,18 @@ private:
 
                         // #TODO blocking call here. This is not a good idea
                         x->start(Reply);
+                    } catch (const std::system_error& e) {
+                        if (e.code().value() == WSAECONNRESET)
+                            XLOG::l.i(XLOG_FLINE + " Client closed connection");
+                        else
+                            XLOG::l(
+                                XLOG_FLINE +
+                                    " Thrown unexpected exception '{}' with value {}",
+                                e.what(), e.code().value());
                     } catch (const std::exception& e) {
-                        XLOG::l(XLOG_FLINE + " Thrown unexpected exception {}",
-                                e.what());
+                        XLOG::l(
+                            XLOG_FLINE + " Thrown unexpected exception '{}'",
+                            e.what());
                     }
                 }
 

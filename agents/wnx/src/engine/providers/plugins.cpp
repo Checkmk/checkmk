@@ -88,7 +88,7 @@ void PluginsProvider::gatherAllData(std::string& Out) {
 
 // empty body empty
 void PluginsProvider::updateSectionStatus() {
-    XLOG::d(XLOG_FUNC + " !");
+    XLOG::d.t(XLOG_FUNC + " !");
     std::string out = cma::section::MakeEmptyHeader();
     gatherAllData(out);
     out += cma::section::MakeEmptyHeader();
@@ -97,7 +97,7 @@ void PluginsProvider::updateSectionStatus() {
 
 // local body empty
 void LocalProvider::updateSectionStatus() {
-    XLOG::d(XLOG_FUNC + " !");
+    XLOG::d.t(XLOG_FUNC + " !");
     std::string out = cma::section::MakeLocalHeader();
     gatherAllData(out);
     out += cma::section::MakeEmptyHeader();

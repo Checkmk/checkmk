@@ -556,9 +556,9 @@ private:
             [this, ExeName](const AnswerId Tp, ServiceProcessor* Proc,
                             const std::wstring& SegmentName, int Timeout,
                             const std::wstring& CommandLine) {
-                XLOG::l("Exec {} for {} started",
-                        wtools::ConvertToUTF8(ExeName),
-                        wtools::ConvertToUTF8(SegmentName));
+                XLOG::l.i("Exec {} for {} started",
+                          wtools::ConvertToUTF8(ExeName),
+                          wtools::ConvertToUTF8(SegmentName));
 
                 auto full_path = cma::cfg::FindExeFileOnPath(ExeName);
                 if (full_path.empty()) {

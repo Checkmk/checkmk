@@ -150,6 +150,81 @@ static void CheckForCommand(std::string& Command) {
     return;
 }
 
+// on -test self
+int TestMainServiceSelf() {
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    bool stop = false;
+
+    // not a best method to call thread, but this is only for VISUAL testing
+    std::thread kick_and_print([&stop]() {
+        auto port = cma::cfg::groups::global.port();
+
+        using namespace asio;
+
+        io_context ios;
+        std::string address = "127.0.0.1";
+
+        ip::tcp::endpoint endpoint(ip::make_address(address), port);
+
+        asio::ip::tcp::socket socket(ios);
+        std::error_code ec;
+
+        while (!stop) {
+            auto enc = cma::cfg::groups::global.globalEncrypt();
+            auto password = enc ? cma::cfg::groups::global.password() : "";
+            socket.connect(endpoint, ec);
+            if (ec.value() != 0) {
+                XLOG::l("Can't connect to {}:{}, waiting for 5 seconds",
+                        address, port);
+
+                // methods below is not a good still we do not want
+                // to over complicate the code just for testing purposes
+                for (int i = 0; i < 5; i++) {
+                    if (stop) break;
+                    cma::tools::sleep(1000);
+                }
+                if (stop) break;
+                continue;
+            }
+            error_code error;
+            std::vector<char> v;
+            for (;;) {
+                char text[4096];
+                auto count = socket.read_some(asio::buffer(text), error);
+                if (error.value()) break;
+                if (count) {
+                    v.insert(v.end(), text, text + count);
+                }
+            }
+            XLOG::l.i("Received {} bytes", v.size());
+            if (enc && password[0]) {
+                XLOG::l.i("Decrypting {} bytes", v.size());
+                // attempt to decode
+                cma::encrypt::Commander e(password);
+                auto size = v.size();
+                v.resize(size + 1024);
+                auto [ret, sz] = e.decode(v.data(), size, true);
+                XLOG::l.i("Decrypted {} bytes {}", ret, sz);
+            }
+            socket.close();
+            // methods below is not a good still we do not want
+            // to over complicate the code just for testing purposes
+            for (int i = 0; i < 25; i++) {
+                if (stop) break;
+                cma::tools::sleep(1000);
+            }
+        }
+        XLOG::l.i("Leaving testing thread");
+    });
+
+    ExecMainService();  // blocking call waiting for keypress
+    stop = true;
+    if (kick_and_print.joinable()) kick_and_print.join();
+
+    return 0;
+}
+
 // on -test
 int TestMainService(const std::wstring& What) {
     using namespace std::chrono;
@@ -195,10 +270,17 @@ int TestMainService(const std::wstring& What) {
             2000ms, [&command](const void* Sp) { return true; });
         sp.startServiceAsLegacyTest();
         sp.stopService();
+    } else if (What == L"self") {
+        TestMainServiceSelf();
+    } else {
+        XLOG::setup::DuplicateOnStdio(true);
+        XLOG::setup::ColoredOutputOnStdio(true);
+        XLOG::l(
+            "Unsupported second parameter\n\tAllowed: port, mt, legacy, self");
     }
 
     return 0;
-}
+}  // namespace srv
 
 // on -cvt
 // may be used as internal API function to convert ini to yaml
@@ -408,8 +490,9 @@ int ServiceAsService(
             auto processor = new ServiceProcessor(Delay, InternalCallback);
             wtools::ServiceController service_controller(processor);
             auto ret = service_controller.registerAndRun(
-                cma::srv::kServiceName);  // we will stay here till service will
-                                          // be stopped itself or from outside
+                cma::srv::kServiceName);  // we will stay here till
+                                          // service will be stopped
+                                          // itself or from outside
             return ret ? 0 : -1;
         } catch (const std::exception& e) {
             XLOG::l.crit("Exception hit {} in main proc", e.what());
@@ -421,5 +504,4 @@ int ServiceAsService(
 }
 
 }  // namespace srv
-
 };  // namespace cma

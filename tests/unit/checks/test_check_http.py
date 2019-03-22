@@ -3,9 +3,8 @@ import pytest
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize(
-    'params,expected_args',
-    [(
+@pytest.mark.parametrize('params,expected_args', [
+    (
         (None, {
             'onredirect': 'follow',
             'port': 80,
@@ -15,32 +14,59 @@ pytestmark = pytest.mark.checks
         }),
         ['-H', 'www.test123.de', '-p', 80, '-u', '/images', '--onredirect=follow', '-L'],
     ),
-     (
-         (None, {
-             'extended_perfdata': True,
-             'method': 'CONNECT',
-             'port': 3128,
-             'proxy': '163.172.86.64',
-             'ssl': 'auto',
-             'uri': '/images',
-             'virthost': ('www.test123.de', True)
-         }),
-         [
-             '-I', '163.172.86.64', '-H', 'www.test123.de', '-p', 3128, '-u', '/images', '--ssl',
-             '--extended-perfdata', '-j', 'CONNECT'
-         ],
-     ),
-     (
-         (None, {
-             'cert_days': (10, 20),
-             'cert_host': 'www.test123.com'
-         }),
-         ['-I', 'www.test123.com', '-C', '10,20'],
-     )])
+    (
+        (None, {
+            'extended_perfdata': True,
+            'method': 'CONNECT',
+            'port': 3128,
+            'proxy': '163.172.86.64',
+            'ssl': 'auto',
+            'uri': '/images',
+            'virthost': ('www.test123.de', True)
+        }),
+        [
+            '-I', '163.172.86.64', '-H', 'www.test123.de', '-p', 3128, '-u', '/images', '--ssl',
+            '--extended-perfdata', '-j', 'CONNECT'
+        ],
+    ),
+    (
+        (None, {
+            'cert_days': (10, 20),
+            'cert_host': 'www.test123.com'
+        }),
+        ['-I', 'www.test123.com', '-C', '10,20'],
+    ),
+    (
+        (None, {
+            'virthost': (None, True),
+            'proxy': "foo.bar",
+        }),
+        ['-I', 'foo.bar'],
+    ),
+    (
+        (None, {
+            'virthost': (None, False),
+            'proxy': "foo.bar",
+        }),
+        ['-I', 'foo.bar'],
+    ),
+    (
+        (None, {
+            'virthost': (None, True),
+        }),
+        [],
+    ),
+    (
+        (None, {
+            'virthost': (None, False),
+        }),
+        ['-I', '$_HOSTADDRESS_4$'],
+    ),
+])
 def test_check_http_argument_parsing(check_manager, params, expected_args):
-    """Tests if all required arguments are present. The tests do not check the order of arguments."""
+    """Tests if all required arguments are present."""
     active_check = check_manager.get_active_check('check_http')
-    assert sorted(active_check.run_argument_function(params)) == sorted(expected_args)
+    assert active_check.run_argument_function(params) == expected_args
 
 
 @pytest.mark.parametrize('params,expected_description', [

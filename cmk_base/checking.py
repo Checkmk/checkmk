@@ -288,7 +288,11 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         # TODO: There is duplicate code with discovery._execute_discovery(). Find a common place!
         try:
             section_content = multi_host_sections.get_section_content(
-                hostname, ipaddress, section_name, for_discovery=False)
+                hostname,
+                ipaddress,
+                section_name,
+                for_discovery=False,
+                service_description=description)
         except MKParseFunctionError as e:
             x = e.exc_info()
             # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped

@@ -1,0 +1,28 @@
+Title: Fixed recurring flexible downtimes.
+Level: 2
+Component: cmc
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p39
+Date: 1553251801
+
+Previously, the combination of "recurring" and "flexible" was broken for
+downtimes.  The effect was that such downtimes remained hot even outside
+their intended time window, so that the next occurring problem just
+triggered the start of such a downtime and no problem was notified.
+
+An example for such a scenario: A flexible host downtime was configured to
+happen every day between 02:00 and 03:00 for 2 hours.  Everything was OK
+between 02:00 and 03:00, but at 08:15 the host went DOWN.  This started the
+downtime, lasting until 10:15, which is of course totally unintended: The
+problem did not happen between 02:00-03:00, so the downtime should not start
+and normal problem processing should be done, including notifications etc.
+
+This has been fixed, so the recurring flexible downtimes are working as
+intended now.  If you update your installation, there is nothing more you
+have to do, all downtimes automatically work correctly after that.  If you
+do not want to update yet, you should delete your recurring flexible
+downtimes for now and add new recurring fixed downtimes instead as a
+workaround until you update.

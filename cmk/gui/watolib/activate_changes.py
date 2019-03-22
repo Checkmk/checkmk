@@ -1158,7 +1158,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._expected_duration = duration
 
 
-
 def execute_activate_changes(domains):
     domains = set(domains).union(ConfigDomain.get_always_activate_domain_idents())
 

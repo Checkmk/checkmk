@@ -520,6 +520,18 @@ def inv_paint_csv_labels(csv_list):
     return "labels", html.render_br().join(csv_list.split(","))
 
 
+@decorate_inv_paint
+def inv_paint_container_ready(ready):
+    if ready == 'yes':
+        css_class = "if_state_up"
+    elif ready == 'no':
+        css_class = "if_state_down"
+    else:
+        css_class = "if_state_other"
+
+    return "if_state " + css_class, ready
+
+
 #.
 #   .--display hints-------------------------------------------------------.
 #   |           _ _           _               _     _       _              |
@@ -1072,9 +1084,28 @@ inventory_displayhints.update({
         "title": _("Nodes"),
         "keyorder": ["name"],
     },
+    ".software.applications.kubernetes.pod_container:": {
+        "title": _("Containers"),
+        "keyorder": [
+            "name",
+            "ready",
+            "restart_count",
+            "image",
+            "image_pull_policy",
+            "image_id",
+            "container_id",
+        ],
+    },
     ".software.applications.kubernetes.roles:*.role" : {"title": _("Name")},
     ".software.applications.kubernetes.roles:*.namespace" : {"title": _("Namespace")},
     ".software.applications.kubernetes.nodes:*.name" : {"title": _("Name")},
+    ".software.applications.kubernetes.pod_container:*.name": {"title": _("Name")},
+    ".software.applications.kubernetes.pod_container:*.image": {"title": _("Image")},
+    ".software.applications.kubernetes.pod_container:*.image_pull_policy": {"title": _("Image pull policy")},
+    ".software.applications.kubernetes.pod_container:*.image_id": {"title": _("Image ID")},
+    ".software.applications.kubernetes.pod_container:*.ready": {"title": _("Ready"), "paint": "container_ready"},
+    ".software.applications.kubernetes.pod_container:*.restart_count": {"title": _("Restart count")},
+    ".software.applications.kubernetes.pod_container:*.container_id": {"title": _("Container ID")},
     ".software.applications.citrix.": {"title": _("Citrix")},
     ".software.applications.citrix.controller.": {"title": _("Controller")},
     ".software.applications.citrix.controller.controller_version": {

@@ -104,6 +104,8 @@ def test_jolokia_yield_configured_instances():
 class _MockHttpResponse(object):
     def __init__(self, http_status, **kwargs):
         self.status_code = http_status
+        self.headers = {}
+        self.content = b'\x00'
         self._payload = kwargs
 
     def json(self):

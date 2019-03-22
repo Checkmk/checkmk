@@ -32,9 +32,40 @@ pytestmark = pytest.mark.checks
     (
         (None, {
             'cert_days': (10, 20),
-            'cert_host': 'www.test123.com'
+            'cert_host': 'www.test123.com',
+            'port': '42',
         }),
-        ['-I', 'www.test123.com', '-C', '10,20'],
+        ['-C', '10,20', '-p', '42', 'www.test123.com'],
+    ),
+    (
+        (None, {
+            'cert_days': (10, 20),
+            'cert_host': 'www.test123.com',
+            'port': '42',
+            'proxy': 'p.roxy',
+        }),
+        ['-C', '10,20', '--ssl', '-j', 'CONNECT', 'p.roxy', 'www.test123.com:42'],
+    ),
+    (
+        (None, {
+            'cert_days': (10, 20),
+            'cert_host': 'www.test123.com',
+            'port': '42',
+            'proxy': 'p.roxy:23',
+        }),
+        ['-C', '10,20', '-p', '23', '--ssl', '-j', 'CONNECT', 'p.roxy', 'www.test123.com:42'],
+    ),
+    (
+        (None, {
+            'cert_days': (10, 20),
+            'cert_host': 'www.test123.com',
+            'port': '42',
+            'proxy': '[dead:beef::face]:23',
+        }),
+        [
+            '-C', '10,20', '-p', '23', '--ssl', '-j', 'CONNECT', '[dead:beef::face]',
+            'www.test123.com:42'
+        ],
     ),
     (
         (None, {

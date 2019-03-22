@@ -19,6 +19,8 @@
 
 #include "cfg.h"
 
+#include "providers/mrpe.h"
+
 namespace cma::cfg::details {  // to become friendly for cma::cfg classes
 
 static std::filesystem::path CreateYamlnInTemp(const std::string& Name,
@@ -55,6 +57,18 @@ static std::filesystem::path CreateTestFile(const std::filesystem::path& Name,
     ofs << Text << "\n";
     return path;
 }
+
+#if 0
+// memory tester
+TEST(AgentConfig, MemoryLeaks) {
+    for (auto i = 0; i < 100; i++) {
+        OnStart(kTest);
+        cma::provider::MrpeProvider m;
+        m.generateContent(cma::section::kUseEmbeddedName);
+        cma::tools::sleep(5000);
+    }
+}
+#endif
 
 TEST(AgentConfig, Aggregate) {
     namespace fs = std::filesystem;

@@ -17,6 +17,8 @@
 #include "glob_match.h"
 #include "service_processor.h"
 
+#include "test-utf-names.h"
+
 namespace cma::provider {
 
 std::string ProcessEntry(const std::string Entry);
@@ -290,7 +292,7 @@ TEST(FileInfoTest, Reality) {
         auto p = BuildTestUNC();
         std::error_code ec;
         if (fs::exists(p, ec)) {
-            fs::path path = fs::u8path(u8"?.txt");
+            fs::path path = fs::u8path(test_u8_name);
             std::string path_string = path.u8string();
             auto w_string = path.wstring();
 
@@ -299,7 +301,7 @@ TEST(FileInfoTest, Reality) {
                 EXPECT_TRUE(files.size() >= 2);  // syswow64 and system32
                 EXPECT_TRUE(std::find(files.begin(), files.end(),
                                       p / "test.txt") != std::end(files));
-                auto russian_file = p / L"????.????";
+                auto russian_file = p / test_russian_file;
                 auto w_name = russian_file.wstring();
                 auto ut8_name = russian_file.u8string();
                 auto utf8_name_2 = wtools::ConvertToUTF8(w_name);

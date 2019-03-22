@@ -77,6 +77,7 @@ std::string GetMountPoints(const std::string &VolumeId) {
     while (true) {
         const std::string combined_path = VolumeId + mountpoint;
         out += GetFileSystem(combined_path);
+        out += GetMountPoints(combined_path);
 
         if (::FindNextVolumeMountPointA(handle, mountpoint, sizeof(mountpoint)))
             break;

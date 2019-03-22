@@ -1,0 +1,12 @@
+Title: agent_kubernetes: the kilo suffix for resources may be lowercase
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1553249538
+
+Resolve an issue where parsing of memory failed if the suffix for
+memory resources was 'k' instead of 'K'.

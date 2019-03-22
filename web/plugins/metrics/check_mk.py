@@ -4837,6 +4837,12 @@ check_metrics["check_mk-tsm_stagingpools"] = {
     "util"  : { "name" : "tapes_util" }
 }
 
+check_metrics["check_mk-tsm_storagepools"] = {
+    "used": {
+        "name": "used_space"
+    },
+}
+
 check_metrics["check_mk-hpux_tunables.shmseg"] = {
     "segments" : { "name" : "shared_memory_segments" }
 }

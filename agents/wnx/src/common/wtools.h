@@ -888,6 +888,14 @@ IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator);
 // the class is thread safe(theoretisch)
 class WmiWrapper {
 public:
+    WmiWrapper() : locator_(nullptr), services_(nullptr) {}
+
+    WmiWrapper(const WmiWrapper&) = delete;
+    WmiWrapper& operator=(const WmiWrapper&) = delete;
+    WmiWrapper(WmiWrapper&&) = delete;
+    WmiWrapper& operator=(WmiWrapper&&) = delete;
+
+    virtual ~WmiWrapper() { close(); }
     // first call
     bool open() noexcept;
 
@@ -912,6 +920,7 @@ public:
                                           const std::wstring& Target) noexcept;
 
 private:
+    void close() noexcept;
     // build valid WQL query
     static std::wstring makeQuery(const std::vector<std::wstring> Names,
                                   const std::wstring& Target) noexcept;

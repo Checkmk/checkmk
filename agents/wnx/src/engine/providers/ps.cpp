@@ -271,6 +271,7 @@ std::string ProducePsWmi(bool FullPath) {
     while (1) {
         auto object = wtools::WmiGetNextObject(processes);
         if (!object) break;
+        ON_OUT_OF_SCOPE(object->Release());
 
         auto process_id = GetUint32AsInt64(object, L"ProcessId");
 

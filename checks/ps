@@ -98,7 +98,7 @@ def ps_cleanup_counters(parsed):
 def ps_get_counters_to_delete(pids):
     counters_to_delete = []
     for ident in get_all_item_states():
-        if isinstance(ident, tuple) and ident[0] == "ps":
+        if isinstance(ident, tuple) and ident[0] in ["ps", "ps.perf"]:
             check_ident = ident[2]
         elif not isinstance(ident, tuple) and (ident.startswith("ps_stat") or
                                                ident.startswith("ps_wmic")):

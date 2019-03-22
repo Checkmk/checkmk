@@ -193,15 +193,15 @@ node {
         docker.image(IMAGE).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} -v ${PACKAGE_DIR}:${PACKAGE_DIR} -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro --network ci_local-infra") {
             stage('Archive artifacts') {
                 // Only master builds should end up on the Website
-                if ${BRANCH} == 'master' {
+                if (${BRANCH} == 'master') {
                     dir("/bauwelt/downloads/${CMK_VERS}") {
                         sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*_amd64.deb . || true"
                         sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.rpm . || true"
                         withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
-                            sh "${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh"
+                            sh "${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}"
                             sh """
                                 rsync -av -e "ssh -i ${RELEASE_KEY_DIR}" \
-	                        ${PACKAGE_DIR}/${CMK_VERSION} \
+	                        ${PACKAGE_DIR}/${CMK_VERS} \
 	                        bauwelt@mathias-kettner.de:${PACKAGE_DIR}
                             """
                             }
@@ -212,7 +212,7 @@ node {
                         sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*_amd64.deb . || true"
                         sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.rpm . || true"
                         withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
-                            sh "${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh"
+                            sh "${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}"
                         }
                         archiveArtifacts "*"
                     }

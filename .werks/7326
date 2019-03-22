@@ -1,0 +1,35 @@
+Title: "Update DNS cache" action is now really cleaning up the cache
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p14
+Date: 1553180606
+
+
+As written in the documentation
+(https://mathias-kettner.com/cms_wato_hosts.html) Check_MK is keeping an
+internal DNS cache for the hosts that have configured no static IP address in
+Check_MK:
+
+---
+
+With the host name method Check_MK uses cached data in order to minimise
+repeated DNS requests during an Activate Changes – which is very important for
+accelerating the activation procedure. Furthermore, the cache ensures that a
+changed configuration can still be activated if the DNS stops working.
+
+The catch is that Check_MK doesn't automatically notice the change to an
+address in DNS. For this reason, in the host details there is the button which
+deletes the entire DNS cache and forces a new resolution at the next Activate
+changes. This file is found under ~/var/check_mk/ipaddresses.cache in your
+instance, by the way. Deleting this file has the same effect as the button as
+described above.
+
+---
+
+The problem was that previous versions did not really delete the entire cache,
+but only updated it. We have now changed this to make the cache invalidation
+work as intended.

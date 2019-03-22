@@ -1147,6 +1147,20 @@ bool WmiWrapper::open() noexcept {  // Obtain the initial locator to Windows
     return true;
 }
 
+// clean all
+void WmiWrapper::close() noexcept {
+    std::lock_guard lk(lock_);
+    if (locator_) {
+        locator_->Release();
+        locator_ = nullptr;
+    }
+
+    if (services_) {
+        services_->Release();
+        services_ = nullptr;
+    }
+}
+
 // connect to the WMI namespace, root\\Something
 // returns true when connect succeed or connect exists
 // thread safe
@@ -1216,6 +1230,7 @@ bool WmiWrapper::impersonate() noexcept {
 }
 
 // tested implicitly
+// RETURNS RAW OBJECT
 // returns nullptr on any error
 IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator) {
     if (!Enumerator) {
@@ -1258,6 +1273,7 @@ std::wstring WmiWrapper::produceTable(
     while (Enumerator) {
         wmi_object = WmiGetNextObject(Enumerator);
         if (!wmi_object) break;
+        ON_OUT_OF_SCOPE(wmi_object->Release());
 
         // names
         if (print_names_please) {
@@ -1276,9 +1292,6 @@ std::wstring WmiWrapper::produceTable(
 
         auto raw = wtools::WmiStringFromObject(wmi_object, names);
         if (!raw.empty()) result += raw + L"\n";
-
-        wmi_object->Release();
-        wmi_object = nullptr;
     }
     return result;
 }

@@ -248,8 +248,19 @@ class Pod(Metadata):
         # type: (client.V1Pod) -> None
         super(Pod, self).__init__(pod.metadata)
         spec = pod.spec
-        self.node = spec.node_name if spec else None
-        self.containers = spec.containers if spec else []
+        if spec:
+            self.node = spec.node_name
+            self._containers = spec.containers
+        else:
+            self.node = None
+            self._containers = []
+
+        status = pod.status
+        if status:
+            self._container_statuses = (status.container_statuses
+                                        if status.container_statuses else [])
+        else:
+            self._container_statuses = []
 
     @staticmethod
     def zero_resources():
@@ -267,7 +278,7 @@ class Pod(Metadata):
     @property
     def resources(self):
         view = self.zero_resources()
-        for container in self.containers:
+        for container in self._containers:
             resources = container.resources
             if not resources:
                 continue
@@ -282,6 +293,27 @@ class Pod(Metadata):
             if requests:
                 view['requests']['cpu'] += parse_frac_prefix(requests.get('cpu', '0.0'))
                 view['requests']['memory'] += parse_memory(requests.get('memory', '0.0'))
+        return view
+
+    @property
+    def containers(self):
+        view = {
+            container.name: {
+                'image': container.image,
+                'image_pull_policy': container.image_pull_policy,
+                'ready': False,
+                'restart_count': 0,
+                'container_id': None,
+                'image_id': None,
+            } for container in self._containers
+        }
+        for container_status in self._container_statuses:
+            data = view[container_status.name]
+            data['ready'] = container_status.ready
+            data['restart_count'] = container_status.restart_count
+            data['container_id'] = (container_status.container_id.replace('docker://', '')
+                                    if container_status.container_id else '')
+            data['image_id'] = container_status.image_id
         return view
 
 
@@ -442,6 +474,9 @@ class PodList(ListLike[Pod]):
 
     def resources(self):
         return {pod.name: pod.resources for pod in self}
+
+    def containers(self):
+        return {pod.name: pod.containers for pod in self}
 
     def resources_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, float]]]
@@ -776,6 +811,7 @@ class ApiData(object):
         logging.info('Output pod sections')
         g = Group()
         g.join('k8s_resources', self.pods.resources())
+        g.join('k8s_pod_container', self.pods.containers())
         return '\n'.join(g.output())
 
 

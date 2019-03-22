@@ -4575,6 +4575,12 @@ metric_info["docker_running_containers"] = {
     "color": "21/a",
 }
 
+metric_info["ready_containers"] = {
+    "title": _("Ready containers"),
+    "unit": "count",
+    "color": "23/a",
+}
+
 metric_info["docker_paused_containers"] = {
     "title": _("Paused containers"),
     "unit": "count",

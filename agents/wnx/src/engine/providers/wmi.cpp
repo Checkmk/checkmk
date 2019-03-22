@@ -65,30 +65,30 @@ NamedWmiSources G_SectionObjects = {
 
     {"msexch_activesync",
      {kWmiPathStd,
-      L"Win32_PerfRawDara_MSExchangeActiveSync_MSExchangeActiveSync"}},
+      L"Win32_PerfRawData_MSExchangeActiveSync_MSExchangeActiveSync"}},
 
     // MSEXCHANGE group
     {"msexch_availability",
      {kWmiPathStd,
-      L"Win32_PerfRawDara_MSExchangeAvailabilityService_MSExchangeAvailabilityService"}},
+      L"Win32_PerfRawData_MSExchangeAvailabilityService_MSExchangeAvailabilityService"}},
 
     {"msexch_owa",  //
-     {kWmiPathStd, L"Win32_PerfRawDara_MSExchangeOWA_MSExchangeOWA"}},
+     {kWmiPathStd, L"Win32_PerfRawData_MSExchangeOWA_MSExchangeOWA"}},
 
     {"msexch_autodiscovery",
      {kWmiPathStd,
-      L"Win32_PerfRawDara_MSExchangeAutodiscover_MSExchangeAutodiscover"}},
+      L"Win32_PerfRawData_MSExchangeAutodiscover_MSExchangeAutodiscover"}},
 
     {"msexch_isclienttype",
      {kWmiPathStd,
-      L"Win32_PerfRawDara_MSExchangeISClientType_MSExchangeISClientType"}},
+      L"Win32_PerfRawData_MSExchangeISClientType_MSExchangeISClientType"}},
 
     {"msexch_isstore",
-     {kWmiPathStd, L"Win32_PerfRawDara_MSExchangeISStore_MSExchangeISStore"}},
+     {kWmiPathStd, L"Win32_PerfRawData_MSExchangeISStore_MSExchangeISStore"}},
 
     {"msexch_rpcclientaccess",
      {kWmiPathStd,
-      L"Win32_PerfRawDara_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"}}
+      L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"}}
 
     // end
 };

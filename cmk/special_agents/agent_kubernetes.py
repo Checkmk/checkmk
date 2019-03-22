@@ -131,7 +131,7 @@ def parse_memory(value):
     if value.endswith('Ei'):
         return 1024**6 * float(value[:-2])
 
-    if value.endswith('K'):
+    if value.endswith('K') or value.endswith('k'):
         return 1e3 * float(value[:-1])
     if value.endswith('M'):
         return 1e6 * float(value[:-1])

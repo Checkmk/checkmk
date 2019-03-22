@@ -3950,9 +3950,10 @@ def _vs_contact(title):
         title=title,
         help=_("This rule set is useful if you send your monitoring notifications "
                "into the Event Console. The contact information that is set by this rule "
-               "will be put into the resulting event in the Event Console.") + _(
-                   " Note: if no contact information is configured for a service "
-                   "then that of the host will be used instead (if configured)."),
+               "will be put into the resulting event in the Event Console. "
+               "This does not transport contact objects or contact groups, but is a free "
+               "comment field.") + _(" Note: if no contact information is configured for a service "
+                                     "then that of the host will be used instead (if configured)."),
         size=80,
         regex=r"^[^;'$|]*$",
         regex_error=_("The contact information must not contain one of the characters "

@@ -90,10 +90,10 @@ def _url_args(address_family, address, settings):
 
     args = []
 
-    if (not omit_ip) and ("proxy" not in settings):
-        args += ["-I", address]
-    elif "proxy" in settings:
+    if "proxy" in settings:
         args += ["-I", settings["proxy"]]
+    elif not omit_ip:
+        args += ["-I", address]
 
     if vhost:
         args += ["-H", vhost]

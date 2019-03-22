@@ -1303,16 +1303,6 @@ def path_to_notification_script(plugin):
 #
 # Note: this function is *not* being called for bulk notification.
 def call_notification_script(plugin, plugin_context):
-    # FIXME: This is a temporary workaround to avoid a possible crash of
-    # subprocess.Popen when a crash dump occurs. Since in this case the
-    # LONGSERVICEOUTPUT and LONGSERVICEOUTPUT_HTML contain very long base64
-    # encoded strings an 'OSError: [Errno 7] Argument list too long' may
-    # occur. To avoid this we replace the base64 encoded strings here.
-    if plugin_context.get('LONGSERVICEOUTPUT', '').startswith('Crash dump:\\n'):
-        plugin_context['LONGSERVICEOUTPUT'] = u'Check failed:\\nA crash report can be submitted via the user interface.'
-    if plugin_context.get('LONGSERVICEOUTPUT_HTML', '').startswith('Crash dump:\\n'):
-        plugin_context['LONGSERVICEOUTPUT_HTML'] = u'Check failed:\\nA crash report can be submitted via the user interface.'
-
     core_notification_log(plugin, plugin_context)
 
     def plugin_log(s):
@@ -1364,8 +1354,27 @@ def call_notification_script(plugin, plugin_context):
 
 # Construct the environment for the notification script
 def notification_script_env(plugin_context):
-    return dict(os.environ.items() + [("NOTIFY_" + k, v.encode("utf-8"))
-                                      for k, v in plugin_context.items()])
+    # Use half of the maximum allowed string length MAX_ARG_STRLEN
+    # which is usually 32 pages on Linux (see "man execve").
+    #
+    # Assumption: We don't have to consider ARG_MAX, i.e. the maximum
+    # size of argv + envp, because it is derived from RLIMIT_STACK
+    # and large enough.
+    try:
+        max_length = 32 * os.sysconf("SC_PAGESIZE") // 2
+    except ValueError:
+        max_length = 32 * 4046 // 2
+
+    def format_(value):
+        if len(value) > max_length:
+            value = value[:max_length] + "...\nAttention: Removed remaining content because it was too long."
+        return value.encode("utf-8")
+
+    notify_env = {
+        "NOTIFY_" + variable: format_(value) for variable, value in plugin_context.iteritems()
+    }
+    notify_env.update(os.environ)
+    return notify_env
 
 
 class NotificationTimeout(Exception):

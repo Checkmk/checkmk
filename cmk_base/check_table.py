@@ -67,7 +67,7 @@ def get_check_table(hostname,
         #       needs to be done in all cases since a host can now have a lot of different data
         #       sources.
         if remove_duplicates and host_config.is_dual_host:
-            return _remove_duplicate_checks(check_table_cache[table_cache_id])
+            return remove_duplicate_checks(check_table_cache[table_cache_id])
         return check_table_cache[table_cache_id]
 
     check_table = {}
@@ -204,7 +204,7 @@ def get_check_table(hostname,
         check_table_cache[table_cache_id] = check_table
 
     if remove_duplicates:
-        return _remove_duplicate_checks(check_table)
+        return remove_duplicate_checks(check_table)
     return check_table
 
 
@@ -267,7 +267,7 @@ def service_deps(hostname, servicedesc):
     return deps
 
 
-def _remove_duplicate_checks(check_table):
+def remove_duplicate_checks(check_table):
     have_with_tcp = {}
     have_with_snmp = {}
     without_duplicates = {}

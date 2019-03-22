@@ -22,14 +22,6 @@
 
 namespace cma::cfg {
 
-// stores EVERYTHING which can be configured
-namespace groups {
-Global global;
-WinPerf winperf;
-Plugins plugins;
-Plugins localGroup;
-};  // namespace groups
-
 Global::Global() {
     setDefaults();
     calcDerivatives();

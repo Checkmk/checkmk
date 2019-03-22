@@ -56,11 +56,20 @@ std::wstring WinPerf::buildCmdLine() const {
     return cmd_line;
 }
 
+// we have chaos with globals
 namespace details {
 ConfigInfo G_ConfigInfo;
 // store boot fixed data
 uint64_t RegisteredPerformanceFreq = wtools::QueryPerformanceFreq();
 }  // namespace details
+
+// stores EVERYTHING which can be configured
+namespace groups {
+Global global;
+WinPerf winperf;
+Plugins plugins;
+Plugins localGroup;
+};  // namespace groups
 
 // API
 

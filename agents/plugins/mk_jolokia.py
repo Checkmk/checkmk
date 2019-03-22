@@ -52,8 +52,8 @@ except ImportError as import_error:
                      " Please install it on the monitored system.")
     sys.exit(1)
 
-VERBOSE = '--verbose' in sys.argv
-DEBUG = '--debug' in sys.argv
+VERBOSE = sys.argv.count('--verbose') + sys.argv.count('-v') + 2 * sys.argv.count('-vv')
+DEBUG = sys.argv.count('--debug')
 
 MBEAN_SECTIONS = {
     'jvm_threading': ("java.lang:type=Threading",),
@@ -342,6 +342,11 @@ class JolokiaInstance(object):
 
 def validate_response(raw):
     '''return loaded response or raise exception'''
+    if VERBOSE > 1:
+        sys.stderr.write("DEBUG: %r:\n"
+                         "DEBUG:   headers: %r\n"
+                         "DEBUG:   content: %r\n\n" % (raw, raw.headers, raw.content))
+
     # check the status of the http server
     if not 200 <= raw.status_code < 300:
         sys.stderr.write("ERROR: HTTP STATUS: %d\n" % raw.status_code)

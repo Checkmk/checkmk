@@ -27,7 +27,7 @@
 
 def get_k8s_resources_inventory_function(name):
     def inventory_function(parsed):
-        if parsed.get('capacity', {}).get(name):
+        if parsed.get('requests', {}).get(name) is not None:
             return [(None, {})]
 
     return inventory_function
@@ -46,11 +46,13 @@ def get_k8s_resources_check_function(name, default, readable):
                 yield 0, 'Limit: %s' % readable(limit), [('k8s_%s_limit' % name, limit)]
 
         allocatable = parsed.get('allocatable', {}).get(name, default)
-        yield 0, 'Allocatable: %s' % readable(allocatable), [('k8s_%s_allocatable' % name,
-                                                              allocatable)]
+        if allocatable:
+            yield 0, 'Allocatable: %s' % readable(allocatable), [('k8s_%s_allocatable' % name,
+                                                                  allocatable)]
 
         capacity = parsed.get('capacity', {}).get(name, default)
-        yield 0, 'Capacity: %s' % readable(capacity), [('k8s_%s_capacity' % name, capacity)]
+        if capacity:
+            yield 0, 'Capacity: %s' % readable(capacity), [('k8s_%s_capacity' % name, capacity)]
 
         if allocatable:
             usage = 100.0 * request / allocatable

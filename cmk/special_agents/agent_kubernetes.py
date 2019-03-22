@@ -440,6 +440,9 @@ class PodList(ListLike[Pod]):
     def pods_in_cluster(self):
         return {'requests': {'pods': len(self)}}
 
+    def resources(self):
+        return {pod.name: pod.resources for pod in self}
+
     def resources_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, float]]]
         """
@@ -769,6 +772,12 @@ class ApiData(object):
             e.get('k8s_pods_%s' % c_metric).insert(self.pods_Metrics[c_metric])
         return '\n'.join(e.output())
 
+    def pod_sections(self):
+        logging.info('Output pod sections')
+        g = Group()
+        g.join('k8s_resources', self.pods.resources())
+        return '\n'.join(g.output())
+
 
 def get_api_client(arguments):
     # type: (argparse.Namespace) -> client.ApiClient
@@ -810,6 +819,7 @@ def main(args=None):
             print(api_data.cluster_sections())
             print(api_data.node_sections())
             print(api_data.custom_metrics_section())
+            print(api_data.pod_sections())
     except Exception as e:
         if arguments.debug:
             raise

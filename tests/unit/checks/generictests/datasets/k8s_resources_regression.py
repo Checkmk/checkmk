@@ -2,7 +2,7 @@
 checkname = 'k8s_resources'
 
 info = [[
-    u'{"allocatable": {"pods": 110, "cpu": 0.9400000000000001, "memory": 609845248.0}, "capacity": {"pods": 110, "cpu": 1.0, "memory": 609845248.0}, "requests": {"cpu": 0.2, "memory": 0.0}, "limits": {"cpu": 0.5, "memory": Infinity}, "allocations": {}}'
+    u'{"allocatable": {"pods": 110, "cpu": 0.9400000000000001, "memory": 609845248.0}, "capacity": {"pods": 110, "cpu": 1.0, "memory": 609845248.0}, "requests": {"pods": 0, "cpu": 0.2, "memory": 0.0}, "limits": {"cpu": 0.5, "memory": Infinity}, "allocations": {}}'
 ]]
 
 discovery = {

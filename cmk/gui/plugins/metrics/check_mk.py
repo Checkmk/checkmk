@@ -8929,7 +8929,7 @@ graph_info["k8s_resources.cpu"] = {
         ("k8s_cpu_limit", "area"),
         ("k8s_cpu_request", "area"),
     ],
-    "optional_metrics": ["k8s_cpu_limit"],
+    "optional_metrics": ["k8s_cpu_capacity", "k8s_cpu_allocatable", "k8s_cpu_limit"],
 }
 
 graph_info["k8s_resources.memory"] = {
@@ -8940,7 +8940,7 @@ graph_info["k8s_resources.memory"] = {
         ("k8s_memory_limit", "area"),
         ("k8s_memory_request", "area"),
     ],
-    "optional_metrics": ["k8s_memory_limit"],
+    "optional_metrics": ["k8s_memory_capacity", "k8s_memory_allocatable", "k8s_memory_limit"],
 }
 
 graph_info["used_cpu_time"] = {

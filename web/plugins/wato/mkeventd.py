@@ -3301,7 +3301,8 @@ register_rule(
 
 contact_help = _("This rule set is useful if you send your monitoring notifications "
                  "into the Event Console. The contact information that is set by this rule "
-                 "will be put into the resulting event in the Event Console.")
+                 "will be put into the resulting event in the Event Console. "
+                 "This does not transport contact objects or contact groups, but is a free comment field.")
 contact_regex = r"^[^;'$|]*$"
 contact_regex_error = _("The contact information must not contain one of the characters <tt>;</tt> <tt>'</tt> <tt>|</tt> or <tt>$</tt>")
 

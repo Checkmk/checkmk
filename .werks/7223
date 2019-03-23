@@ -1,0 +1,12 @@
+Title: db2_tablespaces: Occasionally wrong CRIT state
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1553344784
+Class: fix
+
+In some cases the state of the check went to CRIT, although the
+reported values where fine.
+

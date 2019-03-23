@@ -84,20 +84,29 @@ def check_db2_tablespaces(item, params, parsed):
     if tbsp_type == "SMS":
         usable = free  # for SMS free size is the amount of disk space available to the db file
 
-    perc_free = 100.0 - used / usable * 100.0
     warn, crit, levels_text, as_perc = db_get_tablespace_levels_in_bytes(usable, params)
 
+    infotext = "%s of %s used" % (get_bytes_human_readable(used), get_bytes_human_readable(usable))
     perfdata = [("tablespace_size", usable, max(0, total - (warn or 0)), max(
         0, total - (crit or 0))), ("tablespace_used", used), ("tablespace_max_size", total)]
-    yield 0, "%.1f%% free" % perc_free, perfdata
+    yield 0, infotext, perfdata
 
-    if crit and free <= crit:
-        yield 2, "only %s left %s" % (as_perc and ("%.1f%%" % perc_free) or \
-                 get_bytes_human_readable(used), levels_text)
-    elif warn and free <= warn:
-        yield 1, "only %s left %s" % (as_perc and ("%.1f%%" % perc_free) or \
-                 get_bytes_human_readable(used), levels_text)
-    yield 0, "%s of %s used" % (get_bytes_human_readable(used), get_bytes_human_readable(usable))
+    perc_free = 100.0 - used / usable * 100.0
+    abs_free = usable - used
+
+    state = 0
+    infotext = "%s free" % get_percent_human_readable(perc_free)
+    if crit is not None and abs_free <= crit:
+        state = 2
+    elif warn is not None and abs_free <= warn:
+        state = 1
+    if state:
+        if as_perc:
+            value_str = get_percent_human_readable(perc_free)
+        else:
+            value_str = get_bytes_human_readable(abs_free)
+        infotext = "only %s left %s" % (value_str, levels_text)
+    yield state, infotext
 
     yield tbsp_state.lower() != "normal" and 1 or 0, "State: %s" % tbsp_state
     yield 0, "Type: %s" % tbsp_type

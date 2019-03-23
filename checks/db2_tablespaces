@@ -89,15 +89,22 @@ def check_db2_tablespaces(item, params, parsed):
 
     perfdata = [("tablespace_size", usable, max(0, total - (warn or 0)), max(
         0, total - (crit or 0))), ("tablespace_used", used), ("tablespace_max_size", total)]
-    yield 0, "%.1f%% free" % perc_free, perfdata
 
-    if crit and free <= crit:
-        yield 2, "only %s left %s" % (as_perc and ("%.1f%%" % perc_free) or \
-                 get_bytes_human_readable(used), levels_text)
-    elif warn and free <= warn:
-        yield 1, "only %s left %s" % (as_perc and ("%.1f%%" % perc_free) or \
-                 get_bytes_human_readable(used), levels_text)
     yield 0, "%s of %s used" % (get_bytes_human_readable(used), get_bytes_human_readable(usable))
+    yield 0, "s% free" % get_percent_human_readable(perc_free), perfdata
+
+    state = 0
+    if crit and free <= crit:
+        state = 2
+    elif warn and free <= warn:
+        state = 1
+    if state:
+        if as_perc:
+            value_str = get_percent_human_readable(perc_free)
+        else:
+            # TODO: check if "used" is correct (should't it be "free"?)
+            value_str = get_bytes_human_readable(used)
+        yield state, "only %s left %s" % (value_str, levels_text)
 
     yield tbsp_state.lower() != "normal" and 1 or 0, "State: %s" % tbsp_state
     yield 0, "Type: %s" % tbsp_type

@@ -101,76 +101,83 @@ class ModeTags(WatoMode):
             _("New aux tag"), watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
 
     def action(self):
-        # Deletion of tag groups
-        del_id = html.request.var("_delete")
-        if del_id:
-            tag_group = self._tag_config.get_tag_group(del_id)
-            if tag_group:
-                operations = list(tag_group.get_tag_ids())
-            else:
-                operations = None
+        if html.request.has_var("_delete"):
+            return self._delete_tag_group()
 
-            message = _rename_tags_after_confirmation(del_id, operations)
-            if message is True:  # no confirmation yet
-                c = wato_confirm(
-                    _("Confirm deletion of the tag group '%s'") % del_id,
-                    _("Do you really want to delete the tag group '%s'?") % del_id)
-                if c is False:
-                    return ""
-                elif c is None:
-                    return None
-
-            if message:
-                self._tag_config.remove_tag_group(del_id)
-                self._tag_config_file.save(self._tag_config.get_dict_format())
-                watolib.Folder.invalidate_caches()
-                watolib.Folder.root_folder().rewrite_hosts_files()
-                add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
-                return "tags", message != True and message or None
-
-        # Deletion of auxiliary tags
-        del_nr = html.request.var("_delaux")
-        if del_nr:
-            nr = int(del_nr)
-            del_id = self._tag_config.aux_tag_list.get_number(nr).id
-
-            # Make sure that this aux tag is not begin used by any tag group
-            for group in self._tag_config.tag_groups:
-                for grouped_tag in group.tags:
-                    if del_id in grouped_tag.aux_tag_ids:
-                        raise MKUserError(
-                            None,
-                            _("You cannot delete this auxiliary tag. "
-                              "It is being used in the tag group <b>%s</b>.") % group.title)
-
-            operations = {del_id: False}
-            message = _rename_tags_after_confirmation(None, operations)
-            if message is True:  # no confirmation yet
-                c = wato_confirm(
-                    _("Confirm deletion of the auxiliary tag '%s'") % del_id,
-                    _("Do you really want to delete the auxiliary tag '%s'?") % del_id)
-                if c is False:
-                    return ""
-                elif c is None:
-                    return None
-
-            if message:
-                self._tag_config.aux_tag_list.remove(del_id)
-                self._tag_config_file.save(self._tag_config.get_dict_format())
-                watolib.Folder.invalidate_caches()
-                watolib.Folder.root_folder().rewrite_hosts_files()
-                add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
-                return "tags", message != True and message or None
+        if html.request.has_var("_del_aux"):
+            return self._delete_aux_tag()
 
         if html.request.var("_move") and html.check_transaction():
-            move_nr = html.get_integer_input("_move")
-            move_to = html.get_integer_input("_index")
+            return self._move_tag_group()
 
-            moved = self._tag_config.tag_groups.pop(move_nr)
-            self._tag_config.tag_groups.insert(move_to, moved)
+    def _delete_tag_group(self):
+        del_id = html.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
 
+        tag_group = self._tag_config.get_tag_group(del_id)
+        if tag_group:
+            operations = list(tag_group.get_tag_ids())
+        else:
+            operations = None
+
+        message = _rename_tags_after_confirmation(del_id, operations)
+        if message is True:  # no confirmation yet
+            c = wato_confirm(
+                _("Confirm deletion of the tag group '%s'") % del_id,
+                _("Do you really want to delete the tag group '%s'?") % del_id)
+            if c is False:
+                return ""
+            elif c is None:
+                return None
+
+        if message:
+            self._tag_config.remove_tag_group(del_id)
             self._tag_config_file.save(self._tag_config.get_dict_format())
-            watolib.add_change("edit-tags", _("Changed order of tag groups"))
+            watolib.Folder.invalidate_caches()
+            watolib.Folder.root_folder().rewrite_hosts_files()
+            add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
+            return "tags", message != True and message or None
+
+    def _delete_aux_tag(self):
+        del_id = html.get_item_input("_del_aux",
+                                     dict(self._tag_config.aux_tag_list.get_choices()))[1]
+
+        # Make sure that this aux tag is not begin used by any tag group
+        for group in self._tag_config.tag_groups:
+            for grouped_tag in group.tags:
+                if del_id in grouped_tag.aux_tag_ids:
+                    raise MKUserError(
+                        None,
+                        _("You cannot delete this auxiliary tag. "
+                          "It is being used in the tag group <b>%s</b>.") % group.title)
+
+        operations = {del_id: False}
+        message = _rename_tags_after_confirmation(None, operations)
+        if message is True:  # no confirmation yet
+            c = wato_confirm(
+                _("Confirm deletion of the auxiliary tag '%s'") % del_id,
+                _("Do you really want to delete the auxiliary tag '%s'?") % del_id)
+            if c is False:
+                return ""
+            elif c is None:
+                return None
+
+        if message:
+            self._tag_config.aux_tag_list.remove(del_id)
+            self._tag_config_file.save(self._tag_config.get_dict_format())
+            watolib.Folder.invalidate_caches()
+            watolib.Folder.root_folder().rewrite_hosts_files()
+            add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
+            return "tags", message != True and message or None
+
+    def _move_tag_group(self):
+        move_nr = html.get_integer_input("_move")
+        move_to = html.get_integer_input("_index")
+
+        moved = self._tag_config.tag_groups.pop(move_nr)
+        self._tag_config.tag_groups.insert(move_to, moved)
+
+        self._tag_config_file.save(self._tag_config.get_dict_format())
+        watolib.add_change("edit-tags", _("Changed order of tag groups"))
 
     def page(self):
         if not self._tag_config.tag_groups + self._tag_config.get_aux_tags():
@@ -239,15 +246,15 @@ class ModeTags(WatoMode):
                 empty_text=_("You haven't defined any auxiliary tags."),
                 searchable=False) as table:
 
-            for nr, aux_tag in enumerate(self._effective_config.aux_tag_list.get_tags()):
+            for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 table.row()
                 table.cell(_("Actions"), css="buttons")
                 if aux_tag.id in self._builtin_config.aux_tag_list.get_tag_ids():
                     html.i("(%s)" % _("builtin"))
                 else:
-                    edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit",
-                                                                                         nr)])
-                    delete_url = make_action_link([("mode", "tags"), ("_delaux", nr)])
+                    edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"),
+                                                               ("edit", aux_tag.id)])
+                    delete_url = make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)])
                     html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
                     html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
                 table.text_cell(_("ID"), aux_tag.id)
@@ -306,18 +313,19 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         self._new = self._is_new_aux_tag()
 
         if self._new:
-            self._aux_tag_nr = None
+            self._aux_tag_id = None
             self._aux_tag = cmk.gui.tags.AuxTag()
         else:
-            self._aux_tag_nr = self._get_tag_number()
-            self._aux_tag = self._untainted_hosttags_config.aux_tag_list.get_number(
-                self._aux_tag_nr)
+            self._aux_tag_id = self._get_tag_id()
+            self._aux_tag = self._untainted_hosttags_config.aux_tag_list.get_aux_tag(
+                self._aux_tag_id)
 
     def _is_new_aux_tag(self):
         return html.request.var("edit") is None
 
-    def _get_tag_number(self):
-        return html.get_integer_input("edit")
+    def _get_tag_id(self):
+        return html.get_item_input(
+            "edit", dict(self._untainted_hosttags_config.aux_tag_list.get_choices()))[1]
 
     def title(self):
         if self._new:
@@ -353,7 +361,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         if self._new:
             changed_hosttags_config.aux_tag_list.append(self._aux_tag)
         else:
-            changed_hosttags_config.aux_tag_list.update(self._aux_tag_nr, self._aux_tag)
+            changed_hosttags_config.aux_tag_list.update(self._aux_tag_id, self._aux_tag)
 
         self._tag_config_file.save(changed_hosttags_config.get_dict_format())
 

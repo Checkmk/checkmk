@@ -125,9 +125,6 @@ class AuxTagList(object):
     def get_tags(self):
         return self._tags
 
-    def get_number(self, number):
-        return self._tags[number]
-
     def append(self, aux_tag):
         # TODO: Reenable this!
         #if is_builtin_aux_tag(aux_tag.id):
@@ -141,8 +138,11 @@ class AuxTagList(object):
                                 "of auxiliary tags."))
         self._tags.append(aux_tag)
 
-    def update(self, position, aux_tag):
-        self._tags[position] = aux_tag
+    def update(self, aux_tag_id, aux_tag):
+        for index, tmp_aux_tag in enumerate(self._tags):
+            if tmp_aux_tag.id == aux_tag_id:
+                self._tags[index] = aux_tag
+                return
 
     def remove(self, aux_tag_id):
         for index, tmp_aux_tag in enumerate(self._tags[:]):

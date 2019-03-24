@@ -383,8 +383,6 @@ class TagConfig(object):
         else:
             self._parse_legacy_format(data[0], data[1])
 
-        self.validate_config()
-
     def _parse_from_dict(self, tag_info):  # new style
         for tag_group in tag_info["tag_groups"]:
             self.tag_groups.append(TagGroup(tag_group))
@@ -423,6 +421,20 @@ class TagConfig(object):
             self._validate_group(tag_group)
 
         self.aux_tag_list.validate()
+        self._validate_ids()
+
+    def _validate_ids(self):
+        """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
+        seen_ids = set()
+        for tag_group in self.tag_groups:
+            if tag_group.id in seen_ids:
+                raise MKUserError("tag_id", _("The tag ID %s is used twice.") % tag_group.id)
+            seen_ids.add(tag_group.id)
+
+        for aux_tag in self.aux_tag_list.get_tags():
+            if aux_tag.id in seen_ids:
+                raise MKUserError("tag_id", _("The tag ID %s is used twice.") % aux_tag.id)
+            seen_ids.add(aux_tag.id)
 
     # TODO: cleanup this mess
     # This validation is quite gui specific, I do not want to introduce this into the base classes
@@ -434,13 +446,6 @@ class TagConfig(object):
         if tag_group.id == "site":
             raise MKUserError("tag_id",
                               _("The tag group %s is reserved for internal use.") % tag_group.id)
-
-        for tmp_group in self.tag_groups:
-            if tmp_group == tag_group:
-                continue
-            if tmp_group.id == tag_group.id:
-                raise MKUserError("tag_id", _("The tag group ID %s is already used by the tag group '%s'.") %\
-                                    (tag_group.id, tmp_group.title))
 
         if not tag_group.title:
             raise MKUserError("title", _("Please specify a title for your tag group."))
@@ -460,27 +465,6 @@ class TagConfig(object):
                         raise MKUserError(
                             "choices_id_%d" % (nr + 1),
                             _("Tags IDs must be unique. You've used <b>%s</b> twice.") % tag.id)
-
-            if tag.id:
-                # Make sure this ID is not used elsewhere
-                for tmp_group in self.tag_groups:
-                    # Do not compare the taggroup with itself
-                    if tmp_group != tag_group:
-                        for tmp_tag in tmp_group.tags:
-                            # Check primary and secondary tags
-                            if tag.id == tmp_tag.id:
-                                raise MKUserError(
-                                    "choices_id_%d" % (nr + 1),
-                                    _("The tag ID '%s' is already being used by the choice "
-                                      "'%s' in the tag group '%s'.") % (tag.id, tmp_tag.title,
-                                                                        tmp_group.title))
-
-                # Also check all defined aux tags even if they are not used anywhere
-                for aux_tag in self.get_aux_tags():
-                    if tag.id == aux_tag.id:
-                        raise MKUserError(
-                            "choices_id_%d" % (nr + 1),
-                            _("The tag ID '%s' is already being used as auxiliary tag.") % tag.id)
 
         if len(tag_group.tags) == 0:
             raise MKUserError("id_0", _("Please specify at least one tag."))

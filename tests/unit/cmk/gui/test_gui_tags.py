@@ -241,65 +241,92 @@ def test_tag_config_get_tag_or_aux_tag(test_cfg):
     assert isinstance(test_cfg.get_tag_or_aux_tag("prod"), tags.GroupedTag)
 
 
-def test_tag_config_insert_tag_group():
-    cfg = tags.TagConfig()
-    cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+@pytest.fixture()
+def cfg():
+    return tags.TagConfig()
 
+
+def test_tag_config_insert_tag_group_twice(cfg):
+    cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
     assert cfg.tag_groups[-1].id == "tgid2"
 
-    with pytest.raises(MKUserError, match="already used"):
-        cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg.insert_tag_group(tags.TagGroup(("tgidX", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg.validate_config()
 
+    with pytest.raises(MKUserError, match="is used twice"):
+        cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid3", "tagid3", [])])))
+        cfg.validate_config()
+
+
+def test_tag_config_insert_tag_group_missing_id(cfg):
     with pytest.raises(MKUserError, match="Please specify"):
         tg = tags.TagGroup()
         tg.id = ""
         cfg.insert_tag_group(tg)
+        cfg.validate_config()
 
+
+def test_tag_config_insert_tag_group_missing_title(cfg):
     with pytest.raises(MKUserError, match="Please specify"):
         tg = tags.TagGroup()
         tg.id = "abc"
         tg.title = ""
         cfg.insert_tag_group(tg)
+        cfg.validate_config()
 
+
+def test_tag_config_insert_tag_group_missing_multiple_tags_empty(cfg):
     with pytest.raises(MKUserError, match="Only one tag may be empty"):
         tg = tags.TagGroup(("tgid3", "Topics/titlor", [
             (None, "tagid2", []),
             ("", "tagid3", []),
         ]))
         cfg.insert_tag_group(tg)
+        cfg.validate_config()
 
+
+def test_tag_config_insert_tag_group_missing_tag_not_unique(cfg):
     with pytest.raises(MKUserError, match="must be unique"):
         tg = tags.TagGroup(("tgid4", "Topics/titlor", [
             ("ding", "tagid2", []),
             ("ding", "tagid3", []),
         ]))
         cfg.insert_tag_group(tg)
+        cfg.validate_config()
 
-    with pytest.raises(MKUserError, match="already being used"):
-        tg = tags.TagGroup(("tgid5", "Topics/titlor", [
-            ("tgid2", "tagid2", []),
-        ]))
-        cfg.insert_tag_group(tg)
 
+def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg):
     cfg.aux_tag_list.append(tags.AuxTag(("bla", "BLAAAA")))
-    with pytest.raises(MKUserError, match="already being used as aux"):
-        tg = tags.TagGroup(("tgid6", "Topics/titlor", [
-            ("bla", "tagid2", []),
+    tg = tags.TagGroup(("tgid6", "Topics/titlor", [
+        ("bla", "tagid2", []),
+    ]))
+    cfg.insert_tag_group(tg)
+    cfg.validate_config()
+
+    with pytest.raises(MKUserError, match="is used twice"):
+        tg = tags.TagGroup(("bla", "Topics/titlor", [
+            ("tagid2", "tagid2", []),
         ]))
         cfg.insert_tag_group(tg)
+        cfg.validate_config()
 
+
+def test_tag_config_insert_tag_group_no_tag(cfg):
     with pytest.raises(MKUserError, match="at least one tag"):
         tg = tags.TagGroup(("tgid7", "Topics/titlor", []))
         cfg.insert_tag_group(tg)
+        cfg.validate_config()
 
 
 def test_tag_config_update_tag_group(test_cfg):
     with pytest.raises(MKUserError, match="Unknown tag group"):
         test_cfg.update_tag_group(
             tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+        test_cfg.validate_config()
 
     test_cfg.update_tag_group(tags.TagGroup(("networking", "title", [("tgid2", "tagid2", [])])))
     assert test_cfg.tag_groups[-1].title == "title"
+    test_cfg.validate_config()
 
 
 def test_aux_tag_list_remove(test_cfg):

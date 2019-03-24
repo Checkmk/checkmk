@@ -133,6 +133,7 @@ class ModeTags(WatoMode):
 
         if message:
             self._tag_config.remove_tag_group(del_id)
+            self._tag_config.validate_config()
             self._tag_config_file.save(self._tag_config.get_dict_format())
             watolib.Folder.invalidate_caches()
             watolib.Folder.root_folder().rewrite_hosts_files()
@@ -165,6 +166,7 @@ class ModeTags(WatoMode):
 
         if message:
             self._tag_config.aux_tag_list.remove(del_id)
+            self._tag_config.validate_config()
             self._tag_config_file.save(self._tag_config.get_dict_format())
             watolib.Folder.invalidate_caches()
             watolib.Folder.root_folder().rewrite_hosts_files()
@@ -178,6 +180,7 @@ class ModeTags(WatoMode):
         moved = self._tag_config.tag_groups.pop(move_nr)
         self._tag_config.tag_groups.insert(move_to, moved)
 
+        self._tag_config.validate_config()
         self._tag_config_file.save(self._tag_config.get_dict_format())
         watolib.add_change("edit-tags", _("Changed order of tag groups"))
 
@@ -381,14 +384,6 @@ class ModeEditAuxtag(ABCEditTagMode):
         self._aux_tag = cmk.gui.tags.AuxTag(aux_tag_spec)
         self._aux_tag.validate()
 
-        # Make sure that this ID is not used elsewhere
-        for tag_group in self._untainted_hosttags_config.tag_groups:
-            if self._aux_tag.id in tag_group.get_tag_ids():
-                raise MKUserError(
-                    "tag_id",
-                    _("This tag id is already being used in the host tag group %s") %
-                    tag_group.title)
-
         changed_hosttags_config = cmk.gui.tags.TagConfig()
         changed_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
@@ -396,6 +391,7 @@ class ModeEditAuxtag(ABCEditTagMode):
             changed_hosttags_config.aux_tag_list.append(self._aux_tag)
         else:
             changed_hosttags_config.aux_tag_list.update(self._id, self._aux_tag)
+        changed_hosttags_config.validate_config()
 
         self._tag_config_file.save(changed_hosttags_config.get_dict_format())
 
@@ -468,6 +464,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         if self._new:
             # Inserts and verifies changed tag group
             changed_hosttags_config.insert_tag_group(changed_tag_group)
+            changed_hosttags_config.validate_config()
             self._tag_config_file.save(changed_hosttags_config.get_dict_format())
 
             # Make sure, that all tags are active (also manual ones from main.mk)
@@ -477,6 +474,7 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         # Updates and verifies changed tag group
         changed_hosttags_config.update_tag_group(changed_tag_group)
+        changed_hosttags_config.validate_config()
 
         # This is the major effort of WATO when it comes to
         # host tags: renaming and deleting of tags that might be

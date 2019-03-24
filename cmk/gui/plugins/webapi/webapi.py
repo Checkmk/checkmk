@@ -810,6 +810,7 @@ class APICallHosttags(APICallCollection):
 
         changed_hosttags_config = cmk.gui.tags.TagConfig()
         changed_hosttags_config.parse_config(request)
+        changed_hosttags_config.validate_config()
 
         new_tags = changed_hosttags_config.get_tag_ids()
         new_tags.update(changed_hosttags_config.get_tag_ids_with_group_prefix())

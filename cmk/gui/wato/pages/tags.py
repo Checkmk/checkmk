@@ -26,6 +26,8 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
+import abc
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -274,9 +276,15 @@ class ModeTags(WatoMode):
         return sorted(used_tags)
 
 
-class ModeEditHosttagConfiguration(WatoMode):
+class ABCEditTagMode(WatoMode):
+    __metaclass__ = abc.ABCMeta
+
+    @classmethod
+    def permissions(cls):
+        return ["hosttags"]
+
     def __init__(self):
-        super(ModeEditHosttagConfiguration, self).__init__()
+        super(ABCEditTagMode, self).__init__()
         self._tag_config_file = TagConfigFile()
         self._untainted_hosttags_config = cmk.gui.tags.TagConfig()
         self._untainted_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
@@ -285,6 +293,41 @@ class ModeEditHosttagConfiguration(WatoMode):
         self._effective_config.parse_config(self._untainted_hosttags_config.get_dict_format())
         self._effective_config += cmk.gui.config.BuiltinTagConfig()
 
+        self._id = self._get_id()
+        self._new = self._is_new_tag()
+
+    @abc.abstractmethod
+    def _get_id(self):
+        raise NotImplementedError()
+
+    def _is_new_tag(self):
+        return html.request.var("edit") is None
+
+    def _basic_elements(self):
+        if self._new:
+            vs_id = ID(
+                title=_("Tag ID"),
+                size=60,
+                allow_empty=False,
+                help=_("The internal ID of the tag is used as it's unique identifier "
+                       "It cannot be changed later."),
+            )
+        else:
+            vs_id = FixedValue(
+                self._id,
+                title=_("Tag ID"),
+            )
+
+        return [
+            ("id", vs_id),
+            ("title", TextUnicode(
+                title=_("Title"),
+                size=60,
+                allow_empty=False,
+            )),
+            ("topic", self._get_topic_valuespec()),
+        ]
+
     def _get_topic_valuespec(self):
         return OptionalDropdownChoice(
             title=_("Topic") + "<sup>*</sup>",
@@ -292,38 +335,29 @@ class ModeEditHosttagConfiguration(WatoMode):
             explicit=TextUnicode(),
             otherlabel=_("Create new topic"),
             default_value=None,
-            help=_("Different tag groups can be grouped in topics to make the visualization and "
+            help=_("Different tags can be grouped in topics to make the visualization and "
                    "selections in the GUI more comfortable."),
         )
 
 
 @mode_registry.register
-class ModeEditAuxtag(ModeEditHosttagConfiguration):
+class ModeEditAuxtag(ABCEditTagMode):
     @classmethod
     def name(cls):
         return "edit_auxtag"
 
-    @classmethod
-    def permissions(cls):
-        return ["hosttags"]
-
     def __init__(self):
         super(ModeEditAuxtag, self).__init__()
 
-        self._new = self._is_new_aux_tag()
-
         if self._new:
-            self._aux_tag_id = None
             self._aux_tag = cmk.gui.tags.AuxTag()
         else:
-            self._aux_tag_id = self._get_tag_id()
-            self._aux_tag = self._untainted_hosttags_config.aux_tag_list.get_aux_tag(
-                self._aux_tag_id)
+            self._aux_tag = self._untainted_hosttags_config.aux_tag_list.get_aux_tag(self._id)
 
-    def _is_new_aux_tag(self):
-        return html.request.var("edit") is None
+    def _get_id(self):
+        if not html.request.has_var("edit"):
+            return None
 
-    def _get_tag_id(self):
         return html.get_item_input(
             "edit", dict(self._untainted_hosttags_config.aux_tag_list.get_choices()))[1]
 
@@ -361,7 +395,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         if self._new:
             changed_hosttags_config.aux_tag_list.append(self._aux_tag)
         else:
-            changed_hosttags_config.aux_tag_list.update(self._aux_tag_id, self._aux_tag)
+            changed_hosttags_config.aux_tag_list.update(self._id, self._aux_tag)
 
         self._tag_config_file.save(changed_hosttags_config.get_dict_format())
 
@@ -387,62 +421,25 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
             optional_keys=[],
         )
 
-    def _basic_elements(self):
-        if self._new:
-            vs_id = ID(
-                title=_("Tag ID"),
-                size=60,
-                allow_empty=False,
-                help=_("The internal ID of the tag is used to store the tag's "
-                       "value in the host properties. It cannot be changed later."),
-            )
-        else:
-            vs_id = FixedValue(
-                self._aux_tag.id,
-                title=_("Tag ID"),
-            )
-
-        return [
-            ("id", vs_id),
-            ("title",
-             TextUnicode(
-                 title=_("Title"),
-                 size=60,
-                 help=_("An alias or description of this auxiliary tag"),
-                 allow_empty=False,
-             )),
-            ("topic", self._get_topic_valuespec()),
-        ]
-
 
 @mode_registry.register
-class ModeEditTagGroup(ModeEditHosttagConfiguration):
+class ModeEditTagGroup(ABCEditTagMode):
     @classmethod
     def name(cls):
         return "edit_tag"
 
-    @classmethod
-    def permissions(cls):
-        return ["hosttags"]
-
     def __init__(self):
         super(ModeEditTagGroup, self).__init__()
-        self._tag_group_id = self._get_taggroup_id()
-        self._new = self._is_new_hosttag_group()
 
-        self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(
-            self._tag_group_id)
+        self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(self._id)
         if not self._untainted_tag_group:
             self._untainted_tag_group = cmk.gui.tags.TagGroup()
 
         self._tag_group = self._untainted_hosttags_config.get_tag_group(
-            self._tag_group_id) or cmk.gui.tags.TagGroup()
+            self._id) or cmk.gui.tags.TagGroup()
 
-    def _get_taggroup_id(self):
+    def _get_id(self):
         return html.request.var("edit", html.request.var("tag_id"))
-
-    def _is_new_hosttag_group(self):
-        return html.request.var("edit") is None
 
     def title(self):
         if self._new:
@@ -514,8 +511,7 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
         if message:
             self._tag_config_file.save(changed_hosttags_config.get_dict_format())
             config.load_config()
-            add_change("edit-hosttags",
-                       _("Edited host tag group %s (%s)") % (message, self._tag_group_id))
+            add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
             return "tags", message != True and message or None
 
         return "tags"
@@ -546,33 +542,6 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
             form_narrow=True,
             optional_keys=[],
         )
-
-    def _basic_elements(self):
-        if self._new:
-            vs_id = ID(
-                title=_("Tag group ID"),
-                size=60,
-                allow_empty=False,
-                help=_("The internal ID of the tag group is used to store the tag's "
-                       "value in the host properties. It cannot be changed later."),
-            )
-        else:
-            vs_id = FixedValue(
-                self._tag_group_id,
-                title=_("Tag group ID"),
-            )
-
-        return [
-            ("id", vs_id),
-            ("title",
-             TextUnicode(
-                 title=_("Title"),
-                 size=60,
-                 help=_("An alias or description of this tag group."),
-                 allow_empty=False,
-             )),
-            ("topic", self._get_topic_valuespec()),
-        ]
 
     def _tag_choices_elements(self):
         return [

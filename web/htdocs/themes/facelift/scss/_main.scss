@@ -58,7 +58,7 @@ input, input[type=text], input[type=password], select, textarea, div.snapin text
   .tag_tree {
     font-size: $theme-font-size-main;
   }
-  input:focus, select:focus, textarea:focus, div.snapin select:focus, div.snapin textarea:focus, #mk_side_search_field:focus {
+  input:focus, select:focus, textarea:focus, div.snapin textarea:focus, #mk_side_search_field:focus {
     border-color: $theme-color-main; }
   input.number, select.number, textarea.number, div.snapin select.number, div.snapin textarea.number, .number#mk_side_search_field {
     text-align: left; }
@@ -83,12 +83,6 @@ input, input[type=text], input[type=password], select, textarea, div.snapin text
     margin-bottom: 0px; }
   input.toggle_timespecific_parameter, select.toggle_timespecific_parameter, textarea.toggle_timespecific_parameter, div.snapin select.toggle_timespecific_parameter, div.snapin textarea.toggle_timespecific_parameter, .toggle_timespecific_parameter#mk_side_search_field {
     display: block; }
-
-div.snapin select {
-  width: 100% !important;
-  height: 100% !important; }
-div.snapin textarea {
-  width: 100% !important; }
 
 select:not([multiple]) {
   -webkit-appearance: none !important;
@@ -748,48 +742,10 @@ div.metricchoice select, div.metricchoice input, div.metricchoice select, div.me
 td.title {
   display: table-cell; }
 
-/* Sidebar */
-  body.side p {
-    color: $theme-color-darkgrey; }
-  body.side .link, body.side .title {
-    color: $theme-color-lightgrey; }
-
-  body.main .popup_menu #side_header > span {
-    width: 100%;
-    height: 100%;
-    margin: 0px;
-    background-image: url(images/mk-logo.png);
-    background-size: auto 30px;
-    background-position: 16px center;
-    background-repeat: no-repeat; }
-
+/* TODO: Reproduce this html element */
 #hover_menu div.message {
   color: $theme-color-white;
   background-color: $theme-color-black; }
-
-    div.snapin div.content div.foldable a.iconlink, div.snapin div.content div.foldable body.main .popup_menu span.iconlink, body.main .popup_menu div.snapin div.content div.foldable span.iconlink {
-      padding: 4px 0px; }
-      div.snapin div.content div.foldable a.iconlink:last-of-type, div.snapin div.content div.foldable body.main .popup_menu span.iconlink:last-of-type, body.main .popup_menu div.snapin div.content div.foldable span.iconlink:last-of-type {
-        padding-bottom: 12px; }
-  div.snapin div.footnotelink {
-    text-align: right; }
-    div.snapin div.footnotelink a.link, div.snapin div.footnotelink body.main .popup_menu span.link, body.main .popup_menu div.snapin div.footnotelink span.link {
-      border: none;
-      box-shadow: none;
-      font-size: $theme-font-size-small;
-      text-transform: uppercase;
-      font-weight: $theme-font-weight-bold;
-      letter-spacing: $theme-letter-spacing-table;
-      padding: 12px 0px;
-      background: transparent;
-      color: $theme-color-main;
-      margin-left: 0px;
-      margin-right: 16px; }
-      div.snapin div.footnotelink a.link::before, div.snapin div.footnotelink body.main .popup_menu span.link::before, body.main .popup_menu div.snapin div.footnotelink span.link::before {
-        content: '···';
-        margin-right: 8px; }
-  div.snapin table.allhosts td a.link, div.snapin table.allhosts td body.main .popup_menu span.link, body.main .popup_menu div.snapin table.allhosts td span.link {
-    padding: 7px 4px; }
 
 /* Spezielle Snapins */
 table.tacticaloverview {
@@ -853,52 +809,6 @@ table.cmc_stats, table.mkeventd_performance, table.performance {
 div.statebullet {
   border-radius: 50%;
   box-shadow: none; }
-
-/* Snapinadder */
-div.add_snapin div.snapinadder, div.add_snapin div.snapinadder:hover {
-  box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.1);
-  border: 1px solid $theme-color-table-border;
-  border: 1px solid $theme-color-table-border-dark;
-  padding: 8px;
-  margin: 0px 16px 16px 0px;
-  background-color: $theme-color-white;
-  background-color: $theme-color-sidebar-background;
-  transition: box-shadow .15s 0s ease-in-out; }
-  div.add_snapin div.snapinadder .link, div.add_snapin div.snapinadder .title, div.add_snapin div.snapinadder .label, div.add_snapin div.snapinadder *, div.add_snapin div.snapinadder:hover * {
-    color: $theme-color-text;
-    color: $theme-color-lightgrey; }
-  div.add_snapin div.snapinadder .head {
-    padding: 8px;
-    height: auto;
-    background: transparent;
-    color: $theme-color-text-light;
-    text-align: left; }
-    div.add_snapin div.snapinadder .head b.heading {
-      font-size: $theme-font-size-main;
-      text-transform: uppercase;
-      letter-spacing: $theme-letter-spacing-table;
-      font-weight: 500; }
-  div.add_snapin div.snapinadder .snapin b, div.add_snapin div.snapinadder .head b {
-    font-weight: $theme-font-weight-bold; }
-  div.add_snapin div.snapinadder div.description {
-    color: $theme-color-nuance-8;
-    font-weight: $theme-font-weight-global;
-    line-height: 1.333;
-    font-size: $theme-font-size-small;
-    letter-spacing: $theme-letter-spacing-table;
-    text-rendering: optimizeLegibility;
-    padding: 16px; }
-  div.add_snapin div.snapinadder div.snapin {
-    padding-top: 0px;
-    height: 116px;
-    border: none;
-    border-radius: 0;
-    border-bottom: 1px solid $theme-color-table-border;
-    border-bottom: 1px solid $theme-color-table-border-dark;
-    background-color: $theme-color-white;
-    background-color: $theme-color-sidebar-background; }
-  div.add_snapin div.snapinadder .content {
-    color: $theme-color-text; }
 
 .checkbox label::before {
   box-shadow: none;
@@ -1101,7 +1011,6 @@ div.color {
 
 .state2.state2.state2, .even0 .state2, .even2 .state2, .hstate1, .state2 a, .state2 body.main .popup_menu span, body.main .popup_menu .state2 span, .hstate2 a, .hstate2 body.main .popup_menu span, body.main .popup_menu .hstate2 span {
   background-color: $theme-color-state-2-background !important;
-  color: $theme-color-white !important;
   border-color: $theme-color-state-2-border !important;
   color: $theme-color-lightgrey !important; }
 

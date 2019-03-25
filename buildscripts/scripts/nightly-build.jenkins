@@ -48,6 +48,12 @@ node {
                     dir('agents/wnx') {
                         stash name: 'WinSRC', include: '**/*'
                     }
+                    dir('agents/windows/dependencies/') {
+                        stash name: 'WinDep', include: '**/*'
+                    }
+                    dir('omd/packages/') {
+                        stash name: 'WinDepOMD', include: 'googletest/*, simpleini/*'
+                    }
                 }
             }
         }
@@ -61,6 +67,12 @@ AGENT_LIST.each { AGENT ->
 //                bat 'deltree *'
                 dir('agents/wnx') {
                     unstash name: 'WinSRC'
+                }
+                dir('agents/windows/dependencies/') {
+                    unstash name: 'WinDep'
+                }
+                dir('omd/packages/') {
+                    unstash name: 'WinDepOMD'
                 }
                 bat 'cd agents\\wnx && call build_release.cmd'
                 dir('artefacts') {

@@ -47,6 +47,7 @@ import time
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
 import cmk.utils.debug
+from cmk.utils.notify import notification_message
 from cmk.utils.regex import regex
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
@@ -1310,7 +1311,7 @@ def path_to_notification_script(plugin):
 #
 # Note: this function is *not* being called for bulk notification.
 def call_notification_script(plugin, plugin_context):
-    core_notification_log(plugin, plugin_context)
+    _log_to_history(notification_message(plugin or "plain email", plugin_context))
 
     def plugin_log(s):
         notify_log("     %s" % s)
@@ -1744,7 +1745,7 @@ def notify_bulk(dirname, uuids):
         # a single entry for each notification contained in the bulk.
         # It is important later to have this precise information.
         plugin_name = "bulk " + (plugin or "plain email")
-        core_notification_log(plugin_name, context)
+        _log_to_history(notification_message(plugin_name, context))
 
     if bulk_context:  # otherwise: only corrupted files
         # Per default the uuids are sorted chronologically from oldest to newest
@@ -1945,25 +1946,11 @@ def fresh_uuid():
         return str(uuid.uuid4())
 
 
-def core_notification_log(plugin, plugin_context):
-    what = plugin_context["WHAT"]
-    contact = plugin_context["CONTACTNAME"]
-    spec = plugin_context["HOSTNAME"]
-    if what == "HOST":
-        state = plugin_context["HOSTSTATE"]
-        output = plugin_context["HOSTOUTPUT"]
-    if what == "SERVICE":
-        spec += ";" + plugin_context["SERVICEDESC"]
-        state = plugin_context["SERVICESTATE"]
-        output = plugin_context["SERVICEOUTPUT"]
-
-    log_message = "%s NOTIFICATION: %s;%s;%s;%s;%s" % (what, contact, spec, state, plugin or
-                                                       "plain email", output)
-
-    _send_livestatus_command("LOG;%s" % log_message)
+def _log_to_history(message):
+    _livestatus_cmd("LOG;%s" % message)
 
 
-def _send_livestatus_command(command):
+def _livestatus_cmd(command):
     try:
         livestatus.LocalConnection().command("[%d] %s" % (time.time(), command.encode("utf-8")))
     except Exception as e:

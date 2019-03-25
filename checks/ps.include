@@ -160,10 +160,6 @@ def inventory_ps_common(invdata, invrules, parsed):
             if inv not in inventory:
                 inventory.append(inv)
 
-            # Once a process is matched, don't need to iterate the other
-            # inventory_specs
-            break
-
     return inventory
 
 

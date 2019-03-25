@@ -16,12 +16,16 @@ def generate_inputs():
     return [
         # CMK 1.5
         # linux, openwrt agent(5 entry, cmk>=1.2.7)
+        # NOTE: It is important that the last line ("(twelve,...")
+        #       remains the last line of the following output!
         splitter("""(root,225948,9684,00:00:03/05:05:29,1) /sbin/init splash
 (root,0,0,00:00:00/05:05:29,2) [kthreadd]
 (on,288260,7240,00:00:00/05:03:00,4480) /usr/bin/gnome-keyring-daemon --start --foreground --components=secrets
 (on,1039012,11656,00:00:00/05:02:41,5043) /usr/bin/pulseaudio --start --log-target=syslog
 (on,1050360,303252,00:14:59/1-03:59:39,9902) emacs
-(on,2924232,472252,00:12:05/07:24:15,7912) /usr/lib/firefox/firefox"""),
+(on,2924232,472252,00:12:05/07:24:15,7912) /usr/lib/firefox/firefox
+(heute,11180,1144,00:00:00/03:54:10,10884) /omd/sites/heute/lib/cmc/checkhelper
+(twelve,11180,1244,00:00:00/02:37:39,30136) /omd/sites/twelve/lib/cmc/checkhelper"""),
         # solaris (5 entry cmk>=1.5)
         splitter(
             """(root,4056,1512,0.0/52-04:56:05,5689) /usr/lib/ssh/sshd
@@ -86,7 +90,9 @@ result_parse = [
       [None, ("on", "1050360", "303252", "00:14:59/1-03:59:39", "9902"),
        "emacs"],
       [None, ("on", "2924232", "472252", "00:12:05/07:24:15", "7912"),
-       "/usr/lib/firefox/firefox"]]),
+       "/usr/lib/firefox/firefox"],
+      [None, ("heute", "11180", "1144", "00:00:00/03:54:10", "10884"), "/omd/sites/heute/lib/cmc/checkhelper"],
+      [None, ("twelve", "11180", "1244", "00:00:00/02:37:39", "30136"), "/omd/sites/twelve/lib/cmc/checkhelper"]]),
     (1, [["solaris", ("root", "4056", "1512", "0.0/52-04:56:05", "5689"), "/usr/lib/ssh/sshd"],
          ["solaris", ("zombie", "0", "0", "-/-", "1952"), "<defunct>"]]),
     (1,
@@ -265,6 +271,26 @@ PS_DISCOVERY_WATO_RULES = [
         'descr': 'PS counter',
         'user': 'zombie',
     }, [], ["@all"], {}),
+    ({
+        "default_params": {
+            "process_info": "text"
+        },
+        "match": "~/omd/sites/(\w+)/lib/cmc/checkhelper",
+        "descr": "Checkhelpers %s",
+        "user": None,
+    }, [], ["@all"], {
+        "description": u"Checkhelpers per site"
+    }),
+    ({
+        "default_params": {
+            "process_info": "text"
+        },
+        "match": "~/omd/sites/\w+/lib/cmc/checkhelper",
+        "descr": "Checkhelpers Overall",
+        "user": None,
+    }, [], ["@all"], {
+        "description": u"Overall checkhelpers"
+    }),
 ]
 
 PS_DISCOVERY_SPECS = [
@@ -307,6 +333,14 @@ PS_DISCOVERY_SPECS = [
     }),
     ('PS counter', None, 'zombie', {
         'cpu_rescale_max': None
+    }),
+    ("Checkhelpers %s", "~/omd/sites/(\w+)/lib/cmc/checkhelper", None, {
+        "process_info": "text",
+        'cpu_rescale_max': None,
+    }),
+    ("Checkhelpers Overall", "~/omd/sites/\w+/lib/cmc/checkhelper", None, {
+        "process_info": "text",
+        'cpu_rescale_max': None,
     }),
 ]
 
@@ -421,6 +455,27 @@ PS_DISCOVERED_ITEMS = [
         'cpu_rescale_max': None,
         'match_groups': ['fire'],
     }),
+    ("Checkhelpers heute", {
+        "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
+        "process_info": "text",
+        "user": None,
+        'cpu_rescale_max': None,
+        'match_groups': ['heute'],
+    }),
+    ("Checkhelpers Overall", {
+        "process": "~/omd/sites/\\w+/lib/cmc/checkhelper",
+        "process_info": "text",
+        "user": None,
+        'match_groups': [],
+        'cpu_rescale_max': None,
+    }),
+    ("Checkhelpers twelve", {
+        "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
+        "process_info": "text",
+        "user": None,
+        'cpu_rescale_max': None,
+        'match_groups': ['twelve'],
+    }),
     ("sshd", {
         "process": "~.*sshd",
         "user": None,
@@ -460,8 +515,8 @@ def test_inventory_common(check_manager):
     check = check_manager.get_check("ps")
     info = sum(generate_inputs(), [])
     parsed = check.run_parse(info)[1]
-    assert check.context["inventory_ps_common"]([], PS_DISCOVERY_WATO_RULES,
-                                                parsed) == PS_DISCOVERED_ITEMS
+    assert sorted(check.context["inventory_ps_common"]([], PS_DISCOVERY_WATO_RULES,
+                                                parsed)) == sorted(PS_DISCOVERED_ITEMS)
 
 
 @pytest.mark.parametrize("service_description, matches, result", [
@@ -504,6 +559,33 @@ check_results = [
         (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]), (0, "running for 7 h", []),
         (0,
          "\nname /usr/lib/firefox/firefox, user on, virtual size 2924232kB, resident size 472252kB, creation time 2018-10-24 04:38:07, pid 7912, cpu usage 0.0%\r\n",
+         [])
+    ]),
+    CheckResult([
+        (0, "1 process", [("count", 1, 100000, 100000, 0, None)]),
+        (0, "10.92 MB virtual", [("vsz", 11180, None, None, None, None)]),
+        (0, "1.12 MB physical", [("rss", 1144, None, None, None, None)]),
+        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
+        (0, "running for 234 m", []),
+        (0, "\nname /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB, resident size 1144kB, creation time 2018-10-24 08:08:12, pid 10884, cpu usage 0.0%\r\n",
+         [])
+    ]),
+    CheckResult([
+        (0, "2 processes", [("count", 2, 100000, 100000, 0, None)]),
+        (0, "21.84 MB virtual", [("vsz", 22360, None, None, None, None)]),
+        (0, "2.33 MB physical", [("rss", 2388, None, None, None, None)]),
+        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
+        (0, "youngest running for 157 m, oldest running for 234 m", []),
+        (0, "\nname /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB, resident size 1144kB, creation time 2018-10-24 08:08:12, pid 10884, cpu usage 0.0%\r\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB, resident size 1244kB, creation time 2018-10-24 09:24:43, pid 30136, cpu usage 0.0%\r\n",
+         [])
+    ]),
+    CheckResult([
+        (0, "1 process", [("count", 1, 100000, 100000, 0, None)]),
+        (0, "10.92 MB virtual", [("vsz", 11180, None, None, None, None)]),
+        (0, "1.21 MB physical", [("rss", 1244, None, None, None, None)]),
+        (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
+        (0, "running for 157 m", []),
+        (0, "\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB, resident size 1244kB, creation time 2018-10-24 09:24:43, pid 30136, cpu usage 0.0%\r\n",
          [])
     ]),
     CheckResult([

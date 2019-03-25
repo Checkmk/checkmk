@@ -256,16 +256,26 @@ class Pod(Metadata):
         spec = pod.spec
         if spec:
             self.node = spec.node_name
+            self.host_network = (spec.host_network if spec.host_network is not None else False)
+            self.dns_policy = spec.dns_policy
             self._containers = spec.containers
         else:
             self.node = None
+            self.host_network = False
+            self.dns_policy = None
             self._containers = []
 
         status = pod.status
         if status:
+            self.host_ip = status.host_ip
+            self.pod_ip = status.pod_ip
+            self.qos_class = status.qos_class
             self._container_statuses = (status.container_statuses
                                         if status.container_statuses else [])
         else:
+            self.host_ip = None
+            self.pod_ip = None
+            self.qos_class = None
             self._container_statuses = []
 
     @staticmethod
@@ -321,6 +331,17 @@ class Pod(Metadata):
                                     if container_status.container_id else '')
             data['image_id'] = container_status.image_id
         return view
+
+    @property
+    def info(self):
+        return {
+            'node': self.node,
+            'host_network': self.host_network,
+            'dns_policy': self.dns_policy,
+            'host_ip': self.host_ip,
+            'pod_ip': self.pod_ip,
+            'qos_class': self.qos_class,
+        }
 
 
 class Namespace(Metadata):
@@ -483,6 +504,9 @@ class PodList(ListLike[Pod]):
 
     def pods_in_cluster(self):
         return {'requests': {'pods': len(self)}}
+
+    def info(self):
+        return {pod.name: pod.info for pod in self}
 
     def resources(self):
         return {pod.name: pod.resources for pod in self}
@@ -825,6 +849,7 @@ class ApiData(object):
         g = Group()
         g.join('k8s_resources', self.pods.resources())
         g.join('k8s_pod_container', self.pods.containers())
+        g.join('k8s_pod_info', self.pods.info())
         return '\n'.join(g.output())
 
 

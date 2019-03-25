@@ -1106,6 +1106,15 @@ inventory_displayhints.update({
     ".software.applications.kubernetes.pod_container:*.ready": {"title": _("Ready"), "paint": "container_ready"},
     ".software.applications.kubernetes.pod_container:*.restart_count": {"title": _("Restart count")},
     ".software.applications.kubernetes.pod_container:*.container_id": {"title": _("Container ID")},
+    ".software.applications.kubernetes.pod_info.": {
+        "title": _("Pod"),
+    },
+    ".software.applications.kubernetes.pod_info.node": {"title": _("Node")},
+    ".software.applications.kubernetes.pod_info.host_network": {"title": _("Host network")},
+    ".software.applications.kubernetes.pod_info.dns_policy": {"title": _("DNS policy")},
+    ".software.applications.kubernetes.pod_info.host_ip": {"title": _("Host IP")},
+    ".software.applications.kubernetes.pod_info.pod_ip": {"title": _("Pod IP")},
+    ".software.applications.kubernetes.pod_info.qos_class": {"title": _("QOS class")},
     ".software.applications.citrix.": {"title": _("Citrix")},
     ".software.applications.citrix.controller.": {"title": _("Controller")},
     ".software.applications.citrix.controller.controller_version": {

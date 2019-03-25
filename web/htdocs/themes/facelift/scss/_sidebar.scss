@@ -46,10 +46,16 @@ body.side {
   font-size: 14px;
   font-weight: $theme-font-weight-global;
   background: $theme-color-table-border-dark;
-}
 
-body.side.screenshotmode {
+  p {
+    color: $theme-color-darkgrey; }
+
+  .link, .title {
+    color: $theme-color-lightgrey; }
+
+  &.screenshotmode {
     background-image: url("");
+  }
 }
 
 /* Top logo part */
@@ -67,22 +73,32 @@ body.side.screenshotmode {
   border-radius: 0;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
+
+  > a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    text-decoration: none;
+    background-image: url("images/mk-logo.png");
+    background-position: 16px center;
+    background-repeat: no-repeat;
+    background-size: auto 30px;
+  }
 }
 
-#side_bg {
-  display: none;
-}
-
-#side_header > a {
-  display: block;
+body.main .popup_menu #side_header > span {
   width: 100%;
   height: 100%;
   margin: 0;
-  text-decoration: none;
   background-image: url("images/mk-logo.png");
   background-position: 16px center;
   background-repeat: no-repeat;
   background-size: auto 30px;
+}
+
+#side_bg {
+  display: none;
 }
 
 #side_fold {
@@ -93,12 +109,12 @@ body.side.screenshotmode {
   width: 10px;
   height: 100%;
   cursor: pointer;
-}
 
-#side_fold:hover {
-  background-image: url("images/side_fold.png");
-  background-position: 5% 65%;
-  background-repeat: no-repeat;
+  &:hover {
+    background-image: url("images/side_fold.png");
+    background-position: 5% 65%;
+    background-repeat: no-repeat;
+  }
 }
 
 #side_version {
@@ -110,33 +126,33 @@ body.side.screenshotmode {
   font-size: 11px;
   color: #fff;
   text-align: right;
-}
 
-#side_version a  {
-  font-size: 8px;
-  font-weight: $theme-font-weight-bold;
-  line-height: 1;
-  letter-spacing: $theme-letter-spacing-table;
-  color: $theme-color-text-light;
-  text-decoration: none;
-  text-rendering: optimizeLegibility;
-  background: none;
-}
+  a {
+    font-size: 8px;
+    font-weight: $theme-font-weight-bold;
+    line-height: 1;
+    letter-spacing: $theme-letter-spacing-table;
+    color: $theme-color-text-light;
+    text-decoration: none;
+    text-rendering: optimizeLegibility;
+    background: none;
 
-#side_version a:hover  {
-  text-decoration: underline;
-}
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 
-#side_version span.unack_werks {
-  position: absolute;
-  top: 5px;
-  right: -12px;
-  z-index: 15;
-  padding: 2px;
-  color: #fff;
-  cursor: pointer;
-  background-color: #f00;
-  border-radius: 10px;
+  span.unack_werks {
+    position: absolute;
+    top: 5px;
+    right: -12px;
+    z-index: 15;
+    padding: 2px;
+    color: #fff;
+    cursor: pointer;
+    background-color: #f00;
+    border-radius: 10px;
+  }
 }
 
 /* Scrolling part with snapins */
@@ -148,10 +164,10 @@ body.side.screenshotmode {
   padding-left: 0;
   overflow: hidden;
   color: #000;
-}
 
-#side_content.scroll {
-  overflow-y: scroll;
+  &.scroll {
+    overflow-y: scroll;
+  }
 }
 
 /* The footer of the sidebar */
@@ -170,38 +186,40 @@ body.side.screenshotmode {
   border-radius: 0;
   box-shadow: none;
   box-sizing: border-box;
+
+  img.iconbutton {
+    position: relative;
+    top: 4px;
+    left: 0;
+    width: 27px;
+    height: 27px;
+    padding: 0;
+    margin-right: 5px;
+    font-size: 9px;
+    background-color: $theme-color-sidebar-background;
+    border: 1px solid $theme-color-table-border-dark-2;
+    border-radius: 5px;
+    box-shadow: none;
+  }
+
+  div.copyright {
+    position: relative;
+    top: 13px;
+    right: 0;
+    bottom: 5px;
+    float: right;
+    font-size: $theme-font-size-small;
+    font-weight: $theme-font-weight-bold;
+    letter-spacing: $theme-letter-spacing-table;
+    color: $theme-color-text-light;
+    text-align: right;
+    text-transform: uppercase;
+  }
 }
 
-#side_footer img.iconbutton {
-  position: relative;
-  top: 4px;
-  left: 0;
-  width: 27px;
-  height: 27px;
-  padding: 0;
-  margin-right: 5px;
-  font-size: 9px;
-  background-color: $theme-color-sidebar-background;
-  border: 1px solid $theme-color-table-border-dark-2;
-  border-radius: 5px;
-  box-shadow: none;
-}
-
-#side_footer div.copyright {
-  position: relative;
-  top: 13px;
-  right: 0;
-  bottom: 5px;
-  float: right;
-  font-size: $theme-font-size-small;
-  font-weight: $theme-font-weight-bold;
-  letter-spacing: $theme-letter-spacing-table;
-  color: $theme-color-text-light;
-  text-align: right;
-  text-transform: uppercase;
-}
-
-#side_footer div.copyright a, #side_footer div.copyright body.main .popup_menu span,
+#side_footer div.copyright a,
+/* TODO: Reproduce these two html elements */
+#side_footer div.copyright body.main .popup_menu span,
 body.main .popup_menu #side_footer div.copyright span {
   color: $theme-color-text-light;
   text-decoration: none;
@@ -234,88 +252,408 @@ body.side div.snapin, div.add_snapin div.snapin  {
   box-sizing: border-box;
 }
 
-/* Header of the snapin */
-div.snapin div.head {
-  height: auto;
-  padding: 8px;
-  line-height: 20px;
-  color: $theme-color-text-light;
-  text-align: left;
-  background: transparent;
+div.snapin {
+  /* Header of the snapin */
+  div.head {
+    height: auto;
+    padding: 8px;
+    line-height: 20px;
+    color: $theme-color-text-light;
+    text-align: left;
+    background: transparent;
+
+    &.open {
+      padding-bottom: 0;
+    }
+
+    b.heading {
+      font-size: $theme-font-size-main;
+      font-weight: 500;
+      letter-spacing: $theme-letter-spacing-table;
+      text-transform: uppercase;
+    }
+
+    &.closed div.minisnapin {
+      background-image: url("images/icon_maxisnapin.png");
+    }
+  }
+
+  /* close button on header */
+  div.closesnapin {
+    float: right;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    margin-top: 6px;
+    margin-right: 6px;
+    line-height: 0;
+
+    img {
+      width: 8px;
+      height: 8px;
+    }
+  }
+
+  div.minisnapin {
+    float: right;
+    width: 8px;
+    height: 8px;
+    margin: 6px 6px 0 0;
+    line-height: 0;
+    cursor: pointer;
+    background-image: url("images/icon_minisnapin.png");
+  }
+
+  div.content {
+    top: 64px;
+    width: 100%;
+    padding: 8px;
+    color: #fff;
+    background-color: $theme-color-sidebar-background;
+    box-sizing: border-box;
+  }
+
+  /* TODO: No important styles */
+  select {
+    width: 100% !important;
+    height: 100% !important;
+    padding: 8px !important;
+    font-size: 11px;
+    color: $theme-color-text;
+    background: $theme-color-white;
+    background-image: none !important;
+    border: 1px solid $theme-color-table-border !important;
+    border-radius: $theme-border-radius;
+    box-shadow: none;
+  }
+
+  /*
+   * General styles for snapin contents
+   */
+  .content_center {
+    margin-right: auto;
+    margin-left:  auto;
+  }
+
+  td {
+    color: #fff;
+  }
+
+  h3 {
+    margin: 2px 0;
+    font-size: 100%;
+    color: #fff;
+  }
+
+  /* Normal link in snapins */
+  a {
+    font-weight: normal;
+    color: #fff;
+    text-decoration: none;
+
+    &:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    &.iconlink img {
+      margin-right: 8px;
+    }
+  }
+
+  ul {
+    /* width: 220px; Bei mehrstufigen Einrueckungen stimmt der rechte Rand nicht */
+    padding: 0;
+    padding-left: 16px;
+    margin: 0;
+  }
+
+  li {
+    padding-left: 1px;
+    color: #478;
+
+    &.sidebar {
+      margin-left: 0;
+    }
+  }
+
+  textarea {
+    width: 100% !important;
+  }
+
+  /* TODO: Reproduce this html element */
+  div.footnote {
+    width: 100%;
+    text-align: right;
+  }
+
+  /* Style for exceptions displayed in snapins */
+  div.snapinexception {
+    width: 220px;
+    padding: 3px;
+    background-color: #f88;
+    border: 1px solid #f00;
+    border-radius: 4px;
+
+    h2 {
+      margin-top: 0;
+      font-size: 12px;
+      color: #f00;
+    }
+
+    p {
+      color: #800;
+    }
+  }
+
+  /* The right-aligned link at the bottom of some snapins like the "views" snapin. */
+  div.footnotelink {
+    margin-top: 5px;
+    text-align: right;
+
+    a {
+      border-radius: 5px;
+    }
+
+    a:hover {
+      text-decoration: none;
+    }
+  }
+
+  /* Small iconbutton (e.g. at virtual host tree) */
+  img.iconbutton {
+    width: 10px;
+    height: 10px;
+    margin: 0 2px 0 0;
+    border: none;
+
+    &:hover {
+      opacity: 0.5;
+      filter: alpha(opacity=50); /* For IE8 and earlier */
+    }
+
+    &.bookmark {
+      width: 16px;
+      height: 16px;
+      margin: 0 -1px;
+    }
+  }
+
+  /* state bullets at problem host or all hosts snapin */
+  div.statebullet {
+    float: left;
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    margin-left: 0;
+    border: 1px solid #123a4a;
+    box-shadow: 0 0 1px #123a4a;
+  }
 }
 
-div.snapin div.head.open {
-  padding-bottom: 0;
+div.snapin div.content div.foldable a.iconlink,
+/* TODO: Reproduce these two html elements */
+div.snapin div.content div.foldable body.main .popup_menu span.iconlink,
+body.main .popup_menu div.snapin div.content div.foldable span.iconlink {
+  padding: 4px 0px;
 }
 
-div.snapin div.head b.heading {
-  font-size: $theme-font-size-main;
-  font-weight: 500;
+div.snapin div.content div.foldable a.iconlink:last-of-type,
+/* TODO: Reproduce these two html elements */
+div.snapin div.content div.foldable body.main .popup_menu span.iconlink:last-of-type,
+body.main .popup_menu div.snapin div.content div.foldable span.iconlink:last-of-type {
+  padding-bottom: 12px;
+}
+
+div.snapin table.allhosts td a.link,
+/* TODO: Reproduce these two html elements */
+div.snapin table.allhosts td body.main .popup_menu span.link,
+body.main .popup_menu div.snapin table.allhosts td span.link {
+  padding: 7px 4px;
+}
+
+div.snapin div.footnotelink a.link,
+/* TODO: Reproduce these two html elements */
+div.snapin div.footnotelink body.main .popup_menu span.link,
+body.main .popup_menu div.snapin div.footnotelink span.link {
+  padding: 12px 0;
+  margin-right: 16px;
+  margin-left: 0;
+  font-size: $theme-font-size-small;
+  font-weight: $theme-font-weight-bold;
   letter-spacing: $theme-letter-spacing-table;
+  color: $theme-color-main;
   text-transform: uppercase;
-}
-
-/* close button on header */
-div.snapin div.closesnapin {
-  float: right;
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  margin-top: 6px;
-  margin-right: 6px;
-  line-height: 0;
-}
-
-div.snapin div.closesnapin img {
-  width: 8px;
-  height: 8px;
-}
-
-div.snapin div.minisnapin {
-  float: right;
-  width: 8px;
-  height: 8px;
-  margin: 6px 6px 0 0;
-  line-height: 0;
-  cursor: pointer;
-  background-image: url("images/icon_minisnapin.png");
-}
-
-div.snapin div.head.closed div.minisnapin {
-  background-image: url("images/icon_maxisnapin.png");
-}
-
-div.snapin div.content {
-  top: 64px;
-  width: 100%;
-  padding: 8px;
-  color: #fff;
-  background-color: $theme-color-sidebar-background;
-  box-sizing: border-box;
-}
-
-/* TODO: No important styles */
-div.snapin select {
-  width: 100%;
-  height: 100%;
-  padding: 8px !important;
-  font-size: 11px;
-  color: $theme-color-text;
-  background: $theme-color-white;
-  background-image: none !important;
-  border: 1px solid $theme-color-table-border !important;
-  border-radius: $theme-border-radius;
+  background: transparent;
+  border: none;
   box-shadow: none;
 }
 
-// Styles for wiki and quicksearch sidebar snapins
+div.snapin div.footnotelink a.link::before,
+/* TODO: Reproduce these two html elements */
+div.snapin div.footnotelink body.main .popup_menu span.link::before,
+body.main .popup_menu div.snapin div.footnotelink span.link::before {
+  margin-right: 8px;
+  content: "···";
+}
+
+/* TODO: Reproduce this html element */
+div#snapinDragIndicator {
+  position: relative;
+  top: 2px;
+  width: 247px;
+  height: 1.5px;
+  margin: 0 0 0 11px;
+  font-size: 1px;
+  line-height: 1px;
+  background-color: #fff;
+  border-radius: 3px;
+  box-shadow: 0 0 3px #fff;
+}
+
+
+/*-------------------------------------------------------------------------.
+|          _       _     _                         _                       |
+|         / \   __| | __| |  ___ _ __   __ _ _ __ (_)_ __  ___             |
+|        / _ \ / _` |/ _` | / __| '_ \ / _` | '_ \| | '_ \/ __|            |
+|       / ___ \ (_| | (_| | \__ \ | | | (_| | |_) | | | | \__ \            |
+|      /_/   \_\__,_|\__,_| |___/_| |_|\__,_| .__/|_|_| |_|___/            |
+|                                           |_|                            |
++--------------------------------------------------------------------------+
+| Style for the page where you can add new snapins to the sidebar.         |
+'-------------------------------------------------------------------------*/
+
+div.add_snapin {
+  div.snapinadder {
+    &, &:hover {
+      float: left;
+      width: 270px;
+      height: 220px;
+      padding: 8px;
+      margin: 0 16px 16px 0;
+      background-color: $theme-color-sidebar-background;
+      border: 1px solid $theme-color-table-border-dark;
+      border-radius: 5px;
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
+      transition: box-shadow .15s 0s ease-in-out;
+    }
+
+    *, &:hover * {
+      color: $theme-color-lightgrey;
+    }
+
+    &:hover {
+      position: relative;
+    }
+
+    div.description {
+      padding: 16px;
+      font-size: $theme-font-size-small;
+      font-weight: $theme-font-weight-global;
+      line-height: 1.333;
+      letter-spacing: $theme-letter-spacing-table;
+      color: $theme-color-nuance-8;
+      text-rendering: optimizeLegibility;
+    }
+
+    div.snapin {
+      height: 116px;
+      padding-top: 0;
+      background-color: $theme-color-sidebar-background;
+      border: none;
+      border-bottom: 1px solid $theme-color-table-border-dark;
+      border-radius: 0;
+    }
+
+    .head {
+      height: auto;
+      padding: 8px;
+      color: $theme-color-text-light;
+      text-align: left;
+      background: transparent;
+
+      b.heading {
+        font-size: $theme-font-size-main;
+        font-weight: 500;
+        letter-spacing: $theme-letter-spacing-table;
+        text-transform: uppercase;
+      }
+    }
+
+    .snapin b, .head b {
+      font-weight: $theme-font-weight-bold;
+    }
+
+    .content {
+        color: $theme-color-text;
+    }
+  }
+
+  div.snapin_preview {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 270px;
+    height: 120px;
+    overflow: hidden;
+
+    div.clickshield {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      width: 270px;
+      height: 120px;
+    }
+  }
+}
+
+
+/*-Popup Msg-----------------------------------------------------------.
+|           ____                           __  __                      |
+|          |  _ \ ___  _ __  _   _ _ __   |  \/  |___  __ _            |
+|          | |_) / _ \| '_ \| | | | '_ \  | |\/| / __|/ _` |           |
+|          |  __/ (_) | |_) | |_| | |_) | | |  | \__ \ (_| |           |
+|          |_|   \___/| .__/ \__,_| .__/  |_|  |_|___/\__, |           |
+|                     |_|         |_|                 |___/            |
++----------------------------------------------------------------------+
+| Popup message rendering                                              |
+'---------------------------------------------------------------------*/
+
+div.popup_msg {
+  position: absolute;
+  bottom: 35px;
+  left: 20px;
+  width: 200px;
+  padding: 3px;
+  background-color: #244452;
+
+  .close {
+    display: block;
+    float: right;
+  }
+}
+
+span#msg_label {
+  position: relative;
+  z-index: 15;
+  padding: 1px;
+  color: #ff0000;
+  background-color: #fff;
+  border-radius: 5px;
+}
+
+
+/*
+ * Styles for wiki and quicksearch sidebar snapins
+ */
 #snapin_container_wiki div.content {
   font-weight: bold;
   color: #fff;
-}
 
-#snapin_container_wiki div.content p {
-  font-weight: normal;
+  p {
+    font-weight: normal;
+  }
 }
 
 /* TODO: Reproduce this html element */
@@ -323,45 +661,52 @@ div.snapin select {
   text-align: left;
 }
 
-#mk_side_search, #wiki_search {
+/* Styles shared/inherited by different search bars */
+%search-shared {
   width: 100%;
   padding: 0;
+
+  img {
+    display: none; }
+
+  input {
+    float: left;
+    margin:  0;
+    font-size: 11px;
+    background-repeat: no-repeat;
+  }
+
+  input, select, textarea, #mk_side_search_field {
+    box-sizing: border-box;
+  }
 }
 
-#mk_side_search img, #wiki_search img {
-  display: none; }
+#wiki_search {
+  @extend %search-shared;
 
-#mk_side_search input, #wiki_search input {
-  float: left;
-  margin:  0;
-  font-size: 11px;
-  background-repeat: no-repeat;
+  input {
+    width: 194px;
+    height: 25px;
+  }
 }
 
-#mk_side_search input {
-  width: 100%;
-  height: 100%;
+#mk_side_search {
+  @extend %search-shared;
+
+  input {
+    width: 100%;
+    height: 100%;
+  }
+
+  div.topic {
+    margin-top: 3px;
+    margin-left: 2px;
+    font-size: 125%;
+  }
 }
 
-#wiki_search input {
-  width: 194px;
-  height: 25px;
-}
-
-#mk_side_search input, #mk_side_search select, #mk_side_search textarea,
-#mk_side_search #mk_side_search_field, #wiki_search input, #wiki_search select,
-#wiki_search textarea, #wiki_search #mk_side_search_field {
-  box-sizing: border-box;
-}
-
-#mk_side_clear, #wiki_side_clear {
+#wiki_side_clear, #mk_side_clear {
   clear: both;
-}
-
-#mk_side_search div.topic {
-  margin-top: 3px;
-  margin-left: 2px;
-  font-size: 125%;
 }
 
 #mk_search_results {
@@ -372,22 +717,22 @@ div.snapin select {
   color: #000;
   background-color: #dfdfdf;
   border: 1px solid #fff;
-}
 
-#mk_search_results a {
-  display: block;
-  width: 217px;
-  padding-left: 5px;
-  color: #000;
-  text-align: left;
-  text-decoration: none;
-}
+  a {
+    display: block;
+    width: 217px;
+    padding-left: 5px;
+    color: #000;
+    text-align: left;
+    text-decoration: none;
 
-#mk_search_results a:hover, #mk_search_results a.active {
-  background-color: #bfbfbf;
-}
+    &:hover, &.active {
+      background-color: #bfbfbf;
+    }
+  }
 
-#mk_search_results div.error, #mk_search_results div.warning {
-  padding: 2px;
-  font-size: 12px;
+  div.error, div.warning {
+    padding: 2px;
+    font-size: 12px;
+  }
 }

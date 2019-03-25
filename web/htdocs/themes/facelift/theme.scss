@@ -17,7 +17,6 @@
 @import "../classic/scss/_views.scss";
 @import "../classic/scss/_wato.scss";
 @import "../classic/scss/_mobile.scss";
-@import "../classic/scss/_sidebar.scss";
 
 // CEE specific files
 @import "../../../../enterprise/web/htdocs/themes/classic/scss/_graphs.scss";
@@ -31,7 +30,6 @@
 //@if $MANAGED = "yes" {
 //  @include managed;
 //}
-
 
 @import "scss/_variables.scss";
 @import "scss/_main.scss";

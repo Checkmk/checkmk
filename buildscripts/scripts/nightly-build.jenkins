@@ -51,6 +51,9 @@ node {
                     dir('agents/windows/dependencies/') {
                         stash name: 'WinDep', include: '**/*'
                     }
+                    dir('agents/windows/plugins/') {
+                        stash name: 'WinPlugins', include: '**/*'
+                    }
                     dir('omd/packages/') {
                         stash name: 'WinDepOMD', include: 'googletest/*, simpleini/*'
                     }
@@ -70,6 +73,9 @@ AGENT_LIST.each { AGENT ->
                 }
                 dir('agents/windows/dependencies/') {
                     unstash name: 'WinDep'
+                }
+                dir('agents/windows/plugins/') {
+                    unstash name: 'WinPlugins'
                 }
                 dir('omd/packages/') {
                     unstash name: 'WinDepOMD'

@@ -123,7 +123,7 @@ AGENT_LIST.each { AGENT ->
                                         make
                                 """
                                 sh """
-                                    mkdir -p ${DAILY_DATA}/agent${AGENT}
+                                    mkdir -p ${DAILY_DATA}/agents
                                     cp agent${AGENT}-dest/enterprise/agents/plugins/cmk-update-agent${AGENT} ${DAILY_DATA}/agents
                                 """
                             }

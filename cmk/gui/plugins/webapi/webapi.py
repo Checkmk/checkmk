@@ -1006,6 +1006,7 @@ class APICallBIAggregationState(APICallCollection):
         return {
             "get_bi_aggregations": {
                 "handler": self._get,
+                "optional_keys": ["filter"],
                 "required_permissions": required_permissions,
             },
         }

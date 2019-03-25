@@ -136,7 +136,9 @@ class AggregationRawdataGenerator(object):
 
             secret_file_path = Path(
                 cmk.utils.paths.var_dir) / "web" / self._username / "automation.secret"
-            self._secret = file(secret_file_path).read()
+
+            with secret_file_path.open(encoding="utf-8") as f:
+                self._secret = f.read()
         else:
             self._username, self._secret = self._credentials[1]
 

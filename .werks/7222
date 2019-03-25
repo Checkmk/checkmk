@@ -1,0 +1,19 @@
+Title: check_http: Mixup of ports when configuring certificate check via proxy
+Level: 1
+Component: wato
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0p14
+Date: 1553255189
+
+If users had the active check "Check HTTP" configured to check a certificate
+via a proxy, the option "TCP Port" had wrongly been used as the proxys port
+instead of the certificate servers port.
+
+The port defined in the option "TCP Port" is now applied to the certificate
+server, regardless of whether a proxy is used.
+
+If you relied on the wrong behaviour, remove the option "TCP Port" and include
+the port for the proxy in the proxy settings.

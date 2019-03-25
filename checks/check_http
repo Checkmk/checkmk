@@ -32,8 +32,8 @@ def _is_certificate_check(settings):
 def _get_family_and_address(settings):
     # Use the address family of the monitored host by default
     family = settings.get("address_family")
-    if family == None:
-        family = is_ipv6_primary(host_name()) and "ipv6" or "ipv4"
+    if family is None:
+        family = "ipv6" if is_ipv6_primary(host_name()) else "ipv4"
 
     if family == "ipv6":
         address = "$_HOSTADDRESS_6$"
@@ -43,36 +43,37 @@ def _get_family_and_address(settings):
     return family, address
 
 
+def _get_proxy_setting(settings):
+    """return proxys (address, port, auth) or None"""
+    proxy = settings.get("proxy")
+    if not proxy:
+        return None
+
+    # ':' outside a IPv6 address indicates port
+    if ':' in proxy.split(']')[-1]:
+        address, port = proxy.rsplit(':', 1)
+    else:
+        address, port = proxy, None
+
+    auth = settings.get("proxy_auth")
+    if auth:
+        auth = passwordstore_get_cmdline("%s:%%s" % auth[0], auth[1])
+
+    proset = collections.namedtuple("ProxySettings", ("address", "port", "auth"))
+    return proset(address, port, auth)
+
+
 def _certificate_args(address_family, address, settings):
     args = []
 
-    if "cert_host" in settings:
-        if settings.get('proxy'):
-            args += ['-I', settings['proxy']]
-            args += ['-H', settings['cert_host']]
-            args.append('--ssl')
-            args += ['-j', 'CONNECT']
-        elif settings.get("sni"):
-            args += ['-H', settings['cert_host']]
-        else:
-            args += ['-I', settings['cert_host']]
-            args += ['-H', address]
-    else:
-        args += ["-I", address]
+    server = settings.get('cert_host', address)
 
     if address_family == 'ipv6':
         args += ['-6']
 
-    if "port" in settings:
-        args += ['-p', settings["port"]]
-
-    if "proxy_auth" in settings:
-        username, password = settings["proxy_auth"]
-        args += ["-b", passwordstore_get_cmdline("%s:%%s" % username, password)]
-
     if "cert_days" in settings:
         # legacy behavior
-        if type(settings["cert_days"]) == int:
+        if isinstance(settings["cert_days"], int):
             args += ['-C', settings["cert_days"]]
         else:
             warn, crit = settings["cert_days"]
@@ -81,32 +82,50 @@ def _certificate_args(address_family, address, settings):
     if "sni" in settings:
         args += ['--sni']
 
+    proxy = _get_proxy_setting(settings)
+    server_port = settings.get("port")
+
+    specify_port = proxy.port if proxy else server_port
+    if specify_port:
+        args += ['-p', specify_port]
+
+    if proxy:
+        args += ['--ssl', '-j', 'CONNECT']
+        if proxy.auth:
+            args += ["-b", proxy.auth]
+        args.append(proxy.address)
+        if server_port:
+            server += ':%s' % server_port
+
+    elif settings.get("sni"):
+        args += ['-H', server]
+
+    args += [server]
     return args
 
 
 def _url_args(address_family, address, settings):
-    def _omit_ip(settings):
-        if "virthost" in settings:
-            return settings["virthost"][1]
-        return False
+
+    # get virthost settings:
+    # TODO: when did 'vhost' dissapear from WATO?
+    vhost, omit_ip = settings.get("virthost", (settings.get("vhost"), False))
+    proxy = _get_proxy_setting(settings)
 
     args = []
 
-    if (not _omit_ip(settings)) and ("proxy" not in settings):
+    if proxy:
+        args += ["-I", proxy.address]
+    elif not omit_ip:
         args += ["-I", address]
-    elif "proxy" in settings:
-        args += ["-I", settings["proxy"]]
 
-    if "vhost" in settings:
-        args += ["-H", settings["vhost"]]
-
-    if "virthost" in settings:
-        vhost = settings["virthost"][0]
+    if vhost:
         args += ["-H", vhost]
 
     if address_family == 'ipv6':
         args += ['-6']
 
+    # TODO: I think this should be overridden by the proxy port
+    #       in the same way as in the cert check. (mo)
     if "port" in settings:
         args += ['-p', settings["port"]]
 
@@ -142,9 +161,8 @@ def _url_args(address_family, address, settings):
         username, password = settings["auth"]
         args += ["-a", passwordstore_get_cmdline("%s:%%s" % username, password)]
 
-    if "proxy_auth" in settings:
-        username, password = settings["proxy_auth"]
-        args += ["-b", passwordstore_get_cmdline("%s:%%s" % username, password)]
+    if proxy and proxy.auth:
+        args += ["-b", proxy.auth]
 
     if "onredirect" in settings:
         args += ['--onredirect=%s' % settings["onredirect"]]
@@ -197,7 +215,7 @@ def _url_args(address_family, address, settings):
 
 
 def check_http_arguments(params):
-    description, settings = params
+    _description, settings = params
     args = []
 
     address_family, address = _get_family_and_address(settings)

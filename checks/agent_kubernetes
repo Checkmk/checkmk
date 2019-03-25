@@ -28,6 +28,8 @@
 def agent_kubernetes_arguments(params, _hostname, ipaddress):
     args = ['--token', passwordstore_get_cmdline("%s", params["token"])]
 
+    args += ['--infos', ','.join(params.get('infos', ['nodes']))]
+
     if "port" in params:
         args += ["--port", str(params["port"])]
 

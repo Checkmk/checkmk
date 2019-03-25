@@ -495,10 +495,21 @@ def discover_marked_hosts(core):
     if not hosts:
         console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
 
+
+    # Fetch host state information from livestatus
+    host_states = _fetch_host_states()
     activation_required = False
+
     try:
         _set_discovery_timeout()
         for hostname in hosts:
+            if not _discover_marked_host_exists(hostname, all_hosts):
+                continue
+
+            # Only try to discover hosts with UP state
+            if host_states and host_states.get(hostname) != 0:
+                continue
+
             if _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):
                 activation_required = True
 
@@ -520,6 +531,30 @@ def discover_marked_hosts(core):
             cmk_base.core.do_restart(core)
 
 
+def _fetch_host_states():
+    host_states = {}
+    try:
+        import livestatus
+        query = "GET hosts\nColumns: name state"
+        host_states = dict(livestatus.LocalConnection().query(query))
+    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+        pass
+    return host_states
+
+
+def _discover_marked_host_exists(hostname, all_hosts):
+    if hostname in all_hosts:
+        return True
+
+    host_flag_path = os.path.join(_get_autodiscovery_dir(), hostname)
+    try:
+        os.remove(host_flag_path)
+    except OSError:
+        pass
+    console.verbose("  Skipped. Host %s does not exist in configuration. Removing mark.\n" % hostname)
+    return False
+
+
 def _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):
     services_changed = False
 
@@ -527,13 +562,6 @@ def _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):
 
     console.verbose("%s%s%s:\n" % (tty.bold, hostname, tty.normal))
     host_flag_path = os.path.join(_get_autodiscovery_dir(), hostname)
-    if hostname not in all_hosts:
-        try:
-            os.remove(host_flag_path)
-        except OSError:
-            pass
-        console.verbose("  Skipped. Host does not exist in configuration. Removing mark.\n")
-        return
 
     params = discovery_check_parameters(hostname) or default_discovery_check_parameters()
     params_rediscovery = params.get("inventory_rediscovery", {})

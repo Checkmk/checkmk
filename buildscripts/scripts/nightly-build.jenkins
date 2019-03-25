@@ -67,7 +67,7 @@ AGENT_LIST.each { AGENT ->
     AGENT_BUILDS['build agent ' + AGENT] = {
         if (AGENT == 'windows') {
             node('windows') {
-//                bat 'deltree *'
+                bat 'powershell Remove-Item .\\* -Recurse -Force'
                 dir('agents/wnx') {
                     unstash name: 'WinSRC'
                 }

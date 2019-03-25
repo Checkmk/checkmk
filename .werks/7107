@@ -10,17 +10,13 @@ Class: feature
 Dedicated credentials for each section in custom_sqls
 could be configured. The following parameters are valid:
 
+F+:
 my_custom_sql () {
 SQLS_DBUSER=customuser
 SQLS_DBPASSWORD=secretpwd
-SQLS_DBSYSCONNECT="None"
+SQLS_DBSYSCONNECT=SYSDBA
 SQLS_TNSALIAS=testdb123
+F-:
 
-These are the new parameters.
-An  important note against SQLS_DBSYSCONNECT:
-If sysdba or sysoper has been set in DBUSER inside mk_oracle.cfg, the
-SQLS_DBSYSCONNECT="None" is needed to overwrite the default from DBUSER.
-This is often needed in environments with connections to mounted
-databases.
-SQLS_DBSYSCONNECT could be ignored, when sysdba or sysoper is not set in
-DBUSER.
+These are the new parameters.  SQLS_DBSYSCONNECT needs be set only if the
+user is sysdba or sysoper. Otherwise just skip this line.

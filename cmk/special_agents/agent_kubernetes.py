@@ -76,6 +76,12 @@ def parse(args):
     p.add_argument('host', metavar='HOST', help='Kubernetes host to connect to')
     p.add_argument('--port', type=int, default=443, help='Port to connect to')
     p.add_argument('--token', required=True, help='Token for that user')
+    p.add_argument(
+        '--infos',
+        type=lambda x: x.split(','),
+        required=True,
+        help='Comma separated list of items that should be fetched',
+    )
     p.add_argument('--url-prefix', help='Custom URL prefix for Kubernetes API calls')
     p.add_argument(
         '--path-prefix',
@@ -853,9 +859,11 @@ def main(args=None):
             api_client = get_api_client(arguments)
             api_data = ApiData(api_client)
             print(api_data.cluster_sections())
-            print(api_data.node_sections())
             print(api_data.custom_metrics_section())
-            print(api_data.pod_sections())
+            if 'nodes' in arguments.infos:
+                print(api_data.node_sections())
+            if 'pods' in arguments.infos:
+                print(api_data.pod_sections())
     except Exception as e:
         if arguments.debug:
             raise

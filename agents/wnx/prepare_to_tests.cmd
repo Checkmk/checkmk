@@ -7,13 +7,15 @@ powershell Write-Host Setting root to %root% -Foreground Green
 :exec_me
 set user_dir=%root%\%prdata%\CheckMk\Agent
 if not exist "%root%" powershell Write-Host Making folder %root% -Foreground Yellow && mkdir %root% 2> nul
-mkdir %root%\plugins
+mkdir %root%\plugins 2> nul
 if not exist "%user_dir%" powershell Write-Host Making folder %user_dir% -Foreground Yellow && mkdir %user_dir% 2> nul
 mkdir %root%\bin 2> nul
 mkdir %root%\utils 2> nul
 mkdir %root%\providers 2> nul
 mkdir %root%\exe 2> nul
 mkdir %root%\pdb 2> nul
+
+if not exist "..\windows\plugins" powershell Write-Host "Folder agents\windows\plugins doesnt exist. Check prep\checkout routine" -Foreground Red && exit 33
 
 powershell Write-Host "Installation simulation Root Folder: plugins, ohm, yml"  -Foreground Green
 copy ..\windows\plugins\*.*         	%root%\plugins\ > nul || powershell Write-Host "Failed plugins copy" -Foreground Red	&& exit 3

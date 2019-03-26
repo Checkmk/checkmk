@@ -697,24 +697,7 @@ class AutomationAnalyseServices(Automation):
 
     def static_check_rules_of(self, checkgroup_name, hostname):
         config_cache = config.get_config_cache()
-
-        rules = []
-        for entry in config.static_checks.get(checkgroup_name, []):
-            entry, rule_options = config.get_rule_options(entry)
-            if rule_options.get("disabled"):
-                continue
-
-            if len(entry) == 3:
-                taglist, hostlist = entry[1:3]
-            else:
-                hostlist = entry[1]
-                taglist = []
-
-            if config.hosttags_match_taglist(config_cache.tags_of_host(hostname), taglist) and \
-               config.in_extraconf_hostlist(hostlist, hostname):
-                rules.append(entry[0])
-
-        return rules
+        return config_cache.host_extra_conf(hostname, config.static_checks.get(checkgroup_name, []))
 
 
 automations.register(AutomationAnalyseServices())

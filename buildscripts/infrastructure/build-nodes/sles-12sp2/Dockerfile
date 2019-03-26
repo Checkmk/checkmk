@@ -1,8 +1,8 @@
-FROM 10.9.1.101:5010/sles-12sp2-base
+FROM nexus.lan.tribe29.com:5010/sles-12sp2-base
 
 SHELL ["/bin/bash", "-c"]
 
-RUN zypper addrepo -G http://10.9.1.101:8081/repository/sles12sp2 sles12sp2 \
+RUN zypper addrepo -G http://nexus:8081/repository/sles12sp2 sles12sp2 \
     && zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
@@ -62,5 +62,6 @@ RUN zypper addrepo -G http://10.9.1.101:8081/repository/sles12sp2 sles12sp2 \
 
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN bw-build-gnu-toolchain.sh -b
-
-RUN rm /usr/bin/gcc /usr/bin/g++
+RUN rm /usr/bin/gcc /usr/bin/g++ \
+    && ln -s /opt/gcc-8.2.0/bin/gcc-8 /usr/bin/gcc \
+    && ln -s /opt/gcc-8.2.0/bin/g++-8 /usr/bin/g++

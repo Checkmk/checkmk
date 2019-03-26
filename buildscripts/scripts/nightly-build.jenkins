@@ -183,7 +183,7 @@ DISTRO_LIST.each { DISTRO ->
                                         make -C omd rpm
                                         ;;
                                     cma*)
-                                        make -C cma
+                                        make -C omd cma
                                         ;;
                                     *)
                                         DEBFULLNAME='Check_MK Team' DEBEMAIL='feedback@check-mk.org' make -C omd deb

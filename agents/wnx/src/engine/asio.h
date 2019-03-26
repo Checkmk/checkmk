@@ -1,4 +1,4 @@
-﻿
+
 // Wrapping asio.hpp to hook socket creation with
 // internal control of the options and mode
 //

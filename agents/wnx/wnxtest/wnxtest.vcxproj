@@ -32,6 +32,26 @@
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\obj\</IntDir>
+    <TargetName>$(ProjectName)$(PlatformArchitecture)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\obj\</IntDir>
+    <TargetName>$(ProjectName)$(PlatformArchitecture)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\obj\</IntDir>
+    <TargetName>$(ProjectName)$(PlatformArchitecture)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>../build/$(ProjectName)\$(Platform)\$(Configuration)\obj\</IntDir>
+    <TargetName>$(ProjectName)$(PlatformArchitecture)</TargetName>
+  </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
   </ItemGroup>

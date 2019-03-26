@@ -1,5 +1,5 @@
 
-// provides basic api to start and stop service
+// API "Internal transport"
 
 #pragma once
 #include <chrono>      // timestamps
@@ -10,6 +10,8 @@
 #include "common/mailslot_transport.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"
+
+#include "logger.h"
 
 namespace cma::carrier {
 enum DataType {
@@ -180,7 +182,8 @@ public:
             cc.shutdownCommunication();
             return ret;
         } else {
-            xlog::l("Failed convert %ls", Id.c_str()).print();
+            XLOG::l("Failed to convert id value '{}'",
+                    wtools::ConvertToUTF8(Id));
             return false;
         }
     }

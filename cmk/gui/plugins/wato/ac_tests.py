@@ -494,7 +494,7 @@ class ACTestApacheNumberOfProcesses(ACApacheTest):
             "</p>"
             "<p>Once you have verified your settings, you can acknowledge this test. The "
             "test will not automatically turn to OK, because it can not exactly estimate "
-            "the required memory nedded by the apache processes."
+            "the required memory needed by the apache processes."
             "</p>")
 
     def is_relevant(self):

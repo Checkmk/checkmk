@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 """Code for computing the table of checks of hosts."""
 
-from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base
@@ -157,7 +156,7 @@ def get_check_table(hostname,
             elif filter_mode == "only_clustered" and svc_is_mine:
                 return
 
-            deps = service_deps(hostname, descr)
+            deps = config.service_depends_on(hostname, descr)
             check_table[(checkname, item)] = (params, descr, deps)
 
     # Now process all entries that are specific to the host
@@ -232,39 +231,6 @@ def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
     if precomp_func:
         return precomp_func(hostname, item, params)
     return params
-
-
-# Return a list of services this services depends upon
-# TODO: Make this use the generic "rulesets" functions
-# TODO: Is this needed here? Investigate for what this is used for
-def service_deps(hostname, servicedesc):
-    deps = []
-    config_cache = config.get_config_cache()
-    for entry in config.service_dependencies:
-        entry, rule_options = config.get_rule_options(entry)
-        if rule_options.get("disabled"):
-            continue
-
-        if len(entry) == 3:
-            depname, hostlist, patternlist = entry
-            tags = []
-        elif len(entry) == 4:
-            depname, tags, hostlist, patternlist = entry
-        else:
-            raise MKGeneralException("Invalid entry '%r' in service dependencies: "
-                                     "must have 3 or 4 entries" % entry)
-
-        if config.hosttags_match_taglist(config_cache.tags_of_host(hostname), tags) and \
-           config.in_extraconf_hostlist(hostlist, hostname):
-            for pattern in patternlist:
-                matchobject = regex(pattern).search(servicedesc)
-                if matchobject:
-                    try:
-                        item = matchobject.groups()[-1]
-                        deps.append(depname % item)
-                    except:
-                        deps.append(depname)
-    return deps
 
 
 def remove_duplicate_checks(check_table):

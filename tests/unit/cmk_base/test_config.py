@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-import pytest
+import pytest  # type: ignore
 
 import cmk_base.config as config
 
@@ -205,3 +205,23 @@ def test_http_proxy(http_proxy, result, monkeypatch):
 def _setup_host(monkeypatch, hostname, tags):
     monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, "|".join(tags))])
     monkeypatch.setattr(config, "host_paths", {hostname: "/"})
+
+
+def test_service_depends_on(monkeypatch):
+    assert config.service_depends_on("test-host", "svc") == []
+
+    monkeypatch.setattr(config, "all_hosts", ["test-host"])
+    monkeypatch.setattr(config, "host_paths", {"test-host": "/"})
+    monkeypatch.setattr(config, "service_dependencies", [
+        ("dep1", [], config.ALL_HOSTS, ["svc1"], {}),
+        ("dep2-%s", [], config.ALL_HOSTS, ["svc1-(.*)"], {}),
+        ("dep-disabled", [], config.ALL_HOSTS, ["svc1"], {
+            "disabled": True
+        }),
+    ])
+
+    config.get_config_cache().initialize()
+
+    assert config.service_depends_on("test-host", "svc2") == []
+    assert config.service_depends_on("test-host", "svc1") == ["dep1"]
+    assert config.service_depends_on("test-host", "svc1-abc") == ["dep1", "dep2-abc"]

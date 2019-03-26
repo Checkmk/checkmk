@@ -272,7 +272,7 @@ def _create_nagios_servicedefs(cfg, hostname, host_attrs):
 
     def get_dependencies(hostname, servicedesc):
         result = ""
-        for dep in check_table.service_deps(hostname, servicedesc):
+        for dep in config.service_depends_on(hostname, servicedesc):
             result += _format_nagios_object(
                 "servicedependency", {
                     "use": config.service_dependency_template,

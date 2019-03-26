@@ -1,6 +1,6 @@
 title: Status information for BI aggregation connection
-agents: bi
-catalog: os/misc
+agents: BI
+catalog: app/omd
 license: GPL
 distribution: check_mk
 description:

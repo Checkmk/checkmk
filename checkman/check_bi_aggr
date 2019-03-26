@@ -1,6 +1,6 @@
 title: BI Aggregations
 agents: active
-catalog: agentless
+catalog: app/omd
 license: GPL
 distribution: check_mk
 description:

@@ -591,36 +591,24 @@ class AutomationAnalyseServices(Automation):
         table = check_table.get_check_table(hostname, remove_duplicates=True)
 
         # 1. Manual checks
-        for nr, (checkgroup, entries) in enumerate(config.static_checks.items()):
-            for entry in entries:
-                entry, rule_options = config.get_rule_options(entry)
-                if rule_options.get("disabled"):
-                    continue
-
+        for checkgroup_name in config.static_checks:
+            for value in self.static_check_rules_of(checkgroup_name, hostname):
                 # Parameters are optional
-                if len(entry[0]) == 2:
-                    checktype, item = entry[0]
+                if len(value) == 2:
+                    checktype, item = value
                     params = None
                 else:
-                    checktype, item, params = entry[0]
-                if len(entry) == 3:
-                    taglist, hostlist = entry[1:3]
-                else:
-                    hostlist = entry[1]
-                    taglist = []
+                    checktype, item, params = value
 
-                if config.hosttags_match_taglist(config_cache.tags_of_host(hostname), taglist) and \
-                   config.in_extraconf_hostlist(hostlist, hostname):
-                    descr = config.service_description(hostname, checktype, item)
-                    if descr == servicedesc:
-                        return {
-                            "origin": "static",
-                            "checkgroup": checkgroup,
-                            "checktype": checktype,
-                            "item": item,
-                            "rule_nr": nr,
-                            "parameters": params,
-                        }
+                descr = config.service_description(hostname, checktype, item)
+                if descr == servicedesc:
+                    return {
+                        "origin": "static",
+                        "checkgroup": checkgroup_name,
+                        "checktype": checktype,
+                        "item": item,
+                        "parameters": params,
+                    }
 
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
@@ -706,6 +694,27 @@ class AutomationAnalyseServices(Automation):
                         }
 
         return {}  # not found
+
+    def static_check_rules_of(self, checkgroup_name, hostname):
+        config_cache = config.get_config_cache()
+
+        rules = []
+        for entry in config.static_checks.get(checkgroup_name, []):
+            entry, rule_options = config.get_rule_options(entry)
+            if rule_options.get("disabled"):
+                continue
+
+            if len(entry) == 3:
+                taglist, hostlist = entry[1:3]
+            else:
+                hostlist = entry[1]
+                taglist = []
+
+            if config.hosttags_match_taglist(config_cache.tags_of_host(hostname), taglist) and \
+               config.in_extraconf_hostlist(hostlist, hostname):
+                rules.append(entry[0])
+
+        return rules
 
 
 automations.register(AutomationAnalyseServices())

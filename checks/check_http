@@ -30,7 +30,19 @@ def _transform_check_http(params):
         return params
     name, mode = params
     mode_name = 'cert' if "cert_days" in mode else 'url'
-    return {"name": name, "mode": (mode_name, mode)}
+
+    transformed = {"name": name, "mode": (mode_name, mode)}
+    # The proxy option has ben isolated in version 1.6.0i1
+    proxy_address = mode.get("proxy")
+    if proxy_address:
+        proxy = transformed.setdefault("proxy", {"address": proxy_address})
+        # ':' outside a IPv6 address indicates port
+        if ':' in proxy_address.split(']')[-1]:
+            proxy["address"], proxy["port"] = proxy_address.rsplit(':', 1)
+        if "proxy_auth" in mode:
+            proxy["auth"] = mode["proxy_auth"]
+
+    return transformed
 
 
 def _get_family_and_address(settings):
@@ -53,18 +65,12 @@ def _get_proxy(params):
     if not proxy:
         return None
 
-    # ':' outside a IPv6 address indicates port
-    if ':' in proxy.split(']')[-1]:
-        address, port = proxy.rsplit(':', 1)
-    else:
-        address, port = proxy, None
-
-    auth = params.get("proxy_auth")
+    auth = proxy.get("auth")
     if auth:
         auth = passwordstore_get_cmdline("%s:%%s" % auth[0], auth[1])
 
-    proset = collections.namedtuple("ProxySettings", ("address", "port", "auth"))
-    return proset(address, port, auth)
+    ProxySettings = collections.namedtuple("ProxySettings", ("address", "port", "auth"))
+    return ProxySettings(proxy.get("address"), proxy.get("port"), auth)
 
 
 def _certificate_args(address_family, address, proxy, settings):
@@ -222,7 +228,7 @@ def check_http_arguments(params):
     mode_name, settings = params["mode"]
 
     address_family, address = _get_family_and_address(settings)
-    proxy = _get_proxy(settings)
+    proxy = _get_proxy(params)
 
     if mode_name == 'cert':
         return _certificate_args(address_family, address, proxy, settings)

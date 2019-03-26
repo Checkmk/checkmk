@@ -1,0 +1,11 @@
+Title: check_http: Improve WATO rule
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1553667609
+Class: feature
+
+The WATO rule to configure the active check 'check_http' now provides a more
+user friendly way to configure proxy settings.

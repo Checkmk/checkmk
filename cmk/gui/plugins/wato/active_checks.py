@@ -966,6 +966,22 @@ class RulespecActiveChecksHttp(HostRulespec):
     def _portspec(self, default):
         return Integer(title=_("TCP Port"), minvalue=1, maxvalue=65535, default_value=default)
 
+    def _proxyspec(self):
+        return Dictionary(
+            title=_("Use proxy"),
+            elements=[
+                ("address", TextAscii(title=_("Proxy server address"))),
+                ("port", self._portspec(80)),
+                ("auth",
+                 Tuple(
+                     title=_("Proxy basic authorization"),
+                     elements=[
+                         TextAscii(title=_("Username"), size=12, allow_empty=False),
+                         IndividualOrStoredPassword(title=_("Password"),),
+                     ])),
+            ],
+            required_keys=["address"])
+
     @property
     def valuespec(self):
         return Transform(
@@ -986,6 +1002,7 @@ class RulespecActiveChecksHttp(HostRulespec):
                              "a caret (<tt>^</tt>), the service description will not be prefixed with either "
                              "<tt>HTTP</tt> or <tt>HTTPS</tt>."),
                          allow_empty=False)),
+                    ("proxy", self._proxyspec()),
                     ("mode",
                      CascadingDropdown(
                          title=_("Mode of the Check"),
@@ -1094,27 +1111,6 @@ class RulespecActiveChecksHttp(HostRulespec):
                                                TextAscii(
                                                    title=_("Username"), size=12, allow_empty=False),
                                                IndividualOrStoredPassword(title=_("Password"),)
-                                           ])),
-                                      (
-                                          "proxy",
-                                          TextAscii(
-                                              title=_("Proxy host"),
-                                              help=_(
-                                                  "To use a proxy you have to use the Port of the proxy, "
-                                                  "specify the virtual host and the URL to fetch, "
-                                                  "use the HTTP Method CONNECT, and use SSL/HTTPS "
-                                                  "for the connection")),
-                                      ),
-                                      ("proxy_auth",
-                                       Tuple(
-                                           title=_("Proxy-Authorization"),
-                                           help=_(
-                                               "Credentials for HTTP Proxy with basic authentication"
-                                           ),
-                                           elements=[
-                                               TextAscii(
-                                                   title=_("Username"), size=12, allow_empty=False),
-                                               IndividualOrStoredPassword(title=_("Password"),),
                                            ])),
                                       (
                                           "onredirect",
@@ -1296,25 +1292,6 @@ class RulespecActiveChecksHttp(HostRulespec):
                                               ),
                                           ),
                                       ),
-                                      (
-                                          "proxy",
-                                          TextAscii(
-                                              title=_("Proxy host"),
-                                              help=
-                                              _("To use a proxy you have to specify the Port of the proxy. "
-                                               )),
-                                      ),
-                                      ("proxy_auth",
-                                       Tuple(
-                                           title=_("Proxy-Authorization"),
-                                           help=_(
-                                               "Credentials for HTTP Proxy with basic authentication"
-                                           ),
-                                           elements=[
-                                               TextAscii(
-                                                   title=_("Username"), size=12, allow_empty=False),
-                                               IndividualOrStoredPassword(title=_("Password"),),
-                                           ])),
                                   ],
                                   required_keys=["cert_days"],
                               )),
@@ -1335,6 +1312,19 @@ class RulespecActiveChecksHttp(HostRulespec):
         mode.pop("verbose", None)
 
         mode_name = 'cert' if "cert_days" in mode else 'url'
+
+        transformed = {"name": params[0], "mode": (mode_name, mode)}
+
+        # The proxy option has been isolated in version 1.6.0i1
+        proxy_address = mode.pop("proxy", None)
+        if proxy_address:
+            proxy = transformed.setdefault("proxy", {"address": proxy_address})
+            # ':' outside a IPv6 address indicates port
+            if ':' in proxy_address.split(']')[-1]:
+                proxy["address"], proxy["port"] = proxy_address.rsplit(':', 1)
+            auth = mode.pop("proxy_auth", None)
+            if auth:
+                proxy["auth"] = auth
 
         return {"name": name, "mode": (mode_name, mode)}
 

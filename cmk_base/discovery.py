@@ -495,7 +495,6 @@ def discover_marked_hosts(core):
     if not hosts:
         console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
 
-
     # Fetch host state information from livestatus
     host_states = _fetch_host_states()
     activation_required = False
@@ -551,7 +550,8 @@ def _discover_marked_host_exists(hostname, all_hosts):
         os.remove(host_flag_path)
     except OSError:
         pass
-    console.verbose("  Skipped. Host %s does not exist in configuration. Removing mark.\n" % hostname)
+    console.verbose(
+        "  Skipped. Host %s does not exist in configuration. Removing mark.\n" % hostname)
     return False
 
 

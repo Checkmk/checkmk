@@ -12,7 +12,5 @@ discovery = {'': [(None, {})]}
 
 checks = {'': [(None,
                 {},
-                [(0,
-                  'Container: 1',
-                  [('docker_all_containers', 1, None, None, None, None)]),
-                 (0, 'Ready: 1', [('ready_containers', 1, None, None, None, None)])])]}
+                [(0, 'Ready: 1/1', [('docker_all_containers', 1, None, None, 0, 1),
+                                    ('ready_containers', 1, None, None, 0, 1)])])]}

@@ -8,6 +8,11 @@ description:
  ready containers of a pod. A container is ready if it
  passes its readiness probe.
 
+ To account for the initial setup of the container or the
+ switch of a Pod from one to another the ruleset
+ {Maximum number of check attempts for service} should be
+ used.
+
 item:
  No item.
 

@@ -31,10 +31,14 @@ def inventory_k8s_pod_container(parsed):
 
 def check_k8s_pod_container(_no_item, params, parsed):
     container = len(parsed)
-    yield 0, "Container: %d" % container, [('docker_all_containers', container)]
-
     ready = sum(container['ready'] for container in parsed.itervalues())
-    yield 0, "Ready: %d" % ready, [('ready_containers', ready)]
+
+    state = 2 if ready != container else 0
+    perfdata = [
+        ('docker_all_containers', container, None, None, 0, container),
+        ('ready_containers', ready, None, None, 0, container),
+    ]
+    yield state, "Ready: %d/%d" % (ready, container), perfdata
 
 
 check_info['k8s_pod_container'] = {

@@ -8949,6 +8949,14 @@ graph_info["k8s_resources.memory"] = {
     "optional_metrics": ["k8s_memory_capacity", "k8s_memory_allocatable", "k8s_memory_limit"],
 }
 
+graph_info["k8s_pod_container"] = {
+    "title": _("Ready containers"),
+    "metrics": [
+        ("docker_all_containers", "line"),
+        ("ready_containers", "area"),
+    ],
+}
+
 graph_info["used_cpu_time"] = {
     "title": _("Used CPU Time"),
     "metrics": [

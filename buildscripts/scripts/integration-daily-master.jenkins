@@ -11,6 +11,9 @@ properties([
 
 DISTRO_LIST = DISTROS.split(' ');
 
+// CMK-1705: SLES-15 is missing xinitd and should therefore not be tested
+DISTRO_LIST = DISTRO_LIST - ['sles-15']
+
 println("Building for the following Distros:")
 println(DISTRO_LIST)
 currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST

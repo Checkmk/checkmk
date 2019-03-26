@@ -1419,6 +1419,42 @@ def _checktype_ignored_for_host(host, checktype):
     return False
 
 
+# TODO: Make this use the generic "rulesets" functions
+# a) This function has never been configurable via WATO (see https://mathias-kettner.de/checkmk_service_dependencies.html)
+# b) It only affects the Nagios core - CMC does not implement service dependencies
+# c) This function implements some specific regex replacing match+replace which makes it incompatible to
+#    regular service rulesets. Therefore service_extra_conf() can not easily be used :-/
+def service_depends_on(hostname, servicedesc):
+    """Return a list of services this services depends upon"""
+    deps = []
+    config_cache = get_config_cache()
+    for entry in service_dependencies:
+        entry, rule_options = get_rule_options(entry)
+        if rule_options.get("disabled"):
+            continue
+
+        if len(entry) == 3:
+            depname, hostlist, patternlist = entry
+            tags = []
+        elif len(entry) == 4:
+            depname, tags, hostlist, patternlist = entry
+        else:
+            raise MKGeneralException("Invalid entry '%r' in service dependencies: "
+                                     "must have 3 or 4 entries" % entry)
+
+        if hosttags_match_taglist(config_cache.tags_of_host(hostname), tags) and \
+           in_extraconf_hostlist(hostlist, hostname):
+            for pattern in patternlist:
+                matchobject = regex(pattern).search(servicedesc)
+                if matchobject:
+                    try:
+                        item = matchobject.groups()[-1]
+                        deps.append(depname % item)
+                    except:
+                        deps.append(depname)
+    return deps
+
+
 #.
 #   .--Misc Helpers--------------------------------------------------------.
 #   |        __  __ _            _   _      _                              |

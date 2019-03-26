@@ -5,7 +5,7 @@ properties([
     string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
   ]),
   pipelineTriggers([
-    upstream(upstreamProjects: 'cmk_master/nightly_build', threshold: hudson.model.Result.SUCCESS)
+    upstream(upstreamProjects: 'cmk_master/nightly_build_containerized', threshold: hudson.model.Result.SUCCESS)
   ])
 ])
 

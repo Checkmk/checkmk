@@ -213,14 +213,14 @@ node {
                 // Only master builds should end up on the Website
                 if (BRANCH_NAME == 'master') {
                     sh """
-                        mkdir -p /bauwelt/downloads/${CMK_VERS}
-                        cd /bauwelt/downloads/${CMK_VERS}
+                        mkdir -p /bauwelt/download/${CMK_VERS}
+                        cd /bauwelt/download/${CMK_VERS}
                         cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*_amd64.deb . || true
                         cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.rpm . || true
                     """
                     withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
                     sh """
-                        cd /bauwelt/downloads/${CMK_VERS}
+                        cd /bauwelt/download/${CMK_VERS}
                         ${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}
                         rsync -av -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
 	                        ${PACKAGE_DIR}/${CMK_VERS} \
@@ -228,7 +228,7 @@ node {
                     """
                     }
                 } else {
-                    dir("${DAILY_DATA}/downloads") {
+                    dir("${DAILY_DATA}/download") {
                         sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*_amd64.deb . || true"
                         sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.rpm . || true"
                         withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {

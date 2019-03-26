@@ -1,0 +1,12 @@
+Title: agent_kubernetes: don't output node with name "None"
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1553622124
+Class: fix
+
+If pods cannot be scheduled their assigned node is "None".
+The special agent produced piggyback data for this "None"
+node. This output is now removed.

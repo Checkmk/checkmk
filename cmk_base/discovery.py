@@ -213,10 +213,17 @@ def discover_on_host(mode,
                      use_caches,
                      on_error="ignore",
                      service_filter=None):
-    counts = {"added": 0, "removed": 0, "kept": 0}
+    counts = {
+        "self_new": 0,
+        "self_removed": 0,
+        "self_kept": 0,
+        "self_total": 0,
+        "clustered_new": 0,
+        "clustered_vanished": 0,
+    }
 
     if hostname not in config.all_active_realhosts():
-        return [0, 0, 0, 0], ""
+        return counts, ""
 
     if service_filter is None:
         service_filter = lambda hostname, check_plugin_name, item: True
@@ -228,7 +235,7 @@ def discover_on_host(mode,
         # checks of the host, so that _get_host_services() does show us the
         # new discovered check parameters.
         if mode == "refresh":
-            counts["removed"] += remove_autochecks_of(hostname)  # this is cluster-aware!
+            counts["self_removed"] += remove_autochecks_of(hostname)  # this is cluster-aware!
 
         if config.is_cluster(hostname):
             ipaddress = None
@@ -259,13 +266,13 @@ def discover_on_host(mode,
             if check_source == "new":
                 if mode in ("new", "fixall", "refresh") and service_filter(
                         hostname, check_plugin_name, item):
-                    counts["added"] += 1
+                    counts["self_new"] += 1
                     new_items[(check_plugin_name, item)] = paramstring
 
             elif check_source in ("old", "ignored"):
                 # keep currently existing valid services in any case
                 new_items[(check_plugin_name, item)] = paramstring
-                counts["kept"] += 1
+                counts["self_kept"] += 1
 
             elif check_source == "vanished":
                 # keep item, if we are currently only looking for new services
@@ -273,12 +280,13 @@ def discover_on_host(mode,
                 if mode not in ("fixall",
                                 "remove") or not service_filter(hostname, check_plugin_name, item):
                     new_items[(check_plugin_name, item)] = paramstring
-                    counts["kept"] += 1
+                    counts["self_kept"] += 1
                 else:
-                    counts["removed"] += 1
+                    counts["self_removed"] += 1
 
             elif check_source.startswith("clustered_"):
                 # Silently keep clustered services
+                counts[check_source] += 1
                 new_items[(check_plugin_name, item)] = paramstring
 
             else:
@@ -292,8 +300,9 @@ def discover_on_host(mode,
         if cmk.utils.debug.enabled():
             raise
         err = str(e)
-    return [counts["added"], counts["removed"], counts["kept"],
-            counts["added"] + counts["kept"]], err
+
+    counts["self_total"] = counts["self_new"] + counts["self_kept"]
+    return counts, err
 
 
 #.
@@ -397,8 +406,12 @@ def check_discovery(hostname, ipaddress):
                 "ignored: %s: %s" % (check_plugin_name,
                                      config.service_description(hostname, check_plugin_name, item)))
 
-    _set_rediscovery_flag(hostname, need_rediscovery)
     if need_rediscovery:
+        if config.is_cluster(hostname):
+            for nodename in config.nodes_of(hostname):
+                _set_rediscovery_flag(nodename)
+        else:
+            _set_rediscovery_flag(hostname)
         infotexts.append("rediscovery scheduled")
 
     # Add data source information to check results
@@ -436,7 +449,7 @@ def default_discovery_check_parameters():
     }
 
 
-def _set_rediscovery_flag(hostname, need_rediscovery):
+def _set_rediscovery_flag(hostname):
     def touch(filename):
         if not os.path.exists(filename):
             f = open(filename, "w")
@@ -444,16 +457,10 @@ def _set_rediscovery_flag(hostname, need_rediscovery):
 
     autodiscovery_dir = cmk.utils.paths.var_dir + '/autodiscovery'
     discovery_filename = os.path.join(autodiscovery_dir, hostname)
-    if need_rediscovery:
-        if not os.path.exists(autodiscovery_dir):
-            os.makedirs(autodiscovery_dir)
-        touch(discovery_filename)
-    else:
-        if os.path.exists(discovery_filename):
-            try:
-                os.remove(discovery_filename)
-            except OSError:
-                pass
+
+    if not os.path.exists(autodiscovery_dir):
+        os.makedirs(autodiscovery_dir)
+    touch(discovery_filename)
 
 
 class DiscoveryTimeout(Exception):
@@ -595,12 +602,19 @@ def _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):
                 # compatible with the automation code
                 console.verbose("  failed: host is offline\n")
         else:
-            new_services, removed_services, kept_services, total_services = result
-            if new_services == 0 and removed_services == 0 and kept_services == total_services:
+            if result["self_new"] == 0 and\
+               result["self_removed"] == 0 and\
+               result["self_kept"] == result["self_total"] and\
+               result["clustered_new"] == 0 and\
+               result["clustered_vanished"] == 0:
                 console.verbose("  nothing changed.\n")
             else:
-                console.verbose(
-                    "  %d new, %d removed, %d kept, %d total services.\n" % (tuple(result)))
+                console.verbose("  %(self_new)s new, %(self_removed)s removed, "\
+                                "%(self_kept)s kept, %(self_total)s total services. "\
+                                "clustered new %(clustered_new)s, clustered vanished %(clustered_vanished)s" % result)
+
+                # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
+                #       the activation decision is based on the discovery configuration of the node
                 if redisc_params["activation"]:
                     services_changed = True
 

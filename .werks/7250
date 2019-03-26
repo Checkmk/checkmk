@@ -1,0 +1,22 @@
+Title: Check_MK Discovery: Clusters were unable to automatically discover new services
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1553243799
+
+The <tt>Check_MK Discovery</tt> check for a cluster was able to identify new/vanished services.
+However, the automatic discovery mechanism in the background failed to integrate them into the configuration.
+
+
+This has been fixed. There is still some constraint which makes this werk incompatible.
+The <tt>Periodic service discovery</tt> rule allows you to configure <tt>Automatcally activate changes</tt> for the specified host.
+If you want automatic activation of new services for cluster hosts, you have to configured a rule on the nodes instead of the cluster hosts.
+So any <tt>Periodic service discovery</tt> rules of clusters should be duplicated onto the nodes.
+
+
+This requirement is currently necessary because of the internal configuration.
+Clusters never have an explicit configuration file, the actual clusters configuration is compute on demand.

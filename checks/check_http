@@ -25,8 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 
-def _is_certificate_check(settings):
-    return "cert_days" in settings
+def _transform_check_http(params):
+    if isinstance(params, dict):
+        return params
+    name, mode = params
+    mode_name = 'cert' if "cert_days" in mode else 'url'
+    return {"name": name, "mode": (mode_name, mode)}
 
 
 def _get_family_and_address(settings):
@@ -215,32 +219,29 @@ def _url_args(address_family, address, settings):
 
 
 def check_http_arguments(params):
-    _description, settings = params
-    args = []
+    params = _transform_check_http(params)
+
+    mode_name, settings = params["mode"]
 
     address_family, address = _get_family_and_address(settings)
 
-    if _is_certificate_check(settings):
-        args += _certificate_args(address_family, address, settings)
-    else:
-        args += _url_args(address_family, address, settings)
-
-    return args
+    if mode_name == 'cert':
+        return _certificate_args(address_family, address, settings)
+    return _url_args(address_family, address, settings)
 
 
 def check_http_description(params):
-    description, settings = params
+    params = _transform_check_http(params)
 
+    description = params["name"]
     if description.startswith("^"):
         return description[1:]
 
+    mode_name, settings = params["mode"]
     # here we have to cover connection and certificate checks
-    if settings.get("ssl") or settings.get("cert_days"):
-        protocol = "HTTPS"
-    else:
-        protocol = "HTTP"
-
-    return "%s %s" % (protocol, description)
+    if settings.get("ssl") or mode_name == "cert":
+        return "HTTPS %s" % description
+    return "HTTP %s" % description
 
 
 active_check_info['http'] = {

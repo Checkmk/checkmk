@@ -963,6 +963,9 @@ class RulespecActiveChecksHttp(HostRulespec):
     def match_type(self):
         return "all"
 
+    def _portspec(self, default):
+        return Integer(title=_("TCP Port"), minvalue=1, maxvalue=65535, default_value=default)
+
     @property
     def valuespec(self):
         return Transform(
@@ -1021,12 +1024,7 @@ class RulespecActiveChecksHttp(HostRulespec):
                                            title=_("URI to fetch (default is <tt>/</tt>)"),
                                            allow_empty=False,
                                            default_value="/")),
-                                      ("port",
-                                       Integer(
-                                           title=_("TCP Port"),
-                                           minvalue=1,
-                                           maxvalue=65535,
-                                           default_value=80)),
+                                      ("port", self._portspec(80)),
                                       _ip_address_family_element(),
                                       ("ssl",
                                        Transform(
@@ -1286,15 +1284,7 @@ class RulespecActiveChecksHttp(HostRulespec):
                                                 "address from the host primary address."),
                                           ),
                                       ),
-                                      (
-                                          "port",
-                                          Integer(
-                                              title=_("TCP Port"),
-                                              minvalue=1,
-                                              maxvalue=65535,
-                                              default_value=443,
-                                          ),
-                                      ),
+                                      ("port", self._portspec(443)),
                                       _ip_address_family_element(),
                                       (
                                           "sni",

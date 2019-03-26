@@ -179,6 +179,18 @@ auto ParseKeyValue(const std::basic_string<T> Arg, T Splitter) {
 }
 
 template <typename T>
+auto ParseKeyValue(const std::basic_string_view<T> Arg, T Splitter) {
+    auto end = Arg.find_first_of(Splitter);
+    if (end == std::basic_string<T>::npos) {
+        return std::make_tuple(std::basic_string<T>(), std::basic_string<T>());
+    }
+    auto key = Arg.substr(0, end);
+    auto value = Arg.substr(end + 1);
+    return std::make_tuple(std::basic_string<T>(key),
+                           std::basic_string<T>(value));
+}
+
+template <typename T>
 auto ParseKeyValue(const T* Arg, T Splitter) {
     return ParseKeyValue(std::basic_string<T>(Arg), Splitter);
 }

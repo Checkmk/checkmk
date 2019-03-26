@@ -12,8 +12,9 @@
 
 namespace cma::provider {
 constexpr const wchar_t* kProviderName =
-    L"Provider";  // unique name of the plugin player
+    L"Provider";  // unique name of the provider
 
+// FUNCTIONS BELOW ARE IMPLEMENTED IN THE PROVIDER
 void ProgramUsage(const std::wstring& Comment);
 
 //  test [parameters]
@@ -22,11 +23,13 @@ int MainTest(int argc, wchar_t const* argv[]);
 //  run [parameters]
 int MainRun(int argc, wchar_t const* argv[]);
 
-//  runonce [parameters]
+//  run something [parameters]
 int MainRunOnce(int argc, wchar_t const* argv[]);
 
 // main
 int MainFunction(int argc, wchar_t const* argv[]);
+
+// ********************************************************
 
 // sub form main
 inline int MainFunctionCore(int argc, wchar_t const* argv[]) {

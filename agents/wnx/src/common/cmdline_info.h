@@ -25,7 +25,7 @@ constexpr const wchar_t* kTimeout = L"timeout";
 
 constexpr wchar_t kSplitter = L':';
 
-auto ParseExeCommandLine(int argc, wchar_t const* argv[]) {
+inline auto ParseExeCommandLine(int argc, wchar_t const* argv[]) {
     using namespace std;
     auto make_error_answer = [](int ErrorCode) -> auto {
         return make_tuple(ErrorCode, std::wstring(), std::wstring(),

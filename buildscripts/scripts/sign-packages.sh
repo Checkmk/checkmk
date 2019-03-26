@@ -2,13 +2,13 @@
 set -e
 
 TARGET=.
-VERSION=$CMK_VERS
+VERSION=$1
 KEY_ID=434DAC48C4503261
 KEY_DESC="Check_MK Software Release Signing Key (2018) <feedback@check-mk.org>"
 
 if [ -z "$VERSION" ]; then
-    echo "set CMK_VERS VERSION"
-    echo "Beispiel: CMK_VERS=2018.01.19 $0"
+    echo "Call with: $0 VERSION"
+    echo "Example: $0 2018.01.19"
     exit 1
 fi
 
@@ -30,7 +30,7 @@ echo "$GPG_PASSPHRASE" | \
 	$TARGET/*.rpm
 
 echo "Verify signed RPM packages..."
-for RPM in $TARGET/$VERSION/*.rpm; do
+for RPM in $TARGET/*.rpm; do
     rpm -qp $RPM --qf='%-{NAME} %{SIGPGP:pgpsig}\n'
     if ! rpm -qp $RPM --qf='%-{NAME} %{SIGPGP:pgpsig}\n' | grep -i "Key ID $KEY_ID"; then
         echo "ERROR: RPM not signed: $RPM"
@@ -40,7 +40,7 @@ done
 echo "Sign DEB packages..."
 (
     echo set timeout -1;\
-    echo spawn dpkg-sig -p --sign builder -k $KEY_ID $TARGET/$VERSION/*.deb; \
+    echo spawn dpkg-sig -p --sign builder -k $KEY_ID $TARGET/*.deb; \
     echo expect -exact \"The passphrase for ${KEY_ID}:\";\
     echo send -- \"$GPG_PASSPHRASE\\r\";\
     echo expect eof;\
@@ -54,4 +54,8 @@ done
 # Hashes der kopierten Dateien ablegen
 # (werden später auf der Webseite angezeigt)
 echo "Create HASHES file..."
-sha256sum *.{cma,tar.gz,rpm,deb,cmk} > HASHES
+sha256sum *.cma >> HASHES || true
+sha256sum *.tar.gz >> HASHES || true
+sha256sum *.rpm >> HASHES || true
+sha256sum *.deb >> HASHES || true
+sha256sum *.cmk >> HASHES || true

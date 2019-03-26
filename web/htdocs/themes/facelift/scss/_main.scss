@@ -55,9 +55,6 @@ input, input[type=text], input[type=password], select, textarea, div.snapin text
   box-shadow: none;
   border: 1px solid $theme-color-table-border !important;
   }
-  .tag_tree {
-    font-size: $theme-font-size-main;
-  }
   input:focus, select:focus, textarea:focus, div.snapin textarea:focus, #mk_side_search_field:focus {
     border-color: $theme-color-main; }
   input.number, select.number, textarea.number, div.snapin select.number, div.snapin textarea.number, .number#mk_side_search_field {
@@ -748,67 +745,16 @@ td.title {
   background-color: $theme-color-black; }
 
 /* Spezielle Snapins */
-table.tacticaloverview {
-  margin: 0px !important;
-  width: 100% !important;
-  border-spacing: 2px !important; }
-  table.tacticaloverview th {
-    color: $theme-color-nuance-5 !important;
-    letter-spacing: 0px !important;
-    padding-top: 4px !important;
-    text-align: center !important; }
-  table.tacticaloverview td {
-    background: $theme-color-background !important;
-    border: 1px solid $theme-color-table-border-dark !important;
-    padding: 2px !important;
-    text-align: right !important;
-    border-radius: $theme-border-radius !important; }
-    table.tacticaloverview td a, table.tacticaloverview td body.main .popup_menu span, body.main .popup_menu table.tacticaloverview td span {
-      color: $theme-color-text !important;
-      font-size: $theme-font-size-main !important;
-      padding: 4px !important;
-      font-weight: $theme-font-weight-bold !important;
-      letter-spacing: 0px !important; }
-    table.tacticaloverview td.prob {
-      box-shadow: none !important;
-      background: $theme-color-nuance-6 !important; }
-      table.tacticaloverview td.prob a, table.tacticaloverview td.prob body.main .popup_menu span, body.main .popup_menu table.tacticaloverview td.prob span {
-        color: $theme-color-text !important; }
-
-#snapin_time div.time {
-  color: $theme-color-white !important;
-  border: 1px solid $theme-color-table-border-dark !important;
-  border-spacing: 4px;
-  padding: 8px;
-  background-color: $theme-color-table-background-dark !important;
-  letter-spacing: $theme-letter-spacing-table; }
-
-table.cmc_stats, table.mkeventd_performance, table.performance {
+table.cmc_stats {
   box-sizing: border-box;
   width: 100%;
   border: 1px solid $theme-color-table-border-dark !important;
   border-spacing: 4px;
   padding: 8px;
   background-color: $theme-color-table-background-dark !important; }
-  table.cmc_stats td, table.mkeventd_performance td, table.performance td {
+  table.cmc_stats td {
     letter-spacing: $theme-letter-spacing-table;
     font-weight: $theme-font-weight-global; }
-
-#snapin_wato_foldertree table {
-  border-spacing: 16px; }
-
-#snapin_wato_foldertree select {
-  box-sizing: border-box;
-  border-radius: $theme-border-radius;
-  background: $theme-color-lightgrey;
-  color: $theme-color-nuance-7;
-  font-size: $theme-font-size-main;
-  clear: both;
-  margin: 8px 0 2px; }
-
-div.statebullet {
-  border-radius: 50%;
-  box-shadow: none; }
 
 .checkbox label::before {
   box-shadow: none;
@@ -820,9 +766,6 @@ div.statebullet {
 
 select.vlof_filter {
   width: auto; }
-
-#snapin_master_control table {
-  border-spacing: 8px; }
 
 .toggle_switch, .wato div.globalvars .toggle_switch {
   box-sizing: border-box;
@@ -854,36 +797,9 @@ select.vlof_filter {
   line-height: 16px;
   font-weight: $theme-font-weight-bold; }
 
-.master_control td.left {
-  color: $theme-color-nuance-9;
-  display: inline-block;
-  font-weight: $theme-font-weight-global;
-  letter-spacing: $theme-letter-spacing-table;
-  font-size: $theme-font-size-main; }
-
-.allhosts .statebullet {
-  margin: 8px 4px 8px 0px; }
-
 div.timerange {
   font-size: $theme-font-size-main;
   color: $theme-color-darkgrey; }
-
-.mkeventd_performance {
-  background: $theme-color-nuance-10;
-  border: 1px solid $theme-color-table-border-dark; }
-
-table.hostmatrix td {
-  border: 2px solid $theme-color-nuance-11; }
-
-.hostmatrix td.state1 a, .hostmatrix td.state1 body.main .popup_menu span, body.main .popup_menu .hostmatrix td.state1 span {
-  background-color: $theme-color-main; }
-
-.hostmatrix td.state0 a, .hostmatrix td.state0 body.main .popup_menu span, body.main .popup_menu .hostmatrix td.state0 span {
-  background-color: $theme-color-nuance-12; }
-
-.time {
-  padding: 8px;
-  letter-spacing: 2px; }
 
 body.main input, body.main select, body.main textarea, body.main #mk_side_search_field, body.main select, body.main textarea {
   border: 1px solid $theme-color-table-border; }
@@ -982,10 +898,6 @@ div.color {
   background-color: $theme-color-state-3-background;
   transition: background-color .15s ease-in-out; }
 
-.statebullet {
-  border-radius: 50%;
-  box-shadow: none; }
-
 .state0, .hstate0, .state0 a, .state0 body.main .popup_menu span, body.main .popup_menu .state0 span, .hstate0 a, .hstate0 body.main .popup_menu span, body.main .popup_menu .hstate0 span {
   background-color: $theme-color-state-success-background !important;
   border-color: $theme-color-state-success-border !important; }
@@ -1070,12 +982,6 @@ div.warning {
 div.success {
   background-color: $theme-color-state-success-background;
   border-color: $theme-color-state-success-border; }
-
-div.tacticalalert {
-  box-shadow: none !important;
-  background-color: $theme-color-state-2-background !important;
-  border-radius: $theme-border-radius;
-  margin-top: 8px; }
 
 div.help {
   background-image: none;

@@ -35,7 +35,7 @@ node {
         docker.image(IMAGE).pull()
         docker.image(IMAGE).inside('-u 0:0 -v /var/jenkins_home/daily-data/:/var/jenkins_home/daily-data/ --network ci_local-infra') {
             stage('checkout sources') {
-                sh "rm -rf ${DAILY_DATA}"
+                sh "rm -rf ${DAILY_DATA}/.."
                 sh 'rm -rf *'
                 // Add line to delete folders older than 10 days
                 dir("${DAILY_DATA}/git") {

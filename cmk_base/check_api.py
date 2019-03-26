@@ -377,6 +377,8 @@ def check_levels(value,
              Tuple[warn_upper, crit_upper] -> upper level checking only.
              Tuple[warn_upper, crit_upper, warn_lower, crit_lower]
              -> upper and lower level checking.
+             If a Dict is passed to check_levels, predictive levels are used
+             automatically. The following constellations are possible:
              Dict containing "lower" as key -> lower level checking.
              Dict containing "upper" or "levels_upper_min" as key -> upper level checking.
              Dict containing "lower" and "upper"/"levels_upper_min" as key ->

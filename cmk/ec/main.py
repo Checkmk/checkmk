@@ -1206,7 +1206,7 @@ class EventServer(ECServerThread):
         for rule in self._rules:
             if "expect" in rule:
 
-                if not self.event_rule_matches_site(rule, event=None):
+                if not self._rule_matcher.event_rule_matches_site(rule, event=None):
                     continue
 
                 # Interval is either a number of seconds, or pair of a number of seconds

@@ -27,7 +27,7 @@
 import sys
 import json
 import base64
-import urllib2
+import requests
 
 try:
     ip = sys.argv[1]
@@ -38,20 +38,19 @@ except:
     sys.exit(2)
 
 
-def get_url(address):
-    request = urllib2.Request(address)
+def get_data(address):
     base64string = base64.encodestring('%s:%s' % (user, password)).replace('\n', '')
-    request.add_header("Authorization", "Basic %s" % base64string)
-    request.add_header("Content-Type", "application/json")
+    headers = {"Authorization": "Basic %s" % base64string, "Content-Type": "application/json"}
     try:
-        return urllib2.urlopen(request)
-    except urllib2.HTTPError, e:
-        print e
+        return requests.get(address, headers=headers).text
+    except Exception, e:
+        sys.stderr.write("Connection error: %s" % e)
         sys.exit(2)
 
 
-print "<<<hivemanager_devices:sep(124)>>>"
-url = "https://%s/hm/api/v1/devices" % ip
+address = "https://%s/hm/api/v1/devices" % ip
+data = get_data(address)
+
 informations = [
     'hostName',
     'clients',
@@ -68,7 +67,9 @@ informations = [
     'location',
     'networkPolicy',
 ]
-for line in json.loads(get_url(url).read()):
+
+print "<<<hivemanager_devices:sep(124)>>>"
+for line in json.loads(data):
     if line['upTime'] == '':
         line['upTime'] = "down"
     print "|".join(map(str, ["%s::%s" % (x, y) for x, y in line.items() if x in informations]))

@@ -115,15 +115,15 @@ inline const std::wstring kSolutionUnitTestsFolderName(L"unit_test");
 inline const std::wstring kSolutionConfigTestFilesFolderName(L"config");
 
 inline std::filesystem::path MakePathToUnitTestFiles(std::wstring Root) {
-    using namespace std::filesystem;
-    path r = Root;
+    namespace fs = std::filesystem;
+    fs::path r = Root;
     r = r / kSolutionTestFilesFolderName / kSolutionUnitTestsFolderName;
     return r.lexically_normal();
 }
 
 inline std::filesystem::path MakePathToConfigTestFiles(std::wstring Root) {
-    using namespace std::filesystem;
-    path r = Root;
+    namespace fs = std::filesystem;
+    fs::path r = Root;
     r = r / kSolutionTestFilesFolderName / kSolutionConfigTestFilesFolderName;
     return r.lexically_normal();
 }
@@ -146,8 +146,9 @@ constexpr const wchar_t* kBakery = L"bakery";        // owned by site
 constexpr const wchar_t* kState = L"state";          // owned by plugins
 constexpr const wchar_t* kPluginConfig = L"config";  // owned by plugins
 
-constexpr const wchar_t* kSpool = L"spool";  // owned by user/sys plugins
-constexpr const wchar_t* kTemp = L"temp";    // owned by user plugins
+constexpr const wchar_t* kSpool = L"spool";    // owned by user/sys plugins
+constexpr const wchar_t* kTemp = L"temp";      // owned by user plugins
+constexpr const wchar_t* kUpdate = L"update";  // owned by agent
 
 };  // namespace dirs
 namespace envs {

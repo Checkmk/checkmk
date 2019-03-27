@@ -67,4 +67,13 @@ struct InternalScopeGuard {
     std::lock_guard<decltype(Mutex)> Mutex##CmkAutoLock(Mutex);
 #endif
 
+// For Ranging experimental
+namespace cma {
+template <typename I, typename F>
+void for_each(I IterObject, F Fn) {
+    ::std::for_each(std::begin(IterObject), std::end(IterObject), Fn);
+}
+
+}  // namespace cma
+
 #endif  // ___RAAI_H

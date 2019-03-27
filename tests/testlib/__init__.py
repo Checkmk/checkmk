@@ -1284,6 +1284,8 @@ class CMKWebSession(WebSession):
         else:
             raise NotImplementedError()
 
+        assert req.headers["access-control-allow-origin"] == "*"
+
         if not expect_error:
             assert response["result_code"] == 0, \
                    "An error occured: %r" % response

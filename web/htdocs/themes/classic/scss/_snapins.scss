@@ -427,3 +427,135 @@ div.spacertop {
     }
   }
 }
+
+/*
+ * Wiki snapin
+ */
+#snapin_container_wiki div.content {
+    font-weight: bold;
+    color: white;
+
+    p {
+        font-weight: normal;
+    }
+}
+
+#wiki_navigation {
+    text-align: left;
+}
+
+#wiki_search {
+    width: 232px;
+    padding: 0;
+
+    img.iconbutton {
+        width: 33px;
+        height: 26px;
+        margin-top: -25px;
+        left: 196px;
+        float: left;
+        position: relative;
+        z-index:100;
+    }
+
+    input {
+        margin:  0;
+        padding: 0px 5px;
+        font-size: 8pt;
+        width: 194px;
+        height: 25px;
+        background-image: url(images/quicksearch_field_bg.png);
+        background-repeat: no-repeat;
+        -moz-border-radius: 0px;
+        border-style: none;
+        float: left;
+    }
+}
+
+#wiki_side_clear {
+    clear: both;
+}
+
+/*
+ * Quicksearch snapin
+ */
+#mk_side_search {
+    width: 232px;
+    padding: 0;
+
+    img.iconbutton {
+        width: 33px;
+        height: 26px;
+        margin-top: -25px;
+        left: 196px;
+        float: left;
+        position: relative;
+        z-index:100;
+        opacity: 1;
+        filter: alpha(opacity=100); /* For IE8 and earlier */
+
+        &:hover {
+            filter: grayscale(20%);
+            -webkit-filter: grayscale(20%);
+            -moz-filter: grayscale(20%);
+            -ms-filter: grayscale(20%);
+            -o-filter: grayscale(20%);
+        }
+    }
+
+    input {
+        margin:  0;
+        padding: 0px 5px;
+        font-size: 8pt;
+        width: 194px;
+        height: 25px;
+        background-image: url(images/quicksearch_field_bg.png);
+        background-repeat: no-repeat;
+        -moz-border-radius: 0px;
+        border-style: none;
+        float: left;
+    }
+
+    div.topic {
+        font-size: 125%;
+        margin-top:  3px;
+        margin-left:  2px;
+    }
+}
+
+#mk_side_clear {
+    clear: both;
+}
+
+#mk_search_results {
+    position: relative;
+    float:left;
+    border: 1px solid white;
+    background-color: #DFDFDF;
+    color: #000;
+    font-size: 80%;
+    width: 223px;
+
+    a {
+        display: block;
+        color: #000;
+        text-decoration: none;
+        text-align: left;
+        padding-left: 5px;
+        width: 217px;
+
+        &:hover, &.active {
+            background-color: #BFBFBF;
+        }
+    }
+
+    div.error {
+        padding: 2px;
+        font-size: 9pt;
+    }
+
+    div.warning {
+        padding: 2px;
+        font-size: 9pt;
+    }
+}

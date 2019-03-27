@@ -182,6 +182,7 @@ table.mkeventd_performance {
   }
 }
 
+/* TODO: Reproduce this html element */
 #snapin_mkeventd_performance select {
   margin-bottom: 2px;
 }
@@ -208,10 +209,6 @@ div.statea, div.stated {
 /*
  * Performance snapin
  */
-#snapin_performance select {
-  margin-bottom: 2px;
-}
-
 table.performance {
   @extend %performance-table-shared;
   width: $theme-snapin-width - 2px;
@@ -228,6 +225,11 @@ table.performance {
       white-space: nowrap;
     }
   }
+}
+
+/* TODO: Reproduce this html element */
+#snapin_performance select {
+  margin-bottom: 2px;
 }
 
 /*
@@ -346,7 +348,7 @@ table.tacticaloverview {
 table.tacticaloverview td a,
 table.tacticaloverview td a.link,
 table.tacticaloverview td a:hover,
-/* TODO: Reproduce these two html elements, then get rid of important styles */
+/* TODO: Reproduce these two html elements */
 table.tacticaloverview td body.main .popup_menu span,
 body.main .popup_menu table.tacticaloverview td span {
   padding: 4px;
@@ -356,24 +358,21 @@ body.main .popup_menu table.tacticaloverview td span {
   color: $theme-color-text;
 }
 
-/* TODO: Reproduce this html element */
 div.tacticalalert {
   height: 25px;
   margin-top: 8px;
   font-size: 12px;
   line-height: 25px;
   text-align: center;
-  background-color: $theme-color-state-2-background !important;
+  background-color: $theme-color-state-2-background;
   border-radius: $theme-border-radius;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
-/* TODO: Reproduce this html element */
 div.spacertop {
   padding-top: 5px;
 }
 
-/* TODO: Reproduce this html element */
 #snapin_tactical_overview img {
   position: relative;
   top: -1px;
@@ -495,4 +494,104 @@ div.spacertop {
     border-radius: $theme-border-radius;
     box-sizing: border-box;
   }
+}
+
+/* Styles shared/inherited by different search bars */
+%search-shared {
+  width: 100%;
+  padding: 0;
+
+  img {
+    display: none; }
+
+  input {
+    float: left;
+    margin:  0;
+    font-size: 11px;
+    background-repeat: no-repeat;
+  }
+
+  input, select, textarea, #mk_side_search_field {
+    box-sizing: border-box;
+  }
+}
+
+/*
+ * Wiki snapin
+ */
+#snapin_container_wiki div.content {
+  font-weight: bold;
+  color: #fff;
+
+  p {
+    font-weight: normal;
+  }
+}
+
+/* TODO: Reproduce this html element */
+#wiki_navigation {
+  text-align: left;
+}
+
+#wiki_search {
+  @extend %search-shared;
+
+  input {
+    width: 194px;
+    height: 25px;
+  }
+}
+
+#wiki_side_clear {
+  clear: both;
+}
+
+/*
+ * Quicksearch snapin
+ */
+#mk_side_search {
+  @extend %search-shared;
+
+  input {
+    width: 100%;
+    height: 100%;
+  }
+
+  div.topic {
+    margin-top: 3px;
+    margin-left: 2px;
+    font-size: 125%;
+  }
+}
+
+#mk_search_results {
+  position: relative;
+  float: left;
+  width: 223px;
+  font-size: 80%;
+  color: #000;
+  background-color: #dfdfdf;
+  border: 1px solid #fff;
+
+  a {
+    display: block;
+    width: 217px;
+    padding-left: 5px;
+    color: #000;
+    text-align: left;
+    text-decoration: none;
+
+    &:hover, &.active {
+      background-color: #bfbfbf;
+    }
+  }
+
+  div.error, div.warning {
+    padding: 2px;
+    font-size: 12px;
+  }
+}
+
+#mk_side_clear {
+  clear: both;
 }

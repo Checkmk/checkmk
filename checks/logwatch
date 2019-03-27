@@ -1158,11 +1158,12 @@ def _precompile_ec_logwatch_settings(hostname, params, logwatch_rules):
     """The following code is used for creating the params of precompiled checks
     and when Check_MK is called on the command line.
     Check_MK in keepalive mode (in a running cmc) should never reach this code..."""
-    ruleset = []
+
+    # Bring the logwatch_rules structure in a host ruleset structure to be able
+    # to use the generic host_extra_conf rule matching function
+    host_rules = []
     for rule in logwatch_rules:
         rule, rule_options = get_rule_options(rule)
-        if rule_options.get("disabled"):
-            continue
 
         if len(rule) == 3:
             settings, hostlist, servlist = rule
@@ -1172,13 +1173,9 @@ def _precompile_ec_logwatch_settings(hostname, params, logwatch_rules):
         else:
             continue
 
-        # Directly compute set of all matching hosts here, this
-        # will avoid recomputation later
-        hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts=False)
-        if hostname not in hosts:
-            continue
+        host_rules.append(((settings, servlist), tags, hostlist, rule_options))
 
-        ruleset.append((settings, servlist))
+    ruleset = host_extra_conf(hostname, host_rules)
 
     # Do not use rules with configured items where no item matches the
     # "restrict_logfiles" condition (if applicable)

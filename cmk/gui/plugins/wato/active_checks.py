@@ -1908,7 +1908,7 @@ class RulespecActiveChecksFormSubmit(HostRulespec):
             title=_("Check HTML Form Submit"),
             help=
             _("Check submission of HTML forms via HTTP/HTTPS using the plugin <tt>check_form_submit</tt> "
-              "provided with Check_MK. This plugin provides more functionality as <tt>check_http</tt>, "
+              "provided with Check_MK. This plugin provides more functionality than <tt>check_http</tt>, "
               "as it automatically follows HTTP redirect, accepts and uses cookies, parses forms "
               "from the requested pages, changes vars and submits them to check the response "
               "afterwards."),

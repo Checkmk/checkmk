@@ -1,6 +1,6 @@
 title: HAProxy: Server Status
 agents: freebsd linux
-catalog: hw/app/haproxy
+catalog: app/haproxy
 license: GPL
 distribution: check_mk
 description:

@@ -1313,7 +1313,7 @@ class RulespecActiveChecksHttp(HostRulespec):
 
         mode_name = 'cert' if "cert_days" in mode else 'url'
 
-        transformed = {"name": params[0], "mode": (mode_name, mode)}
+        transformed = {"name": name, "mode": (mode_name, mode)}
 
         # The proxy option has been isolated in version 1.6.0i1
         proxy_address = mode.pop("proxy", None)
@@ -1326,7 +1326,7 @@ class RulespecActiveChecksHttp(HostRulespec):
             if auth:
                 proxy["auth"] = auth
 
-        return {"name": name, "mode": (mode_name, mode)}
+        return transformed
 
 
 @rulespec_registry.register

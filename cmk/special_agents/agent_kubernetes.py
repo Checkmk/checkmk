@@ -174,10 +174,12 @@ class Metadata(object):
             self.namespace = metadata.namespace
             self.creation_timestamp = (time.mktime(metadata.creation_timestamp.utctimetuple())
                                        if metadata.creation_timestamp else None)
+            self.labels = metadata.labels if metadata.labels else {}
         else:
             self.name = None
             self.namespace = None
             self.creation_timestamp = None
+            self.labels = {}
 
 
 class Node(Metadata):
@@ -485,7 +487,7 @@ class Role(Metadata):
         super(Role, self).__init__(role.metadata)
 
 
-ListElem = TypeVar('ListElem')
+ListElem = TypeVar('ListElem', bound=Metadata)
 
 
 class K8sList(Generic[ListElem], Sequence):
@@ -500,6 +502,9 @@ class K8sList(Generic[ListElem], Sequence):
     def __len__(self):
         # type: () -> int
         return len(self.elements)
+
+    def labels(self):
+        return {item.name: item.labels for item in self}
 
 
 class NodeList(K8sList[Node]):
@@ -652,8 +657,12 @@ class RoleList(K8sList[Role]):
         } for role in self if role.name]
 
 
-class Metric(object):
+class Metric(Metadata):
     def __init__(self, metric):
+        # Initialize Metric objects without metadata for now, because
+        # the provided metadata only contains a selfLink and no other
+        # valuable information.
+        super(Metric, self).__init__(metadata=None)
         self.from_object = metric['describedObject']
         self.metrics = {metric['metricName']: metric.get('value')}
 
@@ -886,6 +895,7 @@ class ApiData(object):
         # type: () -> str
         logging.info('Output node sections')
         g = Group()
+        g.join('labels', self.nodes.labels())
         g.join('k8s_resources', self.nodes.resources())
         g.join('k8s_resources', self.pods.resources_per_node())
         g.join('k8s_resources', self.pods.pods_per_node())
@@ -904,6 +914,7 @@ class ApiData(object):
     def pod_sections(self):
         logging.info('Output pod sections')
         g = Group()
+        g.join('labels', self.pods.labels())
         g.join('k8s_resources', self.pods.resources())
         g.join('k8s_pod_container', self.pods.containers())
         g.join('k8s_pod_info', self.pods.info())
@@ -912,6 +923,7 @@ class ApiData(object):
     def deployment_sections(self):
         logging.info('Output node sections')
         g = Group()
+        g.join('labels', self.deployments.labels())
         g.join('k8s_replicas', self.deployments.replicas())
         return '\n'.join(g.output())
 

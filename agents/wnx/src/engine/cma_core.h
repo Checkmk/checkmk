@@ -212,10 +212,9 @@ public:
     uint32_t startedProcId() const { return proc_id_; }
 
     bool appendResult(HANDLE Handle, std::vector<char>& Buf) {
-        using namespace std;
         if (Buf.size() == 0) return true;
 
-        lock_guard lk(lock_);
+        std::lock_guard lk(lock_);
         {
             auto h = process_->getStdioRead();
             if (h && h == Handle) {
@@ -227,8 +226,7 @@ public:
     }
 
     bool storeExitCode(uint32_t Pid, uint32_t Code) {
-        using namespace std;
-        lock_guard lk(lock_);
+        std::lock_guard lk(lock_);
         if (process_->trySetExitCode(Pid, Code)) return true;
         return false;
     }
@@ -263,8 +261,8 @@ public:
     // returns true if all processes ended
     // returns false on timeout or break;
     bool waitForEnd(std::chrono::milliseconds Timeout, bool KillWhatLeft) {
+        using namespace std::chrono;
         if (stop_set_) return false;
-        using namespace std;
         ON_OUT_OF_SCOPE(readWhatLeft());
 
         constexpr std::chrono::milliseconds kGrane = 250ms;
@@ -273,7 +271,7 @@ public:
         for (;;) {
             auto ready = checkProcessExit(waiting_processes);
             {
-                auto buf = readFromHandle<vector<char>>(read_handle);
+                auto buf = readFromHandle<std::vector<char>>(read_handle);
                 if (buf.size()) appendResult(read_handle, buf);
             }
 
@@ -374,8 +372,6 @@ private:
     // updates object
     // returns list of active processes
     bool checkProcessExit(const uint32_t Process) {
-        using namespace std;
-
         auto h = OpenProcess(
             PROCESS_QUERY_LIMITED_INFORMATION,  // not supported on XP
             FALSE, Process);
@@ -416,9 +412,6 @@ private:
     }
 
     bool isExecIn(const std::filesystem::path& FileExec) {
-        using namespace std::filesystem;
-        using namespace std;
-
         // now check for duplicates:
         auto cmd_line = BuildCommand(FileExec);
         return exec_ == cmd_line;

@@ -96,8 +96,7 @@ inline void WideLower(std::wstring& WideStr) {
 // auto vector_of string
 template <typename... Args>
 std::vector<std::wstring> ConstructVectorWstring(Args&&... args) {
-    using namespace std;
-    vector<wstring> cfg_files;
+    std::vector<std::wstring> cfg_files;
     static_assert((std::is_constructible_v<std::wstring, Args&> && ...));
     (cfg_files.emplace_back(args), ...);
     return cfg_files;

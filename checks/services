@@ -40,18 +40,9 @@
 # BITS running/demand Intelligenter Hintergrund<FC>bertragungsdienst
 # Bonjour_Service running/auto Dienst "Bonjour"
 
+# Deprecated option since 1.6. cmk_base creates a config warning when finding rules
+# for this ruleset. Can be dropped with 1.7.
 inventory_services = []
-
-# Examples for inventory_services:
-# inventory_services = [
-#   "HirnTest",               # add service, if currently running
-#   "TapiSrv running",        # the same
-#   "TermService auto",       # add service, if start type is auto (regardless if running)
-#   "BackupSrv running/auto", # add, if start type is auto and it's running
-#   "~Backup.* running/auto",  # same, but add all services matching a regex
-#   ( [ "termserver" ] , ALL_HOSTS, [ "HirnTest running", "Sppoller auto" ] ), # same with tags..
-#   ( ALL_HOSTS, [ "!Backup.*", "FooBar auto" ] ),
-# ]
 
 # Implemented in 1.2.1i2:
 # New rule-style (WATO compatible) notation:
@@ -102,18 +93,6 @@ def inventory_windows_services(info):
 
         return [(name, {})]
 
-    # Handle entries like ( [ "term" ], ALL_HOSTS, [ "FooBar auto", ".*TEST running" ] )
-    def add_services_with_tags(name, description, state, start_type, entry):
-        matching = []
-        if len(entry) == 2:
-            entry = ([],) + entry
-        taglist, hostlist, svclist = entry
-        if hosttags_match_taglist(tags_of_host(host_name()), taglist):
-            if in_extraconf_hostlist(hostlist, host_name()):
-                for svc in svclist:
-                    matching += add_matching_services(name, description, state, start_type, svc)
-        return matching
-
     # Extract the WATO compatible rules for the current host
     rules = []
     for value in host_extra_conf(host_name(), inventory_services_rules):
@@ -136,21 +115,6 @@ def inventory_windows_services(info):
         else:
             state = line[2]
             start_type = "unknown"
-
-        #
-        # Handle "old" inventory_services notation
-        #
-        for entry in inventory_services:
-            if isinstance(entry, str):
-                inventory += add_matching_services(name, description, state, start_type, entry)
-            elif isinstance(entry, tuple):
-                inventory += add_services_with_tags(name, description, state, start_type, entry)
-            else:
-                raise MKGeneralException("Invalid entry %r in inventory_services" % entry)
-
-        #
-        # New WATO compatible rule matching
-        #
 
         for rule in rules:
             inventory += add_matching_services(name, description, state, start_type, rule)

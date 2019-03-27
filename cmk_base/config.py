@@ -160,6 +160,7 @@ def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
     # Such validation only makes sense when all checks have been loaded
     if all_checks_loaded():
         verify_non_invalid_variables(vars_before_config)
+        _verify_no_deprecated_check_rulesets()
 
     verify_snmp_communities_type()
 
@@ -408,6 +409,19 @@ def verify_snmp_communities_type():
     if isinstance(snmp_communities, dict):
         console.error("ERROR: snmp_communities cannot be a dict any more.\n")
         sys.exit(1)
+
+
+def _verify_no_deprecated_check_rulesets():
+    deprecated_rulesets = [
+        ("services", "inventory_services"),
+    ]
+    for check_plugin_name, varname in deprecated_rulesets:
+        check_context = get_check_context(check_plugin_name)
+        if check_context[varname]:
+            console.warning(
+                "Found rules for deprecated ruleset %r. These rules are not applied "
+                "anymore. In case you still need them, you need to migrate them by hand. "
+                "Otherwise you can remove them from your configuration." % varname)
 
 
 def all_nonfunction_vars():

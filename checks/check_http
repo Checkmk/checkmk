@@ -42,6 +42,9 @@ def _transform_check_http(params):
         if "proxy_auth" in mode:
             proxy["auth"] = mode["proxy_auth"]
 
+    if "sni" in mode:
+        transformed["sni"] = mode.pop("sni")
+
     return transformed
 
 
@@ -74,7 +77,7 @@ def _get_proxy(params):
     return ProxySettings(proxy.get("address"), proxy.get("port"), auth)
 
 
-def _certificate_args(host, proxy, settings):
+def _certificate_args(host, proxy, settings, sni_flag):
     args = []
 
     server = settings.get('cert_host', host.address)
@@ -90,9 +93,6 @@ def _certificate_args(host, proxy, settings):
             warn, crit = settings["cert_days"]
             args += ['-C', '%d,%d' % (warn, crit)]
 
-    if "sni" in settings:
-        args += ['--sni']
-
     server_port = settings.get("port")
 
     specify_port = proxy.port if proxy else server_port
@@ -107,7 +107,7 @@ def _certificate_args(host, proxy, settings):
         if server_port:
             server += ':%s' % server_port
 
-    elif settings.get("sni"):
+    elif sni_flag:
         args += ['-H', server]
 
     args += [server]
@@ -145,9 +145,6 @@ def _url_args(host, proxy, settings):
         args += ['--ssl']
     elif ssl:
         args += ['--ssl=%s' % ssl]
-
-    if "sni" in settings:
-        args += ['--sni']
 
     if "response_time" in settings:
         args += [
@@ -230,9 +227,10 @@ def check_http_arguments(params):
     host = _get_host(settings)
     proxy = _get_proxy(params)
 
+    args = ['--sni'] if params.get("sni") else []
     if mode_name == 'cert':
-        return _certificate_args(host, proxy, settings)
-    return _url_args(host, proxy, settings)
+        return args + _certificate_args(host, proxy, settings, params.get("sni"))
+    return args + _url_args(host, proxy, settings)
 
 
 def check_http_description(params):

@@ -1003,6 +1003,11 @@ class RulespecActiveChecksHttp(HostRulespec):
                              "<tt>HTTP</tt> or <tt>HTTPS</tt>."),
                          allow_empty=False)),
                     ("proxy", self._proxyspec()),
+                    ("sni",
+                     FixedValue(
+                         value=True,
+                         totext="",
+                         title=_("Enable SSL/TLS hostname extension support (SNI)"))),
                     ("mode",
                      CascadingDropdown(
                          title=_("Mode of the Check"),
@@ -1058,13 +1063,6 @@ class RulespecActiveChecksHttp(HostRulespec):
                                                default_value="auto",
                                            ),
                                            forth=lambda x: x is True and "auto" or x,
-                                       )),
-                                      ("sni",
-                                       FixedValue(
-                                           value=True,
-                                           totext=_("enable SNI"),
-                                           title=_(
-                                               "Enable SSL/TLS hostname extension support (SNI)"),
                                        )),
                                       ("response_time",
                                        Tuple(
@@ -1282,16 +1280,6 @@ class RulespecActiveChecksHttp(HostRulespec):
                                       ),
                                       ("port", self._portspec(443)),
                                       _ip_address_family_element(),
-                                      (
-                                          "sni",
-                                          FixedValue(
-                                              value=True,
-                                              totext=_("enable SNI"),
-                                              title=_(
-                                                  "Enable SSL/TLS hostname extension support (SNI)"
-                                              ),
-                                          ),
-                                      ),
                                   ],
                                   required_keys=["cert_days"],
                               )),
@@ -1325,6 +1313,9 @@ class RulespecActiveChecksHttp(HostRulespec):
             auth = mode.pop("proxy_auth", None)
             if auth:
                 proxy["auth"] = auth
+
+        if "sni" in mode:
+            transformed["sni"] = mode.pop("sni")
 
         return transformed
 

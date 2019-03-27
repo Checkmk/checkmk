@@ -434,7 +434,13 @@ class PodList(ListLike[Pod]):
         # type: () -> Dict[str, Dict[str, Dict[str, int]]]
         pods_sorted = sorted(self, key=lambda pod: pod.node)
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
-        return {node: {'requests': {'pods': len(list(pods))}} for node, pods in by_node}
+        return {
+            node: {
+                'requests': {
+                    'pods': len(list(pods))
+                }
+            } for node, pods in by_node if node is not None
+        }
 
     def pods_in_cluster(self):
         return {'requests': {'pods': len(self)}}
@@ -451,8 +457,9 @@ class PodList(ListLike[Pod]):
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
         merge = functools.partial(left_join_dicts, operation=operator.add)
         return {
-            node: reduce(merge, [p.resources for p in pods
-                                ], Pod.zero_resources()) for node, pods in by_node
+            node: reduce(merge, [p.resources for p in pods], Pod.zero_resources())
+            for node, pods in by_node
+            if node is not None
         }
 
     def cluster_resources(self):

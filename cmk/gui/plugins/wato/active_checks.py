@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import urlparse
 import six
 
 import cmk.gui.mkeventd as mkeventd
@@ -63,6 +64,8 @@ from cmk.gui.plugins.wato import (
     PluginCommandLine,
     IndividualOrStoredPassword,
 )
+
+from cmk.gui.exceptions import MKUserError
 
 
 @rulespec_group_registry.register
@@ -1041,8 +1044,12 @@ class RulespecActiveChecksHttp(HostRulespec):
                                       ("uri",
                                        TextAscii(
                                            title=_("URI to fetch (default is <tt>/</tt>)"),
+                                           help=_("The URI of the request. This should start with"
+                                                  " '/' and not include the domain"
+                                                  " (e.g. '/index.html')."),
                                            allow_empty=False,
-                                           default_value="/")),
+                                           default_value="/",
+                                           validate=self._validate_uri)),
                                       ("ssl",
                                        Transform(
                                            DropdownChoice(
@@ -1272,6 +1279,11 @@ class RulespecActiveChecksHttp(HostRulespec):
             ),
             forth=self._transform_check_http,
         )
+
+    def _validate_uri(self, value, varprefix):
+        url = urlparse.urlsplit(value)
+        if url.scheme or url.netloc or not url.path.startswith('/'):
+            raise MKUserError(varprefix, _("Invalid URI (see help for details)"))
 
     def _transform_check_http(self, params):
         if isinstance(params, dict):

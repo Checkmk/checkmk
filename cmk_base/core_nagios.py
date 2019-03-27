@@ -1005,6 +1005,8 @@ def _precompile_hostcheck(hostname):
 
     console.verbose("%s%s%-16s%s:", tty.bold, tty.blue, hostname, tty.normal, stream=sys.stderr)
 
+    check_api_utils.set_hostname(hostname)
+
     compiled_filename = cmk.utils.paths.precompiled_hostchecks_dir + "/" + hostname
     source_filename = compiled_filename + ".py"
     for fname in [compiled_filename, source_filename]:

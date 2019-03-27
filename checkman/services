@@ -11,15 +11,12 @@ description:
 
  If you have just a small number of Windows hosts to monitor,
  manual check configuration with {checks +=} will probably do.
- With a larger number of hosts we propose using {inventory_services}.
+ With a larger number of hosts we propose using {inventory_services_rules}.
  This allows auto-detection of services according to their names,
  current states and start types. The auto-detection can also make use
  of host tags in order to use different rules on different sets of
  hosts (for example for monitoring certain services only on production
  servers). Inventory and manual checks can be used in parallel.
- Since version 1.2.1i2 there is a new option {inventory_services_rules}
- available, which is used to configure same options as the {inventory_services}
- option but in a standardized format which is configurable via WATO.
 
 item:
  The name of the service as string. Please note, that the agent replaces
@@ -35,45 +32,6 @@ inventory:
  that should be monitored on your hosts. Because Check_MK cannot know, which
  services are important for you, you have to configure some rules.
 
- As of version 1.1.10i2 it is very flexible, while still being compatible
- with the old simple-style format.
- In the variable {inventory_services} you specify a list of inventory
- declarations. In the easiest form, such a declaration is simply
- a string: the name of a service. On every host that service is found
- {running}, a check for that service will be created during inventory.
-
- If you prefix the name with a tilde {~}, then the string is interpreted
- as a regular expression matching the {beginning} of the service name.
- So the declaration {"~Audio"} will mach {AudioSrv}, and {".*Mobile"}
- will match all services containing the work {Mobile}. All patterns
- are case sensitive. Please note: the check being created will
- {not} contain the regular expression but the precise spelling of the
- service. One rule with a regular expression can create several checks.
-
- It is also possible to depend on the current state and/or the start
- type of the service when deciding whether to create a check. States
- and start types are appended and separated by a space. For example
- {"LanmanServer auto"} will match all services with the name {LanmanServer}
- which have the start type {auto}. Other possible start types are
- {boot}, {demand}, {disabled} and {system}. Please look at the agent output
- if you want to know, which kind of start types exist in your
- environment. The declaration {"Browser running"} means the same as
- just ommitting { running}, since that is the default. If you want
- to combine a state and start type, do this like the agent does,
- by using a slash: {"LmHosts running/auto"} will create a check for
- the service {LmHosts}, if that service if found running {and} has
- the start type auto.
-
- If you need your inventory rules to depend on properties of the host
- or just apply on some selected hosts, you can use "tuple"-entries
- instead of strings. Such an entries consist of an optional list of
- host tags, the keyword {ALL_HOSTS} or an explicit list of hosts and
- a {list} of service declarations like the one discussed above. Please
- consult the examples for details.
-
- Since version 1.2.1i2 there is a new option {inventory_services_rules}
- available, which is used to configure same options as the {inventory_services}
- option but in a standardized format. The option holds a list of rules
- where each rule contains one entry matching a list of service matching
- strings (regexes) state/start mode.
-
+ The option {inventory_services_rules} holds a list of rules where each rule
+ contains one entry matching a list of service matching strings (regexes)
+ state/start mode.

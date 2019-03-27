@@ -1,0 +1,23 @@
+Title: Deprecate inventory_services ruleset
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1553673436
+Class: fix
+
+If you have always used WATO to configure your Check_MK you are not affected
+by this change.
+
+There have been two rulesets for configuring windows service discovery rules
+for a long time. The old one, <tt>inventory_services</tt>, and the newer WATO compatible
+ruleset <tt>inventory_services_rules</tt>. The second one has replaced inventory_services_rules
+in version 1.2.2 of Check_MK. The old ruleset was still working for compatibility
+but has been removed now.
+
+If you have configured such rules in your configuration, it will still load,
+but print out a warning message like this: "WARNING: Found rules for deprecated
+ruleset 'inventory_services'. These rules are not applied anymore. In case you
+still need them, you need to migrate them by hand. Otherwise you can remove
+them from your configuration."

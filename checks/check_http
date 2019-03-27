@@ -45,7 +45,7 @@ def _transform_check_http(params):
     return transformed
 
 
-def _get_family_and_address(settings):
+def _get_host(settings):
     # Use the address family of the monitored host by default
     family = settings.get("address_family")
     if family is None:
@@ -56,7 +56,8 @@ def _get_family_and_address(settings):
     else:
         address = "$_HOSTADDRESS_4$"
 
-    return family, address
+    HostSettings = collections.namedtuple("HostSettings", ("address", "family"))
+    return HostSettings(address, family)
 
 
 def _get_proxy(params):
@@ -73,12 +74,12 @@ def _get_proxy(params):
     return ProxySettings(proxy.get("address"), proxy.get("port"), auth)
 
 
-def _certificate_args(address_family, address, proxy, settings):
+def _certificate_args(host, proxy, settings):
     args = []
 
-    server = settings.get('cert_host', address)
+    server = settings.get('cert_host', host.address)
 
-    if address_family == 'ipv6':
+    if host.family == 'ipv6':
         args += ['-6']
 
     if "cert_days" in settings:
@@ -113,7 +114,7 @@ def _certificate_args(address_family, address, proxy, settings):
     return args
 
 
-def _url_args(address_family, address, proxy, settings):
+def _url_args(host, proxy, settings):
 
     # get virthost settings:
     vhost, omit_ip = settings.get("virthost", (None, False))
@@ -123,12 +124,12 @@ def _url_args(address_family, address, proxy, settings):
     if proxy:
         args += ["-I", proxy.address]
     elif not omit_ip:
-        args += ["-I", address]
+        args += ["-I", host.address]
 
     if vhost:
         args += ["-H", vhost]
 
-    if address_family == 'ipv6':
+    if host.family == 'ipv6':
         args += ['-6']
 
     # TODO: I think this should be overridden by the proxy port
@@ -226,12 +227,12 @@ def check_http_arguments(params):
 
     mode_name, settings = params["mode"]
 
-    address_family, address = _get_family_and_address(settings)
+    host = _get_host(settings)
     proxy = _get_proxy(params)
 
     if mode_name == 'cert':
-        return _certificate_args(address_family, address, proxy, settings)
-    return _url_args(address_family, address, proxy, settings)
+        return _certificate_args(host, proxy, settings)
+    return _url_args(host, proxy, settings)
 
 
 def check_http_description(params):

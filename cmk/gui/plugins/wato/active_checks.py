@@ -1243,16 +1243,16 @@ class RulespecActiveChecksHttp(HostRulespec):
                              ("cert", _("Check SSL Certificate Age"),
                               Dictionary(
                                   title=_("Certificate Checking"),
+                                  help=_("Port defaults to 443. In this mode the URL"
+                                         " is not checked."),
                                   elements=[
                                       (
                                           "cert_days",
                                           Transform(
                                               Tuple(
                                                   title=_("Age"),
-                                                  help=
-                                                  _("Minimum number of days a certificate has to be valid. "
-                                                    "Port defaults to 443. When this option is used the URL "
-                                                    "is not checked."),
+                                                  help=_("Minimum number of days a certificate"
+                                                         " has to be valid."),
                                                   elements=[
                                                       Integer(
                                                           title=_("Warning at or below"),

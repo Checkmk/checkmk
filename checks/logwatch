@@ -1149,9 +1149,15 @@ def logwatch_ec_precompile(hostname, item, params):
         params.update({"logwatch_settings": []})
         return params
 
-    # The following code is used for creating the params of precompiled checks
-    # and when Check_MK is called on the command line.
-    # Check_MK in keepalive mode (in a running cmc) should never reach this code...
+    params.update(
+        {"logwatch_settings": _precompile_ec_logwatch_settings(hostname, params, logwatch_rules)})
+    return params
+
+
+def _precompile_ec_logwatch_settings(hostname, params, logwatch_rules):
+    """The following code is used for creating the params of precompiled checks
+    and when Check_MK is called on the command line.
+    Check_MK in keepalive mode (in a running cmc) should never reach this code..."""
     ruleset = []
     for rule in logwatch_rules:
         rule, rule_options = get_rule_options(rule)
@@ -1187,9 +1193,7 @@ def logwatch_ec_precompile(hostname, item, params):
         else:
             logwatch_settings.append((settings, rule_items))
 
-    params.update({"logwatch_settings": logwatch_settings})
-
-    return params
+    return logwatch_settings
 
 
 precompile_params['logwatch.ec'] = logwatch_ec_precompile

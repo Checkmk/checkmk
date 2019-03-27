@@ -28,7 +28,6 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "StringColumn.h"
-#include "nagios.h"
 class Row;
 
 class CustomVarsExplicitColumn : public StringColumn {
@@ -45,8 +44,6 @@ public:
 
 private:
     std::string _varname;
-
-    customvariablesmember *getCVM(Row row) const;
 };
 
 #endif  // CustomVarsExplicitColumn_h

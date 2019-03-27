@@ -217,7 +217,7 @@ node {
                         cd /bauwelt/download/${CMK_VERS}
                         cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*_amd64.deb . || true
                         cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.rpm . || true
-                        cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.cma . || true
+                        cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*x86_64.cma . || true
                         cp ${DAILY_DATA}/git/check-mk-enterprise-${CMK_VERS}.cee.tar.gz . || true
                     """
                     withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
@@ -233,7 +233,7 @@ node {
                     dir("${DAILY_DATA}/download") {
                         sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*_amd64.deb . || true"
                         sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.rpm . || true"
-                        sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.cma . || true"
+                        sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*x86_64.cma . || true"
                         sh "cp ${DAILY_DATA}/git/check-mk-enterprise-${CMK_VERS}.cee.tar.gz . || true"
                         withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
                             sh "${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}"

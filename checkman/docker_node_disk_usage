@@ -1,6 +1,6 @@
 title: Docker node disk usage
 agents: linux
-catalog: app/docker
+catalog: containerization/docker
 license: GPL
 distribution: check_mk
 description:

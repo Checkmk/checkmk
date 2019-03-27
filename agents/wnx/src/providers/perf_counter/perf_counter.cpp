@@ -34,6 +34,7 @@
 #include "fmt/format.h"
 
 #include "providers/p_perf_counters.h"
+#include "providers/perf_counters_cl.h"
 
 #include "section_header.h"
 #include "logger.h"
@@ -72,8 +73,9 @@ public:
 
 static TestStorage S_Storage;
 
-bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
-                     void* Context) {
+// testing callback
+bool MailboxCallbackTest(const cma::MailSlot* Slot, const void* Data, int Len,
+                         void* Context) {
     using namespace std::chrono;
     auto storage = (TestStorage*)Context;
     if (!storage) {
@@ -145,7 +147,7 @@ int MainTest(int argc, wchar_t const* argv[]) {
     using namespace std;
     auto internal_port =
         BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
-    mailbox.ConstructThread(MailboxCallback, 20, &S_Storage);
+    mailbox.ConstructThread(MailboxCallbackTest, 20, &S_Storage);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
     // prepare parameters
@@ -209,40 +211,6 @@ int MainRun(int argc, wchar_t const* argv[]) {
     return 1;
 }
 
-// workhorse of execution
-int RunMe(const std::wstring& PeerName,  // name assigned by starting program
-          const std::wstring& Port,      // format as in carrier.h mail:*
-          const std::wstring& Id,        // answer id, should be set
-          int Timeout,                   // how long wait for execution
-          std::vector<std::wstring> CounterArray  // name of counters
-) {
-    using namespace std;
-    using namespace std::chrono;
-    using namespace cma::tools;
-
-    string accu;
-    for (const auto& cur_counter : CounterArray) {
-        auto [key, name] = ParseKeyValue(cur_counter, exe::cmdline::kSplitter);
-        if (key == L"ip") {
-            XLOG::d("From ip {}", wtools::ConvertToUTF8(name));
-            continue;
-        }
-
-        std::replace(key.begin(), key.end(), L'*', L' ');
-
-        if (!name.empty() && !key.empty())
-            accu += cma::provider::BuildWinPerfSection(PeerName, name, key);
-
-        // sends results to carrier
-    }
-    if (!accu.empty() && accu.back() == '\n') accu.pop_back();
-
-    auto result = cma::carrier::CoreCarrier::FireSend(
-        PeerName, Port, Id, accu.c_str(), accu.size());
-    XLOG::d("Send to {} {}", wtools::ConvertToUTF8(Port), accu.size());
-    return 0;
-}
-
 //  runonce [parameters]
 // params
 // PORT ID TIMEOUT path1 path2 path3 ...
@@ -254,12 +222,12 @@ int MainRunOnce(int argc, wchar_t const* argv[]) {
     if (error_val != 0) return error_val;
 
     // path1 ...
-    vector<wstring> counters;
+    vector<wstring_view> counters;
     for (int i = 4; i < argc; i++) {
         counters.push_back(argv[i]);
     }
 
-    return RunMe(name, argv[1], id_val, stoi(timeout_val), counters);
+    return RunPerf(name, argv[1], id_val, stoi(timeout_val), counters);
 }
 
 // main

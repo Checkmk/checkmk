@@ -85,6 +85,36 @@ void ServiceProcessor::kickWinPerf(const AnswerId Tp, const std::string& Ip) {
     if (Ip.size())
         cmd_line = L"ip:" + wtools::ConvertToUTF16(Ip) + L" " + cmd_line;
     auto exe_name = groups::winperf.exe();
+    if (cma::tools::IsEqual(exe_name, "agent")) {
+        XLOG::t.i("Looking for default agent");
+        namespace fs = std::filesystem;
+        fs::path f = cma::cfg::GetRootDir();
+        std::vector<fs::path> names = {
+            f / cma::cfg::kDefaultAppFileName  // on install
+
+        };
+
+        // we can try 64 bit
+        if (tgt::Is64bit()) names.emplace_back(f / "check_mk_service64.exe");
+
+        names.emplace_back(f / "check_mk_service32.exe");
+
+        exe_name.clear();
+        for (const auto& name : names) {
+            std::error_code ec;
+            if (fs::exists(name, ec)) {
+                exe_name = name.u8string();
+                XLOG::d.i("Using file '{}' for winperf", exe_name);
+                break;
+            }
+        }
+        if (exe_name.empty()) {
+            XLOG::l.crit("In folder '{}' not found binaries to exec winperf");
+            return;
+        }
+    } else {
+        XLOG::d.i("Looking for agent '{}'", exe_name);
+    }
     auto wide_exe_name = wtools::ConvertToUTF16(exe_name);
     auto prefix = groups::winperf.prefix();
     auto timeout = groups::winperf.timeout();

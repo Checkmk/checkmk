@@ -37,6 +37,6 @@ constexpr bool IsTest() { return !IsService(); }
 }  // namespace cma::cmdline
 namespace cma {
 // we want to test main function too.
-int MainFunction(int argc, wchar_t** Argv);
+int MainFunction(int argc, wchar_t const* Argv[]);
 }  // namespace cma
 #endif  // check_mk_service_h__

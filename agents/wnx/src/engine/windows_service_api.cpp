@@ -156,7 +156,7 @@ int TestMainServiceSelf(int Interval) {
     XLOG::setup::ColoredOutputOnStdio(true);
     bool stop = false;
 
-    if (Interval < 1) Interval = 1;
+    if (Interval < 0) Interval = 0;
     // not a best method to call thread, but this is only for VISUAL testing
     std::thread kick_and_print([&stop, Interval]() {
         auto port = cma::cfg::groups::global.port();
@@ -209,19 +209,25 @@ int TestMainServiceSelf(int Interval) {
                 XLOG::l.i("Decrypted {} bytes {}", ret, sz);
             }
             socket.close();
+
             // methods below is not a good still we do not want
             // to over complicate the code just for testing purposes
             for (int i = 0; i < Interval; i++) {
                 if (stop) break;
                 cma::tools::sleep(1000);
             }
+            if (Interval == 0) break;
         }
         XLOG::l.i("Leaving testing thread");
     });
 
     ExecMainService();  // blocking call waiting for keypress
     stop = true;
-    if (kick_and_print.joinable()) kick_and_print.join();
+    if (kick_and_print.joinable()) {
+        XLOG::l.i("Waiting for testing thread");
+        kick_and_print.join();
+        XLOG::l.i("!");
+    }
 
     return 0;
 }
@@ -363,7 +369,7 @@ int ExecSection(const std::wstring& SecName, int RepeatPause,
 // this is testing routine probably eliminated from the production build
 // THIS ROUTINE DOESN'T USE wtools::ServiceController and Windows Service API
 // Just internal to debug logic
-int ExecMainService() {
+int ExecMainService(bool DuplicateOn) {
     using namespace cma::srv;
     using namespace std::chrono;
 
@@ -378,7 +384,7 @@ int ExecMainService() {
 
     try {
         std::string cmd;
-        XLOG::setup::DuplicateOnStdio(true);
+        if (DuplicateOn) XLOG::setup::DuplicateOnStdio(true);
         XLOG::setup::ColoredOutputOnStdio(true);
         XLOG::l.i("Press any key to stop");
         auto ret = cma::tools::GetKeyPress();
@@ -387,7 +393,7 @@ int ExecMainService() {
     }
     XLOG::l.i("Server is stopping");
     processor->stopService();
-    XLOG::setup::DuplicateOnStdio(false);
+    if (DuplicateOn) XLOG::setup::DuplicateOnStdio(false);
 
     return 0;
 }

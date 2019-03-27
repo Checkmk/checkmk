@@ -12,6 +12,7 @@
 #include "yaml-cpp/yaml.h"
 
 // Project
+#include "common/cmdline_info.h"
 #include "service_api.h"
 #include "windows_service_api.h"
 
@@ -20,6 +21,8 @@
 
 #include "cfg.h"
 #include "logger.h"
+
+#include "providers/perf_counters_cl.h"
 
 std::filesystem::path G_ProjectPath = PROJECT_DIR_CMK_SERVICE;
 
@@ -112,6 +115,9 @@ static void ServiceUsage(const std::wstring &Comment) {
         kSectionParam,
         // example row
         kServiceExeName);
+
+    // undocummneted
+    // -winnperf ....... command line for runperf
 }
 
 namespace cma {
@@ -139,7 +145,7 @@ auto ToUInt64(const T W, uint64_t Dflt = 0) noexcept {
 }
 
 template <typename T>
-auto CvtToInt64(const T W, int64_t Dflt = 0) noexcept {
+auto ToInt64(const T W, int64_t Dflt = 0) noexcept {
     try {
         return std::stoll(W);
     } catch (const std::exception &) {
@@ -160,9 +166,10 @@ auto ToUint(const T W, uint32_t Dflt = 0) noexcept {
 // -cvt watest/CheckMK/Agent/check_mk.test.ini
 //
 
+// #TODO Function is over complicated
 // we want to test main function too.
 // so we have main, but callable
-int MainFunction(int argc, wchar_t **Argv) {
+int MainFunction(int argc, wchar_t const *Argv[]) {
     // check for invalid parameters count
     using namespace std::chrono;
     using namespace cma::install;
@@ -183,6 +190,32 @@ int MainFunction(int argc, wchar_t **Argv) {
     }
 
     std::wstring param(Argv[1]);
+    if (param == cma::exe::cmdline::kRunOnceParam) {
+        // to test
+        // -runonce winperf file:a.txt id:12345 timeout:20 238:processor
+        // NO READING FROM CONFIG. This is intentional
+
+        auto [error_val, name, id_val, timeout_val] =
+            cma::exe::cmdline::ParseExeCommandLine(argc - 2, Argv + 2);
+
+        if (error_val != 0) {
+            XLOG::l("Invalid parameters in command line [{}]", error_val);
+            return 1;
+        }
+
+        std::wstring prefix = name;
+        std::wstring port = Argv[3];
+        std::wstring id = id_val;
+        std::wstring timeout = timeout_val;
+        std::vector<std::wstring_view> counters;
+        for (int i = 6; i < argc; i++) {
+            if (std::wstring(L"#") == Argv[i]) break;
+            counters.push_back(Argv[i]);
+        }
+
+        return cma::provider::RunPerf(prefix, id, port, ToInt(timeout, 20),
+                                      counters);
+    }
 
     if (0) {
         // this code is enabled only during testing and debugging
@@ -259,5 +292,7 @@ int MainFunction(int argc, wchar_t **Argv) {
 
 #if !defined(CMK_TEST)
 // This is our main. PLEASE, do not add code here
-int wmain(int argc, wchar_t **Argv) { return cma::MainFunction(argc, Argv); }
+int wmain(int argc, wchar_t const *Argv[]) {
+    return cma::MainFunction(argc, Argv);
+}
 #endif

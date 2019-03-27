@@ -178,8 +178,8 @@ void WinPerf::loadFromMainConfig() {
         }
         exist_in_cfg_ = true;
 
-        exe_name_ = GetVal(groups::kWinPerf, vars::kWinPerfExe,
-                           std::string("perf_counter.exe"));
+        exe_name_ =
+            GetVal(groups::kWinPerf, vars::kWinPerfExe, std::string("agent"));
 
         prefix_ = GetVal(groups::kWinPerf, vars::kWinPerfPrefixName,
                          std::string("winperf"));

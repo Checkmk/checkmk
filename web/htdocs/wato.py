@@ -16730,6 +16730,9 @@ class ModeCheckPlugins(WatoMode):
             ("cloud", False, _("Cloud Based Environments"),
                 _("Monitoring of cloud environments like Microsoft Azure")),
 
+            ("containerization", False, _("Containerization"),
+                _("Monitoring of container and container orchestration software")),
+
             ("agentless", False, _("Networking checks without agent"),
                 _("Plugins that directly check networking "
                   "protocols like HTTP or IMAP")),

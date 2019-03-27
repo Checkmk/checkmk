@@ -263,6 +263,7 @@
     <ClInclude Include="providers\mem.h" />
     <ClInclude Include="providers\mrpe.h" />
     <ClInclude Include="providers\ohm.h" />
+    <ClInclude Include="providers\perf_counters_cl.h" />
     <ClInclude Include="providers\plugins.h" />
     <ClInclude Include="providers\ps.h" />
     <ClInclude Include="providers\p_perf_counters.h" />
@@ -477,6 +478,7 @@
     <ClCompile Include="providers\mem.cpp" />
     <ClCompile Include="providers\mrpe.cpp" />
     <ClCompile Include="providers\ohm.cpp" />
+    <ClCompile Include="providers\perf_counters_cl.cpp" />
     <ClCompile Include="providers\plugins.cpp" />
     <ClCompile Include="providers\ps.cpp" />
     <ClCompile Include="providers\p_perf_counters.cpp" />

@@ -308,6 +308,7 @@ check_watest.cmd watest
     <ClCompile Include="test-player.cpp" />
     <ClCompile Include="test-plugin.cpp" />
     <ClCompile Include="test-realtime.cpp" />
+    <ClCompile Include="test-runperf.cpp" />
     <ClCompile Include="test-section_fileinfo.cpp" />
     <ClCompile Include="test-section_logwatchevent.cpp" />
     <ClCompile Include="test-section_providers.cpp" />

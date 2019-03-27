@@ -23,7 +23,7 @@ class ServiceProcessor;
 int InstallMainService();                                     // on -install
 int RemoveMainService();                                      // on -remove
 int TestMainService(const std::wstring& What, int Interval);  // on -test
-int ExecMainService();                                        // on -exec
+int ExecMainService(bool DuplicateOn = false);                // on -exec
 int ExecStartLegacy();             // on -start_legacy
 int ExecStopLegacy();              // on -stop_legacy
 int ExecCap();                     // on -cap

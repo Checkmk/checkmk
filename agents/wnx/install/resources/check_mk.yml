@@ -159,7 +159,7 @@ winperf:
     enabled: yes
 
     # default value,  do not change it if do not know what are you douing
-    exe: perf_counter.exe
+    exe: agent
     
     # changes only section name winperf_******
     prefix: winperf

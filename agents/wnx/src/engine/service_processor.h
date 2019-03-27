@@ -465,7 +465,7 @@ private:
         answer_.exeKickedCount(count);
 
         // now wait for answers
-        if (!answer_.waitAnswer(std::chrono::seconds(max_timeout_ * 1000))) {
+        if (!answer_.waitAnswer(std::chrono::seconds(max_timeout_))) {
             XLOG::l(XLOG_FLINE + " no full answer: awaited {}, received {}",
                     answer_.awaitingSegments(),   // expected count
                     answer_.receivedSegments());  // on the hand
@@ -582,7 +582,8 @@ private:
                     Tp.time_since_epoch().count(),  // answer id
                     Timeout, CommandLine);
 
-                XLOG::d("async RunStdCmd: {}", wtools::ConvertToUTF8(cmd_line));
+                XLOG::d.i("async RunStdCmd: {}",
+                          wtools::ConvertToUTF8(cmd_line));
                 cma::tools::RunStdCommand(cmd_line, false);
 
                 return true;

@@ -109,6 +109,7 @@
 
     <!-- Step 2: Add files to your installer package -->
     <DirectoryRef Id="providers">
+      <!--      
       <Component Id="plugin_player32_" Guid="{4C951DF9-B8F2-4225-AD86-A637CDC8C4B6}">
         <File Id="plugin_player32"
               Source="..\build\plugin_player\Win32\Release\plugin_player.exe"
@@ -123,7 +124,6 @@
               Checksum="yes"/>
         <Condition>VersionNT64</Condition>
       </Component>
-      
       <Component Id="perf_counters32_" Guid="{F79D76C9-B14C-40BE-9529-3BFFFD37D84D}">
         <File Id="perf_counter32"
               Source="..\build\providers\perf_counter\Win32\Release\perf_counter.exe"
@@ -138,6 +138,7 @@
               Checksum="yes"/>
         <Condition>VersionNT64</Condition>
       </Component>
+      -->
     </DirectoryRef>
     
     <DirectoryRef Id="install">
@@ -268,10 +269,13 @@
 
     <!-- Step 3: Tell WiX to install the files -->
     <Feature Id="plugin_player_binaries" Title="Binaries of Plugin Player" Level="1">
+      <!--      
+
       <ComponentRef Id="plugin_player32_" />
       <ComponentRef Id="plugin_player64_" />
       <ComponentRef Id="perf_counters32_" />
       <ComponentRef Id="perf_counters64_" />
+      -->
       <ComponentRef Id="check_mk_ini_" />
       <ComponentRef Id="plugins_cap_" />
     </Feature>

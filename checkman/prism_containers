@@ -1,5 +1,5 @@
 title: Nutanix Prism: Containers
-agents: special
+agents: nutanix
 catalog: os/storage
 license: GPL
 distribution: check_mk

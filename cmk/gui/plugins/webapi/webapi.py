@@ -634,11 +634,7 @@ class APICallRules(APICallCollection):
 
         ruleset_dict = {}
         for folder, _rule_index, rule in ruleset.get_rules():
-            ruleset_dict.setdefault(folder.path(), [])
-            # The path is already set in the folder hierarchy
-            rule_config = rule.to_dict_config()
-            del rule_config["path"]
-            ruleset_dict[folder.path()].append(rule_config)
+            ruleset_dict.setdefault(folder.path(), []).append(rule.to_dict_config())
 
         return ruleset_dict
 

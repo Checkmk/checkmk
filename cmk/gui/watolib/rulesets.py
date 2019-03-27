@@ -703,7 +703,6 @@ class Rule(object):
     def to_dict_config(self):
         result = {"conditions": {}}
 
-        result["path"] = self.folder.path()
         result["options"] = self._rule_options_to_config()
 
         if self.ruleset.valuespec():

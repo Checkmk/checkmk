@@ -89,24 +89,13 @@ def ps_data_configured_inventory_rules(invdata):
 
 def ps_wato_configured_inventory_rules(invrules):
     inventory_specs = []
-    for rule in invrules:
-        taglist, hostlist = rule[1:3]
-        if len(rule) >= 4:
-            options = rule[3]
-            if options.get("disabled"):
-                continue
-
-        # Filter out entries with do not match our current host
-        if not hosttags_match_taglist(tags_of_host(host_name()), taglist) \
-           or not in_extraconf_hostlist(hostlist, host_name()):
-            continue  # TODO Test this jump
-
-        v = rule[0]
-        default_params = v.get('default_params', v)
+    for value in host_extra_conf(host_name(), invrules):
+        default_params = value.get('default_params', value)
         if "cpu_rescale_max" not in default_params:
             default_params["cpu_rescale_max"] = None
 
-        inventory_specs.append((v['descr'], v.get('match'), v.get('user'), default_params))
+        inventory_specs.append((value['descr'], value.get('match'), value.get('user'),
+                                default_params))
 
     return inventory_specs
 

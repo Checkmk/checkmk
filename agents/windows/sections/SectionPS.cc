@@ -249,7 +249,7 @@ bool SectionPS::outputWMI(std::ostream &out) {
                 Error(_logger)
                     << "Exception: " << e.what()
                     << " UTF-16 -> UTF-8 conversion error. Skipping line in PS.";
-            }   
+            }
 
             more = result.next();
         }

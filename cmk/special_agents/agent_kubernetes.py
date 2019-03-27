@@ -488,10 +488,10 @@ class Role(Metadata):
 ListElem = TypeVar('ListElem')
 
 
-class ListLike(Generic[ListElem], Sequence):
+class K8sList(Generic[ListElem], Sequence):
     def __init__(self, elements):
         # type: (List[ListElem]) -> None
-        super(ListLike, self).__init__()
+        super(K8sList, self).__init__()
         self.elements = elements
 
     def __getitem__(self, index):
@@ -502,7 +502,7 @@ class ListLike(Generic[ListElem], Sequence):
         return len(self.elements)
 
 
-class NodeList(ListLike[Node]):
+class NodeList(K8sList[Node]):
     def list_nodes(self):
         # type: () -> Dict[str, List[str]]
         return {'nodes': [node.name for node in self if node.name]}
@@ -532,18 +532,18 @@ class NodeList(ListLike[Node]):
         return result
 
 
-class ComponentStatusList(ListLike[ComponentStatus]):
+class ComponentStatusList(K8sList[ComponentStatus]):
     def list_statuses(self):
         # type: () -> Dict[str, List[Dict[str, str]]]
         return {status.name: status.conditions for status in self if status.name}
 
 
-class DeploymentList(ListLike[Deployment]):
+class DeploymentList(K8sList[Deployment]):
     def replicas(self):
         return {deployment.name: deployment.replicas for deployment in self}
 
 
-class PodList(ListLike[Pod]):
+class PodList(K8sList[Pod]):
     def pods_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, int]]]
         pods_sorted = sorted(self, key=lambda pod: pod.node)
@@ -590,7 +590,7 @@ class PodList(ListLike[Pod]):
         return reduce(merge, [p.resources for p in self], Pod.zero_resources())
 
 
-class NamespaceList(ListLike[Namespace]):
+class NamespaceList(K8sList[Namespace]):
     def list_namespaces(self):
         # type: () -> Dict[str, Dict[str, Dict[str, Optional[str]]]]
         return {
@@ -602,7 +602,7 @@ class NamespaceList(ListLike[Namespace]):
         }
 
 
-class PersistentVolumeList(ListLike[PersistentVolume]):
+class PersistentVolumeList(K8sList[PersistentVolume]):
     def list_volumes(self):
         # type: () -> Dict[str, Dict[str, Union[Optional[List[str]], Optional[float], Dict[str, Optional[str]]]]]
         # TODO: Output details of the different types of volumes
@@ -617,7 +617,7 @@ class PersistentVolumeList(ListLike[PersistentVolume]):
         }
 
 
-class PersistentVolumeClaimList(ListLike[PersistentVolumeClaim]):
+class PersistentVolumeClaimList(K8sList[PersistentVolumeClaim]):
     def list_volume_claims(self):
         # type: () -> Dict[str, Dict[str, Any]]
         # TODO: Fix "Any"
@@ -631,7 +631,7 @@ class PersistentVolumeClaimList(ListLike[PersistentVolumeClaim]):
         }
 
 
-class StorageClassList(ListLike[StorageClass]):
+class StorageClassList(K8sList[StorageClass]):
     def list_storage_classes(self):
         # type: () -> Dict[Any, Dict[str, Any]]
         # TODO: should be Dict[str, Dict[str, Optional[str]]]
@@ -643,7 +643,7 @@ class StorageClassList(ListLike[StorageClass]):
         }
 
 
-class RoleList(ListLike[Role]):
+class RoleList(K8sList[Role]):
     def list_roles(self):
         return [{
             'name': role.name,
@@ -669,7 +669,7 @@ class Metric(object):
         return str(self.__dict__)
 
 
-class MetricList(ListLike[Metric]):
+class MetricList(K8sList[Metric]):
     def __add__(self, other):
         return MetricList([a + b for a, b in zip(self, other)])
 

@@ -116,8 +116,7 @@ def _certificate_args(address_family, address, proxy, settings):
 def _url_args(address_family, address, proxy, settings):
 
     # get virthost settings:
-    # TODO: when did 'vhost' dissapear from WATO?
-    vhost, omit_ip = settings.get("virthost", (settings.get("vhost"), False))
+    vhost, omit_ip = settings.get("virthost", (None, False))
 
     args = []
 

@@ -315,14 +315,14 @@ div.snapin {
 
   /* TODO: No important styles */
   select {
-    width: 100% !important;
-    height: 100% !important;
+    width: 100%;
+    height: 100%;
     padding: 8px !important;
     font-size: 11px;
     color: $theme-color-text;
     background: $theme-color-white;
     background-image: none !important;
-    border: 1px solid $theme-color-table-border !important;
+    border: 1px solid $theme-color-table-border;
     border-radius: $theme-border-radius;
     box-shadow: none;
   }
@@ -377,6 +377,7 @@ div.snapin {
     }
   }
 
+  /* TODO: Reproduce this html element */
   textarea {
     width: 100% !important;
   }
@@ -641,98 +642,4 @@ span#msg_label {
   color: #ff0000;
   background-color: #fff;
   border-radius: 5px;
-}
-
-
-/*
- * Styles for wiki and quicksearch sidebar snapins
- */
-#snapin_container_wiki div.content {
-  font-weight: bold;
-  color: #fff;
-
-  p {
-    font-weight: normal;
-  }
-}
-
-/* TODO: Reproduce this html element */
-#wiki_navigation {
-  text-align: left;
-}
-
-/* Styles shared/inherited by different search bars */
-%search-shared {
-  width: 100%;
-  padding: 0;
-
-  img {
-    display: none; }
-
-  input {
-    float: left;
-    margin:  0;
-    font-size: 11px;
-    background-repeat: no-repeat;
-  }
-
-  input, select, textarea, #mk_side_search_field {
-    box-sizing: border-box;
-  }
-}
-
-#wiki_search {
-  @extend %search-shared;
-
-  input {
-    width: 194px;
-    height: 25px;
-  }
-}
-
-#mk_side_search {
-  @extend %search-shared;
-
-  input {
-    width: 100%;
-    height: 100%;
-  }
-
-  div.topic {
-    margin-top: 3px;
-    margin-left: 2px;
-    font-size: 125%;
-  }
-}
-
-#wiki_side_clear, #mk_side_clear {
-  clear: both;
-}
-
-#mk_search_results {
-  position: relative;
-  float: left;
-  width: 223px;
-  font-size: 80%;
-  color: #000;
-  background-color: #dfdfdf;
-  border: 1px solid #fff;
-
-  a {
-    display: block;
-    width: 217px;
-    padding-left: 5px;
-    color: #000;
-    text-align: left;
-    text-decoration: none;
-
-    &:hover, &.active {
-      background-color: #bfbfbf;
-    }
-  }
-
-  div.error, div.warning {
-    padding: 2px;
-    font-size: 12px;
-  }
 }

@@ -1,6 +1,6 @@
 title: Nutanix Prism: Alerts
-agents: special
-catalog: os/storage
+agents: nutanix
+catalog: os/misc
 license: GPL
 distribution: check_mk
 description:

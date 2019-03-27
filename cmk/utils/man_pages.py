@@ -185,6 +185,7 @@ catalog_titles = {
         "msoffice"      : "MS Office",
         "nginx"         : "NGINX",
         "nullmailer"    : "Nullmailer",
+        "nutanix"       : "Nutanix",
         "omd"           : "Open Monitoring Distribution (OMD)",
         "check_mk"      : "Check_MK Monitoring System",
         "oracle"        : "ORACLE Database",
@@ -250,7 +251,8 @@ check_mk_agents = {
     "windows": "Windows",
     "snmp": "SNMP",
     "openvms": "OpenVMS",
-    "vsphere": "vSphere"
+    "vsphere": "vSphere",
+    "nutanix": "Nutanix",
 }
 
 _manpage_catalog = {}  # type: ignore

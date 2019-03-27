@@ -214,13 +214,18 @@ no_discovery_possible = _check_api_utils.no_discovery_possible
 service_extra_conf = _config.service_extra_conf
 host_extra_conf = _config.host_extra_conf
 in_binary_hostlist = _config.in_binary_hostlist
-in_extraconf_hostlist = _config.in_extraconf_hostlist
-hosttags_match_taglist = _config.hosttags_match_taglist
 host_extra_conf_merged = _config.host_extra_conf_merged
+
+# TODO: Only used by logwatch check. Can we clean this up?
 get_rule_options = _config.get_rule_options
 all_matching_hosts = _config.all_matching_hosts
 
+# These functions were used in some specific checks until 1.6. Don't add it to
+# the future check API. It's kept here for compatibility reasons for now.
+in_extraconf_hostlist = _config.in_extraconf_hostlist
+hosttags_match_taglist = _config.hosttags_match_taglist
 tags_of_host = _config.tags_of_host
+
 nagios_illegal_chars = _config.nagios_illegal_chars
 is_ipv6_primary = _config.is_ipv6_primary
 is_cmc = _config.is_cmc

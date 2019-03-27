@@ -416,6 +416,7 @@ def _verify_no_deprecated_check_rulesets():
         ("services", "inventory_services"),
         ("domino_tasks", "inv_domino_tasks"),
         ("ps", "inventory_processes"),
+        ("logwatch", "logwatch_patterns"),
     ]
     for check_plugin_name, varname in deprecated_rulesets:
         check_context = get_check_context(check_plugin_name)

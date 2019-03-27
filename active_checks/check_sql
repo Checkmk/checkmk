@@ -37,7 +37,7 @@ import sys
 import cmk.utils.password_store
 cmk.utils.password_store.replace_passwords()
 
-log = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 DEFAULT_PORTS = {
     "postgres": 5432,
@@ -202,10 +202,10 @@ def parse_args(argv):
     logging.basicConfig(level=max(30 - 10 * args.verbose, 0), format=fmt)
 
     # V-VERBOSE INFO
-    for k, v in args.__dict__.items():
-        if k in ('user', 'password'):
-            v = '****'
-        log.debug('argparse: %s = %r', k, v)
+    for key, val in args.__dict__.items():
+        if key in ('user', 'password'):
+            val = '****'
+        LOG.debug('argparse: %s = %r', key, val)
     return args
 
 
@@ -225,12 +225,12 @@ def bail_out(exit_code, output):
 #
 def _default_execute(cursor, cmd, inpt, procedure):
     if procedure:
-        log.info("SQL Procedure Name: %s", cmd)
-        log.info("Input Values: %s", inpt)
+        LOG.info("SQL Procedure Name: %s", cmd)
+        LOG.info("Input Values: %s", inpt)
         cursor.callproc(cmd, inpt)
-        log.debug("inpt after 'callproc' = %r", inpt)
+        LOG.debug("inpt after 'callproc' = %r", inpt)
     else:
-        log.info("SQL Statement: %s", cmd)
+        LOG.info("SQL Statement: %s", cmd)
         cursor.execute(cmd)
 
     return cursor.fetchall()
@@ -262,12 +262,12 @@ def mssql_connect(host, port, db_name, user, pwd):
                            database=db_name, user=user, password=pwd)
 
 
-def mssql_execute(cursor, cmd, inpt, procedure):
+def mssql_execute(cursor, cmd, _inpt, procedure):
     if procedure:
-        log.info("SQL Procedure Name: %s", cmd)
+        LOG.info("SQL Procedure Name: %s", cmd)
         cmd = 'EXEC ' + cmd
     else:
-        log.info("SQL Statement: %s", cmd)
+        LOG.info("SQL Statement: %s", cmd)
 
     cursor.execute(cmd)
 
@@ -279,8 +279,8 @@ def oracle_connect(host, port, db_name, user, pwd):
         '/usr/lib/python%s.%s/site-packages' % (sys.version_info.major, sys.version_info.minor))
     try:
         import cx_Oracle  # pylint: disable=import-error
-    except ImportError as e:
-        bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % e)
+    except ImportError as exc:
+        bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % exc)
 
     cstring = "%s/%s@%s:%s/%s" % (user, pwd, host, port, db_name)
     return cx_Oracle.connect(cstring)
@@ -289,34 +289,34 @@ def oracle_connect(host, port, db_name, user, pwd):
 def oracle_execute(cursor, cmd, inpt, procedure):
     try:
         import cx_Oracle  # pylint: disable=import-error
-    except ImportError as e:
-        bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % e)
+    except ImportError as exc:
+        bail_out(3, "%s. Please install it via 'pip install cx_Oracle'." % exc)
 
     if procedure:
-        log.info("SQL Procedure Name: %s", cmd)
-        log.info("Input Values: %s", inpt)
+        LOG.info("SQL Procedure Name: %s", cmd)
+        LOG.info("Input Values: %s", inpt)
 
-        # NOTE: In an earlier version, this code-branch
-        #       had been executed regardles of the dbms.
-        #       clearly this   vvv  is oracle specific.
+        # In an earlier version, this code-branch
+        # had been executed regardles of the dbms.
+        # clearly this is oracle specific.
         outvar = cursor.var(cx_Oracle.STRING)  # pylint:disable=undefined-variable
-        #       However, I have not been able to test it.
+        # However, I have not been able to test it.
         inpt.append(outvar)
 
         cursor.callproc(cmd, inpt)
 
-        log.debug("inpt after 'callproc' = %r", inpt)
-        log.debug("outvar = %r", outvar)
+        LOG.debug("inpt after 'callproc' = %r", inpt)
+        LOG.debug("outvar = %r", outvar)
 
         # for empty input this is just
         #  _res = outvar.getvalue()
         _res = ','.join(i.getvalue() for i in inpt)
-        log.debug("outvar.getvalue() = %r", _res)
+        LOG.debug("outvar.getvalue() = %r", _res)
         params_result = _res.split(",")
-        log.debug("params_result = %r", params_result)
+        LOG.debug("params_result = %r", params_result)
 
     else:
-        log.info("SQL Statement: %s", cmd)
+        LOG.info("SQL Statement: %s", cmd)
         cursor.execute(cmd)
 
     return cursor.fetchall()
@@ -327,8 +327,8 @@ def db2_connect(host, port, db_name, user, pwd):
     try:
         import ibm_db  # pylint: disable=import-error
         import ibm_db_dbi  # pylint: disable=import-error
-    except ImportError as e:
-        bail_out(3, "%s. Please install it via pip." % e)
+    except ImportError as exc:
+        bail_out(3, "%s. Please install it via pip." % exc)
 
     cstring = 'DRIVER={IBM DB2 ODBC DRIVER};DATABASE=%s;' \
               'HOSTNAME=%s;PORT=%s;PROTOCOL=TCPIP;UID=%s;PWD=%s;' \
@@ -382,7 +382,7 @@ def execute(dbms, connection, cmd, inpt, procedure=False):
         cursor.close()
         connection.close()
 
-    log.info("SQL Result:\n%r", result)
+    LOG.info("SQL Result:\n%r", result)
     return result
 
 
@@ -394,9 +394,8 @@ def process_result(result, warn, crit, metrics=False, debug=False):
     [numerical_value, text, performance_data].
     The full result is returned as muliline output.
     """
-    if result is None or len(result) == 0:
+    if not result:
         bail_out(3, "SQL statement/procedure returned no data")
-
     row0 = result[0]
 
     number = float(row0[0])
@@ -450,8 +449,8 @@ def main(argv=None):
             metrics=args.metrics,
             debug=args.debug,
         )
-    except () if args.debug else Exception as e:
-        errmsg = str(e).strip('()').replace(r'\n', ' ')
+    except () if args.debug else Exception as exc:
+        errmsg = str(exc).strip('()').replace(r'\n', ' ')
         bail_out(3, "Error while %s: %s" % (msg, errmsg))
 
     bail_out(state, args.text + text)

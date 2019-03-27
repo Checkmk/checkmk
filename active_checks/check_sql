@@ -409,7 +409,7 @@ def process_result(result, warn, crit, metrics=False, debug=False):
     perf = ""
     if metrics:
         try:
-            perf = " | performance_data=%s" % str(result[2])
+            perf = " | performance_data=%s" % str(row0[2])
         except IndexError:
             if debug:
                 raise

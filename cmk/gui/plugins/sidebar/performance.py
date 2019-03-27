@@ -31,7 +31,6 @@ from cmk.gui.globals import html
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,
-    snapin_width,
     snapin_site_choice,
 )
 
@@ -100,28 +99,3 @@ class Performance(SidebarSnapin):
         return [
             "admin",
         ]
-
-    def styles(self):
-        return """
-#snapin_performance select {
-    margin-bottom: 2px;
-}
-table.performance {
-    width: %dpx;
-    border-radius: 2px;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
-    border-width: 1.5px;
-}
-table.performance td {
-    padding: 0px 2px;
-    font-size: 8pt;
-}
-table.performance td.right {
-    text-align: right;
-    padding: 0px;
-    padding-right: 1px;
-    white-space: nowrap;
-}
-""" % (snapin_width - 2)

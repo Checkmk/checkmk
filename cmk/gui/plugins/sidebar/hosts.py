@@ -110,12 +110,6 @@ class HostSnapin(SidebarSnapin):
     def refresh_on_restart(cls):
         return True
 
-    def styles(self):
-        return """
-.snapin table.allhosts { width: 100%; }
-.snapin table.allhosts td { width: 50%; padding: 0px 0px; }
-"""
-
 
 @snapin_registry.register
 class Hosts(HostSnapin):

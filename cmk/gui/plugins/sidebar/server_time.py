@@ -28,7 +28,6 @@ import time
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.plugins.sidebar import snapin_width
 from . import SidebarSnapin, snapin_registry
 
 
@@ -48,18 +47,3 @@ class CurrentTime(SidebarSnapin):
 
     def show(self):
         html.div(time.strftime("%H:%M"), class_="time")
-
-    def styles(self):
-        return """
-div.time {
-   text-align: center;
-   font-size: 18pt;
-   font-weight: bold;
-   /* The border needs to be substracted from the width */
-   border: 1px solid #8cc;
-   -moz-border-radius: 10px;
-   background-color: #588;
-   color: #aff;
-   width: %dpx;
-}
-""" % (snapin_width - 2)

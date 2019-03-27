@@ -71,7 +71,10 @@
 # 4. levels:   four numbers (thresholds)
 inventory_processes_rules = []
 
+# Deprecated option since 1.6. cmk_base creates a config warning when finding rules
+# for this ruleset. Can be dropped with 1.7.
 inventory_processes = []
+
 inventory_processes_perf = []
 ANY_USER = None
 
@@ -249,7 +252,7 @@ def parse_ps(info):
 
 def inventory_ps(info):
     _cpu_cores, parsed = info[0]
-    return inventory_ps_common(inventory_processes, inventory_processes_rules, parsed)
+    return inventory_ps_common(inventory_processes_rules, parsed)
 
 
 def check_ps(item, params, info):

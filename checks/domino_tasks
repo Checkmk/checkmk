@@ -38,6 +38,9 @@
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.8 Router
 
 inv_domino_tasks_rules = []
+
+# Deprecated option since 1.6. cmk_base creates a config warning when finding rules
+# for this ruleset. Can be dropped with 1.7.
 inv_domino_tasks = []
 
 
@@ -54,7 +57,7 @@ def parse_domino_tasks(info):
 
 
 def inventory_domino_tasks(parsed):
-    return inventory_ps_common(inv_domino_tasks, inv_domino_tasks_rules, parsed)
+    return inventory_ps_common(inv_domino_tasks_rules, parsed)
 
 
 def check_domino_tasks(item, params, parsed):

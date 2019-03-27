@@ -414,6 +414,8 @@ def verify_snmp_communities_type():
 def _verify_no_deprecated_check_rulesets():
     deprecated_rulesets = [
         ("services", "inventory_services"),
+        ("domino_tasks", "inv_domino_tasks"),
+        ("ps", "inventory_processes"),
     ]
     for check_plugin_name, varname in deprecated_rulesets:
         check_context = get_check_context(check_plugin_name)

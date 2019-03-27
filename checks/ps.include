@@ -44,49 +44,6 @@ def ps_info_tuple(entry):
     return False
 
 
-def ps_get_inventory_specs(invdata, invrules):
-
-    return ps_data_configured_inventory_rules(invdata) + ps_wato_configured_inventory_rules(
-        invrules)
-
-
-# This is old function and don't have source data to test it.
-def ps_data_configured_inventory_rules(invdata):
-    inventory_specs = []
-
-    # Handle inventory_processes, inventory_processes_perf variables
-    default_levels = None
-    for inv_entry in invdata:
-        # New in 1.1.7i1: inventory_processes may be prefixed with list of
-        # host names or tags + ALL_HOSTS
-        # New in 1.2.6b7: inventory_processes might have no levels specified
-        tags = None
-        if len(inv_entry) in (4, 8):
-            tags = []
-            hostlist = inv_entry[0]
-            inv_entry = inv_entry[1:]
-            if len(inv_entry) == 8:
-                default_levels = inv_entry[3:7]
-        elif len(inv_entry) in (5, 9):
-            tags = inv_entry[0]
-            hostlist = inv_entry[1]
-            inv_entry = inv_entry[2:]
-            default_levels = inv_entry[4:8]
-
-        # Filter out entries with do not match our current host
-        if tags is not None and (not hosttags_match_taglist(tags_of_host(host_name()), tags) or
-                                 not in_extraconf_hostlist(hostlist, host_name())):
-            continue
-
-        if len(inv_entry) == 7:  # extend old inventory_processes
-            inv_entry += ([],)
-            default_levels = inv_entry[3:7]
-
-        inventory_specs.append(inv_entry[:3] + ({"levels": default_levels},))
-
-    return inventory_specs
-
-
 def ps_wato_configured_inventory_rules(invrules):
     inventory_specs = []
     for value in host_extra_conf(host_name(), invrules):
@@ -100,8 +57,8 @@ def ps_wato_configured_inventory_rules(invrules):
     return inventory_specs
 
 
-def inventory_ps_common(invdata, invrules, parsed):
-    inventory_specs = ps_get_inventory_specs(invdata, invrules)
+def inventory_ps_common(invrules, parsed):
+    inventory_specs = ps_wato_configured_inventory_rules(invrules)
 
     inventory = []
     for line in parsed:
@@ -164,7 +121,7 @@ def replace_service_description(service_description, match_groups, pattern):
     num_elements_replace = service_description.count('%s')
     if len(match_groups) < num_elements_replace:
         raise MKGeneralException(
-            "Invalid entry in inventory_processes: "
+            "Invalid entry in inventory_processes_rules: "
             "service description '%s' contains "
             "%d replaceable elements, but "
             "regular expression '%s' contains only %d subexpression(s)." %

@@ -824,10 +824,7 @@ class ACTestESXDatasources(ACTest):
     def execute(self):
         all_rules_ok = True
         for folder, rule_index, rule in self._get_rules():
-            rule_config = rule.to_dict_config()
-            vsphere_queries_agent = (rule_config['value'].get('direct') in [
-                'agent', 'hostsystem_agent'
-            ])
+            vsphere_queries_agent = (rule.value.get('direct') in ['agent', 'hostsystem_agent'])
             if vsphere_queries_agent:
                 all_rules_ok = False
                 yield ACResultCRIT(

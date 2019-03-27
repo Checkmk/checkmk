@@ -1,5 +1,5 @@
 title: Kubernetes node and cluster level filesystem usage
-agents: linux
+agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL
 distribution: check_mk

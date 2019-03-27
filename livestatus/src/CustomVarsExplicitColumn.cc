@@ -24,20 +24,15 @@
 
 #include "CustomVarsExplicitColumn.h"
 #include "Row.h"
+#include "nagios.h"
 
 std::string CustomVarsExplicitColumn::getValue(Row row) const {
-    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
-         cvm = cvm->next) {
-        if (cvm->variable_name == _varname) {
-            return cvm->variable_value;
+    if (auto p = columnData<customvariablesmember *>(row)) {
+        for (auto cvm = *p; cvm != nullptr; cvm = cvm->next) {
+            if (cvm->variable_name == _varname) {
+                return cvm->variable_value;
+            }
         }
     }
     return "";
-}
-
-customvariablesmember *CustomVarsExplicitColumn::getCVM(Row row) const {
-    if (auto p = columnData<customvariablesmember *>(row)) {
-        return *p;
-    }
-    return nullptr;
 }

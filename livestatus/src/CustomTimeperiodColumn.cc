@@ -32,19 +32,13 @@ extern TimeperiodsCache *g_timeperiods_cache;
 // state of that period
 int32_t CustomTimeperiodColumn::getValue(
     Row row, const contact * /* auth_user */) const {
-    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
-         cvm = cvm->next) {
-        if (cvm->variable_name == _varname) {
-            return static_cast<int32_t>(
-                g_timeperiods_cache->inTimeperiod(cvm->variable_value));
+    if (auto p = columnData<customvariablesmember *>(row)) {
+        for (auto cvm = *p; cvm != nullptr; cvm = cvm->next) {
+            if (cvm->variable_name == _varname) {
+                return static_cast<int32_t>(
+                    g_timeperiods_cache->inTimeperiod(cvm->variable_value));
+            }
         }
     }
     return 1;  // assume 24X7
-}
-
-customvariablesmember *CustomTimeperiodColumn::getCVM(Row row) const {
-    if (auto p = columnData<customvariablesmember *>(row)) {
-        return *p;
-    }
-    return nullptr;
 }

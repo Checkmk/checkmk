@@ -48,8 +48,7 @@ def get_data(address):
         sys.exit(2)
 
 
-address = "https://%s/hm/api/v1/devices" % ip
-data = get_data(address)
+data = get_data("https://%s/hm/api/v1/devices" % ip)
 
 informations = [
     'hostName',

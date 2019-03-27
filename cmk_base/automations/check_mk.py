@@ -116,8 +116,10 @@ class AutomationDiscovery(DiscoveryAutomation):
         for hostname in hostnames:
             result, error = discovery.discover_on_host(how, hostname, do_snmp_scan, use_caches,
                                                        on_error)
-            counts[hostname] = result["self_new"], result["self_removed"], result[
-                "self_kept"], result["self_total"]
+            counts[hostname] = [
+                result["self_new"], result["self_removed"], result["self_kept"],
+                result["self_total"]
+            ]
 
             if error is not None:
                 failed_hosts[hostname] = error

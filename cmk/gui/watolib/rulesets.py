@@ -600,6 +600,8 @@ class Rule(object):
         else:
             raise NotImplementedError()
 
+    # TODO: Would make sense to implement independent parsing for the different
+    # ruleset types
     def _parse_dict_rule(self, rule_config):
         self.rule_options = rule_config.get("options", {})
 
@@ -612,9 +614,11 @@ class Rule(object):
             else:
                 self.value = True
 
-        conditions = rule_config.get("conditions", {})
+        conditions = rule_config["conditions"]
         self.host_list = conditions.get("host_specs", [])
-        self.item_list = conditions.get("service_specs")
+
+        if self.ruleset.item_type():
+            self.item_list = conditions.get("service_specs")
 
         # Remove folder tag from tag list
         tag_specs = conditions.get("host_tags", [])
@@ -705,20 +709,22 @@ class Rule(object):
         return content
 
     def to_dict_config(self):
-        result = {"conditions": {}}
+        result = {
+            "conditions": {},
+        }
 
-        result["options"] = self._rule_options_to_config()
+        rule_options = self._rule_options_to_config()
+        if rule_options:
+            result["options"] = rule_options
 
         if self.ruleset.valuespec():
             result["value"] = self.value
-        else:
-            if self.value:
-                result["negate"] = False
-            else:
-                result["negate"] = True
+        elif self.value is False:
+            result["negate"] = True
 
         result["conditions"]["host_specs"] = self.host_list
-        result["conditions"]["host_tags"] = self.tag_specs
+        if self.tag_specs:
+            result["conditions"]["host_tags"] = self.tag_specs
 
         if self.ruleset.item_type():
             result["conditions"]["service_specs"] = self.item_list

@@ -571,7 +571,7 @@ class Rule(object):
 
     def clone(self):
         cloned = Rule(self.folder, self.ruleset)
-        cloned.from_config(self._format_rule())
+        cloned.from_config(self.to_dict_config())
         return cloned
 
     def _initialize(self):
@@ -724,28 +724,6 @@ class Rule(object):
             result["conditions"]["service_specs"] = self.item_list
 
         return result
-
-    def _format_rule(self):
-        if self.ruleset.valuespec():
-            rule = [self.value]
-        elif not self.value:
-            rule = [NEGATE]
-        else:
-            rule = []
-
-        if self.tag_specs != []:
-            rule.append(self.tag_specs)
-
-        rule.append(self.host_list)
-        if self.item_list is not None:
-            rule.append(self.item_list)
-
-        ro = self._rule_options_to_config()
-
-        if ro:
-            rule.append(ro)
-
-        return tuple(rule)
 
     # Append rule options, but only if they are not trivial. That way we
     # keep as close as possible to the original Check_MK in rules.mk so that

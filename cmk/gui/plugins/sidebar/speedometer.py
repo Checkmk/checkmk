@@ -168,26 +168,6 @@ speedometer_show_speed(0, 0, 0);
     def allowed_roles(cls):
         return ["admin"]
 
-    def styles(self):
-        return """
-div.speedometer {
-    position: relative;
-    top: 0px;
-    left: 0px;
-    height: 223px;
-}
-img#speedometerbg {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-}
-canvas#speedometer {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-}
-"""
-
     def page_handlers(self):
         return {
             "sidebar_ajax_speedometer": self._ajax_speedometer,

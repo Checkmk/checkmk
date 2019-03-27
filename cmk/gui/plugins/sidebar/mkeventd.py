@@ -33,7 +33,6 @@ from cmk.gui.plugins.sidebar import (
     snapin_site_choice,
     SidebarSnapin,
     snapin_registry,
-    snapin_width,
 )
 
 
@@ -122,33 +121,3 @@ class SidebarSnapinCustomers(SidebarSnapin):
 
         entries.sort()
         return entries
-
-    def styles(self):
-        return """
-    table.mkeventd_performance {
-        width: %dpx;
-        border-radius: 2px;
-        background-color: rgba(0, 0, 0, 0.1);
-        border-style: solid;
-        border-color: rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
-        border-width: 1.5px;
-    }
-
-    #snapin_mkeventd_performance select {
-        margin-bottom: 2px;
-    }
-
-    table.mkeventd_performance td {
-        padding: 0px 2px;
-        font-size: 8pt;
-    }
-
-    table.mkeventd_performance td:nth-of-type(2) {
-        text-align: right;
-        padding: 0px;
-        padding-right: 1px;
-        white-space: nowrap;
-        font-weight: bold;
-    }
-
-    """ % (snapin_width - 2)

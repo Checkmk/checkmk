@@ -305,19 +305,6 @@ function add_bookmark() {
     def allowed_roles(cls):
         return ["admin", "user", "guest"]
 
-    def styles(self):
-        return """
-div.bookmark {
-    width: 230px;
-    max-width: 230px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    -o-text-overflow: ellipsis;
-    white-space: nowrap;
-    color: white;
-}
-"""
-
     def _ajax_add_bookmark(self):
         title = html.request.var("title")
         url = html.request.var("url")

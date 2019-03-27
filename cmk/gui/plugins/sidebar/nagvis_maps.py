@@ -52,28 +52,6 @@ class NagVisMaps(SidebarSnapin):
     def allowed_roles(cls):
         return ["admin", "user", "guest"]
 
-    def styles(self):
-        return """
-div.state1.statea {
-    border-color: #ff0;
-}
-div.state2.statea {
-    border-color: #f00;
-}
-div.statea {
-    background-color: #0b3;
-}
-div.state1.stated {
-    border-color: #ff0;
-}
-div.state2.stated {
-    border-color: #f00;
-}
-div.stated {
-    background-color: #0b3;
-}
-"""
-
     @classmethod
     def refresh_regularly(cls):
         return True

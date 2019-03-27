@@ -80,20 +80,6 @@ table.hostmatrix {
   }
 }
 
-.hostmatrix td.state1 a,
-/* TODO: Reproduce these two html elements */
-.hostmatrix td.state1 body.main .popup_menu span,
-body.main .popup_menu .hostmatrix td.state1 span {
-  background-color: $theme-color-main;
-}
-
-.hostmatrix td.state0 a,
-/* TODO: Reproduce these two html elements */
-.hostmatrix td.state0 body.main .popup_menu span,
-body.main .popup_menu .hostmatrix td.state0 span {
-  background-color: $theme-color-nuance-12;
-}
-
 /*
  * Hosts snapin
  */
@@ -104,10 +90,6 @@ body.main .popup_menu .hostmatrix td.state0 span {
     width: 50%;
     padding: 0;
   }
-
-  .statebullet {
-    margin: 8px 4px 8px 0;
-  }
 }
 
 /*
@@ -116,7 +98,7 @@ body.main .popup_menu .hostmatrix td.state0 span {
 div.snapin table.master_control {
   width: 100%;
   margin: 0;
-  border-spacing: 8px;
+  border-spacing: 0;
 
   td {
     div.toggle_switch {
@@ -124,11 +106,6 @@ div.snapin table.master_control {
     }
 
     &.left {
-      display: inline-block;
-      font-size: $theme-font-size-main;
-      font-weight: $theme-font-weight-global;
-      letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-nuance-9;
       text-align: left;
 
       a {
@@ -146,26 +123,15 @@ div.snapin table.master_control {
   }
 }
 
-/* Styles shared/inherited by different performance tables */
-%performance-table-shared {
-  padding: 8px;
-  background-color: $theme-color-table-background-dark;
-  border: 1px solid $theme-color-table-border-dark;
-  border-spacing: 4px;
-  box-sizing: border-box;
-
-  td {
-    font-weight: $theme-font-weight-global;
-    letter-spacing: $theme-letter-spacing-table;
-  }
-}
-
 /*
  * Event console performance snapin (mkeventd)
  */
 table.mkeventd_performance {
-  @extend %performance-table-shared;
-  width: $theme-snapin-width - 2px;
+  width: 228px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(0, 0,   0, 0.3);
+  border-style: solid;
+  border-width: 1.5px;
   border-radius: 2px;
 
   td {
@@ -213,8 +179,11 @@ div.statea, div.stated {
 }
 
 table.performance {
-  @extend %performance-table-shared;
-  width: $theme-snapin-width - 2px;
+  width: 228px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
+  border-style: solid;
+  border-width: 1.5px;
   border-radius: 2px;
 
   td {
@@ -234,23 +203,22 @@ table.performance {
  * Server time snapin
  */
 div.time {
-  width: $theme-snapin-width - 2px;
-  padding: 8px;
+  width: 228px;
   font-size: 24px;
   font-weight: bold;
-  letter-spacing: $theme-letter-spacing-table;
-  color: $theme-color-white;
+  color: #aff;
   text-align: center;
-  background-color: $theme-color-table-background-dark;
-  border: 1px solid $theme-color-table-border-dark;
-  border-spacing: 4px;
+  background-color: #588;
+  /* The border needs to be substracted from the width */
+  border: 1px solid #8cc;
+  -moz-border-radius: 10px;
 }
 
 /*
  * Site status snapin
  */
 table.sitestate {
-  width: $theme-snapin-width;
+  width: 230px;
 
   td {
     padding: 1px 0;
@@ -298,34 +266,29 @@ img#speedometerbg, canvas#speedometer {
  * Tactical overview snapin
  */
 table.tacticaloverview {
-  width: 100%;
-  margin: 0;
+  width: 230px;
+  margin-top: -7px;
   border-collapse: separate;
-  border-spacing: 2px;
 
   th {
     padding: 0;
-    padding-top: 4px;
+    padding-top: 2px;
     font-size: 11px;
     font-weight: normal;
     line-height: 9px;
-    letter-spacing: 0;
-    color: $theme-color-nuance-5;
-    text-align: center;
+    color: #123a4a;
+    text-align: left;
     vertical-align: bottom;
   }
 
   td {
     height: 14px;
-    padding: 2px;
+    padding: 0;
     text-align: right;
-    background: $theme-color-background;
-    border: 1px solid $theme-color-table-border-dark;
-    border-radius: $theme-border-radius;
+    background-color: #6da1b8;
 
     &.prob {
-      background: $theme-color-nuance-6;
-      box-shadow: none;
+      box-shadow: 0 0 4px #ffd000;
     }
 
     &.col3 {
@@ -343,37 +306,19 @@ table.tacticaloverview {
   }
 }
 
-table.tacticaloverview td a,
-table.tacticaloverview td a.link,
-table.tacticaloverview td a:hover,
-/* TODO: Reproduce these two html elements, then get rid of important styles */
-table.tacticaloverview td body.main .popup_menu span,
-body.main .popup_menu table.tacticaloverview td span {
-  padding: 4px;
-  font-size: $theme-font-size-main;
-  font-weight: $theme-font-weight-bold;
-  letter-spacing: 0;
-  color: $theme-color-text;
-}
-
-/* TODO: Reproduce this html element */
 div.tacticalalert {
   height: 25px;
-  margin-top: 8px;
   font-size: 12px;
   line-height: 25px;
   text-align: center;
-  background-color: $theme-color-state-2-background !important;
-  border-radius: $theme-border-radius;
-  box-shadow: none !important;
+  background-color: #f50;
+  box-shadow: 0 0 4px #ffd000;
 }
 
-/* TODO: Reproduce this html element */
 div.spacertop {
   padding-top: 5px;
 }
 
-/* TODO: Reproduce this html element */
 #snapin_tactical_overview img {
   position: relative;
   top: -1px;
@@ -406,7 +351,6 @@ div.spacertop {
 
   div.tag_tree {
     clear: both;
-    font-size: $theme-font-size-main;
   }
 
   div.statebullet {
@@ -418,7 +362,6 @@ div.spacertop {
     width: 8px;
     height: 8px;
     margin-right: 0;
-    border-radius: 50%;
     box-shadow: 0 0 0.7px #284850;
   }
 
@@ -472,27 +415,15 @@ div.spacertop {
 /*
  * WATO folder tree snapin
  */
-#snapin_wato_foldertree {
-  table {
-    width: 100%;
-    border-spacing: 0;
+#snapin_wato_foldertree table {
+  width: 100%;
+  border-spacing: 0;
 
-    td {
-      vertical-align: baseline;
+  td {
+    vertical-align: baseline;
 
-      &.label {
-        width: 1px;
-      }
+    &.label {
+      width: 1px;
     }
-  }
-
-  select {
-    margin: 8px 0 2px;
-    clear: both;
-    font-size: $theme-font-size-main;
-    color: $theme-color-nuance-7;
-    background: $theme-color-lightgrey;
-    border-radius: $theme-border-radius;
-    box-sizing: border-box;
   }
 }

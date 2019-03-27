@@ -142,34 +142,6 @@ class MasterControlSnapin(SidebarSnapin):
     def allowed_roles(cls):
         return ["admin"]
 
-    def styles(self):
-        return """
-div.snapin table.master_control {
-    width: 100%;
-    margin: 0px 0px 0px 0px;
-    border-spacing: 0px;
-}
-
-div.snapin table.master_control td div.toggle_switch {
-    float: right;
-}
-
-div.snapin table.master_control td.left a {
-    text-align: left;
-    font-size: 8pt;
-    font-weight: normal;
-}
-
-div.snapin table.master_control td.left {
-    text-align: left;
-}
-
-div.snapin table.master_control td img.iconbutton {
-    width: 60px;
-    height: 16px;
-}
-"""
-
     def page_handlers(self):
         return {
             "switch_master_state": self._ajax_switch_masterstate,

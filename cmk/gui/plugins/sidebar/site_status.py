@@ -34,7 +34,6 @@ import cmk.gui.config as config
 from . import (
     SidebarSnapin,
     snapin_registry,
-    snapin_width,
     render_link,
 )
 
@@ -105,38 +104,6 @@ class SiteStatus(SidebarSnapin):
     @classmethod
     def allowed_roles(cls):
         return ["user", "admin"]
-
-    def styles(self):
-        return """
-table.sitestate {
-    width: %dpx;
-}
-
-table.sitestate td {
-    padding: 1px 0px;
-    text-align: right;
-}
-
-table.sitestate td.left {
-    text-align: left;
-}
-
-div.snapin table.sitestate td img.iconbutton {
-    width: 60px;
-    height: 16px;
-}
-
-table.sitestate td.left a {
-    text-align: left;
-    font-weight: normal;
-}
-
-table.sitestate td.state {
-    width: 60px;
-    font-size: 7pt;
-}
-
-""" % snapin_width
 
     def page_handlers(self):
         return {

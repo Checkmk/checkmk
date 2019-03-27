@@ -98,17 +98,3 @@ class CustomLinks(SidebarSnapin):
                     html.write_text(_("invalid entry %s: %s<br>\n") % (entry, e))
 
         render_list([], links)
-
-    def styles(self):
-        return """
-#snapin_custom_links div.sublist {
-    padding-left: 10px;
-}
-#snapin_custom_links img {
-    margin-right: 5px;
-}
-#snapin_custom_links img.icon {
-    width: 16px;
-    height: 16px;
-}
-"""

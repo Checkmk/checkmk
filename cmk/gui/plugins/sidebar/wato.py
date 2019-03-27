@@ -125,30 +125,6 @@ class SidebarSnapinWATOMini(SidebarSnapin):
     def show(self):
         render_wato(mini=True)
 
-    def styles(self):
-        return """
-#snapin_admin_mini {
-    padding-top: 6px;
-    clear: right;
-}
-#snapin_admin_mini img {
-    margin-right: 3.9px;
-    margin-bottom: 4px;
-    width: 18px;
-    height: 18px;
-    position: relative;
-    left: 3px;
-    padding: 0;
-}
-
-#snapin_admin_mini div.footnotelink {
-    float: right;
-}
-#snapin_admin_mini div.clear {
-    clear: right;
-}
-"""
-
 
 def compute_foldertree():
     sites.live().set_prepend_site(True)
@@ -337,20 +313,6 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         if user_folders:
             render_tree_folder("wato-hosts",
                                user_folders.values()[0], 'cmk.sidebar.wato_tree_click')
-
-    def styles(self):
-        return """
-#snapin_wato_foldertree table {
-    width: 100%;
-    border-spacing: 0;
-}
-#snapin_wato_foldertree table td.label {
-    width: 1px;
-}
-#snapin_wato_foldertree table td {
-    vertical-align: baseline;
-}
-"""
 
 
 @snapin_registry.register

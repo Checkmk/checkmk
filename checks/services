@@ -114,22 +114,10 @@ def inventory_windows_services(info):
                     matching += add_matching_services(name, description, state, start_type, svc)
         return matching
 
-    # Filter WATO compatible rules by tags/hostlist
+    # Extract the WATO compatible rules for the current host
     rules = []
-    for rule in inventory_services_rules:
-        if len(rule) >= 4:
-            options = rule[3]
-            if options.get("disabled"):
-                continue
-
-        # 1. Get all rules matching the current host
-        taglist, hostlist = rule[1:3]
-        if not hosttags_match_taglist(tags_of_host(host_name()), taglist) \
-           or not in_extraconf_hostlist(hostlist, host_name()):
-            continue
-
-        # 2. Now extract the list of service regexes
-        value = rule[0]
+    for value in host_extra_conf(host_name(), inventory_services_rules):
+        # Now extract the list of service regexes
         svcs = value.get('services', [])
         state = value.get('state', None)
         start_mode = value.get('start_mode', None)

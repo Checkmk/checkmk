@@ -249,6 +249,9 @@ def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rul
     else:
         assert rule.rule_options == {}
 
+    # test for synchronous to_dict on the way
+    assert rule.to_dict_config() == rule_spec
+
 
 def test_rule_clone():
     rule = _rule("clustered_services")

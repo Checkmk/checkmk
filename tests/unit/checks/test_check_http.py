@@ -12,7 +12,10 @@ pytestmark = pytest.mark.checks
             'urlize': True,
             'virthost': ('www.test123.de', True)
         }),
-        ['-H', 'www.test123.de', '-p', 80, '-u', '/images', '--onredirect=follow', '-L'],
+        [
+            '-I', 'www.test123.de', '-H', 'www.test123.de', '-p', 80, '-u', '/images',
+            '--onredirect=follow', '-L'
+        ],
     ),
     (
         (None, {
@@ -85,7 +88,7 @@ pytestmark = pytest.mark.checks
         (None, {
             'virthost': ("virtual.host", True),
         }),
-        ['-H', 'virtual.host'],
+        ['-I', 'virtual.host', '-H', 'virtual.host'],
     ),
     (
         (None, {

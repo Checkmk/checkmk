@@ -42,25 +42,42 @@ def _transform_check_http(params):
         if "proxy_auth" in mode:
             proxy["auth"] = mode["proxy_auth"]
 
+    # The host options have ben isolated in version 1.6.0i1
+    host_settings = transformed.setdefault("host", {})
+    # URL mode:
+    if "virthost" in mode:
+        virthost, omit_ip = mode["virthost"]
+        mode["virthost"] = virthost
+        if omit_ip or proxy_address:
+            host_settings["address"] = virthost
+    # CERT mode:
+    if "cert_host" in mode:
+        host_settings["address"] = mode.pop("cert_host")
+    # both modes:
+    for key in ("port", "address_family"):
+        if key in mode:
+            host_settings[key] = mode.pop(key)
+
     if "sni" in mode:
         transformed["sni"] = mode.pop("sni")
 
     return transformed
 
 
-def _get_host(settings):
+def _get_host(params):
     # Use the address family of the monitored host by default
-    family = settings.get("address_family")
+    host = params.get("host", {})
+
+    family = host.get("address_family")
     if family is None:
         family = "ipv6" if is_ipv6_primary(host_name()) else "ipv4"
 
-    if family == "ipv6":
-        address = "$_HOSTADDRESS_6$"
-    else:
-        address = "$_HOSTADDRESS_4$"
+    address = host.get("address")
+    if address is None:
+        address = "$_HOSTADDRESS_%s$" % family[-1]
 
-    HostSettings = collections.namedtuple("HostSettings", ("address", "family"))
-    return HostSettings(address, family)
+    HostSettings = collections.namedtuple("HostSettings", ("address", "port", "family"))
+    return HostSettings(address, host.get("port"), family)
 
 
 def _get_proxy(params):
@@ -80,8 +97,6 @@ def _get_proxy(params):
 def _certificate_args(host, proxy, settings, sni_flag):
     args = []
 
-    server = settings.get('cert_host', host.address)
-
     if host.family == 'ipv6':
         args += ['-6']
 
@@ -93,9 +108,7 @@ def _certificate_args(host, proxy, settings, sni_flag):
             warn, crit = settings["cert_days"]
             args += ['-C', '%d,%d' % (warn, crit)]
 
-    server_port = settings.get("port")
-
-    specify_port = proxy.port if proxy else server_port
+    specify_port = proxy.port if proxy else host.port
     if specify_port:
         args += ['-p', specify_port]
 
@@ -104,38 +117,39 @@ def _certificate_args(host, proxy, settings, sni_flag):
         if proxy.auth:
             args += ["-b", proxy.auth]
         args.append(proxy.address)
-        if server_port:
-            server += ':%s' % server_port
 
     elif sni_flag:
-        args += ['-H', server]
+        args += ['-H', host.address]
 
-    args += [server]
+    address = host.address
+    if proxy and host.port:
+        address += ':%s' % host.port
+    args += [address]
+
     return args
 
 
 def _url_args(host, proxy, settings):
-
-    # get virthost settings:
-    vhost, omit_ip = settings.get("virthost", (None, False))
-
     args = []
 
     if proxy:
         args += ["-I", proxy.address]
-    elif not omit_ip:
+        args += ["-H", host.address]
+    else:
         args += ["-I", host.address]
-
-    if vhost:
-        args += ["-H", vhost]
+        # TODO: what if we have a proxy, *and* virthost?
+        #       This was not possible earlier, so for now
+        #       ignore 'virthost' in that case.
+        if "virthost" in settings:
+            args += ["-H", settings["virthost"]]
 
     if host.family == 'ipv6':
         args += ['-6']
 
     # TODO: I think this should be overridden by the proxy port
     #       in the same way as in the cert check. (mo)
-    if "port" in settings:
-        args += ['-p', settings["port"]]
+    if host.port:
+        args += ['-p', host.port]
 
     if "uri" in settings:
         args += ['-u', settings["uri"]]
@@ -224,7 +238,7 @@ def check_http_arguments(params):
 
     mode_name, settings = params["mode"]
 
-    host = _get_host(settings)
+    host = _get_host(params)
     proxy = _get_proxy(params)
 
     args = ['--sni'] if params.get("sni") else []

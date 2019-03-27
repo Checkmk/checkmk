@@ -982,6 +982,20 @@ class RulespecActiveChecksHttp(HostRulespec):
             ],
             required_keys=["address"])
 
+    def _hostspec(self):
+        return Dictionary(
+            title=_("Host settings"),
+            help=_("Usually Check_MK will nail this check to the primary IP address of the host"
+                   " it is attached to. It will use corresponding IP version (IPv4/IPv6) and"
+                   " the default port (80/443). With this option you can override either of these"
+                   " parameters."),
+            elements=[
+                ("address", TextAscii(title=_("Hosts name / IP address"), allow_empty=False)),
+                ("port", self._portspec(443)),
+                _ip_address_family_element(),
+            ],
+        )
+
     @property
     def valuespec(self):
         return Transform(
@@ -1002,6 +1016,7 @@ class RulespecActiveChecksHttp(HostRulespec):
                              "a caret (<tt>^</tt>), the service description will not be prefixed with either "
                              "<tt>HTTP</tt> or <tt>HTTPS</tt>."),
                          allow_empty=False)),
+                    ("host", self._hostspec()),
                     ("proxy", self._proxyspec()),
                     ("sni",
                      FixedValue(
@@ -1018,36 +1033,16 @@ class RulespecActiveChecksHttp(HostRulespec):
                                   title=_("URL Checking"),
                                   elements=[
                                       ("virthost",
-                                       Tuple(
+                                       TextAscii(
                                            title=_("Virtual host"),
-                                           elements=[
-                                               TextAscii(
-                                                   title=_("Name of the virtual host"),
-                                                   help=
-                                                   _("Set this in order to specify the name of the "
-                                                     "virtual host for the query (using HTTP/1.1). If you "
-                                                     "leave this empty, then the IP address of the host "
-                                                     "will be used instead."),
-                                                   allow_empty=False),
-                                               Checkbox(
-                                                   label=_("Omit specifying an IP address"),
-                                                   help=
-                                                   _("Usually Check_MK will nail this check to the "
-                                                     "IP address of the host it is attached to. With this "
-                                                     "option you can have the check use the name of the "
-                                                     "virtual host instead and do a dynamic DNS lookup."
-                                                    ),
-                                                   true_label=_("omit IP address"),
-                                                   false_label=_("specify IP address"),
-                                               ),
-                                           ])),
+                                           help=_("Set this in order to specify the name of the"
+                                                  " virtual host for the query."),
+                                           allow_empty=False)),
                                       ("uri",
                                        TextAscii(
                                            title=_("URI to fetch (default is <tt>/</tt>)"),
                                            allow_empty=False,
                                            default_value="/")),
-                                      ("port", self._portspec(80)),
-                                      _ip_address_family_element(),
                                       ("ssl",
                                        Transform(
                                            DropdownChoice(
@@ -1267,26 +1262,13 @@ class RulespecActiveChecksHttp(HostRulespec):
                                               forth=transform_cert_days,
                                           ),
                                       ),
-                                      (
-                                          "cert_host",
-                                          TextAscii(
-                                              title=_(
-                                                  "Check Certificate of different IP / DNS Name"),
-                                              help=
-                                              _("For each SSL certificate on a host, a different IP address is needed. "
-                                                "Here, you can specify the address if it differs from the  "
-                                                "address from the host primary address."),
-                                          ),
-                                      ),
-                                      ("port", self._portspec(443)),
-                                      _ip_address_family_element(),
                                   ],
                                   required_keys=["cert_days"],
                               )),
                          ],
                      )),
                 ],
-                required_keys=["name", "mode"],
+                required_keys=["name", "host", "mode"],
             ),
             forth=self._transform_check_http,
         )
@@ -1313,6 +1295,22 @@ class RulespecActiveChecksHttp(HostRulespec):
             auth = mode.pop("proxy_auth", None)
             if auth:
                 proxy["auth"] = auth
+
+        # The host options have ben isolated in version 1.6.0i1
+        host_settings = transformed.setdefault("host", {})
+        # URL mode:
+        if "virthost" in mode:
+            virthost, omit_ip = mode["virthost"]
+            mode["virthost"] = virthost
+            if omit_ip or proxy_address:
+                host_settings["address"] = virthost
+        # CERT mode:
+        if "cert_host" in mode:
+            host_settings["address"] = mode.pop("cert_host")
+        # both modes:
+        for key in ("port", "address_family"):
+            if key in mode:
+                host_settings[key] = mode.pop(key)
 
         if "sni" in mode:
             transformed["sni"] = mode.pop("sni")

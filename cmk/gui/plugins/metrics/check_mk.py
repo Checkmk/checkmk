@@ -4725,6 +4725,18 @@ metric_info["k8s_roles"] = {
     "color": "21/b",
 }
 
+metric_info["ready_replicas"] = {
+    "title": _("Ready replicas"),
+    "unit": "",
+    "color": "21/a",
+}
+
+metric_info["total_replicas"] = {
+    "title": _("Total replicas"),
+    "unit": "",
+    "color": "35/a",
+}
+
 metric_info["active_vms"] = {
     "title": _("Active VMs"),
     "unit": "count",
@@ -8955,6 +8967,15 @@ graph_info["k8s_pod_container"] = {
         ("docker_all_containers", "line"),
         ("ready_containers", "area"),
     ],
+}
+
+graph_info["replicas"] = {
+    "title": _("Replicas"),
+    "metrics": [
+        ("ready_replicas", "area"),
+        ("total_replicas", "line"),
+    ],
+    "scalars": ["ready_replicas:crit",]
 }
 
 graph_info["used_cpu_time"] = {

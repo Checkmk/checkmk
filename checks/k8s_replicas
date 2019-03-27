@@ -1,0 +1,103 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_k8s_surge(value, total):
+    """
+    Returns the upper level for replicas which is considered critical
+    (hence the +1 in the return value). Values may be given as an
+    absolute number or in percent.
+    """
+    if isinstance(value, int):
+        return value + total + 1
+    percentage = 1.0 + float(value.rstrip('%')) / 100.0
+    return math.ceil(percentage * total) + 1
+
+
+def parse_k8s_unavailability(value, total):
+    """
+    Returns the lower level for replicas which is still considered ok.
+    Values may be given as an absolute number or in percent.
+    """
+    if isinstance(value, int):
+        return total - value
+    percentage = 1.0 - float(value.rstrip('%')) / 100.0
+    return math.floor(percentage * total)
+
+
+def inventory_k8s_replicas(parsed):
+    if parsed['ready_replicas'] is not None and parsed['replicas'] is not None:
+        return [(None, {})]
+
+
+def check_k8s_replicas(_no_item, params, parsed):
+    ready, total = parsed['ready_replicas'], parsed['replicas']
+    paused, strategy = parsed['paused'], parsed['strategy_type']
+
+    if paused or strategy == 'Recreate':
+        crit, crit_lower = None, None
+    elif strategy == 'RollingUpdate':
+        crit = parse_k8s_surge(parsed['max_surge'], total)
+        crit_lower = parse_k8s_unavailability(parsed['max_unavailable'], total)
+    else:
+        yield 3, "Unknown deployment strategy: %s" % strategy
+        return
+
+    state = 0
+    infotext = "Ready: %s/%s" % (ready, total)
+    if paused:
+        infotext += ' (paused)'
+    if crit is not None and ready >= crit:
+        state = 2
+        infotext += " (crit at %d)" % crit
+    if crit_lower is not None and ready < crit_lower:
+        state = 2
+        infotext += " (crit below %d)" % crit_lower
+
+    perfdata = [
+        ('ready_replicas', ready, None, crit),
+        ('total_replicas', total),
+    ]
+    yield state, infotext, perfdata
+
+    if strategy:
+        strategy_infotext = "Strategy: %s" % parsed['strategy_type']
+        if strategy == 'RollingUpdate':
+            strategy_infotext += " (max unavailable: %s, max surge: %s)" % (
+                parsed['max_unavailable'],
+                parsed['max_surge'],
+            )
+        yield 0, strategy_infotext
+
+
+check_info['k8s_replicas'] = {
+    'parse_function': parse_k8s,
+    'inventory_function': inventory_k8s_replicas,
+    'check_function': check_k8s_replicas,
+    'service_description': 'Replicas',
+    'has_perfdata': True,
+    'includes': ['k8s.include'],
+}

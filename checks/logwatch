@@ -30,11 +30,14 @@ import cmk.utils.debug
 
 # Configuration variables in main.mk needed during the actual check
 logwatch_dir = cmk.utils.paths.var_dir + '/logwatch'
-logwatch_patterns = {}
 logwatch_rules = []
 logwatch_max_filesize = 500000  # do not save more than 500k of message (configurable)
 logwatch_service_output = "default"
 logwatch_groups = []
+
+# Deprecated option since 1.6. cmk_base creates a config warning when finding rules
+# for this ruleset. Can be dropped with 1.7.
+logwatch_patterns = {}
 
 # Variables embedded in precompiled checks
 check_config_variables += ["logwatch_dir", "logwatch_max_filesize", "logwatch_service_output"]
@@ -94,20 +97,6 @@ def logwatch_select_forwarded(info):
 
     return forwarded_logs, not_forwarded_logs
 
-
-# logwatch_patterns = {
-#    'System': [
-#    ( 'W', 'sshd' ),
-#    ( ['host1', 'host2'],        'C', 'ssh' ), # only applies to certain hosts
-#    ( ['lnx', 'dmz'], ALL_HOSTS, 'C', 'ssh' ), # only applies to host having certain tags
-#    ( ALL_HOSTS, (10, 20), 'x' ), # at 10 messages per interval warn, at 20 crit
-#    ( 'I', '0' )
-#    ],
-#    'Application': [
-#    ( 'W', 'crash.exe' ),
-#    ( 'E', 'ssh' )
-#    ]
-#    }
 
 # New rule-stule logwatch_rules in WATO friendly consistent rule notation:
 #
@@ -178,31 +167,6 @@ def logwatch_precompile(hostname, item, _unused):
                 params["reclassify_states"] = rule["reclassify_states"]
         else:
             params["reclassify_patterns"].extend(x for x in rule)
-
-    # Now load the old logwatch_patterns var
-    patterns = logwatch_patterns.get(item)
-    if patterns:
-        for entry in patterns:
-            hostlist = None
-            tags = []
-
-            pattern = entry[-1]
-            level = entry[-2]
-
-            if len(entry) >= 3:  # found optional host list
-                hostlist = entry[-3]
-            if len(entry) >= 4:  # found optional host tags
-                tags = entry[-4]
-
-            if hostlist and not \
-                   (hosttags_match_taglist(tags_of_host(hostname), tags) and \
-                    in_extraconf_hostlist(hostlist, hostname)):
-                continue
-
-            # All entries need to be 3-Tuples to be compatible with the wato rule.
-            # The third entry is a comment not used in the check anyway, so we just
-            # fill it with None here.
-            params["reclassify_patterns"].append((level, pattern, None))
 
     return params
 
@@ -286,7 +250,7 @@ def inventory_logwatch(info):
 
 
 # In case of a precompiled check, params contains the precompiled
-# logwatch_patterns for the logfile we deal with. If using check_mk
+# logwatch patterns for the logfile we deal with. If using check_mk
 # without precompiled checks, the params must be None an will be
 # ignored.
 def check_logwatch(item, params, info):

@@ -1,0 +1,24 @@
+Title: Deprecate logwatch_patterns configuration option
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1553676821
+Class: fix
+
+If you have always used WATO to configure your Check_MK you are not affected
+by this change.
+
+There have been two configuration options for configuring logwatch pattern on
+Check_MK server side rules for a long time. The old one,
+<tt>logwatch_patterns</tt>, and the newer WATO compatible ruleset
+<tt>logwatch_rules</tt>. The second one has replaced the first one a long time
+ago. The old config optionswas still working for compatibility but has been
+removed now.
+
+If you have configured such rules in your configuration, it will still load,
+but print out a warning message like this: "WARNING: Found rules for deprecated
+ruleset 'logwatch_patterns'. These rules are not applied anymore. In case you
+still need them, you need to migrate them by hand. Otherwise you can remove
+them from your configuration."

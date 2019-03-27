@@ -249,6 +249,55 @@ class ComponentStatus(Metadata):
         return [{'type': c.type, 'status': c.status} for c in self._conditions]
 
 
+class Deployment(Metadata):
+    # TODO: include pods of the deployment?
+    def __init__(self, deployment):
+        # type: (client.V1Deployment) -> None
+        super(Deployment, self).__init__(deployment.metadata)
+        spec = deployment.spec
+        if spec:
+            self._paused = spec.paused
+
+            strategy = spec.strategy
+            if strategy:
+                self._strategy_type = strategy.type
+                rolling_update = strategy.rolling_update
+                if rolling_update:
+                    self._max_surge = rolling_update.max_surge
+                    self._max_unavailable = rolling_update.max_unavailable
+                else:
+                    self._max_surge = None
+                    self._max_unavailable = None
+            else:
+                self._strategy_type = None
+                self._max_surge = None
+                self._max_unavailable = None
+        else:
+            self._paused = None
+            self._strategy_type = None
+            self._max_surge = None
+            self._max_unavailable = None
+
+        status = deployment.status
+        if status:
+            self._ready_replicas = status.ready_replicas
+            self._replicas = status.replicas
+        else:
+            self._ready_replicas = None
+            self._replicas = None
+
+    @property
+    def replicas(self):
+        return {
+            'paused': self._paused,
+            'ready_replicas': self._ready_replicas,
+            'replicas': self._replicas,
+            'strategy_type': self._strategy_type,
+            'max_surge': self._max_surge,
+            'max_unavailable': self._max_unavailable,
+        }
+
+
 class Pod(Metadata):
     def __init__(self, pod):
         # type: (client.V1Pod) -> None
@@ -489,6 +538,11 @@ class ComponentStatusList(ListLike[ComponentStatus]):
         return {status.name: status.conditions for status in self if status.name}
 
 
+class DeploymentList(ListLike[Deployment]):
+    def replicas(self):
+        return {deployment.name: deployment.replicas for deployment in self}
+
+
 class PodList(ListLike[Pod]):
     def pods_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, int]]]
@@ -721,6 +775,7 @@ class ApiData(object):
         core_api = client.CoreV1Api(api_client)
         storage_api = client.StorageV1Api(api_client)
         rbac_authorization_api = client.RbacAuthorizationV1Api(api_client)
+        apps_api = client.ExtensionsV1beta1Api(api_client)
 
         self.custom_api = client.CustomObjectsApi(api_client)
 
@@ -740,6 +795,7 @@ class ApiData(object):
         pvs = core_api.list_persistent_volume()
         pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
         pods = core_api.list_pod_for_all_namespaces()
+        deployments = apps_api.list_deployment_for_all_namespaces()
 
         logging.debug('Assigning collected data')
         self.storage_classes = StorageClassList(map(StorageClass, storage_classes.items))
@@ -753,6 +809,7 @@ class ApiData(object):
         self.persistent_volume_claims = PersistentVolumeClaimList(
             map(PersistentVolumeClaim, pvcs.items))
         self.pods = PodList(map(Pod, pods.items))
+        self.deployments = DeploymentList(map(Deployment, deployments.items))
 
         pods_custom_metrics = {
             "memory": ['memory_rss', 'memory_swap', 'memory_usage_bytes', 'memory_max_usage_bytes'],
@@ -852,6 +909,12 @@ class ApiData(object):
         g.join('k8s_pod_info', self.pods.info())
         return '\n'.join(g.output())
 
+    def deployment_sections(self):
+        logging.info('Output node sections')
+        g = Group()
+        g.join('k8s_replicas', self.deployments.replicas())
+        return '\n'.join(g.output())
+
 
 def get_api_client(arguments):
     # type: (argparse.Namespace) -> client.ApiClient
@@ -896,6 +959,8 @@ def main(args=None):
                 print(api_data.node_sections())
             if 'pods' in arguments.infos:
                 print(api_data.pod_sections())
+            if 'deployments' in arguments.infos:
+                print(api_data.deployment_sections())
     except Exception as e:
         if arguments.debug:
             raise

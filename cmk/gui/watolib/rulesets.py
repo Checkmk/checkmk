@@ -595,8 +595,10 @@ class Rule(object):
     def _parse_rule(self, rule_config):
         if isinstance(rule_config, dict):
             self._parse_dict_rule(rule_config)
-        else:  # tuple
+        elif isinstance(rule_config, tuple):
             self._parse_tuple_rule(rule_config)
+        else:
+            raise NotImplementedError()
 
     def _parse_dict_rule(self, rule_config):
         self.rule_options = rule_config.get("options", {})
@@ -618,6 +620,8 @@ class Rule(object):
         tag_specs = conditions.get("host_tags", [])
         self.tag_specs = [t for t in tag_specs if not t.startswith("/")]
 
+    # Parses the pre 1.6 tuple format. Since 1.6 Check_MK writes out the dict
+    # format handled by _parse_dict_rule(). Deprecate this one day.
     def _parse_tuple_rule(self, rule_config):
         if isinstance(rule_config[-1], dict):
             self.rule_options = rule_config[-1]

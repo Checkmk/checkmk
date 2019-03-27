@@ -1,0 +1,43 @@
+import java.text.SimpleDateFormat
+
+properties([
+  pipelineTriggers([
+    upstream(upstreamProjects: 'cmk_master/nightly_build_containerized', threshold: hudson.model.Result.SUCCESS)
+  ])
+])
+
+currentBuild.description = '\nBuilding the CMK docker container\n'
+
+def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
+def date = new Date()
+def CMK_VERS = dateFormat.format(date)
+def DAILY_DATA = '/var/jenkins_home/daily-data/' + BRANCH_NAME.replaceAll("/","-") + '/' + CMK_VERS
+
+def PACKAGE_DIR = '/bauwelt/download'
+def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
+def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
+
+node {
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        IMAGE = 'ubuntu-18.04-common'
+        docker.image(IMAGE).pull()
+        docker.image(IMAGE).inside("-u 0:0 -v ${PACKAGE_DIR}/${CMK_VERS}:${PACKAGE_DIR}/${CMK_VERS} -v ${DAILY_DATA}:${DAILY_DATA} -v /var/run/docker.sock:/var/run/docker.sock  -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro -v /root/.cmk-credentials:/root/.cmk-credentials --network ci_local-infra") {
+            stage('Build Container') {
+               sh """
+                   cd ${DAILY_DATA}/git/
+                   ./buildscripts/scripts/build-cmk-container.sh master enterprise ${CMK_VERS}
+                """
+                withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
+                    sh """
+                        cd ${PACKAGE_DIR}/${CMK_VERS}
+                        rm -f HASHES
+                        ${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}
+                        rsync -av -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
+	                    ${PACKAGE_DIR}/${CMK_VERS} \
+	                    bauwelt@mathias-kettner.de:${PACKAGE_DIR}
+                    """
+                }
+            }
+        }
+    }
+}

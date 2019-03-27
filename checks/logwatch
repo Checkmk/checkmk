@@ -1169,23 +1169,23 @@ def logwatch_ec_precompile(hostname, item, params):
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
         hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts=False)
-        ruleset.append((settings, hosts, servlist))
+        if hostname not in hosts:
+            continue
 
-    # Filter out any logwatch_rules which do apply to to this host
-    # 1st filter: Do not use rules where the hostname does not match
-    # 2nd filter: Do not use rules with configured items where no item matches the
-    #             "restrict_logfiles" condition (if applicable)
+        ruleset.append((settings, servlist))
+
+    # Do not use rules with configured items where no item matches the
+    # "restrict_logfiles" condition (if applicable)
     logwatch_settings = []
     for rule in ruleset:
-        settings, hosts, rule_items = rule
-        if hostname in hosts:
-            if params.get("restrict_logfiles"):
-                for rule_item in rule_items:
-                    if rule_item == "" or logwatch_ec_forwarding_enabled(params, rule_item):
-                        logwatch_settings.append((settings, rule_items))
-                        break
-            else:
-                logwatch_settings.append((settings, rule_items))
+        settings, rule_items = rule
+        if params.get("restrict_logfiles"):
+            for rule_item in rule_items:
+                if rule_item == "" or logwatch_ec_forwarding_enabled(params, rule_item):
+                    logwatch_settings.append((settings, rule_items))
+                    break
+        else:
+            logwatch_settings.append((settings, rule_items))
 
     params.update({"logwatch_settings": logwatch_settings})
 

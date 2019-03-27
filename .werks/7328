@@ -1,0 +1,26 @@
+Title: Deprecate inventory_processes and inv_domino_tasks rulesets
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1553676415
+Class: fix
+
+If you have always used WATO to configure your Check_MK you are not affected
+by this change.
+
+There have been two rulesets for configuring process discovery rules for a long
+time. The old one, <tt>inventory_processes</tt>, and the newer WATO compatible
+ruleset <tt>inventory_processes_rules</tt>. The second one has replaced
+inventory_processes a long time ago. The old ruleset was still working for
+compatibility but has been removed now.
+
+If you have configured such rules in your configuration, it will still load,
+but print out a warning message like this: "WARNING: Found rules for deprecated
+ruleset 'inventory_processes'. These rules are not applied anymore. In case you
+still need them, you need to migrate them by hand. Otherwise you can remove
+them from your configuration."
+
+The same applies to the ruleset <tt>inv_domino_tasks</tt> and
+<tt>inv_domino_tasks_rules</tt>.

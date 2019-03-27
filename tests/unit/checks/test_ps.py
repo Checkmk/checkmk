@@ -515,7 +515,7 @@ def test_inventory_common(check_manager):
     check = check_manager.get_check("ps")
     info = sum(generate_inputs(), [])
     parsed = check.run_parse(info)[1]
-    assert sorted(check.context["inventory_ps_common"]([], PS_DISCOVERY_WATO_RULES,
+    assert sorted(check.context["inventory_ps_common"](PS_DISCOVERY_WATO_RULES,
                                                 parsed)) == sorted(PS_DISCOVERED_ITEMS)
 
 
@@ -772,7 +772,7 @@ def test_subset_patterns(check_manager):
         }),
     ]
 
-    assert check.context["inventory_ps_common"]([], wato_rule, parsed) == discovered
+    assert check.context["inventory_ps_common"](wato_rule, parsed) == discovered
 
     def counted_reference(count):
         return CheckResult([

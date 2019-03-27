@@ -16,59 +16,11 @@ item:
  it is another service.
 
 inventory:
- As of version 1.1.1, {ps} supports inventory. Since Check_MK cannot
- know which processes are of relevance to you, some configuration is
- needed. The configuration is done via {inventory_processes}. The structure
- of that variable is a list of seven-tuples. It is similar but not
- completely the same as the configuration of manual checks. The seven
- components of each entry are: {(1)} a service description, {(2)} a pattern
- (just as the first parameter of the check), {(3)} a
- user specification and {(4)} - {(7)} the warning and critical levels
- for the number of processes.
+ The Check_MK check {ps} supports discovering running services on your monitored
+ systems. Since Check_MK cannot know which processes are of relevance to you,
+ some configuration is needed. The configuration is done via the ruleset
+ {inventory_processes_rules}.
 
  During inventory Check_MK tries to match all entries on each
  process found on the target host. If an entry matches, a new check will
  be created according to the entry (if it's not already existing).
-
- The {service description} may contain one or more occurances of {%s}.
- If you do this, then the pattern must be a regular expression and
- be prefixed with {~}. For each {%s} in the description, the expression has to contain
- one "group". A group is a subexpression enclosed in brackets, for example
- {(.*)} or {([a-zA-Z]+)} or {(...)}. When the inventory finds a process
- matching the pattern, it will substitute all such groups with the
- {actual values} when creating the check. That way one rule can create
- several checks on a host.
-
- If the pattern contains more groups then occurrances of {%s} in
- the service description then only the first matching subexpressions
- are used for the service descriptions. The matched substrings corresponding
- to the remaining groups are copied into the regular expression, nevertheless.
-
- New in version 1.2.2: As an alternative to {%s} you may also use {%1}, {%2},
- etc. These will be replaced by the first, second, ... matching group. This
- allows you to reorder things.
-
- Wildcards not enclosed by brackets are simply copied verbatim to the created
- checks. Please refer to the examples for more details.
-
- The {user specification} can either be a user name (string). The inventory
- will then trigger only if that user matches the user the process is running as
- and the resulting check will require that user.  Alternatively you can specify
- {ANY_USER} or {GRAB_USER}.  If you specify {ANY_USER} then the user field
- will simply be ignored.  The created check will not check for a specific user.
-
- Specifying {GRAB_USER} makes the created check expect the process to run
- as the same user as during inventory: the user name will be hardcoded into
- the check. In that case if you put {%u} into the service description,
- that will be replaced by the actual user name during inventory. You need
- that if your rule might match for more than one user - your would create
- duplicate services with the same description otherwise.
-
- The {warning and critical levels} are simply copied to the created
- checks.
-
- As of version {1.1.7i1} ps inventory allows optional host specification.
- You can prepend a list of host names or a list of tag names and {ALL_HOSTS}
- to some of all rules of the inventory specification. That way you can
- make the inventory apply some rules only to certain hosts.
-

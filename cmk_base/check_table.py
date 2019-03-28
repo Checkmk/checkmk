@@ -46,7 +46,6 @@ import cmk_base.check_api_utils as check_api_utils
 def get_check_table(hostname,
                     remove_duplicates=False,
                     use_cache=True,
-                    world='config',
                     skip_autochecks=False,
                     filter_mode=None,
                     skip_ignored=True):
@@ -162,7 +161,7 @@ def get_check_table(hostname,
     # Now process all entries that are specific to the host
     # in search (single host) or that might match the host.
     if not skip_autochecks:
-        for entry in config_cache.get_autochecks_of(hostname, world):
+        for entry in config_cache.get_autochecks_of(hostname):
             handle_entry(entry)
 
     for entry in single_host_checks.get(hostname, []):
@@ -178,7 +177,7 @@ def get_check_table(hostname,
         for node in config.nodes_of(hostname):
             node_checks = single_host_checks.get(node, [])
             if not skip_autochecks:
-                node_checks = node_checks + config_cache.get_autochecks_of(node, world)
+                node_checks = node_checks + config_cache.get_autochecks_of(node)
             for entry in node_checks:
                 if len(entry) == 4:
                     entry = entry[1:]  # drop hostname from single_host_checks
@@ -209,11 +208,10 @@ def get_check_table(hostname,
 
 def get_precompiled_check_table(hostname,
                                 remove_duplicates=True,
-                                world="config",
                                 filter_mode=None,
                                 skip_ignored=True):
     host_checks = get_sorted_check_table(
-        hostname, remove_duplicates, world, filter_mode=filter_mode, skip_ignored=skip_ignored)
+        hostname, remove_duplicates, filter_mode=filter_mode, skip_ignored=skip_ignored)
     precomp_table = []
     for check_plugin_name, item, params, description, _unused_deps in host_checks:
         # make these globals available to the precompile function
@@ -258,18 +256,13 @@ def remove_duplicate_checks(check_table):
 # if there already is a TCP based one with the same
 # description. E.g: df vs hr_fs.
 # TODO: Clean this up!
-def get_sorted_check_table(hostname,
-                           remove_duplicates=False,
-                           world="config",
-                           filter_mode=None,
-                           skip_ignored=True):
+def get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
     # Convert from dictionary into simple tuple list. Then sort
     # it according to the service dependencies.
     unsorted = [(checkname, item, params, descr, deps)
                 for ((checkname, item), (params, descr, deps)) in get_check_table(
                     hostname,
                     remove_duplicates=remove_duplicates,
-                    world=world,
                     filter_mode=filter_mode,
                     skip_ignored=skip_ignored).items()]
 

@@ -259,10 +259,7 @@ class DataSources(object):
                 node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
 
                 table = check_table.get_precompiled_check_table(
-                    node_hostname,
-                    remove_duplicates=True,
-                    filter_mode="only_clustered",
-                    world="active" if _in_keepalive_mode() else "config")
+                    node_hostname, remove_duplicates=True, filter_mode="only_clustered")
 
                 node_data_sources = DataSources(node_hostname, node_ipaddress)
                 node_data_sources.enforce_check_plugin_names(set([e[0] for e in table]))

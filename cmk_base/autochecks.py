@@ -38,19 +38,14 @@ import cmk_base.console
 
 
 # Read automatically discovered checks of one host.
-# world: "config" -> File in var/check_mk/autochecks
-#        "active" -> Copy in var/check_mk/core/autochecks
 # Returns a table with three columns:
 # 1. check_plugin_name
 # 2. item
 # 3. parameters evaluated!
 # TODO: use store.load_data_from_file()
 # TODO: Common code with parse_autochecks_file? Cleanup.
-def read_autochecks_of(hostname, world="config"):
-    if world == "config":
-        basedir = cmk.utils.paths.autochecks_dir
-    else:
-        basedir = cmk.utils.paths.var_dir + "/core/autochecks"
+def read_autochecks_of(hostname):
+    basedir = cmk.utils.paths.autochecks_dir
     filepath = basedir + '/' + hostname + '.mk'
 
     if not os.path.exists(filepath):
@@ -58,6 +53,7 @@ def read_autochecks_of(hostname, world="config"):
 
     check_config = cmk_base.config.get_check_variables()
     try:
+        cmk_base.console.vverbose("Loading autochecks from %s\n", filepath)
         autochecks_raw = eval(file(filepath).read(), check_config, check_config)
     except SyntaxError as e:
         cmk_base.console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)

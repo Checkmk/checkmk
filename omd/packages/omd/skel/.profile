@@ -19,6 +19,14 @@ export MAILRC="$OMD_ROOT/etc/mail.rc"
 # Make the python requests module trust the CAs configured in Check_MK
 export REQUESTS_CA_BUNDLE=$OMD_ROOT/var/ssl/ca-certificates.crt
 
+# Enforce a non localized environment. The reason for this configuration is
+# that the parameters and outputs of the monitoring plug-ins are localized. If
+# they are called from the core, they are always language-neutral. During
+# manual testing, the plugins may behave differently depending on the
+# localization of the user's environment variables. This can lead to confusion
+# during tests.
+export LANG=C LC_ALL=C
+
 # Set environment for the monitoring plugins that use state retention (like check_snmp).
 export NAGIOS_PLUGIN_STATE_DIRECTORY="$OMD_ROOT/var/monitoring-plugins"
 export MP_STATE_DIRECTORY=$NAGIOS_PLUGIN_STATE_DIRECTORY

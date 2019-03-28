@@ -76,6 +76,20 @@ uint32_t AppRunner::goExec(std::wstring CommandLine, bool Wait,
 std::mutex ServiceController::s_lock_;
 ServiceController* ServiceController::s_controller_ = nullptr;
 
+// normal API
+ServiceController::ServiceController(
+    std::unique_ptr<wtools::BaseServiceProcessor> Processor) {
+    if (nullptr == Processor) {
+        XLOG::l.crit("Processor is nullptr unique");
+        return;
+    }
+    std::lock_guard lk(s_lock_);
+    if (processor_ == nullptr && s_controller_ == nullptr) {
+        processor_ = std::move(Processor);
+        s_controller_ = this;
+    }
+}
+
 void WINAPI ServiceController::ServiceMain(DWORD Argc, wchar_t** Argv) {
     // Register the handler function for the service
     XLOG::l.i("Service Main");

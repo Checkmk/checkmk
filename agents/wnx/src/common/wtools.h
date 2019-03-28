@@ -261,15 +261,15 @@ public:
 
         if (KillTreeToo) {
             if (job_handle_) {
-			    // this is normal case but with job
+                // this is normal case but with job
                 TerminateJobObject(job_handle_, 0);
-                
-				// job:
-				CloseHandle(job_handle_);
+
+                // job:
+                CloseHandle(job_handle_);
                 job_handle_ = nullptr;
-				
-				// process:
-                CloseHandle(process_handle_); // must
+
+                // process:
+                CloseHandle(process_handle_);  // must
                 process_handle_ = nullptr;
             } else {
                 KillProcessTree(proc_id);
@@ -325,17 +325,8 @@ private:
                                               // ptr, but this is clear overkill
 
 public:
-    // owns Processor
-    ServiceController(BaseServiceProcessor* Processor) {
-        assert(Processor);  // #TODO replace with own crash and log
-        if (!Processor) return;
-
-        std::lock_guard lk(s_lock_);
-        if (!processor_ && s_controller_ == nullptr) {
-            processor_.reset(Processor);
-            s_controller_ = this;
-        }
-    }
+    // normal API, used in production
+    ServiceController(std::unique_ptr<wtools::BaseServiceProcessor> Processor);
 
     // no copy!
     ServiceController(const ServiceController& Rhs) = delete;

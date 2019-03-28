@@ -375,14 +375,20 @@ int ExecMainService(bool DuplicateOn) {
     using namespace cma::install;
 
     milliseconds Delay = 1000ms;
-    auto processor = new ServiceProcessor(Delay, [](const void* Processor) {
+    auto processor =
+        std::make_unique<ServiceProcessor>(Delay, [](const void* Processor) {
+    // default embedded callback for exec
+    // atm does nothing
+    // optional commands listed here
+    // ********
+    // 1. Auto Update when  msi file is located by specified address
 #if 0
         // #TODO planned test
         CheckForUpdateFile(kDefaultMsiFileName, cma::cfg::GetUpdateDir(),
                            UpdateType::kMsiExecQuiet, true);
 #endif
-        return true;
-    });
+            return true;
+        });
 
     processor->startService();
 
@@ -538,8 +544,10 @@ int ServiceAsService(
     // infinite loop to protect from exception
     while (1) {
         try {
-            auto processor = new ServiceProcessor(Delay, InternalCallback);
-            wtools::ServiceController service_controller(processor);
+            std::unique_ptr<wtools::BaseServiceProcessor> processor =
+                std::make_unique<ServiceProcessor>(Delay, InternalCallback);
+
+            wtools::ServiceController service_controller(std::move(processor));
             auto ret = service_controller.registerAndRun(
                 cma::srv::kServiceName);  // we will stay here till
                                           // service will be stopped

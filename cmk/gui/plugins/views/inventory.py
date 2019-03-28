@@ -36,7 +36,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Checkbox, Hostname
 from cmk.gui.exceptions import MKUserError
@@ -1696,11 +1696,7 @@ def _create_view_enabled_check_func(invpath, is_history=False):
 
         # FIXME In order to decide whether this view is enabled
         # do we really need to load the whole tree?
-        if is_history:
-            struct_tree = inventory.load_filtered_inventory_tree(hostname)
-        else:
-            row = inventory.get_status_data_via_livestatus(context.get("site"), hostname)
-            struct_tree = inventory.load_filtered_and_merged_tree(row)
+        struct_tree = _get_struct_tree(is_history, hostname, context.get("site"))
 
         if not struct_tree:
             return False
@@ -1718,6 +1714,22 @@ def _create_view_enabled_check_func(invpath, is_history=False):
         return True
 
     return _check_view_enabled
+
+
+def _get_struct_tree(is_history, hostname, site_id):
+    struct_tree_cache = current_app.g.setdefault("struct_tree_cache", {})
+    cache_id = (is_history, hostname, site_id)
+    if cache_id in struct_tree_cache:
+        return struct_tree_cache[cache_id]
+
+    if is_history:
+        struct_tree = inventory.load_filtered_inventory_tree(hostname)
+    else:
+        row = inventory.get_status_data_via_livestatus(site_id, hostname)
+        struct_tree = inventory.load_filtered_and_merged_tree(row)
+
+    struct_tree_cache[cache_id] = struct_tree
+    return struct_tree
 
 
 # Now declare Multisite views for a couple of embedded tables

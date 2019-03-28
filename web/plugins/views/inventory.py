@@ -1278,13 +1278,19 @@ def _create_view_enabled_check_func(invpath, is_history=False):
         elif hostname == "":
             return False
 
-        # FIXME In order to decide whether this view is enabled
-        # do we really need to load the whole tree?
-        if is_history:
-            struct_tree = inventory.load_filtered_inventory_tree(hostname)
+        cache_id = (is_history, context.get("site"), hostname)
+        if html.is_cached(cache_id):
+            struct_tree = html.get_cached(cache_id)
         else:
-            row = inventory.get_status_data_via_livestatus(context.get("site"), hostname)
-            struct_tree = inventory.load_filtered_and_merged_tree(row)
+            # FIXME In order to decide whether this view is enabled
+            # do we really need to load the whole tree?
+            if is_history:
+                struct_tree = inventory.load_filtered_inventory_tree(hostname)
+            else:
+                row = inventory.get_status_data_via_livestatus(context.get("site"), hostname)
+                struct_tree = inventory.load_filtered_and_merged_tree(row)
+
+            html.set_cache(cache_id, struct_tree)
 
         if not struct_tree:
             return False

@@ -116,7 +116,7 @@ body.main .popup_menu a, body.main .popup_menu span, body.main table.footer, bod
 .op {
   width: 60px !important; }
 
-.aggrtree img.treeangle, .bi_rule_tree img.treeangle, .invtree img.treeangle, .grouped_row_header img.treeangle.nform {
+.bi_rule_tree img.treeangle, .invtree img.treeangle, .grouped_row_header img.treeangle.nform {
   filter: invert(0%) !important; }
 
 table {
@@ -322,27 +322,6 @@ table {
         font-size: $theme-font-size-global;
         text-transform: uppercase;
         letter-spacing: $theme-letter-spacing-table; }
-    table.data.table .bi_tree_container .title {
-      color: $theme-color-text;
-      font-weight: $theme-font-weight-global;
-      padding: 0px; }
-      table.data.table .bi_tree_container .title li {
-        padding: 4px 8px;
-        list-style-type: none; }
-      table.data.table .bi_tree_container .title ul.subtree {
-        border: none;
-        border-left: 1px solid $theme-color-darkgrey;
-        padding: 0px 0px 0px 18px;
-        border-radius: 0px;
-        margin: 8px 0px 0px 18px;
-        list-style-type: none; }
-        table.data.table .bi_tree_container .title ul.subtree li {
-          margin-top: 8px;
-          list-style-type: none; }
-      table.data.table .bi_tree_container .title .state {
-        border-radius: 2px;
-        padding: 0px 6px;
-        margin-right: 4px; }
     table.data.check_catalog tbody tr td.title {
       display: table-cell; }
     table.data.headerleft.sla tbody tr td, table.data.headerleft.sla tbody tr td.sla {

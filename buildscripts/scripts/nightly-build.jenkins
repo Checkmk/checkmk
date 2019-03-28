@@ -171,7 +171,7 @@ DISTRO_LIST.each { DISTRO ->
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(DISTRO).pull()
-                docker.image(DISTRO).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra") {
+                docker.image(DISTRO).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra --hostname ${DISTRO}") {
                     stage('build' + DISTRO + ' package') {
                         sh 'rm -rf *'
                         sh 'mkdir work dest'

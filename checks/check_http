@@ -137,9 +137,7 @@ def _url_args(host, proxy, settings):
         args += ["-H", host.address]
     else:
         args += ["-I", host.address]
-        # TODO: what if we have a proxy, *and* virthost?
-        #       This was not possible earlier, so for now
-        #       ignore 'virthost' in that case.
+        # Proxy *and* virthost is not allowed
         if "virthost" in settings:
             args += ["-H", settings["virthost"]]
 

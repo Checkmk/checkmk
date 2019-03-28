@@ -3007,13 +3007,12 @@ class ConfigCache(object):
             return hosts_in_folder
         return self._folder_host_lookup[cache_id]
 
-    def get_autochecks_of(self, hostname, world):
+    def get_autochecks_of(self, hostname):
         try:
-            return self._autochecks_cache[world][hostname]
+            return self._autochecks_cache[hostname]
         except KeyError:
-            self._autochecks_cache.setdefault(world, {})
-            result = cmk_base.autochecks.read_autochecks_of(hostname, world)
-            self._autochecks_cache[world][hostname] = result
+            result = cmk_base.autochecks.read_autochecks_of(hostname)
+            self._autochecks_cache[hostname] = result
             return result
 
     def section_name_of(self, section):

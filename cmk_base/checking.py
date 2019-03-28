@@ -199,10 +199,7 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
         filter_mode = "include_clustered"
 
     table = check_table.get_precompiled_check_table(
-        hostname,
-        remove_duplicates=True,
-        filter_mode=filter_mode,
-        world="active" if _in_keepalive_mode() else "config")
+        hostname, remove_duplicates=True, filter_mode=filter_mode)
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
@@ -424,10 +421,7 @@ def _evaluate_timespecific_entry(entry):
 
 def is_manual_check(hostname, check_plugin_name, item):
     manual_checks = check_table.get_check_table(
-        hostname,
-        remove_duplicates=True,
-        world="active" if _in_keepalive_mode() else "config",
-        skip_autochecks=True)
+        hostname, remove_duplicates=True, skip_autochecks=True)
     return (check_plugin_name, item) in manual_checks
 
 

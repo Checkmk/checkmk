@@ -44,19 +44,10 @@
 # /etc/oracle-release|Oracle LinuxServer release 7.1
 
 
-def inv_lnx_distro(info):
-    parsed = {}
-    filename = None
-    for line in info:
-        if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            filename = line[0][3:-3]
-        elif filename is not None:
-            parsed.setdefault(filename, line)
-        elif filename is None:
-            # stay compatible to older versions of output
-            parsed.setdefault(line[0], line[1:])
+def inv_lnx_distro(info, inventory_tree):
+    parsed = _parse_lnx_distro(info)
 
-    node = inv_tree("software.os.")
+    node = inventory_tree.get_dict("software.os.")
     node["type"] = "Linux"
     for file_name, handler in [
         ("/usr/share/cma/version", inv_lnx_parse_cma),
@@ -71,6 +62,20 @@ def inv_lnx_distro(info):
         if file_name in parsed:
             handler(node, parsed[file_name])
             break
+
+
+def _parse_lnx_distro(info):
+    parsed = {}
+    filename = None
+    for line in info:
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            filename = line[0][3:-3]
+        elif filename is not None:
+            parsed.setdefault(filename, line)
+        elif filename is None:
+            # stay compatible to older versions of output
+            parsed.setdefault(line[0], line[1:])
+    return parsed
 
 
 def inv_lnx_parse_os(node, line):

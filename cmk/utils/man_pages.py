@@ -819,7 +819,7 @@ class NowikiManPageRenderer(ManPageRenderer):
         self.output = StringIO.StringIO()
 
     def index_entry(self):
-        return "<tr><td class=\"tt narrow\">%s</td><td>[check_%s|%s]</td></tr>\n" % \
+        return "<tr><td class=\"tt\">%s</td><td>[check_%s|%s]</td></tr>\n" % \
                   (self.name, self.name, self.man_page["header"]["title"])
 
     def render(self):

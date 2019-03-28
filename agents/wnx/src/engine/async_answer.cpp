@@ -102,14 +102,13 @@ bool AsyncAnswer::addSegment(
 ) {
     std::lock_guard lk(lock_);
     if (Id != tp_id_) {
-        xlog::d("Invalid attempt to add data");
+        XLOG::d("Invalid attempt to add data '{}'", SectionName);
         return false;
     }
 
     for (const auto& s : segments_) {
         if (s.name_ == SectionName) {
-            xlog::l("Section %s tries to store data twice. F-f",
-                    SectionName.c_str());
+            XLOG::l("Section '{}' tries to store data twice. F-f", SectionName);
             return false;  // duplicated section run
         }
     }
@@ -122,7 +121,7 @@ bool AsyncAnswer::addSegment(
         }
     } catch (const std::exception& e) {
         // not possible, but we have to check
-        xlog::l(XLOG_FLINE + "-exception %s", e.what());
+        XLOG::l(XLOG_FLINE + "-exception '{}'", e.what());
     }
 
     received_segments_++;
@@ -135,8 +134,6 @@ bool AsyncAnswer::addSegment(
 
     return true;
 }
-
-
 
 // resets data, internal use only
 void AsyncAnswer::dropDataNoLock() {

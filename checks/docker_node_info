@@ -63,25 +63,25 @@ def append_deprecation_warning(check_function):
 
 def parse_docker_node_info(info):
     version = docker_get_version(info)  # pylint: disable=undefined-variable
-
     if version is None:
         return parse_legacy_docker_node_info(info)  # pylint: disable=undefined-variable
 
     if len(info) < 2:
         return {}
 
-    loaded = docker_json_get_obj(info[1])  # pylint: disable=undefined-variable
-    return loaded or {}
+    loaded = {}
+    for line in info[1:]:
+        loaded.update(docker_json_get_obj(line) or {})  # pylint: disable=undefined-variable
+    return loaded
 
 
 @append_deprecation_warning  # pylint: disable=undefined-variable
 def check_docker_node_info(_no_item, _no_params, parsed):
     if "Name" in parsed:
         yield 0, 'Daemon running on host %s' % parsed["Name"]
-    if "Warning" in parsed:
-        yield 1, parsed["Warning"]
-    if "Critical" in parsed:
-        yield 2, parsed["Critical"]
+    for state, key in enumerate(("Warning", "Critical", "Unknown"), 1):
+        if key in parsed:
+            yield state, parsed[key]
 
 
 check_info['docker_node_info'] = {

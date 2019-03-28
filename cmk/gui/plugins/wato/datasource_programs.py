@@ -150,8 +150,9 @@ class RulespecSpecialAgentsKubernetes(HostRulespec):
                      ListChoice(
                          choices=[
                              ("nodes", _("Nodes")),
-                             ("pods", _("Pods")),
+                             ("services", _("Services")),
                              ("deployments", _("Deployments")),
+                             ("pods", _("Pods")),
                          ],
                          default_value=[
                              "nodes",

@@ -251,6 +251,67 @@ class ComponentStatus(Metadata):
         return [{'type': c.type, 'status': c.status} for c in self._conditions]
 
 
+class Service(Metadata):
+    def __init__(self, service):
+        super(Service, self).__init__(service.metadata)
+
+        spec = service.spec
+        if spec:
+            # For details refer to:
+            # https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1ServiceSpec.md
+
+            # type may be: ExternalName, ClusterIP, NodePort, and LoadBalancer
+            self._type = spec.type
+            self._selector = spec.selector if spec.selector else {}
+            # cluster_ip may be: None (headless service), "" (no IP), or a str (valid IP)
+            self._cluster_ip = spec.cluster_ip
+            # only applies to type LoadBalancer
+            self._load_balancer_ip = spec.load_balancer_ip
+            self._ports = spec.ports if spec.ports else []
+        else:
+            self._type_ = None
+            self._selector = {}
+            self._cluster_ip = ""
+            self._load_balancer_ip = ""
+            self._ports = []
+
+        status = service.status
+        if status and status.load_balancer and status.load_balancer.ingress:
+            self._ingress = {
+                {
+                    # for ingress points that are DNS based (typically AWS load-balancers)
+                    'hostname': ingress.hostname,
+                    # for ingress points that are IP based (typically GCE or OpenStack load-balancers)
+                    'ip': ingress.ip
+                } for ingress in status.load_balancer.ingress
+            }
+
+    @property
+    def info(self):
+        return {
+            'type': self._type,
+            'selector': self._selector,
+            'cluster_ip': self._cluster_ip,
+            'load_balancer_ip': self._load_balancer_ip,
+        }
+
+    @property
+    def selector(self):
+        return self._selector
+
+    @property
+    def ports(self):
+        # port is the only field that is not optional
+        return {
+            port.port: {
+                'name': port.name,
+                'protocol': port.protocol,
+                'target_port': port.target_port,
+                'node_port': port.node_port,
+            } for port in self._ports
+        }
+
+
 class Deployment(Metadata):
     # TODO: include pods of the deployment?
     def __init__(self, deployment):
@@ -543,6 +604,14 @@ class ComponentStatusList(K8sList[ComponentStatus]):
         return {status.name: status.conditions for status in self if status.name}
 
 
+class ServiceList(K8sList[Service]):
+    def infos(self):
+        return {service.name: service.info for service in self}
+
+    def ports(self):
+        return {service.name: service.ports for service in self}
+
+
 class DeploymentList(K8sList[Deployment]):
     def replicas(self):
         return {deployment.name: deployment.replicas for deployment in self}
@@ -804,6 +873,7 @@ class ApiData(object):
         pvs = core_api.list_persistent_volume()
         pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
         pods = core_api.list_pod_for_all_namespaces()
+        services = core_api.list_service_for_all_namespaces()
         deployments = apps_api.list_deployment_for_all_namespaces()
 
         logging.debug('Assigning collected data')
@@ -818,6 +888,7 @@ class ApiData(object):
         self.persistent_volume_claims = PersistentVolumeClaimList(
             map(PersistentVolumeClaim, pvcs.items))
         self.pods = PodList(map(Pod, pods.items))
+        self.services = ServiceList(map(Service, services.items))
         self.deployments = DeploymentList(map(Deployment, deployments.items))
 
         pods_custom_metrics = {
@@ -920,6 +991,14 @@ class ApiData(object):
         g.join('k8s_pod_info', self.pods.info())
         return '\n'.join(g.output())
 
+    def service_sections(self):
+        logging.info('Output service sections')
+        g = Group()
+        g.join('labels', self.services.labels())
+        g.join('k8s_service_info', self.services.infos())
+        g.join('k8s_service_ports', self.services.ports())
+        return '\n'.join(g.output())
+
     def deployment_sections(self):
         logging.info('Output node sections')
         g = Group()
@@ -973,6 +1052,8 @@ def main(args=None):
                 print(api_data.pod_sections())
             if 'deployments' in arguments.infos:
                 print(api_data.deployment_sections())
+            if 'services' in arguments.infos:
+                print(api_data.service_sections())
     except Exception as e:
         if arguments.debug:
             raise

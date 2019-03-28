@@ -59,8 +59,22 @@ if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Re
 %msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x64
 if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-64" -Foreground Red && exit 7
 
+@rem auto install msi
+git update-index --assume-unchanged install/resources/check_mk.dat > nul
+@copy install\resources\check_mk.dat save.tmp > nul
+echo update > install\resources\check_mk.dat
+%msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x64
+set el=%errorlevel%
+@type save.tmp > install\resources\check_mk.dat
+@del save.tmp > nul
+git update-index --no-assume-unchanged install/resources/check_mk.dat > nul
+if not %el% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit 88
+copy %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent_update.msi
+
+
 %msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x64
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit 8
+
 goto end
 @rem ignored:
 powershell Write-Host "starting unit tests" -Foreground Cyan 
@@ -83,5 +97,7 @@ copy %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent.msi
 copy %REMOTE_MACHINE%\check_mk_service32.exe %REMOTE_MACHINE%\check_mk_agent.exe
 copy %REMOTE_MACHINE%\check_mk_service64.exe %REMOTE_MACHINE%\check_mk_agent-64.exe
 
+rem touching update msi
+copy %REMOTE_MACHINE%\check_mk_agent_update.msi /B+ ,,/Y > nul
 
 

@@ -31,19 +31,25 @@
 #include <vector>
 #include "ListColumn.h"
 #include "contact_fwd.h"
+class MonitoringCore;
 class Row;
 
 class CustomVarsValuesColumn : public ListColumn {
 public:
     CustomVarsValuesColumn(const std::string &name,
                            const std::string &description, int indirect_offset,
-                           int extra_offset, int extra_extra_offset, int offset)
+                           int extra_offset, int extra_extra_offset, int offset,
+                           const MonitoringCore *mc)
         : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset, offset) {}
+                     extra_extra_offset, offset)
+        , _mc(mc) {}
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const override;
+
+private:
+    const MonitoringCore *const _mc;
 };
 
 #endif  // CustomVarsValuesColumn_h

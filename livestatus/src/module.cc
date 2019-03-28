@@ -704,6 +704,16 @@ public:
         return fl_store->numCachedLogMessages();
     }
 
+    Attributes customAttributes(const void *holder) const override {
+        Attributes attrs;
+        for (auto cvm =
+                 *static_cast<const customvariablesmember *const *>(holder);
+             cvm != nullptr; cvm = cvm->next) {
+            attrs.emplace(cvm->variable_name, cvm->variable_value);
+        }
+        return attrs;
+    }
+
 private:
     void *implInternal() const override { return fl_store; }
 

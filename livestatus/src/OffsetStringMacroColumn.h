@@ -29,6 +29,7 @@
 #include <string>
 #include "StringColumn.h"
 #include "nagios.h"
+class MonitoringCore;
 class Row;
 
 class OffsetStringMacroColumn : public StringColumn {
@@ -36,9 +37,10 @@ public:
     OffsetStringMacroColumn(const std::string &name,
                             const std::string &description, int indirect_offset,
                             int extra_offset, int extra_extra_offset,
-                            int offset)
+                            const MonitoringCore *mc, int offset)
         : StringColumn(name, description, indirect_offset, extra_offset,
                        extra_extra_offset, 0)
+        , _mc(mc)
         , _string_offset(offset) {}
 
     std::string getValue(Row row) const override;
@@ -47,6 +49,7 @@ public:
     virtual const service *getService(Row) const = 0;
 
 private:
+    const MonitoringCore *const _mc;
     const int _string_offset;
 
     static std::string expandMacros(const std::string &raw, const host *hst,

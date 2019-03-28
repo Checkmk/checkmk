@@ -23,15 +23,17 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsExplicitColumn.h"
+#include <unordered_map>
+#include <utility>
+#include "MonitoringCore.h"
 #include "Row.h"
-#include "nagios.h"
 
 std::string CustomVarsExplicitColumn::getValue(Row row) const {
-    if (auto p = columnData<customvariablesmember *>(row)) {
-        for (auto cvm = *p; cvm != nullptr; cvm = cvm->next) {
-            if (cvm->variable_name == _varname) {
-                return cvm->variable_value;
-            }
+    if (auto p = columnData<void>(row)) {
+        auto attrs = _mc->customAttributes(p);
+        auto it = attrs.find(_varname);
+        if (it != attrs.end()) {
+            return it->second;
         }
     }
     return "";

@@ -31,6 +31,7 @@
 #include <ostream>
 #include <set>
 #include <stdexcept>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 #include "Column.h"
@@ -77,14 +78,12 @@ constexpr unsigned classmask_statehist =
 
 #ifndef CMC
 namespace {
-std::string getCustomVariable(customvariablesmember *cvm,
+std::string getCustomVariable(const MonitoringCore *mc,
+                              customvariablesmember *const *cvm,
                               const std::string &name) {
-    for (; cvm != nullptr; cvm = cvm->next) {
-        if (cvm->variable_name == name) {
-            return cvm->variable_value == nullptr ? "" : cvm->variable_value;
-        }
-    }
-    return "";
+    auto attrs = mc->customAttributes(cvm);
+    auto it = attrs.find(name);
+    return it == attrs.end() ? "" : it->second;
 }
 }  // namespace
 #endif
@@ -497,9 +496,9 @@ void TableStateHistory::answerQuery(Query *query) {
                         state->_service_period =
                             state->_service->servicePeriod()->name();
 #else
-                        state->_service_period =
-                            getCustomVariable(state->_service->custom_variables,
-                                              "SERVICE_PERIOD");
+                        state->_service_period = getCustomVariable(
+                            core(), &state->_service->custom_variables,
+                            "SERVICE_PERIOD");
 #endif
                     } else if (state->_host != nullptr) {
 #ifdef CMC
@@ -507,7 +506,8 @@ void TableStateHistory::answerQuery(Query *query) {
                             state->_host->servicePeriod()->name();
 #else
                         state->_service_period = getCustomVariable(
-                            state->_host->custom_variables, "SERVICE_PERIOD");
+                            core(), &state->_host->custom_variables,
+                            "SERVICE_PERIOD");
 #endif
                     } else {
                         state->_service_period = "";

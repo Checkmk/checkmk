@@ -29,23 +29,29 @@
 #include <chrono>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include "Column.h"
 #include "Filter.h"
-#include "contact_fwd.h"
+#include "MonitoringCore.h"
 #include "opids.h"
 class Aggregator;
 class Row;
 class RowRenderer;
 
+#ifndef CMC
+// TODO(sp) Why on earth is "contact_fwd.h" not enough???
+#include "nagios.h"
+#endif
+
 class CustomVarsDictColumn : public Column {
 public:
     CustomVarsDictColumn(std::string name, std::string description,
                          int indirect_offset, int extra_offset,
-                         int extra_extra_offset, int offset)
+                         int extra_extra_offset, int offset,
+                         const MonitoringCore *mc)
         : Column(std::move(name), std::move(description), indirect_offset,
-                 extra_offset, extra_extra_offset, offset) {}
+                 extra_offset, extra_extra_offset, offset)
+        , _mc(mc) {}
 
     ColumnType type() const override { return ColumnType::dict; };
 
@@ -59,7 +65,10 @@ public:
     std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 
-    std::unordered_map<std::string, std::string> getValue(Row row) const;
+    Attributes getValue(Row row) const;
+
+private:
+    const MonitoringCore *const _mc;
 };
 
 #endif  // CustomVarsDictColumn_h

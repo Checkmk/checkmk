@@ -23,15 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsNamesColumn.h"
-#include "Row.h"
-
-#ifdef CMC
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
-#include "Object.h"
-#include "cmc.h"
-#else
+#include "MonitoringCore.h"
+#include "Row.h"
+
+#ifndef CMC
+// TODO(sp) Why on earth is "contact_fwd.h" not enough???
 #include "nagios.h"
 #endif
 
@@ -39,18 +38,10 @@ std::vector<std::string> CustomVarsNamesColumn::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> names;
-#ifdef CMC
-    if (auto *object = columnData<Object>(row)) {
-        auto attrs = object->customAttributes();
+    if (auto p = columnData<void>(row)) {
+        auto attrs = _mc->customAttributes(p);
         std::transform(attrs.begin(), attrs.end(), std::back_inserter(names),
                        [](const auto &entry) { return entry.first; });
     }
-#else
-    if (auto p = columnData<customvariablesmember *>(row)) {
-        for (auto cvm = *p; cvm != nullptr; cvm = cvm->next) {
-            names.emplace_back(cvm->variable_name);
-        }
-    }
-#endif
     return names;
 }

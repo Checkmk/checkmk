@@ -38,7 +38,8 @@
 #include "State.h"
 #include "Timeperiod.h"
 #else
-#include <cstring>
+#include <unordered_map>
+#include "MonitoringCore.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
 #endif
@@ -87,12 +88,11 @@ std::vector<std::string> ServiceListColumn::getValue(
 extern TimeperiodsCache *g_timeperiods_cache;
 
 namespace {
-bool inCustomTimeperiod(service *svc) {
-    for (customvariablesmember *cvm = svc->custom_variables; cvm != nullptr;
-         cvm = cvm->next) {
-        if (strcmp(cvm->variable_name, "SERVICE_PERIOD") == 0) {
-            return g_timeperiods_cache->inTimeperiod(cvm->variable_value);
-        }
+bool inCustomTimeperiod(MonitoringCore *mc, service *svc) {
+    auto attrs = mc->customAttributes(&svc->custom_variables);
+    auto it = attrs.find("SERVICE_PERIOD");
+    if (it != attrs.end()) {
+        return g_timeperiods_cache->inTimeperiod(it->second);
     }
     return true;  // assume 24X7
 }
@@ -136,7 +136,7 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
                     svc->current_attempt, svc->max_attempts,
                     svc->scheduled_downtime_depth,
                     svc->problem_has_been_acknowledged != 0,
-                    inCustomTimeperiod(svc));
+                    inCustomTimeperiod(_mc, svc));
             }
         }
     }

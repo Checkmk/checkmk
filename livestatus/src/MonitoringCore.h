@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "Triggers.h"
 #include "auth.h"
@@ -60,6 +61,8 @@ struct CommentData {
     uint32_t _entry_type;  // TODO(sp) Move Comment::Type here
     std::chrono::system_clock::time_point _entry_time;
 };
+
+using Attributes = std::unordered_map<std::string, std::string>;
 
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
@@ -121,6 +124,12 @@ public:
     virtual size_t numQueuedNotifications() = 0;
     virtual size_t numQueuedAlerts() = 0;
     virtual size_t numCachedLogMessages() = 0;
+
+    // TODO(sp) Horrible and fragile typing of the parameter, we need to fix
+    // this: The type of the holder is either 'customvariablesmember *const *'
+    // (NEB) or 'const Entity *' (CMC). Furthermore, all we need is a range for
+    // iteration, not a copy.
+    virtual Attributes customAttributes(const void *holder) const = 0;
 
     // Our escape hatch, this should die in the long run...
     template <typename T>

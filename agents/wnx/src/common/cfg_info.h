@@ -62,7 +62,7 @@ constexpr int kDefaultWinPerfTimeout = 11;  // seconds
 constexpr int kDefaultAgentMaxWait = 15;  // max time agent waits for a sections
 
 // #TODO CONFIRM VALUE:
-constexpr int kDefaultAgentMinWait = 1;  // max time agent waits for a sections
+constexpr int kDefaultAgentMinWait = 5;  // max time agent waits for a sections
 
 const char* const kDefaultLogFileName = "check_mk.log";
 const char* const kDefaultAppFileName = "check_mk_agent.exe";

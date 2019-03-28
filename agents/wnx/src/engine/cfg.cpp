@@ -780,7 +780,8 @@ bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src,
                     smartMerge(grp, s, merge_seq);
                 }
             } else {
-                XLOG::l.bp(XLOG_FLINE + " expected map from source {}", name);
+                if (s.IsNull()) continue;  // empty skipped
+                XLOG::l(XLOG_FLINE + " expected map from source {}", name);
             }
             continue;
         } else if (IsYamlSeq(grp)) {

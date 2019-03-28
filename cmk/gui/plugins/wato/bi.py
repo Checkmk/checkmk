@@ -2336,8 +2336,8 @@ class BIRulesPermission(Permission):
 
     @property
     def description(self):
-        return _("User the WATO BI module, create, modify and delete BI rules and "
-                 "aggregations in packs that you are a contact of")
+        return _("Use the WATO BI module, create, modify and delete BI rules and "
+                 "aggregations in packs that you are a contact of.")
 
     @property
     def defaults(self):

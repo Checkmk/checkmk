@@ -78,7 +78,6 @@ class RulesetCollection(object):
             "ALL_SERVICES": [""],
             "NEGATE": NEGATE,
             "FOLDER_PATH": folder.path(),
-            "FILE_PATH": folder.path() + "/hosts.mk",
         }
 
         # Prepare empty rulesets so that rules.mk has something to

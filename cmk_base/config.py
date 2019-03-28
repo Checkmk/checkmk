@@ -201,7 +201,6 @@ def _perform_post_config_loading_actions():
 
 def _load_config(with_conf_d, exclude_parents_mk):
     helper_vars = {
-        "FILE_PATH": None,
         "FOLDER_PATH": None,
     }
 
@@ -222,12 +221,10 @@ def _load_config(with_conf_d, exclude_parents_mk):
             if _f.startswith(cmk.utils.paths.check_mk_config_dir + "/"):
                 _file_path = _f[len(cmk.utils.paths.check_mk_config_dir) + 1:]
                 global_dict.update({
-                    "FILE_PATH": _file_path,
                     "FOLDER_PATH": os.path.dirname(_file_path),
                 })
             else:
                 global_dict.update({
-                    "FILE_PATH": None,
                     "FOLDER_PATH": None,
                 })
 

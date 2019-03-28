@@ -83,7 +83,7 @@ std::string ExtractProcessOwner(HANDLE Process) {
     HANDLE raw_handle = INVALID_HANDLE_VALUE;
 
     if (!::OpenProcessToken(Process, TOKEN_READ, &raw_handle)) {
-        XLOG::l.w("Failed to open process  to get a token {} ", GetLastError());
+        XLOG::t.w("Failed to open process  to get a token {} ", GetLastError());
         return {};
     }
     ON_OUT_OF_SCOPE(CloseHandle(raw_handle));
@@ -228,7 +228,7 @@ std::string GetProcessOwner(int64_t ProcessId) {
 
     auto owner = ExtractProcessOwner(process_handle);
     if (owner.empty()) {
-        XLOG::l.t("Owner of {} is empty, assuming system", process_id);
+        XLOG::t.t("Owner of {} is empty, assuming system", process_id);
         return "SYSTEM";
     }
 

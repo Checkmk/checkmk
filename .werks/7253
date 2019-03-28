@@ -1,0 +1,12 @@
+Title: Service Discovery: No longer query data for disabled snmp checks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1553769555
+Class: fix
+
+Even if a snmp check type was disabled, its relevant data was still queried from the host and discarded shortly after.
+This has been fixed.
+

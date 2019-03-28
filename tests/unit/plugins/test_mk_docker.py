@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(cmk_path(), 'agents', 'plugins'))
 import mk_docker  # pylint: disable=import-error,wrong-import-position
 
 PLUGIN_CHECKSUMS = {
-    '0.1': 'aec6ebec8565d1326d1b0df52191d594',
+    '0.1': 'f43bbe8ce8f19763d53ffa116988fa2d',
 }
 
 
@@ -21,8 +21,7 @@ def test_docker_plugin_version():
     assert md5 == PLUGIN_CHECKSUMS.get(mk_docker.VERSION), """
     Plugin source code has changed.
     If your changes are compatible to previous versions,
-    add the new md5 sum of the plugin to the corresponding
-    list in PLUIGIN_CHECKSUMS.
+    put the new md5 sum of the plugin into PLUIGIN_CHECKSUMS.
     If your change is incompatible, increase the mk_docker.VERSION
-    and start a new list to PLUIGIN_CHECKSUMS.
+    and put a new entry into PLUIGIN_CHECKSUMS.
     """

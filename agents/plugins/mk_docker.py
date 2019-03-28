@@ -150,10 +150,11 @@ class Section(list):
             sys.stdout.write("%s\n" % line)
 
 
-def report_exception_to_server(exc):
+def report_exception_to_server(exc, location):
     LOGGER.info("handling exception: %s", exc)
+    msg = "Plugin exception in %s: %s" % (location, exc)
     sec = Section('node_info')
-    sec.append(json.dumps({"PluginException": str(exc)}))
+    sec.append(json.dumps({"Unknown": msg}))
     sec.write()
 
 
@@ -464,7 +465,7 @@ def main():
     try:  # first calls by docker-daemon: report failure
         client = MKDockerClient(config)
     except () if DEBUG else Exception as exc:
-        report_exception_to_server(exc)
+        report_exception_to_server(exc, "MKDockerClient.__init__")
         sys.exit(1)
 
     set_version_info(client)
@@ -473,7 +474,7 @@ def main():
         try:
             section(client, config)
         except () if DEBUG else Exception as exc:
-            LOGGER.info("caught exception: %s", exc)
+            report_exception_to_server(exc, section.__name__)
 
 
 if __name__ == "__main__":

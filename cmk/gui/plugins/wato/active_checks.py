@@ -1276,6 +1276,7 @@ class RulespecActiveChecksHttp(HostRulespec):
                      )),
                 ],
                 required_keys=["name", "host", "mode"],
+                validate=self._validate_all,
             ),
             forth=self._transform_check_http,
         )
@@ -1284,6 +1285,13 @@ class RulespecActiveChecksHttp(HostRulespec):
         url = urlparse.urlsplit(value)
         if url.scheme or url.netloc or not url.path.startswith('/'):
             raise MKUserError(varprefix, _("Invalid URI (see help for details)"))
+
+    def _validate_all(self, value, varprefix):
+        _name, mode = value['mode']
+        if 'proxy' in value and 'virthost' in mode:
+            msg = _("Unfortunately, using a proxy and a virtual host is not supported (try '%s')."
+                   ) % _("Host settings")
+            raise MKUserError(varprefix, msg)
 
     def _transform_check_http(self, params):
         if isinstance(params, dict):

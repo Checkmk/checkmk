@@ -896,6 +896,7 @@ def _output_snmp_check_plugins(title, collection):
 def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name, on_error):
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_plugin_name, None):
+        console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
         return []
 
     try:

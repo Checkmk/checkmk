@@ -778,11 +778,18 @@ class Group(object):
             section.insert(data)
         return self
 
-    def output(self):
-        # type: () -> List[str]
+    def output(self, piggyback_prefix=""):
+        # type: (str) -> List[str]
+        # The names of elements may not be unique. Kubernetes guarantees e.g. that
+        # only one object of a given kind can have one one name at a time. I.e.
+        # there may only be one deployment with the name "foo", but there may exist
+        # a service with name "foo" as well.
+        # To obtain unique names for piggyback hosts it is therefore possible to
+        # specify a name prefix.
+        # see: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
         data = []
         for name, element in self.elements.iteritems():
-            data.append('<<<<%s>>>>' % name)
+            data.append('<<<<%s>>>>' % (piggyback_prefix + name))
             data.extend(element.output())
             data.append('<<<<>>>>')
         return data
@@ -972,7 +979,7 @@ class ApiData(object):
         g.join('k8s_resources', self.pods.pods_per_node())
         g.join('k8s_stats', self.nodes.stats())
         g.join('k8s_conditions', self.nodes.conditions())
-        return '\n'.join(g.output())
+        return '\n'.join(g.output(piggyback_prefix="node_"))
 
     def custom_metrics_section(self):
         # type: () -> str
@@ -989,7 +996,7 @@ class ApiData(object):
         g.join('k8s_resources', self.pods.resources())
         g.join('k8s_pod_container', self.pods.containers())
         g.join('k8s_pod_info', self.pods.info())
-        return '\n'.join(g.output())
+        return '\n'.join(g.output(piggyback_prefix="pod_"))
 
     def service_sections(self):
         logging.info('Output service sections')
@@ -997,14 +1004,14 @@ class ApiData(object):
         g.join('labels', self.services.labels())
         g.join('k8s_service_info', self.services.infos())
         g.join('k8s_service_ports', self.services.ports())
-        return '\n'.join(g.output())
+        return '\n'.join(g.output(piggyback_prefix="service_"))
 
     def deployment_sections(self):
         logging.info('Output node sections')
         g = Group()
         g.join('labels', self.deployments.labels())
         g.join('k8s_replicas', self.deployments.replicas())
-        return '\n'.join(g.output())
+        return '\n'.join(g.output(piggyback_prefix="deployment_"))
 
 
 def get_api_client(arguments):

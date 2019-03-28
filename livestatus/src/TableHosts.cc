@@ -97,7 +97,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        indirect_offset, extra_offset, -1,
+        indirect_offset, extra_offset, -1, table->core(),
         DANGEROUS_OFFSETOF(host, check_command)));
 #else
     table->addColumn(std::make_unique<OffsetStringColumn>(
@@ -107,7 +107,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        indirect_offset, extra_offset, -1,
+        indirect_offset, extra_offset, -1, table->core(),
         DANGEROUS_OFFSETOF(host, host_check_command)));
 #endif
     table->addColumn(std::make_unique<OffsetStringColumn>(
@@ -127,14 +127,16 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period", "The name of the service period of the host",
         indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), "SERVICE_PERIOD"));
+        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
+        "SERVICE_PERIOD"));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional notes for this host", indirect_offset,
         extra_offset, -1, DANGEROUS_OFFSETOF(host, notes)));
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_expanded",
         "The same as notes, but with the most important macros expanded",
-        indirect_offset, extra_offset, -1, DANGEROUS_OFFSETOF(host, notes)));
+        indirect_offset, extra_offset, -1, table->core(),
+        DANGEROUS_OFFSETOF(host, notes)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL with further information about the host",
@@ -143,7 +145,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
-        indirect_offset, extra_offset, -1,
+        indirect_offset, extra_offset, -1, table->core(),
         DANGEROUS_OFFSETOF(host, notes_url)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "action_url",
@@ -153,7 +155,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "action_url_expanded",
         "The same as action_url, but with the most important macros expanded",
-        indirect_offset, extra_offset, -1,
+        indirect_offset, extra_offset, -1, table->core(),
         DANGEROUS_OFFSETOF(host, action_url)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "plugin_output", "Output of the last host check",
@@ -171,7 +173,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringHostMacroColumn>(
         prefix + "icon_image_expanded",
         "The same as icon_image, but with the most important macros expanded",
-        indirect_offset, extra_offset, -1,
+        indirect_offset, extra_offset, -1, table->core(),
         DANGEROUS_OFFSETOF(host, icon_image)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "icon_image_alt", "Alternative text for the icon_image",
@@ -447,7 +449,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "in_service_period",
         "Whether this host is currently in its service period (0/1)",
         indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), "SERVICE_PERIOD"));
+        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
+        "SERVICE_PERIOD"));
 
     table->addColumn(std::make_unique<HostContactsColumn>(
         prefix + "contacts",
@@ -486,15 +489,17 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
         "A list of the names of all custom variables", indirect_offset,
-        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables)));
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
+        table->core()));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables", indirect_offset,
-        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables)));
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
+        table->core()));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables)));
+        DANGEROUS_OFFSETOF(host, custom_variables), table->core()));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus this will probably be configurable so access to further custom
@@ -503,7 +508,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "filename", "The value of the custom variable FILENAME",
         indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), "FILENAME"));
+        DANGEROUS_OFFSETOF(host, custom_variables), table->core(), "FILENAME"));
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",

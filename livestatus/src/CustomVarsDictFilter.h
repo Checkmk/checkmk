@@ -31,11 +31,15 @@
 #include <string>
 #include "ColumnFilter.h"
 #include "Filter.h"
-#include "contact_fwd.h"
 #include "opids.h"
 class CustomVarsDictColumn;
 class RegExp;
 class Row;
+
+#ifndef CMC
+// TODO(sp) Why on earth is "contact_fwd.h" not enough???
+#include "nagios.h"
+#endif
 
 class CustomVarsDictFilter : public ColumnFilter {
 public:

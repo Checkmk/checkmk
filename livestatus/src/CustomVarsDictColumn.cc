@@ -59,19 +59,9 @@ std::unique_ptr<Aggregator> CustomVarsDictColumn::createAggregator(
                              "' not supported");
 }
 
-std::unordered_map<std::string, std::string> CustomVarsDictColumn::getValue(
-    Row row) const {
-    std::unordered_map<std::string, std::string> dict;
-#ifdef CMC
-    if (auto *entity = columnData<Entity>(row)) {
-        return entity->customAttributes();
+Attributes CustomVarsDictColumn::getValue(Row row) const {
+    if (auto p = columnData<void>(row)) {
+        return _mc->customAttributes(p);
     }
-#else
-    if (auto p = columnData<customvariablesmember *>(row)) {
-        for (auto cvm = *p; cvm != nullptr; cvm = cvm->next) {
-            dict.emplace(cvm->variable_name, cvm->variable_value);
-        }
-    }
-#endif
-    return dict;
+    return {};
 }

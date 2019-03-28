@@ -89,7 +89,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        indirect_offset, -1, -1,
+        indirect_offset, -1, -1, table->core(),
         DANGEROUS_OFFSETOF(service, service_check_command)));
 #else
     table->addColumn(std::make_unique<OffsetStringColumn>(
@@ -98,7 +98,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, check_command)));
+        indirect_offset, -1, -1, table->core(),
+        DANGEROUS_OFFSETOF(service, check_command)));
 #endif
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "event_handler", "Nagios command used as event handler",
@@ -125,14 +126,15 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period",
         "The name of the service period of the service", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(service, custom_variables), "SERVICE_PERIOD"));
+        -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
+        "SERVICE_PERIOD"));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional notes about the service", indirect_offset,
         -1, -1, DANGEROUS_OFFSETOF(service, notes)));
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_expanded",
         "The notes with (the most important) macros expanded", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(service, notes)));
+        -1, -1, table->core(), DANGEROUS_OFFSETOF(service, notes)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL for additional notes about the service",
@@ -140,7 +142,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_url_expanded",
         "The notes_url with (the most important) macros expanded",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, notes_url)));
+        indirect_offset, -1, -1, table->core(),
+        DANGEROUS_OFFSETOF(service, notes_url)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL for actions or custom information about the service",
@@ -148,7 +151,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "action_url_expanded",
         "The action_url with (the most important) macros expanded",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, action_url)));
+        indirect_offset, -1, -1, table->core(),
+        DANGEROUS_OFFSETOF(service, action_url)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "icon_image",
         "The name of an image to be used as icon in the web interface",
@@ -156,7 +160,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<OffsetStringServiceMacroColumn>(
         prefix + "icon_image_expanded",
         "The icon_image with (the most important) macros expanded",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, icon_image)));
+        indirect_offset, -1, -1, table->core(),
+        DANGEROUS_OFFSETOF(service, icon_image)));
     table->addColumn(std::make_unique<OffsetStringColumn>(
         prefix + "icon_image_alt",
         "An alternative text for the icon_image for browsers not displaying icons",
@@ -397,7 +402,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
-        "SERVICE_PERIOD"));
+        table->core(), "SERVICE_PERIOD"));
     table->addColumn(std::make_unique<TimeperiodColumn>(
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",
@@ -442,17 +447,17 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
         "A list of the names of all custom variables of the service",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, custom_variables)));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
+        table->core()));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variable of the service",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, custom_variables)));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
+        table->core()));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        indirect_offset, -1, -1,
-        DANGEROUS_OFFSETOF(service, custom_variables)));
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
+        table->core()));
 
     table->addColumn(std::make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",

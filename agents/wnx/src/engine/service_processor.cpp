@@ -229,10 +229,14 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     }
 
     // Plugins Processing
-    if (0 && groups::plugins.enabledInConfig()) {
+#if 0
+    // we do not use anymore separate plugin process(player)
+    // code is here as future refernce to use again separate process
+    if (groups::plugins.enabledInConfig()) {
         cma::cfg::SetupPluginEnvironment();
         kickPlugins(Tp, Ip);
     }
+#endif
 
     if (max_timeout_ <= 0) {
         max_timeout_ = cma::cfg::kDefaultAgentMinWait;

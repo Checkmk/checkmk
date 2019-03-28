@@ -266,6 +266,7 @@ std::string ProducePsWmi(bool FullPath) {
         XLOG::l("Skipping scanning, enumerator can't be opened");
         return {};
     }
+    ON_OUT_OF_SCOPE(processes->Release());
 
     std::string out;
     while (1) {

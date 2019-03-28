@@ -32,7 +32,7 @@
 class Aggregator;
 
 #ifdef CMC
-#include "Object.h"
+#include "Entity.h"
 #include "cmc.h"
 #else
 #include "nagios.h"
@@ -63,8 +63,8 @@ std::unordered_map<std::string, std::string> CustomVarsDictColumn::getValue(
     Row row) const {
     std::unordered_map<std::string, std::string> dict;
 #ifdef CMC
-    if (auto *object = columnData<Object>(row)) {
-        return object->customAttributes();
+    if (auto *entity = columnData<Entity>(row)) {
+        return entity->customAttributes();
     }
 #else
     if (auto p = columnData<customvariablesmember *>(row)) {

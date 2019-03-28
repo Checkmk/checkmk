@@ -1,0 +1,15 @@
+Title: Fixed decreased performance in host / service views since 1.5.0p5
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1553774075
+Class: fix
+
+When using the HW/SW inventory the performance of views, especially in
+distributed setups with slower responding sites, could be decreased
+significantly because the GUI performed too many livestatus requests in the
+background.
+
+This was caused by werk #6594 which was added in 1.5.0p5.

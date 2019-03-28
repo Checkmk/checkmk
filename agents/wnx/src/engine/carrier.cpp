@@ -80,6 +80,7 @@ bool CoreCarrier::establishCommunication(const std::string& InternalPort) {
 bool CoreCarrier::sendData(const std::string& PeerName, uint64_t Marker,
                            const void* Data, size_t Length) {
     std::lock_guard lk(lock_);
+    XLOG::d.t("Sending data '{}' id is [{}] length [{}]", PeerName, Marker, Length);
     return sendDataDispatcher(DataType::kSegment, PeerName, Marker, Data,
                               Length);
 }

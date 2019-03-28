@@ -255,6 +255,8 @@ private:
                         cma::OnStartApp();
                         auto tp = openAnswer(Ip);
                         if (tp) {
+                            XLOG::d.i("Id is [{}] ",
+                                      tp.value().time_since_epoch().count());
                             auto started = startProviders(tp.value(), Ip);
 
                             return getAnswer(started);
@@ -487,10 +489,10 @@ private:
                 [this](const AnswerId Tp, ServiceProcessor* Proc) {
                     auto block = gatherData();
                     if (block) {
-                        XLOG::d("Provider {} added answer", name_);
+                        XLOG::d("Provider '{}' added answer", name_);
                         return Proc->addSectionToAnswer(name_, Tp, *block);
                     } else {
-                        XLOG::l("Provider {} FAILED answer", name_);
+                        XLOG::l("Provider '{}' FAILED answer", name_);
                         Proc->addSectionToAnswer(name_, Tp);
                         return false;
                     }

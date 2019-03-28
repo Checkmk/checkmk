@@ -1115,6 +1115,12 @@ inventory_displayhints.update({
     ".software.applications.kubernetes.pod_info.host_ip": {"title": _("Host IP")},
     ".software.applications.kubernetes.pod_info.pod_ip": {"title": _("Pod IP")},
     ".software.applications.kubernetes.pod_info.qos_class": {"title": _("QOS class")},
+    ".software.applications.kubernetes.service_info.": {
+        "title": _("Service"),
+    },
+    ".software.applications.kubernetes.service_info.type": {"title": _("Type")},
+    ".software.applications.kubernetes.service_info.cluster_ip": {"title": _("Cluster IP")},
+    ".software.applications.kubernetes.service_info.load_balancer_ip": {"title": _("Load Balancer IP")},
     ".software.applications.citrix.": {"title": _("Citrix")},
     ".software.applications.citrix.controller.": {"title": _("Controller")},
     ".software.applications.citrix.controller.controller_version": {

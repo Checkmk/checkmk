@@ -37,12 +37,12 @@ int TestProcessor::s_counter = 0;
 TEST(ServiceControllerTest, CreateDelete) {
     using namespace std::chrono;
     {
-        auto processor = new TestProcessor;
-        wtools::ServiceController controller(processor);
+        wtools::ServiceController controller(std::make_unique<TestProcessor>());
         EXPECT_EQ(TestProcessor::s_counter, 1);
-        EXPECT_FALSE(processor->started_ || processor->continued_ ||
-                     processor->paused_ || processor->shutdowned_ ||
-                     processor->stopped_);
+        auto p = dynamic_cast<TestProcessor*>(controller.processor_.get());
+        ASSERT_NE(nullptr, p);
+        EXPECT_FALSE(p->started_ || p->continued_ || p->paused_ ||
+                     p->shutdowned_ || p->stopped_);
         EXPECT_NE(controller.processor_, nullptr);
         EXPECT_EQ(controller.name_, nullptr);
         EXPECT_EQ(controller.can_stop_, false);
@@ -75,13 +75,13 @@ TEST(ServiceControllerTest, StartStop) {
     using namespace cma::srv;
     using namespace std::chrono;
     int counter = 0;
-    auto processor =
-        new ServiceProcessor(100ms, [&counter](const void* Processor) {
+
+    wtools::ServiceController controller(std::make_unique<ServiceProcessor>(
+        100ms, [&counter](const void* Processor) {
             xlog::l("pip").print();
             counter++;
             return true;
-        });
-    wtools::ServiceController controller(processor);
+        }));
     EXPECT_NE(controller.processor_, nullptr);
     EXPECT_EQ(controller.name_, nullptr);
     EXPECT_EQ(controller.can_stop_, false);

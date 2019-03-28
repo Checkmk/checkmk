@@ -69,29 +69,29 @@ pytestmark = pytest.mark.checks
     ),
     (
         (None, {
-            'virthost': (None, True),
+            'virthost': ("virtual.host", True),
             'proxy': "foo.bar",
         }),
-        ['-I', 'foo.bar'],
+        ['-I', 'foo.bar', '-H', 'virtual.host'],
     ),
     (
         (None, {
-            'virthost': (None, False),
+            'virthost': ("virtual.host", False),
             'proxy': "foo.bar",
         }),
-        ['-I', 'foo.bar'],
+        ['-I', 'foo.bar', '-H', 'virtual.host'],
     ),
     (
         (None, {
-            'virthost': (None, True),
+            'virthost': ("virtual.host", True),
         }),
-        [],
+        ['-H', 'virtual.host'],
     ),
     (
         (None, {
-            'virthost': (None, False),
+            'virthost': ("virtual.host", False),
         }),
-        ['-I', '$_HOSTADDRESS_4$'],
+        ['-I', '$_HOSTADDRESS_4$', '-H', 'virtual.host'],
     ),
 ])
 def test_check_http_argument_parsing(check_manager, params, expected_args):

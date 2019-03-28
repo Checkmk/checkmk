@@ -1,0 +1,195 @@
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+ails.  You should have  received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+
+*/
+
+/*-------------------------------------------------------------------------.
+|                               ____ ___                                   |
+|                              | __ )_ _|                                  |
+|                              |  _ \| |                                   |
+|                              | |_) | |                                   |
+|                              |____/___|                                  |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles used by the Business-Intelligence module.                         |
+'-------------------------------------------------------------------------*/
+
+.aggrtree ul.subtree {
+  padding-top: 0;
+  padding-bottom: 3px;
+  padding-left: 3px;
+  margin-top: 4px;
+  margin-left: 34px;
+  list-style-type: none;
+  border-top: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+  border-left: 1px solid #aaa;
+  border-radius: 3px;
+}
+
+tr.odd0 .aggrtree ul.subtree {
+  border-color: #ccc;
+}
+tr.even0 .aggrtree ul.subtree {
+  border-color: #aaa;
+}
+.aggrtree ul.subtree li {
+  padding: 0;
+  padding-bottom: 1px;
+  margin: 0;
+  margin-top: 2px;
+}
+
+.aggrtree span.title span.content.name {
+  cursor: pointer;
+}
+
+.aggrtree span.state {
+  display: inline-block;
+  width: 34px;
+  padding: 0;
+  margin-right: 3px;
+  font-weight: bold;
+  text-align: center;
+  border-color: #eee #888 #999 #ccc;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 3px;
+}
+
+.aggrtree a.assumption img.icon,
+.aggrtree img.bi.icon {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  margin-right: 0;
+  vertical-align: middle;
+}
+
+.aggrtree img.bi.icon {
+  position: relative;
+  top: -1px;
+  margin-right: 5px;
+  margin-left: 0;
+}
+
+b.bullet {
+  margin: 0 5px;
+  color: #aaa;
+}
+
+.state.assumed {
+  background-image: url("images/assume_bg.png");
+  background-repeat: repeat;
+}
+
+.aggrtree img.treeangle {
+  width: 15px;
+  height: 15px;
+  margin-right: 2px;
+  margin-left: 0;
+  vertical-align:middle;
+}
+
+table.aggrtree {
+  width: 100%;
+  border-collapse: collapse;
+}
+table.aggrtree td.leaf.odd {
+  background-color: #e0e0e0;
+}
+table.aggrtree td.leaf.even {
+  background-color: #f0f0f0;
+}
+table.aggrtree td.node {
+  background-color: #e8e8e8;
+}
+
+td.aggrtree_box {
+  line-height: 22px;
+}
+.bibox_box {
+  padding: 1px 3px;
+  margin: 0 0 0 0;
+  margin-right: 3px;
+  cursor: pointer;
+  border-color: black;
+  border-style: solid;
+  border-width: 1px;
+}
+.bibox_box.open.noleaf {
+  box-shadow: inset 0.5px 0.5px 3px #444;
+}
+.bibox_box.noleaf:hover {
+  border-style: dashed;
+}
+.bibox_box.closed.noleaf {
+  box-shadow: 0.5px 0.5px 3px #000;
+}
+.bibox_box.leaf {
+  border-color: white;
+}
+.bibox {
+  padding: 0;
+}
+table.aggrtree.ltr td {
+  padding: 3px;
+  border: 1px solid #ccc;
+}
+
+body.main .aggrtree img.treeangle {
+  filter: invert(0%);
+}
+
+table.data.table .bi_tree_container .title {
+  padding: 0;
+  font-weight: $theme-font-weight-global;
+  color: $theme-color-text;
+}
+
+table.data.table .bi_tree_container .title li {
+  padding: 4px 8px;
+  list-style-type: none;
+}
+
+table.data.table .bi_tree_container .title ul.subtree {
+  padding: 0 0 0 18px;
+  margin: 8px 0 0 18px;
+  list-style-type: none;
+  border: none;
+  border-left: 1px solid $theme-color-darkgrey;
+  border-radius: 0;
+}
+
+table.data.table .bi_tree_container .title ul.subtree li {
+  margin-top: 8px;
+  list-style-type: none;
+}
+
+table.data.table .bi_tree_container .title .state {
+  padding: 0 6px;
+  margin-right: 4px;
+  border-radius: 2px;
+}

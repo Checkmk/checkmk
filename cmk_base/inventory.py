@@ -260,12 +260,13 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress, inve
         inv_function_args = inspect.getargspec(inv_function).args
 
         kwargs = {}
-        if 'inventory_tree' in inv_function_args:
-            inv_function_args.remove('inventory_tree')
-            kwargs["inventory_tree"] = inventory_tree
-        if 'status_data_tree' in inv_function_args:
-            inv_function_args.remove('status_data_tree')
-            kwargs["status_data_tree"] = status_data_tree
+        for dynamic_arg_name, dynamic_arg_value in [
+            ("inventory_tree", inventory_tree),
+            ("status_data_tree", status_data_tree),
+        ]:
+            if dynamic_arg_name in inv_function_args:
+                inv_function_args.remove(dynamic_arg_name)
+                kwargs[dynamic_arg_name] = dynamic_arg_value
 
         if len(inv_function_args) == 2:
             params = _get_inv_params(hostname, section_name)

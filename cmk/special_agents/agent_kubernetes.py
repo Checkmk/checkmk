@@ -766,24 +766,24 @@ class MetricList(K8sList[Metric]):
         return [item.__dict__ for item in self]
 
 
-class Group(object):
+class PiggybackGroup(object):
     """
     A group of elements where an element is e.g. a piggyback host.
     """
 
     def __init__(self):
         # type: () -> None
-        super(Group, self).__init__()
-        self._elements = OrderedDict()  # type: OrderedDict[str, Element]
+        super(PiggybackGroup, self).__init__()
+        self._elements = OrderedDict()  # type: OrderedDict[str, PiggybackHost]
 
     def get(self, element_name):
-        # type: (str) -> Element
+        # type: (str) -> PiggybackHost
         if element_name not in self._elements:
-            self._elements[element_name] = Element()
+            self._elements[element_name] = PiggybackHost()
         return self._elements[element_name]
 
     def join(self, section_name, pairs):
-        # type: (str, Mapping[str, Dict[str, Any]]) -> Group
+        # type: (str, Mapping[str, Dict[str, Any]]) -> PiggybackGroup
         for element_name, data in pairs.iteritems():
             section = self.get(element_name).get(section_name)
             section.insert(data)
@@ -806,14 +806,14 @@ class Group(object):
         return data
 
 
-class Element(object):
+class PiggybackHost(object):
     """
     An element that bundles a collection of sections.
     """
 
     def __init__(self):
         # type: () -> None
-        super(Element, self).__init__()
+        super(PiggybackHost, self).__init__()
         self._sections = OrderedDict()  # type: OrderedDict[str, Section]
 
     def get(self, section_name):
@@ -964,7 +964,7 @@ class ApiData(object):
     def cluster_sections(self):
         # type: () -> str
         logging.info('Output cluster sections')
-        e = Element()
+        e = PiggybackHost()
         e.get('k8s_nodes').insert(self.nodes.list_nodes())
         e.get('k8s_namespaces').insert(self.namespaces.list_namespaces())
         e.get('k8s_persistent_volumes').insert(self.persistent_volumes.list_volumes())
@@ -983,7 +983,7 @@ class ApiData(object):
     def node_sections(self):
         # type: () -> str
         logging.info('Output node sections')
-        g = Group()
+        g = PiggybackGroup()
         g.join('labels', self.nodes.labels())
         g.join('k8s_resources', self.nodes.resources())
         g.join('k8s_resources', self.pods.resources_per_node())
@@ -995,14 +995,14 @@ class ApiData(object):
     def custom_metrics_section(self):
         # type: () -> str
         logging.info('Output pods custom metrics')
-        e = Element()
+        e = PiggybackHost()
         for c_metric in self.pods_Metrics:
             e.get('k8s_pods_%s' % c_metric).insert(self.pods_Metrics[c_metric])
         return '\n'.join(e.output())
 
     def pod_sections(self):
         logging.info('Output pod sections')
-        g = Group()
+        g = PiggybackGroup()
         g.join('labels', self.pods.labels())
         g.join('k8s_resources', self.pods.resources())
         g.join('k8s_pod_container', self.pods.containers())
@@ -1011,7 +1011,7 @@ class ApiData(object):
 
     def service_sections(self):
         logging.info('Output service sections')
-        g = Group()
+        g = PiggybackGroup()
         g.join('labels', self.services.labels())
         g.join('k8s_selector', self.services.selector())
         g.join('k8s_service_info', self.services.infos())
@@ -1020,7 +1020,7 @@ class ApiData(object):
 
     def deployment_sections(self):
         logging.info('Output node sections')
-        g = Group()
+        g = PiggybackGroup()
         g.join('labels', self.deployments.labels())
         g.join('k8s_replicas', self.deployments.replicas())
         return '\n'.join(g.output(piggyback_prefix="deployment_"))

@@ -1,0 +1,12 @@
+Title: hr_ps: New check which monitors processes via SNMP
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552898089
+Class: feature
+
+The {HOST-RESOURCES-MIB} is a standardized MIB provided by many
+SNMP agents. This check uses that MIB in order to monitor the
+current processes of the target host.

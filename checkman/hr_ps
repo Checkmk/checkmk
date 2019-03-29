@@ -1,0 +1,37 @@
+title: SNMP Processes
+agents: snmp
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ The {HOST-RESOURCES-MIB} is a standardized MIB provided by many
+ SNMP agents. This check uses that MIB in order to monitor the
+ current processes of the target host.
+
+ No default levels are set. Upper and lower levels for the amount
+ of processes can be configured.
+ The status running, runnable, not runnable or invalid can be
+ mapped th OK, WARN, CRIT or UNKNOWN. The default is OK.
+
+item:
+ A user defined name which must be unique.
+
+inventory:
+ One check is created per user defined name. Within the discovery
+ rule {SNMP Process Discovery} you can specify which processes are
+ taken into account. You can either match on the process name {hrSWRunName}
+ or the process path {hrSWRunPath}, and the process status {hrSWRunStatus}.
+
+ The {service description} may contain one or more occurances of {%s}.
+ If you do this, then the pattern must be a regular expression and
+ be prefixed with {~}. For each {%s} in the description, the expression has to contain
+ one "group". A group is a subexpression enclosed in brackets, for example
+ {(.*)} or {([a-zA-Z]+)} or {(...)}. When the discovery finds a process
+ matching the pattern, it will substitute all such groups with the
+ {actual values} when creating the check. That way one rule can create
+ several checks on a host.
+
+ If the pattern contains more groups then occurrances of {%s} in
+ the service description then only the first matching subexpressions
+ are used for the service descriptions. The matched substrings corresponding
+ to the remaining groups are copied into the regular expression, nevertheless.

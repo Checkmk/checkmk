@@ -1421,6 +1421,19 @@ class EditRuleMode(WatoMode):
                 html.icon(title=None, icon="rule_%s" % img)
                 html.radiobutton("value", img, self._rule.value == val,
                                  _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
+
+        self._show_conditions()
+
+        forms.end()
+
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        self._vs_rule_options().set_focus("options")
+        html.button("_export_rule", _("Export"))
+
+        html.end_form()
+
+    def _show_conditions(self):
         # Conditions
         forms.header(_("Conditions"))
 
@@ -1533,15 +1546,6 @@ class EditRuleMode(WatoMode):
                 label=_("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"))
 
             html.close_div()
-
-        forms.end()
-
-        html.button("save", _("Save"))
-        html.hidden_fields()
-        self._vs_rule_options().set_focus("options")
-        html.button("_export_rule", _("Export"))
-
-        html.end_form()
 
     def _show_rule_representation(self):
         content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_dict_config()))

@@ -5,7 +5,7 @@ properties([
     string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
   ]),
   pipelineTriggers([
-    cron('H 3 * * *')
+    cron('H 0 * * *')
   ])
 ])
 

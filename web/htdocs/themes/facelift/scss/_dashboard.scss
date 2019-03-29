@@ -24,169 +24,228 @@ to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
 */
 
-///* Styles used by the dashboard only */
-//
-//body.dashboard {
-//    padding: 0;
-//    overflow: hidden;
-//}
-//
-//body.dashboard table.header {
-//    padding: 10px;
-//}
-//
-//div#dashboard {
-//    position: absolute;
-//    padding: 0;
-//    margin: 0;
-//}
-//
-//
-//div.dashlet {
-//    position: absolute;
-//    padding: 0;
-//    margin: 0;
-//    display: none;
-//    z-index: 1;
-//}
-//
-///* content area of dashlet, if no iframes are used */
-//div.dashlet div.dashlet_inner {
-//    position: absolute;
-//    padding: 0;
-//    margin: 0;
-//    overflow: hidden;
-//}
-//
-///* Dashlets with "background" set to True */
-//.dashlet .dashlet_inner.background {
-//    background-color: #cbd6da;
-//}
-//
-//div.dashlet div.really,
-//div.dashlet div.success,
-//div.dashlet div.error,
-//div.dashlet div.message,
-//div.dashlet div.warning {
-//    margin: 0;
-//    border-radius: 0;
-//    box-shadow: 0;
-//}
-//
-//div.dashlet iframe {
-//    border-style: none;
-//}
-//
-//div.dashlet > div.title {
-//    position: absolute;
-//    background-color: rgba(0, 0, 0, 0.3);
-//    /* IE < 9 */
-//    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#4c000000', endColorstr='#4c000000');
-//    left: 0;
-//    width: 150px; /* will be changed by javascript later */
-//    color: #fff;
-//    padding: 0px;
-//    margin: 0px;
-//    border-radius: 5px 5px 0 0;
-//    padding-left: 9px;
-//    padding-top: 4px;
-//    font-weight: normal;
-//    overflow: hidden;
-//    height: 17px;
-//    white-space: nowrap;
-//}
-//div.dashlet div.title a {
-//    text-decoration: none;
-//    color: white;
-//}
-//div.dashlet div.title a:hover {
-//    text-decoration: underline;
-//}
-//
-//div.dashlet.edit div.title span {
-//    padding-left: 27px;
-//}
-//
-//table.dashlet_overview h2 {
-//    margin: 8px 0px 8px 0px;
-//    font-size: 10pt;
-//}
-//
-///* Styles for various builtin dashlets */
-//div.dashlet canvas.pie {
-//    position: absolute;
-//    top:5px;
-//    left:10px;
-//    z-index: 10;
-//}
-//
-//div.dashlet img.globe {
-//    position: absolute;
-//    top: 5px;
-//    left: 10px;
-//    z-index: 20;
-//}
-//
-//div.dashlet table.hoststats {
-//    margin-top: 10px;
-//    width: 135px;
-//    height: 142px;
-//    border-collapse: collapse;
-//    border-spacing: 0px;
-//    position:absolute;
-//    right:5px;
-//}
-//div.dashlet table.hoststats.narrow {
-//    margin-top: 6px;
-//}
-//
-//div.dashlet table.hoststats a {
-//    color: black;
-//    text-decoration: none;
-//}
-//div.dashlet table.hoststats a:hover {
-//    text-decoration: underline;
-//}
-//
-//
-//div.dashlet table.hoststats td {
-//    text-align: right;
-//    padding-right: 4px;
-//    padding-left: 4px;
-//    background-color: #95bbcd;
-//}
-//
-//div.dashlet table.hoststats th {
-//    text-align: left;
-//    background-color: transparent;
-//    padding-left: 4px;
-//}
-//div.dashlet table.hoststats td.color {
-//    padding: 0px;
-//    width: 4px;
-//}
-//div.dashlet table.hoststats th, table.hoststats td {
-//    padding-top: 3px;
-//    padding-bottom: 3px;
-//    border-color: #498aa6;
-//    border-style: solid none;
-//    border-width: 1px;
-//    vertical-align: middle;
-//}
-//div.dashlet table.hoststats.narrow th, table.hoststats.narrow td {
-//    font-size: 8pt;
-//    font-weight: normal;
-//}
-//
-//div.dashlet_inner div.stats {
-//    background-color: #6da1b8;
-//    position: relative;
-//    height: 100%;
-//    width: 100%;
-//    padding: 0px;
-//    margin: 0px;
-//}
-//
+/* Styles used by the dashboard only */
+
+body.dashboard {
+    overflow: hidden;
+}
+
+div#dashboard {
+    position: absolute;
+    padding: 0;
+    margin: 0;
+}
+
+
+div.dashlet {
+    position: absolute;
+    padding: 0;
+    margin: 0;
+    display: none;
+    z-index: 1;
+}
+
+/* content area of dashlet, if no iframes are used */
+div.dashlet div.dashlet_inner {
+    position: absolute;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* Dashlets with "background" set to True */
+.dashlet .dashlet_inner.background {
+    background-color: #cbd6da;
+}
+
+/* TODO: Reproduce these html elements */
+div.dashlet div.really,
+div.dashlet div.success,
+div.dashlet div.error,
+div.dashlet div.message,
+div.dashlet div.warning {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: 0;
+}
+
+div.dashlet iframe {
+    border-style: none;
+}
+
+div.dashlet > div.title {
+    position: absolute;
+    background: $theme-color-white;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#4c000000', endColorstr='#4c000000');
+    left: 0;
+    width: 150px; /* will be changed by javascript later */
+    color: $theme-color-table-text;
+    padding: 0px;
+    margin: 0px;
+    border: 1px solid $theme-color-table-border;
+    border-bottom: 0px solid;
+    border-radius: 5px 5px 0 0;
+    padding-left: 9px;
+    padding-top: 4px;
+    font-weight: 500;
+    overflow: hidden;
+    height: 17px;
+    white-space: nowrap;
+    font-size: $theme-font-size-small;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+div.dashlet > div.title span {
+    padding-left: 8px;
+}
+
+div.dashlet.edit div.title span {
+    padding-left: 27px;
+}
+
+div.dashlet div.title a {
+    text-decoration: none;
+    color: white;
+}
+
+div.dashlet div.title a:hover {
+    text-decoration: underline;
+}
+
+div.dashlet > div.title span a, div.dashlet > div.title span body.main .popup_menu span, body.main .popup_menu div.dashlet > div.title span span {
+    color: $theme-color-table-text;
+}
+
+/* Overview dashlet is not selectable TODO: Check if this style can be dropped */
+table.dashlet_overview h2 {
+    margin: 8px 0px 8px 0px;
+    font-size: 10pt;
+}
+
+/* Styles for various builtin dashlets */
+div.dashlet canvas.pie {
+    position: absolute;
+    top: 7px;
+    left: 10px;
+    z-index: 10;
+    transform: scale(0.8, 0.8);
+    transform-origin: center;
+}
+
+div.dashlet img.globe {
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    z-index: 20;
+    transform: scale(0.8, 0.8);
+    transform-origin: center;
+    filter: grayscale(100%);
+}
+
+div.dashlet table.hoststats {
+    margin-top: 0px;
+    width: 135px;
+    height: 142px;
+    border-collapse: collapse;
+    border-spacing: 0px;
+    position:absolute;
+    right: 0px;
+}
+
+/* TODO: Remove this style after decoupling from classic theme */
+div.dashlet table.hoststats.narrow {
+    margin-top: 0px;
+}
+
+div.dashlet table.hoststats th, table.hoststats td {
+    padding: 0px 4px;
+    border-color: #498aa6;
+    border-style: solid none;
+    border-width: 1px;
+    vertical-align: middle;
+}
+
+div.dashlet table.hoststats th {
+    text-align: left;
+    background-color: transparent;
+}
+
+div.dashlet table.hoststats td {
+    text-align: right;
+    background-color: #95bbcd;
+}
+
+div.dashlet table.hoststats th.color, div.dashlet table.hoststats td.color {
+    padding: 0px;
+    width: 4px;
+}
+
+div.dashlet table.hoststats.narrow th, table.hoststats.narrow td {
+    font-size: 8pt;
+    font-weight: normal;
+}
+
+div.dashlet table.hoststats a {
+    color: black;
+    text-decoration: none;
+}
+div.dashlet table.hoststats a:hover {
+    text-decoration: underline;
+}
+
+div.dashlet_inner div.stats table.hoststats a, div.dashlet_inner div.stats table.hoststats body.main .popup_menu span, body.main .popup_menu div.dashlet_inner div.stats table.hoststats span {
+    color: $theme-color-text;
+}
+
+div.dashlet_inner div.stats {
+    background-color: $theme-color-white;
+    position: relative;
+    height: 100%;
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
+}
+
+body.main.dashlet {
+  padding: 8px 0px;
+  background: transparent;
+  border-top: none;
+  box-sizing: border-box;
+}
+
+body.main.dashlet table.data.table {
+    padding: 0px 8px;
+}
+
+body.main.dashlet table.data.table tr.data {
+    background: $theme-color-nuance-13;
+    transition: .15s ease-in-out;
+}
+
+body.main.dashlet table.data.table tr.data:hover {
+    background-color: $theme-color-background;
+}
+
+div.dashlet_inner div.stats table th, div.dashlet_inner div.stats table td {
+    background: $theme-color-white;
+    border-top: 1px solid $theme-color-table-border;
+    border-bottom: none;
+}
+
+div[id^=dashlet] div.dashlet_inner > div {
+  border: 1px solid $theme-color-table-border;
+  box-sizing: border-box;
+  border-top: none;
+  transition: .15s ease-in-out;
+}
+
+iframe[id^=dashlet_iframe] {
+  transition: .15s ease-in-out;
+  background: $theme-color-white;
+}
+
 ///**
 // * Dashboard editing
 // */

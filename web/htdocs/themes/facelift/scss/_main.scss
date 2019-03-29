@@ -782,72 +782,8 @@ div.timerange {
 
 body.main input, body.main select, body.main textarea, body.main #mk_side_search_field, body.main select, body.main textarea {
   border: 1px solid $theme-color-table-border; }
-body.main.dashlet {
-  padding: 8px 0px;
-  background: transparent;
-  border-top: none;
-  box-sizing: border-box; }
-  body.main.dashlet table.data.table {
-    padding: 0px 8px; }
-    body.main.dashlet table.data.table tr.data {
-      background: $theme-color-nuance-13;
-      transition: .15s ease-in-out; }
-      body.main.dashlet table.data.table tr.data:hover {
-        background-color: $theme-color-background; }
 body.main.visible div.foldable .title {
   color: $theme-color-text; }
-
-div.dashlet_inner div.stats {
-  background-color: $theme-color-white; }
-  div.dashlet_inner div.stats canvas.pie {
-    top: 7px;
-    transform: scale(0.8, 0.8);
-    transform-origin: center; }
-  div.dashlet_inner div.stats table.hoststats {
-    right: 0px;
-    margin-top: 0px; }
-    div.dashlet_inner div.stats table.hoststats th, div.dashlet_inner div.stats table.hoststats td {
-      padding: 0px 4px; }
-      div.dashlet_inner div.stats table.hoststats th.color, div.dashlet_inner div.stats table.hoststats td.color {
-        padding: 0px; }
-    div.dashlet_inner div.stats table.hoststats a, div.dashlet_inner div.stats table.hoststats body.main .popup_menu span, body.main .popup_menu div.dashlet_inner div.stats table.hoststats span {
-      color: $theme-color-text; }
-  div.dashlet_inner div.stats .globe {
-    transform: scale(0.8, 0.8);
-    transform-origin: center;
-    filter: grayscale(100%); }
-  div.dashlet_inner div.stats table td {
-    background: $theme-color-white;
-    border-top: 1px solid $theme-color-table-border;
-    border-bottom: none; }
-  div.dashlet_inner div.stats table th {
-    border-top: 1px solid $theme-color-table-border;
-    border-bottom: none;
-    background: $theme-color-white; }
-
-div[id^=dashlet] div.dashlet_inner > div {
-  border: 1px solid $theme-color-table-border;
-  box-sizing: border-box;
-  border-top: none;
-  transition: .15s ease-in-out; }
-
-iframe[id^=dashlet_iframe] {
-  transition: .15s ease-in-out;
-  background: $theme-color-white; }
-
-div.dashlet > div.title {
-  font-size: $theme-font-size-small;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: $theme-color-table-text;
-  background: $theme-color-white;
-  border: 1px solid $theme-color-table-border;
-  border-bottom: 0px solid;
-  font-weight: 500; }
-  div.dashlet > div.title span {
-    padding-left: 8px; }
-    div.dashlet > div.title span a, div.dashlet > div.title span body.main .popup_menu span, body.main .popup_menu div.dashlet > div.title span span {
-      color: $theme-color-table-text; }
 
 #controls, ul.sub {
   padding: 8px;

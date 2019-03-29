@@ -34,7 +34,7 @@ from __future__ import (
 )
 
 import argparse
-from collections import OrderedDict, Sequence
+from collections import OrderedDict, MutableSequence
 import functools
 import itertools
 import json
@@ -550,7 +550,7 @@ class Role(Metadata):
 ListElem = TypeVar('ListElem', bound=Metadata)
 
 
-class K8sList(Generic[ListElem], Sequence):
+class K8sList(Generic[ListElem], MutableSequence):
     def __init__(self, elements):
         # type: (List[ListElem]) -> None
         super(K8sList, self).__init__()
@@ -559,9 +559,18 @@ class K8sList(Generic[ListElem], Sequence):
     def __getitem__(self, index):
         return self.elements[index]
 
+    def __setitem__(self, index, value):
+        self.elements.__setitem__(index, value)
+
+    def __delitem__(self, index):
+        self.elements.__delitem__(index)
+
     def __len__(self):
         # type: () -> int
         return len(self.elements)
+
+    def insert(self, index, value):
+        self.elements.insert(index, value)
 
     def labels(self):
         return {item.name: item.labels for item in self}

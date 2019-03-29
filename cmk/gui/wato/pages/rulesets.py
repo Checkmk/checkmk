@@ -30,6 +30,7 @@ import itertools
 import pprint
 import json
 import re
+from typing import NamedTuple, List, Optional
 
 from cmk.utils.regex import escape_regex_chars
 
@@ -43,7 +44,6 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     Transform,
-    FixedValue,
     Checkbox,
     ListChoice,
     Tuple,
@@ -51,7 +51,6 @@ from cmk.gui.valuespec import (
     Dictionary,
     RegExpUnicode,
     DropdownChoice,
-    Alternative,
 )
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulespecs import (
@@ -1200,6 +1199,14 @@ class ModeRuleSearch(WatoMode):
         )
 
 
+RuleConditions = NamedTuple("RuleConditions", [
+    ("folder_path", str),
+    ("host_tags", List[str]),
+    ("host_list", List[str]),
+    ("item_list", Optional[List[str]]),
+])
+
+
 class EditRuleMode(WatoMode):
     def _from_vars(self):
         self._name = html.request.var("varname")
@@ -1236,7 +1243,7 @@ class EditRuleMode(WatoMode):
                                 "not exist anymore."))
         elif html.request.var("_export_rule"):
             self._rule = watolib.Rule(self._folder, self._ruleset)
-            self._update_rule_from_html_vars()
+            self._update_rule_from_vars()
 
         else:
             raise NotImplementedError()
@@ -1266,12 +1273,10 @@ class EditRuleMode(WatoMode):
         if not html.check_transaction():
             return self._back_mode
 
-        self._update_rule_from_html_vars()
+        self._update_rule_from_vars()
 
         # Check permissions on folders
-        new_folder_path = self._vs_folder().from_html_vars("new_rule_folder")
-        self._vs_folder().validate_value(new_folder_path, "new_rule_folder")
-        new_rule_folder = watolib.Folder.folder(new_folder_path)
+        new_rule_folder = watolib.Folder.folder(self._get_rule_conditions_from_vars().folder_path)
         if not isinstance(self, ModeNewRule):
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
@@ -1306,30 +1311,21 @@ class EditRuleMode(WatoMode):
 
         return (self._back_mode, self._success_message())
 
-    def _update_rule_from_html_vars(self):
+    def _update_rule_from_vars(self):
         # Additional options
         rule_options = self._vs_rule_options().from_html_vars("options")
         self._vs_rule_options().validate_value(rule_options, "options")
         self._rule.rule_options = rule_options
 
-        condition_type = self._vs_condition_type().from_html_vars("condition_type")
-        self._vs_condition_type().validate_value(condition_type, "condition_type")
-
-        if condition_type == "predefined":
-            condition_id = self._vs_predefined_condition_id().from_html_vars(
-                "predefined_condition_id")
-            self._vs_predefined_condition_id().validate_value(condition_id,
-                                                              "predefined_condition_id")
+        if self._get_condition_type_from_vars() == "predefined":
+            condition_id = self._get_condition_id_from_vars()
             self._rule.rule_options["predefined_condition_id"] = condition_id
 
-            tag_specs, host_list, item_list = self._get_predefined_rule_conditions(condition_id)
-        else:
-            tag_specs, host_list, item_list = self._get_explicit_rule_conditions()
-
         # CONDITION
-        self._rule.tag_specs = tag_specs
-        self._rule.host_list = host_list
-        self._rule.item_list = item_list
+        conditions = self._get_rule_conditions_from_vars()
+        self._rule.tag_specs = conditions.host_tags
+        self._rule.host_list = conditions.host_list
+        self._rule.item_list = conditions.item_list
 
         # VALUE
         if self._ruleset.valuespec():
@@ -1339,12 +1335,26 @@ class EditRuleMode(WatoMode):
             value = html.request.var("value") == "yes"
         self._rule.value = value
 
+    def _get_condition_type_from_vars(self):
+        condition_type = self._vs_condition_type().from_html_vars("condition_type")
+        self._vs_condition_type().validate_value(condition_type, "condition_type")
+        return condition_type
+
+    def _get_condition_id_from_vars(self):
+        condition_id = self._vs_predefined_condition_id().from_html_vars("predefined_condition_id")
+        self._vs_predefined_condition_id().validate_value(condition_id, "predefined_condition_id")
+        return condition_id
+
+    def _get_rule_conditions_from_vars(self):
+        # type: () -> RuleConditions
+        if self._get_condition_type_from_vars() == "predefined":
+            return self._get_predefined_rule_conditions(self._get_condition_id_from_vars())
+        return self._get_explicit_rule_conditions()
+
     def _get_predefined_rule_conditions(self, condition_id):
-        # TODO!
-        tag_specs = []
-        host_list = []
-        item_list = []
-        return tag_specs, host_list, item_list
+        store = PredefinedConditionStore()
+        store_entries = store.filter_usable_entries(store.load_for_reading())
+        return RuleConditions(**store_entries[condition_id]["conditions"])
 
     @abc.abstractmethod
     def _save_rule(self):
@@ -1359,56 +1369,10 @@ class EditRuleMode(WatoMode):
                  (self._ruleset.title(), self._folder.alias_path())
 
     def _get_explicit_rule_conditions(self):
-        vs_tag_conditions = self._vs_host_tag_condition()
-        tag_list = vs_tag_conditions.from_html_vars("")
-        vs_tag_conditions.validate_value(tag_list, "")
-
-        # Host list
-        explicit_hosts = self._vs_explicit_hosts().from_html_vars("explicit_hosts")
-        self._vs_explicit_hosts().validate_value(explicit_hosts, "explicit_hosts")
-
-        if explicit_hosts is None:
-            host_list = watolib.ALL_HOSTS
-        else:
-            host_list, negate = explicit_hosts
-
-            if negate:
-                host_list = [watolib.ENTRY_NEGATE_CHAR + h for h in host_list]
-
-            # append watolib.ALL_HOSTS to negated host lists
-            if host_list and host_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
-                host_list += watolib.ALL_HOSTS
-            elif not host_list and negate:
-                host_list = watolib.ALL_HOSTS  # equivalent
-
-        # Item list
-        itemtype = self._rulespec.item_type
-        if itemtype:
-            explicit_services = self._vs_explicit_services().from_html_vars("explicit_services")
-            self._vs_explicit_services().validate_value(explicit_services, "explicit_services")
-
-            if explicit_services is None:
-                item_list = watolib.ALL_SERVICES
-            else:
-                item_list, negate = explicit_services
-
-                if negate:
-                    item_list = [watolib.ENTRY_NEGATE_CHAR + i for i in item_list]
-
-                if item_list and item_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
-                    item_list += watolib.ALL_SERVICES
-                elif not item_list and negate:
-                    item_list = watolib.ALL_SERVICES  # equivalent
-
-                if not item_list:
-                    raise MKUserError(
-                        "item_0",
-                        _("Please specify at least one %s or this rule will never match.") %
-                        self._rulespec.item_name)
-        else:
-            item_list = None
-
-        return tag_list, host_list, item_list
+        vs = self._vs_explicit_conditions()
+        conditions = vs.from_html_vars("explicit_conditions")
+        vs.validate_value(conditions, "explicit_conditions")
+        return conditions
 
     def page(self):
         if html.request.var("_export_rule"):
@@ -1521,34 +1485,75 @@ class EditRuleMode(WatoMode):
                 for ident, entry in store.filter_usable_entries(store.load_for_reading()).items()]
 
     def _show_explicit_conditions(self):
-        # Rule folder
-        forms.section(_("Folder"), css="condition explicit")
-        self._vs_folder().render_input("new_rule_folder", self._folder.path())
+        conditions = RuleConditions(
+            folder_path=self._folder.path(),
+            host_tags=self._rule.tag_specs,
+            host_list=self._rule.host_list,
+            item_list=self._rule.item_list,
+        )
 
-        # Host tags
-        forms.section(_("Host tags"), css="condition explicit")
-        self._vs_host_tag_condition().render_input(varprefix="", value=self._rule.tag_specs)
+        self._vs_explicit_conditions(render="form_part").render_input("explicit_conditions",
+                                                                      conditions)
 
-        # Explicit hosts / watolib.ALL_HOSTS
-        forms.section(_("Explicit hosts"), css="condition explicit")
+    def _vs_explicit_conditions(self, **kwargs):
+        return Transform(
+            Dictionary(
+                elements=[
+                    ("folder_path", self._vs_folder()),
+                    ("host_tags", self._vs_host_tag_condition()),
+                    ("explicit_hosts", self._vs_explicit_hosts()),
+                ] + self._service_elements(),
+                headers=[
+                    (_("Folder"), "condition explicit", ["folder_path"]),
+                    (_("Host tags"), "condition explicit", ["host_tags"]),
+                    (_("Explicit hosts"), "condition explicit", ["explicit_hosts"]),
+                    (self._service_title(), "condition explicit", ["explicit_services"]),
+                ],
+                optional_keys=["explicit_hosts", "explicit_services"],
+                **kwargs),
+            forth=self._to_valuespec,
+            back=self._from_valuespec,
+        )
 
-        explicit_hosts = self._get_explicit(self._rule.host_list, watolib.ALL_HOSTS)
-        self._vs_explicit_hosts().render_input("explicit_hosts", explicit_hosts)
+    def _to_valuespec(self, conditions):
+        # type: (RuleConditions) -> dict
+        explicit = {
+            "folder_path": conditions.folder_path,
+            "host_tags": conditions.host_tags,
+        }
 
-        # Itemlist
-        itemtype = self._ruleset.item_type()
-        if itemtype:
-            if itemtype == "service":
-                forms.section(_("Services"), css="condition explicit")
-            elif itemtype == "checktype":
-                forms.section(_("Check types"), css="condition explicit")
-            elif itemtype == "item":
-                forms.section(self._ruleset.item_name().title(), css="condition explicit")
-            else:
-                raise MKUserError(None, "Invalid item type '%s'" % itemtype)
+        explicit_hosts = self._get_explicit(conditions.host_list, watolib.ALL_HOSTS)
+        if explicit_hosts is not None:
+            explicit["explicit_hosts"] = explicit_hosts
 
-            explicit_services = self._get_explicit(self._rule.item_list, watolib.ALL_SERVICES)
-            self._vs_explicit_services().render_input("explicit_services", explicit_services)
+        if self._ruleset.item_type():
+            explicit_services = self._get_explicit(conditions.item_list, watolib.ALL_SERVICES)
+            if explicit_services is not None:
+                explicit["explicit_services"] = explicit_services
+
+        return explicit
+
+    def _service_elements(self):
+        if not self._ruleset.item_type():
+            return []
+
+        return [("explicit_services", self._vs_explicit_services())]
+
+    def _service_title(self):
+        item_type = self._ruleset.item_type()
+        if not item_type:
+            return None
+
+        if item_type == "service":
+            return _("Services")
+
+        if item_type == "checktype":
+            return _("Check types")
+
+        if item_type == "item":
+            return self._ruleset.item_name().title()
+
+        raise MKUserError(None, "Invalid item type '%s'" % item_type)
 
     def _get_explicit(self, object_list, all_objects):
         if object_list == all_objects:
@@ -1561,6 +1566,54 @@ class EditRuleMode(WatoMode):
             object_list = [i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in object_list[:-1]]
 
         return object_list, negate
+
+    def _from_valuespec(self, explicit):
+        # type: (dict) -> RuleConditions
+
+        # Host list
+        if "explicit_hosts" not in explicit:
+            host_list = watolib.ALL_HOSTS
+        else:
+            host_list, negate = explicit["explicit_hosts"]
+
+            if negate:
+                host_list = [watolib.ENTRY_NEGATE_CHAR + h for h in host_list]
+
+            # append watolib.ALL_HOSTS to negated host lists
+            if host_list and host_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
+                host_list += watolib.ALL_HOSTS
+            elif not host_list and negate:
+                host_list = watolib.ALL_HOSTS  # equivalent
+
+        # Item list
+        itemtype = self._rulespec.item_type
+        item_list = None
+        if itemtype:
+            if "explicit_services" not in explicit:
+                item_list = watolib.ALL_SERVICES
+            else:
+                item_list, negate = explicit["explicit_services"]
+
+                if item_list and negate:
+                    item_list = [watolib.ENTRY_NEGATE_CHAR + i for i in item_list]
+
+                if item_list and item_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
+                    item_list += watolib.ALL_SERVICES
+                elif not item_list and negate:
+                    item_list = watolib.ALL_SERVICES  # equivalent
+
+                if not item_list:
+                    raise MKUserError(
+                        "item_0",
+                        _("Please specify at least one %s or this rule will never match.") %
+                        self._rulespec.item_name)
+
+        return RuleConditions(
+            folder_path=explicit["folder_path"],
+            host_tags=explicit["host_tags"],
+            host_list=host_list,
+            item_list=item_list,
+        )
 
     def _show_rule_representation(self):
         content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_dict_config()))
@@ -1593,29 +1646,19 @@ class EditRuleMode(WatoMode):
 
     def _vs_host_tag_condition(self):
         return HostTagCondition(
+            title=_("Host tags"),
             help=_("The rule will only be applied to hosts fulfilling all "
                    "of the host tag conditions listed here, even if they appear "
-                   "in the list of explicit host names."),)
+                   "in the list of explicit host names."),
+        )
 
     def _vs_explicit_hosts(self):
-        return Alternative(
-            style="dropdown",
+        return Tuple(
+            title=_("Explicit hosts"),
             elements=[
-                FixedValue(
-                    None,
-                    title=_("No explicit host filtering"),
-                    totext="",
-                ),
-                Tuple(
-                    title=_("Specify explicit host names"),
-                    elements=[
-                        ListOfStrings(orientation="horizontal", valuespec=ConfigHostname(size=30,)),
-                        Checkbox(
-                            label=_(
-                                "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
-                            ),),
-                    ],
-                ),
+                ListOfStrings(orientation="horizontal", valuespec=ConfigHostname(size=30,)),
+                Checkbox(
+                    label=_("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"),),
             ],
             help=_(
                 "Here you can enter a list of explicit host names that the rule should or should "
@@ -1628,23 +1671,12 @@ class EditRuleMode(WatoMode):
         )
 
     def _vs_explicit_services(self):
-        return Alternative(
-            style="dropdown",
+        return Tuple(
+            title=self._service_title(),
             elements=[
-                FixedValue(
-                    None,
-                    title=_("No explicit service filtering"),
-                    totext="",
-                ),
-                Tuple(
-                    title=_("Specify explicit values"),
-                    elements=[
-                        self._vs_service_conditions(),
-                        Checkbox(
-                            label=_(
-                                "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
-                            ),),
-                    ],
+                self._vs_service_conditions(),
+                Checkbox(
+                    label=_("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"),
                 ),
             ],
         )
@@ -1766,10 +1798,11 @@ class ModeNewRule(EditRuleMode):
             self._folder = watolib.Folder.current()
 
         else:
-            # Submitting the edit dialog
-            folder_path = self._vs_folder().from_html_vars("new_rule_folder")
-            self._vs_folder().validate_value(folder_path, "new_rule_folder")
-            self._folder = watolib.Folder.folder(folder_path)
+            # Submitting the create dialog
+            self._folder = watolib.Folder.folder(self._get_folder_path_from_vars())
+
+    def _get_folder_path_from_vars(self):
+        return self._get_rule_conditions_from_vars().folder_path
 
     def _set_rule(self):
         host_list = watolib.ALL_HOSTS

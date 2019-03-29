@@ -3632,16 +3632,22 @@ class Dictionary(ValueSpec):
 
     def _render_input_form(self, varprefix, value, as_part=False):
         if self._headers:
-            for header, sections in self._headers:
-                self.render_input_form_header(varprefix, value, header, sections, as_part)
+            for entry in self._headers:
+                if len(entry) == 2:
+                    header, section_elements = entry
+                    css = None
+                else:
+                    header, css, section_elements = entry
+                self.render_input_form_header(
+                    varprefix, value, header, section_elements, as_part, css=css)
         else:
-            self.render_input_form_header(varprefix, value,
-                                          self.title() or _("Properties"), None, as_part)
+            self.render_input_form_header(
+                varprefix, value, self.title() or _("Properties"), None, as_part, css=None)
 
         if not as_part:
             forms.end()
 
-    def render_input_form_header(self, varprefix, value, title, sections, as_part):
+    def render_input_form_header(self, varprefix, value, title, section_elements, as_part, css):
         if not as_part:
             forms.header(title, isopen=self._form_isopen, narrow=self._form_narrow)
 
@@ -3649,7 +3655,7 @@ class Dictionary(ValueSpec):
             if param in self._hidden_keys:
                 continue
 
-            if sections and param not in sections:
+            if section_elements and param not in section_elements:
                 continue
 
             div_id = varprefix + "_d_" + param
@@ -3662,10 +3668,10 @@ class Dictionary(ValueSpec):
                     vp + "_USE",
                     deflt=visible,
                     onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id)
-                forms.section(vs.title(), checkbox=checkbox_code)
+                forms.section(vs.title(), checkbox=checkbox_code, css=css)
             else:
                 visible = True
-                forms.section(vs.title())
+                forms.section(vs.title(), css=css)
 
             html.open_div(id_=div_id, style="display:none;" if not visible else None)
             html.help(vs.help())

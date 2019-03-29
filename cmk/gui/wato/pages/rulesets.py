@@ -42,12 +42,15 @@ from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
+    FixedValue,
+    Checkbox,
     ListChoice,
     Tuple,
     ListOfStrings,
     Dictionary,
     RegExpUnicode,
     DropdownChoice,
+    Alternative,
 )
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulespecs import (
@@ -1360,19 +1363,21 @@ class EditRuleMode(WatoMode):
         vs_tag_conditions.validate_value(tag_list, "")
 
         # Host list
-        if not html.get_checkbox("explicit_hosts"):
+        explicit_hosts = self._vs_explicit_hosts().from_html_vars("explicit_hosts")
+        self._vs_explicit_hosts().validate_value(explicit_hosts, "explicit_hosts")
+
+        if explicit_hosts is None:
             host_list = watolib.ALL_HOSTS
         else:
-            negate = html.get_checkbox("negate_hosts")
-            vs = ListOfStrings()
-            host_list = vs.from_html_vars("hostlist")
-            vs.validate_value(host_list, "hostlist")
+            host_list, negate = explicit_hosts
+
             if negate:
                 host_list = [watolib.ENTRY_NEGATE_CHAR + h for h in host_list]
+
             # append watolib.ALL_HOSTS to negated host lists
-            if len(host_list) > 0 and host_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
+            if host_list and host_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
                 host_list += watolib.ALL_HOSTS
-            elif len(host_list) == 0 and negate:
+            elif not host_list and negate:
                 host_list = watolib.ALL_HOSTS  # equivalent
 
         # Item list
@@ -1537,35 +1542,17 @@ class EditRuleMode(WatoMode):
 
         # Explicit hosts / watolib.ALL_HOSTS
         forms.section(_("Explicit hosts"), css="condition explicit")
-        div_id = "div_all_hosts"
 
-        checked = self._rule.host_list != watolib.ALL_HOSTS
-        html.checkbox(
-            "explicit_hosts",
-            checked,
-            onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id,
-            label=_("Specify explicit host names"))
-        html.open_div(style="display:none;" if not checked else None, id_=div_id)
-        negate_hosts = len(self._rule.host_list) > 0 and self._rule.host_list[0].startswith("!")
+        if self._rule.host_list == watolib.ALL_HOSTS:
+            explicit_hosts = None
+        else:
+            explicit_hosts = [
+                h.strip("!") for h in self._rule.host_list if h != watolib.ALL_HOSTS[0]
+            ]
+            negate_hosts = len(self._rule.host_list) > 0 and self._rule.host_list[0].startswith("!")
+            explicit_hosts = (explicit_hosts, negate_hosts)
 
-        explicit_hosts = [h.strip("!") for h in self._rule.host_list if h != watolib.ALL_HOSTS[0]]
-        ListOfStrings(
-            orientation="horizontal", valuespec=ConfigHostname(size=30)).render_input(
-                "hostlist", explicit_hosts)
-
-        html.checkbox(
-            "negate_hosts",
-            negate_hosts,
-            label=_("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
-        html.close_div()
-        html.help(
-            _("Here you can enter a list of explicit host names that the rule should or should "
-              "not apply to. Leave this option disabled if you want the rule to "
-              "apply for all hosts specified by the given tags. The names that you "
-              "enter here are compared with case sensitive exact matching. Alternatively "
-              "you can use regular expressions if you enter a tilde (<tt>~</tt>) as the first "
-              "character. That regular expression must match the <i>beginning</i> of "
-              "the host names in question."))
+        self._vs_explicit_hosts().render_input("explicit_hosts", explicit_hosts)
 
         # Itemlist
         itemtype = self._ruleset.item_type()
@@ -1658,6 +1645,36 @@ class EditRuleMode(WatoMode):
             title=_("Folder"),
             choices=watolib.Folder.folder_choices(),
             encode_value=False,
+        )
+
+    def _vs_explicit_hosts(self):
+        return Alternative(
+            style="dropdown",
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("No explicit host filtering"),
+                    totext="",
+                ),
+                Tuple(
+                    title=_("Specify explicit host names"),
+                    elements=[
+                        ListOfStrings(orientation="horizontal", valuespec=ConfigHostname(size=30,)),
+                        Checkbox(
+                            label=_(
+                                "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
+                            ),),
+                    ],
+                ),
+            ],
+            help=_(
+                "Here you can enter a list of explicit host names that the rule should or should "
+                "not apply to. Leave this option disabled if you want the rule to "
+                "apply for all hosts specified by the given tags. The names that you "
+                "enter here are compared with case sensitive exact matching. Alternatively "
+                "you can use regular expressions if you enter a tilde (<tt>~</tt>) as the first "
+                "character. That regular expression must match the <i>beginning</i> of "
+                "the host names in question."),
         )
 
     def _vs_service_conditions(self):

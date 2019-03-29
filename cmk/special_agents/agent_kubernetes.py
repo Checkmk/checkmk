@@ -592,7 +592,7 @@ class NodeList(K8sList[Node]):
     def stats(self):
         return {node.name: node.stats for node in self if node.name}
 
-    def cluster_resources(self):
+    def total_resources(self):
         merge = functools.partial(left_join_dicts, operation=operator.add)
         return reduce(merge, self.resources().itervalues())
 
@@ -670,7 +670,7 @@ class PodList(K8sList[Pod]):
             if node is not None
         }
 
-    def cluster_resources(self):
+    def total_resources(self):
         merge = functools.partial(left_join_dicts, operation=operator.add)
         return reduce(merge, [p.resources for p in self], Pod.zero_resources())
 
@@ -974,8 +974,8 @@ class ApiData(object):
         e.get('k8s_storage_classes').insert(self.storage_classes.list_storage_classes())
         e.get('k8s_roles').insert({'roles': self.roles.list_roles()})
         e.get('k8s_roles').insert({'cluster_roles': self.cluster_roles.list_roles()})
-        e.get('k8s_resources').insert(self.nodes.cluster_resources())
-        e.get('k8s_resources').insert(self.pods.cluster_resources())
+        e.get('k8s_resources').insert(self.nodes.total_resources())
+        e.get('k8s_resources').insert(self.pods.total_resources())
         e.get('k8s_resources').insert(self.pods.pods_in_cluster())
         e.get('k8s_stats').insert(self.nodes.cluster_stats())
         return '\n'.join(e.output())

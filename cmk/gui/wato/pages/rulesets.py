@@ -1265,7 +1265,9 @@ class EditRuleMode(WatoMode):
         self._update_rule_from_html_vars()
 
         # Check permissions on folders
-        new_rule_folder = watolib.Folder.folder(html.request.var("new_rule_folder"))
+        new_folder_path = self._vs_folder().from_html_vars("new_rule_folder")
+        self._vs_folder().validate_value(new_folder_path, "new_rule_folder")
+        new_rule_folder = watolib.Folder.folder(new_folder_path)
         if not isinstance(self, ModeNewRule):
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
@@ -1522,7 +1524,7 @@ class EditRuleMode(WatoMode):
     def _show_explicit_conditions(self):
         # Rule folder
         forms.section(_("Folder"), css="condition explicit")
-        html.dropdown("new_rule_folder", watolib.Folder.folder_choices(), deflt=self._folder.path())
+        self._vs_folder().render_input("new_rule_folder", self._folder.path())
         html.help(_("The rule is only applied to hosts directly in or below this folder."))
 
         # Host tags
@@ -1651,6 +1653,13 @@ class EditRuleMode(WatoMode):
         html.close_table()
         html.close_center()
 
+    def _vs_folder(self):
+        return DropdownChoice(
+            title=_("Folder"),
+            choices=watolib.Folder.folder_choices(),
+            encode_value=False,
+        )
+
     def _vs_service_conditions(self):
         return ListOfStrings(
             orientation="horizontal",
@@ -1733,8 +1742,10 @@ class ModeNewRule(EditRuleMode):
             self._folder = watolib.Folder.current()
 
         else:
-            # Submitting the creation dialog
-            self._folder = watolib.Folder.folder(html.request.var("new_rule_folder"))
+            # Submitting the edit dialog
+            folder_path = self._vs_folder().from_html_vars("new_rule_folder")
+            self._vs_folder().validate_value(folder_path, "new_rule_folder")
+            self._folder = watolib.Folder.folder(folder_path)
 
     def _set_rule(self):
         host_list = watolib.ALL_HOSTS

@@ -51,6 +51,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
+def dummy_rulespec():
+    rulespec_class = type("DummyRulespec", (ServiceRulespec,), {
+        "group": RulespecGroupUserInterface,
+        "name": "dummy",
+        "valuespec": None,
+    })
+    # Pylint does not get this right for some reason
+    return rulespec_class()  # pylint: disable=abstract-class-instantiated
+
+
+def vs_conditions():
+    return Transform(
+        VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
+        forth=lambda c: RuleConditions(**c),
+        back=lambda c: dict(c._asdict()),
+    )
+
+
 class PredefinedConditionModeType(SimpleModeType):
     def type_name(self):
         return "predefined_condition"
@@ -109,6 +127,10 @@ class ModePredefinedConditions(SimpleListMode):
 
     def _show_entry_cells(self, table, ident, entry):
         table.cell(_("Title"), html.render_text(entry["title"]))
+
+        table.cell(_("Conditions"))
+        html.write(vs_conditions().value_to_text(entry["conditions"]))
+
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
             html.write_text(
@@ -116,6 +138,7 @@ class ModePredefinedConditions(SimpleListMode):
                   "\"Write access to all predefined conditions\")"))
         else:
             html.write_text(self._contact_group_alias(entry["owned_by"]))
+
         table.cell(_("Shared with"))
         if not entry["shared_with"]:
             html.write_text(_("Not shared"))
@@ -156,7 +179,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
             admin_element = []
 
         return [
-            ("conditions", self._vs_conditions()),
+            ("conditions", vs_conditions()),
             ("owned_by",
              Alternative(
                  title=_("Editable by"),
@@ -190,21 +213,6 @@ class ModeEditPredefinedCondition(SimpleEditMode):
                  autoheight=False,
              )),
         ]
-
-    def _vs_conditions(self):
-        rulespec_class = type("DummyRulespec", (ServiceRulespec,), {
-            "group": RulespecGroupUserInterface,
-            "name": "dummy",
-            "valuespec": None,
-        })
-        # Pylint does not get this right for some reason
-        dummy_rulespec = rulespec_class()  # pylint: disable=abstract-class-instantiated
-
-        return Transform(
-            VSExplicitConditions(rulespec=dummy_rulespec, render="form_part"),
-            forth=lambda c: RuleConditions(**c),
-            back=lambda c: dict(c._asdict()),
-        )
 
     def _contact_group_choices(self, only_own=False):
         contact_groups = load_contact_group_information()

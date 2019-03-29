@@ -816,11 +816,13 @@ class ModeEditRuleset(WatoMode):
     def _rule_conditions(self, rule):
         self._predefined_condition_info(rule)
 
-        html.open_ul(class_="conditions")
-        self._tag_conditions(rule)
-        self._host_conditions(rule)
-        self._service_conditions(rule)
-        html.close_ul()
+        conditions = RuleConditions(
+            folder_path=rule.folder.path(),
+            host_tags=rule.tag_specs,
+            host_list=rule.host_list,
+            item_list=rule.item_list,
+        )
+        html.write(VSExplicitConditions(rulespec=rule.ruleset.rulespec).value_to_text(conditions))
 
     def _predefined_condition_info(self, rule):
         condition_id = rule.predefined_condition_id()
@@ -833,156 +835,6 @@ class ModeEditRuleset(WatoMode):
             ("ident", condition_id),
         ])
         html.write(_("Predefined condition: <a href=\"%s\">%s</a>") % (url, condition["title"]))
-
-    def _tag_conditions(self, rule):
-        for tagspec in rule.tag_specs:
-            if tagspec[0] == '!':
-                negate = True
-                tag_id = tagspec[1:]
-            else:
-                negate = False
-                tag_id = tagspec
-
-            html.open_li(class_="condition")
-            self._single_tag_condition(tag_id, negate)
-            html.close_li()
-
-    def _single_tag_condition(self, tag_id, negate):
-        tag = config.tags.get_tag_or_aux_tag(tag_id)
-        if tag and tag.title:
-            if not tag.is_aux_tag:
-                html.write_text(_("Host") + ": " + tag.group.title + " " + _("is") + " ")
-                if negate:
-                    html.b(_("not") + " ")
-            else:
-                if negate:
-                    html.write_text(_("Host does not have tag") + " ")
-                else:
-                    html.write_text(_("Host has tag") + " ")
-            html.b(tag.title)
-            return
-
-        if negate:
-            html.write_text(_("Host has <b>not</b> the tag") + " ")
-            html.tt(tag_id)
-        else:
-            html.write_text(_("Host has the tag") + " ")
-            html.tt(tag_id)
-
-    def _host_conditions(self, rule):
-        if rule.host_list == watolib.ALL_HOSTS:
-            return
-        # Other cases should not occur, e.g. list of explicit hosts
-        # plus watolib.ALL_HOSTS.
-        condition = self._render_host_condition_text(rule)
-        if condition:
-            html.li(condition, class_="condition")
-
-    def _render_host_condition_text(self, rule):
-        if rule.host_list == []:
-            return _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
-
-        condition, text_list = [], []
-
-        if rule.host_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
-            host_list = rule.host_list[:-1]
-            is_negate = True
-        else:
-            is_negate = False
-            host_list = rule.host_list
-
-        regex_count = len([x for x in host_list if "~" in x])
-
-        condition.append(_("Host name"))
-
-        if regex_count == len(host_list) or regex_count == 0:
-            # Entries are either complete regex or no regex at all
-            is_regex = regex_count > 0
-            if is_regex:
-                condition.append(
-                    _("is not one of regex") if is_negate else _("matches one of regex"))
-            else:
-                condition.append(_("is not one of") if is_negate else _("is"))
-
-            for host_spec in host_list:
-                if not is_regex:
-                    host = watolib.Host.host(host_spec)
-                    if host:
-                        host_spec = html.render_a(host_spec, host.edit_url())
-
-                text_list.append(html.render_b(host_spec.strip("!").strip("~")))
-
-        else:
-            # Mixed entries
-            for host_spec in host_list:
-                is_regex = "~" in host_spec
-                host_spec = host_spec.strip("!").strip("~")
-                if not is_regex:
-                    host = watolib.Host.host(host_spec)
-                    if host:
-                        host_spec = html.render_a(host_spec, host.edit_url())
-
-                if is_negate:
-                    expression = "%s" % (is_regex and _("does not match regex") or _("is not"))
-                else:
-                    expression = "%s" % (is_regex and _("matches regex") or _("is "))
-                text_list.append("%s %s" % (expression, html.render_b(host_spec)))
-
-        if len(text_list) == 1:
-            condition.append(text_list[0])
-        else:
-            condition.append(", ".join(["%s" % s for s in text_list[:-1]]))
-            condition.append(_(" or ") + text_list[-1])
-
-        return HTML(" ").join(condition)
-
-    def _service_conditions(self, rule):
-        if not rule.ruleset.rulespec.item_type or rule.item_list == watolib.ALL_SERVICES:
-            return
-
-        if rule.ruleset.rulespec.item_type == "service":
-            condition = _("Service name ")
-        elif rule.ruleset.rulespec.item_type == "item":
-            condition = rule.ruleset.rulespec.item_name + " "
-
-        is_negate = rule.item_list[-1] == watolib.ALL_SERVICES[0]
-        if is_negate:
-            item_list = rule.item_list[:-1]
-            cleaned_item_list = [
-                i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in is_negate and item_list
-            ]
-        else:
-            item_list = rule.item_list
-            cleaned_item_list = rule.item_list
-
-        exact_match_count = len([x for x in item_list if x[-1] == "$"])
-
-        text_list = []
-        if exact_match_count == len(cleaned_item_list) or exact_match_count == 0:
-            if is_negate:
-                condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")
-            else:
-                condition += exact_match_count == 0 and _("begins with ") or ("is ")
-
-            for item in cleaned_item_list:
-                text_list.append(html.render_b(item.rstrip("$")))
-        else:
-            for item in cleaned_item_list:
-                is_exact = item[-1] == "$"
-                if is_negate:
-                    expression = "%s" % (is_exact and _("is not ") or _("begins not with "))
-                else:
-                    expression = "%s" % (is_exact and _("is ") or _("begins with "))
-                text_list.append("%s%s" % (expression, html.render_b(item.rstrip("$"))))
-
-        if len(text_list) == 1:
-            condition += text_list[0]
-        else:
-            condition += ", ".join(["%s" % s for s in text_list[:-1]])
-            condition += _(" or ") + text_list[-1]
-
-        if condition:
-            html.li(condition, class_="condition")
 
     def _create_form(self):
         html.begin_form("new_rule", add_transid=False)
@@ -1756,6 +1608,165 @@ class VSExplicitConditions(Transform):
             valuespec=RegExpUnicode(size=30, mode=RegExpUnicode.prefix),
             help=self._explicit_service_help_text(),
         )
+
+    def value_to_text(self, value):
+        # type: (RuleConditions) -> None
+        html.open_ul(class_="conditions")
+        self._tag_conditions(value)
+        self._host_conditions(value)
+        self._service_conditions(value)
+        html.close_ul()
+
+    def _tag_conditions(self, conditions):
+        for tagspec in conditions.host_tags:
+            if tagspec[0] == '!':
+                negate = True
+                tag_id = tagspec[1:]
+            else:
+                negate = False
+                tag_id = tagspec
+
+            html.open_li(class_="condition")
+            self._single_tag_condition(tag_id, negate)
+            html.close_li()
+
+    def _single_tag_condition(self, tag_id, negate):
+        tag = config.tags.get_tag_or_aux_tag(tag_id)
+        if tag and tag.title:
+            if not tag.is_aux_tag:
+                html.write_text(_("Host") + ": " + tag.group.title + " " + _("is") + " ")
+                if negate:
+                    html.b(_("not") + " ")
+            else:
+                if negate:
+                    html.write_text(_("Host does not have tag") + " ")
+                else:
+                    html.write_text(_("Host has tag") + " ")
+            html.b(tag.title)
+            return
+
+        if negate:
+            html.write_text(_("Host has <b>not</b> the tag") + " ")
+            html.tt(tag_id)
+        else:
+            html.write_text(_("Host has the tag") + " ")
+            html.tt(tag_id)
+
+    def _host_conditions(self, conditions):
+        if conditions.host_list == watolib.ALL_HOSTS:
+            return
+
+        # Other cases should not occur, e.g. list of explicit hosts
+        # plus watolib.ALL_HOSTS.
+        condition_txt = self._render_host_condition_text(conditions)
+        if condition_txt:
+            html.li(condition_txt, class_="condition")
+
+    def _render_host_condition_text(self, conditions):
+        if conditions.host_list == []:
+            return _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
+
+        condition, text_list = [], []
+
+        if conditions.host_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
+            host_list = conditions.host_list[:-1]
+            is_negate = True
+        else:
+            is_negate = False
+            host_list = conditions.host_list
+
+        regex_count = len([x for x in host_list if "~" in x])
+
+        condition.append(_("Host name"))
+
+        if regex_count == len(host_list) or regex_count == 0:
+            # Entries are either complete regex or no regex at all
+            is_regex = regex_count > 0
+            if is_regex:
+                condition.append(
+                    _("is not one of regex") if is_negate else _("matches one of regex"))
+            else:
+                condition.append(_("is not one of") if is_negate else _("is"))
+
+            for host_spec in host_list:
+                if not is_regex:
+                    host = watolib.Host.host(host_spec)
+                    if host:
+                        host_spec = html.render_a(host_spec, host.edit_url())
+
+                text_list.append(html.render_b(host_spec.strip("!").strip("~")))
+
+        else:
+            # Mixed entries
+            for host_spec in host_list:
+                is_regex = "~" in host_spec
+                host_spec = host_spec.strip("!").strip("~")
+                if not is_regex:
+                    host = watolib.Host.host(host_spec)
+                    if host:
+                        host_spec = html.render_a(host_spec, host.edit_url())
+
+                if is_negate:
+                    expression = "%s" % (is_regex and _("does not match regex") or _("is not"))
+                else:
+                    expression = "%s" % (is_regex and _("matches regex") or _("is "))
+                text_list.append("%s %s" % (expression, html.render_b(host_spec)))
+
+        if len(text_list) == 1:
+            condition.append(text_list[0])
+        else:
+            condition.append(", ".join(["%s" % s for s in text_list[:-1]]))
+            condition.append(_(" or ") + text_list[-1])
+
+        return HTML(" ").join(condition)
+
+    def _service_conditions(self, conditions):
+        if not self._rulespec.item_type or conditions.item_list == watolib.ALL_SERVICES:
+            return
+
+        if self._rulespec.item_type == "service":
+            condition = _("Service name ")
+        elif self._rulespec.item_type == "item":
+            condition = self._rulespec.item_name + " "
+
+        is_negate = conditions.item_list[-1] == watolib.ALL_SERVICES[0]
+        if is_negate:
+            item_list = conditions.item_list[:-1]
+            cleaned_item_list = [
+                i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in is_negate and item_list
+            ]
+        else:
+            item_list = conditions.item_list
+            cleaned_item_list = conditions.item_list
+
+        exact_match_count = len([x for x in item_list if x[-1] == "$"])
+
+        text_list = []
+        if exact_match_count == len(cleaned_item_list) or exact_match_count == 0:
+            if is_negate:
+                condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")
+            else:
+                condition += exact_match_count == 0 and _("begins with ") or ("is ")
+
+            for item in cleaned_item_list:
+                text_list.append(html.render_b(item.rstrip("$")))
+        else:
+            for item in cleaned_item_list:
+                is_exact = item[-1] == "$"
+                if is_negate:
+                    expression = "%s" % (is_exact and _("is not ") or _("begins not with "))
+                else:
+                    expression = "%s" % (is_exact and _("is ") or _("begins with "))
+                text_list.append("%s%s" % (expression, html.render_b(item.rstrip("$"))))
+
+        if len(text_list) == 1:
+            condition += text_list[0]
+        else:
+            condition += ", ".join(["%s" % s for s in text_list[:-1]])
+            condition += _(" or ") + text_list[-1]
+
+        if condition:
+            html.li(condition, class_="condition")
 
 
 @mode_registry.register

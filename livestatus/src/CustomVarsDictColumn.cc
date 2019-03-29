@@ -32,7 +32,6 @@
 class Aggregator;
 
 #ifdef CMC
-#include "Entity.h"
 #include "cmc.h"
 #else
 #include "nagios.h"

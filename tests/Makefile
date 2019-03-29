@@ -49,7 +49,7 @@ test-bandit: $(VENV) bandit.ini
 
 test-docker: $(VENV)
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
-	$(PYTEST) -T docker
+	$(PYTEST) -T docker docker
 
 test-format-python: $(VENV) ../.style.yapf
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories

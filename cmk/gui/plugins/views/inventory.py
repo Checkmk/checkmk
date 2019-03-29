@@ -1121,6 +1121,9 @@ inventory_displayhints.update({
     ".software.applications.kubernetes.service_info.type": {"title": _("Type")},
     ".software.applications.kubernetes.service_info.cluster_ip": {"title": _("Cluster IP")},
     ".software.applications.kubernetes.service_info.load_balancer_ip": {"title": _("Load Balancer IP")},
+    ".software.applications.kubernetes.selector.": {
+        "title": _("Selectors"),
+    },
     ".software.applications.citrix.": {"title": _("Citrix")},
     ".software.applications.citrix.controller.": {"title": _("Controller")},
     ".software.applications.citrix.controller.controller_version": {

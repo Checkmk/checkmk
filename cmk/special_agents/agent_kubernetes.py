@@ -290,7 +290,6 @@ class Service(Metadata):
     def info(self):
         return {
             'type': self._type,
-            'selector': self._selector,
             'cluster_ip': self._cluster_ip,
             'load_balancer_ip': self._load_balancer_ip,
         }
@@ -607,6 +606,9 @@ class ComponentStatusList(K8sList[ComponentStatus]):
 class ServiceList(K8sList[Service]):
     def infos(self):
         return {service.name: service.info for service in self}
+
+    def selector(self):
+        return {service.name: service.selector for service in self}
 
     def ports(self):
         return {service.name: service.ports for service in self}
@@ -1002,6 +1004,7 @@ class ApiData(object):
         logging.info('Output service sections')
         g = Group()
         g.join('labels', self.services.labels())
+        g.join('k8s_selector', self.services.selector())
         g.join('k8s_service_info', self.services.infos())
         g.join('k8s_service_ports', self.services.ports())
         return '\n'.join(g.output(piggyback_prefix="service_"))

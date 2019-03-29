@@ -57,6 +57,8 @@ private:
     bool _toggle_if_missing{false};
     time_t _disabled_until{0};
     std::unique_ptr<wmi::Helper> _helper;
+
+    std::string cached_; // last output stored here, may be reused on timeout
 };
 
 #endif  // SectionWMI_h

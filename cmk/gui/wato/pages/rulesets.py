@@ -445,6 +445,11 @@ class ModeEditRuleset(WatoMode):
     def permissions(cls):
         return []
 
+    def __init__(self):
+        super(ModeEditRuleset, self).__init__()
+        store = PredefinedConditionStore()
+        self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
+
     def _from_vars(self):
         self._name = html.get_ascii_input("varname")
         self._back_mode = html.get_ascii_input(
@@ -809,11 +814,25 @@ class ModeEditRuleset(WatoMode):
         html.write_text(desc)
 
     def _rule_conditions(self, rule):
+        self._predefined_condition_info(rule)
+
         html.open_ul(class_="conditions")
         self._tag_conditions(rule)
         self._host_conditions(rule)
         self._service_conditions(rule)
         html.close_ul()
+
+    def _predefined_condition_info(self, rule):
+        condition_id = rule.predefined_condition_id()
+        if condition_id is None:
+            return
+
+        condition = self._predefined_conditions[condition_id]
+        url = watolib.folder_preserving_link([
+            ("mode", "edit_predefined_condition"),
+            ("ident", condition_id),
+        ])
+        html.write(_("Predefined condition: <a href=\"%s\">%s</a>") % (url, condition["title"]))
 
     def _tag_conditions(self, rule):
         for tagspec in rule.tag_specs:

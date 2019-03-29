@@ -22,6 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+import $ from "jquery";
 import * as utils from "utils";
 
 // ----------------------------------------------------------------------------
@@ -319,4 +320,9 @@ export function toggle_folder(event, oDiv, on) {
             move_dialog.style.display = "none";
         }
     }
+}
+
+export function toggle_rule_condition_type(value) {
+    $(".condition").hide();
+    $(".condition."+value).show();
 }

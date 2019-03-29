@@ -272,14 +272,20 @@ def space():
     html.tr(html.render_td('', colspan=2, style="height:15px;"))
 
 
-def section(title=None, checkbox=None, section_id=None, simple=False, hide=False, legend=True):
+def section(title=None,
+            checkbox=None,
+            section_id=None,
+            simple=False,
+            hide=False,
+            legend=True,
+            css=None):
     global g_section_open
     if g_section_open:
         html.close_td()
         html.close_tr()
     html.open_tr(
         id_=section_id,
-        class_="open" if g_section_isopen else "closed",
+        class_=["open" if g_section_isopen else "closed", css],
         style="display:none;" if hide else None)
 
     if legend:

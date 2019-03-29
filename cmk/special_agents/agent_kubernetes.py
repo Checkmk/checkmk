@@ -554,23 +554,23 @@ class K8sList(Generic[ListElem], MutableSequence):
     def __init__(self, elements):
         # type: (List[ListElem]) -> None
         super(K8sList, self).__init__()
-        self.elements = elements
+        self._elements = elements
 
     def __getitem__(self, index):
-        return self.elements[index]
+        return self._elements[index]
 
     def __setitem__(self, index, value):
-        self.elements.__setitem__(index, value)
+        self._elements.__setitem__(index, value)
 
     def __delitem__(self, index):
-        self.elements.__delitem__(index)
+        self._elements.__delitem__(index)
 
     def __len__(self):
         # type: () -> int
-        return len(self.elements)
+        return len(self._elements)
 
     def insert(self, index, value):
-        self.elements.insert(index, value)
+        self._elements.insert(index, value)
 
     def labels(self):
         return {item.name: item.labels for item in self}
@@ -774,13 +774,13 @@ class Group(object):
     def __init__(self):
         # type: () -> None
         super(Group, self).__init__()
-        self.elements = OrderedDict()  # type: OrderedDict[str, Element]
+        self._elements = OrderedDict()  # type: OrderedDict[str, Element]
 
     def get(self, element_name):
         # type: (str) -> Element
-        if element_name not in self.elements:
-            self.elements[element_name] = Element()
-        return self.elements[element_name]
+        if element_name not in self._elements:
+            self._elements[element_name] = Element()
+        return self._elements[element_name]
 
     def join(self, section_name, pairs):
         # type: (str, Mapping[str, Dict[str, Any]]) -> Group
@@ -799,7 +799,7 @@ class Group(object):
         # specify a name prefix.
         # see: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
         data = []
-        for name, element in self.elements.iteritems():
+        for name, element in self._elements.iteritems():
             data.append('<<<<%s>>>>' % (piggyback_prefix + name))
             data.extend(element.output())
             data.append('<<<<>>>>')
@@ -814,18 +814,18 @@ class Element(object):
     def __init__(self):
         # type: () -> None
         super(Element, self).__init__()
-        self.sections = OrderedDict()  # type: OrderedDict[str, Section]
+        self._sections = OrderedDict()  # type: OrderedDict[str, Section]
 
     def get(self, section_name):
         # type: (str) -> Section
-        if section_name not in self.sections:
-            self.sections[section_name] = Section()
-        return self.sections[section_name]
+        if section_name not in self._sections:
+            self._sections[section_name] = Section()
+        return self._sections[section_name]
 
     def output(self):
         # type: () -> List[str]
         data = []
-        for name, section in self.sections.iteritems():
+        for name, section in self._sections.iteritems():
             data.append('<<<%s:sep(0)>>>' % name)
             data.append(section.output())
         return data
@@ -839,22 +839,22 @@ class Section(object):
     def __init__(self):
         # type: () -> None
         super(Section, self).__init__()
-        self.content = OrderedDict()  # type: OrderedDict[str, Dict[str, Any]]
+        self._content = OrderedDict()  # type: OrderedDict[str, Dict[str, Any]]
 
     def insert(self, data):
         # type: (Dict[str, Any]) -> None
         for key, value in data.iteritems():
-            if key not in self.content:
-                self.content[key] = value
+            if key not in self._content:
+                self._content[key] = value
             else:
                 if isinstance(value, dict):
-                    self.content[key].update(value)
+                    self._content[key].update(value)
                 else:
                     raise ValueError('Key %s is already present and cannot be merged' % key)
 
     def output(self):
         # type: () -> str
-        return json.dumps(self.content)
+        return json.dumps(self._content)
 
 
 class ApiData(object):

@@ -221,6 +221,13 @@ vector<wstring> Result::names() const {
     return result;
 }
 
+#if 0
+// testing code
+// we do not want to loose our time for
+// writing real tests for legacy product
+bool GlobalTimeout = false;
+#endif
+
 bool Result::next() {
     Debug(_logger) << "Result::next";
     if (_enumerator == nullptr) {
@@ -229,8 +236,15 @@ bool Result::next() {
 
     IWbemClassObject *obj = nullptr;
     ULONG numReturned = 0;
-    // always retrieve only one element
+
     HRESULT res = _enumerator->Next(2500, 1, &obj, &numReturned);
+#if 0
+    // this portion of code is used as embedded testing tool
+    // looks terrible, still usable
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    if (fs::exists("timeout.txt", ec) || GlobalTimeout) res = WBEM_S_TIMEDOUT;
+#endif
 
     switch (res) {
         case WBEM_NO_ERROR:

@@ -114,7 +114,86 @@ void SectionWMI::suspend(int duration) {
     _disabled_until = time(nullptr) + duration;
 }
 
-bool SectionWMI::produceOutputInner(std::ostream &out,
+// ********************************************************
+// copy pasted from the new agent, unit-tested in new Agent
+// ********************************************************
+namespace cma::tools {
+inline std::vector<std::string> SplitString(const std::string &In,
+                                            const std::string Delim,
+                                            int MaxCount = 0) noexcept {
+    // sanity
+    if (In.empty()) return {};
+    if (Delim.empty()) return {In};
+
+    size_t start = 0U;
+    std::vector<std::string> result;
+
+    auto end = In.find(Delim);
+    while (end != std::string::npos) {
+        result.push_back(In.substr(start, end - start));
+
+        start = end + Delim.length();
+        end = In.find(Delim, start);
+
+        // check for a skipping rest
+        if (result.size() == static_cast<size_t>(MaxCount)) {
+            end = std::string::npos;
+            break;
+        }
+    }
+
+    auto last_string = In.substr(start, end);
+    if (!last_string.empty()) result.push_back(last_string);
+
+    return result;
+}
+}  // namespace cma::tools
+
+// ********************************************************
+// copy pasted from the new agent, unit-tested in new Agent
+// ********************************************************
+// adds to the output Table from the WMI WMIStatus column
+// column value is either Timeout or OK
+// Before
+// Name,Freq
+// Total,1500
+// AFter
+// Name,Freq,WMIStatus
+// Total,1500,OK
+// Empty or quite short strings are replaced empty string
+std::string WmiPostProcess(const std::string &In, bool ExceptionOn,
+                           char Separator) {
+    if (In.size() < 5) {  // 5 is meaningless, just anything low
+        // data absent
+        return ExceptionOn ? std::string() : In;
+    }
+
+    std::string tail_0;
+    tail_0 += Separator;
+    tail_0 += "WMIStatus\n";
+
+    std::string tail_other;
+    tail_other += Separator;
+    tail_other += ExceptionOn ? "Timeout\n" : "OK\n";
+
+    auto table = cma::tools::SplitString(In, "\n");
+    size_t s_required = 0;
+    table[0] += tail_0;
+    s_required += table[0].size();
+    for (size_t i = 1; i < table.size(); ++i) {
+        table[i] += tail_other;
+        s_required += table[i].size();
+    }
+
+    std::string out;
+    out.reserve(s_required);
+    for (const auto line : table) {
+        out += line;
+    }
+    return out;
+}
+
+bool SectionWMI::produceOutputInner(std::ostream &Out,
                                     const std::optional<std::string> &) {
     Debug(_logger) << "SectionWMI::produceOutputInner";
 
@@ -123,6 +202,8 @@ bool SectionWMI::produceOutputInner(std::ostream &out,
     }
 
     bool success = true;
+
+    bool exception_on = false;
 
     try {
         if (_helper.get() == nullptr) {
@@ -150,13 +231,26 @@ bool SectionWMI::produceOutputInner(std::ostream &out,
             suspend(3600);
         }
 
+        std::stringstream out;
         outputTable(out, result);
+        cached_ = out.str();
     } catch (const wmi::Timeout &t) {
-        // Output WMI timeout so that the check in question knows to handle it.
-        out << t.what() << std::endl;
-        Debug(_logger) << "SectionWMI::produceOutputInner caught " << t.what();
+        exception_on = true;
+        // only logging
+        if (cached_.size()) {
+            Debug(_logger) << "SectionWMI::produceOutputInner caught "
+                           << t.what() << " cached data reused";
+        } else {
+            Debug(_logger) << "SectionWMI::produceOutputInner caught "
+                           << t.what();
+        }
         success = true;
     }
+
+    // in cache we always have last valid data. Or nothing.
+    // those cached data should be decorated with new column
+    auto modified = WmiPostProcess(cached_, exception_on, ',');
+    if (modified.size()) Out << modified;
 
     return success;
 }

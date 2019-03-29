@@ -39,7 +39,6 @@ class Row;
 class RowRenderer;
 
 #ifndef CMC
-#include "contact_fwd.h"
 // TODO(sp) Why on earth is "contact_fwd.h" not enough???
 #include "nagios.h"
 #endif

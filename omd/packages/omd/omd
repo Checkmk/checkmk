@@ -3745,7 +3745,7 @@ class BackupTarFile(tarfile.TarFile):
             if e.errno != errno.ENOENT or arcname == g_sitename:
                 raise
 
-            if self._verbose:
+            if opt_verbose:
                 sys.stdout.write("Skipping vanished file: %s\n" % arcname)
 
     def addfile(self, tarinfo, fileobj=None):

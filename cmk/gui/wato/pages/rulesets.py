@@ -1496,7 +1496,44 @@ class EditRuleMode(WatoMode):
                                                                       conditions)
 
     def _vs_explicit_conditions(self, **kwargs):
-        return Transform(
+        return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
+
+    def _show_rule_representation(self):
+        content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_dict_config()))
+
+        html.write(_("This rule representation can be used for Web API calls."))
+        html.br()
+        html.br()
+
+        html.open_center()
+        html.open_table(class_="progress")
+
+        html.open_tr()
+        html.th("Rule representation for Web API")
+        html.close_tr()
+
+        html.open_tr()
+        html.td(html.render_div(content, id_="rule_representation"), class_="log")
+        html.close_tr()
+
+        html.close_table()
+        html.close_center()
+
+    def _vs_rule_options(self, disabling=True):
+        return Dictionary(
+            title=_("Rule Properties"),
+            optional_keys=False,
+            render="form",
+            elements=rule_option_elements(disabling),
+        )
+
+
+class VSExplicitConditions(Transform):
+    """Valuespec for editing a set of explicit rule conditions"""
+
+    def __init__(self, rulespec, **kwargs):
+        self._rulespec = rulespec
+        super(VSExplicitConditions, self).__init__(
             Dictionary(
                 elements=[
                     ("folder_path", self._vs_folder()),
@@ -1526,7 +1563,7 @@ class EditRuleMode(WatoMode):
         if explicit_hosts is not None:
             explicit["explicit_hosts"] = explicit_hosts
 
-        if self._ruleset.item_type():
+        if self._rulespec.item_type:
             explicit_services = self._get_explicit(conditions.item_list, watolib.ALL_SERVICES)
             if explicit_services is not None:
                 explicit["explicit_services"] = explicit_services
@@ -1534,13 +1571,13 @@ class EditRuleMode(WatoMode):
         return explicit
 
     def _service_elements(self):
-        if not self._ruleset.item_type():
+        if not self._rulespec.item_type:
             return []
 
         return [("explicit_services", self._vs_explicit_services())]
 
     def _service_title(self):
-        item_type = self._ruleset.item_type()
+        item_type = self._rulespec.item_type
         if not item_type:
             return None
 
@@ -1551,7 +1588,7 @@ class EditRuleMode(WatoMode):
             return _("Check types")
 
         if item_type == "item":
-            return self._ruleset.item_name().title()
+            return self._rulespec.item_name.title()
 
         raise MKUserError(None, "Invalid item type '%s'" % item_type)
 
@@ -1615,27 +1652,6 @@ class EditRuleMode(WatoMode):
             item_list=item_list,
         )
 
-    def _show_rule_representation(self):
-        content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_dict_config()))
-
-        html.write(_("This rule representation can be used for Web API calls."))
-        html.br()
-        html.br()
-
-        html.open_center()
-        html.open_table(class_="progress")
-
-        html.open_tr()
-        html.th("Rule representation for Web API")
-        html.close_tr()
-
-        html.open_tr()
-        html.td(html.render_div(content, id_="rule_representation"), class_="log")
-        html.close_tr()
-
-        html.close_table()
-        html.close_center()
-
     def _vs_folder(self):
         return DropdownChoice(
             title=_("Folder"),
@@ -1682,7 +1698,7 @@ class EditRuleMode(WatoMode):
         )
 
     def _explicit_service_help_text(self):
-        itemtype = self._ruleset.item_type()
+        itemtype = self._rulespec.item_type
         if itemtype == "service":
             return _("Specify a list of service patterns this rule shall apply to. "
                      "The patterns must match the <b>beginning</b> of the service "
@@ -1691,8 +1707,8 @@ class EditRuleMode(WatoMode):
                      "match an arbitrary text.")
 
         if itemtype == "item":
-            if self._ruleset.item_help():
-                return self._ruleset.item_help()
+            if self._rulespec.item_help:
+                return self._rulespec.item_help
 
             return _("You can make the rule apply only to certain services of the "
                      "specified hosts. Do this by specifying explicit <b>items</b> to "
@@ -1705,7 +1721,7 @@ class EditRuleMode(WatoMode):
         return None
 
     def _vs_service_conditions(self):
-        itemenum = self._ruleset.item_enum()
+        itemenum = self._rulespec.item_enum
         if itemenum:
             return Transform(
                 ListChoice(
@@ -1720,14 +1736,6 @@ class EditRuleMode(WatoMode):
             orientation="horizontal",
             valuespec=RegExpUnicode(size=30, mode=RegExpUnicode.prefix),
             help=self._explicit_service_help_text(),
-        )
-
-    def _vs_rule_options(self, disabling=True):
-        return Dictionary(
-            title=_("Rule Properties"),
-            optional_keys=False,
-            render="form",
-            elements=rule_option_elements(disabling),
         )
 
 

@@ -34,8 +34,12 @@ from cmk.gui.valuespec import (
     Alternative,
     DropdownChoice,
     DualListChoice,
+    Transform,
 )
 
+from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupUserInterface
+from cmk.gui.wato.pages.rulesets import VSExplicitConditions, RuleConditions
+from cmk.gui.watolib.rulespecs import ServiceRulespec
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.plugins.wato import (
@@ -188,9 +192,18 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         ]
 
     def _vs_conditions(self):
-        return FixedValue(
-            None,
-            title=_("Conditions"),
+        rulespec_class = type("DummyRulespec", (ServiceRulespec,), {
+            "group": RulespecGroupUserInterface,
+            "name": "dummy",
+            "valuespec": None,
+        })
+        # Pylint does not get this right for some reason
+        dummy_rulespec = rulespec_class()  # pylint: disable=abstract-class-instantiated
+
+        return Transform(
+            VSExplicitConditions(rulespec=dummy_rulespec, render="form_part"),
+            forth=lambda c: RuleConditions(**c),
+            back=lambda c: dict(c._asdict()),
         )
 
     def _contact_group_choices(self, only_own=False):

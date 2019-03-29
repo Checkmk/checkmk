@@ -467,6 +467,7 @@ def test_registered_permissions():
         'wato.download_all_agents',
         'wato.edit',
         'wato.edit_all_passwords',
+        'wato.edit_all_predefined_conditions',
         'wato.edit_folders',
         'wato.edit_hosts',
         'wato.global',

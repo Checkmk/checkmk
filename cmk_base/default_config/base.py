@@ -64,6 +64,10 @@ monitoring_host = None  # deprecated
 max_num_processes = 50
 fallback_agent_output_encoding = 'latin1'
 stored_passwords = {}
+# Collection of predefined rule conditions. For the moment this setting is only stored
+# in this config domain but not used by the base code. The WATO logic for writing out
+# rule.mk files is resolving the predefined conditions.
+predefined_conditions = {}
 http_proxies = {}  # Global setting for managing HTTP proxy configs
 
 # SNMP communities and encoding

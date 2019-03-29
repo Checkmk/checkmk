@@ -223,6 +223,7 @@ from cmk.gui.wato.pages.notifications import (
 from cmk.gui.wato.pages.object_parameters import ModeObjectParameters
 from cmk.gui.wato.pages.parentscan import ModeParentScan
 from cmk.gui.wato.pages.password_store import ModePasswords, ModeEditPassword
+from cmk.gui.wato.pages.predefined_conditions import ModePredefinedConditions, ModeEditPredefinedCondition
 from cmk.gui.wato.pages.pattern_editor import ModePatternEditor
 from cmk.gui.wato.pages.random_hosts import ModeRandomHosts
 from cmk.gui.wato.pages.read_only import ModeManageReadOnly
@@ -1453,6 +1454,31 @@ class PermissionWATOEditAllPasswords(Permission):
         return _(
             "Without this permission, users can only edit passwords which are shared with a contact "
             "group they are member of. This permission grants full access to all passwords.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOEditAllPredefinedConditions(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "edit_all_predefined_conditions"
+
+    @property
+    def title(self):
+        return _("Write access to all predefined conditions")
+
+    @property
+    def description(self):
+        return _("Without this permission, users can only edit predefined conditions which are "
+                 "shared with a contact group they are member of. This permission grants full "
+                 "access to all predefined conditions.")
 
     @property
     def defaults(self):

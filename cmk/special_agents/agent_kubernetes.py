@@ -181,6 +181,15 @@ class Metadata(object):
             self.creation_timestamp = None
             self.labels = {}
 
+    def matches(self, selectors):
+        if not selectors:
+            return False
+
+        for name, value in selectors.iteritems():
+            if name not in self.labels or self.labels[name] != value:
+                return False
+        return True
+
 
 class Node(Metadata):
     def __init__(self, node, stats):
@@ -574,6 +583,14 @@ class K8sList(Generic[ListElem], MutableSequence):
 
     def labels(self):
         return {item.name: item.labels for item in self}
+
+    def group_by(self, selectors):
+        grouped = {}
+        for element in self:
+            for name, selector in selectors.iteritems():
+                if element.matches(selector):
+                    grouped.setdefault(name, self.__class__(elements=[])).append(element)
+        return grouped
 
 
 class NodeList(K8sList[Node]):

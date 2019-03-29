@@ -28,6 +28,7 @@
 import abc
 import itertools
 import pprint
+import json
 import re
 
 from cmk.utils.regex import escape_regex_chars
@@ -1434,16 +1435,54 @@ class EditRuleMode(WatoMode):
         html.end_form()
 
     def _show_conditions(self):
-        # Conditions
         forms.header(_("Conditions"))
 
+        # TODO!
+        condition_type = "explicit"
+
+        forms.section(_("Condition type"))
+        self._vs_condition_type().render_input(varprefix="condition_type", value=condition_type)
+        self._show_predefined_conditions()
+        self._show_explicit_conditions()
+        html.javascript("cmk.wato.toggle_rule_condition_type(%s)" % json.dumps(condition_type))
+
+    def _vs_condition_type(self):
+        return DropdownChoice(
+            title=_("Condition type"),
+            help=_("You can either specify individual conditions for this rule, or use a set of "
+                   "predefined conditions, which may be handy if you have to configure the "
+                   "same conditions in different rulesets."),
+            choices=[
+                ("explicit", _("Explicit conditions")),
+                ("predefined", _("Predefined conditions")),
+            ],
+            on_change="cmk.wato.toggle_rule_condition_type(this.value)",
+            encode_value=False,
+        )
+
+    def _show_predefined_conditions(self):
+        # TODO: value
+        forms.section(_("Predefined condition"), css="condition predefined")
+        self._vs_predefined_conditions().render_input(
+            varprefix="predefined_condition_id", value=None)
+
+    def _vs_predefined_conditions(self):
+        return DropdownChoice(
+            title=_("Predefined condition"),
+            choices=[
+                ("predef1", _("BLAAAAA")),
+                ("predef2", _("BLUUUB")),
+            ],
+        )
+
+    def _show_explicit_conditions(self):
         # Rule folder
-        forms.section(_("Folder"))
+        forms.section(_("Folder"), css="condition explicit")
         html.dropdown("new_rule_folder", watolib.Folder.folder_choices(), deflt=self._folder.path())
         html.help(_("The rule is only applied to hosts directly in or below this folder."))
 
         # Host tags
-        forms.section(_("Host tags"))
+        forms.section(_("Host tags"), css="condition explicit")
         HostTagCondition().render_input(varprefix="", value=self._rule.tag_specs)
         html.help(
             _("The rule will only be applied to hosts fulfilling all "
@@ -1451,7 +1490,7 @@ class EditRuleMode(WatoMode):
               "in the list of explicit host names."))
 
         # Explicit hosts / watolib.ALL_HOSTS
-        forms.section(_("Explicit hosts"))
+        forms.section(_("Explicit hosts"), css="condition explicit")
         div_id = "div_all_hosts"
 
         checked = self._rule.host_list != watolib.ALL_HOSTS
@@ -1486,7 +1525,7 @@ class EditRuleMode(WatoMode):
         itemtype = self._ruleset.item_type()
         if itemtype:
             if itemtype == "service":
-                forms.section(_("Services"))
+                forms.section(_("Services"), css="condition explicit")
                 html.help(
                     _("Specify a list of service patterns this rule shall apply to. "
                       "The patterns must match the <b>beginning</b> of the service "
@@ -1494,9 +1533,9 @@ class EditRuleMode(WatoMode):
                       "match. Pattern use <b>regular expressions</b>. A <tt>.*</tt> will "
                       "match an arbitrary text."))
             elif itemtype == "checktype":
-                forms.section(_("Check types"))
+                forms.section(_("Check types"), css="condition explicit")
             elif itemtype == "item":
-                forms.section(self._ruleset.item_name().title())
+                forms.section(self._ruleset.item_name().title(), css="condition explicit")
                 if self._ruleset.item_help():
                     html.help(self._ruleset.item_help())
                 else:
@@ -1568,7 +1607,7 @@ class EditRuleMode(WatoMode):
         html.close_table()
         html.close_center()
 
-    def _vs_service_conditions(self,):
+    def _vs_service_conditions(self):
         return ListOfStrings(
             orientation="horizontal",
             valuespec=RegExpUnicode(size=30, mode=RegExpUnicode.prefix),

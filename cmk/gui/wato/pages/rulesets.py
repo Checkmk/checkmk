@@ -1359,7 +1359,7 @@ class EditRuleMode(WatoMode):
                  (self._ruleset.title(), self._folder.alias_path())
 
     def _get_explicit_rule_conditions(self):
-        vs_tag_conditions = HostTagCondition()
+        vs_tag_conditions = self._vs_host_tag_condition()
         tag_list = vs_tag_conditions.from_html_vars("")
         vs_tag_conditions.validate_value(tag_list, "")
 
@@ -1524,15 +1524,10 @@ class EditRuleMode(WatoMode):
         # Rule folder
         forms.section(_("Folder"), css="condition explicit")
         self._vs_folder().render_input("new_rule_folder", self._folder.path())
-        html.help(_("The rule is only applied to hosts directly in or below this folder."))
 
         # Host tags
         forms.section(_("Host tags"), css="condition explicit")
-        HostTagCondition().render_input(varprefix="", value=self._rule.tag_specs)
-        html.help(
-            _("The rule will only be applied to hosts fulfilling all "
-              "of the host tag conditions listed here, even if they appear "
-              "in the list of explicit host names."))
+        self._vs_host_tag_condition().render_input(varprefix="", value=self._rule.tag_specs)
 
         # Explicit hosts / watolib.ALL_HOSTS
         forms.section(_("Explicit hosts"), css="condition explicit")
@@ -1545,27 +1540,10 @@ class EditRuleMode(WatoMode):
         if itemtype:
             if itemtype == "service":
                 forms.section(_("Services"), css="condition explicit")
-                html.help(
-                    _("Specify a list of service patterns this rule shall apply to. "
-                      "The patterns must match the <b>beginning</b> of the service "
-                      "in question. Adding a <tt>$</tt> to the end forces an excact "
-                      "match. Pattern use <b>regular expressions</b>. A <tt>.*</tt> will "
-                      "match an arbitrary text."))
             elif itemtype == "checktype":
                 forms.section(_("Check types"), css="condition explicit")
             elif itemtype == "item":
                 forms.section(self._ruleset.item_name().title(), css="condition explicit")
-                if self._ruleset.item_help():
-                    html.help(self._ruleset.item_help())
-                else:
-                    html.help(
-                        _("You can make the rule apply only to certain services of the "
-                          "specified hosts. Do this by specifying explicit <b>items</b> to "
-                          "match here. <b>Hint:</b> make sure to enter the item only, "
-                          "not the full Service description. "
-                          "<b>Note:</b> the match is done on the <u>beginning</u> "
-                          "of the item in question. Regular expressions are interpreted, "
-                          "so appending a <tt>$</tt> will force an exact match."))
             else:
                 raise MKUserError(None, "Invalid item type '%s'" % itemtype)
 
@@ -1608,9 +1586,16 @@ class EditRuleMode(WatoMode):
     def _vs_folder(self):
         return DropdownChoice(
             title=_("Folder"),
+            help=_("The rule is only applied to hosts directly in or below this folder."),
             choices=watolib.Folder.folder_choices(),
             encode_value=False,
         )
+
+    def _vs_host_tag_condition(self):
+        return HostTagCondition(
+            help=_("The rule will only be applied to hosts fulfilling all "
+                   "of the host tag conditions listed here, even if they appear "
+                   "in the list of explicit host names."),)
 
     def _vs_explicit_hosts(self):
         return Alternative(
@@ -1664,6 +1649,29 @@ class EditRuleMode(WatoMode):
             ],
         )
 
+    def _explicit_service_help_text(self):
+        itemtype = self._ruleset.item_type()
+        if itemtype == "service":
+            return _("Specify a list of service patterns this rule shall apply to. "
+                     "The patterns must match the <b>beginning</b> of the service "
+                     "in question. Adding a <tt>$</tt> to the end forces an excact "
+                     "match. Pattern use <b>regular expressions</b>. A <tt>.*</tt> will "
+                     "match an arbitrary text.")
+
+        if itemtype == "item":
+            if self._ruleset.item_help():
+                return self._ruleset.item_help()
+
+            return _("You can make the rule apply only to certain services of the "
+                     "specified hosts. Do this by specifying explicit <b>items</b> to "
+                     "match here. <b>Hint:</b> make sure to enter the item only, "
+                     "not the full Service description. "
+                     "<b>Note:</b> the match is done on the <u>beginning</u> "
+                     "of the item in question. Regular expressions are interpreted, "
+                     "so appending a <tt>$</tt> will force an exact match.")
+
+        return None
+
     def _vs_service_conditions(self):
         itemenum = self._ruleset.item_enum()
         if itemenum:
@@ -1679,6 +1687,7 @@ class EditRuleMode(WatoMode):
         return ListOfStrings(
             orientation="horizontal",
             valuespec=RegExpUnicode(size=30, mode=RegExpUnicode.prefix),
+            help=self._explicit_service_help_text(),
         )
 
     def _vs_rule_options(self, disabling=True):

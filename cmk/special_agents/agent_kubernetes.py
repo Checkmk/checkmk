@@ -1033,6 +1033,12 @@ class ApiData(object):
         g.join('k8s_selector', self.services.selector())
         g.join('k8s_service_info', self.services.infos())
         g.join('k8s_service_ports', self.services.ports())
+        pod_names = {
+            service_name: {
+                'names': [pod.name for pod in pods]
+            } for service_name, pods in self.pods.group_by(self.services.selector()).iteritems()
+        }
+        g.join('k8s_assigned_pods', pod_names)
         return '\n'.join(g.output(piggyback_prefix="service_"))
 
     def deployment_sections(self):

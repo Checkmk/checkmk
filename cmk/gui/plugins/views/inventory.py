@@ -1124,6 +1124,10 @@ inventory_displayhints.update({
     ".software.applications.kubernetes.selector.": {
         "title": _("Selectors"),
     },
+    ".software.applications.kubernetes.assigned_pods:": {
+        "title": _("Pods"),
+    },
+    ".software.applications.kubernetes.assigned_pods:*.name": {"title": _("Name")},
     ".software.applications.citrix.": {"title": _("Citrix")},
     ".software.applications.citrix.controller.": {"title": _("Controller")},
     ".software.applications.citrix.controller.controller_version": {

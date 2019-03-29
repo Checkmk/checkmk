@@ -486,15 +486,15 @@ function do_query () {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
 # pgrep might not be available on older distros:
 # shellcheck disable=SC2009
 ps -efw | grep "[H]DB.*sapstartsrv" | while read -r line; do
-    # (!<= is a look behind assertion, so we find \w{3} <- 3 alpha-numerical characters, that follow " /usr/sap/" <- note the leading space
-    SID=$(echo "$line" | grep  -Po '(?<= /usr/sap/)\w{3}')
-
-    # same logic as above, but look for 2 \d digits
-    INSTANCE=$(echo "$line" | grep  -Po "(?<= /usr/sap/${SID}/HDB)\d{2}")
+    # 'sapstartsrv' may have different base paths:
+    # /hana/shared/ABC/HDB10/exe/sapstartsrv pf=/hana/shared/ABC/profile/ABC_HDB10_FOOBAR -D -u USER
+    # /usr/sap/ABC/HDB10/exe/sapstartsrv pf=/hana/shared/ABC/profile/ABC_HDB10_FOOBAR -D -u USER
+    # From these paths we extract: SID=ABC, INSTANCE=10
+    SID=$(echo "$line" | sed 's/.*\/\(.*\)\/.*\/exe\/sapstartsrv.*/\1/g')
+    INSTANCE=$(echo "$line" | sed -e 's/.*\/\(.*\)\/exe\/sapstartsrv.*/\1/g' -e 's/[^0-9]//g')
 
     # grep only the first word = the user running the instance
     INSTANCE_USER=$(echo "$line" | grep -Po "^\s*(\w+)")

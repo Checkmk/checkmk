@@ -49,6 +49,7 @@ from cmk.gui.valuespec import (
     RegExpUnicode,
     DropdownChoice,
 )
+from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
@@ -103,7 +104,7 @@ class ModeRuleEditor(WatoMode):
                 "host")
 
         html.context_button(
-            _("Used Rulesets"),
+            _("Used rulesets"),
             watolib.folder_preserving_link([
                 ("mode", "rulesets"),
                 ("search_p_ruleset_used", DropdownChoice.option_id(True)),
@@ -119,7 +120,7 @@ class ModeRuleEditor(WatoMode):
             "rulesets_ineffective")
 
         html.context_button(
-            _("Deprecated Rulesets"),
+            _("Deprecated rulesets"),
             watolib.folder_preserving_link([("mode", "rulesets"),
                                             ("search_p_ruleset_deprecated",
                                              DropdownChoice.option_id(True)),
@@ -127,6 +128,7 @@ class ModeRuleEditor(WatoMode):
             "rulesets_deprecated")
 
         rule_search_button()
+        predefined_conditions_button()
 
     def page(self):
         if self._only_host:
@@ -229,6 +231,7 @@ class RulesetMode(WatoMode):
             self._regular_buttons()
 
         rule_search_button(self._search_options, mode=self.name())
+        predefined_conditions_button()
 
     def _only_host_buttons(self):
         html.context_button(
@@ -394,6 +397,13 @@ class ModeStaticChecksRulesets(RulesetMode):
                        "automatic service discovery.")
 
 
+def predefined_conditions_button():
+    html.context_button(
+        _("Predef. conditions"), watolib.folder_preserving_link([
+            ("mode", "predefined_conditions"),
+        ]), "condition")
+
+
 def rule_search_button(search_options=None, mode="rulesets"):
     is_searching = bool(search_options)
     # Don't highlight the button on "standard page" searches. Meaning the page calls
@@ -523,6 +533,8 @@ class ModeEditRuleset(WatoMode):
                 _("Back"),
                 watolib.folder_preserving_link([("mode", self._back_mode),
                                                 ("host", self._hostname)] + group_arg), "back")
+
+        predefined_conditions_button()
 
         if self._hostname:
             html.context_button(
@@ -1244,6 +1256,7 @@ class EditRuleMode(WatoMode):
                                                       ("host", html.request.var("host", ""))])
 
         html.context_button(_("Abort"), backurl, "abort")
+        predefined_conditions_button()
 
     def action(self):
         if not html.check_transaction():
@@ -1293,8 +1306,21 @@ class EditRuleMode(WatoMode):
         self._vs_rule_options().validate_value(rule_options, "options")
         self._rule.rule_options = rule_options
 
+        condition_type = self._vs_condition_type().from_html_vars("condition_type")
+        self._vs_condition_type().validate_value(condition_type, "condition_type")
+
+        if condition_type == "predefined":
+            condition_id = self._vs_predefined_condition_id().from_html_vars(
+                "predefined_condition_id")
+            self._vs_predefined_condition_id().validate_value(condition_id,
+                                                              "predefined_condition_id")
+            self._rule.rule_options["predefined_condition_id"] = condition_id
+
+            tag_specs, host_list, item_list = self._get_predefined_rule_conditions(condition_id)
+        else:
+            tag_specs, host_list, item_list = self._get_explicit_rule_conditions()
+
         # CONDITION
-        tag_specs, host_list, item_list = self._get_rule_conditions()
         self._rule.tag_specs = tag_specs
         self._rule.host_list = host_list
         self._rule.item_list = item_list
@@ -1306,6 +1332,13 @@ class EditRuleMode(WatoMode):
         else:
             value = html.request.var("value") == "yes"
         self._rule.value = value
+
+    def _get_predefined_rule_conditions(self, condition_id):
+        # TODO!
+        tag_specs = []
+        host_list = []
+        item_list = []
+        return tag_specs, host_list, item_list
 
     @abc.abstractmethod
     def _save_rule(self):
@@ -1319,7 +1352,7 @@ class EditRuleMode(WatoMode):
         return _("Edited rule in ruleset \"%s\" in folder \"%s\"") % \
                  (self._ruleset.title(), self._folder.alias_path())
 
-    def _get_rule_conditions(self):
+    def _get_explicit_rule_conditions(self):
         vs_tag_conditions = HostTagCondition()
         tag_list = vs_tag_conditions.from_html_vars("")
         vs_tag_conditions.validate_value(tag_list, "")
@@ -1437,8 +1470,7 @@ class EditRuleMode(WatoMode):
     def _show_conditions(self):
         forms.header(_("Conditions"))
 
-        # TODO!
-        condition_type = "explicit"
+        condition_type = "predefined" if self._rule.predefined_condition_id() else "explicit"
 
         forms.section(_("Condition type"))
         self._vs_condition_type().render_input(varprefix="condition_type", value=condition_type)
@@ -1461,19 +1493,31 @@ class EditRuleMode(WatoMode):
         )
 
     def _show_predefined_conditions(self):
-        # TODO: value
         forms.section(_("Predefined condition"), css="condition predefined")
-        self._vs_predefined_conditions().render_input(
-            varprefix="predefined_condition_id", value=None)
+        self._vs_predefined_condition_id().render_input(
+            varprefix="predefined_condition_id",
+            value=self._rule.predefined_condition_id(),
+        )
 
-    def _vs_predefined_conditions(self):
+    def _vs_predefined_condition_id(self):
+        url = watolib.folder_preserving_link([("mode", "predefined_conditions")])
         return DropdownChoice(
             title=_("Predefined condition"),
-            choices=[
-                ("predef1", _("BLAAAAA")),
-                ("predef2", _("BLUUUB")),
-            ],
-        )
+            choices=self._predefined_condition_choices,
+            sorted=True,
+            invalid_choice="complain",
+            invalid_choice_title=_(
+                "Predefined condition '%s' does not exist or using not permitted"),
+            invalid_choice_error=_(
+                "The configured predefined condition has either be removed or you "
+                "are not permitted to use it. Please choose another one."),
+            empty_text=(_("There are no elements defined for this selection yet.") + " " +
+                        _("You can create predefined conditions <a href=\"%s\">here</a>.") % url))
+
+    def _predefined_condition_choices(self):
+        store = PredefinedConditionStore()
+        return [(ident, entry["title"])
+                for ident, entry in store.filter_usable_entries(store.load_for_reading()).items()]
 
     def _show_explicit_conditions(self):
         # Rule folder

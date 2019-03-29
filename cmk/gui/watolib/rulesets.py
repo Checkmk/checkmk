@@ -26,6 +26,7 @@
 
 import re
 import pprint
+from typing import Optional  # pylint: disable=unused-import
 
 import cmk.utils.regex
 import cmk.utils.store as store
@@ -908,6 +909,17 @@ class Rule(object):
 
     def comment(self):
         return self.rule_options.get("comment", "")
+
+    def predefined_condition_id(self):
+        # type: () -> Optional[str]
+        """When a rule refers to a predefined condition return the ID
+
+        The predefined conditions are a pure WATO feature. These are resolved when writing
+        the configuration down for Check_MK base. The configured condition ID is preserved
+        in the rule options for the moment.
+        """
+        #TODO: Once we switched the rule format to be dict base, we can move this key to the conditions dict
+        return self.rule_options.get("predefined_condition_id")
 
     def is_discovery_rule_of(self, host):
         return self.host_list == [host.name()] \

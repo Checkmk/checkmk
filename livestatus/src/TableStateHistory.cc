@@ -31,6 +31,7 @@
 #include <ostream>
 #include <set>
 #include <stdexcept>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 #include "Column.h"
@@ -63,7 +64,6 @@
 #define STATE_CRITICAL 2
 #define STATE_UNKNOWN 3
 #else
-#include <unordered_map>
 #include "auth.h"
 #include "nagios.h"
 #endif

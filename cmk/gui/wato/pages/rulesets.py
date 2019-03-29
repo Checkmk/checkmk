@@ -42,6 +42,7 @@ from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
+    Transform,
     FixedValue,
     Checkbox,
     ListChoice,
@@ -1383,34 +1384,27 @@ class EditRuleMode(WatoMode):
         # Item list
         itemtype = self._rulespec.item_type
         if itemtype:
-            explicit = html.get_checkbox("explicit_services")
-            if not explicit:
+            explicit_services = self._vs_explicit_services().from_html_vars("explicit_services")
+            self._vs_explicit_services().validate_value(explicit_services, "explicit_services")
+
+            if explicit_services is None:
                 item_list = watolib.ALL_SERVICES
             else:
-                itemenum = self._rulespec.item_enum
-                negate = html.get_checkbox("negate_entries")
-
-                if itemenum:
-                    itemspec = ListChoice(choices=itemenum, columns=3)
-                    item_list = [x + "$" for x in itemspec.from_html_vars("item")]
-                else:
-                    vs = self._vs_service_conditions()
-                    item_list = vs.from_html_vars("itemlist")
-                    vs.validate_value(item_list, "itemlist")
+                item_list, negate = explicit_services
 
                 if negate:
                     item_list = [watolib.ENTRY_NEGATE_CHAR + i for i in item_list]
 
-                if len(item_list) > 0 and item_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
+                if item_list and item_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
                     item_list += watolib.ALL_SERVICES
-                elif len(item_list) == 0 and negate:
+                elif not item_list and negate:
                     item_list = watolib.ALL_SERVICES  # equivalent
 
-                if len(item_list) == 0:
+                if not item_list:
                     raise MKUserError(
                         "item_0",
-                        _("Please specify at least one %s or "
-                          "this rule will never match.") % self._rulespec.item_name)
+                        _("Please specify at least one %s or this rule will never match.") %
+                        self._rulespec.item_name)
         else:
             item_list = None
 
@@ -1543,15 +1537,7 @@ class EditRuleMode(WatoMode):
         # Explicit hosts / watolib.ALL_HOSTS
         forms.section(_("Explicit hosts"), css="condition explicit")
 
-        if self._rule.host_list == watolib.ALL_HOSTS:
-            explicit_hosts = None
-        else:
-            explicit_hosts = [
-                h.strip("!") for h in self._rule.host_list if h != watolib.ALL_HOSTS[0]
-            ]
-            negate_hosts = len(self._rule.host_list) > 0 and self._rule.host_list[0].startswith("!")
-            explicit_hosts = (explicit_hosts, negate_hosts)
-
+        explicit_hosts = self._get_explicit(self._rule.host_list, watolib.ALL_HOSTS)
         self._vs_explicit_hosts().render_input("explicit_hosts", explicit_hosts)
 
         # Itemlist
@@ -1583,41 +1569,20 @@ class EditRuleMode(WatoMode):
             else:
                 raise MKUserError(None, "Invalid item type '%s'" % itemtype)
 
-            checked = html.get_checkbox("explicit_services")
-            if checked is None:  # read from rule itself
-                checked = len(self._rule.item_list) == 0 or self._rule.item_list[0] != ""
-            div_id = "item_list"
-            html.checkbox(
-                "explicit_services",
-                checked,
-                onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id,
-                label=_("Specify explicit values"))
-            html.open_div(
-                id_=div_id, style=["display: none;" if not checked else "", "padding: 0px;"])
+            explicit_services = self._get_explicit(self._rule.item_list, watolib.ALL_SERVICES)
+            self._vs_explicit_services().render_input("explicit_services", explicit_services)
 
-            negate_entries = len(self._rule.item_list) > 0 and self._rule.item_list[0].startswith(
-                watolib.ENTRY_NEGATE_CHAR)
-            if negate_entries:
-                cleaned_item_list = [
-                    i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in self._rule.item_list[:-1]
-                ]  # strip last entry (watolib.ALL_SERVICES)
-            else:
-                cleaned_item_list = self._rule.item_list
+    def _get_explicit(self, object_list, all_objects):
+        if object_list == all_objects:
+            return None
 
-            itemenum = self._ruleset.item_enum()
-            if itemenum:
-                value = [x.rstrip("$") for x in cleaned_item_list]
-                itemspec = ListChoice(choices=itemenum, columns=3)
-                itemspec.render_input("item", value)
-            else:
-                self._vs_service_conditions().render_input("itemlist", cleaned_item_list)
+        negate = object_list and object_list[0].startswith(watolib.ENTRY_NEGATE_CHAR)
 
-            html.checkbox(
-                "negate_entries",
-                negate_entries,
-                label=_("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"))
+        if negate:
+            # strip last entry (watolib.ALL_SERVICES/ALL_HOSTS)
+            object_list = [i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in object_list[:-1]]
 
-            html.close_div()
+        return object_list, negate
 
     def _show_rule_representation(self):
         content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_dict_config()))
@@ -1677,7 +1642,40 @@ class EditRuleMode(WatoMode):
                 "the host names in question."),
         )
 
+    def _vs_explicit_services(self):
+        return Alternative(
+            style="dropdown",
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("No explicit service filtering"),
+                    totext="",
+                ),
+                Tuple(
+                    title=_("Specify explicit values"),
+                    elements=[
+                        self._vs_service_conditions(),
+                        Checkbox(
+                            label=_(
+                                "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
+                            ),),
+                    ],
+                ),
+            ],
+        )
+
     def _vs_service_conditions(self):
+        itemenum = self._ruleset.item_enum()
+        if itemenum:
+            return Transform(
+                ListChoice(
+                    choices=itemenum,
+                    columns=3,
+                ),
+                forth=lambda item_list: [x + "$" for x in item_list],
+                back=lambda item_list: [x.rstrip("$") for x in item_list],
+            )
+
         return ListOfStrings(
             orientation="horizontal",
             valuespec=RegExpUnicode(size=30, mode=RegExpUnicode.prefix),

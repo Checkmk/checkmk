@@ -42,6 +42,10 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
     Tuple,
+    ListChoice,
+    MonitoringState,
+    ListOf,
+    CascadingDropdown,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupManualChecksApplications,
@@ -269,6 +273,30 @@ def match_alt(x):
     return 0
 
 
+def process_discovery_descr_option():
+    return TextAscii(
+        title=_('Process Name'),
+        style="dropdown",
+        allow_empty=False,
+        help=_("<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
+               "you do this, then the pattern must be a regular expression and be prefixed "
+               "with ~. For each <tt>%s</tt> in the description, the expression has to "
+               "contain one \"group\". A group is a subexpression enclosed in brackets, "
+               "for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. "
+               "When the inventory finds a process matching the pattern, it will "
+               "substitute all such groups with the actual values when creating the "
+               "check. That way one rule can create several checks on a host.</p>"
+               "<p>If the pattern contains more groups then occurrances of <tt>%s</tt> in "
+               "the service description then only the first matching subexpressions are "
+               "used for the service descriptions. The matched substrings corresponding to "
+               "the remaining groups are copied into the regular expression, "
+               "nevertheless.</p>"
+               "<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, "
+               "<tt>%2</tt>, etc.  These will be replaced by the first, second, "
+               "... matching group. This allows you to reorder thing"),
+    )
+
+
 def process_match_options():
     return Alternative(
         title=_("Process Matching"),
@@ -479,29 +507,7 @@ class RulespecInventoryProcessesRules(HostRulespec):
                     "critical when no process is running and OK otherwise. You can parameterize "
                     "the check with the ruleset <i>State and count of processes</i>."),
                 elements=[
-                    ('descr',
-                     TextAscii(
-                         title=_('Process Name'),
-                         style="dropdown",
-                         allow_empty=False,
-                         help=
-                         _("<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
-                           "you do this, then the pattern must be a regular expression and be prefixed "
-                           "with ~. For each <tt>%s</tt> in the description, the expression has to "
-                           "contain one \"group\". A group is a subexpression enclosed in brackets, "
-                           "for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. "
-                           "When the inventory finds a process matching the pattern, it will "
-                           "substitute all such groups with the actual values when creating the "
-                           "check. That way one rule can create several checks on a host.</p>"
-                           "<p>If the pattern contains more groups then occurrances of <tt>%s</tt> in "
-                           "the service description then only the first matching subexpressions are "
-                           "used for the service descriptions. The matched substrings corresponding to "
-                           "the remaining groups are copied into the regular expression, "
-                           "nevertheless.</p>"
-                           "<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, "
-                           "<tt>%2</tt>, etc.  These will be replaced by the first, second, "
-                           "... matching group. This allows you to reorder thing"),
-                     )),
+                    ('descr', process_discovery_descr_option()),
                     ('match', process_match_options()),
                     ('user',
                      user_match_options([
@@ -535,4 +541,279 @@ class RulespecInventoryProcessesRules(HostRulespec):
                 required_keys=["descr", "default_params"],
             ),
             forth=convert_inventory_processes,
+        )
+
+
+#   .--SNMP processes------------------------------------------------------.
+#   |                      ____  _   _ __  __ ____                         |
+#   |                     / ___|| \ | |  \/  |  _ \                        |
+#   |                     \___ \|  \| | |\/| | |_) |                       |
+#   |                      ___) | |\  | |  | |  __/                        |
+#   |                     |____/|_| \_|_|  |_|_|                           |
+#   |                                                                      |
+#   |                                                                      |
+#   |             _ __  _ __ ___   ___ ___  ___ ___  ___  ___              |
+#   |            | '_ \| '__/ _ \ / __/ _ \/ __/ __|/ _ \/ __|             |
+#   |            | |_) | | | (_) | (_|  __/\__ \__ \  __/\__ \             |
+#   |            | .__/|_|  \___/ \___\___||___/___/\___||___/             |
+#   |            |_|                                                       |
+#   '----------------------------------------------------------------------'
+
+
+def match_hr_alternative(x):
+    if x.startswith('~'):
+        return 1
+    return 0
+
+
+def hr_process_match_name_option():
+    return Alternative(
+        title=_("Process Name Matching"),
+        style="dropdown",
+        elements=[
+            TextAscii(
+                title=_("Exact name of the textual description"),
+                size=50,
+                allow_empty=False,
+            ),
+            Transform(
+                RegExp(
+                    size=50,
+                    mode=RegExp.prefix,
+                    validate=forbid_re_delimiters_inside_groups,
+                    allow_empty=False,
+                ),
+                title=_("Regular expression matching the textual description"),
+                help=_("This regex must match the <i>beginning</i> of the complete "
+                       "textual description of the process including arguments.<br>"
+                       "When using groups, matches will be instantiated "
+                       "during process discovery. e.g. (py.*) will match python, python_dev "
+                       "and python_test and discover 3 services. At check time, because "
+                       "python is a substring of python_test and python_dev it will aggregate"
+                       "all process that start with python. If that is not the intended behavior "
+                       "please use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$<br>"
+                       "In manual check groups are aggregated"),
+                forth=lambda x: x[1:],  # remove ~
+                back=lambda x: "~" + x,  # prefix ~
+            ),
+        ],
+        match=match_hr_alternative,
+        default_value='Foo Bar')
+
+
+def hr_process_match_path_option():
+    return Alternative(
+        title=_("Process Path Matching"),
+        style="dropdown",
+        elements=[
+            TextAscii(
+                title=_("Exact name of the process path"),
+                size=50,
+                allow_empty=False,
+            ),
+            Transform(
+                RegExp(
+                    size=50,
+                    mode=RegExp.prefix,
+                    validate=forbid_re_delimiters_inside_groups,
+                    allow_empty=False,
+                ),
+                title=_("Regular expression matching the process path"),
+                help=_("This regex must match the <i>beginning</i> of the complete "
+                       "path of the process including arguments.<br>"
+                       "When using groups, matches will be instantiated "
+                       "during process discovery. e.g. (py.*) will match python, python_dev "
+                       "and python_test and discover 3 services. At check time, because "
+                       "python is a substring of python_test and python_dev it will aggregate"
+                       "all process that start with python. If that is not the intended behavior "
+                       "please use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$<br>"
+                       "In manual check groups are aggregated"),
+                forth=lambda x: x[1:],  # remove ~
+                back=lambda x: "~" + x,  # prefix ~
+            ),
+        ],
+        match=match_hr_alternative,
+        default_value='/usr/sbin/foo')
+
+
+def hr_process_match_elements():
+    return [
+        ('match_name_or_path',
+         CascadingDropdown(
+             title=_('Process Match textual description or path of process'),
+             choices=[
+                 ('match_name', _("Match textual description"), hr_process_match_name_option()),
+                 ('match_path', _("Match process path"), hr_process_match_path_option()),
+                 ('match_all', _("Match all processes")),
+             ])),
+        ('match_status',
+         ListChoice(
+             title=_('Process Status Matching'),
+             choices=[
+                 ('running', _('Running')),
+                 ('runnable', _('Runnable (Waiting for resource)')),
+                 ('not_runnable', _('Not runnable (Loaded but waiting for event)')),
+                 ('invalid', _('Invalid (Not loaded)')),
+             ])),
+    ]
+
+
+def hr_process_parameter_elements():
+    return [
+        ('levels',
+         Tuple(
+             title=_('Levels for process count'),
+             help=_("Please note that if you specify and also if you modify levels "
+                    "here, the change is activated only during an inventory."
+                    "Saving this rule is not enough. This is due to the nature of"
+                    "inventory rules."),
+             elements=[
+                 Integer(
+                     title=_("Critical below"),
+                     unit=_("processes"),
+                     default_value=1,
+                 ),
+                 Integer(
+                     title=_("Warning below"),
+                     unit=_("processes"),
+                     default_value=1,
+                 ),
+                 Integer(
+                     title=_("Warning above"),
+                     unit=_("processes"),
+                     default_value=99999,
+                 ),
+                 Integer(
+                     title=_("Critical above"),
+                     unit=_("processes"),
+                     default_value=99999,
+                 ),
+             ],
+         )),
+        ('status',
+         ListOf(
+             Tuple(
+                 orientation="horizontal",
+                 elements=[
+                     DropdownChoice(choices=[
+                         ('running', _('Running')),
+                         ('runnable', _('Runnable (Waiting for resource)')),
+                         ('not_runnable', _('Not runnable (Loaded but waiting for event)')),
+                         ('invalid', _('Invalid (Not loaded)')),
+                     ]),
+                     MonitoringState()
+                 ]),
+             title=_('Map process states'),
+         )),
+    ]
+
+
+@rulespec_registry.register
+class RulespecDiscoveryHRProcessesRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "discovery_hr_processes_rules"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_('Process Discovery (only SNMP)'),
+            help=_("This ruleset defines criteria for automatically creating checks for running "
+                   "SNMP processes based upon the HOST Resource MIB and what is running when the "
+                   "service discovery is done. You can either specify the textual description "
+                   "or the path of process within the matching criteria."),
+            elements=[
+                ('descr', process_discovery_descr_option()),
+            ] + hr_process_match_elements() + [
+                ('default_params',
+                 Dictionary(
+                     title=_("Default parameters for detected services"),
+                     help=
+                     _("Here you can select default parameters that are being set "
+                       "for detected services. Note: the preferred way for setting parameters is to use "
+                       "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
+                       "State and Count of Processes</a> instead. "
+                       "A change there will immediately be active, while a change in this rule "
+                       "requires a re-discovery of the services."),
+                     elements=hr_process_parameter_elements(),
+                     ignored_keys=["match_groups"])),
+            ],
+            required_keys=["descr", "default_params"],
+            ignored_keys=["match_groups"],
+        )
+
+
+# Rule for discovered process checks
+@rulespec_registry.register_without_manual_check_rulespec
+class RulespecCheckgroupParametersHRPs(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "hr_ps"
+
+    @property
+    def title(self):
+        return _("State and count of processes (only SNMP)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_(
+                "This ruleset defines criteria for SNMP processes base upon the HOST Resources MIB."
+            ),
+            elements=hr_process_parameter_elements(),
+            ignored_keys=["match_name_or_path", "match_status", "match_groups"])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Process name as defined at discovery"),)
+
+
+# Rule for static process checks
+@rulespec_registry.register
+class ManualCheckParameterHRPs(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksApplications
+
+    @property
+    def check_group_name(self):
+        return "hr_ps"
+
+    @property
+    def title(self):
+        return _("State and count of processes (only SNMP)")
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=hr_process_match_elements() + hr_process_parameter_elements(),
+            required_keys=["descr"],
+            ignored_keys=["match_name_or_path", "match_status", "match_groups"],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Process Name"),
+            help=_("This name will be used in the description of the service"),
+            allow_empty=False,
+            regex="^[a-zA-Z_0-9 _./-]*$",
+            regex_error=_("Please use only a-z, A-Z, 0-9, space, underscore, "
+                          "dot, hyphen and slash for your service description"),
         )

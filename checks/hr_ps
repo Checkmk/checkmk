@@ -1,0 +1,152 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+discovery_hr_processes_rules = []
+
+hr_ps_status_map = {
+    '1': ('running', 'running', ''),
+    '2': ('runnable', 'runnable', 'waiting for resource'),
+    '3': ('not_runnable', 'not runnable', 'loaded but waiting for event'),
+    '4': ('invalid', 'invalid', 'not loaded'),
+}
+
+HRProcess = collections.namedtuple('HRProcess',
+                                   ['name', 'path', 'state_key', 'state_short', 'state_long'])
+
+factory_settings["hr_ps_default_levels"] = {
+    "levels": (1, 1, 99999, 99999),
+}
+
+
+def parse_hr_ps(info):
+    parsed = []
+    for name, path, status in info:
+        key, short, long_ = hr_ps_status_map.get(status, (status, 'unknown[%s]' % status, ''))
+        parsed.append(HRProcess(name.strip(":"), path, key, short, long_))
+    return parsed
+
+
+def discovery_hr_ps(parsed):
+    discovery_rules = host_extra_conf(host_name(), discovery_hr_processes_rules)
+    discovered_items = {}
+    for process in parsed:
+        for rule in discovery_rules:
+            match_name_or_path = rule.get('match_name_or_path')
+            match_status = rule.get('match_status')
+
+            matches = _match_hr_process(process, match_name_or_path, match_status)
+            if not matches:
+                continue
+
+            if hasattr(matches, 'groups'):
+                match_groups = [g if g else "" for g in matches.groups()]
+            else:
+                match_groups = []
+
+            service_descr = replace_service_description(rule['descr'], match_groups,
+                                                        match_name_or_path)
+            discovered_items.setdefault(
+                service_descr, '%r' % {
+                    'match_name_or_path': match_name_or_path,
+                    'match_status': match_status,
+                    'match_groups': match_groups,
+                })
+    return discovered_items.items()
+
+
+def check_hr_ps(item, params, parsed):
+    match_name_or_path = params.get('match_name_or_path')
+    match_status = params.get('match_status')
+    match_groups = params.get('match_groups')
+
+    count_processes = 0
+    processes_by_state = {}
+    for process in parsed:
+        if _match_hr_process(process, match_name_or_path, match_status, match_groups):
+            count_processes += 1
+            processes_by_state.setdefault(
+                (process.state_key, process.state_short, process.state_long), []).append(process)
+
+    lc, lw, uw, uc = params.get('levels', (None, None, None, None))
+    yield check_levels(
+        count_processes, "processes", (uw, uc, lw, lc), unit='processes', human_readable_func=int)
+
+    process_state_map = dict(params.get('status', []))
+    for (state_key, state_short, state_long), processes in processes_by_state.iteritems():
+        state = process_state_map.get(state_key, 0)
+        if state_long:
+            state_info = "%s (%s)" % (state_short, state_long)
+        else:
+            state_info = state_short
+        yield state, "%s %s" % (len(processes), state_info)
+
+
+def _match_hr_process(process, match_name_or_path, match_status, match_groups=None):
+    if match_status and process.state_key not in match_status:
+        return False
+
+    if not match_name_or_path or match_name_or_path == "match_all":
+        return True
+
+    match_type, match_pattern = match_name_or_path
+    if match_type == "match_name":
+        pattern_to_match = process.name
+    elif match_type == "match_name":
+        pattern_to_match = process.path
+    else:
+        pattern_to_match = None
+
+    if match_pattern is not None and match_pattern.startswith("~"):
+        # Regex for complete process name or path
+        reg = regex(match_pattern[1:])  # skip "~"
+        m = reg.match(pattern_to_match)
+        if not m:
+            return False
+        if match_groups:
+            return m.groups() == tuple(match_groups)
+        return m
+
+    # Exact match on name of executable
+    return pattern_to_match == match_pattern
+
+
+check_info['hr_ps'] = {
+    'parse_function': parse_hr_ps,
+    'inventory_function': discovery_hr_ps,
+    'check_function': check_hr_ps,
+    'service_description': 'Process %s',
+    'snmp_scan_function': is_hr,
+    'snmp_info': (
+        '.1.3.6.1.2.1.25.4.2.1',
+        [  # HOST-RESOURCES-MIB
+            '2',  # hrSWRunName
+            '4',  # hrSWRunPath
+            '7',  # hrSWRunStatus
+        ]),
+    'includes': ['ucd_hr.include', 'ps.include'],
+    'group': 'hr_ps',
+    'default_levels_variable': 'hr_ps_default_levels',
+}

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
 # They also work with performance counters reported through other means
@@ -36,7 +35,6 @@
 # 26812621794240,,,32398,0,...
 # 2252985000,,,0,0,...
 
-
 #   .--Parse---------------------------------------------------------------.
 #   |                      ____                                            |
 #   |                     |  _ \ __ _ _ __ ___  ___                        |
@@ -45,12 +43,6 @@
 #   |                     |_|   \__,_|_|  |___/\___|                       |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-class NullTable(object):
-    """Represents an empty table caused by a WMI timeout."""
-    def __getattr__(self, name):
-        raise MKCounterWrapped('WMI query timed out')
 
 
 class WMITable(object):
@@ -73,10 +65,9 @@ class WMITable(object):
         self.__headers = {}
         self.__timestamp = timestamp
         self.__frequency = frequency
-        index = 0
 
         prev_header = None
-        for header in headers:
+        for index, header in enumerate(headers):
             if not header.strip() and prev_header:
                 # MS apparently doesn't bother to provide a name
                 # for base columns with performance counters
@@ -84,7 +75,7 @@ class WMITable(object):
             header = self._normalize_key(header)
             self.__headers[header] = index
             prev_header = header
-            index += 1
+
         self.__key_index = None
         if key_field is not None:
             try:
@@ -95,6 +86,7 @@ class WMITable(object):
 
         self.__row_lookup = {}
         self.__rows = []
+        self.timed_out = False
 
     def __repr__(self):
         return repr((self.__headers, self.__rows))
@@ -117,7 +109,16 @@ class WMITable(object):
             self.__row_lookup[key] = len(self.__rows)
         self.__rows.append(row)
 
+        if not self.timed_out and self._get_row_col_value(-1, "WMIStatus").lower() == "timeout":
+            # Check if there's a timeout in the last added line, ie. row (index) == -1
+            self.timed_out = True
+
     def get(self, row, column):
+        if self.timed_out:
+            raise MKCounterWrapped('WMI query timed out')
+        return self._get_row_col_value(row, column)
+
+    def _get_row_col_value(self, row, column):
         if isinstance(row, int):
             row_index = row
         else:
@@ -131,7 +132,6 @@ class WMITable(object):
             except KeyError, e:
                 raise MKGeneralException(e.message + " missing, valid keys: " +
                                          ", ".join(self.__headers.keys()))
-
         return self.__rows[row_index][col_index]
 
     def row_labels(self):
@@ -160,6 +160,7 @@ class WMITable(object):
 
 
 def parse_wmi_table(info, key="Name"):
+
     parsed = {}
     info_iter = iter(info)
 
@@ -184,23 +185,15 @@ def parse_wmi_table(info, key="Name"):
                 # single-table input
                 tablename = ""
 
-            if is_wmi_timeout(line):
-                parsed[tablename] = NullTable()
-                line = info_iter.next()
-                continue
-
-            if tablename not in parsed:
-                parsed[tablename] = WMITable(tablename, line, key, timestamp, frequency)
-            current = parsed[tablename]
+            missing_wmi_status, current_table =\
+                _prepare_wmi_table(parsed, tablename, line, key, timestamp, frequency)
 
             # read table content
             line = info_iter.next()
             while not line[0].startswith("["):
-                if is_wmi_timeout(line):
-                    parsed[tablename] = NullTable()
-                    line = info_iter.next()
-                    continue
-                current.add_row(line)
+                if missing_wmi_status:
+                    line.append("OK")
+                current_table.add_row(line)
                 line = info_iter.next()
     except (StopIteration, ValueError):
         # regular end of block
@@ -209,8 +202,51 @@ def parse_wmi_table(info, key="Name"):
     return parsed
 
 
-def is_wmi_timeout(line):
-    return line[0] == "WMItimeout"
+def _prepare_wmi_table(parsed, tablename, line, key, timestamp, frequency):
+    # Possibilities:
+    # #1 Agent provides extra column for WMIStatus; since 1.5.0p14
+    # <<<SEC>>>
+    # [foo]
+    # Name,...,WMIStatus
+    # ABC,...,OK/Timeout
+    # [bar]
+    # Name,...,WMIStatus
+    # DEF,...,OK/Timeout
+    #
+    # #2 Old agents have no WMIStatus column; before 1.5.0p14
+    # <<<SEC>>>
+    # [foo]
+    # Name,...,
+    # ABC,...,
+    # [bar]
+    # Name,...,
+    # DEF,...,
+    #
+    # #3 Old agents which report a WMITimeout in any sub section; before 1.5.0p14
+    # <<<SEC>>>
+    # [foo]
+    # WMItimeout
+    # [bar]
+    # Name,...,
+    # DEF,...,
+    if line[0].lower() == "wmitimeout":
+        old_timed_out = True
+        header = ['WMIStatus']
+        key = None
+    else:
+        old_timed_out = False
+        header = line[:]
+
+    missing_wmi_status = False
+    if 'WMIStatus' not in header:
+        missing_wmi_status = True
+        header.append('WMIStatus')
+
+    current_table = parsed.setdefault(tablename,
+                                      WMITable(tablename, header, key, timestamp, frequency))
+    if old_timed_out:
+        current_table.add_row(['Timeout'])
+    return missing_wmi_status, current_table
 
 
 #.
@@ -238,10 +274,11 @@ def wmi_filter_global_only(tables, row):
 #   |                                                   |___/              |
 #   '----------------------------------------------------------------------'
 
+
 def _required_tables_missing(tables, required_tables):
     is_subset = set(required_tables).issubset(set(tables.keys()))
-    contains_null = any(isinstance(table, NullTable) for table in tables.itervalues())
-    return not is_subset or contains_null
+    contains_timed_out_table = any(table.timed_out for table in tables.itervalues())
+    return not is_subset or contains_timed_out_table
 
 
 def inventory_wmi_table_instances(tables, required_tables=None, filt=None, levels=None):
@@ -266,7 +303,6 @@ def inventory_wmi_table_instances(tables, required_tables=None, filt=None, level
     return [(row, levels) for row in potential_instances if filt is None or filt(tables, row)]
 
 
-
 def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=None):
     if required_tables is None:
         required_tables = tables.keys()
@@ -277,8 +313,8 @@ def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=No
     if filt is not None and not filt(tables, None):
         return []
 
-    total_present = all(None in tables[required_table].row_labels()
-                        for required_table in required_tables)
+    total_present = all(
+        None in tables[required_table].row_labels() for required_table in required_tables)
 
     if not total_present:
         return []
@@ -379,8 +415,7 @@ def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfsc
     except KeyError:
         return 3, "item not present anymore", []
 
-    value_per_sec = get_rate("%s_%s" % (column, table.name()),
-                             get_wmi_time(table, row), value)
+    value_per_sec = get_rate("%s_%s" % (column, table.name()), get_wmi_time(table, row), value)
 
     status, levels_text = wmi_determine_status(value_per_sec, levels)
 
@@ -388,8 +423,7 @@ def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfsc
             [wmi_make_perfvar(perfvar, value_per_sec, perfscale, levels)])
 
 
-def wmi_yield_raw_counter(table, row, column, label, perfvar,
-                          levels=None, perfscale=1.0):
+def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None, perfscale=1.0):
     if row == "":
         row = 0
 
@@ -441,10 +475,8 @@ def wmi_calculate_raw_average_time(table, row, column):
 
     sample_time = get_wmi_time(table, row)
 
-    value_per_sec = get_rate("%s_%s" % (column, table.name()),
-                             sample_time, value)
-    base_per_sec  = get_rate("%s_%s_Base" % (column, table.name()),
-                             sample_time, base)
+    value_per_sec = get_rate("%s_%s" % (column, table.name()), sample_time, value)
+    base_per_sec = get_rate("%s_%s_Base" % (column, table.name()), sample_time, base)
 
     if base_per_sec == 0:
         return 0
@@ -462,11 +494,8 @@ def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None, perfs
 
     status, levels_text = wmi_determine_status(average, levels)
 
-    return (
-        status,
-        "%.2f%s%s" % (average, label, levels_text),
-        [wmi_make_perfvar(perfvar, average, perfscale, levels)]
-    )
+    return (status, "%.2f%s%s" % (average, label, levels_text),
+            [wmi_make_perfvar(perfvar, average, perfscale, levels)])
 
 
 def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None, perfscale=1.0):
@@ -478,11 +507,8 @@ def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None,
         return 3, "item not present anymore", []
     status, levels_text = wmi_determine_status(average, levels)
 
-    return (
-        status,
-        "%.2f%s%s" % (average, label, levels_text),
-        [wmi_make_perfvar(perfvar, average, perfscale, levels)]
-    )
+    return (status, "%.2f%s%s" % (average, label, levels_text),
+            [wmi_make_perfvar(perfvar, average, perfscale, levels)])
 
 
 def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
@@ -495,10 +521,7 @@ def wmi_yield_raw_fraction(table, row, column, label, perfvar, levels=None):
 
     status, levels_text = wmi_determine_status(average, levels)
 
-    return (
-        status,
-        "%.2f%s%s" % (average, label, levels_text),
-        [wmi_make_perfvar(perfvar, average, 1.0, levels, 0, 100)]
-    )
+    return (status, "%.2f%s%s" % (average, label, levels_text),
+            [wmi_make_perfvar(perfvar, average, 1.0, levels, 0, 100)])
 
 #.

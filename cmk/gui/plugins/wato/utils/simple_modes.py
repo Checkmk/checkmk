@@ -218,12 +218,18 @@ class SimpleListMode(SimpleWatoModeBase):
             raise MKUserError("_delete", \
                 _("You are not allowed to delete this %s.") % self._mode_type.name_singular())
 
+        self._validate_deletion(ident, entries[ident])
+
         entry = entries.pop(ident)
         self._add_change("delete", entry,
                          _("Removed the %s '%s'") % (self._mode_type.name_singular(), ident))
         self._store.save(entries)
 
         return None, _("The %s has been deleted.") % self._mode_type.name_singular()
+
+    def _validate_deletion(self, ident, entry):
+        """Override this to implement custom validations"""
+        pass
 
     def _delete_confirm_message(self):
         return _("Do you really want to delete this %s?") % self._mode_type.name_singular()

@@ -55,3 +55,7 @@ class PredefinedConditionStore(WatoSimpleConfigFile):
 
         user_groups = userdb.contactgroups_of_user(config.user.id)
         return dict([(k, v) for k, v in entries.items() if v["owned_by"] in user_groups])
+
+    def choices(self):
+        return [(ident, entry["title"])
+                for ident, entry in self.filter_usable_entries(self.load_for_reading()).items()]

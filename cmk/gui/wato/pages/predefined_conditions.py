@@ -27,6 +27,7 @@
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -39,6 +40,7 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupUserInterface
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions, RuleConditions
+from cmk.gui.watolib.rulesets import AllRulesets, SearchedRulesets
 from cmk.gui.watolib.rulespecs import ServiceRulespec
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
@@ -109,13 +111,18 @@ class ModePredefinedConditions(SimpleListMode):
     def _table_title(self):
         return _("Predefined conditions")
 
-    # TODO: Can we validate predefined condition usage and prevent deletion?
-    def _delete_confirm_message(self):
-        return " ".join([
-            _("The password may be used in checks. If you delete the password, "
-              "the checks won't be able to authenticate with this password anymore."),
-            super(ModePredefinedConditions, self)._delete_confirm_message()
-        ])
+    def _validate_deletion(self, ident, entry):
+        rulesets = AllRulesets()
+        rulesets.load()
+        matched_rulesets = SearchedRulesets(rulesets, {
+            "rule_predefined_condition": ident
+        }).get_rulesets()
+
+        if matched_rulesets:
+            raise MKUserError(
+                "_delete",
+                _("You can not delete this %s because it is <a href=\"%s\">in use</a>.") %
+                (self._mode_type.name_singular(), self._search_url(ident)))
 
     def page(self):
         html.p(
@@ -124,6 +131,19 @@ class ModePredefinedConditions(SimpleListMode):
               "conditions may save you a lot of redundant conditions when you need them in multiple "
               "rulesets."))
         super(ModePredefinedConditions, self).page()
+
+    def _show_action_cell(self, table, ident):
+        super(ModePredefinedConditions, self)._show_action_cell(table, ident)
+
+        html.icon_button(
+            self._search_url(ident),
+            _("Show rules using this %s") % self._mode_type.name_singular(), "search")
+
+    def _search_url(self, ident):
+        return html.makeuri_contextless([("mode", "rulesets"),
+                                         ("search_p_rule_predefined_condition",
+                                          DropdownChoice.option_id(ident)),
+                                         ("search_p_rule_predefined_condition_USE", "on")])
 
     def _show_entry_cells(self, table, ident, entry):
         table.cell(_("Title"), html.render_text(entry["title"]))

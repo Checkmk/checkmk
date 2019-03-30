@@ -834,6 +834,10 @@ class Rule(object):
                 "rule_disabled"] != self.is_disabled():
             return False
 
+        if "rule_predefined_condition" in search_options and search_options[
+                "rule_predefined_condition"] != self.predefined_condition_id():
+            return False
+
         if "rule_ineffective" in search_options and search_options[
                 "rule_ineffective"] != self.is_ineffective():
             return False

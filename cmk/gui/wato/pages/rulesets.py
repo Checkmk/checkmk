@@ -953,6 +953,7 @@ class ModeRuleSearch(WatoMode):
                     "rule_disabled",
                     "rule_ineffective",
                     "rule_folder",
+                    "rule_predefined_condition",
                 ]),
             ],
             elements=[
@@ -1065,6 +1066,12 @@ class ModeRuleSearch(WatoMode):
                              default_value=False,
                          ),
                      ],
+                 )),
+                ("rule_predefined_condition",
+                 DropdownChoice(
+                     title=_("Using predefined condition"),
+                     choices=PredefinedConditionStore().choices(),
+                     sorted=True,
                  )),
             ],
         )
@@ -1339,7 +1346,7 @@ class EditRuleMode(WatoMode):
         url = watolib.folder_preserving_link([("mode", "predefined_conditions")])
         return DropdownChoice(
             title=_("Predefined condition"),
-            choices=self._predefined_condition_choices,
+            choices=PredefinedConditionStore().choices(),
             sorted=True,
             invalid_choice="complain",
             invalid_choice_title=_(
@@ -1349,11 +1356,6 @@ class EditRuleMode(WatoMode):
                 "are not permitted to use it. Please choose another one."),
             empty_text=(_("There are no elements defined for this selection yet.") + " " +
                         _("You can create predefined conditions <a href=\"%s\">here</a>.") % url))
-
-    def _predefined_condition_choices(self):
-        store = PredefinedConditionStore()
-        return [(ident, entry["title"])
-                for ident, entry in store.filter_usable_entries(store.load_for_reading()).items()]
 
     def _show_explicit_conditions(self):
         conditions = RuleConditions(

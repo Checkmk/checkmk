@@ -50,6 +50,11 @@ def parse_elasticsearch_nodes(info):
 
     for name, desc, value in info:
         try:
+            if desc == 'cpu_percent':
+                value = float(value)
+            else:
+                value = int(value)
+
             inst = parsed.setdefault(name, {desc: [value, nodes_info[desc]]})
             inst[desc] = [value, nodes_info[desc]]
 
@@ -63,38 +68,22 @@ factory_settings["elasticsearch_nodes"] = {"cpu_levels": (75.0, 90.0)}
 
 
 @get_parsed_item_data
-def check_elasticsearch_nodes(item, params, parsed):
-    for desc in (
-            u'mem_total_virtual_in_bytes',
-            u'cpu_total_in_millis',
-            u'open_file_descriptors',
-            u'max_file_descriptors',
-            u'cpu_percent',
-    ):
-        values = parsed[desc]
-        if desc == "cpu_percent":
-            value = float(values[0])
-        else:
-            value = int(values[0])
-        infotext = values[1]
+def check_elasticsearch_nodes(item, params, item_data):
+    for key in [
+            'cpu_percent', 'cpu_total_in_millis', 'mem_total_virtual_in_bytes',
+            'open_file_descriptors', 'max_file_descriptors'
+    ]:
+        value_str, infotext = item_data[key]
 
-        if desc == "mem_total_virtual_in_bytes":
-            yield check_levels(
-                value,
-                desc,
-                params.get(desc),
-                human_readable_func=get_bytes_human_readable,
-                infoname=infotext)
-        elif desc == "cpu_percent":
-            yield check_levels(
-                value,
-                desc,
-                params.get(desc),
-                human_readable_func=get_percent_human_readable,
-                infoname=infotext)
+        if key == "cpu_percent":
+            hr_func = get_percent_human_readable
+        elif key == "mem_total_virtual_in_bytes":
+            hr_func = get_bytes_human_readable
         else:
-            yield check_levels(
-                value, desc, params.get(desc), human_readable_func=int, infoname=infotext)
+            hr_func = int
+
+        yield check_levels(
+            value_str, key, params.get(key), human_readable_func=hr_func, infoname=infotext)
 
 
 check_info["elasticsearch_nodes"] = {

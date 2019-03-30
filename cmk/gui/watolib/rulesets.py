@@ -925,6 +925,12 @@ class Rule(object):
         #TODO: Once we switched the rule format to be dict base, we can move this key to the conditions dict
         return self.rule_options.get("predefined_condition_id")
 
+    def update_conditions(self, conditions):
+        self.tag_specs = conditions.host_tags
+        self.host_list = conditions.host_list
+        if self.ruleset.item_type():
+            self.item_list = conditions.item_list
+
     def is_discovery_rule_of(self, host):
         return self.host_list == [host.name()] \
                and self.tag_specs == [] \

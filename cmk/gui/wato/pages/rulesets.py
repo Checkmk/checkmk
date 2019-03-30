@@ -1200,10 +1200,7 @@ class EditRuleMode(WatoMode):
             self._rule.rule_options["predefined_condition_id"] = condition_id
 
         # CONDITION
-        conditions = self._get_rule_conditions_from_vars()
-        self._rule.tag_specs = conditions.host_tags
-        self._rule.host_list = conditions.host_list
-        self._rule.item_list = conditions.item_list
+        self._rule.update_conditions(self._get_rule_conditions_from_vars())
 
         # VALUE
         if self._ruleset.valuespec():

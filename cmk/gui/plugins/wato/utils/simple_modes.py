@@ -411,9 +411,12 @@ class SimpleEditMode(SimpleWatoModeBase):
                 "edit", self._entry,
                 _("Edited the %s '%s'") % (self._mode_type.name_singular(), self._ident))
 
-        self._store.save(entries)
+        self._save(entries)
 
         return self._mode_type.list_mode_name()
+
+    def _save(self, entries):
+        self._store.save(entries)
 
     def page(self):
         html.begin_form("edit", method="POST")

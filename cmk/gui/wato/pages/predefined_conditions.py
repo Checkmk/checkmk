@@ -40,7 +40,8 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupUserInterface
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions, RuleConditions
-from cmk.gui.watolib.rulesets import AllRulesets, SearchedRulesets
+from cmk.gui.watolib.rulesets import AllRulesets, SearchedRulesets, FolderRulesets
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulespecs import ServiceRulespec
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
@@ -233,6 +234,38 @@ class ModeEditPredefinedCondition(SimpleEditMode):
                  autoheight=False,
              )),
         ]
+
+    def _save(self, entries):
+        old_path = self._store.load_for_reading()[self._ident]["conditions"]["folder_path"]
+        conditions = RuleConditions(**entries[self._ident]["conditions"])
+
+        super(ModeEditPredefinedCondition, self)._save(entries)
+
+        if old_path != conditions.folder_path:
+            # TODO: Move rules to other folder (See EditRuleMode.action)
+            pass
+
+        self._rewrite_rules_for(conditions)
+
+    def _rewrite_rules_for(self, conditions):
+        # type: (RuleConditions) -> None
+        """Apply changed predefined condition to rules
+
+        After updating a predefined condition it is necessary to rewrite the
+        rules.mk the predefined condition refers to. Rules in this file may refer to
+        the changed predefined condition. Since the conditions are only applied to the
+        rules while saving them this step is needed.
+        """
+        folder = Folder(conditions.folder_path)
+        rulesets = FolderRulesets(folder)
+        rulesets.load()
+
+        for ruleset in rulesets.get_rulesets().values():
+            for rule in ruleset.get_folder_rules(folder):
+                if rule.predefined_condition_id() == self._ident:
+                    rule.update_conditions(conditions)
+
+        rulesets.save()
 
     def _contact_group_choices(self, only_own=False):
         contact_groups = load_contact_group_information()

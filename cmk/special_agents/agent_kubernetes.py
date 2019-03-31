@@ -311,7 +311,8 @@ class Service(Metadata):
     def ports(self):
         # port is the only field that is not optional
         return {
-            port.port: {
+            port.name if port.name else port.port: {
+                'port': port.port,
                 'name': port.name,
                 'protocol': port.protocol,
                 'target_port': port.target_port,
@@ -1032,7 +1033,7 @@ class ApiData(object):
         g.join('labels', self.services.labels())
         g.join('k8s_selector', self.services.selector())
         g.join('k8s_service_info', self.services.infos())
-        g.join('k8s_service_ports', self.services.ports())
+        g.join('k8s_service_port', self.services.ports())
         pod_names = {
             service_name: {
                 'names': [pod.name for pod in pods]

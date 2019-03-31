@@ -1,0 +1,14 @@
+title: Kubernetes service ports
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the ports of a Kubernetes service.
+ Levels for expected values can be set via WATO.
+
+inventory:
+ One service per port is created.
+
+item:
+ The name of the port if given otherwise the port number.

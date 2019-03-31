@@ -1,0 +1,13 @@
+Title: mail: fix bug with multiple recipients and synchronous delivery
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1554054898
+Class: fix
+
+If Email notifictations were sent to multiple recipients and synchronous
+delivery via SMTP was used mail servers may process the recipients of
+Emails wrong. This may result in failed notifications or only partially
+delivered Emails. The exact behaviour depends on the mail server.

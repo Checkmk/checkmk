@@ -64,7 +64,14 @@ factory_settings["elasticsearch_nodes"] = {"cpu_levels": (75.0, 90.0)}
 
 @get_parsed_item_data
 def check_elasticsearch_nodes(item, params, parsed):
-    for desc, values in parsed.iteritems():
+    for desc in (
+            u'mem_total_virtual_in_bytes',
+            u'cpu_total_in_millis',
+            u'open_file_descriptors',
+            u'max_file_descriptors',
+            u'cpu_percent',
+    ):
+        values = parsed[desc]
         if desc == "cpu_percent":
             value = float(values[0])
         else:

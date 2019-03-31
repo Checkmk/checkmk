@@ -1,3 +1,4 @@
+import os
 import time
 import pytest
 import cmk.utils.log
@@ -149,7 +150,7 @@ def event_creator():
                 'pid': 0,
                 'priority': 5,
                 'text': '[WLAN-1] Triggering Background Scan',
-                'time': 10101010.0
+                'time': 1550000000.0
             },
         ),
         (
@@ -233,6 +234,16 @@ def event_creator():
         ),
     ])
 def test_create_event_from_line(event_creator, monkeypatch, line, expected):
+    monkeypatch.setattr(
+        time,
+        'time',
+        lambda: 1550000000.0,
+    )
+    monkeypatch.setattr(
+        time,
+        'localtime',
+        lambda: time.struct_time((2019, 2, 12, 20, 33, 20, 1, 43, 0)),
+    )
+
     address = ("127.0.0.1", 1234)
-    monkeypatch.setattr(time, "time", lambda: 10101010.0)
     assert event_creator.create_event_from_line(line, address) == expected

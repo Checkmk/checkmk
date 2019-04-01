@@ -40,7 +40,7 @@ def expected_output():
               r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,[^,]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
               r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
               r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+')
+              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b')
     if not Globals.alone:
         re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
     re_str += r'$'
@@ -87,7 +87,7 @@ def expected_output():
          r'TotalPropfindRequests,TotalProppatchRequests,TotalPutRequests,'
          r'TotalRejectedAsyncIORequests,TotalSearchRequests,'
          r'TotalTraceRequests,TotalUnlockRequests,TraceRequestsPersec,'
-         r'UnlockRequestsPersec')
+         r'UnlockRequestsPersec,WMIStatus')
     ], repeat(re_str))
 
 

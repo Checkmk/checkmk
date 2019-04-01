@@ -1,0 +1,14 @@
+Title: docker_node_disk_usage: Handle busy docker daemon
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554108850
+Class: fix
+
+If the docker daemon cannot get the disk usage info, the corresponding services
+will become stale without the Check_MK Discovery service going into a WARNING
+state.
+This can happen if you are calling the mk_docker plugin from different Sites.
+Consider configuring asynchronous plugin execution in this case.

@@ -1,0 +1,11 @@
+-std=c++17
+-DHAVE_CONFIG_H
+-I.
+-I..
+-I../..
+-I../../..
+-I../../../omd/packages/boost/destdir/include
+-I../../../omd/packages/re2/destdir/include
+-I../../../omd/packages/googletest/destdir/include
+-Wall
+-Wextra

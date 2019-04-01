@@ -6,8 +6,8 @@ distribution: check_mk
 description:
  This check monitors the pods of Kubernetes nodes and clusters.
 
- By default the check always returns {OK}. Optionally levels can be defined
- for the Pod usage, i.e. the ratio between used and allocatable Pods.
+ The check returns {OK} if the used Pods are below 90%. Below 95% {WARN}
+ is returned and otherwise {CRIT}. Custom levels can be defined in WATO.
 
 inventory:
  One service is created.

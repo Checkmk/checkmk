@@ -8,8 +8,8 @@ description:
  of a Kubernetes entity. If at least one container running on a node does not specify
  limits, the node has no applicable limits.
 
- By default the check always returns {OK}. Optionally levels can be defined
- for the Memory usage, i.e. the ratio between requested and allocatable Memory.
+ The check returns {OK} if the used Memroy is below 90%. Below 95% {WARN}
+ is returned and otherwise {CRIT}. Custom levels can be defined in WATO.
 
 inventory:
  One service is created.

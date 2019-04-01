@@ -24,6 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+factory_settings['k8s_resources_default_levels'] = {
+    'cpu': (90.0, 95.0),
+    'memory': (90.0, 95.0),
+    'pods': (90.0, 95.0),
+}
+
 
 def get_k8s_resources_inventory_function(name):
     def inventory_function(parsed):
@@ -77,6 +83,7 @@ check_info['k8s_resources.pods'] = {
     'service_description': 'Pod resources',
     'has_perfdata': True,
     'group': 'k8s_resources',
+    'default_levels_variable': 'k8s_resources_default_levels',
 }
 
 check_info['k8s_resources.cpu'] = {
@@ -85,6 +92,7 @@ check_info['k8s_resources.cpu'] = {
     'service_description': 'CPU resources',
     'has_perfdata': True,
     'group': 'k8s_resources',
+    'default_levels_variable': 'k8s_resources_default_levels',
 }
 
 check_info['k8s_resources.memory'] = {
@@ -93,4 +101,5 @@ check_info['k8s_resources.memory'] = {
     'service_description': 'Memory resources',
     'has_perfdata': True,
     'group': 'k8s_resources',
+    'default_levels_variable': 'k8s_resources_default_levels',
 }

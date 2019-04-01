@@ -614,7 +614,7 @@ def send_mail_smtp_impl(message, target, smarthost, from_address, context):
 
     # the first parameter here is actually used in the return_path header
     try:
-        conn.sendmail(from_address, target, message.as_string())
+        conn.sendmail(from_address, target.split(','), message.as_string())
         sys.stdout.write("success %d - %s\n" % (conn.last_code, conn.last_repl))
     finally:
         conn.quit()

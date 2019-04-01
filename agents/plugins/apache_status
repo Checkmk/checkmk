@@ -133,6 +133,28 @@ def no_cert_verification():
     return context
 
 
+def get_response(proto, address, portspec, page):
+    is_local = address in ("127.0.0.1", "[::1]", "localhost")
+    url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
+    # Try to fetch the status page for each server
+    try:
+        request = urllib2.Request(url, headers={"Accept": "text/plain"})
+        return urllib2.urlopen(request)
+    except urllib2.URLError, e:
+        if 'unknown protocol' in str(e):
+            # HACK: workaround misconfigurations where port 443 is used for
+            # serving non ssl secured http
+            url = 'http://%s%s/server-status?auto' % (address, portspec)
+            return urllib2.urlopen(url)
+        raise
+    except Exception, e:
+        if 'doesn\'t match' in str(e) and is_local:
+            # HACK: workaround if SSL port is found and localhost is using
+            # SSL connections but certificate does not match
+            return urllib2.urlopen(url, context=no_cert_verification())
+        raise
+
+
 def main():
     config = get_config()
     servers = config["servers"]
@@ -148,31 +170,10 @@ def main():
     for server in servers:
         proto, address, port, page = _unpack_server(server)
         portspec = ':%d' % port if port else ''
-        is_local = address in ("127.0.0.1", "[::1]", "localhost")
 
         try:
-            url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
-            # Try to fetch the status page for each server
-            try:
-                request = urllib2.Request(url, headers={"Accept": "text/plain"})
-                fd = urllib2.urlopen(request)
-            except urllib2.URLError, e:
-                if 'unknown protocol' in str(e):
-                    # HACK: workaround misconfigurations where port 443 is used for
-                    # serving non ssl secured http
-                    url = 'http://%s%s/server-status?auto' % (address, portspec)
-                    fd = urllib2.urlopen(url)
-                else:
-                    raise
-            except Exception, e:
-                if 'doesn\'t match' in str(e) and is_local:
-                    # HACK: workaround if SSL port is found and localhost is using
-                    # SSL connections but certificate does not match
-                    fd = urllib2.urlopen(url, context=no_cert_verification())
-                else:
-                    raise
-
-            for line in fd.read().split('\n'):
+            response = get_response(proto, address, portspec, page)
+            for line in response.read().split('\n'):
                 if not line.strip():
                     continue
                 if line.lstrip()[0] == '<':

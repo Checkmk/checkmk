@@ -7,9 +7,13 @@ description:
  Checks the status of Enclosures, Canisters and PSUs in an IBM SVC / Storwize V3700 /
  V7000 device.
 
- Returns {OK} if the Enclousure report status {online} and all Canisters and PSUs
- are online and {CRIT} otherwise. If the firmware supports it then also fan modules
- are being checked.
+ Check status:
+ In case the WATO rule {IBM SVC Enclosure} is not configured the check status is
+ {OK} if the enclosure reports status {online} and all canisters and PSUs are online and
+ {CRIT} otherwise. If the firmware supports it then also fan modules are being checked.
+ In case the WATO rule {IBM SVC Enclosure} is configured the check status for the
+ canisters is {WARN} or {CRIT} according to the configured lower levels for the number
+ of online canisters.
 
  Please note: You need the special agent {agent_ibmsvc} for retrieving the monitoring
  data from the device. Your monitoring user must be able to SSH to the device
@@ -20,4 +24,4 @@ item:
  The ID of the enclosure.
 
 inventory:
- Creates one check for every enclosure.
+ Creates one service for every enclosure.

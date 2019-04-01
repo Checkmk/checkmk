@@ -67,8 +67,15 @@ def parse_ibm_svc_enclosure(info):
     return parsed
 
 
+def _try_int(string):
+    try:
+        return int(string)
+    except (ValueError, TypeError):
+        return None
+
+
 @get_parsed_item_data
-def check_ibm_svc_enclosure(item, _no_params, data):
+def check_ibm_svc_enclosure(item, params, data):
     enclosure_status = data['status']
     if enclosure_status == "online":
         status = 0
@@ -76,20 +83,23 @@ def check_ibm_svc_enclosure(item, _no_params, data):
         status = 2
     yield status, 'Status: %s' % enclosure_status
 
-    for total_key, online_key, text in [
-        ('total_canisters', 'online_canisters', 'canisters'),
-        ('total_PSUs', 'online_PSUs', 'PSUs'),
-        ('total_fan_modules', 'online_fan_modules', 'fan modules'),
-        ('total_sems', 'online_sems', 'secondary expander modules'),
+    for key, label in [
+        ('canisters', 'canisters'),
+        ('PSUs', 'PSUs'),
+        ('fan_modules', 'fan modules'),
+        ('sems', 'secondary expander modules'),
     ]:
-        online = data.get(online_key)
-        total = data.get(total_key)
+        online = _try_int(data.get("online_%s" % key))
+        total = _try_int(data.get("total_%s" % key))
         if online is None:
             continue
-        state = 0
-        infotext = "Online %s: %s" % (text, online)
-        if total is not None and online != total:
-            state = 2
+        # Valid values for WATO rule value levels_lower_online_canisters are
+        # False, which shall be mapped to (total, total) or (warn, crit).
+        levels_lower = params.get("levels_lower_online_%s" % key) or (total, total)
+        levels = (None, None) + levels_lower
+        state, infotext, _perfdata = check_levels(
+            online, None, levels, human_readable_func=int, infoname="Online %s" % label)
+        if total is not None:
             infotext += " of %s" % total
         yield state, infotext
 
@@ -100,6 +110,7 @@ check_info["ibm_svc_enclosure"] = {
     "inventory_function": discover(),
     "service_description": "Enclosure %s",
     "includes": ["ibm_svc.include"],
+    "group": "ibm_svc_enclosure",
 }
 
 #   .--helper--------------------------------------------------------------.

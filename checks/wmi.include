@@ -109,9 +109,28 @@ class WMITable(object):
             self.__row_lookup[key] = len(self.__rows)
         self.__rows.append(row)
 
-        if not self.timed_out and self._get_row_col_value(-1, "WMIStatus").lower() == "timeout":
-            # Check if there's a timeout in the last added line, ie. row (index) == -1
-            self.timed_out = True
+        if not self.timed_out:
+            # Check if there's a timeout in the last added line
+            # ie. row (index) == -1, column 'WMIStatus'
+            try:
+                wmi_status = self._get_row_col_value(-1, 'WMIStatus')
+            except IndexError:
+                #TODO Why does the agent send data with different length?
+                # Eg. skype
+                # tablename = [LS:WEB - EventChannel]
+                # header = [
+                #    u'instance', u'EventChannel - Pending Get', u' Timed Out Request Count',
+                #    u'EventChannel - Pending Get', u' Active Request Count', u'EventChannel - Push Events',
+                #    u' Channel Clients Active', u'EventChannel - Push Events', u' Channel Clients Disposed',
+                #    u'EventChannel - Push Events', u' Notification Requests Sent',
+                #    u'EventChannel - Push Events', u' Heartbeat Requests Sent', u'EventChannel - Push Events',
+                #    u' Requests Succeeded', u'EventChannel - Push Events', u' Requests Failed'
+                # ]
+                # row = [u'"_Total"', u'259', u'1', u'0', u'0', u'0', u'0', u'0', u'0']
+                # Then we try to check last value of row
+                wmi_status = self._get_row_col_value(-1, -1)
+            if wmi_status.lower() == "timeout":
+                self.timed_out = True
 
     def get(self, row, column):
         if self.timed_out:

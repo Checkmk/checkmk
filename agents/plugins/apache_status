@@ -119,6 +119,20 @@ def try_detect_servers(ssl_ports):
     return results
 
 
+def _unpack_server(server):
+    if isinstance(server, tuple):
+        return server + ('server-status',)
+    return (server['protocol'], server['address'], server['port'],
+            server.get('page', 'server-status'))
+
+
+def no_cert_verification():
+    context = ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    return context
+
+
 def main():
     config = get_config()
     servers = config["servers"]
@@ -132,16 +146,9 @@ def main():
 
     sys.stdout.write('<<<apache_status>>>\n')
     for server in servers:
-        if isinstance(server, tuple):
-            proto, address, port = server
-            page = 'server-status'
-        else:
-            proto = server['protocol']
-            address = server['address']
-            port = server['port']
-            page = server.get('page', 'server-status')
-
+        proto, address, port, page = _unpack_server(server)
         portspec = ':%d' % port if port else ''
+        is_local = address in ("127.0.0.1", "[::1]", "localhost")
 
         try:
             url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
@@ -158,13 +165,10 @@ def main():
                 else:
                     raise
             except Exception, e:
-                if 'doesn\'t match' in str(e) and address in ("127.0.0.1", "[::1]", "localhost"):
+                if 'doesn\'t match' in str(e) and is_local:
                     # HACK: workaround if SSL port is found and localhost is using
                     # SSL connections but certificate does not match
-                    no_cert_context = ssl.create_default_context()
-                    no_cert_context.check_hostname = False
-                    no_cert_context.verify_mode = ssl.CERT_NONE
-                    fd = urllib2.urlopen(url, context=no_cert_context)
+                    fd = urllib2.urlopen(url, context=no_cert_verification())
                 else:
                     raise
 

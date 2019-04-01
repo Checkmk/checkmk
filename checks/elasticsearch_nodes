@@ -48,15 +48,14 @@ nodes_info = {
 def parse_elasticsearch_nodes(info):
     parsed = {}
 
-    for name, desc, value in info:
+    for name, desc, value_str in info:
         try:
             if desc == 'cpu_percent':
-                value = float(value)
+                value = float(value_str)
             else:
-                value = int(value)
+                value = int(value_str)
 
-            inst = parsed.setdefault(name, {desc: [value, nodes_info[desc]]})
-            inst[desc] = [value, nodes_info[desc]]
+            parsed.setdefault(name, {}).setdefault(desc, (value, nodes_info[desc]))
 
         except (IndexError, ValueError):
             pass
@@ -69,21 +68,17 @@ factory_settings["elasticsearch_nodes"] = {"cpu_levels": (75.0, 90.0)}
 
 @get_parsed_item_data
 def check_elasticsearch_nodes(item, params, item_data):
-    for key in [
-            'cpu_percent', 'cpu_total_in_millis', 'mem_total_virtual_in_bytes',
-            'open_file_descriptors', 'max_file_descriptors'
+    for key, hr_func in [
+        ('cpu_percent', get_percent_human_readable),
+        ('cpu_total_in_millis', int),
+        ('mem_total_virtual_in_bytes', get_bytes_human_readable),
+        ('open_file_descriptors', int),
+        ('max_file_descriptors', int),
     ]:
-        value_str, infotext = item_data[key]
-
-        if key == "cpu_percent":
-            hr_func = get_percent_human_readable
-        elif key == "mem_total_virtual_in_bytes":
-            hr_func = get_bytes_human_readable
-        else:
-            hr_func = int
+        value, infotext = item_data[key]
 
         yield check_levels(
-            value_str, key, params.get(key), human_readable_func=hr_func, infoname=infotext)
+            value, key, params.get(key), human_readable_func=hr_func, infoname=infotext)
 
 
 check_info["elasticsearch_nodes"] = {

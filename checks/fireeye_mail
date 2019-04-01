@@ -30,7 +30,7 @@ def fireeye_counter_generic(value, what, average):
     # (e.g. 'Infected URL')
     # For the counter variable name, we remove all spaces
     # (e.g. 'fireeye.infected.url')
-    counter = 'fireeye.%s' % what.replace(' ', '.').lower()
+    counter = 'fireeye_mail.%s' % what.replace(' ', '.').lower()
     rate = get_rate(counter, this_time, value)
     state = 0
     if what == 'Bypass' and rate > 0:
@@ -40,10 +40,10 @@ def fireeye_counter_generic(value, what, average):
     perfdata = [('%s_rate' % what.split(' ')[0].lower(), rate)]
     if average:
         avg = get_average(' %s avg' % counter, this_time, rate, average)
-        return (state, '%s rate: %.2f mails per %d second' % \
+        return (state, '%s: %.2f mails/%d seconds' % \
             (what, avg * average, average), perfdata)
     else:
-        return (state, '%s rate: %.2f mails per second' % (what, rate ), perfdata)
+        return (state, '%s: %.2f mails/s' % (what, rate ), perfdata)
 
 
 #   .--mail----------------------------------------------------------------.
@@ -70,8 +70,8 @@ def fireeye_counter_generic(value, what, average):
 def check_fireeye_mail(_no_item, params, info):
     mail_info = info[0][0:3]
     average = params.get('interval', 0)
-    for index, mail_type in enumerate(['Total Email', 'Infected Email', 'Analyzed Email']):
-        yield fireeye_counter_generic(int(mail_info[index])*60, mail_type, average)
+    for index, mail_type in enumerate(['Total', 'Infected', 'Analyzed']):
+        yield fireeye_counter_generic(int(mail_info[index]), mail_type, average)
 
 
 check_info['fireeye_mail'] = {
@@ -265,6 +265,5 @@ check_info['fireeye_mail.received'] = {
     'check_function'            : check_fireeye_mail_received,
     'service_description'       : 'Mails Received',
     'default_levels_variable'   : 'received_levels',
-    'group'                     : 'fireeye_mail_received',
     'has_perfdata'              : True,
 }

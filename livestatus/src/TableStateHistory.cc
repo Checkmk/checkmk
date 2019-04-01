@@ -31,7 +31,6 @@
 #include <ostream>
 #include <set>
 #include <stdexcept>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 #include "Column.h"
@@ -58,12 +57,12 @@
 #include "Host.h"     // IWYU pragma: keep
 #include "Service.h"  // IWYU pragma: keep
 #include "Timeperiod.h"
-#include "cmc.h"
 #define STATE_OK 0
 #define STATE_WARNING 1
 #define STATE_CRITICAL 2
 #define STATE_UNKNOWN 3
 #else
+#include <unordered_map>
 #include "auth.h"
 #include "nagios.h"
 #endif

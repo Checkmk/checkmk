@@ -38,7 +38,9 @@ class Aggregator;
 class Row;
 class RowRenderer;
 
-#ifndef CMC
+#ifdef CMC
+#include "contact_fwd.h"
+#else
 // TODO(sp) Why on earth is "contact_fwd.h" not enough???
 #include "nagios.h"
 #endif

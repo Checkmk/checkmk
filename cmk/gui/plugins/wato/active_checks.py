@@ -1013,7 +1013,7 @@ class RulespecActiveChecksHttp(HostRulespec):
                 elements=[
                     ("name",
                      TextUnicode(
-                         title=_("Name"),
+                         title=_("Service name"),
                          help=_(
                              "Will be used in the service description. If the name starts with "
                              "a caret (<tt>^</tt>), the service description will not be prefixed with either "

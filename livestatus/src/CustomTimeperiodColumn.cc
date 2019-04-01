@@ -35,7 +35,7 @@ extern TimeperiodsCache *g_timeperiods_cache;
 int32_t CustomTimeperiodColumn::getValue(
     Row row, const contact * /* auth_user */) const {
     if (auto p = columnData<void>(row)) {
-        auto attrs = _mc->customAttributes(p);
+        auto attrs = _mc->customAttributes(p, AttributeKind::custom_variables);
         auto it = attrs.find(_varname);
         if (it != attrs.end()) {
             return static_cast<int32_t>(

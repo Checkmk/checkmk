@@ -704,12 +704,20 @@ public:
         return fl_store->numCachedLogMessages();
     }
 
-    Attributes customAttributes(const void *holder) const override {
+    Attributes customAttributes(const void *holder,
+                                AttributeKind kind) const override {
         Attributes attrs;
         for (auto cvm =
                  *static_cast<const customvariablesmember *const *>(holder);
              cvm != nullptr; cvm = cvm->next) {
-            attrs.emplace(cvm->variable_name, cvm->variable_value);
+            // TODO(sp) Handle (non-)tag case!
+            switch (kind) {
+                case AttributeKind::custom_variables:
+                    attrs.emplace(cvm->variable_name, cvm->variable_value);
+                    break;
+                case AttributeKind::tags:
+                    break;
+            }
         }
         return attrs;
     }

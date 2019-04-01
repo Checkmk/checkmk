@@ -35,6 +35,7 @@
 #include "MonitoringCore.h"
 #include "opids.h"
 class Aggregator;
+enum class AttributeKind;
 class Row;
 class RowRenderer;
 
@@ -50,10 +51,11 @@ public:
     CustomVarsDictColumn(std::string name, std::string description,
                          int indirect_offset, int extra_offset,
                          int extra_extra_offset, int offset,
-                         const MonitoringCore *mc)
+                         const MonitoringCore *mc, AttributeKind kind)
         : Column(std::move(name), std::move(description), indirect_offset,
                  extra_offset, extra_extra_offset, offset)
-        , _mc(mc) {}
+        , _mc(mc)
+        , _kind(kind) {}
 
     ColumnType type() const override { return ColumnType::dict; };
 
@@ -71,6 +73,7 @@ public:
 
 private:
     const MonitoringCore *const _mc;
+    const AttributeKind _kind;
 };
 
 #endif  // CustomVarsDictColumn_h

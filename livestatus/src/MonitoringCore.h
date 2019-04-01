@@ -63,6 +63,7 @@ struct CommentData {
 };
 
 using Attributes = std::unordered_map<std::string, std::string>;
+enum class AttributeKind { custom_variables, tags };
 
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
@@ -128,8 +129,9 @@ public:
     // TODO(sp) Horrible and fragile typing of the parameter, we need to fix
     // this: The type of the holder is either 'customvariablesmember *const *'
     // (NEB) or 'const Entity *' (CMC). Furthermore, all we need is a range for
-    // iteration, not a copy.
-    virtual Attributes customAttributes(const void *holder) const = 0;
+    // iteration, not a copy. The kind parameter is not really OO, either...
+    virtual Attributes customAttributes(const void *holder,
+                                        AttributeKind kind) const = 0;
 
     // Our escape hatch, this should die in the long run...
     template <typename T>

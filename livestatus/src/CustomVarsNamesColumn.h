@@ -31,6 +31,7 @@
 #include <vector>
 #include "ListColumn.h"
 #include "contact_fwd.h"
+enum class AttributeKind;
 class MonitoringCore;
 class Row;
 
@@ -39,10 +40,11 @@ public:
     CustomVarsNamesColumn(const std::string &name,
                           const std::string &description, int indirect_offset,
                           int extra_offset, int extra_extra_offset, int offset,
-                          const MonitoringCore *mc)
+                          const MonitoringCore *mc, AttributeKind kind)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset, offset)
-        , _mc(mc) {}
+        , _mc(mc)
+        , _kind(kind) {}
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
@@ -50,6 +52,7 @@ public:
 
 private:
     const MonitoringCore *const _mc;
+    const AttributeKind _kind;
 };
 
 #endif  // CustomVarsNamesColumn_h

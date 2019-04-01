@@ -100,7 +100,7 @@ def check_sap_hana_license(item, params, parsed):
             yield 1, 'not %s' % valid.value
 
         expiration_date = data["expiration_date"]
-        if expiration_date == "?":
+        if expiration_date != "?":
             yield 1, 'Expiration date: %s' % expiration_date
 
 

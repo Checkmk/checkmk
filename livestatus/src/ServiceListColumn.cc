@@ -89,7 +89,8 @@ extern TimeperiodsCache *g_timeperiods_cache;
 
 namespace {
 bool inCustomTimeperiod(MonitoringCore *mc, service *svc) {
-    auto attrs = mc->customAttributes(&svc->custom_variables);
+    auto attrs = mc->customAttributes(&svc->custom_variables,
+                                      AttributeKind::custom_variables);
     auto it = attrs.find("SERVICE_PERIOD");
     if (it != attrs.end()) {
         return g_timeperiods_cache->inTimeperiod(it->second);

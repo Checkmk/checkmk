@@ -80,7 +80,7 @@ namespace {
 std::string getCustomVariable(const MonitoringCore *mc,
                               customvariablesmember *const *cvm,
                               const std::string &name) {
-    auto attrs = mc->customAttributes(cvm);
+    auto attrs = mc->customAttributes(cvm, AttributeKind::custom_variables);
     auto it = attrs.find(name);
     return it == attrs.end() ? "" : it->second;
 }

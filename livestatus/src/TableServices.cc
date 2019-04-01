@@ -448,16 +448,16 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "custom_variable_names",
         "A list of the names of all custom variables of the service",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
-        table->core()));
+        table->core(), AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variable of the service",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
-        table->core()));
+        table->core(), AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, custom_variables),
-        table->core()));
+        table->core(), AttributeKind::custom_variables));
 
     table->addColumn(std::make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",

@@ -39,7 +39,7 @@ std::vector<std::string> CustomVarsValuesColumn::getValue(
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> values;
     if (auto p = columnData<void>(row)) {
-        auto attrs = _mc->customAttributes(p);
+        auto attrs = _mc->customAttributes(p, _kind);
         std::transform(attrs.begin(), attrs.end(), std::back_inserter(values),
                        [](const auto &entry) { return entry.second; });
     }

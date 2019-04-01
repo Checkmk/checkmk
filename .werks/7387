@@ -1,0 +1,17 @@
+Title: apache_status: Ignore certificates from local hosts
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554122535
+Class: fix
+
+Previously not all cases of failing certificate verfication for
+local hosts were handled correctly, which could lead to missing
+data for that host.
+Instead of handling all cases of invalid certificates we now 
+omit certificate verification for local addresses entirely.
+This only affects the addresses "127.0.0.1", "[::1]", and
+"localhost".
+

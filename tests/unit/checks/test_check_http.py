@@ -13,8 +13,15 @@ pytestmark = pytest.mark.checks
             'virthost': ('www.test123.de', True)
         }),
         [
-            '-I', 'www.test123.de', '-H', 'www.test123.de', '-p', 80, '-u', '/images',
-            '--onredirect=follow', '-L'
+            '-H',
+            'www.test123.de',
+            '-u',
+            '/images',
+            '--onredirect=follow',
+            '-L',
+            '-p',
+            80,
+            'www.test123.de',
         ],
     ),
     (
@@ -28,8 +35,16 @@ pytestmark = pytest.mark.checks
             'virthost': ('www.test123.de', True)
         }),
         [
-            '-I', '163.172.86.64', '-H', 'www.test123.de', '-p', 3128, '-u', '/images', '--ssl',
-            '--extended-perfdata', '-j', 'CONNECT'
+            '-H',
+            'www.test123.de',
+            '-u',
+            '/images',
+            '--ssl',
+            '--extended-perfdata',
+            '-j',
+            'CONNECT',
+            '163.172.86.64',
+            'www.test123.de:3128',
         ],
     ),
     (
@@ -56,7 +71,7 @@ pytestmark = pytest.mark.checks
             'port': '42',
             'proxy': 'p.roxy:23',
         }),
-        ['-C', '10,20', '-p', '23', '--ssl', '-j', 'CONNECT', 'p.roxy', 'www.test123.com:42'],
+        ['-C', '10,20', '--ssl', '-j', 'CONNECT', '-p', '23', 'p.roxy', 'www.test123.com:42'],
     ),
     (
         (None, {
@@ -66,7 +81,7 @@ pytestmark = pytest.mark.checks
             'proxy': '[dead:beef::face]:23',
         }),
         [
-            '-C', '10,20', '-p', '23', '--ssl', '-j', 'CONNECT', '[dead:beef::face]',
+            '-C', '10,20', '--ssl', '-j', 'CONNECT', '-p', '23', '[dead:beef::face]',
             'www.test123.com:42'
         ],
     ),
@@ -75,26 +90,26 @@ pytestmark = pytest.mark.checks
             'virthost': ("virtual.host", True),
             'proxy': "foo.bar",
         }),
-        ['-I', 'foo.bar', '-H', 'virtual.host'],
+        ['-H', 'virtual.host', 'foo.bar', 'virtual.host'],
     ),
     (
         (None, {
             'virthost': ("virtual.host", False),
             'proxy': "foo.bar",
         }),
-        ['-I', 'foo.bar', '-H', 'virtual.host'],
+        ['-H', 'virtual.host', 'foo.bar', 'virtual.host'],
     ),
     (
         (None, {
             'virthost': ("virtual.host", True),
         }),
-        ['-I', 'virtual.host', '-H', 'virtual.host'],
+        ['-H', 'virtual.host', 'virtual.host'],
     ),
     (
         (None, {
             'virthost': ("virtual.host", False),
         }),
-        ['-I', '$_HOSTADDRESS_4$', '-H', 'virtual.host'],
+        ['-H', 'virtual.host', '$_HOSTADDRESS_4$'],
     ),
 ])
 def test_check_http_argument_parsing(check_manager, params, expected_args):

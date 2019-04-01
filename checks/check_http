@@ -105,21 +105,10 @@ def _certificate_args(host, proxy, settings, sni_flag):
             warn, crit = settings["cert_days"]
             args += ['-C', '%d,%d' % (warn, crit)]
 
-    specify_port = proxy.port if proxy else host.port
-    if specify_port:
-        args += ['-p', specify_port]
-
     if proxy:
         args += ['--ssl', '-j', 'CONNECT']
-        args.append(proxy.address)
-
     elif sni_flag:
         args += ['-H', host.address]
-
-    address = host.address
-    if proxy and host.port:
-        address += ':%s' % host.port
-    args += [address]
 
     return args
 
@@ -127,19 +116,8 @@ def _certificate_args(host, proxy, settings, sni_flag):
 def _url_args(host, proxy, settings):
     args = []
 
-    if proxy:
-        args += ["-I", proxy.address]
-        args += ["-H", host.address]
-    else:
-        args += ["-I", host.address]
-        # Proxy *and* virthost is not allowed
-        if "virthost" in settings:
-            args += ["-H", settings["virthost"]]
-
-    # TODO: I think this should be overridden by the proxy port
-    #       in the same way as in the cert check. (mo)
-    if host.port:
-        args += ['-p', host.port]
+    if "virthost" in settings:
+        args += ["-H", settings["virthost"]]
 
     if "uri" in settings:
         args += ['-u', settings["uri"]]
@@ -230,6 +208,18 @@ def _common_args(host, proxy, sni_flag):
     if proxy and proxy.auth:
         args += ["-b", proxy.auth]
 
+    specify_port = proxy.port if proxy else host.port
+    if specify_port:
+        args += ['-p', specify_port]
+
+    # last two arguments correspond to -I/-H, respectively
+    if proxy:
+        args += [proxy.address]
+    address = host.address
+    if proxy and host.port:
+        address += ':%s' % host.port
+    args += [address]
+
     return args
 
 
@@ -242,10 +232,12 @@ def check_http_arguments(params):
     proxy = _get_proxy(params)
 
     sni_flag = bool(params.get("sni"))
-    args = _common_args(host, proxy, sni_flag)
     if mode_name == 'cert':
-        return args + _certificate_args(host, proxy, settings, sni_flag)
-    return args + _url_args(host, proxy, settings)
+        args = _certificate_args(host, proxy, settings, sni_flag)
+    else:
+        args = _url_args(host, proxy, settings)
+
+    return args + _common_args(host, proxy, sni_flag)
 
 
 def check_http_description(params):

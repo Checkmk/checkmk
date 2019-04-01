@@ -327,9 +327,14 @@ def section_node_info(client, _config):
 @skippable
 def section_node_disk_usage(client, _config):
     '''docker system df'''
-    data = client.df()
-    LOGGER.debug(data)
     section = Section('node_disk_usage')
+    try:
+        data = client.df()
+    except () if DEBUG else docker.errors.APIError as exc:
+        section.write()
+        LOGGER.exception(exc)
+        return
+    LOGGER.debug(data)
 
     def get_row(type_, instances, is_inactive, key='Size'):
         inactive = [i for i in instances if is_inactive(i)]

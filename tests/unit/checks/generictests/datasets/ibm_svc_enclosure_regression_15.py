@@ -27,6 +27,6 @@ discovery = {'': [(u'5', {})]}
 checks = {'': [(u'5',
                 {},
                 [(0, u'Status: online', []),
-                 (0, u'Online canisters: 2', []),
-                 (0, u'Online PSUs: 2', []),
-                 (0, u'Online fan modules: 0', [])])]}
+                 (0, u'Online canisters: 2 of 2', []),
+                 (0, u'Online PSUs: 2 of 2', []),
+                 (0, u'Online fan modules: 0 of 0', [])])]}

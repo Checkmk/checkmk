@@ -1,0 +1,11 @@
+Title: ibm_svc_enclosure: Configurable lower levels for online canisters
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554133523
+Class: feature
+
+Previously the check status was CRIT if not all of the canisters were online.
+This werk adds optional configuration of the lower levels for online canisters.

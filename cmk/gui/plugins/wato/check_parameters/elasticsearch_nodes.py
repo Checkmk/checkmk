@@ -69,7 +69,7 @@ class RulespecCheckgroupParametersElasticsearchNodes(CheckParameterRulespecWithI
                          Percentage(title=_("CPU usage critical at"), default_value=90.0),
                      ],
                  )),
-                ("open_filedesc",
+                ("open_file_descriptors",
                  Tuple(
                      title=_("Expected number of open file descriptors"),
                      elements=[
@@ -78,7 +78,7 @@ class RulespecCheckgroupParametersElasticsearchNodes(CheckParameterRulespecWithI
                      ],
                  )),
             ],
-            optional_keys=["open_filedesc", "cpu_usage"],
+            optional_keys=["open_file_descriptors", "cpu_levels"],
         )
 
     @property

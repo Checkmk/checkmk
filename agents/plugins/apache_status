@@ -126,11 +126,16 @@ def _unpack_server(server):
             server.get('page', 'server-status'))
 
 
-def no_cert_verification():
+def urlopen_no_cert_verification(url):
+    """urlopen without checking the cert
+
+    workaround if SSL port is found and localhost is using
+    SSL connections but certificate does not match
+    """
     context = ssl.create_default_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
-    return context
+    return urllib2.urlopen(url, context=context)
 
 
 def get_response(proto, address, portspec, page):
@@ -139,6 +144,8 @@ def get_response(proto, address, portspec, page):
     # Try to fetch the status page for each server
     try:
         request = urllib2.Request(url, headers={"Accept": "text/plain"})
+        if is_local:
+            return urlopen_no_cert_verification(url)
         return urllib2.urlopen(request)
     except urllib2.URLError as exc:
         if 'unknown protocol' in str(exc):
@@ -146,12 +153,6 @@ def get_response(proto, address, portspec, page):
             # serving non ssl secured http
             url = 'http://%s%s/server-status?auto' % (address, portspec)
             return urllib2.urlopen(url)
-        raise
-    except Exception as exc:
-        if 'doesn\'t match' in str(exc) and is_local:
-            # HACK: workaround if SSL port is found and localhost is using
-            # SSL connections but certificate does not match
-            return urllib2.urlopen(url, context=no_cert_verification())
         raise
 
 

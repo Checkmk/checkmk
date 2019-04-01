@@ -97,9 +97,6 @@ def _get_proxy(params):
 def _certificate_args(host, proxy, settings, sni_flag):
     args = []
 
-    if host.family == 'ipv6':
-        args += ['-6']
-
     if "cert_days" in settings:
         # legacy behavior
         if isinstance(settings["cert_days"], int):
@@ -114,8 +111,6 @@ def _certificate_args(host, proxy, settings, sni_flag):
 
     if proxy:
         args += ['--ssl', '-j', 'CONNECT']
-        if proxy.auth:
-            args += ["-b", proxy.auth]
         args.append(proxy.address)
 
     elif sni_flag:
@@ -140,9 +135,6 @@ def _url_args(host, proxy, settings):
         # Proxy *and* virthost is not allowed
         if "virthost" in settings:
             args += ["-H", settings["virthost"]]
-
-    if host.family == 'ipv6':
-        args += ['-6']
 
     # TODO: I think this should be overridden by the proxy port
     #       in the same way as in the cert check. (mo)
@@ -177,9 +169,6 @@ def _url_args(host, proxy, settings):
     if "auth" in settings:
         username, password = settings["auth"]
         args += ["-a", passwordstore_get_cmdline("%s:%%s" % username, password)]
-
-    if proxy and proxy.auth:
-        args += ["-b", proxy.auth]
 
     if "onredirect" in settings:
         args += ['--onredirect=%s' % settings["onredirect"]]
@@ -231,6 +220,19 @@ def _url_args(host, proxy, settings):
     return args
 
 
+def _common_args(host, proxy, sni_flag):
+    args = []
+
+    if host.family == 'ipv6':
+        args += ['-6']
+    if sni_flag:
+        args += ['--sni']
+    if proxy and proxy.auth:
+        args += ["-b", proxy.auth]
+
+    return args
+
+
 def check_http_arguments(params):
     params = _transform_check_http(params)
 
@@ -239,9 +241,10 @@ def check_http_arguments(params):
     host = _get_host(params)
     proxy = _get_proxy(params)
 
-    args = ['--sni'] if params.get("sni") else []
+    sni_flag = bool(params.get("sni"))
+    args = _common_args(host, proxy, sni_flag)
     if mode_name == 'cert':
-        return args + _certificate_args(host, proxy, settings, params.get("sni"))
+        return args + _certificate_args(host, proxy, settings, sni_flag)
     return args + _url_args(host, proxy, settings)
 
 

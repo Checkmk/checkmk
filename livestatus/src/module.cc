@@ -706,17 +706,21 @@ public:
 
     Attributes customAttributes(const void *holder,
                                 AttributeKind kind) const override {
+        auto h = *static_cast<const customvariablesmember *const *>(holder);
         Attributes attrs;
-        for (auto cvm =
-                 *static_cast<const customvariablesmember *const *>(holder);
-             cvm != nullptr; cvm = cvm->next) {
-            // TODO(sp) Handle (non-)tag case!
+        for (auto cvm = h; cvm != nullptr; cvm = cvm->next) {
+            bool is_tag = mk::starts_with(cvm->variable_name, "_TAG_");
+            bool part_of_result = false;
             switch (kind) {
                 case AttributeKind::custom_variables:
-                    attrs.emplace(cvm->variable_name, cvm->variable_value);
+                    part_of_result = !is_tag;
                     break;
                 case AttributeKind::tags:
+                    part_of_result = is_tag;
                     break;
+            }
+            if (part_of_result) {
+                attrs.emplace(cvm->variable_name, cvm->variable_value);
             }
         }
         return attrs;

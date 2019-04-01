@@ -150,6 +150,12 @@ class ModePredefinedConditions(SimpleListMode):
         table.cell(_("Title"), html.render_text(entry["title"]))
 
         table.cell(_("Conditions"))
+        html.open_ul(class_="conditions")
+        html.open_li()
+        html.write("%s: %s" % (_("Folder"), Folder.folder(
+            entry["conditions"]["folder_path"]).alias_path()))
+        html.close_li()
+        html.close_ul()
         html.write(vs_conditions().value_to_text(entry["conditions"]))
 
         table.cell(_("Editable by"))
@@ -242,10 +248,31 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         super(ModeEditPredefinedCondition, self)._save(entries)
 
         if old_path != conditions.folder_path:
-            # TODO: Move rules to other folder (See EditRuleMode.action)
-            pass
+            self._move_rules_for_conditions(conditions, old_path)
 
         self._rewrite_rules_for(conditions)
+
+    def _move_rules_for_conditions(self, conditions, old_path):
+        # type (RuleConditions, str) -> None
+        """Apply changed folder of predefined condition to rules"""
+        old_folder = Folder.folder(old_path)
+        old_rulesets = FolderRulesets(old_folder)
+        old_rulesets.load()
+
+        new_folder = Folder.folder(conditions.folder_path)
+        new_rulesets = FolderRulesets(new_folder)
+        new_rulesets.load()
+
+        for old_ruleset in old_rulesets.get_rulesets().values():
+            for rule in old_ruleset.get_folder_rules(old_folder):
+                if rule.predefined_condition_id() == self._ident:
+                    old_ruleset.delete_rule(rule)
+
+                    new_ruleset = new_rulesets.get(old_ruleset.name)
+                    new_ruleset.append_rule(new_folder, rule)
+
+        new_rulesets.save()
+        old_rulesets.save()
 
     def _rewrite_rules_for(self, conditions):
         # type: (RuleConditions) -> None
@@ -256,7 +283,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         the changed predefined condition. Since the conditions are only applied to the
         rules while saving them this step is needed.
         """
-        folder = Folder(conditions.folder_path)
+        folder = Folder.folder(conditions.folder_path)
         rulesets = FolderRulesets(folder)
         rulesets.load()
 

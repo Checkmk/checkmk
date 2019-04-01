@@ -44,6 +44,7 @@ test_neb_SOURCES = \
     test_OffsetStringMacroColumn.cc
 test_neb_CPPFLAGS = \
     -I.. \
+    -I../.. \
     -I$(GOOGLETEST)/destdir/include \
     @BOOST_CPPFLAGS@ @RE2_CPPFLAGS@
 test_neb_LDFLAGS = \

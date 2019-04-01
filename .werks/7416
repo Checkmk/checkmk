@@ -1,0 +1,9 @@
+Title: k8s_resources: now uses default levels of 90% and 95?%
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1556108625
+Class: feature
+

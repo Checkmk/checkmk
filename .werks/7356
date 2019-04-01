@@ -1,0 +1,11 @@
+Title: fireeye_mail: Fixed wrong scaling of total, infected and analyzed mail rates
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1554103411
+
+

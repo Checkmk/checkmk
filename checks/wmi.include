@@ -45,13 +45,6 @@
 #   '----------------------------------------------------------------------'
 
 
-class NullTable(object):
-    """Represents an empty table caused by a WMI timeout."""
-
-    def __getattr__(self, name):
-        raise MKCounterWrapped('WMI query timed out')
-
-
 class WMITable(object):
     """
     Represents a 2-dimensional table of performance metrics.
@@ -72,10 +65,9 @@ class WMITable(object):
         self.__headers = {}
         self.__timestamp = timestamp
         self.__frequency = frequency
-        index = 0
 
         prev_header = None
-        for header in headers:
+        for index, header in enumerate(headers):
             if not header.strip() and prev_header:
                 # MS apparently doesn't bother to provide a name
                 # for base columns with performance counters
@@ -83,7 +75,7 @@ class WMITable(object):
             header = self._normalize_key(header)
             self.__headers[header] = index
             prev_header = header
-            index += 1
+
         self.__key_index = None
         if key_field is not None:
             try:
@@ -94,6 +86,7 @@ class WMITable(object):
 
         self.__row_lookup = {}
         self.__rows = []
+        self.timed_out = False
         if rows:
             for row in rows:
                 self.add_row(row)
@@ -131,7 +124,16 @@ class WMITable(object):
             self.__row_lookup[key] = len(self.__rows)
         self.__rows.append(row)
 
+        if not self.timed_out and self._get_row_col_value(-1, "WMIStatus").lower() == "timeout":
+            # Check if there's a timeout in the last added line, ie. row (index) == -1
+            self.timed_out = True
+
     def get(self, row, column):
+        if self.timed_out:
+            raise MKCounterWrapped('WMI query timed out')
+        return self._get_row_col_value(row, column)
+
+    def _get_row_col_value(self, row, column):
         if isinstance(row, int):
             row_index = row
         else:
@@ -198,23 +200,15 @@ def parse_wmi_table(info, key="Name"):
                 # single-table input
                 tablename = ""
 
-            if is_wmi_timeout(line):
-                parsed[tablename] = NullTable()
-                line = info_iter.next()
-                continue
-
-            if tablename not in parsed:
-                parsed[tablename] = WMITable(tablename, line, key, timestamp, frequency)
-            current = parsed[tablename]
+            missing_wmi_status, current_table =\
+                _prepare_wmi_table(parsed, tablename, line, key, timestamp, frequency)
 
             # read table content
             line = info_iter.next()
             while not line[0].startswith("["):
-                if is_wmi_timeout(line):
-                    parsed[tablename] = NullTable()
-                    line = info_iter.next()
-                    continue
-                current.add_row(line)
+                if missing_wmi_status:
+                    line.append("OK")
+                current_table.add_row(line)
                 line = info_iter.next()
     except (StopIteration, ValueError):
         # regular end of block
@@ -223,8 +217,51 @@ def parse_wmi_table(info, key="Name"):
     return parsed
 
 
-def is_wmi_timeout(line):
-    return line[0] == "WMItimeout"
+def _prepare_wmi_table(parsed, tablename, line, key, timestamp, frequency):
+    # Possibilities:
+    # #1 Agent provides extra column for WMIStatus; since 1.5.0p14
+    # <<<SEC>>>
+    # [foo]
+    # Name,...,WMIStatus
+    # ABC,...,OK/Timeout
+    # [bar]
+    # Name,...,WMIStatus
+    # DEF,...,OK/Timeout
+    #
+    # #2 Old agents have no WMIStatus column; before 1.5.0p14
+    # <<<SEC>>>
+    # [foo]
+    # Name,...,
+    # ABC,...,
+    # [bar]
+    # Name,...,
+    # DEF,...,
+    #
+    # #3 Old agents which report a WMITimeout in any sub section; before 1.5.0p14
+    # <<<SEC>>>
+    # [foo]
+    # WMItimeout
+    # [bar]
+    # Name,...,
+    # DEF,...,
+    if line[0].lower() == "wmitimeout":
+        old_timed_out = True
+        header = ['WMIStatus']
+        key = None
+    else:
+        old_timed_out = False
+        header = line[:]
+
+    missing_wmi_status = False
+    if 'WMIStatus' not in header:
+        missing_wmi_status = True
+        header.append('WMIStatus')
+
+    current_table = parsed.setdefault(tablename,
+                                      WMITable(tablename, header, key, timestamp, frequency))
+    if old_timed_out:
+        current_table.add_row(['Timeout'])
+    return missing_wmi_status, current_table
 
 
 #.
@@ -255,8 +292,8 @@ def wmi_filter_global_only(tables, row):
 
 def _required_tables_missing(tables, required_tables):
     is_subset = set(required_tables).issubset(set(tables.keys()))
-    contains_null = any(isinstance(table, NullTable) for table in tables.itervalues())
-    return not is_subset or contains_null
+    contains_timed_out_table = any(table.timed_out for table in tables.itervalues())
+    return not is_subset or contains_timed_out_table
 
 
 def inventory_wmi_table_instances(tables, required_tables=None, filt=None, levels=None):

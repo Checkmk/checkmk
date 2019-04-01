@@ -1,0 +1,14 @@
+Title: check_http: Fix port mixup in URL-mode
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1554103908
+Class: fix
+
+The check_http check in URL mode mixed up the servers port and the proxy port if a proxy was used.
+If users were using a proxy to check a URL, the configured port was used as the proxys port, while
+it was not possible to configure a port for the server. Users who have been relying on this wrong
+behaviour need to edit their rules.
+The rule has been reworked to clearly show which settings apply the server, and which to the proxy.

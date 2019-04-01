@@ -36,7 +36,9 @@ class CustomVarsDictColumn;
 class RegExp;
 class Row;
 
-#ifndef CMC
+#ifdef CMC
+#include "contact_fwd.h"
+#else
 // TODO(sp) Why on earth is "contact_fwd.h" not enough???
 #include "nagios.h"
 #endif

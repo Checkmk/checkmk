@@ -1,0 +1,22 @@
+Title: wmi.include: Check_MK Discovery does not report 'vanished services' for WMI services if WMI timeout
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1554115340
+Class: fix
+
+If a timeout occurs in a Windows agent section while executing WMI queries the
+related services were handled as vanished services by the Check_MK Discovery
+service. This may be misleading because this timeout is short-lived.
+
+The WMI query timeouts are a known problem in Windows and can not be solved by
+the Check_MK agent. Please see
+https://github.com/martinlindhe/wmi_exporter/issues/89 for further information.
+
+Now the Check_MK Discovery does not take WMI timeouts into account. Thus the
+Check_MK Discovery does not report "vanished services" any more.  The Check_MK
+service handles services with WMI timeouts as "stale" further on.
+
+

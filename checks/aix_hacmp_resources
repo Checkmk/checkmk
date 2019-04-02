@@ -39,15 +39,10 @@
 def parse_aix_hacmp_resources(info):
     parsed = {}
     for line in info:
-        if 'There is no cluster definition.' in " ".join(line):
+        joined_line = " ".join(line)
+        if 'There is no cluster definition' in joined_line or 'Status of the RSCT subsystems' in joined_line:
             continue
-        if line[0] not in parsed:
-            parsed[line[0]] = [ (line[2], line[1].lower()) ]
-        else:
-            parsed[line[0]].append(
-                (line[2], line[1].lower())
-            )
-
+        parsed.setdefault(line[0], []).append((line[2], line[1].lower()))
     return parsed
 
 

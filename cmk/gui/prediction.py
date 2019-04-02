@@ -145,8 +145,9 @@ def page_graph():
     from_time, until_time = timegroup["range"]
     now = time.time()
     if now >= from_time and now <= until_time:
-        _rrd_step, rrd_data = prediction.get_rrd_data(host, service, dsname, "MAX", from_time,
-                                                      until_time)
+        timeseries = prediction.get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
+        rrd_data = timeseries.values
+
         render_curve(rrd_data, "#0000ff", 2)
         if current_value is not None:
             rel_time = (now - prediction.timezone_at(now)) % timegroup["slice"]

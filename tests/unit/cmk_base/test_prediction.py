@@ -15,11 +15,11 @@ def test_group_by(group_by, timestamp, result):
 
 
 @pytest.mark.parametrize("slices, result", [
-    ([(0, 1, list(range(6)))], [[i] * 4 for i in range(6)]),
-    ([(0, 1, [1, 5, None, 6])], [[i] * 4 for i in [1, 5, None, 6]]),
+    ([list(range(6))], [[i] * 4 for i in range(6)]),
+    ([[1, 5, None, 6]], [[i] * 4 for i in [1, 5, None, 6]]),
     ([
-        (0, 1, [1, 5, None, 6]),
-        (0, 1, [2, None, 2, 4]),
+        [1, 5, None, 6],
+        [2, None, 2, 4],
     ], [
         pytest.approx([1.5, 1, 2, math.sqrt(2) / 2]),
         [5.0, 5, 5, 5.0],
@@ -27,9 +27,9 @@ def test_group_by(group_by, timestamp, result):
         pytest.approx([5.0, 4, 6, math.sqrt(2)]),
     ]),
     ([
-        (0, 1, [1, 5, 3, 6, 8, None]),
-        (0, 1, [2, 2, 2, 4, 3, 5]),
-        (0, 2, [3, None, 2]),
+        [1, 5, 3, 6, 8, None],
+        [2, 2, 2, 4, 3, 5],
+        [3, 3, None, None, 2, 2],
     ], [
         pytest.approx([2.0, 1, 3, 1.0]),
         pytest.approx([10.0 / 3.0, 2, 5, 1.527525]),
@@ -39,9 +39,9 @@ def test_group_by(group_by, timestamp, result):
         pytest.approx([3.5, 2, 5, 2.121320]),
     ]),
     ([
-        (0, 1, [1, 5, 3, 2, 6, 8, None]),
-        (0, 1, []),
-        (0, 3.5, [5, 2]),
+        [1, 5, 3, 2, 6, 8, None],
+        [None] * 7,
+        [5, 5, 5, 5, 2, 2, 2],
     ], [
         pytest.approx([3.0, 1, 5, 2.828427]),
         pytest.approx([5.0, 5, 5, 0.0]),
@@ -52,5 +52,5 @@ def test_group_by(group_by, timestamp, result):
         pytest.approx([2.0, 2, 2, 2.0]),
     ]),
 ])
-def test_consolidate(slices, result):
-    assert prediction.consolidate_data(slices) == result
+def test_data_stats(slices, result):
+    assert prediction.data_stats(slices) == result

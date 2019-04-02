@@ -2938,8 +2938,7 @@ class ConfigCache(object):
         empty list."""
         return self._hosttags.get(hostname, [])
 
-    # TODO: Rename to tags_of_host
-    def tag_groups_of_host(self, hostname):
+    def tags_of_host(self, hostname):
         """Returns the dict of all configured tag groups and values of a host"""
         return host_tags.get(hostname, {})
 

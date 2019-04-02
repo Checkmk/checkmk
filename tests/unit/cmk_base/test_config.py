@@ -243,11 +243,11 @@ def test_host_tags_of_host(monkeypatch):
 
     cfg = config.HostConfig("xyz")
     assert cfg.tag_groups == {}
-    assert config.get_config_cache().tag_groups_of_host("xyz") == {}
+    assert config.get_config_cache().tags_of_host("xyz") == {}
 
     cfg = config.HostConfig("test-host")
     assert cfg.tag_groups == {"tag_group": "abc"}
-    assert config.get_config_cache().tag_groups_of_host("test-host") == {"tag_group": "abc"}
+    assert config.get_config_cache().tags_of_host("test-host") == {"tag_group": "abc"}
 
 
 def test_service_tag_rules_default():

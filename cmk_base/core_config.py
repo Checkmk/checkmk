@@ -393,7 +393,7 @@ def get_host_attributes(hostname, config_cache):
     # "__TAG_" instead. We may deprecate this is one day.
     attrs["_TAGS"] = " ".join(sorted(config_cache.tag_list_of_host(hostname)))
 
-    attrs.update(_get_tag_attributes(config_cache.tag_groups_of_host(hostname)))
+    attrs.update(_get_tag_attributes(config_cache.tags_of_host(hostname)))
 
     if "alias" not in attrs:
         attrs["alias"] = config.alias_of(hostname, hostname)

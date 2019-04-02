@@ -78,8 +78,9 @@ def dump_host(hostname):
                    (addresses if addresses is not None else "No IP") + "\n")
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
-    tags = [(tag_template % ":".join(t))
-            for t in sorted(config_cache.tag_groups_of_host(hostname).items())]
+    tags = [
+        (tag_template % ":".join(t)) for t in sorted(config_cache.tags_of_host(hostname).items())
+    ]
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
     if config.is_cluster(hostname):
         parents_list = config.nodes_of(hostname)

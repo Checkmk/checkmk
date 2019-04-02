@@ -51,6 +51,66 @@ def timezone_at(timestamp):
     return time.timezone
 
 
+def rrd_timestamps(twindow):
+    start, end, step = twindow
+    if step == 0:
+        return []
+    return [t + step for t in range(start, end, step)]
+
+
+class TimeSeries(object):
+    """Describes the returned time series returned by livestatus
+
+    - Timestamped values are valid for the measurement interval:
+        [timestamp-step; timestamp[
+      which means they are at the end of the interval.
+    - The Series describes the interval [start; end[
+    - Start has no associated value to it.
+    """
+
+    def __init__(self, data):
+        self.start = data[0]
+        self.end = data[1]
+        self.step = data[2]
+        self.values = data[3:]
+
+    @property
+    def twindow(self):
+        return self.start, self.end, self.step
+
+    def bfill_upsample(self, twindow, shift):
+        """Upsample by backward filling values
+
+        twindow : 3-tuple, (start, end, step)
+             description of target time interval
+        """
+        upsa = []
+        i = 0
+        start, end, step = twindow
+        current_times = rrd_timestamps(self.twindow)
+        if start != self.start or end != self.end or step != self.step:
+            for t in range(start, end, step):
+                if t >= current_times[i] + shift:
+                    i += 1
+                upsa.append(self.values[i])
+
+            return upsa
+
+        return self.values
+
+    def time_data_pairs(self):
+        return list(zip(rrd_timestamps(self.twindow), self.values))
+
+    def __repr__(self):
+        return str(list(self.twindow) + self.values)
+
+    def __eq__(self, other):
+        if not isinstance(other, TimeSeries):
+            return NotImplemented
+
+        return self.start == other.start and self.end == other.end and self.step == other.step and self.values == other.values
+
+
 def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
     """Fetch RRD historic metrics data of a specific service, within the specified time range
 

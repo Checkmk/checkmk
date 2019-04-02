@@ -11,9 +11,6 @@ description:
  Alternatively you can configure thresholds for the SQL output
  "wait_duration_ms".
 
- These two options can {not} be combined. If thresholds are set,
- they will have precedence.
-
  This check needs the Check_MK mssql.vbs -plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.

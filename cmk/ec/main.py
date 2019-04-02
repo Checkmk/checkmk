@@ -232,7 +232,7 @@ class ECServerThread(threading.Thread):
                     self.serve()
             except Exception:
                 self._logger.exception("Exception in %s server" % self.name)
-                if self._settings.options.debug:
+                if self.settings.options.debug:
                     raise
                 time.sleep(1)
 

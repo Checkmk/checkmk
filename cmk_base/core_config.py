@@ -391,7 +391,7 @@ def get_host_attributes(hostname, config_cache):
     # Pre 1.6 legacy attribute. We have changed our whole code to use the
     # livestatus column "tags" which is populated by all attributes starting with
     # "__TAG_" instead. We may deprecate this is one day.
-    attrs["_TAGS"] = " ".join(sorted(config_cache.tags_of_host(hostname)))
+    attrs["_TAGS"] = " ".join(sorted(config_cache.tag_list_of_host(hostname)))
 
     attrs.update(_get_tag_attributes(config_cache.tag_groups_of_host(hostname)))
 

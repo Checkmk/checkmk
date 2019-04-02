@@ -21,7 +21,7 @@ def clear_config_caches(monkeypatch):
     ("testhost", ["no-ip"], False),
 ])
 def test_is_ipv4_host(monkeypatch, hostname, tags, result):
-    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    monkeypatch.setattr(config, "tag_list_of_host", lambda h: {hostname: tags}[h])
     assert config.is_ipv4_host(hostname) == result
 
 
@@ -33,7 +33,7 @@ def test_is_ipv4_host(monkeypatch, hostname, tags, result):
     ("testhost", ["no-ip"], True),
 ])
 def test_is_no_ip_host(monkeypatch, hostname, tags, result):
-    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    monkeypatch.setattr(config, "tag_list_of_host", lambda h: {hostname: tags}[h])
     assert config.is_no_ip_host(hostname) == result
 
 
@@ -58,7 +58,7 @@ def test_is_no_ip_host(monkeypatch, hostname, tags, result):
 def test_is_ipv6_primary_host(monkeypatch, hostname, tags, result, ruleset):
     monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, "|".join(tags))])
     monkeypatch.setattr(config, "host_paths", {hostname: "/"})
-    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    monkeypatch.setattr(config, "tag_list_of_host", lambda h: {hostname: tags}[h])
     monkeypatch.setattr(config, "primary_address_family", ruleset)
 
     config.get_config_cache().initialize()
@@ -121,7 +121,7 @@ def test_is_snmp_host(monkeypatch, hostname, tags, result):
     ("testhost", ["cmk-agent"], False),
 ])
 def test_is_all_agents_host(monkeypatch, hostname, tags, result):
-    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    monkeypatch.setattr(config, "tag_list_of_host", lambda h: {hostname: tags}[h])
     assert config.is_all_agents_host(hostname) == result
 
 
@@ -133,7 +133,7 @@ def test_is_all_agents_host(monkeypatch, hostname, tags, result):
     ("testhost", ["cmk-agent"], False),
 ])
 def test_is_all_special_agents_host(monkeypatch, hostname, tags, result):
-    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    monkeypatch.setattr(config, "tag_list_of_host", lambda h: {hostname: tags}[h])
     assert config.is_all_special_agents_host(hostname) == result
 
 

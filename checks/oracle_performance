@@ -106,13 +106,13 @@ def check_oracle_performance(item, _no_params, parsed):
     sga_info = data.get('SGA_info', None)
     if sga_info:
         for what, val, perfvar in [
-           ('SGA', sga_info["Maximum SGA Size"], 'oracle_sga_size'),
-           ('DB Cache', sga_info["Buffer Cache Size"], 'oracle_sga_buffer_cache'),
-           ('Shared Pool', sga_info["Shared Pool Size"], 'oracle_sga_shared_pool'),
-           ('Redo Buffers', sga_info["Redo Buffers"], 'oracle_sga_redo_buffer'),
-           ('Java Pool Size', sga_info["Java Pool Size"], 'oracle_sga_java_pool'),
-           ('Large Pool Size', sga_info["Large Pool Size"], 'oracle_sga_large_pool'),
-           ('Streams Pool Size', sga_info["Streams Pool Size"], 'oracle_sga_streams_pool'),
+            ('SGA', sga_info["Maximum SGA Size"], 'oracle_sga_size'),
+            ('DB Cache', sga_info["Buffer Cache Size"], 'oracle_sga_buffer_cache'),
+            ('Shared Pool', sga_info["Shared Pool Size"], 'oracle_sga_shared_pool'),
+            ('Redo Buffers', sga_info["Redo Buffers"], 'oracle_sga_redo_buffer'),
+            ('Java Pool Size', sga_info["Java Pool Size"], 'oracle_sga_java_pool'),
+            ('Large Pool Size', sga_info["Large Pool Size"], 'oracle_sga_large_pool'),
+            ('Streams Pool Size', sga_info["Streams Pool Size"], 'oracle_sga_streams_pool'),
         ]:
             yield 0, "%s: %s" % (what, get_bytes_human_readable(val))
             perfdata.append((perfvar, val))

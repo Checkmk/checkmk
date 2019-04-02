@@ -2943,6 +2943,15 @@ class ConfigCache(object):
         """Returns the dict of all configured tag groups and values of a host"""
         return host_tags.get(hostname, {})
 
+    def tags_of_service(self, hostname, svc_desc):
+        """Returns the dict of all configured tags of a service
+        It takes all explicitly configured tag groups into account.
+        """
+        tags = {}
+        for entry in self.service_extra_conf(hostname, svc_desc, service_tag_rules):
+            tags.update(entry)
+        return tags
+
     def set_all_processed_hosts(self, all_processed_hosts):
         self._all_processed_hosts = set(all_processed_hosts)
 

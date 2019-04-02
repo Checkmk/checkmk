@@ -56,7 +56,7 @@ def test_get_host_attributes(monkeypatch):
 }), ({
     "a.d B/E u-f N_A": "a.d B/E u-f N_A"
 }, {
-    "__TAG_a.d B/E u-f N_A": "a.d B/E u-f N_A",
+    u"__TAG_a.d B/E u-f N_A": "a.d B/E u-f N_A",
 })])
 def test_get_tag_attributes(tag_groups, result):
     attributes = core_config._get_tag_attributes(tag_groups)
@@ -64,6 +64,29 @@ def test_get_tag_attributes(tag_groups, result):
     for k, v in attributes.items():
         assert isinstance(k, unicode)
         assert isinstance(v, unicode)
+
+
+def test_get_service_attributes(monkeypatch):
+    monkeypatch.setattr(config, "all_hosts", ["test-host|abc"])
+    monkeypatch.setattr(config, "host_paths", {"test-host": "/"})
+    monkeypatch.setattr(config, "host_tags", {
+        "test-host": {
+            "tag_group": "abc",
+        },
+    })
+
+    ruleset = [
+        ([("criticality", "prod")], [], ["test-host"], ["CPU load$"], {}),
+    ]
+    monkeypatch.setattr(config, "service_tag_rules", ruleset)
+
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+
+    attrs = core_config.get_service_attributes("test-host", "CPU load", config_cache)
+    assert attrs == {
+        '__TAG_criticality': 'prod',
+    }
 
 
 def test_custom_service_attributes_of(monkeypatch):

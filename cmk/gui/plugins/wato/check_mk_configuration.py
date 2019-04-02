@@ -1272,6 +1272,55 @@ class RulespecCustomServiceAttributes(ServiceRulespec):
             seen_ids.append(entry[0])
 
 
+@rulespec_registry.register
+class RulespecServiceTags(ServiceRulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
+
+    @property
+    def name(self):
+        return "service_tag_rules"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return ListOf(
+            CascadingDropdown(
+                choices=self._tag_group_choices(),
+                orientation="horizontal",
+            ),
+            title=_("Service tags"),
+            help=_("Use this ruleset to assign <a href=\"%s\">%s</a> to services.") %
+            ("wato.py?mode=tags", _("Tags")),
+            allow_empty=False,
+            validate=self._validate_unique_entries,
+        )
+
+    def _tag_group_choices(self):
+        choices = []
+
+        for tag_group in config.tags.tag_groups:
+            choices.append((tag_group.id, tag_group.title,
+                            DropdownChoice(choices=tag_group.get_tag_choices(),)))
+
+        return sorted(choices, key=lambda x: x[1])
+
+    def _validate_unique_entries(self, value, varprefix):
+        seen_ids = []
+        for entry in value:
+            if entry[0] in seen_ids:
+                raise MKUserError(varprefix, _("Found multiple entries using for '%s'") % entry[0])
+            seen_ids.append(entry[0])
+
+
 @config_variable_registry.register
 class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
     def group(self):

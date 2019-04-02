@@ -1,0 +1,13 @@
+Title: Prevent tag groups with a single choice (checkbox) and empty tag ID
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1554216866
+Class: fix
+
+In previous versions it was possible to create tag groups that had a single
+choice (shown as checkbox) and an empty tag ID for this single choice. This
+was not intended and was not usable at all. The tag management GUI and API
+calls are now preventing this configuration.

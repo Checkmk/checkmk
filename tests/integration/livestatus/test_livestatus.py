@@ -116,3 +116,35 @@ def test_service_table(default_cfg, site):
     assert "Check_MK Discovery" in descriptions
     assert "CPU load" in descriptions
     assert "Memory" in descriptions
+
+
+@pytest.fixture()
+def configure_service_tags(site, web):
+    web.set_ruleset(
+        "service_tag_rules", {
+            "ruleset": {
+                "": [{
+                    "value": [("criticality", "prod")],
+                    "conditions": {
+                        "host_tags": [],
+                        "host_specs": ["livestatus-test-host"],
+                        "service_specs": ["CPU load$"],
+                    },
+                },],
+            }
+        })
+    web.activate_changes()
+    yield
+    web.set_ruleset("service_tag_rules", {"ruleset": {"": [],}})
+    web.activate_changes()
+
+
+def test_service_custom_variables(configure_service_tags, default_cfg, site):
+    rows = site.live.query("GET services\n"
+                           "Columns: custom_variables tags\n"
+                           "Filter: host_name = livestatus-test-host\n"
+                           "Filter: description = CPU load\n")
+    assert isinstance(rows, list)
+    custom_variables, tags = rows[0]
+    assert custom_variables == {}
+    assert tags == {u'criticality': u'prod'}

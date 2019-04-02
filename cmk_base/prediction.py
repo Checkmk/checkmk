@@ -128,9 +128,9 @@ def time_slices(timestamp, horizon, period_info, timegroup):
     return slices
 
 
-def retrieve_grouped_data_from_rrd(rrd_column, time_windows, from_time):
+def retrieve_grouped_data_from_rrd(rrd_column, time_windows):
     "Collect all time slices and up-sample them to same resolution"
-    from_time = int(from_time)
+    from_time = time_windows[0][0]
 
     slices = [(rrd_column(start, end), from_time - start) for start, end in time_windows]
 
@@ -162,20 +162,12 @@ def data_stats(slices):
     return descriptors
 
 
-def aggregate_data_for_prediction_and_save(hostname, service_description, pred_file, params,
-                                           period_info, dsname, cf, now):
-    _clean_predictions_dir(os.path.dirname(pred_file), params)
-
-    timegroup, from_time, until_time, _rel_time = get_prediction_timegroup(now, period_info)
-    logger.verbose("Aggregating data for time group %s", timegroup)
-
-    time_windows = time_slices(from_time, int(params["horizon"] * 86400), period_info, timegroup)
-    rrd_database = cmk.utils.prediction.rrd_datacolum(hostname, service_description, dsname, cf)
-    twindow, slices = retrieve_grouped_data_from_rrd(rrd_database, time_windows, from_time)
+def calculate_data_for_prediction(time_windows, rrd_datacolumn):
+    twindow, slices = retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
 
     descriptors = data_stats(slices)
 
-    data_for_pred = {
+    return {
         u"columns": [u"average", u"min", u"max", u"stdev"],
         u"points": descriptors,
         u"num_points": len(descriptors),
@@ -183,21 +175,12 @@ def aggregate_data_for_prediction_and_save(hostname, service_description, pred_f
         u"step": twindow[2],
     }
 
-    info = {
-        "time": now,
-        "range": (from_time, until_time),
-        "cf": cf,
-        "dsname": dsname,
-        "slice": period_info["slice"],
-        "params": params,
-    }
 
+def save_predictions(pred_file, info, data_for_pred):
     with open(pred_file + '.info', "w") as fname:
         json.dump(info, fname)
     with open(pred_file, "w") as fname:
         json.dump(data_for_pred, fname)
-
-    return data_for_pred
 
 
 def stdev(point_line, average):
@@ -235,18 +218,6 @@ def is_prediction_up2date(pred_file, timegroup, params):
     return True
 
 
-def _clean_predictions_dir(pred_dir, params):
-    # Remove all prediction files that result from other
-    # prediction periods. This is e.g. needed if the user switches
-    # the parameter from 'wday' to 'day'.
-    for f in os.listdir(pred_dir):
-        if f.endswith(".info"):
-            info_file = os.path.join(pred_dir, f)
-            info = cmk.utils.prediction.retrieve_data_for_prediction(info_file, '')
-            if info is None or info["params"]["period"] != params["period"]:
-                cmk.utils.prediction.clean_prediction_files(info_file[:-5], force=True)
-
-
 # cf: consilidation function (MAX, MIN, AVERAGE)
 # levels_factor: this multiplies all absolute levels. Usage for example
 # in the cpu.loads check the multiplies the levels by the number of CPU
@@ -267,8 +238,25 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
     if is_prediction_up2date(pred_file, timegroup, params):
         data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file, timegroup)
     else:
-        data_for_pred = aggregate_data_for_prediction_and_save(
-            hostname, service_description, pred_file, params, period_info, dsname, cf, now)
+        logger.verbose("Calculating prediction data for time group %s", timegroup)
+        cmk.utils.prediction.clean_prediction_files(pred_file, force=True)
+
+        time_windows = time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
+
+        rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(hostname, service_description, dsname,
+                                                            cf)
+
+        data_for_pred = calculate_data_for_prediction(time_windows, rrd_datacolumn)
+
+        info = {
+            u"time": now,
+            u"range": time_windows[0],
+            u"cf": cf,
+            u"dsname": dsname,
+            u"slice": period_info["slice"],
+            u"params": params,
+        }
+        save_predictions(pred_file, info, data_for_pred)
 
     # Find reference value in data_for_pred
     index = int(rel_time / data_for_pred["step"])

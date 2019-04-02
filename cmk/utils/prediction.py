@@ -199,7 +199,8 @@ def retrieve_data_for_prediction(info_file, timegroup):
         logger.verbose("No previous prediction for group %s available.", timegroup)
     except ValueError:
         logger.verbose("Invalid prediction file %s, old format", info_file)
-        clean_prediction_files(info_file[:-5], force=True)
+        pred_file = info_file[:-5] if info_file.endswith(".info") else info_file
+        clean_prediction_files(pred_file, force=True)
     return None
 
 

@@ -55,7 +55,9 @@ def test_host_custom_variables(default_cfg, site):
     custom_variables, tags = rows[0]
     assert custom_variables == {
         u'ADDRESS_FAMILY': u'4',
-        u'TAGS': u'/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp wato',
+        u'TAGS':
+            u'/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:%s tcp wato' %
+            site.id,
         u'FILENAME': u'/wato/hosts.mk',
         u'ADDRESS_4': u'127.0.0.1',
         u'ADDRESS_6': u'',
@@ -67,7 +69,7 @@ def test_host_custom_variables(default_cfg, site):
         u'ip-v4': u'ip-v4',
         u'networking': u'lan',
         u'piggyback': u'auto-piggyback',
-        u'site': u'heute',
+        u'site': unicode(site.id),
         u'snmp': u'no-snmp',
         u'tcp': u'tcp',
     }

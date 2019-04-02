@@ -318,6 +318,7 @@ def test_write_host_tags(web, site):
         cfg = {
             "FOLDER_PATH": "/",
             "all_hosts": [],
+            "host_tags": {},
             "ipaddresses": {},
             "host_attributes": {},
         }

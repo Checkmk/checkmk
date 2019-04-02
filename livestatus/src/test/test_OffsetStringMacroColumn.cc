@@ -134,7 +134,7 @@ TEST_F(OffsetStringMacroColumnTest, getValue_border_cases) {
     set_host_notes("checking $HOSTNAME$...");
     EXPECT_EQ("checking $HOSTNAME$...", expanded_host_notes());
 
-    host_.notes = nullptr;
+    set_host_notes(nullptr);
     EXPECT_EQ("", expanded_host_notes());
 
     set_host_notes("");

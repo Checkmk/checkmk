@@ -88,35 +88,103 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
     assert (timeseries.step, len(timeseries.values)) == result
 
 
-@pytest.mark.xfail
-@pytest.mark.parametrize('now, params', [
-    (1543503360.0, {
+@pytest.mark.parametrize('utcdate, timezone, params, reference', [
+    ("2018-09-01 07:00", "Europe/Berlin", {
+        'period': 'wday',
+        'horizon': 10
+    }, ((1535752800, 1535839200, 1800), [[
+        0.0966667, 0.1, 0.14, 0.120167, 0.0986667, 0.11, 0.0953333, 0.08, 0.1, 0.1, 0.118333,
+        0.0966667, 0.21, 0.163667, 0.1, 0.158, 0.107333, 0.08, 0.06, 0.12, 0.1085, 0.1, 0.0953333,
+        0.09, 0.11, 0.125, 0.13, 0.12, 0.1, 0.12, 0.0978333, 0.13, 0.08, 0.0775, 0.3045, 0.11, 0.09,
+        0.126667, 0.098, 0.24, 0.1995, 0.12, 0.134833, 0.14, 0.13, 0.13, 0.139333, 0.185333
+    ], [0.203833] * 4 + [0.115583] * 12 + [0.463333] * 12 + [0.13] * 12 + [0.1645] * 8])),
+    ("2018-09-02 10:00", "America/New_York", {
+        'period': 'wday',
+        'horizon': 10,
+    }, ((1535860800, 1535947200, 1800), [[
+        0.0981667, 0.18, 0.0853333, 0.0886667, 0.122, 0.16, 0.15475, 0.12, 0.07, 0.04, 0.0493333,
+        0.118667, 0.1, 0.08, 0.0891667, 0.12, 0.0996667, 0.0248333, 0.06, 0.0958333, 0.15, 0.11,
+        0.1, 0.0956667, 0.1, 0.0918333, 0.12, 0.11, 0.1, 0.124333, 0.05, 0.115667, 0.135833, 0.1,
+        0.0646667, 0.12, 0.203167, 0.13, 0.0483333, 0.0438333, 0.09, 0.12, 0.12, 0.12, 0.109167,
+        0.0745, 0.11, 0.114167
+    ], [0.2] * 4 + [0.201333] * 12 + [0.16] * 12 + [0.13] * 12 + [0.1585] * 8])),
+    ("2018-09-02 10:00", "Asia/Yekaterinburg", {
+        'period': 'wday',
+        'horizon': 10,
+    }, ((1535828400, 1535914800, 1800), [[
+        0.134833, 0.14, 0.13, 0.13, 0.139333, 0.185333, 0.242833, 0.11, 0.12, 0.09, 0.0513333,
+        0.0951667, 0.0891667, 0.06, 0.1, 0.1905, 0.11, 0.1, 0.0981667, 0.18, 0.0853333, 0.0886667,
+        0.122, 0.16, 0.15475, 0.12, 0.07, 0.04, 0.0493333, 0.118667, 0.1, 0.08, 0.0891667, 0.12,
+        0.0996667, 0.0248333, 0.06, 0.0958333, 0.15, 0.11, 0.1, 0.0956667, 0.1, 0.0918333, 0.12,
+        0.11, 0.1, 0.124333
+    ], [0.1645] * 10 + [0.2] * 12 + [0.201333] * 12 + [0.16] * 12 + [0.13, 0.13]])),
+    ("2018-09-03 10:00", "UTC", {
+        'period': 'wday',
+        'horizon': 10,
+    }, ((1535932800, 1536019200, 1800), [[
+        0.09, 0.12, 0.12, 0.12, 0.109167, 0.0745, 0.11, 0.114167, 0.257, 0.2, 0.14, 0.09, 0.14,
+        0.124833, 0.11, 0.09, 0.18, 0.121333, 0.086, 0.0963333, 0.13, 0.09, 0.2, 0.13, 0.136,
+        0.1695, 0.16, 0.17, 0.186833, 0.0873333, 0.131333, 0.115833, 0.11, 0.14, 0.25, 0.169,
+        0.0905, 0.0885, 0.11, 0.1, 0.067, 0.1, 0.13, 0.130833, 0.18, 0.11, 0.109333, 0.105833
+    ], [0.1585] * 12 + [0.13] * 12 + [0.26] * 12 + [0.3] * 12])),
+])
+def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, reference):
+    "This mostly verifies the up-sampling"
+
+    period_info = prediction.prediction_periods[params['period']]
+    with on_time(utcdate, timezone):
+        now = time.time()
+        timegroup = period_info["groupby"](now)[0]
+        time_windows = prediction.time_slices(now, int(params["horizon"] * 86400), period_info,
+                                              timegroup)
+
+    hostname, service_description, dsname = 'test-prediction', "CPU load", 'load15'
+    rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(hostname, service_description, dsname,
+                                                        "MAX")
+    result = prediction.retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
+
+    assert result == reference
+
+
+@pytest.mark.parametrize('utcdate, timezone, params', [
+    ("2018-11-29 14:56", "Europe/Berlin", {
         'period': 'wday',
         'horizon': 90
     }),
-    (1543215600.0, {
+    ("2018-11-26 07:00", "Europe/Berlin", {
         'period': 'day',
         'horizon': 90
     }),
-    (1541833200.0, {
+    ("2018-11-10 07:00", "Europe/Berlin", {
         'period': 'hour',
         'horizon': 90
     }),
+    ("2018-07-15 10:00", "America/New_York", {
+        'period': 'hour',
+        'horizon': 10,
+    }),
+    ("2018-07-15 10:00", "UTC", {
+        'period': 'wday',
+        'horizon': 10,
+    }),
 ])
-def test_aggregate_data_for_prediction_and_save(cfg_setup, now, params):
-    hostname, service_description, dsname = 'test-prediction', "CPU load", 'load15'
-    pred_dir = cmk.utils.prediction.predictions_dir(
-        hostname, service_description, dsname, create=True)
+def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
 
     period_info = prediction.prediction_periods[params['period']]
-    timegroup = period_info["groupby"](now)[0]
-    pred_file = os.path.join(pred_dir, timegroup)
+    with on_time(utcdate, timezone):
+        now = time.time()
+        timegroup = period_info["groupby"](now)[0]
 
-    data_for_pred = prediction.aggregate_data_for_prediction_and_save(
-        hostname, service_description, pred_file, params, period_info, dsname, 'MAX', now)
+        time_windows = prediction.time_slices(now, int(params["horizon"] * 86400), period_info,
+                                              timegroup)
 
-    reference = cmk.utils.prediction.retrieve_data_for_prediction(
-        "%s/tests/integration/cmk_base/test-files/%s" % (repo_path(), timegroup), timegroup)
+    hostname, service_description, dsname = 'test-prediction', "CPU load", 'load15'
+    rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(hostname, service_description, dsname,
+                                                        "MAX")
+    data_for_pred = prediction.calculate_data_for_prediction(time_windows, rrd_datacolumn)
+
+    path = "%s/tests/integration/cmk_base/test-files/%s/%s" % (repo_path(), timezone, timegroup)
+    reference = cmk.utils.prediction.retrieve_data_for_prediction(path, timegroup)
     assert data_for_pred == reference
 
 

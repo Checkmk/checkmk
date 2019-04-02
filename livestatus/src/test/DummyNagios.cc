@@ -100,5 +100,4 @@ scheduled_downtime *scheduled_downtime_list;
 servicegroup *servicegroup_list;
 service *service_list;
 timeperiod *timeperiod_list;
-
 }

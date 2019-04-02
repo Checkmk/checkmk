@@ -2519,12 +2519,10 @@ class FilterHostAuxTags(Filter):
 
         Filter.__init__(self, info='host', htmlvars=htmlvars, link_columns=[])
 
-        self.auxtags = config.wato_aux_tags
-
     def display(self):
+        aux_tag_choices = [("", "")] + config.tags.aux_tag_list.get_choices()
         for num in range(self.count):
-            html.dropdown(
-                '%s_%d' % (self.prefix, num), [("", "")] + self.auxtags, ordered=True, class_='neg')
+            html.dropdown('%s_%d' % (self.prefix, num), aux_tag_choices, ordered=True, class_='neg')
             html.open_nobr()
             html.checkbox('%s_%d_neg' % (self.prefix, num), False, label=_("negate"))
             html.close_nobr()
@@ -2547,8 +2545,8 @@ class FilterHostAuxTags(Filter):
         return ''
 
     def _host_auxtags_filter(self, tag, negate):
-        return "Filter: host_tags %s '%s' '%s'" % (
-            "!=" if negate else "=", livestatus.lqencode(tag), livestatus.lqencode(tag))
+        return "Filter: host_tags %s %s %s" % ("!=" if negate else "=", livestatus.lqencode(tag),
+                                               livestatus.lqencode(tag))
 
     def double_height(self):
         return True

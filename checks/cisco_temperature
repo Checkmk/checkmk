@@ -83,7 +83,7 @@ def parse_cisco_temperature(info):
         '3': (2, "critical"),
         '4': (2, "shutdown"),
         '5': (3, "not present"),
-        '6': (3, "not functioning"),  # TODO: fix this to CRIT
+        '6': (2, "not functioning"),
     }
 
     description_info, state_info, levels_info, perfstuff = info
@@ -123,8 +123,6 @@ def parse_cisco_temperature(info):
             'dev_state': map_states.get(sensorstate, (3, 'unknown[%s]' % sensorstate))
         }
 
-        # TODO: entity_parsed contains sensors with status OK only and means sensors with non-OK
-        # status are not inventorized.
         if sensorstate == '1':
             scale = 10**int(magnitude)
             scale *= 10**(-1 * cisco_entity_exponents[scalecode])

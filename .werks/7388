@@ -1,0 +1,10 @@
+Title: cisco_temperature: Non-functioning devices are now treated as CRIT instead of UNKNOWN
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554199236
+Class: fix
+
+

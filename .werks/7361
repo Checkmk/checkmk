@@ -9,4 +9,4 @@ Version: 1.5.0p14
 Date: 1554209263
 
 See Werk 5946 for detailed information. Inventorizing these docker
-interface may led to superfluous inventory changes.
+interfaces may lead to superfluous inventory changes.

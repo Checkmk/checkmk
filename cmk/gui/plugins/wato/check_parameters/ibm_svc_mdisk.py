@@ -50,7 +50,7 @@ class RulespecCheckgroupParametersIbmSvcMdisk(CheckParameterRulespecWithItem):
 
     @property
     def title(self):
-        return _("IBM SVC: Options for SVC Disk Check")
+        return _("IBM SVC Disk")
 
     @property
     def match_type(self):

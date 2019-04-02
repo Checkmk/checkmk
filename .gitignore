@@ -41,8 +41,6 @@ depcomp
 install-sh
 missing
 mk-livestatus-*.tar.gz
-mkeventd-*.tar.gz
-mkeventd/
 stamp-h1
 tags
 tests/web/data/*

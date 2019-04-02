@@ -1,0 +1,12 @@
+Title: lnx_if: Ignore docker veth* interfaces when inventorizing Linux interfaces
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p14
+Date: 1554209263
+
+See Werk 5946 for detailed information. Inventorizing these docker
+interface may led to superfluous inventory changes.

@@ -42,6 +42,10 @@ def inv_lnx_if(parsed, params):
         if_in_errors, if_out_octets, outucast, outmcast, outbcast, \
         if_out_discards, if_out_errors, if_out_qlen, if_alias, if_phys_address in parsed:
 
+        if if_descr.startswith("veth"):
+            # Always exclude dockers veth* interfaces on docker nodes
+            continue
+
         if if_type in ( "231", "232" ):
             continue # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
                      # Ignore useless half-empty tables (e.g. Viprinet-Router)

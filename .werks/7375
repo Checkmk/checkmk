@@ -1,0 +1,11 @@
+Title: oracle_performance: Added SGA informationen to service output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554214253
+Class: feature
+
+The SGA information from inventory has been added to the service
+output. A metric graph has been added as well.

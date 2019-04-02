@@ -76,52 +76,79 @@ def inventory_oracle_performance(parsed):
 
 
 def check_oracle_performance(item, _no_params, parsed):
+    data = parsed.get(item, None)
+
+    # In case of missing information we assume that the login into
+    # the database has failed and we simply skip this check. It won't
+    # switch to UNKNOWN, but will get stale.
+    if not data:
+        raise MKCounterWrapped("Login into database failed")
+
+    now = time.time()
+    perfdata = []
+    infotexts = []
+
+    # old agents deliver no data for sys_time_model!
+    # sys_time_model: only DB_CPU and DB_Time!
     map_db_time_vars = {
         "DB CPU": "oracle_db_cpu",
         "DB time": "oracle_db_time",
     }
+    sys_time_model = data.get("sys_time_model", {})
+    for what, val in sys_time_model.items():
+        perfvar = map_db_time_vars.get(what)
+        rate = get_rate("oracle_perf.%s.sys_time_model.%s" % (item, perfvar), now, val)
+        infotexts.append("%s: %.1f/s" % (what, rate))
+        perfdata.append((perfvar, rate))
 
-    if item in parsed:
-        data = parsed[item]
-        now = time.time()
-        perfdata = []
+    # old agents delivery not the needed data...
+    # sgainfo
+    sga_info = data.get('SGA_info', None)
+    if sga_info:
+        for what, val, perfvar in [
+           ('SGA', sga_info["Maximum SGA Size"], 'oracle_sga_size'),
+           ('DB Cache', sga_info["Buffer Cache Size"], 'oracle_sga_buffer_cache'),
+           ('Shared Pool', sga_info["Shared Pool Size"], 'oracle_sga_shared_pool'),
+           ('Redo Buffers', sga_info["Redo Buffers"], 'oracle_sga_redo_buffer'),
+           ('Java Pool Size', sga_info["Java Pool Size"], 'oracle_sga_java_pool'),
+           ('Large Pool Size', sga_info["Large Pool Size"], 'oracle_sga_large_pool'),
+           ('Streams Pool Size', sga_info["Streams Pool Size"], 'oracle_sga_streams_pool'),
+        ]:
+            yield 0, "%s: %s" % (what, get_bytes_human_readable(val))
+            perfdata.append((perfvar, val))
 
-        infotexts = []
-        for what, val in data["sys_time_model"].items():
-            perfvar = map_db_time_vars[what]
-            rate = get_rate("oracle_perf.%s.sys_time_model.%s" % (item, perfvar), now, val)
-            infotexts.append("%s: %.1f/s" % (what, rate))
-            perfdata.append((perfvar, rate))
+    # PDB is <SID>.<PDB>
+    # ignore more perf-data for PDBs except CDBROOT!
+    if '.' in item and '.CDB$ROOT' not in item:
 
-        # PDB is <SID>.<PDB>
-        if '.' in item:
+        # PDB does not support more performance data at the moment...
+        infotexts.append("limited performance data for PDBSEED and non CDBROOT")
+        yield 0, ", ".join(infotexts), perfdata
+        return
 
-            # PDB does not support more performance data at the moment...
-            yield 0, ", ".join(infotexts), perfdata
-            return
-
+    if "buffer_pool_statistics" in data and "DEFAULT" in data["buffer_pool_statistics"]:
         buffer_pool_stats = data["buffer_pool_statistics"]
-        if "DEFAULT" in buffer_pool_stats:
-            db_block_gets, db_block_change, consistent_gets, physical_reads, \
-                physical_writes, free_buffer_wait, buffer_busy_wait = \
-                buffer_pool_stats["DEFAULT"]
+        db_block_gets, db_block_change, consistent_gets, physical_reads, \
+            physical_writes, free_buffer_wait, buffer_busy_wait = \
+            buffer_pool_stats["DEFAULT"]
 
-            for what, val in [('oracle_db_block_gets', db_block_gets),
-                              ('oracle_db_block_change', db_block_change),
-                              ('oracle_consistent_gets', consistent_gets),
-                              ('oracle_physical_reads', physical_reads),
-                              ('oracle_physical_writes', physical_writes),
-                              ('oracle_free_buffer_wait', free_buffer_wait),
-                              ('oracle_buffer_busy_wait', buffer_busy_wait)]:
-                rate = get_rate("oracle_perf.%s.buffer_pool_statistics.%s" % (item, what), now, val)
-                perfdata.append((what, rate))
+        for what, val in [('oracle_db_block_gets', db_block_gets),
+                          ('oracle_db_block_change', db_block_change),
+                          ('oracle_consistent_gets', consistent_gets),
+                          ('oracle_physical_reads', physical_reads),
+                          ('oracle_physical_writes', physical_writes),
+                          ('oracle_free_buffer_wait', free_buffer_wait),
+                          ('oracle_buffer_busy_wait', buffer_busy_wait)]:
+            rate = get_rate("oracle_perf.%s.buffer_pool_statistics.%s" % (item, what), now, val)
+            perfdata.append((what, rate))
 
-            if db_block_gets + consistent_gets > 0:
-                hit_ratio = (1 - (float(physical_reads) /
-                                  (float(db_block_gets) + float(consistent_gets)))) * 100
-                yield 0, "Buffer hit ratio: %.1f%%" % hit_ratio, \
-                      [('oracle_buffer_hit_ratio', hit_ratio)]
+        if db_block_gets + consistent_gets > 0:
+            hit_ratio = (1 - (float(physical_reads) /
+                              (float(db_block_gets) + float(consistent_gets)))) * 100
+            yield 0, "Buffer hit ratio: %.1f%%" % hit_ratio, \
+                  [('oracle_buffer_hit_ratio', hit_ratio)]
 
+    if "librarycache" in data:
         pins_sum = 0
         pin_hits_sum = 0
         for what, vals in data["librarycache"].items():
@@ -138,13 +165,8 @@ def check_oracle_performance(item, _no_params, parsed):
             yield 0, "Library cache hit ratio: %.1f%%" % pin_ratio, \
                   [('oracle_library_cache_hit_ratio', pin_ratio)]
 
-        yield 0, ", ".join(infotexts), perfdata
-        return
-
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed")
+    yield 0, ", ".join(infotexts), perfdata
+    return
 
 
 check_info['oracle_performance'] = {

@@ -4337,6 +4337,19 @@ def register_oracle_metrics():
             "color": color,
         }
 
+    for what, descr, unit, color in [
+        ("oracle_sga_size","SGA","bytes", "11/a"),
+        ("oracle_sga_buffer_cache","Buffer Cache","bytes", "15/a"),
+        ("oracle_sga_shared_pool","Shared Pool","bytes", "21/a"),
+        ("oracle_sga_redo_buffer","Redo Buffer","bytes", "43/b"),
+        ("oracle_sga_java_pool","Java Pool","bytes", "26/a"),
+        ("oracle_sga_large_pool","Large Pool","bytes", "14/a"),
+        ("oracle_sga_streams_pool","Streams Pool","bytes", "16/a")]:
+        metric_info["%s" % what] = {
+            "title": _("ORACLE %s") % descr,
+            "unit": unit,
+            "color": color,
+        }
 
 register_oracle_metrics()
 
@@ -10454,6 +10467,24 @@ graph_info["oracle_library_cache_statistics"] = {
     "metrics": [
         ("oracle_pins_sum", "line"),
         ("oracle_pin_hits_sum", "line"),
+    ],
+}
+
+graph_info["oracle_sga_info"] = {
+    "title": _("ORACLE SGA Information"),
+    "metrics": [
+        ("oracle_sga_size","line"),
+        ("oracle_sga_buffer_cache", "stack"),
+        ("oracle_sga_shared_pool","stack"),
+        ("oracle_sga_redo_buffer","stack"),
+        ("oracle_sga_java_pool","stack"),
+        ("oracle_sga_large_pool","stack"),
+        ("oracle_sga_streams_pool","stack"),
+    ],
+    "optional_metrics": [
+        "oracle_sga_java_pool",
+        "oracle_sga_large_pool",
+        "oracle_sga_streams_pool",
     ],
 }
 

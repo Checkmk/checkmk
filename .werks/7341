@@ -1,0 +1,21 @@
+Title: Web-API: Add API calls for the new Grafana datasource
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p16
+Date: 1556020991
+Class: feature
+
+We'll release a Grafana datasource for Check_MK shortly. To be able to use the
+datasource with the current stable version of Check_MK we backport the API
+calls that are needed for this datasource with this werk.
+
+If you are curious, you can have a look at the code of the datasource:
+https://github.com/tribe29/grafana-checkmk-datasource
+
+You could even setup the datasource with a daily build or starting with 1.5.0p16
+from now.
+
+We are heading to make this plugin directly available via grafana.com as official
+plugin in the next couple of days.

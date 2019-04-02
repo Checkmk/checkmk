@@ -66,9 +66,7 @@ class RulespecCheckgroupParametersMssqlInstanceBlockedSessions(CheckParameterRul
             elements=[
                 ("state",
                  MonitoringState(
-                     title=_("State of MSSQL Blocked Sessions is treated as"),
-                     help=_("The default state if there is at least one "
-                            "blocked session."),
+                     title=_("State if at least one blocked session"),
                      default_value=2,
                  )),
                 ("waittime",

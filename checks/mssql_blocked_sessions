@@ -80,25 +80,27 @@ def check_mssql_blocked_sessions(item, params, parsed):
             ignored_waittypes.add(db_inst.wait_type)
             continue
 
-        level_info = ""
-        state = 0
         if crit is not None and db_inst.wait_duration >= crit:
             state = 2
         elif warn is not None and db_inst.wait_duration >= warn:
             state = 1
-        if state:
-            level_info = " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
-                                                    get_age_human_readable(crit))
+        else:
+            state = 0
 
         summary.setdefault(db_inst.session_id, 0)
         summary[db_inst.session_id] += 1
-        details.append((state, "Session %s blocked by %s (Type: %s, Wait: %s)%s" % \
+        details.append((state, "Session %s blocked by %s (Type: %s, Wait: %s)" % \
                        (db_inst.session_id, db_inst.blocking_session_id, db_inst.wait_type,
-                        get_age_human_readable(db_inst.wait_duration), level_info)))
+                        get_age_human_readable(db_inst.wait_duration))))
 
     if summary:
         yield params['state'], "Summary: %s" % (", ".join(
             ["%s blocked by %s ID(s)" % (k, v) for k, v in summary.iteritems()]))
+
+        max_state = max([state for state, _infotext in details])
+        if max_state:
+            yield max_state, 'At least one session above thresholds (warn/crit at %s/%s)' % (
+                get_age_human_readable(warn), get_age_human_readable(crit))
         for state, infotext in details:
             yield state, "\n%s" % infotext
 

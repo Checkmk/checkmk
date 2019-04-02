@@ -8,4 +8,4 @@ Date: 1554209263
 Class: fix
 
 See Werk 5946 for detailed information. Inventorizing these docker
-interface may led to superfluous inventory changes.
+interfaces may lead to superfluous inventory changes.

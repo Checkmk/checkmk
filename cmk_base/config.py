@@ -603,8 +603,8 @@ def strip_tags(tagged_hostlist):
         return result
 
 
-def tags_of_host(hostname):
-    return get_config_cache().tags_of_host(hostname)
+def tag_list_of_host(hostname):
+    return get_config_cache().tag_list_of_host(hostname)
 
 
 #.
@@ -776,7 +776,7 @@ def all_configured_offline_hosts():
 
 
 def host_is_member_of_site(hostname, site):
-    for tag in tags_of_host(hostname):
+    for tag in tag_list_of_host(hostname):
         if tag.startswith("site:"):
             return site == tag[5:]
     # hosts without a site: tag belong to all sites
@@ -846,7 +846,7 @@ def is_agent_host(hostname):
     if is_tcp_host(hostname):
         return True
 
-    tags = tags_of_host(hostname)
+    tags = tag_list_of_host(hostname)
 
     if "piggyback" in tags:
         is_piggyback_host = True
@@ -865,11 +865,11 @@ def is_dual_host(hostname):
 
 
 def is_all_agents_host(hostname):
-    return "all-agents" in tags_of_host(hostname)
+    return "all-agents" in tag_list_of_host(hostname)
 
 
 def is_all_special_agents_host(hostname):
-    return "special-agents" in tags_of_host(hostname)
+    return "special-agents" in tag_list_of_host(hostname)
 
 
 #
@@ -893,19 +893,19 @@ def _primary_ip_address_family_of(hostname):
 
 
 def is_ipv4v6_host(hostname):
-    tags = tags_of_host(hostname)
+    tags = tag_list_of_host(hostname)
     return "ip-v6" in tags and "ip-v4" in tags
 
 
 def is_ipv6_host(hostname):
-    return "ip-v6" in tags_of_host(hostname)
+    return "ip-v6" in tag_list_of_host(hostname)
 
 
 def is_ipv4_host(hostname):
     """Whether or not the given host is configured to be monitored via IPv4.
     This is the case when it is set to be explicit IPv4 or implicit
     (when host is not an IPv6 host and not a "No IP" host)"""
-    tags = tags_of_host(hostname)
+    tags = tag_list_of_host(hostname)
 
     if "ip-v4" in tags:
         return True
@@ -915,7 +915,7 @@ def is_ipv4_host(hostname):
 
 def is_no_ip_host(hostname):
     """Whether or not the given host is configured not to be monitored via IP"""
-    return "no-ip" in tags_of_host(hostname)
+    return "no-ip" in tag_list_of_host(hostname)
 
 
 #
@@ -1456,7 +1456,7 @@ def service_depends_on(hostname, servicedesc):
             raise MKGeneralException("Invalid entry '%r' in service dependencies: "
                                      "must have 3 or 4 entries" % entry)
 
-        if hosttags_match_taglist(config_cache.tags_of_host(hostname), tags) and \
+        if hosttags_match_taglist(config_cache.tag_list_of_host(hostname), tags) and \
            in_extraconf_hostlist(hostlist, hostname):
             for pattern in patternlist:
                 matchobject = regex(pattern).search(servicedesc)
@@ -2784,7 +2784,7 @@ class HostConfig(object):
         self.is_cluster = is_cluster(hostname)
         self.part_of_clusters = self._config_cache.clusters_of(hostname)
 
-        tags = self._config_cache.tags_of_host(self.hostname)
+        tags = self._config_cache.tag_list_of_host(self.hostname)
         self.tags = tags
         self.tag_groups = host_tags.get(hostname, {})
 
@@ -2931,8 +2931,8 @@ class ConfigCache(object):
             parts = tagged_host.split("|")
             self._hosttags[parts[0]] = set(parts[1:])
 
-    # TODO: Rename to tag_list_of_hosts, check all call sites and remove this
-    def tags_of_host(self, hostname):
+    # TODO: check all call sites and remove this
+    def tag_list_of_host(self, hostname):
         """Returns the list of all configured tags of a host. In case
         a host has no tags configured or is not known, it returns an
         empty list."""
@@ -3387,7 +3387,7 @@ class ConfigCache(object):
             cache[cache_id] = result
         else:
             for entry in conf:
-                actual_host_tags = self.tags_of_host(hostname)
+                actual_host_tags = self.tag_list_of_host(hostname)
                 entry, rule_options = get_rule_options(entry)
                 if rule_options.get("disabled"):
                     continue

@@ -293,7 +293,7 @@ def _list_all_hosts_with_tags(tags):
 
     config_cache = config.get_config_cache()
     for h in hostlist:
-        if config.hosttags_match_taglist(config_cache.tags_of_host(h), tags):
+        if config.hosttags_match_taglist(config_cache.tag_list_of_host(h), tags):
             hosts.append(h)
     return hosts
 

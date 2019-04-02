@@ -223,7 +223,7 @@ get_rule_options = _config.get_rule_options
 # the future check API. It's kept here for compatibility reasons for now.
 in_extraconf_hostlist = _config.in_extraconf_hostlist
 hosttags_match_taglist = _config.hosttags_match_taglist
-tags_of_host = _config.tags_of_host
+tags_of_host = _config.tag_list_of_host
 all_matching_hosts = _config.all_matching_hosts
 
 nagios_illegal_chars = _config.nagios_illegal_chars

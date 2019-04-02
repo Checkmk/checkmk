@@ -172,12 +172,6 @@ def autodetect_plugin(command_line):
     return command_line
 
 
-def custom_service_attributes_of(hostname, service_description):
-    return dict(
-        itertools.chain(*config.service_extra_conf(hostname, service_description,
-                                                   config.custom_service_attributes)))
-
-
 def icons_and_actions_of(what, hostname, svcdesc=None, checkname=None, params=None):
     if what == 'host':
         return list(set(config.host_extra_conf(hostname, config.host_icons_and_actions)))
@@ -323,6 +317,59 @@ def active_check_arguments(hostname, description, args):
                                                                                description))
 
     return config.prepare_check_command(args, hostname, description)
+
+
+#.
+#   .--ServiceAttrs.-------------------------------------------------------.
+#   |     ____                  _             _   _   _                    |
+#   |    / ___|  ___ _ ____   _(_) ___ ___   / \ | |_| |_ _ __ ___         |
+#   |    \___ \ / _ \ '__\ \ / / |/ __/ _ \ / _ \| __| __| '__/ __|        |
+#   |     ___) |  __/ |   \ V /| | (_|  __// ___ \ |_| |_| |  \__ \_       |
+#   |    |____/ \___|_|    \_/ |_|\___\___/_/   \_\__|\__|_|  |___(_)      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Management of service attributes                                     |
+#   '----------------------------------------------------------------------'
+
+
+def get_service_attributes(hostname, description, config_cache, checkname=None, params=None):
+    attrs = _extra_service_attributes(hostname, description, config_cache, checkname, params)
+    attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description)))
+    return attrs
+
+
+def _extra_service_attributes(hostname, description, config_cache, checkname, params):
+    attrs = {}
+
+    # Add service custom_variables. Name conflicts are prevented by the GUI, but just
+    # to be sure, add them first. The other definitions will override the custom attributes.
+    for varname, value in custom_service_attributes_of(hostname, description).iteritems():
+        attrs["_%s" % varname.upper()] = value
+
+    for key, conflist in config.extra_service_conf.items():
+        values = config_cache.service_extra_conf(hostname, description, conflist)
+        if values:
+            if key[0] == "_":
+                key = key.upper()
+            attrs[key] = values[0]
+
+    # Add explicit custom_variables
+    for varname, value in config.get_explicit_service_custom_variables(hostname,
+                                                                       description).iteritems():
+        attrs["_%s" % varname.upper()] = value
+
+    # Add custom user icons and actions
+    actions = icons_and_actions_of("service", hostname, description, checkname, params)
+    if actions:
+        attrs["_ACTIONS"] = ','.join(actions)
+    return attrs
+
+
+# TODO: Hand over config_cache and use it instead of config.service_extra_conf
+def custom_service_attributes_of(hostname, service_description):
+    return dict(
+        itertools.chain(*config.service_extra_conf(hostname, service_description,
+                                                   config.custom_service_attributes)))
 
 
 #.

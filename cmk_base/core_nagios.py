@@ -343,12 +343,9 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             "check_command": "check_mk-%s" % checkname,
         }
 
-        # Add custom user icons and actions
-        actions = core_config.icons_and_actions_of('service', hostname, description, checkname,
-                                                   params)
-        if actions:
-            service_spec["_ACTIONS"] = ",".join(actions)
-
+        service_spec.update(
+            core_config.get_service_attributes(
+                hostname, description, config_cache, checkname=checkname, params=params))
         service_spec.update(_extra_service_conf_of(cfg, hostname, description))
 
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
@@ -363,6 +360,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             "host_name": hostname,
             "service_description": "Check_MK",
         }
+        service_spec.update(core_config.get_service_attributes(hostname, "Check_MK", config_cache))
         service_spec.update(_extra_service_conf_of(cfg, hostname, "Check_MK"))
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
@@ -399,6 +397,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             "check_command": _simulate_command(cfg, command),
             "active_checks_enabled": 1,
         }
+        service_spec.update(core_config.get_service_attributes(hostname, description, config_cache))
         service_spec.update(_extra_service_conf_of(cfg, hostname, description))
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
@@ -471,6 +470,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                 "check_command": _simulate_command(cfg, command),
                 "active_checks_enabled": 1,
             }
+            service_spec.update(
+                core_config.get_service_attributes(hostname, description, config_cache))
             service_spec.update(_extra_service_conf_of(cfg, hostname, description))
             outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
@@ -542,6 +543,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                 "active_checks_enabled": 1 if (command_line and not freshness) else 0,
             }
             service_spec.update(freshness)
+            service_spec.update(
+                core_config.get_service_attributes(hostname, description, config_cache))
             service_spec.update(_extra_service_conf_of(cfg, hostname, description))
             outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
@@ -568,6 +571,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             "retry_check_interval": params["check_interval"],
             "service_description": service_discovery_name,
         }
+        service_spec.update(
+            core_config.get_service_attributes(hostname, service_discovery_name, config_cache))
         service_spec.update(_extra_service_conf_of(cfg, hostname, service_discovery_name))
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
@@ -584,20 +589,20 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
     # No check_mk service, no legacy service -> create PING service
     if not have_at_least_one_service and not legchecks and not actchecks and not custchecks:
-        _add_ping_service(cfg, hostname, host_attrs["address"],
+        _add_ping_service(cfg, config_cache, hostname, host_attrs["address"],
                           config.is_ipv6_primary(hostname) and 6 or 4, "PING",
                           host_attrs.get("_NODEIPS"))
 
     if config.is_ipv4v6_host(hostname):
         if config.is_ipv6_primary(hostname):
-            _add_ping_service(cfg, hostname, host_attrs["_ADDRESS_4"], 4, "PING IPv4",
+            _add_ping_service(cfg, config_cache, hostname, host_attrs["_ADDRESS_4"], 4, "PING IPv4",
                               host_attrs.get("_NODEIPS_4"))
         else:
-            _add_ping_service(cfg, hostname, host_attrs["_ADDRESS_6"], 6, "PING IPv6",
+            _add_ping_service(cfg, config_cache, hostname, host_attrs["_ADDRESS_6"], 6, "PING IPv6",
                               host_attrs.get("_NODEIPS_6"))
 
 
-def _add_ping_service(cfg, hostname, ipaddress, family, descr, node_ips):
+def _add_ping_service(cfg, config_cache, hostname, ipaddress, family, descr, node_ips):
     arguments = core_config.check_icmp_arguments_of(hostname, family=family)
 
     ping_command = 'check-mk-ping'
@@ -612,6 +617,7 @@ def _add_ping_service(cfg, hostname, ipaddress, family, descr, node_ips):
         "service_description": descr,
         "check_command": "%s!%s" % (ping_command, arguments),
     }
+    service_spec.update(core_config.get_service_attributes(hostname, descr, config_cache))
     service_spec.update(_extra_service_conf_of(cfg, hostname, descr))
     cfg.outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
@@ -895,10 +901,6 @@ def _extra_service_conf_of(cfg, hostname, description):
         if config.define_servicegroups:
             cfg.servicegroups_to_define.update(sergr)
     service_spec.update(_extra_conf_of(config.extra_service_conf, hostname, description))
-
-    for varname, value in core_config.custom_service_attributes_of(hostname,
-                                                                   description).iteritems():
-        service_spec["_%s" % varname.upper()] = value
 
     return service_spec
 

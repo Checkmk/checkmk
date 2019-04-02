@@ -2397,27 +2397,32 @@ class FilterDowntimeId(FilterText):
         FilterText.__init__(self, "downtime", "downtime_id", "downtime_id", "=")
 
 
-@filter_registry.register
-class FilterHostTags(Filter):
-    @property
-    def ident(self):
-        return "host_tags"
+class ABCTagFilter(Filter):
+    __metaclass__ = abc.ABCMeta
 
-    @property
-    def title(self):
-        return _("Host Tags")
+    @abc.abstractproperty
+    def object_type(self):
+        raise NotImplementedError()
 
     @property
     def sort_index(self):
         return 302
 
+    @property
+    def _var_prefix(self):
+        return "%s_tag_" % (self.object_type)
+
     def __init__(self):
         self.count = 3
         htmlvars = []
         for num in range(self.count):
-            htmlvars += ['host_tag_%d_grp' % num, 'host_tag_%d_op' % num, 'host_tag_%d_val' % num]
+            htmlvars += [
+                '%s%d_grp' % (self._var_prefix, num),
+                '%s%d_op' % (self._var_prefix, num),
+                '%s%d_val' % (self._var_prefix, num),
+            ]
 
-        Filter.__init__(self, info='host', htmlvars=htmlvars, link_columns=[])
+        Filter.__init__(self, info=self.object_type, htmlvars=htmlvars, link_columns=[])
 
     def display(self):
         groups = config.tags.get_tag_group_choices()
@@ -2434,15 +2439,17 @@ class FilterHostTags(Filter):
                 tag_id = "" if grouped_tag.id is None else grouped_tag.id
                 grouped[tag_group.id].append([tag_id, grouped_tag.title])
 
-        html.javascript('cmk.utils.set_host_tag_groups(%s);' % json.dumps(grouped))
+        html.javascript('cmk.utils.set_tag_groups(%s, %s);' % (json.dumps(self.object_type),
+                                                               json.dumps(grouped)))
         html.open_table()
         for num in range(self.count):
-            prefix = 'host_tag_%d' % num
+            prefix = '%s%d' % (self._var_prefix, num)
             html.open_tr()
             html.open_td()
             html.dropdown(
                 prefix + '_grp', [("", "")] + groups,
-                onchange='cmk.utils.host_tag_update_value(\'%s\', this.value)' % prefix,
+                onchange='cmk.utils.tag_update_value(\'%s\', \'%s\', this.value)' %
+                (self.object_type, prefix),
                 style='width:129px',
                 ordered=True,
                 class_="grp")
@@ -2470,8 +2477,8 @@ class FilterHostTags(Filter):
         # Do not restrict to a certain number, because we'd like to link to this
         # via an URL, e.g. from the virtual host tree snapin
         num = 0
-        while html.request.has_var('host_tag_%d_op' % num):
-            prefix = 'host_tag_%d' % num
+        while html.request.has_var('%s%d_op' % (self._var_prefix, num)):
+            prefix = '%s%d' % (self._var_prefix, num)
             num += 1
 
             op = html.request.var(prefix + '_op')
@@ -2481,18 +2488,52 @@ class FilterHostTags(Filter):
             if not tag_group or not op:
                 continue
 
-            headers.append(self._hosttag_filter(tag_group.id, tag, negate=op != "is"))
+            headers.append(self._tag_filter(tag_group.id, tag, negate=op != "is"))
 
         if headers:
             return '\n'.join(headers) + '\n'
         return ''
 
-    def _hosttag_filter(self, tag_group, tag, negate):
-        return "Filter: host_tags %s %s %s" % (
-            '!=' if negate else '=', livestatus.lqencode(tag_group), livestatus.lqencode(tag))
+    def _tag_filter(self, tag_group, tag, negate):
+        return "Filter: %s_tags %s %s %s" % (
+            livestatus.lqencode(self.object_type),
+            '!=' if negate else '=',
+            livestatus.lqencode(tag_group),
+            livestatus.lqencode(tag),
+        )
 
     def double_height(self):
         return True
+
+
+@filter_registry.register
+class FilterHostTags(ABCTagFilter):
+    @property
+    def object_type(self):
+        return "host"
+
+    @property
+    def ident(self):
+        return "host_tags"
+
+    @property
+    def title(self):
+        return _("Host Tags")
+
+
+@filter_registry.register
+class FilterServiceTags(ABCTagFilter):
+    @property
+    def object_type(self):
+        return "service"
+
+    @property
+    def ident(self):
+        return "service_tags"
+
+    @property
+    def title(self):
+        return _("Tags")
 
 
 @filter_registry.register

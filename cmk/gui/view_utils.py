@@ -123,7 +123,23 @@ def check_limit(rows, limit, user):
     return True
 
 
-def render_tag_groups(tag_groups):
+def render_tag_groups(tag_groups, object_type, with_links):
     return HTML("").join(
-        html.render_span("%s:%s" % (tg_id, tag), class_="tag_group")
+        _render_tag_group(tg_id, tag, object_type, with_links)
         for tg_id, tag in sorted(tag_groups.items()))
+
+
+def _render_tag_group(tg_id, tag, object_type, with_link):
+    span = html.render_span("%s:%s" % (tg_id, tag), class_="tag_group")
+    if not with_link:
+        return span
+
+    url = html.makeuri([
+        ("filled_in", "filter"),
+        ("%s_tag_0_grp" % object_type, tg_id),
+        ("%s_tag_0_op" % object_type, "is"),
+        ("%s_tag_0_val" % object_type, tag),
+        ("search", "Search"),
+        ("view_name", "searchhost" if object_type == "host" else "searchsvc"),
+    ])
+    return html.render_a(span, href=url)

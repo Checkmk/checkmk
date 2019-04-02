@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import time
 
 import cmk.gui.config as config
@@ -155,8 +156,25 @@ class SorterSitealias(Sorter):
         return cmp(config.site(r1["site"])["alias"], config.site(r2["site"])["alias"])
 
 
+class ABCTagSorter(Sorter):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def object_type(self):
+        raise NotImplementedError()
+
+    def cmp(self, r1, r2):
+        tag_groups_1 = sorted(get_tag_groups(r1, self.object_type).items())
+        tag_groups_2 = sorted(get_tag_groups(r2, self.object_type).items())
+        return cmp(tag_groups_1, tag_groups_2)
+
+
 @sorter_registry.register
-class SorterHost(Sorter):
+class SorterHost(ABCTagSorter):
+    @property
+    def object_type(self):
+        return "host"
+
     @property
     def ident(self):
         return "host"
@@ -169,10 +187,24 @@ class SorterHost(Sorter):
     def columns(self):
         return ["host_tags"]
 
-    def cmp(self, r1, r2):
-        tag_groups_1 = sorted(get_tag_groups(r1, "host").items())
-        tag_groups_2 = sorted(get_tag_groups(r2, "host").items())
-        return cmp(tag_groups_1, tag_groups_2)
+
+@sorter_registry.register
+class SorterServiceTags(ABCTagSorter):
+    @property
+    def object_type(self):
+        return "service"
+
+    @property
+    def ident(self):
+        return "service_tags"
+
+    @property
+    def title(self):
+        return _("Tags")
+
+    @property
+    def columns(self):
+        return ["service_tags"]
 
 
 @sorter_registry.register

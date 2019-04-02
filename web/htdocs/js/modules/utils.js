@@ -553,13 +553,16 @@ export function unhide_context_buttons(oA)
     oA.parentNode.style.display = "none";
 }
 
-var g_hosttag_groups = {};
+var g_tag_groups = {
+    "host": {},
+    "service": {}
+};
 
-export function set_host_tag_groups(grouped) {
-    g_hosttag_groups = grouped;
+export function set_tag_groups(object_type, grouped) {
+    g_tag_groups[object_type] = grouped;
 }
 
-export function host_tag_update_value(prefix, grp) {
+export function tag_update_value(object_type, prefix, grp) {
     var value_select = document.getElementById(prefix + "_val");
 
     // Remove all options
@@ -569,10 +572,10 @@ export function host_tag_update_value(prefix, grp) {
         return; // skip over when empty group selected
 
     var opt = null;
-    for (var i = 0, len = g_hosttag_groups[grp].length; i < len; i++) {
+    for (var i = 0, len = g_tag_groups[object_type][grp].length; i < len; i++) {
         opt = document.createElement("option");
-        opt.value = g_hosttag_groups[grp][i][0];
-        opt.text  = g_hosttag_groups[grp][i][1];
+        opt.value = g_tag_groups[object_type][grp][i][0];
+        opt.text  = g_tag_groups[object_type][grp][i][1];
         value_select.appendChild(opt);
     }
 }

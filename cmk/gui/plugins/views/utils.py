@@ -991,6 +991,8 @@ def url_to_view(row, view_name):
 
 
 def get_tag_groups(row, what):
+    # Sites with old versions that don't have the tag groups column return
+    # None for this field. Convert this to the default value
     return row.get("%s_tags" % what, {}) or {}
 
 

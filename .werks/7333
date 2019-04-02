@@ -1,0 +1,23 @@
+Title: Introduce predefined conditions for rulesets
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554209050
+Class: feature
+
+In the rule-based configuration of Check_MK ("Host & Service Parameters" and
+"Manual Checks") it often happens that rules with the same conditions have to
+be created in different rule chains. With a larger number of rules, this
+quickly becomes confusing.
+
+To improve this situation we have now added a feature called "Predefined
+conditions". The idea is to preconfigure conditions in a central place, to
+which you can later refer in the individual rule chains. A predefined condition
+currently always consists of a full set of conditions (folder, tags, host
+specification, service specification). A rule can either use explicit
+conditions, as before, or refer to a predefined condition now.
+
+You access the predefined conditions via a context button from the pages on
+which you manage your rule chains.

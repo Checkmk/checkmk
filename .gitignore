@@ -1,5 +1,6 @@
 *.gcno
 *.pyc
+*.py.*.py
 *kate-swp
 *~
 .*.swo
@@ -41,7 +42,7 @@ install-sh
 missing
 mk-livestatus-*.tar.gz
 mkeventd-*.tar.gz
-mkeventd/
+mkeventd/
 stamp-h1
 tags
 tests/web/data/*

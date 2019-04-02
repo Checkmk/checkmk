@@ -5089,7 +5089,7 @@ class PainterAlertStatsProblem(Painter):
 
 
 #
-# HOSTTAGS
+# TAGS
 #
 
 
@@ -5116,11 +5116,44 @@ class PainterHostTags(Painter):
         return "host"
 
     def render(self, row, cell):
-        return "", render_tag_groups(get_tag_groups(row, "host"))
+        return "", render_tag_groups(get_tag_groups(row, "host"), "host", with_links=True)
+
+
+class ABCPainterTagsWithTitles(Painter):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def object_type(self):
+        raise NotImplementedError()
+
+    def render(self, row, cell):
+        entries = self._get_entries(row)
+        return "", "<br>".join(["%s: %s" % e for e in sorted(entries)])
+
+    def _get_entries(self, row):
+        entries = []
+        for tag_group_id, tag_id in get_tag_groups(row, self.object_type).items():
+            tag_group = config.tags.get_tag_group(tag_group_id)
+            if tag_group:
+                entries.append((tag_group.title, dict(tag_group.get_tag_choices()).get(
+                    tag_id, tag_id)))
+                continue
+
+            aux_tag_title = dict(config.tags.aux_tag_list.get_choices()).get(tag_group_id)
+            if aux_tag_title:
+                entries.append((aux_tag_title, aux_tag_title))
+                continue
+
+            entries.append((tag_group_id, tag_id))
+        return entries
 
 
 @painter_registry.register
-class PainterHostTagsWithTitles(Painter):
+class PainterHostTagsWithTitles(ABCPainterTagsWithTitles):
+    @property
+    def object_type(self):
+        return "host"
+
     @property
     def ident(self):
         return "host_tags_with_titles"
@@ -5141,23 +5174,55 @@ class PainterHostTagsWithTitles(Painter):
     def sorter(self):
         return "host"
 
+
+@painter_registry.register
+class PainterServiceTags(Painter):
+    @property
+    def ident(self):
+        return "service_tags"
+
+    @property
+    def title(self):
+        return _("Tags")
+
+    @property
+    def short_title(self):
+        return _("Tags")
+
+    @property
+    def columns(self):
+        return ["service_tags"]
+
+    @property
+    def sorter(self):
+        return "service_tags"
+
     def render(self, row, cell):
-        entries = self._get_entries(row)
-        return "", "<br>".join(["%s: %s" % e for e in sorted(entries)])
+        return "", render_tag_groups(get_tag_groups(row, "service"), "service", with_links=True)
 
-    def _get_entries(self, row):
-        entries = []
-        for tag_group_id, tag_id in get_tag_groups(row, "host").items():
-            tag_group = config.tags.get_tag_group(tag_group_id)
-            if tag_group:
-                entries.append((tag_group.title, dict(tag_group.get_tag_choices()).get(
-                    tag_id, tag_id)))
-                continue
 
-            aux_tag_title = dict(config.tags.aux_tag_list.get_choices()).get(tag_group_id)
-            if aux_tag_title:
-                entries.append((aux_tag_title, aux_tag_title))
-                continue
+@painter_registry.register
+class PainterServiceTagsWithTitles(ABCPainterTagsWithTitles):
+    @property
+    def object_type(self):
+        return "service"
 
-            entries.append((tag_group_id, tag_id))
-        return entries
+    @property
+    def ident(self):
+        return "service_tags_with_titles"
+
+    @property
+    def title(self):
+        return _("Tags (with titles)")
+
+    @property
+    def short_title(self):
+        return _("Tags")
+
+    @property
+    def columns(self):
+        return ["service_tags"]
+
+    @property
+    def sorter(self):
+        return "service_tags"

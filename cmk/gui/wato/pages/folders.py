@@ -569,7 +569,8 @@ class ModeFolder(WatoMode):
 
         if not config.wato_hide_hosttags:
             table.cell(_("Tags"), css="tag-ellipsis")
-            html.write(cmk.gui.view_utils.render_tag_groups(host.tag_groups()))
+            html.write(
+                cmk.gui.view_utils.render_tag_groups(host.tag_groups(), "host", with_links=False))
 
         # Located in folder
         if self._folder.is_search_folder():

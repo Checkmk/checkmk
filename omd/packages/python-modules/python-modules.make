@@ -301,7 +301,6 @@ python-modules-dump-Pipfile:
 	@echo 'pytest-cov = "*"'
 	@echo 'pytest-mock = "*"'
 	@echo '"beautifulsoup4" = "*"'
-	@echo 'pytest-stepwise = "*"'
 	@echo 'dill = "*"'
 	@echo 'bandit = "*"'
 	@echo 'lockfile = "*"'

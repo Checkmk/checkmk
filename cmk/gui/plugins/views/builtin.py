@@ -1285,10 +1285,9 @@ multisite_builtin_views.update({
             # 1. Identification and icons
             ('sitealias', None),
             ('host', 'host'),
-            ('host_parents', None),
-            ('host_childs', None),
             ('host_addresses', None),
             ('alias', None),
+            ('host_tags', None),
             ('host_icons', None),
 
             # 2. State and metrics
@@ -1323,6 +1322,8 @@ multisite_builtin_views.update({
             ('host_notification_postponement_reason', None),
 
             # 5. Configuration
+            ('host_parents', None),
+            ('host_childs', None),
             ('host_check_interval', None),
             ('host_contact_groups', None),
             ('host_contacts', None),
@@ -1510,6 +1511,7 @@ multisite_builtin_views.update({
             ('sitealias', None),
             ('host', 'hoststatus'),
             ('service_description', 'servicedesc'),
+            ('service_tags', None),
             ('service_icons', None),
 
             # 2. State and metrics

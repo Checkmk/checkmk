@@ -1,0 +1,25 @@
+Title: Fixed "Clustered services for overlapping clusters" rule while checking
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p14
+Date: 1553236403
+
+Normally each node is part of a single cluster host in Check_MK. Using the
+ruleset {{Clustered services for overlapping clusters}} you can assign services
+found on a node to different independent cluster hosts, so called overlapping
+clusters. This was unregarded while executing clustered services checks on the
+related clusters. This may result in wrong check results.
+
+Example:
+Each of the two clusters {{cluster1}} and {{cluster2}} has the nodes {{node1}}
+and {{node2}}. On each node we have discovered a process {{Process ABC}}.
+Within the ruleset {{Clustered services for overlapping clusters}} we assign
+the service {{Process ABC}} from node {{node1}} to {{cluster1}}.
+
+Now the service {{Process ABC}} which is assigned ot the cluster {{cluster1}}
+processes the data of both nodes and may return a wrong check result in the
+moment where {{node1}} AND {{node2}} have data for {{Process ABC}}.

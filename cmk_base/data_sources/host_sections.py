@@ -107,7 +107,12 @@ class MultiHostSections(object):
         return self._multi_host_sections
 
 
-    def get_section_content(self, hostname, ipaddress, check_plugin_name, for_discovery):
+    def get_section_content(self,
+                            hostname,
+                            ipaddress,
+                            check_plugin_name,
+                            for_discovery,
+                            service_description=None):
         """Prepares the section_content construct for a Check_MK check on ANY host
 
         The section_content construct is then handed over to the check, inventory or
@@ -129,28 +134,55 @@ class MultiHostSections(object):
         """
 
         section_name = checks.section_name_of(check_plugin_name)
+        nodes_of_clustered_service = self._get_nodes_of_clustered_service(
+            hostname, service_description)
+        cache_key = (hostname, ipaddress, section_name, for_discovery,
+                     bool(nodes_of_clustered_service))
         try:
-            return self._section_content_cache[(hostname, ipaddress, section_name, for_discovery)]
+            return self._section_content_cache[cache_key]
         except KeyError:
-            section_content = self._get_section_content(hostname, ipaddress, check_plugin_name, section_name, for_discovery)
-            self._section_content_cache[(hostname, ipaddress, section_name, for_discovery)] = section_content
+            section_content = self._get_section_content(hostname, ipaddress, check_plugin_name,
+                                                        section_name, for_discovery,
+                                                        nodes_of_clustered_service)
+            self._section_content_cache[cache_key] = section_content
             return section_content
 
+    def _get_nodes_of_clustered_service(self, hostname, service_description):
+        """Returns the node names if a service is clustered, otherwise 'None' in order to
+        decide whether we collect section content of the host or the nodes.
 
-    def _get_section_content(self, hostname, ipaddress, check_plugin_name, section_name, for_discovery):
-        # First abstract cluster / non cluster hosts
-        host_entries = []
+        For real hosts or nodes for which the service is not clustered we return 'None',
+        thus the caching works as before.
+
+        If a service is assigned to a cluster we receive the real nodename. In this
+        case we have to sort out data from the nodes for which the same named service
+        is not clustered (Clustered service for overlapping clusters).
+
+        We also use the result for the section cache.
+        """
+        if not service_description:
+            return
         nodes = config.nodes_of(hostname)
-        if nodes != None:
-            for node_hostname in nodes:
-                host_entries.append((node_hostname, ip_lookup.lookup_ip_address(node_hostname)))
-        else:
-            host_entries.append((hostname, ipaddress))
+        if nodes is None:
+            return
+        return [
+            nodename for nodename in nodes
+            if hostname == config.host_of_clustered_service(
+                nodename, service_description)
+        ]
+
+    def _get_section_content(self, hostname, ipaddress, check_plugin_name, section_name,
+                             for_discovery, nodes_of_clustered_service):
+        # First abstract cluster / non cluster hosts
+        host_entries = self._get_host_entries(hostname, ipaddress)
 
         # Now get the section_content from the required hosts and merge them together to
         # a single section_content. For each host optionally add the node info.
         section_content = None
         for host_entry in host_entries:
+            if nodes_of_clustered_service and host_entry[0] not in nodes_of_clustered_service:
+                continue
+
             try:
                 host_section_content = self._multi_host_sections[host_entry].sections[section_name]
             except KeyError:
@@ -175,6 +207,13 @@ class MultiHostSections(object):
 
         return section_content
 
+    def _get_host_entries(self, hostname, ipaddress):
+        nodes = config.nodes_of(hostname)
+        if nodes is None:
+            return [(hostname, ipaddress)]
+        return [
+            (node_hostname, ip_lookup.lookup_ip_address(node_hostname)) for node_hostname in nodes
+        ]
 
     def _update_with_node_column(self, section_content, check_plugin_name, hostname, for_discovery):
         """Add cluster node information to the section content

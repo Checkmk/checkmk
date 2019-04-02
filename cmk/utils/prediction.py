@@ -114,18 +114,25 @@ class TimeSeries(object):
 def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
     """Fetch RRD historic metrics data of a specific service, within the specified time range
 
-    returns a tuple of (step, [value1, value2, ...])
+    returns a TimeSeries object holding interval and data information
 
     Query to livestatus always returns if database is found, thus:
     - Values can be None when there is no data for a given timestamp
-    - If time range is smaller than data resolution the values list is empty
-    - Livestatus returns a maximum of 360 data-points per query, even if
-      better resolution is available within the time range.
-    - There is no guarantee that query response from livestatus will
-      exactly match the requested time range. Shifts on both ends will
-      occur to guarantee equally spaced data-points. In the average case
-      there is no problem and thus response time window is not included in
-      return
+    - Livestatus/rrdtool returns a maximum of 400 data-points per query,
+      even if better resolution is available within the time range.
+    - Reply from livestatus/rrdtool is always enough to describe the
+      queried interval. That means, the returned bounds are always outside
+      the queried interval.
+
+    LEGEND
+    O timestamps of measurements
+    | query values, fromtime and untiltime
+    x returned start, no data contained
+    v returned data rows, includes end y
+
+    --O---O---O---O---O---O---O---O
+            |---------------|
+          x---v---v---v---v---y
 
     """
 
@@ -149,8 +156,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
             raise
         raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
 
-    step, values = response[2], response[3:]
-    return step, values
+    return TimeSeries(response)
 
 
 def predictions_dir(hostname, service_description, dsname, create=False):

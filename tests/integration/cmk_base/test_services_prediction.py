@@ -93,9 +93,12 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
         _, from_time, until_time, _ = prediction.get_prediction_timegroup(
             timestamp, prediction.prediction_periods[period])
 
-    step, data = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
+    timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
                                                    from_time, until_time)
-    assert (step, len(data)) == result
+
+    assert timeseries.start <= from_time
+    assert timeseries.end >= until_time
+    assert (timeseries.step, len(timeseries.values)) == result
 
 
 @pytest.mark.xfail
@@ -139,9 +142,12 @@ def test_aggregate_data_for_prediction_and_save(cfg_setup, now, params):
 ])
 def test_get_rrd_data_incomplete(cfg_setup, timerange, result):
     from_time, until_time = timerange
-    data_response = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15',
-                                                      'MAX', from_time, until_time)
-    assert data_response == result
+    timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
+                                                   from_time, until_time)
+
+    assert timeseries.start <= from_time
+    assert timeseries.end >= until_time
+    assert (timeseries.step, timeseries.values) == result
 
 
 def test_get_rrd_data_fails(cfg_setup):
@@ -155,8 +161,7 @@ def test_get_rrd_data_fails(cfg_setup):
                                           from_time, until_time)
 
     # Empty response, because non-existent perf_data variable
-    step, data = cmk.utils.prediction.get_rrd_data(
+    timeseries = cmk.utils.prediction.get_rrd_data(
         'test-prediction', 'CPU load', 'untracked_prefdata', 'MAX', from_time, until_time)
 
-    assert step == 0
-    assert data == []
+    assert timeseries == cmk.utils.prediction.TimeSeries([0, 0, 0])

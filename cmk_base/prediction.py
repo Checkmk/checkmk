@@ -35,7 +35,6 @@ import cmk.utils
 import cmk.utils.log
 import cmk.utils.defines as defines
 import cmk.utils.prediction
-from cmk.utils.exceptions import MKGeneralException
 
 logger = cmk.utils.log.get_logger(__name__)
 
@@ -110,61 +109,47 @@ def retrieve_grouped_data_from_rrd(hostname, service_description, timegroup, par
                                    from_time, dsname, cf):
     # Collect all slices back into the past until the time horizon
     # is reached
-    begin = from_time
+    from_time = int(from_time)
     slices = []
-    absolute_begin = from_time - params["horizon"] * 86400
-    # The resolutions of the different time ranges differ. We interpolate
-    # to the best resolution. We assume that the youngest slice has the
-    # finest resolution. We also assume, that each step is always dividable
-    # by the smallest step.
+    absolute_begin = from_time - int(params["horizon"]) * 86400
 
     # Note: due to the f**king DST, we can have several shifts between
     # DST and non-DST during are computation. We need to compensate for
     # those. DST swaps within slices are being ignored. The DST flag
     # is checked against the beginning of the slice.
-    smallest_step = None
-    while begin >= absolute_begin:
+    for begin in range(from_time, absolute_begin, -period_info["slice"]):
         tg, fr, un = get_prediction_timegroup(begin, period_info)[:3]
         if tg == timegroup:
-            step, data = cmk.utils.prediction.get_rrd_data(hostname, service_description, dsname,
-                                                           cf, fr, un - 1)
-            if smallest_step is None:
-                smallest_step = step
-            slices.append((fr, step / float(smallest_step), data))
-        begin -= period_info["slice"]
-    return slices, smallest_step
+            timeseries = cmk.utils.prediction.get_rrd_data(hostname, service_description, dsname,
+                                                           cf, fr, un)
+            slices.append((timeseries, from_time - fr))
+
+    # The resolutions of the different time ranges differ. We upsample
+    # to the best resolution. We assume that the youngest slice has the
+    # finest resolution.
+    twindow = slices[0][0].twindow
+    return twindow, [ts.bfill_upsample(twindow, shift) for ts, shift in slices]
 
 
-def consolidate_data(slices):
-    # Now we have all the RRD data we need. The next step is to consolidate
-    # all that data into one new array.
-    try:
-        num_points = slices[0][2]
-    except IndexError:
-        raise MKGeneralException("Got no historic metrics")
+def data_stats(slices):
+    "Statistically summarize all the upsampled RRD data"
 
-    consolidated = []
-    for i in xrange(len(num_points)):
-        point_line = []
-        for _from_time, scale, data in slices:
-            if not data:
-                continue
-            idx = int(i / float(scale))  # left data-point mapping
-            d = data[idx]
-            if d is not None:
-                point_line.append(d)
+    descriptors = []
 
+    for time_column in zip(*slices):
+        point_line = [x for x in time_column if x is not None]
         if point_line:
             average = sum(point_line) / float(len(point_line))
-            consolidated.append([
+            descriptors.append([
                 average,
                 min(point_line),
                 max(point_line),
                 stdev(point_line, average),
             ])
         else:
-            consolidated.append([None, None, None, None])
-    return consolidated
+            descriptors.append([None, None, None, None])
+
+    return descriptors
 
 
 def aggregate_data_for_prediction_and_save(hostname, service_description, pred_file, params,
@@ -173,16 +158,17 @@ def aggregate_data_for_prediction_and_save(hostname, service_description, pred_f
 
     timegroup, from_time, until_time, _rel_time = get_prediction_timegroup(now, period_info)
     logger.verbose("Aggregating data for time group %s", timegroup)
-    slices, smallest_step = retrieve_grouped_data_from_rrd(
-        hostname, service_description, timegroup, params, period_info, from_time, dsname, cf)
+    twindow, slices = retrieve_grouped_data_from_rrd(hostname, service_description, timegroup,
+                                                     params, period_info, from_time, dsname, cf)
 
-    consolidated = consolidate_data(slices)
+    descriptors = data_stats(slices)
 
     data_for_pred = {
-        "num_points": len(consolidated),
-        "step": smallest_step,
-        "columns": ["average", "min", "max", "stdev"],
-        "points": consolidated,
+        u"columns": [u"average", u"min", u"max", u"stdev"],
+        u"points": descriptors,
+        u"num_points": len(descriptors),
+        u"data_twindow": list(twindow[:2]),
+        u"step": twindow[2],
     }
 
     info = {

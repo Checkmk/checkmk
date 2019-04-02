@@ -50,7 +50,7 @@ class RulespecCheckgroupParametersIbmSvcTotalLatency(CheckParameterRulespecWithI
 
     @property
     def title(self):
-        return _("IBM SVC: Levels for total disk latency")
+        return _("IBM SVC Total Disk Latency")
 
     @property
     def match_type(self):

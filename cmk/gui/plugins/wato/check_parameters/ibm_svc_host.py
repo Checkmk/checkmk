@@ -65,7 +65,7 @@ class RulespecCheckgroupParametersIbmSvcHost(CheckParameterRulespecWithoutItem):
 
     @property
     def title(self):
-        return _("IBM SVC: Options for SVC Hosts Check")
+        return _("IBM SVC Hosts")
 
     @property
     def match_type(self):

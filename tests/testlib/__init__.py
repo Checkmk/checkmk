@@ -1684,6 +1684,42 @@ class CMKWebSession(WebSession):
         assert isinstance(result, dict)
         return result
 
+    def get_user_sites(self, expect_error=False):
+        result = self._api_request(
+            "webapi.py?action=get_user_sites", {
+                "request": json.dumps({}),
+            },
+            expect_error=expect_error)
+        assert isinstance(result, list)
+        return result
+
+    def get_host_names(self, request, expect_error=False):
+        result = self._api_request(
+            "webapi.py?action=get_host_names", {
+                "request": json.dumps(request),
+            },
+            expect_error=expect_error)
+        assert isinstance(result, list)
+        return result
+
+    def get_metrics_of_host(self, request, expect_error=False):
+        result = self._api_request(
+            "webapi.py?action=get_metrics_of_host", {
+                "request": json.dumps(request),
+            },
+            expect_error=expect_error)
+        assert isinstance(result, dict)
+        return result
+
+    def get_graph_recipes(self, request, expect_error=False):
+        result = self._api_request(
+            "webapi.py?action=get_graph_recipes", {
+                "request": json.dumps(request),
+            },
+            expect_error=expect_error)
+        assert isinstance(result, list)
+        return result
+
     def activate_changes(self, mode=None, allow_foreign_changes=None):
         request = {}
 

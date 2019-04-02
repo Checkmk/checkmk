@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=redefined-outer-name
 # encoding: utf-8
 
 import base64
@@ -8,8 +9,8 @@ import os
 from StringIO import StringIO
 import time
 
-import pytest
-from PIL import Image
+import pytest  # type: ignore
+from PIL import Image  # type: ignore
 
 import cmk
 from testlib import web, APIError, wait_until, repo_path  # pylint: disable=unused-import
@@ -902,3 +903,135 @@ def test_get_inventory(web):
         assert inv[host_name] == {}
     finally:
         web.delete_host(host_name)
+
+
+def test_get_user_sites(web, graph_test_config):
+    assert web.get_user_sites() == [
+        [u'heute', u'Der Master'],
+    ]
+
+
+def test_get_host_names(web, graph_test_config):
+    assert "test-host-get-graph" in web.get_host_names(request={})
+
+
+def test_get_metrics_of_host(web, graph_test_config):
+    # Do not validate the whole response, just a sample entry
+    response = web.get_metrics_of_host(request={"hostname": "test-host-get-graph"})
+    assert response["CPU load"] == {
+        u'check_command': u'check_mk-cpu.loads',
+        u'metrics': {
+            u'load1': {
+                u'index': 1,
+                u'name': u'load1',
+                u'title': u'CPU load average of last minute'
+            },
+            u'load15': {
+                u'index': 0,
+                u'name': u'load15',
+                u'title': u'CPU load average of last 15 minutes'
+            },
+            u'load5': {
+                u'index': 2,
+                u'name': u'load5',
+                u'title': u'CPU load average of last 5 minutes'
+            }
+        },
+    }
+
+
+def test_get_graph_recipes(web, graph_test_config):
+    assert web.get_graph_recipes(
+        request={
+            "specification": [
+                "template",
+                {
+                    "service_description": "Check_MK",
+                    "site": web.site.id,
+                    "graph_index": 0,
+                    "host_name": "test-host-get-graph",
+                }
+            ],
+        }) == [
+            {
+                u'consolidation_function': u'max',
+                u'explicit_vertical_range': [None, None],
+                u'horizontal_rules': [],
+                u'metrics': [{
+                    u'color': u'#87f058',
+                    u'expression': [
+                        u'operator', u'+',
+                        [[
+                            u'rrd', u'heute', u'test-host-get-graph', u'Check_MK', u'user_time',
+                            None, 1.0
+                        ],
+                         [
+                             u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                             u'children_user_time', None, 1.0
+                         ]]
+                    ],
+                    u'line_type': u'stack',
+                    u'title': u'CPU time in user space',
+                    u'unit': u's'
+                },
+                             {
+                                 u'color': u'#ff8840',
+                                 u'expression': [
+                                     u'operator', u'+',
+                                     [[
+                                         u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                                         u'system_time', None, 1.0
+                                     ],
+                                      [
+                                          u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                                          u'children_system_time', None, 1.0
+                                      ]]
+                                 ],
+                                 u'line_type': u'stack',
+                                 u'title': u'CPU time in operating system',
+                                 u'unit': u's'
+                             },
+                             {
+                                 u'color': u'#00b2ff',
+                                 u'expression': [
+                                     u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                                     u'cmk_time_agent', None, 1.0
+                                 ],
+                                 u'line_type': u'stack',
+                                 u'title': u'Time spent waiting for Check_MK agent',
+                                 u'unit': u's'
+                             },
+                             {
+                                 u'color': u'#00d1ff',
+                                 u'expression': [
+                                     u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                                     u'cmk_time_ds', None, 1.0
+                                 ],
+                                 u'line_type': u'stack',
+                                 u'title': u'Time spent waiting for special agent',
+                                 u'unit': u's'
+                             },
+                             {
+                                 u'color': u'#d080af',
+                                 u'expression': [
+                                     u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                                     u'execution_time', None, 1.0
+                                 ],
+                                 u'line_type': u'line',
+                                 u'title': u'Total execution time',
+                                 u'unit': u's'
+                             }],
+                u'omit_zero_metrics': False,
+                u'specification': [
+                    u'template',
+                    {
+                        u'graph_index': 0,
+                        u'host_name': u'test-host-get-graph',
+                        u'service_description': u'Check_MK',
+                        u'site': u'heute'
+                    }
+                ],
+                u'title': u'Time usage by phase',
+                u'unit': u's'
+            },
+        ]

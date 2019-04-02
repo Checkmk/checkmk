@@ -32,6 +32,7 @@ import traceback
 import time
 import pprint
 import sys
+import re
 from hashlib import sha256
 from typing import NamedTuple, Text, List, Optional  # pylint: disable=unused-import
 
@@ -787,7 +788,7 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
             return
 
         def _compile_patterns(services):
-            return ["%s$" % s.replace("\\", "\\\\") for s in services]
+            return ["%s$" % re.escape(s) for s in services]
 
         rulesets = watolib.AllRulesets()
         rulesets.load()

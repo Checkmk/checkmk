@@ -309,9 +309,7 @@ def wmi_filter_global_only(tables, row):
 
 
 def _required_tables_missing(tables, required_tables):
-    is_subset = set(required_tables).issubset(set(tables.keys()))
-    contains_timed_out_table = any(table.timed_out for table in tables.itervalues())
-    return not is_subset or contains_timed_out_table
+    return not set(required_tables).issubset(set(tables.keys()))
 
 
 def inventory_wmi_table_instances(tables, required_tables=None, filt=None, levels=None):

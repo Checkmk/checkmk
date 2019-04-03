@@ -15,6 +15,9 @@
     <DefineConstants>$(Configuration)=1</DefineConstants>
     <WixVariables>$(Configuration)=1</WixVariables>
     <SuppressSpecificWarnings>1076</SuppressSpecificWarnings>
+    <LinkerAdditionalOptions>
+    </LinkerAdditionalOptions>
+    <CompilerAdditionalOptions>-sw1091</CompilerAdditionalOptions>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>..\build\install\$(Configuration)\</OutputPath>
@@ -23,6 +26,9 @@
     <WixVariables>$(Configuration)=1</WixVariables>
     <SuppressPdbOutput>True</SuppressPdbOutput>
     <SuppressSpecificWarnings>1076</SuppressSpecificWarnings>
+    <LinkerAdditionalOptions>
+    </LinkerAdditionalOptions>
+    <CompilerAdditionalOptions>-sw1091</CompilerAdditionalOptions>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="InstallFolderDialog.wxs" />

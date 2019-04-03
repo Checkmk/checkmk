@@ -386,3 +386,12 @@ def test_tags_of_service(monkeypatch):
     assert config.get_config_cache().tags_of_service("test-host", "CPU load") == {
         "tag_group1": "val1"
     }
+
+
+def test_config_cache_get_host_config():
+    cache = config.ConfigCache()
+    assert cache._host_configs == {}
+
+    host_config = cache.get_host_config("xyz")
+    assert isinstance(host_config, config.HostConfig)
+    assert host_config is cache.get_host_config("xyz")

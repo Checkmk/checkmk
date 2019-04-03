@@ -44,89 +44,6 @@ def bail_out(text):
     sys.exit(1)
 
 
-def _remove_cab(path_to_msibuild, new_msi_filename):
-    verbose("Removing product.cab from %s" % new_msi_filename)
-    if os.system(  # nosec
-        (path_to_msibuild +
-         "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams where Name = 'product.cab'\"") %
-        {"new_msi_file": new_msi_filename}) != 0:
-        bail_out('Fehler!')
-
-
-def _create_new_cab(working_dir):
-    verbose("Generating new product.cab")
-
-    lcab_files = ""
-    for lcab_file in ["check_mk_ini", "plugins_cap"]:
-        lcab_files += "%(source_dir)s/%(lcab_file)s " % {
-            "source_dir": source_dir,
-            "lcab_file": lcab_file
-        }
-    if os.system(  # nosec
-            "lcab -n %(lcab_files)s %(work_dir)s/product.cab" % {
-                "lcab_files": lcab_files,
-                "work_dir": working_dir
-            }) != 0:
-        bail_out('Fehler!')
-
-
-def _add_cab(path_to_msibuild, new_msi_filename, working_dir):
-    verbose("Add modified product.cab")
-    if os.system(  # nosec
-        (path_to_msibuild + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % {
-            "work_dir": working_dir,
-            "new_msi_file": new_msi_filename
-        }) != 0:
-        bail_out('Fehler!')
-
-
-def _update_package_code(msi_filename):
-    package_code = ("{%s}" % uuid.uuid1()).upper()
-    summary_info = {
-        "new_msi_file": new_msi_file,
-        "start": package_code[:16],
-        "end": package_code[16:]
-    }
-    default_package_codes = {
-        # left as example for possible control
-        "vanilla_container.msi": {
-            "dftl_start": "{08012468-53DE-4",
-            "dftl_end": "2A3-BAA9-FE4C2A129135}"
-        },
-        # used in production
-        "check_mk_agent.msi": {
-            "dftl_start": "{BAEBF560-7308-4",
-            "dftl_end": "D53-B426-903EA74B1D7E}"
-        },
-        # may be used in production(just other name)
-        "baked_container.msi": {
-            "dftl_start": "{BAEBF560-7308-4",
-            "dftl_end": "D53-B426-903EA74B1D7E}"
-        },
-        # used for a testing
-        "check_mk_agent_update.msi": {
-            "dftl_start": "{BAEBF560-7308-4",
-            "dftl_end": "D53-B426-903EA74B1D7E}"
-        }
-    }
-    summary_info.update(default_package_codes[os.path.basename(msi_filename)])
-    if os.system(  # nosec
-            "sed -i -e 's/%(dftl_start)s/%(start)s/' -e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s"
-            % summary_info) != 0:
-        bail_out('Fehler!')
-
-
-def _make_msi_copy(msi_file, new_msi_file):
-    verbose("Creating copy of original file %s -> %s" % (msi_file, new_msi_file))
-
-    # Make a copy
-    if os.system("cp %(msi_file)s %(new_msi_file)s" % {  # nosec
-            "msi_file": msi_file,
-            "new_msi_file": new_msi_file
-    }) != 0:
-        bail_out('Fehler!')
-
-
 try:
     if sys.argv[1] == '-v':
         opt_verbose = True
@@ -194,13 +111,13 @@ try:
     # Export required idt files into work dir
     for entry in ["File", "Property", "Component"]:
         verbose("Export table %s from file %s" % (entry, msi_file))
-        command = (path_prefix +
-                   "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % {
-                       "work_dir": work_dir,
-                       "msi_file": msi_file,
-                       "property": entry
-                   }
-        if os.system(command) != 0:
+        if os.system(  # nosec
+            (path_prefix +
+             "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % {
+                 "work_dir": work_dir,
+                 "msi_file": msi_file,
+                 "property": entry
+             }) != 0:
             bail_out('Failed to unpack msi table %s from %s' % (entry, msi_file))
 
     verbose("Modify extracted files..")
@@ -208,9 +125,8 @@ try:
     # ==============================================
     # Modify File.idt
 
-    # Convert Input Files to Internal-MSI Presentation
-    shutil.copy(source_dir + "/check_mk.ini", source_dir + "/check_mk_ini")
-    shutil.copy(source_dir + "/plugins.cap", source_dir + "/plugins_cap")
+    # HACK: the 64 bit agent is msi internally handled as check_mk_agent64.exe
+    os.rename(source_dir + "/check_mk_agent-64.exe", source_dir + "/check_mk_agent64.exe")
 
     lines_file_idt = file(work_dir + "/File.idt").readlines()
     file_idt_new = file(work_dir + "/File.idt.new", "w")
@@ -221,12 +137,9 @@ try:
         tokens = line.split("\t")
         filename = tokens[0]
         cabinet_files.append((tokens[-1], filename))
-        for f in ["check_mk_ini", "plugins_cap"]:  # sorted(cabinet_files):
-            if f == filename:
-                file_stats = os.stat(source_dir + "/" + filename)
-                new_size = file_stats.st_size
-                tokens[3] = str(new_size)
-                break
+        file_stats = os.stat(source_dir + "/" + filename)
+        new_size = file_stats.st_size
+        tokens[3] = str(new_size)
         # The version of this file is different from the msi installer version !
         tokens[4] = tokens[4] and new_version_build or ""
         tokens[4] = tokens[4] and new_version_build or ""
@@ -242,7 +155,9 @@ try:
 
     for line in lines_component_idt[3:]:
         tokens = line.split("\t")
-        if tokens[0] in ["plugins_cap_", "check_mk_ini_"]:
+        if tokens[0] in [
+                "plugins.cap", "check_mk.ini", "agent32", "agent64", "check_mk.example.ini"
+        ]:
             tokens[1] = ("{%s}" % uuid.uuid1()).upper()
         component_idt_new.write("\t".join(tokens))
 
@@ -260,10 +175,10 @@ try:
     for line in lines_property_idt[3:]:
         tokens = line.split("\t")
         if tokens[0] == "ProductName":
-            tokens[1] = "Check MK Service\r\n"
-        # The upgrade code defines the product family. Do not change it!
-        #    elif tokens[0] == "UpgradeCode":
-        #        tokens[1] = upgrade_code
+            tokens[1] = "Check_MK Agent\r\n"
+    # The upgrade code defines the product family. Do not change it!
+    #    elif tokens[0] == "UpgradeCode":
+    #        tokens[1] = upgrade_code
         elif tokens[0] == "ProductCode":
             tokens[1] = product_code
         elif tokens[0] == "ProductVersion":
@@ -272,7 +187,14 @@ try:
     property_idt_new.close()
     # ==============================================
 
-    _make_msi_copy(msi_file, new_msi_file)
+    verbose("Creating copy of original file %s -> %s" % (msi_file, new_msi_file))
+
+    # Make a copy
+    if os.system("cp %(msi_file)s %(new_msi_file)s" % {  # nosec
+            "msi_file": msi_file,
+            "new_msi_file": new_msi_file
+    }) != 0:
+        bail_out('Fehler!')
 
     # Rename modified tables
     for entry in ["Property", "File", "Component"]:
@@ -292,16 +214,60 @@ try:
     # the unqiue identifier for this package. Inside the package the uuid is split into two halfs.
     # Each of it is updated with the corresponding new package code. Since msi-update uses the
     # vanilla_container.msi as well as the baked_container.msi we need to handle both..
-    _update_package_code(msi_file)
+    package_code = ("{%s}" % uuid.uuid1()).upper()
+    summary_info = {
+        "new_msi_file": new_msi_file,
+        "start": package_code[:16],
+        "end": package_code[16:]
+    }
+    default_package_codes = {
+        "vanilla_container.msi": {
+            "dftl_start": "{08012468-53DE-4",
+            "dftl_end": "2A3-BAA9-FE4C2A129135}"
+        },
+        "baked_container.msi": {
+            "dftl_start": "{47ED1918-CEDF-4",
+            "dftl_end": "D37-943C-B4DBC3F58E6C}"
+        }
+    }
+    summary_info.update(default_package_codes[os.path.basename(msi_file)])
+    if os.system(  # nosec
+            "sed -i -e 's/%(dftl_start)s/%(start)s/' -e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s"
+            % summary_info) != 0:
+        bail_out('Fehler!')
 
     # Remove original product.cab from stream
-    _remove_cab(path_prefix, new_msi_file)
+    verbose("Removing product.cab from %s" % new_msi_file)
+    if os.system(  # nosec
+        (path_prefix +
+         "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams where Name = 'product.cab'\"") %
+        {"new_msi_file": new_msi_file}) != 0:
+        bail_out('Fehler!')
 
     # Prepare product.cab file
-    _create_new_cab(work_dir)
+    verbose("Generating new product.cab")
+
+    lcab_files = ""
+    for index, lcab_file in sorted(cabinet_files):
+        lcab_files += "%(source_dir)s/%(lcab_file)s " % {
+            "source_dir": source_dir,
+            "lcab_file": lcab_file
+        }
+    if os.system(  # nosec
+            "lcab -n %(lcab_files)s %(work_dir)s/product.cab" % {
+                "lcab_files": lcab_files,
+                "work_dir": work_dir
+            }) != 0:
+        bail_out('Fehler!')
 
     # Add modified product.cab
-    _add_cab(path_prefix, new_msi_file, work_dir)
+    verbose("Add modified product.cab")
+    if os.system(  # nosec
+        (path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % {
+            "work_dir": work_dir,
+            "new_msi_file": new_msi_file
+        }) != 0:
+        bail_out('Fehler!')
 
     shutil.rmtree(work_dir)
     verbose("Successfully created file " + new_msi_file)

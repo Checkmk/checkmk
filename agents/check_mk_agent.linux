@@ -571,7 +571,7 @@ fi
 
 # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
 # have installed freeipmi that IPMI is really support by your hardware.
-if type ipmi-sensors >/dev/null
+if (type ipmi-sensors && ls /dev/ipmi*) &>/dev/null
 then
     echo '<<<ipmi_sensors>>>'
     # Newer ipmi-sensors version have new output format; Legacy format can be used

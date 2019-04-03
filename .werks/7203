@@ -1,0 +1,16 @@
+Title: agent_prism: Fixed handling of informational messages
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p14
+Date: 1553155607
+
+We have seen informational messages in format:
+{dev_type} drive {dev_name} on host {ip_address} has the following problems: {err_msg}
+
+In order to handle such cases, we now deal with this message format differently.
+
+

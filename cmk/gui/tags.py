@@ -467,10 +467,17 @@ class TagConfig(object):
             if tag.id or tag.title:
                 if not tag.id:
                     tag.id = None
+
+                    if len(tag_group.tags) == 1:
+                        raise MKUserError("choices_%d_id" % (nr + 1),
+                                          _("Can not use an empty tag ID with a single choice."))
+
                     if have_none_tag:
                         raise MKUserError("choices_%d_id" % (nr + 1),
                                           _("Only one tag may be empty."))
+
                     have_none_tag = True
+
                 # Make sure tag ID is unique within this group
                 for (n, x) in enumerate(tag_group.tags):
                     if n != nr and x.id == tag.id:

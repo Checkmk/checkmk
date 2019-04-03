@@ -2785,6 +2785,7 @@ class HostConfig(object):
         self.part_of_clusters = self._config_cache.clusters_of(hostname)
 
         tags = self._config_cache.tag_list_of_host(self.hostname)
+        # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
         self.tags = tags
         self.tag_groups = host_tags.get(hostname, {})
 

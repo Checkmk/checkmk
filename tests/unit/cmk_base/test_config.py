@@ -3,6 +3,7 @@
 import pytest  # type: ignore
 
 import cmk_base.config as config
+import cmk_base.piggyback as piggyback
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -21,8 +22,68 @@ def clear_config_caches(monkeypatch):
     ("testhost", ["no-ip"], False),
 ])
 def test_is_ipv4_host(monkeypatch, hostname, tags, result):
-    monkeypatch.setattr(config, "tag_list_of_host", lambda h: {hostname: tags}[h])
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
+
     assert config.is_ipv4_host(hostname) == result
+    assert config.HostConfig(hostname).is_ipv4_host == result
+
+
+@pytest.mark.parametrize("hostname,tags,result", [
+    ("testhost", [], False),
+    ("testhost", ["ip-v4"], False),
+    ("testhost", ["ip-v4", "ip-v6"], True),
+    ("testhost", ["ip-v6"], True),
+    ("testhost", ["no-ip"], False),
+])
+def test_is_ipv6_host(monkeypatch, hostname, tags, result):
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
+
+    assert config.is_ipv6_host(hostname) == result
+    assert config.HostConfig(hostname).is_ipv6_host == result
+
+
+@pytest.mark.parametrize("hostname,tags,result", [
+    ("testhost", [], False),
+    ("testhost", ["ip-v4"], False),
+    ("testhost", ["ip-v4", "ip-v6"], True),
+    ("testhost", ["ip-v6"], False),
+    ("testhost", ["no-ip"], False),
+])
+def test_is_ipv4v6_host(monkeypatch, hostname, tags, result):
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
+
+    assert config.is_ipv4v6_host(hostname) == result
+    assert config.HostConfig(hostname).is_ipv4v6_host == result
+
+
+@pytest.mark.parametrize("hostname,tags,result", [
+    ("testhost", ["piggyback"], True),
+    ("testhost", ["no-piggyback"], False),
+])
+def test_is_piggyback_host(monkeypatch, hostname, tags, result):
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
+
+    assert config.HostConfig(hostname).is_piggyback_host == result
+
+
+@pytest.mark.parametrize("with_data,result", [
+    (True, True),
+    (False, False),
+])
+@pytest.mark.parametrize("hostname,tags", [
+    ("testhost", []),
+    ("testhost", ["auto-piggyback"]),
+])
+def test_is_piggyback_host_auto(monkeypatch, hostname, tags, with_data, result):
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
+    monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda cache_age, hostname: with_data)
+
+    assert config.HostConfig(hostname).is_piggyback_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -33,8 +94,11 @@ def test_is_ipv4_host(monkeypatch, hostname, tags, result):
     ("testhost", ["no-ip"], True),
 ])
 def test_is_no_ip_host(monkeypatch, hostname, tags, result):
-    monkeypatch.setattr(config, "tag_list_of_host", lambda h: {hostname: tags}[h])
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
+
     assert config.is_no_ip_host(hostname) == result
+    assert config.HostConfig(hostname).is_no_ip_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result,ruleset", [
@@ -56,14 +120,14 @@ def test_is_no_ip_host(monkeypatch, hostname, tags, result):
     ("testhost", ["no-ip"], False, []),
 ])
 def test_is_ipv6_primary_host(monkeypatch, hostname, tags, result, ruleset):
-    monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, "|".join(tags))])
-    monkeypatch.setattr(config, "host_paths", {hostname: "/"})
-    monkeypatch.setattr(config, "tag_list_of_host", lambda h: {hostname: tags}[h])
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
     monkeypatch.setattr(config, "primary_address_family", ruleset)
 
     config.get_config_cache().initialize()
 
     assert config.is_ipv6_primary(hostname) == result
+    assert config.HostConfig(hostname).is_ipv6_primary == result
 
 
 @pytest.mark.parametrize("result,attrs", [
@@ -98,7 +162,27 @@ def test_management_address_of(monkeypatch, attrs, result):
 def test_is_tcp_host(monkeypatch, hostname, tags, result):
     _setup_host(monkeypatch, hostname, tags)
     config.get_config_cache().initialize()
+
     assert config.is_tcp_host(hostname) == result
+    assert config.HostConfig(hostname).is_tcp_host == result
+
+
+@pytest.mark.parametrize("hostname,tags,result", [
+    ("testhost", [], False),
+    ("testhost", ["cmk-agent"], False),
+    ("testhost", ["snmp", "tcp"], False),
+    ("testhost", ["snmp", "tcp", "ping"], False),
+    ("testhost", ["snmp"], False),
+    ("testhost", ["no-agent", "no-snmp", "no-piggyback"], True),
+    ("testhost", ["no-agent", "no-snmp"], True),
+    ("testhost", ["ping"], True),
+])
+def test_is_ping_host(monkeypatch, hostname, tags, result):
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
+
+    assert config.is_ping_host(hostname) == result
+    assert config.HostConfig(hostname).is_ping_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -110,7 +194,25 @@ def test_is_tcp_host(monkeypatch, hostname, tags, result):
 def test_is_snmp_host(monkeypatch, hostname, tags, result):
     _setup_host(monkeypatch, hostname, tags)
     config.get_config_cache().initialize()
+
     assert config.is_snmp_host(hostname) == result
+    assert config.HostConfig(hostname).is_snmp_host == result
+
+
+@pytest.mark.parametrize("hostname,tags,result", [
+    ("testhost", [], False),
+    ("testhost", ["tcp"], False),
+    ("testhost", ["snmp"], False),
+    ("testhost", ["cmk-agent", "snmp"], False),
+    ("testhost", ["no-agent", "no-snmp"], False),
+    ("testhost", ["tcp", "snmp"], True),
+])
+def test_is_dual_host(monkeypatch, hostname, tags, result):
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
+
+    assert config.is_dual_host(hostname) == result
+    assert config.HostConfig(hostname).is_dual_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -121,8 +223,11 @@ def test_is_snmp_host(monkeypatch, hostname, tags, result):
     ("testhost", ["cmk-agent"], False),
 ])
 def test_is_all_agents_host(monkeypatch, hostname, tags, result):
-    monkeypatch.setattr(config, "tag_list_of_host", lambda h: {hostname: tags}[h])
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
+
     assert config.is_all_agents_host(hostname) == result
+    assert config.HostConfig(hostname).is_all_agents_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -133,8 +238,11 @@ def test_is_all_agents_host(monkeypatch, hostname, tags, result):
     ("testhost", ["cmk-agent"], False),
 ])
 def test_is_all_special_agents_host(monkeypatch, hostname, tags, result):
-    monkeypatch.setattr(config, "tag_list_of_host", lambda h: {hostname: tags}[h])
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
+
     assert config.is_all_special_agents_host(hostname) == result
+    assert config.HostConfig(hostname).is_all_special_agents_host == result
 
 
 def test_prepare_check_command_basics():

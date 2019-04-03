@@ -69,7 +69,7 @@ set el=%errorlevel%
 @del save.tmp > nul
 git update-index --no-assume-unchanged install/resources/check_mk.dat > nul
 if not %el% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit 88
-copy %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent_update.msi
+move %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent_update.msi
 
 
 %msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x64
@@ -93,11 +93,14 @@ powershell Write-Host "Killing msi in artefacts" -Foreground Red
 call %cur_dir%\clean_artefacts.cmd 
 exit 100
 :end
-copy %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent.msi
-copy %REMOTE_MACHINE%\check_mk_service32.exe %REMOTE_MACHINE%\check_mk_agent.exe
-copy %REMOTE_MACHINE%\check_mk_service64.exe %REMOTE_MACHINE%\check_mk_agent-64.exe
+pushd %REMOTE_MACHINE%
+
+copy check_mk_service.msi check_mk_agent.msi
+copy check_mk_service32.exe check_mk_agent.exe
+copy check_mk_service64.exe check_mk_agent-64.exe
 
 rem touching update msi
-copy %REMOTE_MACHINE%\check_mk_agent_update.msi /B+ ,,/Y > nul
+copy check_mk_agent_update.msi /B+ ,,/Y > nul
+popd
 
 

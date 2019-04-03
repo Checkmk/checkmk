@@ -1,19 +1,17 @@
 # pylint: disable=redefined-outer-name
 
-from contextlib import contextmanager
 from datetime import datetime
 import os
 import time
 
 import pytest
-import freezegun
 
 import cmk.utils.prediction
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk_base import prediction
 
-from testlib import web, repo_path, create_linux_test_host  # pylint: disable=unused-import
+from testlib import web, repo_path, create_linux_test_host, on_time  # pylint: disable=unused-import
 
 
 @pytest.fixture(scope="module")
@@ -50,17 +48,6 @@ custom_checks = [
     # Cleanup
     site.delete_file("etc/check_mk/conf.d/linux_test_host_%s_cpu_load.mk" % hostname)
     site.delete_dir("var/check_mk/rrd")
-
-
-@contextmanager
-def on_time(utctime, timezone):
-    """Set the time and timezone for the test"""
-    os.environ['TZ'] = timezone
-    time.tzset()
-    with freezegun.freeze_time(utctime):
-        yield
-    os.environ.pop('TZ')
-    time.tzset()
 
 
 @pytest.mark.parametrize('utcdate, timezone, period, result', [

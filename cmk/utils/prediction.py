@@ -159,6 +159,15 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
     return TimeSeries(response)
 
 
+def rrd_datacolum(hostname, service_description, varname, cf):
+    "Partial helper function to get rrd data"
+
+    def time_boundaries(fromtime, untiltime):
+        return get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime)
+
+    return time_boundaries
+
+
 def predictions_dir(hostname, service_description, dsname, create=False):
     pred_dir = os.path.join(cmk.utils.paths.var_dir, "prediction", hostname,
                             cmk.utils.pnp_cleanup(service_description),

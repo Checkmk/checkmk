@@ -105,24 +105,34 @@ def get_prediction_timegroup(t, period_info):
     return timegroup, from_time, until_time, rel_time
 
 
-def retrieve_grouped_data_from_rrd(hostname, service_description, timegroup, params, period_info,
-                                   from_time, dsname, cf):
-    # Collect all slices back into the past until the time horizon
-    # is reached
-    from_time = int(from_time)
+def time_slices(timestamp, horizon, period_info, timegroup):
+    "Collect all slices back into the past until time horizon is reached"
+    timestamp = int(timestamp)
+    abs_begin = timestamp - horizon
     slices = []
-    absolute_begin = from_time - int(params["horizon"]) * 86400
 
-    # Note: due to the f**king DST, we can have several shifts between
-    # DST and non-DST during are computation. We need to compensate for
-    # those. DST swaps within slices are being ignored. The DST flag
-    # is checked against the beginning of the slice.
-    for begin in range(from_time, absolute_begin, -period_info["slice"]):
-        tg, fr, un = get_prediction_timegroup(begin, period_info)[:3]
+    # Note: due to the f**king DST, we can have several shifts between DST
+    # and non-DST during a computation. Treatment is unfair on those longer
+    # or shorter days. All days have 24hrs. DST swaps within slices are
+    # being ignored, we work with slice shifts. The DST flag is checked
+    # against the query timestamp. In general that means test is done at
+    # the beginning of the day(because predictive levels refresh at
+    # midnight) and most likely before DST swap is applied.
+
+    # Have fun understanding the tests for this function.
+
+    for begin in range(timestamp, abs_begin, -period_info["slice"]):
+        tg, start, end = get_prediction_timegroup(begin, period_info)[:3]
         if tg == timegroup:
-            timeseries = cmk.utils.prediction.get_rrd_data(hostname, service_description, dsname,
-                                                           cf, fr, un)
-            slices.append((timeseries, from_time - fr))
+            slices.append((start, end))
+    return slices
+
+
+def retrieve_grouped_data_from_rrd(rrd_column, time_windows, from_time):
+    "Collect all time slices and up-sample them to same resolution"
+    from_time = int(from_time)
+
+    slices = [(rrd_column(start, end), from_time - start) for start, end in time_windows]
 
     # The resolutions of the different time ranges differ. We upsample
     # to the best resolution. We assume that the youngest slice has the
@@ -158,8 +168,10 @@ def aggregate_data_for_prediction_and_save(hostname, service_description, pred_f
 
     timegroup, from_time, until_time, _rel_time = get_prediction_timegroup(now, period_info)
     logger.verbose("Aggregating data for time group %s", timegroup)
-    twindow, slices = retrieve_grouped_data_from_rrd(hostname, service_description, timegroup,
-                                                     params, period_info, from_time, dsname, cf)
+
+    time_windows = time_slices(from_time, int(params["horizon"] * 86400), period_info, timegroup)
+    rrd_database = cmk.utils.prediction.rrd_datacolum(hostname, service_description, dsname, cf)
+    twindow, slices = retrieve_grouped_data_from_rrd(rrd_database, time_windows, from_time)
 
     descriptors = data_stats(slices)
 

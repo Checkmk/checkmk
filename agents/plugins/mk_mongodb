@@ -15,12 +15,7 @@ import os
 import pprint
 import sys
 import time
-
-try:
-    import pymongo
-except ImportError:
-    sys.stderr.write("ERROR: Unable to import pymongo module\n")
-    sys.exit(2)
+import pymongo  # pylint: disable=import-error
 
 
 def main():  # pylint: disable=too-many-branches,too-many-locals

@@ -2775,11 +2775,12 @@ cmk_base.cleanup.register_cleanup(check_api_utils.reset_hostname)
 
 
 class HostConfig(object):
-    def __init__(self, hostname):
+    def __init__(self, config_cache, hostname):
+        # type: (ConfigCache, str) -> None
         super(HostConfig, self).__init__()
         self.hostname = hostname
 
-        self._config_cache = get_config_cache()
+        self._config_cache = config_cache
 
         self.is_cluster = is_cluster(hostname)
         self.part_of_clusters = self._config_cache.clusters_of(hostname)
@@ -2939,7 +2940,7 @@ class ConfigCache(object):
         if host_config:
             return host_config
 
-        host_config = self._host_configs[hostname] = HostConfig(hostname)
+        host_config = self._host_configs[hostname] = HostConfig(self, hostname)
         return host_config
 
     def _collect_hosttags(self):

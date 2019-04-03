@@ -140,6 +140,9 @@ def configure_service_tags(site, web):
 
 
 def test_service_custom_variables(configure_service_tags, default_cfg, site):
+    if default_cfg.core == "nagios":
+        pytest.skip("Disabled until tags column is supported by play nagios")
+
     rows = site.live.query("GET services\n"
                            "Columns: custom_variables tags\n"
                            "Filter: host_name = livestatus-test-host\n"

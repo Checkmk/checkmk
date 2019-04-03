@@ -1,20 +1,20 @@
 #!/usr/bin/python
-# Monitor MongoDB on Linux
+"""Monitor MongoDB on Linux
 
+This agent plugin creates various sections out of the MongoDB server status information.
+Important: 1) If MongoDB runs as single instance the agent data is assigned
+              to the host same host where the plugin resides.
+
+           2) If MongoDB is deployed as replica set the agent data is piggybacked
+              to a different hostname, name after the replica set name.
+              You have to create a new host in the monitoring system matching the
+              replica set name, or use the piggyback translation rule to modify the
+              hostname according to your needs.
+"""
 import os
 import pprint
 import sys
 import time
-
-# This agent plugin creates various sections out of the MongoDB server status information.
-# Important: 1) If MongoDB runs as single instance the agent data is assigned
-#               to the host same host where the plugin resides.
-#
-#            2) If MongoDB is deployed as replica set the agent data is piggybacked
-#               to a different hostname, name after the replica set name.
-#               You have to create a new host in the monitoring system matching the
-#               replica set name, or use the piggyback translation rule to modify the
-#               hostname according to your needs.
 
 try:
     import pymongo

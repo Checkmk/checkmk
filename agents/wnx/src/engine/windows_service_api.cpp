@@ -12,7 +12,7 @@
 #include "tools/_kbd.h"
 #include "tools/_process.h"
 
-#include "service_api.h"          // install
+#include "install_api.h"          // install
 #include "service_processor.h"    // cmk service implementation class
 #include "windows_service_api.h"  // windows api abstracted
 
@@ -371,34 +371,36 @@ int ExecSection(const std::wstring& SecName, int RepeatPause,
 // THIS ROUTINE DOESN'T USE wtools::ServiceController and Windows Service API
 // Just internal to debug logic
 int ExecMainService(bool DuplicateOn) {
-    using namespace cma::srv;
     using namespace std::chrono;
     using namespace cma::install;
 
     milliseconds Delay = 1000ms;
     auto processor = new ServiceProcessor(Delay, [](const void* Processor) {
-        // default embedded callback for exec
-        // optional commands listed here
-        // ********
-        // 1. Auto Update when  msi file is located by specified address
-        CheckForUpdateFile(kDefaultMsiFileName, GetMsiUpdateDirectory(),
+#if 0
+        // #TODO planned test
+        CheckForUpdateFile(kDefaultMsiFileName, cma::cfg::GetUpdateDir(),
                            UpdateType::kMsiExecQuiet, true);
+#endif
         return true;
     });
 
     processor->startService();
 
     try {
-        std::string cmd;
+        // setup output
         if (DuplicateOn) XLOG::setup::DuplicateOnStdio(true);
         XLOG::setup::ColoredOutputOnStdio(true);
+
         XLOG::l.i("Press any key to stop");
-        auto ret = cma::tools::GetKeyPress();
+
+        cma::tools::GetKeyPress();  // blocking  wait for key press
     } catch (const std::exception& e) {
         xlog::l("Exception \"%s\"", e.what());
     }
-    XLOG::l.i("Server is stopping");
+
+    XLOG::l.i("Server is going to stop");
     processor->stopService();
+
     if (DuplicateOn) XLOG::setup::DuplicateOnStdio(false);
 
     return 0;
@@ -520,14 +522,18 @@ int ExecSkypeTest() {
     return 0;
 }
 
-// normal BLOCKING FOR EVER CALL
-// blocking call from the Windows Service Manager
+// entry point in service mode
+// normally this is "BLOCKING FOR EVER"
+// called by Windows Service Manager
 // exception free
 // returns -1 on failure
 int ServiceAsService(
     std::chrono::milliseconds Delay,
     std::function<bool(const void* Processor)> InternalCallback) noexcept {
-    using namespace cma::srv;
+    XLOG::l.i("service to run");
+
+    cma::OnStartApp();               // path from service
+    ON_OUT_OF_SCOPE(cma::OnExit());  // we are sure that this is last foo
 
     // infinite loop to protect from exception
     while (1) {
@@ -538,14 +544,16 @@ int ServiceAsService(
                 cma::srv::kServiceName);  // we will stay here till
                                           // service will be stopped
                                           // itself or from outside
+            XLOG::l.i("Service is stopped {}",
+                      ret ? "" : "due to abnormal situation");
             return ret ? 0 : -1;
         } catch (const std::exception& e) {
-            XLOG::l.crit("Exception hit {} in main proc", e.what());
+            XLOG::l.crit("Exception hit {} in ServiceAsService", e.what());
         } catch (...) {
-            XLOG::l.crit("Unknown Exception in main proc");
+            XLOG::l.crit("Unknown Exception in ServiceAsService");
         }
     }
-    // unreachable
+    // reachable only on service stop
 }
 
 }  // namespace srv

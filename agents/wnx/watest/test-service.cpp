@@ -9,10 +9,6 @@
 
 #include "service_processor.h"
 
-#include "service_api.h"
-
-#include "windows_service_api.h"
-
 namespace wtools {  // to become friendly for wtools classes
 class TestProcessor : public wtools::BaseServiceProcessor {
 public:
@@ -37,8 +33,6 @@ public:
     static int s_counter;
 };  // namespace wtoolsclassTestProcessor:publiccma::srv::BaseServiceProcessor
 int TestProcessor::s_counter = 0;
-
-#include <iostream>
 
 TEST(ServiceControllerTest, CreateDelete) {
     using namespace std::chrono;
@@ -121,40 +115,6 @@ TEST(ServiceControllerTest, StartStop) {
 }
 
 }  // namespace wtools
-
-TEST(ServiceApiTest, Base) {
-    using namespace cma::install;
-    using namespace cma::tools;
-    auto msi = cma::cfg::GetMsiExecPath();
-    EXPECT_TRUE(!msi.empty());
-    auto path = win::GetSomeSystemFolder(FOLDERID_Public);
-    std::ofstream f;
-    try {
-        // artificial file creation
-        f.open(path + L"\\test.dat", std::ios::binary);
-        char buf[] = "-----\n";
-        f.write(buf, strlen(buf) + 1);
-        f.close();
-
-        // check for presence
-        auto ret = IsFileExist(path + L"\\test.dat");
-        EXPECT_TRUE(ret);
-
-        // check MakTemp...
-        auto to_install = MakeTempFileNameInTempPath(L"test.dat");
-        EXPECT_TRUE(!to_install.empty());
-        if (ret) {
-            auto result =
-                CheckForUpdateFile(L"test.dat", path, kMsiExecQuiet, false);
-            EXPECT_TRUE(result);
-
-            EXPECT_TRUE(IsFileExist(to_install));
-            EXPECT_TRUE(!IsFileExist(path + L"\\test.dat"));
-        }
-    } catch (const std::exception& e) {
-        xlog::l(XLOG_FLINE + "exception opening file %s", e.what());
-    }
-}
 
 TEST(Misc, All) {
     {

@@ -32,7 +32,8 @@ enum Error {
 
 namespace dirs {
 constexpr const wchar_t* kCapInstallDir = L"install";
-}
+constexpr const wchar_t* kMsiInstallDir = L"install";
+}  // namespace dirs
 
 namespace files {
 
@@ -109,6 +110,7 @@ std::wstring GetPathOfUserConfig() noexcept;
 std::wstring GetPathOfLoadedConfig() noexcept;
 std::string GetPathOfLoadedConfigAsString() noexcept;
 
+// official
 std::wstring GetUserPluginsDir() noexcept;
 std::wstring GetSystemPluginsDir() noexcept;
 std::wstring GetRootDir() noexcept;
@@ -119,6 +121,7 @@ std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
 std::wstring GetPluginConfigDir() noexcept;
 std::wstring GetUpdateDir() noexcept;
+std::wstring GetMsiBackupDir() noexcept; // storage for MSI installed
 std::wstring GetSpoolDir() noexcept;
 std::wstring GetTempDir() noexcept;
 std::wstring GetLogDir() noexcept;

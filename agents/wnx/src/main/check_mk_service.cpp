@@ -13,7 +13,7 @@
 
 // Project
 #include "common/cmdline_info.h"
-#include "service_api.h"
+#include "install_api.h"
 #include "windows_service_api.h"
 
 // Personal
@@ -121,7 +121,9 @@ static void ServiceUsage(const std::wstring &Comment) {
 }
 
 namespace cma {
-bool G_Service = false;
+
+bool G_Service = false;  // set to true only when we run service
+
 StartTypes AppDefaultType() {
     return G_Service ? StartTypes::kService : StartTypes::kExe;
 }
@@ -170,21 +172,26 @@ auto ToUint(const T W, uint32_t Dflt = 0) noexcept {
 // we want to test main function too.
 // so we have main, but callable
 int MainFunction(int argc, wchar_t const *Argv[]) {
-    // check for invalid parameters count
-    using namespace std::chrono;
-    using namespace cma::install;
     if (argc == 1) {
-        XLOG::l.i("service to run");
-        using namespace cma::srv;
-        G_Service = true;
-        cma::OnStartApp();  // path from service
-        ON_OUT_OF_SCOPE(cma::OnExit());
-        return ServiceAsService(1000ms, [](const void *) {
+        // entry from the service engine
+
+        using namespace cma::install;
+        using namespace std::chrono;
+        using namespace cma::cfg;
+
+        G_Service = true;  // we know that we are service
+
+        return cma::srv::ServiceAsService(1000ms, [](const void *) {
             // optional commands listed here
             // ********
-            // 1. Auto Update when  msi file is located by specified address
-            CheckForUpdateFile(kDefaultMsiFileName, GetMsiUpdateDirectory(),
-                               UpdateType::kMsiExecQuiet, true);
+            // 1. Auto Update when  MSI file is located by specified address
+            // this part of code have to be tested manually
+            // scripting is possible but complicated
+            CheckForUpdateFile(kDefaultMsiFileName,  // file we are looking for
+                               GetUpdateDir(),       // dir where file we're searching
+                               UpdateType::kMsiExecQuiet, // quiet for production
+                               true,                // start update when file found
+                               GetMsiBackupDir());  // dir where file to backup
             return true;
         });
     }

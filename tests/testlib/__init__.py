@@ -25,6 +25,7 @@ import pytest  # type: ignore
 import requests  # type: ignore
 import urllib3  # type: ignore
 from bs4 import BeautifulSoup  # type: ignore
+import freezegun
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -2139,3 +2140,14 @@ class SpecialAgent(object):
         assert self.name.startswith(
             'agent_'), 'Specify the full name of the active check, e.g. agent_3par'
         self.argument_func = config.special_agent_info[self.name[len('agent_'):]]
+
+
+@contextmanager
+def on_time(utctime, timezone):
+    """Set the time and timezone for the test"""
+    os.environ['TZ'] = timezone
+    time.tzset()
+    with freezegun.freeze_time(utctime):
+        yield
+    os.environ.pop('TZ')
+    time.tzset()

@@ -10,14 +10,14 @@ namespace cma {
 
 namespace install {
 enum UpdateType { kMsiExec, kMsiExecQuiet };
-constexpr const wchar_t* const kDefaultMsiFileName = L"check_mk_service.msi";
+constexpr const wchar_t* const kDefaultMsiFileName = L"check_mk_agent.msi";
 
 std::wstring GetMsiUpdateDirectory();
 
 // StartUpdateProcess == false when we only testing functionality
 bool CheckForUpdateFile(const std::wstring Name, const std::wstring Path,
                         UpdateType Update, bool StartUpdateProcess);
-std::wstring FindMsiExec();
+
 std::wstring MakeTempFileNameInTempPath(const std::wstring& Name);
 
 }  // namespace install

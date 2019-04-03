@@ -236,7 +236,11 @@ inline void KillProcessTree(uint32_t ProcessId) {
 
 class AppRunner {
 public:
-    AppRunner() : process_id_(0), exit_code_(STILL_ACTIVE), job_(nullptr) {}
+    AppRunner()
+        : process_id_(0)
+        , exit_code_(STILL_ACTIVE)
+        , job_handle_(nullptr)
+        , process_handle_(nullptr) {}
     ~AppRunner() {
         kill(true);
         stdio_.shutdown();
@@ -245,41 +249,7 @@ public:
 
     // returns process id
     uint32_t goExec(std::wstring CommandLine, bool Wait, bool InheritHandle,
-                    bool PipeOutput) noexcept {
-        try {
-            if (PipeOutput) {
-                stdio_.create();
-                stderr_.create();
-            }
-            cmd_line_ = CommandLine;
-            job_ = nullptr;
-            uint32_t proc_id = 0;
-            if (use_job_)
-                proc_id = cma::tools::RunStdCommandAsJob(
-                    job_, CommandLine.c_str(), InheritHandle, stdio_.getWrite(),
-                    stderr_.getWrite());
-            else
-                proc_id = cma::tools::RunStdCommand(
-                    CommandLine.c_str(), Wait, InheritHandle, stdio_.getWrite(),
-                    stderr_.getWrite());
-
-            if (proc_id) {
-                process_id_ = proc_id;
-                return proc_id;
-            }
-
-            xlog::l(XLOG_FLINE + " Failed RunStd: %d", GetLastError());
-
-            job_ = nullptr;
-            process_id_ = 0;
-            stdio_.shutdown();
-            stderr_.shutdown();
-            return 0;
-        } catch (const std::exception& e) {
-            xlog::l(XLOG_FLINE + " exception: %s", e.what());
-        }
-        return 0;
-    }
+                    bool PipeOutput) noexcept;
 
     void kill(bool KillTreeToo) {
         auto proc_id = process_id_.exchange(0);
@@ -290,10 +260,17 @@ public:
         }
 
         if (KillTreeToo) {
-            if (job_) {
-                TerminateJobObject(job_, 0);
-                CloseHandle(job_);
-                job_ = nullptr;
+            if (job_handle_) {
+			    // this is normal case but with job
+                TerminateJobObject(job_handle_, 0);
+                
+				// job:
+				CloseHandle(job_handle_);
+                job_handle_ = nullptr;
+				
+				// process:
+                CloseHandle(process_handle_); // must
+                process_handle_ = nullptr;
             } else {
                 KillProcessTree(proc_id);
             }
@@ -330,7 +307,8 @@ private:
     void setExitCode(uint32_t Code) { exit_code_ = Code; }
     std::wstring cmd_line_;
     std::atomic<uint32_t> process_id_;
-    HANDLE job_;
+    HANDLE job_handle_;
+    HANDLE process_handle_;
     SimplePipe stdio_;
     SimplePipe stderr_;
 
@@ -493,7 +471,6 @@ private:
 #endif
 
     std::vector<uint32_t> GetProcessListByParent(uint32_t ParentId) {
-        using namespace std;
         PROCESSENTRY32 pe32;
 
         // Take a snapshot of all processes in the system.
@@ -516,7 +493,7 @@ private:
         std::vector<uint32_t> processes;
         // Now walk the snapshot of processes
         do {
-            wstring str(pe32.szExeFile);
+            std::wstring str(pe32.szExeFile);
 
             if (pe32.th32ParentProcessID == ParentId)
                 processes.push_back(pe32.th32ProcessID);
@@ -532,7 +509,6 @@ private:
 // nice, yes?
 // gtest [+]
 inline std::string ConvertToUTF8(const std::wstring_view Src) noexcept {
-    using namespace std;
 #if defined(WINDOWS_OS)
     // Windows only
     auto in_len = static_cast<int>(Src.length());
@@ -673,15 +649,14 @@ inline int64_t QueryPerformanceCo() {
 // util to get in windows find path to your binary
 // MAY NOT WORK when you are running as a service
 inline std::wstring GetCurrentExePath() noexcept {
-    using namespace std;
-    using namespace std::filesystem;
+    namespace fs = std::filesystem;
 
-    wstring exe_path;
+    std::wstring exe_path;
     int args_count = 0;
     auto arg_list = ::CommandLineToArgvW(GetCommandLineW(), &args_count);
     if (arg_list) {
         ON_OUT_OF_SCOPE(LocalFree(arg_list););
-        path exe = arg_list[0];
+        fs::path exe = arg_list[0];
         try {
             if (exists(exe)) {
                 exe_path = exe.parent_path();

@@ -148,6 +148,10 @@ std::wstring GetPluginConfigDir() noexcept {
     return details::G_ConfigInfo.getPluginConfigDir();
 }
 
+std::wstring GetUpdateDir() noexcept {
+    return details::G_ConfigInfo.getUpdateDir();
+}
+
 std::wstring GetSpoolDir() noexcept {
     return details::G_ConfigInfo.getSpoolDir();
 }
@@ -165,6 +169,10 @@ std::wstring GetLogDir() noexcept {
 }
 
 std::wstring GetWorkingDir() noexcept { return details::G_ConfigInfo.getCwd(); }
+
+std::wstring GetMsiExecPath() noexcept {
+    return details::G_ConfigInfo.getMsiExecPath();
+}
 
 // #TODO gtest
 bool IsLoadedConfigOk() noexcept { return details::G_ConfigInfo.isOk(); }
@@ -185,8 +193,8 @@ std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
     if (!fs::exists(Filename, ec)) {
-        XLOG::d("Attempting to save into cache not existing file '{}'",
-                Filename.u8string());
+        XLOG::d("Attempting to save into cache not existing file '{}' [{}]",
+                Filename.u8string(), ec.value());
         return {};
     }
 
@@ -208,9 +216,10 @@ std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
         fs::copy(fs::path(Filename), cache_file,
                  fs::copy_options::overwrite_existing, ec);
         if (ec.value() == 0) return cache_file.wstring();
-        XLOG::l("Attempt to copy config file to cache {} failed with error {}",
-                fs::path(Filename).u8string(), cache_file.u8string(),
-                ec.value());
+        XLOG::l(
+            "Attempt to copy config file to cache '{}' failed with error [{}], '{}'",
+            fs::path(Filename).u8string(), cache_file.u8string(), ec.value(),
+            ec.message());
 
     } catch (std::exception& e) {
         XLOG::l("Exception during YAML saving to cache {}", e.what());
@@ -318,8 +327,8 @@ bool Folders::setRoot(const std::wstring& ServiceValidName,  // look in registry
             auto p = Path.parent_path();
             full.emplace_back(p.lexically_normal());
         } else {
-            XLOG::l("Cannot emplace back path {}, error_code: {}",
-                    Path.u8string(), ec.value());
+            XLOG::l("Cannot emplace back path {}, error_code: [{}] '{}'",
+                    Path.u8string(), ec.value(), ec.message());
         }
     };
 
@@ -540,8 +549,8 @@ const std::wstring FindConfigFile(std::filesystem::path Dir,
     if (fs::exists(file_path, ec)) {
         return file_path.lexically_normal().wstring();
     }
-    XLOG::l("Config file '{}' not found status {}", file_path.u8string(),
-            ec.value());
+    XLOG::l("Config file '{}' not found, status [{}] '{}'",
+            file_path.u8string(), ec.value(), ec.message());
     return {};
 }
 };  // namespace cma::cfg
@@ -592,7 +601,6 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring FileName, int Fallback,
                                 int* ErrorCodePtr) noexcept {
     namespace fs = std::filesystem;
     auto file_name = wtools::ConvertToUTF8(FileName);
-    std::error_code ec;
     if (fs::exists(file_name)) {
         int error_code = 0;
         try {
@@ -622,18 +630,13 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring FileName, int Fallback,
         case FallbackPolicy::kNone:
             return {};
         case FallbackPolicy::kGenerateDefault:
-            xlog::l(XLOG_FLINE + " Error: Fallback %d NOT SUPPORTED", Fallback);
-            return {};
         case FallbackPolicy::kLastGoodOnly:
-            xlog::l(XLOG_FLINE + " Error: Fallback %d NOT SUPPORTED", Fallback);
-            return {};
         case FallbackPolicy::kStandard:
-            // try to use last good
-            // generate good one and return
-            xlog::l(XLOG_FLINE + " Error: Fallback %d NOT SUPPORTED", Fallback);
+            XLOG::l(XLOG_FLINE + " Error: Fallback [{}] NOT SUPPORTED",
+                    Fallback);
             return {};
         default:
-            xlog::l(XLOG_FLINE + " Bad value used");
+            XLOG::l(XLOG_FLINE + " Bad value used [{}]", Fallback);
             return {};
     }
 }
@@ -711,12 +714,25 @@ void ConfigInfo::initEnvironment() {
     char host_name[256] = "";
     auto ret = ::gethostname(host_name, 256);
     if (ret != 0) {
-        XLOG::l("Can\'t call gethostname, error {}", ret);
+        XLOG::l("Can\'t call gethostname, error [{}]", ret);
     }
     host_name_ = host_name;
 
     // working directory
     cwd_ = fs::current_path().wstring();
+
+    // msi exec
+    path_to_msi_exec_.clear();
+    fs::path p = cma::tools::win::GetSystem32Folder();
+    p /= "msiexec.exe";
+    std::error_code ec;
+    if (fs::exists(p, ec)) {
+        XLOG::l.i("Found msiexec {}", p.u8string());
+        path_to_msi_exec_ = p.wstring();
+    } else
+        XLOG::l.crit(
+            "Cannot find msiexec {} error [{}] '{}', automatic update is not possible",
+            p.u8string(), ec.value(), ec.message());
 }
 
 // probably global in the future
@@ -737,7 +753,8 @@ static void PrepareEnvironment() {
         std::error_code ec;
         fs::remove_all(state_path, ec);
         if (ec.value()) {
-            XLOG::l("Not enough writes to clear state file folder");
+            XLOG::l("Not enough rights to clear state file folder [{}]",
+                    ec.value());
         }
         fs::create_directory(state_path);
     }
@@ -978,7 +995,8 @@ bool ConfigInfo::loadDirect(const std::filesystem::path FullPath) {
     fs::path fpath = file;
     std::error_code ec;
     if (!fs::exists(fpath, ec)) {
-        XLOG::l("File {} not found, code = {}", fpath.u8string(), ec.value());
+        XLOG::l("File {} not found, code = [{}] '{}'", fpath.u8string(),
+                ec.value(), ec.message());
         return false;
     }
     auto ftime = fs::last_write_time(fpath, ec);

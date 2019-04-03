@@ -1,7 +1,6 @@
 // test-wtools.cpp
 // windows mostly
 
-
 #include "pch.h"
 
 #include <filesystem>
@@ -16,6 +15,8 @@
 
 #include "read_file.h"
 #include "yaml-cpp/yaml.h"
+
+#include "test-tools.h"
 
 namespace wtools {  // to become friendly for cma::cfg classes
 
@@ -154,6 +155,28 @@ TEST(Wtools, AppRunnerCtorDtor) {
     EXPECT_EQ(app.getStdioRead(), null_handle);
     EXPECT_EQ(app.processId(), 0);
 }
+
+#if 0
+// this is example of code how to check leaks
+//
+TEST(Wtools, AppRunnerRunAndSTop) {
+    namespace fs = std::filesystem;
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+
+    fs::path temp_dir = cma::cfg::GetTempDir();
+    std::error_code ec;
+
+    auto exe = temp_dir / "a.cmd";
+
+    tst::CreateFile(exe, "@echo xxxxxx\n");
+    for (int i = 0; i < 30; i++) {
+        wtools::AppRunner app;
+        app.goExec(exe.wstring(), false, true, true);
+        cma::tools::sleep(1000);
+    }
+    EXPECT_TRUE(true);
+}
+#endif
 
 TEST(Wtools, SimplePipeBase) {
     wtools::SimplePipe pipe;

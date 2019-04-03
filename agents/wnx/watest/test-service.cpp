@@ -125,7 +125,7 @@ TEST(ServiceControllerTest, StartStop) {
 TEST(ServiceApiTest, Base) {
     using namespace cma::install;
     using namespace cma::tools;
-    auto msi = FindMsiExec();
+    auto msi = cma::cfg::GetMsiExecPath();
     EXPECT_TRUE(!msi.empty());
     auto path = win::GetSomeSystemFolder(FOLDERID_Public);
     std::ofstream f;

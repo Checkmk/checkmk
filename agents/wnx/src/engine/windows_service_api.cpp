@@ -12,6 +12,7 @@
 #include "tools/_kbd.h"
 #include "tools/_process.h"
 
+#include "service_api.h"          // install
 #include "service_processor.h"    // cmk service implementation class
 #include "windows_service_api.h"  // windows api abstracted
 
@@ -372,11 +373,16 @@ int ExecSection(const std::wstring& SecName, int RepeatPause,
 int ExecMainService(bool DuplicateOn) {
     using namespace cma::srv;
     using namespace std::chrono;
+    using namespace cma::install;
 
     milliseconds Delay = 1000ms;
     auto processor = new ServiceProcessor(Delay, [](const void* Processor) {
         // default embedded callback for exec
-        // atm does nothing
+        // optional commands listed here
+        // ********
+        // 1. Auto Update when  msi file is located by specified address
+        CheckForUpdateFile(kDefaultMsiFileName, GetMsiUpdateDirectory(),
+                           UpdateType::kMsiExecQuiet, true);
         return true;
     });
 
@@ -543,4 +549,4 @@ int ServiceAsService(
 }
 
 }  // namespace srv
-};  // namespace cma
+}  // namespace cma

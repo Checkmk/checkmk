@@ -97,6 +97,10 @@ public:
         return data_ / dirs::kCache;
     }
 
+    inline std::filesystem::path getUpdate() const {
+        return data_ / dirs::kUpdate;
+    }
+
     inline std::filesystem::path getPublicLogs() const { return public_logs_; }
     inline std::filesystem::path getPrivateLogs() const {
         return private_logs_;
@@ -284,6 +288,11 @@ public:
         return folders_.getPluginConfigPath();
     }
 
+    auto getUpdateDir() const {
+        std::lock_guard lk(lock_);
+        return folders_.getUpdate();
+    }
+
     auto getSpoolDir() const {
         std::lock_guard lk(lock_);
         return folders_.getSpool();
@@ -307,6 +316,11 @@ public:
     auto getLogFileDir() const {
         std::lock_guard lk(lock_);
         return logfile_dir_;
+    }
+
+    auto getMsiExecPath() const {
+        std::lock_guard lk(lock_);
+        return path_to_msi_exec_;
     }
 
     void setLogFileDir(const std::wstring& Path) {
@@ -351,6 +365,8 @@ private:
     std::string host_name_;
     std::wstring cwd_;
     std::wstring logfile_dir_;
+
+    std::wstring path_to_msi_exec_;
 
     // #TODO
     void GenerateDefaultConfig() {}

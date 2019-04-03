@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <string>
+#include <tuple>
 
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
@@ -111,14 +112,14 @@ inline uint32_t RunStdCommand(
 
 // Tree controlling command
 // #TODO make right API from this wrapper
-inline uint32_t RunStdCommandAsJob(
-    HANDLE& Job,
+// returns [ProcId, JobHandle, ProcessHandle]
+inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     const std::wstring& Command,  // full command with arguments
     BOOL InheritHandle = FALSE,   // not optimal, but default
     HANDLE Stdio = 0,             // when we want to catch output
     HANDLE Stderr = 0,            // same
     DWORD CreationFlags = 0,      // never checked this
-    DWORD StartFlags = 0) {
+    DWORD StartFlags = 0) noexcept {
     // windows "boiler plate"
     STARTUPINFOW si{0};
     memset(&si, 0, sizeof(si));
@@ -134,26 +135,29 @@ inline uint32_t RunStdCommandAsJob(
 
     auto job_handle = CreateJobObjectA(nullptr, nullptr);
 
-    if (::CreateProcessW(NULL,  // stupid windows want null here
-                         const_cast<wchar_t*>(Command.c_str()),  // win32!
-                         nullptr,        // security attribute
-                         nullptr,        // thread attribute
-                         InheritHandle,  // handle inheritance
-                         CreationFlags,  // Creation Flags
-                         nullptr,        // environment
-                         nullptr,        // current directory
-                         &si, &pi)) {
-        auto process_id = pi.dwProcessId;
-        AssignProcessToJobObject(job_handle, pi.hProcess);
-        Job = job_handle;
+    if (!job_handle) return {0, nullptr, nullptr};
 
-        CloseHandle(pi.hThread);
-        return process_id;
+    if (!::CreateProcessW(NULL,  // stupid windows want null here
+                          const_cast<wchar_t*>(Command.c_str()),  // win32!
+                          nullptr,        // security attribute
+                          nullptr,        // thread attribute
+                          InheritHandle,  // handle inheritance
+                          CreationFlags,  // Creation Flags
+                          nullptr,        // environment
+                          nullptr,        // current directory
+                          &si, &pi)) {
+        // #TODO diagnostic here!
+        // clean out here. No process created
+        CloseHandle(job_handle);
+
+        return {0, nullptr, nullptr};
     }
 
-    ::CloseHandle(job_handle);
-    Job = 0;
-    return 0;
+    auto process_id = pi.dwProcessId;
+    AssignProcessToJobObject(job_handle, pi.hProcess);
+
+    CloseHandle(pi.hThread);
+    return {process_id, job_handle, pi.hProcess};
 }
 
 #if defined(_WIN32)

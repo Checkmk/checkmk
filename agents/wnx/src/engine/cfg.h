@@ -118,12 +118,15 @@ std::filesystem::path GetBakeryFile() noexcept;
 std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
 std::wstring GetPluginConfigDir() noexcept;
+std::wstring GetUpdateDir() noexcept;
 std::wstring GetSpoolDir() noexcept;
 std::wstring GetTempDir() noexcept;
 std::wstring GetLogDir() noexcept;
 std::string GetHostName() noexcept;
 std::wstring GetWorkingDir() noexcept;
 std::wstring GetWorkingDir() noexcept;
+std::wstring GetMsiExecPath() noexcept;
+
 bool IsLoadedConfigOk() noexcept;
 
 bool StoreUserYamlToCache() noexcept;
@@ -313,7 +316,6 @@ std::vector<T> GetArray(const YAML::Node& Yaml, std::string Name,
 // deprecated
 inline YAML::Node GetRootSection(std::string Section, int* Error = 0) noexcept {
     using namespace cma::cfg;
-    using namespace std;
 
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {

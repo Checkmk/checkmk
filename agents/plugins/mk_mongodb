@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # Monitor MongoDB on Linux
 
+import os
+import pprint
 import sys
 import time
-import pprint
-import os
 
 # This agent plugin creates various sections out of the MongoDB server status information.
 # Important: 1) If MongoDB runs as single instance the agent data is assigned
@@ -22,183 +22,191 @@ except ImportError, e:
     sys.stderr.write("ERROR: Unable to import pymongo module\n")
     sys.exit(2)
 
-# TODO: might be implemented in the future..
-host = None
-port = None
 
-try:
-    con = pymongo.MongoClient(host, port)
+def main():
+    # pylint: disable=too-many-branches,unused-variable
+    # TODO: might be implemented in the future..
+    host = None
+    port = None
+
     try:
-        # pylint: disable=no-member
-        con = pymongo.database_names()
+        con = pymongo.MongoClient(host, port)
+        try:
+            # pylint: disable=no-member
+            con = pymongo.database_names()
+        except:
+            con = pymongo.MongoClient(None, None, read_preference=pymongo.ReadPreference.SECONDARY)
+
+        con.admin.read_preference = pymongo.ReadPreference.SECONDARY
+
+        # if user and passwd:
+        #     db = con["admin"]
+        #     if not db.authenticate(user, passwd):
+        #        sys.exit("Username/Password incorrect")
+
+        server_status = con.admin.command("serverStatus")
     except:
-        con = pymongo.MongoClient(None, None, read_preference=pymongo.ReadPreference.SECONDARY)
-
-    con.admin.read_preference = pymongo.ReadPreference.SECONDARY
-
-    # if user and passwd:
-    #     db = con["admin"]
-    #     if not db.authenticate(user, passwd):
-    #        sys.exit("Username/Password incorrect")
-
-    server_status = con.admin.command("serverStatus")
-except:
-    sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
-    sys.stdout.write("error\tInstance is down\n")
-    sys.exit(0)
-
-server_version = tuple(con.server_info()['version'].split('.'))
-
-repl_info = server_status.get("repl")
-
-sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
-if not repl_info:
-    sys.stdout.write("mode\tSingle Instance\n")
-else:
-    if repl_info.get("ismaster"):
-        sys.stdout.write("mode\tPrimary\n")
-    elif repl_info.get("secondary"):
-        sys.stdout.write("mode\tSecondary\n")
-    else:
-        sys.stdout.write("mode\tArbiter\n")
-    sys.stdout.write("address\t%s\n" % repl_info["me"])
-
-sys.stdout.write("version\t%s\n" % server_status["version"])
-sys.stdout.write("pid\t%s\n" % server_status["pid"])
-
-if repl_info:
-    if not repl_info.get("ismaster"):
+        sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
+        sys.stdout.write("error\tInstance is down\n")
         sys.exit(0)
-    sys.stdout.write("<<<<%s>>>>\n" % repl_info["setName"])
-    sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
-    sys.stdout.write("primary\t%s\n" % repl_info.get("primary"))
-    sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
-    sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
 
-    sys.stdout.write("<<<mongodb_replstatus>>>\n")
-    sys.stdout.write(pprint.pformat(con.admin.command("replSetGetStatus")))
+    server_version = tuple(con.server_info()['version'].split('.'))
 
-sys.stdout.write("<<<mongodb_asserts>>>\n")
-for key, value in server_status.get("asserts", {}).items():
-    sys.stdout.write("%s %s\n" % (key, value))
+    repl_info = server_status.get("repl")
 
-sys.stdout.write("<<<mongodb_connections>>>\n")
-sys.stdout.write("%s\n" % "\n".join("%s %s" % x for x in server_status["connections"].items()))
+    sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
+    if not repl_info:
+        sys.stdout.write("mode\tSingle Instance\n")
+    else:
+        if repl_info.get("ismaster"):
+            sys.stdout.write("mode\tPrimary\n")
+        elif repl_info.get("secondary"):
+            sys.stdout.write("mode\tSecondary\n")
+        else:
+            sys.stdout.write("mode\tArbiter\n")
+        sys.stdout.write("address\t%s\n" % repl_info["me"])
 
-databases = {x: {} for x in con.database_names()}
+    sys.stdout.write("version\t%s\n" % server_status["version"])
+    sys.stdout.write("pid\t%s\n" % server_status["pid"])
 
-for name in databases.keys():
-    databases[name]["collections"] = con[name].collection_names()
-    databases[name]["stats"] = con[name].command("dbstats")
-    databases[name]["collstats"] = {}
-    for collection in databases[name]["collections"]:
-        databases[name]["collstats"][collection] = con[name].command("collstats", collection)
+    if repl_info:
+        if not repl_info.get("ismaster"):
+            sys.exit(0)
+        sys.stdout.write("<<<<%s>>>>\n" % repl_info["setName"])
+        sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
+        sys.stdout.write("primary\t%s\n" % repl_info.get("primary"))
+        sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
+        sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
 
-sys.stdout.write("<<<mongodb_chunks>>>\n")
-col = con.config.chunks
-for db_name, db_data in databases.items():
-    shards = col.distinct("shard")
-    sys.stdout.write("shardcount %d\n" % len(shards))
-    for collection in db_data.get("collections"):
-        nsfilter = "%s.%s" % (db_name, collection)
-        sys.stdout.write("nscount %s %s\n" % (nsfilter, col.find({"ns": nsfilter}).count()))
-        for shard in shards:
-            sys.stdout.write("shardmatches %s#%s %s\n" % (nsfilter, shard,
-                                                          col.find({
-                                                              "ns": nsfilter,
-                                                              "shard": shard
-                                                          }).count()))
+        sys.stdout.write("<<<mongodb_replstatus>>>\n")
+        sys.stdout.write(pprint.pformat(con.admin.command("replSetGetStatus")))
 
-sys.stdout.write("<<<mongodb_locks>>>\n")
-global_lock_info = server_status.get("globalLock")
-if global_lock_info:
-    for what in ["activeClients", "currentQueue"]:
-        if what in global_lock_info:
-            for key, value in global_lock_info[what].items():
-                sys.stdout.write("%s %s %s\n" % (what, key, value))
+    sys.stdout.write("<<<mongodb_asserts>>>\n")
+    for key, value in server_status.get("asserts", {}).items():
+        sys.stdout.write("%s %s\n" % (key, value))
 
-sys.stdout.write("<<<mongodb_flushing>>>\n")
-sys.stdout.write("average_ms %s\n" % server_status["backgroundFlushing"]["average_ms"])
-sys.stdout.write("last_ms %s\n" % server_status["backgroundFlushing"]["last_ms"])
-sys.stdout.write("flushed %s\n" % server_status["backgroundFlushing"]["flushes"])
+    sys.stdout.write("<<<mongodb_connections>>>\n")
+    sys.stdout.write("%s\n" % "\n".join("%s %s" % x for x in server_status["connections"].items()))
 
-# Unused
-#try:
-#    if server_version >= tuple("2.4.0".split(".")):
-#        indexCounters = server_status['indexCounters']
-#    else:
-#        indexCounters = server_status['indexCounters']["btree"]
-#    print "<<<mongodb_indexcounters>>>"
-#    for key, value in indexCounters.items():
-#        print "%s %s" % (key, value)
-#except:
-#    pass
+    databases = {x: {} for x in con.database_names()}
 
-sys.stdout.write("<<<mongodb_mem>>>\n")
-for key, value in server_status["mem"].items():
-    sys.stdout.write("%s %s\n" % (key, value))
-for key, value in server_status["extra_info"].items():
-    sys.stdout.write("%s %s\n" % (key, value))
+    for name in databases.keys():
+        databases[name]["collections"] = con[name].collection_names()
+        databases[name]["stats"] = con[name].command("dbstats")
+        databases[name]["collstats"] = {}
+        for collection in databases[name]["collections"]:
+            databases[name]["collstats"][collection] = con[name].command("collstats", collection)
 
-sys.stdout.write("<<<mongodb_counters>>>\n")
-for what in ["opcounters", "opcountersRepl"]:
-    for key, value in server_status.get(what, {}).items():
-        sys.stdout.write("%s %s %s\n" % (what, key, value))
+    sys.stdout.write("<<<mongodb_chunks>>>\n")
+    col = con.config.chunks
+    for db_name, db_data in databases.items():
+        shards = col.distinct("shard")
+        sys.stdout.write("shardcount %d\n" % len(shards))
+        for collection in db_data.get("collections"):
+            nsfilter = "%s.%s" % (db_name, collection)
+            sys.stdout.write("nscount %s %s\n" % (nsfilter, col.find({"ns": nsfilter}).count()))
+            for shard in shards:
+                sys.stdout.write("shardmatches %s#%s %s\n" % (nsfilter, shard,
+                                                              col.find({
+                                                                  "ns": nsfilter,
+                                                                  "shard": shard
+                                                              }).count()))
 
-sys.stdout.write("<<<mongodb_collections:sep(9)>>>\n")
-for dbname, dbdata in databases.items():
-    for collname, colldata in dbdata.get("collstats", {}).items():
-        for what, value in colldata.items():
-            sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, what, value))
+    sys.stdout.write("<<<mongodb_locks>>>\n")
+    global_lock_info = server_status.get("globalLock")
+    if global_lock_info:
+        for what in ["activeClients", "currentQueue"]:
+            if what in global_lock_info:
+                for key, value in global_lock_info[what].items():
+                    sys.stdout.write("%s %s %s\n" % (what, key, value))
 
-sys.stdout.write("<<<logwatch>>>\n")
-sys.stdout.write("[[[MongoDB startupWarnings]]]\n")
-startup_warnings = con.admin.command({"getLog": "startupWarnings"})
+    sys.stdout.write("<<<mongodb_flushing>>>\n")
+    sys.stdout.write("average_ms %s\n" % server_status["backgroundFlushing"]["average_ms"])
+    sys.stdout.write("last_ms %s\n" % server_status["backgroundFlushing"]["last_ms"])
+    sys.stdout.write("flushed %s\n" % server_status["backgroundFlushing"]["flushes"])
 
-var_dir = os.environ.get("MK_VARDIR")
-if var_dir:
-    state_file = "%s/mongodb.state" % var_dir
-    last_timestamp = None
-    output_all = False
+    # Unused
+    #try:
+    #    if server_version >= tuple("2.4.0".split(".")):
+    #        indexCounters = server_status['indexCounters']
+    #    else:
+    #        indexCounters = server_status['indexCounters']["btree"]
+    #    print "<<<mongodb_indexcounters>>>"
+    #    for key, value in indexCounters.items():
+    #        print "%s %s" % (key, value)
+    #except:
+    #    pass
 
-    # Supports: Nov  6 13:44:09
-    #           2015-10-17T05:35:24
-    def get_timestamp(text):
-        for pattern in ["%a %b %d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
-            try:
-                result = time.mktime(time.strptime(text, pattern))
-                return result
-            except:
-                continue
+    sys.stdout.write("<<<mongodb_mem>>>\n")
+    for key, value in server_status["mem"].items():
+        sys.stdout.write("%s %s\n" % (key, value))
+    for key, value in server_status["extra_info"].items():
+        sys.stdout.write("%s %s\n" % (key, value))
 
-    year_available = False
-    if os.path.exists(state_file):
-        last_timestamp = int(file(state_file).read())
-        if time.localtime(last_timestamp).tm_year >= 2015:
-            year_available = True
+    sys.stdout.write("<<<mongodb_counters>>>\n")
+    for what in ["opcounters", "opcountersRepl"]:
+        for key, value in server_status.get(what, {}).items():
+            sys.stdout.write("%s %s %s\n" % (what, key, value))
 
-        # Note: there is no year information in these loglines
-        # As workaround we look at the creation date (year) of the last statefile
-        # If it differs and there are new messages we start from the beginning
-        if not year_available:
-            statefile_year = time.localtime(os.stat(state_file).st_ctime).tm_year
-            if time.localtime().tm_year != statefile_year:
-                output_all = True
+    sys.stdout.write("<<<mongodb_collections:sep(9)>>>\n")
+    for dbname, dbdata in databases.items():
+        for collname, colldata in dbdata.get("collstats", {}).items():
+            for what, value in colldata.items():
+                sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, what, value))
 
-    for line in startup_warnings["log"]:
-        state = "C"
-        state_index = line.find("]") + 2
-        if len(line) == state_index or line[state_index:].startswith("**  "):
-            state = "."
+    sys.stdout.write("<<<logwatch>>>\n")
+    sys.stdout.write("[[[MongoDB startupWarnings]]]\n")
+    startup_warnings = con.admin.command({"getLog": "startupWarnings"})
 
-        if "** WARNING:" in line:
-            state = "W"
+    var_dir = os.environ.get("MK_VARDIR")
+    if var_dir:
+        state_file = "%s/mongodb.state" % var_dir
+        last_timestamp = None
+        output_all = False
 
-        if output_all or get_timestamp(line.split(".")[0]) > last_timestamp:
-            sys.stdout.write("%s %s\n" % (state, line))
+        # Supports: Nov  6 13:44:09
+        #           2015-10-17T05:35:24
+        def get_timestamp(text):
+            for pattern in ["%a %b %d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
+                try:
+                    result = time.mktime(time.strptime(text, pattern))
+                    return result
+                except:
+                    continue
 
-    # update state file
-    if startup_warnings["log"]:
-        file(state_file, "w").write("%d" % get_timestamp(startup_warnings["log"][-1].split(".")[0]))
+        year_available = False
+        if os.path.exists(state_file):
+            last_timestamp = int(file(state_file).read())
+            if time.localtime(last_timestamp).tm_year >= 2015:
+                year_available = True
 
-sys.stdout.write("<<<<>>>>\n")
+            # Note: there is no year information in these loglines
+            # As workaround we look at the creation date (year) of the last statefile
+            # If it differs and there are new messages we start from the beginning
+            if not year_available:
+                statefile_year = time.localtime(os.stat(state_file).st_ctime).tm_year
+                if time.localtime().tm_year != statefile_year:
+                    output_all = True
+
+        for line in startup_warnings["log"]:
+            state = "C"
+            state_index = line.find("]") + 2
+            if len(line) == state_index or line[state_index:].startswith("**  "):
+                state = "."
+
+            if "** WARNING:" in line:
+                state = "W"
+
+            if output_all or get_timestamp(line.split(".")[0]) > last_timestamp:
+                sys.stdout.write("%s %s\n" % (state, line))
+
+        # update state file
+        if startup_warnings["log"]:
+            file(state_file,
+                 "w").write("%d" % get_timestamp(startup_warnings["log"][-1].split(".")[0]))
+
+    sys.stdout.write("<<<<>>>>\n")
+
+
+if __name__ == "__main__":
+    sys.exit(main())

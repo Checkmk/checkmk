@@ -39,30 +39,29 @@ import cmk.utils.prediction
 logger = cmk.utils.log.get_logger(__name__)
 
 
-def day_start(timestamp):
-    return (timestamp - cmk.utils.prediction.timezone_at(timestamp)) % 86400
+def window_start(timestamp, span):
+    """If time is partitioned in SPAN intervals, how many seconds is TIMESTAMP away from the start
 
-
-def hour_start(timestamp):
-    return (timestamp - cmk.utils.prediction.timezone_at(timestamp)) % 3600
+    It works well across time zones, but has an unfair behavior with daylight savings time."""
+    return (timestamp - cmk.utils.prediction.timezone_at(timestamp)) % span
 
 
 def group_by_wday(t):
     wday = time.localtime(t).tm_wday
-    return defines.weekday_ids()[wday], day_start(t)
+    return defines.weekday_ids()[wday], window_start(t, 86400)
 
 
 def group_by_day(t):
-    return "everyday", day_start(t)
+    return "everyday", window_start(t, 86400)
 
 
 def group_by_day_of_month(t):
     mday = time.localtime(t).tm_mday
-    return str(mday), day_start(t)
+    return str(mday), window_start(t, 86400)
 
 
 def group_by_everyhour(t):
-    return "everyhour", hour_start(t)
+    return "everyhour", window_start(t, 3600)
 
 
 prediction_periods = {
@@ -101,7 +100,7 @@ def get_prediction_timegroup(t, period_info):
     # Convert to local timezone
     timegroup, rel_time = period_info["groupby"](t)
     from_time = t - rel_time
-    until_time = t - rel_time + period_info["slice"]
+    until_time = from_time + period_info["slice"]
     return timegroup, from_time, until_time, rel_time
 
 

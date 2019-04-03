@@ -1021,11 +1021,6 @@ class RulespecActiveChecksHttp(HostRulespec):
                          allow_empty=False)),
                     ("host", self._hostspec()),
                     ("proxy", self._proxyspec()),
-                    ("sni",
-                     FixedValue(
-                         value=True,
-                         totext="",
-                         title=_("Enable SSL/TLS hostname extension support (SNI)"))),
                     ("mode",
                      CascadingDropdown(
                          title=_("Mode of the Check"),
@@ -1274,6 +1269,15 @@ class RulespecActiveChecksHttp(HostRulespec):
                               )),
                          ],
                      )),
+                    ("disable_sni",
+                     FixedValue(
+                         value=True,
+                         totext="",
+                         title=_("Advanced: Disable SSL/TLS hostname extension support (SNI)"),
+                         help=_(
+                             "In earlier versions of Check_MK users had to enable SNI explicitly."
+                             " We now assume users allways want SNI support. If you don't, you"
+                             " can disable it with this option."))),
                 ],
                 required_keys=["name", "host", "mode"],
                 validate=self._validate_all,
@@ -1332,8 +1336,7 @@ class RulespecActiveChecksHttp(HostRulespec):
             if key in mode:
                 host_settings[key] = mode.pop(key)
 
-        if "sni" in mode:
-            transformed["sni"] = mode.pop("sni")
+        mode.pop("sni", None)
 
         return transformed
 

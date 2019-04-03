@@ -1,0 +1,15 @@
+Title: check_http: Enable SSL/TLS hostname extension support by default
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1554282151
+Class: fix
+
+Previously users had to {enable SSL/TLS hostname extension support} (SNI)
+explicitly. Omiting the option could result in unexpectedly checking
+different content/certificates than the {host address} option would suggest.
+We now assume users want SNI support. Users that relied on the previous
+behaviour of disabled SNI can disable SNI explicitly useing the option
+{Advanced: Disable SSL/TLS hostname extension support (SNI)}.

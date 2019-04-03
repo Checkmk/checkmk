@@ -58,8 +58,7 @@ def _transform_check_http(params):
         if key in mode:
             host_settings[key] = mode.pop(key)
 
-    if "sni" in mode:
-        transformed["sni"] = mode.pop("sni")
+    mode.pop("sni", None)
 
     return transformed
 
@@ -94,8 +93,8 @@ def _get_proxy(params):
     return ProxySettings(proxy.get("address"), proxy.get("port"), auth)
 
 
-def _certificate_args(host, proxy, settings, sni_flag):
-    args = []
+def _certificate_args(host, proxy, settings):
+    args = ['-H', host.address]
 
     if "cert_days" in settings:
         # legacy behavior
@@ -107,17 +106,12 @@ def _certificate_args(host, proxy, settings, sni_flag):
 
     if proxy:
         args += ['--ssl', '-j', 'CONNECT']
-    elif sni_flag:
-        args += ['-H', host.address]
 
     return args
 
 
-def _url_args(host, proxy, settings):
-    args = []
-
-    if "virthost" in settings:
-        args += ["-H", settings["virthost"]]
+def _url_args(host, _proxy, settings):
+    args = ["-H", settings.get("virthost", host.address)]
 
     if "uri" in settings:
         args += ['-u', settings["uri"]]
@@ -198,12 +192,12 @@ def _url_args(host, proxy, settings):
     return args
 
 
-def _common_args(host, proxy, sni_flag):
+def _common_args(host, proxy, params):
     args = []
 
     if host.family == 'ipv6':
         args += ['-6']
-    if sni_flag:
+    if not params.get("disable_sni"):
         args += ['--sni']
     if proxy and proxy.auth:
         args += ["-b", proxy.auth]
@@ -231,13 +225,12 @@ def check_http_arguments(params):
     host = _get_host(params)
     proxy = _get_proxy(params)
 
-    sni_flag = bool(params.get("sni"))
     if mode_name == 'cert':
-        args = _certificate_args(host, proxy, settings, sni_flag)
+        args = _certificate_args(host, proxy, settings)
     else:
         args = _url_args(host, proxy, settings)
 
-    return args + _common_args(host, proxy, sni_flag)
+    return args + _common_args(host, proxy, params)
 
 
 def check_http_description(params):

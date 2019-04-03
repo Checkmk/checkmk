@@ -22,11 +22,9 @@ def clear_config_caches(monkeypatch):
     ("testhost", ["no-ip"], False),
 ])
 def test_is_ipv4_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_ipv4_host(hostname) == result
-    assert config.HostConfig(hostname).is_ipv4_host == result
+    assert config_cache.get_host_config(hostname).is_ipv4_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -37,11 +35,9 @@ def test_is_ipv4_host(monkeypatch, hostname, tags, result):
     ("testhost", ["no-ip"], False),
 ])
 def test_is_ipv6_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_ipv6_host(hostname) == result
-    assert config.HostConfig(hostname).is_ipv6_host == result
+    assert config_cache.get_host_config(hostname).is_ipv6_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -52,11 +48,9 @@ def test_is_ipv6_host(monkeypatch, hostname, tags, result):
     ("testhost", ["no-ip"], False),
 ])
 def test_is_ipv4v6_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_ipv4v6_host(hostname) == result
-    assert config.HostConfig(hostname).is_ipv4v6_host == result
+    assert config_cache.get_host_config(hostname).is_ipv4v6_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -64,10 +58,8 @@ def test_is_ipv4v6_host(monkeypatch, hostname, tags, result):
     ("testhost", ["no-piggyback"], False),
 ])
 def test_is_piggyback_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
-    assert config.HostConfig(hostname).is_piggyback_host == result
+    config_cache = _setup_host(monkeypatch, hostname, tags)
+    assert config_cache.get_host_config(hostname).is_piggyback_host == result
 
 
 @pytest.mark.parametrize("with_data,result", [
@@ -79,11 +71,9 @@ def test_is_piggyback_host(monkeypatch, hostname, tags, result):
     ("testhost", ["auto-piggyback"]),
 ])
 def test_is_piggyback_host_auto(monkeypatch, hostname, tags, with_data, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
     monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda cache_age, hostname: with_data)
-
-    assert config.HostConfig(hostname).is_piggyback_host == result
+    config_cache = _setup_host(monkeypatch, hostname, tags)
+    assert config_cache.get_host_config(hostname).is_piggyback_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -94,11 +84,9 @@ def test_is_piggyback_host_auto(monkeypatch, hostname, tags, with_data, result):
     ("testhost", ["no-ip"], True),
 ])
 def test_is_no_ip_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_no_ip_host(hostname) == result
-    assert config.HostConfig(hostname).is_no_ip_host == result
+    assert config_cache.get_host_config(hostname).is_no_ip_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result,ruleset", [
@@ -120,14 +108,10 @@ def test_is_no_ip_host(monkeypatch, hostname, tags, result):
     ("testhost", ["no-ip"], False, []),
 ])
 def test_is_ipv6_primary_host(monkeypatch, hostname, tags, result, ruleset):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
     monkeypatch.setattr(config, "primary_address_family", ruleset)
-
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_ipv6_primary(hostname) == result
-    assert config.HostConfig(hostname).is_ipv6_primary == result
+    assert config_cache.get_host_config(hostname).is_ipv6_primary == result
 
 
 @pytest.mark.parametrize("result,attrs", [
@@ -160,11 +144,9 @@ def test_management_address_of(monkeypatch, attrs, result):
     ("testhost", ["no-agent", "no-snmp"], False),
 ])
 def test_is_tcp_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_tcp_host(hostname) == result
-    assert config.HostConfig(hostname).is_tcp_host == result
+    assert config_cache.get_host_config(hostname).is_tcp_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -178,11 +160,9 @@ def test_is_tcp_host(monkeypatch, hostname, tags, result):
     ("testhost", ["ping"], True),
 ])
 def test_is_ping_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_ping_host(hostname) == result
-    assert config.HostConfig(hostname).is_ping_host == result
+    assert config_cache.get_host_config(hostname).is_ping_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -192,11 +172,9 @@ def test_is_ping_host(monkeypatch, hostname, tags, result):
     ("testhost", ["snmp"], True),
 ])
 def test_is_snmp_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_snmp_host(hostname) == result
-    assert config.HostConfig(hostname).is_snmp_host == result
+    assert config_cache.get_host_config(hostname).is_snmp_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -208,11 +186,9 @@ def test_is_snmp_host(monkeypatch, hostname, tags, result):
     ("testhost", ["tcp", "snmp"], True),
 ])
 def test_is_dual_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_dual_host(hostname) == result
-    assert config.HostConfig(hostname).is_dual_host == result
+    assert config_cache.get_host_config(hostname).is_dual_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -223,11 +199,9 @@ def test_is_dual_host(monkeypatch, hostname, tags, result):
     ("testhost", ["cmk-agent"], False),
 ])
 def test_is_all_agents_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_all_agents_host(hostname) == result
-    assert config.HostConfig(hostname).is_all_agents_host == result
+    assert config_cache.get_host_config(hostname).is_all_agents_host == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
@@ -238,11 +212,9 @@ def test_is_all_agents_host(monkeypatch, hostname, tags, result):
     ("testhost", ["cmk-agent"], False),
 ])
 def test_is_all_special_agents_host(monkeypatch, hostname, tags, result):
-    _setup_host(monkeypatch, hostname, tags)
-    config.get_config_cache().initialize()
-
+    config_cache = _setup_host(monkeypatch, hostname, tags)
     assert config.is_all_special_agents_host(hostname) == result
-    assert config.HostConfig(hostname).is_all_special_agents_host == result
+    assert config_cache.get_host_config(hostname).is_all_special_agents_host == result
 
 
 def test_prepare_check_command_basics():
@@ -314,6 +286,10 @@ def _setup_host(monkeypatch, hostname, tags):
     monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, "|".join(tags))])
     monkeypatch.setattr(config, "host_paths", {hostname: "/"})
 
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    return config_cache
+
 
 def test_service_depends_on(monkeypatch):
     assert config.service_depends_on("test-host", "svc") == []
@@ -340,22 +316,20 @@ def test_host_tags_default():
 
 
 def test_host_tags_of_host(monkeypatch):
-    _setup_host(monkeypatch, "test-host", ["abc"])
     monkeypatch.setattr(config, "host_tags", {
         "test-host": {
             "tag_group": "abc",
         },
     })
+    config_cache = _setup_host(monkeypatch, "test-host", ["abc"])
 
-    config.get_config_cache().initialize()
-
-    cfg = config.HostConfig("xyz")
+    cfg = config_cache.get_host_config("xyz")
     assert cfg.tag_groups == {}
-    assert config.get_config_cache().tags_of_host("xyz") == {}
+    assert config_cache.tags_of_host("xyz") == {}
 
-    cfg = config.HostConfig("test-host")
+    cfg = config_cache.get_host_config("test-host")
     assert cfg.tag_groups == {"tag_group": "abc"}
-    assert config.get_config_cache().tags_of_host("test-host") == {"tag_group": "abc"}
+    assert config_cache.tags_of_host("test-host") == {"tag_group": "abc"}
 
 
 def test_service_tag_rules_default():
@@ -363,7 +337,6 @@ def test_service_tag_rules_default():
 
 
 def test_tags_of_service(monkeypatch):
-    _setup_host(monkeypatch, "test-host", ["abc"])
     monkeypatch.setattr(config, "host_tags", {
         "test-host": {
             "tag_group": "abc",
@@ -375,17 +348,15 @@ def test_tags_of_service(monkeypatch):
     ]
     monkeypatch.setattr(config, "service_tag_rules", ruleset)
 
-    config.get_config_cache().initialize()
+    config_cache = _setup_host(monkeypatch, "test-host", ["abc"])
 
-    cfg = config.HostConfig("xyz")
+    cfg = config_cache.get_host_config("xyz")
     assert cfg.tag_groups == {}
-    assert config.get_config_cache().tags_of_service("xyz", "CPU load") == {}
+    assert config_cache.tags_of_service("xyz", "CPU load") == {}
 
-    cfg = config.HostConfig("test-host")
+    cfg = config_cache.get_host_config("test-host")
     assert cfg.tag_groups == {"tag_group": "abc"}
-    assert config.get_config_cache().tags_of_service("test-host", "CPU load") == {
-        "tag_group1": "val1"
-    }
+    assert config_cache.tags_of_service("test-host", "CPU load") == {"tag_group1": "val1"}
 
 
 def test_config_cache_get_host_config():

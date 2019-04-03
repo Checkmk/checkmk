@@ -50,8 +50,8 @@ def get_check_table(hostname,
                     filter_mode=None,
                     skip_ignored=True):
 
-    host_config = config.HostConfig(hostname)
     config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
 
     if host_config.is_ping_host:
         skip_autochecks = True

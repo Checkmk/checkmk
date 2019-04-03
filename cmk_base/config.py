@@ -2927,6 +2927,21 @@ class ConfigCache(object):
         # It is used to determine the best rule evualation method
         self._all_processed_hosts_similarity = 1
 
+        # Keep HostConfig instances created with the current configuration cache
+        self._host_configs = {}
+
+    def get_host_config(self, hostname):
+        """Returns a HostConfig instance for the given host
+
+        It lazy initializes the host config object and caches the objects during the livetime
+        of the ConfigCache."""
+        host_config = self._host_configs.get(hostname)
+        if host_config:
+            return host_config
+
+        host_config = self._host_configs[hostname] = HostConfig(hostname)
+        return host_config
+
     def _collect_hosttags(self):
         for tagged_host in all_hosts + clusters.keys():
             parts = tagged_host.split("|")

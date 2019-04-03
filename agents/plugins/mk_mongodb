@@ -18,14 +18,13 @@ import time
 
 try:
     import pymongo
-except ImportError, e:
+except ImportError:
     sys.stderr.write("ERROR: Unable to import pymongo module\n")
     sys.exit(2)
 
 
-def main():
-    # pylint: disable=too-many-branches,unused-variable
-    # TODO: might be implemented in the future..
+def main():  # pylint: disable=too-many-branches,too-many-locals
+    # might be implemented in the future..
     host = None
     port = None
 
@@ -34,7 +33,7 @@ def main():
         try:
             # pylint: disable=no-member
             con = pymongo.database_names()
-        except:
+        except Exception:  # pylint: disable=broad-except
             con = pymongo.MongoClient(None, None, read_preference=pymongo.ReadPreference.SECONDARY)
 
         con.admin.read_preference = pymongo.ReadPreference.SECONDARY
@@ -45,12 +44,10 @@ def main():
         #        sys.exit("Username/Password incorrect")
 
         server_status = con.admin.command("serverStatus")
-    except:
+    except Exception:  # pylint: disable=broad-except
         sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
         sys.stdout.write("error\tInstance is down\n")
         sys.exit(0)
-
-    server_version = tuple(con.server_info()['version'].split('.'))
 
     repl_info = server_status.get("repl")
 
@@ -126,6 +123,7 @@ def main():
     sys.stdout.write("flushed %s\n" % server_status["backgroundFlushing"]["flushes"])
 
     # Unused
+    # server_version = tuple(con.server_info()['version'].split('.'))
     #try:
     #    if server_version >= tuple("2.4.0".split(".")):
     #        indexCounters = server_status['indexCounters']
@@ -171,7 +169,7 @@ def main():
                 try:
                     result = time.mktime(time.strptime(text, pattern))
                     return result
-                except:
+                except Exception:  # pylint: disable=broad-except
                     continue
 
         year_available = False

@@ -12,11 +12,17 @@ description:
  [Cisco UCS Rack-Mount Servers Cisco IMC XML API 2.0]:
 
  - Cisco UCS C220 M5 Rack Server
+
  - Cisco UCS C240 M5 Rack Server
+
  - Cisco UCS C480 M5 Rack Server
+
  - Cisco UCS C480 ML M5 Rack Server
+
  - Cisco UCS C220 M4 Rack Server
+
  - Cisco UCS C240 M4 Rack Server
+
  - Cisco UCS C460 M4 Rack Server
 
  This check does not support the C-Series Rack Server model "Cisco UCS C125 M5 Rack Server Node"
@@ -26,10 +32,13 @@ description:
 
  - {OK} in case the monitored operability status is one of:
    operable
+
  - {WARN} in case the monitored operability status is one of:
    powered-off, removed, identity-unestablishable, bios-post-timeout, disabled, malformed-fru, fabric-unsupported-conn, config, decomissioning, chassis-limit-exceeded, not-supported, discovery
+
  - {CRIT} in case the monitored operability status is one of:
    inoperable, degraded, power-problem, voltage-problem, thermal-problem, performance-problem, accessibility-problem, fabric-conn-problem, equipment-problem, peer-comm-problem
+
  - {UNKNOWN} in ccase the monitored operability status is one of:
    unknown
 

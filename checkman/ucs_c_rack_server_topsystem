@@ -12,11 +12,17 @@ description:
  [Cisco UCS Rack-Mount Servers Cisco IMC XML API 2.0]:
 
  - Cisco UCS C220 M5 Rack Server
+
  - Cisco UCS C240 M5 Rack Server
+
  - Cisco UCS C480 M5 Rack Server
+
  - Cisco UCS C480 ML M5 Rack Server
+
  - Cisco UCS C220 M4 Rack Server
+
  - Cisco UCS C240 M4 Rack Server
+
  - Cisco UCS C460 M4 Rack Server
 
  This check does not support the C-Series Rack Server model Cisco UCS C125 M5 Rack Server Node

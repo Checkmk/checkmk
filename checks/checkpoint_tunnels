@@ -49,7 +49,6 @@ def inventory_checkpoint_tunnels(info):
 
 
 def check_checkpoint_tunnels(item, params, info):
-    print params
     for peer, status in info:
         if peer == item:
             state = params[tunnel_states[status]]

@@ -116,6 +116,9 @@
     <ClCompile Include="test-runperf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test-install-auto.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\test_files\config\check_mk.old.example.yml">

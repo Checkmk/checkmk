@@ -132,6 +132,11 @@ std::filesystem::path GetBakeryFile() noexcept {
     return bakery;
 }
 
+std::wstring GetMsiBackupDir() noexcept {
+    std::filesystem::path data_dir = details::G_ConfigInfo.getUserDir();
+    return data_dir / dirs::kMsiInstallDir;
+}
+
 std::wstring GetRootDir() noexcept {
     return details::G_ConfigInfo.getRootDir();
 }

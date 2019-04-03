@@ -25,6 +25,54 @@
 #pragma comment(lib, "wbemuuid.lib")  /// Microsoft Specific
 
 namespace wtools {
+
+uint32_t AppRunner::goExec(std::wstring CommandLine, bool Wait,
+                           bool InheritHandle, bool PipeOutput) noexcept {
+    try {
+        if (process_id_) {
+            XLOG::l.bp("Attempt to reuse AppRunner");
+            return 0;
+        }
+        if (PipeOutput) {
+            stdio_.create();
+            stderr_.create();
+        }
+        cmd_line_ = CommandLine;
+        job_handle_ = nullptr;
+        process_handle_ = nullptr;
+
+        if (use_job_) {
+            auto [pid, jh, ph] = cma::tools::RunStdCommandAsJob(
+                CommandLine.c_str(), InheritHandle, stdio_.getWrite(),
+                stderr_.getWrite());
+            // store data to reuse
+            process_id_ = pid;
+            job_handle_ = jh;
+            process_handle_ = ph;
+
+        } else
+            process_id_ = cma::tools::RunStdCommand(
+                CommandLine.c_str(), Wait, InheritHandle, stdio_.getWrite(),
+                stderr_.getWrite());
+
+        // check and return on success
+        if (process_id_) return process_id_;
+
+        // failure s here
+        XLOG::l(XLOG_FLINE + " Failed RunStd: [{}]*", GetLastError());
+
+        job_handle_ = nullptr;
+        process_handle_ = nullptr;
+        stdio_.shutdown();
+        stderr_.shutdown();
+
+        return 0;
+    } catch (const std::exception& e) {
+        XLOG::l.crit(XLOG_FLINE + " unexpected exception: '{}'", e.what());
+    }
+    return 0;
+}
+
 std::mutex ServiceController::s_lock_;
 ServiceController* ServiceController::s_controller_ = nullptr;
 

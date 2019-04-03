@@ -5,6 +5,7 @@
 #include <shlobj.h>
 #include <userenv.h>
 
+#include <filesystem>
 #include <string>
 
 #include "tools/_process.h"
@@ -15,28 +16,11 @@
 #include "logger.h"
 #include "service_api.h"
 
+#include "cfg.h"
+
 namespace cma {
 
 namespace install {
-
-std::wstring FindMsiExec() {
-    using namespace cma::tools;
-    static std::wstring path_to_msiexec;
-    static std::wstring msiexe;
-    if (path_to_msiexec.empty()) {
-        path_to_msiexec = win::GetSystem32Folder();
-    }
-
-    if (!msiexe.empty()) return msiexe;
-
-    if (IsFileExist(path_to_msiexec + L"\\msiexec.exe")) {
-        return path_to_msiexec + L"\\msiexec.exe";
-    }
-
-    XLOG::l("Path to msiexec not found");
-    return {};
-
-}  // namespace srv
 
 std::wstring MakeTempFileNameInTempPath(const std::wstring &Name) {
     // Find Temporary Folder
@@ -57,7 +41,7 @@ std::wstring MakeTempFileNameInTempPath(const std::wstring &Name) {
 bool CheckForUpdateFile(const std::wstring Name, const std::wstring Path,
                         UpdateType Update, bool StartUpdateProcess) {
     // find path to msiexec, in Windows it is in System32 folder
-    const auto exe = FindMsiExec();
+    const auto exe = cma::cfg::GetMsiExecPath();
     if (exe.empty()) return false;
 
     // check file existence
@@ -119,7 +103,9 @@ bool CheckForUpdateFile(const std::wstring Name, const std::wstring Path,
 std::wstring GetMsiUpdateDirectory() {
     // read from config or preset during development
     //
-    return cma::tools::win::GetSystem32Folder();
+    namespace fs = std::filesystem;
+
+    return cma::cfg::GetUpdateDir();
 }
 
 }  // namespace install

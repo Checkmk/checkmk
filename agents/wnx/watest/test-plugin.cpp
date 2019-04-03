@@ -72,14 +72,13 @@ TEST(PluginTest, JobStartSTop) {
     fs::path temp_folder = cma::cfg::GetTempDir();
 
     CreatePluginInTemp(temp_folder / "a.cmd", 120, "a");
-    HANDLE job = nullptr;
-    HANDLE process = nullptr;
 
-    auto pid =
-        cma::tools::RunStdCommandAsJob(job, (temp_folder / "a.cmd").wstring());
+    auto [pid, job, process] =
+        cma::tools::RunStdCommandAsJob((temp_folder / "a.cmd").wstring());
     ::Sleep(1000);
     TerminateJobObject(job, 21);
-    CloseHandle(job);
+    if (job) CloseHandle(job);
+    if (process) CloseHandle(process);
     /*
 
         HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);

@@ -1,0 +1,11 @@
+Title: mk_mongodb: don't crash upon missing flushing info
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554298869
+Class: fix
+
+The plugin no longer crashes the server does not report info
+on 'backgroundFlushing', as is the case for MongoDB 4.0 onwards.

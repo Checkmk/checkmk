@@ -18,6 +18,17 @@ import time
 import pymongo  # pylint: disable=import-error
 
 
+def section_flushing(server_status):
+    # key is depricated for MongoDB 4.0
+    flushing_info = server_status.get("backgroundFlushing")
+    if flushing_info is None:
+        return
+    sys.stdout.write("<<<mongodb_flushing>>>\n")
+    sys.stdout.write("average_ms %s\n" % flushing_info["average_ms"])
+    sys.stdout.write("last_ms %s\n" % flushing_info["last_ms"])
+    sys.stdout.write("flushed %s\n" % flushing_info["flushes"])
+
+
 def main():  # pylint: disable=too-many-branches,too-many-locals
     # might be implemented in the future..
     host = None
@@ -110,10 +121,7 @@ def main():  # pylint: disable=too-many-branches,too-many-locals
                 for key, value in global_lock_info[what].items():
                     sys.stdout.write("%s %s %s\n" % (what, key, value))
 
-    sys.stdout.write("<<<mongodb_flushing>>>\n")
-    sys.stdout.write("average_ms %s\n" % server_status["backgroundFlushing"]["average_ms"])
-    sys.stdout.write("last_ms %s\n" % server_status["backgroundFlushing"]["last_ms"])
-    sys.stdout.write("flushed %s\n" % server_status["backgroundFlushing"]["flushes"])
+    section_flushing(server_status)
 
     # Unused
     # server_version = tuple(con.server_info()['version'].split('.'))

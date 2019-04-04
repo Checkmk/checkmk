@@ -826,11 +826,14 @@ def do_snmpget(*args):
         raise MKBailOut("You need to specify an OID.")
     oid = args[0][0]
 
+    config_cache = config.get_config_cache()
+
     hostnames = args[0][1:]
     if not hostnames:
         hostnames = []
         for host in config.all_active_realhosts():
-            if config.is_snmp_host(host):
+            host_config = config_cache.get_host_config(host)
+            if host_config.is_snmp_host:
                 hostnames.append(host)
 
     for hostname in hostnames:

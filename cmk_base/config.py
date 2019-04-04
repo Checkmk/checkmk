@@ -830,11 +830,6 @@ def is_tcp_host(hostname):
 
 
 # TODO: Replace call sites with HostConfig access and remove this
-def is_snmp_host(hostname):
-    return get_config_cache().get_host_config(hostname).is_snmp_host
-
-
-# TODO: Replace call sites with HostConfig access and remove this
 def is_ping_host(hostname):
     return get_config_cache().get_host_config(hostname).is_ping_host
 
@@ -1057,8 +1052,9 @@ def is_snmpv2or3_without_bulkwalk_host(hostname):
     return in_binary_hostlist(hostname, snmpv2c_hosts)
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_usewalk_host(hostname):
-    return in_binary_hostlist(hostname, usewalk_hosts)
+    return get_config_cache().get_host_config(hostname).is_usewalk_host
 
 
 def is_inline_snmp_host(hostname):
@@ -2756,6 +2752,7 @@ class HostConfig(object):
         # Basic types
         self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
         self.is_snmp_host = self._config_cache.in_binary_hostlist(hostname, snmp_hosts)
+        self.is_usewalk_host = self._config_cache.in_binary_hostlist(hostname, usewalk_hosts)
 
         if "piggyback" in self.tags:
             self.is_piggyback_host = True

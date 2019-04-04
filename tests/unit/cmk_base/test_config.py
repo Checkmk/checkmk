@@ -173,7 +173,6 @@ def test_is_ping_host(monkeypatch, hostname, tags, result):
 ])
 def test_is_snmp_host(monkeypatch, hostname, tags, result):
     config_cache = _setup_host(monkeypatch, hostname, tags)
-    assert config.is_snmp_host(hostname) == result
     assert config_cache.get_host_config(hostname).is_snmp_host == result
 
 

@@ -109,7 +109,7 @@ class DataSources(object):
     def _initialize_data_sources(self):
         self._sources = {}
 
-        if config.is_cluster(self._hostname):
+        if self._host_config.is_cluster:
             # Cluster hosts do not have any actual data sources
             # Instead all data is provided by the nodes
             return
@@ -119,17 +119,17 @@ class DataSources(object):
         self._initialize_management_board_data_sources()
 
     def _initialize_agent_based_data_sources(self):
-        if config.is_all_agents_host(self._hostname):
+        if self._host_config.is_all_agents_host:
             source = self._get_agent_data_source(ignore_special_agents=True)
             source.set_main_agent_data_source()
             self._add_source(source)
 
             self._add_sources(self._get_special_agent_data_sources())
 
-        elif config.is_all_special_agents_host(self._hostname):
+        elif self._host_config.is_all_special_agents_host:
             self._add_sources(self._get_special_agent_data_sources())
 
-        elif config.is_tcp_host(self._hostname):
+        elif self._host_config.is_tcp_host:
             source = self._get_agent_data_source()
             source.set_main_agent_data_source()
             self._add_source(source)
@@ -138,7 +138,7 @@ class DataSources(object):
             self._add_source(PiggyBackDataSource(self._hostname, self._ipaddress))
 
     def _initialize_snmp_data_sources(self):
-        if config.is_snmp_host(self._hostname):
+        if self._host_config.is_snmp_host:
             self._add_source(SNMPDataSource(self._hostname, self._ipaddress))
 
     def _initialize_management_board_data_sources(self):
@@ -162,13 +162,13 @@ class DataSources(object):
         self._sources[source.id()] = source
 
     def describe_data_sources(self):
-        if config.is_all_agents_host(self._hostname):
+        if self._host_config.is_all_agents_host:
             return "Contact Check_MK Agent and use all enabled special agents"
 
-        elif config.is_all_special_agents_host(self._hostname):
+        elif self._host_config.is_all_special_agents_host:
             return "Use all enabled special agents"
 
-        elif config.is_tcp_host(self._hostname):
+        elif self._host_config.is_tcp_host:
             return "Contact either Check_MK Agent or use a single special agent"
 
         return "No agent"

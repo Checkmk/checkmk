@@ -93,14 +93,18 @@ def potentially_piggybacked_sections(con, server_status, repl_info):
     sys.stdout.write("<<<mongodb_connections>>>\n")
     sys.stdout.write("%s\n" % "\n".join("%s %s" % x for x in server_status["connections"].items()))
 
-    databases = {x: {} for x in con.database_names()}
+    try:
+        databases = {x: {} for x in con.list_database_names()}
+    except AttributeError:  # pymongo < 3.6
+        databases = {x: {} for x in con.database_names()}
 
-    for name in databases.keys():
-        databases[name]["collections"] = con[name].collection_names()
-        databases[name]["stats"] = con[name].command("dbstats")
+    for name in databases:
+        database = con[name]
+        databases[name]["collections"] = database.collection_names()
+        databases[name]["stats"] = database.command("dbstats")
         databases[name]["collstats"] = {}
         for collection in databases[name]["collections"]:
-            databases[name]["collstats"][collection] = con[name].command("collstats", collection)
+            databases[name]["collstats"][collection] = database.command("collstats", collection)
 
     sys.stdout.write("<<<mongodb_chunks>>>\n")
     col = con.config.chunks

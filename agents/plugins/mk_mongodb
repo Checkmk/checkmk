@@ -91,6 +91,30 @@ def sections_replica(client, server_status):
     sys.stdout.write(pprint.pformat(client.admin.command("replSetGetStatus")))
 
 
+def section_chunks(client, databases):
+    sys.stdout.write("<<<mongodb_chunks>>>\n")
+    col = client.config.chunks
+    for db_name, db_data in databases.items():
+        shards = col.distinct("shard")
+        sys.stdout.write("shardcount %d\n" % len(shards))
+        for collection in db_data.get("collections"):
+            nsfilter = "%s.%s" % (db_name, collection)
+            sys.stdout.write("nscount %s %s\n" % (nsfilter, col.find({"ns": nsfilter}).count()))
+            for shard in shards:
+                matches = col.find({"ns": nsfilter, "shard": shard}).count()
+                sys.stdout.write("shardmatches %s#%s %s\n" % (nsfilter, shard, matches))
+
+
+def section_locks(server_status):
+    sys.stdout.write("<<<mongodb_locks>>>\n")
+    global_lock_info = server_status.get("globalLock")
+    if global_lock_info:
+        for what in ["activeClients", "currentQueue"]:
+            if what in global_lock_info:
+                for key, value in global_lock_info[what].items():
+                    sys.stdout.write("%s %s %s\n" % (what, key, value))
+
+
 def main():
     # might be implemented in the future..
     host = None
@@ -129,28 +153,9 @@ def potentially_piggybacked_sections(client, server_status):
 
     databases = get_database_info(client)
 
-    sys.stdout.write("<<<mongodb_chunks>>>\n")
-    col = client.config.chunks
-    for db_name, db_data in databases.items():
-        shards = col.distinct("shard")
-        sys.stdout.write("shardcount %d\n" % len(shards))
-        for collection in db_data.get("collections"):
-            nsfilter = "%s.%s" % (db_name, collection)
-            sys.stdout.write("nscount %s %s\n" % (nsfilter, col.find({"ns": nsfilter}).count()))
-            for shard in shards:
-                sys.stdout.write("shardmatches %s#%s %s\n" % (nsfilter, shard,
-                                                              col.find({
-                                                                  "ns": nsfilter,
-                                                                  "shard": shard
-                                                              }).count()))
+    section_chunks(client, databases)
 
-    sys.stdout.write("<<<mongodb_locks>>>\n")
-    global_lock_info = server_status.get("globalLock")
-    if global_lock_info:
-        for what in ["activeClients", "currentQueue"]:
-            if what in global_lock_info:
-                for key, value in global_lock_info[what].items():
-                    sys.stdout.write("%s %s %s\n" % (what, key, value))
+    section_locks(server_status)
 
     section_flushing(server_status)
 

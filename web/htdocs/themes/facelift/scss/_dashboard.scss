@@ -25,7 +25,6 @@ Boston, MA 02110-1301 USA.
 */
 
 /* Styles used by the dashboard only */
-
 body.dashboard {
   overflow: hidden;
 }
@@ -251,76 +250,75 @@ iframe[id^=dashlet_iframe] {
   transition: .15s ease-in-out;
 }
 
-/**
+/*
  * Dashboard editing
  */
-
 #controls_toggle {
-    z-index: 150;
-    position: absolute;
-    right: 0px;
-    bottom: -41px;
-    padding: 6px 3px;
-    background-color: rgba(0, 0, 0, 0.5);
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#7f000000', endColorstr='#7f000000');
-    border-radius: 5px;
-}
+  position: absolute;
+  right: 0;
+  bottom: -41px;
+  z-index: 150;
+  padding: 6px 3px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  /* IE < 9 */
+  filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#7f000000', endColorstr='#7f000000');
 
-#controls_toggle:hover {
+  &:hover {
     bottom: -10px;
-}
+  }
 
-#controls_toggle .iconbutton {
+  .iconbutton {
     width: 33px;
     height: 31px;
+  }
 }
 
 #controls, ul.sub {
-    margin: 0;
-    z-index: 180;
-    display: block;
-    position: absolute;
-    padding: 8px;
-    width: 200px;
-    list-style: none;
+  position: absolute;
+  z-index: 180;
+  display: block;
+  width: 200px;
+  padding: 8px;
+  margin: 0;
+  color: $theme-color-lightgrey;
+  list-style: none;
+  background-color: $theme-color-sidebar-background;
+  border: 1px solid $theme-color-table-border-dark;
+  border-radius: $theme-border-radius;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+
+  li, {
+    padding: 4px 0;
     color: $theme-color-lightgrey;
-    background-color: $theme-color-sidebar-background;
-    border: 1px solid $theme-color-table-border-dark;
-    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
-    border-radius: $theme-border-radius;
+  }
 }
 
-#controls a {
+#controls {
+  a {
     display: block;
     padding: 1px 15px 1px 2px;
     line-height: 14px;
     text-align: left;
     text-decoration: none;
-}
 
-#controls a:hover {
-    text-decoration: underline;
-}
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 
-/* submenu */
-
-#controls ul.sub {
-    bottom: 5px;
+  /* submenu */
+  ul.sub {
     right: 212px;
-}
+    bottom: 5px;
+  }
 
-#controls > li > a > img,
-#controls ul.menu > li > a > img {
-    margin-right: 4px;
-    vertical-align: middle;
+  > li > a > img, ul.menu > li > a > img {
     width: 12px;
     height: 12px;
-}
-
-#controls li, ul.sub li {
-    color: $theme-color-lightgrey;
-    padding: 4px 0px;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
 }
 
 #controls li a,
@@ -329,363 +327,360 @@ body.main .popup_menu #controls li span,
 ul.sub li a,
 ul.sub li body.main .popup_menu span,
 body.main .popup_menu ul.sub li span {
-    color: inherit;
+  color: inherit;
 }
 
 /* dashlet controls */
-
-div.dashlet.edit .controls {
-    z-index: 100;
-    cursor: auto;
+div.dashlet.edit {
+  .controls {
     position: relative;
+    z-index: 100;
     width: 100%;
     height: 100%;
+    cursor: auto;
     background-color: rgba(50, 80, 90, 0.6);
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#fffffff', endColorstr='#7fffffff');
-}
 
-div.dashlet.edit .controls:hover {
-    cursor: move;
+    &:hover {
+      cursor: move;
+    }
+  }
+
+  /* dashlet edit button */
+  .edit {
+    position: absolute;
+    top: 4px;
+    left: 19px;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    /* background-color: rgba(0, 0, 0, 0.7); */
+    background-image: url(images/dashlet_edit_lo.png);
+    border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+
+    &:hover {
+      background-image: url(images/dashlet_edit_hi.png);
+    }
+  }
+
+  /* dashlet delete button */
+  .del {
+    position: absolute;
+    top: 4px;
+    right: 19px;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    /* background-color: rgba(0, 0, 0, 0.7); */
+    background-image: url(images/dashlet_del_lo.png);
+    border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+
+    &:hover {
+      background-image: url(images/dashlet_del_hi.png);
+    }
+  }
+
+  /* position anchors */
+  .anchor {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    cursor: auto;
+    /* background-color: rgba(255, 255, 255, 0.7); */
+    background-image: url(images/dashlet_anchor_lo.png);
+    border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+
+    &.off {
+      cursor: pointer;
+      background-image: url(images/dashlet_anchor_off.png);
+
+      &:hover {
+        background-image: url(images/dashlet_anchor_hi.png);
+      }
+    }
+
+    &.anchor0 {
+      top: 4px;
+      left: 4px;
+    }
+
+    &.anchor1 {
+      top: 4px;
+      right: 4px;
+    }
+
+    &.anchor2 {
+      right: 4px;
+      bottom: 4px;
+    }
+
+    &.anchor3 {
+      bottom: 4px;
+      left: 4px;
+    }
+  }
 }
 
 div#dashboard.grid {
-    background-image: url(images/dashboard_grid.png);
-}
-
-/* dashlet edit button */
-
-div.dashlet.edit .edit {
-    cursor: pointer;
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    top: 4px;
-    left: 19px;
-    /* background-color: rgba(0, 0, 0, 0.7); */
-    border-radius: 5px;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
-    background-image: url(images/dashlet_edit_lo.png);
-}
-
-div.dashlet.edit .edit:hover {
-    background-image: url(images/dashlet_edit_hi.png);
-}
-
-/* dashlet delete button */
-
-div.dashlet.edit .del {
-    cursor: pointer;
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    top: 4px;
-    right: 19px;
-    /* background-color: rgba(0, 0, 0, 0.7); */
-    border-radius: 5px;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
-    background-image: url(images/dashlet_del_lo.png);
-}
-
-div.dashlet.edit .del:hover {
-    background-image: url(images/dashlet_del_hi.png);
-}
-
-/* position anchors */
-
-div.dashlet.edit .anchor {
-    cursor: auto;
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    /* background-color: rgba(255, 255, 255, 0.7); */
-    border-radius: 5px;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
-    background-image: url(images/dashlet_anchor_lo.png);
-}
-
-div.dashlet.edit .anchor.off {
-    cursor: pointer;
-    background-image: url(images/dashlet_anchor_off.png);
-}
-
-div.dashlet.edit .anchor.off:hover {
-    background-image: url(images/dashlet_anchor_hi.png);
-}
-
-div.dashlet.edit .anchor.anchor0 {
-    top: 4px;
-    left: 4px;
-}
-
-div.dashlet.edit .anchor.anchor1 {
-    top: 4px;
-    right: 4px;
-}
-
-div.dashlet.edit .anchor.anchor2 {
-    bottom: 4px;
-    right: 4px;
-}
-
-div.dashlet.edit .anchor.anchor3 {
-    bottom: 4px;
-    left: 4px;
+  background-image: url("images/dashboard_grid.png");
 }
 
 .sizer {
-    position: absolute;
-    border: 1px solid #666;
-    box-shadow: .5px .5px 2px #333;
-    border-radius: 2px;
-    cursor: pointer;
+  position: absolute;
+  cursor: pointer;
+  border: 1px solid #666;
+  border-radius: 2px;
+  box-shadow: .5px .5px 2px #333;
 }
 
 .sizer0 {
-    width: 50%;
-    height: 10px;
+  width: 50%;
+  height: 10px;
 }
 
 .sizer1 {
-    height: 50%;
-    width: 10px;
+  width: 10px;
+  height: 50%;
 }
 
 .sizer.max {
-    background-color: #f00;
+  background-color: #f00;
 }
 
 .sizer.grow {
-    background-color: #ff0;
+  background-color: #ff0;
 }
 
 .sizer.abs {
-    background-color: #eee;
+  background-color: #eee;
 }
 
 /* left side */
 .sizer1.anchor0,
 .sizer1.anchor3 {
-    left: 5px;
-    top: 25%;
+  top: 25%;
+  left: 5px;
 }
 
 /* right side */
 .sizer1.anchor1,
 .sizer1.anchor2 {
-    right: 10px;
-    top: 25%;
+  top: 25%;
+  right: 10px;
 }
 
 /* top side */
 .sizer0.anchor0,
 .sizer0.anchor1 {
-    left: 25%;
-    top: 5px;
+  top: 5px;
+  left: 25%;
 }
 
 /* bottom side */
 .sizer0.anchor2,
 .sizer0.anchor3 {
-    left: 25%;
-    bottom: 10px;
+  bottom: 10px;
+  left: 25%;
 }
 
 /* general arrow */
 .sizer0:before,
 .sizer1:before {
-    position: absolute;
-    content: " ";
+  position: absolute;
+  content: " ";
 }
 
 /* arrow on left */
 .sizer0.anchor1:before, .sizer0.anchor2:before {
-    top: -7px;
-    left: -11px;
-    background-repeat: no-repeat;
-    width: 13px;
-    height: 21px;
+  top: -7px;
+  left: -11px;
+  width: 13px;
+  height: 21px;
+  background-repeat: no-repeat;
 }
 
 .sizer0.anchor1.max:before, .sizer0.anchor2.max:before {
-    background-image: url(images/dashlet_arrow_l_max.png);
+  background-image: url("images/dashlet_arrow_l_max.png");
 }
 
 .sizer0.anchor1.grow:before, .sizer0.anchor2.grow:before {
-    background-image: url(images/dashlet_arrow_l_grow.png);
+  background-image: url("images/dashlet_arrow_l_grow.png");
 }
 
 /* arrow on right */
 .sizer0.anchor0:before, .sizer0.anchor3:before {
-    top: -7px;
-    left: 100%;
-    background-repeat: no-repeat;
-    width: 12px;
-    height: 21px;
+  top: -7px;
+  left: 100%;
+  width: 12px;
+  height: 21px;
+  background-repeat: no-repeat;
 }
 
 .sizer0.anchor0.max:before, .sizer0.anchor3.max:before {
-    background-image: url(images/dashlet_arrow_r_max.png);
+  background-image: url("images/dashlet_arrow_r_max.png");
 }
 
 .sizer0.anchor0.grow:before, .sizer0.anchor3.grow:before {
-    background-image: url(images/dashlet_arrow_r_grow.png);
+  background-image: url("images/dashlet_arrow_r_grow.png");
 }
 
 /* arrow at top */
 .sizer1.anchor2:before, .sizer1.anchor3:before {
-    top: -10px;
-    left: -7px;
-    background-repeat: no-repeat;
-    height: 14px;
-    width: 23px;
+  top: -10px;
+  left: -7px;
+  width: 23px;
+  height: 14px;
+  background-repeat: no-repeat;
 }
 
 .sizer1.anchor2.max:before, .sizer1.anchor3.max:before {
-    background-image: url(images/dashlet_arrow_t_max.png);
+  background-image: url("images/dashlet_arrow_t_max.png");
 }
 
 .sizer1.anchor2.grow:before, .sizer1.anchor3.grow:before {
-    background-image: url(images/dashlet_arrow_t_grow.png);
+  background-image: url("images/dashlet_arrow_t_grow.png");
 }
 
 /* arrow at bottom */
 .sizer1.anchor0:before, .sizer1.anchor1:before {
-    bottom: -10px;
-    left: -7px;
-    background-repeat: no-repeat;
-    height: 14px;
-    width: 23px;
+  bottom: -10px;
+  left: -7px;
+  width: 23px;
+  height: 14px;
+  background-repeat: no-repeat;
 }
 
 .sizer1.anchor0.max:before, .sizer1.anchor1.max:before {
-    background-image: url(images/dashlet_arrow_b_max.png);
+  background-image: url("images/dashlet_arrow_b_max.png");
 }
 
 .sizer1.anchor0.grow:before, .sizer1.anchor1.grow:before {
-    background-image: url(images/dashlet_arrow_b_grow.png);
+  background-image: url("images/dashlet_arrow_b_grow.png");
 }
 
 .sizer_lbl {
-    position: absolute;
-    color: #000;
-    padding: 2px;
-    cursor: auto;
-    /* display: none; */
-    font-size: 6px;
+  position: absolute;
+  /* display: none; */
+  padding: 2px;
+  font-size: 6px;
+  color: #000;
+  cursor: auto;
 }
 
 .sizer_lbl0 {
-    width: auto;
-    height: 15px;
+  width: auto;
+  height: 15px;
 }
 
 .sizer_lbl1 {
-    height: auto;
-    width: 15px;
-    -webkit-transform: rotate(-90deg);
-    -moz-transform: rotate(-90deg);
-    -ms-transform: rotate(-90deg);
-    -o-transform: rotate(-90deg);
-    transform: rotate(-90deg);
-    /* Should be unset in IE9+ I think. */
-    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+  width: 15px;
+  height: auto;
+  /* Should be unset in IE9+ I think. */
+  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -ms-transform: rotate(-90deg);
+  -o-transform: rotate(-90deg);
+  transform: rotate(-90deg);
 }
 
 /* left side */
 .sizer_lbl1.anchor0,
 .sizer_lbl1.anchor3 {
-    left: 1.5px;
-    top: 47%;
+  top: 47%;
+  left: 1.5px;
 }
 
 /* right side */
 .sizer_lbl1.anchor1,
 .sizer_lbl1.anchor2 {
-    right: 6.5px;
-    top: 47%;
+  top: 47%;
+  right: 6.5px;
 }
 
 /* top side */
 .sizer_lbl0.anchor0,
 .sizer_lbl0.anchor1 {
-    left: 47%;
-    top: 5px;
+  top: 5px;
+  left: 47%;
 }
 
 /* bottom side */
 .sizer_lbl0.anchor2,
 .sizer_lbl0.anchor3 {
-    left: 47%;
-    bottom: 2.5px;
+  bottom: 2.5px;
+  left: 47%;
 }
 
 /* transparent resize areas for absolute sized */
-
 .resize {
-    position: absolute;
-    z-index: 70;
+  position: absolute;
+  z-index: 70;
 }
 
 .resize0 {
-    height: 100%;
-    width: 5px;
+  width: 5px;
+  height: 100%;
 }
 
 .resize1 {
-    width: 100%;
-    height: 5px;
+  width: 100%;
+  height: 5px;
 }
 
 .resize0_0 {
-    left: 0;
-    cursor:w-resize;
+  left: 0;
+  cursor: w-resize;
 }
 
 .resize0_1 {
-    right: 0;
-    cursor:e-resize;
+  right: 0;
+  cursor: e-resize;
 }
 
 .resize1_0 {
-    top: 0;
-    cursor:n-resize;
+  top: 0;
+  cursor: n-resize;
 }
 
 .resize1_1 {
-    bottom: 0;
-    cursor:s-resize;
+  bottom: 0;
+  cursor: s-resize;
 }
 
 .resize_corner {
-    width: 10px;
-    height: 10px;
-    z-index: 80;
+  z-index: 80;
+  width: 10px;
+  height: 10px;
 }
 
 .resize_corner0 {
-    top:0;
-    left:0;
-    cursor:nw-resize;
+  top: 0;
+  left: 0;
+  cursor: nw-resize;
 }
 
 .resize_corner1 {
-    top:0;
-    right:0;
-    cursor:ne-resize;
+  top: 0;
+  right: 0;
+  cursor: ne-resize;
 }
 
 .resize_corner2 {
-    bottom:0;
-    right:0;
-    cursor:se-resize;
+  right: 0;
+  bottom: 0;
+  cursor: se-resize;
 }
 
 .resize_corner3 {
-    bottom:0;
-    left:0;
-    cursor:sw-resize;
+  bottom: 0;
+  left: 0;
+  cursor: sw-resize;
 }

@@ -373,19 +373,18 @@ class BackgroundJob(object):
         if job_status["state"] == JobStatus.state_finished:
             return False
 
+        if job_status["state"] == JobStatus.state_initialized:
+            # The process was created a millisecond ago
+            # The child process however, did not have time to update the statefile with its PID
+            # We consider this scenario as OK, if the start time was recent enough
+            if time.time() - job_status["started"] < 5: # 5 seconds
+                return True
+
         if job_status["pid"] is None:
             return False
 
         try:
             p = psutil.Process(job_status["pid"])
-            if job_status["state"] == JobStatus.state_initialized:
-                # The process was just created, but has/may not been renamed yet
-                # Additionally it has no open file handle to the status file
-                # The _is_correct_process check will fail in this gray area
-                # We consider this scenario as OK, if the start time was recent enough
-                if time.time() - job_status["started"] < 5: # 5 seconds
-                    return True
-
             if self._is_correct_process(job_status, p):
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied) as e:

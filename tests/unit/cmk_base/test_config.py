@@ -145,7 +145,6 @@ def test_management_address_of(monkeypatch, attrs, result):
 ])
 def test_is_tcp_host(monkeypatch, hostname, tags, result):
     config_cache = _setup_host(monkeypatch, hostname, tags)
-    assert config.is_tcp_host(hostname) == result
     assert config_cache.get_host_config(hostname).is_tcp_host == result
 
 
@@ -161,7 +160,6 @@ def test_is_tcp_host(monkeypatch, hostname, tags, result):
 ])
 def test_is_ping_host(monkeypatch, hostname, tags, result):
     config_cache = _setup_host(monkeypatch, hostname, tags)
-    assert config.is_ping_host(hostname) == result
     assert config_cache.get_host_config(hostname).is_ping_host == result
 
 
@@ -203,7 +201,6 @@ def test_is_usewalk_host(monkeypatch):
 ])
 def test_is_dual_host(monkeypatch, hostname, tags, result):
     config_cache = _setup_host(monkeypatch, hostname, tags)
-    assert config.is_dual_host(hostname) == result
     assert config_cache.get_host_config(hostname).is_dual_host == result
 
 
@@ -216,7 +213,6 @@ def test_is_dual_host(monkeypatch, hostname, tags, result):
 ])
 def test_is_all_agents_host(monkeypatch, hostname, tags, result):
     config_cache = _setup_host(monkeypatch, hostname, tags)
-    assert config.is_all_agents_host(hostname) == result
     assert config_cache.get_host_config(hostname).is_all_agents_host == result
 
 
@@ -229,7 +225,6 @@ def test_is_all_agents_host(monkeypatch, hostname, tags, result):
 ])
 def test_is_all_special_agents_host(monkeypatch, hostname, tags, result):
     config_cache = _setup_host(monkeypatch, hostname, tags)
-    assert config.is_all_special_agents_host(hostname) == result
     assert config_cache.get_host_config(hostname).is_all_special_agents_host == result
 
 

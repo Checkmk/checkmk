@@ -820,41 +820,6 @@ def clusters_of(hostname):
 
 
 #
-# Agent type
-#
-
-
-# TODO: Replace call sites with HostConfig access and remove this
-def is_tcp_host(hostname):
-    return get_config_cache().get_host_config(hostname).is_tcp_host
-
-
-# TODO: Replace call sites with HostConfig access and remove this
-def is_ping_host(hostname):
-    return get_config_cache().get_host_config(hostname).is_ping_host
-
-
-# TODO: Replace call sites with HostConfig access and remove this
-def is_agent_host(hostname):
-    return get_config_cache().get_host_config(hostname).is_agent_host
-
-
-# TODO: Replace call sites with HostConfig access and remove this
-def is_dual_host(hostname):
-    return get_config_cache().get_host_config(hostname).is_dual_host
-
-
-# TODO: Replace call sites with HostConfig access and remove this
-def is_all_agents_host(hostname):
-    return get_config_cache().get_host_config(hostname).is_all_agents_host
-
-
-# TODO: Replace call sites with HostConfig access and remove this
-def is_all_special_agents_host(hostname):
-    return get_config_cache().get_host_config(hostname).is_all_special_agents_host
-
-
-#
 # IPv4/IPv6
 #
 

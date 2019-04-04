@@ -256,6 +256,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
     outfile = cfg.outfile
     import cmk_base.check_table as check_table
 
+    host_config = config_cache.get_host_config(hostname)
+
     #   _____
     #  |___ /
     #    |_ \
@@ -411,7 +413,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         if entries:
             # Skip Check_MK HW/SW Inventory for all ping hosts, even when the user has enabled
             # the inventory for ping only hosts
-            if acttype == "cmk_inv" and config.is_ping_host(hostname):
+            if acttype == "cmk_inv" and host_config.is_ping_host:
                 continue
 
             cfg.active_checks_to_define.add(acttype)
@@ -563,7 +565,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
     # Inventory checks - if user has configured them.
     if params["check_interval"] \
         and not config.service_ignored(hostname, None, service_discovery_name) \
-        and not config.is_ping_host(hostname):
+        and not host_config.is_ping_host:
         service_spec = {
             "use": config.inventory_check_template,
             "host_name": hostname,

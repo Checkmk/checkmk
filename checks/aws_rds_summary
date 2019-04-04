@@ -27,7 +27,7 @@
 
 def parse_aws_rds_summary(info):
     try:
-        return {instance['DBName']: instance for instance in parse_aws(info)}
+        return {instance['DBInstanceIdentifier']: instance for instance in parse_aws(info)}
     except IndexError:
         return {}
 
@@ -75,10 +75,10 @@ check_info['aws_rds_summary'] = {
 
 @get_parsed_item_data
 def check_aws_rds_summary_db(item, params, data):
-    db_id = data['DBInstanceIdentifier']
+    db_name = data.get('DBName')
     pre_info = ""
-    if db_id is not None:
-        pre_info = "[%s] " % db_id
+    if db_name is not None:
+        pre_info = "[%s] " % db_name
     yield 0, '%sStatus: %s' % (pre_info, data['DBInstanceStatus'])
 
     multi_az = data.get('MultiAZ')

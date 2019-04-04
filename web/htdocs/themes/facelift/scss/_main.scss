@@ -785,22 +785,6 @@ body.main input, body.main select, body.main textarea, body.main #mk_side_search
 body.main.visible div.foldable .title {
   color: $theme-color-text; }
 
-#controls, ul.sub {
-  padding: 8px;
-  color: $theme-color-lightgrey;
-  background-color: $theme-color-sidebar-background;
-  border: 1px solid $theme-color-table-border-dark;
-  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
-  border-radius: $theme-border-radius; }
-  #controls li, ul.sub li {
-    color: $theme-color-lightgrey;
-    padding: 4px 0px; }
-    #controls li a, #controls li body.main .popup_menu span, body.main .popup_menu #controls li span, ul.sub li a, ul.sub li body.main .popup_menu span, body.main .popup_menu ul.sub li span {
-      color: inherit; }
-
-.dashlet.edit .controls {
-  background: $theme-color-nuance-14; }
-
 .state {
   box-shadow: none; }
 

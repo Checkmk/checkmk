@@ -158,8 +158,9 @@ def clear_config_caches(monkeypatch):
     monkeypatch.setattr(cmk_base, "runtime_cache", cmk_base.caching.CacheManager())
 
 
-def test_data_sources_of_hosts(clear_config_caches, monkeypatch):
-    hosts = [
+@pytest.mark.parametrize(
+    "hostname,settings",
+    [
         # Configs from 1.4
         ("agent-host-14", {
             "tags": "lan|cmk-agent|ip-v4|tcp|ip-v4-only|prod",
@@ -218,15 +219,10 @@ def test_data_sources_of_hosts(clear_config_caches, monkeypatch):
             "tags": "lan|ip-v4|no-snmp|tcp|ip-v4-only|special-agents|prod",
             "sources": ['SpecialAgentDataSource', 'PiggyBackDataSource'],
         }),
-    ]
-
-    all_hosts = [("%s|%s" % (name, h["tags"])) for name, h in hosts]
-    monkeypatch.setattr(config, "all_hosts", all_hosts)
-
-    changed_hosts_paths = copy.deepcopy(config.host_paths)
-    for name, _h in hosts:
-        changed_hosts_paths[name] = "/"
-    monkeypatch.setattr(config, "host_paths", changed_hosts_paths)
+    ])
+def test_data_sources_of_hosts(clear_config_caches, monkeypatch, hostname, settings):
+    monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, settings["tags"])])
+    monkeypatch.setattr(config, "host_paths", {hostname: "/"})
 
     monkeypatch.setattr(config, "datasource_programs", [
         ('echo 1', [], ['ds-host-14', 'all-agents-host', 'all-special-host'], {}),
@@ -242,8 +238,6 @@ def test_data_sources_of_hosts(clear_config_caches, monkeypatch):
 
     config.get_config_cache().initialize()
 
-    for hostname, host_attrs in hosts:
-        sources = cmk_base.data_sources.DataSources(hostname, "127.0.0.1")
-        source_names = [s.__class__.__name__ for s in sources.get_data_sources()]
-        assert host_attrs["sources"] == source_names, \
-            "Wrong sources for %s" % hostname
+    sources = cmk_base.data_sources.DataSources(hostname, "127.0.0.1")
+    source_names = [s.__class__.__name__ for s in sources.get_data_sources()]
+    assert settings["sources"] == source_names, "Wrong sources for %s" % hostname

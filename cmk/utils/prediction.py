@@ -187,7 +187,7 @@ def clean_prediction_files(pred_file, force=False):
     # which was never handled correctly so that the prediction could never be used again until
     # manual removal of the files. Clean this up.
     for file_path in [pred_file, pred_file + '.info']:
-        if os.path.exists(file_path) and os.stat(file_path).st_size == 0 or force:
+        if os.path.exists(file_path) and (os.stat(file_path).st_size == 0 or force):
             logger.verbose("Removing obsolete prediction %s", os.path.basename(file_path))
             os.remove(file_path)
 

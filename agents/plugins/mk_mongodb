@@ -47,7 +47,7 @@ def section_flushing(server_status):
     sys.stdout.write("flushed %s\n" % flushing_info["flushes"])
 
 
-def main():  # pylint: disable=too-many-branches,too-many-locals
+def main():
     # might be implemented in the future..
     host = None
     port = None
@@ -64,10 +64,20 @@ def main():  # pylint: disable=too-many-branches,too-many-locals
     section_instance(server_status)
 
     repl_info = server_status.get("repl")
+
+    if repl_info and not repl_info.get("ismaster"):
+        return
+
     if repl_info:
-        if not repl_info.get("ismaster"):
-            sys.exit(0)
         sys.stdout.write("<<<<%s>>>>\n" % repl_info["setName"])
+    potentially_piggybacked_sections(con, server_status, repl_info)
+    if repl_info:
+        sys.stdout.write("<<<<>>>>\n")
+
+
+def potentially_piggybacked_sections(con, server_status, repl_info):
+    # pylint: disable=too-many-branches,too-many-locals
+    if repl_info:
         sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
         sys.stdout.write("primary\t%s\n" % repl_info.get("primary"))
         sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
@@ -197,8 +207,6 @@ def main():  # pylint: disable=too-many-branches,too-many-locals
         if startup_warnings["log"]:
             file(state_file,
                  "w").write("%d" % get_timestamp(startup_warnings["log"][-1].split(".")[0]))
-
-    sys.stdout.write("<<<<>>>>\n")
 
 
 if __name__ == "__main__":

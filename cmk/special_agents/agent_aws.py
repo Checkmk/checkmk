@@ -45,6 +45,17 @@ from cmk.utils.paths import tmp_dir
 import cmk.utils.store as store
 import cmk.utils.password_store
 
+# TODO
+# Rewrite API calls from low-level client to high-level resource:
+# Boto3 has two distinct levels of APIs. Client (or "low-level") APIs provide
+# one-to-one mappings to the underlying HTTP API operations. Resource APIs hide
+# explicit network calls but instead provide resource objects and collections to
+# access attributes and perform actions.
+
+# Note that in this case you do not have to make a second API call to get the
+# objects; they're available to you as a collection on the bucket. These
+# collections of subresources are lazily-loaded.
+
 AWSStrings = Union[bytes, unicode]
 
 #   .--for imports---------------------------------------------------------.
@@ -274,10 +285,11 @@ class AWSSection(object):
         try:
             age = now - self._cache_file.stat().st_mtime
         except OSError as e:
-            if e.errno == 2:  # No such file or directory
-                logging.info("Cannot calculate cache file age of %s", self._cache_file)
+            if e.errno == 2:
+                logging.info("No such file or directory %s (calculate age)", self._cache_file)
                 return False
             else:
+                logging.info("Cannot calculate cache file age: %s", e)
                 raise
 
         if age >= self.interval:
@@ -294,14 +306,16 @@ class AWSSection(object):
             with self._cache_file.open(encoding="utf-8") as f:
                 raw_content = f.read().strip()
         except IOError as e:
-            if e.errno == errno.ENOENT:  # No such file or directory
+            if e.errno == errno.ENOENT:
+                logging.info("No such file or directory %s (read from cache)", self._cache_file)
                 return None, 0.0
             else:
+                logging.info("Cannot read from cache file: %s", e)
                 raise
         try:
             content = json.loads(raw_content)
         except ValueError as e:
-            logging.info(e)
+            logging.info("Cannot load raw content: %s", e)
             content = None
         return content, self._cache_file.stat().st_mtime
 
@@ -349,6 +363,26 @@ class AWSSection(object):
         # type: (Any) -> List[AWSSectionResult]
         pass
 
+    def _get_response_content(self, response, key, dflt=None):
+        if dflt is None:
+            dflt = []
+        try:
+            return response[key]
+        except KeyError:
+            logging.info("%s: KeyError; Available keys are %s", self.name, response.keys())
+            return dflt
+
+    def _prepare_tags_for_api_response(self, tags):
+        """
+        We need to change the format, in order to filter out instances with specific
+        tags if and only if we already fetched instances, eg. by limits section.
+        The format:
+        [{'Key': KEY, 'Value': VALUE}, ...]
+        """
+        if not tags:
+            return
+        return [{'Key': e['Name'].strip("tag:"), 'Value': v} for e in tags for v in e['Values']]
+
 
 class AWSSectionLimits(AWSSection):
     __metaclass__ = abc.ABCMeta
@@ -394,10 +428,9 @@ class AWSSectionCloudwatch(AWSSection):
                 StartTime=start_time,
                 EndTime=end_time,
             )
-            try:
-                metrics = response['MetricDataResults']
-            except KeyError as e:
-                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+
+            metrics = self._get_response_content(response, 'MetricDataResults')
+            if not metrics:
                 continue
             raw_content.extend(metrics)
         return raw_content
@@ -463,11 +496,7 @@ class CostsAndUsage(AWSSectionGeneric):
                 'Key': 'SERVICE'
             }],
         )
-        try:
-            return response['ResultsByTime']
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
+        return self._get_response_content(response, 'ResultsByTime')
 
     def _compute_content(self, raw_content, colleague_contents):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
@@ -506,11 +535,7 @@ class EC2Summary(AWSSectionGeneric):
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._describe_instances()
-        try:
-            return response['Reservations']
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
+        return self._get_response_content(response, 'Reservations')
 
     def _describe_instances(self):
         if self._names is not None:
@@ -553,11 +578,10 @@ class EC2SecurityGroups(AWSSectionGeneric):
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._describe_security_groups()
-        try:
-            return {group['GroupId']: group for group in response['SecurityGroups']}
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return {}
+        return {
+            group['GroupId']: group
+            for group in self._get_response_content(response, 'SecurityGroups')
+        }
 
     def _describe_security_groups(self):
         if self._names is not None:
@@ -676,11 +700,7 @@ class S3Limits(AWSSectionLimits):
         fetch all buckets.
         """
         response = self._client.list_buckets()
-        try:
-            return response['Buckets']
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
+        return self._get_response_content(response, 'Buckets')
 
     def _compute_content(self, raw_content, colleague_contents):
         self._add_limit("", AWSLimit('buckets', 'Buckets', 100, len(raw_content.content)))
@@ -691,16 +711,7 @@ class S3Summary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(S3Summary, self).__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config['s3_names']
-        self._tags = self._prepare_s3_tags(self._config.service_config['s3_tags'])
-
-    def _prepare_s3_tags(self, tags):
-        """
-        S3 tags have a different format:
-        [{'Key': KEY, 'Value': VALUE}, ...]
-        """
-        if not tags:
-            return
-        return [{'Key': e['Name'].strip("tag:"), 'Value': v} for e in tags for v in e['Values']]
+        self._tags = self._prepare_tags_for_api_response(self._config.service_config['s3_tags'])
 
     @property
     def name(self):
@@ -720,17 +731,12 @@ class S3Summary(AWSSectionGeneric):
         found_buckets = []
         for bucket in self._list_buckets(colleague_contents):
             bucket_name = bucket['Name']
-            response = self._client.get_bucket_location(Bucket=bucket_name)
-            try:
-                location = response['LocationConstraint']
-            except KeyError as e:
-                logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
-                             response.keys())
-                location = None
 
             # We can request buckets globally but if a bucket is located in
             # another region we do not get any results
-            if location is None or location != self._region:
+            response = self._client.get_bucket_location(Bucket=bucket_name)
+            location = self._get_response_content(response, 'LocationConstraint', dflt="")
+            if location != self._region:
                 continue
             bucket['LocationConstraint'] = location
 
@@ -739,17 +745,14 @@ class S3Summary(AWSSectionGeneric):
             #_response = self._client.get_public_access_block(Bucket=bucket_name)
             #_response = self._client.get_bucket_policy_status(Bucket=bucket_name)
             # 'S3' object has no attribute 'get_bucket_policy_status'
-
-            tagging = []
             try:
                 response = self._client.get_bucket_tagging(Bucket=bucket_name)
-                tagging = response['TagSet']
             except botocore.exceptions.ClientError as e:
                 # If there are no tags attached to a bucket we receive a 'ClientError'
                 logging.info("%s/%s: No tags set, %s", self.name, bucket_name, e)
-            except KeyError as e:
-                logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
-                             response.keys())
+                response = {}
+
+            tagging = self._get_response_content(response, 'TagSet')
             if self._matches_tag_conditions(tagging):
                 bucket['Tagging'] = tagging
                 found_buckets.append(bucket)
@@ -764,11 +767,7 @@ class S3Summary(AWSSectionGeneric):
             return [{'Name': n} for n in self._names]
 
         response = self._client.list_buckets()
-        try:
-            return response['Buckets']
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
+        return self._get_response_content(response, 'Buckets')
 
     def _matches_tag_conditions(self, tagging):
         if self._names is not None:
@@ -947,18 +946,10 @@ class ELBLimits(AWSSectionLimits):
         values from 'describe_load_balancers'.
         """
         response = self._client.describe_load_balancers()
-        try:
-            load_balancers = response['LoadBalancerDescriptions']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            load_balancers = []
+        load_balancers = self._get_response_content(response, 'LoadBalancerDescriptions')
 
         response = self._client.describe_account_limits()
-        try:
-            limits = response['Limits']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            limits = []
+        limits = self._get_response_content(response, 'Limits')
         return load_balancers, limits
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -987,16 +978,7 @@ class ELBSummary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(ELBSummary, self).__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config['elb_names']
-        self._tags = self._prepare_elb_tags(self._config.service_config['elb_tags'])
-
-    def _prepare_elb_tags(self, tags):
-        """
-        ELB tags have a different format:
-        [{'Key': KEY, 'Value': VALUE}, ...]
-        """
-        if not tags:
-            return
-        return [{'Key': e['Name'].strip("tag:"), 'Value': v} for e in tags for v in e['Values']]
+        self._tags = self._prepare_tags_for_api_response(self._config.service_config['elb_tags'])
 
     @property
     def name(self):
@@ -1013,18 +995,17 @@ class ELBSummary(AWSSectionGeneric):
         found_load_balancers = []
         for load_balancer in self._describe_load_balancers(colleague_contents):
             load_balancer_name = load_balancer['LoadBalancerName']
-            tagging = []
             try:
                 response = self._client.describe_tags(LoadBalancerNames=[load_balancer_name])
-                tagging = [
-                    tag for tag_descr in response['TagDescriptions'] for tag in tag_descr['Tags']
-                ]
             except botocore.exceptions.ClientError as e:
                 # If there are no tags attached to a bucket we receive a 'ClientError'
                 logging.info("%s/%s: No tags set, %s", self.name, load_balancer_name, e)
-            except KeyError as e:
-                logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
-                             e, response.keys())
+                response = {}
+
+            tagging = [
+                tag for tag_descr in self._get_response_content(response, 'TagDescriptions')
+                for tag in tag_descr['Tags']
+            ]
             if self._matches_tag_conditions(tagging):
                 load_balancer['TagDescriptions'] = tagging
                 found_load_balancers.append(load_balancer)
@@ -1040,11 +1021,7 @@ class ELBSummary(AWSSectionGeneric):
             response = self._client.describe_load_balancers(LoadBalancerNames=self._names)
         else:
             response = self._client.describe_load_balancers()
-        try:
-            return response['LoadBalancerDescriptions']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
+        return self._get_response_content(response, 'LoadBalancerDescriptions')
 
     def _matches_tag_conditions(self, tagging):
         if self._names is not None:
@@ -1086,12 +1063,8 @@ class ELBHealth(AWSSectionGeneric):
         for load_balancer_dns_name, load_balancer in colleague_contents.content.iteritems():
             load_balancer_name = load_balancer['LoadBalancerName']
             response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)
-            try:
-                states = response['InstanceStates']
-            except KeyError as e:
-                logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
-                             e, response.keys())
-            else:
+            states = self._get_response_content(response, 'InstanceStates')
+            if states:
                 load_balancers.setdefault(load_balancer_dns_name, states)
         return load_balancers
 
@@ -1199,18 +1172,10 @@ class EBSLimits(AWSSectionLimits):
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_volumes()
-        try:
-            volumes = response['Volumes']
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            volumes = []
+        volumes = self._get_response_content(response, 'Volumes')
 
         response = self._client.describe_snapshots()
-        try:
-            snapshots = response['Snapshots']
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            snapshots = []
+        snapshots = self._get_response_content(response, 'Snapshots')
         return volumes, snapshots
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -1317,7 +1282,7 @@ class EBSSummary(AWSSectionGeneric):
 
     def _fetch_volumes_filtered_by_tags(self, col_volumes):
         if col_volumes:
-            tags = self._prepare_ebs_tags(self._tags)
+            tags = self._prepare_tags_for_api_response(self._tags)
             volumes = {
                 vol['VolumeId']: vol for vol in col_volumes for tag in vol['Tags'] if tag in tags
             }
@@ -1326,34 +1291,15 @@ class EBSSummary(AWSSectionGeneric):
         return (volumes,
                 self._format_volume_states(self._client.describe_volume_status(Filters=self._tags)))
 
-    def _prepare_ebs_tags(self, tags):
-        """
-        We need to change the format, in order to filter out volumes with specific
-        tags if and only if we already fetched volumes by ebs_limits. The format from
-        the API is:
-        [{'Key': KEY, 'Value': VALUE}, ...]
-        """
-        if not tags:
-            return
-        return [{'Key': e['Name'].strip("tag:"), 'Value': v} for e in tags for v in e['Values']]
-
     def _fetch_volumes_without_filter(self):
         return (self._format_volumes(self._client.describe_volumes()),
                 self._format_volume_states(self._client.describe_volume_status()))
 
     def _format_volumes(self, response):
-        try:
-            return {r['VolumeId']: r for r in response['Volumes']}
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return {}
+        return {r['VolumeId']: r for r in self._get_response_content(response, 'Volumes')}
 
     def _format_volume_states(self, response):
-        try:
-            return {r['VolumeId']: r for r in response['VolumeStatuses']}
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return {}
+        return {r['VolumeId']: r for r in self._get_response_content(response, 'VolumeStatuses')}
 
     def _compute_content(self, raw_content, colleague_contents):
         _col_volumes, col_instances = colleague_contents.content
@@ -1502,11 +1448,7 @@ class RDSLimits(AWSSectionLimits):
         limit and usage values.
         """
         response = self._client.describe_account_attributes()
-        try:
-            return response['AccountQuotas']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
+        return self._get_response_content(response, 'AccountQuotas')
 
     def _compute_content(self, raw_content, colleague_contents):
         for limit in raw_content.content:
@@ -1538,11 +1480,7 @@ class RDSSummary(AWSSectionGeneric):
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._describe_db_instances()
-        try:
-            return response['DBInstances']
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
+        return self._get_response_content(response, 'DBInstances')
 
     def _describe_db_instances(self):
         if self._names is not None:
@@ -1666,7 +1604,7 @@ class AWSSections(object):
         try:
             return self._session.client(client_key)
         except (ValueError, botocore.exceptions.ClientError,
-                botocore.exceptions.UnknownServiceError):
+                botocore.exceptions.UnknownServiceError) as e:
             # If region name is not valid we get a ValueError
             # but not in all cases, eg.:
             # 1. 'eu-central-' raises a ValueError
@@ -1674,6 +1612,7 @@ class AWSSections(object):
             # In the second case we get an exception raised by botocore
             # during we execute an operation, eg. cloudwatch.get_metrics(**kwargs):
             # - botocore.exceptions.EndpointConnectionError
+            logging.info("Invalid region name or client key %s: %s", client_key, e)
             raise
 
     def run(self, use_cache=True):
@@ -1837,22 +1776,6 @@ class AWSSectionsGeneric(AWSSections):
         rds_summary_distributor.add(rds)
 
         #---register sections for execution---------------------------------
-        # Dependencies: First append sections which distribute their results:
-        # --ec2_summary ('ec2')
-        #   |
-        #   |-- ec2 ('ec2')
-        #   |
-        #   |-- ebs_summary ('ec2', 'ebs')
-        #   |       |
-        #   |       |-- ebs ('ec2', 'ebs')
-        #   |
-        #   |-- ebs ('ec2')
-        #
-        # -- elb_summary
-        #    |
-        #    |-- elb_health
-        #    |
-        #    |-- elb
         if 'ec2' in services:
             self._sections.append(ec2_summary)
             self._sections.append(ec2_security_groups)

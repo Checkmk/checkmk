@@ -238,6 +238,9 @@ def test_data_sources_of_hosts(clear_config_caches, monkeypatch, hostname, setti
 
     config.get_config_cache().initialize()
 
+    print config.get_config_cache.get_host_config(hostname).is_piggyback_host
+
+
     sources = cmk_base.data_sources.DataSources(hostname, "127.0.0.1")
     source_names = [s.__class__.__name__ for s in sources.get_data_sources()]
     assert settings["sources"] == source_names, "Wrong sources for %s" % hostname

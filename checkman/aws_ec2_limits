@@ -1,0 +1,44 @@
+title: AWS EC2 Limits
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the AWS/EC2 limits.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ We have the following default limits:
+
+ - VPC Elastic IP Addresses, 5
+
+ - Elastic IP Addresses, 5
+
+ - Rules of VPC security group, 50
+
+ - Security Groups of VPC, 500
+
+ - VPC security groups of elastic network interface, 5
+
+ - Spot Instance Requests, 20
+
+ - Active Spot Fleet Requests, 1000
+
+ - Spot Fleet Requests Total Target Capacity, 5000
+
+ - Total Running On-Demand Instances, 20
+
+ - Running On-Demand Instances of different types, 20
+
+ From above API method we addtionally get the amount of used
+ instances/space per limit type.
+
+ With both values we calculate the usage of each limit type
+ in percent. Default levels are set to 80, 90 percent per type.
+ For each limit type the limit and usage levels are configurable.
+
+ If limits are enabled account attributes of EC2 resource are
+ additionally fetched.
+
+inventory:
+ One service per bucket will be created.

@@ -1,0 +1,22 @@
+Title: aws_ec2_limits: New check which monitors AWS/EC2 limits
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552059190
+Class: feature
+
+The following limits and their default levels are monitored:
+<ul>
+<li>VPC Elastic IP Addresses, 5</li>
+<li>Elastic IP Addresses, 5</li>
+<li>Rules of VPC security group, 50</li>
+<li>Security Groups of VPC, 500</li>
+<li>VPC security groups of elastic network interface, 5</li>
+<li>Spot Instance Requests, 20</li>
+<li>Active Spot Fleet Requests, 1000</li>
+<li>Spot Fleet Requests Total Target Capacity, 5000</li>
+<li>Total Running On-Demand Instances, 20</li>
+<li>Running On-Demand Instances of different types, 20</li>
+</ul>

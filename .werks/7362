@@ -1,0 +1,13 @@
+Title: AWS/RDS services: Use DB identifier instead of DB name as item; DB name may be missing or not set
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1554365041
+
+You have to perform a re-discovery in order to create new items
+and remove old items. Configured rules for these services must
+also be adapted.

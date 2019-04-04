@@ -54,10 +54,10 @@ private:
 
     static std::string expandMacros(const std::string &raw, const host *hst,
                                     const service *svc);
-    static const char *expandMacro(const char *macroname, const host *hst,
-                                   const service *svc);
+    static const char *expandMacro(const std::string &macroname,
+                                   const host *hst, const service *svc);
     static const char *expandCustomVariables(
-        const char *varname, const customvariablesmember *custvars);
+        const std::string &varname, const customvariablesmember *custvars);
 };
 
 #endif  // OffsetStringMacroColumn_h

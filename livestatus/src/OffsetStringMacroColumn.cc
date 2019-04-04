@@ -24,10 +24,10 @@
 
 #include "OffsetStringMacroColumn.h"
 #include <cstdlib>
-#include <cstring>
 #include "Column.h"
 #include "RegExp.h"
 #include "Row.h"
+#include "StringUtils.h"
 
 std::string OffsetStringMacroColumn::getValue(Row row) const {
     // TODO(sp): Use _mc!
@@ -44,104 +44,101 @@ std::string OffsetStringMacroColumn::getValue(Row row) const {
 std::string OffsetStringMacroColumn::expandMacros(const std::string &raw,
                                                   const host *hst,
                                                   const service *svc) {
-    // search for macro names, beginning with $
     std::string result;
-    const char *scan = raw.c_str();
-    while (*scan != 0) {
-        const char *dollar = strchr(scan, '$');
-        if (dollar == nullptr) {
-            result += scan;
+    size_t pos = 0;
+    while (pos < raw.size()) {
+        auto start = raw.find('$', pos);
+        if (start == std::string::npos) {
+            result += raw.substr(pos);
             break;
         }
-        result += std::string(scan, dollar - scan);
-        const char *otherdollar = strchr(dollar + 1, '$');
-        if (otherdollar == nullptr) {  // unterminated macro, do not expand
-            result += dollar;
+        auto end = raw.find('$', start + 1);
+        if (end == std::string::npos) {
+            result += raw.substr(pos);
             break;
         }
-        std::string macroname =
-            std::string(dollar + 1, otherdollar - dollar - 1);
-        const char *replacement = expandMacro(macroname.c_str(), hst, svc);
-        if (replacement != nullptr) {
-            result += replacement;
+        auto macroname = raw.substr(start + 1, end - (start + 1));
+        if (auto replacement = expandMacro(macroname, hst, svc)) {
+            result += raw.substr(pos, start - pos) + replacement;
         } else {
-            result += std::string(
-                dollar, otherdollar - dollar + 1);  // leave macro unexpanded
+            result += raw.substr(pos, end + 1 - pos);
         }
-        scan = otherdollar + 1;
+        pos = end + 1;
     }
     return result;
 }
 
 // static
-const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
+const char *OffsetStringMacroColumn::expandMacro(const std::string &macroname,
                                                  const host *hst,
                                                  const service *svc) {
     // host macros
-    if (strcmp(macroname, "HOSTNAME") == 0) {
+    if (macroname == "HOSTNAME") {
         return hst->name;
     }
-    if (strcmp(macroname, "HOSTDISPLAYNAME") == 0) {
+    if (macroname == "HOSTDISPLAYNAME") {
         return hst->display_name;
     }
-    if (strcmp(macroname, "HOSTALIAS") == 0) {
+    if (macroname == "HOSTALIAS") {
         return hst->alias;
     }
-    if (strcmp(macroname, "HOSTADDRESS") == 0) {
+    if (macroname == "HOSTADDRESS") {
         return hst->address;
     }
-    if (strcmp(macroname, "HOSTOUTPUT") == 0) {
+    if (macroname == "HOSTOUTPUT") {
         return hst->plugin_output;
     }
-    if (strcmp(macroname, "LONGHOSTOUTPUT") == 0) {
+    if (macroname == "LONGHOSTOUTPUT") {
         return hst->long_plugin_output;
     }
-    if (strcmp(macroname, "HOSTPERFDATA") == 0) {
+    if (macroname == "HOSTPERFDATA") {
         return hst->perf_data;
     }
-    if (strcmp(macroname, "HOSTCHECKCOMMAND") == 0) {
+    if (macroname == "HOSTCHECKCOMMAND") {
 #ifndef NAGIOS4
         return hst->host_check_command;
 #else
         return hst->check_command;
 #endif  // NAGIOS4
     }
-    if (strncmp(macroname, "_HOST", 5) == 0) {  // custom macro
-        return expandCustomVariables(macroname + 5, hst->custom_variables);
+    if (mk::starts_with(macroname, "_HOST")) {  // custom macro
+        return expandCustomVariables(macroname.substr(5),
+                                     hst->custom_variables);
 
         // service macros
     }
     if (svc != nullptr) {
-        if (strcmp(macroname, "SERVICEDESC") == 0) {
+        if (macroname == "SERVICEDESC") {
             return svc->description;
         }
-        if (strcmp(macroname, "SERVICEDISPLAYNAME") == 0) {
+        if (macroname == "SERVICEDISPLAYNAME") {
             return svc->display_name;
         }
-        if (strcmp(macroname, "SERVICEOUTPUT") == 0) {
+        if (macroname == "SERVICEOUTPUT") {
             return svc->plugin_output;
         }
-        if (strcmp(macroname, "LONGSERVICEOUTPUT") == 0) {
+        if (macroname == "LONGSERVICEOUTPUT") {
             return svc->long_plugin_output;
         }
-        if (strcmp(macroname, "SERVICEPERFDATA") == 0) {
+        if (macroname == "SERVICEPERFDATA") {
             return svc->perf_data;
         }
-        if (strcmp(macroname, "SERVICECHECKCOMMAND") == 0) {
+        if (macroname == "SERVICECHECKCOMMAND") {
 #ifndef NAGIOS4
             return svc->service_check_command;
 #else
             return svc->check_command;
 #endif  // NAGIOS4
         }
-        if (strncmp(macroname, "_SERVICE", 8) == 0) {  // custom macro
-            return expandCustomVariables(macroname + 8, svc->custom_variables);
+        if (mk::starts_with(macroname, "_SERVICE")) {  // custom macro
+            return expandCustomVariables(macroname.substr(8),
+                                         svc->custom_variables);
         }
     }
 
     // USER macros
-    if (strncmp(macroname, "USER", 4) == 0) {
-        int n = atoi(macroname + 4);
+    if (mk::starts_with(macroname, "USER")) {
+        int n = atoi(macroname.substr(4).c_str());
         if (n > 0 && n <= MAX_USER_MACROS) {
             extern char *macro_user[MAX_USER_MACROS];
             return macro_user[n - 1];
@@ -153,7 +150,7 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
 
 // static
 const char *OffsetStringMacroColumn::expandCustomVariables(
-    const char *varname, const customvariablesmember *custvars) {
+    const std::string &varname, const customvariablesmember *custvars) {
     RegExp regExp(varname, RegExp::Case::ignore, RegExp::Syntax::literal);
     for (; custvars != nullptr; custvars = custvars->next) {
         if (regExp.match(custvars->variable_name)) {

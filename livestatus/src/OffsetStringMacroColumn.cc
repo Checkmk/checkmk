@@ -57,7 +57,7 @@ void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
         result += string(scan, dollar - scan);
         const char *otherdollar = strchr(dollar + 1, '$');
         if (otherdollar == nullptr) {  // unterminated macro, do not expand
-            result += scan;
+            result += dollar;
             break;
         }
         string macroname = string(dollar + 1, otherdollar - dollar - 1);

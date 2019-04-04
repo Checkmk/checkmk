@@ -1,0 +1,16 @@
+Title: Fixed macro expansion in Livestatus
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p39
+Date: 1554369501
+
+Unterminated dollar signs were handled incorrectly: The part of the text
+before such a dollar sign was repeated, e.g. "foo$bar" was incorreclty
+expanded to "foofoo$bar", although it should remain unchanged.  This
+affected only the Livestatus NEB, not the CMC.
+
+CMK-1925

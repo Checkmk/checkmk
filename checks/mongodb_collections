@@ -39,19 +39,24 @@
 
 
 def parse_mongodb_collections(info):
+    required_keys_int = ("size", "storageSize")
     parsed = {}
     for line in info:
         db_name, collection, key, value = line
         data = parsed.setdefault("%s %s" % (db_name, collection), {})
-        data[key] = value
+        if key in required_keys_int:
+            try:
+                data[key] = int(value)
+            except ValueError:
+                pass
     return parsed
 
 
 def check_mongodb_collections(item, params, parsed):
     fslist_blocks = []
     for coll_item, values in parsed.items():
-        used_mb = float(values["size"]) / 1024.0**2
-        total_mb = float(values["storageSize"]) / 1024.0**2
+        used_mb = values["size"] / 1024.0**2
+        total_mb = values["storageSize"] / 1024.0**2
         fslist_blocks.append((coll_item, total_mb, total_mb - used_mb, 0))
 
     return df_check_filesystem_list(item, params, fslist_blocks)

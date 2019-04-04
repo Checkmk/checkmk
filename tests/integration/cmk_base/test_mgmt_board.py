@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# TODO: This should be realized as unit tests
 
 import pytest
 from testlib import web
@@ -19,6 +20,10 @@ def reload_config():
     import cmk_base.check_api as check_api
     config.load_all_checks(check_api.get_check_api_context)
     config.load()
+
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    return config_cache
 
 
 @pytest.fixture(scope="function")
@@ -72,10 +77,11 @@ def test_mgmt_explicit_settings(web, protocol, cred_attribute, credentials):
             cred_attribute: credentials,
         })
 
-    reload_config()
-    assert config.has_management_board("mgmt-host")
+    config_cache = reload_config()
+    host_config = config_cache.get_host_config("mgmt-host")
+    assert host_config.has_management_board
+    assert host_config.management_protocol == protocol
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_protocol_of("mgmt-host") == protocol
     assert config.management_credentials_of("mgmt-host") == credentials
 
 
@@ -88,10 +94,11 @@ def test_mgmt_explicit_address(web):
             "management_address": "127.0.0.2",
         })
 
-    reload_config()
-    assert config.has_management_board("mgmt-host")
+    config_cache = reload_config()
+    host_config = config_cache.get_host_config("mgmt-host")
+    assert host_config.has_management_board
+    assert host_config.management_protocol == "snmp"
     assert config.management_address_of("mgmt-host") == "127.0.0.2"
-    assert config.management_protocol_of("mgmt-host") == "snmp"
     assert config.management_credentials_of("mgmt-host") == "public"
 
 
@@ -105,10 +112,11 @@ def test_mgmt_disabled(web):
             "management_snmp_community": "HOST",
         })
 
-    reload_config()
-    assert config.has_management_board("mgmt-host") == False
+    config_cache = reload_config()
+    host_config = config_cache.get_host_config("mgmt-host")
+    assert host_config.has_management_board is False
+    assert host_config.management_protocol is None
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_protocol_of("mgmt-host") is None
     assert config.management_credentials_of("mgmt-host") is None
 
 
@@ -138,10 +146,11 @@ def test_mgmt_inherit_credentials_explicit_host(web, protocol, cred_attribute, c
             cred_attribute: credentials,
         })
 
-    reload_config()
-    assert config.has_management_board("mgmt-host")
+    config_cache = reload_config()
+    host_config = config_cache.get_host_config("mgmt-host")
+    assert host_config.has_management_board
+    assert host_config.management_protocol == protocol
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_protocol_of("mgmt-host") == protocol
     assert config.management_credentials_of("mgmt-host") == credentials
 
 
@@ -169,10 +178,11 @@ def test_mgmt_inherit_credentials(web, protocol, cred_attribute, credentials, fo
             "management_protocol": protocol,
         })
 
-    reload_config()
-    assert config.has_management_board("mgmt-host")
+    config_cache = reload_config()
+    host_config = config_cache.get_host_config("mgmt-host")
+    assert host_config.has_management_board
+    assert host_config.management_protocol == protocol
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_protocol_of("mgmt-host") == protocol
     assert config.management_credentials_of("mgmt-host") == folder_credentials
 
 
@@ -203,10 +213,11 @@ def test_mgmt_inherit_protocol_explicit_host(web, protocol, cred_attribute, cred
             cred_attribute: credentials,
         })
 
-    reload_config()
-    assert config.has_management_board("mgmt-host")
+    config_cache = reload_config()
+    host_config = config_cache.get_host_config("mgmt-host")
+    assert host_config.has_management_board
+    assert host_config.management_protocol == protocol
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_protocol_of("mgmt-host") == protocol
     assert config.management_credentials_of("mgmt-host") == credentials
 
 
@@ -233,10 +244,11 @@ def test_mgmt_inherit_protocol(web, protocol, cred_attribute, credentials, folde
             "ipaddress": "127.0.0.1",
         })
 
-    reload_config()
-    assert config.has_management_board("mgmt-host")
+    config_cache = reload_config()
+    host_config = config_cache.get_host_config("mgmt-host")
+    assert host_config.has_management_board
+    assert host_config.management_protocol == protocol
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_protocol_of("mgmt-host") == protocol
     assert config.management_credentials_of("mgmt-host") == folder_credentials
 
 
@@ -278,10 +290,11 @@ def test_mgmt_config_ruleset(web, protocol, cred_attribute, credentials, ruleset
             "management_protocol": protocol,
         })
 
-    reload_config()
-    assert config.has_management_board("mgmt-host")
+    config_cache = reload_config()
+    host_config = config_cache.get_host_config("mgmt-host")
+    assert host_config.has_management_board
+    assert host_config.management_protocol == protocol
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_protocol_of("mgmt-host") == protocol
     assert config.management_credentials_of("mgmt-host") == ruleset_credentials
 
 
@@ -327,10 +340,11 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(web, protocol, cred_a
             "management_protocol": protocol,
         })
 
-    reload_config()
-    assert config.has_management_board("mgmt-host")
+    config_cache = reload_config()
+    host_config = config_cache.get_host_config("mgmt-host")
+    assert host_config.has_management_board
+    assert host_config.management_protocol == protocol
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_protocol_of("mgmt-host") == protocol
     assert config.management_credentials_of("mgmt-host") == folder_credentials
 
 
@@ -370,8 +384,9 @@ def test_mgmt_config_ruleset_order(web):
             "management_protocol": "snmp",
         })
 
-    reload_config()
-    assert config.has_management_board("mgmt-host")
+    config_cache = reload_config()
+    host_config = config_cache.get_host_config("mgmt-host")
+    assert host_config.has_management_board
+    assert host_config.management_protocol == "snmp"
     assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_protocol_of("mgmt-host") == "snmp"
     assert config.management_credentials_of("mgmt-host") == "RULESET1"

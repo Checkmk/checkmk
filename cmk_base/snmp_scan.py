@@ -101,7 +101,7 @@ def _snmp_scan(host_config,
     default_found = []
 
     for check_plugin_name, _unused_check in items:
-        if config.service_ignored(hostname, check_plugin_name, None):
+        if config.service_ignored(host_config.hostname, check_plugin_name, None):
             continue
         else:
             if for_inv and not inventory_plugins.is_snmp_plugin(check_plugin_name):

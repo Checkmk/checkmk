@@ -39,21 +39,12 @@
 
 
 def parse_mongodb_collections(info):
-    databases = {}
-    for line in info:
-        db, coll, what, value = line
-        databases.setdefault(db, {}).setdefault(coll, {})[what] = value
-
     parsed = {}
-    for db, collections in databases.items():
-        for collection, values in collections.items():
-            parsed["%s %s" % (db, collection)] = values
+    for line in info:
+        db_name, collection, key, value = line
+        data = parsed.setdefault("%s %s" % (db_name, collection), {})
+        data[key] = value
     return parsed
-
-
-def inventory_mongodb_collections(parsed):
-    for item in parsed:
-        yield item, {}
 
 
 def check_mongodb_collections(item, params, parsed):
@@ -68,8 +59,8 @@ def check_mongodb_collections(item, params, parsed):
 
 check_info["mongodb_collections"] = {
     "parse_function": parse_mongodb_collections,
+    "inventory_function": discover(),
     "check_function": check_mongodb_collections,
-    "inventory_function": inventory_mongodb_collections,
     "service_description": "MongoDB Collection %s",
     "group": "mongodb_collections",
     "default_levels_variable": "filesystem_default_levels",

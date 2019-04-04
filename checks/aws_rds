@@ -57,7 +57,7 @@ def parse_aws_rds(info):
             "AllocatedStorage",
         ],
             parse_aws(info),
-            extra_keys=['DBName']).itervalues():
+            extra_keys=['DBInstanceIdentifier']).itervalues():
 
         for key, factor in [
             ('AllocatedStorage', 1.074e+9),
@@ -69,7 +69,7 @@ def parse_aws_rds(info):
                 metrics[key] *= factor
             except KeyError:
                 pass
-        parsed.setdefault(metrics['DBName'], metrics)
+        parsed.setdefault(metrics['DBInstanceIdentifier'], metrics)
     return parsed
 
 
@@ -194,7 +194,7 @@ def check_aws_rds_network_io(item, params, metrics):
         "",
         "",
         "",
-        metrics.get('DBName', item),
+        metrics.get('DBInstanceIdentifier', item),
         "",
     ]]
     return check_if_common_single(item, params, interfaces)

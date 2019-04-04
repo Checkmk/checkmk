@@ -50,6 +50,7 @@ class WritableDataset(object):
         self.filename = filename
         self.writelist = (
             'checkname',
+            'freeze_time',
             'info',
             'parsed',
             'discovery',
@@ -60,6 +61,7 @@ class WritableDataset(object):
         )
         self.checkname = init_dict.get('checkname', None)
         self.info = init_dict.get('info', None)
+        self.freeze_time = init_dict.get('freeze_time', None)
         self.parsed = init_dict.get('parsed', None)
         self.discovery = init_dict.get('discovery', {})
         self.checks = {}

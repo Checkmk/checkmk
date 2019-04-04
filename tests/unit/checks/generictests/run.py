@@ -7,6 +7,8 @@ from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          Immutables, assertEqual
 from testlib import MissingCheckInfoError
 from generictests.checkhandler import checkhandler
+from contextlib import contextmanager
+import freezegun
 
 
 class DiscoveryParameterTypeError(AssertionError):
@@ -163,6 +165,20 @@ def check_listed_result(check, list_entry, info_arg, immu):
     assertCheckResultsEqual(result, result_expected)
 
 
+@contextmanager
+def optional_freeze_time(dataset):
+    """Optionally freeze of the time in generic dataset tests
+
+    If present and truish the datasets freeze_time attribute is passed to
+    freezegun.freeze_time.
+    """
+    if getattr(dataset, 'freeze_time', None):
+        with freezegun.freeze_time(dataset.freeze_time):
+            yield
+    else:
+        yield
+
+
 def run(check_manager, dataset, write=False):
     """Run all possible tests on 'dataset'"""
     print("START: %r" % dataset)
@@ -177,29 +193,31 @@ def run(check_manager, dataset, write=False):
     # get the expected check results, if present
     checks_expected = getattr(dataset, 'checks', {})
 
-    # LOOP OVER ALL (SUB)CHECKS
-    for sname in checklist:
-        subcheck = (sname + '.').split('.')[1]
-        check = check_manager.get_check(sname)
+    with optional_freeze_time(dataset):
+        # LOOP OVER ALL (SUB)CHECKS
+        for sname in checklist:
+            subcheck = (sname + '.').split('.')[1]
+            check = check_manager.get_check(sname)
 
-        info_arg = get_info_argument(dataset, subcheck, parsed)
-        immu.test(' after get_info_argument ')
-        immu.register(info_arg, 'info_arg')
+            info_arg = get_info_argument(dataset, subcheck, parsed)
+            immu.test(' after get_info_argument ')
+            immu.register(info_arg, 'info_arg')
 
-        mock_is, mock_hec = get_mock_values(dataset, subcheck)
+            mock_is, mock_hec = get_mock_values(dataset, subcheck)
 
-        with MockItemState(mock_is), MockHostExtraConf(check, mock_hec):
-            # test discovery
-            d_result = discovery(check, subcheck, dataset, info_arg, immu)
-            if write:
-                dataset.discovery[subcheck] = [e.tuple for e in d_result]
-            # test checks
-            for dr in d_result:
-                cdr = check_discovered_result(check, dr, info_arg, immu)
-                if write and cdr:
-                    dataset.checks.setdefault(subcheck, []).append(cdr)
-            if not write:
-                for entry in checks_expected.get(subcheck, []):
-                    check_listed_result(check, entry, info_arg, immu)
+            with MockItemState(mock_is), MockHostExtraConf(check, mock_hec):
+                # test discovery
+                d_result = discovery(check, subcheck, dataset, info_arg, immu)
+                if write:
+                    dataset.discovery[subcheck] = [e.tuple for e in d_result]
+                    # test checks
+                for dr in d_result:
+                    cdr = check_discovered_result(check, dr, info_arg, immu)
+                    if write and cdr:
+                        dataset.checks.setdefault(subcheck, []).append(cdr)
+                if not write:
+                    for entry in checks_expected.get(subcheck, []):
+
+                        check_listed_result(check, entry, info_arg, immu)
 
         immu.test(' at end of subcheck loop %r ' % subcheck)

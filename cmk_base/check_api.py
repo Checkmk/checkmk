@@ -223,8 +223,14 @@ get_rule_options = _config.get_rule_options
 # the future check API. It's kept here for compatibility reasons for now.
 in_extraconf_hostlist = _config.in_extraconf_hostlist
 hosttags_match_taglist = _config.hosttags_match_taglist
-tags_of_host = _config.tag_list_of_host
 all_matching_hosts = _config.all_matching_hosts
+
+
+# These functions were used in some specific checks until 1.6. Don't add it to
+# the future check API. It's kept here for compatibility reasons for now.
+def tags_of_host(hostname):
+    return _config.get_config_cache().get_host_config(hostname).tags
+
 
 nagios_illegal_chars = _config.nagios_illegal_chars
 is_ipv6_primary = _config.is_ipv6_primary

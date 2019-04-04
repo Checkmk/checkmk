@@ -134,7 +134,7 @@ class DataSources(object):
             source.set_main_agent_data_source()
             self._add_source(source)
 
-        if "no-piggyback" not in config.tag_list_of_host(self._hostname):
+        if self._host_config.is_piggyback_host:
             self._add_source(PiggyBackDataSource(self._hostname, self._ipaddress))
 
     def _initialize_snmp_data_sources(self):

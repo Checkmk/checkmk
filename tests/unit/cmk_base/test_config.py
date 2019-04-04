@@ -176,6 +176,23 @@ def test_is_snmp_host(monkeypatch, hostname, tags, result):
     assert config_cache.get_host_config(hostname).is_snmp_host == result
 
 
+def test_is_not_usewalk_host(monkeypatch):
+    config_cache = _setup_host(monkeypatch, "xyz", ["abc"])
+    host_config = config_cache.get_host_config("xyz")
+
+    assert host_config.is_usewalk_host is False
+
+
+def test_is_usewalk_host(monkeypatch):
+    monkeypatch.setattr(config, "usewalk_hosts", [
+        (["xyz"], config.ALL_HOSTS, {}),
+    ])
+
+    config_cache = _setup_host(monkeypatch, "xyz", ["abc"])
+    host_config = config_cache.get_host_config("xyz")
+    assert host_config.is_usewalk_host is False
+
+
 @pytest.mark.parametrize("hostname,tags,result", [
     ("testhost", [], False),
     ("testhost", ["tcp"], False),

@@ -40,8 +40,8 @@ import cmk_base.checking as checking
 
 
 def dump_host(hostname):
-
     config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
 
     console.output("\n")
     if config.is_cluster(hostname):
@@ -99,7 +99,7 @@ def dump_host(hostname):
     for source in sources.get_data_sources():
         agenttypes.append(source.describe())
 
-    if config.is_ping_host(hostname):
+    if host_config.is_ping_host:
         agenttypes.append('PING only')
 
     console.output(tty.yellow + "Agent mode:             " + tty.normal)

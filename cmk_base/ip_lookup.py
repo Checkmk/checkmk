@@ -75,9 +75,11 @@ def lookup_ip_address(hostname, family=None):
     if config.fake_dns:
         return config.fake_dns
 
+    host_config = config.get_config_cache().get_host_config(hostname)
+
     # Honor simulation mode und usewalk hosts. Never contact the network.
-    elif config.simulation_mode or _enforce_localhost or \
-         (config.is_usewalk_host(hostname) and config.is_snmp_host(hostname)):
+    if config.simulation_mode or _enforce_localhost or \
+         (host_config.is_usewalk_host and host_config.is_snmp_host):
         if family == 4:
             return "127.0.0.1"
 

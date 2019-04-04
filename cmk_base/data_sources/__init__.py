@@ -98,7 +98,7 @@ class DataSources(object):
         self._ipaddress = ipaddress
 
         config_cache = config.get_config_cache()
-        self._host_config = config.HostConfig(config_cache, hostname)
+        self._host_config = config_cache.get_host_config(hostname)
 
         self._initialize_data_sources()
 
@@ -134,7 +134,7 @@ class DataSources(object):
             source.set_main_agent_data_source()
             self._add_source(source)
 
-        if self._host_config.is_piggyback_host:
+        if "no-piggyback" not in self._host_config.tags:
             self._add_source(PiggyBackDataSource(self._hostname, self._ipaddress))
 
     def _initialize_snmp_data_sources(self):

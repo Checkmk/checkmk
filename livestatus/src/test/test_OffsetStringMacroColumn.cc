@@ -202,7 +202,7 @@ TEST_F(OffsetStringHostMacroColumnTest, border_cases) {
     EXPECT_EQ("$", expanded_host_notes());
 
     set_host_notes("foo$bar");
-    EXPECT_EQ("foofoo$bar", expanded_host_notes());  // TODO(sp) WRONG!!!
+    EXPECT_EQ("foo$bar", expanded_host_notes());
 
     set_host_notes("checking $USER0$...");
     EXPECT_EQ("checking $USER0$...", expanded_host_notes());
@@ -319,7 +319,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, border_cases) {
     EXPECT_EQ("$", expanded_service_notes());
 
     set_service_notes("foo$bar");
-    EXPECT_EQ("foofoo$bar", expanded_service_notes());  // TODO(sp) WRONG!!!
+    EXPECT_EQ("foo$bar", expanded_service_notes());
 
     set_service_notes("checking $USER0$...");
     EXPECT_EQ("checking $USER0$...", expanded_service_notes());

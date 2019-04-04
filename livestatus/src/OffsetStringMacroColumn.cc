@@ -56,7 +56,7 @@ std::string OffsetStringMacroColumn::expandMacros(const std::string &raw,
         result += std::string(scan, dollar - scan);
         const char *otherdollar = strchr(dollar + 1, '$');
         if (otherdollar == nullptr) {  // unterminated macro, do not expand
-            result += scan;
+            result += dollar;
             break;
         }
         std::string macroname =

@@ -36,11 +36,6 @@ def main():  # pylint: disable=too-many-branches,too-many-locals
 
     try:
         con = pymongo.MongoClient(host, port, read_preference=pymongo.ReadPreference.SECONDARY)
-        try:
-            # pylint: disable=no-member
-            con = pymongo.database_names()
-        except Exception:  # pylint: disable=broad-except
-            con = pymongo.MongoClient(None, None, read_preference=pymongo.ReadPreference.SECONDARY)
 
         # if user and passwd:
         #     db = con["admin"]

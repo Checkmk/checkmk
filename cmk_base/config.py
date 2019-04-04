@@ -603,10 +603,6 @@ def strip_tags(tagged_hostlist):
         return result
 
 
-def tag_list_of_host(hostname):
-    return get_config_cache().tag_list_of_host(hostname)
-
-
 #.
 #   .--HostCollections-----------------------------------------------------.
 #   | _   _           _    ____      _ _           _   _                   |
@@ -776,7 +772,7 @@ def all_configured_offline_hosts():
 
 
 def host_is_member_of_site(hostname, site):
-    for tag in tag_list_of_host(hostname):
+    for tag in get_config_cache().get_host_config(hostname).tags:
         if tag.startswith("site:"):
             return site == tag[5:]
     # hosts without a site: tag belong to all sites
@@ -2753,9 +2749,8 @@ class HostConfig(object):
         self.is_cluster = is_cluster(hostname)
         self.part_of_clusters = self._config_cache.clusters_of(hostname)
 
-        tags = self._config_cache.tag_list_of_host(self.hostname)
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
-        self.tags = tags
+        self.tags = self._config_cache.tag_list_of_host(self.hostname)
         self.tag_groups = host_tags.get(hostname, {})
 
         # Basic types
@@ -2780,18 +2775,19 @@ class HostConfig(object):
 
         self.is_dual_host = self.is_tcp_host and self.is_snmp_host
         self.is_all_agents_host = "all-agents" in self.tags
-        self.is_all_special_agents_host = "special-agents" in tags
+        self.is_all_special_agents_host = "special-agents" in self.tags
 
         # IP addresses
         # Whether or not the given host is configured not to be monitored via IP
-        self.is_no_ip_host = "no-ip" in tags
-        self.is_ipv6_host = "ip-v6" in tags
+        self.is_no_ip_host = "no-ip" in self.tags
+        self.is_ipv6_host = "ip-v6" in self.tags
         # Whether or not the given host is configured to be monitored via IPv4.
         # This is the case when it is set to be explicit IPv4 or implicit (when
         # host is not an IPv6 host and not a "No IP" host)
-        self.is_ipv4_host = "ip-v4" in tags or (not self.is_ipv6_host and not self.is_no_ip_host)
+        self.is_ipv4_host = "ip-v4" in self.tags or (not self.is_ipv6_host and
+                                                     not self.is_no_ip_host)
 
-        self.is_ipv4v6_host = "ip-v6" in tags and "ip-v4" in tags
+        self.is_ipv4v6_host = "ip-v6" in self.tags and "ip-v4" in self.tags
 
         # Whether or not the given host is configured to be monitored primarily via IPv6
         self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) \

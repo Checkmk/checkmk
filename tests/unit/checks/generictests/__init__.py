@@ -38,8 +38,9 @@ check function(s)). In the following, 'sc-dict' refers to a dictionary with
 Some more advanced ones are
 
   * `freeze_time`    : [str] Mocked time.
-                       If present, its value are passed to
-                           `freezegun.freeze_time`
+                       If present its value is passed to `freezegun.freeze_time`.
+                       If you specify the empty string it will be replaced by the
+                       current time if processed by generictests.regression.
   * `extra_sections` : [sc-dict] Extra sections that are appended to the info
                        / parsed variable.
                        If present, its values are extra sections (the actual

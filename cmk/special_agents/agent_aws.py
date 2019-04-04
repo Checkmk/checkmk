@@ -45,6 +45,8 @@ from cmk.utils.paths import tmp_dir
 import cmk.utils.store as store
 import cmk.utils.password_store
 
+AWSStrings = Union[bytes, unicode]
+
 # TODO
 # Rewrite API calls from low-level client to high-level resource:
 # Boto3 has two distinct levels of APIs. Client (or "low-level") APIs provide
@@ -56,7 +58,9 @@ import cmk.utils.password_store
 # objects; they're available to you as a collection on the bucket. These
 # collections of subresources are lazily-loaded.
 
-AWSStrings = Union[bytes, unicode]
+# TODO limits
+# - per account (S3)
+# - per region (EC2, EBS, ELB, RDS)
 
 #   .--for imports---------------------------------------------------------.
 #   |         __              _                            _               |
@@ -66,6 +70,8 @@ AWSStrings = Union[bytes, unicode]
 #   |       |_|  \___/|_|    |_|_| |_| |_| .__/ \___/|_|   \__|___/        |
 #   |                                    |_|                               |
 #   '----------------------------------------------------------------------'
+
+#   .--regions--------------------------------------------------------------
 
 AWSRegions = [
     ("ap-south-1", "Asia Pacific (Mumbai)"),
@@ -90,6 +96,289 @@ AWSRegions = [
 ]
 
 #.
+#   .--EC2 instance types---------------------------------------------------
+
+AWSEC2InstGeneralTypes = [
+    'a1.2xlarge',
+    'a1.4xlarge',
+    'a1.large',
+    'a1.medium',
+    'a1.xlarge',
+    't2.nano',
+    't2.micro',
+    't2.small',
+    't2.medium',
+    't2.large',
+    't2.xlarge',
+    't2.2xlarge',
+    't3.nano',
+    't3.micro',
+    't3.small',
+    't3.medium',
+    't3.large',
+    't3.xlarge',
+    't3.2xlarge',
+    'm3.medium',
+    'm3.large',
+    'm3.xlarge',
+    'm3.2xlarge',
+    'm4.large',
+    'm4.xlarge',
+    'm4.2xlarge',
+    'm4.4xlarge',
+    'm4.10xlarge',
+    'm4.16xlarge',
+    'm5.12xlarge',
+    'm5.24xlarge',
+    'm5.2xlarge',
+    'm5.4xlarge',
+    'm5.large',
+    'm5.xlarge',
+    'm5d.12xlarge',
+    'm5d.24xlarge',
+    'm5d.2xlarge',
+    'm5d.4xlarge',
+    'm5d.large',
+    'm5d.xlarge',
+    'm5a.12xlarge',
+    'm5a.24xlarge',
+    'm5a.2xlarge',
+    'm5a.4xlarge',
+    'm5a.large',
+    'm5a.xlarge',
+]
+
+AWSEC2InstPrevGeneralTypes = [
+    't1.micro',
+    'm1.small',
+    'm1.medium',
+    'm1.large',
+    'm1.xlarge',
+]
+
+AWSEC2InstMemoryTypes = [
+    'r3.2xlarge',
+    'r3.4xlarge',
+    'r3.8xlarge',
+    'r3.large',
+    'r3.xlarge',
+    'r4.2xlarge',
+    'r4.4xlarge',
+    'r4.8xlarge',
+    'r4.16xlarge',
+    'r4.large',
+    'r4.xlarge',
+    'r5.2xlarge',
+    'r5.4xlarge',
+    'r5.8xlarge',
+    'r5.12xlarge',
+    'r5.16xlarge',
+    'r5.24xlarge',
+    'r5.large',
+    'r5.metal',
+    'r5.xlarge',
+    'r5a.12xlarge',
+    'r5a.24xlarge',
+    'r5a.2xlarge',
+    'r5a.4xlarge',
+    'r5a.large',
+    'r5a.xlarge',
+    'r5d.2xlarge',
+    'r5d.4xlarge',
+    'r5d.8xlarge',
+    'r5d.12xlarge',
+    'r5d.16xlarge',
+    'r5d.24xlarge',
+    'r5d.large',
+    'r5d.metal',
+    'r5d.xlarge',
+    'x1.16xlarge',
+    'x1.32xlarge',
+    'x1e.2xlarge',
+    'x1e.4xlarge',
+    'x1e.8xlarge',
+    'x1e.16xlarge',
+    'x1e.32xlarge',
+    'x1e.xlarge',
+    'z1d.2xlarge',
+    'z1d.3xlarge',
+    'z1d.6xlarge',
+    'z1d.12xlarge',
+    'z1d.large',
+    'z1d.xlarge',
+]
+
+AWSEC2InstPrevMemoryTypes = [
+    'm2.xlarge',
+    'm2.2xlarge',
+    'm2.4xlarge',
+    'cr1.8xlarge',
+]
+
+AWSEC2InstComputeTypes = [
+    'c3.large',
+    'c3.xlarge',
+    'c3.2xlarge',
+    'c3.4xlarge',
+    'c3.8xlarge',
+    'c4.large',
+    'c4.xlarge',
+    'c4.2xlarge',
+    'c4.4xlarge',
+    'c4.8xlarge',
+    'c5.18xlarge',
+    'c5.2xlarge',
+    'c5.4xlarge',
+    'c5.9xlarge',
+    'c5.large',
+    'c5.xlarge',
+    'c5d.18xlarge',
+    'c5d.2xlarge',
+    'c5d.4xlarge',
+    'c5d.9xlarge',
+    'c5d.large',
+    'c5d.xlarge',
+    'c5n.18xlarge',
+    'c5n.2xlarge',
+    'c5n.4xlarge',
+    'c5n.9xlarge',
+    'c5n.large',
+    'c5n.xlarge',
+]
+
+AWSEC2InstPrevComputeTypes = [
+    'c1.medium',
+    'c1.xlarge',
+    'cc2.8xlarge',
+    'cc1.4xlarge',
+]
+
+AWSEC2InstAcceleratedComputeTypes = [
+    'f1.4xlarge',
+    'p2.xlarge',
+    'p2.8xlarge',
+    'p2.16xlarge',
+    'p3.16xlarge',
+    'p3.2xlarge',
+    'p3.8xlarge',
+    'p3dn.24xlarge',
+]
+
+AWSEC2InstStorageTypes = [
+    'i2.xlarge',
+    'i2.2xlarge',
+    'i2.4xlarge',
+    'i2.8xlarge',
+    'i3.large',
+    'i3.xlarge',
+    'i3.2xlarge',
+    'i3.4xlarge',
+    'i3.8xlarge',
+    'i3.16xlarge',
+    'i3.metal',
+    'h1.16xlarge',
+    'h1.2xlarge',
+    'h1.4xlarge',
+    'h1.8xlarge',
+]
+
+# 'hi1.4xlarge' is no longer in the instance type listings,
+# but some accounts might still have a limit for it
+AWSEC2InstPrevStorageTypes = [
+    'hi1.4xlarge',
+    'hs1.8xlarge',
+]
+
+AWSEC2InstDenseStorageTypes = [
+    'd2.xlarge',
+    'd2.2xlarge',
+    'd2.4xlarge',
+    'd2.8xlarge',
+]
+
+AWSEC2InstGPUTypes = [
+    'g2.2xlarge',
+    'g2.8xlarge',
+    'g3.16xlarge',
+    'g3.4xlarge',
+    'g3.8xlarge',
+    'g3s.xlarge',
+]
+
+AWSEC2InstPrevGPUTypes = [
+    'cg1.4xlarge',
+]
+
+# note, as of 2016-12-17, these are still in Developer Preview;
+# there isn't a published instance limit yet, so we'll assume
+# it's the default...
+AWSEC2InstFPGATypes = [
+    'f1.2xlarge',
+    'f1.16xlarge',
+]
+
+AWSEC2InstTypes = (
+    AWSEC2InstGeneralTypes + AWSEC2InstPrevGeneralTypes + AWSEC2InstMemoryTypes +
+    AWSEC2InstPrevMemoryTypes + AWSEC2InstComputeTypes + AWSEC2InstPrevComputeTypes +
+    AWSEC2InstAcceleratedComputeTypes + AWSEC2InstStorageTypes + AWSEC2InstPrevStorageTypes +
+    AWSEC2InstDenseStorageTypes + AWSEC2InstGPUTypes + AWSEC2InstPrevGPUTypes + AWSEC2InstFPGATypes)
+
+# (On-Demand, Reserved, Spot)
+
+AWSEC2LimitsDefault = (20, 20, 5)
+
+AWSEC2LimitsSpecial = {
+    'c4.4xlarge': (10, 20, 5),
+    'c4.8xlarge': (5, 20, 5),
+    'c5.4xlarge': (10, 20, 5),
+    'c5.9xlarge': (5, 20, 5),
+    'c5.18xlarge': (5, 20, 5),
+    'cg1.4xlarge': (2, 20, 5),
+    'cr1.8xlarge': (2, 20, 5),
+    'd2.4xlarge': (10, 20, 5),
+    'd2.8xlarge': (5, 20, 5),
+    'g2.2xlarge': (5, 20, 5),
+    'g2.8xlarge': (2, 20, 5),
+    'g3.4xlarge': (1, 20, 5),
+    'g3.8xlarge': (1, 20, 5),
+    'g3.16xlarge': (1, 20, 5),
+    'h1.8xlarge': (10, 20, 5),
+    'h1.16xlarge': (5, 20, 5),
+    'hi1.4xlarge': (2, 20, 5),
+    'hs1.8xlarge': (2, 20, 0),
+    'i2.2xlarge': (8, 20, 0),
+    'i2.4xlarge': (4, 20, 0),
+    'i2.8xlarge': (2, 20, 0),
+    'i2.xlarge': (8, 20, 0),
+    'i3.2xlarge': (2, 20, 0),
+    'i3.4xlarge': (2, 20, 0),
+    'i3.8xlarge': (2, 20, 0),
+    'i3.16xlarge': (2, 20, 0),
+    'i3.large': (2, 20, 0),
+    'i3.xlarge': (2, 20, 0),
+    'm4.4xlarge': (10, 20, 5),
+    'm4.10xlarge': (5, 20, 5),
+    'm4.16xlarge': (5, 20, 5),
+    'm5.4xlarge': (10, 20, 5),
+    'm5.12xlarge': (5, 20, 5),
+    'm5.24xlarge': (5, 20, 5),
+    'p2.8xlarge': (1, 20, 5),
+    'p2.16xlarge': (1, 20, 5),
+    'p2.xlarge': (1, 20, 5),
+    'p3.2xlarge': (1, 20, 5),
+    'p3.8xlarge': (1, 20, 5),
+    'p3.16xlarge': (1, 20, 5),
+    'p3dn.24xlarge': (1, 20, 5),
+    'r3.4xlarge': (10, 20, 5),
+    'r3.8xlarge': (5, 20, 5),
+    'r4.4xlarge': (10, 20, 5),
+    'r4.8xlarge': (5, 20, 5),
+    'r4.16xlarge': (1, 20, 5),
+}
+
+#.
+
+#.
 #   .--helpers-------------------------------------------------------------.
 #   |                  _          _                                        |
 #   |                 | |__   ___| |_ __   ___ _ __ ___                    |
@@ -107,6 +396,11 @@ def _datetime_converter(o):
 
 def _chunks(list_, length=100):
     return [list_[i:i + length] for i in xrange(0, len(list_), length)]
+
+
+def _get_ec2_instance_id(inst, region):
+    # PrivateIpAddress and InstanceId is available although the instance is stopped
+    return u"%s-%s-%s" % (inst['PrivateIpAddress'], region, inst['InstanceId'])
 
 
 #.
@@ -516,6 +810,218 @@ class CostsAndUsage(AWSSectionGeneric):
 #   '----------------------------------------------------------------------'
 
 
+class EC2Limits(AWSSectionLimits):
+    @property
+    def name(self):
+        return "ec2_limits"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        response = self._client.describe_instances()
+        reservations = self._get_response_content(response, 'Reservations')
+
+        response = self._client.describe_reserved_instances()
+        reserved_instances = self._get_response_content(response, 'ReservedInstances')
+
+        response = self._client.describe_addresses()
+        addresses = self._get_response_content(response, 'Addresses')
+
+        response = self._client.describe_security_groups()
+        security_groups = self._get_response_content(response, 'SecurityGroups')
+
+        response = self._client.describe_network_interfaces()
+        interfaces = self._get_response_content(response, 'NetworkInterfaces')
+
+        response = self._client.describe_spot_instance_requests()
+        spot_inst_requests = self._get_response_content(response, 'SpotInstanceRequests')
+
+        response = self._client.describe_spot_fleet_requests()
+        spot_fleet_requests = self._get_response_content(response, 'SpotFleetRequestConfigs')
+
+        return reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests
+
+    def _compute_content(self, raw_content, colleague_contents):
+        reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests = raw_content.content
+        instances = {inst['InstanceId']: inst for res in reservations for inst in res['Instances']}
+        res_instances = {inst['ReservedInstanceId']: inst for inst in reserved_instances}
+
+        self._add_instance_limits(instances, res_instances, spot_inst_requests)
+        self._add_addresses_limits(addresses)
+        self._add_security_group_limits(instances, security_groups)
+        self._add_interface_limits(instances, interfaces)
+        self._add_spot_inst_limits(spot_inst_requests)
+        self._add_spot_fleet_limits(spot_fleet_requests)
+        return AWSComputedContent(reservations, raw_content.cache_timestamp)
+
+    def _add_instance_limits(self, instances, res_instances, spot_inst_requests):
+        inst_limits = self._get_inst_limits(instances, spot_inst_requests)
+        res_limits = self._get_res_inst_limits(res_instances)
+
+        total_ris = 0
+        running_ris = 0
+        ondemand_limits = {}
+        # subtract reservations from instance usage
+        for inst_az, inst_types in inst_limits.iteritems():
+            if inst_az not in res_limits:
+                for inst_type, count in inst_types.iteritems():
+                    ondemand_limits[inst_type] = ondemand_limits.get(inst_type, 0) + count
+                continue
+
+            # else we have reservations for this AZ
+            for inst_type, count in inst_types.iteritems():
+                if inst_type not in res_limits[inst_az]:
+                    # no reservations for this type
+                    ondemand_limits[inst_type] = ondemand_limits.get(inst_type, 0) + count
+                    continue
+
+                amount_res_inst_type = res_limits[inst_az][inst_type]
+                ondemand = count - amount_res_inst_type
+                total_ris += amount_res_inst_type
+                if count < amount_res_inst_type:
+                    running_ris += count
+                else:
+                    running_ris += amount_res_inst_type
+                if ondemand < 0:
+                    # we have unused reservations
+                    continue
+                ondemand_limits[inst_type] = ondemand_limits.get(inst_type, 0) + ondemand
+
+        dflt_ondemand_limit, _reserved_limit, _spot_limit = AWSEC2LimitsDefault
+        total_instances = 0
+        for inst_type, count in ondemand_limits.iteritems():
+            total_instances += count
+            ondemand_limit, _reserved_limit, _spot_limit = AWSEC2LimitsSpecial.get(
+                inst_type, AWSEC2LimitsDefault)
+            self._add_limit(
+                "",
+                AWSLimit("running_ondemand_instances_%s" % inst_type,
+                         "Running On-Demand %s Instances" % inst_type, ondemand_limit, count))
+        self._add_limit(
+            "",
+            AWSLimit("running_ondemand_instances_total", "Total Running On-Demand Instances",
+                     dflt_ondemand_limit, total_instances))
+
+    def _get_inst_limits(self, instances, spot_inst_requests):
+        spot_instance_ids = [inst['InstanceId'] for inst in spot_inst_requests]
+        inst_limits = {}
+        for inst_id, inst in instances.iteritems():
+            if inst_id in spot_instance_ids:
+                continue
+            if inst['State']['Name'] in ['stopped', 'terminated']:
+                continue
+            inst_type = inst['InstanceType']
+            inst_az = inst['Placement']['AvailabilityZone']
+            inst_limits.setdefault(
+                inst_az, {})[inst_type] = inst_limits.get(inst_az, {}).get(inst_type, 0) + 1
+        return inst_limits
+
+    def _get_res_inst_limits(self, res_instances):
+        res_limits = {}
+        for res_inst in res_instances.itervalues():
+            if res_inst['State'] != 'active':
+                continue
+            inst_type = res_inst['InstanceType']
+            if inst_type not in AWSEC2InstTypes:
+                logging.info("%s: Unknown instance type '%s'", self.name, inst_type)
+                continue
+
+            inst_az = res_inst['AvailabilityZone']
+            res_limits.setdefault(inst_az, {})[inst_type] = res_limits.get(inst_az, {}).get(
+                inst_type, 0) + res_inst['InstanceCount']
+        return res_limits
+
+    def _add_addresses_limits(self, addresses):
+        # Global limits
+        vpc_addresses = 0
+        std_addresses = 0
+        for address in addresses:
+            domain = address['Domain']
+            if domain == "vpc":
+                vpc_addresses += 1
+            elif domain == "standard":
+                std_addresses += 1
+        self._add_limit(
+            "", AWSLimit("vpc_elastic_ip_addresses", "VPC Elastic IP Addresses", 5, vpc_addresses))
+        self._add_limit("",
+                        AWSLimit("elastic_ip_addresses", "Elastic IP Addresses", 5, std_addresses))
+
+    def _add_security_group_limits(self, instances, security_groups):
+        # Security groups for EC2-Classic per instance
+        # Rules per security group for EC2-Classic
+        sgs_per_vpc = {}
+        for sec_group in security_groups:
+            vpc_id = sec_group['VpcId']
+            if not vpc_id:
+                continue
+            inst = self._get_inst_assignment(instances, 'VpcId', vpc_id)
+            if inst is None:
+                continue
+            inst_id = _get_ec2_instance_id(inst, self._region)
+            key = (inst_id, vpc_id)
+            sgs_per_vpc[key] = sgs_per_vpc.get(key, 0) + 1
+            self._add_limit(
+                inst_id,
+                AWSLimit("vpc_sec_group_rules",
+                         "Rules of VPC security group %s" % sec_group['GroupName'], 50,
+                         len(sec_group['IpPermissions'])))
+
+        for (inst_id, vpc_id), count in sgs_per_vpc.iteritems():
+            self._add_limit(
+                inst_id, AWSLimit("vpc_sec_groups", "Security Groups of VPC %s" % vpc_id, 500,
+                                  count))
+
+    def _get_inst_assignment(self, instances, key, assignment):
+        for inst in instances.itervalues():
+            if inst.get(key) == assignment:
+                return inst
+
+    def _add_interface_limits(self, instances, interfaces):
+        # These limits are per security groups and
+        # security groups are per instance
+        for iface in interfaces:
+            inst = self._get_inst_assignment(instances, 'VpcId', iface.get('VpcId'))
+            if inst is None:
+                continue
+            self._add_limit(
+                _get_ec2_instance_id(inst, self._region),
+                AWSLimit(
+                    "if_vpc_sec_group", "VPC security groups of elastic network interface %s" %
+                    iface['NetworkInterfaceId'], 5, len(iface['Groups'])))
+
+    def _add_spot_inst_limits(self, spot_inst_requests):
+        count_spot_inst_reqs = 0
+        for spot_inst_req in spot_inst_requests:
+            if spot_inst_req['State'] in ['open', 'active']:
+                count_spot_inst_reqs += 1
+        self._add_limit(
+            "", AWSLimit('spot_inst_requests', 'Spot Instance Requests', 20, count_spot_inst_reqs))
+
+    def _add_spot_fleet_limits(self, spot_fleet_requests):
+        active_spot_fleet_requests = 0
+        total_target_cap = 0
+        for spot_fleet_req in spot_fleet_requests:
+            if spot_fleet_req['State'] != 'active':
+                continue
+
+            active_spot_fleet_requests += 1
+            total_target_cap += spot_fleet_req['SpotFleetRequestConfig']['TargetCapacity']
+
+        self._add_limit(
+            "",
+            AWSLimit('active_spot_fleet_requests', 'Active Spot Fleet Requests', 1000,
+                     active_spot_fleet_requests))
+        self._add_limit(
+            "",
+            AWSLimit('spot_fleet_total_target_capacity',
+                     'Spot Fleet Requests Total Target Capacity', 5000, total_target_cap))
+
+
 class EC2Summary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(EC2Summary, self).__init__(client, region, config, distributor=distributor)
@@ -531,26 +1037,61 @@ class EC2Summary(AWSSectionGeneric):
         return 300
 
     def _get_colleague_contents(self):
-        return AWSColleagueContents(None, 0.0)
+        colleague = self._received_results.get('ec2_limits')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
-        response = self._describe_instances()
-        return self._get_response_content(response, 'Reservations')
+        if self._tags is None and self._names is not None:
+            return self._fetch_instances_filtered_by_names(colleague_contents.content)
+        if self._tags is not None:
+            return self._fetch_instances_filtered_by_tags(colleague_contents.content)
+        return self._fetch_instances_without_filter()
 
-    def _describe_instances(self):
-        if self._names is not None:
-            return self._client.describe_instances(InstanceIds=self._names)
-        elif self._tags is not None:
-            return self._client.describe_instances(Filters=self._tags)
-        return self._client.describe_instances()
+    def _fetch_instances_filtered_by_names(self, col_reservations):
+        if col_reservations:
+            instances = [
+                inst for res in col_reservations for inst in res['Instances']
+                if inst['InstanceId'] in self._names
+            ]
+        else:
+            response = self._client.describe_instances(InstanceIds=self._names)
+            instances = [
+                inst for res in self._get_response_content(response, 'Reservations')
+                for inst in res['Instances']
+            ]
+        return instances
+
+    def _fetch_instances_filtered_by_tags(self, col_reservations):
+        if col_reservations:
+            tags = self._prepare_tags_for_api_response(self._tags)
+            instances = [
+                inst for res in col_reservations
+                for inst in res['Instances'] for tag in inst['Tags'] if tag in tags
+            ]
+        else:
+            response = self._client.describe_instances(Filters=self._tags)
+            instances = [
+                inst for res in self._get_response_content(response, 'Reservations')
+                for inst in res['Instances']
+            ]
+        return instances
+
+    def _fetch_instances_without_filter(self):
+        response = self._client.describe_instances()
+        return [
+            inst for res in self._get_response_content(response, 'Reservations')
+            for inst in res['Instances']
+        ]
 
     def _compute_content(self, raw_content, colleague_contents):
+        return AWSComputedContent(
+            self._format_instances(raw_content.content), raw_content.cache_timestamp)
+
+    def _format_instances(self, instances):
         # PrivateIpAddress and InstanceId is available although the instance is stopped
-        return AWSComputedContent({
-            "%s-%s-%s" % (instance['PrivateIpAddress'], self._region, instance['InstanceId']):
-            instance for reservation in raw_content.content
-            for instance in reservation.get('Instances', [])
-        }, raw_content.cache_timestamp)
+        return {_get_ec2_instance_id(inst, self._region): inst for inst in instances}
 
     def _create_results(self, computed_content):
         return [AWSSectionResult("", computed_content.content.values())]
@@ -1715,6 +2256,7 @@ class AWSSectionsGeneric(AWSSections):
         cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
+        ec2_limits_distributor = ResultDistributor()
         ec2_summary_distributor = ResultDistributor()
 
         elb_limits_distributor = ResultDistributor()
@@ -1729,6 +2271,7 @@ class AWSSectionsGeneric(AWSSections):
         rds_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
+        ec2_limits = EC2Limits(ec2_client, region, config, ec2_limits_distributor)
         ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
 
         ebs_limits = EBSLimits(ec2_client, region, config, ebs_limits_distributor)
@@ -1757,6 +2300,7 @@ class AWSSectionsGeneric(AWSSections):
         rds = RDS(cloudwatch_client, region, config)
 
         #---register sections to distributors-------------------------------
+        ec2_limits_distributor.add(ec2_summary)
         ec2_summary_distributor.add(ec2_security_groups)
         ec2_summary_distributor.add(ec2)
         ec2_summary_distributor.add(ebs_summary)
@@ -1777,6 +2321,8 @@ class AWSSectionsGeneric(AWSSections):
 
         #---register sections for execution---------------------------------
         if 'ec2' in services:
+            if config.service_config.get('ec2_limits'):
+                self._sections.append(ec2_limits)
             self._sections.append(ec2_summary)
             self._sections.append(ec2_security_groups)
             self._sections.append(ec2)
@@ -1839,7 +2385,7 @@ AWSServices = [
         title="Elastic Compute Cloud (EC2)",
         global_service=False,
         filter_by_names_or_tags=True,
-        limits=False),
+        limits=True),
     AWSServiceAttributes(
         key="ebs",
         title="Elastic Block Storage (EBS)",
@@ -1997,7 +2543,7 @@ def main(args=None):
 
     aws_config = AWSConfig(hostname, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [
-        ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), None),
+        ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), args.ec2_limits),
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),
         ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values), args.s3_limits),
         ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), args.elb_limits),
@@ -2014,7 +2560,7 @@ def main(args=None):
         (args.global_services, ["us-east-1"], AWSSectionsUSEast),
         (args.services, args.regions, AWSSectionsGeneric),
     ]:
-        if not aws_services:
+        if not aws_services or not aws_regions:
             continue
         for region in aws_regions:
             try:

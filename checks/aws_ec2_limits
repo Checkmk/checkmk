@@ -24,29 +24,58 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings['aws_elb_limits_default_levels'] = {
-    'load_balancers': (None, 80.0, 90.0),
-    'load_balancer_listeners': (None, 80.0, 90.0),
-    'load_balancer_registered_instances': (None, 80.0, 90.0),
+from cmk.special_agents.agent_aws import AWSEC2InstTypes
+
+_aws_ec2_limits_default_levels = {
+    'vpc_elastic_ip_addresses': (None, 80.0, 90.0),
+    'elastic_ip_addresses': (None, 80.0, 90.0),
+    'vpc_sec_group_rules': (None, 80.0, 90.0),
+    'vpc_sec_groups': (None, 80.0, 90.0),
+    'if_vpc_sec_group': (None, 80.0, 90.0),
+    'spot_inst_requests': (None, 80.0, 90.0),
+    'active_spot_fleet_requests': (None, 80.0, 90.0),
+    'spot_fleet_total_target_capacity': (None, 80.0, 90.0),
+    'running_ondemand_instances_total': (None, 80.0, 90.0),
 }
+_aws_ec2_limits_default_levels.update({
+    'running_ondemand_instances_%s' % inst_type: (None, 80.0, 90.0) for inst_type in AWSEC2InstTypes
+})
+
+factory_settings['aws_ec2_limits_default_levels'] = _aws_ec2_limits_default_levels
 
 
-def parse_aws_elb_limits(info):
+def parse_aws_ec2_limits(info):
     return [(resource_key, resource_title, limit, amount, None)
             for resource_key, resource_title, limit, amount in parse_aws(info)]
 
 
-def check_aws_elb_limits(item, params, parsed):
-    return check_aws_limits("elb", params, parsed)
+def _transform_ec2_limits(params):
+    transformed = {}
+    for k, v in params.iteritems():
+        if isinstance(v, tuple):
+            transformed[k] = v
+        elif isinstance(v, list):
+            # As we get from agent
+            for inst_type, levels in v:
+                transformed['running_ondemand_instances_%s' % inst_type] = levels
+    return transformed
 
 
-check_info['aws_elb_limits'] = {
-    'parse_function': parse_aws_elb_limits,
+def check_aws_ec2_limits(item, params, parsed):
+    # params look like:
+    # {'vpc_sec_group_rules': (50, 80.0, 90.0),
+    #  'running_ondemand_instances': [('a1.4xlarge', (20, 80.0, 90.0))]}
+    params = _transform_ec2_limits(params)
+    return check_aws_limits("ec2", params, parsed)
+
+
+check_info['aws_ec2_limits'] = {
+    'parse_function': parse_aws_ec2_limits,
     'inventory_function': discover_single,
-    'check_function': check_aws_elb_limits,
-    'service_description': 'AWS/ELB Limits',
+    'check_function': check_aws_ec2_limits,
+    'service_description': 'AWS/EC2 Limits',
     'includes': ['aws.include'],
-    'group': 'aws_elb_limits',
-    'default_levels_variable': 'aws_elb_limits_default_levels',
+    'group': 'aws_ec2_limits',
+    'default_levels_variable': 'aws_ec2_limits_default_levels',
     'has_perfdata': True,
 }

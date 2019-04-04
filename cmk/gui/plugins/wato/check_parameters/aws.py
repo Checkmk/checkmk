@@ -36,12 +36,19 @@ from cmk.gui.valuespec import (
     FixedValue,
     TextAscii,
     Filesize,
+    ListOf,
+    CascadingDropdown,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithoutItem,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+)
+from cmk.special_agents.agent_aws import (
+    AWSEC2InstTypes,
+    AWSEC2LimitsDefault,
+    AWSEC2LimitsSpecial,
 )
 
 
@@ -145,37 +152,31 @@ def _vs_latency():
 
 def _vs_limits(resource, default_limit, vs_limit_cls=None):
     if vs_limit_cls is None:
-        vs_limit = Integer(
-            title=_("Set limit"), unit=_("%s" % resource), min_value=1, default_value=default_limit)
+        vs_limit = Integer(unit=_("%s" % resource), min_value=1, default_value=default_limit)
     else:
-        vs_limit = vs_limit_cls(title=_("Set limit"), min_value=1, default_value=default_limit)
+        vs_limit = vs_limit_cls(min_value=1, default_value=default_limit)
 
-    return Tuple(
-        title=_("Set limit and levels for %s" % resource.lower()),
+    if resource:
+        title = _("Set limit and levels for %s" % resource)
+    else:
+        title = None
+    return Alternative(
+        title=title,
+        style="dropdown",
         elements=[
-            Alternative(
-                style="dropdown",
-                orientation="horizontal",
+            Tuple(
+                title=_("Set levels"),
                 elements=[
                     vs_limit,
-                    FixedValue(None, totext="", title=_("No limit")),
+                    Percentage(title=_("Warning at"), default_value=80.0),
+                    Percentage(title=_("Critical at"), default_value=90.0),
                 ]),
-            Alternative(
-                style="dropdown",
-                orientation="horizontal",
+            Tuple(
+                title=_("No levels"),
                 elements=[
-                    Tuple(
-                        title=_("Set levels"),
-                        elements=[
-                            Percentage(title=_("Warning at"), default_value=80.0),
-                            Percentage(title=_("Critical at"), default_value=90.0),
-                        ]),
-                    Tuple(
-                        title=_("No levels"),
-                        elements=[
-                            FixedValue(None, totext=""),
-                            FixedValue(None, totext=""),
-                        ]),
+                    FixedValue(None, totext=""),
+                    FixedValue(None, totext=""),
+                    FixedValue(None, totext=""),
                 ]),
         ])
 
@@ -477,6 +478,54 @@ class RulespecCheckgroupParametersAwsEc2CpuCredits(CheckParameterRulespecWithout
     @property
     def parameter_valuespec(self):
         return Dictionary(elements=[_vs_cpu_credits_balance()])
+
+
+def _vs_limits_inst_types():
+    return ListOf(
+        CascadingDropdown(
+            orientation="horizontal",
+            choices=[(inst_type, inst_type,
+                      _vs_limits("%s instances" % inst_type,
+                                 AWSEC2LimitsSpecial.get(inst_type, AWSEC2LimitsDefault)[0]))
+                     for inst_type in AWSEC2InstTypes]),
+        title=_("Set limits and levels for running on-demand instances"),
+    )
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsEc2Limits(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_ec2_limits"
+
+    @property
+    def title(self):
+        return _("AWS/EC2 Limits")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('vpc_elastic_ip_addresses', _vs_limits("VPC Elastic IP Addresses", 5)),
+            ('elastic_ip_addresses', _vs_limits("Elastic IP Addresses", 5)),
+            ('vpc_sec_group_rules', _vs_limits("Rules of VPC security group", 50)),
+            ('vpc_sec_groups', _vs_limits("Security Groups of VPC", 500)),
+            ('if_vpc_sec_group', _vs_limits("VPC security groups of elastic network interface", 5)),
+            ('spot_inst_requests', _vs_limits("Spot Instance Requests", 20)),
+            ('active_spot_fleet_requests', _vs_limits("Active Spot Fleet Requests", 1000)),
+            ('spot_fleet_total_target_capacity',
+             _vs_limits("Spot Fleet Requests Total Target Capacity", 5000)),
+            ('running_ondemand_instances_total',
+             _vs_limits("Total Running On-Demand Instances", 20)),
+            ('running_ondemand_instances', _vs_limits_inst_types()),
+        ])
 
 
 #.

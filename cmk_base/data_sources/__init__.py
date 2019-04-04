@@ -91,18 +91,15 @@ def _in_keepalive_mode():
 #   '----------------------------------------------------------------------'
 
 
-def has_persisted_piggyback_agent_sections(hostname):
-    for source in DataSources(hostname, None).get_data_sources():
-        if isinstance(source, PiggyBackDataSource) and source.has_persisted_agent_sections():
-            return True
-    return False
-
-
 class DataSources(object):
     def __init__(self, hostname, ipaddress):
         super(DataSources, self).__init__()
         self._hostname = hostname
         self._ipaddress = ipaddress
+
+        config_cache = config.get_config_cache()
+        self._host_config = config.HostConfig(config_cache, hostname)
+
         self._initialize_data_sources()
 
         # Has currently no effect. The value possibly set during execution on the single data
@@ -145,7 +142,7 @@ class DataSources(object):
             self._add_source(SNMPDataSource(self._hostname, self._ipaddress))
 
     def _initialize_management_board_data_sources(self):
-        protocol = config.management_protocol_of(self._hostname)
+        protocol = self._host_config.management_protocol
         if protocol == "snmp":
             # TODO: Why not hand over management board IP address?
             self._add_source(SNMPManagementBoardDataSource(self._hostname, self._ipaddress))

@@ -818,8 +818,9 @@ def parents_of(hostname):
 
 # If host is node of one or more clusters, return a list of the cluster host names.
 # If not, return an empty list.
+# TODO: Replace call sites with HostConfig access and remove this
 def clusters_of(hostname):
-    return get_config_cache().clusters_of(hostname)
+    return get_config_cache().get_host_config(hostname).part_of_clusters
 
 
 #
@@ -827,37 +828,39 @@ def clusters_of(hostname):
 #
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_tcp_host(hostname):
-    return in_binary_hostlist(hostname, tcp_hosts)
+    return get_config_cache().get_host_config(hostname).is_tcp_host
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_snmp_host(hostname):
-    return in_binary_hostlist(hostname, snmp_hosts)
+    return get_config_cache().get_host_config(hostname).is_snmp_host
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_ping_host(hostname):
     return get_config_cache().get_host_config(hostname).is_ping_host
 
 
-# Deprecated: Use HostConfig:is_agent_host instance instead
+# TODO: Replace call sites with HostConfig access and remove this
 def is_agent_host(hostname):
-    if is_tcp_host(hostname):
-        return True
-
-    host_config = get_config_cache().get_host_config(hostname)
-    return host_config.is_piggyback_host
+    return get_config_cache().get_host_config(hostname).is_agent_host
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_dual_host(hostname):
-    return is_tcp_host(hostname) and is_snmp_host(hostname)
+    return get_config_cache().get_host_config(hostname).is_dual_host
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_all_agents_host(hostname):
-    return "all-agents" in tag_list_of_host(hostname)
+    return get_config_cache().get_host_config(hostname).is_all_agents_host
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_all_special_agents_host(hostname):
-    return "special-agents" in tag_list_of_host(hostname)
+    return get_config_cache().get_host_config(hostname).is_all_special_agents_host
 
 
 #
@@ -865,45 +868,29 @@ def is_all_special_agents_host(hostname):
 #
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_ipv6_primary(hostname):
-    """Whether or not the given host is configured to be monitored
-    primarily via IPv6."""
-    dual_stack_host = is_ipv4v6_host(hostname)
-    return (not dual_stack_host and is_ipv6_host(hostname)) \
-            or (dual_stack_host and _primary_ip_address_family_of(hostname) == "ipv6")
+    return get_config_cache().get_host_config(hostname).is_ipv6_primary
 
 
-def _primary_ip_address_family_of(hostname):
-    rules = host_extra_conf(hostname, primary_address_family)
-    if rules:
-        return rules[0]
-    return "ipv4"
-
-
+# TODO: Replace call sites with HostConfig access and remove this
 def is_ipv4v6_host(hostname):
-    tags = tag_list_of_host(hostname)
-    return "ip-v6" in tags and "ip-v4" in tags
+    return get_config_cache().get_host_config(hostname).is_ipv4v6_host
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_ipv6_host(hostname):
-    return "ip-v6" in tag_list_of_host(hostname)
+    return get_config_cache().get_host_config(hostname).is_ipv6_host
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_ipv4_host(hostname):
-    """Whether or not the given host is configured to be monitored via IPv4.
-    This is the case when it is set to be explicit IPv4 or implicit
-    (when host is not an IPv6 host and not a "No IP" host)"""
-    tags = tag_list_of_host(hostname)
-
-    if "ip-v4" in tags:
-        return True
-
-    return "ip-v6" not in tags and "no-ip" not in tags
+    return get_config_cache().get_host_config(hostname).is_ipv4_host
 
 
+# TODO: Replace call sites with HostConfig access and remove this
 def is_no_ip_host(hostname):
-    """Whether or not the given host is configured not to be monitored via IP"""
-    return "no-ip" in tag_list_of_host(hostname)
+    return get_config_cache().get_host_config(hostname).is_no_ip_host
 
 
 #
@@ -2796,14 +2783,19 @@ class HostConfig(object):
         self.is_all_special_agents_host = "special-agents" in tags
 
         # IP addresses
+        # Whether or not the given host is configured not to be monitored via IP
         self.is_no_ip_host = "no-ip" in tags
         self.is_ipv6_host = "ip-v6" in tags
+        # Whether or not the given host is configured to be monitored via IPv4.
+        # This is the case when it is set to be explicit IPv4 or implicit (when
+        # host is not an IPv6 host and not a "No IP" host)
         self.is_ipv4_host = "ip-v4" in tags or (not self.is_ipv6_host and not self.is_no_ip_host)
 
         self.is_ipv4v6_host = "ip-v6" in tags and "ip-v4" in tags
 
+        # Whether or not the given host is configured to be monitored primarily via IPv6
         self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) \
-                                or (self.is_ipv4v6_host and _primary_ip_address_family_of(hostname) == "ipv6")
+                                or (self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6")
 
     @property
     def has_piggyback_data(self):
@@ -2812,6 +2804,12 @@ class HostConfig(object):
 
         from cmk_base.data_sources.piggyback import PiggyBackDataSource
         return PiggyBackDataSource(self.hostname, None).has_persisted_agent_sections()
+
+    def _primary_ip_address_family_of(self):
+        rules = self._config_cache.host_extra_conf(self.hostname, primary_address_family)
+        if rules:
+            return rules[0]
+        return "ipv4"
 
 
 #.

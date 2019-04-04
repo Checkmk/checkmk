@@ -55,8 +55,7 @@ test_neb_LDFLAGS = \
     @RE2_LDFLAGS@
 test_neb_LDADD = \
     -lstdc++fs \
-    -L.. \
-    -llivestatus \
+    ../liblivestatus.a \
     -lpthread \
     @BOOST_ASIO_LIB@ \
     @RE2_LIBS@

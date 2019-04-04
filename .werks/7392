@@ -1,0 +1,10 @@
+Title: mongodb_mem: Don't crash upon zero mapped bytes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554370210
+Class: fix
+
+

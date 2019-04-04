@@ -1,8 +1,20 @@
+# pylint: disable=redefined-outer-name
+
 import pytest
 
 import cmk_base.config as config
 import cmk_base.check_utils
 import cmk_base.check_api as check_api
+
+
+@pytest.fixture
+def config_cache(monkeypatch):
+    monkeypatch.setattr(config,
+                        "_get_management_board_precedence", lambda c, _: _check_plugins()[c])
+    monkeypatch.setattr(cmk_base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    return config_cache
 
 
 def test_load_checks():
@@ -94,13 +106,13 @@ def _check_plugins():
     (False, []),
     (True, []),
 ])
-def test_filter_by_management_board_unknown_check_plugins(monkeypatch, for_discovery, result):
-    monkeypatch.setattr(config, "is_snmp_host", lambda _: False)
-    monkeypatch.setattr(config, "is_tcp_host", lambda _: True)
-    monkeypatch.setattr(config, "has_management_board", lambda _: False)
-    monkeypatch.setattr(config,
-                        "_get_management_board_precedence", lambda c, _: _check_plugins()[c])
-    monkeypatch.setattr(cmk_base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
+def test_filter_by_management_board_unknown_check_plugins(config_cache, monkeypatch, for_discovery,
+                                                          result):
+    h = config_cache.get_host_config("this_host")
+    h.is_snmp_host = False
+    h.is_tcp_host = True
+    h.has_management_board = False
+
     found_check_plugins = [c for c in _check_plugins()]
     monkeypatch.setattr(config, "check_info", [])
 
@@ -115,13 +127,13 @@ def test_filter_by_management_board_unknown_check_plugins(monkeypatch, for_disco
     (False, ["tcp_check_host_precedence", "tcp_check_host_only"]),
     (True, ["tcp_check_host_precedence", "tcp_check_host_only"]),
 ])
-def test_filter_by_management_board_TCP_host_without_mgmt_board(monkeypatch, for_discovery, result):
-    monkeypatch.setattr(config, "is_snmp_host", lambda _: False)
-    monkeypatch.setattr(config, "is_tcp_host", lambda _: True)
-    monkeypatch.setattr(config, "has_management_board", lambda _: False)
-    monkeypatch.setattr(config,
-                        "_get_management_board_precedence", lambda c, _: _check_plugins()[c])
-    monkeypatch.setattr(cmk_base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
+def test_filter_by_management_board_TCP_host_without_mgmt_board(config_cache, monkeypatch,
+                                                                for_discovery, result):
+    h = config_cache.get_host_config("this_host")
+    h.is_snmp_host = False
+    h.is_tcp_host = True
+    h.has_management_board = False
+
     found_check_plugins = [c for c in _check_plugins() if c.startswith("tcp_")]
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
@@ -136,14 +148,13 @@ def test_filter_by_management_board_TCP_host_without_mgmt_board(monkeypatch, for
     (False, ["snmp_check_host_precedence", "snmp_check_host_only"]),
     (True, ["snmp_check_host_precedence", "snmp_check_host_only"]),
 ])
-def test_filter_by_management_board_SNMP_host_without_mgmt_board(monkeypatch, for_discovery,
-                                                                 result):
-    monkeypatch.setattr(config, "is_snmp_host", lambda _: True)
-    monkeypatch.setattr(config, "is_tcp_host", lambda _: False)
-    monkeypatch.setattr(config, "has_management_board", lambda _: False)
-    monkeypatch.setattr(config,
-                        "_get_management_board_precedence", lambda c, _: _check_plugins()[c])
-    monkeypatch.setattr(cmk_base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
+def test_filter_by_management_board_SNMP_host_without_mgmt_board(config_cache, monkeypatch,
+                                                                 for_discovery, result):
+    h = config_cache.get_host_config("this_host")
+    h.is_snmp_host = True
+    h.is_tcp_host = False
+    h.has_management_board = False
+
     found_check_plugins = [c for c in _check_plugins() if c.startswith("snmp_")]
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
@@ -164,14 +175,13 @@ def test_filter_by_management_board_SNMP_host_without_mgmt_board(monkeypatch, fo
         "snmp_check_host_only"
     ]),
 ])
-def test_filter_by_management_board_dual_host_without_mgmt_board(monkeypatch, for_discovery,
-                                                                 result):
-    monkeypatch.setattr(config, "is_snmp_host", lambda _: True)
-    monkeypatch.setattr(config, "is_tcp_host", lambda _: True)
-    monkeypatch.setattr(config, "has_management_board", lambda _: False)
-    monkeypatch.setattr(config,
-                        "_get_management_board_precedence", lambda c, _: _check_plugins()[c])
-    monkeypatch.setattr(cmk_base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
+def test_filter_by_management_board_dual_host_without_mgmt_board(config_cache, monkeypatch,
+                                                                 for_discovery, result):
+    h = config_cache.get_host_config("this_host")
+    h.is_snmp_host = True
+    h.is_tcp_host = True
+    h.has_management_board = False
+
     found_check_plugins = [c for c in _check_plugins()]
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
@@ -188,14 +198,13 @@ def test_filter_by_management_board_dual_host_without_mgmt_board(monkeypatch, fo
     (True, ["tcp_check_host_precedence", "tcp_check_host_only"],
      ["snmp_check_mgmt_only", "snmp_check_host_precedence"]),
 ])
-def test_filter_by_management_board_TCP_host_with_SNMP_mgmt_board(monkeypatch, for_discovery,
-                                                                  host_result, mgmt_board_result):
-    monkeypatch.setattr(config, "is_snmp_host", lambda _: False)
-    monkeypatch.setattr(config, "is_tcp_host", lambda _: True)
-    monkeypatch.setattr(config, "has_management_board", lambda _: True)
-    monkeypatch.setattr(config,
-                        "_get_management_board_precedence", lambda c, _: _check_plugins()[c])
-    monkeypatch.setattr(cmk_base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
+def test_filter_by_management_board_TCP_host_with_SNMP_mgmt_board(
+        config_cache, monkeypatch, for_discovery, host_result, mgmt_board_result):
+    h = config_cache.get_host_config("this_host")
+    h.is_snmp_host = False
+    h.is_tcp_host = True
+    h.has_management_board = True
+
     found_check_plugins = [c for c in _check_plugins() if c.startswith("tcp_")]
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
@@ -217,14 +226,13 @@ def test_filter_by_management_board_TCP_host_with_SNMP_mgmt_board(monkeypatch, f
     (False, ["snmp_check_host_only", "snmp_check_host_precedence"], ["snmp_check_mgmt_only"]),
     (True, ["snmp_check_host_only", "snmp_check_host_precedence"], ["snmp_check_mgmt_only"]),
 ])
-def test_filter_by_management_board_SNMP_host_with_SNMP_mgmt_board(monkeypatch, for_discovery,
-                                                                   host_result, mgmt_board_result):
-    monkeypatch.setattr(config, "is_snmp_host", lambda _: True)
-    monkeypatch.setattr(config, "is_tcp_host", lambda _: False)
-    monkeypatch.setattr(config, "has_management_board", lambda _: True)
-    monkeypatch.setattr(config,
-                        "_get_management_board_precedence", lambda c, _: _check_plugins()[c])
-    monkeypatch.setattr(cmk_base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
+def test_filter_by_management_board_SNMP_host_with_SNMP_mgmt_board(
+        config_cache, monkeypatch, for_discovery, host_result, mgmt_board_result):
+    h = config_cache.get_host_config("this_host")
+    h.is_snmp_host = True
+    h.is_tcp_host = False
+    h.has_management_board = True
+
     found_check_plugins = [c for c in _check_plugins() if c.startswith("snmp_")]
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 
@@ -252,14 +260,13 @@ def test_filter_by_management_board_SNMP_host_with_SNMP_mgmt_board(monkeypatch, 
         "snmp_check_host_precedence"
     ], ["snmp_check_mgmt_only"]),
 ])
-def test_filter_by_management_board_dual_host_with_SNMP_mgmt_board(monkeypatch, for_discovery,
-                                                                   host_result, mgmt_board_result):
-    monkeypatch.setattr(config, "is_snmp_host", lambda _: True)
-    monkeypatch.setattr(config, "is_tcp_host", lambda _: True)
-    monkeypatch.setattr(config, "has_management_board", lambda _: True)
-    monkeypatch.setattr(config,
-                        "_get_management_board_precedence", lambda c, _: _check_plugins()[c])
-    monkeypatch.setattr(cmk_base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
+def test_filter_by_management_board_dual_host_with_SNMP_mgmt_board(
+        config_cache, monkeypatch, for_discovery, host_result, mgmt_board_result):
+    h = config_cache.get_host_config("this_host")
+    h.is_snmp_host = True
+    h.is_tcp_host = True
+    h.has_management_board = True
+
     found_check_plugins = [c for c in _check_plugins()]
     monkeypatch.setattr(config, "check_info", found_check_plugins)
 

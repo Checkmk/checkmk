@@ -836,9 +836,7 @@ def is_snmp_host(hostname):
 
 
 def is_ping_host(hostname):
-    return not is_snmp_host(hostname) \
-       and not is_agent_host(hostname) \
-       and not has_management_board(hostname)
+    return get_config_cache().get_host_config(hostname).is_ping_host
 
 
 # Deprecated: Use HostConfig:is_agent_host instance instead
@@ -913,10 +911,6 @@ def is_no_ip_host(hostname):
 #
 
 
-def has_management_board(hostname):
-    return management_protocol_of(hostname) is not None
-
-
 def management_address_of(hostname):
     attributes_of_host = host_attributes.get(hostname, {})
     if attributes_of_host.get("management_address"):
@@ -925,12 +919,8 @@ def management_address_of(hostname):
     return ipaddresses.get(hostname)
 
 
-def management_protocol_of(hostname):
-    return management_protocol.get(hostname)
-
-
 def management_credentials_of(hostname):
-    protocol = management_protocol_of(hostname)
+    protocol = get_config_cache().get_host_config(hostname).management_protocol
     if protocol == "snmp":
         credentials_variable, default_value = management_snmp_credentials, snmp_default_community
     elif protocol == "ipmi":
@@ -949,8 +939,8 @@ def management_credentials_of(hostname):
 
     # If a rule matches, use the first rule for the management board protocol of the host
     rule_settings = host_extra_conf(hostname, management_board_config)
-    for protocol, credentials in rule_settings:
-        if protocol == management_protocol_of(hostname):
+    for rule_protocol, credentials in rule_settings:
+        if rule_protocol == protocol:
             return credentials
 
     return default_value
@@ -2653,21 +2643,22 @@ def filter_by_management_board(hostname,
     mgmt_only, host_precedence_snmp, host_only_snmp, host_precedence_tcp, host_only_tcp =\
         _get_categorized_check_plugins(found_check_plugin_names, for_inventory=for_inventory)
 
+    config_cache = get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
+
     final_collection = set()
-    is_snmp_host_ = is_snmp_host(hostname)
-    is_agent_host_ = is_agent_host(hostname)
-    if not has_management_board(hostname):
-        if is_snmp_host_:
+    if not host_config.has_management_board:
+        if host_config.is_snmp_host:
             final_collection.update(host_precedence_snmp)
             final_collection.update(host_only_snmp)
-        if is_agent_host_:
+        if host_config.is_agent_host:
             final_collection.update(host_precedence_tcp)
             final_collection.update(host_only_tcp)
         return final_collection
 
     if for_mgmt_board:
         final_collection.update(mgmt_only)
-        if not is_snmp_host_:
+        if not host_config.is_snmp_host:
             final_collection.update(host_precedence_snmp)
             if not for_discovery:
                 # Migration from 1.4 to 1.5:
@@ -2684,10 +2675,10 @@ def filter_by_management_board(hostname,
                 final_collection.update(host_only_snmp)
 
     else:
-        if is_snmp_host_:
+        if host_config.is_snmp_host:
             final_collection.update(host_precedence_snmp)
             final_collection.update(host_only_snmp)
-        if is_agent_host_:
+        if host_config.is_agent_host:
             final_collection.update(host_precedence_tcp)
             final_collection.update(host_only_tcp)
 
@@ -2793,7 +2784,7 @@ class HostConfig(object):
 
         # Agent types
         self.is_agent_host = self.is_tcp_host or self.is_piggyback_host
-        self.management_protocol = management_protocol_of(hostname)
+        self.management_protocol = management_protocol.get(hostname)
         self.has_management_board = self.management_protocol is not None
 
         self.is_ping_host = not self.is_snmp_host and\

@@ -115,6 +115,14 @@ def section_locks(server_status):
                     sys.stdout.write("%s %s %s\n" % (what, key, value))
 
 
+def section_by_keys(section_name, keys, server_status, output_key=False):
+    sys.stdout.write("<<<mongodb_%s>>>\n" % section_name)
+    for key in keys:
+        fmt = ("%s " % key if output_key else "") + "%s %s\n"
+        for item in server_status.get(key, {}).items():
+            sys.stdout.write(fmt % item)
+
+
 def main():
     # might be implemented in the future..
     host = None
@@ -141,15 +149,11 @@ def main():
 
 
 def potentially_piggybacked_sections(client, server_status):
-    # pylint: disable=too-many-branches,too-many-locals
     sections_replica(client, server_status)
 
-    sys.stdout.write("<<<mongodb_asserts>>>\n")
-    for key, value in server_status.get("asserts", {}).items():
-        sys.stdout.write("%s %s\n" % (key, value))
+    section_by_keys("asserts", ("asserts",), server_status)
 
-    sys.stdout.write("<<<mongodb_connections>>>\n")
-    sys.stdout.write("%s\n" % "\n".join("%s %s" % x for x in server_status["connections"].items()))
+    section_by_keys("connections", ("connections",), server_status)
 
     databases = get_database_info(client)
 
@@ -172,16 +176,9 @@ def potentially_piggybacked_sections(client, server_status):
     #except:
     #    pass
 
-    sys.stdout.write("<<<mongodb_mem>>>\n")
-    for key, value in server_status["mem"].items():
-        sys.stdout.write("%s %s\n" % (key, value))
-    for key, value in server_status["extra_info"].items():
-        sys.stdout.write("%s %s\n" % (key, value))
+    section_by_keys("mem", ("mem", "extra_info"), server_status)
 
-    sys.stdout.write("<<<mongodb_counters>>>\n")
-    for what in ["opcounters", "opcountersRepl"]:
-        for key, value in server_status.get(what, {}).items():
-            sys.stdout.write("%s %s %s\n" % (what, key, value))
+    section_by_keys("counters", ("opcounters", "opcountersRepl"), server_status, output_key=True)
 
     sys.stdout.write("<<<mongodb_collections:sep(9)>>>\n")
     for dbname, dbdata in databases.items():
@@ -237,8 +234,8 @@ def potentially_piggybacked_sections(client, server_status):
 
         # update state file
         if startup_warnings["log"]:
-            file(state_file,
-                 "w").write("%d" % get_timestamp(startup_warnings["log"][-1].split(".")[0]))
+            timestamp = get_timestamp(startup_warnings["log"][-1].split(".")[0])
+            file(state_file, "w").write("%d" % timestamp)
 
 
 if __name__ == "__main__":

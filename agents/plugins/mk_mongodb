@@ -34,19 +34,14 @@ def main():  # pylint: disable=too-many-branches,too-many-locals
     host = None
     port = None
 
+    con = pymongo.MongoClient(host, port, read_preference=pymongo.ReadPreference.SECONDARY)
     try:
-        con = pymongo.MongoClient(host, port, read_preference=pymongo.ReadPreference.SECONDARY)
-
-        # if user and passwd:
-        #     db = con["admin"]
-        #     if not db.authenticate(user, passwd):
-        #        sys.exit("Username/Password incorrect")
-
+        # connecting is lazy, it might fail only now
         server_status = con.admin.command("serverStatus")
-    except Exception:  # pylint: disable=broad-except
+    except pymongo.errors.ConnectionFailure:
         sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
         sys.stdout.write("error\tInstance is down\n")
-        sys.exit(0)
+        return
 
     repl_info = server_status.get("repl")
 

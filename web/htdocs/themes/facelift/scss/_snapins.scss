@@ -235,7 +235,7 @@ table.performance {
 /*
  * Server time snapin
  */
-div.time {
+#snapin_time div.time {
   width: $theme-snapin-width - 2px;
   padding: 8px;
   font-size: 24px;

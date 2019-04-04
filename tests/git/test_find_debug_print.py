@@ -38,7 +38,7 @@ def test_find_debug_code():
                 scanned += 1
                 for filename in filenames:
                     file_path = "%s/%s" % (dirpath, filename)
-                    if [folder in file_path for folder in exclude_folders]:
+                    if [folder for folder in exclude_folders if folder in file_path]:
                         continue
 
                     for nr, line in enumerate(open(file_path)):

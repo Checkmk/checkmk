@@ -8,7 +8,7 @@ or specified as explicit modules (as in the datasets subpackage).
 
 The minimal compliant dataset must have the attribute
 
-  * `checkname` (str)       : The name of the (main) check.
+  * `checkname`      : [str] The name of the (main) check.
 
 In order to actually do something, at least one of the following attributes
 must be present. They are optional (but you must provide some input for the
@@ -37,6 +37,9 @@ check function(s)). In the following, 'sc-dict' refers to a dictionary with
 
 Some more advanced ones are
 
+  * `freeze_time`    : [str] Mocked time.
+                       If present, its value are passed to
+                           `freezegun.freeze_time`
   * `extra_sections` : [sc-dict] Extra sections that are appended to the info
                        / parsed variable.
                        If present, its values are extra sections (the actual

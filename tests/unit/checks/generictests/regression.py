@@ -39,6 +39,7 @@ Make sure the file(s name) is a valid python module:
 import os
 import sys
 import pprint
+import time
 from importlib import import_module
 
 import generictests.run
@@ -61,7 +62,10 @@ class WritableDataset(object):
         )
         self.checkname = init_dict.get('checkname', None)
         self.info = init_dict.get('info', None)
-        self.freeze_time = init_dict.get('freeze_time', None)
+        freeze_time = init_dict.get('freeze_time', None)
+        if freeze_time == "":
+            freeze_time = time.strftime("%Y-%m-%d %H:%M:%S")
+        self.freeze_time = freeze_time
         self.parsed = init_dict.get('parsed', None)
         self.discovery = init_dict.get('discovery', {})
         self.checks = {}

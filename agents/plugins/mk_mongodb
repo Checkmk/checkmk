@@ -16,6 +16,7 @@ import pprint
 import sys
 import time
 from contextlib import contextmanager
+
 import pymongo  # pylint: disable=import-error
 
 
@@ -29,6 +30,23 @@ def piggyback(info):
     finally:
         if piggyhost:
             sys.stdout.write("<<<<>>>>\n")
+
+
+def get_database_info(client):
+    try:
+        db_names = client.list_database_names()
+    except AttributeError:  # pymongo < 3.6
+        db_names = client.database_names()
+
+    databases = {n: {} for n in db_names}
+    for name in db_names:
+        database = client[name]
+        databases[name]["collections"] = database.collection_names()
+        databases[name]["stats"] = database.command("dbstats")
+        databases[name]["collstats"] = {}
+        for collection in databases[name]["collections"]:
+            databases[name]["collstats"][collection] = database.command("collstats", collection)
+    return databases
 
 
 def section_instance(server_status):
@@ -60,6 +78,19 @@ def section_flushing(server_status):
     sys.stdout.write("flushed %s\n" % flushing_info["flushes"])
 
 
+def sections_replica(client, server_status):
+    repl_info = server_status.get("repl")
+    if not repl_info:
+        return
+    sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
+    sys.stdout.write("primary\t%s\n" % repl_info.get("primary"))
+    sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
+    sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
+
+    sys.stdout.write("<<<mongodb_replstatus>>>\n")
+    sys.stdout.write(pprint.pformat(client.admin.command("replSetGetStatus")))
+
+
 def main():
     # might be implemented in the future..
     host = None
@@ -82,19 +113,12 @@ def main():
         return
 
     with piggyback(repl_info):
-        potentially_piggybacked_sections(client, server_status, repl_info)
+        potentially_piggybacked_sections(client, server_status)
 
 
-def potentially_piggybacked_sections(client, server_status, repl_info):
+def potentially_piggybacked_sections(client, server_status):
     # pylint: disable=too-many-branches,too-many-locals
-    if repl_info:
-        sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
-        sys.stdout.write("primary\t%s\n" % repl_info.get("primary"))
-        sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
-        sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
-
-        sys.stdout.write("<<<mongodb_replstatus>>>\n")
-        sys.stdout.write(pprint.pformat(client.admin.command("replSetGetStatus")))
+    sections_replica(client, server_status)
 
     sys.stdout.write("<<<mongodb_asserts>>>\n")
     for key, value in server_status.get("asserts", {}).items():
@@ -103,18 +127,7 @@ def potentially_piggybacked_sections(client, server_status, repl_info):
     sys.stdout.write("<<<mongodb_connections>>>\n")
     sys.stdout.write("%s\n" % "\n".join("%s %s" % x for x in server_status["connections"].items()))
 
-    try:
-        databases = {x: {} for x in client.list_database_names()}
-    except AttributeError:  # pymongo < 3.6
-        databases = {x: {} for x in client.database_names()}
-
-    for name in databases:
-        database = client[name]
-        databases[name]["collections"] = database.collection_names()
-        databases[name]["stats"] = database.command("dbstats")
-        databases[name]["collstats"] = {}
-        for collection in databases[name]["collections"]:
-            databases[name]["collstats"][collection] = database.command("collstats", collection)
+    databases = get_database_info(client)
 
     sys.stdout.write("<<<mongodb_chunks>>>\n")
     col = client.config.chunks

@@ -67,24 +67,27 @@ def wait_agent():
 def actual_output(write_config, wait_agent):
     if platform.system() == 'Windows':
         # Run agent and yield telnet output.
+        telnet, p = None, None
         try:
             save_cwd = os.getcwd()
             os.chdir(remotedir)
             p = subprocess.Popen([agent_exe, 'adhoc'])
+
             # Override wait_agent in tests to wait for async processes to start.
             wait_agent()
+
             telnet = telnetlib.Telnet(host, port)  # nosec
             yield telnet.read_all().splitlines()
         finally:
-            try:
+            if telnet:
                 telnet.close()
+
+            if p:
                 p.terminate()
-                # Possibly wait for async processes to stop.
-                wait_agent()
-            # Thrown if something goes wrong before variable assigment
-            except UnboundLocalError as e:
-                sys.stderr.write('%s\n' % str(e))
-                assert 0, '%s' % str(e)
+
+            # Possibly wait for async processes to stop.
+            wait_agent()
+
             os.chdir(save_cwd)
     else:
         # Not on Windows, test run remotely, nothing to be done.

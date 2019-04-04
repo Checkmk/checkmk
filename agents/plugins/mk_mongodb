@@ -52,10 +52,10 @@ def main():
     host = None
     port = None
 
-    con = pymongo.MongoClient(host, port, read_preference=pymongo.ReadPreference.SECONDARY)
+    client = pymongo.MongoClient(host, port, read_preference=pymongo.ReadPreference.SECONDARY)
     try:
         # connecting is lazy, it might fail only now
-        server_status = con.admin.command("serverStatus")
+        server_status = client.admin.command("serverStatus")
     except pymongo.errors.ConnectionFailure:
         sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
         sys.stdout.write("error\tInstance is down\n")
@@ -70,12 +70,12 @@ def main():
 
     if repl_info:
         sys.stdout.write("<<<<%s>>>>\n" % repl_info["setName"])
-    potentially_piggybacked_sections(con, server_status, repl_info)
+    potentially_piggybacked_sections(client, server_status, repl_info)
     if repl_info:
         sys.stdout.write("<<<<>>>>\n")
 
 
-def potentially_piggybacked_sections(con, server_status, repl_info):
+def potentially_piggybacked_sections(client, server_status, repl_info):
     # pylint: disable=too-many-branches,too-many-locals
     if repl_info:
         sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
@@ -84,7 +84,7 @@ def potentially_piggybacked_sections(con, server_status, repl_info):
         sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
 
         sys.stdout.write("<<<mongodb_replstatus>>>\n")
-        sys.stdout.write(pprint.pformat(con.admin.command("replSetGetStatus")))
+        sys.stdout.write(pprint.pformat(client.admin.command("replSetGetStatus")))
 
     sys.stdout.write("<<<mongodb_asserts>>>\n")
     for key, value in server_status.get("asserts", {}).items():
@@ -94,12 +94,12 @@ def potentially_piggybacked_sections(con, server_status, repl_info):
     sys.stdout.write("%s\n" % "\n".join("%s %s" % x for x in server_status["connections"].items()))
 
     try:
-        databases = {x: {} for x in con.list_database_names()}
+        databases = {x: {} for x in client.list_database_names()}
     except AttributeError:  # pymongo < 3.6
-        databases = {x: {} for x in con.database_names()}
+        databases = {x: {} for x in client.database_names()}
 
     for name in databases:
-        database = con[name]
+        database = client[name]
         databases[name]["collections"] = database.collection_names()
         databases[name]["stats"] = database.command("dbstats")
         databases[name]["collstats"] = {}
@@ -107,7 +107,7 @@ def potentially_piggybacked_sections(con, server_status, repl_info):
             databases[name]["collstats"][collection] = database.command("collstats", collection)
 
     sys.stdout.write("<<<mongodb_chunks>>>\n")
-    col = con.config.chunks
+    col = client.config.chunks
     for db_name, db_data in databases.items():
         shards = col.distinct("shard")
         sys.stdout.write("shardcount %d\n" % len(shards))
@@ -163,7 +163,7 @@ def potentially_piggybacked_sections(con, server_status, repl_info):
 
     sys.stdout.write("<<<logwatch>>>\n")
     sys.stdout.write("[[[MongoDB startupWarnings]]]\n")
-    startup_warnings = con.admin.command({"getLog": "startupWarnings"})
+    startup_warnings = client.admin.command({"getLog": "startupWarnings"})
 
     var_dir = os.environ.get("MK_VARDIR")
     if var_dir:

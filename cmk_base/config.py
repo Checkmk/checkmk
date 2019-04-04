@@ -846,18 +846,8 @@ def is_agent_host(hostname):
     if is_tcp_host(hostname):
         return True
 
-    tags = tag_list_of_host(hostname)
-
-    if "piggyback" in tags:
-        is_piggyback_host = True
-    elif "no-piggyback" in tags:
-        is_piggyback_host = False
-    else:  # Legacy automatic detection
-        import cmk_base.data_sources as data_sources
-        is_piggyback_host = piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, hostname) or \
-                            data_sources.has_persisted_piggyback_agent_sections(hostname)
-
-    return is_piggyback_host
+    host_config = get_config_cache().get_host_config(hostname)
+    return host_config.is_piggyback_host
 
 
 def is_dual_host(hostname):
@@ -2826,9 +2816,11 @@ class HostConfig(object):
 
     @property
     def has_piggyback_data(self):
-        import cmk_base.data_sources as data_sources
-        return piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, self.hostname) or \
-               data_sources.has_persisted_piggyback_agent_sections(self.hostname)
+        if piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, self.hostname):
+            return True
+
+        from cmk_base.data_sources.piggyback import PiggyBackDataSource
+        return PiggyBackDataSource(self.hostname, None).has_persisted_agent_sections()
 
 
 #.

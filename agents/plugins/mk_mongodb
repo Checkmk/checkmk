@@ -18,6 +18,24 @@ import time
 import pymongo  # pylint: disable=import-error
 
 
+def section_instance(server_status):
+    sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
+    sys.stdout.write("version\t%s\n" % server_status["version"])
+    sys.stdout.write("pid\t%s\n" % server_status["pid"])
+    repl_info = server_status.get("repl")
+    if not repl_info:
+        sys.stdout.write("mode\tSingle Instance\n")
+        return
+    if repl_info.get("ismaster"):
+        sys.stdout.write("mode\tPrimary\n")
+        return
+    if repl_info.get("secondary"):
+        sys.stdout.write("mode\tSecondary\n")
+        return
+    sys.stdout.write("mode\tArbiter\n")
+    sys.stdout.write("address\t%s\n" % repl_info["me"])
+
+
 def section_flushing(server_status):
     # key is depricated for MongoDB 4.0
     flushing_info = server_status.get("backgroundFlushing")
@@ -43,23 +61,9 @@ def main():  # pylint: disable=too-many-branches,too-many-locals
         sys.stdout.write("error\tInstance is down\n")
         return
 
+    section_instance(server_status)
+
     repl_info = server_status.get("repl")
-
-    sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
-    if not repl_info:
-        sys.stdout.write("mode\tSingle Instance\n")
-    else:
-        if repl_info.get("ismaster"):
-            sys.stdout.write("mode\tPrimary\n")
-        elif repl_info.get("secondary"):
-            sys.stdout.write("mode\tSecondary\n")
-        else:
-            sys.stdout.write("mode\tArbiter\n")
-        sys.stdout.write("address\t%s\n" % repl_info["me"])
-
-    sys.stdout.write("version\t%s\n" % server_status["version"])
-    sys.stdout.write("pid\t%s\n" % server_status["pid"])
-
     if repl_info:
         if not repl_info.get("ismaster"):
             sys.exit(0)

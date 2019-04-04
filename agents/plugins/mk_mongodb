@@ -15,7 +15,20 @@ import os
 import pprint
 import sys
 import time
+from contextlib import contextmanager
 import pymongo  # pylint: disable=import-error
+
+
+@contextmanager
+def piggyback(info):
+    piggyhost = info.get("setName") if info else None
+    if piggyhost:
+        sys.stdout.write("<<<<%s>>>>\n" % piggyhost)
+    try:
+        yield
+    finally:
+        if piggyhost:
+            sys.stdout.write("<<<<>>>>\n")
 
 
 def section_instance(server_status):
@@ -68,11 +81,8 @@ def main():
     if repl_info and not repl_info.get("ismaster"):
         return
 
-    if repl_info:
-        sys.stdout.write("<<<<%s>>>>\n" % repl_info["setName"])
-    potentially_piggybacked_sections(client, server_status, repl_info)
-    if repl_info:
-        sys.stdout.write("<<<<>>>>\n")
+    with piggyback(repl_info):
+        potentially_piggybacked_sections(client, server_status, repl_info)
 
 
 def potentially_piggybacked_sections(client, server_status, repl_info):

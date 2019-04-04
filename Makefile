@@ -188,6 +188,7 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 	$(MAKE) -C agents build
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
 	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update
+	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update-legacy
 	gzip $(DISTNAME)/bin.tar
 	$(PIPENV) run python -m compileall cmk ; \
 	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \

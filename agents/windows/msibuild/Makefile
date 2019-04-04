@@ -32,6 +32,7 @@ all: exchange_msi_files
 
 clean:
 	rm -rf $(MSITOOLS)
+	rm -f check_mk_agent.msi
 	rm -rf work sources
 	rm -f .gsf-save-*
 
@@ -47,7 +48,10 @@ msibuild:
 	rm msibuild msiinfo
 	ln -s $(MSITOOLS)/msibuild $(MSITOOLS)/msiinfo .
 
-# with new agent we do not need to update vanilla container
-# nothing to do, but target left for the future changes and
-# for updating msibuild
+# we have to use legacy msi-update 	
 exchange_msi_files: msibuild
+	mkdir -p work sources
+	cp ../check_mk_agent.exe ../check_mk_agent-64.exe ../check_mk.example.ini sources
+	LD_LIBRARY_PATH=$$(pwd)/msitools-0.94/libmsi/.libs \
+           ./msi-update-legacy -v vanilla_container.msi sources $(BUILD_VERSION) $(CHECK_MK_VERSION)
+	rm -rf work sources

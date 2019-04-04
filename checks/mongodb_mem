@@ -61,10 +61,11 @@ def check_mongodb_mem(_no_item, params, parsed):
 
     # MongoDB doc: If virtual value is significantly larger than mapped (e.g. 3 or more times),
     #              this may indicate a memory leak.
-    virt_mapped_factor = parsed["virtual"] / float(parsed["mapped"])
-    if virt_mapped_factor >= 3:
-        textfmt = "Virtual size is %.1f times the mapped size (possible memory leak)"
-        yield 1, textfmt % virt_mapped_factor
+    if parsed.get("mapped"):  # present, non-zero
+        virt_mapped_factor = parsed["virtual"] / float(parsed["mapped"])
+        if virt_mapped_factor >= 3:
+            textfmt = "Virtual size is %.1f times the mapped size (possible memory leak)"
+            yield 1, textfmt % virt_mapped_factor
 
 
 check_info['mongodb_mem'] = {

@@ -62,7 +62,7 @@ try {
 
 $(() => {
     utils.update_header_timer();
-    forms.enable_select2();
+    forms.enable_dynamic_form_elements();
     // TODO: only register when needed?
     element_dragging.register_event_handlers();
 });

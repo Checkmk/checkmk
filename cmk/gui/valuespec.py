@@ -4232,11 +4232,17 @@ class TextOrRegExpUnicode(TextOrRegExp):
 class Labels(ValueSpec):
     """Valuespec to render and input a collection of object labels"""
 
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("help", "")
+        kwargs["help"] += _("Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. "
+                            "For example <tt>os:windows</tt>.")
+        super(Labels, self).__init__(*args, **kwargs)
+
     def canonical_value(self):
         return {}
 
     def from_html_vars(self, varprefix):
-        return json.loads(html.get_unicode_input(varprefix))
+        return dict(e["value"].split(":", 1) for e in json.loads(html.get_unicode_input(varprefix)))
 
     def value_to_text(self, value):
         # TODO: Find a better place for this function and rename it
@@ -4244,8 +4250,14 @@ class Labels(ValueSpec):
         return render_tag_groups(value, "host", with_links=False)
 
     def render_input(self, varprefix, value):
-        # TODO: Add a nice label input mechanism
-        html.text_input(varprefix, default_value=json.dumps(value))
+        html.help(self.help())
+        html.text_input(
+            varprefix,
+            default_value=json.dumps(["%s:%s" % e for e in value.items()]),
+            cssclass="labels",
+            attrs={
+                "placeholder": _("Add some tag"),
+            })
 
 
 class IconSelector(ValueSpec):

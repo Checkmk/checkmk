@@ -24,11 +24,18 @@
 
 import $ from "jquery";
 import "select2";
+import Tagify from "@yaireo/tagify";
+
 import * as utils from "utils";
+
+export function enable_dynamic_form_elements(container=null) {
+    enable_select2_dropdowns(container);
+    enable_label_input_fields(container);
+}
 
 // html.dropdown() adds the .select2-enable class for all dropdowns
 // that should use the select2 powered dropdowns
-export function enable_select2(container=null) {
+function enable_select2_dropdowns(container) {
     let elements;
     if (container)
         elements = $(container).find(".select2-enable:visible");
@@ -38,6 +45,18 @@ export function enable_select2(container=null) {
     elements.select2({
         dropdownAutoWidth : true,
         minimumResultsForSearch: 5
+    });
+}
+
+function enable_label_input_fields(container) {
+    if (!container)
+        container = document;
+
+    let elements = container.querySelectorAll("input.labels");
+    elements.forEach(element => {
+        let tagify = new Tagify(element, {
+            pattern: /^[^:]+:[^:]+$/,
+        });
     });
 }
 

@@ -124,13 +124,18 @@ def check_limit(rows, limit, user):
 
 
 def render_tag_groups(tag_groups, object_type, with_links):
-    return HTML("").join(
+    elements = [
         _render_tag_group(tg_id, tag, object_type, with_links)
-        for tg_id, tag in sorted(tag_groups.items()))
+        for tg_id, tag in sorted(tag_groups.items())
+    ]
+    return html.render_tags(
+        HTML("").join(elements), class_=["tagify", "labels", "display"], readonly="true")
 
 
 def _render_tag_group(tg_id, tag, object_type, with_link):
-    span = html.render_span("%s:%s" % (tg_id, tag), class_="tag_group")
+    span = html.render_tag(
+        html.render_div(html.render_span("%s:%s" % (tg_id, tag), class_=["tagify__tag-text"])),
+        class_=["tagify--noAnim"])
     if not with_link:
         return span
 

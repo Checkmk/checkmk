@@ -1,0 +1,13 @@
+Title: winperf_phydisk: Optional configuration of disk io operations
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554463850
+Class: feature
+
+This werk adds support for the configuration of Levels for disk I/O operations
+for Windows in WATO rule "Levels on disk IO (old style checks)".
+
+CMK-1780

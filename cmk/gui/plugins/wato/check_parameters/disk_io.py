@@ -128,6 +128,18 @@ class RulespecCheckgroupParametersDiskIo(CheckParameterRulespecWithItem):
                                "cause incompatibilities with existing historical data "
                                "if you are running PNP4Nagios in SINGLE mode.")),
                 ),
+                ("read_ios",
+                 Levels(
+                     title=_("Read operations"),
+                     unit=_("1/s"),
+                     default_levels=(400.0, 600.0),
+                 )),
+                ("write_ios",
+                 Levels(
+                     title=_("Write operations"),
+                     unit=_("1/s"),
+                     default_levels=(300.0, 400.0),
+                 )),
             ],)
 
     @property

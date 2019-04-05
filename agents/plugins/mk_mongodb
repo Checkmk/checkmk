@@ -125,6 +125,15 @@ def section_by_keys(section_name, keys, server_status, output_key=False):
             sys.stdout.write(fmt % item)
 
 
+def section_collections(databases):
+    sys.stdout.write("<<<mongodb_collections:sep(9)>>>\n")
+    for dbname, dbdata in databases.items():
+        for collname, colldata in dbdata.get("collstats", {}).items():
+            for key, value in colldata.items():
+                if 'size' in key.lower():
+                    sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, key, value))
+
+
 def get_timestamp(text):
     """parse timestamps like 'Nov  6 13:44:09.345' or '2015-10-17T05:35:24.234'"""
     text = text.split('.')[0]
@@ -194,11 +203,7 @@ def section_logwatch(client):
 
 
 def main():
-    # might be implemented in the future..
-    host = None
-    port = None
-
-    client = pymongo.MongoClient(host, port, read_preference=pymongo.ReadPreference.SECONDARY)
+    client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY)
     try:
         # connecting is lazy, it might fail only now
         server_status = client.admin.command("serverStatus")
@@ -233,29 +238,11 @@ def potentially_piggybacked_sections(client, server_status):
 
     section_flushing(server_status)
 
-    # Unused
-    # server_version = tuple(con.server_info()['version'].split('.'))
-    #try:
-    #    if server_version >= tuple("2.4.0".split(".")):
-    #        indexCounters = server_status['indexCounters']
-    #    else:
-    #        indexCounters = server_status['indexCounters']["btree"]
-    #    print "<<<mongodb_indexcounters>>>"
-    #    for key, value in indexCounters.items():
-    #        print "%s %s" % (key, value)
-    #except:
-    #    pass
-
     section_by_keys("mem", ("mem", "extra_info"), server_status)
 
     section_by_keys("counters", ("opcounters", "opcountersRepl"), server_status, output_key=True)
 
-    sys.stdout.write("<<<mongodb_collections:sep(9)>>>\n")
-    for dbname, dbdata in databases.items():
-        for collname, colldata in dbdata.get("collstats", {}).items():
-            for key, value in colldata.items():
-                if 'size' in key.lower():
-                    sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, key, value))
+    section_collections(databases)
 
     section_logwatch(client)
 

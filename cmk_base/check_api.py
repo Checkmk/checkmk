@@ -383,6 +383,7 @@ def check_levels(value,
 
     value:   currently measured value
     dsname:  name of the datasource in the RRD that corresponds to this value
+             or None in order to skip perfdata
     params:  None or Tuple(None, None) -> no level checking.
              Tuple variants with non-None values:
              Tuple[warn_upper, crit_upper] -> upper level checking only.
@@ -438,10 +439,11 @@ def check_levels(value,
     else:
         infotext = "%s%s" % (human_readable_func(value), unit_info)
 
-    perf_value = (dsname, value)
     # None, {} or (None, None) -> do not check any levels
     if not params or params == (None, None):
-        return 0, infotext, [perf_value]
+        if dsname:
+            return 0, infotext, [(dsname, value)]
+        return 0, infotext, []
 
     # Pair of numbers -> static levels
     elif isinstance(params, tuple):
@@ -478,9 +480,12 @@ def check_levels(value,
     if statemarkers:
         infotext += state_markers[state]
 
-    perfdata = [perf_value + tuple(levels[:2])]
-    if ref_value:
-        perfdata.append(('predict_' + dsname, ref_value))
+    if dsname:
+        perfdata = [(dsname, value, levels[0], levels[1])]
+        if ref_value:
+            perfdata.append(('predict_' + dsname, ref_value))
+    else:
+        perfdata = []
 
     return state, infotext, perfdata
 

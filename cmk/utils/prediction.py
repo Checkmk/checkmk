@@ -111,15 +111,13 @@ class TimeSeries(object):
         return self.start == other.start and self.end == other.end and self.step == other.step and self.values == other.values
 
 
-def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
+def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime, max_entries=400):
     """Fetch RRD historic metrics data of a specific service, within the specified time range
 
     returns a TimeSeries object holding interval and data information
 
     Query to livestatus always returns if database is found, thus:
     - Values can be None when there is no data for a given timestamp
-    - Livestatus/rrdtool returns a maximum of 400 data-points per query,
-      even if better resolution is available within the time range.
     - Reply from livestatus/rrdtool is always enough to describe the
       queried interval. That means, the returned bounds are always outside
       the queried interval.
@@ -140,11 +138,11 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
     rpn = "%s.%s" % (varname, cf.lower())  # "MAX" -> "max"
 
     lql = "GET services\n" \
-          "Columns: rrddata:m1:%s:%s:%s:%s\n" \
+          "Columns: rrddata:m1:%s:%s:%s:%s:%s\n" \
           "OutputFormat: python\n" \
           "Filter: host_name = %s\n" \
           "Filter: description = %s\n" % tuple(map(livestatus.lqencode,
-                                                   map(str, (rpn, fromtime, untiltime, step,
+                                                   map(str, (rpn, fromtime, untiltime, step, max_entries,
                                                              hostname, service_description))))
 
     try:

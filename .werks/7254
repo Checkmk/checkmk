@@ -1,0 +1,13 @@
+Title: Background Jobs: Fixed bug on several job detail pages, stating the job is stuck in "initialized" phase
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1554382214
+
+The <tt>Bake agents</tt> or <tt>Download agent output</tt> background job details pages incorrectly showed the jobstatus as initialized.
+This error solely was a display bug and was caused by invalid parsing of the jobs statefile.
+The actual background job was running fine.

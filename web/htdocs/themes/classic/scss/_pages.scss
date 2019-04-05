@@ -1556,3 +1556,7 @@ span.tag_group {
     font-size: 8pt;
   }
 }
+
+.tagify.display[readonly] tag > div::before {
+    background: #d6d6d6;
+}

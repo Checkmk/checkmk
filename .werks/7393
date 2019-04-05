@@ -1,0 +1,13 @@
+Title: mongodb_collections: New WATO rule and fixed output
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1554458898
+Class: fix
+
+The storage size is no longer wrongly treated as total available space,
+which led to a {CRIT} state.
+Users who had a rule configured for Mongo DB collections need to set
+up a new one.

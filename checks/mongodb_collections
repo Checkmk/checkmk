@@ -52,14 +52,19 @@ def parse_mongodb_collections(info):
     return parsed
 
 
-def check_mongodb_collections(item, params, parsed):
-    fslist_blocks = []
-    for coll_item, values in parsed.items():
-        used_mb = values["size"] / 1024.0**2
-        total_mb = values["storageSize"] / 1024.0**2
-        fslist_blocks.append((coll_item, total_mb, total_mb - used_mb, 0))
-
-    return df_check_filesystem_list(item, params, fslist_blocks)
+@get_parsed_item_data
+def check_mongodb_collections(_no_item, params, data):
+    for key, label in (
+        ("size", "Uncompressed size in memory"),
+        ("storageSize", "Allocated for document storage"),
+    ):
+        if key not in data:
+            continue
+        levels = params.get("levels_%s" % key.lower())
+        if levels is not None:
+            levels = (levels[0] * 1024**2, levels[1] * 1024**2)
+        yield check_levels(
+            data[key], None, levels, human_readable_func=get_bytes_human_readable, infoname=label)
 
 
 check_info["mongodb_collections"] = {
@@ -68,7 +73,5 @@ check_info["mongodb_collections"] = {
     "check_function": check_mongodb_collections,
     "service_description": "MongoDB Collection %s",
     "group": "mongodb_collections",
-    "default_levels_variable": "filesystem_default_levels",
-    "includes": ["size_trend.include", "df.include"],
-    "has_perfdata": True,
+    "has_perfdata": False,
 }

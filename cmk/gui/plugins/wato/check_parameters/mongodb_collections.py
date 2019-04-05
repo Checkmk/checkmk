@@ -25,19 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersStorage,
     CheckParameterRulespecWithItem,
+    RulespecGroupCheckParametersStorage,
     rulespec_registry,
 )
-from cmk.gui.plugins.wato.check_parameters.utils import (
-    fs_levels_elements,
-    size_trend_elements,
-)
+from cmk.gui.valuespec import Dictionary, Integer, TextAscii, Tuple
 
 
 @rulespec_registry.register
@@ -60,8 +53,19 @@ class RulespecCheckgroupParametersMongodbCollections(CheckParameterRulespecWithI
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(elements=fs_levels_elements + size_trend_elements)
+        return Dictionary(elements=[
+            ("levels_size", self._size_tuple("Uncompressed size in memory", "above")),
+            ("levels_storagesize", self._size_tuple("Allocated for document storage", "above")),
+        ])
+
+    def _size_tuple(self, title, course):
+        return Tuple(
+            title=_(title),
+            elements=[
+                Integer(title=_("Warning if %s") % course, unit=_("MiB"), minvalue=0),
+                Integer(title=_("Critical if %s") % course, unit=_("MiB"), minvalue=0),
+            ])
 
     @property
     def item_spec(self):
-        return TextAscii(title=_("Collection name"),)
+        return TextAscii(title=_("Database/Collection name ('<DB name> <collection name>')"),)

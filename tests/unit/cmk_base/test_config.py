@@ -2,6 +2,7 @@
 
 import pytest  # type: ignore
 
+import cmk.utils.paths
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
 
@@ -402,6 +403,17 @@ def test_host_config_labels(monkeypatch):
         "from-rule": "rule1",
         "from-rule2": "rule2",
     }
+
+
+def test_host_labels_of_host_discovered_labels(monkeypatch, tmp_path):
+    config_cache = _setup_host(monkeypatch, "test-host", ["abc"])
+
+    monkeypatch.setattr(cmk.utils.paths, "discovered_host_labels_dir", tmp_path)
+    host_file = (tmp_path / "test-host").with_suffix(".mk")
+    with host_file.open(mode="wb") as f:
+        f.write(repr({u"äzzzz": u"eeeeez"}) + "\n")
+
+    assert config_cache.get_host_config("test-host").labels == {u"äzzzz": u"eeeeez"}
 
 
 def test_service_label_rules_default():

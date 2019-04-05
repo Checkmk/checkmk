@@ -118,6 +118,15 @@ class RulespecActiveChecksCmkInv(HostRulespec):
                      ],
                      default_value=True,
                  )),
+                ("host_label_inventory",
+                 DropdownChoice(
+                     title=_("Host label inventory"),
+                     choices=[
+                         (True, _("Do automatic host label inventory")),
+                         (False, _("Do not perform automatic host label inventory")),
+                     ],
+                     default_value=True,
+                 )),
             ]),
             title=_("Do hardware/software Inventory"),
             help=_("All hosts configured via this ruleset will do a hardware and "

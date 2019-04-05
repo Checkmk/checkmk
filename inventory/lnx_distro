@@ -44,7 +44,7 @@
 # /etc/oracle-release|Oracle LinuxServer release 7.1
 
 
-def inv_lnx_distro(info, inventory_tree):
+def inv_lnx_distro(info, inventory_tree, discovered_host_labels):
     parsed = _parse_lnx_distro(info)
 
     node = inventory_tree.get_dict("software.os.")
@@ -62,6 +62,9 @@ def inv_lnx_distro(info, inventory_tree):
         if file_name in parsed:
             handler(node, parsed[file_name])
             break
+
+    if "name" in node:
+        discovered_host_labels["os"] = node["name"]
 
 
 def _parse_lnx_distro(info):

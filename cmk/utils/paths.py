@@ -83,6 +83,7 @@ livebackendsdir = _omd_path("share/check_mk/livestatus")
 inventory_output_dir = _omd_path("var/check_mk/inventory")
 inventory_archive_dir = _omd_path("var/check_mk/inventory_archive")
 status_data_dir = _omd_path("tmp/check_mk/status_data")
+discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_labels"))
 
 share_dir = _omd_path("share/check_mk")
 checks_dir = _omd_path("share/check_mk/checks")

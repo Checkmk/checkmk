@@ -139,6 +139,8 @@ custom_checks = []  # WATO variant for free-form custom checks without formaliza
 all_hosts = []
 host_tags = {}  # store host tag config per host
 host_labels = {}  # store explicit host labels per host
+host_label_rules = []  # Assign labels via ruleset to hosts
+service_label_rules = []  # Asssing labels via ruleset to services
 # TODO: This is a derived variable. Should be handled like others
 # (hosttags, service_service_levels, ...)
 host_paths = {}

@@ -39,6 +39,8 @@ from cmk.utils.plugin_loader import load_plugins
 from cmk.gui.plugins.views.utils import (
     get_tag_groups,
     render_tag_groups,
+    get_labels,
+    render_labels,
     get_permitted_views,
     cmp_custom_variable,
     cmp_ip_address,

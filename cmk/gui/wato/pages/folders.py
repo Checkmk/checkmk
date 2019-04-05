@@ -573,7 +573,7 @@ class ModeFolder(WatoMode):
                 cmk.gui.view_utils.render_tag_groups(host.tag_groups(), "host", with_links=False))
 
         table.cell(_("Explicit labels"), css="tag-ellipsis")
-        html.write(cmk.gui.view_utils.render_tag_groups(host.labels(), "host", with_links=False))
+        html.write(cmk.gui.view_utils.render_labels(host.labels(), "host", with_links=False))
 
         # Located in folder
         if self._folder.is_search_folder():

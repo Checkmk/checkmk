@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import re
+import json
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -123,28 +124,49 @@ def check_limit(rows, limit, user):
     return True
 
 
+def render_labels(labels, object_type, with_links):
+    return _render_tag_groups_or_labels(labels, object_type, with_links, label_type="label")
+
+
 def render_tag_groups(tag_groups, object_type, with_links):
+    return _render_tag_groups_or_labels(tag_groups, object_type, with_links, label_type="tag_group")
+
+
+def _render_tag_groups_or_labels(entries, object_type, with_links, label_type):
     elements = [
-        _render_tag_group(tg_id, tag, object_type, with_links)
-        for tg_id, tag in sorted(tag_groups.items())
+        _render_tag_group(tg_id, tag, object_type, with_links, label_type)
+        for tg_id, tag in sorted(entries.items())
     ]
     return html.render_tags(
-        HTML("").join(elements), class_=["tagify", "labels", "display"], readonly="true")
+        HTML("").join(elements), class_=["tagify", label_type, "display"], readonly="true")
 
 
-def _render_tag_group(tg_id, tag, object_type, with_link):
+def _render_tag_group(tg_id, tag, object_type, with_link, label_type):
     span = html.render_tag(
         html.render_div(html.render_span("%s:%s" % (tg_id, tag), class_=["tagify__tag-text"])),
         class_=["tagify--noAnim"])
     if not with_link:
         return span
 
+    if label_type == "tag_group":
+        type_filter_vars = [
+            ("%s_tag_0_grp" % object_type, tg_id),
+            ("%s_tag_0_op" % object_type, "is"),
+            ("%s_tag_0_val" % object_type, tag),
+        ]
+    elif label_type == "label":
+        type_filter_vars = [
+            ("%s_label" % object_type, json.dumps([{
+                "value": "%s:%s" % (tg_id, tag)
+            }]).decode("utf-8")),
+        ]
+
+    else:
+        raise NotImplementedError()
+
     url = html.makeuri([
         ("filled_in", "filter"),
-        ("%s_tag_0_grp" % object_type, tg_id),
-        ("%s_tag_0_op" % object_type, "is"),
-        ("%s_tag_0_val" % object_type, tag),
         ("search", "Search"),
         ("view_name", "searchhost" if object_type == "host" else "searchsvc"),
-    ])
+    ] + type_filter_vars)
     return html.render_a(span, href=url)

@@ -2114,7 +2114,7 @@ class html(HTMLGenerator):
 
         # Model
         error = self.user_errors.get(varname)
-        value = self.request.var(varname, default_value)
+        value = self.get_unicode_input(varname, default_value)
         if not value:
             value = ""
         if error:

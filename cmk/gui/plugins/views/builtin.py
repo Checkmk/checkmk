@@ -91,6 +91,7 @@ multisite_builtin_views.update({
             'host_check_command',
             'opthost_contactgroup',
             'hostalias',
+            'host_labels',
             'host_tags',
         ],
         'sorters': [
@@ -1287,7 +1288,7 @@ multisite_builtin_views.update({
             ('host', 'host'),
             ('host_addresses', None),
             ('alias', None),
-            ('host_tags', None),
+            ('host_labels', None),
             ('host_icons', None),
 
             # 2. State and metrics
@@ -1401,6 +1402,7 @@ multisite_builtin_views.update({
             'host_address',
             'host_notif_number',
             'host_staleness',
+            'host_labels',
             'host_tags',
             'hostalias',
             'host_favorites',
@@ -1478,6 +1480,8 @@ multisite_builtin_views.update({
             'aggr_service_used',
             'svc_notif_number',
             'service_staleness',
+            'service_labels',
+            'host_labels',
             'host_tags',
             'hostalias',
             'host_favorites',
@@ -1511,7 +1515,7 @@ multisite_builtin_views.update({
             ('sitealias', None),
             ('host', 'hoststatus'),
             ('service_description', 'servicedesc'),
-            ('service_tags', None),
+            ('service_labels', None),
             ('service_icons', None),
 
             # 2. State and metrics
@@ -1832,6 +1836,7 @@ multisite_builtin_views.update({
             'svcstate',
             'svchardstate',
             'serviceregex',
+            'host_labels',
             'host_tags',
             'hoststate',
         ],
@@ -2669,6 +2674,7 @@ multisite_builtin_views.update({
             'aggr_service_used': {},
             'svc_notif_number': {},
             'service_staleness': {},
+            'host_labels': {},
             'host_tags': {},
             'hostalias': {},
             'host_favorites': {},

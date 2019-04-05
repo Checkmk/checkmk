@@ -44,6 +44,7 @@ from cmk.gui.plugins.views import (
     cmp_string_list,
     cmp_ip_address,
     get_tag_groups,
+    get_labels,
     get_perfdata_nth_value,
 )
 
@@ -205,6 +206,57 @@ class SorterServiceTags(ABCTagSorter):
     @property
     def columns(self):
         return ["service_tags"]
+
+
+class ABCLabelSorter(Sorter):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def object_type(self):
+        raise NotImplementedError()
+
+    def cmp(self, r1, r2):
+        labels_1 = sorted(get_labels(r1, self.object_type).items())
+        labels_2 = sorted(get_labels(r2, self.object_type).items())
+        return cmp(labels_1, labels_2)
+
+
+@sorter_registry.register
+class SorterHostLabels(ABCTagSorter):
+    @property
+    def object_type(self):
+        return "host"
+
+    @property
+    def ident(self):
+        return "host_labels"
+
+    @property
+    def title(self):
+        return _("Labels")
+
+    @property
+    def columns(self):
+        return ["host_labels"]
+
+
+@sorter_registry.register
+class SorterServiceLabels(ABCTagSorter):
+    @property
+    def object_type(self):
+        return "service"
+
+    @property
+    def ident(self):
+        return "service_labels"
+
+    @property
+    def title(self):
+        return _("Labels")
+
+    @property
+    def columns(self):
+        return ["service_labels"]
 
 
 @sorter_registry.register

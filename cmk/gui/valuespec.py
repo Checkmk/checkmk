@@ -4242,21 +4242,21 @@ class Labels(ValueSpec):
         return {}
 
     def from_html_vars(self, varprefix):
-        return dict(e["value"].split(":", 1) for e in json.loads(html.get_unicode_input(varprefix)))
+        return dict(
+            e["value"].split(":", 1) for e in json.loads(html.get_unicode_input(varprefix) or "[]"))
 
     def value_to_text(self, value):
-        # TODO: Find a better place for this function and rename it
-        from cmk.gui.view_utils import render_tag_groups
-        return render_tag_groups(value, "host", with_links=False)
+        from cmk.gui.view_utils import render_labels
+        return render_labels(value, "host", with_links=False)
 
     def render_input(self, varprefix, value):
         html.help(self.help())
         html.text_input(
             varprefix,
-            default_value=json.dumps(["%s:%s" % e for e in value.items()]),
+            default_value=json.dumps(["%s:%s" % e for e in value.items()]).decode("utf-8"),
             cssclass="labels",
             attrs={
-                "placeholder": _("Add some tag"),
+                "placeholder": _("Add some label"),
             })
 
 

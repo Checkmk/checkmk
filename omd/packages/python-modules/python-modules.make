@@ -188,7 +188,7 @@ PYTHON_MODULES_LIST += boto3-1.9.42.tar.gz
 PYTHON_MODULES_LIST += cachetools-3.0.0.tar.gz
 PYTHON_MODULES_LIST += rsa-4.0.tar.gz
 PYTHON_MODULES_LIST += google-auth-1.6.1.tar.gz
-PYTHON_MODULES_LIST += PyYAML-3.13.tar.gz
+PYTHON_MODULES_LIST += PyYAML-5.1.tar.gz
 PYTHON_MODULES_LIST += websocket_client-0.54.0.tar.gz
 PYTHON_MODULES_LIST += kubernetes-8.0.0.tar.gz
 # Added for jira notification script

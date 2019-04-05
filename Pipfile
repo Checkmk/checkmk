@@ -106,7 +106,7 @@ boto3 = "==1.9.42"
 cachetools = "==3.0.0"
 rsa = "==4.0"
 google-auth = "==1.6.1"
-PyYAML = "==3.13"
+PyYAML = "==5.1"
 websocket_client = "==0.54.0"
 kubernetes = "==8.0.0"
 # Has been added for jira notification plugin

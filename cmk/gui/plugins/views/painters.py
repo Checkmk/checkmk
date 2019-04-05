@@ -72,6 +72,8 @@ from cmk.gui.plugins.views import (
     render_cache_info,
     render_tag_groups,
     get_tag_groups,
+    render_labels,
+    get_labels,
 )
 
 #   .--Painter Options-----------------------------------------------------.
@@ -5226,3 +5228,55 @@ class PainterServiceTagsWithTitles(ABCPainterTagsWithTitles):
     @property
     def sorter(self):
         return "service_tags"
+
+
+@painter_registry.register
+class PainterHostLabels(Painter):
+    @property
+    def ident(self):
+        return "host_labels"
+
+    @property
+    def title(self):
+        return _("Labels")
+
+    @property
+    def short_title(self):
+        return _("Labels")
+
+    @property
+    def columns(self):
+        return ["host_labels"]
+
+    @property
+    def sorter(self):
+        return "host_labels"
+
+    def render(self, row, cell):
+        return "", render_labels(get_labels(row, "host"), "host", with_links=True)
+
+
+@painter_registry.register
+class PainterServiceLabels(Painter):
+    @property
+    def ident(self):
+        return "service_labels"
+
+    @property
+    def title(self):
+        return _("Labels")
+
+    @property
+    def short_title(self):
+        return _("Labels")
+
+    @property
+    def columns(self):
+        return ["service_labels"]
+
+    @property
+    def sorter(self):
+        return "service_labels"
+
+    def render(self, row, cell):
+        return "", render_labels(get_labels(row, "service"), "service", with_links=True)

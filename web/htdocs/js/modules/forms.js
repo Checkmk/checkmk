@@ -54,7 +54,7 @@ function enable_label_input_fields(container) {
 
     let elements = container.querySelectorAll("input.labels");
     elements.forEach(element => {
-        let tagify = new Tagify(element, {
+        new Tagify(element, {
             pattern: /^[^:]+:[^:]+$/,
         });
     });

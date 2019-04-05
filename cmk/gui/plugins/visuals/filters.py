@@ -38,7 +38,10 @@ import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import (DualListChoice)
+from cmk.gui.valuespec import (
+    DualListChoice,
+    Labels,
+)
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.visuals.managed
@@ -2591,6 +2594,91 @@ class FilterHostAuxTags(Filter):
 
     def double_height(self):
         return True
+
+
+class ABCLabelFilter(Filter):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def object_type(self):
+        raise NotImplementedError()
+
+    @property
+    def sort_index(self):
+        return 301
+
+    @property
+    def _var_prefix(self):
+        return "%s_label" % self.object_type
+
+    @property
+    def _column(self):
+        return "%s_labels" % self.object_type
+
+    def __init__(self):
+        Filter.__init__(self, info=self.object_type, htmlvars=[self._var_prefix], link_columns=[])
+
+    def _current_value(self):
+        return self._valuespec().from_html_vars(self._var_prefix)
+
+    def variable_settings(self, row):
+        return [(self.htmlvars[0], row[self._column])]
+
+    def _valuespec(self):
+        return Labels()
+
+    def display(self):
+        self._valuespec().render_input(self._var_prefix, self._current_value())
+
+    def filter(self, infoname):
+        value = self._current_value()
+        if not value:
+            return ""
+
+        return self._get_label_filters(value)
+
+    def _get_label_filters(self, labels):
+        filters = []
+        for label_id, label_value in labels.items():
+            filters.append(self._label_filter(label_id, label_value))
+        return "".join(filters)
+
+    def _label_filter(self, label_id, label_value):
+        return "Filter: %s = %s %s\n" % (
+            livestatus.lqencode(self._column),
+            livestatus.lqencode(label_id),
+            livestatus.lqencode(label_value),
+        )
+
+
+@filter_registry.register
+class FilterHostLabels(ABCLabelFilter):
+    @property
+    def object_type(self):
+        return "host"
+
+    @property
+    def ident(self):
+        return "host_labels"
+
+    @property
+    def title(self):
+        return _("Labels")
+
+
+@filter_registry.register
+class FilterServiceLabels(ABCLabelFilter):
+    @property
+    def object_type(self):
+        return "service"
+
+    @property
+    def ident(self):
+        return "service_labels"
+
+    @property
+    def title(self):
+        return _("Labels")
 
 
 class ABCFilterCustomAttribute(Filter):

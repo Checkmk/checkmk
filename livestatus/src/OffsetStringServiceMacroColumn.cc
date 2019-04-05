@@ -23,15 +23,47 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetStringServiceMacroColumn.h"
+#include <optional>
+#include "OffsetStringHostMacroColumn.h"
 #include "Row.h"
+#include "nagios.h"
 
-const host *OffsetStringServiceMacroColumn::getHost(Row row) const {
-    if (auto svc = getService(row)) {
-        return svc->host_ptr;
+ServiceMacroExpander::ServiceMacroExpander(const service *svc)
+    : _svc(svc), _cve("_SERVICE", svc->custom_variables) {}
+
+std::optional<std::string> ServiceMacroExpander::expand(
+    const std::string &str) {
+    if (str == "SERVICEDESC") {
+        return from_ptr(_svc->description);
     }
-    return nullptr;
+    if (str == "SERVICEDISPLAYNAME") {
+        return from_ptr(_svc->display_name);
+    }
+    if (str == "SERVICEOUTPUT") {
+        return from_ptr(_svc->plugin_output);
+    }
+    if (str == "LONGSERVICEOUTPUT") {
+        return from_ptr(_svc->long_plugin_output);
+    }
+    if (str == "SERVICEPERFDATA") {
+        return from_ptr(_svc->perf_data);
+    }
+    if (str == "SERVICECHECKCOMMAND") {
+#ifndef NAGIOS4
+        return from_ptr(_svc->service_check_command);
+#else
+        return from_ptr(_svc->check_command);
+#endif  // NAGIOS4
+    }
+    return _cve.expand(str);
 }
 
-const service *OffsetStringServiceMacroColumn::getService(Row row) const {
-    return columnData<service>(row);
+std::unique_ptr<MacroExpander> OffsetStringServiceMacroColumn::getMacroExpander(
+    Row row) const {
+    auto svc = columnData<service>(row);
+    return std::make_unique<CompoundMacroExpander>(
+        std::make_unique<HostMacroExpander>(svc->host_ptr),
+        std::make_unique<CompoundMacroExpander>(
+            std::make_unique<ServiceMacroExpander>(svc),
+            std::make_unique<UserMacroExpander>()));
 }

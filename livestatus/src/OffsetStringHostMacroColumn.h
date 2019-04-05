@@ -26,11 +26,23 @@
 #define OffsetStringHostMacroColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
+#include <optional>
 #include <string>
 #include "OffsetStringMacroColumn.h"
 #include "nagios.h"
 class MonitoringCore;
 class Row;
+
+class HostMacroExpander : public MacroExpander {
+public:
+    explicit HostMacroExpander(const host *hst);
+    std::optional<std::string> expand(const std::string &str) override;
+
+private:
+    const host *_hst;
+    CustomVariableExpander _cve;
+};
 
 class OffsetStringHostMacroColumn : public OffsetStringMacroColumn {
 public:
@@ -43,9 +55,7 @@ public:
                                   extra_offset, extra_extra_offset, mc,
                                   offset) {}
 
-private:
-    const host *getHost(Row row) const override;
-    const service *getService(Row row) const override;
+    std::unique_ptr<MacroExpander> getMacroExpander(Row row) const override;
 };
 
 #endif  // OffsetStringHostMacroColumn_h

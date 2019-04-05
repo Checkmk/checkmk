@@ -26,11 +26,50 @@
 #define OffsetStringMacroColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
+#include <optional>
 #include <string>
 #include "StringColumn.h"
 #include "nagios.h"
 class MonitoringCore;
 class Row;
+
+class MacroExpander {
+public:
+    virtual ~MacroExpander() = default;
+    virtual std::optional<std::string> expand(const std::string &str) = 0;
+    std::optional<std::string> from_ptr(const char *str);
+};
+
+// poor man's monad...
+class CompoundMacroExpander : public MacroExpander {
+public:
+    CompoundMacroExpander(std::unique_ptr<MacroExpander> first,
+                          std::unique_ptr<MacroExpander> second);
+
+    std::optional<std::string> expand(const std::string &str) override;
+
+private:
+    std::unique_ptr<MacroExpander> _first;
+    std::unique_ptr<MacroExpander> _second;
+};
+
+class UserMacroExpander : public MacroExpander {
+public:
+    std::optional<std::string> expand(const std::string &str) override;
+};
+
+class CustomVariableExpander : public MacroExpander {
+public:
+    CustomVariableExpander(std::string prefix,
+                           const customvariablesmember *cvm);
+
+    std::optional<std::string> expand(const std::string &str) override;
+
+private:
+    std::string _prefix;
+    const customvariablesmember *_cvm;
+};
 
 class OffsetStringMacroColumn : public StringColumn {
 public:
@@ -45,19 +84,11 @@ public:
 
     std::string getValue(Row row) const override;
 
-    virtual const host *getHost(Row) const = 0;
-    virtual const service *getService(Row) const = 0;
+    virtual std::unique_ptr<MacroExpander> getMacroExpander(Row row) const = 0;
 
 private:
     const MonitoringCore *const _mc;
     const int _string_offset;
-
-    static std::string expandMacros(const std::string &raw, const host *hst,
-                                    const service *svc);
-    static const char *expandMacro(const std::string &macroname,
-                                   const host *hst, const service *svc);
-    static const char *expandCustomVariables(
-        const std::string &varname, const customvariablesmember *custvars);
 };
 
 #endif  // OffsetStringMacroColumn_h

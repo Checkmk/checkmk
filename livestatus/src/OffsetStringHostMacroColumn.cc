@@ -24,11 +24,46 @@
 
 #include "OffsetStringHostMacroColumn.h"
 #include "Row.h"
+#include "nagios.h"
 
-const host *OffsetStringHostMacroColumn::getHost(Row row) const {
-    return columnData<host>(row);
+HostMacroExpander::HostMacroExpander(const host *hst)
+    : _hst(hst), _cve("_HOST", hst->custom_variables) {}
+
+std::optional<std::string> HostMacroExpander::expand(const std::string &str) {
+    if (str == "HOSTNAME") {
+        return from_ptr(_hst->name);
+    }
+    if (str == "HOSTDISPLAYNAME") {
+        return from_ptr(_hst->display_name);
+    }
+    if (str == "HOSTALIAS") {
+        return from_ptr(_hst->alias);
+    }
+    if (str == "HOSTADDRESS") {
+        return from_ptr(_hst->address);
+    }
+    if (str == "HOSTOUTPUT") {
+        return from_ptr(_hst->plugin_output);
+    }
+    if (str == "LONGHOSTOUTPUT") {
+        return from_ptr(_hst->long_plugin_output);
+    }
+    if (str == "HOSTPERFDATA") {
+        return from_ptr(_hst->perf_data);
+    }
+    if (str == "HOSTCHECKCOMMAND") {
+#ifndef NAGIOS4
+        return from_ptr(_hst->host_check_command);
+#else
+        return from_ptr(_hst->check_command);
+#endif  // NAGIOS4
+    }
+    return _cve.expand(str);
 }
 
-const service *OffsetStringHostMacroColumn::getService(Row /*unused*/) const {
-    return nullptr;
+std::unique_ptr<MacroExpander> OffsetStringHostMacroColumn::getMacroExpander(
+    Row row) const {
+    return std::make_unique<CompoundMacroExpander>(
+        std::make_unique<HostMacroExpander>(columnData<host>(row)),
+        std::make_unique<UserMacroExpander>());
 }

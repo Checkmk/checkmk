@@ -370,6 +370,64 @@ def test_tags_of_service(monkeypatch):
     assert config_cache.tags_of_service("test-host", "CPU load") == {"tag_group1": "val1"}
 
 
+def test_host_label_rules_default():
+    assert isinstance(config.host_label_rules, list)
+
+
+def test_host_config_labels(monkeypatch):
+    monkeypatch.setattr(config, "host_labels", {
+        "test-host": {
+            "explicit": "ding",
+        },
+    })
+
+    ruleset = [
+        ({
+            "from-rule": "rule1"
+        }, ["abc"], config.ALL_HOSTS, {}),
+        ({
+            "from-rule2": "rule2"
+        }, ["abc"], config.ALL_HOSTS, {}),
+    ]
+    monkeypatch.setattr(config, "host_label_rules", ruleset)
+
+    config_cache = _setup_host(monkeypatch, "test-host", ["abc"])
+
+    cfg = config_cache.get_host_config("xyz")
+    assert cfg.labels == {}
+
+    cfg = config_cache.get_host_config("test-host")
+    assert cfg.labels == {
+        "explicit": "ding",
+        "from-rule": "rule1",
+        "from-rule2": "rule2",
+    }
+
+
+def test_service_label_rules_default():
+    assert isinstance(config.service_label_rules, list)
+
+
+def test_labels_of_service(monkeypatch):
+    ruleset = [
+        ({
+            "label1": "val1"
+        }, ["abc"], config.ALL_HOSTS, ["CPU load$"], {}),
+        ({
+            "label2": "val2"
+        }, ["abc"], config.ALL_HOSTS, ["CPU load$"], {}),
+    ]
+    monkeypatch.setattr(config, "service_label_rules", ruleset)
+
+    config_cache = _setup_host(monkeypatch, "test-host", ["abc"])
+
+    assert config_cache.labels_of_service("xyz", "CPU load") == {}
+    assert config_cache.labels_of_service("test-host", "CPU load") == {
+        "label1": "val1",
+        "label2": "val2",
+    }
+
+
 def test_config_cache_get_host_config():
     cache = config.ConfigCache()
     assert cache._host_configs == {}

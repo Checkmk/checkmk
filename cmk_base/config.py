@@ -2713,7 +2713,7 @@ class HostConfig(object):
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
         self.tags = self._config_cache.tag_list_of_host(self.hostname)
         self.tag_groups = host_tags.get(hostname, {})
-        self.labels = host_labels.get(hostname, {})
+        self.labels = self._get_host_labels()
 
         # Basic types
         self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
@@ -2769,6 +2769,20 @@ class HostConfig(object):
         if rules:
             return rules[0]
         return "ipv4"
+
+    def _get_host_labels(self):
+        """Returns the effective set of host labels from all available sources
+
+        1. Discovered labels
+        2. Ruleset "Host labels"
+        3. Explicit labels (via host/folder config)
+
+        Last one wins.
+        """
+        labels = {}
+        labels.update(self._config_cache.host_extra_conf_merged(self.hostname, host_label_rules))
+        labels.update(host_labels.get(self.hostname, {}))
+        return labels
 
 
 #.
@@ -2907,6 +2921,18 @@ class ConfigCache(object):
         for entry in self.service_extra_conf(hostname, svc_desc, service_tag_rules):
             tags.update(entry)
         return tags
+
+    def labels_of_service(self, hostname, svc_desc):
+        """Returns the effective set of service labels from all available sources
+
+        1. Discovered labels
+        2. Ruleset "Service labels"
+
+        Last one wins.
+        """
+        labels = {}
+        labels.update(self.service_extra_conf_merged(hostname, svc_desc, service_label_rules))
+        return labels
 
     def set_all_processed_hosts(self, all_processed_hosts):
         self._all_processed_hosts = set(all_processed_hosts)
@@ -3195,6 +3221,13 @@ class ConfigCache(object):
                 entries.append(value)
 
         return entries
+
+    def service_extra_conf_merged(self, hostname, service, ruleset):
+        rule_dict = {}
+        for rule in self.service_extra_conf(hostname, service, ruleset):
+            for key, value in rule.items():
+                rule_dict.setdefault(key, value)
+        return rule_dict
 
     def _convert_service_ruleset(self, ruleset, with_foreign_hosts):
         new_rules = []

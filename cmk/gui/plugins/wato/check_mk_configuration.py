@@ -66,6 +66,7 @@ from cmk.gui.valuespec import (
     ID,
     ListOfCAs,
     LogLevelChoice,
+    Labels,
 )
 
 from cmk.gui.plugins.wato import (
@@ -1319,6 +1320,48 @@ class RulespecServiceTags(ServiceRulespec):
             if entry[0] in seen_ids:
                 raise MKUserError(varprefix, _("Found multiple entries using for '%s'") % entry[0])
             seen_ids.append(entry[0])
+
+
+@rulespec_registry.register
+class RulespecServiceLabels(ServiceRulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
+
+    @property
+    def name(self):
+        return "service_label_rules"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def item_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Labels(title=_("Service labels"))
+
+
+@rulespec_registry.register
+class RulespecHostLabels(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationHostChecks
+
+    @property
+    def name(self):
+        return "host_label_rules"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Labels(title=_("Host labels"))
 
 
 @config_variable_registry.register

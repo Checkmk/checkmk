@@ -2713,6 +2713,7 @@ class HostConfig(object):
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
         self.tags = self._config_cache.tag_list_of_host(self.hostname)
         self.tag_groups = host_tags.get(hostname, {})
+        self.labels = host_labels.get(hostname, {})
 
         # Basic types
         self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)

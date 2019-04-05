@@ -4229,6 +4229,25 @@ class TextOrRegExpUnicode(TextOrRegExp):
     _regex_valuespec_class = RegExpUnicode
 
 
+class Labels(ValueSpec):
+    """Valuespec to render and input a collection of object labels"""
+
+    def canonical_value(self):
+        return {}
+
+    def from_html_vars(self, varprefix):
+        return json.loads(html.get_unicode_input(varprefix))
+
+    def value_to_text(self, value):
+        # TODO: Find a better place for this function and rename it
+        from cmk.gui.view_utils import render_tag_groups
+        return render_tag_groups(value, "host", with_links=False)
+
+    def render_input(self, varprefix, value):
+        # TODO: Add a nice label input mechanism
+        html.text_input(varprefix, default_value=json.dumps(value))
+
+
 class IconSelector(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)

@@ -608,6 +608,7 @@ class CREFolder(BaseFolder):
             "ALL_HOSTS": ALL_HOSTS,
             "ALL_SERVICES": ALL_SERVICES,
             "all_hosts": [],
+            "host_labels": {},
             "host_tags": {},
             "clusters": {},
             "ipaddresses": {},
@@ -660,6 +661,7 @@ class CREFolder(BaseFolder):
         custom_macros = {}  # collect value for attributes that are to be present in Nagios
         cleaned_hosts = {}
         host_tags = {}
+        host_labels = {}
 
         attribute_mappings = [
             # host attr, cmk_base variable name, value, title
@@ -687,6 +689,10 @@ class CREFolder(BaseFolder):
             tag_groups = host.tag_groups()
             if tag_groups:
                 host_tags[hostname] = tag_groups
+
+            labels = host.labels()
+            if labels:
+                host_labels[hostname] = labels
 
             if host.is_cluster():
                 clusters.append((hostentry, host.cluster_nodes()))
@@ -746,6 +752,8 @@ class CREFolder(BaseFolder):
             out.write("})\n")
 
         out.write("\nhost_tags.update(%s)\n" % format_config_value(host_tags))
+
+        out.write("\nhost_labels.update(%s)\n" % format_config_value(host_labels))
 
         for attribute_name, cmk_base_varname, dictionary, title in attribute_mappings:
             if dictionary:
@@ -1977,6 +1985,16 @@ class CREHost(WithPermissionsAndAttributes):
         effective.update(self.attributes())
         self._cache_effective_attributes(effective)
         return effective
+
+    def labels(self):
+        """Returns the aggregated labels for the current host
+
+        The labels of all parent folders and the host are added together. When multiple
+        objects define the same tag group, the nearest to the host wins."""
+        labels = {}
+        for obj in self.folder().parent_folder_chain() + [self.folder(), self]:
+            labels.update(obj.attributes().get("labels", {}).items())
+        return labels
 
     def groups(self):
         return self.folder().groups(self)

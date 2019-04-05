@@ -253,8 +253,9 @@ def potentially_piggybacked_sections(client, server_status):
     sys.stdout.write("<<<mongodb_collections:sep(9)>>>\n")
     for dbname, dbdata in databases.items():
         for collname, colldata in dbdata.get("collstats", {}).items():
-            for what, value in colldata.items():
-                sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, what, value))
+            for key, value in colldata.items():
+                if 'size' in key.lower():
+                    sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, key, value))
 
     section_logwatch(client)
 

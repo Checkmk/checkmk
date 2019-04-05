@@ -4,6 +4,9 @@
 checkname = 'heartbeat_crm'
 
 
+freeze_time = '2019-04-11 12:38:36'
+
+
 info = [[u'Stack:', u'corosync'],
         [u'Current',
          u'DC:',
@@ -108,11 +111,9 @@ discovery = {'': [(None, {'num_nodes': 2, 'num_resources': 10})],
                            (u'st-vmware2', None)]}
 
 
-checks = {
-          #TODO the main check uses the current time which can currently not be patched in generic tests
-          #'': [(None,
-          #      {'max_age': 60, 'num_nodes': 2, 'num_resources': 10},
-          #      [(3, 'Ignoring reported data (Status output too old: 42 h)', [])])],
+checks = {'': [(None,
+                {'max_age': 60, 'num_nodes': 2, 'num_resources': 10},
+                [(3, 'Ignoring reported data (Status output too old: 31 d)', [])])],
           'resources': [(u'clone_nfs_sapmnt_IFG',
                          {},
                          [(0,

@@ -334,7 +334,7 @@ def active_check_arguments(hostname, description, args):
 
 def get_service_attributes(hostname, description, config_cache, checkname=None, params=None):
     attrs = _extra_service_attributes(hostname, description, config_cache, checkname, params)
-    attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description)))
+    attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
     return attrs
 
 
@@ -387,13 +387,15 @@ def custom_service_attributes_of(hostname, service_description):
 
 def get_host_attributes(hostname, config_cache):
     attrs = _extra_host_attributes(hostname)
+    host_config = config_cache.get_host_config(hostname)
 
     # Pre 1.6 legacy attribute. We have changed our whole code to use the
     # livestatus column "tags" which is populated by all attributes starting with
     # "__TAG_" instead. We may deprecate this is one day.
     attrs["_TAGS"] = " ".join(sorted(config_cache.get_host_config(hostname).tags))
 
-    attrs.update(_get_tag_attributes(config_cache.tags_of_host(hostname)))
+    attrs.update(_get_tag_attributes(config_cache.tags_of_host(hostname), "TAG"))
+    attrs.update(_get_tag_attributes(host_config.labels, "LABEL"))
 
     if "alias" not in attrs:
         attrs["alias"] = config.alias_of(hostname, hostname)
@@ -450,8 +452,8 @@ def get_host_attributes(hostname, config_cache):
     return attrs
 
 
-def _get_tag_attributes(tags):
-    return {u"__TAG_%s" % k: unicode(v) for k, v in tags.iteritems()}
+def _get_tag_attributes(collection, prefix):
+    return {u"__%s_%s" % (prefix, k): unicode(v) for k, v in collection.iteritems()}
 
 
 def _extra_host_attributes(hostname):

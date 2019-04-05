@@ -288,6 +288,18 @@ expected_attributes = {
         'show_inherited_value': True,
         'topic': u'Data sources'
     },
+    'labels': {
+        'depends_on_roles': [],
+        'depends_on_tags': [],
+        'editable': True,
+        'from_config': False,
+        'show_in_folder': True,
+        'show_in_form': True,
+        'show_in_host_search': True,
+        'show_in_table': False,
+        'show_inherited_value': True,
+        'topic': u'Basic settings'
+    }
 }
 
 
@@ -454,6 +466,7 @@ def test_host_attributes(for_what):
             'snmp_community',
             'parents',
             'site',
+            'labels',
         ],
         "address": [
             'tag_address_family',

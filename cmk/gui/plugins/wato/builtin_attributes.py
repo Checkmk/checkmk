@@ -55,6 +55,7 @@ from cmk.gui.valuespec import (
     SiteChoice,
     ID,
     Transform,
+    Labels,
 )
 from cmk.gui.exceptions import MKUserError
 
@@ -890,3 +891,34 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
             title=_("Meta data"),
             optional_keys=[],
         )
+
+
+@host_attribute_registry.register
+class HostAttributeLabels(ABCHostAttributeValueSpec):
+    def name(self):
+        return "labels"
+
+    def title(self):
+        return _("Labels")
+
+    def topic(self):
+        return HostAttributeTopicBasicSettings
+
+    def help(self):
+        return _("With the help of labels you can flexibly group your hosts in "
+                 "order to refer to them later at other places in Check_MK, e.g. in rule chains. "
+                 "A label always consists of a combination of key and value in the format "
+                 "\"key:value\". A host can only have one value per key. Check_MK will not perform "
+                 "any validation on the labels you use.")
+
+    def show_in_table(self):
+        return False
+
+    def show_in_folder(self):
+        return True
+
+    def valuespec(self):
+        return Labels()
+
+    def filter_matches(self, crit, value, hostname):
+        return set(value).issuperset(set(crit))

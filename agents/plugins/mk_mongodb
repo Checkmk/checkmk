@@ -126,7 +126,8 @@ def section_by_keys(section_name, keys, server_status, output_key=False):
 
 
 def get_timestamp(text):
-    """parse timestamps like 'Nov  6 13:44:09' or '2015-10-17T05:35:24'"""
+    """parse timestamps like 'Nov  6 13:44:09.345' or '2015-10-17T05:35:24.234'"""
+    text = text.split('.')[0]
     for pattern in ["%a %b %d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
         try:
             return time.mktime(time.strptime(text, pattern))
@@ -135,22 +136,34 @@ def get_timestamp(text):
 
 
 def read_statefile(state_file):
-    last_timestamp = None
-    output_all = False
-    year_available = False
-    if os.path.exists(state_file):
-        last_timestamp = int(file(state_file).read())
-        if time.localtime(last_timestamp).tm_year >= 2015:
-            year_available = True
+    try:
+        with open(state_file) as state_fd:
+            last_timestamp = int(state_fd.read())
+    except (IOError, ValueError):
+        return None, True
 
-        # Note: there is no year information in these loglines
-        # As workaround we look at the creation date (year) of the last statefile
-        # If it differs and there are new messages we start from the beginning
-        if not year_available:
-            statefile_year = time.localtime(os.stat(state_file).st_ctime).tm_year
-            if time.localtime().tm_year != statefile_year:
-                output_all = True
+    if time.localtime(last_timestamp).tm_year >= 2015:
+        return last_timestamp, False
+
+    # Note: there is no year information in these loglines
+    # As workaround we look at the creation date (year) of the last statefile
+    # If it differs and there are new messages we start from the beginning
+    statefile_year = time.localtime(os.stat(state_file).st_ctime).tm_year
+    output_all = time.localtime().tm_year != statefile_year
     return last_timestamp, output_all
+
+
+def update_statefile(state_file, startup_warnings):
+    lines = startup_warnings.get("log")
+    if not lines:
+        return
+    timestamp = get_timestamp(lines[-1])
+    try:
+        with open(state_file, 'w') as state_fd:
+            state_fd.write("%d" % timestamp)
+    except (IOError, TypeError):
+        # TypeError: timestamp was None, but at least ctime is updated.
+        pass
 
 
 def section_logwatch(client):
@@ -174,13 +187,10 @@ def section_logwatch(client):
         if "** WARNING:" in line:
             state = "W"
 
-        if output_all or get_timestamp(line.split(".")[0]) > last_timestamp:
+        if output_all or get_timestamp(line) > last_timestamp:
             sys.stdout.write("%s %s\n" % (state, line))
 
-    # update state file
-    if startup_warnings["log"]:
-        timestamp = get_timestamp(startup_warnings["log"][-1].split(".")[0])
-        file(state_file, "w").write("%d" % timestamp)
+    update_statefile(state_file, startup_warnings)
 
 
 def main():

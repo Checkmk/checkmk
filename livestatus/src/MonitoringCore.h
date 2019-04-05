@@ -63,7 +63,7 @@ struct CommentData {
 };
 
 using Attributes = std::unordered_map<std::string, std::string>;
-enum class AttributeKind { custom_variables, tags };
+enum class AttributeKind { custom_variables, tags, labels };
 
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {

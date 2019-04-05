@@ -473,6 +473,21 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
         AttributeKind::tags));
 
+    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
+        prefix + "label_names",
+        "A list of the names of all labels of the service", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
+        AttributeKind::labels));
+    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
+        prefix + "label_values",
+        "A list of the values of all labels of the service", indirect_offset,
+        -1, -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
+        AttributeKind::labels));
+    table->addColumn(std::make_unique<CustomVarsDictColumn>(
+        prefix + "labels", "A dictionary of the labels", indirect_offset, -1,
+        -1, DANGEROUS_OFFSETOF(service, custom_variables), table->core(),
+        AttributeKind::labels));
+
     table->addColumn(std::make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(service, servicegroups_ptr),

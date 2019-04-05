@@ -1342,7 +1342,10 @@ class RulespecServiceLabels(ServiceRulespec):
 
     @property
     def valuespec(self):
-        return Labels(title=_("Service labels"))
+        return Labels(
+            title=_("Service labels"),
+            help=_("Use this ruleset to assign labels to service of your choice."),
+        )
 
 
 @rulespec_registry.register
@@ -1361,7 +1364,10 @@ class RulespecHostLabels(HostRulespec):
 
     @property
     def valuespec(self):
-        return Labels(title=_("Host labels"))
+        return Labels(
+            title=_("Host labels"),
+            help=_("Use this ruleset to assign labels to hosts of your choice."),
+        )
 
 
 @config_variable_registry.register

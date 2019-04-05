@@ -210,7 +210,7 @@ export function listof_add(varprefix, magic, style)
 
     container.appendChild(new_child);
     utils.execute_javascript_by_object(new_child);
-    forms.enable_select2(new_child);
+    forms.enable_dynamic_form_elements(new_child);
 
     listof_update_indices(varprefix);
 }

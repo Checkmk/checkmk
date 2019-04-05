@@ -54,6 +54,7 @@ import cmk_base.utils
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.cleanup
 import cmk_base.piggyback as piggyback
+from cmk_base.discovered_host_labels import DiscoveredHostLabelsStore
 
 # TODO: Prefix helper functions with "_".
 
@@ -2533,7 +2534,6 @@ def _get_checkgroup_parameters(host, checktype, item):
         raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
 
 
-# TODO: Better move this function to py
 def do_status_data_inventory_for(hostname):
     rules = active_checks.get('cmk_inv')
     if rules is None:
@@ -2541,7 +2541,7 @@ def do_status_data_inventory_for(hostname):
 
     # 'host_extra_conf' is already cached thus we can
     # use it after every check cycle.
-    entries = host_extra_conf(hostname, rules)
+    entries = get_config_cache().host_extra_conf(hostname, rules)
 
     if not entries:
         return False  # No matching rule -> disable
@@ -2550,6 +2550,22 @@ def do_status_data_inventory_for(hostname):
     params = {} if entries[0] is None else entries[0]
 
     return params.get('status_data_inventory', False)
+
+
+def do_host_label_discovery_for(hostname):
+    rules = active_checks.get('cmk_inv')
+    if rules is None:
+        return True
+
+    entries = get_config_cache().host_extra_conf(hostname, rules)
+
+    if not entries:
+        return True  # No matching rule -> disable
+
+    # Convert legacy rules to current dict format (just like the valuespec)
+    params = {} if entries[0] is None else entries[0]
+
+    return params.get("host_label_inventory", True)
 
 
 def filter_by_management_board(hostname,
@@ -2780,9 +2796,14 @@ class HostConfig(object):
         Last one wins.
         """
         labels = {}
+        labels.update(self._discovered_labels_of_host())
         labels.update(self._config_cache.host_extra_conf_merged(self.hostname, host_label_rules))
         labels.update(host_labels.get(self.hostname, {}))
         return labels
+
+    def _discovered_labels_of_host(self):
+        # type: () -> Dict
+        return DiscoveredHostLabelsStore(self.hostname).load()
 
 
 #.

@@ -88,6 +88,16 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
     assert (timeseries.step, len(timeseries.values)) == result
 
 
+@pytest.mark.parametrize("max_entries, result", [(400, (180, 401)), (20, (3600, 21)),
+                                                 (50, (1800, 41)), (1000, (120, 600)),
+                                                 (1200, (60, 1200))])
+def test_get_rrd_data_point_max(cfg_setup, max_entries, result):
+    from_time, until_time = 1543430040, 1543502040
+    timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
+                                                   from_time, until_time, max_entries)
+    assert (timeseries.step, len(timeseries.values)) == result
+
+
 @pytest.mark.parametrize('utcdate, timezone, params, reference', [
     ("2018-09-01 07:00", "Europe/Berlin", {
         'period': 'wday',

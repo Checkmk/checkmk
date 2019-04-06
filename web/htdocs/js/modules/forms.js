@@ -27,6 +27,7 @@ import "select2";
 import Tagify from "@yaireo/tagify";
 
 import * as utils from "utils";
+import * as ajax from "ajax";
 
 export function enable_dynamic_form_elements(container=null) {
     enable_select2_dropdowns(container);
@@ -54,8 +55,44 @@ function enable_label_input_fields(container) {
 
     let elements = container.querySelectorAll("input.labels");
     elements.forEach(element => {
-        new Tagify(element, {
+        let ajax_obj;
+        let tagify = new Tagify(element, {
             pattern: /^[^:]+:[^:]+$/,
+        });
+
+        let world = element.getAttribute("data-world");
+
+        // Realize the auto completion dropdown field by using an ajax call
+        tagify.on("input", function(e) {
+            var value = e.detail;
+            tagify.settings.whitelist.length = 0; // reset the whitelist
+
+            var post_data = "request=" + encodeURIComponent(JSON.stringify({
+                "search_label": value,
+                "world": world,
+            }));
+
+            if (ajax_obj)
+                ajax_obj.abort();
+
+            ajax_obj = ajax.call_ajax("ajax_autocomplete_labels.py", {
+                method: "POST",
+                post_data: post_data,
+                response_handler: function(handler_data, ajax_response) {
+                    var response = JSON.parse(ajax_response);
+                    if (response.result_code != 0) {
+                        console.log("Error [" + response.result_code + "]: " + response.result); // eslint-disable-line
+                        return;
+                    }
+
+                    handler_data.tagify.settings.whitelist = response.result;
+                    handler_data.tagify.dropdown.show.call(handler_data.tagify, handler_data.value);
+                },
+                handler_data: {
+                    value: value,
+                    tagify: tagify,
+                },
+            });
         });
     });
 }

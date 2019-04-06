@@ -63,7 +63,7 @@ import cmk.utils.defines as defines
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
 from cmk.gui.i18n import _
-from cmk.gui.pages import page_registry, Page
+from cmk.gui.pages import page_registry, Page, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -4234,7 +4234,12 @@ class TextOrRegExpUnicode(TextOrRegExp):
 class Labels(ValueSpec):
     """Valuespec to render and input a collection of object labels"""
 
-    def __init__(self, *args, **kwargs):
+    class World(Enum):
+        CONFIG = "config"
+        CORE = "core"
+
+    def __init__(self, world, *args, **kwargs):
+        self._world = world
         kwargs.setdefault("help", "")
         kwargs["help"] += _("Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. "
                             "For example <tt>os:windows</tt>.")
@@ -4255,11 +4260,53 @@ class Labels(ValueSpec):
         html.help(self.help())
         html.text_input(
             varprefix,
-            default_value=json.dumps(["%s:%s" % e for e in value.items()]).decode("utf-8"),
+            default_value=json.dumps(_encode_labels_for_tagify(value.items())).decode("utf-8"),
             cssclass="labels",
             attrs={
                 "placeholder": _("Add some label"),
+                "data-world": self._world.value,
             })
+
+
+@page_registry.register_page("ajax_autocomplete_labels")
+class PageAutocompleteLabels(AjaxPage):
+    """Return all known labels to support tagify label input dropdown completion"""
+
+    def page(self):
+        request = html.get_request()
+        return _encode_labels_for_tagify(
+            self._get_labels(Labels.World(request["world"]), request["search_label"]))
+
+    def _get_labels(self, world, search_label):
+        if world == Labels.World.CONFIG:
+            return self._get_labels_from_config(search_label)
+
+        if world == Labels.World.CORE:
+            return self._get_labels_from_core(search_label)
+
+        raise NotImplementedError()
+
+    def _get_labels_from_config(self, search_label):
+        return []  # TODO: Implement me
+
+    # Would be better to optimize this kind of query somehow. The best we can
+    # do without extending livestatus is to use the Cache header for liveproxyd
+    def _get_labels_from_core(self, search_label):
+        import cmk.gui.sites as sites
+        query = ("GET services\n" \
+                "Cache: reload\n" \
+                "Columns: host_labels labels\n")
+
+        labels = set()
+        for row in sites.live().query(query):
+            labels.update(row[0].items())
+            labels.update(row[1].items())
+
+        return list(labels)
+
+
+def _encode_labels_for_tagify(labels):
+    return [{"value": "%s:%s" % e} for e in labels]
 
 
 class IconSelector(ValueSpec):

@@ -36,7 +36,7 @@ import cmk.gui.utils as utils
 from cmk.gui.log import logger
 import cmk.gui.i18n
 import cmk.gui.mobile
-import cmk.gui.pages
+from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -423,21 +423,31 @@ def do_login():
             return "%s" % e
 
 
-@cmk.gui.pages.register("login")
-def page_login(no_html_output=False):
-    # Initialize the cmk.gui.i18n for the login dialog. This might be overridden
-    # later after user login
-    cmk.gui.i18n.localize(html.request.var("lang", config.get_language()))
+@page_registry.register_page("login")
+class LoginPage(Page):
+    def __init__(self):
+        super(LoginPage, self).__init__()
+        self._no_html_output = False
 
-    result = do_login()
-    if isinstance(result, tuple):
-        return result  # Successful login
-    elif no_html_output:
-        raise MKAuthException(_("Invalid login credentials."))
+    def set_no_html_output(self, no_html_output):
+        self._no_html_output = no_html_output
 
-    if html.mobile:
-        return cmk.gui.mobile.page_login()
-    return normal_login_page()
+    def page(self):
+        # Initialize the cmk.gui.i18n for the login dialog. This might be
+        # overridden later after user login
+        cmk.gui.i18n.localize(html.request.var("lang", config.get_language()))
+
+        result = do_login()
+        if isinstance(result, tuple):
+            return  # Successful login
+
+        if self._no_html_output:
+            raise MKAuthException(_("Invalid login credentials."))
+
+        if html.mobile:
+            return cmk.gui.mobile.page_login()
+
+        return normal_login_page()
 
 
 def normal_login_page(called_directly=True):
@@ -520,19 +530,21 @@ def normal_login_page(called_directly=True):
     html.footer()
 
 
-@cmk.gui.pages.register("logout")
-def page_logout():
-    invalidate_auth_session()
+@page_registry.register_page("logout")
+class LogoutPage(Page):
+    def page(self):
+        invalidate_auth_session()
 
-    if auth_type == 'cookie':
-        raise HTTPRedirect(config.url_prefix() + 'check_mk/login.py')
-    else:
-        # Implement HTTP logout with cookie hack
-        if not html.request.has_cookie('logout'):
-            html.response.headers[
-                'WWW-Authenticate'] = 'Basic realm="OMD Monitoring Site %s"' % config.omd_site()
-            html.response.set_http_cookie('logout', '1')
-            raise FinalizeRequest(httplib.UNAUTHORIZED)
+        if auth_type == 'cookie':
+            raise HTTPRedirect(config.url_prefix() + 'check_mk/login.py')
         else:
-            html.response.delete_cookie('logout')
-            raise HTTPRedirect(config.url_prefix() + 'check_mk/')
+            # Implement HTTP logout with cookie hack
+            if not html.request.has_cookie('logout'):
+                html.response.headers[
+                    'WWW-Authenticate'] = 'Basic realm="OMD Monitoring Site %s"' % config.omd_site(
+                    )
+                html.response.set_http_cookie('logout', '1')
+                raise FinalizeRequest(httplib.UNAUTHORIZED)
+            else:
+                html.response.delete_cookie('logout')
+                raise HTTPRedirect(config.url_prefix() + 'check_mk/')

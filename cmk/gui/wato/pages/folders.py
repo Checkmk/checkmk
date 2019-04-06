@@ -569,16 +569,27 @@ class ModeFolder(WatoMode):
 
         if not config.wato_hide_hosttags:
             table.cell(_("Tags"), css="tag-ellipsis")
-            html.write(
-                cmk.gui.view_utils.render_tag_groups(host.tag_groups(), "host", with_links=False))
+            tag_groups, show_all_code = self._limit_labels(host.tag_groups())
+            html.write(cmk.gui.view_utils.render_tag_groups(tag_groups, "host", with_links=False))
+            html.write(show_all_code)
 
         table.cell(_("Explicit labels"), css="tag-ellipsis")
-        html.write(cmk.gui.view_utils.render_labels(host.labels(), "host", with_links=False))
+        labels, show_all_code = self._limit_labels(host.labels())
+        html.write(cmk.gui.view_utils.render_labels(labels, "host", with_links=False))
+        html.write(show_all_code)
 
         # Located in folder
         if self._folder.is_search_folder():
             table.cell(_("Folder"))
             html.a(host.folder().alias_path(), href=host.folder().url())
+
+    def _limit_labels(self, labels):
+        show_all, limit = "", 3
+        if len(labels) > limit and html.request.var("_show_all") != "1":
+            show_all = " %s" % html.render_a(
+                "... (%s)" % _("show all"), href=html.makeuri([("_show_all", "1")]))
+            labels = dict(sorted(labels.items())[:limit])
+        return labels, show_all
 
     def _render_contact_group(self, contact_group_names, c):
         display_name = contact_group_names.get(c, {'alias': c})['alias']

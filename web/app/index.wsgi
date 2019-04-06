@@ -238,7 +238,9 @@ class Application(object):
             # This either displays the login page or validates the information submitted
             # to the login form. After successful login a http redirect to the originally
             # requested page is performed.
-            login.page_login(self._plain_error())
+            login_page = login.LoginPage()
+            login_page.set_no_html_output(self._plain_error())
+            login_page.handle_page()
 
         raise FinalizeRequest(httplib.OK)
 

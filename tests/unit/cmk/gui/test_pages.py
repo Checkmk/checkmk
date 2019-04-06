@@ -6,7 +6,7 @@ import cmk.gui.pages
 
 @pytest.mark.usefixtures("load_plugins")
 def test_registered_pages():
-    assert sorted(cmk.gui.pages._pages) == sorted([
+    assert sorted(cmk.gui.pages.page_registry.keys()) == sorted([
         'add_bookmark',
         'ajax_activation_state',
         'ajax_add_visual',
@@ -147,10 +147,10 @@ def test_registered_pages():
 
 
 def test_pages_register(monkeypatch, capsys):
-    monkeypatch.setattr(cmk.gui.pages, "_pages", {})
+    monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
 
     @cmk.gui.pages.register("123handler")
-    def page_handler():
+    def page_handler():  # pylint: disable=unused-variable
         sys.stdout.write("123")
 
     handler = cmk.gui.pages.get_page_handler("123handler")
@@ -161,7 +161,7 @@ def test_pages_register(monkeypatch, capsys):
 
 
 def test_pages_register_handler(monkeypatch, capsys):
-    monkeypatch.setattr(cmk.gui.pages, "_pages", {})
+    monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
 
     class PageClass(object):
         def handle_page(self):
@@ -173,4 +173,19 @@ def test_pages_register_handler(monkeypatch, capsys):
     assert callable(handler)
 
     handler()
+    assert capsys.readouterr()[0] == "234"
+
+
+def test_page_registry_register_page(monkeypatch, capsys):
+    page_registry = cmk.gui.pages.PageRegistry()
+
+    @page_registry.register_page("234handler")
+    class PageClass(cmk.gui.pages.Page):
+        def page(self):
+            sys.stdout.write("234")
+
+    handler = page_registry.get("234handler")
+    assert handler == PageClass
+
+    handler().handle_page()
     assert capsys.readouterr()[0] == "234"

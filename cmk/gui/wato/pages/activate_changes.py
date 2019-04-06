@@ -45,7 +45,7 @@ import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
 
-from cmk.gui.pages import register_page_handler, AjaxPage
+from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.display_options import display_options
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -444,6 +444,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         html.write(last_state["_status_details"])
 
 
+@page_registry.register_page("ajax_start_activation")
 class ModeAjaxStartActivation(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
@@ -478,9 +479,7 @@ class ModeAjaxStartActivation(AjaxPage):
         }
 
 
-register_page_handler("ajax_start_activation", lambda: ModeAjaxStartActivation().handle_page())
-
-
+@page_registry.register_page("ajax_activation_state")
 class ModeAjaxActivationState(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
@@ -499,8 +498,6 @@ class ModeAjaxActivationState(AjaxPage):
 
         return manager.get_state()
 
-
-register_page_handler("ajax_activation_state", lambda: ModeAjaxActivationState().handle_page())
 
 ActivateChangesRequest = NamedTuple("ActivateChangesRequest", [("site_id", str),
                                                                ("domains", List[str])])

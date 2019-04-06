@@ -49,7 +49,7 @@ from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.plugins.wato.utils.context_buttons import folder_status_button, global_buttons
 
-from cmk.gui.pages import register_page_handler, AjaxPage
+from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -764,6 +764,7 @@ def delete_host_after_confirm(delname):
 
 
 # TODO: Split this into one base class and one subclass for folder and hosts
+@page_registry.register_page("ajax_popup_move_to_folder")
 class ModeAjaxPopupMoveToFolder(AjaxPage):
     """Renders the popup menu contents for either moving a host or a folder to another folder"""
 
@@ -822,10 +823,6 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
             raise NotImplementedError()
 
         return choices
-
-
-register_page_handler(
-    "ajax_popup_move_to_folder", lambda: ModeAjaxPopupMoveToFolder().handle_page())
 
 
 class FolderMode(WatoMode):
@@ -996,10 +993,8 @@ def _convert_title_to_filename(title):
     return str(converted)
 
 
+@page_registry.register_page("ajax_set_foldertree")
 class ModeAjaxSetFoldertree(AjaxPage):
     def page(self):
         request = self.webapi_request()
         config.user.save_file("foldertree", (request.get('topic'), request.get('target')))
-
-
-register_page_handler("ajax_set_foldertree", lambda: ModeAjaxSetFoldertree().handle_page())

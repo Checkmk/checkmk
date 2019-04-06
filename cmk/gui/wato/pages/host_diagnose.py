@@ -35,7 +35,7 @@ from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
-from cmk.gui.pages import register_page_handler, AjaxPage
+from cmk.gui.pages import page_registry, AjaxPage
 
 from cmk.gui.valuespec import (
     TextAscii,
@@ -322,6 +322,7 @@ class ModeDiagHost(WatoMode):
         )
 
 
+@page_registry.register_page("wato_ajax_diag_host")
 class ModeAjaxDiagHost(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
@@ -401,6 +402,3 @@ class ModeAjaxDiagHost(AjaxPage):
             "status_code": result[0],
             "output": result[1],
         }
-
-
-register_page_handler("wato_ajax_diag_host", lambda: ModeAjaxDiagHost().handle_page())

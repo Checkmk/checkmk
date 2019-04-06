@@ -216,10 +216,6 @@ def test_save_user_config_allowed(mocker, monkeypatch):
     save_user_file_mock.assert_called_once_with("sidebar", {"fold": True, "snapins": []})
 
 
-def test_ajax_fold_page():
-    assert cmk.gui.pages.get_page_handler("sidebar_fold") == sidebar.ajax_fold
-
-
 @pytest.mark.parametrize("origin_state,fold_var,set_state", [
     (False, "yes", True),
     (True, "", False),
@@ -245,10 +241,6 @@ def test_ajax_fold(register_builtin_html, mocker, origin_state, fold_var, set_st
             "visibility": "open",
         }],
     })
-
-
-def test_ajax_openclose_page():
-    assert cmk.gui.pages.get_page_handler("sidebar_openclose") == sidebar.ajax_openclose
 
 
 @pytest.mark.parametrize("origin_state,set_state", [
@@ -293,10 +285,6 @@ def test_ajax_openclose_close(register_builtin_html, mocker, origin_state, set_s
         "fold": False,
         "snapins": [e.to_config() for e in snapins],
     })
-
-
-def test_move_snapin_page():
-    assert cmk.gui.pages.get_page_handler("sidebar_move_snapin") == sidebar.move_snapin
 
 
 def test_move_snapin_not_permitted(monkeypatch, mocker, register_builtin_html):

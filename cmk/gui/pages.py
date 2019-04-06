@@ -26,56 +26,35 @@
 
 import abc
 import json
+import inspect
+import cmk.utils.plugin_registry
 from cmk.gui.globals import html
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKException
 from cmk.gui.log import logger
 
-_pages = {}
 
-
-def register(path):
-    """Register a function to be called when the given URL is called.
-
-    In case you need to register some callable like staticmethods or
-    classmethods, you will have to use register_page_handler() directly
-    because this decorator can not deal with them.
-
-    It is essentially a decorator that calls register_page_handler().
-    """
-
-    def wrap(page_func):
-        if isinstance(page_func, (staticmethod, classmethod)):
-            raise NotImplementedError()
-
-        register_page_handler(path, page_func)
-        return page_func
-
-    return wrap
-
-
-def register_page_handler(path, page_func):
-    """Register a function to be called when the given URL is called."""
-    _pages[path] = page_func
-
-
-def get_page_handler(name, dflt=None):
-    """Returns either the page handler registered for the given name or None
-
-    In case dflt is given it returns dflt instead of None when there is no
-    page handler for the requested name."""
-    return _pages.get(name, dflt)
-
-
-# TODO: Clean up implicit _from_vars() procotocol
-class AjaxPage(object):
-    """Generic page handler that wraps page() calls into AJAX respones"""
+class Page(object):
     __metaclass__ = abc.ABCMeta
+
+    @classmethod
+    #TODO: Use when we are using python3 abc.abstractmethod
+    def ident(cls):
+        raise NotImplementedError()
+
+    def handle_page(self):
+        self.page()
 
     @abc.abstractmethod
     def page(self):
         """Override this to implement the page functionality"""
         raise NotImplementedError()
+
+
+# TODO: Clean up implicit _from_vars() procotocol
+class AjaxPage(Page):
+    """Generic page handler that wraps page() calls into AJAX respones"""
+    __metaclass__ = abc.ABCMeta
 
     def __init__(self):
         super(AjaxPage, self).__init__()
@@ -105,3 +84,70 @@ class AjaxPage(object):
             response = {"result_code": 1, "result": "%s" % e}
 
         html.write(json.dumps(response))
+
+
+class PageRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return Page
+
+    def plugin_name(self, plugin_class):
+        return plugin_class.ident()
+
+    def register_page(self, path):
+        def wrap(plugin_class):
+            if not inspect.isclass(plugin_class):
+                raise NotImplementedError()
+
+            plugin_class._ident = path
+            plugin_class.ident = classmethod(lambda cls: cls._ident)
+
+            self.register(plugin_class)
+            return plugin_class
+
+        return wrap
+
+
+page_registry = PageRegistry()
+
+
+# TODO: Refactor all call sites to sub classes of Page() and change the
+# registration to page_registry.register("path")
+def register(path):
+    """Register a function to be called when the given URL is called.
+
+    In case you need to register some callable like staticmethods or
+    classmethods, you will have to use register_page_handler() directly
+    because this decorator can not deal with them.
+
+    It is essentially a decorator that calls register_page_handler().
+    """
+
+    def wrap(wrapped_callable):
+        cls_name = "PageClass%s" % path.title().replace(":", "")
+        LegacyPageClass = type(cls_name, (Page,), {
+            "_wrapped_callable": (wrapped_callable,),
+            "page": lambda self: self._wrapped_callable[0]()
+        })
+
+        page_registry.register_page(path)(LegacyPageClass)
+        return lambda: LegacyPageClass().handle_page()
+
+    return wrap
+
+
+# TODO: replace all call sites by directly calling page_registry.register_page("path")
+def register_page_handler(path, page_func):
+    """Register a function to be called when the given URL is called."""
+    wrap = register(path)
+    return wrap(page_func)
+
+
+def get_page_handler(name, dflt=None):
+    """Returns either the page handler registered for the given name or None
+
+    In case dflt is given it returns dflt instead of None when there is no
+    page handler for the requested name."""
+    handle_class = page_registry.get(name, dflt)
+    if handle_class is None:
+        return None
+    return lambda: handle_class().handle_page()

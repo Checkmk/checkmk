@@ -81,9 +81,7 @@ from cmk.gui.valuespec import (
     MonitoredHostname,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (
-    WatoMode,
-    WatoWebApiMode,
-)
+    WatoMode,)
 from cmk.gui.plugins.wato.utils.simple_modes import (
     SimpleModeType,
     SimpleListMode,

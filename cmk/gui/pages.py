@@ -24,6 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
+import json
+from cmk.gui.globals import html
+import cmk.gui.config as config
+from cmk.gui.exceptions import MKException
+from cmk.gui.log import logger
+
 _pages = {}
 
 
@@ -58,3 +65,43 @@ def get_page_handler(name, dflt=None):
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
     return _pages.get(name, dflt)
+
+
+# TODO: Clean up implicit _from_vars() procotocol
+class AjaxPage(object):
+    """Generic page handler that wraps page() calls into AJAX respones"""
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def page(self):
+        """Override this to implement the page functionality"""
+        raise NotImplementedError()
+
+    def __init__(self):
+        super(AjaxPage, self).__init__()
+        self._from_vars()
+
+    def _from_vars(self):
+        """Override this method to set mode specific attributes based on the
+        given HTTP variables."""
+        pass
+
+    def webapi_request(self):
+        return html.get_request()
+
+    def handle_page(self):
+        """The page handler, called by the page registry"""
+        html.set_output_format("json")
+        try:
+            action_response = self.page()
+            response = {"result_code": 0, "result": action_response}
+        except MKException as e:
+            response = {"result_code": 1, "result": "%s" % e}
+
+        except Exception as e:
+            if config.debug:
+                raise
+            logger.exception()
+            response = {"result_code": 1, "result": "%s" % e}
+
+        html.write(json.dumps(response))

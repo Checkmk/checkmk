@@ -33,8 +33,8 @@ import cmk.gui.backup as backup
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.wato.utils.context_buttons import home_button
-from cmk.gui.plugins.wato.utils.base_modes import WatoWebApiMode
 from cmk.gui.valuespec import Checkbox
+from cmk.gui.pages import register_page_handler, AjaxPage
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -179,7 +179,7 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
         return SiteBackupJobs()
 
 
-class ModeAjaxBackupJobState(WatoWebApiMode):
+class ModeAjaxBackupJobState(AjaxPage):
     def page(self):
         config.user.need_permission("wato.backups")
         if html.request.var("job") == "restore":
@@ -189,8 +189,7 @@ class ModeAjaxBackupJobState(WatoWebApiMode):
         page.show_job_details()
 
 
-cmk.gui.pages.register_page_handler(
-    "ajax_backup_job_state", lambda: ModeAjaxBackupJobState().page())
+register_page_handler("ajax_backup_job_state", lambda: ModeAjaxBackupJobState().page())
 
 
 class SiteBackupKeypairStore(backup.BackupKeypairStore):

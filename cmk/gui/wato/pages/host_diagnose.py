@@ -32,10 +32,10 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.plugins.wato.utils.base_modes import WatoWebApiMode
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
+from cmk.gui.pages import register_page_handler, AjaxPage
 
 from cmk.gui.valuespec import (
     TextAscii,
@@ -322,7 +322,7 @@ class ModeDiagHost(WatoMode):
         )
 
 
-class ModeAjaxDiagHost(WatoWebApiMode):
+class ModeAjaxDiagHost(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
 
@@ -403,4 +403,4 @@ class ModeAjaxDiagHost(WatoWebApiMode):
         }
 
 
-cmk.gui.pages.register_page_handler("wato_ajax_diag_host", lambda: ModeAjaxDiagHost().handle_page())
+register_page_handler("wato_ajax_diag_host", lambda: ModeAjaxDiagHost().handle_page())

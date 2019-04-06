@@ -44,12 +44,12 @@ from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     get_hostnames_from_checkboxes,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.plugins.wato.utils.context_buttons import folder_status_button, global_buttons
 
-from cmk.gui.pages import register_page_handler
+from cmk.gui.pages import register_page_handler, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -764,7 +764,7 @@ def delete_host_after_confirm(delname):
 
 
 # TODO: Split this into one base class and one subclass for folder and hosts
-class ModeAjaxPopupMoveToFolder(WatoWebApiMode):
+class ModeAjaxPopupMoveToFolder(AjaxPage):
     """Renders the popup menu contents for either moving a host or a folder to another folder"""
 
     def _from_vars(self):
@@ -992,7 +992,7 @@ def _convert_title_to_filename(title):
     return str(converted)
 
 
-class ModeAjaxSetFoldertree(WatoWebApiMode):
+class ModeAjaxSetFoldertree(AjaxPage):
     def page(self):
         request = self.webapi_request()
         config.user.save_file("foldertree", (request.get('topic'), request.get('target')))

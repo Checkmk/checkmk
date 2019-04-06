@@ -152,7 +152,6 @@ from cmk.gui.plugins.wato.utils import (
     wato_confirm,
     wato_fileheader,
     register_hook,
-    WatoWebApiMode,
     WatoMode,
     SimpleModeType,
     SimpleListMode,

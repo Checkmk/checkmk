@@ -778,8 +778,11 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
         if not self._back_url or not self._back_url.startswith("wato.py"):
             raise MKUserError("back_url", _("Invalid back URL provided."))
 
-    # TODO: Better use handle_page() for standard AJAX call error handling. This
+    # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    def handle_page(self):
+        self.page()
+
     def page(self):
         html.span(self._move_title())
 
@@ -821,7 +824,8 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
         return choices
 
 
-register_page_handler("ajax_popup_move_to_folder", lambda: ModeAjaxPopupMoveToFolder().page())
+register_page_handler(
+    "ajax_popup_move_to_folder", lambda: ModeAjaxPopupMoveToFolder().handle_page())
 
 
 class FolderMode(WatoMode):

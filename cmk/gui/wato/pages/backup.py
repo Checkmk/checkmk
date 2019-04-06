@@ -180,6 +180,11 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
 
 
 class ModeAjaxBackupJobState(AjaxPage):
+    # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
+    # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    def handle_page(self):
+        self.page()
+
     def page(self):
         config.user.need_permission("wato.backups")
         if html.request.var("job") == "restore":
@@ -189,7 +194,7 @@ class ModeAjaxBackupJobState(AjaxPage):
         page.show_job_details()
 
 
-register_page_handler("ajax_backup_job_state", lambda: ModeAjaxBackupJobState().page())
+register_page_handler("ajax_backup_job_state", lambda: ModeAjaxBackupJobState().handle_page())
 
 
 class SiteBackupKeypairStore(backup.BackupKeypairStore):

@@ -625,6 +625,11 @@ class AgentOutputPage(object):
 
         self._job = FetchAgentOutputBackgroundJob(self._host.site_id(), self._host.name(), self._ty)
 
+    # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
+    # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    def handle_page(self):
+        self.page()
+
     @abc.abstractmethod
     def page(self):
         pass
@@ -684,7 +689,8 @@ class PageFetchAgentOutput(AgentOutputPage):
 
 # TODO: Clean this up! We would like to use the cmk.gui.pages.register() decorator instead
 # of this
-cmk.gui.pages.register_page_handler("fetch_agent_output", lambda: PageFetchAgentOutput().page())
+cmk.gui.pages.register_page_handler(
+    "fetch_agent_output", lambda: PageFetchAgentOutput().handle_page())
 
 
 @gui_background_job.job_registry.register
@@ -740,7 +746,7 @@ class PageDownloadAgentOutput(AgentOutputPage):
 
 
 cmk.gui.pages.register_page_handler(
-    "download_agent_output", lambda: PageDownloadAgentOutput().page())
+    "download_agent_output", lambda: PageDownloadAgentOutput().handle_page())
 
 #.
 #   .--Network Scan--------------------------------------------------------.

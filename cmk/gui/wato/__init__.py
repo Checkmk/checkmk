@@ -142,7 +142,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.log import logger
 from cmk.gui.display_options import display_options
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 
 from cmk.gui.wato.pages.activate_changes import (
     ModeActivateChanges,

@@ -62,9 +62,10 @@ from cmk.gui.valuespec import (
     HTTPUrl,
 )
 
+from cmk.gui.pages import register_page_handler, AjaxPage
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.watolib.utils import config_variable_registry
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head, wato_confirm
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -737,7 +738,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.close_div()
 
 
-class ModeAjaxFetchSiteStatus(WatoWebApiMode):
+class ModeAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
     def page(self):
@@ -798,7 +799,7 @@ class ModeAjaxFetchSiteStatus(WatoWebApiMode):
             message, style="vertical-align:middle"))
 
 
-cmk.gui.pages.register_page_handler(
+register_page_handler(
     "wato_ajax_fetch_site_status", lambda: ModeAjaxFetchSiteStatus().handle_page())
 
 PingResult = NamedTuple("PingResult", [

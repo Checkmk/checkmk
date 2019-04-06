@@ -25,14 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
-import json
 from typing import List  # pylint: disable=unused-import
 
-import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKException
-from cmk.gui.log import logger
 from .context_buttons import global_buttons
 
 
@@ -79,41 +75,3 @@ class WatoMode(object):
 
     def handle_page(self):
         return self.page()
-
-
-# TODO: WatoWebApiMode ist not a mode in the sense of WatoMode. Rename to page
-# or similar more generic? Maybe once there is a generic Page class.
-class WatoWebApiMode(object):
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self):
-        super(WatoWebApiMode, self).__init__()
-        self._from_vars()
-
-    def _from_vars(self):
-        """Override this method to set mode specific attributes based on the
-        given HTTP variables."""
-        pass
-
-    def webapi_request(self):
-        return html.get_request()
-
-    def handle_page(self):
-        html.set_output_format("json")
-        try:
-            action_response = self.page()
-            response = {"result_code": 0, "result": action_response}
-        except MKException as e:
-            response = {"result_code": 1, "result": "%s" % e}
-
-        except Exception as e:
-            if config.debug:
-                raise
-            logger.exception()
-            response = {"result_code": 1, "result": "%s" % e}
-
-        html.write(json.dumps(response))
-
-    @abc.abstractmethod
-    def page(self):
-        raise NotImplementedError()

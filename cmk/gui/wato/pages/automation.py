@@ -34,15 +34,14 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 
-from cmk.gui.pages import register_page_handler
-from cmk.gui.plugins.wato.utils.base_modes import WatoWebApiMode
+from cmk.gui.pages import register_page_handler, AjaxPage
 from cmk.gui.log import logger
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
 
 
-class ModeAutomationLogin(WatoWebApiMode):
+class ModeAutomationLogin(AjaxPage):
     """Is executed by the central Check_MK site during creation of the WATO master/slave sync to
 
     When the page method is execute a remote (master) site has successfully
@@ -72,7 +71,7 @@ class ModeAutomationLogin(WatoWebApiMode):
 register_page_handler("automation_login", lambda: ModeAutomationLogin().page())
 
 
-class ModeAutomation(WatoWebApiMode):
+class ModeAutomation(AjaxPage):
     """Executes the requested automation call
 
     This page is accessible without regular login. The request is authenticated using the given

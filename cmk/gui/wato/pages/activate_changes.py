@@ -39,13 +39,13 @@ import cmk.gui.forms as forms
 import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import home_button
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
 
-from cmk.gui.pages import register_page_handler
+from cmk.gui.pages import register_page_handler, AjaxPage
 from cmk.gui.display_options import display_options
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -444,7 +444,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         html.write(last_state["_status_details"])
 
 
-class ModeAjaxStartActivation(WatoWebApiMode):
+class ModeAjaxStartActivation(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
 
@@ -481,7 +481,7 @@ class ModeAjaxStartActivation(WatoWebApiMode):
 register_page_handler("ajax_start_activation", lambda: ModeAjaxStartActivation().handle_page())
 
 
-class ModeAjaxActivationState(WatoWebApiMode):
+class ModeAjaxActivationState(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
 

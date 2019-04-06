@@ -1343,6 +1343,7 @@ class RulespecServiceLabels(ServiceRulespec):
     @property
     def valuespec(self):
         return Labels(
+            world=Labels.World.CONFIG,
             title=_("Service labels"),
             help=_("Use this ruleset to assign labels to service of your choice."),
         )
@@ -1365,6 +1366,7 @@ class RulespecHostLabels(HostRulespec):
     @property
     def valuespec(self):
         return Labels(
+            world=Labels.World.CONFIG,
             title=_("Host labels"),
             help=_("Use this ruleset to assign labels to hosts of your choice."),
         )

@@ -2625,7 +2625,7 @@ class ABCLabelFilter(Filter):
         return [(self.htmlvars[0], row[self._column])]
 
     def _valuespec(self):
-        return Labels()
+        return Labels(world=Labels.World.CORE)
 
     def display(self):
         self._valuespec().render_input(self._var_prefix, self._current_value())

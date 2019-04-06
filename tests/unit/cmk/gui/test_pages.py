@@ -10,6 +10,7 @@ def test_registered_pages():
         'add_bookmark',
         'ajax_activation_state',
         'ajax_add_visual',
+        'ajax_autocomplete_labels',
         'ajax_backup_job_state',
         'ajax_dashlet_pos',
         'ajax_delete_user_notification',

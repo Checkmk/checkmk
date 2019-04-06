@@ -120,11 +120,11 @@ import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
-import cmk.gui.pages
 import cmk.gui.view_utils
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
 import cmk.gui.wato.mkeventd
+from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -591,7 +591,9 @@ def _show_read_only_warning():
 #       to better location.
 
 
-class AgentOutputPage(object):
+# TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
+# would need larger refactoring of the generic html.popup_trigger() mechanism.
+class AgentOutputPage(Page):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
@@ -625,20 +627,12 @@ class AgentOutputPage(object):
 
         self._job = FetchAgentOutputBackgroundJob(self._host.site_id(), self._host.name(), self._ty)
 
-    # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
-    # would need larger refactoring of the generic html.popup_trigger() mechanism.
-    def handle_page(self):
-        self.page()
-
-    @abc.abstractmethod
-    def page(self):
-        pass
-
     @staticmethod
     def file_name(site_id, host_name, ty):
         return "%s-%s-%s.txt" % (site_id, host_name, ty)
 
 
+@page_registry.register_page("fetch_agent_output")
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self):
         html.header(_("%s: Download agent output") % self._host.name())
@@ -687,12 +681,6 @@ class PageFetchAgentOutput(AgentOutputPage):
         job_manager.show_job_details_from_snapshot(job_snapshot=job_snapshot)
 
 
-# TODO: Clean this up! We would like to use the cmk.gui.pages.register() decorator instead
-# of this
-cmk.gui.pages.register_page_handler(
-    "fetch_agent_output", lambda: PageFetchAgentOutput().handle_page())
-
-
 @gui_background_job.job_registry.register
 class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob):
     job_prefix = "agent-output-"
@@ -734,6 +722,7 @@ class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob
         job_interface.send_result_message(_("%s Finished.") % button)
 
 
+@page_registry.register_page("download_agent_output")
 class PageDownloadAgentOutput(AgentOutputPage):
     def page(self):
         file_name = self.file_name(self._host.site_id(), self._host.name(), self._ty)
@@ -744,9 +733,6 @@ class PageDownloadAgentOutput(AgentOutputPage):
         preview_filepath = os.path.join(self._job.get_work_dir(), file_name)
         html.write(file(preview_filepath).read())
 
-
-cmk.gui.pages.register_page_handler(
-    "download_agent_output", lambda: PageDownloadAgentOutput().handle_page())
 
 #.
 #   .--Network Scan--------------------------------------------------------.

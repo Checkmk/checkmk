@@ -34,13 +34,14 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 
-from cmk.gui.pages import register_page_handler, AjaxPage
+from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.log import logger
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
 
 
+@page_registry.register_page("automation_login")
 class ModeAutomationLogin(AjaxPage):
     """Is executed by the central Check_MK site during creation of the WATO master/slave sync to
 
@@ -73,9 +74,7 @@ class ModeAutomationLogin(AjaxPage):
         html.write_html(repr(response))
 
 
-register_page_handler("automation_login", lambda: ModeAutomationLogin().handle_page())
-
-
+@page_registry.register_page("noauth:automation")
 class ModeAutomation(AjaxPage):
     """Executes the requested automation call
 
@@ -192,9 +191,6 @@ class ModeAutomation(AjaxPage):
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % \
                             (e, traceback.format_exc()))
-
-
-register_page_handler("noauth:automation", lambda: ModeAutomation().handle_page())
 
 
 def _get_login_secret(create_on_demand=False):

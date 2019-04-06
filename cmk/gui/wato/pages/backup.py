@@ -34,7 +34,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.wato.utils.context_buttons import home_button
 from cmk.gui.valuespec import Checkbox
-from cmk.gui.pages import register_page_handler, AjaxPage
+from cmk.gui.pages import page_registry, AjaxPage
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -179,6 +179,7 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
         return SiteBackupJobs()
 
 
+@page_registry.register_page("ajax_backup_job_state")
 class ModeAjaxBackupJobState(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
@@ -192,9 +193,6 @@ class ModeAjaxBackupJobState(AjaxPage):
         else:
             page = ModeBackupJobState()
         page.show_job_details()
-
-
-register_page_handler("ajax_backup_job_state", lambda: ModeAjaxBackupJobState().handle_page())
 
 
 class SiteBackupKeypairStore(backup.BackupKeypairStore):

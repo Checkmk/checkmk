@@ -60,10 +60,10 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.defines as defines
 
-import cmk.gui.pages
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
 from cmk.gui.i18n import _
+from cmk.gui.pages import page_registry, Page
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -803,9 +803,11 @@ class MonitoredHostname(TextAsciiAutocomplete):
         return [(h, h) for h in hosts]
 
 
-# We can not use the decorator because it can not deal with classmethods as quick fix we
-# directory use the register_page_handler_function() which is also fine.
-cmk.gui.pages.register_page_handler("ajax_vs_autocomplete", TextAsciiAutocomplete.ajax_handler)
+@page_registry.register_page("ajax_vs_autocomplete")
+class PageVsAutocomplete(Page):
+    def page(self):
+        # TODO: Move ajax_handler to this class? Should we also move the autocomplete_choices()?
+        TextAsciiAutocomplete.ajax_handler()
 
 
 # A host name with or without domain part. Also allow IP addresses

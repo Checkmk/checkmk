@@ -46,7 +46,7 @@ from cmk.gui.table import table_element
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatus  # pylint: disable=unused-import
 from cmk.gui.gui_background_job import job_registry
 
-from cmk.gui.pages import register_page_handler, AjaxPage
+from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -480,6 +480,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         return os.path.join(self.get_work_dir(), "check_table.mk")
 
 
+@page_registry.register_page("ajax_service_discovery")
 class ModeAjaxServiceDiscovery(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
@@ -1554,13 +1555,11 @@ class DiscoveryPageRenderer(object):
         ]
 
 
-register_page_handler("ajax_service_discovery", lambda: ModeAjaxServiceDiscovery().handle_page())
-
-
 class ModeFirstDiscovery(ModeDiscovery):
     pass
 
 
+@page_registry.register_page("wato_ajax_execute_check")
 class ModeAjaxExecuteCheck(AjaxPage):
     def _from_vars(self):
         self._site = html.get_ascii_input("site")
@@ -1594,6 +1593,3 @@ class ModeAjaxExecuteCheck(AjaxPage):
             "state_name": short_service_state_name(state, "UNKN"),
             "output": output,
         }
-
-
-register_page_handler("wato_ajax_execute_check", lambda: ModeAjaxExecuteCheck().handle_page())

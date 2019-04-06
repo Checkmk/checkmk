@@ -38,7 +38,7 @@ from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
-from cmk.gui.pages import register_page_handler, AjaxPage
+from cmk.gui.pages import page_registry, AjaxPage
 
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
@@ -347,6 +347,7 @@ def page_user_profile(change_pw=False):
     html.footer()
 
 
+@page_registry.register_page("wato_ajax_profile_repl")
 class ModeAjaxProfileReplication(AjaxPage):
     """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
 
@@ -385,6 +386,3 @@ class ModeAjaxProfileReplication(AjaxPage):
         watolib.ActivateChanges().update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC,
                                                          duration)
         return result
-
-
-register_page_handler("wato_ajax_profile_repl", lambda: ModeAjaxProfileReplication().handle_page())

@@ -49,6 +49,11 @@ class ModeAutomationLogin(AjaxPage):
     done be exchanging a login secret. If such a secret is not yet present it
     is created on the fly."""
 
+    # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
+    # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    def handle_page(self):
+        self.page()
+
     def page(self):
         if not config.user.may("wato.automation"):
             raise MKAuthException(_("This account has no permission for automation."))
@@ -68,7 +73,7 @@ class ModeAutomationLogin(AjaxPage):
         html.write_html(repr(response))
 
 
-register_page_handler("automation_login", lambda: ModeAutomationLogin().page())
+register_page_handler("automation_login", lambda: ModeAutomationLogin().handle_page())
 
 
 class ModeAutomation(AjaxPage):
@@ -99,6 +104,11 @@ class ModeAutomation(AjaxPage):
 
         if secret != _get_login_secret():
             raise MKAuthException(_("Invalid automation secret."))
+
+    # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
+    # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    def handle_page(self):
+        self.page()
 
     def page(self):
         # To prevent mixups in written files we use the same lock here as for
@@ -184,7 +194,7 @@ class ModeAutomation(AjaxPage):
                             (e, traceback.format_exc()))
 
 
-register_page_handler("noauth:automation", lambda: ModeAutomation().page())
+register_page_handler("noauth:automation", lambda: ModeAutomation().handle_page())
 
 
 def _get_login_secret(create_on_demand=False):

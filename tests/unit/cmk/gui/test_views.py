@@ -14,16 +14,8 @@ from cmk.gui.valuespec import ValueSpec
 import cmk.gui.plugins.views
 import cmk.gui.modules as modules
 
-
 @pytest.fixture()
-def load_view_plugins(register_builtin_html, monkeypatch, tmpdir):
-    config_dir = Path("%s" % tmpdir).joinpath("var/check_mk/web")
-    config_dir.mkdir(parents=True)  # pylint: disable=no-member
-    monkeypatch.setattr(config, "config_dir", "%s" % config_dir)
-    modules.load_all_plugins()
-
-@pytest.fixture()
-def view(register_builtin_html, load_view_plugins):
+def view(register_builtin_html, load_plugins):
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
     return cmk.gui.views.View(view_name, view_spec)
@@ -701,7 +693,8 @@ def test_registered_datasources():
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_painters(load_view_plugins):
+@pytest.mark.usefixture("load_plugins")
+def test_registered_painters():
     expected = {
         'aggr_acknowledged': {
             'columns': ['aggr_effective_state'],
@@ -4084,7 +4077,8 @@ def test_legacy_register_painter(monkeypatch):
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_sorters(load_view_plugins):
+@pytest.mark.usefixture("load_plugins")
+def test_registered_sorters():
     expected = {
         'aggr_group': {
             'columns': ['aggr_group'],
@@ -5781,7 +5775,8 @@ def test_get_needed_join_columns(view):
         'service_description',
     ])
 
-def test_create_view_basics(load_view_plugins):
+@pytest.mark.usefixture("load_plugins")
+def test_create_view_basics():
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
     view = cmk.gui.views.View(view_name, view_spec)

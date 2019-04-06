@@ -10,14 +10,6 @@ import cmk.gui.visuals as visuals
 import cmk.gui.modules as modules
 
 
-@pytest.fixture()
-def load_plugins(register_builtin_html, monkeypatch, tmpdir):
-    config_dir = Path("%s" % tmpdir).joinpath("var/check_mk/web")
-    config_dir.mkdir(parents=True)  # pylint: disable=no-member
-    monkeypatch.setattr(config, "config_dir", "%s" % config_dir)
-    modules.load_all_plugins()
-
-
 def test_get_filter():
     f = visuals.get_filter("hostregex")
     assert isinstance(f, cmk.gui.plugins.visuals.Filter)
@@ -71,11 +63,13 @@ expected_visual_types = {
 }
 
 
-def test_registered_visual_types(load_plugins):
+@pytest.mark.usefixture("load_plugins")
+def test_registered_visual_types():
     assert sorted(utils.visual_type_registry.keys()) == sorted(expected_visual_types.keys())
 
 
-def test_registered_visual_type_attributes(load_plugins):
+@pytest.mark.usefixture("load_plugins")
+def test_registered_visual_type_attributes():
     for ident, plugin_class in utils.visual_type_registry.items():
         plugin = plugin_class()
         spec = expected_visual_types[ident]
@@ -3658,14 +3652,16 @@ expected_infos = {
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_infos(load_plugins):
+@pytest.mark.usefixture("load_plugins")
+def test_registered_infos():
     assert sorted(utils.visual_info_registry.keys()) == sorted(expected_infos.keys())
 
 
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_info_attributes(load_plugins):
+@pytest.mark.usefixture("load_plugins")
+def test_registered_info_attributes():
     for ident, cls in utils.visual_info_registry.items():
         info = cls()
         spec = expected_infos[ident]

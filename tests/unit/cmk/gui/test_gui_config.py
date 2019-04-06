@@ -16,13 +16,7 @@ from cmk.gui.permissions import (
     permission_registry,
 )
 
-
-@pytest.fixture(autouse=True)
-def load_plugins(register_builtin_html, monkeypatch, tmpdir):
-    config_dir = Path("%s" % tmpdir).joinpath("var/check_mk/web")
-    config_dir.mkdir(parents=True)  # pylint: disable=no-member
-    monkeypatch.setattr(config, "config_dir", "%s" % config_dir)
-    modules.load_all_plugins()
+pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_registered_permission_sections():

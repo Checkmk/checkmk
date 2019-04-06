@@ -91,6 +91,7 @@ class Table(object):
         self.options = {
             "collect_headers": False,  # also: True, "finished"
             "omit_if_empty": kwargs.get("omit_if_empty", False),
+            "omit_empty_columns": kwargs.get("omit_empty_columns", False),
             "omit_headers": kwargs.get("omit_headers", False),
             "searchable": kwargs.get("searchable", True),
             "sortable": kwargs.get("sortable", True),
@@ -277,12 +278,18 @@ class Table(object):
 
         table_id = self.id
         num_cols = len(self.headers)
+        empty_columns = self._get_empty_columns(rows, num_cols)
+        num_cols -= len([v for v in empty_columns if v])
 
         html.open_table(class_=["data", "oddeven", self.css])
 
         # If we have no group headers then paint the headers now
         if self.rows and self.rows[0][2] != "header":
-            self._render_headers(actions_enabled, actions_visible)
+            self._render_headers(
+                actions_enabled,
+                actions_visible,
+                empty_columns,
+            )
 
         if actions_enabled and actions_visible:
             html.open_tr(class_=["data", "even0", "actions"])
@@ -311,7 +318,6 @@ class Table(object):
             html.close_tr()
 
         for nr, (row_spec, css, state, _fixed, attrs) in enumerate(rows):
-
             if not css and "class_" in attrs:
                 css = attrs.pop("class_")
             if not css and "class" in attrs:
@@ -329,14 +335,17 @@ class Table(object):
                     html.close_td()
                     html.close_tr()
 
-                    self._render_headers(actions_enabled, actions_visible)
+                    self._render_headers(actions_enabled, actions_visible, empty_columns)
                 continue
 
             oddeven_name = "even" if (nr - 1) % 2 == 0 else "odd"
 
             html.open_tr(
                 class_=["data", "%s%d" % (oddeven_name, state), css if css else None], **attrs)
-            for cell_content, css_classes, colspan in row_spec:
+            for col_index, (cell_content, css_classes, colspan) in enumerate(row_spec):
+                if self.options["omit_empty_columns"] and empty_columns[col_index]:
+                    continue
+
                 html.open_td(
                     class_=css_classes if css_classes else None,
                     colspan=colspan if colspan else None)
@@ -350,6 +359,13 @@ class Table(object):
             html.close_tr()
 
         html.close_table()
+
+    def _get_empty_columns(self, rows, num_cols):
+        empty_columns = [True] * num_cols
+        for row_spec, _css, _state, _fixed, _attrs in rows:
+            for col_index, (cell_content, _css_classes, _colspan) in enumerate(row_spec):
+                empty_columns[col_index] &= not cell_content
+        return empty_columns
 
     def _write_csv(self, csv_separator):
 
@@ -377,7 +393,7 @@ class Table(object):
                 ]))
             html.write("\n")
 
-    def _render_headers(self, actions_enabled, actions_visible):
+    def _render_headers(self, actions_enabled, actions_visible, empty_columns):
         if self.options["omit_headers"]:
             return
 
@@ -386,6 +402,9 @@ class Table(object):
         html.open_tr()
         first_col = True
         for nr, (header, css, help_txt, sortable) in enumerate(self.headers):
+            if self.options["omit_empty_columns"] and empty_columns[nr]:
+                continue
+
             text = header
 
             if help_txt:

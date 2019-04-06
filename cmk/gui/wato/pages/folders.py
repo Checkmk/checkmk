@@ -406,7 +406,8 @@ class ModeFolder(WatoMode):
 
         # Show table of hosts in this folder
         html.begin_form("hosts", method="POST")
-        with table_element("hosts", title=_("Hosts"), searchable=False) as table:
+        with table_element(
+                "hosts", title=_("Hosts"), searchable=False, omit_empty_columns=True) as table:
 
             # Remember if that host has a target folder (i.e. was imported with
             # a folder information but not yet moved to that folder). If at least
@@ -554,7 +555,7 @@ class ModeFolder(WatoMode):
             icon = "autherr"
             title = html.strip_tags(reason)
 
-        table.cell(_('Auth'), html.render_icon(icon, title), sortable=False)
+        table.cell(_('Auth'), html.render_icon(icon, title), css="buttons", sortable=False)
 
         # Permissions and Contact groups - through complete recursion and inhertance
         permitted_groups, host_contact_groups, _use_for_services = host.groups()

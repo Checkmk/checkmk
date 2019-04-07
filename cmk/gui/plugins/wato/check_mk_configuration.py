@@ -1334,11 +1334,11 @@ class RulespecServiceLabels(ServiceRulespec):
 
     @property
     def match_type(self):
-        return "all"
+        return "dict"
 
     @property
     def item_type(self):
-        return "dict"
+        return "service"
 
     @property
     def valuespec(self):

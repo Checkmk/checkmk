@@ -569,15 +569,21 @@ class AutomationAnalyseServices(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
+    def execute(self, args):
+        config_cache = config.get_config_cache()
+        hostname = args[0]
+        servicedesc = args[1].decode("utf-8")
+
+        service_info = self._get_service_info(config_cache, hostname, servicedesc)
+        service_info["labels"] = config_cache.labels_of_service(hostname, servicedesc)
+        return service_info
+
     # Determine the type of the check, and how the parameters are being
     # constructed
     # TODO: Refactor this huge function
     # TODO: Was ist mit Clustern???
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
-    def execute(self, args):
-        config_cache = config.get_config_cache()
-        hostname = args[0]
-        servicedesc = args[1].decode("utf-8")
+    def _get_service_info(self, config_cache, hostname, servicedesc):
         check_api_utils.set_hostname(hostname)
 
         # We just consider types of checks that are managed via WATO.
@@ -701,6 +707,20 @@ class AutomationAnalyseServices(Automation):
 
 
 automations.register(AutomationAnalyseServices())
+
+
+class AutomationAnalyseHost(Automation):
+    cmd = "analyse-host"
+    needs_config = True
+    needs_checks = False
+
+    def execute(self, args):
+        host_name = args[0]
+        config_cache = config.get_config_cache()
+        return {"labels": config_cache.get_host_config(host_name).labels}
+
+
+automations.register(AutomationAnalyseHost())
 
 
 class AutomationDeleteHosts(Automation):
@@ -1497,3 +1517,26 @@ class AutomationGetServiceConfigurations(Automation):
 
 
 automations.register(AutomationGetServiceConfigurations())
+
+
+class AutomationGetLabelsOf(Automation):
+    cmd = "get-labels-of"
+    needs_config = True
+    needs_checks = False
+
+    def execute(self, args):
+        object_type, host_name = args[:2]
+
+        config_cache = config.get_config_cache()
+
+        if object_type == "host":
+            return {"labels": config_cache.get_host_config(host_name).labels}
+
+        if object_type == "service":
+            service_description = args[2].decode("utf-8")
+            return {"labels": config_cache.labels_of_service(host_name, service_description)}
+
+        raise NotImplementedError()
+
+
+automations.register(AutomationGetLabelsOf())

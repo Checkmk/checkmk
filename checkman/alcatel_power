@@ -4,9 +4,18 @@ catalog: hw/network/alcatel
 license: GPL
 distribution: check_mk
 description:
- This check monitors the health of power supplies in
- Alcatel switches. If one of the two power supplies fails, the
- check returns {CRIT}.
+ This check monitors the health of power supplies in the following Alcatel
+ switches running the specified operating system release versions:
+
+ - OmniSwitch 6850-48X: AOS 6.4.5.528.R02 Service Release
+
+ - OmniSwitch 6850-U24X: AOS 6.4.4.442.C Service Release
+
+ - OmniSwitch 6450-U24: AOS 6.6.5.77.R02 Service Release, AOS 6.6.4.285.R01 Service Release
+
+ - OmniSwitch 6450-10: AOS 6.7.2.191.R04 GA
+
+ If one of the two power supplies fails, the check returns {CRIT}.
 
 item:
  The ID of the power supply as output from the SNMP agent.

@@ -61,13 +61,14 @@ public:
 
 class CustomVariableExpander : public MacroExpander {
 public:
-    CustomVariableExpander(std::string prefix,
-                           const customvariablesmember *cvm);
+    CustomVariableExpander(std::string prefix, const customvariablesmember *cvm,
+                           const MonitoringCore *mc);
 
     std::optional<std::string> expand(const std::string &str) override;
 
 private:
     std::string _prefix;
+    const MonitoringCore *const _mc;
     const customvariablesmember *_cvm;
 };
 
@@ -86,8 +87,10 @@ public:
 
     virtual std::unique_ptr<MacroExpander> getMacroExpander(Row row) const = 0;
 
-private:
+protected:
     const MonitoringCore *const _mc;
+
+private:
     const int _string_offset;
 };
 

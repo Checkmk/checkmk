@@ -26,8 +26,8 @@
 #include "Row.h"
 #include "nagios.h"
 
-HostMacroExpander::HostMacroExpander(const host *hst)
-    : _hst(hst), _cve("_HOST", hst->custom_variables) {}
+HostMacroExpander::HostMacroExpander(const host *hst, const MonitoringCore *mc)
+    : _hst(hst), _cve("_HOST", hst->custom_variables, mc) {}
 
 std::optional<std::string> HostMacroExpander::expand(const std::string &str) {
     if (str == "HOSTNAME") {
@@ -64,6 +64,6 @@ std::optional<std::string> HostMacroExpander::expand(const std::string &str) {
 std::unique_ptr<MacroExpander> OffsetStringHostMacroColumn::getMacroExpander(
     Row row) const {
     return std::make_unique<CompoundMacroExpander>(
-        std::make_unique<HostMacroExpander>(columnData<host>(row)),
+        std::make_unique<HostMacroExpander>(columnData<host>(row), _mc),
         std::make_unique<UserMacroExpander>());
 }

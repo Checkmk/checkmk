@@ -36,7 +36,7 @@ class Row;
 
 class HostMacroExpander : public MacroExpander {
 public:
-    explicit HostMacroExpander(const host *hst);
+    HostMacroExpander(const host *hst, const MonitoringCore *mc);
     std::optional<std::string> expand(const std::string &str) override;
 
 private:

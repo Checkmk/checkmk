@@ -116,10 +116,18 @@ struct ThreadInfo {
 
 static std::vector<ThreadInfo> fl_thread_info;
 static thread_local ThreadInfo *tl_info;
-size_t fl_max_cached_messages = 500000;
-// do never read more than that number of lines from a logfile
-static size_t fl_max_lines_per_logfile = 1000000;
-size_t fl_max_response_size = 100 * 1024 * 1024;  // limit answer to 10 MB
+
+struct NagiosLimits {
+    size_t _max_cached_messages;
+    size_t _max_lines_per_logfile;
+    size_t _max_response_size;
+};
+static NagiosLimits fl_limits{
+    ._max_cached_messages = 500000,
+    ._max_lines_per_logfile = 1000000,
+    ._max_response_size = 100 * 1024 * 1024,
+};
+
 int g_thread_running = 0;
 static AuthorizationKind fl_service_authorization = AuthorizationKind::loose;
 static AuthorizationKind fl_group_authorization = AuthorizationKind::strict;
@@ -622,7 +630,7 @@ public:
     }
 
     size_t maxLinesPerLogFile() const override {
-        return fl_max_lines_per_logfile;
+        return fl_limits._max_lines_per_logfile;
     }
 
     Command find_command(const std::string &name) const override {
@@ -687,8 +695,10 @@ public:
     }
 
     Encoding dataEncoding() override { return fl_data_encoding; }
-    size_t maxResponseSize() override { return fl_max_response_size; }
-    size_t maxCachedMessages() override { return fl_max_cached_messages; }
+    size_t maxResponseSize() override { return fl_limits._max_response_size; }
+    size_t maxCachedMessages() override {
+        return fl_limits._max_cached_messages;
+    }
 
     // TODO(sp) Unused in Livestatus NEB: Strange & ugly...
     AuthorizationKind hostAuthorization() const override {
@@ -1010,25 +1020,26 @@ void livestatus_parse_arguments(const char *args_orig) {
             } else if (strcmp(left, "mkeventd_socket_path") == 0) {
                 fl_paths._mkeventd_socket_path = right;
             } else if (strcmp(left, "max_cached_messages") == 0) {
-                fl_max_cached_messages = strtoul(right, nullptr, 10);
+                fl_limits._max_cached_messages = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios)
                     << "setting max number of cached log messages to "
-                    << fl_max_cached_messages;
+                    << fl_limits._max_cached_messages;
             } else if (strcmp(left, "max_lines_per_logfile") == 0) {
-                fl_max_lines_per_logfile = strtoul(right, nullptr, 10);
+                fl_limits._max_lines_per_logfile = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios)
                     << "setting max number lines per logfile to "
-                    << fl_max_lines_per_logfile;
+                    << fl_limits._max_lines_per_logfile;
             } else if (strcmp(left, "thread_stack_size") == 0) {
                 g_thread_stack_size = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios) << "setting size of thread stacks to "
                                          << g_thread_stack_size;
             } else if (strcmp(left, "max_response_size") == 0) {
-                fl_max_response_size = strtoul(right, nullptr, 10);
+                fl_limits._max_response_size = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios)
                     << "setting maximum response size to "
-                    << fl_max_response_size << " bytes ("
-                    << (fl_max_response_size / (1024.0 * 1024.0)) << " MB)";
+                    << fl_limits._max_response_size << " bytes ("
+                    << (fl_limits._max_response_size / (1024.0 * 1024.0))
+                    << " MB)";
             } else if (strcmp(left, "num_client_threads") == 0) {
                 int c = atoi(right);
                 if (c <= 0 || c > 1000) {

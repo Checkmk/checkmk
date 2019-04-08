@@ -1121,29 +1121,17 @@ void livestatus_parse_arguments(const char *args_orig) {
                 }
             } else if (strcmp(left, "pnp_path") == 0) {
                 fl_paths._pnp_path = right;
-                if (right[strlen(right) - 1] != '/') {
-                    fl_paths._pnp_path += "/";
-                }
                 check_path("PNP perfdata directory", fl_paths._pnp_path);
             } else if (strcmp(left, "mk_inventory_path") == 0) {
                 fl_paths._mk_inventory_path = right;
-                if (right[strlen(right) - 1] != '/') {
-                    fl_paths._mk_inventory_path += "/";
-                }
                 check_path("Check_MK Inventory directory",
                            fl_paths._mk_inventory_path);
             } else if (strcmp(left, "structured_status_path") == 0) {
                 fl_paths._structured_status_path = right;
-                if (right[strlen(right) - 1] != '/') {
-                    fl_paths._structured_status_path += "/";
-                }
                 check_path("Check_MK structured status directory",
                            fl_paths._structured_status_path);
             } else if (strcmp(left, "mk_logwatch_path") == 0) {
                 fl_paths._mk_logwatch_path = right;
-                if (right[strlen(right) - 1] != '/') {
-                    fl_paths._mk_logwatch_path += "/";
-                }
                 check_path("Check_MK logwatch directory",
                            fl_paths._mk_logwatch_path);
             } else if (strcmp(left, "data_encoding") == 0) {

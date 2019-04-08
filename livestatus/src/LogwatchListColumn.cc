@@ -62,12 +62,12 @@ std::vector<std::string> LogwatchListColumn::getValue(
     return {};
 }
 
-std::string LogwatchListColumn::getDirectory(Row row) const {
+fs::path LogwatchListColumn::getDirectory(Row row) const {
     auto logwatch_path = _mc->mkLogwatchPath();
     auto host_name = getHostName(row);
     return logwatch_path.empty() || host_name.empty()
-               ? ""
-               : logwatch_path + pnp_cleanup(host_name);
+               ? fs::path()
+               : fs::path(logwatch_path) / pnp_cleanup(host_name);
 }
 
 std::string LogwatchListColumn::getHostName(Row row) const {

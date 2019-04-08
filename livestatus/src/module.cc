@@ -95,13 +95,18 @@ size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
 void *g_nagios_handle;
 int g_unix_socket = -1;
 int g_max_fd_ever = 0;
-static std::string fl_socket_path;
-static char fl_pnp_path[4096];
-static char fl_mk_inventory_path[4096];
-static char fl_structured_status_path[4096];
-static char fl_mk_logwatch_path[4096];
-static std::string fl_logfile_path;
-static std::string fl_mkeventd_socket_path;
+
+struct NagiosPaths {
+    std::string _socket_path;
+    char _pnp_path[4096];
+    char _mk_inventory_path[4096];
+    char _structured_status_path[4096];
+    char _mk_logwatch_path[4096];
+    std::string _logfile_path;
+    std::string _mkeventd_socket_path;
+};
+static NagiosPaths fl_paths;
+
 static bool fl_should_terminate = false;
 
 struct ThreadInfo {
@@ -306,7 +311,7 @@ void start_threads() {
         fl_logger_livestatus->setUseParentHandlers(false);
         try {
             fl_logger_livestatus->setHandler(
-                std::make_unique<LivestatusHandler>(fl_logfile_path));
+                std::make_unique<LivestatusHandler>(fl_paths._logfile_path));
         } catch (const generic_error &ex) {
             Warning(fl_logger_nagios) << ex;
         }
@@ -377,12 +382,13 @@ void terminate_threads() {
 
 bool open_unix_socket() {
     struct stat st;
-    if (stat(fl_socket_path.c_str(), &st) == 0) {
-        if (unlink(fl_socket_path.c_str()) == 0) {
+    if (stat(fl_paths._socket_path.c_str(), &st) == 0) {
+        if (unlink(fl_paths._socket_path.c_str()) == 0) {
             Debug(fl_logger_nagios)
-                << "removed old socket file " << fl_socket_path;
+                << "removed old socket file " << fl_paths._socket_path;
         } else {
-            generic_error ge("cannot remove old socket file " + fl_socket_path);
+            generic_error ge("cannot remove old socket file " +
+                             fl_paths._socket_path);
             Alert(fl_logger_nagios) << ge;
             return false;
         }
@@ -405,16 +411,16 @@ bool open_unix_socket() {
     }
 
     // Bind it to its address. This creates the file with the name
-    // fl_socket_path
+    // fl_paths._socket_path
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
-    strncpy(sockaddr.sun_path, fl_socket_path.c_str(),
+    strncpy(sockaddr.sun_path, fl_paths._socket_path.c_str(),
             sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
              sizeof(sockaddr)) < 0) {
         generic_error ge("cannot bind UNIX socket to address " +
-                         fl_socket_path);
+                         fl_paths._socket_path);
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
@@ -422,28 +428,29 @@ bool open_unix_socket() {
 
     // Make writable group members (fchmod didn't do nothing for me. Don't know
     // why!)
-    if (0 != chmod(fl_socket_path.c_str(), 0660)) {
+    if (0 != chmod(fl_paths._socket_path.c_str(), 0660)) {
         generic_error ge("cannot change file permissions for UNIX socket at " +
-                         fl_socket_path + " to 0660");
+                         fl_paths._socket_path + " to 0660");
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
     }
 
     if (0 != listen(g_unix_socket, 3 /* backlog */)) {
-        generic_error ge("cannot listen to UNIX socket at " + fl_socket_path);
+        generic_error ge("cannot listen to UNIX socket at " +
+                         fl_paths._socket_path);
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
     }
 
     Informational(fl_logger_nagios)
-        << "opened UNIX socket at " << fl_socket_path;
+        << "opened UNIX socket at " << fl_paths._socket_path;
     return true;
 }
 
 void close_unix_socket() {
-    unlink(fl_socket_path.c_str());
+    unlink(fl_paths._socket_path.c_str());
     if (g_unix_socket >= 0) {
         close(g_unix_socket);
         g_unix_socket = -1;
@@ -663,14 +670,16 @@ public:
     }
 
     std::string mkeventdSocketPath() override {
-        return fl_mkeventd_socket_path;
+        return fl_paths._mkeventd_socket_path;
     }
-    std::string mkLogwatchPath() override { return fl_mk_logwatch_path; }
-    std::string mkInventoryPath() override { return fl_mk_inventory_path; }
+    std::string mkLogwatchPath() override { return fl_paths._mk_logwatch_path; }
+    std::string mkInventoryPath() override {
+        return fl_paths._mk_inventory_path;
+    }
     std::string structuredStatusPath() override {
-        return fl_structured_status_path;
+        return fl_paths._structured_status_path;
     }
-    std::string pnpPath() override { return fl_pnp_path; }
+    std::string pnpPath() override { return fl_paths._pnp_path; }
     std::string historyFilePath() override { return log_file; }
     std::string logArchivePath() override {
         extern char *log_archive_path;
@@ -956,19 +965,19 @@ void check_path(const char *name, char *path) {
 }
 
 void livestatus_parse_arguments(const char *args_orig) {
-    fl_socket_path = default_socket_path;
+    fl_paths._socket_path = default_socket_path;
 
     // set default path to our logfile to be in the same path as nagios.log
     std::string lf{log_file};
     auto slash = lf.rfind('/');
-    fl_logfile_path =
+    fl_paths._logfile_path =
         (slash == std::string::npos ? "/tmp/" : lf.substr(0, slash + 1)) +
         "livestatus.log";
 
-    fl_mkeventd_socket_path = "";
+    fl_paths._mkeventd_socket_path = "";
 
     /* there is no default PNP path */
-    fl_pnp_path[0] = 0;
+    fl_paths._pnp_path[0] = 0;
 
     if (args_orig == nullptr) {
         return;  // no arguments, use default options
@@ -983,7 +992,7 @@ void livestatus_parse_arguments(const char *args_orig) {
         char *left = next_token(&part, '=');
         char *right = next_token(&part, 0);
         if (right == nullptr) {
-            fl_socket_path = left;
+            fl_paths._socket_path = left;
         } else {
             if (strcmp(left, "debug") == 0) {
                 int debug_level = atoi(right);
@@ -997,9 +1006,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 Notice(fl_logger_nagios)
                     << "setting debug level to " << fl_livestatus_log_level;
             } else if (strcmp(left, "log_file") == 0) {
-                fl_logfile_path = right;
+                fl_paths._logfile_path = right;
             } else if (strcmp(left, "mkeventd_socket_path") == 0) {
-                fl_mkeventd_socket_path = right;
+                fl_paths._mkeventd_socket_path = right;
             } else if (strcmp(left, "max_cached_messages") == 0) {
                 fl_max_cached_messages = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios)
@@ -1079,45 +1088,48 @@ void livestatus_parse_arguments(const char *args_orig) {
                            "allowed are strict and loose";
                 }
             } else if (strcmp(left, "pnp_path") == 0) {
-                strncpy(fl_pnp_path, right, sizeof(fl_pnp_path) - 1);
+                strncpy(fl_paths._pnp_path, right,
+                        sizeof(fl_paths._pnp_path) - 1);
                 // make sure, that trailing slash is always there
                 if (right[strlen(right) - 1] != '/') {
-                    strncat(fl_pnp_path, "/",
-                            sizeof(fl_pnp_path) - strlen(fl_pnp_path) - 1);
+                    strncat(fl_paths._pnp_path, "/",
+                            sizeof(fl_paths._pnp_path) -
+                                strlen(fl_paths._pnp_path) - 1);
                 }
-                check_path("PNP perfdata directory", fl_pnp_path);
+                check_path("PNP perfdata directory", fl_paths._pnp_path);
             } else if (strcmp(left, "mk_inventory_path") == 0) {
-                strncpy(fl_mk_inventory_path, right,
-                        sizeof(fl_mk_inventory_path) - 1);
+                strncpy(fl_paths._mk_inventory_path, right,
+                        sizeof(fl_paths._mk_inventory_path) - 1);
                 if (right[strlen(right) - 1] != '/') {
-                    strncat(fl_mk_inventory_path, "/",
-                            sizeof(fl_mk_inventory_path) -
-                                strlen(fl_mk_inventory_path) -
+                    strncat(fl_paths._mk_inventory_path, "/",
+                            sizeof(fl_paths._mk_inventory_path) -
+                                strlen(fl_paths._mk_inventory_path) -
                                 1);  // make sure, that trailing slash is there
                 }
                 check_path("Check_MK Inventory directory",
-                           fl_mk_inventory_path);
+                           fl_paths._mk_inventory_path);
             } else if (strcmp(left, "structured_status_path") == 0) {
-                strncpy(fl_structured_status_path, right,
-                        sizeof(fl_structured_status_path) - 1);
+                strncpy(fl_paths._structured_status_path, right,
+                        sizeof(fl_paths._structured_status_path) - 1);
                 if (right[strlen(right) - 1] != '/') {
-                    strncat(fl_structured_status_path, "/",
-                            sizeof(fl_structured_status_path) -
-                                strlen(fl_structured_status_path) -
+                    strncat(fl_paths._structured_status_path, "/",
+                            sizeof(fl_paths._structured_status_path) -
+                                strlen(fl_paths._structured_status_path) -
                                 1);  // make sure, that trailing slash is there
                 }
                 check_path("Check_MK structured status directory",
-                           fl_structured_status_path);
+                           fl_paths._structured_status_path);
             } else if (strcmp(left, "mk_logwatch_path") == 0) {
-                strncpy(fl_mk_logwatch_path, right,
-                        sizeof(fl_mk_logwatch_path) - 1);
+                strncpy(fl_paths._mk_logwatch_path, right,
+                        sizeof(fl_paths._mk_logwatch_path) - 1);
                 if (right[strlen(right) - 1] != '/') {
-                    strncat(fl_mk_logwatch_path, "/",
-                            sizeof(fl_mk_logwatch_path) -
-                                strlen(fl_mk_logwatch_path) -
+                    strncat(fl_paths._mk_logwatch_path, "/",
+                            sizeof(fl_paths._mk_logwatch_path) -
+                                strlen(fl_paths._mk_logwatch_path) -
                                 1);  // make sure, that trailing slash is there
                 }
-                check_path("Check_MK logwatch directory", fl_mk_logwatch_path);
+                check_path("Check_MK logwatch directory",
+                           fl_paths._mk_logwatch_path);
             } else if (strcmp(left, "data_encoding") == 0) {
                 if (strcmp(right, "utf8") == 0) {
                     fl_data_encoding = Encoding::utf8;
@@ -1143,16 +1155,16 @@ void livestatus_parse_arguments(const char *args_orig) {
         }
     }
 
-    if (fl_mkeventd_socket_path.empty()) {
-        std::string sp{fl_socket_path};
+    if (fl_paths._mkeventd_socket_path.empty()) {
+        std::string sp{fl_paths._socket_path};
         auto slash = sp.rfind('/');
-        fl_mkeventd_socket_path =
+        fl_paths._mkeventd_socket_path =
             (slash == std::string::npos ? "" : sp.substr(0, slash + 1)) +
             "mkeventd/status";
     }
     Warning(fl_logger_nagios)
-        << "fl_socket_path=[" << fl_socket_path
-        << "], fl_mkeventd_socket_path=[" << fl_mkeventd_socket_path << "]";
+        << "socket_path=[" << fl_paths._socket_path
+        << "], mkeventd_socket_path=[" << fl_paths._mkeventd_socket_path << "]";
 }
 
 void omd_advertize() {
@@ -1162,7 +1174,8 @@ void omd_advertize() {
                              << BUILD_DATE << " on " << BUILD_HOSTNAME;
     Notice(fl_logger_nagios) << "built with " << BUILD_CXX << ", using "
                              << RegExp::engine() << " regex engine";
-    Notice(fl_logger_nagios) << "Using socket at '" << fl_socket_path << "'";
+    Notice(fl_logger_nagios)
+        << "Using socket at '" << fl_paths._socket_path << "'";
     Notice(fl_logger_nagios) << "Please visit us at http://mathias-kettner.de/";
     if (char *omd_site = getenv("OMD_SITE")) {
         Informational(fl_logger_nagios)
@@ -1218,7 +1231,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 
     Notice(fl_logger_nagios)
         << "finished initialization, further log messages go to "
-        << fl_logfile_path;
+        << fl_paths._logfile_path;
     return 0;
 }
 

@@ -140,7 +140,6 @@ std::unordered_map<std::string, host *> fl_hosts_by_designation;
 static Logger *fl_logger_nagios = nullptr;
 static Logger *fl_logger_livestatus = nullptr;
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
-static Store *fl_store = nullptr;
 static ClientQueue *fl_client_queue = nullptr;
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 
@@ -153,6 +152,264 @@ int g_num_hosts;
 int g_num_services;
 
 constexpr const char *default_socket_path = "/usr/local/nagios/var/rw/live";
+
+class NagiosCore : public MonitoringCore {
+public:
+    NagiosCore(const NagiosPaths &paths, const NagiosLimits &limits)
+        : _paths(paths), _limits(limits), _store(this) {}
+
+    Host *find_host(const std::string &name) override {
+        // Older Nagios headers are not const-correct... :-P
+        return fromImpl(::find_host(const_cast<char *>(name.c_str())));
+    }
+
+    Host *getHostByDesignation(const std::string &designation) override {
+        auto it = fl_hosts_by_designation.find(mk::unsafe_tolower(designation));
+        return it == fl_hosts_by_designation.end() ? nullptr
+                                                   : fromImpl(it->second);
+    }
+
+    Service *find_service(const std::string &host_name,
+                          const std::string &service_description) override {
+        // Older Nagios headers are not const-correct... :-P
+        return fromImpl(
+            ::find_service(const_cast<char *>(host_name.c_str()),
+                           const_cast<char *>(service_description.c_str())));
+    }
+
+    ContactGroup *find_contactgroup(const std::string &name) override {
+        // Older Nagios headers are not const-correct... :-P
+        return fromImpl(::find_contactgroup(const_cast<char *>(name.c_str())));
+    }
+
+    const Contact *find_contact(const std::string &name) override {
+        // Older Nagios headers are not const-correct... :-P
+        return fromImpl(::find_contact(const_cast<char *>(name.c_str())));
+    }
+
+    bool host_has_contact(const Host *host, const Contact *contact) override {
+        return is_authorized_for(this, toImpl(contact), toImpl(host), nullptr);
+    }
+
+    bool is_contact_member_of_contactgroup(const ContactGroup *group,
+                                           const Contact *contact) override {
+        // Older Nagios headers are not const-correct... :-P
+        return ::is_contact_member_of_contactgroup(
+                   const_cast<contactgroup *>(toImpl(group)),
+                   const_cast<::contact *>(toImpl(contact))) != 0;
+    }
+
+    std::chrono::system_clock::time_point last_logfile_rotation() override {
+        // TODO(sp) We should better listen to NEBCALLBACK_PROGRAM_STATUS_DATA
+        // instead of this 'extern' hack...
+        extern time_t last_log_rotation;
+        return std::chrono::system_clock::from_time_t(last_log_rotation);
+    }
+
+    size_t maxLinesPerLogFile() const override {
+        return _limits._max_lines_per_logfile;
+    }
+
+    Command find_command(const std::string &name) const override {
+        // Older Nagios headers are not const-correct... :-P
+        if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
+            return {cmd->name, cmd->command_line};
+        }
+        return {"", ""};
+    }
+
+    std::vector<Command> commands() const override {
+        extern command *command_list;
+        std::vector<Command> commands;
+        for (command *cmd = command_list; cmd != nullptr; cmd = cmd->next) {
+            commands.push_back({cmd->name, cmd->command_line});
+        }
+        return commands;
+    }
+
+    std::vector<DowntimeData> downtimes_for_host(
+        const Host *host) const override {
+        return downtimes_for_object(toImpl(host), nullptr);
+    }
+
+    std::vector<DowntimeData> downtimes_for_service(
+        const Service *service) const override {
+        return downtimes_for_object(toImpl(service)->host_ptr, toImpl(service));
+    }
+
+    std::vector<CommentData> comments_for_host(
+        const Host *host) const override {
+        return comments_for_object(toImpl(host), nullptr);
+    }
+
+    std::vector<CommentData> comments_for_service(
+        const Service *service) const override {
+        return comments_for_object(toImpl(service)->host_ptr, toImpl(service));
+    }
+
+    bool mkeventdEnabled() override {
+        if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
+            return config_mkeventd == std::string("on");
+        }
+        return false;
+    }
+
+    std::string mkeventdSocketPath() override {
+        return _paths._mkeventd_socket_path;
+    }
+    std::string mkLogwatchPath() override { return _paths._mk_logwatch_path; }
+    std::string mkInventoryPath() override { return _paths._mk_inventory_path; }
+    std::string structuredStatusPath() override {
+        return _paths._structured_status_path;
+    }
+    std::string pnpPath() override { return _paths._pnp_path; }
+    std::string historyFilePath() override { return log_file; }
+    std::string logArchivePath() override {
+        extern char *log_archive_path;
+        return log_archive_path;
+    }
+
+    Encoding dataEncoding() override { return fl_data_encoding; }
+    size_t maxResponseSize() override { return _limits._max_response_size; }
+    size_t maxCachedMessages() override { return _limits._max_cached_messages; }
+
+    // TODO(sp) Unused in Livestatus NEB: Strange & ugly...
+    AuthorizationKind hostAuthorization() const override {
+        return AuthorizationKind::loose;
+    }
+
+    AuthorizationKind serviceAuthorization() const override {
+        return fl_service_authorization;
+    }
+
+    AuthorizationKind groupAuthorization() const override {
+        return fl_group_authorization;
+    }
+
+    Logger *loggerLivestatus() override { return fl_logger_livestatus; }
+
+    Triggers &triggers() override { return fl_triggers; }
+
+    size_t numQueuedNotifications() override { return 0; }
+    size_t numQueuedAlerts() override { return 0; }
+
+    size_t numCachedLogMessages() override {
+        return _store.numCachedLogMessages();
+    }
+
+    Attributes customAttributes(const void *holder,
+                                AttributeKind kind) const override {
+        auto h = *static_cast<const customvariablesmember *const *>(holder);
+        Attributes attrs;
+        for (auto cvm = h; cvm != nullptr; cvm = cvm->next) {
+            bool is_tag = mk::starts_with(cvm->variable_name, "_TAG_");
+            bool is_label = mk::starts_with(cvm->variable_name, "_LABEL_");
+            bool part_of_result = false;
+            switch (kind) {
+                case AttributeKind::custom_variables:
+                    part_of_result = !is_tag && !is_label;
+                    break;
+                case AttributeKind::tags:
+                    part_of_result = is_tag;
+                    break;
+                case AttributeKind::labels:
+                    part_of_result = is_label;
+                    break;
+            }
+            if (part_of_result) {
+                attrs.emplace(cvm->variable_name, cvm->variable_value);
+            }
+        }
+        return attrs;
+    }
+
+    // specific for NagiosCore
+    bool answerRequest(InputBuffer &input, OutputBuffer &output) {
+        return _store.answerRequest(input, output);
+    }
+
+    void registerDowntime(nebstruct_downtime_data *data) {
+        _store.registerDowntime(data);
+    }
+
+    void registerComment(nebstruct_comment_data *data) {
+        _store.registerComment(data);
+    }
+
+private:
+    const NagiosPaths &_paths;
+    const NagiosLimits &_limits;
+    Store _store;
+
+    void *implInternal() const override { return const_cast<Store *>(&_store); }
+
+    static const Contact *fromImpl(const contact *c) {
+        return reinterpret_cast<const Contact *>(c);
+    }
+    static const contact *toImpl(const Contact *c) {
+        return reinterpret_cast<const contact *>(c);
+    }
+
+    static ContactGroup *fromImpl(contactgroup *g) {
+        return reinterpret_cast<ContactGroup *>(g);
+    }
+    static const contactgroup *toImpl(const ContactGroup *g) {
+        return reinterpret_cast<const contactgroup *>(g);
+    }
+
+    static Host *fromImpl(host *h) { return reinterpret_cast<Host *>(h); }
+    static const host *toImpl(const Host *h) {
+        return reinterpret_cast<const host *>(h);
+    }
+
+    static Service *fromImpl(service *s) {
+        return reinterpret_cast<Service *>(s);
+    }
+    static const service *toImpl(const Service *s) {
+        return reinterpret_cast<const service *>(s);
+    }
+
+    std::vector<DowntimeData> downtimes_for_object(const ::host *h,
+                                                   const ::service *s) const {
+        std::vector<DowntimeData> result;
+        for (const auto &entry : _store._downtimes) {
+            auto *dt = static_cast<Downtime *>(entry.second.get());
+            if (dt->_host == h && dt->_service == s) {
+                result.push_back({
+                    dt->_id,
+                    dt->_author_name,
+                    dt->_comment,
+                    false,
+                    std::chrono::system_clock::from_time_t(dt->_entry_time),
+                    std::chrono::system_clock::from_time_t(dt->_start_time),
+                    std::chrono::system_clock::from_time_t(dt->_end_time),
+                    dt->_fixed != 0,
+                    std::chrono::seconds(dt->_duration),
+                    0,
+                    dt->_type != 0,
+                });
+            }
+        }
+        return result;
+    }
+
+    std::vector<CommentData> comments_for_object(const ::host *h,
+                                                 const ::service *s) const {
+        std::vector<CommentData> result;
+        for (const auto &entry : _store._comments) {
+            auto *co = static_cast<Comment *>(entry.second.get());
+            if (co->_host == h && co->_service == s) {
+                result.push_back(
+                    {co->_id, co->_author_name, co->_comment,
+                     static_cast<uint32_t>(co->_entry_type),
+                     std::chrono::system_clock::from_time_t(co->_entry_time)});
+            }
+        }
+        return result;
+    }
+};
+
+static NagiosCore *fl_core = nullptr;
 
 void count_hosts() {
     g_num_hosts = 0;
@@ -262,8 +519,7 @@ void *client_thread(void *data) {
                 counterIncrement(Counter::requests);
                 OutputBuffer output_buffer(cc, fl_should_terminate,
                                            fl_logger_livestatus);
-                keepalive =
-                    fl_store->answerRequest(input_buffer, output_buffer);
+                keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
             close(cc);
         }
@@ -490,7 +746,7 @@ int broker_check(int event_type, void *data) {
 
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     auto co = static_cast<nebstruct_comment_data *>(data);
-    fl_store->registerComment(co);
+    fl_core->registerComment(co);
     counterIncrement(Counter::neb_callbacks);
     fl_triggers.notify_all(Triggers::Kind::comment);
     return 0;
@@ -498,7 +754,7 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     auto dt = static_cast<nebstruct_downtime_data *>(data);
-    fl_store->registerDowntime(dt);
+    fl_core->registerDowntime(dt);
     counterIncrement(Counter::neb_callbacks);
     fl_triggers.notify_all(Triggers::Kind::downtime);
     return 0;
@@ -579,250 +835,6 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
     return 0;
 }
 
-class NagiosCore : public MonitoringCore {
-public:
-    NagiosCore(const NagiosPaths &paths, const NagiosLimits &limits)
-        : _paths(paths), _limits(limits) {}
-
-    Host *find_host(const std::string &name) override {
-        // Older Nagios headers are not const-correct... :-P
-        return fromImpl(::find_host(const_cast<char *>(name.c_str())));
-    }
-
-    Host *getHostByDesignation(const std::string &designation) override {
-        auto it = fl_hosts_by_designation.find(mk::unsafe_tolower(designation));
-        return it == fl_hosts_by_designation.end() ? nullptr
-                                                   : fromImpl(it->second);
-    }
-
-    Service *find_service(const std::string &host_name,
-                          const std::string &service_description) override {
-        // Older Nagios headers are not const-correct... :-P
-        return fromImpl(
-            ::find_service(const_cast<char *>(host_name.c_str()),
-                           const_cast<char *>(service_description.c_str())));
-    }
-
-    ContactGroup *find_contactgroup(const std::string &name) override {
-        // Older Nagios headers are not const-correct... :-P
-        return fromImpl(::find_contactgroup(const_cast<char *>(name.c_str())));
-    }
-
-    const Contact *find_contact(const std::string &name) override {
-        // Older Nagios headers are not const-correct... :-P
-        return fromImpl(::find_contact(const_cast<char *>(name.c_str())));
-    }
-
-    bool host_has_contact(const Host *host, const Contact *contact) override {
-        return is_authorized_for(this, toImpl(contact), toImpl(host), nullptr);
-    }
-
-    bool is_contact_member_of_contactgroup(const ContactGroup *group,
-                                           const Contact *contact) override {
-        // Older Nagios headers are not const-correct... :-P
-        return ::is_contact_member_of_contactgroup(
-                   const_cast<contactgroup *>(toImpl(group)),
-                   const_cast<::contact *>(toImpl(contact))) != 0;
-    }
-
-    std::chrono::system_clock::time_point last_logfile_rotation() override {
-        // TODO(sp) We should better listen to NEBCALLBACK_PROGRAM_STATUS_DATA
-        // instead of this 'extern' hack...
-        extern time_t last_log_rotation;
-        return std::chrono::system_clock::from_time_t(last_log_rotation);
-    }
-
-    size_t maxLinesPerLogFile() const override {
-        return _limits._max_lines_per_logfile;
-    }
-
-    Command find_command(const std::string &name) const override {
-        // Older Nagios headers are not const-correct... :-P
-        if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
-            return {cmd->name, cmd->command_line};
-        }
-        return {"", ""};
-    }
-
-    std::vector<Command> commands() const override {
-        extern command *command_list;
-        std::vector<Command> commands;
-        for (command *cmd = command_list; cmd != nullptr; cmd = cmd->next) {
-            commands.push_back({cmd->name, cmd->command_line});
-        }
-        return commands;
-    }
-
-    std::vector<DowntimeData> downtimes_for_host(
-        const Host *host) const override {
-        return downtimes_for_object(toImpl(host), nullptr);
-    }
-
-    std::vector<DowntimeData> downtimes_for_service(
-        const Service *service) const override {
-        return downtimes_for_object(toImpl(service)->host_ptr, toImpl(service));
-    }
-
-    std::vector<CommentData> comments_for_host(
-        const Host *host) const override {
-        return comments_for_object(toImpl(host), nullptr);
-    }
-
-    std::vector<CommentData> comments_for_service(
-        const Service *service) const override {
-        return comments_for_object(toImpl(service)->host_ptr, toImpl(service));
-    }
-
-    bool mkeventdEnabled() override {
-        if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
-            return config_mkeventd == std::string("on");
-        }
-        return false;
-    }
-
-    std::string mkeventdSocketPath() override {
-        return _paths._mkeventd_socket_path;
-    }
-    std::string mkLogwatchPath() override { return _paths._mk_logwatch_path; }
-    std::string mkInventoryPath() override { return _paths._mk_inventory_path; }
-    std::string structuredStatusPath() override {
-        return _paths._structured_status_path;
-    }
-    std::string pnpPath() override { return _paths._pnp_path; }
-    std::string historyFilePath() override { return log_file; }
-    std::string logArchivePath() override {
-        extern char *log_archive_path;
-        return log_archive_path;
-    }
-
-    Encoding dataEncoding() override { return fl_data_encoding; }
-    size_t maxResponseSize() override { return _limits._max_response_size; }
-    size_t maxCachedMessages() override { return _limits._max_cached_messages; }
-
-    // TODO(sp) Unused in Livestatus NEB: Strange & ugly...
-    AuthorizationKind hostAuthorization() const override {
-        return AuthorizationKind::loose;
-    }
-
-    AuthorizationKind serviceAuthorization() const override {
-        return fl_service_authorization;
-    }
-
-    AuthorizationKind groupAuthorization() const override {
-        return fl_group_authorization;
-    }
-
-    Logger *loggerLivestatus() override { return fl_logger_livestatus; }
-
-    Triggers &triggers() override { return fl_triggers; }
-
-    size_t numQueuedNotifications() override { return 0; }
-    size_t numQueuedAlerts() override { return 0; }
-
-    size_t numCachedLogMessages() override {
-        return fl_store->numCachedLogMessages();
-    }
-
-    Attributes customAttributes(const void *holder,
-                                AttributeKind kind) const override {
-        auto h = *static_cast<const customvariablesmember *const *>(holder);
-        Attributes attrs;
-        for (auto cvm = h; cvm != nullptr; cvm = cvm->next) {
-            bool is_tag = mk::starts_with(cvm->variable_name, "_TAG_");
-            bool is_label = mk::starts_with(cvm->variable_name, "_LABEL_");
-            bool part_of_result = false;
-            switch (kind) {
-                case AttributeKind::custom_variables:
-                    part_of_result = !is_tag && !is_label;
-                    break;
-                case AttributeKind::tags:
-                    part_of_result = is_tag;
-                    break;
-                case AttributeKind::labels:
-                    part_of_result = is_label;
-                    break;
-            }
-            if (part_of_result) {
-                attrs.emplace(cvm->variable_name, cvm->variable_value);
-            }
-        }
-        return attrs;
-    }
-
-private:
-    const NagiosPaths &_paths;
-    const NagiosLimits &_limits;
-
-    void *implInternal() const override { return fl_store; }
-
-    static const Contact *fromImpl(const contact *c) {
-        return reinterpret_cast<const Contact *>(c);
-    }
-    static const contact *toImpl(const Contact *c) {
-        return reinterpret_cast<const contact *>(c);
-    }
-
-    static ContactGroup *fromImpl(contactgroup *g) {
-        return reinterpret_cast<ContactGroup *>(g);
-    }
-    static const contactgroup *toImpl(const ContactGroup *g) {
-        return reinterpret_cast<const contactgroup *>(g);
-    }
-
-    static Host *fromImpl(host *h) { return reinterpret_cast<Host *>(h); }
-    static const host *toImpl(const Host *h) {
-        return reinterpret_cast<const host *>(h);
-    }
-
-    static Service *fromImpl(service *s) {
-        return reinterpret_cast<Service *>(s);
-    }
-    static const service *toImpl(const Service *s) {
-        return reinterpret_cast<const service *>(s);
-    }
-
-    std::vector<DowntimeData> downtimes_for_object(const ::host *h,
-                                                   const ::service *s) const {
-        std::vector<DowntimeData> result;
-        for (const auto &entry : fl_store->_downtimes) {
-            auto *dt = static_cast<Downtime *>(entry.second.get());
-            if (dt->_host == h && dt->_service == s) {
-                result.push_back({
-                    dt->_id,
-                    dt->_author_name,
-                    dt->_comment,
-                    false,
-                    std::chrono::system_clock::from_time_t(dt->_entry_time),
-                    std::chrono::system_clock::from_time_t(dt->_start_time),
-                    std::chrono::system_clock::from_time_t(dt->_end_time),
-                    dt->_fixed != 0,
-                    std::chrono::seconds(dt->_duration),
-                    0,
-                    dt->_type != 0,
-                });
-            }
-        }
-        return result;
-    }
-
-    std::vector<CommentData> comments_for_object(const ::host *h,
-                                                 const ::service *s) const {
-        std::vector<CommentData> result;
-        for (const auto &entry : fl_store->_comments) {
-            auto *co = static_cast<Comment *>(entry.second.get());
-            if (co->_host == h && co->_service == s) {
-                result.push_back(
-                    {co->_id, co->_author_name, co->_comment,
-                     static_cast<uint32_t>(co->_entry_type),
-                     std::chrono::system_clock::from_time_t(co->_entry_time)});
-            }
-        }
-        return result;
-    }
-};
-
-static NagiosCore *fl_core = nullptr;
-
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
     auto ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
@@ -837,7 +849,6 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
                 fl_hosts_by_designation[mk::unsafe_tolower(hst->name)] = hst;
             }
             fl_core = new NagiosCore(fl_paths, fl_limits);
-            fl_store = new Store(fl_core);
             fl_client_queue = new ClientQueue();
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
@@ -1262,9 +1273,6 @@ extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
 
     delete fl_client_queue;
     fl_client_queue = nullptr;
-
-    delete fl_store;
-    fl_store = nullptr;
 
     delete fl_core;
     fl_core = nullptr;

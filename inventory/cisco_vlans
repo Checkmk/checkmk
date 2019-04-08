@@ -89,8 +89,8 @@ def parse_multi_vlan(vlan_multi):
     return ", ".join(infotexts)
 
 
-def inv_cisco_vlans(info, params):
-    node = inv_tree("networking.interfaces:")
+def inv_cisco_vlans(info, inventory_tree):
+    node = inventory_tree.get_list("networking.interfaces:")
     map_vlans = {
         '1' : 'static',
         '2' : 'dynamic',

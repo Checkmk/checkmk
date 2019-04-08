@@ -2118,6 +2118,80 @@ class RDS(AWSSectionCloudwatch):
 
 
 #.
+#   .--Cloudwatch----------------------------------------------------------.
+#   |         ____ _                 _               _       _             |
+#   |        / ___| | ___  _   _  __| |_      ____ _| |_ ___| |__          |
+#   |       | |   | |/ _ \| | | |/ _` \ \ /\ / / _` | __/ __| '_ \         |
+#   |       | |___| | (_) | |_| | (_| |\ V  V / (_| | || (__| | | |        |
+#   |        \____|_|\___/ \__,_|\__,_| \_/\_/ \__,_|\__\___|_| |_|        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class CloudwatchAlarmsLimits(AWSSectionLimits):
+    @property
+    def name(self):
+        return "cloudwatch_alarms_limits"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        response = self._client.describe_alarms()
+        return self._get_response_content(response, 'MetricAlarms')
+
+    def _compute_content(self, raw_content, colleague_contents):
+        self._add_limit(
+            "", AWSLimit('cloudwatch_alarms', 'Cloudwatch Alarms', 5000, len(raw_content.content)))
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+
+class CloudwatchAlarms(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None):
+        super(CloudwatchAlarms, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['cloudwatch_alarms']
+
+    @property
+    def name(self):
+        return "cloudwatch_alarms"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('cloudwatch_alarms_limits')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        if self._names:
+            if colleague_contents.content:
+                return [
+                    alarm for alarm in colleague_contents.content
+                    if alarm['AlarmName'] in self._names
+                ]
+            response = self._client.describe_alarms(AlarmNames=self._names)
+        else:
+            response = self._client.describe_alarms()
+        return self._get_response_content(response, 'MetricAlarms')
+
+    def _compute_content(self, raw_content, colleague_contents):
+        if raw_content.content:
+            return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+        dflt_alarms = [{'AlarmName': 'Check_MK/Cloudwatch Alarms', 'StateValue': 'NO_ALARMS'}]
+        return AWSComputedContent(dflt_alarms, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content.content)]
+
+
+#.
 #   .--sections------------------------------------------------------------.
 #   |                               _   _                                  |
 #   |                 ___  ___  ___| |_(_) ___  _ __  ___                  |
@@ -2270,6 +2344,8 @@ class AWSSectionsGeneric(AWSSections):
 
         rds_summary_distributor = ResultDistributor()
 
+        cloudwatch_alarms_limits_distributor = ResultDistributor()
+
         #---sections with distributors--------------------------------------
         ec2_limits = EC2Limits(ec2_client, region, config, ec2_limits_distributor)
         ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
@@ -2285,6 +2361,9 @@ class AWSSectionsGeneric(AWSSections):
 
         rds_summary = RDSSummary(rds_client, region, config, rds_summary_distributor)
 
+        cloudwatch_alarms_limits = CloudwatchAlarmsLimits(cloudwatch_client, region, config,
+                                                          cloudwatch_alarms_limits_distributor)
+
         #---sections--------------------------------------------------------
         elb_health = ELBHealth(elb_client, region, config)
         ec2_security_groups = EC2SecurityGroups(ec2_client, region, config)
@@ -2298,6 +2377,8 @@ class AWSSectionsGeneric(AWSSections):
 
         rds_limits = RDSLimits(rds_client, region, config)
         rds = RDS(cloudwatch_client, region, config)
+
+        cloudwatch_alarms = CloudwatchAlarms(cloudwatch_client, region, config)
 
         #---register sections to distributors-------------------------------
         ec2_limits_distributor.add(ec2_summary)
@@ -2318,6 +2399,8 @@ class AWSSectionsGeneric(AWSSections):
         s3_summary_distributor.add(s3_requests)
 
         rds_summary_distributor.add(rds)
+
+        cloudwatch_alarms_limits_distributor.add(cloudwatch_alarms)
 
         #---register sections for execution---------------------------------
         if 'ec2' in services:
@@ -2353,6 +2436,12 @@ class AWSSectionsGeneric(AWSSections):
                 self._sections.append(rds_limits)
             self._sections.append(rds_summary)
             self._sections.append(rds)
+
+        if 'cloudwatch' in services:
+            if config.service_config.get('cloudwatch_alarms_limits'):
+                self._sections.append(cloudwatch_alarms_limits)
+            if 'cloudwatch_alarms' in config.service_config:
+                self._sections.append(cloudwatch_alarms)
 
 
 #.
@@ -2417,6 +2506,13 @@ AWSServices = [
         filter_by_names=True,
         filter_by_tags=True,
         limits=True),
+    AWSServiceAttributes(
+        key="cloudwatch",
+        title="Cloudwatch",
+        global_service=False,
+        filter_by_names=False,
+        filter_by_tags=False,
+        limits=True),
 ]
 
 
@@ -2480,6 +2576,8 @@ def parse_arguments(argv):
         "--s3-requests",
         action="store_true",
         help="You have to enable requests metrics in AWS/S3 console. This is a paid feature.")
+
+    parser.add_argument("--cloudwatch-alarms", nargs='*')
 
     parser.add_argument('--overall-tag-key', nargs=1, action='append', help="Overall tag key")
     parser.add_argument(
@@ -2562,6 +2660,7 @@ def main(args=None):
         aws_config.add_single_service_config("%s_limits" % service_key, service_limits)
 
     aws_config.add_single_service_config("s3_requests", args.s3_requests)
+    aws_config.add_single_service_config("cloudwatch_alarms", args.cloudwatch_alarms)
 
     has_exceptions = False
     for aws_services, aws_regions, aws_sections in [

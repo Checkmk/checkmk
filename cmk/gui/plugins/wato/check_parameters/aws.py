@@ -1077,3 +1077,39 @@ class RulespecCheckgroupParametersAwsRdsLimits(CheckParameterRulespecWithoutItem
             ('db_cluster_parameter_groups', _vs_limits("DB cluster parameter groups", 50)),
             ('db_cluster_roles', _vs_limits("DB cluster roles", 5)),
         ])
+
+
+#.
+#   .--Cloudwatch----------------------------------------------------------.
+#   |         ____ _                 _               _       _             |
+#   |        / ___| | ___  _   _  __| |_      ____ _| |_ ___| |__          |
+#   |       | |   | |/ _ \| | | |/ _` \ \ /\ / / _` | __/ __| '_ \         |
+#   |       | |___| | (_) | |_| | (_| |\ V  V / (_| | || (__| | | |        |
+#   |        \____|_|\___/ \__,_|\__,_| \_/\_/ \__,_|\__\___|_| |_|        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsCloudwatchAlarmsLimits(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_cloudwatch_alarms_limits"
+
+    @property
+    def title(self):
+        return _("AWS/Cloudwatch Alarms Limits")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('cloudwatch_alarms', _vs_limits("Cloudwatch Alarms", 5000)),
+        ])

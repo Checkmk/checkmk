@@ -2033,8 +2033,24 @@ class RulespecSpecialAgentsAws(HostRulespec):
                               optional_keys=["limits"],
                               default_keys=["limits"],
                           )),
+                         ("cloudwatch",
+                          Dictionary(
+                              title=_("Cloudwatch"),
+                              elements=[
+                                  ('alarms',
+                                   CascadingDropdown(
+                                       title=_("Selection of alarms"),
+                                       choices=[
+                                           ('all', _("Gather all")),
+                                           ('names', _("Use explicit names"), ListOfStrings()),
+                                       ])),
+                                  _vs_element_aws_limits(),
+                              ],
+                              optional_keys=["alarms", "limits"],
+                              default_keys=["alarms", "limits"],
+                          )),
                      ],
-                     default_keys=["ec2", "ebs", "s3", "elb", "rds"],
+                     default_keys=["ec2", "ebs", "s3", "elb", "rds", "cloudwatch"],
                  )),
                 ("overall_tags", _vs_aws_tags(
                     _("Restrict monitoring services by one of these tags"))),

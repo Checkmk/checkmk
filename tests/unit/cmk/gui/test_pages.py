@@ -190,3 +190,8 @@ def test_page_registry_register_page(monkeypatch, capsys):
 
     handler().handle_page()
     assert capsys.readouterr()[0] == "234"
+
+
+def test_get_page_handler_default():
+    handler = cmk.gui.pages.get_page_handler("123handler", "XYZ")
+    assert handler == "XYZ"

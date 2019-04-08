@@ -147,7 +147,7 @@ def get_page_handler(name, dflt=None):
 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
-    handle_class = page_registry.get(name, dflt)
+    handle_class = page_registry.get(name)
     if handle_class is None:
-        return None
+        return dflt
     return lambda: handle_class().handle_page()

@@ -98,10 +98,10 @@ int g_max_fd_ever = 0;
 
 struct NagiosPaths {
     std::string _socket_path;
-    char _pnp_path[4096];
-    char _mk_inventory_path[4096];
-    char _structured_status_path[4096];
-    char _mk_logwatch_path[4096];
+    std::string _pnp_path;
+    std::string _mk_inventory_path;
+    std::string _structured_status_path;
+    std::string _mk_logwatch_path;
     std::string _logfile_path;
     std::string _mkeventd_socket_path;
 };
@@ -984,18 +984,17 @@ void deregister_callbacks() {
     neb_deregister_callback(NEBCALLBACK_TIMED_EVENT_DATA, broker_event);
 }
 
-void check_path(const char *name, char *path) {
+void check_path(const std::string &name, std::string &path) {
     struct stat st;
-    if (0 == stat(path, &st)) {
-        if (0 != access(path, R_OK)) {
-            Error(fl_logger_nagios)
-                << name << " '" << path
-                << "' not readable, please fix permissions.";
-            path[0] = 0;  // disable
-        }
-    } else {
+    if (stat(path.c_str(), &st) != 0) {
         Error(fl_logger_nagios) << name << " '" << path << "' not existing!";
-        path[0] = 0;  // disable
+        path.clear();  // disable
+        return;
+    }
+    if (access(path.c_str(), R_OK) != 0) {
+        Error(fl_logger_nagios) << name << " '" << path
+                                << "' not readable, please fix permissions.";
+        path.clear();  // disable
     }
 }
 
@@ -1010,9 +1009,6 @@ void livestatus_parse_arguments(const char *args_orig) {
         "livestatus.log";
 
     fl_paths._mkeventd_socket_path = "";
-
-    /* there is no default PNP path */
-    fl_paths._pnp_path[0] = 0;
 
     if (args_orig == nullptr) {
         return;  // no arguments, use default options
@@ -1124,45 +1120,29 @@ void livestatus_parse_arguments(const char *args_orig) {
                            "allowed are strict and loose";
                 }
             } else if (strcmp(left, "pnp_path") == 0) {
-                strncpy(fl_paths._pnp_path, right,
-                        sizeof(fl_paths._pnp_path) - 1);
-                // make sure, that trailing slash is always there
+                fl_paths._pnp_path = right;
                 if (right[strlen(right) - 1] != '/') {
-                    strncat(fl_paths._pnp_path, "/",
-                            sizeof(fl_paths._pnp_path) -
-                                strlen(fl_paths._pnp_path) - 1);
+                    fl_paths._pnp_path += "/";
                 }
                 check_path("PNP perfdata directory", fl_paths._pnp_path);
             } else if (strcmp(left, "mk_inventory_path") == 0) {
-                strncpy(fl_paths._mk_inventory_path, right,
-                        sizeof(fl_paths._mk_inventory_path) - 1);
+                fl_paths._mk_inventory_path = right;
                 if (right[strlen(right) - 1] != '/') {
-                    strncat(fl_paths._mk_inventory_path, "/",
-                            sizeof(fl_paths._mk_inventory_path) -
-                                strlen(fl_paths._mk_inventory_path) -
-                                1);  // make sure, that trailing slash is there
+                    fl_paths._mk_inventory_path += "/";
                 }
                 check_path("Check_MK Inventory directory",
                            fl_paths._mk_inventory_path);
             } else if (strcmp(left, "structured_status_path") == 0) {
-                strncpy(fl_paths._structured_status_path, right,
-                        sizeof(fl_paths._structured_status_path) - 1);
+                fl_paths._structured_status_path = right;
                 if (right[strlen(right) - 1] != '/') {
-                    strncat(fl_paths._structured_status_path, "/",
-                            sizeof(fl_paths._structured_status_path) -
-                                strlen(fl_paths._structured_status_path) -
-                                1);  // make sure, that trailing slash is there
+                    fl_paths._structured_status_path += "/";
                 }
                 check_path("Check_MK structured status directory",
                            fl_paths._structured_status_path);
             } else if (strcmp(left, "mk_logwatch_path") == 0) {
-                strncpy(fl_paths._mk_logwatch_path, right,
-                        sizeof(fl_paths._mk_logwatch_path) - 1);
+                fl_paths._mk_logwatch_path = right;
                 if (right[strlen(right) - 1] != '/') {
-                    strncat(fl_paths._mk_logwatch_path, "/",
-                            sizeof(fl_paths._mk_logwatch_path) -
-                                strlen(fl_paths._mk_logwatch_path) -
-                                1);  // make sure, that trailing slash is there
+                    fl_paths._mk_logwatch_path += "/";
                 }
                 check_path("Check_MK logwatch directory",
                            fl_paths._mk_logwatch_path);

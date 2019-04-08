@@ -23,12 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "mk_logwatch.h"
-#include <unistd.h>
 #include <ostream>
+#include <system_error>
 #include "Logger.h"
 #include "pnp4nagios.h"
 
-void mk_logwatch_acknowledge(Logger *logger, const std::string &logwatch_path,
+void mk_logwatch_acknowledge(Logger *logger, const fs::path &logwatch_path,
                              const std::string &host_name,
                              const std::string &file_name) {
     if (file_name.find('/') != std::string::npos) {
@@ -39,8 +39,9 @@ void mk_logwatch_acknowledge(Logger *logger, const std::string &logwatch_path,
     if (logwatch_path.empty()) {
         return;
     }
-    std::string path = logwatch_path + pnp_cleanup(host_name) + "/" + file_name;
-    if (unlink(path.c_str()) != 0) {
+    auto path = fs::path(logwatch_path) / pnp_cleanup(host_name) / file_name;
+    std::error_code ec;
+    if (!fs::remove(path, ec)) {
         generic_error ge("Cannot acknowledge mk_logfile file '" + file_name +
                          "' of host '" + host_name + "'");
         Warning(logger) << ge;

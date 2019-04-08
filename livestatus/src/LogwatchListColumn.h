@@ -29,6 +29,7 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include "FileSystem.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
@@ -50,7 +51,7 @@ public:
 private:
     MonitoringCore *_mc;
 
-    std::string getDirectory(Row row) const;
+    fs::path getDirectory(Row row) const;
     std::string getHostName(Row row) const;
 };
 

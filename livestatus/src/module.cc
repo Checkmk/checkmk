@@ -134,9 +134,6 @@ static AuthorizationKind fl_group_authorization = AuthorizationKind::strict;
 Encoding fl_data_encoding = Encoding::utf8;
 Triggers fl_triggers;
 
-// Map to speed up access via name/alias/address
-std::unordered_map<std::string, host *> fl_hosts_by_designation;
-
 static Logger *fl_logger_nagios = nullptr;
 static Logger *fl_logger_livestatus = nullptr;
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
@@ -156,7 +153,17 @@ constexpr const char *default_socket_path = "/usr/local/nagios/var/rw/live";
 class NagiosCore : public MonitoringCore {
 public:
     NagiosCore(const NagiosPaths &paths, const NagiosLimits &limits)
-        : _paths(paths), _limits(limits), _store(this) {}
+        : _paths(paths), _limits(limits), _store(this) {
+        for (host *hst = host_list; hst != nullptr; hst = hst->next) {
+            if (const char *address = hst->address) {
+                _hosts_by_designation[mk::unsafe_tolower(address)] = hst;
+            }
+            if (const char *alias = hst->alias) {
+                _hosts_by_designation[mk::unsafe_tolower(alias)] = hst;
+            }
+            _hosts_by_designation[mk::unsafe_tolower(hst->name)] = hst;
+        }
+    }
 
     Host *find_host(const std::string &name) override {
         // Older Nagios headers are not const-correct... :-P
@@ -164,9 +171,9 @@ public:
     }
 
     Host *getHostByDesignation(const std::string &designation) override {
-        auto it = fl_hosts_by_designation.find(mk::unsafe_tolower(designation));
-        return it == fl_hosts_by_designation.end() ? nullptr
-                                                   : fromImpl(it->second);
+        auto it = _hosts_by_designation.find(mk::unsafe_tolower(designation));
+        return it == _hosts_by_designation.end() ? nullptr
+                                                 : fromImpl(it->second);
     }
 
     Service *find_service(const std::string &host_name,
@@ -340,6 +347,7 @@ private:
     const NagiosPaths &_paths;
     const NagiosLimits &_limits;
     Store _store;
+    std::unordered_map<std::string, host *> _hosts_by_designation;
 
     void *implInternal() const override { return const_cast<Store *>(&_store); }
 
@@ -839,15 +847,6 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
     auto ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
-            for (host *hst = host_list; hst != nullptr; hst = hst->next) {
-                if (const char *address = hst->address) {
-                    fl_hosts_by_designation[mk::unsafe_tolower(address)] = hst;
-                }
-                if (const char *alias = hst->alias) {
-                    fl_hosts_by_designation[mk::unsafe_tolower(alias)] = hst;
-                }
-                fl_hosts_by_designation[mk::unsafe_tolower(hst->name)] = hst;
-            }
             fl_core = new NagiosCore(fl_paths, fl_limits);
             fl_client_queue = new ClientQueue();
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);

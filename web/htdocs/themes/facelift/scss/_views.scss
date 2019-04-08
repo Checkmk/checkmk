@@ -362,225 +362,404 @@ div.view_form {
     margin-bottom: 10px;
 }
 
-///*-------------------------------------------------------------------------.
-//|                _                            _                            |
-//|               | |    __ _ _   _  ___  _   _| |_ ___                      |
-//|               | |   / _` | | | |/ _ \| | | | __/ __|                     |
-//|               | |__| (_| | |_| | (_) | |_| | |_\__ \                     |
-//|               |_____\__,_|\__, |\___/ \__,_|\__|___/                     |
-//|                           |___/                                          |
-//+--------------------------------------------------------------------------+
-//| Styles used by layouts of the views (plugins/views/layouts.py)           |
-//'-------------------------------------------------------------------------*/
-//
-//
-//td.fillup {
-//    background-color: #eee;
-//}
-//td.groupheader {
-//    margin: 0;
-//    padding: 0;
-//}
-//
-//table.data tr.data > td.gap,
-//table.data tr > td.last_col,
-//table.data tr > th.last_col {
-//    border-right: 0;
-//}
-//
-//td.gap, table.data .checkbox_hover.gap {
-//    background-image: url("images/contentframe_background.jpg");
-//    background-attachment: fixed;
-//    background-repeat: repeat;
-//    width: 5px;
-//}
-//
-///* boxed layout */
-//table.boxlayout {
-//    border-spacing: 0px;
-//}
-//table.boxlayout td.boxcolumn {
-//    padding-right: 20px;
-//}
-//
-//
-///* tiled layout */
-//table.tiled td {
-//    border-style: none;
-//}
-//
-//.tile {
-//    width: 180px;
-//    border: 1px solid #000;
-//    float: left;
-//    border-radius: 0px;
-//    margin-right: 6px;
-//    margin-bottom: 6px;
-//    box-shadow: 1px 1px 3px #000;
-//    background-color: #ccc;
-//}
-//
-//.tile img.icon {
-//    width: 16px;
-//    height: 16px;
-//}
-//
-//.tile table {
-//    height: 70px;
-//}
-//.tile td {
-//    border-style: none;
-//    font-size: 7pt;
-//}
-//.tile.sstate0, .tile.hhstate0 {
-//    border-color: #0f0;
-//}
-//.tile.sstate1 {
-//    border-color: #ff0;
-//    background-color: #ff0;
-//}
-//.tile.sstate2, .tile.hhstate1 {
-//    border-color: #f00;
-//    background-color: #f88;
-//}
-//.tile.sstate3, .tile.hhstate2 {
-//    border-color: #f80;
-//    background-color: #fc8;
-//}
-//
-//.tile table {
-//    width: 100%;
-//}
-//.tile td.tl, .tile td.bl {
-//    text-align: left;
-//}
-//.tile td.tr, .tile td.br {
-//    text-align: right;
-//}
-//.tile td.center {
-//    vertical-align: middle;
-//}
-//.tile td.center, .tile td.cont {
-//    text-align: center;
-//}
-//.tile td.bl, .tile td.br {
-//    vertical-align: bottom;
-//}
-//
-//.tile td.bl, .tile td.br, .tile td.tl, .tile td.tr {
-//    height: 20px;
-//}
-//
-///*
-// LAYOUT: dataset
-// The dataset layout is used to display detailed information
-// about a single host/service on a page. e.g. the "host defails"
-// page uses thislayout
-//*/
-//table.data.single {
-//    margin-top: 5px;
-//    border-spacing: 1px;
-//    padding: 0;
-//    border-collapse: collapse;
-//    empty-cells: show;
-//}
-//
-//table.data.single tr.data > td {
-//    padding-bottom: 4px;
-//    padding: 4px 5px 2px 5px;
-//    text-align: left;
-//    height: 16px;
-//    line-height: 14px;
-//    vertical-align: top;
-//}
-//
-//table.data.single tr.data td.left {
-//    width: 10%;
-//    white-space: nowrap;
-//    vertical-align: top;
-//    padding-right: 20px;
-//}
-//
-//table.data.matrix {
-//    width: auto;
-//    margin-bottom: 10px;
-//}
-//
-//table.data.matrix tr.even0 td.left,
-//table.data.single tr.even0 td.left {
-//    background-color: #bbb;
-//}
-//
-//table.data.matrix tr.odd0 td.left,
-//table.data.single tr.odd0 td.left {
-//    background-color: #ccc;
-//}
-//
-//table.data.matrix tr.even0 td.matrixhead {
-//    background-color: #888;
-//    color: white;
-//}
-//
-//table.data.matrix tr.odd0 td.matrixhead {
-//    background-color: #999;
-//    color: white;
-//}
-//
-//table.data.matrix td.cell {
-//    padding: 0px;
-//}
-//
-//table.data.matrix td.cell table {
-//    width: 100%;
-//    padding: 0px;
-//}
-//
-//table.data.matrix table.cell > tbody > tr > td {
-//    padding: 0px;
-//    border: 1px solid red;
-//}
-//
-//table.data.matrix tr.matrixhead td.left a,
-//table.data.matrix tr.matrixhead td.left {
-//    color: white;
-//}
-//
-//.even0 .minority {
-//    background-color: #cff;
-//}
-//.odd0 .minority {
-//    background-color: #dff;
-//}
-//
-//table.data.matrix tr.even0 td.left.minority {
-//    background-color: #bdd;
-//}
-//table.data.matrix tr.odd0 td.left.minority {
-//    background-color: #cee;
-//}
-//
-//
-//table.data.single td.gap {
-//    background-color: transparent;
-//    border-left-style: none;
-//    border-right-style: none;
-//}
-//table.data.single td.age,
-//table.data.single td.number,
-//table.data.single td.count {
-//    text-align: left;
-//}
-//
-//table.data.single td.perfometer div.content {
-//    width: 100%;
-//}
-//table.data.single td.perfometer div.glass {
-//    width: 100%;
-//}
-//table.data.single td.perfometer div.title {
-//    width: 100%;
-//}
-//
+/*-------------------------------------------------------------------------.
+|                _                            _                            |
+|               | |    __ _ _   _  ___  _   _| |_ ___                      |
+|               | |   / _` | | | |/ _ \| | | | __/ __|                     |
+|               | |__| (_| | |_| | (_) | |_| | |_\__ \                     |
+|               |_____\__,_|\__, |\___/ \__,_|\__|___/                     |
+|                           |___/                                          |
++--------------------------------------------------------------------------+
+| Styles used by layouts of the views (plugins/views/layouts.py)           |
+'-------------------------------------------------------------------------*/
+
+
+/* TODO: Reproduce this html element */
+td.fillup {
+    background-color: #eee;
+}
+
+tr.groupheader td {
+  padding: 0px;
+  color: $theme-color-text;
+  background: transparent;
+}
+
+td.groupheader {
+    margin: 0;
+}
+
+tr.groupheader td.groupheader .groupheader tbody tr td {
+    padding: 12px 0px 4px;
+    color: $theme-color-text;
+    font-weight: $theme-font-weight-global;
+    letter-spacing: $theme-letter-spacing-table;
+    display: inline-block;
+    font-size: $theme-font-table-header;
+    vertical-align: baseline;
+}
+
+tr.groupheader td.groupheader .groupheader tbody tr td a,
+tr.groupheader td.groupheader .groupheader tbody tr td body.main .popup_menu span,
+body.main .popup_menu tr.groupheader td.groupheader .groupheader tbody tr td span {
+    color: $theme-color-text;
+    font-weight: $theme-font-weight-global;
+    letter-spacing: $theme-letter-spacing-table;
+    display: inline-block;
+    font-size: $theme-font-table-header;
+}
+
+tr.groupheader td.groupheader .groupheader tbody tr td.state {
+    padding: 0px 8px;
+    width: auto;
+    box-shadow: none;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+tr.groupheader td.groupheader .groupheader tbody tr td.state a,
+tr.groupheader td.groupheader .groupheader tbody tr td.state body.main .popup_menu span,
+body.main .popup_menu tr.groupheader td.groupheader .groupheader tbody tr td.state span {
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+tr.groupheader td.groupheader .groupheader tbody tr td.state.hstate1 a,
+tr.groupheader td.groupheader .groupheader tbody tr td.state.hstate1 body.main .popup_menu span,
+body.main .popup_menu tr.groupheader td.groupheader .groupheader tbody tr td.state.hstate1 span {
+    color: $theme-color-lightgrey;
+}
+
+tr.groupheader a,
+tr.groupheader body.main .popup_menu span,
+body.main .popup_menu tr.groupheader span {
+  color: $theme-color-text;
+}
+
+table.data.oddeven > tbody > tr.groupheader {
+    background-color: transparent;
+}
+
+table.data tr.data > td.gap,
+table.data tr > td.last_col,
+table.data tr > th.last_col {
+    border-right: 0;
+}
+
+td.gap, table.data .checkbox_hover.gap {
+    /* TODO: Check whether these background styles are needed */
+    background-image: url("images/contentframe_background.jpg");
+    background-attachment: fixed;
+    background-repeat: repeat;
+    width: 5px;
+}
+
+/* boxed layout */
+table.boxlayout {
+    border-spacing: 0px;
+}
+table.boxlayout td.boxcolumn {
+    padding-right: 20px;
+}
+
+/* tiled layout */
+table.tiled td {
+    border-style: none;
+}
+
+.tile {
+    width: 180px;
+    border: 1px solid #000;
+    float: left;
+    border-radius: 0px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    box-shadow: 1px 1px 3px #000;
+    background-color: #ccc;
+}
+
+table.data.tiled td.tiles div.tile {
+    border: 1px solid $theme-color-table-border;
+    border-radius: $theme-border-radius;
+    box-shadow: none;
+    background: $theme-color-white;
+    width: 240px;
+    padding: 4px;
+}
+
+.tile img.icon {
+    width: 16px;
+    height: 16px;
+}
+
+.tile table {
+    height: 70px;
+    width: 100%;
+}
+
+.tile td {
+    border-style: none;
+    font-size: 7pt;
+}
+
+table.data.tiled td.tiles {
+  padding: 0;
+}
+
+table.data.tiled td.tiles div.tile table {
+  border-spacing: 4px 8px;
+}
+
+table.data.tiled td.tiles div.tile table td {
+    padding: 8px;
+}
+
+table.data.tiled td.tiles div.tile table td.states {
+  border-radius: $theme-border-radius;
+}
+
+table.data.tiled td.tiles div.tile .cont {
+  box-sizing: border-box;
+}
+
+.tile.sstate0, .tile.hhstate0 {
+    border-color: #0f0;
+}
+
+.tile.sstate1 {
+    border-color: #ff0;
+    background-color: #ff0;
+}
+
+.tile.sstate2, .tile.hhstate1 {
+    border-color: #f00;
+    background-color: #f88;
+}
+
+.tile.sstate3, .tile.hhstate2 {
+    border-color: #f80;
+    background-color: #fc8;
+}
+
+.tile td.tl, .tile td.bl {
+    text-align: left;
+}
+
+.tile td.tr, .tile td.br {
+    text-align: right;
+}
+
+.tile td.center {
+    vertical-align: middle;
+}
+
+.tile td.center, .tile td.cont {
+    text-align: center;
+}
+
+.tile td.bl, .tile td.br {
+    vertical-align: bottom;
+}
+
+.tile td.bl, .tile td.br, .tile td.tl, .tile td.tr {
+    height: 20px;
+}
+
+/*
+ LAYOUT: dataset
+ The dataset layout is used to display detailed information
+ about a single host/service on a page. e.g. the "host details"
+ page uses thislayout
+*/
+table.data.single {
+    margin-top: 5px;
+    border-spacing: 1px;
+    padding: 0;
+    border-collapse: collapse;
+    empty-cells: show;
+}
+
+table.data.single tr.data > td {
+    padding-bottom: 4px;
+    padding: 4px 5px 2px 5px;
+    text-align: left;
+    height: 16px;
+    line-height: 14px;
+    vertical-align: top;
+}
+
+table.data.single tr.data td.left {
+    width: 10%;
+    white-space: nowrap;
+    vertical-align: top;
+    padding-right: 20px;
+}
+
+table.data.single > tbody > tr > td,
+table.data.single > tbody tr.odd0 > td,
+table.data.single > tbody tr.even0 > td {
+    padding: 8px 16px;
+    background-color: $theme-color-white;
+    border-radius: 0px;
+}
+
+table.data.single > tbody > tr > td.left,
+table.data.single > tbody tr.odd0 > td.left,
+table.data.single > tbody tr.even0 > td.left {
+    font-weight: $theme-font-weight-bold;
+    background-color: $theme-color-white;
+    border-right: 1px solid $theme-color-table-border;
+    transition: .15s ease-in-out;
+}
+
+table.data.single tr.data td.invtree table {
+    box-shadow: none;
+    border: 1px solid $theme-color-table-border;
+    margin: 8px 0px 12px;
+}
+
+table.data.single tr.data td.invtree table th {
+    background-color: whitesmoke;
+    border: 1px solid $theme-color-table-border;
+    padding: 2px 4px;
+    color: $theme-color-text;
+}
+
+table.data.single tr.data td.invtree table td {
+    background-color: $theme-color-table-background;
+    border: 1px solid $theme-color-table-border;
+    padding: 2px 4px;
+}
+
+table.data.single td.gap {
+    background-color: transparent;
+    border-left-style: none;
+    border-right-style: none;
+}
+
+/* #TODO: Check whether this style is redundant
+ * see styles for table.data.single tr.data > td
+ */
+table.data.single td.age,
+table.data.single td.number,
+table.data.single td.count {
+    text-align: left;
+}
+
+table.data.single td.perfometer div.glass {
+    width: 100%;
+}
+
+table.data.matrix {
+    width: auto;
+    margin-bottom: 10px;
+}
+
+table.data.matrix tbody > tr.data > td {
+  padding: 8px;
+  border: 1px solid $theme-color-table-border;
+  border-left: 0px solid;
+}
+
+table.data.matrix tr.even0 td.left {
+    background-color: #bbb;
+}
+
+table.data.matrix tr.odd0 td.left {
+    background-color: #ccc;
+}
+
+table.data.matrix tbody > tr.data > td.left {
+    font-weight: $theme-font-weight-bold;
+    background-color: $theme-color-white;
+    border-right: 1px solid $theme-color-table-border;
+    transition: .15s ease-in-out;
+    border-left: 1px solid $theme-color-table-border;
+}
+
+table.data.matrix tbody tr.even0 td.matrixhead,
+table.data.matrix tbody tr.odd0 td.matrixhead {
+  color: $theme-color-text;
+  font-weight: $theme-font-weight-bold;
+}
+
+table.data.matrix tr.even0 td.matrixhead {
+    background-color: #888;
+}
+
+table.data.matrix tr.odd0 td.matrixhead {
+    background-color: #999;
+}
+
+/* TODO: Reproduce this html element
+ * .perfometer seems to always be one table level lower than tr.data, so not a direct child
+ */
+table.data.matrix tbody > tr.data > td.perfometer {
+    width: 180px;
+}
+
+table.data.matrix tbody > tr.data > td.cell td.perfometer div.title {
+    padding: 0;
+}
+
+table.data.matrix tbody > tr.data > td.cell td.perfometer div.content {
+    padding: 0;
+}
+
+table.data.matrix tbody > tr.data:hover td.left {
+  background-color: $theme-color-table-background;
+}
+
+table.data.matrix tbody > tr.data:first-child {
+  background: transparent;
+}
+
+table.data.matrix tbody > tr.data:first-child td {
+    background: transparent;
+    border: none;
+}
+
+table.data.matrix tbody > tr.data:first-child td.matrixhead {
+    font-size: $theme-font-size-global;
+    text-transform: uppercase;
+    letter-spacing: $theme-letter-spacing-table;
+}
+
+table.data.matrix td.cell {
+    padding: 0px;
+}
+
+table.data.matrix td.cell table {
+    width: 100%;
+    padding: 0px;
+}
+
+/* TODO: Reproduce this html element */
+table.data.matrix table.cell > tbody > tr > td {
+    padding: 0px;
+    border: 1px solid red;
+}
+
+/* TODO: Reproduce this html element */
+table.data.matrix tr.matrixhead td.left a,
+table.data.matrix tr.matrixhead td.left {
+    color: white;
+}
+
+.even0 .minority {
+    background-color: #cff;
+}
+.odd0 .minority {
+    background-color: #dff;
+}
+
+table.data.matrix tr.even0 td.left.minority {
+    background-color: #bdd;
+}
+table.data.matrix tr.odd0 td.left.minority {
+    background-color: #cee;
+}
+
 ///*-------------------------------------------------------------------------.
 //|              _____    _ _ _           _                                  |
 //|             | ____|__| (_) |_  __   _(_) _____      __                   |

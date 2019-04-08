@@ -136,6 +136,10 @@ try:
 
     # MSI container to modify
     msi_file = sys.argv[1]
+    if msi_file.find("baked_container.msi"):
+        verbose("changing baked_container.msi to check_mk_agent.msi")
+        msi_file = msi_file.replace("baked_container.msi",
+                                    "check_mk_agent.msi")  # The same container for all cases
 
     # Directory where the sources are contained
     source_dir = sys.argv[2]

@@ -1,0 +1,13 @@
+Title: Missing custom icons and actions when using CMC
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1554725188
+Class: fix
+
+The custom icons and actions have not been included in the action item menu.
+
+This only ocurred when using the CMC and configuring the custom icons using
+the ps- and services-Check rules.

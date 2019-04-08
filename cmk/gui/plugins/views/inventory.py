@@ -78,6 +78,7 @@ from cmk.gui.plugins.views import (
     paint_age,
     declare_1to1_sorter,
     cmp_simple_number,
+    render_labels,
 )
 
 
@@ -518,6 +519,11 @@ def inv_paint_timestamp_as_age_days(timestamp):
 @decorate_inv_paint
 def inv_paint_csv_labels(csv_list):
     return "labels", html.render_br().join(csv_list.split(","))
+
+
+@decorate_inv_paint
+def inv_paint_cmk_label(label):
+    return "labels", render_labels({label[0]: label[1]}, object_type="host", with_links=True)
 
 
 @decorate_inv_paint
@@ -1012,6 +1018,20 @@ inventory_displayhints.update({
         "title": _("Cluster host"), "short": _("Cluster"), "paint": "bool"
     },
     ".software.applications.check_mk.cluster.nodes:": {"title": _("Nodes")},
+    ".software.applications.check_mk.host_labels:": {
+        "title": _("Discovered host labels"),
+        "keyorder": [
+            "label",
+            "inventory_plugin_name",
+        ],
+    },
+    ".software.applications.check_mk.host_labels:*.label": {
+        "title": _("Label"),
+        "paint": "cmk_label",
+    },
+    ".software.applications.check_mk.host_labels:*.inventory_plugin_name": {
+        "title": _("Discovered by inventory plugin"),
+    },
     ".software.applications.docker.": {
         "icon": "docker", "title": "Docker", "keyorder": [
             "version",

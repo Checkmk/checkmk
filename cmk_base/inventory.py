@@ -187,7 +187,7 @@ def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_dat
     _initialize_inventory_tree()
     inventory_tree = g_inv_tree
     status_data_tree = StructuredDataTree()
-    discovered_host_labels = DiscoveredHostLabels()
+    discovered_host_labels = DiscoveredHostLabels(inventory_tree)
 
     node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
     if config.is_cluster(hostname):

@@ -4,30 +4,31 @@
 import collections
 import pytest  # type: ignore
 import cmk.utils.paths
+from cmk.utils.structured_data import StructuredDataTree
 from cmk_base.discovered_host_labels import DiscoveredHostLabels, DiscoveredHostLabelsStore
 
 
-def test_discovered_host_labels_type():
-    labels = DiscoveredHostLabels()
+@pytest.fixture()
+def labels():
+    return DiscoveredHostLabels(StructuredDataTree())
+
+
+def test_discovered_host_labels_type(labels):
     assert isinstance(labels, collections.MutableMapping)
 
 
-def test_discovered_host_labels_is_empty():
-    labels = DiscoveredHostLabels()
+def test_discovered_host_labels_is_empty(labels):
     assert labels.is_empty()
     labels["abc"] = "123"
     assert not labels.is_empty()
 
 
-def test_discovered_host_labels_getitem():
-    labels = DiscoveredHostLabels()
+def test_discovered_host_labels_getitem(labels):
     labels["abc"] = "123"
     assert labels["abc"] == "123"
 
 
-def test_discovered_host_labels_delitem():
-    labels = DiscoveredHostLabels()
-
+def test_discovered_host_labels_delitem(labels):
     labels["abc"] = "123"
     assert "abc" in labels
 
@@ -35,9 +36,7 @@ def test_discovered_host_labels_delitem():
     assert "abc" not in labels
 
 
-def test_discovered_host_labels_iter():
-    labels = DiscoveredHostLabels()
-
+def test_discovered_host_labels_iter(labels):
     labels["abc"] = "123"
     labels["xyz"] = "bla"
 
@@ -45,8 +44,7 @@ def test_discovered_host_labels_iter():
     assert sorted(list(labels.iterkeys())) == ["abc", "xyz"]
 
 
-def test_discovered_host_labels_len():
-    labels = DiscoveredHostLabels()
+def test_discovered_host_labels_len(labels):
     assert len(labels) == 0
 
     labels["abc"] = "123"
@@ -55,8 +53,7 @@ def test_discovered_host_labels_len():
     assert len(labels) == 2
 
 
-def test_discovered_host_labels_to_dict():
-    labels = DiscoveredHostLabels()
+def test_discovered_host_labels_to_dict(labels):
     assert labels.to_dict() == {}
 
     labels["äbc"] = "123"
@@ -65,6 +62,17 @@ def test_discovered_host_labels_to_dict():
     assert labels.to_dict() == {
         "äbc": "123",
         "xyz": "blä",
+    }
+
+
+def test_discovered_host_add_label(labels):
+    labels.add_label("abc", "123", plugin_name="xyz")
+    assert labels["abc"] == "123"
+    inventory_labels = labels._inventory_tree.get_list(
+        "software.applications.check_mk.host_labels:")
+    assert inventory_labels[0] == {
+        'inventory_plugin_name': 'xyz',
+        'label': ('abc', '123'),
     }
 
 
@@ -79,9 +87,8 @@ def test_discovered_host_labels_store_file_path(discovered_labels_dir):
     assert DiscoveredHostLabelsStore("host").file_path == discovered_labels_dir / "host.mk"
 
 
-def test_discovered_host_labels_store_save(discovered_labels_dir):
+def test_discovered_host_labels_store_save(labels, discovered_labels_dir):
     store = DiscoveredHostLabelsStore("host")
-    labels = DiscoveredHostLabels()
     labels["xyz"] = "äbc"
     label_dict = labels.to_dict()
 

@@ -64,7 +64,7 @@ def inv_lnx_distro(info, inventory_tree, discovered_host_labels):
             break
 
     if "name" in node:
-        discovered_host_labels["os"] = node["name"]
+        discovered_host_labels.add_label("os", node["name"], plugin_name="lnx_distro")
 
 
 def _parse_lnx_distro(info):

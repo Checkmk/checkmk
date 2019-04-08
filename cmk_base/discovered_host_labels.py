@@ -61,8 +61,9 @@ class DiscoveredHostLabelsStore(object):
 class DiscoveredHostLabels(collections.MutableMapping, object):
     """Encapsulates the discovered labels of a single host during runtime"""
 
-    def __init__(self, **kwargs):
+    def __init__(self, inventory_tree, **kwargs):
         super(DiscoveredHostLabels, self).__init__()
+        self._inventory_tree = inventory_tree
         self._labels = kwargs
 
     def is_empty(self):
@@ -85,3 +86,17 @@ class DiscoveredHostLabels(collections.MutableMapping, object):
 
     def to_dict(self):
         return self._labels
+
+    # TODO: Once we redesign the hw/sw inventory plugin API check if we can move it to the
+    # inventory API.
+    def add_label(self, key, value, plugin_name):
+        """Add a label to the collection of discovered labels and inventory tree
+
+        Add it to the inventory tree for debugging purposes
+        """
+        self[key] = value
+        labels = self._inventory_tree.get_list("software.applications.check_mk.host_labels:")
+        labels.append({
+            "label": (key, value),
+            "inventory_plugin_name": plugin_name,
+        })

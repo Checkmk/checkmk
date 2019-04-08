@@ -96,7 +96,6 @@ exit 100
 pushd %REMOTE_MACHINE%
 
 copy check_mk_service.msi check_mk_agent.msi
-copy check_mk_service.msi baked_container.msi
 copy check_mk_service32.exe check_mk_agent.exe
 copy check_mk_service64.exe check_mk_agent-64.exe
 

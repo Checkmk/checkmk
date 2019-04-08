@@ -581,6 +581,9 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
 
 class NagiosCore : public MonitoringCore {
 public:
+    NagiosCore(const NagiosPaths &paths, const NagiosLimits &limits)
+        : _paths(paths), _limits(limits) {}
+
     Host *find_host(const std::string &name) override {
         // Older Nagios headers are not const-correct... :-P
         return fromImpl(::find_host(const_cast<char *>(name.c_str())));
@@ -630,7 +633,7 @@ public:
     }
 
     size_t maxLinesPerLogFile() const override {
-        return fl_limits._max_lines_per_logfile;
+        return _limits._max_lines_per_logfile;
     }
 
     Command find_command(const std::string &name) const override {
@@ -678,16 +681,14 @@ public:
     }
 
     std::string mkeventdSocketPath() override {
-        return fl_paths._mkeventd_socket_path;
+        return _paths._mkeventd_socket_path;
     }
-    std::string mkLogwatchPath() override { return fl_paths._mk_logwatch_path; }
-    std::string mkInventoryPath() override {
-        return fl_paths._mk_inventory_path;
-    }
+    std::string mkLogwatchPath() override { return _paths._mk_logwatch_path; }
+    std::string mkInventoryPath() override { return _paths._mk_inventory_path; }
     std::string structuredStatusPath() override {
-        return fl_paths._structured_status_path;
+        return _paths._structured_status_path;
     }
-    std::string pnpPath() override { return fl_paths._pnp_path; }
+    std::string pnpPath() override { return _paths._pnp_path; }
     std::string historyFilePath() override { return log_file; }
     std::string logArchivePath() override {
         extern char *log_archive_path;
@@ -695,10 +696,8 @@ public:
     }
 
     Encoding dataEncoding() override { return fl_data_encoding; }
-    size_t maxResponseSize() override { return fl_limits._max_response_size; }
-    size_t maxCachedMessages() override {
-        return fl_limits._max_cached_messages;
-    }
+    size_t maxResponseSize() override { return _limits._max_response_size; }
+    size_t maxCachedMessages() override { return _limits._max_cached_messages; }
 
     // TODO(sp) Unused in Livestatus NEB: Strange & ugly...
     AuthorizationKind hostAuthorization() const override {
@@ -751,6 +750,9 @@ public:
     }
 
 private:
+    const NagiosPaths &_paths;
+    const NagiosLimits &_limits;
+
     void *implInternal() const override { return fl_store; }
 
     static const Contact *fromImpl(const contact *c) {
@@ -819,7 +821,7 @@ private:
     }
 };
 
-NagiosCore core;
+static NagiosCore *fl_core = nullptr;
 
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
     auto ps = static_cast<struct nebstruct_process_struct *>(data);
@@ -834,7 +836,8 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
                 }
                 fl_hosts_by_designation[mk::unsafe_tolower(hst->name)] = hst;
             }
-            fl_store = new Store(&core);
+            fl_core = new NagiosCore(fl_paths, fl_limits);
+            fl_store = new Store(fl_core);
             fl_client_queue = new ClientQueue();
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
@@ -1252,12 +1255,19 @@ extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
     Notice(fl_logger_nagios) << "deinitializing";
     terminate_threads();
     close_unix_socket();
-    delete fl_store;
-    fl_store = nullptr;
-    delete fl_client_queue;
-    fl_client_queue = nullptr;
+    deregister_callbacks();
+
     delete g_timeperiods_cache;
     g_timeperiods_cache = nullptr;
-    deregister_callbacks();
+
+    delete fl_client_queue;
+    fl_client_queue = nullptr;
+
+    delete fl_store;
+    fl_store = nullptr;
+
+    delete fl_core;
+    fl_core = nullptr;
+
     return 0;
 }

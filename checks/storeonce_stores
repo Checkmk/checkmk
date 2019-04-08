@@ -75,32 +75,33 @@
 # numTeamMembers  0
 
 
+def _get_item(data):
+    return "ServiceSet %s Store %s" % (data["ServiceSet ID"], data["Name"])
+
+
 def inventory_storeonce_stores(parsed):
     for values in parsed.itervalues():
-        yield ("ServiceSet %s Store %s" % \
-                (values["ServiceSet ID"], values["Name"]), \
-                {})
+        yield _get_item(values), {}
 
 
-def check_storeonce_stores(item, params, parsed):
+def check_storeonce_stores(item, _no_params, parsed):
     for values in parsed.itervalues():
-        item_name = "ServiceSet %s Store %s" % \
-                (values["ServiceSet ID"], values["Name"])
-        if not item == item_name:
+        if _get_item(values) != item:
             continue
 
         state = translate_storeonce_status(values["Health Level"])
+        yield state, "Status: %s" % values["Status"]
+
         size = float(values["diskBytes"])
-        yield state, "Status: %s, Size: %s" % \
-                (values["Status"], get_bytes_human_readable(size)), \
-                [ ("data_size", size) ]
+        yield 0, "Size: %s" % get_bytes_human_readable(size), [("data_size", size)]
 
         if "Dedupe Ratio" in values:
             dedup = float(values["Dedupe Ratio"])
-            yield 0, "Dedup ratio: %.2f" % dedup, \
-                        [ ( "dedup_rate", dedup) ]
-        if not values["Description"] == "":
-            yield 0, "Description: %s" % values["Description"]
+            yield 0, "Dedup ratio: %.2f" % dedup, [("dedup_rate", dedup)]
+
+        description = values.get("Description")
+        if description:
+            yield 0, "Description: %s" % description
 
 
 check_info['storeonce_stores'] = {

@@ -47,8 +47,8 @@ def get_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
         return []
 
     piggyback_data = []
-    for source_host, piggyback_file_path in _get_piggyback_files(piggyback_max_cachefile_age,
-                                                                 hostname):
+    for source_host, piggyback_file_path in get_piggyback_files(piggyback_max_cachefile_age,
+                                                                hostname):
         try:
             raw_data = file(piggyback_file_path).read()
         except IOError as e:
@@ -62,14 +62,14 @@ def get_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
 
 
 def has_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
-    return _get_piggyback_files(piggyback_max_cachefile_age, hostname) != []
+    return get_piggyback_files(piggyback_max_cachefile_age, hostname) != []
 
 
-def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
+def get_piggyback_files(piggyback_max_cachefile_age, hostname):
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing the
-    _get_piggyback_files(), store_piggyback_raw_data() or cleanup_piggyback_files()
+    get_piggyback_files(), store_piggyback_raw_data() or cleanup_piggyback_files()
     functions. Therefor all these functions needs to deal with suddenly vanishing or
     updated files/directories.
     """
@@ -215,7 +215,7 @@ def cleanup_piggyback_files(piggyback_max_cachefile_age):
     # Cleanup empty backed host directories below "piggyback"
 
     Please note that there may be multiple parallel calls executing the
-    _get_piggyback_files(), store_piggyback_raw_data() or cleanup_piggyback_files()
+    get_piggyback_files(), store_piggyback_raw_data() or cleanup_piggyback_files()
     functions. Therefor all these functions needs to deal with suddenly vanishing or
     updated files/directories.
     """
@@ -245,7 +245,7 @@ def _cleanup_old_source_status_files(piggyback_max_cachefile_age):
 def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
     """Remove piggyback data that is not needed anymore
 
-    The monitoring (_get_piggyback_files()) is already skipping these files,
+    The monitoring (get_piggyback_files()) is already skipping these files,
     but we need some cleanup mechanism.
 
     - Remove all piggyback files created by sources without status file

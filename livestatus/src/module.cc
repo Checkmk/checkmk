@@ -118,15 +118,11 @@ static std::vector<ThreadInfo> fl_thread_info;
 static thread_local ThreadInfo *tl_info;
 
 struct NagiosLimits {
-    size_t _max_cached_messages;
-    size_t _max_lines_per_logfile;
-    size_t _max_response_size;
+    size_t _max_cached_messages{500000};
+    size_t _max_lines_per_logfile{1000000};
+    size_t _max_response_size{100 * 1024 * 1024};
 };
-static NagiosLimits fl_limits{
-    ._max_cached_messages = 500000,
-    ._max_lines_per_logfile = 1000000,
-    ._max_response_size = 100 * 1024 * 1024,
-};
+static NagiosLimits fl_limits;
 
 int g_thread_running = 0;
 
@@ -479,6 +475,7 @@ void livestatus_cleanup_after_fork() {
 
 void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
+    auto logger = fl_core->loggerLivestatus();
     while (!fl_should_terminate) {
         do_statistics();
 
@@ -494,14 +491,14 @@ void *main_thread(void *data) {
 #endif
             if (cc == -1) {
                 generic_error ge("cannot accept client connection");
-                Warning(fl_core->loggerLivestatus()) << ge;
+                Warning(logger) << ge;
                 continue;
             }
 #if !HAVE_ACCEPT4
             if (fcntl(cc, F_SETFD, FD_CLOEXEC) == -1) {
                 generic_error ge(
                     "cannot set close-on-exec bit on client socket");
-                Alert(fl_core->loggerLivestatus()) << ge;
+                Alert(logger) << ge;
                 break;
             }
 #endif
@@ -513,33 +510,30 @@ void *main_thread(void *data) {
             counterIncrement(Counter::connections);
         }
     }
-    Notice(fl_core->loggerLivestatus()) << "socket thread has terminated";
+    Notice(logger) << "socket thread has terminated";
     return voidp;
 }
 
 void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
+    auto logger = fl_core->loggerLivestatus();
     while (!fl_should_terminate) {
         int cc = fl_client_queue->popConnection();
         g_num_queued_connections--;
         g_livestatus_active_connections++;
         if (cc >= 0) {
-            Debug(fl_core->loggerLivestatus())
-                << "accepted client connection on fd " << cc;
-            InputBuffer input_buffer(cc, fl_should_terminate,
-                                     fl_core->loggerLivestatus(),
+            Debug(logger) << "accepted client connection on fd " << cc;
+            InputBuffer input_buffer(cc, fl_should_terminate, logger,
                                      fl_query_timeout, fl_idle_timeout);
             bool keepalive = true;
             unsigned requestnr = 0;
             while (keepalive && !fl_should_terminate) {
                 if (++requestnr > 1) {
-                    Debug(fl_core->loggerLivestatus())
-                        << "handling request " << requestnr
-                        << " on same connection";
+                    Debug(logger) << "handling request " << requestnr
+                                  << " on same connection";
                 }
                 counterIncrement(Counter::requests);
-                OutputBuffer output_buffer(cc, fl_should_terminate,
-                                           fl_core->loggerLivestatus());
+                OutputBuffer output_buffer(cc, fl_should_terminate, logger);
                 keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
             close(cc);
@@ -592,10 +586,11 @@ void start_threads() {
     count_services();
 
     if (g_thread_running == 0) {
-        fl_core->loggerLivestatus()->setLevel(fl_livestatus_log_level);
-        fl_core->loggerLivestatus()->setUseParentHandlers(false);
+        auto logger = fl_core->loggerLivestatus();
+        logger->setLevel(fl_livestatus_log_level);
+        logger->setUseParentHandlers(false);
         try {
-            fl_core->loggerLivestatus()->setHandler(
+            logger->setHandler(
                 std::make_unique<LivestatusHandler>(fl_paths._logfile_path));
         } catch (const generic_error &ex) {
             Warning(fl_logger_nagios) << ex;

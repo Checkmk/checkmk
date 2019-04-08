@@ -71,9 +71,13 @@
 # combinedUserBytes   265622218292968
 
 
+def _get_item(data):
+    return data["ServiceSet ID"]
+
+
 def inventory_storeonce_servicesets(parsed):
     for values in parsed.itervalues():
-        yield (values["ServiceSet ID"], {})
+        yield _get_item(values), {}
 
 
 def check_storeonce_servicesets(item, params, parsed):
@@ -109,20 +113,14 @@ check_info['storeonce_servicesets'] = {
 }
 
 
-def inventory_storeonce_servicesets_capacity(parsed):
-    for values in parsed.itervalues():
-        yield (values["ServiceSet ID"], {})
-
-
 def check_storeonce_servicesets_capacity(item, params, parsed):
     for values in parsed.itervalues():
-        if not item == values["ServiceSet ID"]:
-            continue
-        yield check_storeonce_space(item, params, values)
+        if _get_item(values) == item:
+            return check_storeonce_space(item, params, values)
 
 
 check_info['storeonce_servicesets.capacity'] = {
-    'inventory_function': inventory_storeonce_servicesets_capacity,
+    'inventory_function': inventory_storeonce_servicesets,
     'check_function': check_storeonce_servicesets_capacity,
     'service_description': "ServiceSet %s Capacity",
     'has_perfdata': True,

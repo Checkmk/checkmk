@@ -760,290 +760,313 @@ table.data.matrix tr.odd0 td.left.minority {
     background-color: #cee;
 }
 
-///*-------------------------------------------------------------------------.
-//|              _____    _ _ _           _                                  |
-//|             | ____|__| (_) |_  __   _(_) _____      __                   |
-//|             |  _| / _` | | __| \ \ / / |/ _ \ \ /\ / /                   |
-//|             | |__| (_| | | |_   \ V /| |  __/\ V  V /                    |
-//|             |_____\__,_|_|\__|   \_/ |_|\___| \_/\_/                     |
-//|                                                                          |
-//+--------------------------------------------------------------------------+
-//| Styles used while editing a view in the view editor                      |
-//'-------------------------------------------------------------------------*/
-//
-//div.clear {
-//    clear: left;
-//}
-//
-//input#try{
-//    float:left;
-//}
-//
-//
-///*-------------------------------------------------------------------------.
-//|       _     _     _            __         _                              |
-//|      | |   (_)___| |_    ___  / _| __   _(_) _____      _____            |
-//|      | |   | / __| __|  / _ \| |_  \ \ / / |/ _ \ \ /\ / / __|           |
-//|      | |___| \__ \ |_  | (_) |  _|  \ V /| |  __/\ V  V /\__ \           |
-//|      |_____|_|___/\__|  \___/|_|     \_/ |_|\___| \_/\_/ |___/           |
-//|                                                                          |
-//+--------------------------------------------------------------------------+
-//| The table with the list of all views                                     |
-//'-------------------------------------------------------------------------*/
-//
-//table.views {
-//    border-collapse: collapse;
-//    empty-cells: show;
-//    margin-bottom: 1ex;
-//}
-//
-//table.views td, table.views th{
-//    border: 1px solid #444;
-//    padding: 2px 1ex;
-//}
-//
-//table.views td {
-//    height: 25px;
-//    padding-top: 3px;
-//    color: #fff;
-//}
-//
-//table.views th {
-//    background-color: #709aa5;
-//    color: #fff;
-//}
-//
-//table.views td.legend {
-//    background-color: #8eaeb8;
-//    color: #fff;
-//}
-//
-//table.views td.content {
-//    background-color: #9ebec8;
-//    color: #fff;
-//}
-//
-//table.views td.edit {
-//    background-color: #6ab;
-//    text-align: center;
-//}
-//
-//table.views td.buttons {
-//    padding: 3px;
-//    vertical-align: middle;
-//    background-color: #8EAEB8;
-//}
-//
-///* Availability */
-//table.data.availability {
-//    width: 100%;
-//}
-//
-//table.data.availability td.number {
-//    width: 60px;
-//}
-//
-//table.data.availability td.unused {
-//    color: #888;
-//    text-shadow: 1px 1px 0.5px #fff;
-//}
-//
-//table.data.availability tr.summary {
-//    background-color: #bbb;
-//}
-//table.data.availability tr.summary td {
-//    border-top: 1px solid black;
-//    font-weight: bold;
-//    border-bottom-style: none;
-//    padding-bottom: 1px;
-//    padding-top: 1px;
-//}
-//
-//
-//table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
-//    background-color: #f0f;
-//}
-//table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
-//    background-color: #0af;
-//}
-//table.data td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
-//    background-color: #048;
-//    color: white;
-//}
-//table.data td.unmonitored, table.timeline td.unmonitored, div.avlegend.timeline div.state.unmonitored  {
-//    background-color: #cacaca;
-//    color: #888;
-//}
-//table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
-//    background-color: #cacaca;
-//    background-image: url("images/ooservice.png");
-//    background-repeat: repeat;
-//}
-//table.data.availability tr.odd0 td.number {
-//    background-image: url("images/white_30percent.png");
-//    background-repeat: repeat;
-//}
-//
-//table.data.availability td.number.stats {
-//    background-image: url("images/white_30percent.png");
-//}
-//
-//table.data.availability tr.odd0 td.number.stats {
-//    background-image: url("images/white_50percent.png");
-//}
-//
-//
-//div.floatfilter.rangespec table.valuespec_tuple {
-//    width: 100%;
-//}
-//
-//div.floatfilter.rangespec table.valuespec_tuple span.title {
-//    position: relative;
-//    top: 7px;
-//}
-//
-//div#avoptions_on {
-//    margin-right: 3px;
-//}
-//
-//table.data tr.data > td.timeline {
-//    width: 500px;
-//    padding: 0px;
-//}
-//
-//table.timeline {
-//    height: 30px;
-//    border-spacing: 0px;
-//    border-collapse: collapse;
-//}
-//
-//table.timeline.low {
-//    height: 5px;
-//    margin-top: -18px;
-//    border-spacing: 0px;
-//    border-collapse: collapse;
-//}
-//
-//table.timeline.standalone {
-//    box-shadow: 0px 0px 1px #ccf;
-//    margin-bottom: 20px;
-//    width: 800px;
-//}
-//
-//table.timeline.inline {
-//    border-style: none;
-//    width: 500px;
-//}
-//table.timeline.inline {
-//    border-style: none;
-//    width: 500px;
-//    box-shadow: 0px 0px 1px #555 inset;
-//}
-//
-//table.timeline td {
-//    padding: 0px;
-//    border-style: none;
-//}
-//
-//table.timeline td.hilite {
-//    padding: 0px;
-//    border-style: none;
-//    background-color: #0091b6;
-//    filter: brightness(80%);
-//}
-//
-//table.timeline td.chaos {
-//    background-color: #8844ff;
-//}
-//
-//table.timeline.standalone td {
-//    border: 1px solid #444;
-//}
-//
-//div.timelinerange {
-//    position: relative;
-//}
-//
-///* We render the small vertical lines in a way that only
-//   the left border is visible but the thing is thick 5 pixels.
-//   That makes hovering over it more easy. */
-//div.timelinerange div.timelinechoord {
-//    position: absolute;
-//    top: 0px;
-//    width: 5px;
-//    height: 30px;
-//    border-style: none none none solid;
-//    border-width: 0px 0px 0px 1px;
-//    border-color: #666;
-//}
-//
-//table.timelineevents {
-//    width: 800px;
-//}
-//table.data.oddeven.timelineevents > tbody > tr.hilite {
-//    background-color: #6ab;
-//    color: white;
-//}
-//div.timelinerange {
-//    width: 800px;
-//    float: none;
-//}
-//div.timelinerange.inline {
-//    width: 500px;
-//}
-//div.timelinerange div {
-//    width: 300px;
-//    float: left;
-//}
-//div.timelinerange div.until {
-//    text-align: right;
-//    float: right;
-//}
-//
-//table.data.timewarp {
-//    width: 800px;
-//    margin-bottom: 20px;
-//}
-//
-//div.avlegend {
-//    background-color: rgba(255, 255, 255, 0.2);
-//    padding: 5px 15px;
-//    border-radius: 5px;
-//    margin-top: 10px;
-//    text-align: right;
-//}
-//div.avlegend h3 {
-//    margin-top: 0px;
-//    font-size: 13px;
-//    color: black;
-//}
-//div.avlegend div {
-//    display: inline-block;
-//    width: 50px;
-//    white-space: nowrap;
-//    margin-right: 5px;
-//}
-//div.avlegend div.state {
-//    text-align: center;
-//    padding: 2px 0px;
-//    font-size: 12px;
-//}
-//div.avlegend div:last-child {
-//    margin-right: 0px;
-//}
-//div.avlegend.levels div.level {
-//    margin-right: 15px;
-//    color: black;
-//}
-//
-//div.avlegend.timeline div.state {
-//    width: 75px;
-//}
-//div.avlegend.timeline div.state.ooservice {
-//    color: black;
-//}
-//
-//
+/*-------------------------------------------------------------------------.
+|              _____    _ _ _           _                                  |
+|             | ____|__| (_) |_  __   _(_) _____      __                   |
+|             |  _| / _` | | __| \ \ / / |/ _ \ \ /\ / /                   |
+|             | |__| (_| | | |_   \ V /| |  __/\ V  V /                    |
+|             |_____\__,_|_|\__|   \_/ |_|\___| \_/\_/                     |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles used while editing a view in the view editor                      |
+'-------------------------------------------------------------------------*/
+
+div.clear {
+    clear: left;
+}
+
+input#try{
+    float:left;
+}
+
+
+/*-------------------------------------------------------------------------.
+|       _     _     _            __         _                              |
+|      | |   (_)___| |_    ___  / _| __   _(_) _____      _____            |
+|      | |   | / __| __|  / _ \| |_  \ \ / / |/ _ \ \ /\ / / __|           |
+|      | |___| \__ \ |_  | (_) |  _|  \ V /| |  __/\ V  V /\__ \           |
+|      |_____|_|___/\__|  \___/|_|     \_/ |_|\___| \_/\_/ |___/           |
+|                                                                          |
++--------------------------------------------------------------------------+
+| The table with the list of all views                                     |
+'-------------------------------------------------------------------------*/
+/* TODO: Check whether this list of views is deprecated
+ * page_edit_views() in cmk.gui.views is never called
+ */
+
+table.views {
+    border-collapse: collapse;
+    empty-cells: show;
+    margin-bottom: 1ex;
+}
+
+table.views td, table.views th{
+    border: 1px solid #444;
+    padding: 2px 1ex;
+}
+
+table.views td {
+    height: 25px;
+    padding-top: 3px;
+    color: #fff;
+}
+
+table.views th {
+    background-color: #709aa5;
+    color: #fff;
+}
+
+table.views td.legend {
+    background-color: #8eaeb8;
+    color: #fff;
+}
+
+table.views td.content {
+    background-color: #9ebec8;
+    color: #fff;
+}
+
+table.views td.edit {
+    background-color: #6ab;
+    text-align: center;
+}
+
+table.views td.buttons {
+    padding: 3px;
+    vertical-align: middle;
+    background-color: #8EAEB8;
+}
+
+/* Availability */
+table.data.availability {
+    width: 100%;
+}
+
+table.data.availability td.number {
+    width: 60px;
+}
+
+table.data.availability td.unused {
+    color: #888;
+    text-shadow: 1px 1px 0.5px #fff;
+}
+
+table.data.availability tr.summary {
+    background-color: #bbb;
+}
+
+table.data.availability tr.summary td {
+    border-top: 1px solid $theme-color-table-border;
+    font-weight: bold;
+    border-bottom-style: none;
+    padding-bottom: 1px;
+    padding-top: 1px;
+}
+
+table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
+    background-color: #f0f;
+}
+table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
+    background-color: #0af;
+}
+table.data td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
+    background-color: #048;
+    color: white;
+}
+table.data td.unmonitored,
+table.timeline td.unmonitored,
+div.avlegend.timeline div.state.unmonitored {
+    background-color: #cacaca;
+    color: #888;
+}
+
+table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
+    background-color: #cacaca;
+    /* TODO: Check whether this image can be dropped (seems not to be available anymore */
+    background-image: url("images/ooservice.png");
+    background-repeat: repeat;
+}
+
+table.data.availability tr.odd0 td.number:not(.unused), table.data.availability td.number.stats {
+    opacity: .7;
+}
+
+table.data.availability tr.odd0 td.number.stats {
+    opacity: .5;
+}
+
+div.floatfilter.rangespec table.valuespec_tuple {
+    width: 100%;
+}
+
+div.floatfilter.rangespec table.valuespec_tuple span.title {
+    position: relative;
+    top: 7px;
+}
+
+/* #TODO: Reproduce this html element */
+div#avoptions_on {
+    margin-right: 3px;
+}
+
+table.data tr.data > td.timeline {
+    width: 500px;
+    padding: 0px;
+}
+
+table.timeline {
+    height: 30px;
+    border-spacing: 0px;
+    border-collapse: collapse;
+}
+
+table.timeline.low {
+    height: 5px;
+    margin-top: -18px;
+    border-spacing: 0px;
+    border-collapse: collapse;
+}
+
+table.timeline.standalone {
+    box-shadow: 0px 0px 1px #ccf;
+    margin-bottom: 20px;
+    width: 800px;
+}
+
+table.timeline.inline {
+    border-style: none;
+    width: 500px;
+    box-shadow: 0px 0px 1px #555 inset;
+}
+
+table.timeline td {
+    padding: 0px;
+    border-style: none;
+}
+
+/* #TODO: Reproduce this html element */
+table.timeline td.hilite {
+    padding: 0px;
+    border-style: none;
+    background-color: #0091b6;
+    filter: brightness(80%);
+}
+
+table.timeline td.chaos {
+    background-color: #8844ff;
+}
+
+div.timelinerange {
+    position: relative;
+    width: 800px;
+    float: none;
+}
+
+/* We render the small vertical lines in a way that only
+   the left border is visible but the thing is thick 5 pixels.
+   That makes hovering over it more easy. */
+div.timelinerange div.timelinechoord {
+    position: absolute;
+    top: 0px;
+    width: 5px;
+    height: 30px;
+    border-style: none none none solid;
+    border-width: 0px 0px 0px 1px;
+    border-color: #666;
+}
+
+table.timelineevents {
+    width: 800px;
+}
+
+/* #TODO: Reproduce this html element */
+table.data.oddeven.timelineevents > tbody > tr.hilite {
+    background-color: #6ab;
+    color: white;
+}
+
+div.timelinerange.inline {
+    width: 500px;
+}
+
+div.timelinerange div {
+    width: 300px;
+    float: left;
+}
+
+div.timelinerange div.until {
+    text-align: right;
+    float: right;
+}
+
+.timelinerange .from, .timelinerange .until {
+  color: $theme-color-darkgrey;
+  display: inline-block;
+  margin-bottom: 4px;
+  margin-top: 8px;
+  font-size: $theme-font-size-small;
+  letter-spacing: $theme-letter-spacing-table;
+}
+
+.timelinerange .timeline {
+  box-shadow: none;
+}
+
+.timelinerange .timeline.standalone td {
+    border: 1px solid $theme-color-table-border;
+}
+
+/* #TODO: Reproduce this html element */
+table.data.timewarp {
+    width: 800px;
+    margin-bottom: 20px;
+}
+
+div.avlegend {
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 5px 15px;
+    border-radius: 5px;
+    margin-top: 10px;
+    text-align: right;
+}
+
+div.avlegend h3 {
+    margin-top: 0px;
+    font-size: 13px;
+    color: black;
+}
+
+div.avlegend div {
+    display: inline-block;
+    width: 50px;
+    white-space: nowrap;
+    margin-right: 5px;
+}
+
+div.avlegend div.state {
+    text-align: center;
+    padding: 2px 0px;
+    font-size: 12px;
+}
+
+div.avlegend div:last-child {
+    margin-right: 0px;
+}
+
+div.avlegend.levels div.level {
+    margin-right: 15px;
+    color: black;
+}
+
+div.avlegend.timeline div.state {
+    width: 75px;
+}
+
+div.avlegend.timeline div.state.ooservice {
+    color: black;
+}
+
+
 ///*--Inventory--------------------------------------------------------------.
 //|            ___                      _                                    |
 //|           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _                  |

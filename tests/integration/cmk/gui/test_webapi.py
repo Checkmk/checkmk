@@ -319,6 +319,7 @@ def test_write_host_tags(web, site):
             "FOLDER_PATH": "/",
             "all_hosts": [],
             "host_tags": {},
+            "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
         }

@@ -18,6 +18,7 @@ import pwd
 import shutil
 import sys
 import tempfile
+from pathlib2 import Path
 import testlib
 
 #
@@ -123,6 +124,9 @@ def fake_version_and_paths():
     monkeypatch.setattr("cmk.utils.paths.check_mk_config_dir",
                         os.path.join(tmp_dir, "etc/check_mk/conf.d"))
     monkeypatch.setattr("cmk.utils.paths.default_config_dir", os.path.join(tmp_dir, "etc/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.piggyback_dir", Path(tmp_dir) / "var/check_mk/piggyback")
+    monkeypatch.setattr("cmk.utils.paths.piggyback_source_dir",
+                        Path(tmp_dir) / "var/check_mk/piggyback_sources")
 
 
 # Cleanup temporary directory created above

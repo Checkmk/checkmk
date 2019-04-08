@@ -74,14 +74,14 @@ def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
     updated files/directories.
     """
     files = []
-    piggyback_dir = os.path.join(cmk.utils.paths.tmp_dir, "piggyback", hostname)
+    host_piggyback_dir = cmk.utils.paths.piggyback_dir / hostname
 
     # cleanup_piggyback_files() may remove stale piggyback files of one source
     # host and also the directory "hostname" when the last piggyback file for the
     # current host was removed. This may cause the os.listdir() to fail. We treat
     # this as regular case: No piggyback files for the current host.
     try:
-        source_host_names = os.listdir(piggyback_dir)
+        source_host_names = [e.name for e in host_piggyback_dir.iterdir()]
     except OSError as e:
         if e.errno == 2:  # No such file or directory
             return files
@@ -92,11 +92,11 @@ def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
         if source_host.startswith("."):
             continue
 
-        piggyback_file_path = os.path.join(piggyback_dir, source_host)
+        piggyback_file_path = host_piggyback_dir / source_host
 
         try:
-            file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
-        except MKGeneralException as e:
+            file_age = cmk_base.utils.cachefile_age(str(piggyback_file_path))
+        except MKGeneralException:
             continue  # File might've been deleted. That's ok.
 
         # Skip piggyback files that are outdated at all
@@ -112,13 +112,13 @@ def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
                 piggyback_file_path)
             continue
 
-        if _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
+        if _is_piggyback_file_outdated(status_file_path, str(piggyback_file_path)):
             console.verbose(
                 "Piggyback file %s is outdated (Not updated by source). Skip processing.\n" %
                 piggyback_file_path)
             continue
 
-        files.append((source_host, piggyback_file_path))
+        files.append((source_host, str(piggyback_file_path)))
 
     return files
 
@@ -137,7 +137,7 @@ def _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
 
 
 def _piggyback_source_status_path(source_host):
-    return os.path.join(cmk.utils.paths.tmp_dir, "piggyback_sources", source_host)
+    return str(cmk.utils.paths.piggyback_source_dir / source_host)
 
 
 def _remove_piggyback_file(piggyback_file_path):
@@ -152,6 +152,7 @@ def _remove_piggyback_file(piggyback_file_path):
 
 
 def remove_source_status_file(source_host):
+    # type: (str) -> bool
     """Remove the source_status_file of this piggyback host which will
     mark the piggyback data from this source as outdated."""
     source_status_path = _piggyback_source_status_path(source_host)
@@ -161,8 +162,7 @@ def remove_source_status_file(source_host):
 def store_piggyback_raw_data(source_host, piggybacked_raw_data):
     piggyback_file_paths = []
     for piggybacked_host, lines in piggybacked_raw_data.items():
-        piggyback_file_path = os.path.join(cmk.utils.paths.tmp_dir, "piggyback", piggybacked_host,
-                                           source_host)
+        piggyback_file_path = str(cmk.utils.paths.piggyback_dir / piggybacked_host / source_host)
         console.verbose("Storing piggyback data for: %s\n" % piggybacked_host)
         content = "\n".join(lines) + "\n"
         store.save_file(piggyback_file_path, content)
@@ -224,7 +224,7 @@ def cleanup_piggyback_files(piggyback_max_cachefile_age):
 
 
 def _cleanup_old_source_status_files(piggyback_max_cachefile_age):
-    base_dir = os.path.join(cmk.utils.paths.tmp_dir, "piggyback_sources")
+    base_dir = str(cmk.utils.paths.piggyback_source_dir)
     for entry in os.listdir(base_dir):
         if entry[0] == ".":
             continue
@@ -252,7 +252,7 @@ def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
     - Remove all piggyback files that are older that the current status file of the source host
     - Cleanup empty backed host directories below "piggyback"
     """
-    keep_sources = set(os.listdir(os.path.join(cmk.utils.paths.tmp_dir, "piggyback_sources")))
+    keep_sources = set(os.listdir(str(cmk.utils.paths.piggyback_source_dir)))
 
     base_dir = os.path.join(cmk.utils.paths.tmp_dir, "piggyback")
     for backed_host_name in os.listdir(base_dir):

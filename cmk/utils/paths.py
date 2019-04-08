@@ -44,7 +44,7 @@ def _local_path(global_path):
     return _path(omd_root, "local", Path(global_path).relative_to(omd_root))
 
 
-# TODO: Add piggyback_dir and active_checks_dir and use it in code
+# TODO: Add active_checks_dir and use it in code
 
 omd_root = _path(os.environ.get("OMD_ROOT", ""))
 
@@ -84,6 +84,8 @@ inventory_output_dir = _omd_path("var/check_mk/inventory")
 inventory_archive_dir = _omd_path("var/check_mk/inventory_archive")
 status_data_dir = _omd_path("tmp/check_mk/status_data")
 discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_labels"))
+piggyback_dir = Path(tmp_dir) / "piggyback"
+piggyback_source_dir = Path(tmp_dir) / "piggyback_sources"
 
 share_dir = _omd_path("share/check_mk")
 checks_dir = _omd_path("share/check_mk/checks")

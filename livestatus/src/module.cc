@@ -132,7 +132,6 @@ int g_thread_running = 0;
 static AuthorizationKind fl_service_authorization = AuthorizationKind::loose;
 static AuthorizationKind fl_group_authorization = AuthorizationKind::strict;
 Encoding fl_data_encoding = Encoding::utf8;
-Triggers fl_triggers;
 
 static Logger *fl_logger_nagios = nullptr;
 static Logger *fl_logger_livestatus = nullptr;
@@ -295,7 +294,7 @@ public:
 
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
-    Triggers &triggers() override { return fl_triggers; }
+    Triggers &triggers() override { return _triggers; }
 
     size_t numQueuedNotifications() override { return 0; }
     size_t numQueuedAlerts() override { return 0; }
@@ -348,6 +347,7 @@ private:
     const NagiosLimits &_limits;
     Store _store;
     std::unordered_map<std::string, host *> _hosts_by_designation;
+    Triggers _triggers;
 
     void *implInternal() const override { return const_cast<Store *>(&_store); }
 
@@ -748,7 +748,7 @@ int broker_check(int event_type, void *data) {
             counterIncrement(Counter::host_checks);
         }
     }
-    fl_triggers.notify_all(Triggers::Kind::check);
+    fl_core->triggers().notify_all(Triggers::Kind::check);
     return result;
 }
 
@@ -756,7 +756,7 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     auto co = static_cast<nebstruct_comment_data *>(data);
     fl_core->registerComment(co);
     counterIncrement(Counter::neb_callbacks);
-    fl_triggers.notify_all(Triggers::Kind::comment);
+    fl_core->triggers().notify_all(Triggers::Kind::comment);
     return 0;
 }
 
@@ -764,7 +764,7 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     auto dt = static_cast<nebstruct_downtime_data *>(data);
     fl_core->registerDowntime(dt);
     counterIncrement(Counter::neb_callbacks);
-    fl_triggers.notify_all(Triggers::Kind::downtime);
+    fl_core->triggers().notify_all(Triggers::Kind::downtime);
     return 0;
 }
 
@@ -772,7 +772,10 @@ int broker_log(int event_type __attribute__((__unused__)),
                void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
     counterIncrement(Counter::log_messages);
-    fl_triggers.notify_all(Triggers::Kind::log);
+    // NOTE: We use logging very early, even before the core is instantiated!
+    if (fl_core != nullptr) {
+        fl_core->triggers().notify_all(Triggers::Kind::log);
+    }
     return 0;
 }
 
@@ -785,25 +788,25 @@ int broker_command(int event_type __attribute__((__unused__)), void *data) {
             strcmp(sc->command_string, "_LOG") == 0) {
             write_to_all_logs(sc->command_args, -1);
             counterIncrement(Counter::log_messages);
-            fl_triggers.notify_all(Triggers::Kind::log);
+            fl_core->triggers().notify_all(Triggers::Kind::log);
         }
     }
     counterIncrement(Counter::neb_callbacks);
-    fl_triggers.notify_all(Triggers::Kind::command);
+    fl_core->triggers().notify_all(Triggers::Kind::command);
     return 0;
 }
 
 int broker_state(int event_type __attribute__((__unused__)),
                  void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
-    fl_triggers.notify_all(Triggers::Kind::state);
+    fl_core->triggers().notify_all(Triggers::Kind::state);
     return 0;
 }
 
 int broker_program(int event_type __attribute__((__unused__)),
                    void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
-    fl_triggers.notify_all(Triggers::Kind::program);
+    fl_core->triggers().notify_all(Triggers::Kind::program);
     return 0;
 }
 

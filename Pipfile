@@ -19,6 +19,7 @@ yapf = "*"
 docker = "*"
 mockldap = "*"
 isort = "*"
+python-language-server = "*"
 pdbpp = "*"
 freezegun = "*"
 

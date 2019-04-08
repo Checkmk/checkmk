@@ -5,9 +5,18 @@ license: GPL
 distribution: check_mk
 description:
 
-  This Check Monitors all Fans on new Alcatel switches running at least AOS7 supporting
-  the ALCATEL-IND1-CHASSIS-MIB (version for >=AOS7). The status is automaticly reported
-  by the device, so no configuration is needed.
+  This check monitors all fans of the following Alcatel switches
+  running the specified operating system release versions:
+
+ - OmniSwitch 6860E-P48: AOS 8.2.1.351.R01 Service Release
+
+ - OmniSwitch 6900-X20: AOS 7.3.4.310.R02 Service Release
+
+ - OmniSwitch 6900-T40: AOS 8.4.1.233.R02 Service Release
+
+ - OmniSwitch 10K: AOS 8.3.1.377.R01 Service Release
+
+ The status is automaticly reported by the device, so no configuration is needed.
 
 inventory:
  One check is created

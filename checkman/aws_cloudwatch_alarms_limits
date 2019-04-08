@@ -1,0 +1,19 @@
+title: AWS Cloudwatch Alarms Limits
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the AWS/Cloudwatch alarms limits, ie. the
+ number of allowed alarms withing a region.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ Default levels are set to 80, 90 percent and the default max.
+ value of 5000. These levels are configurable.
+
+ If limits are enabled all alarms are fetched regardless of
+ possibly configured restriction to names.
+
+inventory:
+ One service will be created.

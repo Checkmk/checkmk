@@ -97,6 +97,13 @@ def agent_aws_arguments(params, hostname, ipaddress):
     if 'requests' in services.get('s3', {}):
         args += ["--s3-requests"]
 
+    alarms = services.get('cloudwatch', {}).get('alarms')
+    if alarms:
+        # {'alarms': 'all'} is handled by no additionally specified names
+        args += ["--cloudwatch-alarms"]
+        if isinstance(alarms, tuple):
+            args += alarms[1]
+
     # '--overall-tags': [('KEY_1', ['VAL_1', 'VAL_2']), ...)],
     args += _get_tag_options(params.get('overall_tags', []), 'overall')
     args += [

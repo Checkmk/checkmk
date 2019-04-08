@@ -136,7 +136,7 @@ struct NagiosAuthorization {
 };
 static NagiosAuthorization fl_authorization;
 
-Encoding fl_data_encoding = Encoding::utf8;
+Encoding fl_data_encoding{Encoding::utf8};
 
 static Logger *fl_logger_nagios = nullptr;
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
@@ -156,11 +156,12 @@ constexpr const char *default_socket_path = "/usr/local/nagios/var/rw/live";
 class NagiosCore : public MonitoringCore {
 public:
     NagiosCore(const NagiosPaths &paths, const NagiosLimits &limits,
-               const NagiosAuthorization &authorization)
+               const NagiosAuthorization &authorization, Encoding data_encoding)
         : _logger_livestatus(Logger::getLogger("cmk.livestatus"))
         , _paths(paths)
         , _limits(limits)
         , _authorization(authorization)
+        , _data_encoding(data_encoding)
         , _store(this) {
         for (host *hst = host_list; hst != nullptr; hst = hst->next) {
             if (const char *address = hst->address) {
@@ -284,7 +285,7 @@ public:
         return log_archive_path;
     }
 
-    Encoding dataEncoding() override { return fl_data_encoding; }
+    Encoding dataEncoding() override { return _data_encoding; }
     size_t maxResponseSize() override { return _limits._max_response_size; }
     size_t maxCachedMessages() override { return _limits._max_cached_messages; }
 
@@ -356,6 +357,7 @@ private:
     const NagiosPaths &_paths;
     const NagiosLimits &_limits;
     const NagiosAuthorization &_authorization;
+    Encoding _data_encoding;
     Store _store;
     std::unordered_map<std::string, host *> _hosts_by_designation;
     Triggers _triggers;
@@ -861,7 +863,8 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
     auto ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
-            fl_core = new NagiosCore(fl_paths, fl_limits, fl_authorization);
+            fl_core = new NagiosCore(fl_paths, fl_limits, fl_authorization,
+                                     fl_data_encoding);
             fl_client_queue = new ClientQueue();
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;

@@ -134,7 +134,6 @@ static AuthorizationKind fl_group_authorization = AuthorizationKind::strict;
 Encoding fl_data_encoding = Encoding::utf8;
 
 static Logger *fl_logger_nagios = nullptr;
-static Logger *fl_logger_livestatus = nullptr;
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
 static ClientQueue *fl_client_queue = nullptr;
 TimeperiodsCache *g_timeperiods_cache = nullptr;
@@ -152,7 +151,10 @@ constexpr const char *default_socket_path = "/usr/local/nagios/var/rw/live";
 class NagiosCore : public MonitoringCore {
 public:
     NagiosCore(const NagiosPaths &paths, const NagiosLimits &limits)
-        : _paths(paths), _limits(limits), _store(this) {
+        : _logger_livestatus(Logger::getLogger("cmk.livestatus"))
+        , _paths(paths)
+        , _limits(limits)
+        , _store(this) {
         for (host *hst = host_list; hst != nullptr; hst = hst->next) {
             if (const char *address = hst->address) {
                 _hosts_by_designation[mk::unsafe_tolower(address)] = hst;
@@ -292,7 +294,7 @@ public:
         return fl_group_authorization;
     }
 
-    Logger *loggerLivestatus() override { return fl_logger_livestatus; }
+    Logger *loggerLivestatus() override { return _logger_livestatus; }
 
     Triggers &triggers() override { return _triggers; }
 
@@ -343,6 +345,7 @@ public:
     }
 
 private:
+    Logger *_logger_livestatus;
     const NagiosPaths &_paths;
     const NagiosLimits &_limits;
     Store _store;
@@ -481,14 +484,14 @@ void *main_thread(void *data) {
 #endif
             if (cc == -1) {
                 generic_error ge("cannot accept client connection");
-                Warning(fl_logger_livestatus) << ge;
+                Warning(fl_core->loggerLivestatus()) << ge;
                 continue;
             }
 #if !HAVE_ACCEPT4
             if (fcntl(cc, F_SETFD, FD_CLOEXEC) == -1) {
                 generic_error ge(
                     "cannot set close-on-exec bit on client socket");
-                Alert(fl_logger_livestatus) << ge;
+                Alert(fl_core->loggerLivestatus()) << ge;
                 break;
             }
 #endif
@@ -500,7 +503,7 @@ void *main_thread(void *data) {
             counterIncrement(Counter::connections);
         }
     }
-    Notice(fl_logger_livestatus) << "socket thread has terminated";
+    Notice(fl_core->loggerLivestatus()) << "socket thread has terminated";
     return voidp;
 }
 
@@ -511,22 +514,22 @@ void *client_thread(void *data) {
         g_num_queued_connections--;
         g_livestatus_active_connections++;
         if (cc >= 0) {
-            Debug(fl_logger_livestatus)
+            Debug(fl_core->loggerLivestatus())
                 << "accepted client connection on fd " << cc;
             InputBuffer input_buffer(cc, fl_should_terminate,
-                                     fl_logger_livestatus, fl_query_timeout,
-                                     fl_idle_timeout);
+                                     fl_core->loggerLivestatus(),
+                                     fl_query_timeout, fl_idle_timeout);
             bool keepalive = true;
             unsigned requestnr = 0;
             while (keepalive && !fl_should_terminate) {
                 if (++requestnr > 1) {
-                    Debug(fl_logger_livestatus)
+                    Debug(fl_core->loggerLivestatus())
                         << "handling request " << requestnr
                         << " on same connection";
                 }
                 counterIncrement(Counter::requests);
                 OutputBuffer output_buffer(cc, fl_should_terminate,
-                                           fl_logger_livestatus);
+                                           fl_core->loggerLivestatus());
                 keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
             close(cc);
@@ -579,10 +582,10 @@ void start_threads() {
     count_services();
 
     if (g_thread_running == 0) {
-        fl_logger_livestatus->setLevel(fl_livestatus_log_level);
-        fl_logger_livestatus->setUseParentHandlers(false);
+        fl_core->loggerLivestatus()->setLevel(fl_livestatus_log_level);
+        fl_core->loggerLivestatus()->setUseParentHandlers(false);
         try {
-            fl_logger_livestatus->setHandler(
+            fl_core->loggerLivestatus()->setHandler(
                 std::make_unique<LivestatusHandler>(fl_paths._logfile_path));
         } catch (const generic_error &ex) {
             Warning(fl_logger_nagios) << ex;
@@ -1220,8 +1223,6 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
     fl_logger_nagios = Logger::getLogger("nagios");
     fl_logger_nagios->setHandler(std::make_unique<NagiosHandler>());
     fl_logger_nagios->setUseParentHandlers(false);
-
-    fl_logger_livestatus = Logger::getLogger("cmk.livestatus");
 
     g_nagios_handle = handle;
     livestatus_parse_arguments(args);

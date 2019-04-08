@@ -1,0 +1,14 @@
+Title: Opsgenie: Notification plugin
+Level: 2
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554752614
+Class: feature
+
+Check_MK now supports integration with Opsgenie.
+You can create, close and acknowledge alerts.
+
+It is possible to set optional parameter via the associated WATO rule, eg.
+"Responsible Team", "Actions", "Tags" and "Entity".

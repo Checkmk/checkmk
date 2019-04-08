@@ -229,6 +229,7 @@ def test_registered_permissions():
         'notification_plugin.jira_issues',
         'notification_plugin.mail',
         'notification_plugin.mkeventd',
+        'notification_plugin.opsgenie_issues',
         'notification_plugin.pagerduty',
         'notification_plugin.pushover',
         'notification_plugin.servicenow',

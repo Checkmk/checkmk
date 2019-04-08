@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+# Opsgenie
+# Bulk: no
+
+import sys
+from cmk.notification_plugins import opsgenie_issues
+
+if __name__ == "__main__":
+    sys.exit(opsgenie_issues.main())

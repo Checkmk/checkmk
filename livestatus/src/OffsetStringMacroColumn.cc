@@ -59,11 +59,13 @@ std::optional<std::string> UserMacroExpander::expand(const std::string &str) {
 }
 
 CustomVariableExpander::CustomVariableExpander(std::string prefix,
-                                               const customvariablesmember *cvm)
-    : _prefix(std::move(prefix)), _cvm(cvm) {}
+                                               const customvariablesmember *cvm,
+                                               const MonitoringCore *mc)
+    : _prefix(std::move(prefix)), _mc(mc), _cvm(cvm) {}
 
 std::optional<std::string> CustomVariableExpander::expand(
     const std::string &str) {
+    (void)_mc;
     if (mk::starts_with(str, _prefix)) {
         RegExp regExp(str.substr(_prefix.size()), RegExp::Case::ignore,
                       RegExp::Syntax::literal);

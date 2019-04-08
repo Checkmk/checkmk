@@ -28,8 +28,9 @@
 #include "Row.h"
 #include "nagios.h"
 
-ServiceMacroExpander::ServiceMacroExpander(const service *svc)
-    : _svc(svc), _cve("_SERVICE", svc->custom_variables) {}
+ServiceMacroExpander::ServiceMacroExpander(const service *svc,
+                                           const MonitoringCore *mc)
+    : _svc(svc), _cve("_SERVICE", svc->custom_variables, mc) {}
 
 std::optional<std::string> ServiceMacroExpander::expand(
     const std::string &str) {
@@ -62,8 +63,8 @@ std::unique_ptr<MacroExpander> OffsetStringServiceMacroColumn::getMacroExpander(
     Row row) const {
     auto svc = columnData<service>(row);
     return std::make_unique<CompoundMacroExpander>(
-        std::make_unique<HostMacroExpander>(svc->host_ptr),
+        std::make_unique<HostMacroExpander>(svc->host_ptr, _mc),
         std::make_unique<CompoundMacroExpander>(
-            std::make_unique<ServiceMacroExpander>(svc),
+            std::make_unique<ServiceMacroExpander>(svc, _mc),
             std::make_unique<UserMacroExpander>()));
 }

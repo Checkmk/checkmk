@@ -230,12 +230,6 @@ table {
       letter-spacing: $theme-letter-spacing;
       color: $theme-color-text;
       line-height: 1.5; }
-      table.data td.gap {
-        background: $theme-color-background;
-        border-top: 1px solid $theme-color-background;
-        border-bottom: 1px solid $theme-color-background;
-        border-left: 1px solid $theme-color-background;
-        border-right: 1px solid $theme-color-table-border; }
       table.data.analyze_config td.buttons {
         min-width: 25px }
     table.data div.objectlist div {
@@ -246,8 +240,6 @@ table {
     table.data.oddeven > tbody > tr:nth-child(odd) {
       background-color: transparent; }
     table.data.oddeven > tbody > tr:nth-child(even) {
-      background-color: transparent; }
-    table.data.oddeven > tbody > tr.groupheader {
       background-color: transparent; }
     table.data.oddeven > tbody > .matches_search > td, table.data.oddeven > tbody > .matches_search > td {
       background-color: $theme-color-nuance-2 !important; }
@@ -270,58 +262,6 @@ table {
           margin: 0px; }
       table.data.headerleft tbody tr:last-of-type td, table.data.headerleft tbody tr:last-of-type th {
         border-bottom: 1px solid $theme-color-table-border; }
-    table.data.single > tbody > tr > td, table.data.single > tbody tr.odd0 > td, table.data.single > tbody tr.even0 > td {
-      padding: 8px 16px;
-      background-color: $theme-color-white;
-      border-radius: 0px; }
-      table.data.single > tbody > tr > td.left, table.data.single > tbody tr.odd0 > td.left, table.data.single > tbody tr.even0 > td.left {
-        font-weight: $theme-font-weight-bold;
-        background-color: $theme-color-white;
-        border-right: 1px solid $theme-color-table-border;
-        transition: .15s ease-in-out; }
-    table.data.single tr.data td.invtree table {
-      box-shadow: none;
-      border: 1px solid $theme-color-table-border;
-      margin: 8px 0px 12px; }
-      table.data.single tr.data td.invtree table th {
-        background-color: whitesmoke;
-        border: 1px solid $theme-color-table-border;
-        padding: 2px 4px;
-        color: $theme-color-text; }
-      table.data.single tr.data td.invtree table td {
-        background-color: $theme-color-table-background;
-        border: 1px solid $theme-color-table-border;
-        padding: 2px 4px; }
-    table.data.matrix tbody tr.even0 td.matrixhead, table.data.matrix tbody tr.odd0 td.matrixhead {
-      color: $theme-color-text;
-      font-weight: $theme-font-weight-bold; }
-    table.data.matrix tbody > tr.data > td {
-      padding: 8px;
-      border: 1px solid $theme-color-table-border;
-      border-left: 0px solid; }
-      table.data.matrix tbody > tr.data > td.left {
-        font-weight: $theme-font-weight-bold;
-        background-color: $theme-color-white;
-        border-right: 1px solid $theme-color-table-border;
-        transition: .15s ease-in-out;
-        border-left: 1px solid $theme-color-table-border; }
-      table.data.matrix tbody > tr.data > td.perfometer {
-        width: 180px; }
-      table.data.matrix tbody > tr.data > td.cell td.perfometer div.title {
-        padding: 0; }
-      table.data.matrix tbody > tr.data > td.cell td.perfometer div.content {
-        padding: 0; }
-    table.data.matrix tbody > tr.data:hover td.left {
-      background-color: $theme-color-table-background; }
-    table.data.matrix tbody > tr.data:first-child {
-      background: transparent; }
-      table.data.matrix tbody > tr.data:first-child td {
-        background: transparent;
-        border: none; }
-      table.data.matrix tbody > tr.data:first-child td.matrixhead {
-        font-size: $theme-font-size-global;
-        text-transform: uppercase;
-        letter-spacing: $theme-letter-spacing-table; }
     table.data.check_catalog tbody tr td.title {
       display: table-cell; }
     table.data.headerleft.sla tbody tr td, table.data.headerleft.sla tbody tr td.sla {
@@ -360,23 +300,6 @@ table {
       width: 240px !important; }
     table.data.headerleft.sla a, table.data.headerleft.sla body.main .popup_menu span, body.main .popup_menu table.data.headerleft.sla span {
       color: $theme-color-text !important; }
-    table.data.tiled td.tiles {
-      padding: 0; }
-      table.data.tiled td.tiles div.tile {
-        border: 1px solid $theme-color-table-border;
-        border-radius: $theme-border-radius;
-        box-shadow: none;
-        background: $theme-color-white;
-        width: 240px;
-        padding: 4px; }
-        table.data.tiled td.tiles div.tile table {
-          border-spacing: 4px 8px; }
-          table.data.tiled td.tiles div.tile table td {
-            padding: 8px; }
-            table.data.tiled td.tiles div.tile table td.states {
-              border-radius: $theme-border-radius; }
-        table.data.tiled td.tiles div.tile .cont {
-          box-sizing: border-box; }
     table.data.availability tr.summary td {
       border-top: 1px solid $theme-color-table-border; }
   table.nform {
@@ -442,40 +365,6 @@ table {
       vertical-align: middle; }
       div.diag_host > table > tbody > tr > td {
         vertical-align: unset; }
-
-tr.groupheader td {
-  padding: 0px;
-  color: $theme-color-text;
-  background: transparent; }
-  tr.groupheader td:first-of-type {
-    padding: 0px; }
-  tr.groupheader td.groupheader .groupheader tbody tr td {
-    padding: 12px 0px 4px;
-    color: $theme-color-text;
-    font-weight: $theme-font-weight-global;
-    letter-spacing: $theme-letter-spacing-table;
-    display: inline-block;
-    font-size: $theme-font-table-header;
-    vertical-align: baseline; }
-    tr.groupheader td.groupheader .groupheader tbody tr td a, tr.groupheader td.groupheader .groupheader tbody tr td body.main .popup_menu span, body.main .popup_menu tr.groupheader td.groupheader .groupheader tbody tr td span {
-      color: $theme-color-text;
-      font-weight: $theme-font-weight-global;
-      letter-spacing: $theme-letter-spacing-table;
-      display: inline-block;
-      font-size: $theme-font-table-header; }
-    tr.groupheader td.groupheader .groupheader tbody tr td.state {
-      padding: 0px 8px;
-      width: auto;
-      box-shadow: none;
-      font-size: 14px;
-      text-transform: uppercase; }
-      tr.groupheader td.groupheader .groupheader tbody tr td.state a, tr.groupheader td.groupheader .groupheader tbody tr td.state body.main .popup_menu span, body.main .popup_menu tr.groupheader td.groupheader .groupheader tbody tr td.state span {
-        font-size: 14px;
-        text-transform: uppercase; }
-      tr.groupheader td.groupheader .groupheader tbody tr td.state.hstate1 a, tr.groupheader td.groupheader .groupheader tbody tr td.state.hstate1 body.main .popup_menu span, body.main .popup_menu tr.groupheader td.groupheader .groupheader tbody tr td.state.hstate1 span {
-        color: $theme-color-lightgrey; }
-tr.groupheader a, tr.groupheader body.main .popup_menu span, body.main .popup_menu tr.groupheader span {
-  color: $theme-color-text; }
 
 /* Graphs */
 div.graph_with_timeranges {

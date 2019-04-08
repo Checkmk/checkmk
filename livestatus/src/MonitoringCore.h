@@ -110,6 +110,7 @@ public:
     virtual std::string pnpPath() = 0;
     virtual std::string historyFilePath() = 0;
     virtual std::string logArchivePath() = 0;
+
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;
     virtual size_t maxCachedMessages() = 0;

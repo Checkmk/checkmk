@@ -585,10 +585,6 @@ public:
                            const_cast<char *>(service_description.c_str())));
     }
 
-    bool host_has_contact(const Host *host, const Contact *contact) override {
-        return is_authorized_for(this, toImpl(contact), toImpl(host), nullptr);
-    }
-
     ContactGroup *find_contactgroup(const std::string &name) override {
         // Older Nagios headers are not const-correct... :-P
         return fromImpl(::find_contactgroup(const_cast<char *>(name.c_str())));
@@ -597,6 +593,10 @@ public:
     const Contact *find_contact(const std::string &name) override {
         // Older Nagios headers are not const-correct... :-P
         return fromImpl(::find_contact(const_cast<char *>(name.c_str())));
+    }
+
+    bool host_has_contact(const Host *host, const Contact *contact) override {
+        return is_authorized_for(this, toImpl(contact), toImpl(host), nullptr);
     }
 
     bool is_contact_member_of_contactgroup(const ContactGroup *group,
@@ -614,16 +614,16 @@ public:
         return std::chrono::system_clock::from_time_t(last_log_rotation);
     }
 
+    size_t maxLinesPerLogFile() const override {
+        return fl_max_lines_per_logfile;
+    }
+
     Command find_command(const std::string &name) const override {
         // Older Nagios headers are not const-correct... :-P
         if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
             return {cmd->name, cmd->command_line};
         }
         return {"", ""};
-    }
-
-    size_t maxLinesPerLogFile() const override {
-        return fl_max_lines_per_logfile;
     }
 
     std::vector<Command> commands() const override {
@@ -676,6 +676,7 @@ public:
         extern char *log_archive_path;
         return log_archive_path;
     }
+
     Encoding dataEncoding() override { return fl_data_encoding; }
     size_t maxResponseSize() override { return fl_max_response_size; }
     size_t maxCachedMessages() override { return fl_max_cached_messages; }

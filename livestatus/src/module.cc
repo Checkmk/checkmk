@@ -129,8 +129,13 @@ static NagiosLimits fl_limits{
 };
 
 int g_thread_running = 0;
-static AuthorizationKind fl_service_authorization = AuthorizationKind::loose;
-static AuthorizationKind fl_group_authorization = AuthorizationKind::strict;
+
+struct NagiosAuthorization {
+    AuthorizationKind _service{AuthorizationKind::loose};
+    AuthorizationKind _group{AuthorizationKind::strict};
+};
+static NagiosAuthorization fl_authorization;
+
 Encoding fl_data_encoding = Encoding::utf8;
 
 static Logger *fl_logger_nagios = nullptr;
@@ -150,10 +155,12 @@ constexpr const char *default_socket_path = "/usr/local/nagios/var/rw/live";
 
 class NagiosCore : public MonitoringCore {
 public:
-    NagiosCore(const NagiosPaths &paths, const NagiosLimits &limits)
+    NagiosCore(const NagiosPaths &paths, const NagiosLimits &limits,
+               const NagiosAuthorization &authorization)
         : _logger_livestatus(Logger::getLogger("cmk.livestatus"))
         , _paths(paths)
         , _limits(limits)
+        , _authorization(authorization)
         , _store(this) {
         for (host *hst = host_list; hst != nullptr; hst = hst->next) {
             if (const char *address = hst->address) {
@@ -287,11 +294,11 @@ public:
     }
 
     AuthorizationKind serviceAuthorization() const override {
-        return fl_service_authorization;
+        return _authorization._service;
     }
 
     AuthorizationKind groupAuthorization() const override {
-        return fl_group_authorization;
+        return _authorization._group;
     }
 
     Logger *loggerLivestatus() override { return _logger_livestatus; }
@@ -348,6 +355,7 @@ private:
     Logger *_logger_livestatus;
     const NagiosPaths &_paths;
     const NagiosLimits &_limits;
+    const NagiosAuthorization &_authorization;
     Store _store;
     std::unordered_map<std::string, host *> _hosts_by_designation;
     Triggers _triggers;
@@ -853,7 +861,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
     auto ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
-            fl_core = new NagiosCore(fl_paths, fl_limits);
+            fl_core = new NagiosCore(fl_paths, fl_limits, fl_authorization);
             fl_client_queue = new ClientQueue();
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
@@ -1099,9 +1107,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 }
             } else if (strcmp(left, "service_authorization") == 0) {
                 if (strcmp(right, "strict") == 0) {
-                    fl_service_authorization = AuthorizationKind::strict;
+                    fl_authorization._service = AuthorizationKind::strict;
                 } else if (strcmp(right, "loose") == 0) {
-                    fl_service_authorization = AuthorizationKind::loose;
+                    fl_authorization._service = AuthorizationKind::loose;
                 } else {
                     Warning(fl_logger_nagios)
                         << "invalid service authorization mode, "
@@ -1109,9 +1117,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 }
             } else if (strcmp(left, "group_authorization") == 0) {
                 if (strcmp(right, "strict") == 0) {
-                    fl_group_authorization = AuthorizationKind::strict;
+                    fl_authorization._group = AuthorizationKind::strict;
                 } else if (strcmp(right, "loose") == 0) {
-                    fl_group_authorization = AuthorizationKind::loose;
+                    fl_authorization._group = AuthorizationKind::loose;
                 } else {
                     Warning(fl_logger_nagios)
                         << "invalid group authorization mode, "

@@ -42,6 +42,7 @@ from cmk.gui.valuespec import (
     HTTPUrl,
     IPv4Address,
     ListChoice,
+    ListOfStrings,
     Password,
     TextAreaUnicode,
     TextAscii,
@@ -816,6 +817,142 @@ $LONGSERVICEOUTPUT$
                      help=_("Here you can configure timeout settings in seconds."),
                      default_value=10,
                      size=3)),
+            ],
+        )
+
+
+@notification_parameter_registry.register
+class NotificationParameterOpsgenie(NotificationParameter):
+    @property
+    def ident(self):
+        return "opsgenie_issues"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            required_keys=[
+                'password',
+            ],
+            elements=[
+                ("password",
+                 PasswordFromStore(
+                     title=_("API Key to use. Depending on your opsgenie "
+                             "subscription you can use global or team integration api "
+                             "keys."),
+                     allow_empty=False,
+                 )),
+                ("owner",
+                 TextUnicode(
+                     title=_("Owner"),
+                     help_=("Sets the user of the alert. "
+                            "Display name of the request owner."),
+                     size=100,
+                     allow_empty=False,
+                 )),
+                ("source",
+                 TextUnicode(
+                     title=_("Source"),
+                     help=_("Source field of the alert. Default value is IP "
+                            "address of the incoming request."),
+                     size=16,
+                 )),
+                ('priority',
+                 DropdownChoice(
+                     title=_("Priority"),
+                     choices=[
+                         ('P1', _('P1 - Critical')),
+                         ('P2', _('P2 - High')),
+                         ('P3', _('P3 - Moderate')),
+                         ('P4', _('P4 - Low')),
+                         ('P5', _('P5 - Informational')),
+                     ],
+                     default="P3")),
+                ("note_created",
+                 TextUnicode(
+                     title=_("Note while creating"),
+                     help=_("Additional note that will be added while creating the alert."),
+                     default_value="Alert created by Check_MK",
+                 )),
+                ("note_closed",
+                 TextUnicode(
+                     title=_("Note while closing"),
+                     help=_("Additional note that will be added while closing the alert."),
+                     default_value="Alert closed by Check_MK",
+                 )),
+                ("host_msg",
+                 TextUnicode(
+                     title=_("Description for host alerts"),
+                     help=_("Description field of host alert that is generally "
+                            "used to provide a detailed information about the "
+                            "alert."),
+                     default_value="Check_MK: $HOSTNAME$ - $HOSTSHORTSTATE$",
+                     size=64,
+                 )),
+                ("svc_msg",
+                 TextUnicode(
+                     title=_("Description for service alerts"),
+                     help=_("Description field of service alert that is generally "
+                            "used to provide a detailed information about the "
+                            "alert."),
+                     default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $SERVICESHORTSTATE$",
+                     size=68,
+                 )),
+                ("host_desc",
+                 TextAreaUnicode(
+                     title=_("Message for host alerts"),
+                     rows=7,
+                     cols=58,
+                     monospaced=True,
+                     default_value="""Host: $HOSTNAME$
+Event:    $EVENT_TXT$
+Output:   $HOSTOUTPUT$
+Perfdata: $HOSTPERFDATA$
+$LONGHOSTOUTPUT$
+""")),
+                ("svc_desc",
+                 TextAreaUnicode(
+                     title=_("Message for service alerts"),
+                     rows=11,
+                     cols=58,
+                     monospaced=True,
+                     default_value="""Host: $HOSTNAME$
+Service:  $SERVICEDESC$
+Event:    $EVENT_TXT$
+Output:   $SERVICEOUTPUT$
+Perfdata: $SERVICEPERFDATA$
+$LONGSERVICEOUTPUT$
+""")),
+                ("teams",
+                 ListOfStrings(
+                     title=_("Responsible teams"),
+                     help=_("Team names which will be responsible for the alert. "
+                            "If the API Key belongs to a team integration, "
+                            "this field will be overwritten with the owner "
+                            "team."),
+                     allow_empty=False,
+                     orientation="horizontal",
+                 )),
+                ("actions",
+                 ListOfStrings(
+                     title=_("Actions"),
+                     help=_("Custom actions that will be available for the alert."),
+                     allow_empty=False,
+                     orientation="horizontal",
+                 )),
+                ("tags",
+                 ListOfStrings(
+                     title=_("Tags"),
+                     help=_("Tags of the alert."),
+                     allow_empty=False,
+                     orientation="horizontal",
+                 )),
+                ("entity",
+                 TextUnicode(
+                     title=_("Entity"),
+                     help=_("Is used to specify which domain the alert is related to."),
+                     allow_empty=False,
+                     size=68,
+                 )),
             ],
         )
 

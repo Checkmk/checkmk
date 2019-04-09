@@ -50,8 +50,9 @@ class DiscoveredHostLabelsStore(object):
 
     def save(self, labels):
         # type: (Dict) -> None
-        if not labels and self.file_path.exists():  # pylint: disable=no-member
-            self.file_path.unlink()  # pylint: disable=no-member
+        if not labels:
+            if self.file_path.exists():
+                self.file_path.unlink()
             return
 
         self.file_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member

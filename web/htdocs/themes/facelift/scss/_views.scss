@@ -37,329 +37,336 @@ Boston, MA 02110-1301 USA.
 '-------------------------------------------------------------------------*/
 
 table.filterform {
-    border-collapse: collapse;
-    padding: 0px;
-    border-style: none;
-}
-table.filterform td {
-    padding: 0px;
+  padding: 0;
+  border-collapse: collapse;
+  border-style: none;
+
+  td {
+    padding: 0;
+  }
 }
 
 div.floatfilter {
-    margin: 0px 4px 3px 0px;
-    width: 310px;
-    height: 53px;
-    float: left;
-    border-width: 1px;
-    border-style: solid;
-    border-color: #acc #22404d #22414d #8ab;
-    box-shadow: 0.5px 0.5px 1px #444;
-    background-color: rgba(160, 181, 190, 0.6);
-    border-radius: 5px;
-    color: black;
+  float: left;
+  width: 310px;
+  height: 53px;
+  margin: 0 4px 3px 0;
+  color: #000;
+  background-color: rgba(160, 181, 190, 0.6);
+  border-color: #acc #22404d #22414d #8ab;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 5px;
+  box-shadow: 0.5px 0.5px 1px #444;
+
+  &.double {
+    display: table-cell;
+    height: 110px;
+
+    .content {
+      height: 82px;
+    }
+  }
+
+  input[type=text] {
+    width: 294px;
+
+    &.neg {
+      width: 229px;
+    }
+  }
+
+  .legend {
+    width: 300px;
+    height: 17px;
+    padding: 3px 5px 0;
+    margin-bottom: 1px;
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 5px 5px 0 0;
+  }
+
+  .content {
+    display: table-cell;
+    width: 311px;
+    height: 30px;
+    padding-top: 5px;
+    padding-left: 4px;
+    margin-top: 0;
+    margin-left: 0;
+    text-align: left;
+
+    > select {
+      width: 300px;
+
+      &.neg,
+      &#opthost_group,
+      &#optservice_contact_group,
+      &#opthost_contact_group,
+      &#optservice_group {
+        width: 237px;
+      }
+    }
+
+    .multigroup {
+      table {
+        margin-top: -6px;
+      }
+
+      select {
+        width: 148px;
+        height: 66px;
+
+        &.large {
+          width: 228px;
+        }
+
+        &.small {
+          width: 68px;
+        }
+      }
+    }
+
+    .filtertime select {
+      width: 136px;
+    }
+  }
+
+  &.service_custom_variable, &.host_custom_variable {
+    input, select {
+      display: inline-block;
+      width: 45%;
+    }
+
+    select {
+      margin-right: 10px;
+    }
+  }
+}
+
+body.main.screenshotmode div.floatfilter {
+  background-color: #5893af;
 }
 
 .filterform > tbody > tr > td div.floatfilter {
-  height: auto;
-  width: 372px;
   position: relative;
+  width: 372px;
+  height: auto;
   margin-right: 16px;
   margin-bottom: 16px;
   background: $theme-color-white;
   border: 1px solid $theme-color-table-border;
   box-shadow: none;
-}
 
-body.main.screenshotmode div.floatfilter {
-    background-color: #5893af;
-}
-
-div.floatfilter.double {
-    height: 110px;
-    display: table-cell;
-}
-
-.filterform > tbody > tr > td div.floatfilter.single {
+  &.single {
     height: 114px;
-}
+  }
 
-.filterform > tbody > tr > td div.floatfilter.double {
+  &.double {
     height: 246px;
-}
+  }
 
-div.floatfilter input[type=text] {
-    width: 294px;
-}
-
-div.floatfilter input[type=text].neg {
-    width: 229px;
-}
-
-div.floatfilter .legend {
-    color: white;
-    margin-bottom: 1px;
-    width: 300px;
-    height: 17px;
-    background-color: rgba(255, 255, 255, 0.2);
-    padding: 3px 5px 0px 5px;
-    border-radius: 5px 5px 0px 0px;
-}
-
-.filterform > tbody > tr > td div.floatfilter .legend {
-    padding: 12px;
-    box-sizing: border-box;
+  .legend {
+    width: 100%;
     height: auto;
+    padding: 12px;
     color: $theme-color-table-text;
     text-transform: uppercase;
-    width: 100%;
-}
-
-div.floatfilter .content {
-    width: 311px;
-    height: 30px;
-    margin-top: 0px;
-    margin-left: 0px;
-    display: table-cell;
-    padding-left: 4px;
-    text-align: left;
-    padding-top: 5px;
-}
-
-.filterform > tbody > tr > td div.floatfilter .content {
-    width: 100%;
-    display: block;
     box-sizing: border-box;
+  }
+
+  .content {
+    display: block;
+    width: 100%;
     padding: 12px;
-}
-
-div.floatfilter.double .content {
-    height: 82px;
-}
-
-div.floatfilter .content > select {
-    width: 300px;
-}
-
-.filterform > tbody > tr > td div.floatfilter .content select {
     box-sizing: border-box;
-}
 
-div.floatfilter .content > select.neg,
-div.floatfilter .content > select#opthost_group,
-div.floatfilter .content > select#optservice_contact_group,
-div.floatfilter .content > select#opthost_contact_group,
-div.floatfilter .content > select#optservice_group {
-    width: 237px;
-}
+    select {
+      box-sizing: border-box;
+    }
 
-.filterform > tbody > tr > td div.floatfilter .content table {
-    border-spacing: 8px 4px;
-}
+    table {
+      border-spacing: 8px 4px;
+    }
 
-div.floatfilter .content .multigroup table {
-    margin-top: -6px;
-}
+    .checkbox {
+      display: block;
+      float: left;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
 
-div.floatfilter .content .multigroup select {
-    width: 148px;
-    height: 66px;
-}
+    input, select, textarea, #mk_side_search_field {
+      margin-bottom: 8px;
+    }
 
-div.floatfilter .content .multigroup select.large {
-    width: 228px;
-}
+    input[type^=radio],
+    select[type^=radio],
+    textarea[type^=radio],
+    [type^=radio]#mk_side_search_field {
+      width: auto;
+      margin-bottom: 0;
+    }
 
-div.floatfilter .content .multigroup select.small {
-    width: 68px;
-}
-
-div.floatfilter .content .filtertime select {
-    width: 136px;
-}
-
-.filterform > tbody > tr > td div.floatfilter .content .checkbox {
-    display: block;
-    float: left;
-    margin-right: 8px;
-    margin-bottom: 8px;
-}
-
-.filterform > tbody > tr > td div.floatfilter .content input,
-.filterform > tbody > tr > td div.floatfilter .content select,
-.filterform > tbody > tr > td div.floatfilter .content textarea,
-.filterform > tbody > tr > td div.floatfilter .content #mk_side_search_field,
-.filterform > tbody > tr > td div.floatfilter .content select {
-    margin-bottom: 8px;
-}
-
-.filterform > tbody > tr > td div.floatfilter .content input[type^=radio],
-.filterform > tbody > tr > td div.floatfilter .content select[type^=radio],
-.filterform > tbody > tr > td div.floatfilter .content textarea[type^=radio],
-.filterform > tbody > tr > td div.floatfilter .content [type^=radio]#mk_side_search_field,
-.filterform > tbody > tr > td div.floatfilter .content select[type^=radio] {
-    width: auto;
-    margin-bottom: 0px;
-}
-
-div.floatfilter.service_custom_variable input, div.floatfilter.host_custom_variable input,
-div.floatfilter.service_custom_variable select, div.floatfilter.host_custom_variable select {
-    display: inline-block;
-    width: 45%;
-}
-
-div.floatfilter.service_custom_variable select, div.floatfilter.host_custom_variable select {
-    margin-right: 10px;
-}
-
-.filterform > tbody > tr > td div.floatfilter .content .valuespec_tuple {
-    width: 100%;
-    border-spacing: 2px 2px;
+    .valuespec_tuple {
+      width: 100%;
+      border-spacing: 2px 2px;
+    }
+  }
 }
 
 /* Improving styling of floatfilters that are contained in a ListOf() */
-table.valuespec_listof.filter {
+table.valuespec_listof {
+  *.filter {
     width: 300px;
-    border-spacing: 0px;
+    border-spacing: 0;
+  }
+
+  td {
+    &.vlof_content.filter {
+      width: 1px;
+      border-style: none;
+    }
+
+    &.vlof_buttons.filter {
+      width: 1px;
+      vertical-align: top;
+      border-style: none;
+
+      img {
+        position: relative;
+        top: 2px;
+        left: -28px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
 }
 
 select.vlof_filter {
-    width: 312px;
-}
-
-table.valuespec_listof td.vlof_content.filter {
-    width: 1px;
-    border-style: none;
-}
-
-table.valuespec_listof td.vlof_buttons.filter {
-    width: 1px;
-    border-style: none;
-    vertical-align: top;
-}
-
-table.valuespec_listof td.vlof_buttons.filter img {
-    position: relative;
-    top: 2px;
-    left: -28px;
-    width: 16px;
-    height: 16px;
+  width: 312px;
 }
 
 table.nform table.valuespec_listof {
-    border-spacing: 0px;
-}
+  border-spacing: 0;
 
-table.nform table.valuespec_listof > tbody > tr {
+  > tbody > tr {
     vertical-align: middle;
-}
+  }
 
-table.nform table.valuespec_listof .vlof_content {
-    border-bottom: 1px solid $theme-color-table-border;
-    padding: 8px 0px;
+  .vlof_content {
+    padding: 8px 0;
     vertical-align: top;
-}
+    border-bottom: 1px solid $theme-color-table-border;
 
-table.nform table.valuespec_listof .vlof_content .valuespec_tuple {
-    border-spacing: 8px;
-}
+    .valuespec_tuple {
+      border-spacing: 8px;
+    }
 
-table.nform table.valuespec_listof .vlof_content .content nobr {
-    display: inline-block;
-    margin-top: 8px;
-}
+    .content nobr {
+      display: inline-block;
+      margin-top: 8px;
+    }
+  }
 
-table.nform table.valuespec_listof .vlof_buttons {
+  .vlof_buttons {
+    padding-top: 8px;
+    padding-bottom: 32px;
     vertical-align: middle;
     border-bottom: 1px solid $theme-color-table-border;
-    padding-bottom: 32px;
-    padding-top: 8px;
-}
+  }
 
-table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter {
-    height: auto;
-    box-shadow: none;
-    border: 1px solid $theme-color-table-border;
-    background-color: $theme-color-white;
-    width: 400px;
-}
+  &.filter {
+    .vlof_content.filter .floatfilter {
+      width: 400px;
+      height: auto;
+      background-color: $theme-color-white;
+      border: 1px solid $theme-color-table-border;
+      box-shadow: none;
 
-table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter .legend {
-    font-size: $theme-font-size-global;
-    text-transform: uppercase;
-    letter-spacing: $theme-letter-spacing-table;
-    color: $theme-color-table-text;
-    padding: 16px 0px 0px 16px;
-}
+      .legend {
+        padding: 16px 0 0 16px;
+        font-size: $theme-font-size-global;
+        letter-spacing: $theme-letter-spacing-table;
+        color: $theme-color-table-text;
+        text-transform: uppercase;
+      }
 
-table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter .content {
-    padding: 16px;
-    width: 100%;
-}
+      .content {
+        width: 100%;
+        padding: 16px;
 
-table.nform table.valuespec_listof.filter .vlof_content.filter .floatfilter .content table {
-    border-spacing: 8px 4px;
-}
+        table {
+          border-spacing: 8px 4px;
+        }
+      }
+    }
 
-table.nform table.valuespec_listof.filter .vlof_buttons.filter img {
-    top: 8px;
-    left: -40px;
+    .vlof_buttons.filter img {
+      top: 8px;
+      left: -40px;
+    }
+  }
 }
 
 table.filtertime td {
-    vertical-align: middle;
-}
-
-div.optiondial, div.optiondial.num_columns, div.optiondial.refresh {
-  background: $theme-color-white;
-  height: 32px;
-  width: 73px;
-  box-shadow: none;
-  border: 1px solid $theme-color-table-border;
-  border-radius: $theme-border-radius;
-  margin-right: 12px;
-  margin-bottom: 12px;
-  top: 0;
+  vertical-align: middle;
 }
 
 div.optiondial {
-    cursor: pointer;
+  &, &.num_columns, &.refresh {
+    top: 0;
+    width: 73px;
+    height: 32px;
+    margin-right: 12px;
+    margin-bottom: 12px;
+    background: $theme-color-white;
+    border: 1px solid $theme-color-table-border;
+    border-radius: $theme-border-radius;
+    box-shadow: none;
+
+    div {
+      padding: 0;
+      line-height: 34px;
+    }
+  }
+
+  & {
     position: relative;
+    float: left;
     margin-top: 0;
     margin-left: 0;
-    float: left;
     overflow: hidden;
-    box-shadow: 0px 0px 3px #123;
-    text-shadow: 0px 0.5px 0.5px #fff;
     color: #222;
-}
+    text-shadow: 0 0.5px 0.5px #fff;
+    cursor: pointer;
+    box-shadow: 0 0 3px #123;
+  }
 
-div.optiondial.num_columns {
-    margin-right: 0px;
-    border-right: 0px;
-    border-radius: $theme-border-radius 0px 0px 4px;
+  &.num_columns {
     width: 74px;
-}
+    margin-right: 0;
+    border-right: 0;
+    border-radius: $theme-border-radius 0 0 4px;
+  }
 
-div.optiondial.refresh {
+  &.refresh {
     margin-left: -6px;
-    border-radius: 0px 4px 4px 0px;
-}
+    border-radius: 0 4px 4px 0;
+  }
 
-div.optiondial div, div.optiondial.num_columns div, div.optiondial.refresh div {
-    line-height: 34px;
-    padding: 0px;
-}
-
-div.optiondial div {
+  div {
+    position: relative;
+    top: 0;
     width: 100%;
     height: 100%;
-    position: relative;
-    top: 0px;
     text-align: center;
+  }
 }
 
 div.view_form {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 /*-------------------------------------------------------------------------.
@@ -376,193 +383,192 @@ div.view_form {
 
 /* TODO: Reproduce this html element */
 td.fillup {
-    background-color: #eee;
+  background-color: #eee;
 }
 
-tr.groupheader td {
-  padding: 0px;
-  color: $theme-color-text;
-  background: transparent;
-}
-
-td.groupheader {
-    margin: 0;
-}
-
-tr.groupheader td.groupheader .groupheader tbody tr td {
-    padding: 12px 0px 4px;
+tr.groupheader {
+  td {
+    padding: 0;
     color: $theme-color-text;
-    font-weight: $theme-font-weight-global;
-    letter-spacing: $theme-letter-spacing-table;
-    display: inline-block;
-    font-size: $theme-font-table-header;
-    vertical-align: baseline;
-}
+    background: transparent;
 
-tr.groupheader td.groupheader .groupheader tbody tr td a,
-tr.groupheader td.groupheader .groupheader tbody tr td body.main .popup_menu span,
-body.main .popup_menu tr.groupheader td.groupheader .groupheader tbody tr td span {
+    &.groupheader .groupheader tbody tr td {
+      display: inline-block;
+      padding: 12px 0 4px;
+      font-size: $theme-font-table-header;
+      font-weight: $theme-font-weight-global;
+      letter-spacing: $theme-letter-spacing-table;
+      color: $theme-color-text;
+      vertical-align: baseline;
+
+      &.state {
+        width: auto;
+        padding: 0 8px;
+        font-size: 14px;
+        text-transform: uppercase;
+        box-shadow: none;
+      }
+
+      a,
+      body.main .popup_menu span,
+      body.main .popup_menu & span {
+        display: inline-block;
+        font-size: $theme-font-table-header;
+        font-weight: $theme-font-weight-global;
+        letter-spacing: $theme-letter-spacing-table;
+        color: $theme-color-text;
+      }
+
+      &.state a,
+      &.state body.main .popup_menu span,
+      body.main .popup_menu &.state span {
+        font-size: 14px;
+        text-transform: uppercase;
+      }
+
+      &.state.hstate1 a,
+      &.state.hstate1 body.main .popup_menu span,
+      body.main .popup_menu &.state.hstate1 span {
+        color: $theme-color-lightgrey;
+      }
+    }
+  }
+
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
     color: $theme-color-text;
-    font-weight: $theme-font-weight-global;
-    letter-spacing: $theme-letter-spacing-table;
-    display: inline-block;
-    font-size: $theme-font-table-header;
-}
-
-tr.groupheader td.groupheader .groupheader tbody tr td.state {
-    padding: 0px 8px;
-    width: auto;
-    box-shadow: none;
-    font-size: 14px;
-    text-transform: uppercase;
-}
-
-tr.groupheader td.groupheader .groupheader tbody tr td.state a,
-tr.groupheader td.groupheader .groupheader tbody tr td.state body.main .popup_menu span,
-body.main .popup_menu tr.groupheader td.groupheader .groupheader tbody tr td.state span {
-    font-size: 14px;
-    text-transform: uppercase;
-}
-
-tr.groupheader td.groupheader .groupheader tbody tr td.state.hstate1 a,
-tr.groupheader td.groupheader .groupheader tbody tr td.state.hstate1 body.main .popup_menu span,
-body.main .popup_menu tr.groupheader td.groupheader .groupheader tbody tr td.state.hstate1 span {
-    color: $theme-color-lightgrey;
-}
-
-tr.groupheader a,
-tr.groupheader body.main .popup_menu span,
-body.main .popup_menu tr.groupheader span {
-  color: $theme-color-text;
+  }
 }
 
 table.data.oddeven > tbody > tr.groupheader {
-    background-color: transparent;
+  background-color: transparent;
 }
 
 table.data tr.data > td.gap,
 table.data tr > td.last_col,
 table.data tr > th.last_col {
-    border-right: 0;
+  border-right: 0;
 }
 
 td.gap, table.data .checkbox_hover.gap {
-    /* TODO: Check whether these background styles are needed */
-    background-image: url("images/contentframe_background.jpg");
-    background-attachment: fixed;
-    background-repeat: repeat;
-    width: 5px;
+  width: 5px;
+  /* #TODO: Check whether these background styles are needed */
+  background-attachment: fixed;
+  background-image: url("images/contentframe_background.jpg");
+  background-repeat: repeat;
 }
 
 /* boxed layout */
 table.boxlayout {
-    border-spacing: 0px;
-}
-table.boxlayout td.boxcolumn {
+  border-spacing: 0;
+
+  td.boxcolumn {
     padding-right: 20px;
+  }
 }
 
 /* tiled layout */
 table.tiled td {
-    border-style: none;
+  border-style: none;
 }
 
 .tile {
-    width: 180px;
-    border: 1px solid #000;
-    float: left;
-    border-radius: 0px;
-    margin-right: 6px;
-    margin-bottom: 6px;
-    box-shadow: 1px 1px 3px #000;
-    background-color: #ccc;
-}
+  float: left;
+  width: 180px;
+  margin-right: 6px;
+  margin-bottom: 6px;
+  background-color: #ccc;
+  border: 1px solid #000;
+  border-radius: 0;
+  box-shadow: 1px 1px 3px #000;
 
-table.data.tiled td.tiles div.tile {
-    border: 1px solid $theme-color-table-border;
-    border-radius: $theme-border-radius;
-    box-shadow: none;
-    background: $theme-color-white;
-    width: 240px;
-    padding: 4px;
-}
-
-.tile img.icon {
+  img.icon {
     width: 16px;
     height: 16px;
-}
+  }
 
-.tile table {
-    height: 70px;
+  table {
     width: 100%;
-}
+    height: 70px;
+  }
 
-.tile td {
+  td {
+    font-size: 9px;
     border-style: none;
-    font-size: 7pt;
+
+    &.tl, &.bl {
+      text-align: left;
+    }
+
+    &.tr, &.br {
+      text-align: right;
+    }
+
+    &.center {
+      vertical-align: middle;
+    }
+
+    &.center, &.cont {
+      text-align: center;
+    }
+
+    &.bl, &.br {
+      vertical-align: bottom;
+    }
+
+    &.bl, &.br, &.tl, &.tr {
+      height: 20px;
+    }
+  }
+
+  &.sstate0, &.hhstate0 {
+    border-color: #0f0;
+  }
+
+  &.sstate1 {
+    background-color: #ff0;
+    border-color: #ff0;
+  }
+
+  &.sstate2, &.hhstate1 {
+    background-color: #f88;
+    border-color: #f00;
+  }
+
+  &.sstate3, &.hhstate2 {
+    background-color: #fc8;
+    border-color: #f80;
+  }
 }
 
 table.data.tiled td.tiles {
   padding: 0;
-}
 
-table.data.tiled td.tiles div.tile table {
-  border-spacing: 4px 8px;
-}
+  div.tile {
+    width: 240px;
+    padding: 4px;
+    background: $theme-color-white;
+    border: 1px solid $theme-color-table-border;
+    border-radius: $theme-border-radius;
+    box-shadow: none;
 
-table.data.tiled td.tiles div.tile table td {
-    padding: 8px;
-}
+    table {
+      border-spacing: 4px 8px;
 
-table.data.tiled td.tiles div.tile table td.states {
-  border-radius: $theme-border-radius;
-}
+      td {
+        padding: 8px;
 
-table.data.tiled td.tiles div.tile .cont {
-  box-sizing: border-box;
-}
+        &.states {
+          border-radius: $theme-border-radius;
+        }
+      }
+    }
 
-.tile.sstate0, .tile.hhstate0 {
-    border-color: #0f0;
-}
-
-.tile.sstate1 {
-    border-color: #ff0;
-    background-color: #ff0;
-}
-
-.tile.sstate2, .tile.hhstate1 {
-    border-color: #f00;
-    background-color: #f88;
-}
-
-.tile.sstate3, .tile.hhstate2 {
-    border-color: #f80;
-    background-color: #fc8;
-}
-
-.tile td.tl, .tile td.bl {
-    text-align: left;
-}
-
-.tile td.tr, .tile td.br {
-    text-align: right;
-}
-
-.tile td.center {
-    vertical-align: middle;
-}
-
-.tile td.center, .tile td.cont {
-    text-align: center;
-}
-
-.tile td.bl, .tile td.br {
-    vertical-align: bottom;
-}
-
-.tile td.bl, .tile td.br, .tile td.tl, .tile td.tr {
-    height: 20px;
+    .cont {
+      box-sizing: border-box;
+    }
+  }
 }
 
 /*
@@ -572,173 +578,182 @@ table.data.tiled td.tiles div.tile .cont {
  page uses thislayout
 */
 table.data.single {
-    margin-top: 5px;
-    border-spacing: 1px;
-    padding: 0;
-    border-collapse: collapse;
-    empty-cells: show;
-}
+  padding: 0;
+  margin-top: 5px;
+  border-collapse: collapse;
+  border-spacing: 1px;
+  empty-cells: show;
 
-table.data.single tr.data > td {
-    padding-bottom: 4px;
-    padding: 4px 5px 2px 5px;
-    text-align: left;
-    height: 16px;
-    line-height: 14px;
-    vertical-align: top;
-}
+  tr.data {
+    > td {
+      height: 16px;
+      padding: 4px 5px 2px 5px;
+      padding-bottom: 4px;
+      line-height: 14px;
+      text-align: left;
+      vertical-align: top;
+    }
 
-table.data.single tr.data td.left {
-    width: 10%;
-    white-space: nowrap;
-    vertical-align: top;
-    padding-right: 20px;
-}
+    td.left {
+      width: 10%;
+      padding-right: 20px;
+      white-space: nowrap;
+      vertical-align: top;
+    }
+  }
 
-table.data.single > tbody > tr > td,
-table.data.single > tbody tr.odd0 > td,
-table.data.single > tbody tr.even0 > td {
+  > tbody > tr > td,
+  > tbody tr.odd0 > td,
+  > tbody tr.even0 > td {
     padding: 8px 16px;
     background-color: $theme-color-white;
-    border-radius: 0px;
-}
+    border-radius: 0;
 
-table.data.single > tbody > tr > td.left,
-table.data.single > tbody tr.odd0 > td.left,
-table.data.single > tbody tr.even0 > td.left {
-    font-weight: $theme-font-weight-bold;
-    background-color: $theme-color-white;
-    border-right: 1px solid $theme-color-table-border;
-    transition: .15s ease-in-out;
-}
+    &.left {
+      font-weight: $theme-font-weight-bold;
+      background-color: $theme-color-white;
+      border-right: 1px solid $theme-color-table-border;
+      transition: .15s ease-in-out;
+    }
+  }
 
-table.data.single td.gap {
-    background-color: transparent;
-    border-left-style: none;
-    border-right-style: none;
-}
+  td {
+    &.gap {
+      background-color: transparent;
+      border-right-style: none;
+      border-left-style: none;
+    }
 
-/* #TODO: Check whether this style is redundant
- * see styles for table.data.single tr.data > td
- */
-table.data.single td.age,
-table.data.single td.number,
-table.data.single td.count {
-    text-align: left;
-}
+    /* #TODO: Check whether this style is redundant
+     * see styles for table.data.single tr.data > td
+     */
+    &.age, &.number, &.count {
+      text-align: left;
+    }
 
-table.data.single td.perfometer div.glass {
-    width: 100%;
+    &.perfometer div.glass {
+      width: 100%;
+    }
+  }
 }
 
 table.data.matrix {
-    width: auto;
-    margin-bottom: 10px;
-}
+  width: auto;
+  margin-bottom: 10px;
 
-table.data.matrix tbody > tr.data > td {
-  padding: 8px;
-  border: 1px solid $theme-color-table-border;
-  border-left: 0px solid;
-}
+  tbody > tr.data {
+    > td {
+      padding: 8px;
+      border: 1px solid $theme-color-table-border;
+      border-left: 0 solid;
 
-table.data.matrix tr.even0 td.left {
-    background-color: #bbb;
-}
+      &.left {
+        font-weight: $theme-font-weight-bold;
+        background-color: $theme-color-white;
+        border-right: 1px solid $theme-color-table-border;
+        border-left: 1px solid $theme-color-table-border;
+        transition: .15s ease-in-out;
+      }
 
-table.data.matrix tr.odd0 td.left {
-    background-color: #ccc;
-}
+      /* #TODO: Reproduce this html element
+       * .perfometer seems to always be one table level lower than tr.data, so
+       * not a direct child
+       */
+      &.perfometer {
+        width: 180px;
+      }
 
-table.data.matrix tbody > tr.data > td.left {
-    font-weight: $theme-font-weight-bold;
-    background-color: $theme-color-white;
-    border-right: 1px solid $theme-color-table-border;
-    transition: .15s ease-in-out;
-    border-left: 1px solid $theme-color-table-border;
-}
+      &.cell td.perfometer {
+        div.title, div.content {
+          padding: 0;
+        }
+      }
+    }
 
-table.data.matrix tbody tr.even0 td.matrixhead,
-table.data.matrix tbody tr.odd0 td.matrixhead {
-  color: $theme-color-text;
-  font-weight: $theme-font-weight-bold;
-}
+    &:hover td.left {
+      background-color: $theme-color-table-background;
+    }
 
-table.data.matrix tr.even0 td.matrixhead {
-    background-color: #888;
-}
+    &:first-child {
+      background: transparent;
 
-table.data.matrix tr.odd0 td.matrixhead {
-    background-color: #999;
-}
+      td {
+        background: transparent;
+        border: none;
 
-/* TODO: Reproduce this html element
- * .perfometer seems to always be one table level lower than tr.data, so not a direct child
- */
-table.data.matrix tbody > tr.data > td.perfometer {
-    width: 180px;
-}
+        &.matrixhead {
+          font-size: $theme-font-size-global;
+          letter-spacing: $theme-letter-spacing-table;
+          text-transform: uppercase;
+        }
+      }
+    }
+  }
 
-table.data.matrix tbody > tr.data > td.cell td.perfometer div.title {
+  tr.even0 {
+    td.left {
+      background-color: #bbb;
+
+      &.minority {
+        background-color: #bdd;
+      }
+    }
+
+    td.matrixhead {
+      background-color: #888;
+    }
+  }
+
+  tr.odd0 {
+    td.left {
+      background-color: #ccc;
+
+      &.minority {
+        background-color: #cee;
+      }
+    }
+
+    td.matrixhead {
+      background-color: #999;
+    }
+  }
+
+  tr.even0, tr.odd0 {
+    tbody & td.matrixhead {
+      font-weight: $theme-font-weight-bold;
+      color: $theme-color-text;
+    }
+  }
+
+  td.cell {
     padding: 0;
-}
 
-table.data.matrix tbody > tr.data > td.cell td.perfometer div.content {
+    table {
+      width: 100%;
+      padding: 0;
+    }
+  }
+
+  /* #TODO: Reproduce this html element */
+  table.cell > tbody > tr > td {
     padding: 0;
-}
+    border: 1px solid #f00;
+  }
 
-table.data.matrix tbody > tr.data:hover td.left {
-  background-color: $theme-color-table-background;
-}
-
-table.data.matrix tbody > tr.data:first-child {
-  background: transparent;
-}
-
-table.data.matrix tbody > tr.data:first-child td {
-    background: transparent;
-    border: none;
-}
-
-table.data.matrix tbody > tr.data:first-child td.matrixhead {
-    font-size: $theme-font-size-global;
-    text-transform: uppercase;
-    letter-spacing: $theme-letter-spacing-table;
-}
-
-table.data.matrix td.cell {
-    padding: 0px;
-}
-
-table.data.matrix td.cell table {
-    width: 100%;
-    padding: 0px;
-}
-
-/* TODO: Reproduce this html element */
-table.data.matrix table.cell > tbody > tr > td {
-    padding: 0px;
-    border: 1px solid red;
-}
-
-/* TODO: Reproduce this html element */
-table.data.matrix tr.matrixhead td.left a,
-table.data.matrix tr.matrixhead td.left {
-    color: white;
+  /* #TODO: Reproduce this html element */
+  tr.matrixhead td.left {
+    &, a {
+      color: #fff;
+    }
+  }
 }
 
 .even0 .minority {
-    background-color: #cff;
-}
-.odd0 .minority {
-    background-color: #dff;
+  background-color: #cff;
 }
 
-table.data.matrix tr.even0 td.left.minority {
-    background-color: #bdd;
-}
-table.data.matrix tr.odd0 td.left.minority {
-    background-color: #cee;
+.odd0 .minority {
+  background-color: #dff;
 }
 
 /*-------------------------------------------------------------------------.
@@ -753,11 +768,11 @@ table.data.matrix tr.odd0 td.left.minority {
 '-------------------------------------------------------------------------*/
 
 div.clear {
-    clear: left;
+  clear: left;
 }
 
-input#try{
-    float:left;
+input#try {
+  float: left;
 }
 
 
@@ -776,275 +791,275 @@ input#try{
  */
 
 table.views {
-    border-collapse: collapse;
-    empty-cells: show;
-    margin-bottom: 1ex;
-}
+  margin-bottom: 1ex;
+  border-collapse: collapse;
+  empty-cells: show;
 
-table.views td, table.views th{
-    border: 1px solid #444;
+  td, th{
     padding: 2px 1ex;
-}
+    color: #fff;
+    border: 1px solid #444;
+  }
 
-table.views td {
+  td {
     height: 25px;
     padding-top: 3px;
-    color: #fff;
-}
 
-table.views th {
+    &.legend {
+      color: #fff;
+      background-color: #8eaeb8;
+    }
+
+    &.content {
+      color: #fff;
+      background-color: #9ebec8;
+    }
+
+    &.edit {
+      text-align: center;
+      background-color: #6ab;
+    }
+
+    &.buttons {
+      padding: 3px;
+      vertical-align: middle;
+      background-color: #8eaeb8;
+    }
+  }
+
+  th {
     background-color: #709aa5;
-    color: #fff;
-}
-
-table.views td.legend {
-    background-color: #8eaeb8;
-    color: #fff;
-}
-
-table.views td.content {
-    background-color: #9ebec8;
-    color: #fff;
-}
-
-table.views td.edit {
-    background-color: #6ab;
-    text-align: center;
-}
-
-table.views td.buttons {
-    padding: 3px;
-    vertical-align: middle;
-    background-color: #8EAEB8;
+  }
 }
 
 /* Availability */
 table.data.availability {
-    width: 100%;
-}
+  width: 100%;
 
-table.data.availability td.number {
+  td.number {
     width: 60px;
-}
+  }
 
-table.data.availability td.unused {
+  td.unused {
     color: #888;
     text-shadow: 1px 1px 0.5px #fff;
-}
+  }
 
-table.data.availability tr.summary {
+  tr.summary {
     background-color: #bbb;
-}
 
-table.data.availability tr.summary td {
-    border-top: 1px solid $theme-color-table-border;
-    font-weight: bold;
-    border-bottom-style: none;
-    padding-bottom: 1px;
-    padding-top: 1px;
+    td {
+      padding-top: 1px;
+      padding-bottom: 1px;
+      font-weight: bold;
+      border-top: 1px solid $theme-color-table-border;
+      border-bottom-style: none;
+    }
+  }
+
+  td.number.stats, tr.odd0 td.number:not(.unused) {
+    opacity: .7;
+  }
+
+  tr.odd0 td.number.stats {
+    opacity: .5;
+  }
 }
 
 table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
-    background-color: #f0f;
+  background-color: #f0f;
 }
 table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
-    background-color: #0af;
+  background-color: #0af;
 }
 table.data td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
-    background-color: #048;
-    color: white;
+  color: #fff;
+  background-color: #048;
 }
+
 table.data td.unmonitored,
 table.timeline td.unmonitored,
 div.avlegend.timeline div.state.unmonitored {
-    background-color: #cacaca;
-    color: #888;
+  color: #888;
+  background-color: #cacaca;
 }
 
 table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
-    background-color: #cacaca;
-    /* TODO: Check whether this image can be dropped (seems not to be available anymore */
-    background-image: url("images/ooservice.png");
-    background-repeat: repeat;
-}
-
-table.data.availability tr.odd0 td.number:not(.unused), table.data.availability td.number.stats {
-    opacity: .7;
-}
-
-table.data.availability tr.odd0 td.number.stats {
-    opacity: .5;
+  background-color: #cacaca;
+  /* #TODO: Check whether this image can be dropped (seems not to be available anymore */
+  background-image: url("images/ooservice.png");
+  background-repeat: repeat;
 }
 
 div.floatfilter.rangespec table.valuespec_tuple {
-    width: 100%;
-}
+  width: 100%;
 
-div.floatfilter.rangespec table.valuespec_tuple span.title {
+  span.title {
     position: relative;
     top: 7px;
+  }
 }
 
 /* #TODO: Reproduce this html element */
 div#avoptions_on {
-    margin-right: 3px;
+  margin-right: 3px;
 }
 
 table.data tr.data > td.timeline {
-    width: 500px;
-    padding: 0px;
+  width: 500px;
+  padding: 0;
 }
 
 table.timeline {
-    height: 30px;
-    border-spacing: 0px;
-    border-collapse: collapse;
-}
+  height: 30px;
+  border-collapse: collapse;
+  border-spacing: 0;
 
-table.timeline.low {
+  &.low {
     height: 5px;
     margin-top: -18px;
-    border-spacing: 0px;
     border-collapse: collapse;
-}
+    border-spacing: 0;
+  }
 
-table.timeline.standalone {
-    box-shadow: 0px 0px 1px #ccf;
-    margin-bottom: 20px;
+  &.standalone {
     width: 800px;
-}
+    margin-bottom: 20px;
+    box-shadow: 0 0 1px #ccf;
+  }
 
-table.timeline.inline {
-    border-style: none;
+  &.inline {
     width: 500px;
-    box-shadow: 0px 0px 1px #555 inset;
-}
-
-table.timeline td {
-    padding: 0px;
     border-style: none;
-}
+    box-shadow: 0 0 1px #555 inset;
+  }
 
-/* #TODO: Reproduce this html element */
-table.timeline td.hilite {
-    padding: 0px;
+  td {
+    padding: 0;
     border-style: none;
-    background-color: #0091b6;
-    filter: brightness(80%);
-}
 
-table.timeline td.chaos {
-    background-color: #8844ff;
+    /* #TODO: Reproduce this html element */
+    &.hilite {
+      padding: 0;
+      background-color: #0091b6;
+      border-style: none;
+      filter: brightness(80%);
+    }
+
+    &.chaos {
+      background-color: #84f;
+    }
+  }
 }
 
 div.timelinerange {
-    position: relative;
-    width: 800px;
-    float: none;
-}
+  position: relative;
+  float: none;
+  width: 800px;
 
-/* We render the small vertical lines in a way that only
-   the left border is visible but the thing is thick 5 pixels.
-   That makes hovering over it more easy. */
-div.timelinerange div.timelinechoord {
-    position: absolute;
-    top: 0px;
-    width: 5px;
-    height: 30px;
-    border-style: none none none solid;
-    border-width: 0px 0px 0px 1px;
-    border-color: #666;
+  div {
+    float: left;
+    width: 300px;
+
+    /* We render the small vertical lines in a way that only
+       the left border is visible but the thing is thick 5 pixels.
+       That makes hovering over it more easy. */
+    &.timelinechoord {
+      position: absolute;
+      top: 0;
+      width: 5px;
+      height: 30px;
+      border-color: #666;
+      border-style: none none none solid;
+      border-width: 0 0 0 1px;
+    }
+
+    &.until {
+      float: right;
+      text-align: right;
+    }
+  }
+
+  &.inline {
+    width: 500px;
+  }
 }
 
 table.timelineevents {
-    width: 800px;
+  width: 800px;
 }
 
 /* #TODO: Reproduce this html element */
 table.data.oddeven.timelineevents > tbody > tr.hilite {
-    background-color: #6ab;
-    color: white;
-}
-
-div.timelinerange.inline {
-    width: 500px;
-}
-
-div.timelinerange div {
-    width: 300px;
-    float: left;
-}
-
-div.timelinerange div.until {
-    text-align: right;
-    float: right;
+  color: #fff;
+  background-color: #6ab;
 }
 
 .timelinerange .from, .timelinerange .until {
-  color: $theme-color-darkgrey;
   display: inline-block;
-  margin-bottom: 4px;
   margin-top: 8px;
+  margin-bottom: 4px;
   font-size: $theme-font-size-small;
   letter-spacing: $theme-letter-spacing-table;
+  color: $theme-color-darkgrey;
 }
 
 .timelinerange .timeline {
   box-shadow: none;
-}
 
-.timelinerange .timeline.standalone td {
+  &.standalone td {
     border: 1px solid $theme-color-table-border;
+  }
 }
 
 /* #TODO: Reproduce this html element */
 table.data.timewarp {
-    width: 800px;
-    margin-bottom: 20px;
+  width: 800px;
+  margin-bottom: 20px;
 }
 
 div.avlegend {
-    background-color: rgba(255, 255, 255, 0.2);
-    padding: 5px 15px;
-    border-radius: 5px;
-    margin-top: 10px;
-    text-align: right;
-}
+  padding: 5px 15px;
+  margin-top: 10px;
+  text-align: right;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
 
-div.avlegend h3 {
-    margin-top: 0px;
+  h3 {
+    margin-top: 0;
     font-size: 13px;
-    color: black;
-}
+    color: #000;
+  }
 
-div.avlegend div {
+  div {
     display: inline-block;
     width: 50px;
-    white-space: nowrap;
     margin-right: 5px;
-}
+    white-space: nowrap;
 
-div.avlegend div.state {
-    text-align: center;
-    padding: 2px 0px;
-    font-size: 12px;
-}
+    &.state {
+      padding: 2px 0;
+      font-size: 12px;
+      text-align: center;
+    }
 
-div.avlegend div:last-child {
-    margin-right: 0px;
-}
+    &:last-child {
+      margin-right: 0;
+    }
+  }
 
-div.avlegend.levels div.level {
+  &.levels div.level {
     margin-right: 15px;
-    color: black;
-}
+    color: #000;
+  }
 
-div.avlegend.timeline div.state {
+  &.timeline div.state {
     width: 75px;
-}
 
-div.avlegend.timeline div.state.ooservice {
-    color: black;
+    &.ooservice {
+      color: #000;
+    }
+  }
 }
 
 
@@ -1060,302 +1075,313 @@ div.avlegend.timeline div.state.ooservice {
 '-------------------------------------------------------------------------*/
 
 td.invtree {
-    width: 100%;
-}
+  width: 100%;
 
-/* TODO: Reproduce this html element */
-td.invtree b.treeangle.title {
-    color: black;
+  /* TODO: Reproduce this html element */
+  b.treeangle.title {
     font-weight: normal;
-}
+    color: #000;
+  }
 
-td.invtree ul.treeangle {
-    margin: 0px;
+  ul.treeangle {
+    margin: 0;
     margin-bottom: 3px;
+  }
+
+  table td, table th {
+    height: 14px;
+    padding: 1px 5px;
+    border: 1px solid #888;
+  }
+
+  td.invtree table th {
+    text-align: left;
+  }
+
+  td.invtree table td {
+    background-color: #fff;
+  }
+
+  /* TODO: Reproduce this html element */
+  td.invtree span.invold, span.invold table.data {
+    color: #ff0000;
+  }
+
+  /* TODO: Reproduce this html element */
+  td.invtree span.invnew, span.invnew table.data {
+    color: #00bf00;
+  }
 }
 
 td.sla_spec table,
 td.invtree table,
 td.agent_config table {
-   border-collapse: collapse;
-   border: 0.5px solid black;
-   box-shadow: 0.5px 0.5px 1px #ccc;
-   margin-top: 3px;
+  margin-top: 3px;
+  border: 0.5px solid #000;
+  border-collapse: collapse;
+  box-shadow: 0.5px 0.5px 1px #ccc;
 }
 
-td.invtree table td,
-td.invtree table th {
-    border: 1px solid #888;
-    padding: 1px 5px;
-    height: 14px;
-}
-
-table.data.single tr.data td.invtree table {
+table.data.single {
+  tr.data td.invtree table {
+    margin: 8px 0 12px;
+    border: 1px solid $theme-color-table-border;
     box-shadow: none;
-    border: 1px solid $theme-color-table-border;
-    margin: 8px 0px 12px;
-}
 
-table.data.single tr.data td.invtree table th,
-table.data.single tr.data td.invtree table td {
-    background-color: $theme-color-table-background;
-    border: 1px solid $theme-color-table-border;
-    padding: 2px 4px;
-    height: 14px;
-}
+    th, td {
+      height: 14px;
+      padding: 2px 4px;
+      background-color: $theme-color-table-background;
+      border: 1px solid $theme-color-table-border;
+    }
 
-table.data.single tr.data td.invtree table th {
-    background-color: whitesmoke;
-    color: $theme-color-text;
-}
+    th {
+      color: $theme-color-text;
+      background-color: #f5f5f5;
+    }
+  }
 
-/* Make td class of invtree more specific, when shown in single dataset mode */
-/* td.data.single td.invtree td.number { */
-table.data.single td.invtree td.number {
+  /* Make td class of invtree more specific, when shown in single dataset mode */
+  /* td.data.single td.invtree td.number { */
+  td.invtree td.number {
     text-align: right;
-}
-
-td.invtree table th {
-    text-align: left;
-}
-
-td.invtree table td {
-    background-color: #fff;
-}
-
-/* TODO: Reproduce this html element */
-td.invtree span.invold, span.invold table.data {
-    color: #ff0000;
-}
-
-/* TODO: Reproduce this html element */
-td.invtree span.invnew, span.invnew table.data {
-    color: #00bf00;
+  }
 }
 
 /* Positioning of the link from an inventory dicttable to the matching multisite table */
 div.invtablelink {
-    position: absolute;
-    top: -17px;
-    right: 1px;
+  position: absolute;
+  top: -17px;
+  right: 1px;
 }
 
 td.if_state {
-    box-shadow: none;
-    text-align: center;
-    width: 50px;
+  width: 50px;
+  text-align: center;
+  box-shadow: none;
 }
 
-table.data.single tr.data td.invtree table td.if_state.if_state_up {
-  background-color: $theme-color-state-success-background;
-  box-shadow: none; }
+table.data.single tr.data td.invtree table td.if_state {
+  &.if_state_up {
+    background-color: $theme-color-state-success-background;
+    box-shadow: none; }
 
-table.data.single tr.data td.invtree table td.if_state.if_state_down {
-  background-color: $theme-color-state-2-background;
-  box-shadow: none; }
+  &.if_state_down {
+    background-color: $theme-color-state-2-background;
+    box-shadow: none; }
 
-table.data.single tr.data td.invtree table td.if_state.if_state_other {
-  background-color: $theme-color-state-9-background;
-  box-shadow: none; }
+  &.if_state_other {
+    background-color: $theme-color-state-9-background;
+    box-shadow: none; }
 
-table.data.single tr.data td.invtree table td.if_state.if_available {
-  color: $theme-color-black;
-  background-color: $theme-color-state-success-background;
-}
+  &.if_available {
+    color: $theme-color-black;
+    background-color: $theme-color-state-success-background;
+  }
 
-table.data.single tr.data td.invtree table td.if_state.if_not_available {
-  color: $theme-color-black;
-  background-color: $theme-color-state-4-background;
+  &.if_not_available {
+    color: $theme-color-black;
+    background-color: $theme-color-state-4-background;
+  }
 }
 
 /* #TODO: Reproduce all .sla elements */
-table.data.headerleft.sla th {
+table.data.headerleft.sla {
+  margin-bottom: 20px;
+
+  th {
     width: 130px;
-    text-align: left;
     padding: 4px 5px;
-}
+    text-align: left;
 
-table.data.headerleft.sla a {
-    color: white;
-    text-decoration: underline;
-}
+    &.sla_state {
+      width: 30px;
+    }
 
-table.data.headerleft.sla th.sla_state {
-    width: 30px;
-}
+    &.sla_duration {
+      text-align: left;
+    }
+  }
 
-table.data.headerleft.sla th.sla_date,
-table.data.headerleft.sla td.sla_date {
+  td {
+    padding: 0;
+
+    &.sla_duration {
+      padding-right: 4px;
+      text-align: right;
+    }
+
+    &.sla_output {
+      width: 70%;
+      padding-left: 4px;
+    }
+  }
+
+  th.sla_date,
+  td.sla_date {
     width: 120px;
     padding-right: 4px;
+  }
+
+  a {
+    color: #fff;
+    text-decoration: underline;
+  }
 }
 
-table.data.headerleft.sla th.sla_duration {
-    text-align: left;
-}
-
-table.data.headerleft.sla td.sla_duration {
-    text-align: right;
-    padding-right: 4px;
-}
-
-table.data.headerleft.sla td.sla_output {
-    width: 70%;
-    padding-left: 4px;
-}
-
-table.data.headerleft.sla td {
-    padding: 0px;
-}
-
-table.data.headerleft.sla {
-    margin-bottom: 20px;
-}
-
-table.timeline.standalone.sla td {
-    border: 0px solid #444;
-    padding: 0px;
-}
-
-table.timeline.standalone.sla {
+table.timeline {
+  &.standalone.sla {
     margin-bottom: 5px;
-}
 
-table.timeline.standalone.sla.period {
-    margin-bottom: 5px;
-    height: 10px;
-}
+    td {
+      padding: 0;
+      border: none solid #444;
+    }
 
-table.timeline td.state0.even {
+    &.period {
+      height: 10px;
+      margin-bottom: 5px;
+    }
+  }
+
+  td.state0.even {
     background-color: #0b3;
-}
+  }
 
-table.timeline td.state0.odd {
+  td.state0.odd {
     background-color: #092;
-}
+  }
 
-table.timeline td.state2.even {
+  td.state2.even {
     background-color: #f00;
-}
+  }
 
-table.timeline td.state2.odd {
+  td.state2.odd {
     background-color: #900;
+  }
 }
 
 div.sla_details {
-    background-color: #73a1b4;
+  background-color: #73a1b4;
 }
 
 td.sla > div.foldable > b {
-    color: black;
+  color: #000;
 }
 
 h2.sla {
-    margin-bottom: 3px;
+  margin-bottom: 3px;
 }
 
 h3.sla {
-    margin-top: 3px;
+  margin-top: 3px;
 }
 
 table.data tr.sla_horizontal_line > td.sla_horizontal_line {
-    height: 1px;
-}
+  height: 1px;
 
-table.data tr.sla_horizontal_line > td.sla_horizontal_line.black {
+  &.black {
     height: 1px;
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid #000;
+  }
 }
 
 table.timeline.sla td.sla_hilite,
 table.data.oddeven > tbody > tr.sla_hilite {
-    padding: 0px;
-    border-style: none;
-    filter: brightness(70%);
-}
+  padding: 0;
+  border-style: none;
+  filter: brightness(70%);
 
-table.timeline.sla td.sla_hilite.sla_error_hilite,
-table.data.oddeven > tbody > tr.sla_hilite.sla_error_hilite {
-    padding: 0px;
+  &.sla_error_hilite {
+    padding: 0;
     border-style: none;
     filter: brightness(50%);
+  }
 }
 
 div.timelinerange.sla {
-    width: auto;
-    float: none;
+  float: none;
+  width: auto;
 }
 
-table.data.headerleft.sla tbody tr td, table.data.headerleft.sla tbody tr td.sla {
-    padding: 4px 8px !important;
-}
+/* TODO: No important styles */
+table.data.headerleft.sla {
+  tbody tr {
+    td {
+      &, &.sla {
+        padding: 4px 8px !important;
+      }
 
-table.data.headerleft.sla tbody tr td table.timeline.standalone,
-table.data.headerleft.sla tbody tr td.sla table.timeline.standalone {
-    margin-bottom: 0px;
-    box-shadow: none;
-}
+      table.timeline.standalone,
+      &.sla table.timeline.standalone {
+        margin-bottom: 0;
+        box-shadow: none;
 
-table.data.headerleft.sla tbody tr td table.timeline.standalone tbody tr td,
-table.data.headerleft.sla tbody tr td.sla table.timeline.standalone tbody tr td {
-    border-radius: 0px;
-}
+        tbody tr td {
+          border-radius: 0;
+        }
+      }
 
-table.data.headerleft.sla tbody tr td.sla_spec > table,
-table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec {
-    border-spacing: 0px;
-    margin: 0px;
-    border: none;
-    box-shadow: none;
-}
+      &.sla_spec > table,
+      &.sla_spec table.sla_spec {
+        margin: 0;
+        border: none;
+        border-spacing: 0;
+        box-shadow: none;
 
-table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td,
-table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td {
-    vertical-align: baseline;
-    border: none;
-    margin: 0px;
-    box-shadow: none;
-    padding-left: 0px !important;
-}
+        /* TODO: No important styles */
+        tbody tr td {
+          padding-left: 0 !important;
+          margin: 0;
+          vertical-align: baseline;
+          border: none;
+          box-shadow: none;
 
-table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td.title,
-table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td.title {
-    display: table-cell;
-    font-weight: $theme-font-weight-bold;
-    width: 280px;
-    background: transparent;
-    color: $theme-color-text;
-}
+          &.title {
+            display: table-cell;
+            width: 280px;
+            font-weight: $theme-font-weight-bold;
+            color: $theme-color-text;
+            background: transparent;
+          }
 
-table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td table,
-table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td table {
-    border-spacing: 0px;
-    border: none;
-    box-shadow: none;
-    margin: 0;
-}
+          table {
+            margin: 0;
+            border: none;
+            border-spacing: 0;
+            box-shadow: none;
 
-table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td table tbody tr td,
-table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td table tbody tr td {
-    padding: 0px !important;
-    padding-right: 16px;
-}
+            /* TODO: No important styles */
+            tbody tr td {
+              padding: 0 !important;
+              padding-right: 16px;
+            }
+          }
+        }
+      }
+    }
 
-table.data.headerleft.sla tbody tr th {
-    width: 240px !important;
-}
+    /* TODO: No important styles */
+    th {
+      width: 240px !important;
+    }
+  }
 
-table.data.headerleft.sla a,
-table.data.headerleft.sla body.main .popup_menu span,
-body.main .popup_menu table.data.headerleft.sla span {
+  /* TODO: No important styles */
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
     color: $theme-color-text !important;
+  }
 }
 
 
-div#avoptions td.dictleft {
+div#avoptions td {
+  &.dictleft {
     width: 99%;
-}
+  }
 
-div#avoptions td.dictright {
+  &.dictright {
     padding-right: 4px;
+  }
 }

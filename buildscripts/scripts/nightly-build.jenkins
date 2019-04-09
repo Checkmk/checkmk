@@ -2,7 +2,8 @@ import java.text.SimpleDateFormat
 
 properties([
   parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' ),
+    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
   ]),
   pipelineTriggers([
     cron('H 0 * * *')
@@ -37,14 +38,20 @@ node {
             stage('checkout sources') {
                 sh "rm -rf ${DAILY_DATA}"
                 sh 'rm -rf *'
-                // Add line to delete folders older than 10 days
                 dir("${DAILY_DATA}/git") {
                     checkout(scm)
-                    // Actually Dependent on Edition. For now set to Enterprise!
-                    sh """
-                        rm -rf managed
-                        make NEW_VERSION=${CMK_VERS} setversion
-                    """
+
+                    switch(EDITION) {
+                        case 'raw':
+                            AGENT_LIST = ["windows", "windows-legacy"]
+                            sh 'rm -rf enterprise managed'
+                            break
+                        case 'enterprise':
+                            sh 'rm -rf  managed'
+                            break
+                    }
+                    sh "make NEW_VERSION=${CMK_VERS} setversion"
+
                     dir('agents/wnx') {
                         stash name: 'WinSRC', include: '**/*'
                     }
@@ -105,23 +112,23 @@ AGENT_LIST.each { AGENT ->
                             sh "mount -t overlay overlay -o lowerdir=${DAILY_DATA}/git,upperdir=${WORKSPACE}/agent${AGENT}-dest,workdir=${WORKSPACE}/agent${AGENT}-work ${WORKSPACE}/agent${AGENT}-dest"
                             if (AGENT == '-windows') {
                                 sh script: """
+                                    mkdir -p ${DAILY_DATA}/agents
                                     cd agent${AGENT}-dest/agents/windows/
                                     CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
                                         CHROOT_NAME="agent-builder-windows" \
                                         ./build-agent
+                                    cp check_mk_agent-64.exe ${DAILY_DATA}/agents/check_mk_agent_legacy-64.exe
+                                    cp check_mk_agent.exe ${DAILY_DATA}/agents/check_mk_agent_legacy.exe
+                                    cp check_mk_agent.msi ${DAILY_DATA}/agents/check_mk_agent_legacy.msi
                                 """
-                                sh script: """
-                                    cd agent${AGENT}-dest/enterprise/agents/windows/plugins
-                                    CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
-                                        make
-                                """
-                                sh """
-                                    mkdir -p ${DAILY_DATA}/agents
-                                    cp agent${AGENT}-dest/agents/windows/check_mk_agent-64.exe ${DAILY_DATA}/agents/check_mk_agent_legacy-64.exe
-                                    cp agent${AGENT}-dest/agents/windows/check_mk_agent.exe ${DAILY_DATA}/agents/check_mk_agent_legacy.exe
-                                    cp agent${AGENT}-dest/agents/windows/check_mk_agent.msi ${DAILY_DATA}/agents/check_mk_agent_legacy.msi
-                                    cp agent${AGENT}-dest/enterprise/agents/windows/plugins/cmk-update-agent.exe ${DAILY_DATA}/agents/
-                                """
+                                if(EDITION != 'raw') {
+                                    sh script: """
+                                        cd agent${AGENT}-dest/enterprise/agents/windows/plugins
+                                        CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
+                                            make
+                                        cp cmk-update-agent.exe ${DAILY_DATA}/agents/
+                                    """
+                                }
                             } else { // Linux Agents (64 and 32 bit)
                                 sh script: """cd agent${AGENT}-dest/enterprise/agents/plugins \
                                     && CHROOT_BUILD_DIR=${WORKSPACE}/agent${AGENT}-dest \
@@ -154,9 +161,11 @@ node {
                unstash name: 'WinMSI'
                sh "mv check_mk_agent* ${DAILY_DATA}/agents/"
                dir("${DAILY_DATA}/git") {
-                    sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
-                    sh "cp ${DAILY_DATA}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
-                    sh "cp ${DAILY_DATA}/agents/cmk-update-agent.exe enterprise/agents/windows/plugins/"
+                    if(EDITION != 'raw') {
+                        sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
+                        sh "cp ${DAILY_DATA}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
+                        sh "cp ${DAILY_DATA}/agents/cmk-update-agent.exe enterprise/agents/windows/plugins/"
+                    }
                     sh "cp ${DAILY_DATA}/agents/check_mk_agent*.msi agents/windows"
                     sh "cp ${DAILY_DATA}/agents/check_mk_agent*.exe agents/windows"
                     sh 'make dist || cat /root/.npm/_logs/*-debug.log'
@@ -215,10 +224,10 @@ node {
                     sh """
                         mkdir -p /bauwelt/download/${CMK_VERS}
                         cd /bauwelt/download/${CMK_VERS}
-                        cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*_amd64.deb . || true
-                        cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.rpm . || true
-                        cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*x86_64.cma . || true
-                        cp ${DAILY_DATA}/git/check-mk-enterprise-${CMK_VERS}.cee.tar.gz . || true
+                        cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*_amd64.deb . || true
+                        cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*.x86_64.rpm . || true
+                        cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*x86_64.cma . || true
+                        cp ${DAILY_DATA}/git/check-mk--${CMK_VERS}.cee.tar.gz . || true
                     """
                     withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
                     sh """
@@ -231,10 +240,10 @@ node {
                     }
                 } else {
                     dir("${DAILY_DATA}/download") {
-                        sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*_amd64.deb . || true"
-                        sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*.x86_64.rpm . || true"
-                        sh "cp ${DAILY_DATA}/*-dest/check-mk-enterprise-*x86_64.cma . || true"
-                        sh "cp ${DAILY_DATA}/git/check-mk-enterprise-${CMK_VERS}.cee.tar.gz . || true"
+                        sh "cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*_amd64.deb . || true"
+                        sh "cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*.x86_64.rpm . || true"
+                        sh "cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*x86_64.cma . || true"
+                        sh "cp ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.*.tar.gz . || true"
                         withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
                             sh "${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}"
                         }

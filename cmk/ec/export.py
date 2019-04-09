@@ -256,6 +256,11 @@ def load_config(settings):
         levels["cmk.mkeventd.lock"] = levels["cmk.mkeventd"]
     config["log_level"] = levels
 
+    # Convert pre 1.4 hostname translation config
+    translation = config["hostname_translation"]
+    if "regex" in translation  and not isinstance(translation["regex"], list):
+        translation["regex"] = [ translation["regex"] ]
+
     return config
 
 

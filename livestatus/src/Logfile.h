@@ -25,6 +25,8 @@
 #ifndef Logfile_h
 #define Logfile_h
 
+// NOTE: We need the 2nd "keep" pragma for deleting Logfile. Is this an IWYU
+// bug?
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
 #include <cstdio>
@@ -33,8 +35,8 @@
 #include <memory>
 #include <string>
 #include "FileSystem.h"
+#include "LogEntry.h"  // IWYU pragma: keep
 class LogCache;
-class LogEntry;
 class Logger;
 
 // key is time_t . lineno

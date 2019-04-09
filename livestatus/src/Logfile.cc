@@ -198,3 +198,4 @@ const logfile_entries_t *Logfile::getEntriesFor(size_t max_lines_per_logfile,
 uint64_t Logfile::makeKey(time_t t, size_t lineno) {
     return (static_cast<uint64_t>(t) << 32) | static_cast<uint64_t>(lineno);
 }
+

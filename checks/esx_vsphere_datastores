@@ -67,20 +67,24 @@ def check_esx_vsphere_datastores(item, params, info):
     if item not in stores:
         return 3, "Datastore not existing"
     store = stores[item]
-    size_mb = store["capacity"] / 1024.0 / 1024.0
-    avail_mb = store["freeSpace"] / 1024.0 / 1024.0
 
-    state, infotext, perfdata = df_check_filesystem_single(item, size_mb, avail_mb, 0, None, None,
-                                                           params)
+    mib = 1024.0**2
+    size_bytes = store["capacity"]
+    avail_bytes = store["freeSpace"]
+    #size_mb = store["capacity"] / mib
+    #avail_mb = store["freeSpace"] / mib
+
+    state, infotext, perfdata = df_check_filesystem_single(item, size_bytes / mib,
+                                                           avail_bytes / mib, 0, None, None, params)
 
     if 'uncommitted' in store:
-        uncommitted_mb = store["uncommitted"] / 1024.0 / 1024.0
-        used_mb = size_mb - avail_mb
-        prov_mb = used_mb + uncommitted_mb
-        if size_mb == 0:
+        uncommitted_bytes = store["uncommitted"]
+        used_bytes = size_bytes - avail_bytes
+        prov_bytes = used_bytes + uncommitted_bytes
+        if size_bytes == 0:
             prov_percent = 0
         else:
-            prov_percent = (prov_mb / size_mb) * 100
+            prov_percent = (prov_bytes * 100.) / size_bytes
 
         prov_txt = ''
         warn, crit = None, None
@@ -94,19 +98,16 @@ def check_esx_vsphere_datastores(item, params, info):
                 state = max(state, 1)
                 prov_txt = levels_text + '(!)'
 
-        infotext += ", uncommitted: %.2f GB, provisioning: %.1f%%%s" % (uncommitted_mb / 1024,
-                                                                        prov_percent, prov_txt)
+        infotext += ", uncommitted: %s, provisioning: %s%s" % (get_bytes_human_readable(
+            uncommitted_bytes), get_percent_human_readable(prov_percent), prov_txt)
+
         if perfdata:
+            perfdata.append(('uncommitted', uncommitted_bytes / mib))
             if warn:
-                prov_warn_mb = size_mb / 100 * warn
-                prov_crit_mb = size_mb / 100 * crit
+                scale = size_bytes / mib / 100.
+                perfdata.append(('overprovisioned', prov_bytes / mib, scale * warn, scale * crit))
             else:
-                prov_warn_mb = None
-                prov_crit_mb = None
-            perfdata += [
-                ('uncommitted', uncommitted_mb),
-                ('overprovisioned', prov_mb, prov_warn_mb, prov_crit_mb),
-            ]
+                perfdata.append(('overprovisioned', prov_bytes / mib))
 
     if not store["accessible"]:
         state = 2

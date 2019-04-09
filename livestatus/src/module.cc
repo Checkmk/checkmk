@@ -1024,13 +1024,14 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     while (char *token = next_field(&args)) {
         /* find = */
         char *part = token;
-        char *left = next_token(&part, '=');
-        char *right = next_token(&part, 0);
-        if (right == nullptr) {
+        std::string left = safe_next_token(&part, '=');
+        const char *right_token = next_token(&part, 0);
+        if (right_token == nullptr) {
             fl_paths._socket = left;
         } else {
-            if (strcmp(left, "debug") == 0) {
-                int debug_level = atoi(right);
+            std::string right{right_token};
+            if (left == "debug") {
+                int debug_level = atoi(right.c_str());
                 if (debug_level >= 2) {
                     fl_livestatus_log_level = LogLevel::debug;
                 } else if (debug_level >= 1) {
@@ -1040,32 +1041,35 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 }
                 Notice(logger)
                     << "setting debug level to " << fl_livestatus_log_level;
-            } else if (strcmp(left, "log_file") == 0) {
+            } else if (left == "log_file") {
                 fl_paths._logfile = right;
-            } else if (strcmp(left, "mkeventd_socket") == 0) {
+            } else if (left == "mkeventd_socket") {
                 fl_paths._mkeventd_socket = right;
-            } else if (strcmp(left, "max_cached_messages") == 0) {
-                fl_limits._max_cached_messages = strtoul(right, nullptr, 10);
+            } else if (left == "max_cached_messages") {
+                fl_limits._max_cached_messages =
+                    strtoul(right.c_str(), nullptr, 10);
                 Notice(logger)
                     << "setting max number of cached log messages to "
                     << fl_limits._max_cached_messages;
-            } else if (strcmp(left, "max_lines_per_logfile") == 0) {
-                fl_limits._max_lines_per_logfile = strtoul(right, nullptr, 10);
+            } else if (left == "max_lines_per_logfile") {
+                fl_limits._max_lines_per_logfile =
+                    strtoul(right.c_str(), nullptr, 10);
                 Notice(logger) << "setting max number lines per logfile to "
                                << fl_limits._max_lines_per_logfile;
-            } else if (strcmp(left, "thread_stack_size") == 0) {
-                g_thread_stack_size = strtoul(right, nullptr, 10);
+            } else if (left == "thread_stack_size") {
+                g_thread_stack_size = strtoul(right.c_str(), nullptr, 10);
                 Notice(logger) << "setting size of thread stacks to "
                                << g_thread_stack_size;
-            } else if (strcmp(left, "max_response_size") == 0) {
-                fl_limits._max_response_size = strtoul(right, nullptr, 10);
+            } else if (left == "max_response_size") {
+                fl_limits._max_response_size =
+                    strtoul(right.c_str(), nullptr, 10);
                 Notice(logger)
                     << "setting maximum response size to "
                     << fl_limits._max_response_size << " bytes ("
                     << (fl_limits._max_response_size / (1024.0 * 1024.0))
                     << " MB)";
-            } else if (strcmp(left, "num_client_threads") == 0) {
-                int c = atoi(right);
+            } else if (left == "num_client_threads") {
+                int c = atoi(right.c_str());
                 if (c <= 0 || c > 1000) {
                     Warning(logger) << "cannot set num_client_threads to " << c
                                     << ", must be > 0 and <= 1000";
@@ -1074,8 +1078,8 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                         << "setting number of client threads to " << c;
                     g_livestatus_threads = c;
                 }
-            } else if (strcmp(left, "query_timeout") == 0) {
-                int c = atoi(right);
+            } else if (left == "query_timeout") {
+                int c = atoi(right.c_str());
                 if (c < 0) {
                     Warning(logger) << "query_timeout must be >= 0";
                 } else {
@@ -1088,8 +1092,8 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                             << " ms";
                     }
                 }
-            } else if (strcmp(left, "idle_timeout") == 0) {
-                int c = atoi(right);
+            } else if (left == "idle_timeout") {
+                int c = atoi(right.c_str());
                 if (c < 0) {
                     Warning(logger) << "idle_timeout must be >= 0";
                 } else {
@@ -1101,50 +1105,50 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                             << "setting idle timeout to " << c << " ms";
                     }
                 }
-            } else if (strcmp(left, "service_authorization") == 0) {
-                if (strcmp(right, "strict") == 0) {
+            } else if (left == "service_authorization") {
+                if (right == "strict") {
                     fl_authorization._service = AuthorizationKind::strict;
-                } else if (strcmp(right, "loose") == 0) {
+                } else if (right == "loose") {
                     fl_authorization._service = AuthorizationKind::loose;
                 } else {
                     Warning(logger) << "invalid service authorization mode, "
                                        "allowed are strict and loose";
                 }
-            } else if (strcmp(left, "group_authorization") == 0) {
-                if (strcmp(right, "strict") == 0) {
+            } else if (left == "group_authorization") {
+                if (right == "strict") {
                     fl_authorization._group = AuthorizationKind::strict;
-                } else if (strcmp(right, "loose") == 0) {
+                } else if (right == "loose") {
                     fl_authorization._group = AuthorizationKind::loose;
                 } else {
                     Warning(logger)
                         << "invalid group authorization mode, allowed are strict and loose";
                 }
-            } else if (strcmp(left, "pnp_path") == 0) {
+            } else if (left == "pnp_path") {
                 fl_paths._pnp = check_path("PNP perfdata directory", right);
-            } else if (strcmp(left, "mk_inventory_path") == 0) {
+            } else if (left == "mk_inventory_path") {
                 fl_paths._mk_inventory =
                     check_path("Check_MK Inventory directory", right);
-            } else if (strcmp(left, "structured_status_path") == 0) {
+            } else if (left == "structured_status_path") {
                 fl_paths._structured_status =
                     check_path("Check_MK structured status directory", right);
-            } else if (strcmp(left, "mk_logwatch_path") == 0) {
+            } else if (left == "mk_logwatch_path") {
                 fl_paths._mk_logwatch =
                     check_path("Check_MK logwatch directory", right);
-            } else if (strcmp(left, "data_encoding") == 0) {
-                if (strcmp(right, "utf8") == 0) {
+            } else if (left == "data_encoding") {
+                if (right == "utf8") {
                     fl_data_encoding = Encoding::utf8;
-                } else if (strcmp(right, "latin1") == 0) {
+                } else if (right == "latin1") {
                     fl_data_encoding = Encoding::latin1;
-                } else if (strcmp(right, "mixed") == 0) {
+                } else if (right == "mixed") {
                     fl_data_encoding = Encoding::mixed;
                 } else {
                     Warning(logger) << "invalid data_encoding " << right
                                     << ", allowed are utf8, latin1 and mixed";
                 }
-            } else if (strcmp(left, "livecheck") == 0) {
+            } else if (left == "livecheck") {
                 Warning(logger)
                     << "livecheck has been removed from Livestatus, sorry.";
-            } else if (strcmp(left, "disable_statehist_filtering") == 0) {
+            } else if (left == "disable_statehist_filtering") {
                 Warning(logger)
                     << "the disable_statehist_filtering option has been removed, filtering is always active now.";
             } else {

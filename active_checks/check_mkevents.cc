@@ -22,6 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// NOTE: We really need <sstream>, IWYU bug?
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>

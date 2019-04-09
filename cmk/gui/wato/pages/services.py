@@ -233,6 +233,10 @@ class ModeDiscovery(WatoMode):
                                             ("varname", "ignored_checks")]), "check_parameters")
 
     def page(self):
+        # This is needed to make the discovery page show the help toggle
+        # button. The help texts on this page are only added dynamically via
+        # AJAX.
+        html.enable_help_toggle()
         self._async_progress_msg_container()
         self._service_container()
         html.javascript("cmk.service_discovery.start(%s, %s, %s)" %

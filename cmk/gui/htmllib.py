@@ -1524,14 +1524,17 @@ class html(HTMLGenerator):
     def help(self, text):
         self.write_html(self.render_help(text))
 
-    # Embed help box, whose visibility is controlled by a global button in the page.
     def render_help(self, text):
+        """Embed help box, whose visibility is controlled by a global button in the page."""
         if text and text.strip():
-            self.have_help = True
+            self.enable_help_toggle()
             style = "display: %s;" % ("block" if self.help_visible else "none")
             c = self.render_div(text.strip(), class_="help", style=style)
             return c
         return ""
+
+    def enable_help_toggle(self):
+        self.have_help = True
 
     #
     # Debugging, diagnose and logging

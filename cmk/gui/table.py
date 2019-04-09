@@ -362,7 +362,10 @@ class Table(object):
 
     def _get_empty_columns(self, rows, num_cols):
         empty_columns = [True] * num_cols
-        for row_spec, _css, _state, _fixed, _attrs in rows:
+        for row_spec, _css, state, _fixed, _attrs in rows:
+            if state == "header":
+                continue  # Don't care about group headers
+
             for col_index, (cell_content, _css_classes, _colspan) in enumerate(row_spec):
                 empty_columns[col_index] &= not cell_content
         return empty_columns

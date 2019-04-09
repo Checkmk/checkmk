@@ -245,22 +245,12 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
         else:
             missing_sections.add(cmk_base.check_utils.section_name_of(check_plugin_name))
 
-    if config.do_status_data_inventory_for(hostname):
-        import cmk_base.inventory as inventory
-        inventory.do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress)
-    else:
-        _cleanup_status_data(hostname)
+    import cmk_base.inventory as inventory
+    inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, hostname,
+                                                       ipaddress)
 
     missing_section_list = sorted(list(missing_sections))
     return num_success, missing_section_list
-
-
-def _cleanup_status_data(hostname):
-    filepath = "%s/%s" % (cmk.utils.paths.status_data_dir, hostname)
-    if os.path.exists(filepath):  # Remove empty status data files.
-        os.remove(filepath)
-    if os.path.exists(filepath + ".gz"):
-        os.remove(filepath + ".gz")
 
 
 def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params,

@@ -37,4 +37,4 @@ description:
  additionally fetched.
 
 inventory:
- One service per bucket will be created.
+ One service will be created.

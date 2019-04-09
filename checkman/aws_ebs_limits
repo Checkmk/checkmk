@@ -28,4 +28,4 @@ description:
  possibly configured restriction to names or tags.
 
 inventory:
- One service per bucket will be created.
+ One service will be created.

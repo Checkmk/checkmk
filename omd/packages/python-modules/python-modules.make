@@ -195,6 +195,7 @@ PYTHON_MODULES_LIST += kubernetes-8.0.0.tar.gz
 PYTHON_MODULES_LIST += defusedxml-0.5.0.tar.gz
 PYTHON_MODULES_LIST += requests-toolbelt-0.9.1.tar.gz
 PYTHON_MODULES_LIST += jira-2.0.0.tar.gz
+PYTHON_MODULES_LIST += opsgenie_swagger-0.3.2.tar.gz
 
 
 # NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH

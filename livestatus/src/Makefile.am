@@ -86,6 +86,7 @@ liblivestatus_a_SOURCES = \
         Logger.cc \
         LogwatchListColumn.cc \
         MetricsColumn.cc \
+        NagiosCore.cc \
         NullColumn.cc \
         OffsetBoolColumn.cc \
         OffsetDoubleColumn.cc \

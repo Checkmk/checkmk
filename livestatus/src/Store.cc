@@ -29,11 +29,8 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
-#include "Aggregator.h"         // IWYU pragma: keep
-#include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"
-#include "LogEntry.h"  // IWYU pragma: keep
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "OutputBuffer.h"

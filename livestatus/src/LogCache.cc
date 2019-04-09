@@ -27,7 +27,6 @@
 #include <string>
 #include <utility>
 #include "FileSystem.h"
-#include "LogEntry.h"  // IWYU pragma: keep
 #include "Logfile.h"
 #include "Logger.h"
 #include "MonitoringCore.h"

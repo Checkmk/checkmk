@@ -25,6 +25,8 @@
 #ifndef Query_h
 #define Query_h
 
+// NOTE: We need the 2nd "keep" pragma for deleting Query. Is this
+// an IWYU bug?
 #include "config.h"  // IWYU pragma: keep
 #include <bitset>
 #include <chrono>
@@ -38,6 +40,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include "Aggregator.h"  // IWYU pragma: keep
 #include "Filter.h"
 #include "Renderer.h"
 #include "RendererBrokenCSV.h"
@@ -46,7 +49,6 @@
 #include "Triggers.h"
 #include "contact_fwd.h"
 #include "data_encoding.h"
-class Aggregator;
 class Column;
 class Logger;
 class OutputBuffer;

@@ -44,7 +44,6 @@
 #include "OffsetSStringColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
-#include "OringFilter.h"  // IWYU pragma: keep
 #include "Query.h"
 #include "Row.h"
 #include "StringUtils.h"

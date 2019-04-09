@@ -120,10 +120,12 @@ class RulespecActiveChecksCmkInv(HostRulespec):
                  )),
                 ("host_label_inventory",
                  DropdownChoice(
-                     title=_("Host label inventory"),
+                     title=_("Host label discovery"),
+                     help=_("All hosts configured via this ruleset will try to find new "
+                            "host labels during every check cycle."),
                      choices=[
-                         (True, _("Do automatic host label inventory")),
-                         (False, _("Do not perform automatic host label inventory")),
+                         (True, _("Do automatic host label discovery")),
+                         (False, _("Do not perform automatic host label discovery")),
                      ],
                      default_value=True,
                  )),

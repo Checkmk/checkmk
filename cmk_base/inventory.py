@@ -167,19 +167,38 @@ def do_inv_check(hostname, options):
     return status, infotexts, long_infotexts, perfdata
 
 
-def do_status_data_inventory(sources, multi_host_sections, hostname, ipaddress):
-    if config.is_cluster(hostname):
-        return
-    # cmk_base/modes/check_mk.py loads check plugins but not inventory plugins
+def do_inventory_actions_during_checking_for(sources, multi_host_sections, hostname, ipaddress):
+    do_status_data_inventory = not config.is_cluster(hostname) \
+        and config.do_status_data_inventory_for(hostname)
+
+    do_host_label_discovery = config.do_host_label_discovery_for(hostname)
+
+    if not do_status_data_inventory:
+        _cleanup_status_data(hostname)
+
+    if not do_status_data_inventory and not do_host_label_discovery:
+        return  # nothing to do here
+
+    # This is called during checking, but the inventory plugins are not loaded yet
     import cmk_base.inventory_plugins as inventory_plugins
     inventory_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
+
     _do_inv_for(
         sources,
         multi_host_sections=multi_host_sections,
         hostname=hostname,
         ipaddress=ipaddress,
-        do_status_data_inv=True,
-        do_host_label_discovery=False)
+        do_status_data_inv=do_status_data_inventory,
+        do_host_label_discovery=do_host_label_discovery,
+    )
+
+
+def _cleanup_status_data(hostname):
+    filepath = "%s/%s" % (cmk.utils.paths.status_data_dir, hostname)
+    if os.path.exists(filepath):  # Remove empty status data files.
+        os.remove(filepath)
+    if os.path.exists(filepath + ".gz"):
+        os.remove(filepath + ".gz")
 
 
 def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_data_inv,

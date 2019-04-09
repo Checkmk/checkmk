@@ -89,7 +89,7 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
 
 
 @pytest.mark.parametrize("max_entries, result", [(400, (180, 401)), (20, (3600, 21)),
-                                                 (50, (1800, 41)), (1000, (120, 600)),
+                                                 (50, (1440, 51)), (1000, (120, 600)),
                                                  (1200, (60, 1200))])
 def test_get_rrd_data_point_max(cfg_setup, max_entries, result):
     from_time, until_time = 1543430040, 1543502040

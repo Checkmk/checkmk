@@ -1,0 +1,23 @@
+Title: Fixed broken regex based hostname translation in EC
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0p14
+Date: 1554805735
+Class: fix
+
+The hostname translation of the EC was broken since release of
+Check_MK 1.4.0 (caused by #3687). This issue lead to dropped events
+once the translation has been condifgured. The problem was visible
+in the mkeventd.log in the following form:
+
+C+:
+ 2019-04-04 11:36:24,286 [40] [cmk.mkeventd.EventServer] Unable to parse host "HOST" ('tuple' object has no attribute 'endswith')
+Traceback (most recent call last):
+  File "/omd/sites/snmp/lib/python/cmk/ec/main.py", line 2787, in do_translate_hostname
+    event["host"] = self.translate_hostname(event["host"])
+  File "/omd/sites/snmp/lib/python/cmk/ec/main.py", line 2768, in translate_hostname
+    if not regex.endswith('$'):
+AttributeError: 'tuple' object has no attribute 'endswith' 
+C-:

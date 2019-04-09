@@ -59,52 +59,41 @@ def parse_esx_vsphere_datastores(info):
 
 @get_parsed_item_data
 def check_esx_vsphere_datastores(item, params, data):
-    mib = 1024.0**2
-    size_bytes = data["capacity"]
-    avail_bytes = data["freeSpace"]
-    #size_mb = store["capacity"] / mib
-    #avail_mb = store["freeSpace"] / mib
-
-    state, infotext, perfdata = df_check_filesystem_single(item, size_bytes / mib,
-                                                           avail_bytes / mib, 0, None, None, params)
-
-    if 'uncommitted' in data:
-        uncommitted_bytes = data["uncommitted"]
-        used_bytes = size_bytes - avail_bytes
-        prov_bytes = used_bytes + uncommitted_bytes
-        if size_bytes == 0:
-            prov_percent = 0
-        else:
-            prov_percent = (prov_bytes * 100.) / size_bytes
-
-        prov_txt = ''
-        warn, crit = None, None
-        if 'provisioning_levels' in params:
-            warn, crit = params['provisioning_levels']
-            levels_text = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
-            if prov_percent >= crit:
-                state = max(state, 2)
-                prov_txt = levels_text + '(!!)'
-            elif prov_percent >= warn:
-                state = max(state, 1)
-                prov_txt = levels_text + '(!)'
-
-        infotext += ", uncommitted: %s, provisioning: %s%s" % (get_bytes_human_readable(
-            uncommitted_bytes), get_percent_human_readable(prov_percent), prov_txt)
-
-        if perfdata:
-            perfdata.append(('uncommitted', uncommitted_bytes / mib))
-            if warn:
-                scale = size_bytes / mib / 100.
-                perfdata.append(('overprovisioned', prov_bytes / mib, scale * warn, scale * crit))
-            else:
-                perfdata.append(('overprovisioned', prov_bytes / mib))
-
     if not data["accessible"]:
-        state = 2
-        infotext = "inaccessible(!!), " + infotext
+        yield 2, "inaccessible"
 
-    return state, infotext, perfdata
+    mib = 1024.0**2
+    size_bytes = data.get("capacity")
+    avail_bytes = data.get("freeSpace")
+    if size_bytes is None or avail_bytes is None:
+        return
+
+    yield df_check_filesystem_single(  # pylint: disable=undefined-variable
+        item, size_bytes / mib, avail_bytes / mib, 0, None, None, params)
+
+    uncommitted_bytes = data.get("uncommitted")
+    if uncommitted_bytes is None:
+        return
+    text_uncommitted = "Uncommitted: %s" % get_bytes_human_readable(uncommitted_bytes)
+    yield 0, text_uncommitted, [('uncommitted', uncommitted_bytes / mib)]
+
+    used_bytes = size_bytes - avail_bytes
+    prov_bytes = used_bytes + uncommitted_bytes
+    prov_percent = (prov_bytes * 100.) / size_bytes if size_bytes != 0 else 0
+
+    warn, crit = params.get('provisioning_levels', (None, None))
+    yield check_levels(
+        prov_percent,
+        None, (warn, crit),
+        human_readable_func=get_percent_human_readable,
+        infoname="Provisioning")
+
+    if warn is not None:
+        # convert percent to abs MiB
+        scale = size_bytes / mib / 100.
+        yield 0, "", [('overprovisioned', prov_bytes / mib, scale * warn, scale * crit)]
+    else:
+        yield 0, "", [('overprovisioned', prov_bytes / mib)]
 
 
 check_info['esx_vsphere_datastores'] = {

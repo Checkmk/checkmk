@@ -7,6 +7,7 @@ import cmk_base.config as config
 def test_registered_automations(site):
     needed_automations = [
         'active-check',
+        'analyse-host',
         'analyse-service',
         'delete-hosts',
         'diag-host',
@@ -15,6 +16,7 @@ def test_registered_automations(site):
         'get-check-information',
         'get-check-manpage',
         'get-configuration',
+        'get-labels-of',
         'get-real-time-checks',
         'get-service-configurations',
         'inventory',

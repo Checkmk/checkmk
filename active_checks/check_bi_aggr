@@ -34,6 +34,7 @@ import ast
 
 import requests
 import urllib3  # type: ignore
+from pathlib2 import Path
 
 import cmk.utils.password_store
 
@@ -54,32 +55,33 @@ USAGE: check_bi_aggr -b <BASE_URL> -a <AGGR_NAME> -u <USER> -s <SECRET>
                      [-m <AUTH_MODE>] [-r] [-n <HOSTNAME>] [-t <TIMEOUT>] [-d]
 
 OPTIONS:
-  -b BASE_URL       The base URL to the monitoring environment, e.g.
-                    http://<hostname>/<site-id>
-  -a AGGR_NAME      Name of the aggregation, not the aggregation group.
-                    It is possible that there are multiple aggregations
-                    with an equal name, but you should ensure, that it
-                    is a unique one to prevent confusions
-  -u USER           User-ID of an automation user which is permitted to
-                    see all contents of the aggregation
-  -s SECRET         Automation secret of the user
-  -m AUTH_MODE      Authentication mode, either "cookie", "basic", "digest"
-                    or "kerberos", defaults to "cookie"
-  -t TIMEOUT        HTTP connect timeout in seconds (Default: 60)
-  -r                track downtimes. This requires the hostname to be set.
-  -n HOSTNAME       The hostname for which this check is run.
-  --in-downtime S   S can be "ok" or "warn". Force this state if the
-                    aggregate is in scheduled downtime. OK states will always
-                    be unchanged.
-  --acknowledged S  Same as --in-downtime, but for acknowledged aggregates.
-  -d                Enable debug mode
-  -h, --help        Show this help message and exit
+  -b BASE_URL           The base URL to the monitoring environment, e.g.
+                        http://<hostname>/<site-id>
+  -a AGGR_NAME          Name of the aggregation, not the aggregation group.
+                        It is possible that there are multiple aggregations
+                        with an equal name, but you should ensure, that it
+                        is a unique one to prevent confusions
+  -u USER               User-ID of an automation user which is permitted to
+                        see all contents of the aggregation
+  -s SECRET             Automation secret of the user
+  --use-automation-user Use credentials from the local "automation" user
+  -m AUTH_MODE          Authentication mode, either "cookie", "basic", "digest"
+                        or "kerberos", defaults to "cookie"
+  -t TIMEOUT            HTTP connect timeout in seconds (Default: 60)
+  -r                    track downtimes. This requires the hostname to be set.
+  -n HOSTNAME           The hostname for which this check is run.
+  --in-downtime S       S can be "ok" or "warn". Force this state if the
+                        aggregate is in scheduled downtime. OK states will always
+                        be unchanged.
+  --acknowledged S      Same as --in-downtime, but for acknowledged aggregates.
+  -d                    Enable debug mode
+  -h, --help            Show this help message and exit
 
 """)
 
 
 short_options = 'b:a:u:s:m:t:n:dhr'
-long_options = ["help", "in-downtime=", "acknowledged="]
+long_options = ["help", "in-downtime=", "acknowledged=", "use-automation-user"]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -89,8 +91,11 @@ except getopt.GetoptError, err:
 
 base_url = None
 aggr_name = None
+
 username = None
 password = None
+use_automation_user = False
+
 auth_mode = 'cookie'
 timeout = 60
 debug = False
@@ -125,6 +130,8 @@ for o, a in opts:
         opt_in_downtime = a
     elif o == '--acknowledged':
         opt_acknowledged = a
+    elif o == '--use-automation-user':
+        use_automation_user = True
 
 if not base_url:
     sys.stderr.write('Please provide the URL to the monitoring instance.\n')
@@ -135,6 +142,16 @@ if not aggr_name:
     sys.stderr.write('Please provide the name of the aggregation.\n')
     usage()
     sys.exit(1)
+
+if use_automation_user:
+    username = "automation"
+    secret_file_path = Path(cmk.utils.paths.var_dir) / "web" / username / "automation.secret"
+    try:
+        with secret_file_path.open(encoding="utf-8") as f:  # pylint: disable=no-member
+            password = f.read()
+    except IOError:
+        sys.stderr.write('Unable to read credentials for "automation" user.\n')
+        sys.exit(1)
 
 if not username or not password:
     sys.stderr.write('Please provide valid user credentials.\n')

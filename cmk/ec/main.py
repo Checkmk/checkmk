@@ -1750,15 +1750,16 @@ class EventServer(ECServerThread):
 
             # 3. Regular expression conversion
             if "regex" in translation:
-                regex, subst = translation.get("regex")
-                if not regex.endswith('$'):
-                    regex += '$'
-                rcomp = cmk.utils.regex.regex(regex)
-                mo = rcomp.match(backedhost)
-                if mo:
-                    backedhost = subst
-                    for nr, text in enumerate(mo.groups()):
-                        backedhost = backedhost.replace("\\%d" % (nr + 1), text)
+                for regex, subst in translation["regex"]:
+                    if not regex.endswith('$'):
+                        regex += '$'
+                    rcomp = cmk.utils.regex.regex(regex)
+                    mo = rcomp.match(backedhost)
+                    if mo:
+                        backedhost = subst
+                        for nr, text in enumerate(mo.groups()):
+                            backedhost = backedhost.replace("\\%d" % (nr + 1), text)
+                        break
 
             # 4. Explicity mapping
             for from_host, to_host in translation.get("mapping", []):

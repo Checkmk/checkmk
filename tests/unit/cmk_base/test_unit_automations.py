@@ -1,5 +1,51 @@
+import cmk
+import cmk_base.automations
 import cmk_base.automations.check_mk as automations
 import cmk_base.config as config
+
+
+def test_registered_automations(site):
+    needed_automations = [
+        'active-check',
+        'analyse-service',
+        'delete-hosts',
+        'diag-host',
+        'get-agent-output',
+        'get-autochecks',
+        'get-check-information',
+        'get-check-manpage',
+        'get-configuration',
+        'get-real-time-checks',
+        'get-service-configurations',
+        'inventory',
+        'notification-analyse',
+        'notification-get-bulks',
+        'notification-replay',
+        'reload',
+        'rename-hosts',
+        'restart',
+        'scan-parents',
+        'set-autochecks',
+        'try-inventory',
+        'update-dns-cache',
+    ]
+
+    if cmk.is_enterprise_edition():
+        needed_automations += [
+            'bake-agents',
+            'get-package-info',
+            'get-package',
+            'create-package',
+            'edit-package',
+            'install-package',
+            'remove-package',
+            'release-package',
+            'remove-unpackaged-file',
+        ]
+
+    registered_automations = cmk_base.automations.automations._automations.keys()
+
+    assert sorted(needed_automations) == sorted(registered_automations)
 
 
 def test_static_check_rules_of_host(monkeypatch):

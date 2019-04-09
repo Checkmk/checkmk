@@ -164,7 +164,7 @@ def _render_tag_group(tg_id, tag, object_type, with_link, label_type):
     else:
         raise NotImplementedError()
 
-    url = html.makeuri([
+    url = html.makeuri_contextless([
         ("filled_in", "filter"),
         ("search", "Search"),
         ("view_name", "searchhost" if object_type == "host" else "searchsvc"),

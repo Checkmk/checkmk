@@ -254,6 +254,8 @@ check_mk_agents = {
     "openvms": "OpenVMS",
     "vsphere": "vSphere",
     "nutanix": "Nutanix",
+    "emcvnx": "EMC VNX",
+    "vnx_quotas": "VNX Quotas"
 }
 
 _manpage_catalog = {}  # type: ignore

@@ -575,7 +575,8 @@ class AutomationAnalyseServices(Automation):
         servicedesc = args[1].decode("utf-8")
 
         service_info = self._get_service_info(config_cache, hostname, servicedesc)
-        service_info["labels"] = config_cache.labels_of_service(hostname, servicedesc)
+        if service_info:
+            service_info["labels"] = config_cache.labels_of_service(hostname, servicedesc)
         return service_info
 
     # Determine the type of the check, and how the parameters are being

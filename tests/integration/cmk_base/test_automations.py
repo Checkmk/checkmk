@@ -1,7 +1,8 @@
+# pylint: disable=redefined-outer-name
 import re
 import ast
 import subprocess
-import pytest
+import pytest  # type: ignore
 
 from testlib import web, repo_path  # pylint: disable=unused-import
 

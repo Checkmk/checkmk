@@ -67,66 +67,6 @@ def test_cfg(web, site):
 
 
 #.
-#   .--Registration--------------------------------------------------------.
-#   |        ____            _     _             _   _                     |
-#   |       |  _ \ ___  __ _(_)___| |_ _ __ __ _| |_(_) ___  _ __          |
-#   |       | |_) / _ \/ _` | / __| __| '__/ _` | __| |/ _ \| '_ \         |
-#   |       |  _ <  __/ (_| | \__ \ |_| | | (_| | |_| | (_) | | | |        |
-#   |       |_| \_\___|\__, |_|___/\__|_|  \__,_|\__|_|\___/|_| |_|        |
-#   |                  |___/                                               |
-#   +----------------------------------------------------------------------+
-#   | Check for the loaded automation plugins                              |
-#   '----------------------------------------------------------------------'
-
-
-def test_registered_automations(site):
-    import cmk_base.automations
-    automations = cmk_base.automations.automations._automations
-
-    needed_automations = [
-        'active-check',
-        'analyse-service',
-        'delete-hosts',
-        'diag-host',
-        'get-agent-output',
-        'get-autochecks',
-        'get-check-information',
-        'get-check-manpage',
-        'get-configuration',
-        'get-real-time-checks',
-        'get-service-configurations',
-        'inventory',
-        'notification-analyse',
-        'notification-get-bulks',
-        'notification-replay',
-        'reload',
-        'rename-hosts',
-        'restart',
-        'scan-parents',
-        'set-autochecks',
-        'try-inventory',
-        'update-dns-cache',
-    ]
-
-    if site.version.is_enterprise_edition():
-        needed_automations += [
-            'bake-agents',
-            'get-package-info',
-            'get-package',
-            'create-package',
-            'edit-package',
-            'install-package',
-            'remove-package',
-            'release-package',
-            'remove-unpackaged-file',
-        ]
-
-    all_automations = sorted(automations.keys())
-
-    assert sorted(needed_automations) == all_automations
-
-
-#.
 #   .--Autom.calls---------------------------------------------------------.
 #   |            _         _                             _ _               |
 #   |           / \  _   _| |_ ___  _ __ ___    ___ __ _| | |___           |

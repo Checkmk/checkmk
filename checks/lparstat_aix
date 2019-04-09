@@ -91,8 +91,10 @@ check_info["lparstat_aix"] = {
 
 
 def inventory_lparstat_aix_cpu(parsed):
-    if parsed.get('cpu') or parsed.get('update_required'):
-        yield None, {}
+    if parsed.get('update_required'):
+        return [(None, {})]
+    if all(k in parsed.get('cpu', {}) for k in ('user', 'sys', 'wait', 'idle')):
+        return [(None, {})]
 
 
 def check_lparstat_aix_cpu(_no_item, params, parsed):

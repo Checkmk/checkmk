@@ -1,5 +1,5 @@
 title: EMC VNX Storage: Info about IO
-agents: emc
+agents: emcvnx
 catalog: hw/storagehw/emc
 license: GPL
 distribution: check_mk

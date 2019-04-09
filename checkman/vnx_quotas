@@ -1,6 +1,6 @@
 title: VNX NAS DBs: Quotas
-agents: vnx
-catalog: app/storage/vnx
+agents: vnx_quotas
+catalog: hw/storagehw/emc
 license: GPL
 distribution: check_mk
 description:

@@ -29,19 +29,27 @@ copy check_mk_agent_update.msi %ALLUSERSPROFILE%\CheckMk\Agent\update\check_mk_a
 powershell Start-Sleep 20
 echo update > control.tmp
 fc "%ProgramFiles(X86)%\check_mk_service\check_mk.dat" control.tmp > nul
+if not "%ERRORLEVEL%" == "0"   powershell Write-Host "Update failed" -Foreground Red && fc "%ProgramFiles(X86)%\check_mk_service\check_mk.dat" control.tmp
 set upd=%errorlevel%
 del control.tmp > nul
 :work
 @rem Uninstall check
 powershell Write-Host  "%svc% is running" -Foreground Green
-if not exist %p% powershell Write-Host "Upgrade Protocol file not found" -Foreground Red && set status=5 && goto end
+if not exist %p% powershell Write-Host "Upgrade Protocol file not found" -Foreground Red && set status=5 && goto end_uninstall
 powershell Write-Host  "protocol file is found" -Foreground Green
 powershell Write-Host "%svc% is uninstalling" -Foreground Cyan
 msiexec /uninstall check_mk_agent.msi /quiet /LV* log.tmp
 sc query "%svc%1" > null
-if %ERRORLEVEL% == 0 powershell Write-Host "Cannot Uninstall Service" -Foreground Red && set status=5 && goto end
+if %ERRORLEVEL% == 0 powershell Write-Host "Cannot Uninstall Service" -Foreground Red && set status=6 && goto end
 powershell Write-Host  "%svc% is uninstalled" -Foreground Green
 set status=0
+goto end
+:end_uninstall
+powershell Write-Host "%svc% is uninstalling" -Foreground Cyan
+msiexec /uninstall check_mk_agent.msi /quiet /LV* log.tmp
+sc query "%svc%1" > null
+if %ERRORLEVEL% == 0 powershell Write-Host "Cannot Uninstall Service" -Foreground Red && set status=6 && goto end
+powershell Write-Host  "%svc% is uninstalled" -Foreground Green
 :end
 popd
 del %p%

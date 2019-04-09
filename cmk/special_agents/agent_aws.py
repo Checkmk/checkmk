@@ -1266,7 +1266,7 @@ class S3Summary(AWSSectionGeneric):
         colleague = self._received_results.get('s3_limits')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0.0)
+        return AWSColleagueContents([], 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
         found_buckets = []

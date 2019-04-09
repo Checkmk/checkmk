@@ -2369,7 +2369,8 @@ AWSServiceAttributes = NamedTuple("AWSServiceAttributes", [
     ("key", str),
     ("title", str),
     ("global_service", bool),
-    ("filter_by_names_or_tags", bool),
+    ("filter_by_names", bool),
+    ("filter_by_tags", bool),
     ("limits", bool),
 ])
 
@@ -2378,37 +2379,43 @@ AWSServices = [
         key="ce",
         title="Costs and usage",
         global_service=True,
-        filter_by_names_or_tags=False,
+        filter_by_names=False,
+        filter_by_tags=False,
         limits=False),
     AWSServiceAttributes(
         key="ec2",
         title="Elastic Compute Cloud (EC2)",
         global_service=False,
-        filter_by_names_or_tags=True,
+        filter_by_names=True,
+        filter_by_tags=True,
         limits=True),
     AWSServiceAttributes(
         key="ebs",
         title="Elastic Block Storage (EBS)",
         global_service=False,
-        filter_by_names_or_tags=True,
+        filter_by_names=True,
+        filter_by_tags=True,
         limits=True),
     AWSServiceAttributes(
         key="s3",
         title="Simple Storage Service (S3)",
         global_service=False,
-        filter_by_names_or_tags=True,
+        filter_by_names=True,
+        filter_by_tags=True,
         limits=True),
     AWSServiceAttributes(
         key="elb",
         title="Elastic Load Balancing (ELB)",
         global_service=False,
-        filter_by_names_or_tags=True,
+        filter_by_names=True,
+        filter_by_tags=True,
         limits=True),
     AWSServiceAttributes(
         key="rds",
         title="Relational Database Service (RDS)",
         global_service=False,
-        filter_by_names_or_tags=True,
+        filter_by_names=True,
+        filter_by_tags=True,
         limits=True),
 ]
 
@@ -2449,9 +2456,10 @@ def parse_arguments(argv):
             ["%-15s %s" % (e.key, e.title) for e in AWSServices if not e.global_service]))
 
     for service in AWSServices:
-        if service.filter_by_names_or_tags:
+        if service.filter_by_names:
             parser.add_argument(
                 '--%s-names' % service.key, nargs='+', help="Names for %s" % service.title)
+        if service.filter_by_tags:
             parser.add_argument(
                 '--%s-tag-key' % service.key,
                 nargs=1,

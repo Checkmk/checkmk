@@ -26,18 +26,34 @@
 
 
 def check_bi_aggr_arguments(params):
-    base_url, aggr_name, username, secret, opt_params = params
+    # Convert legacy format
+    if isinstance(params, tuple):
+        converted_params = {}
+        converted_params["base_url"] = params[0]
+        converted_params["aggregation_name"] = params[1]
+        converted_params["credentials"] = ("configured", (params[2], params[3]))
+        converted_params["optional"] = params[4]
+        params = converted_params
+
     args = [
         '-b',
-        base_url,
+        params["base_url"],
         '-a',
-        aggr_name,
-        '-u',
-        username,
-        '-s',
-        passwordstore_get_cmdline("%s", secret),
+        params["aggregation_name"],
     ]
 
+    if params["credentials"] == "automation":
+        args += ["--use-automation-user"]
+    else:
+        # configured
+        args += [
+            '-u',
+            params["credentials"][1][0],
+            '-s',
+            passwordstore_get_cmdline("%s", params["credentials"][1][1]),
+        ]
+
+    opt_params = params["optional"]
     if "auth_mode" in opt_params:
         args += ['-m', opt_params['auth_mode']]
 
@@ -59,5 +75,6 @@ def check_bi_aggr_arguments(params):
 active_check_info['bi_aggr'] = {
     "command_line": '$USER1$/check_bi_aggr $ARG1$',
     "argument_function": check_bi_aggr_arguments,
-    "service_description": lambda params: "Aggr %s" % params[1],
+    "service_description": lambda params: "Aggr %s" % params[1]
+                           if isinstance(params, tuple) else params["aggregation_name"],
 }

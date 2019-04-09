@@ -599,8 +599,8 @@ def passwordstore_choices():
 class PasswordFromStore(CascadingDropdown):
     def __init__(self, *args, **kwargs):
         kwargs["choices"] = [
-            ("password", _("Password"), Password(allow_empty=kwargs.get("allow_empty", True),)),
-            ("store", _("Stored password"),
+            ("password", _("Explicit"), Password(allow_empty=kwargs.get("allow_empty", True),)),
+            ("store", _("From password store"),
              DropdownChoice(
                  choices=passwordstore_choices,
                  sorted=True,

@@ -1809,95 +1809,121 @@ class RulespecActiveChecksBiAggr(HostRulespec):
     def match_type(self):
         return "all"
 
+    def transform_from_disk(self, value):
+        if isinstance(value, dict):
+            return value
+        new_value = {}
+        new_value["base_url"] = value[0]
+        new_value["aggregation_name"] = value[1]
+        new_value["optional"] = value[4]
+        new_value["credentials"] = ("configured", (value[2], value[3]))
+        return new_value
+
     @property
     def valuespec(self):
-        return Tuple(
-            title=_("Check State of BI Aggregation"),
-            help=_(
-                "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
-                "several states to a single BI aggregation, which you want to show up as a single "
-                "service."),
-            elements=[
-                TextAscii(
-                    title=_("Base URL (OMD Site)"),
-                    help=
-                    _("The base URL to the monitoring instance. For example <tt>http://mycheckmk01/mysite</tt>. "
-                      "You can use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL to "
-                      "make them be replaced by the hosts values."),
-                    size=60,
-                    allow_empty=False),
-                TextAscii(
-                    title=_("Aggregation Name"),
-                    help=
-                    _("The name of the aggregation to fetch. It will be added to the service description. You can "
-                      "use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to "
-                      "make them be replaced by the hosts values. The aggregation name is the title in the "
-                      "top-level-rule of your BI pack."),
-                    allow_empty=False),
-                TextAscii(
-                    title=_("Username"),
-                    help=
-                    _("The name of the user account to use for fetching the BI aggregation via HTTP. When "
-                      "using the cookie based authentication mode (default), this must be a user where "
-                      "authentication is set to \"Automation Secret\" based authentication."),
-                    allow_empty=False),
-                IndividualOrStoredPassword(
-                    title=_("Password / Secret"),
-                    help=_(
-                        "Valid automation secret or password for the user, depending on the chosen "
-                        "authentication mode. Be aware that this mode has to be enabled on the monitoring instance. "
-                        "Otherwise authentication will fail."),
-                    allow_empty=False),
-                Dictionary(
-                    title=_("Optional parameters"),
-                    elements=[
-                        ("auth_mode",
-                         DropdownChoice(
-                             title=_('Authentication Mode'),
-                             default_value='cookie',
-                             choices=[
-                                 ('cookie', _('Form (Cookie) based')),
-                                 ('basic', _('HTTP Basic')),
-                                 ('digest', _('HTTP Digest')),
-                                 ('kerberos', _('Kerberos')),
-                             ],
-                         )),
-                        ("timeout",
-                         Integer(
-                             title=_("Seconds before connection times out"),
-                             unit=_("sec"),
-                             default_value=60,
-                         )),
-                        ("in_downtime",
-                         RadioChoice(
-                             title=_("State, if BI aggregate is in scheduled downtime"),
-                             orientation="vertical",
-                             choices=[
-                                 (None, _("Use normal state, ignore downtime")),
-                                 ("ok", _("Force to be OK")),
-                                 ("warn", _("Force to be WARN, if aggregate is not OK")),
-                             ])),
-                        ("acknowledged",
-                         RadioChoice(
-                             title=_("State, if BI aggregate is acknowledged"),
-                             orientation="vertical",
-                             choices=[
-                                 (None, _("Use normal state, ignore acknowledgement")),
-                                 ("ok", _("Force to be OK")),
-                                 ("warn", _("Force to be WARN, if aggregate is not OK")),
-                             ])),
-                        ("track_downtimes",
-                         Checkbox(
-                             title=_("Track downtimes"),
-                             label=_("Automatically track downtimes of aggregation"),
-                             help=_(
-                                 "If this is active, the check will automatically go into downtime "
-                                 "whenever the aggregation does. This downtime is also cleaned up "
-                                 "automatically when the aggregation leaves downtime. "
-                                 "Downtimes you set manually for this check are unaffected."),
-                         )),
-                    ]),
-            ])
+        return Transform(
+            Dictionary(
+                title=_("Check State of BI Aggregation"),
+                help=
+                _("Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
+                  "several states to a single BI aggregation, which you want to show up as a single "
+                  "service."),
+                elements=[
+                    ("base_url",
+                     TextAscii(
+                         title=_("Base URL (OMD Site)"),
+                         help=
+                         _("The base URL to the monitoring instance. For example <tt>http://mycheckmk01/mysite</tt>. "
+                           "You can use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL to "
+                           "make them be replaced by the hosts values."),
+                         size=60,
+                         allow_empty=False)),
+                    ("aggregation_name",
+                     TextAscii(
+                         title=_("Aggregation Name"),
+                         help=
+                         _("The name of the aggregation to fetch. It will be added to the service description. You can "
+                           "use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to "
+                           "make them be replaced by the hosts values. The aggregation name is the title in the "
+                           "top-level-rule of your BI pack."),
+                         allow_empty=False)),
+                    ("credentials",
+                     CascadingDropdown(
+                         choices=
+                         [("automation", _("Use the credentials of the 'automation' user")),
+                          ("configured", _("Use the following credentials"),
+                           Tuple(elements=[
+                               TextAscii(
+                                   title=_("Automation Username"),
+                                   allow_empty=True,
+                                   help=
+                                   _("The name of the automation account to use for fetching the BI aggregation via HTTP. Note: You may "
+                                     "also set credentials of a standard user account, though it is disadvised. "
+                                     "Using the credentials of a standard user also requires a valid authentication method set in the "
+                                     "optional parameters.")),
+                               IndividualOrStoredPassword(
+                                   title=_("Automation Secret"),
+                                   help=_("Valid automation secret for the automation user"),
+                                   allow_empty=False),
+                           ]))],
+                         help=_(
+                             "Here you can configured the credentials to be used. Keep in mind that the <tt>automation</tt> user need "
+                             "to exist if you choose this option"),
+                         title=_("Login credentials"),
+                         default_value="automation")),
+                    ("optional",
+                     Dictionary(
+                         title=_("Optional parameters"),
+                         elements=[
+                             ("auth_mode",
+                              DropdownChoice(
+                                  title=_('Authentication Mode'),
+                                  default_value='cookie',
+                                  choices=[
+                                      ('cookie', _('Form (Cookie) based')),
+                                      ('basic', _('HTTP Basic')),
+                                      ('digest', _('HTTP Digest')),
+                                      ('kerberos', _('Kerberos')),
+                                  ],
+                              )),
+                             ("timeout",
+                              Integer(
+                                  title=_("Seconds before connection times out"),
+                                  unit=_("sec"),
+                                  default_value=60,
+                              )),
+                             ("in_downtime",
+                              RadioChoice(
+                                  title=_("State, if BI aggregate is in scheduled downtime"),
+                                  orientation="vertical",
+                                  choices=[
+                                      (None, _("Use normal state, ignore downtime")),
+                                      ("ok", _("Force to be OK")),
+                                      ("warn", _("Force to be WARN, if aggregate is not OK")),
+                                  ])),
+                             ("acknowledged",
+                              RadioChoice(
+                                  title=_("State, if BI aggregate is acknowledged"),
+                                  orientation="vertical",
+                                  choices=[
+                                      (None, _("Use normal state, ignore acknowledgement")),
+                                      ("ok", _("Force to be OK")),
+                                      ("warn", _("Force to be WARN, if aggregate is not OK")),
+                                  ])),
+                             ("track_downtimes",
+                              Checkbox(
+                                  title=_("Track downtimes"),
+                                  label=_("Automatically track downtimes of aggregation"),
+                                  help=
+                                  _("If this is active, the check will automatically go into downtime "
+                                    "whenever the aggregation does. This downtime is also cleaned up "
+                                    "automatically when the aggregation leaves downtime. "
+                                    "Downtimes you set manually for this check are unaffected."),
+                              )),
+                         ])),
+                ],
+                optional_keys=False),
+            forth=self.transform_from_disk)
 
 
 @rulespec_registry.register

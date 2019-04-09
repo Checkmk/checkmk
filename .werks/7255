@@ -1,0 +1,10 @@
+Title: Active check "Check State of BI Aggregation": Introduced new option for credentials configuration
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554808996
+Class: feature
+
+You can now tell the active check to use the secret from the local <tt>automation</tt> user account.

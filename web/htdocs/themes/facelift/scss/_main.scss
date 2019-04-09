@@ -264,42 +264,6 @@ table {
         border-bottom: 1px solid $theme-color-table-border; }
     table.data.check_catalog tbody tr td.title {
       display: table-cell; }
-    table.data.headerleft.sla tbody tr td, table.data.headerleft.sla tbody tr td.sla {
-      padding: 4px 8px !important; }
-      table.data.headerleft.sla tbody tr td table.timeline.standalone, table.data.headerleft.sla tbody tr td.sla table.timeline.standalone {
-        margin-bottom: 0px;
-        box-shadow: none; }
-        table.data.headerleft.sla tbody tr td table.timeline.standalone tbody tr td, table.data.headerleft.sla tbody tr td.sla table.timeline.standalone tbody tr td {
-          border-radius: 0px; }
-    table.data.headerleft.sla tbody tr td.sla_spec > table, table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec {
-      border-spacing: 0px;
-      margin: 0px;
-      border: none;
-      box-shadow: none; }
-      table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td, table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td {
-        vertical-align: baseline;
-        border: none;
-        margin: 0px;
-        box-shadow: none;
-        padding-left: 0px !important; }
-        table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td.title, table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td.title {
-          display: table-cell;
-          font-weight: $theme-font-weight-bold;
-          width: 280px;
-          background: transparent;
-          color: $theme-color-text; }
-        table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td table, table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td table {
-          border-spacing: 0px;
-          border: none;
-          box-shadow: none;
-          margin: 0; }
-          table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td table tbody tr td, table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td table tbody tr td {
-            padding: 0px !important;
-            padding-right: 16px; }
-    table.data.headerleft.sla tbody tr th {
-      width: 240px !important; }
-    table.data.headerleft.sla a, table.data.headerleft.sla body.main .popup_menu span, body.main .popup_menu table.data.headerleft.sla span {
-      color: $theme-color-text !important; }
   table.nform {
     box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.1);
     border: 1px solid $theme-color-table-border;
@@ -801,30 +765,6 @@ table.data > tbody > tr > td.job_state.job_running {
 table.data > tbody > tr > td.job_state.job_initialized {
   color: $theme-color-black;
   background-color: #cccccc; }
-
-td.if_state.if_state_up {
-  background-color: $theme-color-state-success-background !important;
-  box-shadow: none; }
-
-td.if_state.if_state_down {
-  background-color: $theme-color-state-2-background !important;
-  box-shadow: none; }
-
-td.if_state.if_state_other {
-  background-color: $theme-color-state-9-background !important;
-  box-shadow: none; }
-
-td.if_state {
-  color: $theme-color-white;
-  box-shadow: none; }
-
-td.if_state.if_available {
-  color: $theme-color-black;
-  background-color: $theme-color-state-success-background !important; }
-
-td.if_state.if_not_available {
-  color: $theme-color-black;
-  background-color: $theme-color-state-4-background !important; }
 
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
   background-color: $theme-color-state-3-background !important;

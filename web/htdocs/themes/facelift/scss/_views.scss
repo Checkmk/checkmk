@@ -612,25 +612,6 @@ table.data.single > tbody tr.even0 > td.left {
     transition: .15s ease-in-out;
 }
 
-table.data.single tr.data td.invtree table {
-    box-shadow: none;
-    border: 1px solid $theme-color-table-border;
-    margin: 8px 0px 12px;
-}
-
-table.data.single tr.data td.invtree table th {
-    background-color: whitesmoke;
-    border: 1px solid $theme-color-table-border;
-    padding: 2px 4px;
-    color: $theme-color-text;
-}
-
-table.data.single tr.data td.invtree table td {
-    background-color: $theme-color-table-background;
-    border: 1px solid $theme-color-table-border;
-    padding: 2px 4px;
-}
-
 table.data.single td.gap {
     background-color: transparent;
     border-left-style: none;
@@ -1067,242 +1048,314 @@ div.avlegend.timeline div.state.ooservice {
 }
 
 
-///*--Inventory--------------------------------------------------------------.
-//|            ___                      _                                    |
-//|           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _                  |
-//|            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |                 |
-//|            | || | | \ V /  __/ | | | || (_) | |  | |_| |                 |
-//|           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |                 |
-//|                                                   |___/                  |
-//+--------------------------------------------------------------------------+
-//| Styles for displaying HW/SW-Inventory data                               |
-//'-------------------------------------------------------------------------*/
-//
-//td.invtree {
-//    width: 100%;
-//}
-//
-//td.invtree b.treeangle.title {
-//    color: black;
-//    font-weight: normal;
-//}
-//
-//td.invtree ul.treeangle {
-//    margin: 0px;
-//    margin-bottom: 3px;
-//}
-//
-//td.sla_spec table,
-//td.invtree table,
-//td.agent_config table {
-//   border-collapse: collapse;
-//   border: 0.5px solid black;
-//   box-shadow: 0.5px 0.5px 1px #ccc;
-//   margin-top: 3px;
-//}
-//
-//td.invtree table td,
-//td.invtree table th,
-//table.data.single tr.data td.invtree table td,
-//table.data.single tr.data td.invtree table th
-//{
-//    border: 1px solid #888;
-//    padding: 1px 5px;
-//    height: 14px;
-//}
-//
-///* Make td class of invtree more specific, when shown in single dataset mode */
-///* td.data.single td.invtree td.number { */
-//table.data.single td.invtree td.number {
-//    text-align: right;
-//}
-//
-//
-//td.invtree table th {
-//    text-align: left;
-//}
-//
-//td.invtree table td {
-//    background-color: #fff;
-//}
-//
-//td.invtree span.invold, span.invold table.data {
-//    color: #ff0000;
-//}
-//
-//td.invtree span.invnew, span.invnew table.data {
-//    color: #00bf00;
-//}
-//
-///* Positioning of the link from an inventory dicttable to the matching multisite table */
-//div.invtablelink {
-//    position: absolute;
-//    top: -17px;
-//    right: 1px;
-//}
-//
-//
-//td.if_state.if_state_up {
-//    background-color: #00c020;
-//    box-shadow: 0px 0px 3px #ccffcc inset;
-//}
-//
-//td.if_state.if_state_down {
-//    background-color: #bc5b4e;
-//    box-shadow: 0px 0px 2px #000 inset;
-//}
-//
-//td.if_state.if_state_other {
-//    background-color: #c020c0;
-//    box-shadow: 0px 0px 2px #000 inset;
-//}
-//
-//td.if_state {
-//    color: white;
-//    box-shadow: 0.5px 0.5px 2px #000 inset;
-//    text-align: center;
-//    font-weight: bold;
-//    width: 50px;
-//}
-//
-//td.if_state.if_available {
-//    color: black;
-//    background-color: #80ff40;
-//}
-//
-//td.if_state.if_not_available {
-//    color: black;
-//    background-color: #cccccc;
-//}
-//
-//
-//
-//
-//
-//
-//table.data.headerleft.sla th {
-//    width: 130px;
-//    text-align: left;
-//    padding: 4px 5px;
-//}
-//
-//table.data.headerleft.sla a {
-//    color: white;
-//    text-decoration: underline;
-//}
-//
-//table.data.headerleft.sla th.sla_state {
-//    width: 30px;
-//}
-//
-//table.data.headerleft.sla th.sla_date,
-//table.data.headerleft.sla td.sla_date{
-//    width: 120px;
-//    padding-right: 4px;
-//}
-//
-//table.data.headerleft.sla th.sla_duration{
-//    text-align: left;
-//}
-//
-//table.data.headerleft.sla td.sla_duration{
-//    text-align: right;
-//    padding-right: 4px;
-//}
-//
-//table.data.headerleft.sla td.sla_output{
-//    width: 70%;
-//    padding-left: 4px;
-//}
-//
-//table.data.headerleft.sla td {
-//    padding: 0px;
-//}
-//
-//table.data.headerleft.sla {
-//    margin-bottom: 20px;
-//}
-//
-//table.timeline.standalone.sla td {
-//    border: 0px solid #444;
-//    padding: 0px;
-//}
-//
-//table.timeline.standalone.sla  {
-//    margin-bottom: 5px;
-//}
-//
-//table.timeline.standalone.sla.period  {
-//    margin-bottom: 5px;
-//    height: 10px;
-//}
-//
-//table.timeline td.state0.even{
-//    background-color: #0b3;
-//}
-//
-//table.timeline td.state0.odd{
-//    background-color: #092;
-//}
-//
-//table.timeline td.state2.even{
-//    background-color: #f00;
-//}
-//
-//table.timeline td.state2.odd{
-//    background-color: #900;
-//}
-//
-//div.sla_details{
-//    background-color: #73a1b4;
-//}
-//
-//td.sla > div.foldable > b{
-//    color: black;
-//}
-//
-//h2.sla {
-//    margin-bottom: 3px;
-//}
-//
-//h3.sla {
-//    margin-top: 3px;
-//}
-//
-//table.data tr.sla_horizontal_line > td.sla_horizontal_line {
-//    height: 1px;
-//}
-//
-//table.data tr.sla_horizontal_line > td.sla_horizontal_line.black {
-//    height: 1px;
-//    border-bottom: 1px solid black;
-//}
-//
-//
-//table.timeline.sla td.sla_hilite,
-//table.data.oddeven > tbody > tr.sla_hilite {
-//    padding: 0px;
-//    border-style: none;
-//    filter: brightness(70%);
-//}
-//
-//table.timeline.sla td.sla_hilite.sla_error_hilite,
-//table.data.oddeven > tbody > tr.sla_hilite.sla_error_hilite {
-//    padding: 0px;
-//    border-style: none;
-//    filter: brightness(50%);
-//}
-//
-//div.timelinerange.sla {
-//    width: auto;
-//    float: none;
-//}
-//
-//
-//div#avoptions td.dictleft {
-//    width: 99%;
-//}
-//
-//div#avoptions td.dictright {
-//    padding-right: 4px;
-//}
+/*--Inventory--------------------------------------------------------------.
+|            ___                      _                                    |
+|           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _                  |
+|            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |                 |
+|            | || | | \ V /  __/ | | | || (_) | |  | |_| |                 |
+|           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |                 |
+|                                                   |___/                  |
++--------------------------------------------------------------------------+
+| Styles for displaying HW/SW-Inventory data                               |
+'-------------------------------------------------------------------------*/
+
+td.invtree {
+    width: 100%;
+}
+
+/* TODO: Reproduce this html element */
+td.invtree b.treeangle.title {
+    color: black;
+    font-weight: normal;
+}
+
+td.invtree ul.treeangle {
+    margin: 0px;
+    margin-bottom: 3px;
+}
+
+td.sla_spec table,
+td.invtree table,
+td.agent_config table {
+   border-collapse: collapse;
+   border: 0.5px solid black;
+   box-shadow: 0.5px 0.5px 1px #ccc;
+   margin-top: 3px;
+}
+
+td.invtree table td,
+td.invtree table th {
+    border: 1px solid #888;
+    padding: 1px 5px;
+    height: 14px;
+}
+
+table.data.single tr.data td.invtree table {
+    box-shadow: none;
+    border: 1px solid $theme-color-table-border;
+    margin: 8px 0px 12px;
+}
+
+table.data.single tr.data td.invtree table th,
+table.data.single tr.data td.invtree table td {
+    background-color: $theme-color-table-background;
+    border: 1px solid $theme-color-table-border;
+    padding: 2px 4px;
+    height: 14px;
+}
+
+table.data.single tr.data td.invtree table th {
+    background-color: whitesmoke;
+    color: $theme-color-text;
+}
+
+/* Make td class of invtree more specific, when shown in single dataset mode */
+/* td.data.single td.invtree td.number { */
+table.data.single td.invtree td.number {
+    text-align: right;
+}
+
+td.invtree table th {
+    text-align: left;
+}
+
+td.invtree table td {
+    background-color: #fff;
+}
+
+/* TODO: Reproduce this html element */
+td.invtree span.invold, span.invold table.data {
+    color: #ff0000;
+}
+
+/* TODO: Reproduce this html element */
+td.invtree span.invnew, span.invnew table.data {
+    color: #00bf00;
+}
+
+/* Positioning of the link from an inventory dicttable to the matching multisite table */
+div.invtablelink {
+    position: absolute;
+    top: -17px;
+    right: 1px;
+}
+
+td.if_state {
+    box-shadow: none;
+    text-align: center;
+    width: 50px;
+}
+
+table.data.single tr.data td.invtree table td.if_state.if_state_up {
+  background-color: $theme-color-state-success-background;
+  box-shadow: none; }
+
+table.data.single tr.data td.invtree table td.if_state.if_state_down {
+  background-color: $theme-color-state-2-background;
+  box-shadow: none; }
+
+table.data.single tr.data td.invtree table td.if_state.if_state_other {
+  background-color: $theme-color-state-9-background;
+  box-shadow: none; }
+
+table.data.single tr.data td.invtree table td.if_state.if_available {
+  color: $theme-color-black;
+  background-color: $theme-color-state-success-background;
+}
+
+table.data.single tr.data td.invtree table td.if_state.if_not_available {
+  color: $theme-color-black;
+  background-color: $theme-color-state-4-background;
+}
+
+/* #TODO: Reproduce all .sla elements */
+table.data.headerleft.sla th {
+    width: 130px;
+    text-align: left;
+    padding: 4px 5px;
+}
+
+table.data.headerleft.sla a {
+    color: white;
+    text-decoration: underline;
+}
+
+table.data.headerleft.sla th.sla_state {
+    width: 30px;
+}
+
+table.data.headerleft.sla th.sla_date,
+table.data.headerleft.sla td.sla_date {
+    width: 120px;
+    padding-right: 4px;
+}
+
+table.data.headerleft.sla th.sla_duration {
+    text-align: left;
+}
+
+table.data.headerleft.sla td.sla_duration {
+    text-align: right;
+    padding-right: 4px;
+}
+
+table.data.headerleft.sla td.sla_output {
+    width: 70%;
+    padding-left: 4px;
+}
+
+table.data.headerleft.sla td {
+    padding: 0px;
+}
+
+table.data.headerleft.sla {
+    margin-bottom: 20px;
+}
+
+table.timeline.standalone.sla td {
+    border: 0px solid #444;
+    padding: 0px;
+}
+
+table.timeline.standalone.sla {
+    margin-bottom: 5px;
+}
+
+table.timeline.standalone.sla.period {
+    margin-bottom: 5px;
+    height: 10px;
+}
+
+table.timeline td.state0.even {
+    background-color: #0b3;
+}
+
+table.timeline td.state0.odd {
+    background-color: #092;
+}
+
+table.timeline td.state2.even {
+    background-color: #f00;
+}
+
+table.timeline td.state2.odd {
+    background-color: #900;
+}
+
+div.sla_details {
+    background-color: #73a1b4;
+}
+
+td.sla > div.foldable > b {
+    color: black;
+}
+
+h2.sla {
+    margin-bottom: 3px;
+}
+
+h3.sla {
+    margin-top: 3px;
+}
+
+table.data tr.sla_horizontal_line > td.sla_horizontal_line {
+    height: 1px;
+}
+
+table.data tr.sla_horizontal_line > td.sla_horizontal_line.black {
+    height: 1px;
+    border-bottom: 1px solid black;
+}
+
+table.timeline.sla td.sla_hilite,
+table.data.oddeven > tbody > tr.sla_hilite {
+    padding: 0px;
+    border-style: none;
+    filter: brightness(70%);
+}
+
+table.timeline.sla td.sla_hilite.sla_error_hilite,
+table.data.oddeven > tbody > tr.sla_hilite.sla_error_hilite {
+    padding: 0px;
+    border-style: none;
+    filter: brightness(50%);
+}
+
+div.timelinerange.sla {
+    width: auto;
+    float: none;
+}
+
+table.data.headerleft.sla tbody tr td, table.data.headerleft.sla tbody tr td.sla {
+    padding: 4px 8px !important;
+}
+
+table.data.headerleft.sla tbody tr td table.timeline.standalone,
+table.data.headerleft.sla tbody tr td.sla table.timeline.standalone {
+    margin-bottom: 0px;
+    box-shadow: none;
+}
+
+table.data.headerleft.sla tbody tr td table.timeline.standalone tbody tr td,
+table.data.headerleft.sla tbody tr td.sla table.timeline.standalone tbody tr td {
+    border-radius: 0px;
+}
+
+table.data.headerleft.sla tbody tr td.sla_spec > table,
+table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec {
+    border-spacing: 0px;
+    margin: 0px;
+    border: none;
+    box-shadow: none;
+}
+
+table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td,
+table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td {
+    vertical-align: baseline;
+    border: none;
+    margin: 0px;
+    box-shadow: none;
+    padding-left: 0px !important;
+}
+
+table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td.title,
+table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td.title {
+    display: table-cell;
+    font-weight: $theme-font-weight-bold;
+    width: 280px;
+    background: transparent;
+    color: $theme-color-text;
+}
+
+table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td table,
+table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td table {
+    border-spacing: 0px;
+    border: none;
+    box-shadow: none;
+    margin: 0;
+}
+
+table.data.headerleft.sla tbody tr td.sla_spec > table tbody tr td table tbody tr td,
+table.data.headerleft.sla tbody tr td.sla_spec table.sla_spec tbody tr td table tbody tr td {
+    padding: 0px !important;
+    padding-right: 16px;
+}
+
+table.data.headerleft.sla tbody tr th {
+    width: 240px !important;
+}
+
+table.data.headerleft.sla a,
+table.data.headerleft.sla body.main .popup_menu span,
+body.main .popup_menu table.data.headerleft.sla span {
+    color: $theme-color-text !important;
+}
+
+
+div#avoptions td.dictleft {
+    width: 99%;
+}
+
+div#avoptions td.dictright {
+    padding-right: 4px;
+}

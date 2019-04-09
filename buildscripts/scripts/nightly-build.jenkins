@@ -45,9 +45,23 @@ node {
                         case 'raw':
                             AGENT_LIST = ["windows", "windows-legacy"]
                             sh 'rm -rf enterprise managed'
+                            // Workaround since scss does not support conditional includes
+                            sh '''
+                                rm -rf web/htdocs/themes/classic/scss/{cme,cee}
+                                mkdir -p web/htdocs/themes/classic/scss/{cme,cee}
+                                echo '@mixin graphs {}' > web/htdocs/themes/classic/scss/cee/_graphs.scss
+                                echo '@mixin reporting {}' > web/htdocs/themes/classic/scss/cee/_reporting.scss
+                                echo '@mixin managed {}' > web/htdocs/themes/classic/scss/cme/_managed.scss
+                            '''
                             break
                         case 'enterprise':
                             sh 'rm -rf  managed'
+                            // Workaround since scss does not support conditional includes
+                            sh '''
+                                rm -rf web/htdocs/themes/classic/scss/cme
+                                mkdir -p web/htdocs/themes/classic/scss/cme
+                                echo '@mixin managed {}' > web/htdocs/themes/classic/scss/cme/_managed.scss
+                            '''
                             break
                     }
                     sh "make NEW_VERSION=${CMK_VERS} setversion"

@@ -1,0 +1,16 @@
+Title: labels: New inventory script to discover generic host labels
+Level: 2
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554819594
+Class: feature
+
+A new HW/SW inventory script has been added that works on a generic "<<<labels>>>" section.
+It is used to discover host labels from this section.
+
+The first agent that produces this section is the Kubernetes special agent. It creates the
+label sections for all kind of objects that are monitored by Check_MK. This makes Check_MK
+automatically import the labels configured in Kubernetes. You can now use them to filter
+your views, dashboards and in the future also create rules in WATO based on them.

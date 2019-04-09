@@ -76,11 +76,14 @@ LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
                       src/{Makefile.am,*.{cc,h}} standalone/config_files.m4
 
-FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
+FILES_TO_FORMAT_WINDOWS := \
+                      $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix agents/windows/,*.cc *.h)) \
                       $(wildcard $(addprefix agents/windows/sections/,*.cc *.h)) \
                       $(wildcard $(addprefix agents/windows/test/,*.cc *.h)) \
                       $(wildcard $(addprefix agents/windows/test/sections,*.cc *.h)) \
+
+FILES_TO_FORMAT_LINUX := \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/test/,*.cc *.h)) \
@@ -96,11 +99,11 @@ JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/j
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
 
 
-.PHONY: all analyze build check check-binaries check-permissions \
-        check-version clean compile-neb-cmc cppcheck dist documentation format format-c format-python \
-        GTAGS headers help install iwyu mrproper \
-        optimize-images packages setup setversion tidy version \
-	am--refresh skel
+.PHONY: all analyze build check check-binaries check-permissions check-version \
+        clean compile-neb-cmc cppcheck dist documentation format format-c \
+        format-windows format-linux format-python GTAGS headers help install \
+        iwyu mrproper optimize-images packages setup setversion tidy version \
+        am--refresh skel
 
 help:
 	@echo "setup			      --> Prepare system for development and building"
@@ -486,8 +489,13 @@ format: format-python format-c
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-format-c:
-	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT)
+format-c: format-windows format-linux
+
+format-windows:
+	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_WINDOWS)
+
+format-linux:
+	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
 format-python: .venv
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories

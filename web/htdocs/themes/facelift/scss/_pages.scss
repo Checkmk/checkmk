@@ -301,8 +301,8 @@ div.togglebutton {
   float: left;
   width: 158px;
   height: 36px;
-  margin-right: 12px;
-  margin-bottom: 12px;
+  margin-right: 5px;
+  margin-bottom: -3px;
   overflow: hidden;
   font-size: $theme-font-size-small;
   text-align: center;
@@ -321,8 +321,8 @@ div.togglebutton {
     bottom: 0;
     left: 0;
     display: block;
-    height: 34px;
-    padding: 8px;
+    height: 28px; /* $theme-button-height; */
+    padding: 5px;
     overflow: hidden;
     font-size: $theme-font-size-global;
     font-weight: $theme-font-weight-global;
@@ -350,7 +350,7 @@ div.togglebutton {
       right: 0;
       bottom: 0;
       left: 0;
-      padding: 8px;
+      padding: 5px;
       font-size: $theme-font-size-global;
       font-weight: $theme-font-weight-global;
       letter-spacing: $theme-letter-spacing;
@@ -402,12 +402,12 @@ div.contextlink {
 
 /* Specific toggle button styles */
 div.togglebutton {
-  width: 34px;
-  height: 34px;
+  width: 35.75px;
+  height: $theme-button-height;
 
   &.off {
-    width: 34px;
-    height: 34px;
+    width: $theme-button-height;
+    height: $theme-button-height;
     margin-right: 12px;
     margin-bottom: 12px;
     font-size: $theme-font-size-small;
@@ -495,11 +495,11 @@ table.data {
     font-size: $theme-font-size-main;
     font-weight: $theme-font-weight-bold;
     letter-spacing: $theme-letter-spacing-table;
-    color: $theme-color-table-text;
+    color: $theme-color-table-header-text;
     text-align: left;
     text-transform: uppercase;
     background: transparent;
-    border: 0;
+    border: none;
 
     &:first-child {
       padding-left: 0; /* left align first column header with group header */

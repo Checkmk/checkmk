@@ -31,15 +31,21 @@ Boston, MA 02110-1301 USA.
 
 
 .tagify {
-  border: 0;
+  border: none;
+
+  tag {
+    margin: 0 0 0 5px;
+  }
+
   a tag {
     cursor: pointer;
   }
+
   tag x {
-    font-size: 8pt;
+    font-size: 11px;
   }
 }
 
 .tagify.display[readonly] tag > div::before {
-    background: #d6d6d6;
+  background: #d6d6d6;
 }

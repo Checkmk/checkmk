@@ -257,7 +257,7 @@ div.snapin {
   div.head {
     height: auto;
     padding: 8px;
-    line-height: 20px;
+    line-height: 10px; /* affects height of snapin title bar */
     color: $theme-color-text-light;
     text-align: left;
     background: transparent;
@@ -282,9 +282,9 @@ div.snapin {
   div.closesnapin {
     float: right;
     width: 8px;
-    height: 8px;
+    height: 2px; /* vertical position of close button */
     padding: 0;
-    margin-top: 6px;
+    margin-top: 2px;
     margin-right: 6px;
     line-height: 0;
 
@@ -298,7 +298,7 @@ div.snapin {
     float: right;
     width: 8px;
     height: 8px;
-    margin: 6px 6px 0 0;
+    margin: 2px 6px 0 0; /* vertical position of minimize button */
     line-height: 0;
     cursor: pointer;
     background-image: url("images/icon_minisnapin.png");
@@ -307,7 +307,7 @@ div.snapin {
   div.content {
     top: 64px;
     width: 100%;
-    padding: 8px;
+    padding: 8px; /* Invisible spacing around hole snapin content */
     color: #fff;
     background-color: $theme-color-sidebar-background;
     box-sizing: border-box;

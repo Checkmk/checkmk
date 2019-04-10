@@ -30,7 +30,10 @@
 # Instead a simple string process approach is used which drastically
 # reduces the CPU load for this agent
 
+# pylint: disable=broad-except
+
 import datetime
+import errno
 import getopt
 import httplib
 import os
@@ -38,9 +41,9 @@ import re
 import socket
 import sys
 import time
-import errno
 from typing import Optional, Text  # pylint: disable=unused-import
 from xml.dom import minidom  # type: ignore
+
 from dateutil import tz
 from pathlib2 import Path
 
@@ -871,24 +874,24 @@ def get_agent_info_tcp(address):
             ipaddress = address
         else:
             ipaddress = socket.gethostbyname(address)
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            s.settimeout(opt_timeout)
-        except:
+            soc.settimeout(opt_timeout)
+        except AttributeError:
             pass  # some old Python versions lack settimeout(). Better ignore than fail
-        s.connect((ipaddress, 6556))
+        soc.connect((ipaddress, 6556))
         try:
-            s.setblocking(1)
-        except:
+            soc.setblocking(1)
+        except AttributeError:
             pass
         raw_response = ""
         while True:
-            received = s.recv(4096, socket.MSG_WAITALL)
-            if received and len(received) > 0:
+            received = soc.recv(4096, socket.MSG_WAITALL)
+            if received:
                 raw_response += received
             else:
                 break
-        s.close()
+        soc.close()
         return raw_response
     except Exception:
         if opt_debug:
@@ -913,8 +916,45 @@ def get_pattern(pattern, line):
 class ESXConnection(object):
     """Encapsulates the API calls to the ESX system"""
 
-    def __init__(self, address, no_cert, debug):
+    @staticmethod
+    def _connect_to_server(address, no_cert, debug):
+        """Initialize server connection"""
+        try:
+            netloc = ":".join(map(str, address))
+
+            if no_cert:
+                try:
+                    import ssl
+                    server_handle = httplib.HTTPSConnection(
+                        netloc, context=ssl._create_unverified_context())
+                except Exception:
+                    server_handle = httplib.HTTPSConnection(netloc)
+            else:
+                server_handle = httplib.HTTPSConnection(netloc)
+
+            if debug:
+                sys.stderr.write("Connecting to %s..." % netloc)
+                sys.stderr.flush()
+
+            server_handle.connect()
+            return server_handle
+        except Exception as exc:
+            if debug:
+                raise
+            raise MKGeneralException("Cannot connect to vSphere Server. Please check the IP and"
+                                     " SSL certificate (if applicable) and try again. This error"
+                                     " is not related to the login credentials."
+                                     " Error message: %r" % exc)
+
+    @staticmethod
+    def _check_not_authenticated(text):
+        if "NotAuthenticatedFault" in text:
+            raise MKQueryServerException("No longer authenticated")
+
+    def __init__(self, address, user, secret, no_cert, debug):
         super(ESXConnection, self).__init__()
+        self._user = user
+        self._secret = secret
         self._server_handle = self._connect_to_server(address, no_cert, debug)
 
         self._host_cookie_path = Path(
@@ -926,35 +966,6 @@ class ESXConnection(object):
 
         self.system_info = self._fetch_systeminfo()
         self._server_cookie = self.login()
-
-    def _connect_to_server(self, address, no_cert, debug):
-        """Initialize server connection"""
-        try:
-            netloc = ":".join(map(str, address))
-
-            if no_cert:
-                try:
-                    import ssl
-                    server_handle = httplib.HTTPSConnection(
-                        netloc, context=ssl._create_unverified_context())
-                except:
-                    server_handle = httplib.HTTPSConnection(netloc)
-            else:
-                server_handle = httplib.HTTPSConnection(netloc)
-
-            if debug:
-                sys.stderr.write("Connecting to %s..." % netloc)
-                sys.stderr.flush()
-
-            server_handle.connect()
-            return server_handle
-        except Exception as e:
-            if debug:
-                raise
-            raise MKGeneralException(
-                "Cannot connect to vSphere Server. Please check the IP and SSL certificate (if applicable) "
-                "and try again. This error is not related to the login credentials. Error message: %r"
-                % e)
 
     def _fetch_systeminfo(self):
         """Retrieve basic data, which requires no login"""
@@ -1049,10 +1060,6 @@ class ESXConnection(object):
             self._server_handle.putheader("Cookie", self._server_cookie)
         self._server_handle.endheaders()
 
-    def _check_not_authenticated(self, text):
-        if "NotAuthenticatedFault" in text:
-            raise MKQueryServerException("No longer authenticated")
-
     def login(self):
         # type: () -> Optional[Text]
         if self._host_cookie_path.exists():
@@ -1067,28 +1074,27 @@ class ESXConnection(object):
             return self._host_cookie_path.open(encoding="utf-8").read()
 
         payload = telegram_list["login"]
-        payload_params = {"username": encode_url(user), "password": encode_url(secret)}
+        payload_params = {"username": encode_url(self._user), "password": encode_url(self._secret)}
         response, reply_data = self.send_soapdata(*self.prepare_soapdata(payload, payload_params))
 
         if "InvalidLogin" in reply_data:
-            raise MKGeneralException(
-                "Cannot login to vSphere Server. Login response is not 'OK'. Please check the credentials"
-            )
+            raise MKGeneralException("Cannot login to vSphere Server. Login response is not 'OK'."
+                                     " Please check the credentials.")
 
         server_cookie = response.msg.get("Set-Cookie", "").decode("utf-8")
 
         if server_cookie:
             self._host_cookie_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-            with self._host_cookie_path.open("w", encoding="utf-8") as f:
-                f.write(server_cookie)
+            with self._host_cookie_path.open("w", encoding="utf-8") as f_handle:
+                f_handle.write(server_cookie)
 
         return server_cookie
 
     def delete_server_cookie(self):
         try:
             self._host_cookie_path.unlink()
-        except OSError as e:
-            if e.errno != errno.ENOENT:
+        except OSError as exc:
+            if exc.errno != errno.ENOENT:
                 raise
 
 
@@ -1128,7 +1134,7 @@ def section_systemtime(connection):
             localtime = utc.astimezone(tz.tzlocal())
             output("<<<systemtime>>>")
             output(localtime.strftime("%s"))
-    except:
+    except Exception:
         if opt_debug:
             raise
 
@@ -1137,6 +1143,7 @@ def find_host(search_hostname, hostsystems_properties):
     for vm_host_name, attributes in hostsystems_properties.items():
         if attributes.get("name")[0] == search_hostname:
             return vm_host_name
+    return None
 
 
 def is_placeholder_vm(devices):
@@ -1146,7 +1153,7 @@ def is_placeholder_vm(devices):
     return False
 
 
-def eval_virtual_device(info, datastores):
+def eval_virtual_device(info, _datastores):
     response = []
     virtual_devices = get_pattern("<VirtualDevice (.*?)</VirtualDevice>", info)
     show_fields = ["label", "summary", "startConnected", "allowGuestControl", "connected", "status"]
@@ -1161,7 +1168,7 @@ def eval_virtual_device(info, datastores):
     return "@@".join(response)
 
 
-def eval_snapshot_list(info, datastores):
+def eval_snapshot_list(info, _datastores):
     response = []
     snapshot_info = get_pattern(
         "<name>(.*?)</name>.*?<id>(.*?)</id><createTime>(.*?)</createTime><state>(.*?)</state>",
@@ -1170,7 +1177,7 @@ def eval_snapshot_list(info, datastores):
         try:
             # 2013-11-06T15:39:39.347543Z
             creation_time = int(time.mktime(time.strptime(entry[2][:19], "%Y-%m-%dT%H:%M:%S")))
-        except:
+        except ValueError:
             creation_time = 0
         response.append(
             "%s %s %s %s" % (entry[1], creation_time, entry[3], entry[0].replace("|", " ")))
@@ -1203,8 +1210,8 @@ def fetch_host_systems(connection):
         hostsystems_response)
 
     # On some ESX systems the cookie login does not work as expected, when the agent_vsphere
-    # is called only once or twice a day. The cookie is somehow outdated, but there is no authentification
-    # failed message. Instead, the query simply returns an empty data set..
+    # is called only once or twice a day. The cookie is somehow outdated, but there is no
+    # authentification failed message. Instead, the query simply returns an empty data set..
     # We try to detect this here (there is always a hostsystem) and raise a MKQueryServerException
     # which forces a new login
     if not elements:
@@ -1239,8 +1246,8 @@ def fetch_counters_syntax(connection):
     elements = get_pattern('<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'\
                            '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', counters_syntax_response)
 
-    for key, nameInfo, groupInfo, unitInfo in elements:
-        counters_syntax[key] = {"name": nameInfo, "group": groupInfo, "unit": unitInfo}
+    for key, name_info, group_info, unit_info in elements:
+        counters_syntax[key] = {"name": name_info, "group": group_info, "unit": unit_info}
     return counters_syntax
 
 
@@ -1274,7 +1281,8 @@ def fetch_extra_interface_counters(connection):
 
 def get_max_samples(connection):
     # Determine the needed number of real-time samples
-    # One real-time sample is 20 seconds -> With a check interval of 1 minute we need the last 3 samples
+    # One real-time sample is 20 seconds
+    # -> With a check interval of 1 minute we need the last 3 samples
     # Longer check intervals require even more samples... n-minutes * 3
     # We set the max_samples hard cap to 180 (1 hour)
     # An ESX system does not offer more than one hour of real time samples, anyway.
@@ -1285,7 +1293,7 @@ def get_max_samples(connection):
     return max_samples
 
 
-def eval_sensor_info(hostname, current_propname, sensor_propset):
+def eval_sensor_info(_hostname, _current_propname, sensor_propset):
     sensor_pattern = ""
     for key in [
             "name", "label", "summary", "key", "currentReading", "unitModifier", "baseUnits",
@@ -1295,22 +1303,14 @@ def eval_sensor_info(hostname, current_propname, sensor_propset):
 
     sensor_data = get_pattern(sensor_pattern, sensor_propset)
     properties, sensors = {}, {}
-    for name, label, summary, key, currentReading, unitModifier, baseUnits, sensorType in sensor_data:
-        sensors[name] = {
-            "name": name,
-            "label": label,
-            "summary": summary,
-            "key": key,
-            "currentReading": currentReading,
-            "unitModifier": unitModifier,
-            "baseUnits": baseUnits,
-            "sensorType": sensorType
-        }
+    fields = ("name", "label", "summary", "key", "currentReading", "unitModifier", "baseUnits",
+              "sensorType")
+    sensors = {row[0]: dict(zip(fields, row)) for row in sensor_data}
 
     return properties, sensors
 
 
-def eval_hardwarestatus_info(hostname, current_propname, sensor_propset):
+def eval_hardwarestatus_info(_hostname, _current_propname, sensor_propset):
     sensor_pattern = ""
     for key in ["name", "label", "summary", "key"]:
         sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
@@ -1322,7 +1322,7 @@ def eval_hardwarestatus_info(hostname, current_propname, sensor_propset):
     return properties, sensors
 
 
-def eval_multipath_info(hostname, current_propname, multipath_propset):
+def eval_multipath_info(_hostname, current_propname, multipath_propset):
     multipath_infos = get_pattern("<id>(.*?)</id>.*?((?:<path>.*?</path>)+)", multipath_propset)
     properties, sensors = {}, {}
     for vml_id, xml_paths in multipath_infos:
@@ -1335,7 +1335,7 @@ def eval_multipath_info(hostname, current_propname, multipath_propset):
     return properties, sensors
 
 
-def eval_propset_block(hostname, current_propname, elements, id_key, propset):
+def eval_propset_block(_hostname, current_propname, elements, id_key, propset):
     pattern = ""
     for key in elements:
         pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
@@ -1361,7 +1361,7 @@ def eval_pci_device(hostname, current_propname, pci_propset):
                               pci_propset)
 
 
-def eval_systeminfo_other(hostname, current_propname, otherinfo_propset):
+def eval_systeminfo_other(_hostname, _current_propname, otherinfo_propset):
     data = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>",
                        otherinfo_propset)
     keys_index = {}
@@ -1392,22 +1392,22 @@ def fetch_hostsystem_data(connection):
     esxhostdetails_response = connection.query_server(telegram_list["esxhostdetails"])
     hostsystems_objects = get_pattern('<objects>(.*?)</objects>', esxhostdetails_response)
 
+    eval_functions = {
+        "config.storageDevice.multipathInfo": eval_multipath_info,
+        "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
+        "runtime.healthSystemRuntime.hardwareStatusInfo.storageStatusInfo": eval_hardwarestatus_info,
+        "runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo": eval_hardwarestatus_info,
+        "runtime.healthSystemRuntime.hardwareStatusInfo.memoryStatusInfo": eval_hardwarestatus_info,
+        "hardware.cpuPkg": eval_cpu_pkg,
+        "hardware.pciDevice": eval_pci_device,
+        "hardware.systemInfo.otherIdentifyingInfo": eval_systeminfo_other,
+    }
+
     hostsystems_properties, hostsystems_sensors = {}, {}
     for entry in hostsystems_objects:
         hostname = get_pattern('<obj type="HostSystem">(.*)</obj>', entry[:512])[0]
         hostsystems_properties[hostname] = {}
         hostsystems_sensors[hostname] = {}
-
-        eval_functions = {
-            "config.storageDevice.multipathInfo": eval_multipath_info,
-            "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
-            "runtime.healthSystemRuntime.hardwareStatusInfo.storageStatusInfo": eval_hardwarestatus_info,
-            "runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo": eval_hardwarestatus_info,
-            "runtime.healthSystemRuntime.hardwareStatusInfo.memoryStatusInfo": eval_hardwarestatus_info,
-            "hardware.cpuPkg": eval_cpu_pkg,
-            "hardware.pciDevice": eval_pci_device,
-            "hardware.systemInfo.otherIdentifyingInfo": eval_systeminfo_other,
-        }
 
         elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', entry)
         for current_propname, value in elements:
@@ -1702,7 +1702,8 @@ def fetch_data(connection):
                 host_piggy_data.setdefault(running_on, []).append(vm_info)
             output(vm_info)
 
-    if "virtualmachine" in query_objects and "hostsystem" in query_objects and opt_host_pwr_display == "vm":
+    if ("virtualmachine" in query_objects and "hostsystem" in query_objects and
+            opt_host_pwr_display == "vm"):
 
         for key in vms:
             data = vms[key]
@@ -1768,15 +1769,15 @@ opt_spaces = "underscore"
 opt_no_cert = False
 
 host_address = None
-user = None
-secret = None
+g_user = None
+g_secret = None
 tracefile = None
 query_objects = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
-    sys.stderr.write("%s\n" % err)
+except getopt.GetoptError, get_opt_exc:
+    sys.stderr.write("%s\n" % get_opt_exc)
     sys.exit(1)
 
 for o, a in opts:
@@ -1797,9 +1798,9 @@ for o, a in opts:
     elif o == '--pysphere':
         opt_pysphere = True
     elif o in ['-u', '--user']:
-        user = a
+        g_user = a
     elif o in ['-s', '--secret']:
-        secret = a
+        g_secret = a
     elif o in ['-i', '--modules']:
         query_objects = a.split(',')
     elif o in ['-t', '--timeout']:
@@ -1822,8 +1823,6 @@ for o, a in opts:
     elif o in ['-h', '--help']:
         usage()
         sys.exit(0)
-
-error_exit = 0 if opt_agent else 1
 
 # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
 if opt_pysphere:
@@ -1855,7 +1854,8 @@ if tracefile:
                     (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
 
 try:
-    esx_connection = ESXConnection((host_address, opt_port), opt_no_cert, opt_debug)
+    esx_connection = ESXConnection((host_address, opt_port), g_user, g_secret, opt_no_cert,
+                                   opt_debug)
 
     # If the data aquisition fails, e.g. invalid cookie we try another run
     for _run_count in [0, 1]:
@@ -1863,7 +1863,7 @@ try:
         try:
             fetch_data(esx_connection)
             break
-        except MKQueryServerException, e:
+        except MKQueryServerException:
             # There was a problem during the query.
             # It is possible that the server cookie got invalid.
             # We are delete the cookie and start a second run
@@ -1871,14 +1871,15 @@ try:
             esx_connection.delete_server_cookie()
             esx_connection.login()
             continue  # do a second run
-        except Exception, e:
+        except Exception:
             if opt_debug:
                 raise
             raise MKGeneralException("Error while processing received data")
 
-except MKGeneralException as e:
-    sys.stderr.write("%s\n" % e)
-    sys.exit(error_exit)
+except MKGeneralException as exc:
+    sys.stderr.write("%s\n" % exc)
+    sys.exit(0 if opt_agent else 1)
 
 write_output(vsphere_output, opt_agent, host_address)
+
 sys.exit(0)

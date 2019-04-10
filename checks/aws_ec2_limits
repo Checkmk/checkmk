@@ -26,7 +26,7 @@
 
 from cmk.special_agents.agent_aws import AWSEC2InstTypes
 
-_aws_ec2_limits_default_levels = {
+factory_settings['aws_ec2_limits_default_levels'] = {
     'vpc_elastic_ip_addresses': (None, 80.0, 90.0),
     'elastic_ip_addresses': (None, 80.0, 90.0),
     'vpc_sec_group_rules': (None, 80.0, 90.0),
@@ -36,12 +36,9 @@ _aws_ec2_limits_default_levels = {
     'active_spot_fleet_requests': (None, 80.0, 90.0),
     'spot_fleet_total_target_capacity': (None, 80.0, 90.0),
     'running_ondemand_instances_total': (None, 80.0, 90.0),
+    'running_ondemand_instances':
+        [(inst_type, (None, 80.0, 90.0)) for inst_type in AWSEC2InstTypes],
 }
-_aws_ec2_limits_default_levels.update({
-    'running_ondemand_instances_%s' % inst_type: (None, 80.0, 90.0) for inst_type in AWSEC2InstTypes
-})
-
-factory_settings['aws_ec2_limits_default_levels'] = _aws_ec2_limits_default_levels
 
 
 def parse_aws_ec2_limits(info):
@@ -55,9 +52,8 @@ def _transform_ec2_limits(params):
         if isinstance(v, tuple):
             transformed[k] = v
         elif isinstance(v, list):
-            # As we get from agent
-            for inst_type, levels in v:
-                transformed['running_ondemand_instances_%s' % inst_type] = levels
+            transformed.update(
+                {'running_ondemand_instances_%s' % inst_type: levels for inst_type, levels in v})
     return transformed
 
 

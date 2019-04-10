@@ -85,6 +85,23 @@ def inventory_aws_generic_single(parsed, required_metrics):
         return [(None, {})]
 
 
+# Some limit values have dynamic names, eg.
+# 'Rules of VPC security group %s' % SECURITY_GROUP
+# At the moment we exclude them in the performance data.  If it's
+# a limit for a piggyback host, we do NOT exclude, eg. 'load_balancer_listeners'
+# and 'load_balancer_registered_instances' per load balancer piggyback host
+_exclude_aws_limits_perf_vars = [
+    'vpc_sec_group_rules',
+    'vpc_sec_groups',
+]
+
+
+def _is_valid_aws_limits_perf_data(perfvar):
+    if perfvar in _exclude_aws_limits_perf_vars:
+        return False
+    return True
+
+
 def check_aws_limits(aws_service, params, parsed):
     """
     Generic check for checking limits of AWS resource.
@@ -99,7 +116,7 @@ def check_aws_limits(aws_service, params, parsed):
         if human_readable_func is None:
             human_readable_func = lambda x: "%s" % x
 
-        p_limit, (warn, crit) = params[resource_key]
+        p_limit, warn, crit = params[resource_key]
         if p_limit is None:
             limit_ref = limit
         else:
@@ -107,8 +124,10 @@ def check_aws_limits(aws_service, params, parsed):
 
         infotext = '%s: %s (of max. %s)' % (resource_title, human_readable_func(amount),
                                             human_readable_func(limit_ref))
-        perfvar = "aws_%s_%s" % (aws_service, resource_key)
-        perfdata.append((perfvar, amount))
+
+        if _is_valid_aws_limits_perf_data(resource_key):
+            perfvar = "aws_%s_%s" % (aws_service, resource_key)
+            perfdata.append((perfvar, amount))
 
         if not limit_ref:
             continue
@@ -129,5 +148,6 @@ def check_aws_limits(aws_service, params, parsed):
         yield max_state, 'Levels reached: %s' % ", ".join(levels_reached), perfdata
     else:
         yield 0, 'No levels reached', perfdata
+
     if long_output:
-        yield 0, "\n%s" % "\n".join(long_output)
+        yield 0, "\n%s" % "\n".join(sorted(long_output))

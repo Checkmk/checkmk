@@ -2435,9 +2435,9 @@ def parse_arguments(argv):
     )
 
     parser.add_argument(
-        "--access-key-id", required=True, help="The access key for your AWS account.")
+        "--access-key-id", required=True, help="The access key ID for your AWS account.")
     parser.add_argument(
-        "--secret-access-key", required=True, help="The secret key for your AWS account.")
+        "--secret-access-key", required=True, help="The secret access key for your AWS account.")
     parser.add_argument(
         "--regions",
         nargs='+',

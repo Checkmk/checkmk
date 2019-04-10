@@ -167,7 +167,7 @@ def _vs_limits(resource, default_limit, vs_limit_cls=None):
             Tuple(
                 title=_("Set levels"),
                 elements=[
-                    vs_limit,
+                    Alternative(elements=[FixedValue(None, totext="Limit from AWS API"), vs_limit]),
                     Percentage(title=_("Warning at"), default_value=80.0),
                     Percentage(title=_("Critical at"), default_value=90.0),
                 ]),

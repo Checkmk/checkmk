@@ -1745,141 +1745,142 @@ def call_legacy_pysphere():
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-short_options = "hi:u:s:Dat:H:Pp:S:"
-long_options = [
-    "help", "user=", "secret=", "direct", "agent", "debug", "modules=", "timeout=", "no-cert-check",
-    "hostname=", "tracefile=", "pysphere", "port=", "spaces=", "host_pwr_display=",
-    "vm_pwr_display=", "snapshot_display=", "vm_piggyname="
-]
+if __name__ == "__main__":
+    short_options = "hi:u:s:Dat:H:Pp:S:"
+    long_options = [
+        "help", "user=", "secret=", "direct", "agent", "debug", "modules=", "timeout=",
+        "no-cert-check", "hostname=", "tracefile=", "pysphere", "port=", "spaces=",
+        "host_pwr_display=", "vm_pwr_display=", "snapshot_display=", "vm_piggyname="
+    ]
 
-opt_debug = False
-opt_direct = False
-opt_agent = False
-opt_timeout = 60
-opt_port = 443
-opt_hostname = None
-opt_skip_placeholder_vm = False
-opt_pysphere = False
-opt_tracefile = None
-opt_host_pwr_display = None
-opt_vm_pwr_display = None
-opt_snapshot_display = None
-opt_vm_piggyname = "alias"
-opt_spaces = "underscore"
-opt_no_cert = False
+    opt_debug = False
+    opt_direct = False
+    opt_agent = False
+    opt_timeout = 60
+    opt_port = 443
+    opt_hostname = None
+    opt_skip_placeholder_vm = False
+    opt_pysphere = False
+    opt_tracefile = None
+    opt_host_pwr_display = None
+    opt_vm_pwr_display = None
+    opt_snapshot_display = None
+    opt_vm_piggyname = "alias"
+    opt_spaces = "underscore"
+    opt_no_cert = False
 
-host_address = None
-g_user = None
-g_secret = None
-tracefile = None
-query_objects = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
+    host_address = None
+    g_user = None
+    g_secret = None
+    tracefile = None
+    query_objects = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, get_opt_exc:
-    sys.stderr.write("%s\n" % get_opt_exc)
-    sys.exit(1)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+    except getopt.GetoptError, get_opt_exc:
+        sys.stderr.write("%s\n" % get_opt_exc)
+        sys.exit(1)
 
-for o, a in opts:
-    if o in ['--debug']:
-        opt_debug = True
-    elif o in ['--tracefile']:
-        opt_tracefile = a
-    elif o in ['-D', '--direct']:
-        opt_direct = True
-    elif o in ['-a', '--agent']:
-        opt_agent = True
-    elif o == '-P':
-        opt_skip_placeholder_vm = True
-    elif o in ['-p', '--port']:
-        opt_port = a
-    elif o in ['--no-cert-check']:
-        opt_no_cert = True
-    elif o == '--pysphere':
-        opt_pysphere = True
-    elif o in ['-u', '--user']:
-        g_user = a
-    elif o in ['-s', '--secret']:
-        g_secret = a
-    elif o in ['-i', '--modules']:
-        query_objects = a.split(',')
-    elif o in ['-t', '--timeout']:
-        opt_timeout = int(a)
-    elif o in ['-H', '--hostname']:
-        opt_hostname = a
-    elif o in ['--vm_piggyname']:
-        opt_vm_piggyname = a
-    elif o in ['--vm_pwr_display']:
-        opt_vm_pwr_display = a
-    elif o in ['--host_pwr_display']:
-        opt_host_pwr_display = a
-    elif o in ['--snapshot_display']:
-        opt_snapshot_display = a
-    elif o in ['-S', '--spaces']:
-        if a not in ["cut", "underscore"]:
+    for o, a in opts:
+        if o in ['--debug']:
+            opt_debug = True
+        elif o in ['--tracefile']:
+            opt_tracefile = a
+        elif o in ['-D', '--direct']:
+            opt_direct = True
+        elif o in ['-a', '--agent']:
+            opt_agent = True
+        elif o == '-P':
+            opt_skip_placeholder_vm = True
+        elif o in ['-p', '--port']:
+            opt_port = a
+        elif o in ['--no-cert-check']:
+            opt_no_cert = True
+        elif o == '--pysphere':
+            opt_pysphere = True
+        elif o in ['-u', '--user']:
+            g_user = a
+        elif o in ['-s', '--secret']:
+            g_secret = a
+        elif o in ['-i', '--modules']:
+            query_objects = a.split(',')
+        elif o in ['-t', '--timeout']:
+            opt_timeout = int(a)
+        elif o in ['-H', '--hostname']:
+            opt_hostname = a
+        elif o in ['--vm_piggyname']:
+            opt_vm_piggyname = a
+        elif o in ['--vm_pwr_display']:
+            opt_vm_pwr_display = a
+        elif o in ['--host_pwr_display']:
+            opt_host_pwr_display = a
+        elif o in ['--snapshot_display']:
+            opt_snapshot_display = a
+        elif o in ['-S', '--spaces']:
+            if a not in ["cut", "underscore"]:
+                usage()
+                sys.exit(1)
+            opt_spaces = a
+        elif o in ['-h', '--help']:
             usage()
-            sys.exit(1)
-        opt_spaces = a
-    elif o in ['-h', '--help']:
-        usage()
-        sys.exit(0)
+            sys.exit(0)
 
-# If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
-if opt_pysphere:
-    sys.exit(call_legacy_pysphere())
+    # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
+    if opt_pysphere:
+        sys.exit(call_legacy_pysphere())
 
-if len(args) == 1:
-    host_address = args[0]
-elif not args:
-    sys.stderr.write("ERROR: No host given.\n")
-    sys.exit(1)
-else:
-    sys.stderr.write("ERROR: Please specify exactly one host.\n")
-    sys.exit(1)
+    if len(args) == 1:
+        host_address = args[0]
+    elif not args:
+        sys.stderr.write("ERROR: No host given.\n")
+        sys.exit(1)
+    else:
+        sys.stderr.write("ERROR: Please specify exactly one host.\n")
+        sys.exit(1)
 
-vsphere_output = []
+    vsphere_output = []
 
-socket.setdefaulttimeout(opt_timeout)
+    socket.setdefaulttimeout(opt_timeout)
 
-if opt_tracefile:
-    tracefile_dir = os.path.dirname(opt_tracefile) or "."
-    if os.path.exists(tracefile_dir):
-        tracefile = file(opt_tracefile, "w")
-    elif opt_debug:
-        sys.stderr.write("Path for tracefile %s does not exist" % opt_tracefile)
-        sys.stderr.flush()
+    if opt_tracefile:
+        tracefile_dir = os.path.dirname(opt_tracefile) or "."
+        if os.path.exists(tracefile_dir):
+            tracefile = file(opt_tracefile, "w")
+        elif opt_debug:
+            sys.stderr.write("Path for tracefile %s does not exist" % opt_tracefile)
+            sys.stderr.flush()
 
-if tracefile:
-    tracefile.write("Tracefile %s Host address: %s\n" %
-                    (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
+    if tracefile:
+        tracefile.write("Tracefile %s Host address: %s\n" %
+                        (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
 
-try:
-    esx_connection = ESXConnection((host_address, opt_port), g_user, g_secret, opt_no_cert,
-                                   opt_debug)
+    try:
+        esx_connection = ESXConnection((host_address, opt_port), g_user, g_secret, opt_no_cert,
+                                       opt_debug)
 
-    # If the data aquisition fails, e.g. invalid cookie we try another run
-    for _run_count in [0, 1]:
-        # Note: If the cookie fails inbetween these calls, we also start a second run
-        try:
-            fetch_data(esx_connection)
-            break
-        except MKQueryServerException:
-            # There was a problem during the query.
-            # It is possible that the server cookie got invalid.
-            # We are delete the cookie and start a second run
-            vsphere_output = []  # Reset current output
-            esx_connection.delete_server_cookie()
-            esx_connection.login()
-            continue  # do a second run
-        except Exception:
-            if opt_debug:
-                raise
-            raise MKGeneralException("Error while processing received data")
+        # If the data aquisition fails, e.g. invalid cookie we try another run
+        for _run_count in [0, 1]:
+            # Note: If the cookie fails inbetween these calls, we also start a second run
+            try:
+                fetch_data(esx_connection)
+                break
+            except MKQueryServerException:
+                # There was a problem during the query.
+                # It is possible that the server cookie got invalid.
+                # We are delete the cookie and start a second run
+                vsphere_output = []  # Reset current output
+                esx_connection.delete_server_cookie()
+                esx_connection.login()
+                continue  # do a second run
+            except Exception:
+                if opt_debug:
+                    raise
+                raise MKGeneralException("Error while processing received data")
 
-except MKGeneralException as exc:
-    sys.stderr.write("%s\n" % exc)
-    sys.exit(0 if opt_agent else 1)
+    except MKGeneralException as exc:
+        sys.stderr.write("%s\n" % exc)
+        sys.exit(0 if opt_agent else 1)
 
-write_output(vsphere_output, opt_agent, host_address)
+    write_output(vsphere_output, opt_agent, host_address)
 
-sys.exit(0)
+    sys.exit(0)

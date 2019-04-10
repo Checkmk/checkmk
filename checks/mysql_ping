@@ -29,11 +29,6 @@
 # mysqladmin: connect to server at 'localhost' failed
 # error: 'Access denied for user 'root'@'localhost' (using password: NO)'
 #
-# parsed = {
-#   "instance1" : [ "mysqld is alive" ],
-#   "instance2" : [ "mysqladmin: connect to server at 'localhost' failed",
-#                   "error: 'Access denied for user 'root'@'localhost' (using password: NO)'" ]
-# }
 
 
 # FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions

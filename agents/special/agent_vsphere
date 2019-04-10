@@ -998,10 +998,11 @@ class ESXConnection(object):
 
     def send_soapdata(self, soapdata, payload_params):
         self._init_headers(soapdata)
-
         response_data = []
 
-        time_sent = time.time()
+        if tracefile:
+            tracefile.write("####   Sent  ####\n%s" % soapdata)
+            time_sent = time.time()
         self._server_handle.send(soapdata)
 
         response = self._server_handle.getresponse()
@@ -1025,14 +1026,12 @@ class ESXConnection(object):
             else:
                 break
 
-        time_response = time.time()
-
+        respose_text = "".join(response_data)
         if tracefile:
-            tracefile.write("####   Sent  ####\n%s" % soapdata)
-            timing_info = "Response took: %f" % (time_response - time_sent)
-            tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, "".join(response_data)))
+            timing_info = "Response took: %f" % (time.time() - time_sent)
+            tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, respose_text))
 
-        return response, "".join(response_data)
+        return response, respose_text
 
     def query_server(self, payload, payload_params=None):
         soapdata, payload_params = self.prepare_soapdata(payload, payload_params)

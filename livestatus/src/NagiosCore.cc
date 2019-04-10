@@ -44,11 +44,11 @@ void NagiosPaths::dump(Logger *logger) {
     Notice(logger) << "mkeventd socket path = '" << _mkeventd_socket << "'";
 }
 
-NagiosCore::NagiosCore(const NagiosPaths &paths, const NagiosLimits &limits,
-                       const NagiosAuthorization &authorization,
+NagiosCore::NagiosCore(NagiosPaths paths, NagiosLimits limits,
+                       NagiosAuthorization authorization,
                        Encoding data_encoding)
     : _logger_livestatus(Logger::getLogger("cmk.livestatus"))
-    , _paths(paths)
+    , _paths(std::move(paths))
     , _limits(limits)
     , _authorization(authorization)
     , _data_encoding(data_encoding)

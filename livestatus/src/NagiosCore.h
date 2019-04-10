@@ -67,9 +67,8 @@ struct NagiosAuthorization {
 
 class NagiosCore : public MonitoringCore {
 public:
-    NagiosCore(const NagiosPaths &paths, const NagiosLimits &limits,
-               const NagiosAuthorization &authorization,
-               Encoding data_encoding);
+    NagiosCore(NagiosPaths paths, NagiosLimits limits,
+               NagiosAuthorization authorization, Encoding data_encoding);
 
     Host *find_host(const std::string &name) override;
     Host *getHostByDesignation(const std::string &designation) override;
@@ -133,9 +132,9 @@ public:
 
 private:
     Logger *_logger_livestatus;
-    const NagiosPaths &_paths;
-    const NagiosLimits &_limits;
-    const NagiosAuthorization &_authorization;
+    const NagiosPaths _paths;
+    const NagiosLimits _limits;
+    const NagiosAuthorization _authorization;
     Encoding _data_encoding;
     Store _store;
     std::unordered_map<std::string, host *> _hosts_by_designation;

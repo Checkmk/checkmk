@@ -210,22 +210,9 @@ Attributes NagiosCore::customAttributes(const void *holder,
     auto h = *static_cast<const customvariablesmember *const *>(holder);
     Attributes attrs;
     for (auto cvm = h; cvm != nullptr; cvm = cvm->next) {
-        bool is_tag = mk::starts_with(cvm->variable_name, "_TAG_");
-        bool is_label = mk::starts_with(cvm->variable_name, "_LABEL_");
-        bool part_of_result = false;
-        switch (kind) {
-            case AttributeKind::custom_variables:
-                part_of_result = !is_tag && !is_label;
-                break;
-            case AttributeKind::tags:
-                part_of_result = is_tag;
-                break;
-            case AttributeKind::labels:
-                part_of_result = is_label;
-                break;
-        }
-        if (part_of_result) {
-            attrs.emplace(cvm->variable_name, cvm->variable_value);
+        auto [k, name] = to_attribute_kind(cvm->variable_name);
+        if (k == kind) {
+            attrs.emplace(name, cvm->variable_value);
         }
     }
     return attrs;

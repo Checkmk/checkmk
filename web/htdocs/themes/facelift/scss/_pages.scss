@@ -308,7 +308,7 @@ div#foot_refresh, div#foot_refresh_time {
 
 div.contextlinks {
   margin-top: 8px;
-  margin-bottom: 0;
+  margin-bottom: 5px;
 
   .end {
     clear: left;
@@ -431,7 +431,8 @@ div.togglebutton {
     margin-right: 12px;
     margin-bottom: 12px;
     font-size: $theme-font-size-small;
-    border: 1px solid $theme-color-table-border;
+    cursor: auto;
+    border: none; /* 1px solid $theme-color-table-border; */
     border-radius: $theme-border-radius;
     opacity: 0.5;
     filter: alpha(opacity=50);
@@ -894,7 +895,7 @@ table.data.headerleft {
   tbody tr td {
     &:nth-child(odd),
     &:nth-child(even) {
-      padding: 8px 16px;
+      padding: 5px 16px;
       vertical-align: top;
       background: $theme-color-white;
       border-top: 1px solid $theme-color-table-border;
@@ -937,7 +938,7 @@ table.data.headerleft {
 input:not(.button), input[type=text], input[type=password],
 select, textarea, div.snapin textarea, #mk_side_search_field {
   height: auto;
-  padding: 8px;
+  padding: 5px 8px;
   color: $theme-color-text;
   background: $theme-color-white;
   background-image: none;
@@ -1075,11 +1076,10 @@ span.checkbox {
 table.nform {
   width: 100%;
   padding: 0;
-  margin: 0;
-  margin-bottom: 10px;
+  margin: 5px 0;
   background: $theme-color-white;
   border: 1px solid $theme-color-table-border;
-  border-spacing: 8px;
+  border-spacing: 7px 5px;
   border-radius: $theme-border-radius;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
   empty-cells: show;
@@ -1106,7 +1106,7 @@ table.nform {
 
     td {
       height: auto;
-      padding: 8px;
+      padding: 3px 4px 0 ;
       font-size: $theme-font-size-global;
       letter-spacing: $theme-letter-spacing-table;
       color: $theme-color-table-text;
@@ -1144,18 +1144,18 @@ table.nform {
     div.title {
       float: left;
       max-width: 284px;
-      padding: 4px 0;
+      padding: 0 8px 0 0;
       overflow: hidden;
       font-weight: $theme-font-weight-bold;
       white-space: nowrap;
 
       .dots {
-        opacity: .3;
+        opacity: .2;
       }
 
       &.withcheckbox {
         max-width: 284px;
-        margin-right: 6px;
+        margin: 5px 6px 5px 0;
       }
     }
 
@@ -1192,12 +1192,16 @@ table.nform {
     padding-bottom: 2px;
   }
 
-  tr.top td {
-    height: 6px;
+  tr.top {
+    height: 0; /* deflate vert space after heading */
+
+    td {
+      height: 0; /* deflate top vert space */
+    }
   }
 
   tr.bottom td {
-    height: 5px;
+    height: 0; /* deflate bottom vert space */
   }
 
   td.reason {
@@ -1205,14 +1209,18 @@ table.nform {
   }
 
   input, select, textarea, #mk_side_search_field {
-    &, &.button {
-      margin: 4px;
+    & {
+      margin: 0;
+    }
+
+    &.button {
+      margin: 0 5px 0 0;
     }
   }
 
   hr {
-    margin: 12px 0;
-    background-color: $theme-color-table-border;
+    margin: 8px 0;
+    background-color: #e5e5e5;
   }
 
   .ruleset {

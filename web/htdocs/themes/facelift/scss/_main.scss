@@ -202,9 +202,6 @@ table {
               height: 32px;
               box-sizing: border-box;
               padding: 6px; }
-        table.data tr.data > td.bulkactions {
-          background: transparent;
-          border: 0px solid !important; }
     table.data tr td.gap {
       background: $theme-color-background;
       border: 1px solid $theme-color-background; }
@@ -369,8 +366,6 @@ div.graph_with_timeranges {
   #reload_pause_counter {
     color: $theme-color-lightgrey; }
 
-.wato {
-  color: $theme-color-text; }
   .wato table.progress {
     border: 1px solid $theme-color-table-border;
     border-radius: $theme-border-radius;
@@ -466,12 +461,6 @@ div.graph_with_timeranges {
     margin-bottom: 0px; }
   .wato td.bulksearch input.text, .wato td.bulksearch select.text, .wato td.bulksearch textarea.text, .wato td.bulksearch .text#mk_side_search_field {
     width: auto; }
-  .wato td.bulkactions select {
-    width: auto; }
-  .wato table.data tr {
-    background-color: transparent !important; }
-  .wato table.data th {
-    background: transparent; }
   .wato div.floatfolder {
     background-image: url(images/folder_closed.png); }
     .wato div.floatfolder.open {

@@ -1108,7 +1108,7 @@ html {
 
 .link, .title {
   display: inline-block;
-  padding: 4px 2px;
+  padding: 0px 2px; /* affects spacing in sidebar plugins */
   font-size: $theme-font-size-main;
   font-weight: $theme-font-weight-global;
   letter-spacing: $theme-letter-spacing-table;

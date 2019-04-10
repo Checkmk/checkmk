@@ -994,11 +994,9 @@ class ESXConnection(object):
         if self.system_info:
             payload_params.update(self.system_info)
         soapdata = put_in_envelope(payload)
-        return soapdata % payload_params
+        return soapdata % payload_params, payload_params
 
-    def query_server(self, payload, payload_params=None):
-        soapdata = self.prepare_soapdata(payload, payload_params)
-
+    def send_soapdata(self, soapdata, payload_params):
         self._init_headers(soapdata)
 
         response_data = []
@@ -1035,6 +1033,10 @@ class ESXConnection(object):
             tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, "".join(response_data)))
 
         return response, "".join(response_data)
+
+    def query_server(self, payload, payload_params=None):
+        soapdata, payload_params = self.prepare_soapdata(payload, payload_params)
+        return self.send_soapdata(soapdata, payload_params)
 
     def _init_headers(self, soapdata):
         self._server_handle.putrequest("POST", "/sdk")

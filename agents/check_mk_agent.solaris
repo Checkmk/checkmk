@@ -32,6 +32,17 @@ export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
 export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
 export MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
 
+# Optionally set a tempdir for all subsequent calls
+#export TMPDIR=
+
+# Provide information about the remote host. That helps when data
+# is being sent only once to each remote host.
+if [ "$REMOTE_HOST" ] ; then
+    export REMOTE=$REMOTE_HOST
+elif [ "$SSH_CLIENT" ] ; then
+    export REMOTE=${SSH_CLIENT%% *}
+fi
+
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own
 # sections and must output headers with '<<<' and '>>>'

@@ -1,0 +1,16 @@
+Title: check_mk_agent.{aix,solaris}: Fixed possibly disappeared inventory entries
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p39
+Date: 1554818345
+
+On Linux hosts the HW/SW inventory plugin {{mk_inventory}} remembers the
+remote address, ie. the Check_MK server, in order to know which server has
+already got the inventory data (for caching reasons).
+The AIX and Solaris agent does not provide the remote host information.
+This may lead to disappearing inventory data on Check_MK servers if at
+least two Check_MK servers request data from the same client host.

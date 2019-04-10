@@ -986,7 +986,7 @@ class ESXConnection(object):
 
         return system_info
 
-    def query_server(self, payload, payload_params=None):
+    def prepare_soapdata(self, payload, payload_params):
         if payload_params is None:
             payload_params = {}
 
@@ -994,7 +994,10 @@ class ESXConnection(object):
         if self.system_info:
             payload_params.update(self.system_info)
         soapdata = put_in_envelope(payload)
-        soapdata = soapdata % payload_params
+        return soapdata % payload_params
+
+    def query_server(self, payload, payload_params=None):
+        soapdata = self.prepare_soapdata(payload, payload_params)
 
         self._init_headers(soapdata)
 

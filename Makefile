@@ -98,6 +98,7 @@ JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/j
 
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
 
+RRDTOOL_VERS := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
@@ -404,8 +405,8 @@ config.status: $(CONFIG_DEPS)
 	  else \
 	    BOOST_OPT="DUMMY1=" ; \
 	  fi ; \
-	  if test -d "omd/rrdtool-1.7.1/src/.libs"; then \
-	    RRD_OPT="LDFLAGS=-L$(realpath omd/rrdtool-1.7.1/src/.libs)" ; \
+	  if test -d "omd/rrdtool-$(RRDTOOL_VERS)/src/.libs"; then \
+	    RRD_OPT="LDFLAGS=-L$(realpath omd/rrdtool-$(RRDTOOL_VERS)/src/.libs)" ; \
 	  else \
 	    RRD_OPT="DUMMY2=" ; \
 	  fi ; \

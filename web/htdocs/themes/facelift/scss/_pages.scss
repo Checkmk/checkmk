@@ -62,153 +62,173 @@ h3 {
 | Styles for the main frame (its body, header, footer, etc.)               |
 '-------------------------------------------------------------------------*/
 
-body.main {
-  padding: 80px 32px;
-  margin: 0;
-  font-family: arial, helvetica, sans-serif;
-  font-size: $theme-font-size-main;
-  font-weight: $theme-font-weight-global;
-  color: $theme-color-text;
-  background: $theme-color-background;
 
-  /* Can be toggled with N/n display option */
-  &.inline {
-    padding: 0;
-    background: none;
+body {
+  color: #fff;
+
+  a, a:link, a:visited {
+    color: #fff;
   }
 
-  /* Special mode for creating screenshots of single elements. Omit background.
-     This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
-     on the URL */
-  &.screenshotmode {
-    background-color: #fff;
-    background-image: url("");
-  }
-
-  /* TODO: Reproduce this div.main element */
-  div.main {
-    padding-left: 10px;
-    border-left: 1px solid #f00;
-  }
-
-  /* The content page header containing the title, user, date */
-  table.header {
-    position: fixed;
+  &.hidden:after {
+    position: absolute;
     top: 0;
     left: 0;
-    z-index: 1000;
+    display: block;
     width: 100%;
-    height: 64px;
-    max-width: 100%;
-    padding: 8px 32px;
-    margin: 0 0 5px;
-    color: #fff;
-    background: $theme-color-white;
-    border-bottom: 1px solid $theme-color-table-border;
-    border-spacing: 0;
+    height: 100%;
+    background-color: rgba(0, 0, 0, .5);
+    content: "";
   }
 
-  table.header td {
-    overflow: hidden;
-    color: #fff;
-    text-overflow: ellipsis;
-    -o-text-overflow: ellipsis;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
-
-  table.header td.heading {
-    height: 31px;
-    max-width: 100px;
-    padding-left: 0;
-    font-size: 21px;
-  }
-
-  table.header td.heading img {
-    width: 24px;
-    height: 24px;
-    margin-right: 3px;
-    vertical-align: middle;
-  }
-
-  table.header td.heading a,
-  table.header td.heading a:hover {
-    text-decoration: none;
-  }
-
-  table.header td.heading a,
-  table.header td.heading .popup_menu span,
-  .popup_menu table.header td.heading span {
-    color: $theme-color-text;
-  }
-
-  table.header td.right {
-    width: 1%;
-    font-size: 13px;
-    color: $theme-color-text;
-    text-align: right;
-  }
-
-  table.header td.right img {
-    width: 19px;
-    height: 19px;
-    vertical-align: middle;
-  }
-
-  table.header td.right a.head_logo img {
-    width: 20px;
-    height: 23px;
-    margin: 0 0 1px 5px;
-  }
-
-  table.header td.right a.head_logo img:hover {
-    opacity: 0.5;
-    filter: alpha(opacity=50);
-  }
-
-  table.header td.right * {
-    color: $theme-color-text;
-  }
-
-  hr.header {
-    position: absolute;
-    top: 42px;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    padding: 0;
+  &.main {
+    padding: 68px 32px;
     margin: 0;
-    color: #fff;
-    background-color: #fff;
-    border: none;
-  }
-
-  /* TODO: Reproduce this html element */
-  div.urldebug {
-    position: relative;
-    top: -14px;
-    width: 100%;
-    font-family: monospace;
-    font-size: 11px;
-    color: #fff;
-  }
-
-  /* The content page footer containing optional status icons */
-  table.footer,
-  table.footer .popup_menu a,
-  table.footer .popup_menu span {
+    font-family: arial, helvetica, sans-serif;
+    font-size: $theme-font-size-main;
+    font-weight: $theme-font-weight-global;
     color: $theme-color-text;
-  }
+    background: $theme-color-background;
 
-  table.footer {
-    width: 100%;
-    margin-top: 10px;
-  }
+    /* Can be toggled with N/n display option */
+    &.inline {
+      padding: 0;
+      background: none;
+    }
 
-  table.footer td.left   { text-align: left; }
-  table.footer td.middle { text-align: center; }
-  table.footer td.right  { text-align: right; }
-  table.footer a { color: #246; }
+    /* Special mode for creating screenshots of single elements. Omit background.
+       This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
+       on the URL */
+    &.screenshotmode {
+      background-color: #fff;
+      background-image: url("");
+    }
+
+    /* TODO: Reproduce this div.main element */
+    div.main {
+      padding-left: 10px;
+      border-left: 1px solid #f00;
+    }
+
+    /* The content page header containing the title, user, date */
+    table.header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      width: 100%;
+      height: 64px;
+      max-width: 100%;
+      padding: 8px 32px;
+      margin: 0 0 5px;
+      color: #fff;
+      background: $theme-color-white;
+      border-bottom: 1px solid $theme-color-table-border;
+      border-spacing: 0;
+    }
+
+    table.header td {
+      overflow: hidden;
+      color: #fff;
+      text-overflow: ellipsis;
+      -o-text-overflow: ellipsis;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    table.header td.heading {
+      height: 31px;
+      max-width: 100px;
+      padding-left: 0;
+      font-size: 21px;
+    }
+
+    table.header td.heading img {
+      width: 24px;
+      height: 24px;
+      margin-right: 3px;
+      vertical-align: middle;
+    }
+
+    table.header td.heading a,
+    table.header td.heading a:hover {
+      text-decoration: none;
+    }
+
+    table.header td.heading a,
+    table.header td.heading .popup_menu span,
+    .popup_menu table.header td.heading span {
+      color: $theme-color-text;
+    }
+
+    table.header td.right {
+      width: 1%;
+      font-size: 13px;
+      color: $theme-color-text;
+      text-align: right;
+    }
+
+    table.header td.right img {
+      width: 19px;
+      height: 19px;
+      vertical-align: middle;
+    }
+
+    table.header td.right a.head_logo img {
+      width: 20px;
+      height: 23px;
+      margin: 0 0 1px 5px;
+    }
+
+    table.header td.right a.head_logo img:hover {
+      opacity: 0.5;
+      filter: alpha(opacity=50);
+    }
+
+    table.header td.right * {
+      color: $theme-color-text;
+    }
+
+    hr.header {
+      position: absolute;
+      top: 42px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      padding: 0;
+      margin: 0;
+      color: #fff;
+      background-color: #fff;
+      border: none;
+    }
+
+    /* TODO: Reproduce this html element */
+    div.urldebug {
+      position: relative;
+      top: -14px;
+      width: 100%;
+      font-family: monospace;
+      font-size: 11px;
+      color: #fff;
+    }
+
+    /* The content page footer containing optional status icons */
+    table.footer,
+    table.footer .popup_menu a,
+    table.footer .popup_menu span {
+      color: $theme-color-text;
+    }
+
+    table.footer {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    table.footer td.left   { text-align: left; }
+    table.footer td.middle { text-align: center; }
+    table.footer td.right  { text-align: right; }
+    table.footer a { color: #246; }
+  }
 }
 
 /* TODO: Check out whether this style and the respective span element within the

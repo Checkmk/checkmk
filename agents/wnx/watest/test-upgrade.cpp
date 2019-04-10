@@ -2,7 +2,6 @@
 
 // complicated things LWA -> NWA
 
-
 #include "pch.h"
 
 #include <filesystem>
@@ -407,7 +406,8 @@ TEST(UpgradeTest, StopStartStopOhm) {
     std::error_code ec;
     ASSERT_TRUE(fs::exists(ohm))
         << "OpenHardwareMonitor not installed, please, add it to the Legacy Agent folder";
-    RunDetachedProcess(ohm.wstring());
+    auto ret = RunDetachedProcess(ohm.wstring());
+    ASSERT_TRUE(ret);
 
     auto status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                                 SERVICE_RUNNING, 5000);
@@ -419,7 +419,8 @@ TEST(UpgradeTest, StopStartStopOhm) {
                            SERVICE_STOPPED, 5000);
     EXPECT_EQ(status, SERVICE_STOPPED);
 
-    RunDetachedProcess(ohm.wstring());
+    ret = RunDetachedProcess(ohm.wstring());
+    ASSERT_TRUE(ret);
     tools::sleep(1000);
     status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                            SERVICE_RUNNING, 5000);

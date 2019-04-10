@@ -1726,6 +1726,15 @@ def fetch_data(connection):
     section_systemtime(connection)
 
 
+def call_legacy_pysphere():
+    # TODO: Remove this, drop agent_vsphere.pysphere
+    import subprocess
+
+    path_vsphere_pysphere = os.path.dirname(os.path.abspath(__file__))
+    cmd = ["%s/agent_vsphere.pysphere" % path_vsphere_pysphere] + sys.argv[1:]
+    return subprocess.call(cmd)
+
+
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -1817,18 +1826,8 @@ for o, a in opts:
 error_exit = 0 if opt_agent else 1
 
 # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
-# TODO: Remove this, drop agent_vsphere.pysphere
 if opt_pysphere:
-    path_vsphere_pysphere = os.path.dirname(os.path.abspath(__file__))
-    cmd = ["%s/agent_vsphere.pysphere" % path_vsphere_pysphere]
-    import subprocess
-    proc = subprocess.Popen(cmd + sys.argv[1:], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    out, err = proc.communicate()
-    if out:
-        sys.stdout.write(out)
-    if err:
-        sys.stderr.write(err)
-    sys.exit(proc.returncode)
+    sys.exit(call_legacy_pysphere())
 
 if len(args) == 1:
     host_address = args[0]

@@ -482,7 +482,7 @@ table.data {
   padding: 0;
   margin: 0;
   color: $theme-color-text;
-  border-spacing: 0 4px;
+  border-spacing: 0 2px;
   empty-cells: show;
 
   .checkbox_hover {
@@ -524,7 +524,7 @@ table.data {
     padding: 4px 8px;
     font-size: $theme-font-size-main;
     font-weight: 500;
-    line-height: 1.5;
+    line-height: 1.3;
     letter-spacing: $theme-letter-spacing;
     color: $theme-color-text;
     border: none;
@@ -579,7 +579,7 @@ table.data {
 
     > td {
       height: 26px;
-      padding: 4px 8px;
+      padding: 0 8px; /* spacing in every row */
       vertical-align: middle;
       background-color: $theme-color-white;
       border-top: 1px solid $theme-color-table-border;

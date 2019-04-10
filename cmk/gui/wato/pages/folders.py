@@ -125,6 +125,11 @@ class ModeFolder(WatoMode):
         html.context_button(
             _("Search"), watolib.folder_preserving_link([("mode", "search")]), "search")
 
+        if config.user.may("wato.dcd_connections"):
+            html.context_button(
+                _("Dynamic configuration"),
+                watolib.folder_preserving_link([("mode", "dcd_connections")]), "dcd_connections")
+
     def action(self):
         if html.request.var("_search"):  # just commit to search form
             return

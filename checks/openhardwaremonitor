@@ -170,6 +170,7 @@ def inventory_openhardwaremonitor(sensor_type, parsed):
 def check_openhardwaremonitor(sensor_type, item, params, parsed):
     if item in parsed.get(sensor_type, {}):
         data = parsed[sensor_type][item]
+        _check_openhardwaremonitor_wmistatus(data)
         if 'lower' in params:
             status_lower = _openhardwaremonitor_expect_order(params['lower'][1], params['lower'][0],
                                                              data.reading)
@@ -187,6 +188,11 @@ def check_openhardwaremonitor(sensor_type, item, params, parsed):
 
         return (_openhardwaremonitor_worst_status(status_lower, status_upper),
                 '%.1f%s' % (data.reading, data.unit), perfdata)
+
+
+def _check_openhardwaremonitor_wmistatus(data):
+    if data.WMIstatus.lower() == 'timeout':
+        raise MKCounterWrapped('WMI query timed out')
 
 
 #   .--clock---------------------------------------------------------------.
@@ -235,6 +241,7 @@ def check_openhardwaremonitor_temperature(item, params, parsed):
 
     if item in parsed.get('Temperature', {}):
         data = parsed['Temperature'][item]
+        _check_openhardwaremonitor_wmistatus(data)
         return check_temperature(data.reading, params, "openhardwaremonitor_%s" % item)
 
 
@@ -288,6 +295,7 @@ factory_settings['openhardwaremonitor_fan_default_levels'] = {
 def check_openhardwaremonitor_fan(item, params, parsed):
     if item in parsed.get("Fan", {}):
         data = parsed["Fan"][item]
+        _check_openhardwaremonitor_wmistatus(data)
         return check_fan(data.reading, params)
 
 
@@ -345,6 +353,7 @@ def check_openhardwaremonitor_smart(item, params, parsed):
 
             warn, crit = params[reading['key']]
             data = parsed[sensor_type][reading_name]
+            _check_openhardwaremonitor_wmistatus(data)
 
             if reading.get('lower_bounds', False):
                 status = _openhardwaremonitor_expect_order(crit, warn, data.reading)

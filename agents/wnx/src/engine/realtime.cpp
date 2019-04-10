@@ -183,12 +183,12 @@ std::string Device::generateData() {
 
     if (use_df_) {
         cma::provider::Df df;
-        result += df.generateContent(cma::section::kUseEmbeddedName);
+        result += df.generateContent(cma::section::kUseEmbeddedName, true);
     }
 
     if (use_mem_) {
         cma::provider::Mem mem;
-        result += mem.generateContent(cma::section::kUseEmbeddedName);
+        result += mem.generateContent(cma::section::kUseEmbeddedName, true);
     }
 
     if (use_winperf_processor_) {

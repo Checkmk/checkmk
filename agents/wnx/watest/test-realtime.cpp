@@ -3,6 +3,7 @@
 //
 #include "pch.h"
 
+#include <string_view>
 #include <thread>
 
 #include "asio.h"
@@ -12,7 +13,19 @@
 
 #include "cfg.h"
 #include "realtime.h"
-void StartTestServer() {}
+
+namespace tst {
+void DisableSectionsNode(std::string_view Str) {
+    using namespace cma::cfg;
+    YAML::Node config = GetLoadedConfig();
+    YAML::Node disabled = config[groups::kGlobal][vars::kSectionsDisabled];
+    {
+        if (disabled.IsDefined()) {
+            disabled.push_back(std::string(Str));
+        }
+    }
+}
+}  // namespace tst
 
 namespace cma::rt {
 
@@ -87,7 +100,7 @@ TEST(RealtimeTest, LowLevel) {
     EXPECT_TRUE(dev.working_period_);
     tm = dev.kick_time_;
 
-    dev.connectFrom("1.0.0.1", 999, {"tesT"}, 0);
+    dev.connectFrom("1.0.0.1", 999, {"tesT"}, "", 0);
     EXPECT_FALSE(dev.use_df_);
     EXPECT_FALSE(dev.use_mem_);
     EXPECT_FALSE(dev.use_winperf_processor_);
@@ -153,7 +166,16 @@ TEST(RealtimeTest, PackData) {
 TEST(RealtimeTest, Base) {
     // stub
 
+    cma::OnStart(cma::kTest);
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));  // restore original config
     {
+        // we disable sections to be sure that realtime sections are executed even being disabled
+        tst::DisableSectionsNode("df");
+        tst::DisableSectionsNode("mem");
+        tst::DisableSectionsNode("winperf");
+        cma::cfg::ProcessKnownConfigGroups();
+        cma::cfg::SetupEnvironmentFromGroups();
+
         Device dev;
         asio::io_context context;
         TestTable.clear();

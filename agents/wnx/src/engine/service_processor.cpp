@@ -14,6 +14,7 @@
 #include "yaml-cpp/yaml.h"
 
 #include "external_port.h"
+#include "realtime.h"
 #include "service_processor.h"
 
 namespace cma::srv {
@@ -155,6 +156,35 @@ void ServiceProcessor::kickPlugins(
             answer_.newTimeout(t_out);
         }
     }
+}
+
+// usually called from the main entry point after connect came to us
+// according to spec, we have to update stop time point and parameters from the
+// config file
+void ServiceProcessor::informDevice(cma::rt::Device& Device,
+                                    std::string_view Ip) const noexcept {
+    using namespace cma::cfg;
+
+    if (!Device.started()) {
+        XLOG::l("RT Device is not started");
+        return;
+    }
+
+    if (!groups::global.realtimeEnabled()) {
+        XLOG::t("Real time is disabled in config");
+        return;
+    }
+
+    auto sections = groups::global.realtimeSections();
+    if (sections.empty()) return;
+
+    auto s_view = cma::tools::ToView(sections);
+
+    auto rt_port = groups::global.realtimePort();
+    auto password = groups::global.realtimePassword();
+    auto rt_timeout = groups::global.realtimeTimeout();
+
+    Device.connectFrom(Ip, rt_port, s_view, password);
 }
 
 // Global config reloaded here

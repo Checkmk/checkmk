@@ -59,6 +59,16 @@ static void ServiceUsage(const std::wstring &Comment) {
         // second row
         kLegacyTestParam, kTestParam, kExecParam);
 
+    xlog::sendStringToStdio("Realtime Testing:\n", Colors::kCyan);
+    printf(
+        "\t%s.exe <%ls>\n"
+        "\t%-10ls - test realtime data with all sections and encryption\n",
+        kServiceExeName,  // service name from th project definitions
+        // first Row
+        kRealtimeParam,
+        // second row
+        kRealtimeParam);
+
     xlog::sendStringToStdio(
         "To Convert Legacy Agent Ini File into Agent Yml file:\n",
         Colors::kPink);
@@ -187,11 +197,12 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
             // 1. Auto Update when  MSI file is located by specified address
             // this part of code have to be tested manually
             // scripting is possible but complicated
-            CheckForUpdateFile(kDefaultMsiFileName,  // file we are looking for
-                               GetUpdateDir(),       // dir where file we're searching
-                               UpdateType::kMsiExecQuiet, // quiet for production
-                               true,                // start update when file found
-                               GetMsiBackupDir());  // dir where file to backup
+            CheckForUpdateFile(
+                kDefaultMsiFileName,        // file we are looking for
+                GetUpdateDir(),             // dir where file we're searching
+                UpdateType::kMsiExecQuiet,  // quiet for production
+                true,                       // start update when file found
+                GetMsiBackupDir());         // dir where file to backup
             return true;
         });
     }
@@ -253,47 +264,64 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     if (param == kInstallParam) {
         XLOG::l(XLOG::kStdio | XLOG::kInfo)("service to INSTALL");
         return cma::srv::InstallMainService();
-    } else if (param == kRemoveParam && argc > 2) {
+    }
+    if (param == kRemoveParam && argc > 2) {
         XLOG::l(XLOG::kStdio | XLOG::kInfo)("service to REMOVE");
         return cma::srv::RemoveMainService();
-    } else if (param == kTestParam) {
+    }
+
+    if (param == kTestParam) {
         std::wstring param = argc > 2 ? Argv[2] : L"";
         auto interval = argc > 3 ? ToInt(Argv[3]) : 0;
         return cma::srv::TestMainService(param, interval);
-    } else if (param == kLegacyTestParam) {
+    }
+
+    if (param == kLegacyTestParam) {
         return cma::srv::TestMainService(L"legacy", 0);
-    } else if (param == kExecParam) {
+    }
+
+    if (param == kExecParam) {
         return cma::srv::ExecMainService();
-    } else if (param == kSkypeParam) {
+    }
+    if (param == kRealtimeParam) {
+        return cma::srv::ExecRealtimeTest(true);
+    }
+    if (param == kSkypeParam) {
         return cma::srv::ExecSkypeTest();
-    } else if (param == kStopLegacyParam) {
+    }
+    if (param == kStopLegacyParam) {
         return cma::srv::ExecStopLegacy();
-    } else if (param == kStartLegacyParam) {
+    }
+    if (param == kStartLegacyParam) {
         return cma::srv::ExecStartLegacy();
-    } else if (param == kCapParam) {
+    }
+    if (param == kCapParam) {
         return cma::srv::ExecCap();
-    } else if (param == kUpgradeParam) {
+    }
+    if (param == kUpgradeParam) {
         std::wstring second_param = argc > 2 ? Argv[2] : L"";
         return cma::srv::ExecUpgradeParam(second_param == L"force");
-    } else if (param == kCvtParam && argc > 2) {
+    }
+    if (param == kCvtParam && argc > 2) {
         std::wstring ini = argc > 2 ? Argv[2] : L"";
         std::wstring yml = argc > 3 ? Argv[3] : L"";
         return cma::srv::ExecCvtIniYaml(ini, yml, true);
-    } else if (param == kSectionParam && argc > 2) {
+    }
+    if (param == kSectionParam && argc > 2) {
         std::wstring section = Argv[2];
         int delay = argc > 3 ? ToInt(Argv[3]) : 0;
         bool diag = argc > 4 ? std::wstring(Argv[4]) == L"trace" : false;
         return cma::srv::ExecSection(section, delay, diag);
-    } else if (param == kHelpParam) {
-        ServiceUsage(std::wstring(L""));
-        return 0;
-    } else {
-        ServiceUsage(std::wstring(L"Provided Parameter \"") + param +
-                     L"\" is not allowed");
-        return 2;
     }
 
-    return 0;
+    if (param == kHelpParam) {
+        ServiceUsage(std::wstring(L""));
+        return 0;
+    }
+
+    ServiceUsage(std::wstring(L"Provided Parameter \"") + param +
+                 L"\" is not allowed");
+    return 2;
 }
 }  // namespace cma
 

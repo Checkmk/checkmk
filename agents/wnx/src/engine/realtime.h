@@ -12,7 +12,11 @@
 
 namespace cma::rt {
 
-enum { kHeaderSize = 2, kTimeStampSize = 10 };
+enum {
+    kHeaderSize = 2,
+    kTimeStampSize = 10,
+    kDataOffset = kHeaderSize + kTimeStampSize
+};
 
 constexpr const std::string_view kEncryptedHeader = "99";
 constexpr const std::string_view kPlainHeader = "00";

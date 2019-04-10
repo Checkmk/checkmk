@@ -44,6 +44,8 @@
 #include "providers/system_time.h"
 #include "providers/wmi.h"
 
+#include "realtime.h"
+
 namespace cma::srv {
 // mini processes of the global type
 class TheMiniProcess {
@@ -228,6 +230,9 @@ private:
     // on this phase we are starting our async plugins
     void preContextCall() {}
 
+    void informDevice(cma::rt::Device& Device, std::string_view Ip) const
+        noexcept;
+
     // this thread is HOSTING THREAD for start next services
     // Io
     // All providers
@@ -242,10 +247,13 @@ private:
             bool io_started = false;
             mailbox.ConstructThread(SystemMailboxCallback, 20, this);
             ON_OUT_OF_SCOPE(mailbox.DismantleThread());
+            cma::rt::Device rt_device;
             if (Port) {
                 // this is main part
+                rt_device.start();
                 io_started = Port->startIo(
-                    [this](const std::string Ip) -> std::vector<uint8_t> {
+                    [this,
+                     &rt_device](const std::string Ip) -> std::vector<uint8_t> {
                         // most important entry point for external port io
                         // this is internal implementation of the io_context
                         // called upon kicking in port, i.e. LATER. NOT NOW.
@@ -253,6 +261,7 @@ private:
                         using namespace std::chrono;
                         XLOG::d.i("Connected from {} ", Ip.c_str());
                         cma::OnStartApp();
+                        informDevice(rt_device, Ip);
                         auto tp = openAnswer(Ip);
                         if (tp) {
                             XLOG::d.i("Id is [{}] ",

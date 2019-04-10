@@ -102,6 +102,7 @@ global:
         # sections can be used in realtime updates, the following is the
         # complete list
     realtime:
+        enabled: no
         # specifies how long (in seconds) realtime updates are sent to
         # the last monitoring system that requested an update.
         # this should be longer than the request frequency (usually
@@ -113,6 +114,7 @@ global:
         timeout: 90
         # enable/disable encryption of regular agent output (default: disabled) 
         # yes or no
+        port: 6559
         encrypted: no
         # passphrase for encrypted communication.
         passphrase: this is my password

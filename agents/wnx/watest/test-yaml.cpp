@@ -341,10 +341,13 @@ TEST(AgentConfig, WorkScenario) {
 
     {
         auto realtime = GetNode(groups::kGlobal, vars::kRealTime);
-        EXPECT_TRUE(realtime.size() == 4);
+        EXPECT_TRUE(realtime.size() == 6);
 
         auto encrypt = GetVal(realtime, vars::kRtEncrypt, true);
         EXPECT_TRUE(!encrypt);
+
+        auto rt_port = GetVal(realtime, vars::kRtPort, 111);
+        EXPECT_EQ(rt_port, cma::cfg::kDefaultRealtimePort);
 
         auto passphrase =
             GetVal(realtime, vars::kGlobalPassword, std::string());
@@ -563,6 +566,11 @@ TEST(AgentConfig, FunctionalityCheck) {
 
     EXPECT_TRUE(global.enabledSections().size() != 0);
     EXPECT_TRUE(global.disabledSections().size() != 0);
+
+    EXPECT_TRUE(global.realtimePort() == cma::cfg::kDefaultRealtimePort);
+    EXPECT_TRUE(global.realtimeTimeout() == cma::cfg::kDefaultRealtimeTimeout);
+    EXPECT_FALSE(global.realtimeEncrypt());
+    EXPECT_FALSE(global.realtimeEnabled());
 
     // caching USER
     fs::path source_name = details::G_ConfigInfo.getUserYamlPath();

@@ -143,7 +143,7 @@ class BookmarkList(pagetypes.Overridable):
                 FixedValue(
                     None,
                     title=_("Use default topic"),
-                    totext=_(""),
+                    totext="",
                 ),
                 OptionalDropdownChoice(
                     title=_("Individual topic"),

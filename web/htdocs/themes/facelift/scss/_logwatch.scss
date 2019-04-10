@@ -22,164 +22,164 @@ ails.  You should have  received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
-
 */
 
 /* Styles used in the logwatch pages */
 
-//#logwatch {
-//    margin-top: 1ex;
-//    color: #000;
-//}
-//
-//#logwatch div.chunk {
-//    border-width: 1px;
-//    border-style: solid;
-//    margin-bottom: 1em;
-//    padding: 0.5ex;
-//    border-color: #bbb #555 #222 #bbb;
-//    background-color: #fff;
-//}
-//
-//#logwatch a {
-//    font-family: sans-serif;
-//    font-weight: bold;
-//    width: 4em;
-//    color: #008;
-//}
-//
-//#logwatch a b {
-//    color: #08f;
-//}
-//
-//#logwatch a.ack {
-//    background-color: #33c;
-//    color: #fff;
-//    text-decoration: none;
-//    border-width: 2px;
-//    border-style: solid;
-//    border-color: #ccc #888 #333 #777;
-//    padding: 0.3ex 1ex;
-//    border-radius: 6px;
-//}
-//
-//#logwatch p {
-//    font-family: courier, monospace;
-//    margin: 0;
-//    padding: 0.2ex 0 0.5ex 0.2ex;
-//    border-left: 1px solid #888;
-//    border-right: 1px solid #888;
-//    font-size: 10pt;
-//    background-color: #ddd;
-//    text-indent: -1.0ex;
-//    padding-left: 1.5ex;
-//}
-//
-//#logwatch p img {
-//    margin-right: 2px;
-//}
-//
-//#logwatch .WARN {
-//    background-color: #ff8;
-//    border-bottom: 1px solid #cc0;
-//}
-//
-//#logwatch .CRIT {
-//    background-color: #f88;
-//    border-bottom: 1px solid #c00;
-//}
-//
-//#logwatch .OK {
-//    background-color: #0b3;
-//    border-bottom: 1px solid #0c0;
-//}
-//
-//#logwatch td.WARN, td.CRIT, td.OK {
-//    width: 5em;
-//    text-align: center;
-//    padding: 0em 0.5ex;
-//    margin: 0;
-//    font-weight: bold;
-//}
-//
-//#logwatch td.WARN {
-//    border: 1px solid #000;
-//    background-color: #ff0;
-//}
-//
-//#logwatch td.CRIT {
-//    border: 1px solid #000;
-//    background-color: #f00;
-//    color: #fff;
-//}
-//
-//#logwatch td.OK {
-//    background-color: #0b3;
-//    border: 1px solid #000;
-//    color: #fff;
-//}
-//
-//#logwatch table.section {
-//    margin: 0ex 0ex 0.8ex 0ex;
-//    width: 100%
-//}
-//
-//#logwatch .date {
-//    font-weight: normal;
-//    padding-left: 1ex;
-//    color: #666;
-//}
-//
-//#logwatch td.button {
-//    text-align: right;
-//}
-//
-//#logwatch td.button a {
-//    background-color: #cca;
-//    color: #000;
-//    text-decoration: none;
-//    font-weight: normal;
-//    border-width: 1px;
-//    border-style: solid;
-//    border-color: #ddd #888 #333 #ddd;
-//    padding: 0.1ex 1ex;
-//    border-radius: 4px;
-//}
-//
-//#logwatch td.button a:active {
-//  background-color: #aa8;
-//}
-//
-///* --- navigation tabs in logwatch ------------------ */
-//
-//#logwatch a.tab, #logwatch a.tabactive {
-//    border-radius: 12px 12px 0px 0px;
-//    display: block;
-//    margin-bottom: 0px;
-//    color: #000;
-//    padding: 0.4ex 1em;
-//    border-style: none;
-//    vertical-align: top;
-//    margin-right: 0.3ex;
-//    background-color: #fc0;
-//    border-bottom: 1px solid #000;
-//    text-decoration: none;
-//    width: 140px;
-//}
-//
-//#logwatch a.tab:hover {
-//    padding-bottom: 10px;
-//}
-//
-//#logwatch a.tabactive {
-//    padding-bottom: 6px;
-//    border-bottom-style: none;
-//}
-//
-//#logwatch p {
-//   white-space: pre-wrap;      /* CSS3 */
-//   white-space: -moz-pre-wrap; /* Firefox */
-//   white-space: -pre-wrap;     /* Opera <7 */
-//   white-space: -o-pre-wrap;   /* Opera 7 */
-//   word-wrap: break-word;      /* IE */
-//}
+#logwatch {
+    margin-top: 1ex;
+    color: #000;
+}
+
+#logwatch div.chunk {
+    border-width: 1px;
+    border-style: solid;
+    margin-bottom: 1em;
+    padding: 0.5ex;
+    border-color: #bbb #555 #222 #bbb;
+    background-color: #fff;
+}
+
+#logwatch a {
+    font-family: sans-serif;
+    font-weight: bold;
+    width: 4em;
+    color: #008;
+}
+
+/* TODO: Reproduce this html element */
+#logwatch a b {
+    color: #08f;
+}
+
+/* TODO: Reproduce this html element */
+#logwatch a.ack {
+    background-color: #33c;
+    color: #fff;
+    text-decoration: none;
+    border-width: 2px;
+    border-style: solid;
+    border-color: #ccc #888 #333 #777;
+    padding: 0.3ex 1ex;
+    border-radius: 6px;
+}
+
+#logwatch p {
+    font-family: courier, monospace;
+    margin: 0;
+    padding: 0.2ex 0 0.5ex 0.2ex;
+    border-left: 1px solid #888;
+    border-right: 1px solid #888;
+    font-size: 10pt;
+    background-color: #ddd;
+    text-indent: -1.0ex;
+    padding-left: 1.5ex;
+    white-space: pre-wrap;      /* CSS3 */
+    white-space: -moz-pre-wrap; /* Firefox */
+    white-space: -pre-wrap;     /* Opera <7 */
+    white-space: -o-pre-wrap;   /* Opera 7 */
+    word-wrap: break-word;      /* IE */
+}
+
+#logwatch p img {
+    margin-right: 2px;
+}
+
+#logwatch .WARN {
+    background-color: #ff8;
+    border-bottom: 1px solid #cc0;
+}
+
+#logwatch .CRIT {
+    background-color: #f88;
+    border-bottom: 1px solid #c00;
+}
+
+#logwatch .OK {
+    background-color: #0b3;
+    border-bottom: 1px solid #0c0;
+}
+
+#logwatch td.WARN, td.CRIT, td.OK {
+    width: 5em;
+    text-align: center;
+    padding: 0em 0.5ex;
+    margin: 0;
+    font-weight: bold;
+}
+
+#logwatch td.WARN {
+    border: 1px solid #000;
+    background-color: #ff0;
+}
+
+#logwatch td.CRIT {
+    border: 1px solid #000;
+    background-color: #f00;
+    color: #fff;
+}
+
+#logwatch td.OK {
+    background-color: #0b3;
+    border: 1px solid #000;
+    color: #fff;
+}
+
+#logwatch table.section {
+    margin: 0ex 0ex 0.8ex 0ex;
+    width: 100%
+}
+
+#logwatch .date {
+    font-weight: normal;
+    padding-left: 1ex;
+    color: #666;
+}
+
+/* TODO: Reproduce these three td.button elements */
+#logwatch td.button {
+    text-align: right;
+}
+
+#logwatch td.button a {
+    background-color: #cca;
+    color: #000;
+    text-decoration: none;
+    font-weight: normal;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #ddd #888 #333 #ddd;
+    padding: 0.1ex 1ex;
+    border-radius: 4px;
+}
+
+#logwatch td.button a:active {
+  background-color: #aa8;
+}
+
+/* --- navigation tabs in logwatch ------------------ */
+/* TODO: Reproduce these .tab and .tabactive elements */
+
+#logwatch a.tab, #logwatch a.tabactive {
+    border-radius: 12px 12px 0px 0px;
+    display: block;
+    margin-bottom: 0px;
+    color: #000;
+    padding: 0.4ex 1em;
+    border-style: none;
+    vertical-align: top;
+    margin-right: 0.3ex;
+    background-color: #fc0;
+    border-bottom: 1px solid #000;
+    text-decoration: none;
+    width: 140px;
+}
+
+#logwatch a.tab:hover {
+    padding-bottom: 10px;
+}
+
+#logwatch a.tabactive {
+    padding-bottom: 6px;
+    border-bottom-style: none;
+}

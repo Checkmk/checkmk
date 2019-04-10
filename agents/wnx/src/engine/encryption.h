@@ -43,7 +43,8 @@ public:
 
     // in-place encrypt buffer
     std::tuple<bool, size_t> encode(void *InOut, size_t InputSize,
-                                    size_t BufferSize, bool LastBlock = true);
+                                    size_t BufferSize,
+                                    bool LastBlock = true) const;
     std::tuple<bool, size_t> decode(void *InOut, size_t input_size,
                                     bool LastBlock = true);
 
@@ -54,6 +55,8 @@ public:
     const bool available() const { return key_ != 0; }
 
     std::optional<uint32_t> blockSize() const;
+
+    std::optional<size_t> CalcBufferOverhead(size_t DataSize) const noexcept;
 
 private:
     void cleanup();

@@ -3,14 +3,220 @@
 //
 #include "pch.h"
 
+#include <thread>
+
+#include "asio.h"
+
 #include "common/cfg_info.h"
+#include "tools/_misc.h"
 
 #include "cfg.h"
 #include "realtime.h"
+void StartTestServer() {}
 
 namespace cma::rt {
 
+using asio::ip::udp;
+static std::vector<RtBlock> TestTable;
+
+// test server for the checking output from realtime main thread
+// do NOT use in production
+class UdpServer {
+public:
+    UdpServer(asio::io_context& io_context, short port)
+        : socket_(io_context, udp::endpoint(udp::v4(), port)) {
+        do_receive();
+    }
+
+    void do_receive() {
+        socket_.async_receive_from(
+            asio::buffer(data_, max_length), sender_endpoint_,
+            [this](std::error_code ec, std::size_t bytes_recvd) {
+                do_store(bytes_recvd);
+                do_receive();
+            });
+    }
+
+private:
+    void do_store(size_t Length) {
+        TestTable.emplace_back(data_, data_ + Length);
+    }
+
+    udp::socket socket_;
+    udp::endpoint sender_endpoint_;
+    enum { max_length = 16000 };
+    char data_[max_length];
+};
+
+void StartTestServer(asio::io_context* IoContext, int Port) {
+    try {
+        ;
+
+        UdpServer s(*IoContext, Port);
+
+        IoContext->run();
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << "\n";
+    }
+}
+
+TEST(RealtimeTest, LowLevel) {
+    // stub
+    Device dev;
+    auto ret = dev.start();
+    ASSERT_TRUE(dev.started());
+    EXPECT_FALSE(dev.use_df_);
+    EXPECT_FALSE(dev.use_mem_);
+    EXPECT_FALSE(dev.use_winperf_processor_);
+    EXPECT_FALSE(dev.use_test_);
+    EXPECT_TRUE(dev.port_ == 0);
+    EXPECT_FALSE(dev.working_period_);
+    EXPECT_TRUE(dev.kick_count_ == 0);
+    auto tm = dev.kick_time_;
+
+    dev.connectFrom("1.0.0.1", 555, {"mem", "df", "tesT", "winpErf_processor"},
+                    "", 91);
+    EXPECT_TRUE(dev.use_df_);
+    EXPECT_TRUE(dev.use_mem_);
+    EXPECT_TRUE(dev.use_winperf_processor_);
+    EXPECT_TRUE(dev.use_test_);
+    EXPECT_TRUE(dev.port_ == 555);
+    EXPECT_TRUE(dev.kick_count_ == 1);
+    EXPECT_TRUE(dev.kick_time_ > tm);
+    EXPECT_TRUE(dev.timeout_ == 91);
+    EXPECT_TRUE(dev.working_period_);
+    tm = dev.kick_time_;
+
+    dev.connectFrom("1.0.0.1", 999, {"tesT"}, 0);
+    EXPECT_FALSE(dev.use_df_);
+    EXPECT_FALSE(dev.use_mem_);
+    EXPECT_FALSE(dev.use_winperf_processor_);
+    EXPECT_TRUE(dev.use_test_);
+    EXPECT_TRUE(dev.port_ == 999);
+    EXPECT_TRUE(dev.kick_time_ > tm);
+    cma::tools::sleep(2000);
+    EXPECT_FALSE(dev.working_period_);
+}
+
+TEST(RealtimeTest, PackData) {
+    // stub
+    std::string_view output = "123456789";
+    {
+        auto tstamp1 = time(nullptr);
+        auto no_crypt_result = PackData(output, nullptr);
+        auto tstamp2 = time(nullptr);
+        ASSERT_TRUE(no_crypt_result.size() ==
+                    output.size() + kHeaderSize + kTimeStampSize);
+        auto data = no_crypt_result.data();
+        EXPECT_TRUE(0 == memcmp(data, kPlainHeader.data(), kHeaderSize));
+        EXPECT_TRUE(0 == memcmp(data + kHeaderSize + kTimeStampSize,
+                                output.data(), output.size()));
+        auto char_data = reinterpret_cast<char*>(data);
+        std::string_view ts(char_data + kHeaderSize, kTimeStampSize);
+        std::string timestamp(ts);
+        auto timestamp_mid = std::atoll(timestamp.c_str());
+        EXPECT_TRUE(tstamp1 <= timestamp_mid);
+        EXPECT_TRUE(tstamp2 >= timestamp_mid);
+    }
+
+    {
+        cma::encrypt::Commander crypto("873fre)%d\\-QA");
+        auto tstamp1 = time(nullptr);
+        auto crypt_result = PackData(output, &crypto);
+        auto tstamp2 = time(nullptr);
+        ASSERT_TRUE(!crypt_result.empty());
+        EXPECT_TRUE(0 == memcmp(crypt_result.data(), kEncryptedHeader.data(),
+                                kHeaderSize));
+        ASSERT_TRUE(crypt_result.size() >
+                    output.size() + kHeaderSize + kTimeStampSize);
+        auto data = crypt_result.data();
+        auto char_data = reinterpret_cast<char*>(data);
+        std::string_view ts(char_data + kHeaderSize, kTimeStampSize);
+        std::string timestamp(ts);
+        auto timestamp_mid = std::atoll(timestamp.c_str());
+        EXPECT_TRUE(tstamp1 <= timestamp_mid);
+        EXPECT_TRUE(tstamp2 >= timestamp_mid);
+
+        auto [success, size] =
+            crypto.decode(data + kHeaderSize + kTimeStampSize,
+                          crypt_result.size() - (kHeaderSize + kTimeStampSize));
+
+        ASSERT_TRUE(success);
+        ASSERT_TRUE(size > 0);
+        EXPECT_EQ(size, output.size());
+
+        EXPECT_TRUE(0 == memcmp(data + kHeaderSize + kTimeStampSize,
+                                output.data(), output.size()));
+    }
+}
+
 TEST(RealtimeTest, Base) {
     // stub
+
+    {
+        Device dev;
+        asio::io_context context;
+        TestTable.clear();
+        std::thread first(StartTestServer, &context, 555);
+        auto ret = dev.start();
+
+        EXPECT_TRUE(dev.started_);
+        dev.connectFrom("127.0.0.1", 555, {"mem", "df", "winperf_processor"},
+                        "");
+
+        EXPECT_TRUE(ret);
+        cma::tools::sleep(5000);
+        EXPECT_TRUE(dev.started_);
+        dev.stop();
+        EXPECT_FALSE(dev.started_);
+
+        context.stop();
+        if (first.joinable()) first.join();
+        EXPECT_TRUE(TestTable.size() > 3);
+
+        for (auto packet : TestTable) {
+            auto d = reinterpret_cast<const char*>(packet.data());
+            std::string p(d);
+            EXPECT_TRUE(p.find(kPlainHeader) == 0);
+            EXPECT_TRUE(p.find("<<<df") != std::string::npos);
+            EXPECT_TRUE(p.find("<<<mem") != std::string::npos);
+            EXPECT_TRUE(p.find("<<<winperf_processor") != std::string::npos);
+        }
+    }
+    {
+        Device dev;
+        asio::io_context context;
+        TestTable.clear();
+        std::thread first(StartTestServer, &context, 555);
+        auto ret = dev.start();
+
+        EXPECT_TRUE(dev.started_);
+        dev.connectFrom("127.0.0.1", 555, {"mem", "df", "winperf_processor"},
+                        "encrypt");
+
+        EXPECT_TRUE(ret);
+        cma::tools::sleep(5000);
+        EXPECT_TRUE(dev.started_);
+        dev.stop();
+        EXPECT_FALSE(dev.started_);
+
+        context.stop();
+        if (first.joinable()) first.join();
+        EXPECT_TRUE(TestTable.size() > 3);
+        cma::encrypt::Commander dec("encrypt");
+        for (auto packet : TestTable) {
+            auto d = reinterpret_cast<char*>(packet.data());
+            auto [success, size] =
+                dec.decode(d + kHeaderSize + kTimeStampSize,
+                           packet.size() - kHeaderSize - kTimeStampSize, true);
+            ASSERT_TRUE(success);
+            std::string p(d);
+            ASSERT_TRUE(p.find(kEncryptedHeader) == 0);
+
+            EXPECT_TRUE(p.find("<<<df") != std::string::npos);
+            EXPECT_TRUE(p.find("<<<mem") != std::string::npos);
+            EXPECT_TRUE(p.find("<<<winperf_processor") != std::string::npos);
+        }
+    }
 }
 }  // namespace cma::rt

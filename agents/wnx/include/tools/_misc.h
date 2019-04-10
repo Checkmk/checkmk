@@ -34,7 +34,7 @@ inline void sleep(int Milliseconds) noexcept {
 }
 
 // gtest [+]
-inline bool IsEqual(const std::string& Left, const std::string& Right) {
+inline bool IsEqual(std::string_view Left, std::string_view Right) {
     return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
                       [](char LeftChar, char RightChar) {
                           return std::tolower(LeftChar) ==

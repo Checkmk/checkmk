@@ -43,7 +43,8 @@ void Commander::cleanup() {
 }
 
 std::tuple<bool, size_t> Commander::encode(void *InOut, size_t InputSize,
-                                           size_t BufferSize, bool LastBlock) {
+                                           size_t BufferSize,
+                                           bool LastBlock) const {
     if (!available()) return {false, 0};
 
     auto input_size = static_cast<DWORD>(InputSize);
@@ -82,7 +83,7 @@ std::tuple<bool, size_t> Commander::decode(void *InOut, size_t InputSize,
         // special case, when error is recoverable
         if (GetLastError() == ERROR_MORE_DATA) return {false, input_size};
 
-        XLOG::l.crit("Cannot decode buffer {}", GetLastError());
+        XLOG::l.crit("Cannot decode buffer [{}]", GetLastError());
         return {false, 0};
     }
 
@@ -403,6 +404,24 @@ std::unique_ptr<Commander> MakeCrypt() {
 
     auto p = pass.value();
     return std::make_unique<Commander>(p);
+}
+
+// calculate additional size of buffer in bytes to compress DataSize
+std::optional<size_t> Commander::CalcBufferOverhead(size_t DataSize) const
+    noexcept {
+    if (!blockSize().has_value()) {
+        XLOG::l("Impossible situation, crypt engine is absent");
+        return {};
+    }
+
+    if (!blockSize().value()) {
+        XLOG::l("Impossible situation, block is too short");
+        return {};
+    }
+
+    auto block_size = blockSize().value();
+
+    return block_size - (DataSize % block_size);
 }
 
 }  // namespace cma::encrypt

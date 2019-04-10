@@ -121,7 +121,7 @@ std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
 std::wstring GetPluginConfigDir() noexcept;
 std::wstring GetUpdateDir() noexcept;
-std::wstring GetMsiBackupDir() noexcept; // storage for MSI installed
+std::wstring GetMsiBackupDir() noexcept;  // storage for MSI installed
 std::wstring GetSpoolDir() noexcept;
 std::wstring GetTempDir() noexcept;
 std::wstring GetLogDir() noexcept;
@@ -399,6 +399,7 @@ public:
         std::lock_guard lk(lock_);
         return port_;
     }
+
     int flushTcp() const {
         std::lock_guard lk(lock_);
         return flush_tcp_;
@@ -436,18 +437,38 @@ public:
         return realtime_sections_;
     }
 
-    bool realtimeEncrypt() const {
+    bool realtimeEncrypt() const noexcept {
         std::lock_guard lk(lock_);
         return realtime_encrypt_;
     }
 
-    auto getWmiTimeout() const {
+    bool realtimeEnabled() const noexcept {
+        std::lock_guard lk(lock_);
+        return realtime_enabled_;
+    }
+
+    int realtimePort() const noexcept {
+        std::lock_guard lk(lock_);
+        return realtime_port_;
+    }
+
+    int realtimeTimeout() const noexcept {
+        std::lock_guard lk(lock_);
+        return realtime_timeout_;
+    }
+
+    int getWmiTimeout() const noexcept {
         std::lock_guard lk(lock_);
         return wmi_timeout_;
     }
     std::string password() const {
         std::lock_guard lk(lock_);
         return password_;
+    }
+
+    std::string realtimePassword() const {
+        std::lock_guard lk(lock_);
+        return realtime_encrypt_ ? password_ : "";
     }
 
     bool publicLog() const {
@@ -487,21 +508,21 @@ public:
         return true;
     }
 
-    auto isSectionDisabled(const std::string Name) const {
+    auto isSectionDisabled(const std::string& Name) const {
         std::lock_guard lk(lock_);
 
         // most important is disabled
         return cma::tools::Find(disabled_sections_, Name);
     }
 
-    bool isIpAddressAllowed(const std::string_view Ip) const {
+    bool isIpAddressAllowed(std::string_view Ip) const {
         if (!of::IsAddress(Ip)) {
             XLOG::d(XLOG_FUNC + " Bad param in {}", Ip);
             return false;
         }
         std::lock_guard lk(lock_);
 
-        // empty only from vector allowes any connection
+        // empty only from vector allows any connection
         if (only_from_.size() == 0) return true;
 
         for (auto& o : only_from_) {
@@ -590,8 +611,10 @@ private:
     std::vector<std::string> disabled_sections_;
 
     // real time
+    bool realtime_enabled_;
     bool realtime_encrypt_;
     int realtime_timeout_;
+    int realtime_port_;
     std::vector<std::string> realtime_sections_;
 
     // wmi hlobal

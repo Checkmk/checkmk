@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <vector>
@@ -328,6 +329,16 @@ inline void RightTrim(std::string& Str) {
 inline void AllTrim(std::string& Str) {
     LeftTrim(Str);
     RightTrim(Str);
+}
+
+// #TODO Make Template
+inline std::vector<std::string_view> ToView(
+    const std::vector<std::string>& StringArray) {
+    std::vector<std::string_view> s_view;
+
+    for (const auto& str : StringArray) s_view.emplace_back(str);
+
+    return s_view;
 }
 
 // string splitter

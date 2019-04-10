@@ -11,6 +11,7 @@ constexpr const wchar_t* kInstallParam = L"-install";
 constexpr const wchar_t* kRemoveParam = L"-remove";
 constexpr const wchar_t* kLegacyTestParam = L"test";
 constexpr const wchar_t* kTestParam = L"-test";
+constexpr const wchar_t* kRealtimeParam = L"-rt";
 constexpr const wchar_t* kHelpParam = L"-help";
 constexpr const wchar_t* kExecParam = L"-exec";                 // runs as app
 constexpr const wchar_t* kCvtParam = L"-cvt";                   // runs as app

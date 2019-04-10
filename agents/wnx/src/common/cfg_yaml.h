@@ -38,8 +38,10 @@ const char* const kGlobalWmiTimeout = "wmi_timeout";  // int
 
 const char* const kRealTime = "realtime";    // map
 const char* const kRtTimeout = "timeout";    // int
+const char* const kRtPort = "port";          // int
 const char* const kRtEncrypt = "encrypted";  // bool
 const char* const kRtRun = "run";            // seq
+const char* const kRtEnabled = "enabled";    // bool
 
 const char* const kSectionsEnabled = "sections";            // seq
 const char* const kSectionsDisabled = "disabled_sections";  // seq

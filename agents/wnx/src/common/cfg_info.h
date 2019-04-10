@@ -47,6 +47,7 @@ constexpr int kDefaultWmiTimeout = 3;  // seconds, this is Windows FAIL
 constexpr int kDefaultRealtimeTimeout =
     90;  // In seconds.
          // data will be send to peer during this interval
+constexpr int kDefaultRealtimePort = 6559;
 
 // #TODO CONFIRM VALUE:
 constexpr int kMinimumCacheAge = 120;

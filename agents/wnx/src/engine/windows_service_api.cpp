@@ -21,6 +21,7 @@
 #include "cap.h"
 #include "cfg.h"
 #include "cvt.h"
+#include "realtime.h"
 #include "upgrade.h"
 
 // out of namespace
@@ -525,6 +526,100 @@ int ExecSkypeTest() {
     XLOG::l.i("*******************************************************");
     //    skype.generateContent();
     XLOG::l.i("<<<Skype testing END>>>");
+    return 0;
+}
+
+constexpr static int kRtTestPort = 5555;
+constexpr static std::string_view kRtTestPassword = "axecerc";
+
+// Yet Another Test server for the checking output from realtime main thread
+// do NOT use in production
+class UdpServer {
+public:
+    UdpServer(asio::io_context& io_context, short port, bool Print)
+        : socket_(io_context,
+                  asio::ip::udp::endpoint(asio::ip::udp::v4(), port))
+        , print_(Print) {
+        do_receive();
+    }
+
+    void do_receive() {
+        socket_.async_receive_from(
+            asio::buffer(data_, max_length), sender_endpoint_,
+            [this](std::error_code ec, std::size_t bytes_recvd) {
+                do_processing(bytes_recvd);
+                do_receive();  // asio trick to restart receive
+            });
+    }
+
+private:
+    void do_processing(size_t Length) {
+        if (!print_ || Length == 0) return;
+
+        // decoding
+        auto [success, len] = crypt_.decode(
+            data_ + cma::rt::kDataOffset, Length - cma::rt::kDataOffset, true);
+
+        // printing
+        if (success) {
+            data_[cma::rt::kDataOffset + len] = 0;
+            XLOG::l.t("{}",
+                      std::string_view(data_ + cma::rt::kDataOffset, Length));
+        } else {
+            XLOG::l("Failed to decrypt data");
+        }
+
+        xlog::sendStringToStdio(
+            "Press any key to STOP testing Realtime Sections\n",
+            xlog::internal::Colors::kPink);
+    }
+
+    const std::string password_{kRtTestPassword};
+    cma::encrypt::Commander crypt_{password_};
+
+    asio::ip::udp::socket socket_;
+    asio::ip::udp::endpoint sender_endpoint_;
+    enum { max_length = 16000 };
+    char data_[max_length];
+    bool print_ = false;
+};
+
+void RunTestingUdpServer(asio::io_context* IoContext, int Port, bool Print) {
+    try {
+        UdpServer s(*IoContext, Port, Print);
+
+        IoContext->run();  // blocking call till the context stopped
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << "\n";
+    }
+}
+
+// on -rt
+// verify that skype business is present
+int ExecRealtimeTest(bool Print) {
+    using namespace cma::rt;
+
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false););
+    Device dev;
+    asio::io_context context;
+    std::thread thread_with_server(RunTestingUdpServer, &context, kRtTestPort,
+                                   Print);
+
+    auto ret = dev.start();
+
+    xlog::sendStringToStdio(
+        "Press any key to START testing Realtime Sections\n",
+        xlog::internal::Colors::kGreen);
+    cma::tools::GetKeyPress();  // blocking  wait for key press
+    dev.connectFrom("127.0.0.1", kRtTestPort,
+                    {"mem", "df", "winperf_processor"}, kRtTestPassword, 30);
+    cma::tools::GetKeyPress();  // blocking  wait for key press
+    dev.stop();
+
+    context.stop();
+    if (thread_with_server.joinable()) thread_with_server.join();
     return 0;
 }
 

@@ -70,8 +70,12 @@ void Global::loadFromMainConfig() {
 
         realtime_encrypt_ = GetVal(realtime, vars::kRtEncrypt, false);
 
+        realtime_enabled_ = GetVal(realtime, vars::kRtEnabled, true);
+
         realtime_timeout_ =
             GetVal(realtime, vars::kRtTimeout, kDefaultRealtimeTimeout);
+
+        realtime_port_ = GetVal(realtime, vars::kRtPort, kDefaultRealtimePort);
 
         wmi_timeout_ = GetVal(groups::kGlobal, vars::kGlobalWmiTimeout,
                               kDefaultWmiTimeout);

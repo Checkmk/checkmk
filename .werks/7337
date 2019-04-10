@@ -1,0 +1,10 @@
+Title: Fix handling of dashlet exception breaking whole dashboard
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p15
+Date: 1554884031
+Class: fix
+
+

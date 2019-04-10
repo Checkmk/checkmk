@@ -374,7 +374,9 @@ def draw_dashboard(name):
             register_for_refresh(name, nr, dashlet, wato_folder)
             register_for_on_resize(nr, dashlet)
 
-            draw_dashlet(name, board, nr, dashlet, wato_folder)
+            with html.plugged():
+                draw_dashlet(name, board, nr, dashlet, wato_folder)
+                html.write(html.drain())
         except MKUserError, e:
             dashlet_error(nr, dashlet, e)
         except Exception, e:

@@ -1,0 +1,13 @@
+Title: openhardwaremonitor: Handles WMI timeouts correctly
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554899463
+Class: fix
+
+Newer Windows agents provide an additional column WMIStatus
+with the possible value OK or Timeout.
+In case of a WMI timeout the {{openhardwaremonitor}} services
+go stale.

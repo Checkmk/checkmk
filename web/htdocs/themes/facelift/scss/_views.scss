@@ -314,10 +314,10 @@ table.filtertime td {
 div.optiondial {
   &, &.num_columns, &.refresh {
     top: 0;
-    width: 73px;
-    height: 32px;
-    margin-right: 12px;
-    margin-bottom: 12px;
+    width: 80.5px;
+    height: 26px;
+    margin-right: 5px;
+    margin-bottom: 5px;
     background: $theme-color-white;
     border: 1px solid $theme-color-table-border;
     border-radius: $theme-border-radius;
@@ -325,7 +325,7 @@ div.optiondial {
 
     div {
       padding: 0;
-      line-height: 34px;
+      line-height: 27px;
     }
   }
 
@@ -342,9 +342,8 @@ div.optiondial {
   }
 
   &.num_columns {
-    width: 74px;
     margin-right: 0;
-    border-right: 0;
+    border-right: none;
     border-radius: $theme-border-radius 0 0 4px;
   }
 

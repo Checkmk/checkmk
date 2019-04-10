@@ -407,7 +407,7 @@ div.snapin {
 
   /* The right-aligned link at the bottom of some snapins like the "views" snapin. */
   div.footnotelink {
-    margin-top: 5px;
+    margin-top: 0px;
     text-align: right;
 
     a {
@@ -475,7 +475,7 @@ div.snapin div.footnotelink a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin div.footnotelink body.main .popup_menu span.link,
 body.main .popup_menu div.snapin div.footnotelink span.link {
-  padding: 12px 0;
+  padding: 0 0;
   margin-right: 16px;
   margin-left: 0;
   font-size: $theme-font-size-small;

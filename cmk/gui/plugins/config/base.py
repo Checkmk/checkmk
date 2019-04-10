@@ -68,15 +68,8 @@ multisite_contactgroups = {}
 #   |____/|_|\__,_|\___|_.__/ \__,_|_|
 #
 
-sidebar = [
-    ('tactical_overview', 'open'),
-    ('search', 'open'),
-    ('views', 'open'),
-    ('reports', 'closed'),  # does not harm if not available
-    ('bookmarks', 'open'),
-    ('admin', 'open'),
-    ('master_control', 'closed')
-]
+sidebar = [('tactical_overview', 'open'), ('search', 'open'), ('views', 'open'), ('admin', 'open'),
+           ('bookmarks', 'open'), ('master_control', 'closed')]
 
 # Interval of snapin updates in seconds
 sidebar_update_interval = 30.0

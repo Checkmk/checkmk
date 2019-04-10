@@ -120,9 +120,8 @@ def test_load_default_config(monkeypatch):
         UserSidebarSnapin.from_snapin_type_id('tactical_overview'),
         UserSidebarSnapin.from_snapin_type_id('search'),
         UserSidebarSnapin.from_snapin_type_id('views'),
-        UserSidebarSnapin(sidebar.snapin_registry["reports"], sidebar.SnapinVisibility.CLOSED),
-        UserSidebarSnapin.from_snapin_type_id('bookmarks'),
         UserSidebarSnapin.from_snapin_type_id('admin'),
+        UserSidebarSnapin.from_snapin_type_id('bookmarks'),
         UserSidebarSnapin(sidebar.snapin_registry["master_control"],
                           sidebar.SnapinVisibility.CLOSED),
     ]

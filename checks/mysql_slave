@@ -25,56 +25,34 @@
 # Boston, MA 02110-1301 USA.
 
 
-# FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_slave(info):
-    def parse_line(l):
-        if ':' in l[0]:
-            val = ' '.join(l[1:])
+    def parse_line(line):
+        if not line[0].endswith(':'):
+            return None, None
+        key = line[0][:-1]
 
-            # Parse some values
-            try:
-                val = int(val)
-            except ValueError:
-                if val == 'Yes':
-                    val = True
-                elif val == 'No':
-                    val = False
-                elif val == 'None':
-                    val = None
-            return line[0][:-1], val
-        return None, None
+        val = ' '.join(line[1:])
+        # Parse some values
+        try:
+            val = int(val)
+        except ValueError:
+            val = {'Yes': True, 'No': False, 'None': None}.get(val, val)
+        return key, val
 
     parsed = {}
-    instance = False
-    for line in info:
-        if line[0].startswith("[["):
-            instance = line[0][2:-2]
-            if instance == "":
-                instance = "mysql"
-            parsed[instance] = {}
-        elif instance:
-            key, value = parse_line(line)
-            if key:
-                parsed[instance][key] = value
-
-    # Support for old Plugin version
-    if not instance:
-        parsed['mysql'] = {}
-        for line in info:
-            key, value = parse_line(line)
-            if key:
-                parsed['mysql'][key] = value
-
+    for instance, line in _mysql_iter_instance_lines(info):  # pylint: disable=undefined-variable
+        key, value = parse_line(line)
+        parsed.setdefault(instance, {})[key] = value
     return parsed
 
 
 @discover
-def inventory_mysql_slave(key, values):
+def inventory_mysql_slave(_key, values):
     return len(values) > 0
 
 
 @get_parsed_item_data
-def check_mysql_slave(item, params, data):
+def check_mysql_slave(_no_item, params, data):
     state = 0
     perfdata = []
     output = []
@@ -122,4 +100,5 @@ check_info['mysql_slave'] = {
     "service_description": "MySQL DB Slave %s",
     "has_perfdata": True,
     "group": "mysql_slave",
+    "includes": ["mysql.include"],
 }

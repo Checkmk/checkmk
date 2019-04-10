@@ -41,36 +41,21 @@
 # test 409255936       54525952
 
 
-# FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_capacity(info):
-    def cut_spaces(line):
+    def _name_size_avail(line):
         name = " ".join(line[:-2])
-        size = line[-2]
-        avail = line[-1]
-        return name, size, avail
+        return name, line[-2], line[-1]
 
     parsed = {}
-    instance = False
-    for line in info:
-        if line[0].startswith("[["):
-            instance = line[0][2:-2]
-            if instance == "":
-                instance = "mysql"
-            parsed[instance] = []
-        elif instance:
-            parsed[instance].append(cut_spaces(line))
-
-    if not instance:
-        parsed['mysql'] = []
-        for line in info:
-            parsed['mysql'].append(cut_spaces(line))
-
+    for instance, line in _mysql_iter_instance_lines(info):  # pylint: disable=undefined-variable
+        name, size, avail = _name_size_avail(line)
+        parsed.setdefault(instance, {})[name] = (size, avail)
     return parsed
 
 
 @discover
 def inventory_mysql_size(instance, values):
-    for dbname, used, avail in values:
+    for dbname, (used, avail) in values.iteritems():
         if dbname not in ["information_schema", "mysql", "performance_schema"] \
             and used != 'NULL' and avail != 'NULL':
             yield "%s:%s" % (instance, dbname)
@@ -84,32 +69,25 @@ def check_mysql_size(item, params, parsed):
     else:
         instance, dbname = item.split(':')
 
-    dbs = parsed[instance]
+    instance_data = parsed.get(instance)
+    if not instance_data or dbname not in instance_data:
+        return
+
+    size, _avail = instance_data[dbname]
 
     # size and avail are given as bytes
-    for db, size, _avail in dbs:
-        if db == dbname:
-            if size == 'NULL':
-                return 3, "Missing information - Size is reported as 'NULL'"
-            size = int(size)
-            infotext = "Size: %s" % get_bytes_human_readable(size)
-            if params:
-                state = 0
-                warn, crit = params
-                warn_b = warn * 1024
-                crit_b = crit * 1024
-                perfdata = [("database_size", size, warn_b, crit_b)]
-                if size > crit_b:
-                    state = 2
-                elif size > warn_b:
-                    state = 1
-                if state:
-                    infotext += " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn_b),
-                                                           get_bytes_human_readable(crit_b))
-            else:
-                state = 0
-                perfdata = [("database_size", size)]
-            return state, infotext, perfdata
+    if size == 'NULL':
+        yield 3, "Missing information - Size is reported as 'NULL'"
+        return
+
+    size = int(size)
+    levels = (params[0] * 1024, params[1] * 1024) if params else None
+    yield check_levels(
+        size,
+        'database_size',
+        levels,
+        human_readable_func=get_bytes_human_readable,
+        infoname="Size")
 
 
 check_info['mysql_capacity'] = {
@@ -119,4 +97,5 @@ check_info['mysql_capacity'] = {
     "service_description": "MySQL DB Size %s",
     "has_perfdata": True,
     "group": "mysql_db_size",
+    "includes": ["mysql.include"],
 }

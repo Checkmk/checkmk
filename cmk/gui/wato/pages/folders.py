@@ -76,55 +76,54 @@ class ModeFolder(WatoMode):
 
     def buttons(self):
         global_buttons()
-        if self._folder.is_disk_folder():
-            if config.user.may("wato.rulesets") or config.user.may("wato.seeall"):
-                html.context_button(
-                    _("Rulesets"), watolib.folder_preserving_link([("mode", "ruleeditor")]),
-                    "rulesets")
-                html.context_button(
-                    _("Manual Checks"), watolib.folder_preserving_link([("mode", "static_checks")]),
-                    "static_checks")
-            if self._folder.may("read"):
-                html.context_button(
-                    _("Folder Properties"), self._folder.edit_url(backfolder=self._folder), "edit")
-            if not self._folder.locked_subfolders() and config.user.may(
-                    "wato.manage_folders") and self._folder.may("write"):
-                html.context_button(
-                    _("New folder"), self._folder.url([("mode", "newfolder")]), "newfolder")
-            if not self._folder.locked_hosts() and config.user.may(
-                    "wato.manage_hosts") and self._folder.may("write"):
-                html.context_button(_("New host"), self._folder.url([("mode", "newhost")]), "new")
-                html.context_button(
-                    _("New cluster"), self._folder.url([("mode", "newcluster")]), "new_cluster")
-                html.context_button(
-                    _("Bulk import"), self._folder.url([("mode", "bulk_import")]), "bulk_import")
-            if config.user.may("wato.services"):
-                html.context_button(
-                    _("Bulk discovery"), self._folder.url([("mode", "bulkinventory"),
-                                                           ("all", "1")]), "inventory")
-            if config.user.may("wato.rename_hosts"):
-                html.context_button(
-                    _("Bulk renaming"), self._folder.url([("mode", "bulk_rename_host")]),
-                    "rename_host")
-            if config.user.may("wato.custom_attributes"):
-                html.context_button(
-                    _("Custom attributes"),
-                    watolib.folder_preserving_link([("mode", "host_attrs")]), "custom_attr")
-            if not self._folder.locked_hosts() and config.user.may(
-                    "wato.parentscan") and self._folder.may("write"):
-                html.context_button(
-                    _("Parent scan"), self._folder.url([("mode", "parentscan"), ("all", "1")]),
-                    "parentscan")
-            folder_status_button()
-            if config.user.may("wato.random_hosts"):
-                html.context_button(
-                    _("Random Hosts"), self._folder.url([("mode", "random_hosts")]), "random")
-            html.context_button(
-                _("Search"), watolib.folder_preserving_link([("mode", "search")]), "search")
-        else:
+        if not self._folder.is_disk_folder():
             html.context_button(_("Back"), self._folder.parent().url(), "back")
             html.context_button(
                 _("Refine Search"), self._folder.url([("mode", "search")]), "search")
+            return
+
+        if config.user.may("wato.rulesets") or config.user.may("wato.seeall"):
+            html.context_button(
+                _("Rulesets"), watolib.folder_preserving_link([("mode", "ruleeditor")]), "rulesets")
+            html.context_button(
+                _("Manual Checks"), watolib.folder_preserving_link([("mode", "static_checks")]),
+                "static_checks")
+        if self._folder.may("read"):
+            html.context_button(
+                _("Folder Properties"), self._folder.edit_url(backfolder=self._folder), "edit")
+        if not self._folder.locked_subfolders() and config.user.may(
+                "wato.manage_folders") and self._folder.may("write"):
+            html.context_button(
+                _("New folder"), self._folder.url([("mode", "newfolder")]), "newfolder")
+        if not self._folder.locked_hosts() and config.user.may(
+                "wato.manage_hosts") and self._folder.may("write"):
+            html.context_button(_("New host"), self._folder.url([("mode", "newhost")]), "new")
+            html.context_button(
+                _("New cluster"), self._folder.url([("mode", "newcluster")]), "new_cluster")
+            html.context_button(
+                _("Bulk import"), self._folder.url([("mode", "bulk_import")]), "bulk_import")
+        if config.user.may("wato.services"):
+            html.context_button(
+                _("Bulk discovery"), self._folder.url([("mode", "bulkinventory"), ("all", "1")]),
+                "inventory")
+        if config.user.may("wato.rename_hosts"):
+            html.context_button(
+                _("Bulk renaming"), self._folder.url([("mode", "bulk_rename_host")]), "rename_host")
+        if config.user.may("wato.custom_attributes"):
+            html.context_button(
+                _("Custom attributes"), watolib.folder_preserving_link([("mode", "host_attrs")]),
+                "custom_attr")
+        if not self._folder.locked_hosts() and config.user.may(
+                "wato.parentscan") and self._folder.may("write"):
+            html.context_button(
+                _("Parent scan"), self._folder.url([("mode", "parentscan"), ("all", "1")]),
+                "parentscan")
+        folder_status_button()
+        if config.user.may("wato.random_hosts"):
+            html.context_button(
+                _("Random Hosts"), self._folder.url([("mode", "random_hosts")]), "random")
+        html.context_button(
+            _("Search"), watolib.folder_preserving_link([("mode", "search")]), "search")
 
     def action(self):
         if html.request.var("_search"):  # just commit to search form

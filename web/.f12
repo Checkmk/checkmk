@@ -17,7 +17,9 @@ echo "Update site $SITE..."
 
 echo "Copy CRE files..."
 sudo rsync \
+    --exclude "scss" \
     --exclude "*cmc.py" \
+    --exclude "*.scss" \
     -arx app htdocs $ROOT/share/check_mk/web/
 
 # Also deploy all other directories of same type

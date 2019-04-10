@@ -1,6 +1,4 @@
-import pytest
-
-# Following import is used to trigger pluggin loading
+# Following import is used to trigger plugin loading
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.plugins.wato.utils.main_menu as main_menu
 
@@ -8,7 +6,6 @@ import cmk.gui.plugins.wato.utils.main_menu as main_menu
 def test_registered_modules():
     module_names = [m.mode_or_url for m in main_menu.get_modules()]
     assert module_names == [
-        'dcd_connections',
         'agents',
         'folder',
         'tags',

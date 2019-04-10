@@ -501,6 +501,10 @@ table.data {
     background: transparent;
     border: 0;
 
+    &:first-child {
+      padding-left: 0; /* left align first column header with group header */
+    }
+
     /* TODO: Check whether this style is redundant due to a .last_col style in
      *       _views.scss */
     &:last-child {

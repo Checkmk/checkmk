@@ -55,6 +55,11 @@ function enable_label_input_fields(container) {
 
     let elements = container.querySelectorAll("input.labels");
     elements.forEach(element => {
+        // Do not tagify objects that are part of a ListOf valuespec template
+        if (element.closest("tbody.vlof_prototype") !== null) {
+            return;
+        }
+
         let ajax_obj;
         let tagify = new Tagify(element, {
             pattern: /^[^:]+:[^:]+$/,

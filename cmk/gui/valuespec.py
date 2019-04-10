@@ -1318,7 +1318,7 @@ class ListOf(ValueSpec):
     def _show_reference_entry(self, varprefix, index, value):
         if self._style == ListOf.Style.REGULAR:
             html.open_table(style="display:none;")
-            html.open_tbody(id_="%s_prototype" % varprefix)
+            html.open_tbody(id_="%s_prototype" % varprefix, class_="vlof_prototype")
 
             self._show_entry(varprefix, index, value)
 

@@ -28,8 +28,10 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
+#include "StringUtils.h"
 #include "Triggers.h"
 #include "auth.h"
 #include "data_encoding.h"
@@ -63,7 +65,21 @@ struct CommentData {
 };
 
 using Attributes = std::unordered_map<std::string, std::string>;
-enum class AttributeKind { custom_variables, tags, labels };
+enum class AttributeKind { custom_variables, tags, labels, sources };
+
+inline std::tuple<AttributeKind, std::string> to_attribute_kind(
+    const std::string &name) {
+    if (mk::starts_with(name, "_TAG_")) {
+        return {AttributeKind::tags, name.substr(5)};
+    }
+    if (mk::starts_with(name, "_LABEL_")) {
+        return {AttributeKind::labels, name.substr(7)};
+    }
+    if (mk::starts_with(name, "_SOURCES_")) {
+        return {AttributeKind::sources, name.substr(9)};
+    }
+    return {AttributeKind::custom_variables, name};
+}
 
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {

@@ -532,6 +532,21 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
         table->core(), AttributeKind::labels));
 
+    table->addColumn(std::make_unique<CustomVarsNamesColumn>(
+        prefix + "source_names", "A list of the names of all sources",
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
+        AttributeKind::sources));
+    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
+        prefix + "source_values", "A list of the values of the sources",
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
+        AttributeKind::sources));
+    table->addColumn(std::make_unique<CustomVarsDictColumn>(
+        prefix + "sources", "A dictionary of the sources", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
+        table->core(), AttributeKind::sources));
+
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus this will probably be configurable so access to further custom
     // variable can be added, such that those variables are presented like

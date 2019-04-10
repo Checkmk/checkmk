@@ -1224,9 +1224,6 @@ def show_view(view, view_renderer, only_count=False):
     force_checkboxes = view.spec.get("force_checkboxes", False)
     show_checkboxes = force_checkboxes or html.request.var('show_checkboxes', '0') == '1'
 
-    # Always allow the users to specify all allowed filters using the URL
-    use_filters = visuals.filters_allowed_for_infos(view.datasource.infos).values()
-
     # Not all filters are really shown later in show_filter_form(), because filters which
     # have a hardcoded value are not changeable by the user
     show_filters = visuals.filters_of_visual(
@@ -1251,11 +1248,7 @@ def show_view(view, view_renderer, only_count=False):
     # Another idea: We could change these views to non single context views, but then we would not
     # be able to show the buttons to other host related views, which is also bad. So better stick
     # with the current mode.
-    if view.datasource.ident in [ "mkeventd_events", "mkeventd_history" ] \
-       and "host" in view.spec["single_infos"] and view.spec["name"] != "ec_events_of_monhost":
-        # Remove the original host name filter
-        use_filters = [f for f in use_filters if f.ident != "host"]
-
+    if _is_ec_unrelated_host_view(view):
         # Set the value for the event host filter
         if not html.request.has_var("event_host"):
             html.request.set_var("event_host", html.request.var("host"))
@@ -1270,20 +1263,8 @@ def show_view(view, view_renderer, only_count=False):
     # Check that all needed information for configured single contexts are available
     visuals.verify_single_contexts('views', view.spec, view.datasource.link_filters)
 
-    # Prepare Filter headers for Livestatus
-    # TODO: When this is used by the reporting then *all* filters are
-    # active. That way the inventory data will always be loaded. When
-    # we convert this to the visuals principle the we need to optimize
-    # this.
-    filterheaders = ""
-    all_active_filters = [f for f in use_filters if f.available()]
-    for filt in all_active_filters:
-        try:
-            header = filt.filter(view.datasource.table)
-        except MKUserError as e:
-            html.add_user_error(e.varname, e)
-            continue
-        filterheaders += header
+    all_active_filters = _get_all_active_filters(view)
+    filterheaders = _get_livestatus_filter_headers(view, all_active_filters)
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
@@ -1405,6 +1386,23 @@ def show_view(view, view_renderer, only_count=False):
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
 
 
+def _get_all_active_filters(view):
+    # Always allow the users to specify all allowed filters using the URL
+    use_filters = visuals.filters_allowed_for_infos(view.datasource.infos).values()
+
+    # See show_view() for more information about this hack
+    if _is_ec_unrelated_host_view(view):
+        # Remove the original host name filter
+        use_filters = [f for f in use_filters if f.ident != "host"]
+
+    return [f for f in use_filters if f.available()]
+
+
+def _is_ec_unrelated_host_view(view):
+    return view.datasource.ident in [ "mkeventd_events", "mkeventd_history" ] \
+       and "host" in view.spec["single_infos"] and view.spec["name"] != "ec_events_of_monhost"
+
+
 def _get_needed_regular_columns(cells, sorters, datasource):
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
@@ -1431,6 +1429,22 @@ def _get_needed_regular_columns(cells, sorters, datasource):
         pass
 
     return list(columns)
+
+
+# TODO: When this is used by the reporting then *all* filters are active.
+# That way the inventory data will always be loaded. When we convert this to the
+# visuals principle the we need to optimize this.
+def _get_livestatus_filter_headers(view, all_active_filters):
+    """Prepare Filter headers for Livestatus"""
+    filterheaders = ""
+    for filt in all_active_filters:
+        try:
+            header = filt.filter(view.datasource.table)
+        except MKUserError as e:
+            html.add_user_error(e.varname, e)
+            continue
+        filterheaders += header
+    return filterheaders
 
 
 def _get_needed_join_columns(join_cells, sorters):

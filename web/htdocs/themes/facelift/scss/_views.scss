@@ -521,25 +521,6 @@ table.tiled td {
       height: 20px;
     }
   }
-
-  &.sstate0, &.hhstate0 {
-    border-color: #0f0;
-  }
-
-  &.sstate1 {
-    background-color: #ff0;
-    border-color: #ff0;
-  }
-
-  &.sstate2, &.hhstate1 {
-    background-color: #f88;
-    border-color: #f00;
-  }
-
-  &.sstate3, &.hhstate2 {
-    background-color: #fc8;
-    border-color: #f80;
-  }
 }
 
 table.data.tiled td.tiles {
@@ -624,13 +605,6 @@ table.data.single {
       border-left-style: none;
     }
 
-    /* #TODO: Check whether this style is redundant
-     * see styles for table.data.single tr.data > td
-     */
-    &.age, &.number, &.count {
-      text-align: left;
-    }
-
     &.perfometer div.glass {
       width: 100%;
     }
@@ -653,14 +627,6 @@ table.data.matrix {
         border-right: 1px solid $theme-color-table-border;
         border-left: 1px solid $theme-color-table-border;
         transition: .15s ease-in-out;
-      }
-
-      /* #TODO: Reproduce this html element
-       * .perfometer seems to always be one table level lower than tr.data, so
-       * not a direct child
-       */
-      &.perfometer {
-        width: 180px;
       }
 
       &.cell td.perfometer {
@@ -691,12 +657,8 @@ table.data.matrix {
   }
 
   tr.even0 {
-    td.left {
-      background-color: #bbb;
-
-      &.minority {
-        background-color: #bdd;
-      }
+    td.left.minority {
+      background-color: #bdd;
     }
 
     td.matrixhead {
@@ -705,12 +667,8 @@ table.data.matrix {
   }
 
   tr.odd0 {
-    td.left {
-      background-color: #ccc;
-
-      &.minority {
-        background-color: #cee;
-      }
+    td.left.minority {
+      background-color: #cee;
     }
 
     td.matrixhead {
@@ -731,19 +689,6 @@ table.data.matrix {
     table {
       width: 100%;
       padding: 0;
-    }
-  }
-
-  /* #TODO: Reproduce this html element */
-  table.cell > tbody > tr > td {
-    padding: 0;
-    border: 1px solid #f00;
-  }
-
-  /* #TODO: Reproduce this html element */
-  tr.matrixhead td.left {
-    &, a {
-      color: #fff;
     }
   }
 }
@@ -886,7 +831,6 @@ div.avlegend.timeline div.state.unmonitored {
 
 table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
   background-color: #cacaca;
-  /* #TODO: Check whether this image can be dropped (seems not to be available anymore */
   background-image: url("images/ooservice.png");
   background-repeat: repeat;
 }
@@ -938,7 +882,6 @@ table.timeline {
     padding: 0;
     border-style: none;
 
-    /* #TODO: Reproduce this html element */
     &.hilite {
       padding: 0;
       background-color: #0091b6;
@@ -1164,15 +1107,15 @@ td.if_state {
 table.data.single tr.data td.invtree table td.if_state {
   &.if_state_up {
     background-color: $theme-color-state-success-background;
-    box-shadow: none; }
+  }
 
   &.if_state_down {
     background-color: $theme-color-state-2-background;
-    box-shadow: none; }
+  }
 
   &.if_state_other {
     background-color: $theme-color-state-9-background;
-    box-shadow: none; }
+  }
 
   &.if_available {
     color: $theme-color-black;

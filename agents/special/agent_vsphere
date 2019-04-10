@@ -975,7 +975,7 @@ class ESXConnection(object):
             "osType",
         ]
 
-        reply_data = self.query_server(telegram_list["systeminfo"])[1]
+        reply_data = self.query_server(telegram_list["systeminfo"])
         for entry in systemfields:
             element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % {"entry": entry}, reply_data)
             if element:
@@ -1035,7 +1035,8 @@ class ESXConnection(object):
 
     def query_server(self, payload, payload_params=None):
         soapdata, payload_params = self.prepare_soapdata(payload, payload_params)
-        return self.send_soapdata(soapdata, payload_params)
+        _respose_object, response_text = self.send_soapdata(soapdata, payload_params)
+        return response_text
 
     def _init_headers(self, soapdata):
         self._server_handle.putrequest("POST", "/sdk")
@@ -1066,9 +1067,8 @@ class ESXConnection(object):
             return self._host_cookie_path.open(encoding="utf-8").read()
 
         payload = telegram_list["login"]
-        response, reply_data = \
-                    self.query_server(payload, payload_params = {"username": encode_url(user),
-                                                            "password": encode_url(secret)})
+        payload_params = {"username": encode_url(user), "password": encode_url(secret)}
+        response, reply_data = self.send_soapdata(*self.prepare_soapdata(payload, payload_params))
 
         if "InvalidLogin" in reply_data:
             raise MKGeneralException(
@@ -1120,7 +1120,7 @@ def output_aggregated_snapshots(vms, hostsystems=None):
 
 def section_systemtime(connection):
     try:
-        response = connection.query_server(telegram_list["systemtime"])[1]
+        response = connection.query_server(telegram_list["systemtime"])
         elements = get_pattern('<returnval>(.*)</returnval>', response)
         if elements:
             naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -1197,7 +1197,7 @@ def eval_datastores(info, datastores):
 
 
 def fetch_host_systems(connection):
-    hostsystems_response = connection.query_server(telegram_list["hostsystems"])[1]
+    hostsystems_response = connection.query_server(telegram_list["hostsystems"])
     elements = get_pattern(
         '<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>',
         hostsystems_response)
@@ -1214,7 +1214,7 @@ def fetch_host_systems(connection):
 
 
 def fetch_datastores(connection):
-    datastores_response = connection.query_server(telegram_list["datastores"])[1]
+    datastores_response = connection.query_server(telegram_list["datastores"])
     elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>',
                            datastores_response)
     datastores = {}
@@ -1233,7 +1233,7 @@ def fetch_counters_syntax(connection):
         counter_data.append("<ns1:counterId>%s</ns1:counterId>" % entry)
 
     counters_syntax_response = connection.query_server(
-        counter_syntax_payload, payload_params={"counters": "".join(counter_data)})[1]
+        counter_syntax_payload, payload_params={"counters": "".join(counter_data)})
 
     counters_syntax = {}
     elements = get_pattern('<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'\
@@ -1251,7 +1251,7 @@ def fetch_extra_interface_counters(connection):
         return []
 
     net_extra_info = []
-    networksystem_response = connection.query_server(telegram_list["networksystem"])[1]
+    networksystem_response = connection.query_server(telegram_list["networksystem"])
     nic_objects = get_pattern('<pnic><key>(.*?)</pnic>', networksystem_response)
     for nic in nic_objects:
         nic_if = get_pattern('(.*?)</key><device>(.*?)</device>(.*)<mac>(.*?)</mac>', nic)
@@ -1389,7 +1389,7 @@ def output_datastores(datastores):
 
 
 def fetch_hostsystem_data(connection):
-    esxhostdetails_response = connection.query_server(telegram_list["esxhostdetails"])[1]
+    esxhostdetails_response = connection.query_server(telegram_list["esxhostdetails"])
     hostsystems_objects = get_pattern('<objects>(.*?)</objects>', esxhostdetails_response)
 
     hostsystems_properties, hostsystems_sensors = {}, {}
@@ -1471,7 +1471,7 @@ def process_counters(connection, hostsystems, datastores):
         ### TODO: try to get esx hosts perfdata from vCenter
         counter_avail = telegram_list["perfcounteravail"]
         counter_avail_response = connection.query_server(
-            counter_avail, payload_params={"esxhost": host})[1]
+            counter_avail, payload_params={"esxhost": host})
 
         counters_avail = {}
         elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)",
@@ -1492,7 +1492,7 @@ def process_counters(connection, hostsystems, datastores):
                 "esxhost": host,
                 "counters": "".join(counter_data),
                 "samples": max_samples
-            })[1]
+            })
         # Python regex only supports up to 100 match groups in a regex..
         # We are only extracting the whole value line and split it later on
         # This is a perfect candidate for "Catastrophic Backtracking" :)
@@ -1538,7 +1538,7 @@ def fetch_virtual_machines(connection, hostsystems, datastores):
     vms, vm_esx_host = {}, {}
 
     # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
-    vmdetails_response = connection.query_server(telegram_list["vmdetails"])[1]
+    vmdetails_response = connection.query_server(telegram_list["vmdetails"])
 
     elements = get_pattern("<objects>(.*?)</objects>", vmdetails_response)
     for entry in elements:
@@ -1583,11 +1583,11 @@ def process_clusters(connection, vm_esx_host):
     if opt_direct:
         return
 
-    response = connection.query_server(telegram_list["datacenters"])[1]
+    response = connection.query_server(telegram_list["datacenters"])
     datacenters = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>', response)
     for datacenter in datacenters:
         response = connection.query_server(
-            telegram_list["clustersofdatacenter"], payload_params={"datacenter": datacenter})[1]
+            telegram_list["clustersofdatacenter"], payload_params={"datacenter": datacenter})
         clusters = get_pattern(
             '<objects><obj type="ClusterComputeResource">(.*?)</obj>.*?string">(.*?)</val></propSet></objects>',
             response)
@@ -1595,7 +1595,7 @@ def process_clusters(connection, vm_esx_host):
         output("<<<esx_vsphere_clusters:sep(9)>>>")
         for cluster in clusters:
             response = connection.query_server(
-                telegram_list["esxhostsofcluster"], payload_params={"clustername": cluster[0]})[1]
+                telegram_list["esxhostsofcluster"], payload_params={"clustername": cluster[0]})
             cluster_vms = []
             hosts = get_pattern(
                 '<objects><obj type="HostSystem">.*?string">(.*?)</val></propSet></objects>',
@@ -1621,7 +1621,7 @@ def fetch_data(connection):
     # Licenses
     ###########################
     if "licenses" in query_objects:
-        licenses_response = connection.query_server(telegram_list["licensesused"])[1]
+        licenses_response = connection.query_server(telegram_list["licensesused"])
         output_licenses(licenses_response)
 
     ###########################

@@ -5071,6 +5071,50 @@ metric_info['aws_request_latency'] = {
     'color': '21/a',
 }
 
+metric_info['aws_ec2_vpc_elastic_ip_addresses'] = {
+    'title': _('VPC Elastic IP Addresses'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_ec2_elastic_ip_addresses'] = {
+    'title': _('Elastic IP Addresses'),
+    'unit': 'count',
+    'color': '13/a',
+}
+
+metric_info['aws_ec2_spot_inst_requests'] = {
+    'title': _('Spot Instance Requests'),
+    'unit': 'count',
+    'color': '15/a',
+}
+
+metric_info['aws_ec2_active_spot_fleet_requests'] = {
+    'title': _('Active Spot Fleet Requests'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
+metric_info['aws_ec2_spot_fleet_total_target_capacity'] = {
+    'title': _('Spot Fleet Requests Total Target Capacity'),
+    'unit': 'count',
+    'color': '23/a',
+}
+
+metric_info['aws_ec2_running_ondemand_instances_total'] = {
+    'title': _('Total Running On-Demand Instances'),
+    'unit': 'count',
+    'color': '25/a',
+}
+
+from cmk.special_agents.agent_aws import AWSEC2InstTypes
+for inst_type in AWSEC2InstTypes:
+    metric_info['aws_ec2_running_ondemand_instances_%s' % inst_type] = {
+        'title': _('Total Running On-Demand %s Instances') % inst_type,
+        'unit': 'count',
+        'color': '11/a',
+    }
+
 metric_info['get_requests'] = {
     'title': _('GET Requests'),
     'unit': '1/s',

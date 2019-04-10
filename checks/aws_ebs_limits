@@ -52,7 +52,7 @@ def parse_aws_ebs_limits(info):
         elif resource_key == "block_store_iops_io1":
             human_readable_func = lambda x: "%s/s" % x
         else:
-            human_readable_func = None
+            human_readable_func = int
         parsed.append((resource_key, resource_title, limit, amount, human_readable_func))
     return parsed
 

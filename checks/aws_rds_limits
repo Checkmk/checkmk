@@ -51,7 +51,10 @@ def parse_aws_rds_limits(info):
             factor = 1024**4 / 1000
             limit = limit * factor
             amount = amount * factor
-        parsed.append(resource_key, resource_title, limit, amount, get_bytes_human_readable)
+            human_readable_f = get_bytes_human_readable
+        else:
+            human_readable_f = int
+        parsed.append((resource_key, resource_title, limit, amount, human_readable_f))
     return parsed
 
 

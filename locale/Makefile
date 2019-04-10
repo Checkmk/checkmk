@@ -1,5 +1,5 @@
 LANGUAGES = de ro
-SHELL=/bin/bash
+SHELL=/bin/bash -e -o pipefail
 
 .PHONY: $(LANGUAGES)
 
@@ -23,14 +23,15 @@ all:
 update-%:
 	@L=$@ ; \
 	cd $${L#*-}/LC_MESSAGES ; \
-	unset LANG ; xgettext -w 80 --sort-output --force-po \
+	unset LANG ; \
+	xgettext -w 80 --sort-output --force-po \
 	         -L python --from-code=utf-8 --omit-header \
 		 -o scanned.po \
 		 ../../../web/app/index.wsgi \
 		 $$(find -L ../../../cmk -type f -name "*.py") 2>&1 < /dev/null | \
 		 sed '/format string with unnamed arguments cannot be properly localized/,/and a mapping instead of a tuple for the arguments./d' ; \
 	cat ../../header scanned.po > new.po ; \
-	msgmerge -w 80 -q -U -v multisite.po new.po 2>&1 < /dev/null | grep -v "reference, merged" ; \
+	msgmerge -w 80 -q -U -v multisite.po new.po 2>&1 < /dev/null | grep -v "reference, merged" || true ; \
 	rm -f new.po scanned.po
 
 cleanup-%:

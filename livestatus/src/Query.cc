@@ -807,4 +807,3 @@ void Query::doWait() {
                                         timezoneOffset());
     });
 }
-

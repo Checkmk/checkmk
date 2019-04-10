@@ -3303,7 +3303,7 @@ class BIStatusFilter(Filter):
         else:
             self.code = what[0]
         self.prefix = "bi%ss" % self.code
-        vars_ = [self.prefix + str(x) for x in [-1, 0, 1, 2, 3]]
+        vars_ = ["%s%s" % (self.prefix, x) for x in [-1, 0, 1, 2, 3, "_filled"]]
         if self.code == 'a':
             vars_.append(self.prefix + "n")
         Filter.__init__(self, info="aggr", htmlvars=vars_, link_columns=[])
@@ -3314,11 +3314,12 @@ class BIStatusFilter(Filter):
     def double_height(self):
         return self.column == "aggr_assumed_state"
 
+    def _filter_used(self):
+        return html.request.has_var(self.prefix + "_filled")
+
     def display(self):
-        if html.request.var("filled_in"):
-            defval = ""
-        else:
-            defval = "on"
+        html.hidden_field(self.prefix + "_filled", "1", add_var=True)
+
         for varend, text in [
             ('0', _('OK')),
             ('1', _('WARN')),
@@ -3332,17 +3333,12 @@ class BIStatusFilter(Filter):
             if varend == 'n':
                 html.br()
             var = self.prefix + varend
-            html.checkbox(var, defval, label=text)
+            html.checkbox(var, defval=not self._filter_used(), label=text)
 
     def filter_table(self, rows):
-        if html.request.var("filled_in"):
-            defval = ""
-        else:
-            defval = "on"
-
         allowed_states = []
         for i in ['0', '1', '2', '3', '-1', 'n']:
-            if html.request.var(self.prefix + i, defval) == "on":
+            if html.get_checkbox(self.prefix + i):
                 if i == 'n':
                     s = None
                 else:

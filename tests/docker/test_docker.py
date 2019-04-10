@@ -24,10 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# pylint: disable=redefined-outer-name
+
 import sys
 import os
 import subprocess
-import pytest
+import pytest  # type: ignore
 import docker
 
 import testlib
@@ -119,7 +121,8 @@ def _build(request, client, version, add_args=None):
 
     # 2018-11-14: 900 -> 920
     # 2018-11-22: 920 -> 940
-    assert attrs["Size"] < 940 * 1024 * 1024, \
+    # 2019-04-10: 940 -> 950
+    assert attrs["Size"] < 950 * 1024 * 1024, \
         "Docker image size increased: Please verify that this is intended"
 
     assert len(attrs["RootFS"]["Layers"]) == 6

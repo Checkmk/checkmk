@@ -44,7 +44,9 @@ constexpr int kDefaultLogLevel = kLogBase;
 // #TODO CONFIRM VALUE:
 constexpr int kDefaultWmiTimeout = 3;  // seconds, this is Windows FAIL
 
-constexpr int kDefaultRealtimeTimeout = 90;  // seconds
+constexpr int kDefaultRealtimeTimeout =
+    90;  // In seconds.
+         // data will be send to peer during this interval
 
 // #TODO CONFIRM VALUE:
 constexpr int kMinimumCacheAge = 120;

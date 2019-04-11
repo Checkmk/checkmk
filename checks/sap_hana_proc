@@ -27,13 +27,13 @@
 
 def parse_sap_hana_proc(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).iteritems():
         for line in lines:
             if len(line) < 2:
                 continue
 
             inst = parsed.setdefault(
-                ("%s %s" % (sid_instance, line[1]), node), {
+                "%s - %s" % (sid_instance, line[1]), {
                     "port": line[0],
                     "pid": line[2],
                     "detail": line[3],
@@ -48,32 +48,26 @@ def parse_sap_hana_proc(info):
 
 
 def inventory_sap_hana_proc(parsed):
-    for (sid_instance, _node), data in parsed.iteritems():
+    for sid_instance, data in parsed.iteritems():
         yield sid_instance, {'coordin': data['coordin']}
 
 
-def check_sap_hana_proc(item, params, parsed):
-    for (sid_instance, node), data in parsed.iteritems():
-        if item != sid_instance:
-            continue
+@get_parsed_item_data
+def check_sap_hana_proc(item, params, data):
+    yield 0, 'Port: %s, PID: %s' % (data['port'], data['pid'])
 
-        if node:
-            yield 0, 'On node: %s' % node
+    p_coordin = params['coordin']
+    coordin = data['coordin']
+    if p_coordin != coordin:
+        yield 1, "Role: changed from %s to %s" % (p_coordin, coordin)
+    elif coordin.lower() != 'none':
+        yield 0, "Role: %s" % coordin
 
-        yield 0, 'Port: %s, PID: %s' % (data['port'], data['pid'])
-
-        p_coordin = params['coordin']
-        coordin = data['coordin']
-        if p_coordin != coordin:
-            yield 1, "Role: changed from %s to %s" % (p_coordin, coordin)
-        elif coordin.lower() != 'none':
-            yield 0, "Role: %s" % coordin
-
-        sql_port = data['sql_port']
-        if sql_port:
-            yield 0, "SQL-Port: %s" % sql_port
-        if data['acting'].lower() != 'yes':
-            yield 2, "not acting"
+    sql_port = data['sql_port']
+    if sql_port:
+        yield 0, "SQL-Port: %s" % sql_port
+    if data['acting'].lower() != 'yes':
+        yield 2, "not acting"
 
 
 check_info['sap_hana_proc'] = {
@@ -82,5 +76,4 @@ check_info['sap_hana_proc'] = {
     'check_function': check_sap_hana_proc,
     'service_description': 'SAP HANA Process %s',
     'includes': ['sap_hana.include'],
-    "node_info": True,
 }

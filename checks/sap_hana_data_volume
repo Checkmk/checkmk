@@ -27,15 +27,16 @@
 
 def parse_sap_hana_data_volume(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).iteritems():
         for line in lines:
             if len(line) < 8:
                 continue
 
-            inst = parsed.setdefault(("%s %s %s" % (sid_instance, line[0], line[2]), node), {
-                "service": line[1],
-                "path": line[3],
-            })
+            inst = parsed.setdefault("%s - %s %s" % (sid_instance, line[0], line[2]),
+                                     {}).setdefault(node, {
+                                         "service": line[1],
+                                         "path": line[3],
+                                     })
             for key, index in [
                 ("size", 7),
                 ("used", 6),
@@ -45,7 +46,8 @@ def parse_sap_hana_data_volume(info):
                 except ValueError:
                     pass
 
-            inst = parsed.setdefault(("%s %s %s Disk" % (sid_instance, line[0], line[2]), node), {})
+            inst = parsed.setdefault("%s - %s %s Disk" % (sid_instance, line[0], line[2]),
+                                     {}).setdefault(node, {})
             for key, index in [
                 ("size", 5),
                 ("used", 4),
@@ -58,18 +60,17 @@ def parse_sap_hana_data_volume(info):
 
 
 def inventory_sap_hana_data_volume(parsed):
-    for (sid_instance, _node) in parsed.iterkeys():
-        yield sid_instance, {}
+    for item in parsed.iterkeys():
+        yield item, {}
 
 
-def check_sap_hana_data_volume(item, params, parsed):
-    for (sid_instance, node), data in parsed.iteritems():
-        if item != sid_instance:
-            continue
+@get_parsed_item_data
+def check_sap_hana_data_volume(item, params, node_data):
+    nodes = [n for n in node_data.keys() if n]
+    if nodes:
+        yield 0, 'Nodes: %s' % ", ".join(nodes)
 
-        if node:
-            yield 0, 'On node: %s' % node
-
+    for data in node_data.itervalues():
         size = data['size']
         used = data['used']
         avail = size - used
@@ -81,6 +82,10 @@ def check_sap_hana_data_volume(item, params, parsed):
         path = data.get('path')
         if path:
             yield 0, 'Path: %s' % path
+
+        # It ONE physical device and at least two nodes.
+        # Thus we only need to check the first one.
+        return
 
 
 check_info['sap_hana_data_volume'] = {

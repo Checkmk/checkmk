@@ -27,7 +27,7 @@
 
 def parse_sap_hana_ess(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).iteritems():
         inst_data = {}
         for line in lines:
             if len(line) < 2:
@@ -42,38 +42,32 @@ def parse_sap_hana_ess(info):
             else:
                 inst_data[key] = line[1]
         if inst_data:
-            parsed.setdefault((sid_instance, node), inst_data)
+            parsed.setdefault(sid_instance, inst_data)
     return parsed
 
 
 def inventory_sap_hana_ess(parsed):
-    for (sid_instance, _node) in parsed.iterkeys():
-        yield sid_instance, {}
+    for item in parsed.iterkeys():
+        yield item, {}
 
 
-def check_sap_hana_ess(item, params, parsed):
-    for (sid_instance, node), data in parsed.iteritems():
-        if item != sid_instance:
-            continue
+@get_parsed_item_data
+def check_sap_hana_ess(item, params, data):
+    active_state_name = data['active']
+    if active_state_name == 'unknown':
+        state = 3
+    elif active_state_name in ['false', 'no']:
+        state = 2
+    else:
+        state = 0
+    yield state, "Active status: %s" % active_state_name
 
-        if node:
-            yield 0, 'On node: %s' % node
-
-        active_state_name = data['active']
-        if active_state_name == 'unknown':
-            state = 3
-        elif active_state_name in ['false', 'no']:
-            state = 2
-        else:
-            state = 0
-        yield state, "Active status: %s" % active_state_name
-
-        started_threads = data.get('started')
-        if started_threads is None or started_threads < 1:
-            state = 2
-        else:
-            state = 2
-        yield state, 'Started threads: %s' % started_threads, [('threads', started_threads)]
+    started_threads = data.get('started')
+    if started_threads is None or started_threads < 1:
+        state = 2
+    else:
+        state = 2
+    yield state, 'Started threads: %s' % started_threads, [('threads', started_threads)]
 
 
 check_info['sap_hana_ess'] = {
@@ -83,5 +77,4 @@ check_info['sap_hana_ess'] = {
     'service_description': 'SAP HANA ESS %s',
     'includes': ['sap_hana.include'],
     "has_perfdata": True,
-    "node_info": True,
 }

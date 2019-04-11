@@ -178,8 +178,13 @@ class AggregationRawdataGenerator(object):
     def _parse_response_text(self, response_text):
         try:
             rawdata = ast.literal_eval(response_text)
-        except ValueError:  # ast.literal_eval
-            raise RawdataException("Error: Unable to parse data from monitoring instance")
+        except (ValueError, SyntaxError):  # ast.literal_eval
+            if "automation secret" in response_text:
+                raise RawdataException(
+                    "Error: Unable to parse data from monitoring instance. Please check the login credentials"
+                )
+            else:
+                raise RawdataException("Error: Unable to parse data from monitoring instance")
 
         if not isinstance(rawdata, dict):
             raise RawdataException("Error: Unable to process parsed data from monitoring instance")

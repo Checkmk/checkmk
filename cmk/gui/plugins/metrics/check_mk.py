@@ -3124,7 +3124,7 @@ metric_info["license_size"] = {
     "color": "11/a",
 }
 
-metric_info["license_usage_perc"] = {
+metric_info["license_usage"] = {
     "title": _("License usage"),
     "unit": "%",
     "color": "13/a",

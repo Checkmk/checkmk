@@ -30,17 +30,16 @@
 #include <string>
 #include "DynamicColumn.h"
 class Column;
-class Logger;
 class MonitoringCore;
 
 class DynamicLogwatchFileColumn : public DynamicColumn {
 public:
     DynamicLogwatchFileColumn(const std::string &name,
-                              const std::string &description, Logger *logger,
+                              const std::string &description,
                               MonitoringCore *mc, int indirect_offset,
                               int extra_offset, int extra_extra_offset)
-        : DynamicColumn(name, description, logger, indirect_offset,
-                        extra_offset, extra_extra_offset)
+        : DynamicColumn(name, description, indirect_offset, extra_offset,
+                        extra_extra_offset)
         , _mc(mc) {}
     ~DynamicLogwatchFileColumn() override = default;
     std::unique_ptr<Column> createColumn(const std::string &name,

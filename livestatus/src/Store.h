@@ -67,7 +67,7 @@ class OutputBuffer;
 #ifdef CMC
 #include <cstdint>
 #include "TableCachedStatehist.h"
-class GlobalConfig;
+class Core;
 class Object;
 #else
 #include <mutex>
@@ -77,8 +77,8 @@ class Object;
 
 class Store {
 public:
-    explicit Store(MonitoringCore *mc);
 #ifdef CMC
+    Store(MonitoringCore *mc, Core *core);
     LogCache *logCache() { return &_log_cache; };
     bool answerRequest(InputBuffer *, OutputBuffer *);
     bool answerGetRequest(const std::list<std::string> &lines,
@@ -94,6 +94,7 @@ public:
     void addDowntimeToStatehistCache(Object *object, bool started);
     void addFlappingToStatehistCache(Object *object, bool started);
 #else
+    explicit Store(MonitoringCore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
 
     void registerDowntime(nebstruct_downtime_data *data);
@@ -111,6 +112,9 @@ private:
     };
 
     MonitoringCore *_mc;
+#ifdef CMC
+    Core *_core;
+#endif
 #ifndef CMC
     // TODO(sp) These fields should better be somewhere else, e.g. module.cc
 public:
@@ -159,7 +163,6 @@ private:
     void addTable(Table &table);
     Table &findTable(OutputBuffer &output, const std::string &name);
 #ifdef CMC
-    const GlobalConfig *config() const;
     uint32_t horizon() const;
 #else
     void logRequest(const std::string &line,

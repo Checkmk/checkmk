@@ -26,11 +26,10 @@
 #include <utility>
 
 DynamicColumn::DynamicColumn(std::string name, std::string description,
-                             Logger *logger, int indirect_offset,
-                             int extra_offset, int extra_extra_offset)
+                             int indirect_offset, int extra_offset,
+                             int extra_extra_offset)
     : _name(std::move(name))
     , _description(std::move(description))
-    , _logger(logger)
     , _indirect_offset(indirect_offset)
     , _extra_offset(extra_offset)
     , _extra_extra_offset(extra_extra_offset) {}

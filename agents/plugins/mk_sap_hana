@@ -294,8 +294,7 @@ QUERY
 function query_sap_hana_proc () {
     local hostname="$1"
     cat <<QUERY
-SELECT
-PORT,SERVICE_NAME,PROCESS_ID,DETAIL,ACTIVE_STATUS,SQL_PORT,COORDINATOR_TYPE
+SELECT PORT,SERVICE_NAME,PROCESS_ID,DETAIL,ACTIVE_STATUS,SQL_PORT,COORDINATOR_TYPE
 FROM M_SERVICES WHERE HOST = '$hostname'
 QUERY
 }
@@ -401,7 +400,6 @@ function do_query () {
     local SID="$1"
     local INSTANCE="$2"
     local INSTANCE_USER="$3"
-    local HOSTNAME
     local INSTANCE_NAME="[[${SID} ${INSTANCE}]]"
 
     if [ -z "$HOSTNAME" ]; then

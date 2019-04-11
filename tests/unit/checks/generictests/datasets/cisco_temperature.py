@@ -2171,7 +2171,9 @@ info = [[[u'10', u'Fabric Stack Root'],
          [u'300491102.2', u'0'],
          [u'300491102.3', u'0'],
          [u'300491102.4', u'0']],
-        []]
+        [],
+        [],
+]
 
 
 discovery = {'': [(u'Ethernet1/1 Lane 1 Transceiver Temperature Sensor', {}),

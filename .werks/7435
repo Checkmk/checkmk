@@ -1,0 +1,12 @@
+Title: cisco_temperature.dom: Optional discovery dependent on ethernet port admin status
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1554997458
+Class: feature
+
+Previously the check discovered optical sensors of ethernet ports independent on to which
+administration state the ethernet port is set to. This werk adds optional discovery of
+sensors of ethernet ports with specific, configurable administration states.

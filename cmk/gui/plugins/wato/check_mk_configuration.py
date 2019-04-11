@@ -1344,6 +1344,7 @@ class RulespecServiceLabels(ServiceRulespec):
     def valuespec(self):
         return Labels(
             world=Labels.World.CONFIG,
+            label_source=Labels.Source.RULESET,
             title=_("Service labels"),
             help=_("Use this ruleset to assign labels to service of your choice."),
         )
@@ -1367,6 +1368,7 @@ class RulespecHostLabels(HostRulespec):
     def valuespec(self):
         return Labels(
             world=Labels.World.CONFIG,
+            label_source=Labels.Source.RULESET,
             title=_("Host labels"),
             help=_("Use this ruleset to assign labels to hosts of your choice."),
         )

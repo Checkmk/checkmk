@@ -580,7 +580,12 @@ class ModeFolder(WatoMode):
 
         table.cell(_("Explicit labels"), css="tag-ellipsis")
         labels, show_all_code = self._limit_labels(host.labels())
-        html.write(cmk.gui.view_utils.render_labels(labels, "host", with_links=False))
+        html.write(
+            cmk.gui.view_utils.render_labels(
+                labels,
+                "host",
+                with_links=False,
+                label_sources={k: "explicit" for k in labels.keys()}))
         html.write(show_all_code)
 
         # Located in folder

@@ -124,27 +124,30 @@ def check_limit(rows, limit, user):
     return True
 
 
-def render_labels(labels, object_type, with_links):
-    return _render_tag_groups_or_labels(labels, object_type, with_links, label_type="label")
+def render_labels(labels, object_type, with_links, label_sources):
+    return _render_tag_groups_or_labels(
+        labels, object_type, with_links, label_type="label", label_sources=label_sources)
 
 
 def render_tag_groups(tag_groups, object_type, with_links):
-    return _render_tag_groups_or_labels(tag_groups, object_type, with_links, label_type="tag_group")
+    return _render_tag_groups_or_labels(
+        tag_groups, object_type, with_links, label_type="tag_group", label_sources={})
 
 
-def _render_tag_groups_or_labels(entries, object_type, with_links, label_type):
+def _render_tag_groups_or_labels(entries, object_type, with_links, label_type, label_sources):
     elements = [
-        _render_tag_group(tg_id, tag, object_type, with_links, label_type)
+        _render_tag_group(tg_id, tag, object_type, with_links, label_type,
+                          label_sources.get(tg_id, "unspecified"))
         for tg_id, tag in sorted(entries.items())
     ]
     return html.render_tags(
         HTML("").join(elements), class_=["tagify", label_type, "display"], readonly="true")
 
 
-def _render_tag_group(tg_id, tag, object_type, with_link, label_type):
+def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_source):
     span = html.render_tag(
         html.render_div(html.render_span("%s:%s" % (tg_id, tag), class_=["tagify__tag-text"])),
-        class_=["tagify--noAnim"])
+        class_=["tagify--noAnim", label_source])
     if not with_link:
         return span
 

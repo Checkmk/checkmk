@@ -403,6 +403,11 @@ def test_host_config_labels(monkeypatch):
         "from-rule": "rule1",
         "from-rule2": "rule2",
     }
+    assert cfg.label_sources == {
+        "explicit": "explicit",
+        "from-rule": "ruleset",
+        "from-rule2": "ruleset",
+    }
 
 
 def test_host_labels_of_host_discovered_labels(monkeypatch, tmp_path):
@@ -414,6 +419,7 @@ def test_host_labels_of_host_discovered_labels(monkeypatch, tmp_path):
         f.write(repr({u"äzzzz": u"eeeeez"}) + "\n")
 
     assert config_cache.get_host_config("test-host").labels == {u"äzzzz": u"eeeeez"}
+    assert config_cache.get_host_config("test-host").label_sources == {u"äzzzz": u"discovered"}
 
 
 def test_service_label_rules_default():
@@ -434,9 +440,15 @@ def test_labels_of_service(monkeypatch):
     config_cache = _setup_host(monkeypatch, "test-host", ["abc"])
 
     assert config_cache.labels_of_service("xyz", "CPU load") == {}
+    assert config_cache.label_sources_of_service("xyz", "CPU load") == {}
+
     assert config_cache.labels_of_service("test-host", "CPU load") == {
         "label1": "val1",
         "label2": "val2",
+    }
+    assert config_cache.label_sources_of_service("test-host", "CPU load") == {
+        "label1": "ruleset",
+        "label2": "ruleset",
     }
 
 

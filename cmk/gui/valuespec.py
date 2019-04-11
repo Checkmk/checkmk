@@ -4238,12 +4238,19 @@ class Labels(ValueSpec):
         CONFIG = "config"
         CORE = "core"
 
-    def __init__(self, world, *args, **kwargs):
+    class Source(Enum):
+        EXPLICIT = "explicit"
+        RULESET = "ruleset"
+        DISCOVERED = "discovered"
+
+    def __init__(self, world, label_source=None, **kwargs):
         self._world = world
+        # Set this source to mark the labels that have no explicit label source set
+        self._label_source = label_source
         kwargs.setdefault("help", "")
         kwargs["help"] += _("Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. "
                             "For example <tt>os:windows</tt>.")
-        super(Labels, self).__init__(*args, **kwargs)
+        super(Labels, self).__init__(**kwargs)
 
     def canonical_value(self):
         return {}
@@ -4254,7 +4261,9 @@ class Labels(ValueSpec):
 
     def value_to_text(self, value):
         from cmk.gui.view_utils import render_labels
-        return render_labels(value, "host", with_links=False)
+        label_sources = {k: self._label_source.value for k in value.keys()
+                        } if self._label_source else {}
+        return render_labels(value, "host", with_links=False, label_sources=label_sources)
 
     def render_input(self, varprefix, value):
         html.help(self.help())
@@ -4289,6 +4298,7 @@ class PageAutocompleteLabels(AjaxPage):
     def _get_labels_from_config(self, search_label):
         return []  # TODO: Implement me
 
+    # TODO: Provide information about the label source
     # Would be better to optimize this kind of query somehow. The best we can
     # do without extending livestatus is to use the Cache header for liveproxyd
     def _get_labels_from_core(self, search_label):

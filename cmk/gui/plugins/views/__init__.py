@@ -40,6 +40,7 @@ from cmk.gui.plugins.views.utils import (
     get_tag_groups,
     render_tag_groups,
     get_labels,
+    get_label_sources,
     render_labels,
     get_permitted_views,
     cmp_custom_variable,

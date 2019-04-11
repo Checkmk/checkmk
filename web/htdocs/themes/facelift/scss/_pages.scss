@@ -30,22 +30,48 @@ Boston, MA 02110-1301 USA.
    styles are not used in the sidebar and in Mobile. */
 
 
-.tagify {
+.tagify, .tagify[readonly] {
   border: none;
 
   tag {
     margin: 0 0 0 5px;
+
+    > div {
+      color: #fff;
+    }
+
+    x {
+      font-size: 11px;
+    }
+
+    &:hover:not([readonly]) div::before {
+      opacity: 0.5;
+      box-shadow: none;
+    }
+
+    > div::before {
+      background: #00a8b5;
+      box-shadow: none;
+    }
+
+    &.explicit > div::before {
+      background: #774898;
+    }
+
+    &.ruleset > div::before {
+      background: #de4383;
+    }
+
+    &.discovered > div::before {
+      background: #f3ae4b;
+    }
+  }
+
+  &:hover {
+    border-color: none;
   }
 
   a tag {
     cursor: pointer;
   }
-
-  tag x {
-    font-size: 11px;
-  }
-}
-
-.tagify.display[readonly] tag > div::before {
-  background: #d6d6d6;
 }

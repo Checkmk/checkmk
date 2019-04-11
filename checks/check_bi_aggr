@@ -51,7 +51,7 @@ def check_bi_aggr_arguments(params):
         args += ['--acknowledged', opt_params['acknowledged']]
 
     if opt_params.get("track_downtimes"):
-        args += ['-r', '-n', 'HOSTNAME$']
+        args += ['-r', '-n', '$HOSTNAME$']
 
     return args
 

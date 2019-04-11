@@ -1687,14 +1687,15 @@ register_rule(group,
                 allow_empty = False
             ),
             TextAscii(
-                title = _("Username"),
-                help = _("The name of the user account to use for fetching the BI aggregation via HTTP. When "
-                         "using the cookie based authentication mode (default), this must be a user where "
-                         "authentication is set to \"Automation Secret\" based authentication."),
+                title = _("Automation Username"),
+                help = _("The name of the automation account to use for fetching the BI aggregation via HTTP. Note: You may "
+                         "also set credentials of a standard user account, though it is disadvised. "
+                         "Using the credentials of a standard user also requires a valid authentication method set in the "
+                         "optional parameters."),
                 allow_empty = False
             ),
             IndividualOrStoredPassword(
-                title = _("Password / Secret"),
+                title = _("Automation Secret"),
                 help = _("Valid automation secret or password for the user, depending on the chosen "
                          "authentication mode. Be aware that this mode has to be enabled on the monitoring instance. "                         "Otherwise authentication will fail."),
                 allow_empty = False
@@ -1739,8 +1740,8 @@ register_rule(group,
                     )),
                     ("track_downtimes",
                      Checkbox(
-                        title = _("Track downtimes"),
-                        label = _("Automatically track downtimes of aggregation"),
+                        title = _("Track scheduled downtimes"),
+                        label = _("Automatically track scheduled downtimes of aggregation"),
                         help = _("If this is active, the check will automatically go into downtime "
                                 "whenever the aggregation does. This downtime is also cleaned up "
                                 "automatically when the aggregation leaves downtime. "

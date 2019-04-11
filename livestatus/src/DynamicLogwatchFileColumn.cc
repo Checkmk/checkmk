@@ -63,7 +63,9 @@ std::unique_ptr<Column> DynamicLogwatchFileColumn::createColumn(
                                  "': file name '" + arguments +
                                  "' contains slash");
     }
+    auto mc = _mc;
+    auto suffix = "/" + unescape_filename(arguments);
     return std::make_unique<HostFileColumn>(
         name, "Contents of logwatch file", _indirect_offset, _extra_offset, -1,
-        0, _mc->mkLogwatchPath(), "/" + unescape_filename(arguments));
+        0, [mc]() { return mc->mkLogwatchPath(); }, suffix);
 }

@@ -43,14 +43,16 @@ HostFileColumn::HostFileColumn(const std::string& name,
                                const std::string& description,
                                int indirect_offset, int extra_offset,
                                int extra_extra_offset, int offset,
-                               std::string base_dir, std::string suffix)
+                               std::function<std::string()> get_base_dir,
+                               std::string suffix)
     : BlobColumn(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset)
-    , _base_dir(std::move(base_dir))
+    , _get_base_dir(std::move(get_base_dir))
     , _suffix(std::move(suffix)) {}
 
 std::unique_ptr<std::vector<char>> HostFileColumn::getValue(Row row) const {
-    if (_base_dir.empty()) {
+    auto base_dir = _get_base_dir();
+    if (base_dir.empty()) {
         return nullptr;  // Path is not configured
     }
 
@@ -68,7 +70,7 @@ std::unique_ptr<std::vector<char>> HostFileColumn::getValue(Row row) const {
     std::string host_name = hst->name;
 #endif
 
-    std::string path = _base_dir + "/" + host_name + _suffix;
+    std::string path = base_dir + "/" + host_name + _suffix;
     int fd = open(path.c_str(), O_RDONLY);
     if (fd == -1) {
         // It is OK when inventory/logwatch files do not exist.

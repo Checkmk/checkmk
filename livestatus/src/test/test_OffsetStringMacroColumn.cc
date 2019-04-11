@@ -6,8 +6,17 @@
 #include "OffsetStringHostMacroColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
 #include "Row.h"
+#include "Store.h"
 #include "gtest/gtest.h"
 #include "nagios.h"
+
+// TODO(sp) Move this to a better place.
+TEST(Store, dont_use_mc) {
+    // Make sure that the MonitoringCore abstraction is not accessed during the
+    // construction of Store. This is a bit fragile, but it is needed to tie the
+    // knot between NagiosCore and Store.
+    Store store{nullptr};
+}
 
 extern char *macro_user[MAX_USER_MACROS];
 

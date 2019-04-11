@@ -17,16 +17,19 @@ def test_package_built(version_path, what):
 
 def _get_package_paths(version_path, what):
     for filename in os.listdir(version_path):
-        if filename.startswith("check-mk-") and filename.endswith(".%s" % what):
+        if filename.startswith("check-mk-") and \
+           filename.endswith(".%s" % what) and \
+           not "-dbgsym_" in filename:
             yield os.path.join(version_path, filename)
 
 
 # In case packages grow/shrink this check has to be changed.
+# TODO: Handle Docker tar.gz differently?
 @pytest.mark.parametrize("what,min_size,max_size", [
-    ("rpm", 160 * 1024 * 1024, 235 * 1024 * 1024),
-    ("deb", 128 * 1024 * 1024, 139 * 1024 * 1024),
-    ("cma", 230 * 1024 * 1024, 241 * 1024 * 1024),
-    ("tar.gz", 358 * 1024 * 1024, 428 * 1024 * 1024),
+    ("rpm", 168 * 1024 * 1024, 203 * 1024 * 1024),
+    ("deb", 132 * 1024 * 1024, 144 * 1024 * 1024),
+    ("cma", 243 * 1024 * 1024, 253 * 1024 * 1024),
+    ("tar.gz", 401 * 1024 * 1024, 443 * 1024 * 1024),
 ])
 def test_package_sizes(version_path, what, min_size, max_size):
     for pkg in _get_package_paths(version_path, what):

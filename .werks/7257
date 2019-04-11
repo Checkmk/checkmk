@@ -1,0 +1,10 @@
+Title: WATO: The host diagnose page now also indicates if there are errors in the agent datasource
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p15
+Date: 1555001446
+Class: feature
+
+

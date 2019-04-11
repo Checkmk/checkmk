@@ -1124,6 +1124,8 @@ class AutomationDiagHost(Automation):
                             source.set_timeout(tcp_connect_timeout)
 
                     output += source.run_raw()
+                    if source.exception():
+                        output += "%s" % source.exception()
 
                 return 0, output
 

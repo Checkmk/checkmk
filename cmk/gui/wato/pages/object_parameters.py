@@ -146,7 +146,7 @@ class ModeObjectParameters(WatoMode):
             return
 
         forms.header(_("Host information"), isopen=True, narrow=True, css="rulesettings")
-        self._show_labels(host_info["labels"], "host")
+        self._show_labels(host_info["labels"], "host", host_info["label_sources"])
 
     def _show_service_info(self, all_rulesets):
         serviceinfo = watolib.check_mk_automation(self._host.site_id(), "analyse-service",
@@ -272,9 +272,10 @@ class ModeObjectParameters(WatoMode):
             html.close_tr()
             html.close_table()
 
-        self._show_labels(serviceinfo.get("labels", []), "service")
+        self._show_labels(
+            serviceinfo.get("labels", {}), "service", serviceinfo.get("label_sources", {}))
 
-    def _show_labels(self, labels, object_type):
+    def _show_labels(self, labels, object_type, label_sources):
         forms.section(_("Effective labels"))
         html.open_table(class_="setting")
         html.open_tr()
@@ -283,7 +284,9 @@ class ModeObjectParameters(WatoMode):
         html.i(_("Explicit, ruleset, discovered"))
         html.close_td()
         html.open_td(class_=["settingvalue", "used"])
-        html.write(cmk.gui.view_utils.render_labels(labels, object_type, with_links=False))
+        html.write(
+            cmk.gui.view_utils.render_labels(
+                labels, object_type, with_links=False, label_sources=label_sources))
         html.close_td()
 
         html.close_tr()

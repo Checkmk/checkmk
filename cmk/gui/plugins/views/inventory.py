@@ -517,7 +517,10 @@ def inv_paint_csv_labels(csv_list):
 
 @decorate_inv_paint
 def inv_paint_cmk_label(label):
-    return "labels", render_labels({label[0]: label[1]}, object_type="host", with_links=True)
+    return "labels", render_labels({label[0]: label[1]},
+                                   object_type="host",
+                                   with_links=True,
+                                   label_sources={label[0]: "discovered"})
 
 
 @decorate_inv_paint

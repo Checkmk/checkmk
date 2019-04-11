@@ -74,6 +74,7 @@ from cmk.gui.plugins.views import (
     get_tag_groups,
     render_labels,
     get_labels,
+    get_label_sources,
 )
 
 #   .--Painter Options-----------------------------------------------------.
@@ -5246,14 +5247,18 @@ class PainterHostLabels(Painter):
 
     @property
     def columns(self):
-        return ["host_labels"]
+        return ["host_labels", "host_sources"]
 
     @property
     def sorter(self):
         return "host_labels"
 
     def render(self, row, cell):
-        return "", render_labels(get_labels(row, "host"), "host", with_links=True)
+        return "", render_labels(
+            get_labels(row, "host"),
+            "host",
+            with_links=True,
+            label_sources=get_label_sources(row, "host"))
 
 
 @painter_registry.register
@@ -5272,11 +5277,15 @@ class PainterServiceLabels(Painter):
 
     @property
     def columns(self):
-        return ["service_labels"]
+        return ["service_labels", "host_sources"]
 
     @property
     def sorter(self):
         return "service_labels"
 
     def render(self, row, cell):
-        return "", render_labels(get_labels(row, "service"), "service", with_links=True)
+        return "", render_labels(
+            get_labels(row, "service"),
+            "service",
+            with_links=True,
+            label_sources=get_label_sources(row, "service"))

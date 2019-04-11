@@ -2966,6 +2966,16 @@ class ConfigCache(object):
         labels.update(self.service_extra_conf_merged(hostname, svc_desc, service_label_rules))
         return labels
 
+    def label_sources_of_service(self, hostname, svc_desc):
+        """Returns the effective set of service label keys with their source identifier instead of the value
+        Order and merging logic is equal to labels_of_service()"""
+        labels = {}
+        labels.update({
+            k: "ruleset"
+            for k in self.service_extra_conf_merged(hostname, svc_desc, service_label_rules)
+        })
+        return labels
+
     def set_all_processed_hosts(self, all_processed_hosts):
         self._all_processed_hosts = set(all_processed_hosts)
 

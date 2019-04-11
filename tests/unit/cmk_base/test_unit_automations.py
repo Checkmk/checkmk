@@ -90,7 +90,14 @@ def test_get_labels_of_host(monkeypatch):
     })
     config.get_config_cache().initialize()
 
-    assert automation.execute(["host", "test-host"]) == {"labels": {"explicit": "ding"}}
+    assert automation.execute(["host", "test-host"]) == {
+        "labels": {
+            "explicit": "ding"
+        },
+        "label_sources": {
+            "explicit": "explicit"
+        },
+    }
 
 
 def test_get_labels_of_service(monkeypatch):
@@ -115,6 +122,10 @@ def test_get_labels_of_service(monkeypatch):
         "labels": {
             "label1": "val1",
             "label2": "val2"
+        },
+        "label_sources": {
+            "label1": "ruleset",
+            "label2": "ruleset"
         }
     }
 
@@ -131,4 +142,11 @@ def test_analyse_host(monkeypatch):
     })
     config.get_config_cache().initialize()
 
-    assert automation.execute(["test-host"]) == {"labels": {"explicit": "ding"}}
+    assert automation.execute(["test-host"]) == {
+        "labels": {
+            "explicit": "ding"
+        },
+        "label_sources": {
+            "explicit": "explicit"
+        },
+    }

@@ -576,7 +576,10 @@ class AutomationAnalyseServices(Automation):
 
         service_info = self._get_service_info(config_cache, hostname, servicedesc)
         if service_info:
-            service_info["labels"] = config_cache.labels_of_service(hostname, servicedesc)
+            service_info.update({
+                "labels": config_cache.labels_of_service(hostname, servicedesc),
+                "label_sources": config_cache.label_sources_of_service(hostname, servicedesc),
+            })
         return service_info
 
     # Determine the type of the check, and how the parameters are being
@@ -718,7 +721,10 @@ class AutomationAnalyseHost(Automation):
     def execute(self, args):
         host_name = args[0]
         config_cache = config.get_config_cache()
-        return {"labels": config_cache.get_host_config(host_name).labels}
+        return {
+            "labels": config_cache.get_host_config(host_name).labels,
+            "label_sources": config_cache.get_host_config(host_name).label_sources,
+        }
 
 
 automations.register(AutomationAnalyseHost())
@@ -1531,11 +1537,18 @@ class AutomationGetLabelsOf(Automation):
         config_cache = config.get_config_cache()
 
         if object_type == "host":
-            return {"labels": config_cache.get_host_config(host_name).labels}
+            return {
+                "labels": config_cache.get_host_config(host_name).labels,
+                "label_sources": config_cache.get_host_config(host_name).label_sources,
+            }
 
         if object_type == "service":
             service_description = args[2].decode("utf-8")
-            return {"labels": config_cache.labels_of_service(host_name, service_description)}
+            return {
+                "labels": config_cache.labels_of_service(host_name, service_description),
+                "label_sources": config_cache.label_sources_of_service(
+                    host_name, service_description),
+            }
 
         raise NotImplementedError()
 

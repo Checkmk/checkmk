@@ -37,9 +37,7 @@ constexpr unsigned long check_mem_cycle = 1000;
 }  // namespace
 
 LogCache::LogCache(MonitoringCore *mc)
-    : _mc(mc), _num_cached_log_messages(0), _num_at_last_check(0) {
-    update();
-}
+    : _mc(mc), _num_cached_log_messages(0), _num_at_last_check(0) {}
 
 void LogCache::update() {
     if (!_logfiles.empty() &&

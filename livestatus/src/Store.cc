@@ -25,6 +25,7 @@
 #include "Store.h"
 #include <ctime>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
@@ -308,6 +309,8 @@ bool Store::answerGetRequest(const std::list<std::string> &lines,
 
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }
 
-size_t Store::numCachedLogMessages() const {
+size_t Store::numCachedLogMessages() {
+    std::lock_guard<std::mutex> lg(_log_cache._lock);
+    _log_cache.update();
     return _log_cache.numCachedLogMessages();
 }

@@ -32,8 +32,11 @@ from cmk.gui.valuespec import (
     Float,
     TextAscii,
     Tuple,
+    ListChoice,
 )
 from cmk.gui.plugins.wato import (
+    HostRulespec,
+    RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
     CheckParameterRulespecWithItem,
     rulespec_registry,
@@ -105,11 +108,45 @@ class RulespecCheckgroupParametersCiscoDOM(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (_vs_cisco_dom("upper")),
-            (_vs_cisco_dom("lower")),
-        ])
+        return Dictionary(
+            elements=[
+                (_vs_cisco_dom("upper")),
+                (_vs_cisco_dom("lower")),
+            ],)
 
     @property
     def item_spec(self):
         return TextAscii(title=_("Sensor description if present, sensor index otherwise"))
+
+
+@rulespec_registry.register
+class RulespecDiscoveryCiscoDomRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "discovery_cisco_dom_rules"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Cisco DOM Discovery"),
+            elements=[
+                ("admin_states",
+                 ListChoice(
+                     title=_("Admin states to discover"),
+                     choices={
+                         1: _("up"),
+                         2: _("down"),
+                         3: _("testing"),
+                     },
+                     toggle_all=True,
+                     default_value=['1', '2', '3'],
+                 )),
+            ])

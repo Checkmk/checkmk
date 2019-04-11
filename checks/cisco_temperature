@@ -28,6 +28,13 @@
 # have been observed to display a tenth of the actual temperature value.
 # A firmware update on the device fixes this.
 
+# OID: ifAdminStatus
+cisco_temperature_admin_state_map = {
+    '1': "up",
+    '2': "down",
+    '3': "testing",
+}
+
 
 def parse_cisco_temperature(info):
     # CISCO-ENTITY-SENSOR-MIB entSensorType
@@ -86,10 +93,31 @@ def parse_cisco_temperature(info):
         '6': (2, "not functioning"),
     }
 
-    description_info, state_info, levels_info, perfstuff = info
+    # description_info = [...,
+    #                     [u'25955', u'Ethernet1/9(Rx-dBm)'],
+    #                     [u'25956', u'Ethernet1/9(Tx-dBm)'],
+    #                     ...]
+    # state_info = [...,
+    #               [u'25955', u'14', u'8', u'0', u'-3487', u'1'],
+    #               [u'25956', u'14', u'8', u'0', u'-2525', u'1'],
+    #               ...]
+    # admin_states = [['Ethernet1/9', '1'], ...]
+    description_info, state_info, levels_info, perfstuff, admin_states = info
 
     # Create dict of sensor descriptions
     descriptions = dict(description_info)
+
+    # Map admin state of Ethernet ports to sensor_ids of corresponding ethernet port sensors.
+    # E.g. Ethernet1/9 -> Ethernet1/9(Rx-dBm), Ethernet1/9(Tx-dBm)
+    # In case the description has been modified in the switch device this
+    # mapping will not be successful. The description contains an ID instead of
+    # a human readable string to identify the sensors then. The sensors cannot
+    # be looked up in the description_info then.
+    admin_states_dict = {}
+    for if_name, admin_state in admin_states:
+        for sensor_id, descr in descriptions.iteritems():
+            if descr.startswith(if_name):
+                admin_states_dict[sensor_id] = cisco_temperature_admin_state_map.get(admin_state)
 
     # Create dict with thresholds
     thresholds = {}
@@ -117,10 +145,12 @@ def parse_cisco_temperature(info):
             continue
 
         entity_parsed.setdefault(sensortype_id, {})
+
         sensor_attrs = {
             'descr': descr,
             'raw_dev_state': sensorstate,  # used in discovery function
-            'dev_state': map_states.get(sensorstate, (3, 'unknown[%s]' % sensorstate))
+            'dev_state': map_states.get(sensorstate, (3, 'unknown[%s]' % sensorstate)),
+            'admin_state': admin_states_dict.get(sensor_id),
         }
 
         if sensorstate == '1':
@@ -276,6 +306,10 @@ check_info['cisco_temperature'] = {
                                  4, # ciscoEnvMonTemperatureThreshold
                                  6, # ciscoEnvMonTemperatureState
                                ]),
+                               ( ".1.3.6.1.2.1.2.2.1", [
+                                 CACHED_OID(2),  # Description of the sensor
+                                 CACHED_OID(7),  # ifAdminStatus
+                               ]),
                             ],
     "includes"          : [ "temperature.include", 'cisco_sensor_item.include' ],
 }
@@ -292,12 +326,25 @@ check_info['cisco_temperature'] = {
 #   | digital optical monitoring                                           |
 #   '----------------------------------------------------------------------'
 
+discovery_cisco_dom_rules = []
+
 
 def inventory_cisco_temperature_dom(parsed):
+    discovery_options = host_extra_conf_merged(host_name(), discovery_cisco_dom_rules)
     parsed_dom = parsed.get('14', {})
+    admin_states_to_discover = [
+        cisco_temperature_admin_state_map[admin_state]
+        for admin_state in discovery_options.get('admin_states', [])
+    ]
     for item, attrs in parsed_dom.iteritems():
-        if attrs.get('raw_dev_state') == '1':
-            yield item, {}
+        if attrs.get('raw_dev_state') != '1':
+            continue
+        admin_state = attrs.get('admin_state')
+        if admin_state is None:
+            pass  # discover sensors without admin state
+        elif admin_state not in admin_states_to_discover:
+            continue
+        yield item, {}
 
 
 def _determine_all_levels(dlh_upper, dlh_lower, user_levels, dev_levels):

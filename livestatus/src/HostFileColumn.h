@@ -26,6 +26,7 @@
 #define HostFileColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,13 +37,14 @@ class HostFileColumn : public BlobColumn {
 public:
     HostFileColumn(const std::string& name, const std::string& description,
                    int indirect_offset, int extra_offset,
-                   int extra_extra_offset, int offset, std::string base_dir,
+                   int extra_extra_offset, int offset,
+                   std::function<std::string()> get_base_dir,
                    std::string suffix);
 
     std::unique_ptr<std::vector<char>> getValue(Row row) const override;
 
 private:
-    std::string _base_dir;
+    std::function<std::string()> _get_base_dir;
     std::string _suffix;
 };
 

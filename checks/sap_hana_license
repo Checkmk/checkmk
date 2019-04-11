@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings['sap_hana_license_default_levels'] = {
-    'license_usage_perc': (80.0, 90.0),
+    'license_usage': (80.0, 90.0),
 }
 
 SAP_HANA_MAYBE = collections.namedtuple("SAP_HANA_MAYBE", ["bool", "value"])
@@ -119,8 +119,8 @@ def _check_product_usage(size, limit, params):
     else:
         yield check_levels(
             usage_perc,
-            "license_usage_perc",
-            params.get('license_usage_perc', (None, None)),
+            "license_usage",
+            params['license_usage'],
             human_readable_func=get_percent_human_readable,
             infoname="Usage")
 

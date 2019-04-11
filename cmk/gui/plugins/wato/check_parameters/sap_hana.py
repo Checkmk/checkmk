@@ -64,7 +64,7 @@ class RulespecCheckgroupParametersSapHanaBackup(CheckParameterRulespecWithItem):
     @property
     def parameter_valuespec(self):
         return Dictionary(elements=[
-            ('backup_age_levels',
+            ('backup_age',
              Alternative(
                  title=_("Upper levels for the backup age"),
                  style="dropdown",

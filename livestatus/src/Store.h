@@ -100,7 +100,7 @@ public:
     void registerComment(nebstruct_comment_data *data);
 #endif
     Logger *logger() const;
-    size_t numCachedLogMessages() const;
+    size_t numCachedLogMessages();
 
 private:
     struct TableDummy : public Table {

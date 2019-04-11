@@ -398,7 +398,7 @@ def _chunks(list_, length=100):
     return [list_[i:i + length] for i in xrange(0, len(list_), length)]
 
 
-def _get_ec2_instance_id(inst, region):
+def _get_ec2_piggyback_hostname(inst, region):
     # PrivateIpAddress and InstanceId is available although the instance is stopped
     return u"%s-%s-%s" % (inst['PrivateIpAddress'], region, inst['InstanceId'])
 
@@ -548,10 +548,10 @@ class AWSSection(object):
             assert isinstance(
                 result.piggyback_hostname, (unicode, str)
             ), "%s: Piggyback hostname of created result must be of type 'unicode' or 'str'" % self.name
+
             # In the related check plugin aws.include we parse these results and
-            # extend list of json-loaded results.
-            assert isinstance(result.content,
-                              list), "%s: Result content must be of type 'list'" % self.name
+            # extend list of json-loaded results, except for labels sections.
+            self._validate_result_content(result.content)
 
             final_results.append(result)
         return AWSSectionResults(final_results, computed_content.cache_timestamp)
@@ -666,6 +666,9 @@ class AWSSection(object):
             logging.info("%s: KeyError; Available keys are %s", self.name, response.keys())
             return dflt
 
+    def _validate_result_content(self, content):
+        assert isinstance(content, list), "%s: Result content must be of type 'list'" % self.name
+
     def _prepare_tags_for_api_response(self, tags):
         """
         We need to change the format, in order to filter out instances with specific
@@ -694,6 +697,28 @@ class AWSSectionLimits(AWSSection):
             AWSSectionResult(piggyback_hostname, limits)
             for piggyback_hostname, limits in self._limits.iteritems()
         ]
+
+
+class AWSSectionLabels(AWSSection):
+    __metaclass__ = abc.ABCMeta
+
+    @property
+    def name(self):
+        return "labels"
+
+    def _create_results(self, computed_content):
+        assert isinstance(
+            computed_content.content,
+            dict), "%s: Computed result of Labels section must be of type 'dict'" % self.name
+        for pb in computed_content.content.iterkeys():
+            assert bool(pb), "%s: Piggyback hostname is not allowed to be empty" % self.name
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.content.iteritems()
+        ]
+
+    def _validate_result_content(self, content):
+        assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
 
 
 class AWSSectionGeneric(AWSSection):
@@ -962,7 +987,7 @@ class EC2Limits(AWSSectionLimits):
             inst = self._get_inst_assignment(instances, 'VpcId', vpc_id)
             if inst is None:
                 continue
-            inst_id = _get_ec2_instance_id(inst, self._region)
+            inst_id = _get_ec2_piggyback_hostname(inst, self._region)
             key = (inst_id, vpc_id)
             sgs_per_vpc[key] = sgs_per_vpc.get(key, 0) + 1
             self._add_limit(
@@ -989,7 +1014,7 @@ class EC2Limits(AWSSectionLimits):
             if inst is None:
                 continue
             self._add_limit(
-                _get_ec2_instance_id(inst, self._region),
+                _get_ec2_piggyback_hostname(inst, self._region),
                 AWSLimit(
                     "if_vpc_sec_group", "VPC security groups of elastic network interface %s" %
                     iface['NetworkInterfaceId'], 5, len(iface['Groups'])))
@@ -1090,11 +1115,44 @@ class EC2Summary(AWSSectionGeneric):
             self._format_instances(raw_content.content), raw_content.cache_timestamp)
 
     def _format_instances(self, instances):
-        # PrivateIpAddress and InstanceId is available although the instance is stopped
-        return {_get_ec2_instance_id(inst, self._region): inst for inst in instances}
+        return {_get_ec2_piggyback_hostname(inst, self._region): inst for inst in instances}
 
     def _create_results(self, computed_content):
         return [AWSSectionResult("", computed_content.content.values())]
+
+
+class EC2Labels(AWSSectionLabels):
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('ec2_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        response = self._client.describe_tags(Filters=[{
+            'Name': 'resource-id',
+            'Values': [inst['InstanceId'] for inst in colleague_contents.content.itervalues()],
+        }])
+        return self._get_response_content(response, 'Tags')
+
+    def _compute_content(self, raw_content, colleague_contents):
+        inst_id_to_ec2_piggyback_hostname_map = {
+            inst['InstanceId']: ec2_instance_id
+            for ec2_instance_id, inst in colleague_contents.content.iteritems()
+        }
+
+        computed_content = {}
+        for tag in raw_content.content:
+            ec2_piggyback_hostname = inst_id_to_ec2_piggyback_hostname_map.get(tag['ResourceId'])
+            if not ec2_piggyback_hostname:
+                continue
+            computed_content.setdefault(ec2_piggyback_hostname, {}).setdefault(
+                tag['Key'], tag['Value'])
+        return AWSComputedContent(computed_content, raw_content.cache_timestamp)
 
 
 class EC2SecurityGroups(AWSSectionGeneric):
@@ -1582,6 +1640,28 @@ class ELBSummary(AWSSectionGeneric):
 
     def _create_results(self, computed_content):
         return [AWSSectionResult("", computed_content.content.values())]
+
+
+class ELBLabels(AWSSectionLabels):
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('elb_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        return colleague_contents.content
+
+    def _compute_content(self, raw_content, colleague_contents):
+        computed_content = {
+            elb_instance_id: {tag['Key']: tag['Value'] for tag in data.get('TagDescriptions', [])
+                             } for elb_instance_id, data in raw_content.content.iteritems()
+        }
+        return AWSComputedContent(computed_content, raw_content.cache_timestamp)
 
 
 class ELBHealth(AWSSectionGeneric):
@@ -2284,7 +2364,11 @@ class AWSSections(object):
                 self._write_section_result(section_name, cached_suffix, result)
 
     def _write_section_result(self, section_name, cached_suffix, result):
-        section_header = "<<<aws_%s%s>>>\n" % (section_name, cached_suffix)
+        if section_name == "labels":
+            section_header = "<<<%s:sep(0)%s>>>\n" % (section_name, cached_suffix)
+        else:
+            section_header = "<<<aws_%s%s>>>\n" % (section_name, cached_suffix)
+
         for row in result:
             write_piggyback_header = row.piggyback_hostname\
                                      and row.piggyback_hostname != self._hostname
@@ -2365,11 +2449,14 @@ class AWSSectionsGeneric(AWSSections):
                                                           cloudwatch_alarms_limits_distributor)
 
         #---sections--------------------------------------------------------
-        elb_health = ELBHealth(elb_client, region, config)
+        ec2_labels = EC2Labels(ec2_client, region, config)
         ec2_security_groups = EC2SecurityGroups(ec2_client, region, config)
         ec2 = EC2(cloudwatch_client, region, config)
 
         ebs = EBS(cloudwatch_client, region, config)
+
+        elb_labels = ELBLabels(elb_client, region, config)
+        elb_health = ELBHealth(elb_client, region, config)
         elb = ELB(cloudwatch_client, region, config)
 
         s3 = S3(cloudwatch_client, region, config)
@@ -2382,6 +2469,7 @@ class AWSSectionsGeneric(AWSSections):
 
         #---register sections to distributors-------------------------------
         ec2_limits_distributor.add(ec2_summary)
+        ec2_summary_distributor.add(ec2_labels)
         ec2_summary_distributor.add(ec2_security_groups)
         ec2_summary_distributor.add(ec2)
         ec2_summary_distributor.add(ebs_summary)
@@ -2391,6 +2479,7 @@ class AWSSectionsGeneric(AWSSections):
         ebs_summary_distributor.add(ebs)
 
         elb_limits_distributor.add(elb_summary)
+        elb_summary_distributor.add(elb_labels)
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
 
@@ -2407,6 +2496,7 @@ class AWSSectionsGeneric(AWSSections):
             if config.service_config.get('ec2_limits'):
                 self._sections.append(ec2_limits)
             self._sections.append(ec2_summary)
+            self._sections.append(ec2_labels)
             self._sections.append(ec2_security_groups)
             self._sections.append(ec2)
 
@@ -2420,6 +2510,7 @@ class AWSSectionsGeneric(AWSSections):
             if config.service_config.get('elb_limits'):
                 self._sections.append(elb_limits)
             self._sections.append(elb_summary)
+            self._sections.append(elb_labels)
             self._sections.append(elb_health)
             self._sections.append(elb)
 

@@ -1,0 +1,11 @@
+Title: oracle_tablespaces: Fixed wrong scaling of free space and increment size
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p15
+Date: 1554960785
+
+

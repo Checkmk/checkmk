@@ -78,15 +78,15 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
             ts_status          = datafile["ts_status"]
             file_online_status = datafile["file_online_status"]
 
-            # The following values may be None
+            # The following values may be None, see related check plugin
+            # free_space and increment_size are already scaled by block_size
             try:
-                bs                  = datafile["block_size"]
-                filesize_blocks     = bs * int(datafile["size"])
-                max_filesize_blocks = bs * int(datafile["max_size"])
-                used_blocks         = bs * int(datafile["used_size"])
-                free_space          = bs * int(datafile["free_space"])
-                increment_size      = bs * int(datafile["increment_size"])
-            except:
+                filesize_blocks     = int(datafile["size"])
+                max_filesize_blocks = int(datafile["max_size"])
+                used_blocks         = int(datafile["used_size"])
+                free_space          = int(datafile["free_space"])
+                increment_size      = int(datafile["increment_size"])
+            except TypeError:
                 continue
 
             num_files += 1

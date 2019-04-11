@@ -191,6 +191,10 @@ body.main .popup_menu div.dashlet > div.title span span {
   color: $theme-color-table-text;
 }
 
+div.dashlet > div.title span {
+  padding-left: 0; /* left align with titles of contained views */
+}
+
 /* Overview dashlet is not selectable TODO: Check if this style can be dropped */
 table.dashlet_overview h2 {
   margin: 8px 0;

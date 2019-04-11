@@ -1114,7 +1114,7 @@ table.nform {
   }
 
   tr.open td.legend {
-    width: 320px;
+    min-width: 320px;
     padding-right: 8px;
     padding-left: 10px;
     overflow: hidden;
@@ -1125,7 +1125,7 @@ table.nform {
 
     div.title {
       float: left;
-      max-width: 284px;
+      max-width: 278px;
       padding: 0 8px 0 0;
       overflow: hidden;
       font-weight: $theme-font-weight-bold;
@@ -1136,7 +1136,7 @@ table.nform {
       }
 
       &.withcheckbox {
-        max-width: 284px;
+        max-width: 278px;
         margin: 5px 6px 5px 0;
       }
     }

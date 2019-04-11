@@ -426,50 +426,32 @@ div.togglebutton {
   height: $theme-button-height;
 
   &.off {
-    width: $theme-button-height;
-    height: $theme-button-height;
-    margin-right: 12px;
-    margin-bottom: 12px;
-    font-size: $theme-font-size-small;
-    cursor: auto;
-    border: none; /* 1px solid $theme-color-table-border; */
-    border-radius: $theme-border-radius;
+    border: none;
     opacity: 0.5;
     filter: alpha(opacity=50);
-    box-sizing: border-box;
 
     a,
     body.main .popup_menu span,
     body.main .popup_menu & span {
       &, &:hover {
-        position: relative;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
         display: block;
-        padding: 8px;
         overflow: hidden;
-        font-size: $theme-font-size-global;
-        font-weight: $theme-font-weight-global;
         line-height: 18px;
-        letter-spacing: $theme-letter-spacing;
         color: $theme-color-text;
         text-decoration: none;
         text-overflow: ellipsis;
-        cursor: pointer;
-        border: none;
+        cursor: default;
+        background: $theme-color-white;
         border-radius: 5px;
         box-shadow: none;
       }
 
       & {
+        font-size: $theme-font-size-global;
+        font-weight: $theme-font-weight-global;
+        letter-spacing: $theme-letter-spacing;
         cursor: auto;
-        background: $theme-color-white;
-      }
-
-      &:hover {
-        background: $theme-button-background;
+        border: none;
       }
     }
   }

@@ -115,7 +115,7 @@ defusedxml = "==0.5.0"
 requests-toolbelt = "==0.9.1"
 jira = "==2.0.0"
 # Has been added for opsgenie notification plugin
-opsgenie_swagger = "==0.3.2"
+opsgenie-sdk = "==0.3.1"
 
 [requires]
 python_version = "2.7"

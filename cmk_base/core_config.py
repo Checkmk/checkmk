@@ -396,6 +396,7 @@ def get_host_attributes(hostname, config_cache):
 
     attrs.update(_get_tag_attributes(config_cache.tags_of_host(hostname), "TAG"))
     attrs.update(_get_tag_attributes(host_config.labels, "LABEL"))
+    attrs.update(_get_tag_attributes(host_config.label_sources, "SOURCES"))
 
     if "alias" not in attrs:
         attrs["alias"] = config.alias_of(hostname, hostname)

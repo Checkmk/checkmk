@@ -2730,6 +2730,7 @@ class HostConfig(object):
         self.tags = self._config_cache.tag_list_of_host(self.hostname)
         self.tag_groups = host_tags.get(hostname, {})
         self.labels = self._get_host_labels()
+        self.label_sources = self._get_host_label_sources()
 
         # Basic types
         self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
@@ -2799,6 +2800,16 @@ class HostConfig(object):
         labels.update(self._discovered_labels_of_host())
         labels.update(self._config_cache.host_extra_conf_merged(self.hostname, host_label_rules))
         labels.update(host_labels.get(self.hostname, {}))
+        return labels
+
+    def _get_host_label_sources(self):
+        """Returns the effective set of host label keys with their source identifier instead of the value
+        Order and merging logic is equal to _get_host_labels()"""
+        labels = {}
+        labels.update({k: "discovered" for k in self._discovered_labels_of_host().keys()})
+        labels.update({k : "ruleset" \
+            for k in self._config_cache.host_extra_conf_merged(self.hostname, host_label_rules)})
+        labels.update({k: "explicit" for k in host_labels.get(self.hostname, {}).keys()})
         return labels
 
     def _discovered_labels_of_host(self):

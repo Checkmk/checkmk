@@ -81,6 +81,7 @@ div.floatfilter {
     height: 17px;
     padding: 3px 5px 0;
     margin-bottom: 1px;
+    font-size: 10px;
     color: #fff;
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: 5px 5px 0 0;
@@ -114,16 +115,8 @@ div.floatfilter {
       }
 
       select {
-        width: 148px;
+        width: 156px;
         height: 66px;
-
-        &.large {
-          width: 228px;
-        }
-
-        &.small {
-          width: 68px;
-        }
       }
     }
 
@@ -142,30 +135,48 @@ div.floatfilter {
       margin-right: 10px;
     }
   }
+
+  table.vs_duallist {
+    width: 313px;
+    border-spacing: 0px 3px !important;
+
+    a.control {
+      padding: 0px 6px;
+    }
+
+    /* TODO: Get rid of these important styles */
+    select {
+      height: 43px !important; /* Is hardcoded to 48px in generated HTML code.
+                                  This is bad but we cannot break compatibility
+                                  with the classic theme for the while. */
+      padding: 0 !important;
+      margin-bottom: 0 !important;
+    }
+  }
 }
 
 .filterform > tbody > tr > td div.floatfilter {
   position: relative;
-  width: 372px;
+  width: 326px;
   height: auto;
-  margin-right: 16px;
-  margin-bottom: 16px;
+  margin-right: 5px;
+  margin-bottom: 5px;
   background: $theme-color-white;
   border: 1px solid $theme-color-table-border;
   box-shadow: none;
 
   &.single {
-    height: 114px;
+    height: 53px;
   }
 
   &.double {
-    height: 246px;
+    height: 110px;
   }
 
   .legend {
     width: 100%;
     height: auto;
-    padding: 12px;
+    padding: 5px 8px;
     color: $theme-color-table-text;
     text-transform: uppercase;
     box-sizing: border-box;
@@ -174,7 +185,7 @@ div.floatfilter {
   .content {
     display: block;
     width: 100%;
-    padding: 12px;
+    padding: 3px 8px;
     box-sizing: border-box;
 
     select {
@@ -183,6 +194,11 @@ div.floatfilter {
 
     table {
       border-spacing: 8px 4px;
+
+      /* TODO: Get rid of this important style */
+      td input.text {
+        width: 96px !important;
+      }
     }
 
     .checkbox {
@@ -193,7 +209,7 @@ div.floatfilter {
     }
 
     input, select, textarea, #mk_side_search_field {
-      margin-bottom: 8px;
+      margin-bottom: 0;
     }
 
     input[type^=radio],
@@ -204,10 +220,49 @@ div.floatfilter {
       margin-bottom: 0;
     }
 
+    input[type=radio] {
+      margin-left: 5px;
+    }
+
     .valuespec_tuple {
       width: 100%;
       border-spacing: 2px 2px;
     }
+  }
+
+  &.host_tags .content table {
+    margin-top: -6px;
+    border-spacing: 4px 0;
+  }
+
+  span.select2-selection {
+    border-color: $theme-button-border;
+  }
+
+  &.svchardstate .content, &.svcstate .content {
+    .checkbox {
+      margin-right: 5px;
+    }
+
+    input[type="checkbox"] + label::before {
+      margin: 0 4px 0 0;
+    }
+  }
+
+  &.single span.select2 {
+    position: relative;
+    top: -7px;
+  }
+
+  /* TODO: Get rid of this important style */
+  &.single > div.content > span.select2 {
+    width: 310px !important;
+  }
+
+  &.single input.neg[type=text] {
+    position: relative;
+    top: -6px;
+    width: 222px;
   }
 }
 

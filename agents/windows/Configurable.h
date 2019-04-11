@@ -183,6 +183,10 @@ public:
 
     virtual void output(const std::string &key,
                         std::ostream &out) const override {
+        // NOTE: Funnily enough, clang-format thinks this header contains
+        // Objective-C because of the structured binding declaration with a "&"
+        // reference operator, see: https://bugs.llvm.org/show_bug.cgi?id=37433
+        // clang-format-9 onwards will contain a fix for this.
         for (const auto &[var, value] : this->values()) {
             out << key << " " << var << " = " << value << "\n";
         }

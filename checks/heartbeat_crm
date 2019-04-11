@@ -137,6 +137,19 @@ def inventory_heartbeat_crm(info):
     return [(None, params)]
 
 
+def _transform_heartbeat_crm(params):
+    if isinstance(params, dict):
+        return params
+    par_dict = {'max_age': params[0]}
+    if params[1]:
+        par_dict['dc'] = params[1]
+    if params[2] > -1:
+        par_dict['num_nodes'] = params[2]
+    if params[3] > -1:
+        par_dict['num_resources'] = params[3]
+    return par_dict
+
+
 def check_heartbeat_crm(item, params, info):
     if not len(info) > 0:
         return
@@ -148,14 +161,8 @@ def check_heartbeat_crm(item, params, info):
 
     last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
 
-    # Convert old tuple params (pre 1.2.5i6)
-    if type(params) == tuple:
-        params = {
-            'max_age': params[0],
-            'dc': params[1] != "" and params[1] or None,
-            'num_nodes': params[2] != -1 and params[2] or None,
-            'num_resources': params[3] != -1 and params[3] or None,
-        }
+    # Convert old tuple params (pre 1.5.0p14)
+    params = _transform_heartbeat_crm(params)
 
     # Check the freshness of the crm_mon output and terminate with CRITICAL
     # when too old information are found

@@ -1,0 +1,10 @@
+Title: heartbeat_crm: Inconsistent parameter format
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p15
+Date: 1554962632
+Class: fix
+
+Due to an inconsistent parameter format, the default parameters could not be displayed during discovery.

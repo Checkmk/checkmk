@@ -662,8 +662,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addDynamicColumn(std::make_unique<DynamicLogwatchFileColumn>(
         prefix + "mk_logwatch_file",
-        "This contents of a logfile fetched via mk_logwatch", table->logger(),
-        table->core(), indirect_offset, extra_offset, -1));
+        "This contents of a logfile fetched via mk_logwatch", table->core(),
+        indirect_offset, extra_offset, -1));
 
     table->addColumn(std::make_unique<HostSpecialDoubleColumn>(
         prefix + "staleness", "Staleness indicator for this host",

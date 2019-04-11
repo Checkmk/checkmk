@@ -74,8 +74,8 @@ private:
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
     const std::string &name, const std::string &description, MonitoringCore *mc,
     int indirect_offset, int extra_offset, int extra_extra_offset)
-    : DynamicColumn(name, description, mc->loggerLivestatus(), indirect_offset,
-                    extra_offset, extra_extra_offset)
+    : DynamicColumn(name, description, indirect_offset, extra_offset,
+                    extra_extra_offset)
     , _mc(mc) {}
 
 std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(

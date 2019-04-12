@@ -30,10 +30,22 @@
 # [start_iplink]
 # 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default
 #     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+#     inet 127.0.0.1/8 scope host lo
+#       valid_lft forever preferred_lft forever
+#     inet6 ::1/128 scope host
+#       valid_lft forever preferred_lft forever
 # 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000
 #     link/ether 00:27:13:b4:a9:ec brd ff:ff:ff:ff:ff:ff
+#     inet 127.0.0.1/8 scope host lo
+#       valid_lft forever preferred_lft forever
+#     inet6 ::1/128 scope host
+#       valid_lft forever preferred_lft forever
 # 3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DORMANT group default qlen 1000
 #     link/ether 00:21:6a:10:8e:b8 brd ff:ff:ff:ff:ff:ff
+#     inet 127.0.0.1/8 scope host lo
+#       valid_lft forever preferred_lft forever
+#     inet6 ::1/128 scope host
+#       valid_lft forever preferred_lft forever
 # [end_iplink]
 # <<<lnx_if:sep(58)>>>
 #    lo:   4520   54  0  0  0  0  0  0    4520  54    0   0   0   0   0   0
@@ -53,169 +65,179 @@
 #         Auto-negotiation: on
 #         Link detected: yes
 
-check_includes['lnx_if'] = ["if.include"]
-
 linux_nic_check = "lnx_if"
 
 
-def if_lnx_extract_nic_info(info):
-    def _get_next_node_line(lines):
-        line = lines.next()
-        return line[0], line[1:]
+def _parse_lnx_if_node_info(lines):
+    line = lines.next()
+    return line[0], line[1:]
 
-    nic_info = {}
-    current_nic = None
-    index = 0
-    lines = iter(info)
-    iplink_stats = {}
+
+def _parse_lnx_if_ipaddress(lines):
+    ip_stats = {}
+    iface = None
     while True:
         try:
-            node, line = _get_next_node_line(lines)
-            iplink_stats.setdefault(node, {})
+            node, line = _parse_lnx_if_node_info(lines)
         except StopIteration:
             break
 
-        # This extra info from 'ip link' is used as fallback in case ethtool is missing
+        if line == ['[end_iplink]']:
+            break
+
+        if line[0].endswith(":") and line[1].endswith(":"):
+            # Some (docker) interfaces have suffix "@..." but ethtool does not show this suffix.
+            # 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default ...
+            # 5: veth6a06585@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue ...
+            iface = ip_stats.setdefault((node, line[1][:-1].split("@")[0]), {})
+            iface.update(dict(zip(line[3::2], line[4::2])))
+            continue
+
+        if not iface:
+            continue
+
+        if line[0].startswith('link/'):
+            # link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+            iface[line[0]] = line[1]
+            iface[line[2]] = line[3]
+
+        elif line[0].startswith('inet'):
+            # inet 127.0.0.1/8 scope host lo
+            # inet6 ::1/128 scope host
+            iface[line[0]] = line[1]
+    return ip_stats
+
+
+def _parse_lnx_if_sections(info):
+    ip_stats = {}
+    ethtool_stats = {}
+    iface = None
+    lines = iter(info)
+    index = 0
+    while True:
+        try:
+            node, line = _parse_lnx_if_node_info(lines)
+        except StopIteration:
+            break
+
         if line[0].startswith("[start_iplink]"):
-            try:
-                while True:
-                    node, line = _get_next_node_line(lines)
-                    if line[0].startswith("[end_iplink]"):
-                        node, line = _get_next_node_line(lines)
-                        break
-                    # There some cases with an additional line. These are currently unused
-                    # but need to be handled anyway. This particular line contains information
-                    # provided by cisco about neighors (CDP)
-                    if line[0].startswith("alias"):
-                        continue
-                    # Each interface in this block is represented by two lines
-                    status_info = line
-                    try:
-                        nic_name = status_info[1][:-1]
-                        iplink_stats[node].setdefault(
-                            nic_name, {"extra_info": status_info[2][1:-1].split(",")})
-                        iplink_stats[node][nic_name].update(
-                            dict(zip(status_info[3::2], status_info[4::2])))
-                    except:  # In case of parse errors we simply ignore these lines
-                        pass
-            except StopIteration:
-                break
+            # Parse 'ip link/address' section (as fallback in case ethtool is missing)
+            ip_stats.update(_parse_lnx_if_ipaddress(lines))
 
-        nic_info.setdefault(node, {})
-        # Be careful! On clustered hosts we have more than one perf-counters section
-        # and ethtool section. This needs to be handled. Sadly we have no section
-        # headers. Try to detect it by data format.
-        if line[0].startswith('['):
-            current_nic = line[0][1:-1]
-            index += 1
-            nic_info[node][current_nic]['index'] = index
-            # The iplink_stats are only used within the perf-counters
-            # The (optional) ethtool section invalidates this info, otherwise it would
-            # be incorrectly reused in a followup section of another cluster node
-            # When the ethtool section is missing the data is also reset by the next [start_iplink]
-            iplink_stats = {}
         elif len(line) == 2 and len(line[1].split()) >= 16:
-            # This looks like a perf-counter line
-            nic = line[0]
-            nic_info[node][nic] = {"counters": map(int, line[1].split())}
-            if nic in iplink_stats[node]:
-                nic_info[node][nic]['iplink_stats'] = iplink_stats[node][nic]
-        elif current_nic:
-            # ethtool data line
-            nic_info[node][current_nic][line[0].strip()] = ":".join(line[1:]).strip()
+            # Parse 'ethtool'; part one
+            # IFACE_NAME: VAL VAL VAL ...
+            iface = ethtool_stats.setdefault((node, line[0]), {})
+            iface.update({"counters": map(int, line[1].split())})
 
-    return nic_info
+        elif line[0].startswith('[') and line[0].endswith(']'):
+            # Parse 'ethtool'; part two
+            # [IF_NAME]
+            #       KEY: VAL
+            #       KEY: VAL
+            #       ...
+            index += 1
+            iface = ethtool_stats.setdefault((node, line[0][1:-1]), {})
+            iface.update({"index": index})
+            continue
+
+        if iface is not None:
+            iface[line[0].strip()] = ":".join(line[1:]).strip()
+
+    parsed = {}
+    for k in set(ip_stats.keys()).union(ethtool_stats.keys()):
+        iface = ip_stats.get(k, {})
+        iface.update(ethtool_stats.get(k, {}))
+        parsed[k] = iface
+    return parsed
 
 
 def parse_lnx_if(info):
-    nic_info = if_lnx_extract_nic_info(info)
+    nic_info = _parse_lnx_if_sections(info)
 
     if_table = []
     index = 0
-    for node_info, nic_attrs in nic_info.iteritems():
-        for nic, attr in nic_attrs.iteritems():
-            counters = attr.get("counters", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-            index += 1
-            ifIndex = attr.get("index", index)
-            ifDescr = nic
-            ifAlias = nic
+    for (node_info, nic), attr in nic_info.iteritems():
+        counters = attr.get("counters", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        index += 1
+        ifIndex = attr.get("index", index)
+        ifDescr = nic
+        ifAlias = nic
 
-            # Guess type from name of interface
-            if nic == "lo":
-                ifType = 24
-            else:
-                ifType = 6
+        # Guess type from name of interface
+        if nic == "lo":
+            ifType = 24
+        else:
+            ifType = 6
 
-            # Compute speed
-            speed_text = attr.get("Speed")
-            if speed_text is None:
+        # Compute speed
+        speed_text = attr.get("Speed")
+        if speed_text is None:
+            ifSpeed = ''
+        else:
+            if speed_text == '65535Mb/s':  # unknown
                 ifSpeed = ''
+            elif speed_text.endswith("Kb/s"):
+                ifSpeed = int(speed_text[:-4]) * 1000
+            elif speed_text.endswith("Mb/s"):
+                ifSpeed = int(speed_text[:-4]) * 1000000
+            elif speed_text.endswith("Gb/s"):
+                ifSpeed = int(speed_text[:-4]) * 1000000000
             else:
-                if speed_text == '65535Mb/s':  # unknown
-                    ifSpeed = ''
-                elif speed_text.endswith("Kb/s"):
-                    ifSpeed = int(speed_text[:-4]) * 1000
-                elif speed_text.endswith("Mb/s"):
-                    ifSpeed = int(speed_text[:-4]) * 1000000
-                elif speed_text.endswith("Gb/s"):
-                    ifSpeed = int(speed_text[:-4]) * 1000000000
+                ifSpeed = ''
+
+        # Performance counters
+        ifInOctets = counters[0]
+        inucast = counters[1] + counters[7]
+        inmcast = counters[7]
+        inbcast = 0
+        ifInDiscards = counters[3]
+        ifInErrors = counters[2]
+        ifOutOctets = counters[8]
+        outucast = counters[9]
+        outmcast = 0
+        outbcast = 0
+        ifOutDiscards = counters[11]
+        ifOutErrors = counters[10]
+        ifOutQLen = counters[12]
+
+        # Link state from ethtool. If ethtool has no information about
+        # this NIC, we set the state to unknown.
+        ld = attr.get("Link detected")
+        if ld == "yes":
+            ifOperStatus = 1
+        elif ld == "no":
+            ifOperStatus = 2
+        else:
+            # No information from ethtool. We consider interfaces up
+            # if they have been used at least some time since the
+            # system boot.
+            iplink_stats = attr.get("iplink_stats")
+            if iplink_stats:
+                if "UP" in iplink_stats.get("extra_info", []) or iplink_stats.get("state") == "UP":
+                    ifOperStatus = 1
+                elif iplink_stats.get("state") == "DOWN":
+                    ifOperStatus = 2
                 else:
-                    ifSpeed = ''
-
-            # Performance counters
-            ifInOctets = counters[0]
-            inucast = counters[1] + counters[7]
-            inmcast = counters[7]
-            inbcast = 0
-            ifInDiscards = counters[3]
-            ifInErrors = counters[2]
-            ifOutOctets = counters[8]
-            outucast = counters[9]
-            outmcast = 0
-            outbcast = 0
-            ifOutDiscards = counters[11]
-            ifOutErrors = counters[10]
-            ifOutQLen = counters[12]
-
-            # Link state from ethtool. If ethtool has no information about
-            # this NIC, we set the state to unknown.
-            ld = attr.get("Link detected")
-            if ld == "yes":
-                ifOperStatus = 1
-            elif ld == "no":
-                ifOperStatus = 2
+                    ifOperStatus = 4
             else:
-                # No information from ethtool. We consider interfaces up
-                # if they have been used at least some time since the
-                # system boot.
-                iplink_stats = attr.get("iplink_stats")
-                if iplink_stats:
-                    if "UP" in iplink_stats.get("extra_info",
-                                                []) or iplink_stats.get("state") == "UP":
-                        ifOperStatus = 1
-                    elif iplink_stats.get("state") == "DOWN":
-                        ifOperStatus = 2
-                    else:
-                        ifOperStatus = 4
+                if ifInOctets > 0:
+                    ifOperStatus = 1  # assume up
                 else:
-                    if ifInOctets > 0:
-                        ifOperStatus = 1  # assume up
-                    else:
-                        ifOperStatus = 4  # unknown (NIC has never been used)
+                    ifOperStatus = 4  # unknown (NIC has never been used)
 
-            if attr.get("Address"):
-                ifPhysAddress = "".join(
-                    [chr(int(x, 16)) for x in attr.get("Address", "").split(":")])
-            else:
-                ifPhysAddress = ''
+        if attr.get("Address"):
+            ifPhysAddress = "".join([chr(int(x, 16)) for x in attr.get("Address", "").split(":")])
+        else:
+            ifPhysAddress = ''
 
-            row = [node_info] + map(str, [
-                ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast,
-                inbcast, ifInDiscards, ifInErrors, ifOutOctets, outucast, outmcast, outbcast,
-                ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress
-            ])
+        row = [node_info] + map(str, [
+            ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast,
+            ifInDiscards, ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards,
+            ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress
+        ])
 
-            if_table.append(row)
+        if_table.append(row)
 
     return if_table
 
@@ -223,10 +245,8 @@ def parse_lnx_if(info):
 def inventory_lnx_if(parsed):
     if linux_nic_check == "legacy":
         return []
-
     # Always exclude dockers veth* interfaces on docker nodes
     parsed = [e for e in parsed if not e[2].startswith("veth")]
-
     return inventory_if_common(parsed, has_nodeinfo=True)
 
 
@@ -239,6 +259,7 @@ check_info["lnx_if"] = {
     'inventory_function': inventory_lnx_if,
     'check_function': check_lnx_if,
     'service_description': 'Interface %s',
+    'includes': ['if.include'],
     'node_info': True,
     'has_perfdata': True,
     'group': 'if',

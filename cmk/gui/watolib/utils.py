@@ -33,6 +33,7 @@ from contextlib import contextmanager
 
 import cmk
 import cmk.utils.paths
+import cmk.utils.rulesets.tuple_rulesets
 import cmk.utils.store as store
 
 import cmk.gui.config as config
@@ -40,10 +41,11 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
-# Constants used in configuration files
-ALL_HOSTS = ['@all']
-ALL_SERVICES = [""]
-NEGATE = '@negate'
+# TODO: Clean up all call sites in the GUI and only use them in WATO config file loading code
+ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS
+ALL_SERVICES = cmk.utils.rulesets.tuple_rulesets.ALL_SERVICES
+NEGATE = cmk.utils.rulesets.tuple_rulesets.NEGATE
+
 NO_ITEM = {}  # Just an arbitrary unique thing
 ENTRY_NEGATE_CHAR = "!"
 

@@ -42,6 +42,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.regex import regex, is_regex
 import cmk.utils.translations
+import cmk.utils.rulesets.tuple_rulesets
 import cmk.utils.store as store
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
@@ -1805,12 +1806,13 @@ def _in_servicematcher_list(service_matchers, item):
 #   | Some constants to be used in the configuration and at other places   |
 #   '----------------------------------------------------------------------'
 
-# Conveniance macros for host and service rules
-PHYSICAL_HOSTS = ['@physical']  # all hosts but not clusters
-CLUSTER_HOSTS = ['@cluster']  # all cluster hosts
-ALL_HOSTS = ['@all']  # physical and cluster hosts
-ALL_SERVICES = [""]  # optical replacement"
-NEGATE = '@negate'  # negation in boolean lists
+# Conveniance macros for legacy tuple based host and service rules
+# TODO: Deprecate these in a gentle way
+PHYSICAL_HOSTS = cmk.utils.rulesets.tuple_rulesets.PHYSICAL_HOSTS
+CLUSTER_HOSTS = cmk.utils.rulesets.tuple_rulesets.CLUSTER_HOSTS
+ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS
+ALL_SERVICES = cmk.utils.rulesets.tuple_rulesets.ALL_SERVICES
+NEGATE = cmk.utils.rulesets.tuple_rulesets.NEGATE
 
 # TODO: Cleanup access to check_info[] -> replace it by different function calls
 # like for example check_exists(...)

@@ -1,0 +1,12 @@
+Title: fireeye_content: Optional configuration of levels for the age of the last update
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551954114
+Class: fix
+
+Previously the age of the last content update was shown in an informative manner.
+This werk adds the option to configure the upper levels for the age of the last
+content update in WATO rule {Fireeye Security Content}.

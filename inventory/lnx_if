@@ -25,9 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 
+def inv_lnx_if(parsed, params, inventory_tree):
+    inv_lnx_if_ports(parsed[0], params, inventory_tree)
+    inv_lnx_if_addresses(parsed[1], inventory_tree)
+
+
 # TODO unify with other if inventory plugins
-def inv_lnx_if(parsed, params):
-    node = inv_tree_list("networking.interfaces:")
+def inv_lnx_if_ports(parsed, params, inventory_tree):
+    node = inventory_tree.get_list("networking.interfaces:")
 
     usage_port_types = params.get(
         "usage_port_types",
@@ -76,6 +81,23 @@ def inv_lnx_if(parsed, params):
     node["available_ethernet_ports"] = available_ethernet_ports
     node["total_ethernet_ports"] = total_ethernet_ports
     node["total_interfaces"] = len(parsed)
+
+
+def inv_lnx_if_addresses(parsed, inventory_tree):
+    def parse_address(device, network, ty):
+        address = network.split("/")[0]
+        return {
+            "device": device,
+            "address": address,
+            "type": ty,
+        }
+
+    addresses = inventory_tree.get_list("networking.addresses:")
+    for (_node, if_name), attrs in parsed.items():
+        for entry in attrs.get("inet", {}):
+            addresses.append(parse_address(if_name, entry, "ipv4"))
+        for entry in attrs.get("inet6", {}):
+            addresses.append(parse_address(if_name, entry, "ipv6"))
 
 
 inv_info['lnx_if'] = {

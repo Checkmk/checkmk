@@ -1,0 +1,17 @@
+Title: Linux agent now delievers output of 'ip address'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1555057905
+Class: feature
+
+Previously the Linux agent delievered the output of 'ip link' which is a subset
+of 'ip address'. Now the agent uses 'ip address'.  The inventory plugin
+{{mk_inventory}} also executed 'ip address'.  This has been removed from the
+agent plugin {{mk_inventory}}. The related inventory plugin 'lnx_if_a' has also
+been removed. Instead the inventory plugin 'lnx_if' processes the IP addresses.
+
+In order to use this feature you have to deploy the Linux agent and
+{{mk_inventory}} agent plugin.

@@ -5247,7 +5247,7 @@ class PainterHostLabels(Painter):
 
     @property
     def columns(self):
-        return ["host_labels", "host_sources"]
+        return ["host_labels", "host_label_sources"]
 
     @property
     def sorter(self):
@@ -5277,7 +5277,7 @@ class PainterServiceLabels(Painter):
 
     @property
     def columns(self):
-        return ["service_labels", "host_sources"]
+        return ["service_labels", "host_label_sources"]
 
     @property
     def sorter(self):

@@ -489,7 +489,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
-        "A list of the names of all custom variables", indirect_offset,
+        "A list of the names of the custom variables", indirect_offset,
         extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
         table->core(), AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
@@ -504,7 +504,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         AttributeKind::custom_variables));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
-        prefix + "tag_names", "A list of the names of all tags",
+        prefix + "tag_names", "A list of the names of the tags",
         indirect_offset, extra_offset, -1,
         DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
         AttributeKind::tags));
@@ -519,7 +519,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         table->core(), AttributeKind::tags));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
-        prefix + "label_names", "A list of the names of all labels",
+        prefix + "label_names", "A list of the names of the labels",
         indirect_offset, extra_offset, -1,
         DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
         AttributeKind::labels));
@@ -534,19 +534,20 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         table->core(), AttributeKind::labels));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
-        prefix + "source_names", "A list of the names of all sources",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
-        AttributeKind::sources));
-    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
-        prefix + "source_values", "A list of the values of the sources",
-        indirect_offset, extra_offset, -1,
-        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
-        AttributeKind::sources));
-    table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "sources", "A dictionary of the sources", indirect_offset,
+        prefix + "label_source_names",
+        "A list of the names of the label sources", indirect_offset,
         extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
-        table->core(), AttributeKind::sources));
+        table->core(), AttributeKind::label_sources));
+    table->addColumn(std::make_unique<CustomVarsValuesColumn>(
+        prefix + "label_source_values",
+        "A list of the values of the label sources", indirect_offset,
+        extra_offset, -1, DANGEROUS_OFFSETOF(host, custom_variables),
+        table->core(), AttributeKind::label_sources));
+    table->addColumn(std::make_unique<CustomVarsDictColumn>(
+        prefix + "label_sources", "A dictionary of the label sources",
+        indirect_offset, extra_offset, -1,
+        DANGEROUS_OFFSETOF(host, custom_variables), table->core(),
+        AttributeKind::label_sources));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus this will probably be configurable so access to further custom

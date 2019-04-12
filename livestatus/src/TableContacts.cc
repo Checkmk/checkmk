@@ -150,18 +150,18 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         AttributeKind::labels));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
-        prefix + "source_names", "A list of all sources of the contact",
+        prefix + "label_source_names", "A list of all sources of the contact",
         indirect_offset, -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables),
-        table->core(), AttributeKind::sources));
+        table->core(), AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
-        prefix + "source_values",
+        prefix + "label_source_values",
         "A list of the values of all sources of the contact", indirect_offset,
         -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables), table->core(),
-        AttributeKind::sources));
+        AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
-        prefix + "sources", "A dictionary of the sources", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(contact, custom_variables), table->core(),
-        AttributeKind::sources));
+        prefix + "label_sources", "A dictionary of the label sources",
+        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(contact, custom_variables),
+        table->core(), AttributeKind::label_sources));
 
     table->addColumn(std::make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",

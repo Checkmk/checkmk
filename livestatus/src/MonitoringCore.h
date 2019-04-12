@@ -65,7 +65,7 @@ struct CommentData {
 };
 
 using Attributes = std::unordered_map<std::string, std::string>;
-enum class AttributeKind { custom_variables, tags, labels, sources };
+enum class AttributeKind { custom_variables, tags, labels, label_sources };
 
 inline std::tuple<AttributeKind, std::string> to_attribute_kind(
     const std::string &name) {
@@ -75,8 +75,8 @@ inline std::tuple<AttributeKind, std::string> to_attribute_kind(
     if (mk::starts_with(name, "_LABEL_")) {
         return {AttributeKind::labels, name.substr(7)};
     }
-    if (mk::starts_with(name, "_SOURCES_")) {
-        return {AttributeKind::sources, name.substr(9)};
+    if (mk::starts_with(name, "_LABELSOURCE_")) {
+        return {AttributeKind::label_sources, name.substr(13)};
     }
     return {AttributeKind::custom_variables, name};
 }

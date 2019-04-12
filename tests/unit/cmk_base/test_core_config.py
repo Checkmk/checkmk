@@ -44,7 +44,7 @@ def test_get_host_attributes(monkeypatch):
         '_TAGS': 'abc',
         '__TAG_tag_group': 'abc',
         '__LABEL_ding': 'dong',
-        '__SOURCES_ding': 'explicit',
+        '__LABELSOURCE_ding': 'explicit',
         'address': '0.0.0.0',
         'alias': 'test-host',
     }

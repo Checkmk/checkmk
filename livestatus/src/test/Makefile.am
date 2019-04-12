@@ -34,6 +34,7 @@ BEAR ?= bear
 CPPCHECK ?= cppcheck
 IWYU_TOOL ?= iwyu_tool
 RUN_CLANG_TIDY ?= run-clang-tidy-$(CLANG_VERSION).py
+VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet")
 
 GOOGLETEST :=$(top_srcdir)/omd/packages/googletest
 
@@ -63,7 +64,7 @@ test_neb_LDADD = \
 .PHONY: unit-test build_googletest
 
 unit-test: test_neb$(EXEEXT)
-	GTEST_OUTPUT=xml ./test_neb$(EXEEXT)
+	GTEST_OUTPUT=xml $(VALGRIND) ./test_neb$(EXEEXT)
 
 # NOTE: This is a bit of a hack. What we really want is a clean chroot/VM/image
 # where we just install our build dependencies.

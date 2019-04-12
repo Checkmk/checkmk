@@ -55,11 +55,11 @@ Usage:
 #pragma once
 
 #define WINDOWS_LEAN_AND_MEAN
-#include <windows.h>
 #include <sys/stat.h>
-#include <string>
-#include <fstream>
+#include <windows.h>
 #include <cstdint>
+#include <fstream>
+#include <string>
 
 // MAIN NAMESPACE for C++ based Check MK Agents
 namespace cma {

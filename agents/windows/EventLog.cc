@@ -175,9 +175,8 @@ wstring MessageResolver::resolve(DWORD eventID, LPCWSTR source,
             result += parameters[i];
         }
     }
-    std::replace_if(
-        result.begin(), result.end(),
-        [](wchar_t ch) { return ch == '\n' || ch == '\r'; }, ' ');
+    std::replace_if(result.begin(), result.end(),
+                    [](wchar_t ch) { return ch == '\n' || ch == '\r'; }, ' ');
     return result;
 }
 

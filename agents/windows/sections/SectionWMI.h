@@ -58,7 +58,7 @@ private:
     time_t _disabled_until{0};
     std::unique_ptr<wmi::Helper> _helper;
 
-    std::string cached_; // last output stored here, may be reused on timeout
+    std::string cached_;  // last output stored here, may be reused on timeout
 };
 
 #endif  // SectionWMI_h

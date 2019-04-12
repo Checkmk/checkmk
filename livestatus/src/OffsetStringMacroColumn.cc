@@ -27,6 +27,7 @@
 #include <type_traits>
 #include <utility>
 #include "Column.h"
+#include "MonitoringCore.h"
 #include "RegExp.h"
 #include "Row.h"
 #include "StringUtils.h"
@@ -65,14 +66,16 @@ CustomVariableExpander::CustomVariableExpander(std::string prefix,
 
 std::optional<std::string> CustomVariableExpander::expand(
     const std::string &str) {
-    (void)_mc;
-    if (mk::starts_with(str, _prefix)) {
-        RegExp regExp(str.substr(_prefix.size()), RegExp::Case::ignore,
-                      RegExp::Syntax::literal);
-        for (; _cvm != nullptr; _cvm = _cvm->next) {
-            if (regExp.match(_cvm->variable_name)) {
-                return from_ptr(_cvm->variable_value);
-            }
+    if (!mk::starts_with(str, _prefix)) {
+        return {};
+    }
+
+    RegExp regExp(str.substr(_prefix.size()), RegExp::Case::ignore,
+                  RegExp::Syntax::literal);
+    for (const auto &[name, value] :
+         _mc->customAttributes(&_cvm, AttributeKind::custom_variables)) {
+        if (regExp.match(name)) {
+            return value;
         }
     }
     return {};

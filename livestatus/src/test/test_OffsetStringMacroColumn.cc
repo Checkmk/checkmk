@@ -3,6 +3,7 @@
 #include <iterator>
 #include <string>
 #include "Column.h"
+#include "NagiosCore.h"
 #include "OffsetStringHostMacroColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
 #include "Row.h"
@@ -35,7 +36,7 @@ protected:
         host_.alias = cc("the alias");
         host_.address = cc("the address");
         host_.host_check_command = cc("the host check command");
-        host_.custom_variables = &hcvm2_;
+        host_.custom_variables = &hcvm3_;
         host_.plugin_output = cc("the plugin output");
         host_.long_plugin_output = cc("the long plugin output");
         host_.perf_data = cc("the perf data");
@@ -59,10 +60,17 @@ protected:
                                  .variable_value = cc("Hirsch"),
                                  .has_been_modified = 0,
                                  .next = &hcvm1_};
+    customvariablesmember hcvm3_{.variable_name = cc("_TAG_GUT"),
+                                 .variable_value = cc("Guten Tag!"),
+                                 .has_been_modified = 0,
+                                 .next = &hcvm2_};
+
+    NagiosCore core_{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
+                     Encoding::utf8};
     host host_{};
     Row host_row_{&host_};
     OffsetStringHostMacroColumn oshmc_{
-        "funny_column_name",  "Cool description!", -1, -1, -1, nullptr,
+        "funny_column_name",  "Cool description!", -1, -1, -1, &core_,
         offsetof(host, notes)};
 };
 
@@ -78,7 +86,7 @@ protected:
         service_.description = cc("muppet_show");
         service_.display_name = cc("The Muppet Show");
         service_.service_check_command = cc("check_fozzie_bear");
-        service_.custom_variables = &scvm2_;
+        service_.custom_variables = &scvm3_;
         service_.plugin_output = cc("plug");
         service_.long_plugin_output = cc("long plug");
         service_.perf_data = cc("99%");
@@ -99,10 +107,15 @@ protected:
                                  .variable_value = cc("Terrible!"),
                                  .has_been_modified = 0,
                                  .next = &scvm1_};
+    customvariablesmember scvm3_{.variable_name = cc("_LABEL_LO"),
+                                 .variable_value = cc("Labello"),
+                                 .has_been_modified = 0,
+                                 .next = &scvm2_};
+
     service service_{};
     Row service_row_{&service_};
     OffsetStringServiceMacroColumn ossmc_{
-        "navn", "Beskrivelse", -1, -1, -1, nullptr, offsetof(service, notes)};
+        "navn", "Beskrivelse", -1, -1, -1, &core_, offsetof(service, notes)};
 
 private:
     // Nagios and const-correctness: A Tale of Two Worlds...
@@ -224,6 +237,9 @@ TEST_F(OffsetStringHostMacroColumnTest, border_cases) {
 
     set_host_notes("checking $USER257$...");
     EXPECT_EQ("checking $USER257$...", expanded_host_notes());
+
+    set_host_notes("checking $GUT$...");
+    EXPECT_EQ("checking $GUT$...", expanded_host_notes());
 }
 
 TEST_F(OffsetStringServiceMacroColumnTest, misc) {
@@ -341,4 +357,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, border_cases) {
 
     set_service_notes("checking $USER257$...");
     EXPECT_EQ("checking $USER257$...", expanded_service_notes());
+
+    set_service_notes("checking $LO$...");
+    EXPECT_EQ("checking $LO$...", expanded_service_notes());
 }

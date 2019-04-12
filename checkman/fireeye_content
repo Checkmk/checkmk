@@ -8,8 +8,15 @@ description:
  the last content update time of Fireeye Appliances which support
  the FE-FIREEYE-MIB.
 
- The check goes WARN if the last security content update failed.
- Otherwise OK.
+ Check status:
+
+ - Dependent on the status of the last security update:
+
+   - {WARN} if the last security content update failed.
+
+ - Optional - Dependent on the age of the last security update:
+
+   - {WARN} and {CRIT} according to configured levels in WATO rule {Fireeye Security Content}.
 
 inventory:
  One service is created.

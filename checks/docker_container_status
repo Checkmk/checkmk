@@ -26,7 +26,7 @@
 
 
 # TODO: see why it's not enough to have it in legacy_docker.include
-def append_deprecation_warning(check_function):
+def append_deprecation_warning(check_function):  # pylint: disable=function-redefined
     '''A wrapper to WARN if legacy code is used
 
     If the parse result is of one of the legacy Types the decorated

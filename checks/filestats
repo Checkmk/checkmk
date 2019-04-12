@@ -168,7 +168,6 @@ def check_filestats(_item, params, data):
             yield subresult
 
 
-# pylint: disable=undefined-variable
 check_info['filestats'] = {
     "parse_function": parse_filestats,
     "inventory_function": discover(),

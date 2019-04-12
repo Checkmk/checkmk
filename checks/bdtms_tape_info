@@ -25,11 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_bdtms_tape_info(info):
+def inventory_bdtms_tape_info(info):  # pylint: disable=function-redefined
     return [(None, None)]
 
 
-def check_bdtms_tape_info(_no_item, _no_params, info):
+def check_bdtms_tape_info(_no_item, _no_params, info):  # pylint: disable=function-redefined
     for name, value in zip(['Vendor', 'Product ID', 'Serial Number', 'Software Revision'], info[0]):
         yield 0, "%s: %s" % (name, value)
 

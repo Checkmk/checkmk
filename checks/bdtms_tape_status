@@ -25,11 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_bdtms_tape_info(info):
+def inventory_bdtms_tape_info(info):  # pylint: disable=function-redefined
     return [(None, None)]
 
 
-def check_bdtms_tape_info(_no_item, _no_params, info):
+def check_bdtms_tape_info(_no_item, _no_params, info):  # pylint: disable=function-redefined
     _activity_id, health_id = info[0]
 
     health = {

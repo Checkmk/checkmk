@@ -29,7 +29,7 @@ factory_settings['aws_s3_limits_default_levels'] = {
 }
 
 
-def parse_aws_s3_limits(info):
+def parse_aws_s3_limits(info):  # pylint: disable=function-redefined
     return [(resource_key, resource_title, limit, amount, None)
             for resource_key, resource_title, limit, amount in parse_aws(info)]
 

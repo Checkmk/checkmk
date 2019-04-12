@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# pylint: disable=undefined-variable
-
 
 def parse_docker_container_labels(info):
     version = docker_get_version(info)

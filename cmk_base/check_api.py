@@ -91,18 +91,17 @@ Global variables:
 # concatenates lots of files, including this one.
 
 # We import several modules here for the checks
-# pylint: disable=unused-import
 
 # TODO: Move imports directly to checks?
-import collections
-import enum
-import fnmatch
+import collections  # pylint: disable=unused-import
+import enum  # pylint: disable=unused-import
+import fnmatch  # pylint: disable=unused-import
 import functools
-import math
+import math  # pylint: disable=unused-import
 import os
-import re
-import socket
-import sys
+import re  # pylint: disable=unused-import
+import socket  # pylint: disable=unused-import
+import sys  # pylint: disable=unused-import
 import time
 # NOTE: We do not use pprint in this module, but it is part of the check API.
 import pprint  # pylint: disable=unused-import
@@ -115,7 +114,7 @@ import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
 import cmk.utils.paths as _paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.regex import regex
+from cmk.utils.regex import regex  # pylint: disable=unused-import
 import cmk.utils.render as render
 
 # These imports are not meant for use in the API. So we prefix the names
@@ -123,7 +122,7 @@ import cmk.utils.render as render
 # check context.
 import cmk_base.utils as _utils
 import cmk_base.config as _config
-import cmk_base.console as _console
+import cmk_base.console as _console  # pylint: disable=unused-import
 import cmk_base.snmp_utils as _snmp_utils
 import cmk_base.item_state as _item_state
 import cmk_base.prediction as _prediction

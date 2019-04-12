@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_aws_s3(info):
+def parse_aws_s3(info):  # pylint: disable=function-redefined
     parsed = {}
     for row in parse_aws(info):
         bucket = parsed.setdefault(row['Label'], {})

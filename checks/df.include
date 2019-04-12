@@ -29,7 +29,7 @@
 # between include files are possible this will not be necessary anymore.
 if 'size_trend' not in globals():
 
-    def size_trend(*_args, **_kwargs):
+    def size_trend(*_args, **_kwargs):  # pylint: disable=function-redefined
         raise MKGeneralException('Function size_trend not found. Please include '
                                  '"size_trend.include" in your check')
 

@@ -25,8 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-# pylint: disable=function-redefined
-def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
+def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):  # pylint: disable=function-redefined
     """Trend computation for size related checks of disks, ram, etc.
     Trends are computed in two steps. In the first step the delta to
     the last check is computed, using a normal check_mk counter.

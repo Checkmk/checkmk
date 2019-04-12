@@ -1,0 +1,12 @@
+Title: apache_status: regression for local hosts with python < 2.7
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p15
+Date: 1555054809
+Class: fix
+
+The Fix in Werk #7387 only works for python versions from 2.7,
+which broke the capability to check localhosts over http with
+earlier python versions. This werk fixes that regression.

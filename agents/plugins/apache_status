@@ -45,7 +45,6 @@ import re
 import socket
 import sys
 import urllib2
-import ssl
 
 
 config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
@@ -143,7 +142,8 @@ for server in servers:
         # Try to fetch the status page for each server
         try:
             request = urllib2.Request(url, headers={"Accept" : "text/plain"})
-            if is_local:
+            if is_local and proto == 'https':
+                import ssl
                 no_cert_context = ssl.create_default_context()
                 no_cert_context.check_hostname = False
                 no_cert_context.verify_mode = ssl.CERT_NONE

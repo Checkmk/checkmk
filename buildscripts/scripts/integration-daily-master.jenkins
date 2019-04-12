@@ -25,7 +25,7 @@ def DOCKER_BUILDS = [:]
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
 def CMK_VERSION = dateFormat.format(date)
-def TEST_DATA = '/var/jenkins_home/test-data/' + BRANCH_NAME.replaceAll("/","-") + '/' + CMK_VERSION
+def TEST_DATA = '/var/jenkins_home/test-data/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERSION
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {

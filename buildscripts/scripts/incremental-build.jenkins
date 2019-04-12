@@ -16,7 +16,7 @@ DISTRO_LIST.each { DISTRO ->
                 stage(DISTRO + 'Build something') {
                     dir('dest'){
                         sh 'git fetch'
-                        sh "git checkout ${BRANCH_NAME}"
+                        sh "git checkout ${scm.branches[0].name}"
                         sh 'make -C omd jmx4perl'
                     }
                 }

@@ -125,8 +125,8 @@ def check_aws_limits(aws_service, params, parsed):
         infotext = '%s: %s (of max. %s)' % (resource_title, human_readable_func(amount),
                                             human_readable_func(limit_ref))
 
+        perfvar = "aws_%s_%s" % (aws_service, resource_key)
         if _is_valid_aws_limits_perf_data(resource_key):
-            perfvar = "aws_%s_%s" % (aws_service, resource_key)
             perfdata.append((perfvar, amount))
 
         if not limit_ref:

@@ -38,11 +38,10 @@ export function enable_dynamic_form_elements(container=null) {
 // that should use the select2 powered dropdowns
 function enable_select2_dropdowns(container) {
     let elements;
-    if (container)
-        elements = $(container).find(".select2-enable:visible");
-    else
-        elements = $(".select2-enable:visible");
+    if (!container)
+        container = $(document);
 
+    elements = $(container).find(".select2-enable").not("tbody.vlof_prototype .select2-enable");
     elements.select2({
         dropdownAutoWidth : true,
         minimumResultsForSearch: 5

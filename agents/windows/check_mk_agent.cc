@@ -1000,8 +1000,8 @@ void addIPv6Addresses() {
 // copy pasted from the Environment::determineAgentDirectory
 // ATM Environment is absent.
 // *********************************************************
-// We have here here disaster: absolutely universal code   
-// to obtain location of our folder and plugins had been 
+// We have here here disaster: absolutely universal code
+// to obtain location of our folder and plugins had been
 // closed into the Environment class and forced to use
 // persistent data from those class. This was quite bad idea.
 static const int MAX_PATH_UNICODE = 32767;

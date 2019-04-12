@@ -26,10 +26,10 @@ def _get_package_paths(version_path, what):
 # In case packages grow/shrink this check has to be changed.
 # TODO: Handle Docker tar.gz differently?
 @pytest.mark.parametrize("what,min_size,max_size", [
-    ("rpm", 168 * 1024 * 1024, 203 * 1024 * 1024),
+    ("rpm", 167 * 1024 * 1024, 202 * 1024 * 1024),
     ("deb", 132 * 1024 * 1024, 144 * 1024 * 1024),
-    ("cma", 235 * 1024 * 1024, 245 * 1024 * 1024),
-    ("tar.gz", 401 * 1024 * 1024, 443 * 1024 * 1024),
+    ("cma", 242 * 1024 * 1024, 252 * 1024 * 1024),
+    ("tar.gz", 400 * 1024 * 1024, 443 * 1024 * 1024),
 ])
 def test_package_sizes(version_path, what, min_size, max_size):
     for pkg in _get_package_paths(version_path, what):

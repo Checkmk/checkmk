@@ -324,6 +324,7 @@ optimize-images:
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
 node_modules: package.json
+	npm update -g
 	npm install --unsafe-perm
 
 web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)

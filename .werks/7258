@@ -1,0 +1,9 @@
+Title: SLA configuration: Percentage values are now always shown with three decimal places
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p15
+Date: 1555054839
+Class: feature
+

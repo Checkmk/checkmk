@@ -1003,9 +1003,9 @@ def get_labels(row, what):
 
 
 def get_label_sources(row, what):
-    # Sites with old versions that don't have the sources column return
+    # Sites with old versions that don't have the label_sources column return
     # None for this field. Convert this to the default value
-    return row.get("%s_sources" % what, {}) or {}
+    return row.get("%s_label_sources" % what, {}) or {}
 
 
 def get_graph_timerange_from_painter_options():

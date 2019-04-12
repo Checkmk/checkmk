@@ -352,6 +352,72 @@ for idx in range(0, MAX_NUMBER_HOPS):
         "color" : "23/a"
     }
 
+metric_info["accepted"] = {
+    "title": _("Accepted connections"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["accepted_per_sec"] = {
+    "title": _("Accepted connections per second"),
+    "unit": "1/s",
+    "color": "16/a",
+}
+
+metric_info["handled"] = {
+    "title": _("Handled connections"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["handled_per_sec"] = {
+    "title": _("Handled connections per second"),
+    "unit": "1/s",
+    "color": "26/a",
+}
+
+metric_info["requests"] = {
+    "title": _("Requests per second"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info["requests_per_conn"] = {
+    "title": _("Requests per connection"),
+    "unit": "count",
+    "color": "33/a",
+}
+
+metric_info["requests_per_sec"] = {
+    "title": _("Requests per second"),
+    "unit": "1/s",
+    "color": "36/a",
+}
+
+metric_info["active"] = {
+    "title": _("Active connections"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["reading"] = {
+    "title": _("Reading connections"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["waiting"] = {
+    "title": _("Waiting connections"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["writing"] = {
+    "title": _("Writing connections"),
+    "unit": "count",
+    "color": "21/a",
+}
+
 metric_info["rtt"] = {
     "title" : _("Round trip time"),
     "unit"  : "s",

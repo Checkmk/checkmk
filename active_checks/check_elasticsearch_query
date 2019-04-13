@@ -1,0 +1,197 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import argparse
+import sys
+import urlparse
+import requests
+import urllib3
+from cmk.notification_plugins.utils import retrieve_from_passwordstore
+from cmk.utils.defines import service_state_name
+from cmk.utils.exceptions import MKGeneralException
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+def main():
+
+    args = parse_arguments()
+
+    try:
+        msg, state, perfdata = handle_request(args)
+    except Exception as exc:
+        sys.stdout.write("UNKNOWN - %s\n" % exc)
+        return 3
+
+    sys.stdout.write("%s - %s | %s\n" % (service_state_name(state), msg, perfdata))
+    sys.exit(state)
+
+
+def handle_request(args):
+
+    url = urlparse.urlunparse((args.protocol, "%s:%d" % (args.hostname, args.port),
+                               "%s/_count" % args.index.replace(" ", ","), None, None, None))
+
+    query = {
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "query_string": {
+                            "query": args.pattern
+                        }
+                    },
+                    {
+                        "range": {
+                            "@timestamp": {
+                                "gte": "now-%ds" % args.timerange,
+                                "lt": "now"
+                            }
+                        }
+                    },
+                ]
+            }
+        },
+    }
+
+    if args.fieldname:
+        query['query']['bool']['must'][0]['query_string']['fields'] = args.fieldname.split(" ")
+
+    if args.user and retrieve_from_passwordstore(args.password):
+        raw_response = requests.get(url, json=query, auth=(args.user, args.password))
+    else:
+        raw_response = requests.get(url, json=query)
+
+    msg, state, perfdata = handle_query(raw_response, args.warn, args.crit, args.timerange)
+
+    return msg, state, perfdata
+
+
+def handle_query(raw_response, warn, crit, timerange):
+    response_data = raw_response.json()
+
+    if "count" not in response_data:
+        raise MKGeneralException("Missing section count in raw response data")
+
+    state = 0
+    value = response_data["count"]
+    perfdata = "count=%s" % value
+    msg = "%s messages found" % value
+
+    if crit and warn:
+        msg += " (warn/crit at %d/%d)" % (warn, crit)
+        if value >= crit:
+            state = 2
+        elif value >= warn:
+            state = 1
+
+    return msg, state, perfdata
+
+
+def parse_arguments(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+
+    parser.add_argument(
+        "-u",
+        "--user",
+        default=None,
+        help="Username for elasticsearch login",
+    )
+    parser.add_argument(
+        "-s",
+        "--password",
+        default=None,
+        help="Password for easticsearch login",
+    )
+    parser.add_argument(
+        "-P",
+        "--protocol",
+        default="https",
+        help="Use 'http' or 'https' for connection to elasticsearch (default=https)",
+    )
+    parser.add_argument(
+        "-p",
+        "--port",
+        type=int,
+        default=9200,
+        help="Use alternative port (default: 9200)",
+    )
+    parser.add_argument(
+        "-q",
+        "--pattern",
+        help=("Search pattern"),
+    )
+    parser.add_argument(
+        "-f",
+        "--fieldname",
+        default=None,
+        help=("Fieldname to query"),
+    )
+    parser.add_argument(
+        "-i",
+        "--index",
+        help=("Index to query"),
+        default="_all",
+    )
+    parser.add_argument(
+        "-t",
+        "--timerange",
+        type=int,
+        default=60,
+        help=("The timerange to query, eg. x minutes from now."),
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help=("Debug mode: let Python exceptions come through"),
+    )
+    parser.add_argument(
+        "--warn",
+        type=int,
+        default=None,
+        help=("number of log messages above which the check will warn"),
+    )
+    parser.add_argument(
+        "--crit",
+        type=int,
+        default=None,
+        help=("number of log messages above which the check will become critical"),
+    )
+    parser.add_argument(
+        "-H",
+        "--hostname",
+        help=("Defines the elasticsearch instances to query."),
+    )
+
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

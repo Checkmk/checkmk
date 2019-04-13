@@ -1,0 +1,15 @@
+Title: check_elasticsearch_query: New active check to query elasticsearch
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1555185570
+Class: feature
+
+You can now query the occurrence of log messages in elasticsearch for a
+specified interval. It is possible to set warn/crit level on the message
+count.
+
+It is possible to use free-text search or set a defined index and/or fieldname
+to search.

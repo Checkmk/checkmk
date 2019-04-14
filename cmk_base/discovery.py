@@ -801,14 +801,8 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
         return []
 
-    try:
-        discovery_function = config.check_info[check_plugin_name]["inventory_function"]
-        if discovery_function is None:
-            discovery_function = check_api_utils.no_discovery_possible
-    except KeyError:
-        raise MKGeneralException("No such check type '%s'" % check_plugin_name)
+    discovery_function = _get_discovery_function_of(check_plugin_name)
 
-    # Now do the actual discovery
     try:
         # TODO: There is duplicate code with checking.execute_check(). Find a common place!
         try:
@@ -841,58 +835,76 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
            and not config.check_info[check_plugin_name]["handle_empty_info"]:
             return []
 
-        discovered_items = discovery_function(section_content)
-
-        # tolerate function not explicitely returning []
-        if discovered_items is None:
-            discovered_items = []
-
-        # New yield based api style
-        elif not isinstance(discovered_items, list):
-            discovered_items = list(discovered_items)
-
-        result = []
-        for entry in discovered_items:
-            if not isinstance(entry, tuple):
-                console.error(
-                    "%s: Check %s returned invalid discovery data (entry not a tuple): %r\n" %
-                    (hostname, check_plugin_name, repr(entry)))
-                continue
-
-            if len(entry) == 2:  # comment is now obsolete
-                item, paramstring = entry
-            elif len(entry) == 3:  # allow old school
-                item, __, paramstring = entry
-            else:  # we really don't want longer tuples (or 1-tuples).
-                console.error(
-                    "%s: Check %s returned invalid discovery data (not 2 or 3 elements): %r\n" %
-                    (hostname, check_plugin_name, repr(entry)))
-                continue
-
-            # Check_MK 1.2.7i3 defines items to be unicode strings. Convert non unicode
-            # strings here seamless. TODO remove this conversion one day and replace it
-            # with a validation that item needs to be of type unicode
-            if isinstance(item, str):
-                item = config.decode_incoming_string(item)
-
-            description = config.service_description(hostname, check_plugin_name, item)
-            # make sanity check
-            if len(description) == 0:
-                console.error("%s: Check %s returned empty service description - ignoring it.\n" %
-                              (hostname, check_plugin_name))
-                continue
-
-            result.append((item, paramstring))
-
+        # Now do the actual discovery
+        discovered_items = _execute_discovery_function(discovery_function, section_content)
+        return _validate_discovered_items(hostname, check_plugin_name, discovered_items)
     except Exception as e:
         if on_error == "warn":
             console.warning(
                 "  Exception in discovery function of check type '%s': %s" % (check_plugin_name, e))
         elif on_error == "raise":
             raise
-        return []
+    return []
 
-    return result
+
+def _get_discovery_function_of(check_plugin_name):
+    try:
+        discovery_function = config.check_info[check_plugin_name]["inventory_function"]
+    except KeyError:
+        raise MKGeneralException("No such check type '%s'" % check_plugin_name)
+
+    if discovery_function is None:
+        return check_api_utils.no_discovery_possible
+
+    return discovery_function
+
+
+def _execute_discovery_function(discovery_function, section_content):
+    discovered_items = discovery_function(section_content)
+
+    # tolerate function not explicitely returning []
+    if discovered_items is None:
+        discovered_items = []
+
+    # New yield based api style
+    elif not isinstance(discovered_items, list):
+        discovered_items = list(discovered_items)
+
+    return discovered_items
+
+
+def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
+    results = []
+    for entry in discovered_items:
+        if not isinstance(entry, tuple):
+            console.error("%s: Check %s returned invalid discovery data (entry not a tuple): %r\n" %
+                          (hostname, check_plugin_name, repr(entry)))
+            continue
+
+        if len(entry) == 2:  # comment is now obsolete
+            item, paramstring = entry
+        elif len(entry) == 3:  # allow old school
+            item, __, paramstring = entry
+        else:  # we really don't want longer tuples (or 1-tuples).
+            console.error("%s: Check %s returned invalid discovery data (not 2 or 3 elements): %r\n"
+                          % (hostname, check_plugin_name, repr(entry)))
+            continue
+
+        # Check_MK 1.2.7i3 defines items to be unicode strings. Convert non unicode
+        # strings here seamless. TODO remove this conversion one day and replace it
+        # with a validation that item needs to be of type unicode
+        if isinstance(item, str):
+            item = config.decode_incoming_string(item)
+
+        description = config.service_description(hostname, check_plugin_name, item)
+        # make sanity check
+        if len(description) == 0:
+            console.error("%s: Check %s returned empty service description - ignoring it.\n" %
+                          (hostname, check_plugin_name))
+            continue
+
+        results.append((item, paramstring))
+    return results
 
 
 # Creates a table of all services that a host has or could have according

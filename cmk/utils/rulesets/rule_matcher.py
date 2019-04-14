@@ -96,15 +96,30 @@ class RuleMatcher(object):
             yield self._match_leaf_clause(document, field_or_op, cond)
 
     def _match_leaf_clause(self, document, field, condition):
+        field_exists, value = True, None
+        try:
+            value = self._get_value(document, field)
+        except KeyError:
+            field_exists = False
+
         if isinstance(condition, collections.Mapping):
             # There are two options for dicts. It's either a operator object or
             # a nested document match (which is only possible as full document
             # equal comparison). In case of an operator object all keys are operators.
             if self._is_operator_object(condition):
-                return all(self._match_operator_object(document[field], condition))
+                return all(self._match_operator_object(value, condition))
 
         # Realize the leaf equal comparison
-        return field in document and document[field] == condition
+        return field_exists and value == condition
+
+    def _get_value(self, document, field):
+        """Returns either the value or raises a KeyError in case the field does not exist
+        This method implements the ability to query fields of nested documents.
+        """
+        if not isinstance(field, six.string_types) or "." not in field:
+            return document[field]
+
+        return reduce(operator.getitem, field.split("."), document)
 
     def _is_operator_object(self, condition):
         """Once one operator field is found in the expression"""

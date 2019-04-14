@@ -54,7 +54,7 @@ import cmk_base.utils
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.cleanup
 import cmk_base.piggyback as piggyback
-from cmk_base.discovered_host_labels import DiscoveredHostLabelsStore
+from cmk_base.discovered_labels import DiscoveredHostLabelsStore
 
 # TODO: Prefix helper functions with "_".
 

@@ -70,10 +70,18 @@ SIMPLE_MATCHES = [
     }, []),
     Case({u"düng": u"däng"}, [HOST_TEST]),
     Case({1: 2}, [HOST_PROD]),
+    Case({"not_existing": "bla"}, []),
 ]
 
 NESTED_FIELD_MATCHES = [
-    #    Case({"tags.crit": "test"}, [HOST_TEST]),
+    Case({"tags.crit": "test"}, [HOST_TEST]),
+    Case({"tags.crit": {
+        "$eq": "test"
+    }}, [HOST_TEST]),
+    Case({"tags.crit": {
+        "$ne": "test"
+    }}, [HOST_PROD]),
+    Case({"tags.not_existing": "test"}, []),
 ]
 
 COMPARISON_MATCHES = [

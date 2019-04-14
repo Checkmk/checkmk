@@ -27,7 +27,6 @@
 import os
 import socket
 import time
-import inspect
 import signal
 
 from cmk.utils.regex import regex
@@ -842,15 +841,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
            and not config.check_info[check_plugin_name]["handle_empty_info"]:
             return []
 
-        # Check number of arguments of discovery function. Note: This
-        # check for the legacy API will be removed after 1.2.6.
-        if len(inspect.getargspec(discovery_function).args) == 2:
-            discovered_items = discovery_function(
-                check_plugin_name,
-                section_content)  # discovery is a list of pairs (item, current_value)
-        else:
-            # New preferred style since 1.1.11i3: only one argument: section_content
-            discovered_items = discovery_function(section_content)
+        discovered_items = discovery_function(section_content)
 
         # tolerate function not explicitely returning []
         if discovered_items is None:

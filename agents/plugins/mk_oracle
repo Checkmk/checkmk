@@ -2085,6 +2085,21 @@ mk_ora_db_connect () {
     DBHOST=$(echo "${ORACFGLINE}" | cut -d":" -f$((4+offset)))
     DBPORT=$(echo "${ORACFGLINE}" | cut -d":" -f$((5+offset)))
 
+    if [ -f $OLRLOC -a ! -z "$crs_home" ] ; then
+        if [ -d $crs_home ] ; then
+            # we found GI/Restart
+            # => Use hostname instead of localhost
+            DBHOST=${DBHOST:-$(hostname)}
+            logging "[${sid}] [mk_ora_db_connect]" "OLR detected. crs_home: $crs_home"
+        else
+            DBHOST=${DBHOST:-"localhost"}
+            logging "[${sid}] [mk_ora_db_connect]" "OLR detected, crs_home missing"
+        fi
+    else
+        DBHOST=${DBHOST:-"localhost"}
+        logging "[${sid}] [mk_ora_db_connect]" "Single Instance"
+    fi
+
     TNSPINGOK=no
     if [ -f "${TNS_ADMIN}/tnsnames.ora" ]; then
         if [ "${ORADBUSER:0:2}" = '/@' ]; then
@@ -2140,7 +2155,7 @@ mk_ora_db_connect () {
             assysdbaconnect=" as "${DBSYSCONNECT}
         fi
 
-        TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST:-"localhost"})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
+        TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
 
         # ORADBUSER = '/'? => ignore DBPASSWORD and use the wallet
         if [ "${ORADBUSER:0:1}" = '/' ]; then
@@ -2150,7 +2165,7 @@ mk_ora_db_connect () {
             if [ "$TNSPINGOK" = 'no' ]; then
                 # create an EZCONNECT string when no tnsnames.ora is usable
                 # defaults to localhost:1521/<ORACLE_SID>
-                TNSALIAS="${DBHOST:-"localhost"}:${DBPORT:-1521}/${ORACLE_SID}"
+                TNSALIAS="${DBHOST}:${DBPORT:-1521}/${ORACLE_SID}"
             fi
         fi
     fi

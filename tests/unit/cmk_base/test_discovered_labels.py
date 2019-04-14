@@ -5,7 +5,7 @@ import collections
 import pytest  # type: ignore
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree
-from cmk_base.discovered_host_labels import DiscoveredHostLabels, DiscoveredHostLabelsStore
+from cmk_base.discovered_labels import DiscoveredHostLabels, DiscoveredHostLabelsStore
 
 
 @pytest.fixture()

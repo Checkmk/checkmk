@@ -49,7 +49,7 @@ import cmk_base.data_sources as data_sources
 import cmk_base.cleanup
 import cmk_base.decorator
 import cmk_base.check_api as check_api
-from cmk_base.discovered_host_labels import DiscoveredHostLabels, DiscoveredHostLabelsStore
+from cmk_base.discovered_labels import DiscoveredHostLabels, DiscoveredHostLabelsStore
 
 #.
 #   .--Inventory-----------------------------------------------------------.

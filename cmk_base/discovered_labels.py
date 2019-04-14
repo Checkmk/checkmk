@@ -24,25 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import collections
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict, Text  # pylint: disable=unused-import
 from pathlib2 import Path  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.store
 
 
-class DiscoveredHostLabelsStore(object):
-    """Managing persistance of discovered host labels"""
+class ABCDiscoveredLabelsStore(object):
+    """Managing persistance of discovered labels"""
+    __metaclass__ = abc.ABCMeta
 
-    def __init__(self, hostname):
-        # type: (str) -> None
-        self._hostname = hostname
-
-    @property
+    @abc.abstractproperty
     def file_path(self):
         # type () -> Path
-        return (cmk.utils.paths.discovered_host_labels_dir / self._hostname).with_suffix(".mk")
+        raise NotImplementedError()
 
     def load(self):
         # type: () -> Dict
@@ -59,12 +57,37 @@ class DiscoveredHostLabelsStore(object):
         cmk.utils.store.save_data_to_file(str(self.file_path), labels)
 
 
-class DiscoveredHostLabels(collections.MutableMapping, object):
-    """Encapsulates the discovered labels of a single host during runtime"""
+class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
+    def __init__(self, hostname):
+        # type: (str) -> None
+        super(DiscoveredHostLabelsStore, self).__init__()
+        self._hostname = hostname
 
-    def __init__(self, inventory_tree, **kwargs):
-        super(DiscoveredHostLabels, self).__init__()
-        self._inventory_tree = inventory_tree
+    @property
+    def file_path(self):
+        # type () -> Path
+        return (cmk.utils.paths.discovered_host_labels_dir / self._hostname).with_suffix(".mk")
+
+
+class DiscoveredServiceLabelsStore(ABCDiscoveredLabelsStore):
+    def __init__(self, hostname, service_desc):
+        # type: (str, Text) -> None
+        super(DiscoveredServiceLabelsStore, self).__init__()
+        self._hostname = hostname
+        self._service_desc = service_desc
+
+    @property
+    def file_path(self):
+        # type () -> Path
+        return (cmk.utils.paths.discovered_service_labels_dir / self._hostname /
+                self._service_desc).with_suffix(".mk")
+
+
+class ABCDiscoveredLabels(collections.MutableMapping, object):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, **kwargs):
+        super(ABCDiscoveredLabels, self).__init__()
         self._labels = kwargs
 
     def is_empty(self):
@@ -88,6 +111,14 @@ class DiscoveredHostLabels(collections.MutableMapping, object):
     def to_dict(self):
         return self._labels
 
+
+class DiscoveredHostLabels(ABCDiscoveredLabels):
+    """Encapsulates the discovered labels of a single host during runtime"""
+
+    def __init__(self, inventory_tree, **kwargs):
+        super(DiscoveredHostLabels, self).__init__(**kwargs)
+        self._inventory_tree = inventory_tree
+
     # TODO: Once we redesign the hw/sw inventory plugin API check if we can move it to the
     # inventory API.
     def add_label(self, key, value, plugin_name):
@@ -101,3 +132,8 @@ class DiscoveredHostLabels(collections.MutableMapping, object):
             "label": (key, value),
             "inventory_plugin_name": plugin_name,
         })
+
+
+class DiscoveredServiceLabels(ABCDiscoveredLabels):
+    """Encapsulates the discovered labels of a single service during runtime"""
+    pass

@@ -829,16 +829,6 @@ def parents_of(hostname):
 
 
 #
-# IPv4/IPv6
-#
-
-
-# TODO: Replace call sites with HostConfig access and remove this
-def is_no_ip_host(hostname):
-    return get_config_cache().get_host_config(hostname).is_no_ip_host
-
-
-#
 # Management board
 #
 

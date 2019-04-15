@@ -202,7 +202,7 @@ def _create_nagios_hostdefs(cfg, config_cache, hostname, attrs):
             host_spec[key] = value
 
     # Host check command might differ from default
-    command = core_config.host_check_command(config_cache, hostname, ip, is_clust,
+    command = core_config.host_check_command(config_cache, host_config, ip, is_clust,
                                              cfg.hostcheck_commands_to_define,
                                              cfg.custom_commands_to_define)
     if command:

@@ -406,7 +406,7 @@ def get_host_attributes(hostname, config_cache):
         attrs["alias"] = config.alias_of(hostname, hostname)
 
     # Now lookup configured IP addresses
-    if config.is_ipv4_host(hostname):
+    if host_config.is_ipv4_host:
         attrs["_ADDRESS_4"] = _ip_address_of(host_config, 4)
         if attrs["_ADDRESS_4"] is None:
             attrs["_ADDRESS_4"] = ""
@@ -482,7 +482,7 @@ def get_cluster_attributes(config_cache, host_config, nodes):
         "_NODENAMES": " ".join(sorted_nodes),
     }
     node_ips_4 = []
-    if config.is_ipv4_host(host_config.hostname):
+    if host_config.is_ipv4_host:
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
             addr = _ip_address_of(node_config, 4)

@@ -52,24 +52,13 @@ void RemoveElement(T& Container, const V& Str) {
 
 void EnableSectionsNode(const std::string_view& Str, bool UpdateGlobal) {
     using namespace cma::cfg;
-    YAML::Node config = GetLoadedConfig();
-    {
-        YAML::Node enabled = config[groups::kGlobal][vars::kSectionsEnabled];
 
-        bool found = false;
-        if (enabled.IsDefined()) {
-            // remove from section our name
-            for (size_t i = 0; i < enabled.size(); i++) {
-                auto node = enabled[i];
-                if (node.IsDefined() && node.IsScalar() &&
-                    node.as<std::string>() == Str) {
-                    found = true;
-                    break;
-                }
-            }
+    auto enabled = GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
 
-            if (!found) enabled.push_back(std::string(Str));
-        }
+    // add section name to internal array if not found
+    if (std::end(enabled) == std::find(enabled.begin(), enabled.end(), Str)) {
+        enabled.emplace_back(Str);
+        PutInternalArray(groups::kGlobal, vars::kSectionsEnabled, enabled);
     }
 
     // pattern to remove INternalArray element

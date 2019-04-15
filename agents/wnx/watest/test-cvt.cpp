@@ -506,11 +506,10 @@ TEST(CvtTest, GlobalSection) {
             EXPECT_EQ(logging[vars::kLogDebug].as<std::string>(), "yes");
         }
         {
-            auto sections = g[vars::kSectionsEnabled];
-            ASSERT_TRUE(sections.IsSequence());
+            auto sections = GetInternalArray(g, vars::kSectionsEnabled);
             ASSERT_TRUE(sections.size() == 2);
-            EXPECT_EQ(sections[0].as<std::string>(), "check_mk");
-            EXPECT_EQ(sections[1].as<std::string>(), groups::kWinPerf);
+            EXPECT_EQ(sections[0], "check_mk");
+            EXPECT_EQ(sections[1], groups::kWinPerf);
         }
         {
             auto sessions = cma::cfg::GetInternalArray(groups::kGlobal,

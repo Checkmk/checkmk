@@ -331,7 +331,7 @@ TEST(AgentConfig, WorkScenario) {
 
     {
         auto sections_enabled =
-            GetArray<string>(groups::kGlobal, vars::kSectionsEnabled);
+            GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
         EXPECT_EQ(sections_enabled.size(), 19);
 
         auto sections_disabled =

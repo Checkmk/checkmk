@@ -506,9 +506,8 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         self._resource_client = ResourceManagementClient(self._creds, self.args.subscription)
 
         self.specific_clients = {}
-
         self.timespans = self._get_timespans()
-        self.resources_cache = None
+        self._cache = {}
 
     @staticmethod
     def _get_timespans():
@@ -539,12 +538,12 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
             return
         client.process(resource, self.args)
 
-    def discover_resources(self):
-        if self.resources_cache is None:
+    def list_resources(self):
+        if "resources" not in self._cache:
             # azure-api-call
             raw_resources = self._resource_client.resources.list()
-            self.resources_cache = map(AzureResource, raw_resources)
-        return self.resources_cache
+            self._cache["resources"] = map(AzureResource, raw_resources)
+        return self._cache["resources"]
 
     def _metric_api_call(self, rid, timespan, interval, metric, aggregation, filter_):
         LOG.debug(
@@ -628,7 +627,7 @@ def process_resource(args):
     return sections
 
 
-def write_groups(resources):
+def write_group_info(resources):
     groups = sorted(set(r.info['group'] for r in resources))
     section = Section('agent_info')
     section.add(('monitored-groups', json.dumps(groups)))
@@ -664,10 +663,10 @@ def main(argv=None):
 
     try:
         client = AzureClient(args)
-        resources = [r for r in client.discover_resources() if selector.do_monitor(r)]
+        resources = [r for r in client.list_resources() if selector.do_monitor(r)]
         client.init_specific(resources)
 
-        write_groups(resources)
+        write_group_info(resources)
 
         func_args = ((resource, client) for resource in resources)
         map_ = map if args.sequential else AsyncMapper(args.timeout, args.debug)

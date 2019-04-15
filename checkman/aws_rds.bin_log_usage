@@ -1,4 +1,4 @@
-title: AWS RDS Binary Logs
+title: AWS/RDS Binary Logs
 agents: aws
 catalog: cloud/aws
 license: GPL

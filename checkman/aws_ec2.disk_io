@@ -1,4 +1,4 @@
-title: AWS EC2 Instance Disk IO
+title: AWS/EC2 Instance Disk IO
 agents: aws
 catalog: cloud/aws
 license: GPL

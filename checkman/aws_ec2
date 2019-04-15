@@ -1,4 +1,4 @@
-title: AWS EC2 Instance Status
+title: AWS/EC2 Instance Status
 agents: aws
 catalog: cloud/aws
 license: GPL

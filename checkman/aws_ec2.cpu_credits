@@ -1,4 +1,4 @@
-title: AWS EC2 Instance Credit Usage
+title: AWS/EC2 Instance Credit Usage
 agents: aws
 catalog: cloud/aws
 license: GPL

@@ -1,4 +1,4 @@
-title: AWS EC2 Security Groups
+title: AWS/EC2 Security Groups
 agents: aws
 catalog: cloud/aws
 license: GPL

@@ -260,7 +260,8 @@ void Configuration::outputConfigurables(
                 if (cma::tools::IsEqual(key, "disabled_sections") ||
                     cma::tools::IsEqual(key, "realtime_sections") ||
                     cma::tools::IsEqual(key, "sections") ||
-                    cma::tools::IsEqual(key, "execute")) {
+                    cma::tools::IsEqual(key, "execute") ||
+                    cma::tools::IsEqual(key, "only_from")) {
                     auto value = v.outputAsInternalArray();
                     Sink(section, key, "", value);
                     continue;
@@ -910,7 +911,7 @@ const std::unordered_map<std::string, Mapping> G_Mapper = {
     {"global.encrypted",        { "", "", MapMode::kIniString}},// not supported
     {"global.encrypted_rt",     { "realtime", "encrypted", MapMode::kIniString}},
     {"global.ipv6",             { "", "", MapMode::kIniString}},
-    {"global.only_from",        { "", "", MapMode::kNode}},
+    {"global.only_from",        { "", "", MapMode::kIniString}},
     {"global.port",             { "", "", MapMode::kValue}},
     {"global.realtime_port",    { "realtime", "port", MapMode::kValue}},
     {"global.realtime_timeout", { "realtime", "timeout", MapMode::kValue}},

@@ -524,12 +524,12 @@ TEST(CvtTest, GlobalSection) {
                         sessions[1] == groups::kLogFiles);
         }
         {
-            auto onlyfrom = g[vars::kOnlyFrom];
-            ASSERT_TRUE(onlyfrom.IsSequence());
+            auto onlyfrom = GetInternalArray(g, vars::kOnlyFrom);
+
             ASSERT_TRUE(onlyfrom.size() == 3);
-            EXPECT_EQ(onlyfrom[0].as<std::string>(), "127.0.0.1/32");
-            EXPECT_EQ(onlyfrom[1].as<std::string>(), "192.168.56.0/24");
-            EXPECT_EQ(onlyfrom[2].as<std::string>(), "0:0:0:0:0:0:0:1/128");
+            EXPECT_EQ(onlyfrom[0], "127.0.0.1/32");
+            EXPECT_EQ(onlyfrom[1], "192.168.56.0/24");
+            EXPECT_EQ(onlyfrom[2], "0:0:0:0:0:0:0:1/128");
         }
         {
             auto execute =

@@ -631,9 +631,9 @@ def all_active_hosts():
 # hosts of other sitest or disabled hosts are excluded
 def all_active_realhosts():
     active_realhosts = cmk_base.config_cache.get_set("active_realhosts")
-
     if not active_realhosts.is_populated():
-        active_realhosts.update(filter_active_hosts(all_configured_realhosts()))
+        config_cache = get_config_cache()
+        active_realhosts.update(_filter_active_hosts(config_cache, all_configured_realhosts()))
         active_realhosts.set_populated()
 
     return active_realhosts
@@ -645,7 +645,8 @@ def all_active_clusters():
     active_clusters = cmk_base.config_cache.get_set("active_clusters")
 
     if not active_clusters.is_populated():
-        active_clusters.update(filter_active_hosts(all_configured_clusters()))
+        config_cache = get_config_cache()
+        active_clusters.update(_filter_active_hosts(config_cache, all_configured_clusters()))
         active_clusters.set_populated()
 
     return active_clusters
@@ -692,22 +693,21 @@ def all_active_hosts_with_duplicates():
     else:
         shadow_host_entries = []
 
-    return filter_active_hosts(strip_tags(all_hosts)  \
+    config_cache = get_config_cache()
+    return _filter_active_hosts(config_cache, strip_tags(all_hosts)  \
                                + strip_tags(clusters.keys()) \
                                + strip_tags(shadow_host_entries), keep_duplicates=True)
 
 
-# Returns a set of active hosts for this site
-def filter_active_hosts(hostlist, keep_offline_hosts=False, keep_duplicates=False):
-    config_cache = get_config_cache()
-
+def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False, keep_duplicates=False):
+    """Returns a set of active hosts for this site"""
     if only_hosts is None and distributed_wato_site is None:
         active_hosts = hostlist
 
     elif only_hosts is None:
         active_hosts = [
             hostname for hostname in hostlist
-            if host_is_member_of_site(hostname, distributed_wato_site)
+            if _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
         ]
 
     elif distributed_wato_site is None:
@@ -723,7 +723,7 @@ def filter_active_hosts(hostlist, keep_offline_hosts=False, keep_duplicates=Fals
         active_hosts = [
             hostname for hostname in hostlist
             if (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts)) and
-            host_is_member_of_site(hostname, distributed_wato_site)
+            _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
         ]
 
     if keep_duplicates:
@@ -753,8 +753,10 @@ def duplicate_hosts():
 def all_offline_hosts():
     config_cache = get_config_cache()
 
-    hostlist = filter_active_hosts(
-        all_configured_realhosts().union(all_configured_clusters()), keep_offline_hosts=True)
+    hostlist = _filter_active_hosts(
+        config_cache,
+        all_configured_realhosts().union(all_configured_clusters()),
+        keep_offline_hosts=True)
 
     return [
         hostname for hostname in hostlist
@@ -785,8 +787,8 @@ def all_configured_offline_hosts():
 #   '----------------------------------------------------------------------'
 
 
-def host_is_member_of_site(hostname, site):
-    for tag in get_config_cache().get_host_config(hostname).tags:
+def _host_is_member_of_site(config_cache, hostname, site):
+    for tag in config_cache.get_host_config(hostname).tags:
         if tag.startswith("site:"):
             return site == tag[5:]
     # hosts without a site: tag belong to all sites

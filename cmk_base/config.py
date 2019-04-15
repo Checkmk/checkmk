@@ -828,13 +828,6 @@ def parents_of(hostname):
     return used_parents
 
 
-# If host is node of one or more clusters, return a list of the cluster host names.
-# If not, return an empty list.
-# TODO: Replace call sites with HostConfig access and remove this
-def clusters_of(hostname):
-    return get_config_cache().get_host_config(hostname).part_of_clusters
-
-
 #
 # IPv4/IPv6
 #
@@ -3324,8 +3317,8 @@ class ConfigCache(object):
                 self._clusters_of_cache.setdefault(name, []).append(clustername)
             self._nodes_of_cache[clustername] = hosts
 
-    # Return a list of the cluster host names.
     def clusters_of(self, hostname):
+        """Returns names of cluster hosts the host is a node of"""
         return self._clusters_of_cache.get(hostname, [])
 
     # TODO: cleanup none

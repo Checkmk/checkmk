@@ -2737,8 +2737,8 @@ class HostConfig(object):
         if piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, self.hostname):
             return True
 
-        from cmk_base.data_sources.piggyback import PiggyBackDataSource
-        return PiggyBackDataSource(self.hostname, None).has_persisted_agent_sections()
+        from cmk_base.data_sources.abstract import has_persisted_agent_sections
+        return has_persisted_agent_sections("piggyback", self.hostname)
 
     def _primary_ip_address_family_of(self):
         rules = self._config_cache.host_extra_conf(self.hostname, primary_address_family)

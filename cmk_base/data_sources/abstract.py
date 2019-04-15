@@ -270,10 +270,10 @@ class DataSource(object):
         return os.path.join(cmk.utils.paths.data_source_cache_dir, self.id())
 
     def _persisted_sections_file_path(self):
-        return os.path.join(self._persisted_sections_dir(), self._hostname)
+        return _persisted_sections_file_path(self._persisted_sections_dir, self._hostname)
 
     def _persisted_sections_dir(self):
-        return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
+        return _persisted_sections_dir(self.id())
 
     def get_check_plugin_names(self):
         if self._enforced_check_plugin_names is not None:
@@ -420,9 +420,6 @@ class DataSource(object):
     #   | Caching of info for multiple executions of Check_MK. Mostly caching  |
     #   | of sections that are not provided on each query.                     |
     #   '----------------------------------------------------------------------'
-
-    def has_persisted_agent_sections(self):
-        return os.path.exists(self._persisted_sections_file_path())
 
     def _store_persisted_sections(self, persisted_sections):
         if not persisted_sections:
@@ -737,3 +734,15 @@ class ManagementBoardDataSource(DataSource):
         except socket.error:
             # no ipv6 address either
             return False
+
+
+def has_persisted_agent_sections(datasource_id, hostname):
+    return os.path.exists(_persisted_sections_file_path(datasource_id, hostname))
+
+
+def _persisted_sections_file_path(datasource_id, hostname):
+    return os.path.join(_persisted_sections_dir(datasource_id), hostname)
+
+
+def _persisted_sections_dir(datasource_id):
+    return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", datasource_id)

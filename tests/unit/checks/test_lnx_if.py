@@ -33,7 +33,7 @@ def parsed_change(bandwidth_change):
             str(6570143 + 4 * bandwidth_change), '55994', '0', '0', '0', '0', '0', 'wlp2s0',
             'd]\x86\xe4P/'
         ],
-    ]
+    ], {}
 
 
 DISCOVERY = [

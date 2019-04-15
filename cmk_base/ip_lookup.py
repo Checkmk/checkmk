@@ -75,7 +75,9 @@ def lookup_ip_address(hostname, family=None):
     if config.fake_dns:
         return config.fake_dns
 
-    host_config = config.get_config_cache().get_host_config(hostname)
+    config_cache = config.get_config_cache()
+
+    host_config = config_cache.get_host_config(hostname)
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
     if config.simulation_mode or _enforce_localhost or \
@@ -96,7 +98,7 @@ def lookup_ip_address(hostname, family=None):
 
     # Hosts listed in dyndns hosts always use dynamic DNS lookup.
     # The use their hostname as IP address at all places
-    if config.in_binary_hostlist(hostname, config.dyndns_hosts):
+    if config_cache.in_binary_hostlist(hostname, config.dyndns_hosts):
         return hostname
 
     return cached_dns_lookup(hostname, family)

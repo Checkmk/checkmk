@@ -211,7 +211,9 @@ def host_extra_conf(hostname, ruleset):
     return _config.get_config_cache().host_extra_conf(hostname, ruleset)
 
 
-in_binary_hostlist = _config.in_binary_hostlist
+# Compatibility wrapper for the pre 1.6 existant conf.service_extra_conf()
+def in_binary_hostlist(hostname, ruleset):
+    return _config.get_config_cache().in_binary_hostlist(hostname, ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()

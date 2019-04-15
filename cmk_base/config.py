@@ -699,6 +699,8 @@ def all_active_hosts_with_duplicates():
 
 # Returns a set of active hosts for this site
 def filter_active_hosts(hostlist, keep_offline_hosts=False, keep_duplicates=False):
+    config_cache = get_config_cache()
+
     if only_hosts is None and distributed_wato_site is None:
         active_hosts = hostlist
 
@@ -713,13 +715,14 @@ def filter_active_hosts(hostlist, keep_offline_hosts=False, keep_duplicates=Fals
             active_hosts = hostlist
         else:
             active_hosts = [
-                hostname for hostname in hostlist if in_binary_hostlist(hostname, only_hosts)
+                hostname for hostname in hostlist
+                if config_cache.in_binary_hostlist(hostname, only_hosts)
             ]
 
     else:
         active_hosts = [
             hostname for hostname in hostlist
-            if (keep_offline_hosts or in_binary_hostlist(hostname, only_hosts)) and
+            if (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts)) and
             host_is_member_of_site(hostname, distributed_wato_site)
         ]
 
@@ -748,16 +751,25 @@ def duplicate_hosts():
 #
 # This is not optimized for performance, so use in specific situations.
 def all_offline_hosts():
+    config_cache = get_config_cache()
+
     hostlist = filter_active_hosts(
         all_configured_realhosts().union(all_configured_clusters()), keep_offline_hosts=True)
 
-    return [hostname for hostname in hostlist if not in_binary_hostlist(hostname, only_hosts)]
+    return [
+        hostname for hostname in hostlist
+        if not config_cache.in_binary_hostlist(hostname, only_hosts)
+    ]
 
 
 def all_configured_offline_hosts():
+    config_cache = get_config_cache()
     hostlist = all_configured_realhosts().union(all_configured_clusters())
 
-    return set([hostname for hostname in hostlist if not in_binary_hostlist(hostname, only_hosts)])
+    return set([
+        hostname for hostname in hostlist
+        if not config_cache.in_binary_hostlist(hostname, only_hosts)
+    ])
 
 
 #.
@@ -1003,7 +1015,7 @@ def snmp_port_of(hostname):
 def is_bulkwalk_host(hostname):
     # type: (str) -> bool
     if bulkwalk_hosts:
-        return in_binary_hostlist(hostname, bulkwalk_hosts)
+        return get_config_cache().in_binary_hostlist(hostname, bulkwalk_hosts)
 
     return False
 
@@ -1017,7 +1029,7 @@ def bulk_walk_size_of(hostname):
 
 
 def is_snmpv2or3_without_bulkwalk_host(hostname):
-    return in_binary_hostlist(hostname, snmpv2c_hosts)
+    return get_config_cache().in_binary_hostlist(hostname, snmpv2c_hosts)
 
 
 # TODO: Replace call sites with HostConfig access and remove this
@@ -1029,7 +1041,7 @@ def is_inline_snmp_host(hostname):
     # TODO: Better use "inline_snmp" once we have moved the code to an own module
     has_inline_snmp = "netsnmp" in sys.modules
     return has_inline_snmp and use_inline_snmp \
-           and not in_binary_hostlist(hostname, non_inline_snmp_hosts)
+           and not get_config_cache().in_binary_hostlist(hostname, non_inline_snmp_hosts)
 
 
 #
@@ -1615,10 +1627,6 @@ def in_extraconf_hostlist(hostlist, hostname):
                 raise
 
     return False
-
-
-def in_binary_hostlist(hostname, conf):
-    return get_config_cache().in_binary_hostlist(hostname, conf)
 
 
 def parse_host_rule(rule):

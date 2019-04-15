@@ -74,7 +74,8 @@ def _snmp_scan(host_config,
 
     snmp.initialize_single_oid_cache(host_config)
     console.vverbose("  SNMP scan:\n")
-    if not config.in_binary_hostlist(host_config.hostname, config.snmp_without_sys_descr):
+    if not config.get_config_cache().in_binary_hostlist(host_config.hostname,
+                                                        config.snmp_without_sys_descr):
         for oid, name in [(".1.3.6.1.2.1.1.1.0", "system description"),
                           (".1.3.6.1.2.1.1.2.0", "system object")]:
             value = snmp.get_single_oid(host_config, oid, do_snmp_scan=do_snmp_scan)

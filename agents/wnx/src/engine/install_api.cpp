@@ -177,8 +177,11 @@ bool CheckForUpdateFile(const std::wstring& Name,
 
     // Prepare Command
     std::wstring command = exe + L" ";
-    command = command + L" /i " + msi_to_install.wstring() +
-              L" REINSTALL=ALL REINSTALLMODE=amus ";
+    // original line includes also command  REINSTALL=ALL
+    // this doesn't work well when you have more than one FEATURE(new agent)
+    // and no defined REINSTALL in the MSI
+    command =
+        command + L" /i " + msi_to_install.wstring() + L" REINSTALLMODE=amus ";
 
     if (Update == kMsiExecQuiet)  // this is only normal method
         command += L" /quiet";    // but MS doesn't care at all :)

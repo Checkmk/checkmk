@@ -372,10 +372,9 @@ class Section(object):
     def write(self):
         if not self._cont:
             return
-        self.LOCK.acquire()
-        sys.stdout.writelines(self._head + self._cont + self._foot)
-        sys.stdout.flush()
-        self.LOCK.release()
+        with self.LOCK:
+            sys.stdout.writelines(self._head + self._cont + self._foot)
+            sys.stdout.flush()
 
 
 class AzureSection(Section):

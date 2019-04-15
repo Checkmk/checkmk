@@ -29,22 +29,8 @@
 # But at the current state of affairs we have no choice, otherwise an
 # incremental cleanup is impossible.
 
-import cmk_base.console as console
-
 # Symbolic representations of states in plugin output
 state_markers = ["", "(!)", "(!!)", "(?)"]
-
-
-# The function no_discovery_possible is as stub function used for
-# those checks that do not support inventory. It must be known before
-# we read in all the checks
-def no_discovery_possible(check_plugin_name, info):
-    """In old checks we used this to declare that a check did not support
-    a service discovery. Please don't use this for new checks. Simply
-    skip the "inventory_function" argument of the check_info declaration."""
-    console.verbose("%s does not support discovery. Skipping it.\n", check_plugin_name)
-    return []
-
 
 # Management board checks
 MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST

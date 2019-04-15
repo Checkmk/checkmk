@@ -252,31 +252,64 @@ T GetVal(const YAML::Node& Yaml, std::string Name, T Default,
 
 template <typename T>
 std::vector<T> ConvertNode2Sequence(const YAML::Node& Val) noexcept {
-    if (!Val.IsDefined()) {
-        XLOG::d("Bad!");
-        return {};
-    }
-    if (Val.IsSequence()) {
+    try {
+        if (!Val.IsDefined() || !Val.IsSequence()) return {};
+
         auto sz = Val.size();
         std::vector<T> arr;
         arr.reserve(sz);
-        for (size_t i = 0; i < sz; i++) {
-            auto& v = Val[i];
-            if (v.IsDefined() && !v.IsNull()) arr.emplace_back(Val[i].as<T>());
+        for (const auto& v : Val) {
+            if (!v.IsDefined() || v.IsSequence()) {
+                XLOG::t(XLOG_FUNC + " Invalid node type");
+                continue;
+            }
+            arr.emplace_back(v.as<T>());
         }
         return arr;
-    }
-
-    if (Val.IsScalar()) {
-        std::vector<T> arr;
-        arr.emplace_back(Val.as<T>());
-        return arr;
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + " exception happened '{}'", e.what());
     }
     return {};
 }
 
+using StringPairArray = std::vector<std::pair<std::string, std::string>>;
+
+inline StringPairArray ConvertNode2StringPairArray(
+    const YAML::Node& Val) noexcept {
+    try {
+        if (!Val.IsDefined() || !Val.IsSequence()) {
+            XLOG::t(XLOG_FUNC + " Invalid node or absent node");
+            return {};
+        }
+
+        auto sz = Val.size();
+        StringPairArray arr;
+        arr.reserve(sz);
+
+        for (const auto& v : Val) {
+            if (!v.IsDefined() || !v.IsMap()) {
+                XLOG::t(XLOG_FUNC + " Invalid node type [{}]",
+                        static_cast<int>(Val.Type()));
+                continue;
+            }
+
+            auto sub_it = v.begin();  // This iterator points to
+                                      // the single key/value pair
+            auto name = sub_it->first.as<std::string>();
+            auto body = sub_it->second.as<std::string>();
+            arr.emplace_back(name, body);
+        }
+        return arr;
+
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + " exception happened '{}'", e.what());
+    }
+
+    return {};
+}
+
 template <typename T>
-std::vector<T> GetArray(std::string Section, std::string Name,
+std::vector<T> GetArray(const std::string& Section, const std::string& Name,
                         int* ErrorOut = 0) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
@@ -288,6 +321,34 @@ std::vector<T> GetArray(std::string Section, std::string Name,
         auto val = section[Name];
         if (val.IsDefined() && val.IsSequence())
             return ConvertNode2Sequence<T>(val);
+        else
+            // this is OK when nothing inside
+            XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
+                      val.Type());
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml file {} with {}.{} code:{}",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
+                e.what());
+    }
+    return {};
+}
+
+// used to convert arrays of maps into string pairs
+// special case for more simple version of YAML when we are using
+// sequences of maps  '- name: value'
+inline StringPairArray GetPairArray(const std::string& Section,
+                                    const std::string& Name,
+                                    int* ErrorOut = 0) noexcept {
+    auto yaml = GetLoadedConfig();
+    if (yaml.size() == 0) {
+        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        return {};
+    }
+    try {
+        auto section = yaml[Section];
+        auto val = section[Name];
+        if (val.IsDefined() && val.IsSequence())
+            return ConvertNode2StringPairArray(val);
         else
             // this is OK when nothing inside
             XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
@@ -741,12 +802,12 @@ public:
         Counter() {}
         Counter(const std::string Id, const std::string Name)
             : id_(Id), name_(Name) {}
-        auto name() const { return name_; }
-        auto id() const { return id_; }
+        auto name() const noexcept { return name_; }
+        auto id() const noexcept { return id_; }
 
     private:
-        const std::string id_;
-        const std::string name_;
+        const std::string id_;    // example: 234
+        const std::string name_;  // example: if
     };
 
     // API:

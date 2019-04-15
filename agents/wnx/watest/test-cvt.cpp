@@ -140,7 +140,7 @@ TEST(CvtTest, ToYaml) {
     winperf_counter z(0, "this_name", "this base id");
 
     auto s = ToYamlString(z, false);
-    EXPECT_EQ(s, "- id: this base id\n  name: this_name\n");
+    EXPECT_EQ(s, "- this base id: this_name\n");
 
     auto s2 = ToYamlString("aaaa", false);
     EXPECT_EQ(s2, "aaaa");
@@ -460,15 +460,18 @@ TEST(CvtTest, WinPerfSection) {
         auto wp = ya[groups::kWinPerf];
         ASSERT_TRUE(wp.IsMap());
         {
-            auto counters = wp[vars::kWinPerfCounters];
-            ASSERT_TRUE(counters.IsSequence());
-            ASSERT_TRUE(counters.size() == 3);
-            EXPECT_EQ(counters[0]["id"].as<std::string>(), "10332");
-            EXPECT_EQ(counters[0]["name"].as<std::string>(), "msx_queues");
-            EXPECT_EQ(counters[1]["id"].as<std::string>(), "638");
-            EXPECT_EQ(counters[1]["name"].as<std::string>(), "tcp_conn");
-            EXPECT_EQ(counters[2]["id"].as<std::string>(), "Terminal Services");
-            EXPECT_EQ(counters[2]["name"].as<std::string>(), "ts_sessions");
+            auto counters_raw = wp[vars::kWinPerfCounters];
+            ASSERT_TRUE(counters_raw.IsSequence());
+            ASSERT_TRUE(counters_raw.size() == 3);
+            auto counters =
+                GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
+
+            EXPECT_EQ(counters[0].first, "10332");
+            EXPECT_EQ(counters[0].second, "msx_queues");
+            EXPECT_EQ(counters[1].first, "638");
+            EXPECT_EQ(counters[1].second, "tcp_conn");
+            EXPECT_EQ(counters[2].first, "Terminal Services");
+            EXPECT_EQ(counters[2].second, "ts_sessions");
             EXPECT_TRUE(wp[vars::kEnabled].as<bool>());
         }
     }

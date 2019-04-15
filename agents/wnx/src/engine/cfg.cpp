@@ -791,6 +791,21 @@ static bool IsYamlScalar(YAML::Node Node) {
     return Node.IsScalar();
 }
 
+// simple function to get name of the node
+// #TODO promote as official API
+static std::string GetMapNodeName(const YAML::Node& Node) noexcept {
+    try {
+        if (!Node.IsDefined() || !Node.IsMap()) return {};
+        auto s_iterator = Node.begin();
+
+        auto s_id = s_iterator->first;
+        return s_id.as<std::string>();
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + " Exception on conversion '{}'", e.what());
+        return {};
+    }
+}
+
 // #TODO logging, unit testing and simplifying. This is trash!
 bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src,
                             bool MergeSequences) {
@@ -820,16 +835,16 @@ bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src,
         } else if (IsYamlSeq(grp)) {
             if (IsYamlSeq(s)) {
                 if (MergeSequences) {
+                    // special case when we are merging some sequences from
+                    // different files
                     for (auto entry : s) {
-                        if (!entry.IsDefined() || !entry.IsMap()) continue;
-                        auto s_name = entry["id"].as<std::string>("*");
-                        if (s_name == "*") continue;  // strange entry
+                        auto s_name = GetMapNodeName(entry);
+                        if (s_name.empty()) continue;
+
                         bool found = false;
                         for (auto g_entry : grp) {
-                            if (!entry.IsDefined() || !entry.IsMap()) continue;
-
-                            auto t_name = g_entry["id"].as<std::string>("*");
-                            if (t_name == s_name) {
+                            auto g_name = GetMapNodeName(g_entry);
+                            if (g_name == s_name) {
                                 found = true;
                                 break;
                             }
@@ -848,14 +863,6 @@ bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src,
             else {
                 XLOG::l.bp(XLOG_FLINE + " bad src");
             }
-        }
-
-        if (0) {
-            std::filesystem::path temp_folder = "c:\\dev\\shared";
-            auto path = temp_folder / "out";
-
-            std::ofstream ofs(path.u8string());
-            ofs << Target;
         }
     }
 

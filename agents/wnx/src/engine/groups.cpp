@@ -193,12 +193,9 @@ void WinPerf::loadFromMainConfig() {
 
         enabled_in_cfg_ =
             GetVal(groups::kWinPerf, vars::kEnabled, exist_in_cfg_);
-        auto counters =
-            GetArray<YAML::Node>(groups::kWinPerf, vars::kWinPerfCounters);
+        auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
         for (const auto& entry : counters) {
-            auto id = entry[vars::kWinPerfId].as<std::string>();
-            auto name = entry[vars::kWinPerfName].as<std::string>();
-            counters_.emplace_back(id, name);
+            counters_.emplace_back(entry.first, entry.second);
         }
     } catch (std::exception& e) {
         XLOG::l("Section {} ", groups::kWinPerf, e.what());

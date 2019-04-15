@@ -106,17 +106,14 @@ TEST(AgentConfig, Aggregate) {
                        "  name: 'test name'\n"
                        "winperf:\n"
                        "  counters:\n"
-                       "    - id : 234\n"
-                       "      name : if\n"
-                       "    - id : 638\n"
-                       "      name : tcp_conn\n"
-                       "    - id : 9999\n"
-                       "      name : the_the\n"
-                       "    - id : Terminal Services\n"
-                       "      name : ts_sessions\n");
+                       "    - 234: if\n"
+                       "    -  638 : tcp_conn\n"
+                       "    -   9999 : the_the\n"
+                       "    - Terminal Services: ts_sessions\n");
         auto r = YAML::LoadFile(cfgs[0].u8string());
         ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(), 4);
         auto b = YAML::LoadFile(cfgs[1].u8string());
+        ASSERT_EQ(b[groups::kWinPerf][vars::kWinPerfCounters].size(), 4);
         ConfigInfo::smartMerge(r, b);
         ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(), 5);
         ASSERT_EQ(r["bakery"]["status"].as<std::string>(), "loaded");
@@ -382,13 +379,13 @@ TEST(AgentConfig, WorkScenario) {
         EXPECT_TRUE(winperf_on);
 
         auto winperf_counters =
-            GetArray<YAML::Node>(groups::kWinPerf, vars::kWinPerfCounters);
+            GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
         EXPECT_EQ(winperf_counters.size(), 4);
         for (const auto& counter : winperf_counters) {
-            auto id = GetVal(counter, vars::kWinPerfId, std::string());
+            auto id = counter.first;
             EXPECT_TRUE(id != "");
 
-            auto name = GetVal(counter, vars::kWinPerfName, std::string());
+            auto name = counter.second;
             EXPECT_TRUE(name != "");
         }
     }

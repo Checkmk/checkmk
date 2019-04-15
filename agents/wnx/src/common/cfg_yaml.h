@@ -108,8 +108,6 @@ const char* const kLogWatchEvent_ContextWords[] = {
 };
 
 // winperf.counters[].
-const char* const kWinPerfId = "id";      // string
-const char* const kWinPerfName = "name";  // string
 
 // group "logfiles"
 const char* const kLogFilesView = "view";  // seq

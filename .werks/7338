@@ -1,0 +1,15 @@
+Title: Dropped ancient "no_discovery_possible" from check API
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1555336187
+Class: fix
+
+The function no_discovery_possible was provided by the check API in the early days
+were the check_info was declared as 3-element tuple. Since the checks are registered
+as dictionaries this function is not needed anymore.
+
+In case you get an issue with this after an update, you will have to migrate your
+checks to the current check_info syntax.

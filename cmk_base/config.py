@@ -2279,8 +2279,6 @@ def convert_check_info():
         if not isinstance(info, dict):
             # Convert check declaration from old style to new API
             check_function, descr, has_perfdata, inventory_function = info
-            if inventory_function == check_api_utils.no_discovery_possible:
-                inventory_function = None
 
             scan_function = snmp_scan_functions.get(check_plugin_name,
                                                     snmp_scan_functions.get(section_name))

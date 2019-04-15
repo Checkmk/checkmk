@@ -854,9 +854,14 @@ def _get_discovery_function_of(check_plugin_name):
         raise MKGeneralException("No such check type '%s'" % check_plugin_name)
 
     if discovery_function is None:
-        return check_api_utils.no_discovery_possible
+        return lambda _info: _no_discovery_possible(check_plugin_name)
 
     return discovery_function
+
+
+def _no_discovery_possible(check_plugin_name):
+    console.verbose("%s does not support discovery. Skipping it.\n", check_plugin_name)
+    return []
 
 
 def _execute_discovery_function(discovery_function, section_content):

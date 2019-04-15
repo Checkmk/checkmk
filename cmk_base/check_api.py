@@ -201,15 +201,6 @@ def savefloat(f):
         return 0.0
 
 
-# The function no_discovery_possible is as stub function used for
-# those checks that do not support inventory. It must be known before
-# we read in all the checks
-#
-# TODO: This seems to be an old part of the check API and not used for
-#       a long time. Deprecate this as part of the and move it to the
-#       cmk_base.config module.
-no_discovery_possible = _check_api_utils.no_discovery_possible
-
 service_extra_conf = _config.service_extra_conf
 host_extra_conf = _config.host_extra_conf
 in_binary_hostlist = _config.in_binary_hostlist

@@ -36,7 +36,7 @@ class DeprecatedList(list):
     pass
 
 
-def append_deprecation_warning(check_function):  # pylint: disable=function-redefined
+def append_deprecation_warning(check_function):
     '''A wrapper to WARN if legacy code is used
 
     If the parse result is of one of the legacy Types the decorated

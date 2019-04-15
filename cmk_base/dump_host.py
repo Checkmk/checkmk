@@ -56,7 +56,7 @@ def dump_host(hostname):
     ipaddress = _ip_address_for_dump_host(host_config)
 
     addresses = ""
-    if not config.is_ipv4v6_host(hostname):
+    if not host_config.is_ipv4v6_host:
         addresses = ipaddress
     else:
         try:

@@ -599,7 +599,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                           host_attrs["address"], host_config.is_ipv6_primary and 6 or 4, "PING",
                           host_attrs.get("_NODEIPS"))
 
-    if config.is_ipv4v6_host(hostname):
+    if host_config.is_ipv4v6_host:
         if host_config.is_ipv6_primary:
             _add_ping_service(cfg, config_cache, hostname, host_attrs["_ADDRESS_4"], 4, "PING IPv4",
                               host_attrs.get("_NODEIPS_4"))

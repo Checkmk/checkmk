@@ -1561,10 +1561,6 @@ def host_extra_conf(hostname, ruleset):
     return get_config_cache().host_extra_conf(hostname, ruleset)
 
 
-def host_extra_conf_merged(hostname, conf):
-    return get_config_cache().host_extra_conf_merged(hostname, conf)
-
-
 #.
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |

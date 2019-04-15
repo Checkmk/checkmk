@@ -328,7 +328,8 @@ def _gather_snmp_check_plugin_names_inventory(host_config,
 
 
 def _get_inv_params(hostname, section_name):
-    return config.host_extra_conf_merged(hostname, config.inv_parameters.get(section_name, []))
+    return config.get_config_cache().host_extra_conf_merged(
+        hostname, config.inv_parameters.get(section_name, []))
 
 
 #.

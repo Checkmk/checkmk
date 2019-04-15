@@ -981,10 +981,12 @@ def precompile_hostchecks():
     if not os.path.exists(cmk.utils.paths.precompiled_hostchecks_dir):
         os.makedirs(cmk.utils.paths.precompiled_hostchecks_dir)
 
+    config_cache = config.get_config_cache()
+
     console.verbose("Precompiling host checks...\n")
     for host in config.all_active_hosts():
         try:
-            _precompile_hostcheck(host)
+            _precompile_hostcheck(config_cache, host)
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
@@ -1008,8 +1010,9 @@ def stripped_python_file(filename):
     return a
 
 
-def _precompile_hostcheck(hostname):
+def _precompile_hostcheck(config_cache, hostname):
     import cmk_base.check_table as check_table
+    host_config = config_cache.get_host_config(hostname)
 
     console.verbose("%s%s%-16s%s:", tty.bold, tty.blue, hostname, tty.normal, stream=sys.stderr)
 
@@ -1118,10 +1121,11 @@ if '-d' in sys.argv:
     needed_ipaddresses, needed_ipv6addresses, = {}, {}
     if config.is_cluster(hostname):
         for node in config.nodes_of(hostname):
+            node_config = config_cache.get_host_config(node)
             if config.is_ipv4_host(node):
                 needed_ipaddresses[node] = ip_lookup.lookup_ipv4_address(node)
 
-            if config.is_ipv6_host(node):
+            if node_config.is_ipv6_host:
                 needed_ipv6addresses[node] = ip_lookup.lookup_ipv6_address(node)
 
         try:
@@ -1131,7 +1135,7 @@ if '-d' in sys.argv:
             pass
 
         try:
-            if config.is_ipv6_host(hostname):
+            if host_config.is_ipv6_host:
                 needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(hostname)
         except:
             pass
@@ -1139,7 +1143,7 @@ if '-d' in sys.argv:
         if config.is_ipv4_host(hostname):
             needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(hostname)
 
-        if config.is_ipv6_host(hostname):
+        if host_config.is_ipv6_host:
             needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(hostname)
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)

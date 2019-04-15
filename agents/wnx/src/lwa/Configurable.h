@@ -22,6 +22,7 @@ public:
     virtual void feed(const std::string &key, const std::string &value) = 0;
     virtual void output(const std::string &key, std::ostream &out) const = 0;
     virtual std::string outputForYaml() { return string_value_; }
+    virtual std::string outputAsInternalArray() { return ""; }
     virtual void startFile() = 0;
     virtual void startBlock() = 0;
     virtual bool isKeyed() const { return false; }
@@ -163,6 +164,20 @@ public:
         }
 
         return ss.str();
+    }
+
+    // "check_mk mem df"
+    std::string outputAsInternalArray() override {
+        std::stringstream ss;
+        if (_values.size() == 0) return "~";
+
+        for (auto &c : _values) {
+            ss << c << " ";
+        }
+        auto str = ss.str();
+
+        if (str.back() == ' ') str.pop_back();
+        return str;
     }
 
 protected:

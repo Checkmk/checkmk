@@ -320,7 +320,7 @@ TEST(AgentConfig, WorkScenario) {
     auto flush = GetVal(groups::kGlobal, vars::kSectionFlush, true);
     EXPECT_TRUE(!flush);
 
-    auto execute = GetArray<string>(groups::kGlobal, vars::kExecute);
+    auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
     EXPECT_TRUE(execute.size() > 3);
 
     auto only_from = GetArray<string>(groups::kGlobal, vars::kOnlyFrom);
@@ -335,7 +335,7 @@ TEST(AgentConfig, WorkScenario) {
         EXPECT_EQ(sections_enabled.size(), 19);
 
         auto sections_disabled =
-            GetArray<string>(groups::kGlobal, vars::kSectionsDisabled);
+            GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
         EXPECT_EQ(sections_disabled.size(), 4);
     }
 

@@ -94,7 +94,7 @@ TEST(WmiWrapper, Table) {
 
 namespace cma::provider {
 
-TEST(ProviderTest, WmiAll) {  //
+TEST(ProviderTest, WmiBadName) {  //
     using namespace std::chrono;
 
     cma::OnStart(cma::kTest);
@@ -110,7 +110,10 @@ TEST(ProviderTest, WmiAll) {  //
         x.registerCommandLine("1.1.1.1 wefwef rfwrwer rwerw");
         EXPECT_EQ(x.ip(), "1.1.1.1");
     }
+}
 
+TEST(ProviderTest, WmiAll) {  //
+    using namespace std::chrono;
     {
         auto r = GenerateTable(cma::provider::kWmiPathStd,
                                L"Win32_ComputerSystem", {});

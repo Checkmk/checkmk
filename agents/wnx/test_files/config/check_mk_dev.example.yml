@@ -27,12 +27,7 @@ global:
     # the following suffixes (in local and plugins).
     # Per default all extensions except txt and dir
     # are being executed.
-    execute: 
-        - exe 
-        - bat 
-        - vbs
-        - cmd
-        - ps1
+    execute:  exe bat vbs cmd ps1
 
     # Run async scripts in parallel (to each other). Default is "sequential",
     # which means the scripts are run asynchronously to the agent itself but

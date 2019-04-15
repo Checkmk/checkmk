@@ -50,12 +50,7 @@ global:
     # the following suffixes (in local and plugins).
     # Per default all extensions except txt and dir
     # are being executed.
-    execute: 
-        - exe 
-        - bat 
-        - vbs
-        - cmd
-        - ps1
+    execute: exe bat vbs cmd ps1
 
     # Run sync scripts in parallel (to each other). Default is "sequential",
     # which means the scripts are run asynchronously to the agent itself but
@@ -92,12 +87,8 @@ global:
         - ps
         - fileinfo
         - logwatch
-    disabled_sections:
     # forced to not use
-        - openhardwaremonitor
-        - _logfiles
-        - winperf_xxx
-        - badname
+    disabled_sections: openhardwaremonitor _logfiles winperf_xxx badname
         # output sections in realtime updates. Please note that not all
         # sections can be used in realtime updates, the following is the
         # complete list

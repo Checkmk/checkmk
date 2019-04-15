@@ -57,7 +57,7 @@ void Global::loadFromMainConfig() {
 
         encrypt_ = GetVal(groups::kGlobal, vars::kGlobalEncrypt, false);
 
-        execute_ = GetArray<string>(groups::kGlobal, vars::kExecute);
+        execute_ = GetInternalArray(groups::kGlobal, vars::kExecute);
 
         auto only_from = GetArray<string>(groups::kGlobal, vars::kOnlyFrom);
         fillOnlyFrom(only_from);
@@ -65,7 +65,7 @@ void Global::loadFromMainConfig() {
         enabled_sections_ =
             GetArray<string>(groups::kGlobal, vars::kSectionsEnabled);
         disabled_sections_ =
-            GetArray<string>(groups::kGlobal, vars::kSectionsDisabled);
+            GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
         auto realtime = GetNode(groups::kGlobal, vars::kRealTime);
 
         realtime_encrypt_ = GetVal(realtime, vars::kRtEncrypt, false);

@@ -40,6 +40,16 @@ void SafeCleanTempDir(const std::string Sub) {
     }
 }
 
+template <typename T, typename V>
+void RemoveElement(T& Container, const V& Str) {
+    Container.erase(std::remove_if(Container.begin(), Container.end(),
+                                   [Str](const std::string& Candidate) {
+                                       return cma::tools::IsEqual(Str,
+                                                                  Candidate);
+                                   }),
+                    Container.end());
+}
+
 void EnableSectionsNode(const std::string_view& Str, bool UpdateGlobal) {
     using namespace cma::cfg;
     YAML::Node config = GetLoadedConfig();
@@ -61,21 +71,12 @@ void EnableSectionsNode(const std::string_view& Str, bool UpdateGlobal) {
             if (!found) enabled.push_back(std::string(Str));
         }
     }
-    YAML::Node disabled = config[groups::kGlobal][vars::kSectionsDisabled];
 
-    {
-        if (disabled.IsDefined()) {
-            // remove from section our name
-            for (size_t i = 0; i < disabled.size(); i++) {
-                auto node = disabled[i];
-                if (node.IsDefined() && node.IsScalar() &&
-                    node.as<std::string>() == Str) {
-                    disabled.remove(i);
-                    break;
-                }
-            }
-        }
-    }
+    // pattern to remove INternalArray element
+    auto disabled = GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
+    RemoveElement(disabled, Str);
+    PutInternalArray(groups::kGlobal, vars::kSectionsDisabled, disabled);
+
     if (UpdateGlobal) groups::global.loadFromMainConfig();
 }
 }  // namespace tst

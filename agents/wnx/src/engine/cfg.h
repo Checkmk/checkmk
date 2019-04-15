@@ -295,6 +295,70 @@ std::vector<T> GetArray(std::string Section, std::string Name,
     return {};
 }
 
+inline std::vector<std::string> StringToTable(const std::string& WholeValue) {
+    auto table = cma::tools::SplitString(WholeValue, " ");
+
+    for (auto& value : table) {
+        cma::tools::AllTrim(value);
+    }
+
+    return table;
+}
+
+// gets string from the yaml and split it in table using space as divider
+inline std::vector<std::string> GetInternalArray(const std::string& Section,
+                                                 const std::string& Name,
+                                                 int* ErrorOut = 0) noexcept {
+    auto yaml = GetLoadedConfig();
+    if (yaml.size() == 0) {
+        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        return {};
+    }
+    try {
+        auto section = yaml[Section];
+        auto val = section[Name];
+        if (val.IsDefined() && val.IsScalar()) {
+            auto str = val.as<std::string>();
+            return StringToTable(str);
+        } else
+            // this is OK when nothing inside
+            XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
+                      val.Type());
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml file {} with {}.{} code:{}",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
+                e.what());
+    }
+    return {};
+}
+
+//opposite operation for the GetInternalArray
+inline void PutInternalArray(const std::string& Section,
+                             const std::string& Name,
+                             std::vector<std::string>& Arr,
+                             int* ErrorOut = 0) noexcept {
+    auto yaml = GetLoadedConfig();
+    if (yaml.size() == 0) {
+        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        return;
+    }
+    try {
+        auto section = yaml[Section];
+        if (Arr.empty()) {
+            section.remove(Name);
+            return;
+        }
+
+        auto result = cma::tools::JoinVector(Arr, " ");
+        if (result.back() == ' ') result.pop_back();
+        yaml[Section][Name] = result;
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml file {} with {}.{} code:{}",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
+                e.what());
+    }
+}
+
 template <typename T>
 std::vector<T> GetArray(const YAML::Node& Yaml, std::string Name,
                         int* ErrorOut = 0) noexcept {
@@ -781,7 +845,7 @@ public:
                 async_ = true;
             }
             if (async_ && cache_age_ < kMinimumCacheAge) {
-                XLOG::l(
+                XLOG::t(
                     "Plugin Entry {} has too low cache_age: {}. Setting at {}",
                     pattern_, cache_age_, kMinimumCacheAge);
                 cache_age_ = kMinimumCacheAge;

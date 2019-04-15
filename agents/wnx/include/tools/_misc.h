@@ -463,7 +463,7 @@ inline std::wstring JoinVector(const std::vector<std::wstring> Values,
 }
 
 // version for string
-inline std::string JoinVector(const std::vector<std::string> Values,
+inline std::string JoinVector(const std::vector<std::string>& Values,
                               const std::string& Separator) {
     std::string values_string;
     size_t sz = 0;

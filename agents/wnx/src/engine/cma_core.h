@@ -604,7 +604,7 @@ protected:
     std::chrono::steady_clock::time_point start_time_;  // for timeout
     int failures_;
 
-    bool local_;
+    bool local_;  // if set then we have deal with local groups
 
     // async part
     mutable std::mutex data_lock_;  // cache() and time to control

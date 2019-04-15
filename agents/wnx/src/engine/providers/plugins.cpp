@@ -46,7 +46,7 @@ void PluginsProvider::loadConfig() {
     }
     auto files = cma::GatherAllFiles(pv);
 
-    auto execute = GetArray<std::string>(groups::kGlobal, vars::kExecute);
+    auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
 
     cma::FilterPathByExtension(files, execute);
     cma::RemoveDuplicatedNames(files);

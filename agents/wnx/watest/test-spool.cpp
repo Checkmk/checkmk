@@ -55,8 +55,7 @@ static void RemoveAllSectionsNodes() {
 
         config[groups::kGlobal][vars::kSectionsEnabled] =
             YAML::Load(out.c_str());
-        config[groups::kGlobal][vars::kSectionsDisabled] =
-            YAML::Load(out.c_str());
+        config[groups::kGlobal].remove(vars::kSectionsDisabled);
     }
 }
 

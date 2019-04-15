@@ -25,7 +25,7 @@ TEST(ServiceControllerTest, StartStopExe) {
         });
     ON_OUT_OF_SCOPE(delete processor;);
 
-    cma::MailSlot mailbox("WinAgent", 0);
+    cma::MailSlot mailbox(kServiceMailSlot, 0);
     mailbox.ConstructThread(SystemMailboxCallback, 20, processor);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
     using namespace cma::carrier;
@@ -35,18 +35,18 @@ TEST(ServiceControllerTest, StartStopExe) {
     auto tp = processor->openAnswer("127.0.0.1");
 
     // make command line
-    auto cmd_line = cma::cfg::groups::winperf.buildCmdLine();
+    auto cmd_line = groups::winperf.buildCmdLine();
     ASSERT_TRUE(!cmd_line.empty());
-    auto count = cma::cfg::groups::winperf.countersCount();
+    auto count = groups::winperf.countersCount();
     auto count_of_colon = std::count(cmd_line.begin(), cmd_line.end(), L':');
     auto count_of_spaces = std::count(cmd_line.begin(), cmd_line.end(), L' ');
     ASSERT_TRUE(count_of_colon == count);
     ASSERT_EQ(count_of_spaces, count - 1);
 
-    auto exe_name = cma::cfg::groups::winperf.exe();
+    auto exe_name = groups::winperf.exe();
     ASSERT_TRUE(!exe_name.empty());
     auto wide_exe_name = wtools::ConvertToUTF16(exe_name);
-    auto prefix = cma::cfg::groups::winperf.prefix();
+    auto prefix = groups::winperf.prefix();
     ASSERT_TRUE(!prefix.empty());
     auto wide_prefix = wtools::ConvertToUTF16(prefix);
 

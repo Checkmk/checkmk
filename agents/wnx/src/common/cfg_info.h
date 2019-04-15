@@ -171,4 +171,8 @@ enum EventLevels { kOff = -1, kAll = 0, kWarn, kCrit };
 constexpr auto kInitialPos = std::numeric_limits<uint64_t>::max();
 inline const std::chrono::seconds G_DefaultDelayOnFail(3600);
 
+// Prefixes of mailslots' names
+constexpr const char* const kServiceMailSlot = "WinAgent";      // production
+constexpr const char* const kTestingMailSlot = "WinAgentTest";  // testing
+
 };  // namespace cma::cfg

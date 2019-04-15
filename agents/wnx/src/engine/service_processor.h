@@ -239,8 +239,13 @@ private:
     // Plugin Provider
     // RealTime checks
     void mainThread(world::ExternalPort* Port) {
-        // Periodically check if the service is stopping.
-        cma::MailSlot mailbox("WinAgent", 0);
+        // Periodically checks if the service is stopping.
+
+        // mailslot name selector "service" or "not service"
+        auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
+                                              : cma::cfg::kTestingMailSlot;
+
+        cma::MailSlot mailbox(mailslot_name, 0);
         using namespace cma::carrier;
         internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
         try {

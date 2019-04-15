@@ -637,6 +637,9 @@ void FilterPluginMap(PluginMap& Out, const PathVector& FoundFiles);
 void ApplyExeUnitToPluginMap(
     PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
     bool Local);
+
+void RemoveDuplicatedPlugins(PluginMap& Out, bool CheckExists);
+
 void UpdatePluginMap(PluginMap& Out,  // output is here
                      bool Local, const PathVector& FoundFiles,
                      const std::vector<cma::cfg::Plugins::ExeUnit>& Units,

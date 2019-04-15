@@ -49,7 +49,6 @@ void PluginsProvider::loadConfig() {
     auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
 
     cma::FilterPathByExtension(files, execute);
-    cma::RemoveDuplicatedNames(files);
 
     auto yaml_units =
         GetArray<YAML::Node>(cfg_name_, cma::cfg::vars::kPluginsExecution);

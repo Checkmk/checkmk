@@ -1588,7 +1588,10 @@ class ELBSummary(AWSSectionGeneric):
         return 300
 
     def _get_colleague_contents(self):
-        return AWSColleagueContents(None, 0.0)
+        colleague = self._received_results.get('elb_limits')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
         found_load_balancers = []

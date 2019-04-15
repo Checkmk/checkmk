@@ -589,8 +589,8 @@ def rbn_fallback_contacts():
 def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
     # Right now we are only able to finalize notification plugins with dict parameters..
     if isinstance(rule_parameters, dict):
-        parameters = config.host_extra_conf_merged(hostname,
-                                                   config.notification_parameters.get(plugin, []))
+        parameters = config.get_config_cache().host_extra_conf_merged(
+            hostname, config.notification_parameters.get(plugin, []))
         parameters.update(rule_parameters)
         return parameters
 

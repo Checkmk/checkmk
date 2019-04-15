@@ -208,7 +208,12 @@ def service_extra_conf(hostname, service, ruleset):
 
 host_extra_conf = _config.host_extra_conf
 in_binary_hostlist = _config.in_binary_hostlist
-host_extra_conf_merged = _config.host_extra_conf_merged
+
+
+# Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()
+def host_extra_conf_merged(hostname, conf):
+    return _config.get_config_cache().host_extra_conf_merged(hostname, conf)
+
 
 # TODO: Only used by logwatch check. Can we clean this up?
 get_rule_options = _config.get_rule_options

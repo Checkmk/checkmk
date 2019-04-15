@@ -144,16 +144,17 @@ def _parse_lnx_if_sections(info):
         if iface is not None:
             iface[line[0].strip()] = ":".join(line[1:]).strip()
 
-    parsed = {}
-    for k in set(ip_stats.keys()).union(ethtool_stats.keys()):
-        iface = ip_stats.get(k, {})
-        iface.update(ethtool_stats.get(k, {}))
-        parsed[k] = iface
-    return parsed
+    return ip_stats, ethtool_stats
 
 
 def parse_lnx_if(info):
-    nic_info = _parse_lnx_if_sections(info)
+    ip_stats, ethtool_stats = _parse_lnx_if_sections(info)
+
+    nic_info = {}
+    for k in set(ip_stats.keys()).union(ethtool_stats.keys()):
+        iface = ip_stats.get(k, {})
+        iface.update(ethtool_stats.get(k, {}))
+        nic_info[k] = iface
 
     if_table = []
     index = 0
@@ -239,19 +240,19 @@ def parse_lnx_if(info):
 
         if_table.append(row)
 
-    return if_table
+    return if_table, ip_stats
 
 
 def inventory_lnx_if(parsed):
     if linux_nic_check == "legacy":
         return []
     # Always exclude dockers veth* interfaces on docker nodes
-    parsed = [e for e in parsed if not e[2].startswith("veth")]
-    return inventory_if_common(parsed, has_nodeinfo=True)
+    if_table = [e for e in parsed[0] if not e[2].startswith("veth")]
+    return inventory_if_common(if_table, has_nodeinfo=True)
 
 
 def check_lnx_if(item, params, parsed):
-    return check_if_common(item, params, parsed, has_nodeinfo=True)
+    return check_if_common(item, params, parsed[0], has_nodeinfo=True)
 
 
 check_info["lnx_if"] = {

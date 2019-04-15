@@ -188,13 +188,15 @@ def _check_missing_sections(missing_sections, exit_spec):
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
 def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names=None):
+    config_cache = config.get_config_cache()
+
     num_success, missing_sections = 0, set()
 
     check_api_utils.set_hostname(hostname)
 
     filter_mode = None
 
-    belongs_to_cluster = len(config.get_config_cache().clusters_of(hostname)) > 0
+    belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
     if belongs_to_cluster:
         filter_mode = "include_clustered"
 
@@ -214,7 +216,6 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
     multi_host_sections = sources.get_host_sections()
 
     # Filter out check types which are not used on the node
-    config_cache = config.get_config_cache()
     if belongs_to_cluster:
         pos_match = set()
         neg_match = set()

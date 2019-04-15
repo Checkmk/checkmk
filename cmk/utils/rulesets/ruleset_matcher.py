@@ -30,9 +30,29 @@
 # cmk_base.config.HostConfig. We would need something similar for service
 # objects
 
-from typing import List, Dict, Any  # pylint: disable=unused-import
+from typing import Text, List, Dict, Any, Optional  # pylint: disable=unused-import
 
 from cmk.utils.rulesets.rule_matcher import RuleMatcher
+
+
+class RulesetMatchObject(object):
+    """Wrapper around dict to ensure the ruleset match objects are correctly created"""
+    __slots__ = ["host_name", "host_tags", "service_description"]
+
+    def __init__(self, host_name=None, host_tags=None, service_description=None):
+        # type: (Optional[str], Optional[Dict[Text, Text]], Optional[Text]) -> None
+        super(RulesetMatchObject, self).__init__()
+        self.host_name = host_name
+        self.host_tags = host_tags
+        self.service_description = service_description
+
+    def to_dict(self):
+        # type: () -> Dict
+        # TODO: Two getattr()?
+        return {k: getattr(self, k) for k in self.__slots__ if getattr(self, k) is not None}
+
+    def copy(self):
+        return RulesetMatchObject(**self.to_dict())
 
 
 class RulesetMatcher(object):
@@ -41,8 +61,8 @@ class RulesetMatcher(object):
         super(RulesetMatcher, self).__init__()
         self._matcher = RuleMatcher()
 
-    def is_matching(self, object_spec, ruleset):
-        # type: (Dict, List[Dict]) -> bool
+    def is_matching(self, match_object, ruleset):
+        # type: (RulesetMatchObject, List[Dict]) -> bool
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
@@ -50,31 +70,34 @@ class RulesetMatcher(object):
 
         Replaces in_binary_hostlist / in_boolean_serviceconf_list"""
         for rule in ruleset:
-            if self._matcher.match(object_spec, rule["condition"]):
+            if self._matcher.match(match_object.to_dict(), rule["condition"]):
                 return rule["value"]
         return False
 
-    def get_merged_dict(self, object_spec, ruleset):
-        # type: (Dict, List[Dict]) -> Dict
+    def get_merged_dict(self, match_object, ruleset):
+        # type: (RulesetMatchObject, List[Dict]) -> Dict
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         Replaces host_extra_conf_merged / service_extra_conf_merged"""
         rule_dict = {}  # type: Dict
-        for value_dict in self.get_values(object_spec, ruleset):
+        for value_dict in self.get_values(match_object, ruleset):
             for key, value in value_dict.items():
                 rule_dict.setdefault(key, value)
         return rule_dict
 
-    def get_values(self, object_spec, ruleset):
-        # type: (Dict, List) -> List[Any]
+    def get_values(self, match_object, ruleset):
+        # type: (RulesetMatchObject, List) -> List[Any]
         """Returns a list of the values of the matched rules
 
         Replaces host_extra_conf / service_extra_conf"""
-        return [r["value"] for r in self.get_matching_rules(object_spec, ruleset)]
+        return [r["value"] for r in self.get_matching_rules(match_object, ruleset)]
 
-    def get_matching_rules(self, object_spec, ruleset):
-        # type: (Dict, List) -> List[Dict]
+    def get_matching_rules(self, match_object, ruleset):
+        # type: (RulesetMatchObject, List) -> List[Dict]
         """Filter the ruleset of this matcher for the given object and return the filtered rule list
         """
-        return [rule for rule in ruleset if self._matcher.match(object_spec, rule["condition"])]
+        return [
+            rule for rule in ruleset
+            if self._matcher.match(match_object.to_dict(), rule["condition"])
+        ]

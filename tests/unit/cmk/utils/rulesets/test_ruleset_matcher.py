@@ -1,12 +1,55 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+import pytest  # type: ignore
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
 
 
-def test_basic_matching():
-    ruleset = [{"condition": {"a": "b"}}, {"condition": {"a": "c"}}]
-    matcher = RulesetMatcher()
-    assert matcher.get_matching_rules({"a": "b"}, ruleset=ruleset) == [ruleset[0]]
+def test_ruleset_match_object_invalid_attribute_in_init():
+    with pytest.raises(TypeError, match="unexpected keyword"):
+        RulesetMatchObject(x=1)  # pylint: disable=unexpected-keyword-arg
+
+
+def test_ruleset_match_object_no_conditions():
+    x = RulesetMatchObject()
+    assert x.host_name is None
+    assert x.host_tags is None
+    assert x.service_description is None
+
+
+def test_ruleset_match_object_set_invalid_attribute():
+    x = RulesetMatchObject()
+    with pytest.raises(AttributeError, match="object has no attribute"):
+        x.xyz = 123  # pylint: disable=assigning-non-slot
+
+
+def test_ruleset_match_object_host_name():
+    obj = RulesetMatchObject(host_name="abc")
+    assert obj.host_name == "abc"
+
+
+def test_ruleset_match_object_host_tags():
+    obj = RulesetMatchObject(host_tags={"tag_group1": "tag1"})
+    assert obj.host_tags == {"tag_group1": "tag1"}
+
+
+def test_ruleset_match_object_service_description():
+    obj = RulesetMatchObject(service_description=u"Ümlaut")
+    assert obj.service_description == u"Ümlaut"
+
+
+def test_ruleset_match_object_to_dict():
+    obj = RulesetMatchObject(host_name="abc", service_description=u"Ümlaut")
+    assert obj.to_dict() == {
+        "host_name": "abc",
+        "service_description": u"Ümlaut",
+    }
+
+
+def test_ruleset_match_object_copy():
+    obj = RulesetMatchObject(host_name="abc", service_description=u"Ümlaut")
+    copied_obj = obj.copy()
+    assert obj is not copied_obj
+    assert obj.to_dict() == copied_obj.to_dict()
 
 
 ruleset = [
@@ -31,16 +74,19 @@ ruleset = [
 
 def test_basic_host_ruleset_get_matching_rules():
     matcher = RulesetMatcher()
-    assert matcher.get_matching_rules({"host_name": "abc"}, ruleset=ruleset) == []
-    assert matcher.get_matching_rules({"host_name": "host1"}, ruleset=ruleset) == ruleset
-    assert matcher.get_matching_rules({"host_name": "host2"}, ruleset=ruleset) == [ruleset[1]]
+    assert matcher.get_matching_rules(RulesetMatchObject(host_name="abc"), ruleset=ruleset) == []
+    assert matcher.get_matching_rules(
+        RulesetMatchObject(host_name="host1"), ruleset=ruleset) == ruleset
+    assert matcher.get_matching_rules(
+        RulesetMatchObject(host_name="host2"), ruleset=ruleset) == [ruleset[1]]
 
 
 def test_basic_host_ruleset_get_values():
     matcher = RulesetMatcher()
-    assert matcher.get_values({"host_name": "abc"}, ruleset=ruleset) == []
-    assert matcher.get_values({"host_name": "host1"}, ruleset=ruleset) == ["BLA", "BLUB"]
-    assert matcher.get_values({"host_name": "host2"}, ruleset=ruleset) == ["BLUB"]
+    assert matcher.get_values(RulesetMatchObject(host_name="abc"), ruleset=ruleset) == []
+    assert matcher.get_values(
+        RulesetMatchObject(host_name="host1"), ruleset=ruleset) == ["BLA", "BLUB"]
+    assert matcher.get_values(RulesetMatchObject(host_name="host2"), ruleset=ruleset) == ["BLUB"]
 
 
 dict_ruleset = [
@@ -81,17 +127,19 @@ dict_ruleset = [
 
 def test_basic_host_ruleset_get_merged_dict_values():
     matcher = RulesetMatcher()
-    assert matcher.get_merged_dict({"host_name": "abc"}, ruleset=dict_ruleset) == {}
-    assert matcher.get_merged_dict({"host_name": "host1"}, ruleset=dict_ruleset) == {
-        "hu": "BLA",
-        "ho": "BLA",
-        "he": "BLUB",
-    }
-    assert matcher.get_merged_dict({"host_name": "host2"}, ruleset=dict_ruleset) == {
-        "hu": "BLUB",
-        "ho": "BLA",
-        "he": "BLUB",
-    }
+    assert matcher.get_merged_dict(RulesetMatchObject(host_name="abc"), ruleset=dict_ruleset) == {}
+    assert matcher.get_merged_dict(
+        RulesetMatchObject(host_name="host1"), ruleset=dict_ruleset) == {
+            "hu": "BLA",
+            "ho": "BLA",
+            "he": "BLUB",
+        }
+    assert matcher.get_merged_dict(
+        RulesetMatchObject(host_name="host2"), ruleset=dict_ruleset) == {
+            "hu": "BLUB",
+            "ho": "BLA",
+            "he": "BLUB",
+        }
 
 
 binary_ruleset = [
@@ -125,6 +173,8 @@ binary_ruleset = [
 
 def test_basic_host_ruleset_is_matching():
     matcher = RulesetMatcher()
-    assert matcher.is_matching({"host_name": "abc"}, ruleset=binary_ruleset) is False
-    assert matcher.is_matching({"host_name": "host1"}, ruleset=binary_ruleset) is True
-    assert matcher.is_matching({"host_name": "host2"}, ruleset=binary_ruleset) is False
+    assert matcher.is_matching(RulesetMatchObject(host_name="abc"), ruleset=binary_ruleset) is False
+    assert matcher.is_matching(
+        RulesetMatchObject(host_name="host1"), ruleset=binary_ruleset) is True
+    assert matcher.is_matching(
+        RulesetMatchObject(host_name="host2"), ruleset=binary_ruleset) is False

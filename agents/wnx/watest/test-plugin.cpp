@@ -387,7 +387,7 @@ TEST(PluginTest, FilesAndFolders) {
 
         EXPECT_TRUE(files.size() > 20);
 
-        auto execute = GetArray<std::string>(groups::kGlobal, vars::kExecute);
+        auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
 
         cma::FilterPathByExtension(files, execute);
         EXPECT_TRUE(files.size() >= 6);
@@ -397,7 +397,7 @@ TEST(PluginTest, FilesAndFolders) {
             cma::cfg::groups::kPlugins, cma::cfg::vars::kPluginsExecution);
         std::vector<Plugins::ExeUnit> exe_units;
         cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-        EXPECT_EQ(exe_units.size(), 5);
+        ASSERT_EQ(exe_units.size(), 5);
 
         EXPECT_EQ(exe_units[2].async(), false);
         EXPECT_EQ(exe_units[2].cacheAge(), 0);
@@ -406,7 +406,19 @@ TEST(PluginTest, FilesAndFolders) {
         EXPECT_EQ(exe_units[0].cacheAge(), 3600);
         EXPECT_EQ(exe_units[0].async(), true);
         EXPECT_EQ(exe_units[0].retry(), 3);
+    }
 
+    {
+        EXPECT_EQ(groups::localGroup.foldersCount(), 1);
+        PathVector pv;
+        for (auto& folder : groups::localGroup.folders()) {
+            pv.emplace_back(folder);
+        }
+        auto files = cma::GatherAllFiles(pv);
+        auto yaml_units = GetArray<YAML::Node>(
+            cma::cfg::groups::kLocal, cma::cfg::vars::kPluginsExecution);
+        std::vector<Plugins::ExeUnit> exe_units;
+        cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
         // no local files
         PluginMap pm;
         UpdatePluginMap(pm, true, files, exe_units, true);

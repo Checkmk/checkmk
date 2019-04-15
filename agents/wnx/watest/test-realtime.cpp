@@ -18,12 +18,14 @@ namespace tst {
 void DisableSectionsNode(std::string_view Str) {
     using namespace cma::cfg;
     YAML::Node config = GetLoadedConfig();
-    YAML::Node disabled = config[groups::kGlobal][vars::kSectionsDisabled];
+    auto disabled_string = cma::cfg::GetVal(
+        groups::kGlobal, vars::kSectionsDisabled, std::string(""));
     {
-        if (disabled.IsDefined()) {
-            disabled.push_back(std::string(Str));
-        }
+        disabled_string += " ";
+
+        disabled_string += std::string(Str);
     }
+    config[groups::kGlobal][vars::kSectionsDisabled] = disabled_string;
 }
 }  // namespace tst
 
@@ -169,7 +171,8 @@ TEST(RealtimeTest, Base) {
     cma::OnStart(cma::kTest);
     ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));  // restore original config
     {
-        // we disable sections to be sure that realtime sections are executed even being disabled
+        // we disable sections to be sure that realtime sections are executed
+        // even being disabled
         tst::DisableSectionsNode("df");
         tst::DisableSectionsNode("mem");
         tst::DisableSectionsNode("winperf");

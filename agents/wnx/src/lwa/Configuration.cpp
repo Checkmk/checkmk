@@ -251,26 +251,26 @@ void Configuration::outputConfigurables(
             }
 
             if (cma::tools::IsEqual(section, "logwatch")) {
-                if (v.isListed()) {
-                    auto arr = v.generateKeys();
-                    for (auto &entry : arr) {
-                        std::string out;
-                        mrpe_out += out;
-                    }
-                }
                 Sink(section, key, v.outputForYaml(), v.iniString());
                 continue;
             }
 
             if (cma::tools::IsEqual(section, "logfiles")) {
-                if (v.isListed()) {
-                    auto arr = v.generateKeys();
-                    for (auto &entry : arr) {
-                        std::string out;
-                        mrpe_out += out;
-                    }
-                }
                 Sink(section, key, v.outputForYaml(), v.iniString());
+                continue;
+            }
+
+            if (cma::tools::IsEqual(section, "global") &&
+                cma::tools::IsEqual(key, "disabled_sections")) {
+                std::string value = v.outputAsInternalArray();
+                Sink(section, key, "", value);
+                continue;
+            }
+
+            if (cma::tools::IsEqual(section, "global") &&
+                cma::tools::IsEqual(key, "execute")) {
+                std::string value = v.outputAsInternalArray();
+                Sink(section, key, "", value);
                 continue;
             }
 
@@ -916,11 +916,11 @@ const std::unordered_map<std::string, Mapping> G_Mapper = {
     {"global.realtime_port",    { "realtime", "port", MapMode::kValue}},
     {"global.realtime_timeout", { "realtime", "timeout", MapMode::kValue}},
     {"global.section_flush",    { "", "", MapMode::kIniString}},//ignored
-    {"global.execute",          { "", "", MapMode::kNode}},
+    {"global.execute",          { "", "", MapMode::kIniString}},
     {"global.passphrase",       { "", "", MapMode::kIniString}},//not supported
     {"global.realtime_sections",{ "realtime", "run", MapMode::kNode}},
     {"global.crash_debug",      { "logging", "debug", MapMode::kIniString}},
-    {"global.disabled_sections",{ "", "", MapMode::kNode}},
+    {"global.disabled_sections",{ "", "", MapMode::kIniString}},
     {"global.sections",         { "", "", MapMode::kNode}},
 
     {"winperf.counters",        { "", "", MapMode::kNode}},
@@ -1044,6 +1044,7 @@ YAML::Node Parser::emitYaml() noexcept {
                         yaml[Section][key][sub_key] = IniString;
                     }
                     break;
+
                 case MapMode::kNode: {
                     auto node = YAML::Load(Value);
                     if (sub_key.empty())
@@ -1079,6 +1080,6 @@ YAML::Node Parser::emitYaml() noexcept {
                       vars::kPluginPattern, cma::cfg::vars::kPluginUserFolder);
 
     return yaml;
-}
+}  // namespace cma::cfg::cvt
 
 }  // namespace cma::cfg::cvt

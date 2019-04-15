@@ -1,5 +1,5 @@
 // test-cvt.cpp :
-//ini -> yml
+// ini -> yml
 
 #include "pch.h"
 
@@ -516,10 +516,13 @@ TEST(CvtTest, GlobalSection) {
             EXPECT_EQ(sections[1].as<std::string>(), groups::kWinPerf);
         }
         {
-            auto sessions = g[vars::kSectionsDisabled];
-            ASSERT_TRUE(sessions.IsSequence());
-            ASSERT_TRUE(sessions.size() == 1);
-            EXPECT_EQ(sessions[0].as<std::string>(), groups::kLogFiles);
+            auto sessions = cma::cfg::GetInternalArray(groups::kGlobal,
+                                                       vars::kSectionsDisabled);
+            ASSERT_TRUE(sessions.size() == 2);
+
+            EXPECT_TRUE(sessions[0] == "badname" || sessions[1] == "badname");
+            EXPECT_TRUE(sessions[0] == groups::kLogFiles ||
+                        sessions[1] == groups::kLogFiles);
         }
         {
             auto onlyfrom = g[vars::kOnlyFrom];
@@ -530,12 +533,12 @@ TEST(CvtTest, GlobalSection) {
             EXPECT_EQ(onlyfrom[2].as<std::string>(), "0:0:0:0:0:0:0:1/128");
         }
         {
-            auto onlyfrom = g[vars::kExecute];
-            ASSERT_TRUE(onlyfrom.IsSequence());
-            ASSERT_TRUE(onlyfrom.size() == 3);
-            EXPECT_EQ(onlyfrom[0].as<std::string>(), "exe");
-            EXPECT_EQ(onlyfrom[1].as<std::string>(), "bat");
-            EXPECT_EQ(onlyfrom[2].as<std::string>(), "vbs");
+            auto execute =
+                cma::cfg::GetInternalArray(groups::kGlobal, vars::kExecute);
+            ASSERT_TRUE(execute.size() == 3);
+            EXPECT_EQ(execute[0], "exe");
+            EXPECT_EQ(execute[1], "bat");
+            EXPECT_EQ(execute[2], "vbs");
         }
 
         {

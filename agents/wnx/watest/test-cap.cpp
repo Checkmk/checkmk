@@ -267,6 +267,7 @@ TEST(CapTest, CheckInValid) {
         ASSERT_TRUE(fs::exists(invalid_cap, ec))
             << "Your setup for tests is invalid";
         std::vector<std::wstring> files;
+        XLOG::l.i("Next log output should be crit. This is SUCCESS");
         auto ret = Process(invalid_cap.u8string(), ProcMode::kList, files);
         EXPECT_FALSE(ret);
         ASSERT_EQ(files.size(), 1)

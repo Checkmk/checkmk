@@ -111,7 +111,6 @@ def test_is_no_ip_host(monkeypatch, hostname, tags, result):
 def test_is_ipv6_primary_host(monkeypatch, hostname, tags, result, ruleset):
     monkeypatch.setattr(config, "primary_address_family", ruleset)
     config_cache = _setup_host(monkeypatch, hostname, tags)
-    assert config.is_ipv6_primary(hostname) == result
     assert config_cache.get_host_config(hostname).is_ipv6_primary == result
 
 

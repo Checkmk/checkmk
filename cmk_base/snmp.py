@@ -142,10 +142,13 @@ def _clear_other_hosts_oid_cache(hostname):
 #   '----------------------------------------------------------------------'
 
 
+# TODO: Replace SNMPHostConfig with HostConfig
 def create_snmp_host_config(hostname):
     # type: (str) -> cmk_base.snmp_utils.SNMPHostConfig
+    host_config = config.get_config_cache().get_host_config(hostname)
+
     return cmk_base.snmp_utils.SNMPHostConfig(
-        is_ipv6_primary=config.is_ipv6_primary(hostname),
+        is_ipv6_primary=host_config.is_ipv6_primary,
         hostname=hostname,
         ipaddress=ip_lookup.lookup_ipv4_address(hostname),
         credentials=config.snmp_credentials_of(hostname),

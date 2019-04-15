@@ -88,6 +88,9 @@ class DataSource(object):
         self._exit_code_spec = config.exit_code_spec(hostname, data_source_id=self.id())
         self._persisted_sections = None
 
+        self._config_cache = config.get_config_cache()
+        self._host_config = self._config_cache.get_host_config(self._hostname)
+
     def _setup_logger(self):
         """Add the source log prefix to the class logger"""
         self._logger.propagate = False
@@ -521,7 +524,6 @@ class CheckMKAgentDataSource(DataSource):
     def __init__(self, hostname, ipaddress):
         super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress)
         self._is_main_agent_data_source = False
-        self._config_cache = config.get_config_cache()
 
     # TODO: We should cleanup these old directories one day. Then we can remove this special case
     def set_main_agent_data_source(self):

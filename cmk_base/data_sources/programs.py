@@ -153,9 +153,12 @@ class DSProgramDataSource(ProgramDataSource):
     def _translate_host_macros(self, cmd):
         attrs = core_config.get_host_attributes(self._hostname, self._config_cache)
         if config.is_cluster(self._hostname):
-            parents_list = core_config.get_cluster_nodes_for_config(self._hostname)
+            parents_list = core_config.get_cluster_nodes_for_config(self._config_cache,
+                                                                    self._host_config)
             attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
-            attrs.update(core_config.get_cluster_attributes(self._hostname, parents_list))
+            attrs.update(
+                core_config.get_cluster_attributes(self._config_cache, self._host_config,
+                                                   parents_list))
 
         macros = core_config.get_host_macros_from_attributes(self._hostname, attrs)
         return core_config.replace_macros(cmd, macros)

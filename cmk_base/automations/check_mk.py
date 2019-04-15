@@ -1119,9 +1119,11 @@ class AutomationDiagHost(Automation):
     needs_checks = True
 
     def execute(self, args):
-        config_cache = config.get_config_cache()
         hostname, test, ipaddress, snmp_community = args[:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
+
+        config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
 
         # In 1.5 the tcp connect timeout has been added. The automation may
         # be called from a remote site with an older version. For this reason
@@ -1155,11 +1157,9 @@ class AutomationDiagHost(Automation):
             except:
                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
-        ipv6_primary = config.is_ipv6_primary(hostname)
-
         try:
             if test == 'ping':
-                base_cmd = "ping6" if ipv6_primary else "ping"
+                base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
                 p = subprocess.Popen([base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT)
@@ -1186,7 +1186,7 @@ class AutomationDiagHost(Automation):
                 return 0, output
 
             elif test == 'traceroute':
-                family_flag = "-6" if ipv6_primary else "-4"
+                family_flag = "-6" if host_config.is_ipv6_primary else "-4"
                 try:
                     p = subprocess.Popen(['traceroute', family_flag, '-n', ipaddress],
                                          stdout=subprocess.PIPE,
@@ -1252,7 +1252,7 @@ class AutomationDiagHost(Automation):
 
                 #TODO: What about SNMP management boards?
                 host_config = snmp_utils.SNMPHostConfig(
-                    is_ipv6_primary=ipv6_primary,
+                    is_ipv6_primary=host_config.is_ipv6_primary,
                     hostname=hostname,
                     ipaddress=ipaddress,
                     credentials=credentials,

@@ -182,17 +182,16 @@ def parse_arguments(argv):
         default=[],
         metavar='TAG',
         action='append',
-        help='''Only monitor resources that have the specified TAG. To require multiple tags,
-             provide the option more than once.''')
+        help='''Only monitor resources that have the specified TAG.
+              To require multiple tags, provide the option more than once.''')
     parser.add_argument(
         "--require-tag-value",
         default=[],
         metavar=("TAG", "VALUE"),
         nargs=2,
         action='append',
-        help=
-        '''Only monitor resources that have the specified TAG set to VALUE. To require multiple tags,
-             provide the option more than once.''')
+        help='''Only monitor resources that have the specified TAG set to VALUE.
+             To require multiple tags, provide the option more than once.''')
     parser.add_argument(
         "--explicit-config",
         default=[],
@@ -510,7 +509,6 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
 
         self.timespans = self._get_timespans()
         self.resources_cache = None
-        self.metrics_cache = {}
 
     @staticmethod
     def _get_timespans():

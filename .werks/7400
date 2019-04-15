@@ -1,0 +1,11 @@
+Title: agent_azure: Report resource group tags
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1555320415
+Class: feature
+
+The agent now produces the new generic "&lt;&lt;&lt;labels&gt;&gt;&gt;" section.
+This makes Check_MK automatically create host labels from the tags configured in Azure. You can now use them to filter your views, dashboards and in the future also create rules in WATO based on them.

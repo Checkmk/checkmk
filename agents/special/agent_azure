@@ -344,22 +344,21 @@ class Selector(object):
 
 
 class Section(object):
-    SEP = 124
     LOCK = Lock()
 
-    def __init__(self, name, piggytarget=''):
+    def __init__(self, name, piggytarget, separator):
         super(Section, self).__init__()
+        self._sep = chr(separator)
         self._head = []
         self._cont = []
         self._foot = []
-        if piggytarget != '':
+        if piggytarget:
             self._head.append('<<<<%s>>>>\n' % piggytarget)
             self._foot.append('<<<<>>>>\n')
-        self._head.append('<<<azure_%s:sep(%s)>>>\n' % (name, Section.SEP))
+        self._head.append('<<<%s:sep(%d)>>>\n' % (name, separator))
 
-    @staticmethod
-    def formatline(tokens):
-        return chr(Section.SEP).join(map(str, tokens)) + '\n'
+    def formatline(self, tokens):
+        return self._sep.join(map(str, tokens)) + '\n'
 
     def add(self, info):
         if not info:
@@ -377,6 +376,16 @@ class Section(object):
         sys.stdout.writelines(self._head + self._cont + self._foot)
         sys.stdout.flush()
         self.LOCK.release()
+
+
+class AzureSection(Section):
+    def __init__(self, name, piggytarget=None):
+        super(AzureSection, self).__init__('azure_%s' % name, piggytarget, separator=124)
+
+
+class LabelsSection(Section):
+    def __init__(self, piggytarget):
+        super(LabelsSection, self).__init__("labels", piggytarget, separator=0)
 
 
 class IssueCollecter(object):
@@ -538,6 +547,12 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
             return
         client.process(resource, self.args)
 
+    def list_groups(self):
+        if "groups" not in self._cache:
+            # azure-api-call
+            self._cache["groups"] = list(self._resource_client.resource_groups.list())
+        return self._cache["groups"]
+
     def list_resources(self):
         if "resources" not in self._cache:
             # azure-api-call
@@ -614,28 +629,35 @@ def process_resource(args):
     for metric in client.get_metrics(resource, err):
         resource.metrics.append(metric)
 
-    agent_info_section = Section('agent_info')
+    agent_info_section = AzureSection('agent_info')
     agent_info_section.add(('remaining-reads', client.remaining_reads))
     agent_info_section.add(err.dumpinfo())
 
     sections = [agent_info_section]
     for piggytarget in resource.piggytargets:
-        section = Section(resource.section, piggytarget)
+        section = AzureSection(resource.section, piggytarget)
         section.add(resource.dumpinfo())
         sections.append(section)
 
     return sections
 
 
-def write_group_info(resources):
-    groups = sorted(set(r.info['group'] for r in resources))
-    section = Section('agent_info')
-    section.add(('monitored-groups', json.dumps(groups)))
+def write_group_info(client, resources):
+    monitored_groups = sorted(set(r.info['group'] for r in resources))
+
+    for group in client.list_groups():
+        if group.name in monitored_groups and group.tags:
+            labels_section = LabelsSection(group.name)
+            labels_section.add((json.dumps(group.tags),))
+            labels_section.write()
+
+    section = AzureSection('agent_info')
+    section.add(('monitored-groups', json.dumps(monitored_groups)))
     section.write()
     # create empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
-    for group in groups:
-        Section('agent_info', group).write()
+    for group in monitored_groups:
+        AzureSection('agent_info', group).write()
 
 
 def write_exception_to_agent_info_section(exception):
@@ -647,7 +669,7 @@ def write_exception_to_agent_info_section(exception):
         msg += "HINT: Make sure you have a proper role asigned to your client!"
 
     value = json.dumps((2, msg))
-    section = Section('agent_info')
+    section = AzureSection('agent_info')
     section.add(('agent-bailout', value))
     section.write()
 
@@ -666,7 +688,7 @@ def main(argv=None):
         resources = [r for r in client.list_resources() if selector.do_monitor(r)]
         client.init_specific(resources)
 
-        write_group_info(resources)
+        write_group_info(client, resources)
 
         func_args = ((resource, client) for resource in resources)
         map_ = map if args.sequential else AsyncMapper(args.timeout, args.debug)

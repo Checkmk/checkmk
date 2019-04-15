@@ -1041,10 +1041,6 @@ def hostgroups_of(hostname):
     return get_config_cache().host_extra_conf(hostname, host_groups)
 
 
-def summary_hostgroups_of(hostname):
-    return get_config_cache().host_extra_conf(hostname, summary_host_groups)
-
-
 def contactgroups_of(hostname):
     cgrs = []
 

@@ -1343,7 +1343,7 @@ def service_ignored(hostname, check_plugin_name, description):
         return True
 
     if description is not None \
-       and in_boolean_serviceconf_list(hostname, description, ignored_services):
+       and get_config_cache().in_boolean_serviceconf_list(hostname, description, ignored_services):
         return True
 
     return False
@@ -1559,11 +1559,6 @@ def get_http_proxy(http_proxy):
 
 def service_extra_conf(hostname, service, ruleset):
     return get_config_cache().service_extra_conf(hostname, service, ruleset)
-
-
-# Compute outcome of a service rule set that just say yes/no
-def in_boolean_serviceconf_list(hostname, descr, ruleset):
-    return get_config_cache().in_boolean_serviceconf_list(hostname, descr, ruleset)
 
 
 #.

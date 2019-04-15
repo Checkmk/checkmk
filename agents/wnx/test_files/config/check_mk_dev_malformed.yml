@@ -69,10 +69,7 @@ global:
         # passphrase for encrypted communication.
         passphrase: this is my password
         # which sections are realtime
-        run:
-            - mem 
-            - df 
-            - winperf_processor
+        run: mem df winperf_processor
 
     # by default the agent flushes the socket for each agent section.
     # this is mostly for debugging purposes in case the agent is slow

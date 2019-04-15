@@ -320,11 +320,14 @@ TEST(AgentConfig, WorkScenario) {
     auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
     EXPECT_TRUE(execute.size() > 3);
 
-    auto only_from = GetArray<string>(groups::kGlobal, vars::kOnlyFrom);
+    auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
     EXPECT_TRUE(only_from.size() == 0);
 
+#if 0
+	// should not supported
     auto host = GetArray<string>(groups::kGlobal, vars::kHost);
     EXPECT_TRUE(host.size() == 1);
+#endif
 
     {
         auto sections_enabled =

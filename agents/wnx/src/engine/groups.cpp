@@ -59,7 +59,7 @@ void Global::loadFromMainConfig() {
 
         execute_ = GetInternalArray(groups::kGlobal, vars::kExecute);
 
-        auto only_from = GetArray<string>(groups::kGlobal, vars::kOnlyFrom);
+        auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
         fillOnlyFrom(only_from);
 
         enabled_sections_ =

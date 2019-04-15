@@ -52,8 +52,8 @@ std::string CheckMk::makeBody() const {
         out += fmt::format("{}: {}\n", info.first, info.second);
     }
     out += "OnlyFrom:";
-    auto only_from = GetArray<string>(groups::kGlobal, vars::kOnlyFrom);
-    if (only_from.size() == 0) {
+    auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
+    if (only_from.empty()) {
         out += " 0.0.0.0/0\n";
     } else {
         for (auto& entry : only_from) {

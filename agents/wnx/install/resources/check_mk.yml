@@ -25,10 +25,7 @@ global:
     # source adresses in their ipv6-mapped form. I.e. if
     # 192.168.56.0/24 is listed, connections from ::ffff:c0a8:3800/120
     # are also possible
-    only_from: 
-    #    - 127.0.0.1 
-    #    - 192.168.56.0/24 
-    #    - ::1
+    only_from: # 127.0.0.1 192.168.56.0/24 ::1
 
     # Change port where the agent is listening ( default 6556 )
     port: 6556
@@ -59,12 +56,6 @@ global:
     # impact on the system performance
     # BAD PLACE and duplicates same flag in plugins
     async: yes
-
-    # Restrict the following configuration variables
-    # in [global] to the following hosts
-    # ?????????
-    host: 
-        - '*'
 
     # Just output certain sections
     sections: check_mk mrpe skype spool plugins local winperf uptime systemtime df mem services msexch dotnet_clrmemory wmi_webservices wmi_cpuload ps fileinfo logwatch
@@ -99,7 +90,9 @@ global:
     # Disabling this may (very) slightly reduce network traffic.
     section_flush: no
 
-    wmi_timeout: 8 
+    # In seconds. Windows may be slow during WMI, increase the value when you have problems
+    # Legacy agent is 2.5 seconds, this is not enough
+    wmi_timeout: 3 
 
     # -------------------------------------------------------------- 
     # Internal log of agent
@@ -117,9 +110,6 @@ global:
 
         # you may disable your eventlog ability
         eventlog: yes
-
-        # In seconds. Windows may be slow during WMI, increase the value when you have problems
-        # Legacy agent is 2.5 seconds, this is not enough
 
 ps:
     enabled: yes

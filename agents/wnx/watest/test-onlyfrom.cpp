@@ -143,10 +143,8 @@ TEST(OnlyFromTest, Base) {
     ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
     {
         auto yaml = GetLoadedConfig();
-        yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load(
-            "- 192.168.1.14/24\n"
-            "- ::1\n"
-            "- 127.0.0.1\n");
+        yaml[groups::kGlobal][vars::kOnlyFrom] =
+            YAML::Load("192.168.1.14/24 ::1 127.0.0.1");
 
         yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
 
@@ -234,7 +232,7 @@ TEST(OnlyFromTest, Base) {
         {
             auto yaml = GetLoadedConfig();
             yaml[groups::kGlobal][vars::kOnlyFrom] =
-                YAML::Load("- 192.168.1.14/24\n");
+                YAML::Load("192.168.1.14/24");
 
             groups::global.loadFromMainConfig();
             auto only_froms = groups::global.getOnlyFrom();
@@ -266,9 +264,7 @@ TEST(OnlyFromTest, Ipv6) {
     ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
     {
         auto yaml = GetLoadedConfig();
-        yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load(
-            "- ::1\n"
-            "- 127.0.0.1\n");
+        yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("::1 127.0.0.1");
         yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
 
         groups::global.loadFromMainConfig();
@@ -343,9 +339,8 @@ TEST(OnlyFromTest, Ipv6) {
 
         {
             auto yaml = GetLoadedConfig();
-            yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load(
-                "- ::1\n"
-                "- 127.0.0.1\n");
+            yaml[groups::kGlobal][vars::kOnlyFrom] =
+                YAML::Load("::1 127.0.0.1");
             yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("off\n");
 
             groups::global.loadFromMainConfig();

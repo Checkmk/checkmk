@@ -551,12 +551,11 @@ TEST(CvtTest, GlobalSection) {
             ASSERT_TRUE(rt.IsMap());
             EXPECT_EQ(rt[vars::kTimeout].as<int>(), 90);
             EXPECT_EQ(rt[vars::kRtEncrypt].as<bool>(), true);
-            auto rt_sessions = rt[vars::kRtRun];
-            ASSERT_TRUE(rt_sessions.IsSequence());
+            auto rt_sessions = GetInternalArray(rt, vars::kRtRun);
             ASSERT_TRUE(rt_sessions.size() == 3);
-            EXPECT_EQ(rt_sessions[0].as<std::string>(), "df");
-            EXPECT_EQ(rt_sessions[1].as<std::string>(), "mem");
-            EXPECT_EQ(rt_sessions[2].as<std::string>(), "winperf_processor");
+            EXPECT_EQ(rt_sessions[0], "df");
+            EXPECT_EQ(rt_sessions[1], "mem");
+            EXPECT_EQ(rt_sessions[2], "winperf_processor");
         }
     }
 }

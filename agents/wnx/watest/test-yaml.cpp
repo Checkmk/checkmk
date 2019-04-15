@@ -353,7 +353,7 @@ TEST(AgentConfig, WorkScenario) {
             GetVal(realtime, vars::kGlobalPassword, std::string());
         EXPECT_TRUE(passphrase == "this is my password");
 
-        auto run = GetArray<string>(realtime, vars::kRtRun);
+        auto run = GetInternalArray(realtime, vars::kRtRun);
         EXPECT_TRUE(run.size() == 3);
     }
     {

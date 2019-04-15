@@ -69,11 +69,7 @@ global:
         - fileinfo
         - logwatch
     # forced to not use
-    sections_disabled:
-        - _logfiles
-        - winperf_xxx
-        - badname
-        - openhardwaremonitor
+    disabled_sections: openhardwaremonitor _logfiles winperf_xxx badname
         # output sections in realtime updates. Please note that not all
         # sections can be used in realtime updates, the following is the
         # complete list
@@ -93,10 +89,7 @@ global:
         # passphrase for encrypted communication.
         passphrase: this is my password
         # which sections are realtime
-        run:
-            - mem 
-            - df 
-            - winperf_processor
+        run: mem df winperf_processor
 
     # by default the agent flushes the socket for each agent section.
     # this is mostly for debugging purposes in case the agent is slow
@@ -211,28 +204,12 @@ logwatch:
     sendall: no
     vista_api: no # this is RECOMMENDED settinsg
 
-    logfile:
-        - name: 'Application'
-          level: crit
-          context: yes # default is no
-        - name: 'System'
-          level: warn # allowed crit, warn, all, off
-          context: no
-        # FUTURE RELEASE
-        #- name: '*'
-        #  enabled: off
-        # this entry is show missing output, do not use in production
-        - name: 'Demo'
-          level: 'crit' # allowed crit, warn, all, off
-          context: no
-
-        # this entry is also ignored - name  empty
-        - name: ''
-          level: 'warn' # allowed crit, warn, all, off
-          context: no
-        - name: '*' #special default value for logs found in registry, but not in config file
-          level: 'off' # allowed crit, warn, all, off
-          context: no
+    logfile: # 
+        - 'Application': crit context # allowed <crit|warn|all|off> + [context|nocontext]
+        - 'System': warn nocontext 
+        - 'Demo': all nocontext # allowed crit, warn, all, off
+        - '': warn nocontext # allowed crit, warn, all, off
+        - '*': off nocontext # allowed crit, warn, all, off, do not remove this
 
 plugins:
     # scripts in plugin

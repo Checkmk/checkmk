@@ -311,6 +311,26 @@ inline std::vector<std::string> StringToTable(const std::string& WholeValue) {
 }
 
 // gets string from the yaml and split it in table using space as divider
+inline std::vector<std::string> GetInternalArray(const YAML::Node& Yaml,
+                                                 const std::string& Name,
+                                                 int* ErrorOut = 0) noexcept {
+    try {
+        auto val = Yaml[Name];
+        if (val.IsDefined() && val.IsScalar()) {
+            auto str = val.as<std::string>();
+            return StringToTable(str);
+        } else {
+            // this is OK when nothing inside
+            XLOG::d.t("Absent/Empty node '{}' type is {}", Name, val.Type());
+        }
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml file '{}' with '{}' code:{}",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
+    }
+    return {};
+}
+
+// gets string from the yaml and split it in table using space as divider
 inline std::vector<std::string> GetInternalArray(const std::string& Section,
                                                  const std::string& Name,
                                                  int* ErrorOut = 0) noexcept {
@@ -319,22 +339,36 @@ inline std::vector<std::string> GetInternalArray(const std::string& Section,
         if (ErrorOut) *ErrorOut = Error::kEmpty;
         return {};
     }
+
     try {
         auto section = yaml[Section];
-        auto val = section[Name];
-        if (val.IsDefined() && val.IsScalar()) {
-            auto str = val.as<std::string>();
-            return StringToTable(str);
-        } else
-            // this is OK when nothing inside
-            XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
-                      val.Type());
+        return GetInternalArray(section, Name, ErrorOut);
     } catch (const std::exception& e) {
-        XLOG::l("Cannot read yml file {} with {}.{} code:{}",
+        XLOG::l("Cannot read yml file '{}' with '{}.{}' code:{}",
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
                 e.what());
     }
     return {};
+}
+
+// opposite operation for the GetInternalArray
+inline void PutInternalArray(YAML::Node Yaml, const std::string& Name,
+                             std::vector<std::string>& Arr,
+                             int* ErrorOut = 0) noexcept {
+    try {
+        auto section = Yaml[Name];
+        if (Arr.empty()) {
+            section.remove(Name);
+            return;
+        }
+
+        auto result = cma::tools::JoinVector(Arr, " ");
+        if (result.back() == ' ') result.pop_back();
+        Yaml[Name] = result;
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml file '{}' with '{}' code:'{}'",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
+    }
 }
 
 // opposite operation for the GetInternalArray
@@ -349,16 +383,9 @@ inline void PutInternalArray(const std::string& Section,
     }
     try {
         auto section = yaml[Section];
-        if (Arr.empty()) {
-            section.remove(Name);
-            return;
-        }
-
-        auto result = cma::tools::JoinVector(Arr, " ");
-        if (result.back() == ' ') result.pop_back();
-        yaml[Section][Name] = result;
+        PutInternalArray(section, Name, Arr, ErrorOut);
     } catch (const std::exception& e) {
-        XLOG::l("Cannot read yml file {} with {}.{} code:{}",
+        XLOG::l("Cannot read yml file '{}' with '{}.{} 'code:'{}'",
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
                 e.what());
     }

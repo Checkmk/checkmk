@@ -80,7 +80,7 @@ void Global::loadFromMainConfig() {
         wmi_timeout_ = GetVal(groups::kGlobal, vars::kGlobalWmiTimeout,
                               kDefaultWmiTimeout);
 
-        realtime_sections_ = GetArray<string>(realtime, vars::kRtRun);
+        realtime_sections_ = GetInternalArray(realtime, vars::kRtRun);
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
 
         public_log_ = GetVal(logging, vars::kLogPublic, true);

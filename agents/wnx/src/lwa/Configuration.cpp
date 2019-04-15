@@ -250,28 +250,20 @@ void Configuration::outputConfigurables(
                 continue;
             }
 
-            if (cma::tools::IsEqual(section, "logwatch")) {
+            if (cma::tools::IsEqual(section, "logwatch") ||
+                cma::tools::IsEqual(section, "logfiles")) {
                 Sink(section, key, v.outputForYaml(), v.iniString());
                 continue;
             }
 
-            if (cma::tools::IsEqual(section, "logfiles")) {
-                Sink(section, key, v.outputForYaml(), v.iniString());
-                continue;
-            }
-
-            if (cma::tools::IsEqual(section, "global") &&
-                cma::tools::IsEqual(key, "disabled_sections")) {
-                std::string value = v.outputAsInternalArray();
-                Sink(section, key, "", value);
-                continue;
-            }
-
-            if (cma::tools::IsEqual(section, "global") &&
-                cma::tools::IsEqual(key, "execute")) {
-                std::string value = v.outputAsInternalArray();
-                Sink(section, key, "", value);
-                continue;
+            if (cma::tools::IsEqual(section, "global")) {
+                if (cma::tools::IsEqual(key, "disabled_sections") ||
+                    cma::tools::IsEqual(key, "realtime_sections") ||
+                    cma::tools::IsEqual(key, "execute")) {
+                    auto value = v.outputAsInternalArray();
+                    Sink(section, key, "", value);
+                    continue;
+                }
             }
 
             if (!v.isKeyed()) {
@@ -383,8 +375,8 @@ public:
 
 template <>
 eventlog::config from_string<eventlog::config>(const std::string &value) {
-    // this parses only what's on the right side of the = in the configuration
-    // file
+    // this parses only what's on the right side of the = in the
+    // configuration file
     std::stringstream str(value);
 
     bool hide_context = false;
@@ -549,10 +541,10 @@ bool supportIPv6() {
     INT iErrno = NO_ERROR;
     LPWSAPROTOCOL_INFOW lpProtocolInfo = nullptr;
 
-    // WSCEnumProtocols is broken (nice!). You *must* call it 1st time with null
-    // buffer & bufferSize 0. Otherwise it will corrupt your heap in case the
-    // necessary buffer size exceeds your allocated buffer. Do never ever trust
-    // Microsoft WinAPI documentation!
+    // WSCEnumProtocols is broken (nice!). You *must* call it 1st time with
+    // null buffer & bufferSize 0. Otherwise it will corrupt your heap in
+    // case the necessary buffer size exceeds your allocated buffer. Do
+    // never ever trust Microsoft WinAPI documentation!
     while ((iNuminfo = WSCEnumProtocols(nullptr, lpProtocolInfo, &bufferSize,
                                         &iErrno)) == SOCKET_ERROR) {
         if (iErrno == WSAENOBUFS) {
@@ -924,7 +916,7 @@ const std::unordered_map<std::string, Mapping> G_Mapper = {
     {"global.section_flush",    { "", "", MapMode::kIniString}},//ignored
     {"global.execute",          { "", "", MapMode::kIniString}},
     {"global.passphrase",       { "", "", MapMode::kIniString}},//not supported
-    {"global.realtime_sections",{ "realtime", "run", MapMode::kNode}},
+    {"global.realtime_sections",{ "realtime", "run", MapMode::kIniString}},
     {"global.crash_debug",      { "logging", "debug", MapMode::kIniString}},
     {"global.disabled_sections",{ "", "", MapMode::kIniString}},
     {"global.sections",         { "", "", MapMode::kNode}},
@@ -1074,7 +1066,8 @@ YAML::Node Parser::emitYaml() noexcept {
                 }
             }
 
-            // XLOG::stdio("assigned {}.{} \t<--- {}", Section, Key, Value);
+            // XLOG::stdio("assigned {}.{} \t<--- {}", Section, Key,
+            // Value);
         } catch (...) {
             std::cout << yaml << std::endl;
             XLOG::l("error {}.{} = {}", Section, Key, Value);

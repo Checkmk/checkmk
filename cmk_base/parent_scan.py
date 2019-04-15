@@ -45,10 +45,12 @@ import cmk_base.ip_lookup as ip_lookup
 
 
 def do_scan_parents(hosts):
+    config_cache = config.get_config_cache()
+
     if not hosts:
         hosts = [
             h for h in config.all_active_realhosts()
-            if config.in_binary_hostlist(h, config.scanparent_hosts)
+            if config_cache.in_binary_hostlist(h, config.scanparent_hosts)
         ]
 
     parent_hosts = []

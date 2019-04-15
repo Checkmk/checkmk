@@ -27,6 +27,17 @@
 #include "logger.h"
 #include "read_file.h"
 
+namespace cma {
+namespace details {
+// internal and hidden variables
+// #TODO to be relocated in the application parameters global
+bool G_Service = false;  // set to true only when we run service
+}  // namespace details
+
+bool IsService() { return details::G_Service; }
+
+};  // namespace cma
+
 namespace cma::cfg {
 
 std::wstring WinPerf::buildCmdLine() const {

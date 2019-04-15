@@ -131,11 +131,12 @@ static void ServiceUsage(const std::wstring &Comment) {
 }
 
 namespace cma {
-
-bool G_Service = false;  // set to true only when we run service
+namespace details {
+extern bool G_Service;
+}
 
 StartTypes AppDefaultType() {
-    return G_Service ? StartTypes::kService : StartTypes::kExe;
+    return details::G_Service ? StartTypes::kService : StartTypes::kExe;
 }
 
 template <typename T>
@@ -189,7 +190,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         using namespace std::chrono;
         using namespace cma::cfg;
 
-        G_Service = true;  // we know that we are service
+        cma::details::G_Service = true;  // we know that we are service
 
         return cma::srv::ServiceAsService(1000ms, [](const void *) {
             // optional commands listed here

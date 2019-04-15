@@ -14,6 +14,11 @@
 #include "on_start.h"
 #include "onlyfrom.h"
 
+namespace cma {
+// set only when executable works as a service
+bool IsService();
+}  // namespace cma
+
 namespace cma::cfg {
 // bit mask
 enum LoadCfgStatus {
@@ -332,7 +337,7 @@ inline std::vector<std::string> GetInternalArray(const std::string& Section,
     return {};
 }
 
-//opposite operation for the GetInternalArray
+// opposite operation for the GetInternalArray
 inline void PutInternalArray(const std::string& Section,
                              const std::string& Name,
                              std::vector<std::string>& Arr,

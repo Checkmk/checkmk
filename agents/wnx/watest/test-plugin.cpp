@@ -802,6 +802,29 @@ void PrepareStructures() {
     }
 }
 
+TEST(PluginTest, RemoveDuplicatedPlugins) {
+    PluginMap x;
+    RemoveDuplicatedPlugins(x, false);
+    EXPECT_TRUE(x.size() == 0);
+
+    x.emplace(std::make_pair("c:\\123\\a.bb", "c:\\123\\a.bb"));
+    EXPECT_TRUE(x.size() == 1);
+    RemoveDuplicatedPlugins(x, false);
+    EXPECT_TRUE(x.size() == 1);
+    x.emplace(std::make_pair("c:\\123\\aa.bb", "c:\\123\\aa.bb"));
+    EXPECT_TRUE(x.size() == 2);
+    RemoveDuplicatedPlugins(x, false);
+    EXPECT_TRUE(x.size() == 2);
+
+    x.emplace(std::make_pair("c:\\123\\another\\a.bb", "c:\\123\a.bb"));
+    x.emplace(std::make_pair("c:\\123\\another\\aa.bb", "c:\\123\\aa.bb"));
+    x.emplace(std::make_pair("c:\\123\\aa.bb", "c:\\123\\aa.bb"));
+    x.emplace(std::make_pair("c:\\123\\yy.bb", "c:\\123\\aa.bb"));
+    EXPECT_TRUE(x.size() == 5);
+    RemoveDuplicatedPlugins(x, false);
+    EXPECT_TRUE(x.size() == 3);
+}
+
 TEST(PluginTest, AsyncStartSimulation) {
     using namespace cma::cfg;
     using namespace wtools;

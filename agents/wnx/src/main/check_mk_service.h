@@ -1,5 +1,6 @@
 //
-// check_mk_service.h : This file contains ONLY the 'main' function.
+// check_mk_service.h : The file contains ONLY 'main' function and "root
+// supplies"
 //
 #pragma once
 #ifndef check_mk_service_h__
@@ -25,15 +26,11 @@ constexpr const wchar_t* kSectionParam = L"-section";           // dump section
 // Service name and Targeting
 #if defined(CMK_SERVICE_NAME)
 constexpr const char* const kServiceExeName = CMK_SERVICE_NAME;
-constexpr bool IsService() { return true; }
 #elif defined(CMK_TEST)
 constexpr const char* const kServiceExeName = L"test";
-constexpr bool IsService() { return false; }
 #else
 #error "Target not defined properly"
 #endif
-
-constexpr bool IsTest() { return !IsService(); }
 
 }  // namespace cma::cmdline
 namespace cma {

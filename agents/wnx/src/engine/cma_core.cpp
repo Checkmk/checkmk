@@ -469,15 +469,6 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
     while (data_.size() && data_.back() == 0) data_.pop_back();
 }
 
-const PluginEntry* GetEntrySafe(const PluginMap& Pm, const std::string& Key) {
-    try {
-        auto& z = Pm.at("a");
-        return &z;
-    } catch (...) {
-        return nullptr;
-    }
-}
-
 PluginEntry* GetEntrySafe(PluginMap& Pm, const std::string& Key) {
     try {
         auto& z = Pm.at(Key);
@@ -544,6 +535,30 @@ void ApplyExeUnitToPluginMap(
     }
 }
 
+// CheckExists = false is mostly for testing, set true if you have doubts
+// Out is mutable, gtested
+void RemoveDuplicatedPlugins(PluginMap& Out, bool CheckExists) {
+    namespace fs = std::filesystem;
+    using namespace std;
+    std::unordered_set<std::string>
+        filename_set;  // mk_inventory.vbs, smth.bat, etc
+
+    std::error_code ec;
+    for (auto it = Out.begin(); it != Out.end();) {
+        fs::path p = it->first;
+
+        if (CheckExists && !fs::exists(p, ec)) {
+            it = Out.erase(it);
+            continue;
+        }
+
+        if (!filename_set.insert(p.filename().u8string()).second)
+            it = Out.erase(it);
+        else
+            ++it;
+    }
+}
+
 // Main API
 void UpdatePluginMap(PluginMap& Out,  // output is here
                      bool Local,      // type of plugin
@@ -567,6 +582,9 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
 
     // Apply information from ExeUnits
     ApplyExeUnitToPluginMap(Out, Units, Local);
+
+    // last step is deletion of all duplicated names
+    RemoveDuplicatedPlugins(Out, true);
 }
 
 // #TODO simplify THIS TRASH, SK!

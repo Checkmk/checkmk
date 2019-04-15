@@ -69,13 +69,39 @@ inline bool IsLess(const std::string& Left, const std::string& Right) {
 // #TODO USE IBM ICU or Boost.Locale
 inline void WideUpper(std::wstring& WideStr) {
     if constexpr (tgt::IsWindows()) {
-        auto work_string = WideStr.data();
-        CharUpperW(work_string);
-
+        auto work_string = WideStr.data();  // C++ 17, mutable string
+        CharUpperW(work_string);            // Microsoft specific, but safe
     } else {
         // for windows doesn't work, for Linux probably too
         std::transform(WideStr.begin(), WideStr.end(), WideStr.begin(),
                        [](const wchar_t Ch) { return std::towupper(Ch); });
+    }
+}
+
+// Stupid Approach but C++ has no good methods to uppercase/lowercase string
+// #TODO USE IBM ICU or Boost.Locale
+inline void StringLower(std::string& Str) {
+    if constexpr (tgt::IsWindows()) {
+        auto work_string = Str.data();  // C++ 17, mutable string
+        CharLowerA(work_string);        // Microsoft specific, but safe
+    } else {
+        // for windows doesn't work, for Linux probably too
+        std::transform(Str.begin(), Str.end(), Str.begin(),
+                       [](char Ch) { return std::towlower(Ch); });
+    }
+}
+
+// Stupid Approach but C++ has no good methods to uppercase/lowercase string
+// #TODO USE IBM ICU or Boost.Locale
+inline void StringUpper(std::string& Str) {
+    if constexpr (tgt::IsWindows()) {
+        auto work_string = Str.data();
+        CharUpperA(work_string);
+
+    } else {
+        // for windows doesn't work, for Linux probably too
+        std::transform(Str.begin(), Str.end(), Str.begin(),
+                       [](char Ch) { return std::towupper(Ch); });
     }
 }
 

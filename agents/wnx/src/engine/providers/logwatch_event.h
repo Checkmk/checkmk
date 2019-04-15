@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 #include "common/cfg_info.h"
 
@@ -54,8 +55,10 @@ public:
         : loaded_(false)
         , context_(false)
         , level_(cma::cfg::EventLevels::kOff) {}
-    bool loadFrom(const YAML::Node Node);
-    void init(const std::string& Name, const std::string& Param, bool Context);
+    // bool loadFrom(const YAML::Node Node) noexcept;
+    bool loadFromMapNode(const YAML::Node Node) noexcept;
+    bool loadFrom(std::string_view Line) noexcept;
+    void init(std::string_view Name, std::string_view Param, bool Context);
 
     const std::string name() const noexcept {
         if (loaded_) return name_;
@@ -144,6 +147,17 @@ std::string ReadDataFromLog(bool VistaApi, State& St, bool& LogExists);
 
 // used to check presence of some logs in registry
 bool IsEventLogInRegistry(const std::string Name);
+
+cma::cfg::EventLevels LabelToEventLevel(std::string_view LevelValue);
+
+// used for a testing /analyzing
+struct RawLogWatchData {
+    bool loaded_;
+    std::string_view name_;
+    cma::cfg::EventLevels level_;
+    bool context_;
+};
+
 }  // namespace provider
 
 };  // namespace cma

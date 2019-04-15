@@ -27,49 +27,113 @@
 
 namespace cma::provider {
 
-void LogWatchEntry::init(const std::string& Name, const std::string& LevelValue,
-                         bool Context) {
+// trivial converter. kOff if LevelValue is not valid
+// safe for nullptr and mixed case
+cma::cfg::EventLevels LabelToEventLevel(std::string_view Level) {
     using namespace cma::cfg;
+
+    if (Level.data() == nullptr) {
+        XLOG::l(XLOG_FUNC + " parameter set to nullptr ");
+        return cma::cfg::EventLevels::kOff;
+    }
+
+    std::string val(Level);
+    cma::tools::StringLower(val);
+
+    EventLevels levels[] = {EventLevels::kOff, EventLevels::kAll,
+                            EventLevels::kWarn, EventLevels::kCrit};
+
+    for (auto level : levels) {
+        if (val == ConvertLogWatchLevelToString(level)) return level;
+    }
+
+    XLOG::d("Key '{}' is not allowed, switching level to 'off'", val);
+    return EventLevels::kOff;
+}
+
+void LogWatchEntry::init(std::string_view Name, std::string_view LevelValue,
+                         bool Context) {
     name_ = Name;
     context_ = Context;
-
-    if (LevelValue == "off")
-        level_ = cma::cfg::EventLevels::kOff;
-    else if (LevelValue == "all")
-        level_ = cma::cfg::EventLevels::kAll;
-    else if (LevelValue == "warn")
-        level_ = cma::cfg::EventLevels::kWarn;
-    else if (LevelValue == "crit")
-        level_ = cma::cfg::EventLevels::kCrit;
-    else
-        level_ = cma::cfg::EventLevels::kOff;
+    level_ = LabelToEventLevel(LevelValue);
 
     loaded_ = true;
 }
 
-bool LogWatchEntry::loadFrom(const YAML::Node Node) {
-    using namespace cma::cfg;
-    if (!Node.IsMap()) {
-        XLOG::l("Bad node in logwatch");
+static std::pair<std::string, std::string> ParseLine(
+    std::string_view Line) noexcept {
+    auto name_body = cma::tools::SplitString(std::string(Line), ":");
+    if (name_body.empty()) {
+        XLOG::l("Bad entry '{}' in logwatch section ", Line);
+        return {};
+    }
+
+    auto name = name_body[0];
+    cma::tools::AllTrim(name);
+    if (name.back() == '\"' || name.back() == '\'') name.pop_back();
+    if (name.front() == '\"' || name.front() == '\'') name.erase(name.begin());
+    cma::tools::AllTrim(name);  // this is intended
+    if (name.empty()) {
+        XLOG::d("Skipping empty entry '{}'", Line);
+        return {};
+    }
+
+    auto body = name_body.size() > 1 ? name_body[1] : "";
+    cma::tools::AllTrim(body);
+    return {name, body};
+}
+
+bool LogWatchEntry::loadFromMapNode(const YAML::Node Node) noexcept {
+    if (Node.IsNull() || !Node.IsDefined()) return false;
+    if (!Node.IsMap()) return false;
+    try {
+        YAML::Emitter emit;
+        emit << Node;
+        return loadFrom(emit.c_str());
+    } catch (const std::exception& e) {
+        XLOG::l(
+            "Failed to load logwatch entry from Node exception: '{}' in file '{}'",
+            e.what(), wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
         return false;
     }
-    std::string name;
-    bool context = false;
+}
+// For one-line encoding, example:
+// - 'Application' : crit context
+bool LogWatchEntry::loadFrom(std::string_view Line) noexcept {
+    using namespace cma::cfg;
+    if (Line.data() == nullptr || Line.empty()) {
+        XLOG::t("Skipping logwatch entry with empty name");
+        return false;
+    }
 
     try {
-        auto name = Node[vars::kLogWatchEvent_Name].as<std::string>();
-        auto level_string =
-            Node[vars::kLogWatchEvent_Level].as<std::string>("off");
-        auto context = Node[vars::kLogWatchEvent_Context].as<bool>(false);
-        if (name.empty()) {
-            return false;
+        bool context = false;
+        auto level = EventLevels::kOff;
+        auto [name, body] = ParseLine(Line);
+        if (name.empty()) return false;
+
+        auto table = cma::tools::SplitString(std::string(body), " ");
+        std::string level_string{vars::kLogWatchEvent_ParamDefault};
+        if (table.size()) {
+            level_string = table[0];
+            cma::tools::AllTrim(level_string);
+            if (table.size() > 1) {
+                auto context_value = table[1];
+                cma::tools::AllTrim(context_value);
+                context = cma::tools::IsEqual(context_value, "context");
+            }
+        } else {
+            XLOG::d("logwatch entry '{}' has no data, this is not normal",
+                    name);
         }
-        init(name, level_string, context);
+
+        init(std::string(name), level_string, context);
         return true;
     } catch (const std::exception& e) {
-        XLOG::l("Failed to load node {} {} {} 'exception: {} in file{}'", name,
-                level(), context, e.what(),
-                wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
+        XLOG::l(
+            "Failed to load logwatch entry '{}' exception: '{}' in file '{}'",
+            std::string(Line), e.what(),
+            wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
         return false;
     }
 }
@@ -120,7 +184,7 @@ void LogWatchEvent::loadConfig() {
         bool default_found = false;
         for (auto& l : log_array) {
             entries_.push_back(LogWatchEntry());
-            entries_.back().loadFrom(l);
+            entries_.back().loadFromMapNode(l);
             if (entries_.back().loaded()) {
                 ++count;
                 if (entries_.back().name() == "*") {
@@ -298,8 +362,8 @@ std::string ReadDataFromLog(bool VistaApi, State& St, bool& LogExists) {
     LogExists = false;
 
     if (!VistaApi && !IsEventLogInRegistry(St.name_)) {
-        // we have to check registry, Windows always return success for OpenLog
-        // for any even not existent log, but opens Application
+        // we have to check registry, Windows always return success for
+        // OpenLog for any even not existent log, but opens Application
         XLOG::d("Log '{}' not found in registry, try VistaApi ", St.name_);
         return {};
     }

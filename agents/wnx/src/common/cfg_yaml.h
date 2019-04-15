@@ -87,15 +87,24 @@ const char* const kWinPerfTimeout = "timeout";        // int
 const char* const kLogWatchEventSendall = "sendall";     // bool
 const char* const kLogWatchEventVistaApi = "vista_api";  // bool
 const char* const kLogWatchEventLogFile = "logfile";     // string
-const char* const kLogWatchEvent_Name = "name";          // string
-const char* const kLogWatchEvent_Level = "level";        // string
-const char* const kLogWatchEvent_Context = "context";    // bool
 
-const char* const kLogWatchEvent_ParamWords[] = {
+// Key Words in logwatch.logfile section of the YAML config file
+// example:
+// logfile:
+//   - 'Application' : warn
+//                     ^^^^
+constexpr const char* const kLogWatchEvent_ParamWords[] = {
     "off",   // 0
     "all",   // 1
     "warn",  // 2
     "crit",  // 3
+};
+
+const char* const kLogWatchEvent_ParamDefault = kLogWatchEvent_ParamWords[0];
+
+const char* const kLogWatchEvent_ContextWords[] = {
+    "context",    // 0
+    "nocontext",  // 1
 };
 
 // winperf.counters[].

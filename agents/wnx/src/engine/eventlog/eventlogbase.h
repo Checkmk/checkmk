@@ -70,7 +70,7 @@ public:
             case Level::Information:
             case Level::AuditSuccess:
             case Level::Success:
-                if (Required == cma::cfg::kAll)
+                if (Required == cma::cfg::EventLevels::kAll)
                     return 'O';
                 else
                     return '.';  // potential drop of context

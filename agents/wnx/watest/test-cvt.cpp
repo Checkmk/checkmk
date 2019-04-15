@@ -18,6 +18,7 @@
 
 #include "lwa/types.h"
 
+#include "providers/logwatch_event.h"
 #include "providers/mrpe.h"
 
 #include "test-tools.h"
@@ -197,6 +198,8 @@ TEST(CvtTest, LogFilesSection) {
 
 TEST(CvtTest, LogWatchSection) {
     namespace fs = std::filesystem;
+    using namespace cma::cfg;
+    using namespace cma::provider;
     fs::path test_file = cma::cfg::GetUserDir();
     test_file /= "check_mk.logwatch.test.ini";
     Parser p;
@@ -225,30 +228,24 @@ TEST(CvtTest, LogWatchSection) {
         EXPECT_TRUE(logwatch[vars::kLogWatchEventSendall].as<bool>());
         EXPECT_TRUE(logwatch[vars::kLogWatchEventVistaApi].as<bool>());
 
-        EXPECT_TRUE(logwatch[vars::kLogWatchEventLogFile].size() == 4);
+        ASSERT_TRUE(logwatch[vars::kLogWatchEventLogFile].size() == 4);
         auto logfiles = logwatch[vars::kLogWatchEventLogFile];
-        EXPECT_EQ(logfiles[0][vars::kLogWatchEvent_Name].as<std::string>(),
-                  "application");
-        EXPECT_EQ(logfiles[1][vars::kLogWatchEvent_Name].as<std::string>(),
-                  "system");
-        EXPECT_EQ(logfiles[2][vars::kLogWatchEvent_Name].as<std::string>(),
-                  "*");
-        EXPECT_EQ(logfiles[3][vars::kLogWatchEvent_Name].as<std::string>(),
-                  "microsoft-windows-grouppolicy/operational");
+        const RawLogWatchData base[4] = {
+            {true, "application", EventLevels::kCrit, true},
+            {true, "system", EventLevels::kWarn, false},
+            {true, "*", EventLevels::kOff, true},
+            {true, "microsoft-windows-grouppolicy/operational",
+             EventLevels::kWarn, true},
+        };
 
-        EXPECT_EQ(logfiles[0][vars::kLogWatchEvent_Context].as<bool>(), true);
-        EXPECT_EQ(logfiles[1][vars::kLogWatchEvent_Context].as<bool>(), false);
-        EXPECT_EQ(logfiles[2][vars::kLogWatchEvent_Context].as<bool>(), true);
-        EXPECT_EQ(logfiles[3][vars::kLogWatchEvent_Context].as<bool>(), true);
-
-        EXPECT_EQ(logfiles[0][vars::kLogWatchEvent_Level].as<std::string>(),
-                  vars::kLogWatchEvent_ParamWords[3]);
-        EXPECT_EQ(logfiles[1][vars::kLogWatchEvent_Level].as<std::string>(),
-                  vars::kLogWatchEvent_ParamWords[2]);
-        EXPECT_EQ(logfiles[2][vars::kLogWatchEvent_Level].as<std::string>(),
-                  vars::kLogWatchEvent_ParamWords[0]);
-        EXPECT_EQ(logfiles[3][vars::kLogWatchEvent_Level].as<std::string>(),
-                  vars::kLogWatchEvent_ParamWords[2]);
+        for (int i = 0; i < 4; ++i) {
+            LogWatchEntry lwe;
+            lwe.loadFromMapNode(logfiles[i]);
+            EXPECT_EQ(lwe.name(), base[i].name_);
+            EXPECT_EQ(lwe.level(), base[i].level_);
+            EXPECT_EQ(lwe.context(), base[i].context_);
+            EXPECT_EQ(lwe.loaded(), base[i].loaded_);
+        }
     }
 }
 

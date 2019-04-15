@@ -46,7 +46,7 @@ TEST(EventLogTest, Base) {
         auto [last, level] =
             ScanEventLog(*ptr, 0, cma::cfg::EventLevels::kCrit);
         EXPECT_TRUE(last > 0);
-        EXPECT_TRUE(level > 0);
+        EXPECT_TRUE(level > cma::cfg::EventLevels::kAll);
     }
 
     {
@@ -55,7 +55,7 @@ TEST(EventLogTest, Base) {
         auto [last, level] =
             ScanEventLog(*ptr, 0, cma::cfg::EventLevels::kCrit);
         EXPECT_TRUE(last > 0);
-        EXPECT_TRUE(level > 0);
+        EXPECT_TRUE(level > cma::cfg::EventLevels::kAll);
     }
     {
         auto ptr = OpenEvl(L"Application", false);
@@ -74,7 +74,7 @@ TEST(EventLogTest, Vista) {
         auto [last, level] =
             ScanEventLog(*ptr, 0, cma::cfg::EventLevels::kCrit);
         EXPECT_TRUE(last > 0);
-        EXPECT_TRUE(level > 0);
+        EXPECT_TRUE(level > cma::cfg::EventLevels::kAll);
     }
     {
         auto ptr = OpenEvl(L"Application", false);

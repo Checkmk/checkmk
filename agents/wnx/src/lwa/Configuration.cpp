@@ -415,28 +415,34 @@ eventlog::config from_string<eventlog::config>(const std::string &value) {
 template <>
 std::string ToYamlString(const eventlog::config &Entry, bool) {
     namespace fs = std::filesystem;
+    using namespace cma::cfg;
 
-    std::string out = "- name: '";
+    std::string out = "- '";
     out += Entry.name;
-    out += "'\n  level: ";
+    out += "': ";
+
+    // convert LWA::eventlog::Level to cma:cfg::EventLevels
+    auto event_level = EventLevels::kOff;
+
     switch (Entry.level) {
         case eventlog::Level::All:
-            out += "all";
+            event_level = EventLevels::kAll;
             break;
         case eventlog::Level::Warn:
-            out += "warn";
+            event_level = EventLevels::kWarn;
             break;
         case eventlog::Level::Crit:
-            out += "crit";
+            event_level = EventLevels::kCrit;
             break;
-        default:
         case eventlog::Level::Off:
-            out += "off";
+            event_level = EventLevels::kOff;
             break;
     }
 
-    out += "\n  context: ";
-    out += Entry.hide_context ? "no" : "yes";
+    // now we can obtain text representation for YML
+    out += ConvertLogWatchLevelToString(event_level);
+
+    out += Entry.hide_context ? " nocontext" : " context";
     return out;
 }
 

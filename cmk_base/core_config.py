@@ -95,16 +95,16 @@ def get_configuration_warnings():
 
 # TODO: Cleanup the hostcheck_commands_to_define, custom_commands_to_define thing
 def host_check_command(config_cache,
-                       hostname,
+                       host_config,
                        ip,
                        is_clust,
                        hostcheck_commands_to_define=None,
                        custom_commands_to_define=None):
     # Check dedicated host check command
-    values = config_cache.host_extra_conf(hostname, config.host_check_commands)
+    values = config_cache.host_extra_conf(host_config.hostname, config.host_check_commands)
     if values:
         value = values[0]
-    elif config.is_no_ip_host(hostname):
+    elif host_config.is_no_ip_host:
         value = "ok"
     elif config.monitoring_core == "cmc":
         value = "smart"
@@ -118,7 +118,7 @@ def host_check_command(config_cache,
         return "check-mk-host-smart"
 
     elif value in ["ping", "smart"]:  # Cluster host
-        ping_args = check_icmp_arguments_of(config_cache, hostname)
+        ping_args = check_icmp_arguments_of(config_cache, host_config.hostname)
 
         if is_clust and ip:  # Do check cluster IP address if one is there
             return "check-mk-host-ping!%s" % ping_args
@@ -141,8 +141,8 @@ def host_check_command(config_cache,
         command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
         hostcheck_commands_to_define.append(
             (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
-             (hostname, service.replace('$HOSTNAME$', hostname), hostname,
-              service.replace('$HOSTNAME$', hostname))))
+             (host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname),
+              host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
         return command
 
     elif value[0] == "tcp":
@@ -156,7 +156,7 @@ def host_check_command(config_cache,
         return "check-mk-custom!" + autodetect_plugin(value[1])
 
     raise MKGeneralException(
-        "Invalid value %r for host_check_command of host %s." % (value, hostname))
+        "Invalid value %r for host_check_command of host %s." % (value, host_config.hostname))
 
 
 def autodetect_plugin(command_line):

@@ -83,7 +83,6 @@ def test_is_piggyback_host_auto(monkeypatch, hostname, tags, with_data, result):
 ])
 def test_is_no_ip_host(monkeypatch, hostname, tags, result):
     config_cache = _setup_host(monkeypatch, hostname, tags)
-    assert config.is_no_ip_host(hostname) == result
     assert config_cache.get_host_config(hostname).is_no_ip_host == result
 
 

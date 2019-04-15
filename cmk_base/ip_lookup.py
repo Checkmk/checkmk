@@ -123,7 +123,9 @@ def cached_dns_lookup(hostname, family):
         cache[cache_id] = cached_ip
         return cached_ip
 
-    if config.is_no_ip_host(hostname):
+    host_config = config.get_config_cache().get_host_config(hostname)
+
+    if host_config.is_no_ip_host:
         cache[cache_id] = None
         return None
 

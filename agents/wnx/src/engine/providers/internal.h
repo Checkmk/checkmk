@@ -25,9 +25,9 @@ namespace provider {
 
 // simple creator valid state name
 // gtest [+]
-inline std::string MakeStateFileName(const std::string Name,
-                                     const std::string Ext,
-                                     const std::string Ip = "") {
+inline std::string MakeStateFileName(const std::string& Name,
+                                     const std::string& Ext,
+                                     const std::string& Ip = "") {
     if (Name.empty() || Ext.empty()) {
         XLOG::l("Invalid parameters to MakeStateFileName '{}' '{}'", Name, Ext);
         return {};

@@ -167,7 +167,28 @@ constexpr const char* const kMkLogDirName = "MK_LOGDIR";
 
 };  // namespace envs
 
-enum EventLevels { kOff = -1, kAll = 0, kWarn, kCrit };
+// internal and stable representation of the [logwatch] event levels
+enum class EventLevels { kOff = -1, kAll = 0, kWarn, kCrit };
+
+// #TODO gtest
+// converts from internal and stable representation
+// to key word in logwatch section of the YAML config file
+constexpr const char* const ConvertLogWatchLevelToString(EventLevels Lvl) {
+    switch (Lvl) {
+        case EventLevels::kAll:
+            return vars::kLogWatchEvent_ParamWords[1];
+        case EventLevels::kWarn:
+            return vars::kLogWatchEvent_ParamWords[2];
+        case EventLevels::kCrit:
+            return vars::kLogWatchEvent_ParamWords[3];
+        case EventLevels::kOff:
+            return vars::kLogWatchEvent_ParamWords[0];
+    }
+
+    // unreachable for GCC, Safety Guard for Microsoft
+    return vars::kLogWatchEvent_ParamWords[0];
+}
+
 constexpr auto kInitialPos = std::numeric_limits<uint64_t>::max();
 inline const std::chrono::seconds G_DefaultDelayOnFail(3600);
 

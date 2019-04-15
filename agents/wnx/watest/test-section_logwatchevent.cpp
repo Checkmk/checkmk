@@ -34,6 +34,85 @@ public:
 
 constexpr int LogWatchSections = 5;
 
+TEST(LogWatchEventTest, Consts) {
+    using namespace std;
+    using namespace cma::cfg;
+    EXPECT_EQ(EventLevels::kOff, LabelToEventLevel({}));
+    EXPECT_EQ(EventLevels::kOff, LabelToEventLevel(""));
+    EXPECT_EQ(EventLevels::kOff, LabelToEventLevel("off"));
+    EXPECT_EQ(EventLevels::kOff, LabelToEventLevel("off"));
+    EXPECT_EQ(EventLevels::kWarn, LabelToEventLevel("warn"));
+    EXPECT_EQ(EventLevels::kCrit, LabelToEventLevel("crit"));
+    EXPECT_EQ(EventLevels::kAll, LabelToEventLevel("all"));
+    EXPECT_EQ(EventLevels::kAll, LabelToEventLevel("alL"));
+    EXPECT_EQ(EventLevels::kOff, LabelToEventLevel("all "));
+}
+
+TEST(LogWatchEventTest, LoadFrom) {
+    using namespace std;
+    using namespace cma::cfg;
+    {
+        LogWatchEntry lwe;
+        lwe.loadFrom("  Abc :   ccc context ddd ");
+        EXPECT_TRUE(lwe.loaded());
+        EXPECT_EQ(lwe.level(), EventLevels::kOff);
+        EXPECT_EQ(lwe.name(), "Abc");
+        EXPECT_EQ(lwe.context(), true);
+    }
+
+    {
+        LogWatchEntry lwe;
+        lwe.loadFrom("  Abc :   warn ncontext ddd ");
+        EXPECT_TRUE(lwe.loaded());
+        EXPECT_EQ(lwe.level(), EventLevels::kWarn);
+        EXPECT_EQ(lwe.name(), "Abc");
+        EXPECT_EQ(lwe.context(), false);
+    }
+
+    {
+        LogWatchEntry lwe;
+        lwe.loadFrom("Abc:all context");
+        EXPECT_TRUE(lwe.loaded());
+        EXPECT_EQ(lwe.level(), EventLevels::kAll);
+        EXPECT_EQ(lwe.name(), "Abc");
+        EXPECT_EQ(lwe.context(), true);
+    }
+
+    {
+        LogWatchEntry lwe;
+        lwe.loadFrom("A :");
+        EXPECT_TRUE(lwe.loaded());
+        EXPECT_EQ(lwe.level(), EventLevels::kOff);
+        EXPECT_EQ(lwe.name(), "A");
+        EXPECT_EQ(lwe.context(), false);
+    }
+    {
+        LogWatchEntry lwe;
+        lwe.loadFrom(R"("":aaa)");
+        EXPECT_FALSE(lwe.loaded());
+        lwe.loadFrom(R"("    ":aaa)");
+        EXPECT_FALSE(lwe.loaded());
+        lwe.loadFrom("'  \t\t ':aaa");
+        EXPECT_FALSE(lwe.loaded());
+    }
+    {
+        LogWatchEntry lwe;
+        lwe.loadFrom(R"("*" : crit nocontext )");
+        EXPECT_TRUE(lwe.loaded());
+        EXPECT_EQ(lwe.level(), EventLevels::kCrit);
+        EXPECT_EQ(lwe.name(), "*");
+        EXPECT_EQ(lwe.context(), false);
+    }
+    {
+        LogWatchEntry lwe;
+        lwe.loadFrom(R"(' *  ' : crit nocontext )");
+        EXPECT_TRUE(lwe.loaded());
+        EXPECT_EQ(lwe.level(), EventLevels::kCrit);
+        EXPECT_EQ(lwe.name(), "*");
+        EXPECT_EQ(lwe.context(), false);
+    }
+}
+
 TEST(LogWatchEventTest, Config) {
     using namespace std;
     using namespace cma::cfg;
@@ -52,7 +131,31 @@ TEST(LogWatchEventTest, Config) {
         auto sections =
             GetNode(groups::kLogWatchEvent, vars::kLogWatchEventLogFile);
         ASSERT_TRUE(sections.IsSequence());
-        EXPECT_EQ(sections.size(), LogWatchSections);
+        ASSERT_EQ(sections.size(), LogWatchSections);
+
+        // data to be tested against
+        const RawLogWatchData base[LogWatchSections] = {
+            {true, "Application", cma::cfg::EventLevels::kCrit, true},
+            {true, "System", cma::cfg::EventLevels::kWarn, false},
+            {true, "Demo", cma::cfg::EventLevels::kAll, false},
+            {false, "", cma::cfg::EventLevels::kOff, false},
+            {true, "*", cma::cfg::EventLevels::kOff, false},
+        };
+
+        int pos = 0;
+        for (const auto& sec : sections) {
+            auto type = sec.Type();
+            if (!sec.IsMap()) continue;
+            YAML::Emitter emit;
+            emit << sec;
+            LogWatchEntry lwe;
+            lwe.loadFrom(emit.c_str());
+            EXPECT_EQ(lwe.loaded(), base[pos].loaded_);
+            EXPECT_EQ(lwe.level(), base[pos].level_);
+            EXPECT_EQ(lwe.name(), base[pos].name_);
+            EXPECT_EQ(lwe.context(), base[pos].context_);
+            pos++;
+        }
     }
 }
 
@@ -92,7 +195,7 @@ TEST(LogWatchEventTest, ConfigStruct) {
 
         lwe.init("Name", "WARN", true);
         EXPECT_EQ(lwe.name(), "Name");
-        EXPECT_TRUE(lwe.level() == cma::cfg::EventLevels::kOff);
+        EXPECT_TRUE(lwe.level() == cma::cfg::EventLevels::kWarn);
         EXPECT_EQ(lwe.context(), true);
         EXPECT_EQ(lwe.loaded(), true);
     }
@@ -136,7 +239,7 @@ TEST(LogWatchEventTest, ConfigStruct) {
             ASSERT_TRUE(app.IsMap());
 
             cma::provider::LogWatchEntry lwe;
-            lwe.loadFrom(app);
+            lwe.loadFromMapNode(app);
             EXPECT_EQ(lwe.level(), cma::cfg::EventLevels::kCrit);
             EXPECT_EQ(lwe.context(), true);
             EXPECT_EQ(lwe.loaded(), true);
@@ -147,7 +250,7 @@ TEST(LogWatchEventTest, ConfigStruct) {
             ASSERT_TRUE(sys.IsMap());
 
             cma::provider::LogWatchEntry lwe;
-            lwe.loadFrom(sys);
+            lwe.loadFromMapNode(sys);
             EXPECT_EQ(lwe.level(), cma::cfg::EventLevels::kWarn);
             EXPECT_EQ(lwe.context(), false);
             EXPECT_EQ(lwe.loaded(), true);
@@ -157,8 +260,8 @@ TEST(LogWatchEventTest, ConfigStruct) {
             ASSERT_TRUE(demo.IsMap());
 
             cma::provider::LogWatchEntry lwe;
-            lwe.loadFrom(demo);
-            EXPECT_EQ(lwe.level(), cma::cfg::EventLevels::kCrit);
+            lwe.loadFromMapNode(demo);
+            EXPECT_EQ(lwe.level(), cma::cfg::EventLevels::kAll);
             EXPECT_EQ(lwe.context(), false);
             EXPECT_EQ(lwe.loaded(), true);
         }
@@ -167,7 +270,7 @@ TEST(LogWatchEventTest, ConfigStruct) {
             ASSERT_TRUE(empty.IsMap());
 
             cma::provider::LogWatchEntry lwe;
-            lwe.loadFrom(empty);
+            lwe.loadFromMapNode(empty);
             EXPECT_EQ(lwe.level(), cma::cfg::EventLevels::kOff);
             EXPECT_EQ(lwe.context(), false);
             EXPECT_EQ(lwe.loaded(), false);
@@ -195,7 +298,7 @@ TEST(LogWatchEventTest, ConfigLoad) {
 
         EXPECT_EQ(e[0].level(), cma::cfg::EventLevels::kCrit);
         EXPECT_EQ(e[1].level(), cma::cfg::EventLevels::kWarn);
-        EXPECT_EQ(e[2].level(), cma::cfg::EventLevels::kCrit);
+        EXPECT_EQ(e[2].level(), cma::cfg::EventLevels::kAll);
     }
 }
 

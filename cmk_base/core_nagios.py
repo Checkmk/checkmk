@@ -1122,14 +1122,14 @@ if '-d' in sys.argv:
     if config.is_cluster(hostname):
         for node in config.nodes_of(hostname):
             node_config = config_cache.get_host_config(node)
-            if config.is_ipv4_host(node):
+            if node_config.is_ipv4_host:
                 needed_ipaddresses[node] = ip_lookup.lookup_ipv4_address(node)
 
             if node_config.is_ipv6_host:
                 needed_ipv6addresses[node] = ip_lookup.lookup_ipv6_address(node)
 
         try:
-            if config.is_ipv4_host(hostname):
+            if host_config.is_ipv4_host:
                 needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(hostname)
         except:
             pass
@@ -1140,7 +1140,7 @@ if '-d' in sys.argv:
         except:
             pass
     else:
-        if config.is_ipv4_host(hostname):
+        if host_config.is_ipv4_host:
             needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(hostname)
 
         if host_config.is_ipv6_host:

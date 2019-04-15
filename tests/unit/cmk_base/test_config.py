@@ -24,7 +24,6 @@ def clear_config_caches(monkeypatch):
 ])
 def test_is_ipv4_host(monkeypatch, hostname, tags, result):
     config_cache = _setup_host(monkeypatch, hostname, tags)
-    assert config.is_ipv4_host(hostname) == result
     assert config_cache.get_host_config(hostname).is_ipv4_host == result
 
 

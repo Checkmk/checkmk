@@ -24,7 +24,7 @@ def DOCKER_BUILDS = [:]
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
 def CMK_VERS = dateFormat.format(date)
-def DAILY_DATA = '/var/jenkins_home/daily-data/' + env.scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
+def DAILY_DATA = '/var/jenkins_home/daily-data/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
 
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'

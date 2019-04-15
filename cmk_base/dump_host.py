@@ -127,7 +127,7 @@ def dump_host(hostname):
         _evaluate_params(params),
         cmk_base.utils.make_utf8(description),
         cmk_base.utils.make_utf8(",".join(
-            config.service_extra_conf(hostname, description, config.service_groups))),
+            config_cache.service_extra_conf(hostname, description, config.service_groups))),
         ",".join(deps)
     ] for checktype, item, params, description, deps in check_items], "  ")
 

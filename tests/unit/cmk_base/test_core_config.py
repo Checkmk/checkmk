@@ -74,7 +74,8 @@ def test_get_tag_attributes(tag_groups, result):
 
 
 def test_custom_service_attributes_of(monkeypatch):
-    attributes = core_config.custom_service_attributes_of("luluhost", "laladescr")
+    config_cache = config.get_config_cache()
+    attributes = core_config._custom_service_attributes_of(config_cache, "luluhost", "laladescr")
     assert attributes == {}
 
     monkeypatch.setattr(config, "all_hosts", ["luluhost"])
@@ -84,9 +85,9 @@ def test_custom_service_attributes_of(monkeypatch):
         ([('ding', '2'), ('ding', '2a'),
           ('dong', '3')], [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
     ])
-    config.get_config_cache().initialize()
+    config_cache.initialize()
 
-    attributes = core_config.custom_service_attributes_of("luluhost", "laladescr")
+    attributes = core_config._custom_service_attributes_of(config_cache, "luluhost", "laladescr")
     assert attributes == {
         "deng": "1",
         "ding": "2a",

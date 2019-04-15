@@ -172,12 +172,13 @@ def autodetect_plugin(command_line):
     return command_line
 
 
-def icons_and_actions_of(what, hostname, svcdesc=None, checkname=None, params=None):
+# TODO: Better move to cmk_base.config module
+def _icons_and_actions_of(config_cache, what, hostname, svcdesc=None, checkname=None, params=None):
     if what == 'host':
-        return list(set(config.host_extra_conf(hostname, config.host_icons_and_actions)))
+        return list(set(config_cache.host_extra_conf(hostname, config.host_icons_and_actions)))
     else:
         actions = set(
-            config.service_extra_conf(hostname, svcdesc, config.service_icons_and_actions))
+            config_cache.service_extra_conf(hostname, svcdesc, config.service_icons_and_actions))
 
         # Some WATO rules might register icons on their own
         if checkname:
@@ -343,7 +344,8 @@ def _extra_service_attributes(hostname, description, config_cache, checkname, pa
 
     # Add service custom_variables. Name conflicts are prevented by the GUI, but just
     # to be sure, add them first. The other definitions will override the custom attributes.
-    for varname, value in custom_service_attributes_of(hostname, description).iteritems():
+    for varname, value in _custom_service_attributes_of(config_cache, hostname,
+                                                        description).iteritems():
         attrs["_%s" % varname.upper()] = value
 
     for key, conflist in config.extra_service_conf.items():
@@ -359,17 +361,17 @@ def _extra_service_attributes(hostname, description, config_cache, checkname, pa
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
-    actions = icons_and_actions_of("service", hostname, description, checkname, params)
+    actions = _icons_and_actions_of(config_cache, "service", hostname, description, checkname,
+                                    params)
     if actions:
         attrs["_ACTIONS"] = ','.join(actions)
     return attrs
 
 
-# TODO: Hand over config_cache and use it instead of config.service_extra_conf
-def custom_service_attributes_of(hostname, service_description):
+def _custom_service_attributes_of(config_cache, hostname, service_description):
     return dict(
-        itertools.chain(*config.service_extra_conf(hostname, service_description,
-                                                   config.custom_service_attributes)))
+        itertools.chain(*config_cache.service_extra_conf(hostname, service_description,
+                                                         config.custom_service_attributes)))
 
 
 #.
@@ -443,7 +445,7 @@ def get_host_attributes(hostname, config_cache):
         attrs["_FILENAME"] = path
 
     # Add custom user icons and actions
-    actions = icons_and_actions_of("host", hostname)
+    actions = _icons_and_actions_of(config_cache, "host", hostname)
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
 

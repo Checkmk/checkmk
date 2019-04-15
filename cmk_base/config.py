@@ -1095,7 +1095,7 @@ def _get_exit_code_spec(spec, data_source_id):
 
 
 def check_period_of(hostname, service):
-    periods = service_extra_conf(hostname, service, check_periods)
+    periods = get_config_cache().service_extra_conf(hostname, service, check_periods)
     if periods:
         period = periods[0]
         if period == "24X7":
@@ -1542,23 +1542,6 @@ def get_http_proxy(http_proxy):
         return ""
 
     return None
-
-
-#.
-#   .--Service rules-------------------------------------------------------.
-#   |      ____                  _                       _                 |
-#   |     / ___|  ___ _ ____   _(_) ___ ___   _ __ _   _| | ___  ___       |
-#   |     \___ \ / _ \ '__\ \ / / |/ __/ _ \ | '__| | | | |/ _ \/ __|      |
-#   |      ___) |  __/ |   \ V /| | (_|  __/ | |  | |_| | |  __/\__ \      |
-#   |     |____/ \___|_|    \_/ |_|\___\___| |_|   \__,_|_|\___||___/      |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Service rule set matching                                            |
-#   '----------------------------------------------------------------------'
-
-
-def service_extra_conf(hostname, service, ruleset):
-    return get_config_cache().service_extra_conf(hostname, service, ruleset)
 
 
 #.
@@ -2477,11 +2460,13 @@ def _update_with_default_check_parameters(checktype, params):
 def _update_with_configured_check_parameters(host, checktype, item, params):
     descr = service_description(host, checktype, item)
 
+    config_cache = get_config_cache()
+
     # Get parameters configured via checkgroup_parameters
-    entries = _get_checkgroup_parameters(host, checktype, item)
+    entries = _get_checkgroup_parameters(config_cache, host, checktype, item)
 
     # Get parameters configured via check_parameters
-    entries += service_extra_conf(host, descr, check_parameters)
+    entries += config_cache.service_extra_conf(host, descr, check_parameters)
 
     if entries:
         if _has_timespecific_params(entries):
@@ -2510,7 +2495,7 @@ def _has_timespecific_params(entries):
     return False
 
 
-def _get_checkgroup_parameters(host, checktype, item):
+def _get_checkgroup_parameters(config_cache, host, checktype, item):
     checkgroup = check_info[checktype]["group"]
     if not checkgroup:
         return []
@@ -2521,10 +2506,10 @@ def _get_checkgroup_parameters(host, checktype, item):
     try:
         # checks without an item
         if item is None and checkgroup not in service_rule_groups:
-            return host_extra_conf(host, rules)
+            return config_cache.host_extra_conf(host, rules)
 
         # checks with an item need service-specific rules
-        return service_extra_conf(host, item, rules)
+        return config_cache.service_extra_conf(host, item, rules)
     except MKGeneralException as e:
         raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
 

@@ -402,8 +402,9 @@ def _save_status_data_tree(hostname, status_data_tree):
 def _run_inventory_export_hooks(hostname, inventory_tree):
     import cmk_base.inventory_plugins as inventory_plugins
     hooks = []
+    config_cache = config.get_config_cache()
     for hookname, ruleset in config.inv_exports.items():
-        entries = config.host_extra_conf(hostname, ruleset)
+        entries = config_cache.host_extra_conf(hostname, ruleset)
         if entries:
             hooks.append((hookname, entries[0]))
 

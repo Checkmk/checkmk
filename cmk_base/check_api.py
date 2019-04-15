@@ -206,7 +206,11 @@ def service_extra_conf(hostname, service, ruleset):
     return _config.get_config_cache().service_extra_conf(hostname, service, ruleset)
 
 
-host_extra_conf = _config.host_extra_conf
+# Compatibility wrapper for the pre 1.6 existant conf.service_extra_conf()
+def host_extra_conf(hostname, ruleset):
+    return _config.get_config_cache().host_extra_conf(hostname, ruleset)
+
+
 in_binary_hostlist = _config.in_binary_hostlist
 
 
@@ -492,13 +496,14 @@ def check_levels(value,
 def get_effective_service_level():
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
-    service_levels = _config.get_config_cache().service_extra_conf(
-        host_name(), service_description(), _config.service_service_levels)
+    config_cache = _config.get_config_cache()
+    service_levels = config_cache.service_extra_conf(host_name(), service_description(),
+                                                     _config.service_service_levels)
 
     if service_levels:
         return service_levels[0]
     else:
-        service_levels = _config.host_extra_conf(host_name(), _config.host_service_levels)
+        service_levels = config_cache.host_extra_conf(host_name(), _config.host_service_levels)
         if service_levels:
             return service_levels[0]
     return 0

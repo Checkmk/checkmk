@@ -1,7 +1,6 @@
 # pylint: disable=redefined-outer-name
 
-import copy
-import pytest
+import pytest  # type: ignore
 
 import cmk_base
 import cmk_base.caching
@@ -103,8 +102,11 @@ def test_normalize_ip(ip_in, ips_out):
 def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):
     source = cmk_base.data_sources.tcp.TCPDataSource("hostname", "ipaddress")
 
+    config_cache = config.get_config_cache()
     monkeypatch.setattr(config, "agent_config", {"only_from": [rule]} if rule else {})
-    monkeypatch.setattr(config, "host_extra_conf", lambda host, ruleset: ruleset)
+    config_cache.initialize()
+
+    monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
     assert source._sub_result_only_from({"onlyfrom": reported}) == result
 

@@ -94,13 +94,14 @@ def get_configuration_warnings():
 
 
 # TODO: Cleanup the hostcheck_commands_to_define, custom_commands_to_define thing
-def host_check_command(hostname,
+def host_check_command(config_cache,
+                       hostname,
                        ip,
                        is_clust,
                        hostcheck_commands_to_define=None,
                        custom_commands_to_define=None):
     # Check dedicated host check command
-    values = config.host_extra_conf(hostname, config.host_check_commands)
+    values = config_cache.host_extra_conf(hostname, config.host_check_commands)
     if values:
         value = values[0]
     elif config.is_no_ip_host(hostname):
@@ -117,7 +118,7 @@ def host_check_command(hostname,
         return "check-mk-host-smart"
 
     elif value in ["ping", "smart"]:  # Cluster host
-        ping_args = check_icmp_arguments_of(hostname)
+        ping_args = check_icmp_arguments_of(config_cache, hostname)
 
         if is_clust and ip:  # Do check cluster IP address if one is there
             return "check-mk-host-ping!%s" % ping_args
@@ -191,8 +192,8 @@ def _icons_and_actions_of(config_cache, what, hostname, svcdesc=None, checkname=
         return list(actions)
 
 
-def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
-    values = config.host_extra_conf(hostname, config.ping_levels)
+def check_icmp_arguments_of(config_cache, hostname, add_defaults=True, family=None):
+    values = config_cache.host_extra_conf(hostname, config.ping_levels)
     levels = {}
     for value in values[::-1]:  # make first rules have precedence
         levels.update(value)
@@ -388,7 +389,7 @@ def _custom_service_attributes_of(config_cache, hostname, service_description):
 
 
 def get_host_attributes(hostname, config_cache):
-    attrs = _extra_host_attributes(hostname)
+    attrs = _extra_host_attributes(config_cache, hostname)
     host_config = config_cache.get_host_config(hostname)
 
     # Pre 1.6 legacy attribute. We have changed our whole code to use the
@@ -459,10 +460,10 @@ def _get_tag_attributes(collection, prefix):
     return {u"__%s_%s" % (prefix, k): unicode(v) for k, v in collection.iteritems()}
 
 
-def _extra_host_attributes(hostname):
+def _extra_host_attributes(config_cache, hostname):
     attrs = {}
     for key, conflist in config.extra_host_conf.items():
-        values = config.host_extra_conf(hostname, conflist)
+        values = config_cache.host_extra_conf(hostname, conflist)
         if values:
             if key[0] == "_":
                 key = key.upper()

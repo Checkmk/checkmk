@@ -213,7 +213,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         if not ruleset:
             return 0, ''
 
-        entries = config.host_extra_conf(self._hostname, ruleset)
+        entries = config.get_config_cache().host_extra_conf(self._hostname, ruleset)
         config_only_from = entries[0] if entries else None
         if None in (agent_only_from, config_only_from):
             return 0, ''

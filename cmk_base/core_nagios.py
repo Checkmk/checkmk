@@ -201,8 +201,9 @@ def _create_nagios_hostdefs(cfg, config_cache, hostname, attrs):
             host_spec[key] = value
 
     # Host check command might differ from default
-    command = core_config.host_check_command(
-        hostname, ip, is_clust, cfg.hostcheck_commands_to_define, cfg.custom_commands_to_define)
+    command = core_config.host_check_command(config_cache, hostname, ip, is_clust,
+                                             cfg.hostcheck_commands_to_define,
+                                             cfg.custom_commands_to_define)
     if command:
         host_spec["check_command"] = command
 
@@ -607,7 +608,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
 
 def _add_ping_service(cfg, config_cache, hostname, ipaddress, family, descr, node_ips):
-    arguments = core_config.check_icmp_arguments_of(hostname, family=family)
+    arguments = core_config.check_icmp_arguments_of(config_cache, hostname, family=family)
 
     ping_command = 'check-mk-ping'
     if config.is_cluster(hostname):

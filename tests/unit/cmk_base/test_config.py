@@ -2,6 +2,7 @@
 
 import pytest  # type: ignore
 
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 import cmk.utils.paths
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
@@ -454,3 +455,55 @@ def test_config_cache_get_host_config():
     host_config = cache.get_host_config("xyz")
     assert isinstance(host_config, config.HostConfig)
     assert host_config is cache.get_host_config("xyz")
+
+
+def test_host_ruleset_match_object_of_host(monkeypatch):
+    monkeypatch.setattr(config, "host_tags", {
+        "test-host": {
+            "tag_group": "abc",
+        },
+    })
+    config_cache = _setup_host(monkeypatch, "test-host", ["abc"])
+
+    cfg = config_cache.get_host_config("xyz")
+    assert isinstance(cfg.ruleset_match_object, RulesetMatchObject)
+    assert cfg.ruleset_match_object.to_dict() == {
+        "host_tags": {},
+        "host_name": "xyz",
+    }
+
+    cfg = config_cache.get_host_config("test-host")
+    assert isinstance(cfg.ruleset_match_object, RulesetMatchObject)
+    assert cfg.ruleset_match_object.to_dict() == {
+        "host_name": "test-host",
+        "host_tags": {
+            "tag_group": "abc",
+        }
+    }
+
+
+def test_host_ruleset_match_object_of_service(monkeypatch):
+    monkeypatch.setattr(config, "host_tags", {
+        "test-host": {
+            "tag_group": "abc",
+        },
+    })
+    config_cache = _setup_host(monkeypatch, "test-host", ["abc"])
+
+    obj = config_cache.ruleset_match_object_of_service("xyz", "bla blä")
+    assert isinstance(obj, RulesetMatchObject)
+    assert obj.to_dict() == {
+        "host_name": "xyz",
+        "host_tags": {},
+        "service_description": "bla blä",
+    }
+
+    obj = config_cache.ruleset_match_object_of_service("test-host", "CPU load")
+    assert isinstance(obj, RulesetMatchObject)
+    assert obj.to_dict() == {
+        "host_name": "test-host",
+        "host_tags": {
+            "tag_group": "abc",
+        },
+        "service_description": "CPU load",
+    }

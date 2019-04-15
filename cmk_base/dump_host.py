@@ -53,23 +53,22 @@ def dump_host(hostname):
     console.output(
         "%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
-    ipaddress = _ip_address_for_dump_host(hostname)
+    ipaddress = _ip_address_for_dump_host(host_config)
 
     addresses = ""
     if not config.is_ipv4v6_host(hostname):
         addresses = ipaddress
     else:
-        ipv6_primary = config.is_ipv6_primary(hostname)
         try:
-            if ipv6_primary:
-                secondary = _ip_address_for_dump_host(hostname, 4)
+            if host_config.is_ipv6_primary:
+                secondary = _ip_address_for_dump_host(host_config, 4)
             else:
-                secondary = _ip_address_for_dump_host(hostname, 6)
+                secondary = _ip_address_for_dump_host(host_config, 6)
         except:
             secondary = "X.X.X.X"
 
         addresses = "%s, %s" % (ipaddress, secondary)
-        if ipv6_primary:
+        if host_config.is_ipv6_primary:
             addresses += " (Primary: IPv6)"
         else:
             addresses += " (Primary: IPv4)"
@@ -141,15 +140,14 @@ def _evaluate_params(params):
                                                   current_params)
 
 
-def _ip_address_for_dump_host(hostname, family=None):
-    if config.is_cluster(hostname):
+def _ip_address_for_dump_host(host_config, family=None):
+    if host_config.is_cluster:
         try:
-            ipaddress = ip_lookup.lookup_ip_address(hostname, family)
+            return ip_lookup.lookup_ip_address(host_config.hostname, family)
         except:
-            ipaddress = ""
-    else:
-        try:
-            ipaddress = ip_lookup.lookup_ip_address(hostname, family)
-        except:
-            ipaddress = core_config.fallback_ip_for(hostname, family)
-    return ipaddress
+            return ""
+
+    try:
+        return ip_lookup.lookup_ip_address(host_config.hostname, family)
+    except:
+        return core_config.fallback_ip_for(host_config, family)

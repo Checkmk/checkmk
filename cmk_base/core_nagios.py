@@ -174,13 +174,14 @@ def _create_nagios_config_host(cfg, config_cache, hostname):
 
 
 def _create_nagios_hostdefs(cfg, config_cache, hostname, attrs):
+    host_config = config_cache.get_host_config(hostname)
     is_clust = config.is_cluster(hostname)
 
     ip = attrs["address"]
 
     if is_clust:
-        nodes = core_config.get_cluster_nodes_for_config(hostname)
-        attrs.update(core_config.get_cluster_attributes(hostname, nodes))
+        nodes = core_config.get_cluster_nodes_for_config(config_cache, host_config)
+        attrs.update(core_config.get_cluster_attributes(config_cache, host_config, nodes))
 
     #   _
     #  / |
@@ -192,7 +193,7 @@ def _create_nagios_hostdefs(cfg, config_cache, hostname, attrs):
     host_spec = {
         "host_name": hostname,
         "use": config.cluster_template if is_clust else config.host_template,
-        "address": ip if ip else core_config.fallback_ip_for(hostname),
+        "address": ip if ip else core_config.fallback_ip_for(host_config),
     }
 
     # Add custom macros
@@ -594,12 +595,12 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
     # No check_mk service, no legacy service -> create PING service
     if not have_at_least_one_service and not legchecks and not actchecks and not custchecks:
-        _add_ping_service(cfg, config_cache, hostname, host_attrs["address"],
-                          config.is_ipv6_primary(hostname) and 6 or 4, "PING",
+        _add_ping_service(cfg, config_cache, hostname,
+                          host_attrs["address"], host_config.is_ipv6_primary and 6 or 4, "PING",
                           host_attrs.get("_NODEIPS"))
 
     if config.is_ipv4v6_host(hostname):
-        if config.is_ipv6_primary(hostname):
+        if host_config.is_ipv6_primary:
             _add_ping_service(cfg, config_cache, hostname, host_attrs["_ADDRESS_4"], 4, "PING IPv4",
                               host_attrs.get("_NODEIPS_4"))
         else:

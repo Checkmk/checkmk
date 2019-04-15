@@ -29,7 +29,7 @@ import numbers
 import os
 import sys
 import itertools
-from typing import Any, List  # pylint: disable=unused-import
+from typing import Any, List, Dict  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -201,7 +201,8 @@ def check_icmp_arguments_of(config_cache, hostname, add_defaults=True, family=No
         return ""
 
     if family is None:
-        family = 6 if config.is_ipv6_primary(hostname) else 4
+        host_config = config_cache.get_host_config(hostname)
+        family = 6 if host_config.is_ipv6_primary else 4
 
     args = []
 
@@ -406,20 +407,20 @@ def get_host_attributes(hostname, config_cache):
 
     # Now lookup configured IP addresses
     if config.is_ipv4_host(hostname):
-        attrs["_ADDRESS_4"] = ip_address_of(hostname, 4)
+        attrs["_ADDRESS_4"] = _ip_address_of(host_config, 4)
         if attrs["_ADDRESS_4"] is None:
             attrs["_ADDRESS_4"] = ""
     else:
         attrs["_ADDRESS_4"] = ""
 
     if config.is_ipv6_host(hostname):
-        attrs["_ADDRESS_6"] = ip_address_of(hostname, 6)
+        attrs["_ADDRESS_6"] = _ip_address_of(host_config, 6)
         if attrs["_ADDRESS_6"] is None:
             attrs["_ADDRESS_6"] = ""
     else:
         attrs["_ADDRESS_6"] = ""
 
-    ipv6_primary = config.is_ipv6_primary(hostname)
+    ipv6_primary = host_config.is_ipv6_primary
     if ipv6_primary:
         attrs["address"] = attrs["_ADDRESS_6"]
         attrs["_ADDRESS_FAMILY"] = "6"
@@ -473,34 +474,34 @@ def _extra_host_attributes(config_cache, hostname):
     return attrs
 
 
-def get_cluster_attributes(hostname, nodes):
+def get_cluster_attributes(config_cache, host_config, nodes):
+    # type: (config.ConfigCache, config.HostConfig, List[str]) -> Dict
     sorted_nodes = sorted(nodes)
 
     attrs = {
         "_NODENAMES": " ".join(sorted_nodes),
     }
     node_ips_4 = []
-    if config.is_ipv4_host(hostname):
+    if config.is_ipv4_host(host_config.hostname):
         for h in sorted_nodes:
-            addr = ip_address_of(h, 4)
+            node_config = config_cache.get_host_config(h)
+            addr = _ip_address_of(node_config, 4)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
-                node_ips_4.append(fallback_ip_for(hostname, 4))
+                node_ips_4.append(fallback_ip_for(node_config, 4))
 
     node_ips_6 = []
-    if config.is_ipv6_host(hostname):
+    if config.is_ipv6_host(host_config.hostname):
         for h in sorted_nodes:
-            addr = ip_address_of(h, 6)
+            node_config = config_cache.get_host_config(h)
+            addr = _ip_address_of(node_config, 6)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
-                node_ips_6.append(fallback_ip_for(hostname, 6))
+                node_ips_6.append(fallback_ip_for(node_config, 6))
 
-    if config.is_ipv6_primary(hostname):
-        node_ips = node_ips_6
-    else:
-        node_ips = node_ips_4
+    node_ips = node_ips_6 if host_config.is_ipv6_primary else node_ips_4
 
     for suffix, val in [("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6)]:
         attrs["_NODEIPS%s" % suffix] = " ".join(val)
@@ -508,29 +509,32 @@ def get_cluster_attributes(hostname, nodes):
     return attrs
 
 
-def get_cluster_nodes_for_config(hostname):
-    _verify_cluster_address_family(hostname)
+def get_cluster_nodes_for_config(config_cache, host_config):
+    # type: (config.ConfigCache, config.HostConfig) -> List[str]
+    _verify_cluster_address_family(config_cache, host_config)
 
-    nodes = config.nodes_of(hostname)[:]
+    nodes = config.nodes_of(host_config.hostname)[:]
     for node in nodes:
         if node not in config.all_active_realhosts():
-            warning("Node '%s' of cluster '%s' is not a monitored host in this site." % (node,
-                                                                                         hostname))
+            warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
+                    (node, host_config.hostname))
             nodes.remove(node)
     return nodes
 
 
-def _verify_cluster_address_family(hostname):
-    cluster_host_family = "IPv6" if config.is_ipv6_primary(hostname) else "IPv4"
+def _verify_cluster_address_family(config_cache, host_config):
+    # type: (config.ConfigCache, config.HostConfig) -> None
+    cluster_host_family = "IPv6" if host_config.is_ipv6_primary else "IPv4"
 
     address_families = [
-        "%s: %s" % (hostname, cluster_host_family),
+        "%s: %s" % (host_config.hostname, cluster_host_family),
     ]
 
     address_family = cluster_host_family
     mixed = False
-    for nodename in config.nodes_of(hostname):
-        family = "IPv6" if config.is_ipv6_primary(nodename) else "IPv4"
+    for nodename in config.nodes_of(host_config.hostname):
+        node_config = config_cache.get_host_config(nodename)
+        family = "IPv6" if node_config.is_ipv6_primary else "IPv4"
         address_families.append("%s: %s" % (nodename, family))
         if address_family is None:
             address_family = family
@@ -539,10 +543,10 @@ def _verify_cluster_address_family(hostname):
 
     if mixed:
         warning("Cluster '%s' has different primary address families: %s" %
-                (hostname, ", ".join(address_families)))
+                (host_config.hostname, ", ".join(address_families)))
 
 
-def ip_address_of(hostname, family=None):
+def _ip_address_of(hostname, family=None):
     try:
         return ip_lookup.lookup_ip_address(hostname, family)
     except Exception as e:
@@ -565,9 +569,9 @@ def failed_ip_lookups():
     return _failed_ip_lookups
 
 
-def fallback_ip_for(hostname, family=None):
+def fallback_ip_for(host_config, family=None):
     if family is None:
-        family = 6 if config.is_ipv6_primary(hostname) else 4
+        family = 6 if host_config.is_ipv6_primary else 4
 
     if family == 4:
         return "0.0.0.0"

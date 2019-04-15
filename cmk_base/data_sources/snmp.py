@@ -76,9 +76,11 @@ class SNMPDataSource(DataSource):
     def _cpu_tracking_id(self):
         return "snmp"
 
+    # TODO: Replace SNMPHostConfig with HostConfig
     def _get_host_config(self):
+        # type: () -> snmp_utils.SNMPHostConfig
         return snmp_utils.SNMPHostConfig(
-            is_ipv6_primary=config.is_ipv6_primary(self._hostname),
+            is_ipv6_primary=self._host_config.is_ipv6_primary,
             hostname=self._hostname,
             ipaddress=self._ipaddress,
             credentials=self._credentials,

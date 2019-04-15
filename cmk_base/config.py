@@ -834,11 +834,6 @@ def parents_of(hostname):
 
 
 # TODO: Replace call sites with HostConfig access and remove this
-def is_ipv6_primary(hostname):
-    return get_config_cache().get_host_config(hostname).is_ipv6_primary
-
-
-# TODO: Replace call sites with HostConfig access and remove this
 def is_ipv4v6_host(hostname):
     return get_config_cache().get_host_config(hostname).is_ipv4v6_host
 

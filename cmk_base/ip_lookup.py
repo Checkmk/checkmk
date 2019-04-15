@@ -66,9 +66,6 @@ def lookup_ipv6_address(hostname):
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
 def lookup_ip_address(hostname, family=None):
-    if family is None:  # choose primary family
-        family = 6 if config.is_ipv6_primary(hostname) else 4
-
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
@@ -76,8 +73,10 @@ def lookup_ip_address(hostname, family=None):
         return config.fake_dns
 
     config_cache = config.get_config_cache()
-
     host_config = config_cache.get_host_config(hostname)
+
+    if family is None:  # choose primary family
+        family = 6 if host_config.is_ipv6_primary else 4
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
     if config.simulation_mode or _enforce_localhost or \

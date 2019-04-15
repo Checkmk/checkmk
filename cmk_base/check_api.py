@@ -237,8 +237,13 @@ def tags_of_host(hostname):
     return _config.get_config_cache().get_host_config(hostname).tags
 
 
+# These functions were used in some specific checks until 1.6. Don't add it to
+# the future check API. It's kept here for compatibility reasons for now.
+def is_ipv6_primary(hostname):
+    return _config.get_config_cache().get_host_config(hostname).is_ipv6_primary
+
+
 nagios_illegal_chars = _config.nagios_illegal_chars
-is_ipv6_primary = _config.is_ipv6_primary
 is_cmc = _config.is_cmc
 
 get_age_human_readable = lambda secs: str(render.Age(secs))

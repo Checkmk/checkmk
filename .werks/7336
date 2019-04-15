@@ -7,7 +7,7 @@ Version: 1.6.0i1
 Date: 1554819594
 Class: feature
 
-A new HW/SW inventory script has been added that works on a generic "<<<labels>>>" section.
+A new HW/SW inventory script has been added that works on a generic "&lt;&lt;&lt;labels&gt;&gt;&gt;" section.
 It is used to discover host labels from this section.
 
 The first agent that produces this section is the Kubernetes special agent. It creates the

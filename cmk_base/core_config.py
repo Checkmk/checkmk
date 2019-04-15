@@ -413,7 +413,7 @@ def get_host_attributes(hostname, config_cache):
     else:
         attrs["_ADDRESS_4"] = ""
 
-    if config.is_ipv6_host(hostname):
+    if host_config.is_ipv6_host:
         attrs["_ADDRESS_6"] = _ip_address_of(host_config, 6)
         if attrs["_ADDRESS_6"] is None:
             attrs["_ADDRESS_6"] = ""
@@ -492,7 +492,7 @@ def get_cluster_attributes(config_cache, host_config, nodes):
                 node_ips_4.append(fallback_ip_for(node_config, 4))
 
     node_ips_6 = []
-    if config.is_ipv6_host(host_config.hostname):
+    if host_config.is_ipv6_host:
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
             addr = _ip_address_of(node_config, 6)

@@ -37,7 +37,6 @@ def test_is_ipv4_host(monkeypatch, hostname, tags, result):
 ])
 def test_is_ipv6_host(monkeypatch, hostname, tags, result):
     config_cache = _setup_host(monkeypatch, hostname, tags)
-    assert config.is_ipv6_host(hostname) == result
     assert config_cache.get_host_config(hostname).is_ipv6_host == result
 
 

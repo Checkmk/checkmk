@@ -226,13 +226,17 @@ def update_dns_cache():
         if e.errno != errno.ENOENT:
             raise
 
+    config_cache = config.get_config_cache()
+
     console.verbose("Updating DNS cache...\n")
     for hostname in config.all_active_hosts():
+        host_config = config_cache.get_host_config(hostname)
+
         # Use intelligent logic. This prevents DNS lookups for hosts
         # with statically configured addresses, etc.
         for family in [4, 6]:
-            if (family == 4 and config.is_ipv4_host(hostname)) \
-               or (family == 6 and config.is_ipv6_host(hostname)):
+            if (family == 4 and host_config.is_ipv4_host) \
+               or (family == 6 and host_config.is_ipv6_host):
                 console.verbose("%s (IPv%d)..." % (hostname, family))
                 try:
                     if family == 4:

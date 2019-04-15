@@ -140,17 +140,14 @@ winperf:
     
     # Select counters to extract. The following counters
     # are needed by checks shipped with check_mk.
-    # id is OS is
-    # name is check mk name, should be
+    # Format:
+    # - id:name
+    # where id is OS counter and name is part of CHECK_MK Header 
     counters:
-        - id: 234
-          name: phydisk #second part of section header name winperf_phydisk
-        - id: 510
-          name: if
-        - id: 638
-          name: tcp_conn
-        - id: Terminal Services
-          name: ts_sessions
+        - 234: phydisk
+        - 510: if
+        - 638: tcp_conn
+        - Terminal Services: ts_sessions
 
 logfiles:
     enabled: no

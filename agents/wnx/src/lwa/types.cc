@@ -271,9 +271,9 @@ mrpe_entry from_string<mrpe_entry>(const std::string &value) {
 
 template <>
 std::string ToYamlString(const winperf_counter &WinPerfCounter, bool) {
-    std::string out = "- id: ";
+    std::string out = "- ";
 
-    out += WinPerfCounter.base_id + "\n  name: ";
+    out += WinPerfCounter.base_id + ": ";
     out += WinPerfCounter.name + "\n";
 
     return out;

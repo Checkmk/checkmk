@@ -1,4 +1,4 @@
-title: AWS ELB Statistics
+title: AWS/ELB Statistics
 agents: aws
 catalog: cloud/aws
 license: GPL

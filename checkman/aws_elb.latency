@@ -1,4 +1,4 @@
-title: AWS ELB Latency
+title: AWS/ELB Latency
 agents: aws
 catalog: cloud/aws
 license: GPL

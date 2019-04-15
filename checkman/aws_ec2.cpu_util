@@ -1,4 +1,4 @@
-title: AWS EC2 Instance CPU utilization
+title: AWS/EC2 Instance CPU utilization
 agents: aws
 catalog: cloud/aws
 license: GPL

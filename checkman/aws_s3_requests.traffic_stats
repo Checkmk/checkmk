@@ -1,4 +1,4 @@
-title: AWS S3 Traffic Stats
+title: AWS/S3 Traffic Stats
 agents: aws
 catalog: cloud/aws
 license: GPL

@@ -1,4 +1,4 @@
-title: AWS RDS Database Info
+title: AWS/RDS Database Info
 agents: aws
 catalog: cloud/aws
 license: GPL
@@ -7,8 +7,6 @@ description:
  This check monitors the database status of AWS/RDS.
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
-
- #TODO state
 
 inventory:
  One service per databse will be created.

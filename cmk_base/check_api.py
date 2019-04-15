@@ -201,7 +201,11 @@ def savefloat(f):
         return 0.0
 
 
-service_extra_conf = _config.service_extra_conf
+# Compatibility wrapper for the pre 1.6 existant conf.service_extra_conf()
+def service_extra_conf(hostname, service, ruleset):
+    return _config.get_config_cache().service_extra_conf(hostname, service, ruleset)
+
+
 host_extra_conf = _config.host_extra_conf
 in_binary_hostlist = _config.in_binary_hostlist
 host_extra_conf_merged = _config.host_extra_conf_merged
@@ -483,8 +487,8 @@ def check_levels(value,
 def get_effective_service_level():
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
-    service_levels = _config.service_extra_conf(host_name(), service_description(),
-                                                _config.service_service_levels)
+    service_levels = _config.get_config_cache().service_extra_conf(
+        host_name(), service_description(), _config.service_service_levels)
 
     if service_levels:
         return service_levels[0]

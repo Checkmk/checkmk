@@ -169,11 +169,11 @@ def _create_nagios_config_host(cfg, config_cache, hostname):
     cfg.outfile.write("# ----------------------------------------------------\n")
     host_attrs = core_config.get_host_attributes(hostname, config_cache)
     if config.generate_hostconf:
-        _create_nagios_hostdefs(cfg, hostname, host_attrs)
+        _create_nagios_hostdefs(cfg, config_cache, hostname, host_attrs)
     _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs)
 
 
-def _create_nagios_hostdefs(cfg, hostname, attrs):
+def _create_nagios_hostdefs(cfg, config_cache, hostname, attrs):
     is_clust = config.is_cluster(hostname)
 
     ip = attrs["address"]
@@ -229,8 +229,8 @@ def _create_nagios_hostdefs(cfg, hostname, attrs):
 
         # Get parents manually defined via extra_host_conf["parents"]. Only honor
         # variable "parents" and implicit parents if this setting is empty
-        extra_conf_parents = config.host_extra_conf(hostname,
-                                                    config.extra_host_conf.get("parents", []))
+        extra_conf_parents = config_cache.host_extra_conf(hostname,
+                                                          config.extra_host_conf.get("parents", []))
 
         if not extra_conf_parents:
             parents_list = config.parents_of(hostname)
@@ -248,7 +248,8 @@ def _create_nagios_hostdefs(cfg, hostname, attrs):
         host_spec["alias"] = alias
 
     # Custom configuration last -> user may override all other values
-    host_spec.update(_extra_host_conf_of(hostname, exclude=["parents"] if is_clust else []))
+    host_spec.update(
+        _extra_host_conf_of(config_cache, hostname, exclude=["parents"] if is_clust else []))
     cfg.outfile.write(_format_nagios_object("host", host_spec).encode("utf-8"))
 
 
@@ -326,8 +327,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         # (if configured) the snmp_check_interval for snmp based checks
         check_interval = 1  # default hardcoded interval
         # Customized interval of Check_MK service
-        values = config.service_extra_conf(hostname, "Check_MK",
-                                           config.extra_service_conf.get('check_interval', []))
+        values = config_cache.service_extra_conf(
+            hostname, "Check_MK", config.extra_service_conf.get('check_interval', []))
         if values:
             try:
                 check_interval = int(values[0])
@@ -348,7 +349,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         service_spec.update(
             core_config.get_service_attributes(
                 hostname, description, config_cache, checkname=checkname, params=params))
-        service_spec.update(_extra_service_conf_of(cfg, hostname, description))
+        service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
 
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
@@ -363,11 +364,11 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             "service_description": "Check_MK",
         }
         service_spec.update(core_config.get_service_attributes(hostname, "Check_MK", config_cache))
-        service_spec.update(_extra_service_conf_of(cfg, hostname, "Check_MK"))
+        service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, "Check_MK"))
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
     # legacy checks via legacy_checks
-    legchecks = config.host_extra_conf(hostname, config.legacy_checks)
+    legchecks = config_cache.host_extra_conf(hostname, config.legacy_checks)
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
     for command, description, has_perfdata in legchecks:
@@ -400,7 +401,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             "active_checks_enabled": 1,
         }
         service_spec.update(core_config.get_service_attributes(hostname, description, config_cache))
-        service_spec.update(_extra_service_conf_of(cfg, hostname, description))
+        service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
         # write service dependencies for legacy checks
@@ -409,7 +410,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
     # legacy checks via active_checks
     actchecks = []
     for acttype, rules in config.active_checks.items():
-        entries = config.host_extra_conf(hostname, rules)
+        entries = config_cache.host_extra_conf(hostname, rules)
         if entries:
             # Skip Check_MK HW/SW Inventory for all ping hosts, even when the user has enabled
             # the inventory for ping only hosts
@@ -474,14 +475,14 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             }
             service_spec.update(
                 core_config.get_service_attributes(hostname, description, config_cache))
-            service_spec.update(_extra_service_conf_of(cfg, hostname, description))
+            service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
             outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
             # write service dependencies for active checks
             outfile.write(get_dependencies(hostname, description).encode("utf-8"))
 
     # Legacy checks via custom_checks
-    custchecks = config.host_extra_conf(hostname, config.custom_checks)
+    custchecks = config_cache.host_extra_conf(hostname, config.custom_checks)
     if custchecks:
         outfile.write("\n\n# Custom checks\n")
         for entry in custchecks:
@@ -547,7 +548,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             service_spec.update(freshness)
             service_spec.update(
                 core_config.get_service_attributes(hostname, description, config_cache))
-            service_spec.update(_extra_service_conf_of(cfg, hostname, description))
+            service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
             outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
             # write service dependencies for custom checks
@@ -575,7 +576,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         }
         service_spec.update(
             core_config.get_service_attributes(hostname, service_discovery_name, config_cache))
-        service_spec.update(_extra_service_conf_of(cfg, hostname, service_discovery_name))
+        service_spec.update(
+            _extra_service_conf_of(cfg, config_cache, hostname, service_discovery_name))
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
         if have_at_least_one_service:
@@ -620,7 +622,7 @@ def _add_ping_service(cfg, config_cache, hostname, ipaddress, family, descr, nod
         "check_command": "%s!%s" % (ping_command, arguments),
     }
     service_spec.update(core_config.get_service_attributes(hostname, descr, config_cache))
-    service_spec.update(_extra_service_conf_of(cfg, hostname, descr))
+    service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, descr))
     cfg.outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
 
@@ -879,44 +881,45 @@ def _quote_nagios_string(s):
     return "'" + s.replace('\\', '\\\\').replace("'", "'\"'\"'").replace('!', '\\!') + "'"
 
 
-def _extra_host_conf_of(hostname, exclude=None):
+def _extra_host_conf_of(config_cache, hostname, exclude=None):
     if exclude is None:
         exclude = []
-    return _extra_conf_of(config.extra_host_conf, hostname, None, exclude)
+    return _extra_conf_of(config_cache, config.extra_host_conf, hostname, None, exclude)
 
 
 # Collect all extra configuration data for a service
-def _extra_service_conf_of(cfg, hostname, description):
+def _extra_service_conf_of(cfg, config_cache, hostname, description):
     service_spec = {}
 
     # Contact groups
-    sercgr = config.service_extra_conf(hostname, description, config.service_contactgroups)
+    sercgr = config_cache.service_extra_conf(hostname, description, config.service_contactgroups)
     cfg.contactgroups_to_define.update(sercgr)
     if len(sercgr) > 0:
         if config.enable_rulebased_notifications:
             sercgr.append("check-mk-notify")  # not nessary if not explicit groups defined
         service_spec["contact_groups"] = ",".join(sercgr)
 
-    sergr = config.service_extra_conf(hostname, description, config.service_groups)
+    sergr = config_cache.service_extra_conf(hostname, description, config.service_groups)
     if len(sergr) > 0:
         service_spec["service_groups"] = ",".join(sergr)
         if config.define_servicegroups:
             cfg.servicegroups_to_define.update(sergr)
-    service_spec.update(_extra_conf_of(config.extra_service_conf, hostname, description))
+    service_spec.update(
+        _extra_conf_of(config_cache, config.extra_service_conf, hostname, description))
 
     return service_spec
 
 
-def _extra_conf_of(confdict, hostname, service, exclude=None):
+def _extra_conf_of(config_cache, confdict, hostname, service, exclude=None):
     if exclude is None:
         exclude = []
 
     result = {}
     for key, conflist in confdict.items():
         if service is not None:
-            values = config.service_extra_conf(hostname, service, conflist)
+            values = config_cache.service_extra_conf(hostname, service, conflist)
         else:
-            values = config.host_extra_conf(hostname, conflist)
+            values = config_cache.host_extra_conf(hostname, conflist)
 
         if exclude and key in exclude:
             continue

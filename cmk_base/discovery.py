@@ -428,7 +428,7 @@ def check_discovery(hostname, ipaddress):
 # if the discovery check is disabled for that host, default parameters
 # will be returned.
 def discovery_check_parameters(hostname):
-    entries = config.host_extra_conf(hostname, config.periodic_discovery)
+    entries = config.get_config_cache().host_extra_conf(hostname, config.periodic_discovery)
     if entries:
         return entries[0]
 

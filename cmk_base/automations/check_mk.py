@@ -1119,6 +1119,7 @@ class AutomationDiagHost(Automation):
     needs_checks = True
 
     def execute(self, args):
+        config_cache = config.get_config_cache()
         hostname, test, ipaddress, snmp_community = args[:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
@@ -1224,7 +1225,7 @@ class AutomationDiagHost(Automation):
 
                 # Determine SNMPv2/v3 community
                 if hostname not in config.explicit_snmp_communities:
-                    communities = config.host_extra_conf(hostname, config.snmp_communities)
+                    communities = config_cache.host_extra_conf(hostname, config.snmp_communities)
                     for entry in communities:
                         if (test == "snmpv3") and not isinstance(entry, tuple):
                             continue
@@ -1297,8 +1298,10 @@ class AutomationActiveCheck(Automation):
         hostname, plugin, item = args
         item = item.decode("utf-8")
 
+        config_cache = config.get_config_cache()
+
         if plugin == "custom":
-            custchecks = config.host_extra_conf(hostname, config.custom_checks)
+            custchecks = config_cache.host_extra_conf(hostname, config.custom_checks)
             for entry in custchecks:
                 if entry["service_description"] == item:
                     command_line = self._replace_core_macros(hostname, entry.get(
@@ -1311,7 +1314,7 @@ class AutomationActiveCheck(Automation):
         else:
             rules = config.active_checks.get(plugin)
             if rules:
-                entries = config.host_extra_conf(hostname, rules)
+                entries = config_cache.host_extra_conf(hostname, rules)
                 if entries:
                     act_info = config.active_check_info[plugin]
                     for params in entries:

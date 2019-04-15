@@ -97,8 +97,8 @@ class DataSources(object):
         self._hostname = hostname
         self._ipaddress = ipaddress
 
-        config_cache = config.get_config_cache()
-        self._host_config = config_cache.get_host_config(hostname)
+        self._config_cache = config.get_config_cache()
+        self._host_config = self._config_cache.get_host_config(hostname)
 
         self._initialize_data_sources()
 
@@ -179,7 +179,7 @@ class DataSources(object):
             if special_agents:
                 return special_agents[0]
 
-        programs = config.host_extra_conf(self._hostname, config.datasource_programs)
+        programs = self._config_cache.host_extra_conf(self._hostname, config.datasource_programs)
         if programs:
             return DSProgramDataSource(self._hostname, self._ipaddress, programs[0])
 
@@ -195,7 +195,7 @@ class DataSources(object):
         # We now sort the matching special agents by their name to at least get
         # a deterministic order of the special agents.
         for agentname, ruleset in sorted(config.special_agents.items()):
-            params = config.host_extra_conf(self._hostname, ruleset)
+            params = self._config_cache.host_extra_conf(self._hostname, ruleset)
             if params:
                 special_agents.append(
                     SpecialAgentDataSource(self._hostname, self._ipaddress, agentname, params[0]))

@@ -782,7 +782,7 @@ def host_is_member_of_site(hostname, site):
 
 
 def alias_of(hostname, fallback):
-    aliases = host_extra_conf(hostname, extra_host_conf.get("alias", []))
+    aliases = get_config_cache().host_extra_conf(hostname, extra_host_conf.get("alias", []))
     if len(aliases) == 0:
         if fallback:
             return fallback
@@ -802,7 +802,7 @@ def get_additional_ipaddresses_of(hostname):
 
 
 def parents_of(hostname):
-    par = host_extra_conf(hostname, parents)
+    par = get_config_cache().host_extra_conf(hostname, parents)
     # Use only those parents which are defined and active in
     # all_hosts.
     used_parents = []
@@ -883,7 +883,7 @@ def management_credentials_of(hostname):
         pass
 
     # If a rule matches, use the first rule for the management board protocol of the host
-    rule_settings = host_extra_conf(hostname, management_board_config)
+    rule_settings = get_config_cache().host_extra_conf(hostname, management_board_config)
     for rule_protocol, credentials in rule_settings:
         if rule_protocol == protocol:
             return credentials
@@ -897,7 +897,7 @@ def management_credentials_of(hostname):
 
 
 def agent_port_of(hostname):
-    ports = host_extra_conf(hostname, agent_ports)
+    ports = get_config_cache().host_extra_conf(hostname, agent_ports)
     if len(ports) == 0:
         return agent_port
 
@@ -905,7 +905,7 @@ def agent_port_of(hostname):
 
 
 def tcp_connect_timeout_of(hostname):
-    timeouts = host_extra_conf(hostname, tcp_connect_timeouts)
+    timeouts = get_config_cache().host_extra_conf(hostname, tcp_connect_timeouts)
     if len(timeouts) == 0:
         return tcp_connect_timeout
 
@@ -913,7 +913,7 @@ def tcp_connect_timeout_of(hostname):
 
 
 def agent_encryption_of(hostname):
-    settings = host_extra_conf(hostname, agent_encryption)
+    settings = get_config_cache().host_extra_conf(hostname, agent_encryption)
     if settings:
         return settings[0]
 
@@ -921,7 +921,8 @@ def agent_encryption_of(hostname):
 
 
 def agent_target_version(hostname):
-    agent_target_versions = host_extra_conf(hostname, check_mk_agent_target_versions)
+    agent_target_versions = get_config_cache().host_extra_conf(hostname,
+                                                               check_mk_agent_target_versions)
     if agent_target_versions:
         spec = agent_target_versions[0]
         if spec == "ignore":
@@ -962,7 +963,7 @@ def snmp_credentials_of(hostname):
     except KeyError:
         pass
 
-    communities = host_extra_conf(hostname, snmp_communities)
+    communities = get_config_cache().host_extra_conf(hostname, snmp_communities)
     if len(communities) > 0:
         return communities[0]
 
@@ -971,29 +972,29 @@ def snmp_credentials_of(hostname):
 
 
 def snmp_character_encoding_of(hostname):
-    entries = host_extra_conf(hostname, snmp_character_encodings)
+    entries = get_config_cache().host_extra_conf(hostname, snmp_character_encodings)
     if len(entries) > 0:
         return entries[0]
 
 
 def snmp_timing_of(hostname):
-    timing = host_extra_conf(hostname, snmp_timing)
+    timing = get_config_cache().host_extra_conf(hostname, snmp_timing)
     if len(timing) > 0:
         return timing[0]
     return {}
 
 
 def snmpv3_contexts_of(hostname):
-    return host_extra_conf(hostname, snmpv3_contexts)
+    return get_config_cache().host_extra_conf(hostname, snmpv3_contexts)
 
 
 def oid_range_limits_of(hostname):
-    return host_extra_conf(hostname, snmp_limit_oid_range)
+    return get_config_cache().host_extra_conf(hostname, snmp_limit_oid_range)
 
 
 def snmp_port_of(hostname):
     # type: (str) -> int
-    ports = host_extra_conf(hostname, snmp_ports)
+    ports = get_config_cache().host_extra_conf(hostname, snmp_ports)
     if len(ports) == 0:
         return 161
     return ports[0]
@@ -1008,7 +1009,7 @@ def is_bulkwalk_host(hostname):
 
 
 def bulk_walk_size_of(hostname):
-    bulk_sizes = host_extra_conf(hostname, snmp_bulk_size)
+    bulk_sizes = get_config_cache().host_extra_conf(hostname, snmp_bulk_size)
     if not bulk_sizes:
         return 10
 
@@ -1037,11 +1038,11 @@ def is_inline_snmp_host(hostname):
 
 
 def hostgroups_of(hostname):
-    return host_extra_conf(hostname, host_groups)
+    return get_config_cache().host_extra_conf(hostname, host_groups)
 
 
 def summary_hostgroups_of(hostname):
-    return host_extra_conf(hostname, summary_host_groups)
+    return get_config_cache().host_extra_conf(hostname, summary_host_groups)
 
 
 def contactgroups_of(hostname):
@@ -1052,7 +1053,7 @@ def contactgroups_of(hostname):
     # one is used. The single-contact-groups entries are all
     # recognized.
     first_list = True
-    for entry in host_extra_conf(hostname, host_contactgroups):
+    for entry in get_config_cache().host_extra_conf(hostname, host_contactgroups):
         if isinstance(entry, list) and first_list:
             cgrs += entry
             first_list = False
@@ -1072,7 +1073,7 @@ def contactgroups_of(hostname):
 
 def exit_code_spec(hostname, data_source_id=None):
     spec = {}
-    specs = host_extra_conf(hostname, check_mk_exit_status)
+    specs = get_config_cache().host_extra_conf(hostname, check_mk_exit_status)
     for entry in specs[::-1]:
         spec.update(entry)
     return _get_exit_code_spec(spec, data_source_id)
@@ -1113,7 +1114,7 @@ def check_interval_of(hostname, section_name):
     # Previous to 1.5 "match" could be a check name (including subchecks) instead of
     # only main check names -> section names. This has been cleaned up, but we still
     # need to be compatible. Strip of the sub check part of "match".
-    for match, minutes in host_extra_conf(hostname, snmp_check_interval):
+    for match, minutes in get_config_cache().host_extra_conf(hostname, snmp_check_interval):
         if match is None or match.split(".")[0] == section_name:
             return minutes  # use first match
 
@@ -1352,7 +1353,7 @@ def service_ignored(hostname, check_plugin_name, description):
 def _checktype_ignored_for_host(host, checktype):
     if checktype in ignored_checktypes:
         return True
-    ignored = host_extra_conf(host, ignored_checks)
+    ignored = get_config_cache().host_extra_conf(host, ignored_checks)
     for e in ignored:
         if checktype == e or (isinstance(e, list) and checktype in e):
             return True
@@ -1435,7 +1436,7 @@ def translate_piggyback_host(sourcehost, backedhost):
 
 def _get_piggyback_translations(hostname):
     """Get a dict that specifies the actions to be done during the hostname translation"""
-    rules = host_extra_conf(hostname, piggyback_translation)
+    rules = get_config_cache().host_extra_conf(hostname, piggyback_translation)
     translations = {}
     for rule in rules[::-1]:
         translations.update(rule)
@@ -1447,7 +1448,7 @@ def get_service_translations(hostname):
     if hostname in translations_cache:
         return translations_cache[hostname]
 
-    rules = host_extra_conf(hostname, service_description_translation)
+    rules = get_config_cache().host_extra_conf(hostname, service_description_translation)
     translations = {}
     for rule in rules[::-1]:
         for k, v in rule.items():
@@ -1542,23 +1543,6 @@ def get_http_proxy(http_proxy):
         return ""
 
     return None
-
-
-#.
-#   .--Host rulesets-------------------------------------------------------.
-#   |      _   _           _                _                _             |
-#   |     | | | | ___  ___| |_   _ __ _   _| | ___  ___  ___| |_ ___       |
-#   |     | |_| |/ _ \/ __| __| | '__| | | | |/ _ \/ __|/ _ \ __/ __|      |
-#   |     |  _  | (_) \__ \ |_  | |  | |_| | |  __/\__ \  __/ |_\__ \      |
-#   |     |_| |_|\___/|___/\__| |_|   \__,_|_|\___||___/\___|\__|___/      |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Host ruleset matching                                                |
-#   '----------------------------------------------------------------------'
-
-
-def host_extra_conf(hostname, ruleset):
-    return get_config_cache().host_extra_conf(hostname, ruleset)
 
 
 #.

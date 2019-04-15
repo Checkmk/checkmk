@@ -40,7 +40,10 @@ public:
         cma::OnStart(cma::kTest);
 
         auto yaml = GetLoadedConfig();
-        yaml[groups::kGlobal][vars::kSectionsEnabled].push_back(groups::kMrpe);
+        auto sections =
+            GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
+        sections.push_back(groups::kMrpe);
+        PutInternalArray(groups::kGlobal, vars::kSectionsEnabled, sections);
         yaml[groups::kGlobal].remove(vars::kSectionsDisabled);
         yaml[groups::kGlobal][vars::kLogDebug] = "all";
         ProcessKnownConfigGroups();

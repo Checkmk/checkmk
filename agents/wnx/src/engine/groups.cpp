@@ -63,7 +63,7 @@ void Global::loadFromMainConfig() {
         fillOnlyFrom(only_from);
 
         enabled_sections_ =
-            GetArray<string>(groups::kGlobal, vars::kSectionsEnabled);
+            GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
         disabled_sections_ =
             GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
         auto realtime = GetNode(groups::kGlobal, vars::kRealTime);

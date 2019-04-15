@@ -66,32 +66,13 @@ global:
     host: 
         - '*'
 
-    # Just output certain sections (e.g. for upper hosts)
-    sections:
-        - check_mk 
-        - mrpe
-        - skype
-        - spool
-        - plugins
-        - local
-        - winperf
-        - uptime
-        - systemtime
-        - df
-        - mem
-        - services
-        - msexch
-        - dotnet_clrmemory
-        - wmi_webservices
-        - wmi_cpuload
-        - ps
-        - fileinfo
-        - logwatch
+    # Just output certain sections
+    sections: check_mk mrpe skype spool plugins local winperf uptime systemtime df mem services msexch dotnet_clrmemory wmi_webservices wmi_cpuload ps fileinfo logwatch
+    
     # forced to not use
     disabled_sections: openhardwaremonitor _logfiles winperf_xxx badname
-        # output sections in realtime updates. Please note that not all
-        # sections can be used in realtime updates, the following is the
-        # complete list
+
+    #realtime data description
     realtime:
         enabled: no
         # specifies how long (in seconds) realtime updates are sent to

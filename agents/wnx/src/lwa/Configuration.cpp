@@ -259,6 +259,7 @@ void Configuration::outputConfigurables(
             if (cma::tools::IsEqual(section, "global")) {
                 if (cma::tools::IsEqual(key, "disabled_sections") ||
                     cma::tools::IsEqual(key, "realtime_sections") ||
+                    cma::tools::IsEqual(key, "sections") ||
                     cma::tools::IsEqual(key, "execute")) {
                     auto value = v.outputAsInternalArray();
                     Sink(section, key, "", value);
@@ -919,7 +920,7 @@ const std::unordered_map<std::string, Mapping> G_Mapper = {
     {"global.realtime_sections",{ "realtime", "run", MapMode::kIniString}},
     {"global.crash_debug",      { "logging", "debug", MapMode::kIniString}},
     {"global.disabled_sections",{ "", "", MapMode::kIniString}},
-    {"global.sections",         { "", "", MapMode::kNode}},
+    {"global.sections",         { "", "", MapMode::kIniString}},
 
     {"winperf.counters",        { "", "", MapMode::kNode}},
 

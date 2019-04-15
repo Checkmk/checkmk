@@ -36,20 +36,11 @@ global:
     # impact on the system performance
     async: yes
 
-    # Restrict the following configuration variables
-    # in [global] to the following hosts
-    # ?????????
-    host: 
-        - '*'
-
     # Just output certain sections (e.g. for upper hosts)
-    sections:
-        - check_mk 
-        - winperf
+    sections: check_mk winperf
         #- ps
         # forced to not use
-    disabled:
-        - logfiles
+    disabled: logfiles
         # output sections in realtime updates. Please note that not all
         # sections can be used in realtime updates, the following is the
         # complete list

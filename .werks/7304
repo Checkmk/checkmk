@@ -1,0 +1,23 @@
+Title: Solaris uptime consistent across global & local zones
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1553083736
+
+Solaris uptime check was not working correctly since not all versions of
+Solaris and within global and local zones return consistent information.
+
+This fix reverts Werk 4623, which fixed the problem for some setups but
+broke it for others.
+
+Currently Solaris agent will deliver more system information about
+uptime. The check performs a cross validation of data, if values are
+consistent uptime is returned. For inconsistent values, check goes into
+UNKNOWN state and user is required to fix/patch their Solaris
+system. Additional information of conflicting data is given to the user.
+
+An agent update is needed.

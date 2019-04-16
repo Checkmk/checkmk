@@ -310,13 +310,18 @@ if [ -x /sbin/zpool ]; then
     zpool list
 fi
 
-
-# /proc/uptime
-# Simulated output of Linux /proc/uptime
+# Solaris doesn't always give a consisten output on uptime, thus include side information
+# Tested in VM for solaris 10/11
 echo '<<<uptime>>>'
-btime=$(kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}';)
-echo $btime
-
+ctime=`nawk 'BEGIN{print srand()}'`;
+btime=`kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}'`;
+echo $(($ctime - $btime));
+echo '[uptime_solaris_start]'
+uname -a
+zonename
+uptime
+kstat -p unix:0:system_misc:snaptime
+echo '[uptime_solaris_end]'
 
 # NTP
 ps -o comm $pszone | grep -w .*ntpd &>/dev/null

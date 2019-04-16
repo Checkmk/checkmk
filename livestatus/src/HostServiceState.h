@@ -88,6 +88,7 @@ public:
 
     std::string _debug_info;
     std::string _log_output;
+    std::string _long_log_output;
 
     // maybe "": -> no period known, we assume "always"
     std::string _notification_period;

@@ -92,6 +92,11 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         "plugin_output",
         "The output of the check, if any is associated with the message",
         entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _plugin_output)));
+    addColumn(std::make_unique<OffsetSStringColumn>(
+        "long_plugin_output",
+        "The complete output of the check, if any is associated with the message",
+        entry_offset, -1, -1,
+        DANGEROUS_OFFSETOF(LogEntry, _long_plugin_output)));
     addColumn(std::make_unique<OffsetIntColumn>(
         "state", "The state of the host or service in question", entry_offset,
         -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state)));

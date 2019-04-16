@@ -150,6 +150,9 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<OffsetSStringColumn>(
         "log_output", "Logfile output relevant for this state", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _log_output)));
+    addColumn(std::make_unique<OffsetSStringColumn>(
+        "long_log_output", "Complete logfile output relevant for this state",
+        -1, -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _long_log_output)));
 
     addColumn(std::make_unique<OffsetIntColumn>(
         "duration_ok", "OK duration of state ( until - from )", -1, -1, -1,
@@ -619,6 +622,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 hst->_until = hst->_time;
                 hst->_debug_info = "UNMONITORED";
                 hst->_log_output = "";
+                hst->_long_log_output = "";
             }
 
             hst->_time = _until - 1;
@@ -664,6 +668,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         hs_state->_in_service_period = 0;
         hs_state->_is_flapping = 0;
         hs_state->_log_output = "";
+        hs_state->_long_log_output = "";
 
         // Apply latest notification period information and set the host_state
         // to unmonitored
@@ -825,13 +830,11 @@ int TableStateHistory::updateHostServiceState(Query *query,
     }
 
     if (entry->_kind != LogEntryKind::timeperiod_transition) {
-        if ((entry->_kind == LogEntryKind::state_host_initial ||
-             entry->_kind == LogEntryKind::state_service_initial) &&
-            entry->_plugin_output == "(null)") {
-            hs_state->_log_output = "";
-        } else {
-            hs_state->_log_output = entry->_plugin_output;
-        }
+        bool fix_me = (entry->_kind == LogEntryKind::state_host_initial ||
+                       entry->_kind == LogEntryKind::state_service_initial) &&
+                      entry->_plugin_output == "(null)";
+        hs_state->_log_output = fix_me ? "" : entry->_plugin_output;
+        hs_state->_long_log_output = entry->_long_plugin_output;
     }
 
     return state_changed;

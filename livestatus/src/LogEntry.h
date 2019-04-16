@@ -116,8 +116,9 @@ public:
     int _state;
     std::string _state_type;
     int _attempt;
-    std::string _plugin_output;
     std::string _comment;
+    std::string _plugin_output;
+    std::string _long_plugin_output;
 
     // NOTE: line gets modified!
     LogEntry(size_t lineno, std::string line);
@@ -136,7 +137,9 @@ private:
         StateType,
         Attempt,
         Comment,
-        PluginOutput
+        PluginOutput,
+        LongPluginOutput,
+        Ignore
     };
 
     struct LogDef {

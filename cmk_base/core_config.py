@@ -29,7 +29,7 @@ import numbers
 import os
 import sys
 import itertools
-from typing import Any, List, Dict  # pylint: disable=unused-import
+from typing import Optional, Any, List, Dict  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -547,6 +547,7 @@ def _verify_cluster_address_family(config_cache, host_config):
 
 
 def _ip_address_of(hostname, family=None):
+    # type: (str, Optional[int]) -> Optional[str]
     try:
         return ip_lookup.lookup_ip_address(hostname, family)
     except Exception as e:

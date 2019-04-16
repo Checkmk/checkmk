@@ -332,7 +332,13 @@ void PluginEntry::restartAsyncThreadIfFinished(const std::wstring& Id) {
     if (start_thread) data_is_going_old_ = false;
     lk.unlock();
 
-    if (!start_thread) return;
+    if (!start_thread) {
+        // when thread is still running
+        XLOG::d.i(
+            "Thread for plugin '{}' is still running, restart is not required",
+            path().u8string());
+        return;
+    }
 
     // thread was finished  join(we must)
     joinAndReleaseMainThread();
@@ -341,11 +347,10 @@ void PluginEntry::restartAsyncThreadIfFinished(const std::wstring& Id) {
     lk.lock();
     main_thread_ = std::move(t);
     lk.unlock();
-    XLOG::d.i("restarted {}", path().u8string());
+    XLOG::d.i("restarted thread for plugin '{}'", path().u8string());
 }
 
-std::vector<char> PluginEntry::getResultsAsync(const std::wstring& Id,
-                                               bool StartProcessNow) {
+std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
     using namespace std::chrono;
     if (failed()) return {};
 
@@ -357,6 +362,8 @@ std::vector<char> PluginEntry::getResultsAsync(const std::wstring& Id,
     }
     // check data are ready and new enough
     bool data_ok = false;
+    seconds allowed_age(cache_age_);
+    auto data_age = getDataAge();
     bool going_to_be_old = false;
     {
         std::lock_guard l(data_lock_);
@@ -365,36 +372,30 @@ std::vector<char> PluginEntry::getResultsAsync(const std::wstring& Id,
             // command to restart thread
             going_to_be_old = true;
         } else {
-            auto current_time = std::chrono::steady_clock::now();
-            auto age = current_time - data_time_;
-            if (age <= std::chrono::seconds(cache_age_)) {
+            if (data_age <= allowed_age) {
                 data_ok = true;
-            } else {
-                XLOG::d("Plugin '{}' has too old cache {} secs",
-                        path().u8string(),
-                        std::chrono::duration_cast<std::chrono::seconds>(age)
-                            .count());
             }
 
-            if (age + std::chrono::seconds(60) >
-                std::chrono::seconds(cache_age_)) {
+            if (data_age + kRestartInterval > allowed_age) {
                 going_to_be_old = true;
-                XLOG::d(
-                    "Plugin '{}' data is going to be old should restart process if finished",
-                    path().u8string());
             }
         }
+    }
+    if (!data_ok)
+        XLOG::d("Data '{}' is obsolete, age is '{}' seconds", path().u8string(),
+                duration_cast<seconds>(data_age).count());
 
-        // execution phase
-        if (going_to_be_old) {
-            if (StartProcessNow)
-                restartAsyncThreadIfFinished(Id);
-            else
-                markAsForRestart();
+    // execution phase
+    if (going_to_be_old) {
+        if (StartProcessNow) {
+            XLOG::d.i("restarting async plugin '{}'", path().u8string());
+            restartAsyncThreadIfFinished(path().wstring());
+        } else {
+            XLOG::d.i("plugin '{}' is marked for restart", path().u8string());
+            markAsForRestart();
         }
     }
 
-    if (!data_ok) XLOG::d("Data {} is obsolete", path().u8string());
     // we always return data even if data is OLD
     return data_;
 }
@@ -584,7 +585,7 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
     ApplyExeUnitToPluginMap(Out, Units, Local);
 
     // last step is deletion of all duplicated names
-    RemoveDuplicatedPlugins(Out, true);
+    RemoveDuplicatedPlugins(Out, CheckExists);
 }
 
 // #TODO simplify THIS TRASH, SK!
@@ -661,8 +662,7 @@ std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
 
         if (!entry.async()) continue;
 
-        auto ret =
-            entry.getResultsAsync(entry.path().wstring(), StartImmediately);
+        auto ret = entry.getResultsAsync(StartImmediately);
         if (ret.size()) ++count;
         cma::tools::AddVector(out, ret);
     }

@@ -104,6 +104,7 @@ public:
         provider_uniq_name_ = engine_.getUniqName();
     }
 
+    // #TODO this function is not simple enough
     std::future<bool> kick(
         bool Async,                 // type of execution
         const std::string CmdLine,  // command line, first is Ip address
@@ -253,6 +254,7 @@ private:
             mailbox.ConstructThread(SystemMailboxCallback, 20, this);
             ON_OUT_OF_SCOPE(mailbox.DismantleThread());
             cma::rt::Device rt_device;
+            preStart();
             if (Port) {
                 // this is main part
                 rt_device.start();
@@ -382,8 +384,11 @@ private:
         return tp;
     }
 
-    // #TODO gtest
+    // #TODO gtest!
     int startProviders(AnswerId Tp, std::string Ip);
+
+    // all pre operation required for normal functionality
+    void preStart();
 
 private:
     void preLoadConfig();

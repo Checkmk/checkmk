@@ -210,6 +210,18 @@ void ServiceProcessor::preLoadConfig() {
     cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
 }
 
+void ServiceProcessor::preStart() {
+    XLOG::l.i("Pre Start actions");
+    cma::cfg::SetupPluginEnvironment();
+
+    auto& plugins = plugins_provider_.getEngine();
+    plugins.preStart();
+
+    auto& local = local_provider_.getEngine();
+    local.preStart();
+    XLOG::l.i("Pre Start actions ended");
+}
+
 // This is simple function which kicks to call
 // different providers
 int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {

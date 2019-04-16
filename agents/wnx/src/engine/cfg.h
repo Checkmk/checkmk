@@ -915,8 +915,10 @@ struct PluginInfo {
 
 protected:
     bool async_;
-    int timeout_;
-    int cache_age_;
+
+    int timeout_;    // from the config file, #TODO use chrono
+    int cache_age_;  // from the config file, #TODO use chrono
+
     int retry_;
 };
 

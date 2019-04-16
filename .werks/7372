@@ -1,0 +1,14 @@
+Title: agent_aws: Fixed restriction of services by tags
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p15
+Date: 1555416683
+
+If tags were configured in the special agent {{Amazon Web Services (AWS)}}
+and began or ended with 't', 'a', 'g' or ':' in the related tag key, the
+special agent stripped these characters away. These tagged AWS resources
+were not discovered.

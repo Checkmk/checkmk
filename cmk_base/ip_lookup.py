@@ -27,6 +27,7 @@
 import socket
 import errno
 import os
+from typing import Optional  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -37,7 +38,7 @@ import cmk_base.console as console
 import cmk_base.config as config
 from cmk_base.exceptions import MKIPAddressLookupError
 
-_fake_dns = False
+_fake_dns = None  # type: Optional[str]
 _enforce_localhost = False
 
 
@@ -52,10 +53,12 @@ def enforce_localhost():
 
 
 def lookup_ipv4_address(hostname):
+    # type: (str) -> Optional[str]
     return lookup_ip_address(hostname, 4)
 
 
 def lookup_ipv6_address(hostname):
+    # type: (str) -> Optional[str]
     return lookup_ip_address(hostname, 6)
 
 
@@ -66,6 +69,7 @@ def lookup_ipv6_address(hostname):
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
 def lookup_ip_address(hostname, family=None):
+    # type: (str, Optional[int]) -> Optional[str]
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
@@ -105,6 +109,7 @@ def lookup_ip_address(hostname, family=None):
 
 # Variables needed during the renaming of hosts (see automation.py)
 def cached_dns_lookup(hostname, family):
+    # type: (str, int) -> Optional[str]
     cache = cmk_base.config_cache.get_dict("cached_dns_lookup")
     cache_id = hostname, family
 

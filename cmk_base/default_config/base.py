@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import typing as _typing
+
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
 # variables are preset in checks/* as well.
@@ -54,7 +56,7 @@ piggyback_max_cachefile_age = 3600  # secs
 piggyback_translation = []  # Ruleset for translating piggyback host names
 service_description_translation = []  # Ruleset for translating service descriptions
 simulation_mode = False
-fake_dns = False
+fake_dns = None  # type: _typing.Optional[str]
 agent_simulator = False
 perfdata_format = "pnp"  # also possible: "standard"
 check_mk_perfdata_with_times = True

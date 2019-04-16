@@ -129,6 +129,7 @@ def _parse_lnx_if_sections(info):
             # IFACE_NAME: VAL VAL VAL ...
             iface = ethtool_stats.setdefault((node, line[0]), {})
             iface.update({"counters": map(int, line[1].split())})
+            continue
 
         elif line[0].startswith('[') and line[0].endswith(']'):
             # Parse 'ethtool'; part two
@@ -142,7 +143,11 @@ def _parse_lnx_if_sections(info):
             continue
 
         if iface is not None:
-            iface[line[0].strip()] = ":".join(line[1:]).strip()
+            stripped_line0 = line[0].strip()
+            if stripped_line0 == "Address":
+                iface[stripped_line0] = ":".join(line[1:]).strip()
+            else:
+                iface[stripped_line0] = " ".join(line[1:]).strip()
 
     return ip_stats, ethtool_stats
 
@@ -213,19 +218,19 @@ def parse_lnx_if(info):
             # No information from ethtool. We consider interfaces up
             # if they have been used at least some time since the
             # system boot.
-            iplink_stats = attr.get("iplink_stats")
-            if iplink_stats:
-                if "UP" in iplink_stats.get("extra_info", []) or iplink_stats.get("state") == "UP":
-                    ifOperStatus = 1
-                elif iplink_stats.get("state") == "DOWN":
-                    ifOperStatus = 2
-                else:
-                    ifOperStatus = 4
-            else:
+            if_state = attr.get('state')
+            if if_state is None:
                 if ifInOctets > 0:
                     ifOperStatus = 1  # assume up
                 else:
                     ifOperStatus = 4  # unknown (NIC has never been used)
+            else:
+                if if_state == "UP":
+                    ifOperStatus = 1
+                elif if_state == "DOWN":
+                    ifOperStatus = 2
+                else:
+                    ifOperStatus = 4
 
         if attr.get("Address"):
             ifPhysAddress = "".join([chr(int(x, 16)) for x in attr.get("Address", "").split(":")])

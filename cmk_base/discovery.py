@@ -71,10 +71,11 @@ _marked_host_discovery_timeout = 120
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
 def do_discovery(hostnames, check_plugin_names, only_new):
+    config_cache = config.get_config_cache()
     use_caches = data_sources.abstract.DataSource.get_may_use_cache_file()
     if not hostnames:
         console.verbose("Discovering services on all hosts\n")
-        hostnames = config.all_active_realhosts()
+        hostnames = config_cache.all_active_realhosts()
         use_caches = True
     else:
         console.verbose("Discovering services on: %s\n" % ", ".join(hostnames))
@@ -212,6 +213,7 @@ def discover_on_host(mode,
                      use_caches,
                      on_error="ignore",
                      service_filter=None):
+    config_cache = config.get_config_cache()
     counts = {
         "self_new": 0,
         "self_removed": 0,
@@ -221,7 +223,7 @@ def discover_on_host(mode,
         "clustered_vanished": 0,
     }
 
-    if hostname not in config.all_active_realhosts():
+    if hostname not in config_cache.all_active_realhosts():
         return counts, ""
 
     if service_filter is None:
@@ -493,10 +495,12 @@ def discover_marked_hosts(core):
         console.verbose("  Nothing to do. %s is missing.\n" % autodiscovery_dir)
         return
 
+    config_cache = config.get_config_cache()
+
     now_ts = time.time()
     end_time_ts = now_ts + _marked_host_discovery_timeout  # don't run for more than 2 minutes
     oldest_queued = _queue_age()
-    all_hosts = config.all_configured_hosts()
+    all_hosts = config_cache.all_configured_hosts()
     hosts = os.listdir(autodiscovery_dir)
     if not hosts:
         console.verbose("  Nothing to do. No hosts marked by discovery check.\n")

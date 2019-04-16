@@ -16,6 +16,40 @@ def clear_config_caches(monkeypatch):
     monkeypatch.setattr(cmk_base, "runtime_cache", cmk_base.caching.CacheManager())
 
 
+def test_all_configured_realhosts(monkeypatch):
+    monkeypatch.setattr(config, "distributed_wato_site", "site1")
+
+    all_hosts = [
+        "real1|site:site1",
+        "real2|site:site2",
+        "real3",
+    ]
+    clusters = {
+        "cluster1|site:site1": ["node1"],
+        "cluster2|site:site2": ["node2"],
+        "cluster3": ["node3"],
+    }
+
+    monkeypatch.setattr(config, "all_hosts", all_hosts)
+    monkeypatch.setattr(config, "clusters", clusters)
+    monkeypatch.setattr(config, "host_paths", {
+        "real1": "/",
+        "real2": "/",
+        "real3": "/",
+        "cluster1": "/",
+        "cluster2": "/",
+        "cluster3": "/",
+    })
+
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+
+    assert config_cache.all_configured_clusters() == set(["cluster1", "cluster2", "cluster3"])
+    assert config_cache.all_configured_realhosts() == set(["real1", "real2", "real3"])
+    assert config_cache.all_configured_hosts() == set(
+        ["cluster1", "cluster2", "cluster3", "real1", "real2", "real3"])
+
+
 @pytest.mark.parametrize("hostname,tags,result", [
     ("testhost", [], True),
     ("testhost", ["ip-v4"], True),

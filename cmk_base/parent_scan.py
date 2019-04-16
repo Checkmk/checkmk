@@ -49,7 +49,7 @@ def do_scan_parents(hosts):
 
     if not hosts:
         hosts = [
-            h for h in config.all_active_realhosts()
+            h for h in config_cache.all_active_realhosts()
             if config_cache.in_binary_hostlist(h, config.scanparent_hosts)
         ]
 
@@ -88,7 +88,7 @@ def do_scan_parents(hosts):
                 continue
             chunk.append(host)
 
-        gws = scan_parents_of(chunk)
+        gws = scan_parents_of(config_cache, chunk)
 
         for host, (gw, _unused_state, _unused_ping_fails, _unused_message) in zip(chunk, gws):
             if gw:
@@ -134,7 +134,7 @@ def traceroute_available():
             return f
 
 
-def scan_parents_of(hosts, silent=False, settings=None):
+def scan_parents_of(config_cache, hosts, silent=False, settings=None):
     if settings is None:
         settings = {}
 
@@ -290,7 +290,7 @@ def scan_parents_of(hosts, silent=False, settings=None):
 
         # TTLs already have been filtered out)
         gateway_ip = route
-        gateway = _ip_to_hostname(route)
+        gateway = _ip_to_hostname(config_cache, route)
         if gateway:
             console.verbose("%s(%s) ", gateway, gateway_ip)
         else:
@@ -316,11 +316,11 @@ def gateway_reachable_via_ping(ip, probes):
 # reverse DNS but the Check_MK mechanisms, since we do not
 # want to find the DNS name but the name of a matching host
 # from all_hosts
-def _ip_to_hostname(ip):
+def _ip_to_hostname(config_cache, ip):
     if not cmk_base.config_cache.exists("ip_to_hostname"):
         cache = cmk_base.config_cache.get_dict("ip_to_hostname")
 
-        for host in config.all_active_realhosts():
+        for host in config_cache.all_active_realhosts():
             try:
                 cache[ip_lookup.lookup_ipv4_address(host)] = host
             except:

@@ -34,7 +34,7 @@ import os
 import py_compile
 import struct
 import sys
-from typing import Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
+from typing import Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
 import six
 
@@ -472,9 +472,11 @@ class PackedConfig(object):
                          "# encoding: utf-8\n"
                          "# Created by Check_MK. Dump of the currently active configuration\n\n")
 
+        config_cache = get_config_cache()
+
         # These functions purpose is to filter out hosts which are monitored on different sites
-        active_hosts = all_active_hosts()
-        active_clusters = all_active_clusters()
+        active_hosts = config_cache.all_active_hosts()
+        active_clusters = config_cache.all_active_clusters()
 
         def filter_all_hosts(all_hosts_orig):
             all_hosts_red = []
@@ -595,6 +597,7 @@ class PackedConfig(object):
 
 
 def strip_tags(tagged_hostlist):
+    # type: (List[str]) -> List[str]
     cache = cmk_base.config_cache.get_dict("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
@@ -606,88 +609,10 @@ def strip_tags(tagged_hostlist):
         return result
 
 
-#.
-#   .--HostCollections-----------------------------------------------------.
-#   | _   _           _    ____      _ _           _   _                   |
-#   || | | | ___  ___| |_ / ___|___ | | | ___  ___| |_(_) ___  _ __  ___   |
-#   || |_| |/ _ \/ __| __| |   / _ \| | |/ _ \/ __| __| |/ _ \| '_ \/ __|  |
-#   ||  _  | (_) \__ \ |_| |__| (_) | | |  __/ (__| |_| | (_) | | | \__ \  |
-#   ||_| |_|\___/|___/\__|\____\___/|_|_|\___|\___|\__|_|\___/|_| |_|___/  |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-# Returns a set of all active hosts
-def all_active_hosts():
-    cache = cmk_base.config_cache.get_set("all_active_hosts")
-    if not cache.is_populated():
-        cache.update(all_active_realhosts(), all_active_clusters())
-        cache.set_populated()
-    return cache
-
-
-# Returns a set of all host names to be handled by this site
-# hosts of other sitest or disabled hosts are excluded
-def all_active_realhosts():
-    active_realhosts = cmk_base.config_cache.get_set("active_realhosts")
-    if not active_realhosts.is_populated():
-        config_cache = get_config_cache()
-        active_realhosts.update(_filter_active_hosts(config_cache, all_configured_realhosts()))
-        active_realhosts.set_populated()
-
-    return active_realhosts
-
-
-# Returns a set of all cluster host names to be handled by
-# this site hosts of other sitest or disabled hosts are excluded
-def all_active_clusters():
-    active_clusters = cmk_base.config_cache.get_set("active_clusters")
-
-    if not active_clusters.is_populated():
-        config_cache = get_config_cache()
-        active_clusters.update(_filter_active_hosts(config_cache, all_configured_clusters()))
-        active_clusters.set_populated()
-
-    return active_clusters
-
-
-# Returns a set of all hosts, regardless if currently
-# disabled or monitored on a remote site.
-def all_configured_hosts():
-    cache = cmk_base.config_cache.get_set("all_configured_hosts")
-    if not cache.is_populated():
-        cache.update(all_configured_realhosts(), all_configured_clusters())
-        cache.set_populated()
-    return cache
-
-
-# Returns a set of all host names, regardless if currently
-# disabled or monitored on a remote site. Does not return
-# cluster hosts.
-def all_configured_realhosts():
-    cache = cmk_base.config_cache.get_set("all_configured_realhosts")
-    if not cache.is_populated():
-        cache.update(strip_tags(all_hosts))
-        cache.set_populated()
-    return cache
-
-
-# Returns a set of all cluster names, regardless if currently
-# disabled or monitored on a remote site. Does not return
-# normal hosts.
-def all_configured_clusters():
-    cache = cmk_base.config_cache.get_set("all_configured_clusters")
-    if not cache.is_populated():
-        cache.update(strip_tags(clusters.keys()))
-        cache.set_populated()
-    return cache
-
-
 # This function should only be used during duplicate host check! It has to work like
 # all_active_hosts() but with the difference that duplicates are not removed.
-def all_active_hosts_with_duplicates():
+def _all_active_hosts_with_duplicates():
+    # type: () -> Set[str]
     # Only available with CEE
     if "shadow_hosts" in globals():
         shadow_host_entries = shadow_hosts.keys()
@@ -734,10 +659,11 @@ def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False, keep_
 
 
 def duplicate_hosts():
-    seen_hostnames = set([])
-    duplicates = set([])
+    # type: () -> List[str]
+    seen_hostnames = set()  # type: Set[str]
+    duplicates = set()  # type: Set[str]
 
-    for hostname in all_active_hosts_with_duplicates():
+    for hostname in _all_active_hosts_with_duplicates():
         if hostname in seen_hostnames:
             duplicates.add(hostname)
         else:
@@ -752,22 +678,24 @@ def duplicate_hosts():
 #
 # This is not optimized for performance, so use in specific situations.
 def all_offline_hosts():
+    # type: () -> Set[str]
     config_cache = get_config_cache()
 
     hostlist = _filter_active_hosts(
         config_cache,
-        all_configured_realhosts().union(all_configured_clusters()),
+        config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters()),
         keep_offline_hosts=True)
 
-    return [
+    return set([
         hostname for hostname in hostlist
         if not config_cache.in_binary_hostlist(hostname, only_hosts)
-    ]
+    ])
 
 
 def all_configured_offline_hosts():
+    # type: () -> Set[str]
     config_cache = get_config_cache()
-    hostlist = all_configured_realhosts().union(all_configured_clusters())
+    hostlist = config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters())
 
     return set([
         hostname for hostname in hostlist
@@ -789,6 +717,7 @@ def all_configured_offline_hosts():
 
 
 def _host_is_member_of_site(config_cache, hostname, site):
+    # type: (ConfigCache, str, str) -> bool
     for tag in config_cache.get_host_config(hostname).tags:
         if tag.startswith("site:"):
             return site == tag[5:]
@@ -797,6 +726,7 @@ def _host_is_member_of_site(config_cache, hostname, site):
 
 
 def alias_of(hostname, fallback):
+    # type: (str, str) -> Text
     aliases = get_config_cache().host_extra_conf(hostname, extra_host_conf.get("alias", []))
     if len(aliases) == 0:
         if fallback:
@@ -808,6 +738,7 @@ def alias_of(hostname, fallback):
 
 
 def get_additional_ipaddresses_of(hostname):
+    # type: (str) -> Tuple[List[str], List[str]]
     #TODO Regarding the following configuration variables from WATO
     # there's no inheritance, thus we use 'host_attributes'.
     # Better would be to use cmk_base configuration variables,
@@ -817,14 +748,16 @@ def get_additional_ipaddresses_of(hostname):
 
 
 def parents_of(hostname):
-    par = get_config_cache().host_extra_conf(hostname, parents)
+    # type: (str) -> List[str]
+    config_cache = get_config_cache()
+    par = config_cache.host_extra_conf(hostname, parents)
     # Use only those parents which are defined and active in
     # all_hosts.
     used_parents = []
     for p in par:
         ps = p.split(",")
         for pss in ps:
-            if pss in all_active_realhosts():
+            if pss in config_cache.all_active_realhosts():
                 used_parents.append(pss)
     return used_parents
 
@@ -1112,7 +1045,7 @@ def is_cluster(hostname):
     # all_configured_clusters() needs to be used, because this function affects
     # the agent bakery, which needs all configured hosts instead of just the hosts
     # of this site
-    return hostname in all_configured_clusters()
+    return hostname in get_config_cache().all_configured_clusters()
 
 
 # Returns the nodes of a cluster, or None if hostname is not a cluster
@@ -2783,8 +2716,14 @@ class ConfigCache(object):
         self._collect_hosttags()
         self._setup_clusters_nodes_cache()
 
-        self._all_processed_hosts = all_active_hosts()
-        self._all_configured_hosts = all_configured_hosts()
+        self._all_configured_clusters = self._get_all_configured_clusters()
+        self._all_configured_realhosts = self._get_all_configured_realhosts()
+        self._all_configured_hosts = self._get_all_configured_hosts()
+        self._all_active_clusters = self._get_all_active_clusters()
+        self._all_active_realhosts = self._get_all_active_realhosts()
+        self._all_active_hosts = self._get_all_active_hosts()
+        # TODO: Clean this one up?
+        self._all_processed_hosts = self._all_active_hosts
         self._initialize_host_lookup()
 
     def _initialize_caches(self):
@@ -2804,6 +2743,10 @@ class ConfigCache(object):
         # may contain a reduced set of hosts, since each process handles a subset
         self._all_processed_hosts = set()
         self._all_configured_hosts = set()
+        self._all_configured_clusters = set()
+        self._all_configured_realhosts = set()
+        self._all_active_clusters = set()
+        self._all_active_realhosts = set()
 
         # Reference hostname -> dirname including /
         self._host_paths = {}
@@ -3305,6 +3248,47 @@ class ConfigCache(object):
 
         return new_rules
 
+    def all_active_hosts(self):
+        # type: () -> Set[str]
+        """Returns a set of all active hosts"""
+        return self._all_active_hosts
+
+    def _get_all_active_hosts(self):
+        # type: () -> Set[str]
+        hosts = set()  # type: Set[str]
+        hosts.update(self.all_active_realhosts(), self.all_active_clusters())
+        return hosts
+
+    def all_active_realhosts(self):
+        # type: () -> Set[str]
+        """Returns a set of all host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
+        return self._all_active_realhosts
+
+    def _get_all_active_realhosts(self):
+        # type: () -> Set[str]
+        return _filter_active_hosts(self, self._all_configured_realhosts)
+
+    def all_configured_realhosts(self):
+        # type: () -> Set[str]
+        return self._all_configured_realhosts
+
+    def _get_all_configured_realhosts(self):
+        # type: () -> Set[str]
+        """Returns a set of all host names, regardless if currently disabled or
+        monitored on a remote site. Does not return cluster hosts."""
+        return set(strip_tags(all_hosts))
+
+    def all_configured_hosts(self):
+        # type: () -> Set[str]
+        return self._all_configured_hosts
+
+    def _get_all_configured_hosts(self):
+        # type: () -> Set[str]
+        """Returns a set of all hosts, regardless if currently disabled or monitored on a remote site."""
+        hosts = set()  # type: Set[str]
+        hosts.update(self.all_configured_realhosts(), self.all_configured_clusters())
+        return hosts
+
     def _setup_clusters_nodes_cache(self):
         for cluster, hosts in clusters.items():
             clustername = cluster.split('|', 1)[0]
@@ -3320,6 +3304,26 @@ class ConfigCache(object):
     # Returns the nodes of a cluster. Returns None if no match
     def nodes_of(self, hostname):
         return self._nodes_of_cache.get(hostname)
+
+    def all_active_clusters(self):
+        # type: () -> Set[str]
+        """Returns a set of all cluster host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
+        return self._all_active_clusters
+
+    def _get_all_active_clusters(self):
+        # type: () -> Set[str]
+        return _filter_active_hosts(self, self.all_configured_clusters())
+
+    def all_configured_clusters(self):
+        # type: () -> Set[str]
+        """Returns a set of all cluster names
+        Regardless if currently disabled or monitored on a remote site. Does not return normal hosts.
+        """
+        return self._all_configured_clusters
+
+    def _get_all_configured_clusters(self):
+        # type: () -> Set[str]
+        return set(strip_tags(clusters.keys()))
 
     # Determine weather a service (found on a physical host) is a clustered
     # service and - if yes - return the cluster host of the service. If

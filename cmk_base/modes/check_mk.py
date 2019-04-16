@@ -215,15 +215,16 @@ def mode_list_hosts(options, args):
 
 # TODO: Does not care about internal group "check_mk"
 def _list_all_hosts(hostgroups, options):
+    config_cache = config.get_config_cache()
 
     hostnames = set()
 
     if options.get("all-sites"):
-        hostnames.update(config.all_configured_hosts())  # Return all hosts, including offline
+        hostnames.update(config_cache.all_configured_hosts())  # Return all hosts, including offline
         if not "include-offline" in options:
             hostnames -= config.all_configured_offline_hosts()
     else:
-        hostnames.update(config.all_active_hosts())
+        hostnames.update(config_cache.all_active_hosts())
         if "include-offline" in options:
             hostnames.update(config.all_offline_hosts())
 
@@ -284,12 +285,13 @@ def mode_list_tag(args):
 
 
 def _list_all_hosts_with_tags(tags):
+    config_cache = config.get_config_cache()
     hosts = []
 
     if "offline" in tags:
         hostlist = config.all_offline_hosts()
     else:
-        hostlist = config.all_active_hosts()
+        hostlist = config_cache.all_active_hosts()
 
     config_cache = config.get_config_cache()
     for h in hostlist:
@@ -431,8 +433,9 @@ modes.register(
 
 
 def mode_dump_hosts(hostlist):
+    config_cache = config.get_config_cache()
     if not hostlist:
-        hostlist = config.all_active_hosts()
+        hostlist = config_cache.all_active_hosts()
 
     for hostname in sorted(hostlist):
         cmk_base.dump_host.dump_host(hostname)
@@ -909,9 +912,10 @@ modes.register(
 
 
 def mode_flush(hosts):
+    config_cache = config.get_config_cache()
 
     if not hosts:
-        hosts = config.all_active_hosts()
+        hosts = config_cache.all_active_hosts()
 
     for host in hosts:
         console.output("%-20s: " % host)
@@ -1240,13 +1244,14 @@ modes.register(
 
 def mode_inventory(options, args):
     inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
+    config_cache = config.get_config_cache()
 
     if args:
         hostnames = modes.parse_hostname_list(args, with_clusters=True)
         console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
     else:
         # No hosts specified: do all hosts and force caching
-        hostnames = config.all_active_hosts()
+        hostnames = config_cache.all_active_hosts()
         data_sources.abstract.DataSource.set_may_use_cache_file(
             not data_sources.abstract.DataSource.is_agent_cache_disabled())
         console.verbose("Doing HW/SW inventory on all hosts\n")

@@ -515,7 +515,7 @@ def get_cluster_nodes_for_config(config_cache, host_config):
 
     nodes = config.nodes_of(host_config.hostname)[:]
     for node in nodes:
-        if node not in config.all_active_realhosts():
+        if node not in config_cache.all_active_realhosts():
             warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
                     (node, host_config.hostname))
             nodes.remove(node)

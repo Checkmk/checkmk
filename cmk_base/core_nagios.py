@@ -132,11 +132,12 @@ def create_config(outfile, hostnames):
         config.extra_service_conf["_SERVICE_PERIOD"] = config.extra_service_conf["service_period"]
         del config.extra_service_conf["service_period"]
 
+    config_cache = config.get_config_cache()
+
     if hostnames is None:
-        hostnames = config.all_active_hosts()
+        hostnames = config_cache.all_active_hosts()
 
     cfg = NagiosConfig(outfile, hostnames)
-    config_cache = config.get_config_cache()
 
     _output_conf_header(cfg)
 
@@ -984,7 +985,7 @@ def precompile_hostchecks():
     config_cache = config.get_config_cache()
 
     console.verbose("Precompiling host checks...\n")
-    for host in config.all_active_hosts():
+    for host in config_cache.all_active_hosts():
         try:
             _precompile_hostcheck(config_cache, host)
         except Exception as e:

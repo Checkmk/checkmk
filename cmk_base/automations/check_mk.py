@@ -1101,10 +1101,11 @@ class AutomationScanParents(Automation):
         hostnames = args[4:]
         if not cmk_base.parent_scan.traceroute_available():
             raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
+        config_cache = config.get_config_cache()
 
         try:
             gateways = cmk_base.parent_scan.scan_parents_of(
-                hostnames, silent=True, settings=settings)
+                config_cache, hostnames, silent=True, settings=settings)
             return gateways
         except Exception as e:
             raise MKAutomationError("%s" % e)
@@ -1498,22 +1499,22 @@ class AutomationGetServiceConfigurations(Automation):
 
     def execute(self, args):
         result = {"hosts": {}}
-        for hostname in config.all_active_hosts():
-            result["hosts"][hostname] = self._get_config_for_host(hostname)
+        config_cache = config.get_config_cache()
+        for hostname in config_cache.all_active_hosts():
+            result["hosts"][hostname] = self._get_config_for_host(config_cache, hostname)
 
         result["checkgroup_of_checks"] = self._get_checkgroup_of_checks()
         return result
 
-    def _get_config_for_host(self, hostname):
+    def _get_config_for_host(self, config_cache, hostname):
         return {
             "checks": check_table.get_check_table(hostname, remove_duplicates=True),
-            "active_checks": self._get_active_checks(hostname)
+            "active_checks": self._get_active_checks(config_cache, hostname)
         }
 
-    def _get_active_checks(self, hostname):
+    def _get_active_checks(self, config_cache, hostname):
         # legacy checks via active_checks
         actchecks = []
-        config_cache = config.get_config_cache()
         for acttype, rules in config.active_checks.iteritems():
             entries = config_cache.host_extra_conf(hostname, rules)
             for params in entries:

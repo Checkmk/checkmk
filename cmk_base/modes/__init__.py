@@ -133,16 +133,16 @@ class Modes(object):
         return options
 
     def parse_hostname_list(self, args, with_clusters=True, with_foreign_hosts=False):
+        config_cache = config.get_config_cache()
         if with_foreign_hosts:
-            valid_hosts = config.all_configured_realhosts()
+            valid_hosts = config_cache.all_configured_realhosts()
         else:
-            valid_hosts = config.all_active_realhosts()
+            valid_hosts = config_cache.all_active_realhosts()
 
         if with_clusters:
-            valid_hosts = valid_hosts.union(config.all_active_clusters())
+            valid_hosts = valid_hosts.union(config_cache.all_active_clusters())
 
         hostlist = []
-        config_cache = config.get_config_cache()
         for arg in args:
             if arg[0] != '@' and arg in valid_hosts:
                 hostlist.append(arg)

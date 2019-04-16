@@ -840,7 +840,7 @@ def do_snmpget(*args):
     hostnames = args[0][1:]
     if not hostnames:
         hostnames = []
-        for host in config.all_active_realhosts():
+        for host in config_cache.all_active_realhosts():
             host_config = config_cache.get_host_config(host)
             if host_config.is_snmp_host:
                 hostnames.append(host)

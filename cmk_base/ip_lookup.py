@@ -236,7 +236,7 @@ def update_dns_cache():
     config_cache = config.get_config_cache()
 
     console.verbose("Updating DNS cache...\n")
-    for hostname in config.all_active_hosts():
+    for hostname in config_cache.all_active_hosts():
         host_config = config_cache.get_host_config(hostname)
 
         # Use intelligent logic. This prevents DNS lookups for hosts

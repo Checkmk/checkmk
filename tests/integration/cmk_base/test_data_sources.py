@@ -5,7 +5,7 @@
 # the default caching and handling of global options affecting the
 # caching is checked
 
-import pytest
+import pytest  # type: ignore
 from testlib import web, repo_path
 
 import cmk_base.config as config
@@ -194,9 +194,9 @@ def test_mode_inventory_caching(test_cfg, hosts, cache, force, monkeypatch):
         else:
             kwargs["_may_use_cache_file"] = False
 
-    print kwargs
-
     _patch_data_source_run(monkeypatch, **kwargs)
+
+    config_cache = config.get_config_cache()
 
     try:
         if cache[0] == True:
@@ -213,8 +213,8 @@ def test_mode_inventory_caching(test_cfg, hosts, cache, force, monkeypatch):
 
         # run() has to be called once for each requested host
         if hosts[0] == []:
-            valid_hosts = config.all_active_realhosts()
-            valid_hosts = valid_hosts.union(config.all_active_clusters())
+            valid_hosts = config_cache.all_active_realhosts()
+            valid_hosts = valid_hosts.union(config_cache.all_active_clusters())
         else:
             valid_hosts = hosts[0]
 
@@ -262,9 +262,10 @@ def test_mode_check_discovery_cached(test_cfg, monkeypatch):
 
 
 def test_mode_discover_all_hosts(test_cfg, monkeypatch):
+    config_cache = config.get_config_cache()
     _patch_data_source_run(monkeypatch, _may_use_cache_file=True, _max_cachefile_age=120)
     cmk_base.modes.check_mk.mode_discover({"discover": 1}, [])
-    assert _counter_run == len(config.all_active_realhosts()) * 2
+    assert _counter_run == len(config_cache.all_active_realhosts()) * 2
 
 
 def test_mode_discover_explicit_hosts(test_cfg, monkeypatch):

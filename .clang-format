@@ -4,6 +4,10 @@ BasedOnStyle: Google
 AccessModifierOffset: -4
 BreakConstructorInitializersBeforeComma: true
 IncludeCategories:
+  - Regex: '^"stdafx.h"'
+    Priority: -1
+  - Regex: '^"pch.h"'
+    Priority: -1
   - Regex: '^"config.h"'
     Priority: 1
   - Regex: '^<winsock2.h>'

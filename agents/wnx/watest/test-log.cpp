@@ -31,7 +31,7 @@ TEST(LogTest, All) {
                         (xlog::Directions::kDebuggerPrint |
                          xlog::Directions::kFilePrint));
 
-        EXPECT_TRUE(xlogd.type_ == XLOG::LogType::kDebug);
+        EXPECT_TRUE(xlogd.type_ == XLOG::LogType::debug);
     }
 
     {
@@ -39,21 +39,21 @@ TEST(LogTest, All) {
         EXPECT_TRUE(
             xlogl.log_param_.directions_ ==
             (xlog::Directions::kDebuggerPrint | xlog::Directions::kFilePrint));
-        EXPECT_TRUE(xlogl.type_ == XLOG::LogType::kLog);
+        EXPECT_TRUE(xlogl.type_ == XLOG::LogType::log);
     }
 
     {
         auto& xlogt = XLOG::t;
         EXPECT_TRUE(xlogt.log_param_.directions_ ==
                     (xlog::Directions::kDebuggerPrint));
-        EXPECT_TRUE(xlogt.type_ == XLOG::LogType::kTrace);
+        EXPECT_TRUE(xlogt.type_ == XLOG::LogType::trace);
     }
 
     {
         auto& xlogstdio = XLOG::stdio;
         EXPECT_TRUE(xlogstdio.log_param_.directions_ ==
                     xlog::Directions::kStdioPrint);
-        EXPECT_TRUE(xlogstdio.type_ == XLOG::LogType::kStdio);
+        EXPECT_TRUE(xlogstdio.type_ == XLOG::LogType::stdio);
     }
 
     // DEFAULT
@@ -66,7 +66,7 @@ TEST(LogTest, All) {
 
     // Check API
     {
-        XLOG::Emitter l(XLOG::LogType::kLog);
+        XLOG::Emitter l(XLOG::LogType::log);
         auto& lp = l.log_param_;
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint);
         l.configFile(GetCurrentLogFileName());
@@ -77,13 +77,13 @@ TEST(LogTest, All) {
     }
 
     {
-        XLOG::Emitter d(XLOG::LogType::kDebug);
+        XLOG::Emitter d(XLOG::LogType::debug);
         auto& lp = t.log_param_;
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
     }
 
     {
-        XLOG::Emitter t(XLOG::LogType::kTrace);
+        XLOG::Emitter t(XLOG::LogType::trace);
         auto& lp = t.log_param_;
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
 
@@ -98,7 +98,7 @@ TEST(LogTest, All) {
 
     // CLEAN FILE
     {
-        XLOG::Emitter l(XLOG::LogType::kLog);
+        XLOG::Emitter l(XLOG::LogType::log);
         auto& lp = l.log_param_;
         l.configFile("");
         EXPECT_TRUE(lp.filename()[0] == 0) << "File not changed";

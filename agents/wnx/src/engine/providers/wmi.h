@@ -8,9 +8,8 @@
 #include <chrono>
 #include <string>
 
-#include "section_header.h"
-
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma {
 
@@ -111,8 +110,8 @@ private:
 };
 
 // this is proposed API
-std::string GenerateTable(const std::wstring NameSpace,
-                          const std::wstring Object,
+std::string GenerateTable(const std::wstring& NameSpace,
+                          const std::wstring& Object,
                           const std::vector<std::wstring> Columns);
 
 }  // namespace provider

@@ -128,17 +128,17 @@ public:
         switch (b) {
             case WinEventLevel::Error:
             case WinEventLevel::Critical:
-                return Level::Error;
+                return Level::error;
             case WinEventLevel::Warning:
-                return Level::Warning;
+                return Level::warning;
             case WinEventLevel::Information:
-                return Level::Information;
+                return Level::information;
             case WinEventLevel::Audit:
-                return Level::AuditSuccess;
+                return Level::audit_success;
             case WinEventLevel::Verbose:
-                return Level::Success;
+                return Level::success;
             default:
-                return Level::Error;
+                return Level::error;
         }
     }
 

@@ -1,7 +1,10 @@
 // cma_core.cpp :
 //
-#include <time.h>
 #include "stdafx.h"
+
+#include "cma_core.h"
+
+#include <time.h>
 
 #include <chrono>
 #include <filesystem>
@@ -10,8 +13,6 @@
 #include <vector>
 
 #include "glob_match.h"
-
-#include "cma_core.h"
 #include "section_header.h"  // we have logging here
 
 namespace cma {

@@ -30,7 +30,7 @@ bool ReinstallIni(const std::filesystem::path TargetIni,
                   const std::filesystem::path SrcIni);
 
 // data structures to use
-enum class ProcMode { kInstall, kRemove, kList };
+enum class ProcMode { install, remove, list };
 
 // valid eof is {empty, empty, true}
 // valid NOT eod if {name, data, false}

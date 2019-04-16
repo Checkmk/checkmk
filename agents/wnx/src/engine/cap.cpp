@@ -1,19 +1,19 @@
 // Windows Tools
-#include <stdafx.h>
+
+#include "stdafx.h"
+
+#include "cap.h"
 
 #include <cstdint>
 #include <filesystem>
 #include <string>
 #include <unordered_set>
 
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-#include "logger.h"
-
-#include "cap.h"
 #include "cfg.h"
 #include "cvt.h"
+#include "logger.h"
+#include "tools/_raii.h"
+#include "tools/_xlog.h"
 #include "upgrade.h"
 
 namespace cma::cfg::cap {
@@ -211,11 +211,11 @@ bool Process(const std::string CapFileName, ProcMode Mode,
         }
         const auto full_path = ProcessPluginPath(name);
 
-        if (Mode == ProcMode::kInstall) {
+        if (Mode == ProcMode::install) {
             StoreFile(full_path, data);
             std::error_code ec;
             if (fs::exists(full_path, ec)) FilesLeftOnDisk.push_back(full_path);
-        } else if ((Mode == ProcMode::kRemove)) {
+        } else if ((Mode == ProcMode::remove)) {
             std::error_code ec;
             if (fs::remove(full_path, ec))
                 FilesLeftOnDisk.push_back(full_path);
@@ -223,7 +223,7 @@ bool Process(const std::string CapFileName, ProcMode Mode,
                 XLOG::l("Cannot remove '{}' error {}",
                         wtools::ConvertToUTF8(full_path), ec.value());
             }
-        } else if ((Mode == ProcMode::kList)) {
+        } else if ((Mode == ProcMode::list)) {
             FilesLeftOnDisk.push_back(full_path);
         }
     }
@@ -267,7 +267,7 @@ bool ReinstallCaps(const std::filesystem::path TargetCap,
     std::vector<std::wstring> files_left;
     if (fs::exists(TargetCap, ec)) {
         if (true ==
-            Process(TargetCap.u8string(), ProcMode::kRemove, files_left)) {
+            Process(TargetCap.u8string(), ProcMode::remove, files_left)) {
             XLOG::l.t("File '{}' uninstall-ed", TargetCap.u8string());
             fs::remove(TargetCap, ec);
             for (auto &name : files_left)
@@ -281,7 +281,7 @@ bool ReinstallCaps(const std::filesystem::path TargetCap,
     files_left.clear();
     if (fs::exists(SourceCap, ec)) {
         if (true ==
-            Process(SourceCap.u8string(), ProcMode::kInstall, files_left)) {
+            Process(SourceCap.u8string(), ProcMode::install, files_left)) {
             XLOG::l.t("File {} installed", SourceCap.u8string());
             fs::copy_file(SourceCap, TargetCap, ec);
             for (auto &name : files_left)

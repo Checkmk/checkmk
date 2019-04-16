@@ -594,9 +594,7 @@ const int GetCurrentDebugLevel() {
     return kDefaultLogLevel;
 }
 
-XLOG::EventLevel GetCurrentEventLevel() {
-    return XLOG::EventLevel::kLogCritical;
-}
+XLOG::EventLevel GetCurrentEventLevel() { return XLOG::EventLevel::critical; }
 
 const bool GetCurrentWinDbg() {
     if (ConfigLoaded()) return groups::global.windbgLog();

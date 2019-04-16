@@ -15,12 +15,12 @@ namespace cma::evl {
 class EventLogRecordBase {
 public:
     enum class Level {
-        Error,
-        Warning,
-        Information,
-        AuditFailure,
-        AuditSuccess,
-        Success
+        error,
+        warning,
+        information,
+        audit_failure,
+        audit_success,
+        success
     };
 
     EventLogRecordBase() = default;
@@ -63,18 +63,18 @@ public:
     // for output in port
     char getEventSymbol(cma::cfg::EventLevels Required) const {
         switch (eventLevel()) {
-            case Level::Error:
+            case Level::error:
                 return 'C';
-            case Level::Warning:
+            case Level::warning:
                 return 'W';
-            case Level::Information:
-            case Level::AuditSuccess:
-            case Level::Success:
-                if (Required == cma::cfg::EventLevels::kAll)
+            case Level::information:
+            case Level::audit_success:
+            case Level::success:
+                if (Required == cma::cfg::kAll)
                     return 'O';
                 else
                     return '.';  // potential drop of context
-            case Level::AuditFailure:
+            case Level::audit_failure:
                 return 'C';
             default:
                 return 'u';
@@ -84,15 +84,15 @@ public:
     // decode windows level to universal
     cma::cfg::EventLevels calcEventLevel(cma::cfg::EventLevels Required) const {
         switch (eventLevel()) {
-            case Level::Error:
+            case Level::error:
                 return cma::cfg::EventLevels::kCrit;
-            case Level::Warning:
+            case Level::warning:
                 return cma::cfg::EventLevels::kWarn;
-            case Level::Information:
-            case Level::AuditSuccess:
-            case Level::Success:
+            case Level::information:
+            case Level::audit_success:
+            case Level::success:
                 return cma::cfg::EventLevels::kAll;
-            case Level::AuditFailure:
+            case Level::audit_failure:
                 return cma::cfg::EventLevels::kCrit;
             default:
                 return cma::cfg::EventLevels::kWarn;

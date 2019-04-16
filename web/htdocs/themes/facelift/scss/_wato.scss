@@ -37,6 +37,7 @@ Boston, MA 02110-1301 USA.
 | Styles used in WATO.                                                     |
 '-------------------------------------------------------------------------*/
 
+
 .wato {
   color: $theme-color-text;
 }
@@ -44,214 +45,222 @@ Boston, MA 02110-1301 USA.
 /* Icon image place inline in some documentation text */
 /* TODO: Reproduce this html element */
 .wato img.icon.docu {
-   width: 14px;
-   height: 14px;
-   vertical-align: middle;
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
 }
 
-.wato table.data th {
-    border-radius: 0px;
+.wato table.data {
+  th {
     background: transparent;
-}
+    border-radius: 0;
+  }
 
-/* TODO: No important styles */
-.wato table.data tr {
+  /* TODO: No important styles */
+  tr {
     background-color: transparent !important;
+  }
+
+  /* TODO: Reproduce this html element */
+  td {
+    &.select {
+      width: 1px;
+      text-align: center;
+    }
+
+    &.buttons, &.buttons a, &.buttons img {
+      white-space: nowrap;
+    }
+  }
 }
 
 /* Tables renderes in forms. */
 /* TODO: Reproduce these data tables within nform tables */
 .wato table.nform table.data {
-    box-shadow: 1px 1px 2px #444;
-}
+  box-shadow: 1px 1px 2px #444;
 
-.wato table.nform table.data th {
+  th {
     background-color: #527280;
+  }
 }
 
-/* TODO: Reproduce this html element */
-.wato th.left {
+.wato th {
+  /* TODO: Reproduce this html element */
+  &.left {
     border-left-style: none;
-    border-radius: 4px 0px 0px 0px;
-}
+    border-radius: 4px 0 0 0;
+  }
 
-/* TODO: Reproduce this html element */
-.wato table.data td.select {
-    text-align: center;
-    width: 1px;
-}
-
-.wato table.data td.buttons,
-.wato table.data td.buttons a,
-.wato table.data td.buttons img {
-    white-space: nowrap;
-}
-
-/* TODO: Reproduce these .right elements */
-.wato th.right {
+  /* TODO: Reproduce these .right elements */
+  &.right {
     border-right-style: none;
-    border-radius: 0px 4px 0px 0px;
+    border-radius: 0 4px 0 0;
+  }
 }
 
 .wato td.right {
-    text-align: right;
+  text-align: right;
 }
 
 /* WATO configuration forms */
 /* TODO: Reproduce all table.form elements */
 .wato table.form {
-    width: 100%;
-    margin-left: 0px;
-}
+  width: 100%;
+  margin-left: 0;
 
-.wato table.form td.legend {
-    width: 300px;
-}
+  td {
+    &.legend i, &.title i {
+      margin-top: 13px;
+    }
 
-.wato table.form td.legend h3 {
-    padding: 0px;
-    margin: 0px 0px 5px 0px;
-    font-size: 9pt;
-    font-weight: normal;
-}
+    &.legend {
+      width: 300px;
 
-/* Foldable sections in host properties */
+      h3 {
+        padding: 0;
+        margin: 0 0 5px;
+        font-size: 12px;
+        font-weight: normal;
+      }
+    }
 
-.wato table.form td.title i {
-    font-weight: normal;
-    padding-bottom: 8px;
-    border-top-style: solid;
-}
+    /* Foldable sections in host properties */
+    &.title i {
+      padding-bottom: 8px;
+      font-weight: normal;
+      border-top-style: solid;
+    }
 
-.wato table.form td.legend i, .wato table.form td.title i {
-    margin-top: 13px;
-    /* color: #eee; */
-}
-
-.wato table.form td.checkbox {
-    width: 20px;
-    /* height: 40px; */
-    /* padding-top: 7px; */
-    /* vertical-align: top; */
-    text-align: center;
+    &.checkbox {
+      width: 20px;
+      text-align: center;
+    }
+  }
 }
 
 .wato form.new_rule {
-    margin: 10px 0 10px 0;
+  margin: 10px 0;
 }
 
 /* TODO: Reproduce this html element */
 .wato div.sitestatus {
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 3px;
-    vertical-align: middle;
-    text-align: center;
-    padding: 0px 10px;
-    font-size: 7pt;
-    font-weight: bold;
+  padding: 0 10px;
+  font-size: 9px;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 3px;
 }
 
 .wato div.connection_status {
-    display: inline-block;
+  display: inline-block;
 }
 
-.wato table.auditlog td.nobreak {
+.wato table.auditlog {
+  td.nobreak {
     white-space: nowrap;
-}
+  }
 
-.wato table.auditlog td.fill {
+  td.fill {
     width: 100%;
-}
+  }
 
-.wato table.auditlog img {
+  img {
+    float: none;
     width: 14px;
     height: 14px;
-    margin: 0 5px 0 0;
     padding: 0;
+    margin: 0 5px 0 0;
     border-style: none;
-    float: none;
+  }
 }
 
 /* TODO: Reproduce these .foreignchanges elements */
 .wato table.foreignchanges {
-    border-spacing: 3px;
-    margin-left: 20px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
-.wato table.foreignchanges td {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-left: 20px;
+  border-spacing: 3px;
+
+  td {
     padding: 2px 8px;
-    background-color: #ff0;
     margin: 2px;
+    background-color: #ff0;
+  }
 }
 
 .wato img.foreignchanges {
-    float: left;
-    margin-right: 10px;
+  float: left;
+  margin-right: 10px;
 }
 
 /* TODO: Reproduce these .dns .dnserror and .error elements */
 .wato td.dns {
-    color: #666;
+  color: #666;
 }
 
 .wato td.dnserror {
-    color: #f00;
+  color: #f00;
 }
 
 .wato td.error {
-    color: #f00;
+  color: #f00;
 }
 
 .wato div.inherited {
+  color: #444;
+
+  a {
     color: #444;
-}
-.wato div.inherited a {
-    color: #444;
-}
-.wato div.inherited b {
-    color: black;
+  }
+
+  b {
     font-weight: normal;
+    color: black;
+  }
 }
+
 .wato td.inherited {
-    color: #666;
+  color: #666;
 }
 
 /* host validation error */
 table.validationerror  {
-    width: 100%;
-}
+  width: 100%;
 
-table.validationerror td.img {
+  td.img {
     width: 68px;
-}
+  }
 
-table.validationerror img.icon {
-    margin-left: 5px;
-    margin-top: 10px;
-    margin-right: 15px;
+  img.icon {
     width: 48px;
     height: 48px;
+    margin-top: 10px;
+    margin-right: 15px;
+    margin-left: 5px;
+  }
 }
 
 /* bulk actions in host table */
 .wato td.bulkactions {
-    text-align: right;
-}
+  text-align: right;
 
-.wato td.bulkactions.service_discovery {
+  &.service_discovery {
     text-align: left;
+  }
+
+  select {
+    width: auto;
+  }
 }
 
 table.data tr.data > td.bulkactions {
-    background: transparent;
-    border: 0px solid !important;
+  background: transparent;
+  border: none solid !important;
 }
 
-.wato td.bulkactions select {
-    width: auto;
-}
 
 //a.service_button.disabled {
 //    pointer-events: none;

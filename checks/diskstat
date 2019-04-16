@@ -114,6 +114,7 @@
 # Consideration for debugging purposes:
 # Due to check_info['diskstat']['extra_sections']: ["multipath"])
 # each info list is prefixed with '<node_name>'.
+@with_unused_counter_removal("diskstat")
 def parse_diskstat(info):
     timestamp_str, proc_diskstat, name_info = diskstat_extract_name_info(info)
     # limit diskstat to first elements before actual parsing

@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
+#include "StringUtils.h"
 
 // 0123456789012345678901234567890
 // [1234567890] FOO BAR: blah blah
@@ -73,6 +74,12 @@ bool LogEntry::assign(Param par, const std::string &field) {
         case Param::ServiceDescription:
             this->_service_description = field;
             break;
+        case Param::CommandName:
+            this->_command_name = field;
+            break;
+        case Param::ContactName:
+            this->_contact_name = field;
+            break;
         case Param::HostState:
             this->_state = static_cast<int>(parseHostState(field));
             break;
@@ -91,14 +98,13 @@ bool LogEntry::assign(Param par, const std::string &field) {
         case Param::Comment:
             this->_comment = field;
             break;
-        case Param::CommandName:
-            this->_command_name = field;
-            break;
-        case Param::ContactName:
-            this->_contact_name = field;
-            break;
         case Param::PluginOutput:
             this->_plugin_output = field;
+            break;
+        case Param::LongPluginOutput:
+            this->_long_plugin_output = mk::to_multi_line(field);
+            break;
+        case Param::Ignore:
             break;
     }
 
@@ -110,19 +116,19 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            Class::state,
            LogEntryKind::state_host_initial,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
-            Param::PluginOutput}},
+            Param::PluginOutput, Param::LongPluginOutput}},
     ////////////////
     LogDef{"CURRENT HOST STATE",
            Class::state,
            LogEntryKind::state_host,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
-            Param::PluginOutput}},
+            Param::PluginOutput, Param::LongPluginOutput}},
     ////////////////
     LogDef{"HOST ALERT",
            Class::alert,
            LogEntryKind::alert_host,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
-            Param::PluginOutput}},
+            Param::PluginOutput, Param::LongPluginOutput}},
     ////////////////
     LogDef{"HOST DOWNTIME ALERT",
            Class::alert,
@@ -144,19 +150,22 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            Class::state,
            LogEntryKind::state_service_initial,
            {Param::HostName, Param::ServiceDescription, Param::ServiceState,
-            Param::StateType, Param::Attempt, Param::PluginOutput}},
+            Param::StateType, Param::Attempt, Param::PluginOutput,
+            Param::LongPluginOutput}},
     ////////////////
     LogDef{"CURRENT SERVICE STATE",
            Class::state,
            LogEntryKind::state_service,
            {Param::HostName, Param::ServiceDescription, Param::ServiceState,
-            Param::StateType, Param::Attempt, Param::PluginOutput}},
+            Param::StateType, Param::Attempt, Param::PluginOutput,
+            Param::LongPluginOutput}},
     ////////////////
     LogDef{"SERVICE ALERT",
            Class::alert,
            LogEntryKind::alert_service,
            {Param::HostName, Param::ServiceDescription, Param::ServiceState,
-            Param::StateType, Param::Attempt, Param::PluginOutput}},
+            Param::StateType, Param::Attempt, Param::PluginOutput,
+            Param::LongPluginOutput}},
     ////////////////
     LogDef{"SERVICE DOWNTIME ALERT",
            Class::alert,
@@ -176,25 +185,30 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            {Param::HostName, Param::ServiceDescription, Param::StateType,
             Param::Comment}},
     ////////////////
-    // NOTE: We ignore the trailing name/from/to fields.
     LogDef{"TIMEPERIOD TRANSITION",
            Class::state,
            LogEntryKind::timeperiod_transition,
-           {}},
+           {
+               Param::Ignore,  // name
+               Param::Ignore,  // from
+               Param::Ignore   // to
+           }},
     ////////////////
-    // NOTE: We ignore the trailing author/comment fields.
     LogDef{"HOST NOTIFICATION",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::PluginOutput}},
+            Param::CommandName, Param::PluginOutput,  //
+            Param::Ignore,                            // author
+            Param::Comment, Param::LongPluginOutput}},
     ////////////////
-    // NOTE: We ignore the trailing author/comment fields.
     LogDef{"SERVICE NOTIFICATION",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::ServiceDescription,
-            Param::StateType, Param::CommandName, Param::PluginOutput}},
+            Param::StateType, Param::CommandName, Param::PluginOutput,  //
+            Param::Ignore,  // author
+            Param::Comment, Param::LongPluginOutput}},
     ////////////////
     LogDef{"HOST NOTIFICATION RESULT",
            Class::hs_notification,
@@ -256,8 +270,12 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            LogEntryKind::none,
            {Param::HostName, Param::State, Param::PluginOutput}},
     ////////////////
-    // NOTE: We ignore the trailing command field.
-    LogDef{"EXTERNAL COMMAND", Class::ext_command, LogEntryKind::none, {}}};
+    LogDef{"EXTERNAL COMMAND",
+           Class::ext_command,
+           LogEntryKind::none,
+           {
+               Param::Ignore  // command
+           }}};
 
 // A bit verbose, but we avoid unnecessary string copies below.
 void LogEntry::classifyLogMessage() {

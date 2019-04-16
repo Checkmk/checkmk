@@ -59,6 +59,9 @@ std::string strip(const std::string &str,
 std::pair<std::string, std::string> nextField(
     const std::string &str, const std::string &chars = " \t\n\v\f\r");
 
+std::string from_multi_line(const std::string &str);
+std::string to_multi_line(const std::string &str);
+
 #ifdef CMC
 std::string ipv4ToString(in_addr_t ipv4_address);
 std::string portToString(in_port_t port);

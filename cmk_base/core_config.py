@@ -546,19 +546,19 @@ def _verify_cluster_address_family(config_cache, host_config):
                 (host_config.hostname, ", ".join(address_families)))
 
 
-def _ip_address_of(hostname, family=None):
-    # type: (str, Optional[int]) -> Optional[str]
+def _ip_address_of(host_config, family=None):
+    # type: (config.HostConfig, Optional[int]) -> Optional[str]
     try:
-        return ip_lookup.lookup_ip_address(hostname, family)
+        return ip_lookup.lookup_ip_address(host_config.hostname, family)
     except Exception as e:
-        if config.is_cluster(hostname):
+        if config.is_cluster(host_config.hostname):
             return ""
         else:
-            _failed_ip_lookups.append(hostname)
+            _failed_ip_lookups.append(host_config.hostname)
             if not _ignore_ip_lookup_failures:
                 warning("Cannot lookup IP address of '%s' (%s). "
-                        "The host will not be monitored correctly." % (hostname, e))
-            return fallback_ip_for(hostname, family)
+                        "The host will not be monitored correctly." % (host_config.hostname, e))
+            return fallback_ip_for(host_config.hostname, family)
 
 
 def ignore_ip_lookup_failures():

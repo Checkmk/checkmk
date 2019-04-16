@@ -147,10 +147,16 @@ def create_snmp_host_config(hostname):
     # type: (str) -> cmk_base.snmp_utils.SNMPHostConfig
     host_config = config.get_config_cache().get_host_config(hostname)
 
-    return cmk_base.snmp_utils.SNMPHostConfig(
+    # ip_lookup.lookup_ipv4_address() returns Optional[str] in general, but for
+    # all cases that reach the code here we seem to have "str".
+    address = ip_lookup.lookup_ip_address(hostname)
+    if address is None:
+        raise MKGeneralException("Failed to gather IP address of %s" % hostname)
+
+    return cmk_base.snmp_utils.SNMPHostConfig(  # type: ignore
         is_ipv6_primary=host_config.is_ipv6_primary,
         hostname=hostname,
-        ipaddress=ip_lookup.lookup_ipv4_address(hostname),
+        ipaddress=address,
         credentials=config.snmp_credentials_of(hostname),
         port=config.snmp_port_of(hostname),
         is_bulkwalk_host=config.is_bulkwalk_host(hostname),

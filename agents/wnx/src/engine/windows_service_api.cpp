@@ -1,27 +1,25 @@
 
 // provides basic api to start and stop service
-#include <stdafx.h>
+#include "stdafx.h"
+
+#include "windows_service_api.h"  // windows api abstracted
 
 #include <shlobj_core.h>
 
 #include <chrono>
 #include <cstdint>   // wchar_t when compiler options set weird
 #include <iostream>  // test commands
-#include "common/wtools.h"
-
-#include "tools/_kbd.h"
-#include "tools/_process.h"
-
-#include "install_api.h"          // install
-#include "service_processor.h"    // cmk service implementation class
-#include "windows_service_api.h"  // windows api abstracted
-
-#include "external_port.h"  // windows api abstracted
 
 #include "cap.h"
 #include "cfg.h"
+#include "common/wtools.h"
 #include "cvt.h"
+#include "external_port.h"  // windows api abstracted
+#include "install_api.h"    // install
 #include "realtime.h"
+#include "service_processor.h"  // cmk service implementation class
+#include "tools/_kbd.h"
+#include "tools/_process.h"
 #include "upgrade.h"
 
 // out of namespace

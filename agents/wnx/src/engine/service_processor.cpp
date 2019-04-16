@@ -1,21 +1,19 @@
 
-#include <stdafx.h>
+#include "stdafx.h"
+
+#include "service_processor.h"
 
 #include <shlobj_core.h>
 
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
 
-#include "tools/_process.h"
-
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
-
-#include "yaml-cpp/yaml.h"
-
 #include "external_port.h"
 #include "realtime.h"
-#include "service_processor.h"
+#include "tools/_process.h"
+#include "yaml-cpp/yaml.h"
 
 namespace cma::srv {
 

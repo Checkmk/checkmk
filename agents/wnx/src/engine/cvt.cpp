@@ -1,5 +1,5 @@
 // Windows Tools
-#include <stdafx.h>
+#include "stdafx.h"
 
 #include <cstdint>
 #include <filesystem>

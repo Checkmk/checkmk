@@ -154,19 +154,19 @@ public:
     virtual Level eventLevel() const override {
         switch (_record->EventType) {
             case EVENTLOG_ERROR_TYPE:
-                return Level::Error;
+                return Level::error;
             case EVENTLOG_WARNING_TYPE:
-                return Level::Warning;
+                return Level::warning;
             case EVENTLOG_INFORMATION_TYPE:
-                return Level::Information;
+                return Level::information;
             case EVENTLOG_AUDIT_SUCCESS:
-                return Level::AuditSuccess;
+                return Level::audit_success;
             case EVENTLOG_SUCCESS:
-                return Level::Success;
+                return Level::success;
             case EVENTLOG_AUDIT_FAILURE:
-                return Level::AuditFailure;
+                return Level::audit_failure;
             default:
-                return Level::Error;
+                return Level::error;
         }
     }
 

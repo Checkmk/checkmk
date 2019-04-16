@@ -1,26 +1,23 @@
 // Windows Tools
-#include <stdafx.h>
+#include "stdafx.h"
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #include <WinSock2.h>
 
-#include <iostream>
-
 #include <stdio.h>
-#include <cstdint>
-#include <string>
+#include <windows.h>
 
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
+#include <cstdint>
+#include <iostream>
+#include <string>
 
 #include "cap.h"
 #include "cfg.h"
 #include "logger.h"
-#include "wtools.h"
-
+#include "tools/_raii.h"
+#include "tools/_xlog.h"
 #include "upgrade.h"
+#include "wtools.h"
 
 #pragma comment(lib, "wbemuuid.lib")  /// Microsoft Specific
 

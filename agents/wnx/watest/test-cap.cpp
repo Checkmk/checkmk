@@ -185,7 +185,7 @@ TEST(CapTest, CheckValid) {
     std::error_code ec;
     ASSERT_TRUE(fs::exists(cap, ec)) << "Your setup for tests is invalid";
     std::vector<std::wstring> files;
-    auto ret = Process(cap.u8string(), ProcMode::kList, files);
+    auto ret = Process(cap.u8string(), ProcMode::list, files);
     EXPECT_TRUE(ret);
     ASSERT_EQ(files.size(), 2);
     EXPECT_EQ(files[0], GetUserPluginsDir() + L"\\windows_if.ps1");
@@ -199,7 +199,7 @@ TEST(CapTest, CheckNull) {
     std::error_code ec;
     ASSERT_TRUE(fs::exists(cap, ec)) << "Your setup for tests is invalid";
     std::vector<std::wstring> files;
-    auto ret = Process(cap.u8string(), ProcMode::kList, files);
+    auto ret = Process(cap.u8string(), ProcMode::list, files);
     EXPECT_TRUE(ret);
     EXPECT_EQ(files.size(), 0);
 }
@@ -218,7 +218,7 @@ TEST(CapTest, CheckUnpack) {
     cap /= "plugins.test.cap";
     ASSERT_TRUE(fs::exists(cap, ec)) << "Your setup for tests is invalid";
     std::vector<std::wstring> files;
-    auto ret = Process(cap.u8string(), ProcMode::kInstall, files);
+    auto ret = Process(cap.u8string(), ProcMode::install, files);
     EXPECT_TRUE(ret);
     ASSERT_EQ(files.size(), 2);
     EXPECT_EQ(files[0], names[0]);
@@ -245,7 +245,7 @@ TEST(CapTest, CheckRemove) {
     cap /= "plugins.test.cap";
     ASSERT_TRUE(fs::exists(cap, ec)) << "Your setup for tests is invalid";
     std::vector<std::wstring> files;
-    auto ret = Process(cap.u8string(), ProcMode::kRemove, files);
+    auto ret = Process(cap.u8string(), ProcMode::remove, files);
     EXPECT_TRUE(ret);
     ASSERT_EQ(files.size(), 2);
     EXPECT_EQ(files[0], names[0]);
@@ -268,7 +268,7 @@ TEST(CapTest, CheckInValid) {
             << "Your setup for tests is invalid";
         std::vector<std::wstring> files;
         XLOG::l.i("Next log output should be crit. This is SUCCESS");
-        auto ret = Process(invalid_cap.u8string(), ProcMode::kList, files);
+        auto ret = Process(invalid_cap.u8string(), ProcMode::list, files);
         EXPECT_FALSE(ret);
         ASSERT_EQ(files.size(), 1)
             << "this file is invalid, but first file should be ok";
@@ -281,7 +281,7 @@ TEST(CapTest, CheckInValid) {
         ASSERT_TRUE(fs::exists(invalid_cap, ec))
             << "Your setup for tests is invalid";
         std::vector<std::wstring> files;
-        auto ret = Process(invalid_cap.u8string(), ProcMode::kList, files);
+        auto ret = Process(invalid_cap.u8string(), ProcMode::list, files);
         EXPECT_FALSE(ret);
         ASSERT_EQ(files.size(), 2)
             << "this file is invalid, but first TWO files should be ok";
@@ -294,7 +294,7 @@ TEST(CapTest, CheckInValid) {
         ASSERT_TRUE(fs::exists(invalid_cap, ec))
             << "Your setup for tests is invalid";
         std::vector<std::wstring> files;
-        auto ret = Process(invalid_cap.u8string(), ProcMode::kList, files);
+        auto ret = Process(invalid_cap.u8string(), ProcMode::list, files);
         EXPECT_FALSE(ret);
         ASSERT_EQ(files.size(), 1)
             << "this file is invalid, but first file should be ok";

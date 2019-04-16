@@ -2,7 +2,7 @@
 // check_mk_service.cpp : This file contains ONLY the 'main' function.
 //
 // Precompiled
-#include <pch.h>
+#include "pch.h"
 // system C
 // system C++
 #include <filesystem>
@@ -17,11 +17,9 @@
 #include "windows_service_api.h"
 
 // Personal
-#include "check_mk_service.h"
-
 #include "cfg.h"
+#include "check_mk_service.h"
 #include "logger.h"
-
 #include "providers/perf_counters_cl.h"
 
 std::filesystem::path G_ProjectPath = PROJECT_DIR_CMK_SERVICE;

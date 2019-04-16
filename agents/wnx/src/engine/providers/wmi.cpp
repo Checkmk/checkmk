@@ -5,19 +5,17 @@
 
 #include "stdafx.h"
 
+#include "providers/wmi.h"
+
 #include <chrono>
 #include <iostream>
 #include <string>
 #include <unordered_map>
 
+#include "cfg.h"
+#include "common/cfg_info.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
-
-#include "common/cfg_info.h"
-
-#include "cfg.h"
-
-#include "providers/wmi.h"
 
 namespace cma {
 
@@ -179,8 +177,8 @@ void Wmi::setupByName() {
 // #TODO Estimate as a part of official API
 // #TODO Estimate optimization: do we really need to reconnect to wrapper every
 // time?
-std::string GenerateTable(const std::wstring NameSpace,
-                          const std::wstring Object,
+std::string GenerateTable(const std::wstring& NameSpace,
+                          const std::wstring& Object,
                           const std::vector<std::wstring> Columns) {
     using namespace wtools;
     if (Object.empty()) return "";

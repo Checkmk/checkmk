@@ -1,15 +1,14 @@
 // Windows Tools
-#include <stdafx.h>
+#include "stdafx.h"
+
+#include "encryption.h"
 
 #include <string>
 #include <string_view>
 
-#include "tools/_raii.h"
-
 #include "cfg.h"
 #include "logger.h"
-
-#include "encryption.h"
+#include "tools/_raii.h"
 
 namespace cma::encrypt {
 Commander::Commander() : algorithm_(Algorithm::kDefault) {

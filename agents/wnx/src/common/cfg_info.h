@@ -18,11 +18,11 @@ namespace XLOG {
 
 // windows specific Event Log
 enum class EventLevel : int {
-    kLogCritical = 1,
-    kLogError = 2,
-    kLogWarning = 3,
-    kLogInformation = 4,
-    kLogSuccess = 99
+    critical = 1,
+    error = 2,
+    warning = 3,
+    information = 4,
+    success = 99
 };
 
 // recommended but not obligatory to use

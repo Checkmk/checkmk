@@ -1,28 +1,25 @@
 // Windows Tools
-#include <stdafx.h>
+#include "stdafx.h"
+
+#include "upgrade.h"
 
 #include <cstdint>
 #include <filesystem>
 #include <string>
 
-#include "yaml-cpp/yaml.h"
-
+#include "cvt.h"
+#include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
-
-#include "logger.h"
-
-#include "cvt.h"
-
-#include "upgrade.h"
+#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg::upgrade {
 
 // SERVICE_AUTO_START : SERVICE_DISABLED
 enum class StartType {
-    kDisable = SERVICE_DISABLED,
-    kAutoStart = SERVICE_AUTO_START
+    disable = SERVICE_DISABLED,
+    auto_start = SERVICE_AUTO_START
 
 };
 
@@ -410,7 +407,7 @@ bool ActivateLegacyAgent() {
     wtools::SetRegistryValue(
         L"SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", L"StartType",
         SERVICE_AUTO_START);
-    return WinServiceChangeStartType(L"check_mk_agent", StartType::kAutoStart);
+    return WinServiceChangeStartType(L"check_mk_agent", StartType::auto_start);
 }
 bool DeactivateLegacyAgent() {
     wtools::SetRegistryValue(
@@ -421,7 +418,7 @@ bool DeactivateLegacyAgent() {
         RegDeleteKey(HKEY_LOCAL_MACHINE,
                      L"SYSTEM\\CurrentControlSet\\Services\\WinRing0_1_2_0");
     */
-    return WinServiceChangeStartType(L"check_mk_agent", StartType::kDisable);
+    return WinServiceChangeStartType(L"check_mk_agent", StartType::disable);
 }
 
 int WaitForStatus(std::function<int(const std::wstring&)> StatusChecker,

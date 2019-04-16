@@ -58,17 +58,17 @@ void LogWindowsEvent(EventLevel Level, int Code, const char* Format,
     if (eventSource) {
         unsigned short type = EVENTLOG_ERROR_TYPE;
         switch (Level) {
-            case EventLevel::kLogSuccess:
+            case EventLevel::success:
                 type = EVENTLOG_SUCCESS;
                 break;
-            case EventLevel::kLogInformation:
+            case EventLevel::information:
                 type = EVENTLOG_INFORMATION_TYPE;
                 break;
-            case EventLevel::kLogWarning:
+            case EventLevel::warning:
                 type = EVENTLOG_WARNING_TYPE;
                 break;
-            case EventLevel::kLogError:
-            case EventLevel::kLogCritical:
+            case EventLevel::error:
+            case EventLevel::critical:
                 type = EVENTLOG_ERROR_TYPE;
                 break;
             default:
@@ -97,31 +97,31 @@ void LogWindowsEvent(EventLevel Level, int Code, const char* Format,
 
 template <typename... Args>
 void LogWindowsEventCritical(int Code, const char* Format, Args&&... args) {
-    LogWindowsEvent(EventLevel::kLogCritical, Code, Format,
+    LogWindowsEvent(EventLevel::critical, Code, Format,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
 void LogWindowsEventError(int Code, const char* Format, Args&&... args) {
-    LogWindowsEvent(EventLevel::kLogError, Code, Format,
+    LogWindowsEvent(EventLevel::error, Code, Format,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
 void LogWindowsEventSuccess(int Code, const char* Format, Args&&... args) {
-    LogWindowsEvent(EventLevel::kLogSuccess, Code, Format,
+    LogWindowsEvent(EventLevel::success, Code, Format,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
 void LogWindowsEventWarn(int Code, const char* Format, Args&&... args) {
-    LogWindowsEvent(EventLevel::kLogWarning, Code, Format,
+    LogWindowsEvent(EventLevel::warning, Code, Format,
                     std::forward<Args>(args)...);
 }
 
 template <typename... Args>
 void LogWindowsEventInfo(int Code, const char* Format, Args&&... args) {
-    LogWindowsEvent(EventLevel::kLogInformation, Code, Format,
+    LogWindowsEvent(EventLevel::information, Code, Format,
                     std::forward<Args>(args)...);
 }
 
@@ -292,11 +292,11 @@ enum Mods : int {
 
 // This is de-facto name
 enum class LogType {
-    kLog = 0,  // this is logger for user
-    kDebug,    // this is logger for developer
-    kTrace,    // this is TEMPORARY logger for developer
-    kStdio,
-    kLast = kStdio
+    log = 0,  // this is logger for user
+    debug,    // this is logger for developer
+    trace,    // this is TEMPORARY logger for developer
+    stdio,
+    last = stdio
 };
 
 class Emitter {
@@ -308,23 +308,23 @@ public:
         : type_(t), copy_(false), mods_(Mods::kCopy) {
         // setting up parameters for print in log_param_
         switch (t) {
-            case LogType::kLog:
+            case LogType::log:
                 log_param_.type_ = xlog::Type::kLogOut;
                 log_param_.directions_ = xlog::Directions::kDebuggerPrint |
                                          xlog::Directions::kFilePrint;
                 // other
                 break;
-            case LogType::kTrace:
+            case LogType::trace:
                 log_param_.type_ = xlog::Type::kVerboseOut;
                 log_param_.directions_ = xlog::Directions::kDebuggerPrint;
                 // other
                 break;
-            case LogType::kDebug:
+            case LogType::debug:
                 log_param_.type_ = xlog::Type::kDebugOut;
                 log_param_.directions_ = xlog::Directions::kDebuggerPrint;
                 // other
                 break;
-            case LogType::kStdio: {
+            case LogType::stdio: {
                 log_param_.type_ = xlog::Type::kVerboseOut;
                 log_param_.mark_ = xlog::Marker::kTraceMark;
                 log_param_.directions_ = xlog::Directions::kStdioPrint;
@@ -571,7 +571,7 @@ public:
     }
 
     void enableEventLog(bool Enable) {
-        if (type_ == LogType::kLog) {
+        if (type_ == LogType::log) {
             // only kLog has right to create event log entries
             if (Enable)
                 log_param_.directions_ |= xlog::Directions::kEventPrint;

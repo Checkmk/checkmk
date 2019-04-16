@@ -4,12 +4,12 @@
 
 namespace XLOG {
 
-XLOG::Emitter l(XLOG::LogType::kLog);
-XLOG::Emitter d(XLOG::LogType::kDebug);
-XLOG::Emitter t(XLOG::LogType::kTrace);
-XLOG::Emitter stdio(XLOG::LogType::kStdio);
+Emitter l(LogType::log);
+Emitter d(LogType::debug);
+Emitter t(LogType::trace);
+Emitter stdio(LogType::stdio);
 
-XLOG::Emitter bp(XLOG::LogType::kLog, true);
+Emitter bp(LogType::log, true);
 
 bool Emitter::bp_allowed_ = tgt::IsDebug();
 
@@ -24,10 +24,10 @@ bool IsColoredOnStdio() { return details::LogColoredOnStdio; }
 class GlobalLogSettings {
 public:
     GlobalLogSettings() {
-        enable(LogType::kLog);
-        enable(LogType::kDebug);
+        enable(LogType::log);
+        enable(LogType::debug);
         // enable(LogType::kTrace);
-        enable(LogType::kStdio);
+        enable(LogType::stdio);
     }
 
     struct Info {
@@ -54,31 +54,30 @@ public:
         return false;
     }
 
-    GlobalLogSettings(const GlobalLogSettings&) = delete;
-    GlobalLogSettings& operator=(const GlobalLogSettings&) = delete;
+    GlobalLogSettings(const GlobalLogSettings &) = delete;
+    GlobalLogSettings &operator=(const GlobalLogSettings &) = delete;
 
 private:
-    constexpr static auto last_ = static_cast<int>(LogType::kLast);
+    constexpr static auto last_ = static_cast<int>(LogType::last);
     mutable std::mutex lock_;
     Info arr_[last_];
 };
 
-XLOG::details::GlobalLogSettings
+details::GlobalLogSettings
     G_GlobalLogSettings;  // this is temporary solution to enable disable all
 }  // namespace details
 
 // check that parameters allow to print
-static bool CalcEnabled(int Modifications, XLOG::LogType Type) {
+static bool CalcEnabled(int Modifications, LogType Type) {
     if (Modifications & Mods::kDrop) return false;  // output is dropped
 
-    if (!(Modifications & Mods::kForce) &&  // output not forced
-        !XLOG::details::G_GlobalLogSettings.isEnabled(
-            Type))  // output is too low
+    if (!(Modifications & Mods::kForce) &&              // output not forced
+        !details::G_GlobalLogSettings.isEnabled(Type))  // output is too low
         return false;
     return true;
 }
 
-// convertor from low level log type
+// converter from low level log type
 // to some default mark
 static int XLogType2Marker(xlog::Type Lt) {
     switch (Lt) {
@@ -97,10 +96,10 @@ static int XLogType2Marker(xlog::Type Lt) {
 
 // get base global variable
 // modifies it!
-static auto CalcLogParam(const xlog::LogParam& Param, int Modifications) {
+static auto CalcLogParam(const xlog::LogParam &Param, int Modifications) {
     using namespace xlog::internal;
 
-    auto& lp = Param;
+    auto &lp = Param;
     auto directions = lp.directions_;
     auto flags = lp.flags_;
     using namespace fmt::v5;
@@ -154,7 +153,7 @@ static auto CalcLogParam(const xlog::LogParam& Param, int Modifications) {
 }
 
 // output string in different directions
-void Emitter::postProcessAndPrint(const std::string& String) {
+void Emitter::postProcessAndPrint(const std::string &String) {
     using namespace xlog;
     if (!CalcEnabled(mods_, type_)) return;
 
@@ -165,8 +164,7 @@ void Emitter::postProcessAndPrint(const std::string& String) {
     // EVENT
     if (setup::IsEventLogEnabled() && (directions & xlog::kEventPrint)) {
         // we do not need to format string for the event
-        details::LogWindowsEventCritical(XLOG::EventClass::kDefault,
-                                         String.c_str());
+        details::LogWindowsEventCritical(EventClass::kDefault, String.c_str());
     }
 
     // USUAL
@@ -177,7 +175,7 @@ void Emitter::postProcessAndPrint(const std::string& String) {
     }
 
     if (directions & Directions::kStdioPrint ||
-        XLOG::details::IsDuplicatedOnStdio()) {
+        details::IsDuplicatedOnStdio()) {
         auto normal = formatString(flags, nullptr, String.c_str());
         sendStringToStdio(normal.c_str(), c);
     }
@@ -247,29 +245,29 @@ void ChangeDebugLogLevel(int Level) {
     using namespace cma::cfg;
     switch (Level) {
         case LogLevel::kLogAll:
-            XLOG::setup::EnableTraceLog(true);
-            XLOG::setup::EnableDebugLog(true);
+            setup::EnableTraceLog(true);
+            setup::EnableDebugLog(true);
             break;
         case LogLevel::kLogDebug:
-            XLOG::setup::EnableTraceLog(false);
-            XLOG::setup::EnableDebugLog(true);
+            setup::EnableTraceLog(false);
+            setup::EnableDebugLog(true);
             break;
         case LogLevel::kLogBase:
         default:
-            XLOG::setup::EnableTraceLog(false);
-            XLOG::setup::EnableDebugLog(false);
+            setup::EnableTraceLog(false);
+            setup::EnableDebugLog(false);
             break;
     }
 }
 
 //
-void ChangeLogFileName(const std::string& Filename) {
+void ChangeLogFileName(const std::string &Filename) {
     l.configFile(Filename);
     d.configFile(Filename);
     t.configFile(Filename);
 }
 
-void ChangePrefix(const std::wstring& Prefix) {
+void ChangePrefix(const std::wstring &Prefix) {
     l.configPrefix(Prefix);
     d.configPrefix(Prefix);
     t.configPrefix(Prefix);

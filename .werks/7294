@@ -1,0 +1,13 @@
+Title: netapp_api_vs_status: Subtype dependent check status
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1555416936
+Class: feature
+
+Previously the check status was dependent on the vServer status only.
+Beginning with this werk vServers of subtype dp_destination are
+considered OK even if their status is stopped.
+

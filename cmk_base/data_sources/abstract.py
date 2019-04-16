@@ -267,15 +267,19 @@ class DataSource(object):
         raise NotImplementedError()
 
     def _cache_file_path(self):
+        # type: () -> str
         return os.path.join(self._cache_dir(), self._hostname)
 
     def _cache_dir(self):
+        # type: () -> str
         return os.path.join(cmk.utils.paths.data_source_cache_dir, self.id())
 
     def _persisted_sections_file_path(self):
-        return _persisted_sections_file_path(self._persisted_sections_dir, self._hostname)
+        # type: () -> str
+        return _persisted_sections_file_path(self._persisted_sections_dir(), self._hostname)
 
     def _persisted_sections_dir(self):
+        # type: () -> str
         return _persisted_sections_dir(self.id())
 
     def get_check_plugin_names(self):
@@ -739,12 +743,15 @@ class ManagementBoardDataSource(DataSource):
 
 
 def has_persisted_agent_sections(datasource_id, hostname):
+    # type: (str, str) -> bool
     return os.path.exists(_persisted_sections_file_path(datasource_id, hostname))
 
 
 def _persisted_sections_file_path(datasource_id, hostname):
+    # type: (str, str) -> str
     return os.path.join(_persisted_sections_dir(datasource_id), hostname)
 
 
 def _persisted_sections_dir(datasource_id):
+    # type: (str) -> str
     return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", datasource_id)

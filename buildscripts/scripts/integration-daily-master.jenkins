@@ -3,9 +3,6 @@ import java.text.SimpleDateFormat
 properties([
   parameters([
     string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
-  ]),
-  pipelineTriggers([
-    upstream(upstreamProjects: 'cmk_master/nightly_build_containerized', threshold: hudson.model.Result.SUCCESS)
   ])
 ])
 
@@ -101,7 +98,7 @@ try {
                                     rm -rf \$SYSCTL
                                     ln -s \$(which true) \$SYSCTL
                                 fi
-    
+
                                 case $DISTRO in
                                     centos-6)
                                         rm -f /etc/mtab
@@ -132,7 +129,7 @@ try {
                         }
                         finally {
                             sh """
-                                rm -rf $DISTRO 
+                                rm -rf $DISTRO
                                 mkdir -p $DISTRO
                                 cp /omd/sites/int_master/junit.xml $DISTRO/
                                 cp -r /omd/sites/int_master/var/log $DISTRO/

@@ -1,11 +1,5 @@
 import java.text.SimpleDateFormat
 
-properties([
-  pipelineTriggers([
-    upstream(upstreamProjects: 'cmk_master/nightly_build_containerized', threshold: hudson.model.Result.SUCCESS)
-  ])
-])
-
 currentBuild.description = '\nBuilding the CMK docker container\n'
 
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")

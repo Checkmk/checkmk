@@ -1073,15 +1073,16 @@ def process_clustermode(server, netapp_mode, licenses):
 
 def process_vserver_status(server):
     vservers = query(server, "vserver-get-iter")
-    if vservers:
-        print "<<<netapp_api_vs_status:sep(9)>>>"
-        vserver_dict = create_dict(vservers, custom_key=["vserver-name"], is_counter=False)
-
-        vserver_info = {}
-        for key, values in vserver_dict.items():
-            if "state" in values:
-                vserver_info[key] = values.get("state")
-        print format_dict(vserver_info)
+    if not vservers:
+        return
+    vserver_dict = create_dict(vservers, custom_key=["vserver-name"], is_counter=False)
+    print "<<<netapp_api_vs_status:sep(9)>>>"
+    for vserver, vserver_data in vserver_dict.iteritems():
+        words = [vserver]
+        for key in ("state", "vserver-subtype"):
+            if vserver_data.get(key):
+                words += [key, str(vserver_data[key])]
+        print '\t'.join(words)
 
 
 def process_vserver_traffic(server, netapp_mode):

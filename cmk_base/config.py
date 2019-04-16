@@ -2857,6 +2857,7 @@ class ConfigCache(object):
         self._host_configs = {}
 
     def get_host_config(self, hostname):
+        # type: (str) -> HostConfig
         """Returns a HostConfig instance for the given host
 
         It lazy initializes the host config object and caches the objects during the livetime
@@ -3411,6 +3412,7 @@ class ConfigCache(object):
 
 
 def get_config_cache():
+    # type: () -> ConfigCache
     config_cache = cmk_base.config_cache.get_dict("config_cache")
     if not config_cache:
         config_cache["cache"] = ConfigCache()

@@ -678,7 +678,15 @@ class AWSSection(object):
         """
         if not tags:
             return
-        return [{'Key': e['Name'].strip("tag:"), 'Value': v} for e in tags for v in e['Values']]
+        prepared_tags = []
+        for tag in tags:
+            tag_name = tag['Name']
+            if tag_name.startswith('tag:'):
+                tag_key = tag_name[4:]
+            else:
+                tag_key = tag_name
+            prepared_tags.extend([{'Key': tag_key, 'Value': v} for v in tag['Values']])
+        return prepared_tags
 
 
 class AWSSectionLimits(AWSSection):
@@ -2708,6 +2716,14 @@ class AWSConfig(object):
         self.service_config = {}
 
     def add_service_tags(self, tags_key, tags):
+        """Convert commandline input
+        from
+            ([['foo'], ['aaa'], ...], [['bar', 'baz'], ['bbb', 'ccc'], ...])
+        to
+            Filters=[{'Name': 'tag:foo', 'Values': ['bar', 'baz']},
+                     {'Name': 'tag:aaa', 'Values': ['bbb', 'ccc']}, ...]
+        as we need in API methods if and only if keys AND values are set.
+        """
         self.service_config.setdefault(tags_key, None)
         if tags != (None, None):
             self.service_config[tags_key] = self._prepare_tags(tags)
@@ -2715,11 +2731,6 @@ class AWSConfig(object):
             self.service_config[tags_key] = self._overall_tags
 
     def _prepare_tags(self, tags):
-        """
-        Prepare tags format as needed in API methods:
-        Filters=[{'Name': 'tag:KEY', 'Values': [VAL,...]}, ...]
-        Keys AND values must be set for filtering.
-        """
         keys, values = tags
         if keys and values:
             return [{

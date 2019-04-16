@@ -27,6 +27,7 @@
 import signal
 import sys
 import pprint
+from typing import Optional  # pylint: disable=unused-import
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKTimeout
@@ -115,7 +116,7 @@ class Automations(object):
 
 
 class Automation(object):
-    cmd = None
+    cmd = None  # type: Optional[str]
     needs_checks = False
     needs_config = False
 

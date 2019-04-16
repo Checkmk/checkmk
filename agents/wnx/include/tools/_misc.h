@@ -286,9 +286,6 @@ uint64_t ConvertToUint64(const T& Str, uint64_t Default) noexcept {
 
 namespace win {
 template <typename T>
-inline bool SetEnv(const T* EnvVarName, const T* EnvVarValue) {}
-
-template <typename T>
 inline bool SetEnv(const std::basic_string<T>& EnvVarName,
                    const std::basic_string<T>& EnvVarValue) {
     auto cmd = EnvVarName;
@@ -308,9 +305,9 @@ std::basic_string<T> GetEnv(const T* Name) {
 
     // we need constexpr here to eliminate compilation error
     if constexpr (sizeof(T) == 1) {
-        GetEnvironmentVariableA(Name, remote_machine_string, MAX_PATH);
+        ::GetEnvironmentVariableA(Name, remote_machine_string, MAX_PATH);
     } else {
-        GetEnvironmentVariableW(Name, remote_machine_string, MAX_PATH);
+        ::GetEnvironmentVariableW(Name, remote_machine_string, MAX_PATH);
     }
     return std::basic_string<T>(remote_machine_string);
 }

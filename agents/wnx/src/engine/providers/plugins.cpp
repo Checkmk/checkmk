@@ -73,7 +73,6 @@ void PluginsProvider::loadConfig() {
 }
 
 void PluginsProvider::gatherAllData(std::string& Out) {
-    cma::cfg::SetupPluginEnvironment();
     int last_count = 0;
     auto data_sync = RunSyncPlugins(pm_, last_count, timeout_);
     last_count_ += last_count;
@@ -83,6 +82,12 @@ void PluginsProvider::gatherAllData(std::string& Out) {
 
     cma::tools::AddString(Out, data_sync);
     cma::tools::AddString(Out, data_async);
+}
+
+void PluginsProvider::preStart() noexcept {
+    loadConfig();
+    int last_count = 0;
+    RunAsyncPlugins(pm_, last_count, true);
 }
 
 // empty body empty

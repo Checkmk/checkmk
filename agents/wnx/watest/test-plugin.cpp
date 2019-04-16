@@ -846,8 +846,7 @@ TEST(PluginTest, AsyncStartSimulation) {
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_EQ(entry.failed(), 0);
 
-        auto accu =
-            entry.getResultsAsync(wtools::ConvertToUTF16(entry_name), true);
+        auto accu = entry.getResultsAsync(true);
         EXPECT_EQ(true, accu.empty());
         EXPECT_TRUE(entry.running());
         entry.breakAsync();
@@ -862,8 +861,7 @@ TEST(PluginTest, AsyncStartSimulation) {
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_EQ(entry.failed(), 0);
 
-        auto accu =
-            entry.getResultsAsync(wtools::ConvertToUTF16(entry_name), true);
+        auto accu = entry.getResultsAsync(true);
         EXPECT_EQ(true, accu.empty());
         EXPECT_TRUE(entry.running());
     }
@@ -872,7 +870,7 @@ TEST(PluginTest, AsyncStartSimulation) {
     {
         auto ready = GetEntrySafe(pm, as_files[0].u8string());
         ASSERT_NE(nullptr, ready);
-        auto accu = ready->getResultsAsync(as_files[0].wstring(), true);
+        auto accu = ready->getResultsAsync(true);
 
         // something in result and running
         ASSERT_TRUE(!accu.empty());
@@ -890,7 +888,7 @@ TEST(PluginTest, AsyncStartSimulation) {
     {
         auto still_running = GetEntrySafe(pm, as_files[1].u8string());
         ASSERT_TRUE(nullptr != still_running);
-        auto accu = still_running->getResultsAsync(as_files[1].wstring(), true);
+        auto accu = still_running->getResultsAsync(true);
 
         // nothing but still running
         EXPECT_TRUE(accu.empty());
@@ -904,9 +902,9 @@ TEST(PluginTest, AsyncStartSimulation) {
     {
         auto ready = GetEntrySafe(pm, as_files[0].u8string());
         ASSERT_NE(nullptr, ready);
-        auto accu1 = ready->getResultsAsync(as_files[0].wstring(), true);
+        auto accu1 = ready->getResultsAsync(true);
         ::Sleep(100);
-        auto accu2 = ready->getResultsAsync(as_files[0].wstring(), true);
+        auto accu2 = ready->getResultsAsync(true);
 
         // something in result and running
         ASSERT_TRUE(!accu1.empty());
@@ -932,8 +930,7 @@ TEST(PluginTest, AsyncStartSimulation) {
 
         // we have no more running process still we should get real data
         {
-            auto accu_after_break =
-                ready->getResultsAsync(as_files[0].wstring(), true);
+            auto accu_after_break = ready->getResultsAsync(true);
             ASSERT_TRUE(!accu_after_break.empty());
             ASSERT_TRUE(accu_after_break == accu2);
             EXPECT_FALSE(ready->running())
@@ -946,8 +943,7 @@ TEST(PluginTest, AsyncStartSimulation) {
         // we have no more running process still we should get real and good
         // data
         {
-            auto accu_after_break =
-                ready->getResultsAsync(as_files[0].wstring(), false);
+            auto accu_after_break = ready->getResultsAsync(false);
             ASSERT_TRUE(!accu_after_break.empty());
             ASSERT_TRUE(accu_after_break == accu2);
             EXPECT_FALSE(ready->running());
@@ -955,8 +951,7 @@ TEST(PluginTest, AsyncStartSimulation) {
 
         ::Sleep(5000);
         {
-            auto accu_new =
-                ready->getResultsAsync(as_files[0].wstring(), false);
+            auto accu_new = ready->getResultsAsync(false);
             ASSERT_TRUE(!accu_new.empty());
             EXPECT_EQ(accu_new, accu2)
                 << "without RESTART and we have to have SAME data";
@@ -972,7 +967,7 @@ TEST(PluginTest, AsyncStartSimulation) {
             EXPECT_FALSE(ready->isGoingOld());  // not enough time to be old
             ready->restartAsyncThreadIfFinished(L"x");
             EXPECT_TRUE(ready->running());
-            accu_new = ready->getResultsAsync(as_files[0].wstring(), false);
+            accu_new = ready->getResultsAsync(false);
             ASSERT_TRUE(!accu_new.empty());
             EXPECT_EQ(accu_new, accu2)
                 << "IMMEDIATELY after RESTART and we have to have SAME data";
@@ -984,7 +979,7 @@ TEST(PluginTest, AsyncStartSimulation) {
                 EXPECT_EQ(ln2, SecondLine);
             }
             ::Sleep(6000);
-            accu_new = ready->getResultsAsync(as_files[0].wstring(), false);
+            accu_new = ready->getResultsAsync(false);
             ASSERT_TRUE(!accu_new.empty());
             EXPECT_NE(accu_new, accu2)
                 << "late after RESTART and we have to have different data";
@@ -1026,7 +1021,7 @@ TEST(PluginTest, AsyncStartSimulation) {
         EXPECT_FALSE(still->running());
         EXPECT_TRUE(still->data().empty());
 
-        auto data = ready->getResultsAsync(L"Id", true);
+        auto data = ready->getResultsAsync(true);
         EXPECT_TRUE(data.empty());
     }
     // changing to local again
@@ -1041,10 +1036,10 @@ TEST(PluginTest, AsyncStartSimulation) {
         EXPECT_TRUE(ready->cacheAge() >= kMinimumCacheAge);
         EXPECT_TRUE(still->cacheAge() >= kMinimumCacheAge);
 
-        auto data = ready->getResultsAsync(L"Id", true);
+        auto data = ready->getResultsAsync(true);
         EXPECT_TRUE(data.empty());
         ::Sleep(5000);
-        data = ready->getResultsAsync(L"Id", true);
+        data = ready->getResultsAsync(true);
         EXPECT_TRUE(!data.empty());
         std::string out(data.begin(), data.end());
         auto table = cma::tools::SplitString(out, "\n");

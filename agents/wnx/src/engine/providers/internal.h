@@ -84,6 +84,8 @@ public:
     int timeout() const { return timeout_; }
     virtual void registerCommandLine(const std::string& CmdLine);
 
+    virtual void preStart() noexcept {}
+
 protected:
     bool headerless_;  // if true no makeHeader called during content generation
     // may change the time when next request is possible

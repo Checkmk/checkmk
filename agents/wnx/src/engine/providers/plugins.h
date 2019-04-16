@@ -41,6 +41,8 @@ public:
 
     virtual bool isAllowedByCurrentConfig() const override;
 
+    void preStart() noexcept override;
+
 protected:
     void gatherAllData(std::string& Out);
     std::string cfg_name_;

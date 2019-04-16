@@ -5,6 +5,7 @@
 
 #include <time.h>
 
+#include <chrono>
 #include <filesystem>
 #include <string>
 
@@ -471,8 +472,7 @@ public:
     // ASYNC:
     // if StartProcessNow then process will be started immediately
     // otherwise entry will be marked as required to start
-    std::vector<char> getResultsAsync(const std::wstring& Id,
-                                      bool StartProcessNow);
+    std::vector<char> getResultsAsync(bool StartProcessNow);
     // stop with asyncing
     void breakAsync();
 
@@ -585,6 +585,11 @@ public:
     void restartAsyncThreadIfFinished(const std::wstring& Id);
 
 protected:
+    auto getDataAge() const {
+        auto current_time = std::chrono::steady_clock::now();
+        return current_time - data_time_;
+    }
+
     void joinAndReleaseMainThread();
 
     void threadCore(const std::wstring& Id);
@@ -650,4 +655,6 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count,
                                  const int Timeout);
 std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
                                   bool StartImmediately);
+
+constexpr std::chrono::seconds kRestartInterval{60};
 }  // namespace cma

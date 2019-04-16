@@ -1,0 +1,11 @@
+Title: Perf-O-Meter and Graphs for CPU Utilization in statgrab_cpu check
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1555422905
+
+For consistency with other CPU Utilization checks now statgrab_cpu also includes the same perf-O-meter and graphs

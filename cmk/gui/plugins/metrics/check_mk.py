@@ -6648,7 +6648,7 @@ check_metrics["check_mk-apc_symmetra.elphase"] = {
     },
 }
 
-check_metrics["check_mk-kernel.util"] = {
+cpu_util_unix_translate = {
     "wait": {
         "name": "io_wait"
     },
@@ -6659,6 +6659,9 @@ check_metrics["check_mk-kernel.util"] = {
         "name": "cpu_util_steal"
     },
 }
+
+check_metrics["check_mk-kernel.util"] = cpu_util_unix_translate
+check_metrics["check_mk-statgrab_cpu"] = cpu_util_unix_translate
 
 check_metrics["check_mk-lparstat_aix.cpu_util"] = {
     "wait": {

@@ -610,7 +610,15 @@ class S3Summary(AWSSectionGeneric):
         """
         if not tags:
             return
-        return [{'Key': e['Name'].strip("tag:"), 'Value': v} for e in tags for v in e['Values']]
+        prepared_tags = []
+        for tag in tags:
+            tag_name = tag['Name']
+            if tag_name.startswith('tag:'):
+                tag_key = tag_name[4:]
+            else:
+                tag_key = tag_name
+            prepared_tags.extend([{'Key': tag_key, 'Value': v} for v in tag['Values']])
+        return prepared_tags
 
     @property
     def name(self):
@@ -775,7 +783,15 @@ class ELBSummary(AWSSectionGeneric):
         """
         if not tags:
             return
-        return [{'Key': e['Name'].strip("tag:"), 'Value': v} for e in tags for v in e['Values']]
+        prepared_tags = []
+        for tag in tags:
+            tag_name = tag['Name']
+            if tag_name.startswith('tag:'):
+                tag_key = tag_name[4:]
+            else:
+                tag_key = tag_name
+            prepared_tags.extend([{'Key': tag_key, 'Value': v} for v in tag['Values']])
+        return prepared_tags
 
     @property
     def name(self):
@@ -1581,6 +1597,14 @@ class AWSConfig(object):
         self.service_config = {}
 
     def add_service_config(self, key, names, tags):
+        """Convert tags via commandline input
+        from
+            ([['foo'], ['aaa'], ...], [['bar', 'baz'], ['bbb', 'ccc'], ...])
+        to
+            Filters=[{'Name': 'tag:foo', 'Values': ['bar', 'baz']},
+                     {'Name': 'tag:aaa', 'Values': ['bbb', 'ccc']}, ...]
+        as we need in API methods if and only if keys AND values are set.
+        """
         self.service_config.setdefault(key, {"names": None, "tags": None})
         if names:
             self.service_config[key]["names"] = names
@@ -1590,11 +1614,6 @@ class AWSConfig(object):
             self.service_config[key]["tags"] = self._overall_tags
 
     def _prepare_tags(self, tags):
-        """
-        Prepare tags format as needed in API methods:
-        Filters=[{'Name': 'tag:KEY', 'Values': [VAL,...]}, ...]
-        Keys AND values must be set for filtering.
-        """
         keys, values = tags
         if keys and values:
             return [{

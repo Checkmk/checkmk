@@ -1370,10 +1370,11 @@ def notification_script_env(plugin_context):
             value = value[:max_length] + "...\nAttention: Removed remaining content because it was too long."
         return value.encode("utf-8")
 
-    notify_env = {
+    notify_env = os.environ.copy()
+    notify_env.update({
         "NOTIFY_" + variable: format_(value) for variable, value in plugin_context.iteritems()
-    }
-    notify_env.update(os.environ)
+    })
+
     return notify_env
 
 

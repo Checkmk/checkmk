@@ -124,9 +124,6 @@ function run_cached {
         if (( $MTIME < $MAXAGE )) ; then
             USE_CACHE_FILE=1
         fi
-    fi
-    if [ -s "$CACHE_FILE" ]
-    then
         cat $CACHE_FILE
     fi
     if [ -z "$USE_CACHE_FILE" -a ! -e "$CACHE_FILE.new" ]

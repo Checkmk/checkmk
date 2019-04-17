@@ -74,7 +74,13 @@ def is_snmpv3_host(host_config):
 # And if it is a six-tuple, it has the following additional arguments:
 # (5) privacy protocol (DES|AES) (-x)
 # (6) privacy protocol pass phrase (-X)
-SNMPCredentials = Union[str, Tuple[str, str, str, str], Tuple[str, str, str, str], Tuple[str, str]]
+SNMPCommunity = str
+# TODO: This does not work as intended
+#SNMPv3NoAuthNoPriv = Tuple[str, str]
+#SNMPv3AuthNoPriv = Tuple[str, str, str, str]
+#SNMPv3AuthPriv = Tuple[str, str, str, str, str, str]
+#SNMPCredentials = Union[SNMPCommunity, SNMPv3NoAuthNoPriv, SNMPv3AuthNoPriv, SNMPv3AuthPriv]
+SNMPCredentials = Union[SNMPCommunity, Tuple[str, ...]]
 
 # Wraps the configuration of a host into a single object for the SNMP code
 SNMPHostConfig = NamedTuple(

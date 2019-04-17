@@ -1178,7 +1178,7 @@ class AgentListener(multiprocessing.Process):
         self._update_counter(host_id, "kernel_processes", per_sec=1)
         self._update_counter(host_id, "kernel_pgmajfault", per_sec=50)
 
-        # hundrets of a second
+        # hundreds of a second
         num_cpus = 4
         for i in [""] + range(num_cpus):
             self._update_counter(host_id, "kernel_cpu%s_user" % i, per_sec=0.10)

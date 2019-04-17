@@ -2,18 +2,14 @@
 // Engine independent parameters
 // No C++ file
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #include <shlobj.h>  // known path
 
 #include <chrono>
 #include <filesystem>
 #include <string>
 
-#include "yaml-cpp/yaml.h"
-
 #include "common/cfg_yaml.h"
+#include "yaml-cpp/yaml.h"
 namespace XLOG {
 
 // windows specific Event Log
@@ -36,6 +32,8 @@ enum EventClass {
 
 }  // namespace XLOG
 
+// in This section we have defaults for the configuration(YML/INI)
+// values are either plain ints or plain strings
 namespace cma::cfg {
 enum LogLevel { kLogBase = 0, kLogDebug = 1, kLogAll = 2 };
 
@@ -52,28 +50,32 @@ constexpr int kDefaultRealtimePort = 6559;
 // #TODO CONFIRM VALUE:
 constexpr int kMinimumCacheAge = 120;
 
-// #TODO CONFIRM VALUE:
+// Default Port for connection to client
 constexpr uint16_t kMainPort = 6556;
 
-// #TODO CONFIRM VALUE:
-constexpr int kDefaultPluginTimeout = 11;  // seconds
+// Default timeout for any plugin
+constexpr int kDefaultPluginTimeout = 60;  // seconds
 
-// #TODO CONFIRM VALUE:
-constexpr int kDefaultWinPerfTimeout = 11;  // seconds
+// Windows Wmi API timeout, decision from LWA
+constexpr int kDefaultWinPerfTimeout = 3;  // seconds
 
-// #TODO CONFIRM VALUE:
+// #TODO Probably deprecated
 constexpr int kDefaultAgentMaxWait = 15;  // max time agent waits for a sections
 
-// #TODO CONFIRM VALUE:
-constexpr int kDefaultAgentMinWait = 5;  // max time agent waits for a sections
+// This value is set when timeout was defined badly by ini/yml/user
+constexpr int kDefaultAgentMinWait = 10;  // min safe timeout
 
-const char* const kDefaultLogFileName = "check_mk.log";
-const char* const kDefaultAppFileName = "check_mk_agent.exe";
-constexpr wchar_t kAppDataCompanyName[] = L"CheckMK";
+constexpr const char* const kDefaultLogFileName = "check_mk.log";
+constexpr const char* const kDefaultAppFileName = "check_mk_agent.exe";
 constexpr char kDefaultEventLogName[] =
     "CheckMK";  // name for windows event log
 const wchar_t* const kAppDataAppName = L"Agent";
 const wchar_t* const kDefaultConfigCacheFileName = L"check_mk.cached.yml";
+}  // namespace cma::cfg
+
+// section with folder names, file names and some textual app defaults
+namespace cma::cfg {
+constexpr const wchar_t kAppDataCompanyName[] = L"CheckMK";
 
 // defines default behavior of the main thread
 constexpr bool IsOneShotMode() { return true; }

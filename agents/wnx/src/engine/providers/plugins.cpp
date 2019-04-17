@@ -2,25 +2,21 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/plugins.h"
+
 #include <filesystem>
 #include <regex>
 #include <string>
 #include <tuple>
 
-#include "fmt/format.h"
-
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-#include "common/wtools.h"
-
 #include "cfg.h"
 #include "cma_core.h"
+#include "common/wtools.h"
+#include "fmt/format.h"
 #include "glob_match.h"
-
 #include "logger.h"
-
-#include "providers/plugins.h"
+#include "tools/_raii.h"
+#include "tools/_xlog.h"
 
 namespace cma::provider {
 

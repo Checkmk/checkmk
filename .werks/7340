@@ -1,0 +1,23 @@
+Title: Add option to show long output in availability timeline
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1555497919
+Class: feature
+
+In addition to the "last known plugin output" it is now possible to show the
+"last known long output" in the availability timeline as separate column.
+
+This column is only populated for hosts / services that have been configured to
+write their long output to the monitoring history. This can be done using the
+new rulesets "Write long output of services to monitoring history" and "Write
+long output of hosts to monitoring history".
+
+Be aware: Enabling this option may increase the filesystem space consumption of
+your monitoring history depending on the amount of data your hosts or services
+put in the long output. You should only enable this for the objects you need it
+for.
+
+This feature can only be used with the Microcore.

@@ -31,7 +31,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.0.6\n"
+"X-Generator: Poedit 1.8.11\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Bookmarks: -1,-1,1412,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: /home/mk/git/check_mk/web/htdocs\n"
@@ -7134,7 +7134,6 @@ msgstr ""
 "HTTPS, Umleitungen, Suche nach Zeichenketten und regulären Ausdrücken, "
 "Verbindungszeiten und Ablauf von Zertifikaten."
 
-#, fuzzy
 msgid "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"
 msgstr "Check HTTP: Verwende HTTPS anstelle von HTTP für SSL/TLS-Verbindungen"
 
@@ -7781,6 +7780,9 @@ msgstr "Klasse von Hosts"
 
 msgid "Classes"
 msgstr "Klassen"
+
+msgid "Classic Elastic Load Balancing (ELB)"
+msgstr ""
 
 msgid "Classical"
 msgstr "Klassisch"
@@ -13661,9 +13663,6 @@ msgstr ""
 #, fuzzy
 msgid "Elastic IP Addresses"
 msgstr "IP-Adressen"
-
-msgid "Elastic Load Balancing (ELB)"
-msgstr ""
 
 msgid "Elasticsearch Cluster Health"
 msgstr ""
@@ -19969,17 +19968,9 @@ msgstr ""
 "mehr relevant. Verwenden Sie stattdessen das Alarmierungsplugin <i>Forward "
 "Notification to Event Console</i>."
 
+#, fuzzy
 msgid ""
-"If you set a limit here then there will never be fetched and rendered more "
-"data rows than you specify here. This can save you against reports will a "
-"thousend pages in cases of an invalid filter specification or the like."
-msgstr ""
-"Sie können hier eine Maximalzahl von Datensätzen angeben, die geholt werden "
-"sollen. Dies schützt Sie in Extremfall vor Berichten mit vielen tausend "
-"Seiten, wenn Sie z.B. einen Fehler in einem Filterausdruck haben. "
-
-msgid ""
-"If you set a livetime of an event, then it will automatically be deleted "
+"If you set a lifetime of an event, then it will automatically be deleted "
 "after that time if, even if no action has taken by the user. You can decide "
 "whether to expire open, acknowledged or both types of events. The lifetime "
 "always starts when the event is entering the open state."
@@ -19988,6 +19979,15 @@ msgstr ""
 "dieser Zeit automatisch gelöscht (selbst wenn keine Aktion durch den Benutzer "
 "erfolgt). Sie können bestimmen welche Ereignisse ablaufen: offen/quittiert/"
 "beides. Die Lebenszeit beginnt wenn das Ereignis in den Status offen eintritt."
+
+msgid ""
+"If you set a limit here then there will never be fetched and rendered more "
+"data rows than you specify here. This can save you against reports will a "
+"thousend pages in cases of an invalid filter specification or the like."
+msgstr ""
+"Sie können hier eine Maximalzahl von Datensätzen angeben, die geholt werden "
+"sollen. Dies schützt Sie in Extremfall vor Berichten mit vielen tausend "
+"Seiten, wenn Sie z.B. einen Fehler in einem Filterausdruck haben. "
 
 msgid ""
 "If you set this parameter then the notifications will be sent via syslog/UDP "
@@ -22777,7 +22777,8 @@ msgstr "Begrenze die Pfadlänge in Service-Namen"
 msgid "Limit amount of current events"
 msgstr "Anzahl aktueller Ereignisse begrenzen"
 
-msgid "Limit event livetime"
+#, fuzzy
+msgid "Limit event lifetime"
 msgstr "Limit für Ereignislebenszeit"
 
 msgid "Limit for upper bound dynamic levels"
@@ -36402,9 +36403,8 @@ msgstr "Status falls Force Logging abgeschaltet ist:"
 msgid "State in case of Force Logging is enabled: "
 msgstr "Status falls Force Logging eingeschaltet ist:"
 
-#, fuzzy
 msgid "State in case of Job has no log information"
-msgstr "Status im Falle von unbehandelten Ausnahmen"
+msgstr "Status des Service, falls der Job keine Log-Informationen hat"
 
 #, fuzzy
 msgid "State in case of a timeout"
@@ -36685,13 +36685,11 @@ msgstr "Status eines einzelnen Services, zum Verlinken"
 msgid "Status of last synchronization: <b>%s</b>"
 msgstr "Status der letzten Synchronisation: <b>%s</b>"
 
-#, fuzzy
 msgid "Status of service in case of disabled job"
-msgstr "Status des Services falls der Job fehlt."
+msgstr "Status des Services, falls der Job deaktiviert ist"
 
-#, fuzzy
 msgid "Status of service in case of missing job"
-msgstr "Status des Services falls der Job fehlt."
+msgstr "Status des Services, falls der Job fehlt"
 
 msgid "Status of the Check_MK services"
 msgstr "Status der Check_MK-Services"
@@ -48964,7 +48962,7 @@ msgstr ""
 msgid ""
 "When performing walks on an OID during checking, Check_MK fetches all sub "
 "OIDs regardless whether these values are needed or not. For example, if you "
-"monitor a single network interface of a switch with hundrets of ports, the "
+"monitor a single network interface of a switch with hundreds of ports, the "
 "check will fetch the information for all the interfaces, while only one is "
 "used. This rule can be used to reduce the amount of fetched OIDs, but please "
 "note, this is only useful for special cases like the example above and only "

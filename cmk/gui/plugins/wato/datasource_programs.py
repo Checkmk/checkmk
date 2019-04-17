@@ -2015,7 +2015,7 @@ class RulespecSpecialAgentsAws(HostRulespec):
                           )),
                          ("elb",
                           Dictionary(
-                              title=_("Elastic Load Balancing (ELB)"),
+                              title=_("Classic Elastic Load Balancing (ELB)"),
                               elements=[
                                   _vs_element_aws_service_selection(),
                                   _vs_element_aws_limits(),

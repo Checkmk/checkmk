@@ -11100,7 +11100,7 @@ expected_rulespecs = {
     'snmp_limit_oid_range': {
         'factory_default': [],
         'group_name': 'agent/snmp',
-        'help': u'When performing walks on an OID during checking, Check_MK fetches all sub OIDs regardless whether these values are needed or not. For example, if you monitor a single network interface of a switch with hundrets of ports, the check will fetch the information for all the interfaces, while only one is used. This rule can be used to reduce the amount of fetched OIDs, but please note, this is only useful for special cases like the example above and only used when you perform bulkwalks.',
+        'help': u'When performing walks on an OID during checking, Check_MK fetches all sub OIDs regardless whether these values are needed or not. For example, if you monitor a single network interface of a switch with hundreds of ports, the check will fetch the information for all the interfaces, while only one is used. This rule can be used to reduce the amount of fetched OIDs, but please note, this is only useful for special cases like the example above and only used when you perform bulkwalks.',
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,

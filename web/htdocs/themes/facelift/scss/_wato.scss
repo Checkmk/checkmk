@@ -707,22 +707,21 @@ form.search, div.filter_buttons {
   color: $theme-color-text;
 }
 
-.wato div.mainmenu a,
-.wato div.mainmenu body.main .popup_menu span,
-body.main .popup_menu .wato div.mainmenu span {
-  display: block;
-  height: 104px;
-  margin: 0 8px 8px 0;
-  background: $theme-color-white;
-  border: 1px solid $theme-color-table-border;
-  box-shadow: none;
-
-  &:hover {
-    background: $theme-color-table-background;
-  }
-}
-
 .wato div.mainmenu {
+  a, body.main .popup_menu span, body.main .popup_menu & span {
+    display: block;
+    width: 330px;
+    height: 80px;
+    margin: 0 8px 8px 0;
+    background: $theme-color-white;
+    border: 1px solid $theme-color-table-border;
+    box-shadow: none;
+
+    &:hover {
+      background: $theme-color-table-background;
+    }
+  }
+
   a {
     position: relative;
     float: left;
@@ -744,9 +743,9 @@ body.main .popup_menu .wato div.mainmenu span {
 
     &.subtitle {
       position: absolute;
-      top: 32px;
+      top: 22px;
       left: 72px;
-      width: 237px;
+      width: 234px;
       padding: 16px 0;
       overflow: hidden;
       font-size: $theme-font-size-small;

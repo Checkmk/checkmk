@@ -1,0 +1,12 @@
+Title: check_mk_agent: Plugins cache age info in section header
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1555498273
+Class: feature
+
+For plugins running asynchronously the cache age information is now included in
+the section header. Services corresponding to outdated plugin sections will
+become stale.

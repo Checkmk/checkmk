@@ -151,6 +151,23 @@ def get_av_display_options(what):
             ("service_groups", _("By Service group")),
         ]
 
+    if not cmk.is_raw_edition():
+        ruleset_search_url = html.makeuri_contextless(
+            [
+                ("filled_in", "search"),
+                ("search", "long_output"),
+                ("mode", "rulesets"),
+            ],
+            filename="wato.py",
+        )
+        long_output_labelling = [
+            ("timeline_long_output",
+             _("Display long output in timeline (<a href=\"%s\">Enable via WATO</a>)") %
+             ruleset_search_url)
+        ]
+    else:
+        long_output_labelling = []
+
     return [
         # Time range selection
         ("rangespec", "double", False, Timerange(
@@ -169,6 +186,7 @@ def get_av_display_options(what):
                  ("use_display_name", _("Use alternative display name for services")),
                  ("omit_buttons", _("Do not display icons for history and timeline")),
                  ("omit_timeline_plugin_output", _("Do not display plugin output in timeline")),
+             ] + long_output_labelling + [
                  ("display_timeline_legend", _("Display legend for timeline")),
                  ("omit_av_levels", _("Do not display legend for availability levels")),
              ])),
@@ -605,7 +623,7 @@ def get_outage_statistic_options(avoptions):
 # a specific host or service has one specific state.
 # what is either "host" or "service" or "bi".
 def get_availability_rawdata(what, context, filterheaders, only_sites, av_object, include_output,
-                             avoptions):
+                             include_long_output, avoptions):
     if what == "bi":
         return get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_output,
                                            avoptions)
@@ -647,6 +665,8 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
     ]
     if include_output:
         columns.append("log_output")
+    if include_long_output:
+        columns.append("long_log_output")
     if "use_display_name" in avoptions["labelling"]:
         columns.append("service_display_name")
     if "show_alias" in avoptions["labelling"]:

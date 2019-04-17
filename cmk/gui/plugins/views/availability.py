@@ -219,9 +219,17 @@ def render_availability_page(view, context, filterheaders):
 
     # Now compute all data, we need this also for CSV export
     if not html.has_user_errors():
-        av_rawdata, has_reached_logrow_limit = \
-            availability.get_availability_rawdata(what, context, filterheaders, view.only_sites,
-                                                  av_object, av_mode == "timeline", avoptions)
+        include_long_output = av_mode == "timeline" \
+                and "timeline_long_output" in avoptions["labelling"]
+        av_rawdata, has_reached_logrow_limit = availability.get_availability_rawdata(
+            what,
+            context,
+            filterheaders,
+            view.only_sites,
+            av_object=av_object,
+            include_output=av_mode == "timeline",
+            include_long_output=include_long_output,
+            avoptions=avoptions)
         av_data = availability.compute_availability(what, av_rawdata, avoptions)
 
     # Do CSV ouput
@@ -421,6 +429,9 @@ def render_availability_timeline(what, av_entry, avoptions):
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
                 table.cell(_("Last Known Plugin Output"), row.get("log_output", ""))
+
+            if "timeline_long_output" in avoptions["labelling"]:
+                table.cell(_("Last Known Long Output"), row.get("long_log_output", ""))
 
     # Legend for timeline
     if "display_timeline_legend" in avoptions["labelling"]:

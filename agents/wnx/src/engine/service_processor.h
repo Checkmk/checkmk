@@ -13,21 +13,15 @@
 #include <optional>    //
 #include <thread>      //
 
-#include "common/cfg_info.h"
-#include "common/mailslot_transport.h"
-#include "common/wtools.h"
-#include "tools/_xlog.h"
-
-#include "fmt/format.h"
-
-#include "external_port.h"
-
 #include "async_answer.h"
 #include "carrier.h"
 #include "cfg.h"
+#include "common/cfg_info.h"
+#include "common/mailslot_transport.h"
+#include "common/wtools.h"
+#include "external_port.h"
+#include "fmt/format.h"
 #include "logger.h"
-#include "read_file.h"
-
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/fileinfo.h"
@@ -43,8 +37,9 @@
 #include "providers/spool.h"
 #include "providers/system_time.h"
 #include "providers/wmi.h"
-
+#include "read_file.h"
 #include "realtime.h"
+#include "tools/_xlog.h"
 
 namespace cma::srv {
 // mini processes of the global type
@@ -265,10 +260,13 @@ private:
                         // this is internal implementation of the io_context
                         // called upon kicking in port, i.e. LATER. NOT NOW.
 
-                        using namespace std::chrono;
-                        XLOG::d.i("Connected from {} ", Ip.c_str());
+                        // 1. preparation
+                        XLOG::d.i("Connected from '{}'", Ip.c_str());
                         cma::OnStartApp();
+                        cma::cfg::SetupRemoteHostEnvironment(Ip);
                         informDevice(rt_device, Ip);
+
+                        // 2. processing
                         auto tp = openAnswer(Ip);
                         if (tp) {
                             XLOG::d.i("Id is [{}] ",

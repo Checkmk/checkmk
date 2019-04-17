@@ -678,6 +678,15 @@ void SetupPluginEnvironment() {
         cma::tools::win::SetEnv(d.first, wtools::ConvertToUTF8(d.second));
 }
 
+// called upon every connection
+// required for some plugins using state file
+void SetupRemoteHostEnvironment(const std::string& IpAddress) {
+    using namespace cma::tools;
+
+    win::SetEnv(std::string(envs::kRemote), IpAddress);
+    win::SetEnv(std::string(envs::kRemoteHost), IpAddress);
+}
+
 };  // namespace cma::cfg
 
 namespace cma::cfg::details {

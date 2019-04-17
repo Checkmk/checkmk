@@ -166,6 +166,8 @@ constexpr const char* const kMkTempDirName = "MK_TEMPDIR";
 constexpr const char* const kMkSpoolDirName = "MK_SPOOLDIR";
 constexpr const char* const kMkPluginsDirName = "MK_PLUGINSDIR";
 constexpr const char* const kMkLogDirName = "MK_LOGDIR";
+constexpr const char* const kRemoteHost = "REMOTE_HOST";
+constexpr const char* const kRemote = "REMOTE";
 
 };  // namespace envs
 

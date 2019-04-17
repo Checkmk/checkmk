@@ -1022,7 +1022,11 @@ private:
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
                           const std::vector<YAML::Node> Yaml);
 
+// used to setup on start and forever. These environment variables are stable
 void SetupPluginEnvironment();
+
+// called on every connect from monitoring site.
+void SetupRemoteHostEnvironment(const std::string& IpAddress);
 
 namespace groups {
 extern Global global;

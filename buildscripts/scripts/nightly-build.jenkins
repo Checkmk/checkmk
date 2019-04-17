@@ -91,19 +91,9 @@ node {
                             break
                     }
                     sh "make NEW_VERSION=${CMK_VERS} setversion"
-
-                    dir('agents/wnx') {
-                        stash name: 'WinSRC', include: '**/*'
-                    }
-                    dir('agents/windows/dependencies/') {
-                        stash name: 'WinDep', include: '**/*'
-                    }
-                    dir('agents/windows/plugins/') {
-                        stash name: 'WinPlugins', include: '**/*'
-                    }
-                    dir('omd/packages/') {
-                        stash name: 'WinDepOMD', include: 'googletest/*, simpleini/*'
-                    }
+                    
+                    stash name: 'WinDep', include: 'agents/wnx/**/*, agents/windows/dependencies/**/*, agents/windows/plugins/**/*, omd/packages/googletest/*, omd/packages/simpleini/*'
+                  
                 }
             }
         }
@@ -115,18 +105,7 @@ AGENT_LIST.each { AGENT ->
         if (AGENT == 'windows') {
             node('windows') {
                 bat 'powershell Remove-Item .\\* -Recurse -Force'
-                dir('agents/wnx') {
-                    unstash name: 'WinSRC'
-                }
-                dir('agents/windows/dependencies/') {
-                    unstash name: 'WinDep'
-                }
-                dir('agents/windows/plugins/') {
-                    unstash name: 'WinPlugins'
-                }
-                dir('omd/packages/') {
-                    unstash name: 'WinDepOMD'
-                }
+                unstash name: 'WinDep'
                 bat 'cd agents\\wnx && call build_release.cmd'
                 dir('artefacts') {
                     stash name: 'WinMSI', includes: 'check_mk_agent*'

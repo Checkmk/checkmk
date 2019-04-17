@@ -80,47 +80,39 @@ def mrpe_parse_perfdata(perfinfo):
 def check_mrpe(_no_item, _no_params, data):
     # This check is cluster-aware. An item might be found
     # more than once. In that case we use the best of the
-    # multiple statuses.
+    # multiple statuses (Where OK < WARN < UNKNOWN < CRIT).
+    dataset = min(data, key=lambda x: (0, 1, 3, 2)[x.state])
 
-    best_state = None
+    # First line:  OUTPUT|PERFDATA
+    parts = dataset.info[0].split("|", 1)
+    output = [parts[0].strip()]
+    if len(parts) > 1:
+        perfdata = parts[1].strip().split()
+    else:
+        perfdata = []
 
-    for dataset in data:
-
-        # First line:  OUTPUT|PERFDATA
-        parts = dataset.info[0].split("|", 1)
-        output = [parts[0].strip()]
-        if len(parts) > 1:
-            perfdata = parts[1].strip().split()
+    # Further lines
+    now_comes_perfdata = False
+    for line in dataset.info[1:]:
+        if now_comes_perfdata:
+            perfdata += line.split()
         else:
-            perfdata = []
+            parts = line.split("|", 1)
+            output.append(parts[0].strip())
+            if len(parts) > 1:
+                perfdata += parts[1].strip().split()
+                now_comes_perfdata = True
 
-        # Further lines
-        now_comes_perfdata = False
-        for line in dataset.info[1:]:
-            if now_comes_perfdata:
-                perfdata += line.split()
-            else:
-                parts = line.split("|", 1)
-                output.append(parts[0].strip())
-                if len(parts) > 1:
-                    perfdata += parts[1].strip().split()
-                    now_comes_perfdata = True
+    perf_parsed = []
+    for perfvalue in perfdata:
+        new_perf = mrpe_parse_perfdata(perfvalue)
+        if new_perf:
+            perf_parsed.append(new_perf)
 
-        if best_state in [None, 2] \
-           or (dataset.state < best_state and dataset.state != 2):
-            perf_parsed = []
-            for perfvalue in perfdata:
-                new_perf = mrpe_parse_perfdata(perfvalue)
-                if new_perf:
-                    perf_parsed.append(new_perf)
-
-            # name of check command needed for PNP to choose the correct template
-            if dataset.name:
-                perf_parsed.append(dataset.name)
-            best_result = dataset.state, "\n".join(output), perf_parsed
-            best_state = dataset.state
-
-    return best_result
+    # name of check command needed for PNP to choose the correct template
+    if dataset.name:
+        perf_parsed.append(dataset.name)
+    return dataset.state, "\n".join(output), perf_parsed
 
 
 check_info["mrpe"] = {

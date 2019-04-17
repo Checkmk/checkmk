@@ -6,13 +6,10 @@
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"
-
-#include "yaml-cpp/yaml.h"
-
 #include "logger.h"
-
 #include "on_start.h"
 #include "onlyfrom.h"
+#include "yaml-cpp/yaml.h"
 
 namespace cma {
 // set only when executable works as a service
@@ -965,7 +962,8 @@ public:
     // API:
     void loadFromMainConfig(const std::string GroupName);
 
-    // #TODO gtest
+    // relative high level API to build intermediate data structures
+    // from raw data inside the class
     CmdLineInfo buildCmdLine() const;
 
     auto units() const {

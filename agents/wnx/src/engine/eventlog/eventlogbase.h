@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-#include <fmt/format.h>
+#include "fmt/format.h"
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"

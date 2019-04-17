@@ -1,24 +1,18 @@
 // Configuration Parameters for whole Agent
 #include "stdafx.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #include <shellapi.h>
 #include <shlobj.h>  // known path
 
 #include <filesystem>
 #include <string>
 
+#include "cfg.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
-
 #include "tools/_raii.h"  // on out
 #include "tools/_tgt.h"   // we need IsDebug
-
 #include "yaml-cpp/yaml.h"
-
-#include "cfg.h"
 
 namespace cma::cfg {
 
@@ -354,16 +348,18 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
     files.erase(undefined, files.end());
 
     // build command line
-    for (const auto& f : files) {
-        cli.cmd_line_ += L"\"";
-        cli.cmd_line_ += f.c_str();
-        cli.cmd_line_ += L"\" ";
+    for (const auto& file_name : files) {
+        cli.cmd_line_ += L"\"" + file_name + L"\" ";
     }
     if (cli.cmd_line_.empty()) {
-        XLOG::l("Unexpected, but no plugins to execute");
+        XLOG::l("Unexpected, no plugins to execute");
         return cli;
     }
+
     if (cli.cmd_line_.back() == L' ') cli.cmd_line_.pop_back();
+
+    XLOG::t.i("Expected to execute [{}] plugins '{}'", files.size(),
+              wtools::ConvertToUTF8(cli.cmd_line_));
 
     return cli;
 }  // namespace cma::cfg

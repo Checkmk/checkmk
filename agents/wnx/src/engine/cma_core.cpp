@@ -610,7 +610,7 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
 
         if (entry.async()) continue;
 
-        XLOG::d(XLOG_FUNC + " {}", entry.path().u8string());
+        XLOG::d.t(XLOG_FUNC + " {}", entry.path().u8string());
 
         // C++ async black magic
         results.emplace_back(std::async(

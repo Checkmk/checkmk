@@ -4,10 +4,9 @@
 #include "pch.h"
 
 #include "common/wtools.h"
+#include "service_processor.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-
-#include "service_processor.h"
 
 namespace wtools {  // to become friendly for wtools classes
 class TestProcessor : public wtools::BaseServiceProcessor {
@@ -54,21 +53,24 @@ TEST(ServiceControllerTest, CreateDelete) {
     EXPECT_EQ(ServiceController::s_controller_, nullptr);
 }
 
+static constexpr const wchar_t* const test_service_name = L"CmkTestService";
+
 TEST(ServiceControllerTest, InstallUninstall) {
-    if (cma::tools::win::IsElevated()) {
-        auto ret =
-            wtools::InstallService(L"SN",         // name of service
-                                   L"Test Name",  // service name to display
-                                   SERVICE_DEMAND_START,  // start type
-                                   nullptr,               // dependencies
-                                   nullptr,               // no account
-                                   nullptr                // no password
-            );
-        EXPECT_TRUE(ret);
-        if (ret) wtools::UninstallService(L"SN");
-    } else {
+    if (!cma::tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio).w("Skip Test - you have to be elevated");
+        return;
     }
+
+    auto ret = wtools::InstallService(test_service_name,  // name of service
+                                      L"Test Name",  // service name to display
+                                      SERVICE_DEMAND_START,  // start type
+                                      nullptr,               // dependencies
+                                      nullptr,               // no account
+                                      nullptr                // no password
+    );
+    EXPECT_TRUE(ret);
+    wtools::UninstallService(test_service_name,
+                             wtools::UninstallServiceMode::test);
 }
 
 TEST(ServiceControllerTest, StartStop) {
@@ -90,7 +92,7 @@ TEST(ServiceControllerTest, StartStop) {
     EXPECT_NE(controller.processor_, nullptr);
     if (0) {
         auto ret =
-            wtools::InstallService(L"SN",         // name of service
+            wtools::InstallService(test_service_name,  // name of service
                                    L"Test Name",  // service name to display
                                    SERVICE_DEMAND_START,  // start type
                                    nullptr,               // dependencies
@@ -101,7 +103,8 @@ TEST(ServiceControllerTest, StartStop) {
         if (ret) {
             bool success = false;
             std::thread t([&]() {
-                success = controller.registerAndRun(L"SN", true, true, true);
+                success = controller.registerAndRun(test_service_name, true,
+                                                    true, true);
             });
             EXPECT_TRUE(success);
             std::this_thread::sleep_until(steady_clock::now() +
@@ -109,7 +112,7 @@ TEST(ServiceControllerTest, StartStop) {
             EXPECT_TRUE(counter > 3);
 
             EXPECT_TRUE(ret);
-            if (ret) wtools::UninstallService(L"SN");
+            if (ret) wtools::UninstallService(test_service_name);
         }
     }
 }

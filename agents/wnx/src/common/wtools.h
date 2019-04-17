@@ -13,12 +13,10 @@
 #define _WIN32_DCOM
 
 #include <Wbemidl.h>
+#include <assert.h>
 #include <comdef.h>
-
 #include <shellapi.h>
 #include <tlhelp32.h>
-
-#include <assert.h>
 
 #include <atomic>
 #include <cstdint>
@@ -27,12 +25,11 @@
 #include <optional>
 #include <string>
 
+#include "datablock.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
 #include "tools/_xlog.h"
-
-#include "datablock.h"
 
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
@@ -73,7 +70,9 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
 //   NOTE: If the function fails to uninstall the service, it prints the
 //   error in the standard output stream for users to diagnose the problem.
 //
-bool UninstallService(const wchar_t* ServiceName);
+enum class UninstallServiceMode { normal, test };
+bool UninstallService(const wchar_t* ServiceName,
+                      UninstallServiceMode Mode = UninstallServiceMode::normal);
 
 // Abstract Interface template for SERVICE PROCESSOR:
 // WE ARE NOT GOING TO USE AT ALL.

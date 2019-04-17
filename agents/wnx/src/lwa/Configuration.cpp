@@ -1019,10 +1019,10 @@ YAML::Node Parser::emitYaml() noexcept {
     if (!pi_) return {};
 
     YAML::Node yaml;
-    pi_->parser.outputConfigurables([&yaml](const std::string Section,
-                                            const std::string Key,
-                                            const std::string Value,
-                                            const std::string IniString) {
+    pi_->parser.outputConfigurables([&yaml](const std::string& Section,
+                                            const std::string& Key,
+                                            const std::string& Value,
+                                            const std::string& IniString) {
         try {
             auto mapping = FindMapping(Section, Key);
             if (mapping.map_mode_ == MapMode::kMissing) {
@@ -1042,6 +1042,10 @@ YAML::Node Parser::emitYaml() noexcept {
                         yaml[Section][key] = IniString;
                     else {
                         yaml[Section][key][sub_key] = IniString;
+						if (Key == "realtime_sections")
+						{
+                            yaml[Section][key]["enabled"] = true;
+						}
                     }
                     break;
 

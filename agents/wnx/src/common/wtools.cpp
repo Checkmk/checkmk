@@ -167,7 +167,7 @@ bool ServiceController::registerAndRun(const wchar_t* ServiceName,  //
 //   in the standard output stream for users to diagnose the problem.
 //
 bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
-                    uint32_t dwStartType, const wchar_t* Dependencies,
+                    uint32_t StartType, const wchar_t* Dependencies,
                     const wchar_t* Account, const wchar_t* Password) {
     wchar_t service_path[MAX_PATH];
     XLOG::setup::ColoredOutputOnStdio(true);
@@ -197,7 +197,7 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
                                    DisplayName,           // Name to display
                                    SERVICE_QUERY_STATUS,  // Desired access
                                    SERVICE_WIN32_OWN_PROCESS,  // Service type
-                                   dwStartType,           // Service start type
+                                   StartType,             // Service start type
                                    SERVICE_ERROR_NORMAL,  // Error control type
                                    service_path,          // Service's binary
                                    NULL,          // No load ordering group
@@ -229,7 +229,8 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
 //   NOTE: If the function fails to uninstall the service, it prints the
 //   error in the standard output stream for users to diagnose the problem.
 //
-bool UninstallService(const wchar_t* ServiceName) {
+// StopService by default is true, use false only during testing
+bool UninstallService(const wchar_t* ServiceName, UninstallServiceMode Mode) {
     XLOG::setup::ColoredOutputOnStdio(true);
     // Open the local default service control manager database
     auto service_manager = ::OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
@@ -250,25 +251,27 @@ bool UninstallService(const wchar_t* ServiceName) {
     }
     ON_OUT_OF_SCOPE(::CloseServiceHandle(service););
 
-    // Try to stop the service
-    SERVICE_STATUS ssSvcStatus = {};
-    auto service_name = wtools::ConvertToUTF8(ServiceName);
-    if (::ControlService(service, SERVICE_CONTROL_STOP, &ssSvcStatus)) {
-        XLOG::l(XLOG::kStdio).i("Stopping '{}'.", service_name);
-        Sleep(1000);
+    if (Mode == UninstallServiceMode::normal) {
+        // Try to stop the service
+        SERVICE_STATUS ssSvcStatus = {};
+        auto service_name = wtools::ConvertToUTF8(ServiceName);
+        if (::ControlService(service, SERVICE_CONTROL_STOP, &ssSvcStatus)) {
+            XLOG::l(XLOG::kStdio).i("Stopping '{}'.", service_name);
+            Sleep(1000);
 
-        while (::QueryServiceStatus(service, &ssSvcStatus)) {
-            if (ssSvcStatus.dwCurrentState == SERVICE_STOP_PENDING) {
-                xlog::sendStringToStdio(".");
-                Sleep(1000);
-            } else
-                break;
-        }
+            while (::QueryServiceStatus(service, &ssSvcStatus)) {
+                if (ssSvcStatus.dwCurrentState == SERVICE_STOP_PENDING) {
+                    xlog::sendStringToStdio(".");
+                    Sleep(1000);
+                } else
+                    break;
+            }
 
-        if (ssSvcStatus.dwCurrentState == SERVICE_STOPPED) {
-            XLOG::l(XLOG::kStdio).i("\n{} is stopped.", service_name);
-        } else {
-            XLOG::l(XLOG::kStdio).i("\n{} failed to stop.", service_name);
+            if (ssSvcStatus.dwCurrentState == SERVICE_STOPPED) {
+                XLOG::l(XLOG::kStdio).i("\n{} is stopped.", service_name);
+            } else {
+                XLOG::l(XLOG::kStdio).i("\n{} failed to stop.", service_name);
+            }
         }
     }
 

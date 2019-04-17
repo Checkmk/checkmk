@@ -131,6 +131,10 @@ void Device::connectFrom(std::string_view Address, int Port,
             XLOG::d("Invalid real time section name '{}'", section);
         }
     }
+
+    XLOG::d.i("Realtime kick from '{}' mem:{} df:{} winperf:{}", Address, use_mem_, use_df_, use_winperf_processor_);
+
+
     cv_.notify_one();
 }
 

@@ -551,6 +551,7 @@ TEST(CvtTest, GlobalSection) {
         {
             auto rt = g[vars::kRealTime];
             ASSERT_TRUE(rt.IsMap());
+            EXPECT_EQ(rt[vars::kEnabled].as<bool>(), true);
             EXPECT_EQ(rt[vars::kTimeout].as<int>(), 90);
             EXPECT_EQ(rt[vars::kRtEncrypt].as<bool>(), true);
             auto rt_sessions = GetInternalArray(rt, vars::kRtRun);

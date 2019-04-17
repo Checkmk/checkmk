@@ -931,7 +931,7 @@ public:
             , run_(Run) {
             // validation
             if (!async_ && cache_age_ != 0) {
-                XLOG::l(
+                XLOG::d(
                     "Plugin Entry {} has invalid config async: {} and cache_age: {}. Setting as async.",
                     pattern_, async_, cache_age_);
                 async_ = true;

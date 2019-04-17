@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name
 
 import pytest  # type: ignore
+from testlib.base import Scenario
 
 import cmk_base
 import cmk_base.caching
@@ -153,13 +154,6 @@ def test_get_command_line_and_stdin(monkeypatch, info_func_result, expected):
     assert command_stdin == expected[1]
 
 
-# Automatically refresh caches for each test
-@pytest.fixture(scope="function")
-def clear_config_caches(monkeypatch):
-    monkeypatch.setattr(cmk_base, "config_cache", cmk_base.caching.CacheManager())
-    monkeypatch.setattr(cmk_base, "runtime_cache", cmk_base.caching.CacheManager())
-
-
 @pytest.mark.parametrize(
     "hostname,settings",
     [
@@ -222,23 +216,19 @@ def clear_config_caches(monkeypatch):
             "sources": ['SpecialAgentDataSource', 'PiggyBackDataSource'],
         }),
     ])
-def test_data_sources_of_hosts(clear_config_caches, monkeypatch, hostname, settings):
-    monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, settings["tags"])])
-    monkeypatch.setattr(config, "host_paths", {hostname: "/"})
-
-    monkeypatch.setattr(config, "datasource_programs", [
+def test_data_sources_of_hosts(monkeypatch, hostname, settings):
+    ts = Scenario().add_host(hostname, settings["tags"].split("|"))
+    ts.set_ruleset("datasource_programs", [
         ('echo 1', [], ['ds-host-14', 'all-agents-host', 'all-special-host'], {}),
     ])
-
-    monkeypatch.setitem(config.special_agents, "jolokia", [
-        ({}, [], [
+    ts.set_option(
+        "special_agents",
+        {"jolokia": [({}, [], [
             'special-host-14',
             'all-agents-host',
             'all-special-host',
-        ], {}),
-    ])
-
-    config.get_config_cache().initialize()
+        ], {}),]})
+    ts.apply(monkeypatch)
 
     sources = cmk_base.data_sources.DataSources(hostname, "127.0.0.1")
     source_names = [s.__class__.__name__ for s in sources.get_data_sources()]

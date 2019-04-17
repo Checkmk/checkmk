@@ -1,6 +1,6 @@
 # pylint: disable=redefined-outer-name
 
-import pytest
+import pytest  # type: ignore
 
 import cmk_base.config as config
 import cmk_base.check_utils
@@ -57,58 +57,6 @@ def test_discoverable_tcp_checks():
     assert "uptime" in config.discoverable_tcp_checks()
     assert "snmp_uptime" not in config.discoverable_tcp_checks()
     assert "logwatch" in config.discoverable_tcp_checks()
-
-
-@pytest.mark.parametrize("result,ruleset", [
-    (False, None),
-    (False, []),
-    (False, [(None, [], config.ALL_HOSTS, {})]),
-    (False, [({}, [], config.ALL_HOSTS, {})]),
-    (True, [({
-        "status_data_inventory": True
-    }, [], config.ALL_HOSTS, {})]),
-    (False, [({
-        "status_data_inventory": False
-    }, [], config.ALL_HOSTS, {})]),
-])
-def test_do_status_data_inventory_for(monkeypatch, result, ruleset):
-    config.load_default_config()
-
-    monkeypatch.setattr(config, "all_hosts", ["abc"])
-    monkeypatch.setattr(config, "host_paths", {"abc": "/"})
-    monkeypatch.setattr(config, "active_checks", {
-        "cmk_inv": ruleset,
-    })
-
-    config.get_config_cache().initialize()
-
-    assert config.do_status_data_inventory_for("abc") == result
-
-
-@pytest.mark.parametrize("result,ruleset", [
-    (True, None),
-    (True, []),
-    (True, [(None, [], config.ALL_HOSTS, {})]),
-    (True, [({}, [], config.ALL_HOSTS, {})]),
-    (True, [({
-        "host_label_inventory": True
-    }, [], config.ALL_HOSTS, {})]),
-    (False, [({
-        "host_label_inventory": False
-    }, [], config.ALL_HOSTS, {})]),
-])
-def test_do_host_label_discovery_for(monkeypatch, result, ruleset):
-    config.load_default_config()
-
-    monkeypatch.setattr(config, "all_hosts", ["abc"])
-    monkeypatch.setattr(config, "host_paths", {"abc": "/"})
-    monkeypatch.setattr(config, "active_checks", {
-        "cmk_inv": ruleset,
-    })
-
-    config.get_config_cache().initialize()
-
-    assert config.do_host_label_discovery_for("abc") == result
 
 
 ############ Management board checks

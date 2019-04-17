@@ -2719,12 +2719,13 @@ class ConfigCache(object):
         self._all_configured_clusters = self._get_all_configured_clusters()
         self._all_configured_realhosts = self._get_all_configured_realhosts()
         self._all_configured_hosts = self._get_all_configured_hosts()
+        # TODO: Clean this one up?
+        self._initialize_host_lookup()
+
         self._all_active_clusters = self._get_all_active_clusters()
         self._all_active_realhosts = self._get_all_active_realhosts()
         self._all_active_hosts = self._get_all_active_hosts()
-        # TODO: Clean this one up?
         self._all_processed_hosts = self._all_active_hosts
-        self._initialize_host_lookup()
 
     def _initialize_caches(self):
         self.single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")

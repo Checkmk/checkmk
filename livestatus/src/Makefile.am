@@ -24,7 +24,6 @@
 
 CLANG_VERSION ?= 7
 
-BEAR ?= bear
 CPPCHECK ?= cppcheck
 DOXYGEN ?= doxygen
 IWYU_TOOL ?= iwyu_tool
@@ -177,9 +176,11 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup
 	$(RM) NagiosMockup
 
+# NOTE: cppcheck up to 7287ffe (2019-04-15) understands only the old "command
+# style", so we have to stick with that for now. :-/
 compile_commands.json: Makefile $(wildcard *.cc *.h)
-	$(MAKE) clean
-	$(BEAR) $(MAKE) -j4
+	$(MAKE) -C $(top_srcdir) .venv
+	$(MAKE) -Bnwk | pipenv run compiledb --command-style
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)

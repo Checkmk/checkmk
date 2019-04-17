@@ -30,7 +30,6 @@
 
 CLANG_VERSION ?= 7
 
-BEAR ?= bear
 CPPCHECK ?= cppcheck
 IWYU_TOOL ?= iwyu_tool
 RUN_CLANG_TIDY ?= \
@@ -39,7 +38,7 @@ RUN_CLANG_TIDY ?= \
         -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet")
 
-GOOGLETEST :=$(top_srcdir)/omd/packages/googletest
+GOOGLETEST := $(top_srcdir)/omd/packages/googletest
 
 bin_PROGRAMS = test_neb
 
@@ -73,16 +72,16 @@ unit-test: test_neb$(EXEEXT)
 # where we just install our build dependencies.
 $(test_neb_SOURCES): build_googletest
 
+# HACK: Avoid recompilation caused by make's -B flag
 build_googletest:
-	$(MAKE) -C $(GOOGLETEST) build
+	bash -c "make -C $(GOOGLETEST) build" > /dev/null
 
+# NOTE: cppcheck up to 7287ffe (2019-04-15) understands only the old "command
+# style", so we have to stick with that for now. :-/
 compile_commands.json: Makefile $(wildcard *.cc  *.h)
-	$(MAKE) clean
-# HACK: bear doeesn't have an option to exclude some parts in the output, so we
-# make sure that googletest is built first. We don't want to include that...
-	$(MAKE) -C ../../.. config.status
+	$(MAKE) -C $(top_srcdir) .venv
 	$(MAKE) -j4 -C ..
-	$(BEAR) $(MAKE) -j4 test_neb
+	$(MAKE) -Bnwk | PIPENV_MAX_DEPTH=4 pipenv run compiledb --command-style
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)

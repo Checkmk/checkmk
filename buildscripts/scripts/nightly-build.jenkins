@@ -43,6 +43,19 @@ if (scm.branches[0].name == 'master' && JOB_BASE_NAME == 'nightly_build_containe
     ARCHIVE_DIR = DAILY_DATA + '/download'
 }
 
+def mount_overlay(LOWER_DIR, UPPER_DIR) {
+    sh """
+        mkdir -p ${UPPER_DIR} ${UPPER_DIR}-work
+        mount -t overlay overlay -o \
+        lowerdir=${LOWER_DIR},upperdir=${UPPER_DIR},workdir=${UPPER_DIR}-work \
+        ${UPPER_DIR}
+   """
+}
+
+def unmount_overlay(UPPER_DIR) {
+    sh "until umount ${WORKSPACE}/${UPPER_DIR}; do sleep 1; done"
+}
+
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         IMAGE = 'ubuntu-18.04-common'
@@ -135,8 +148,7 @@ AGENT_LIST.each { AGENT ->
                             }
 
                             sh 'rm -rf *'
-                            sh "mkdir agent${AGENT}-work agent${AGENT}-dest"
-                            sh "mount -t overlay overlay -o lowerdir=${DAILY_DATA}/git,upperdir=${WORKSPACE}/agent${AGENT}-dest,workdir=${WORKSPACE}/agent${AGENT}-work ${WORKSPACE}/agent${AGENT}-dest"
+                            mount_overlay("${DAILY_DATA}/git","${WORKSPACE}/agent${AGENT}-dest")
                             if (AGENT == '-windows') {
                                 sh script: """
                                     mkdir -p ${DAILY_DATA}/agents
@@ -167,7 +179,7 @@ AGENT_LIST.each { AGENT ->
                                     cp agent${AGENT}-dest/enterprise/agents/plugins/cmk-update-agent${AGENT} ${DAILY_DATA}/agents
                                 """
                             }
-                            sh "until umount agent${AGENT}-dest; do sleep 1; done"
+                            unmount_overlay("agent${AGENT}-dest")
                         }
                     }
                 }
@@ -211,7 +223,7 @@ DISTRO_LIST.each { DISTRO ->
                     stage('build' + DISTRO + ' package') {
                         sh 'rm -rf *'
                         sh 'mkdir work dest'
-                        sh "mount -t overlay overlay -o lowerdir=${DAILY_DATA}/git,upperdir=${WORKSPACE}/dest,workdir=${WORKSPACE}/work ${WORKSPACE}/dest"
+                        mount_overlay("${DAILY_DATA}/git", "${WORKSPACE}/dest")
                         dir('dest') {
                             sh """
                                 case $DISTRO in
@@ -227,10 +239,10 @@ DISTRO_LIST.each { DISTRO ->
                                 esac
                             """
                         }
-                        sh 'until umount dest; do sleep 1; done'
-                        sh "rm -rf ${DAILY_DATA}/${DISTRO}-{dest,work}"
+                        unmount_overlay('dest')
+                        sh "rm -rf ${DAILY_DATA}/${DISTRO}-{dest,dest-work}"
                         sh "mv dest ${DAILY_DATA}/${DISTRO}-dest"
-                        sh "mv work ${DAILY_DATA}/${DISTRO}-work"
+                        sh "mv dest-work ${DAILY_DATA}/${DISTRO}-dest-work"
                         sh "ls -lah ${DAILY_DATA}"
                     }
                 }

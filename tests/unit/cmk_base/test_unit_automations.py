@@ -1,3 +1,5 @@
+from testlib.base import Scenario
+
 import cmk
 import cmk_base.automations
 import cmk_base.automations.check_mk as automations
@@ -54,10 +56,10 @@ def test_static_check_rules_of_host(monkeypatch):
     as_automation = automations.AutomationAnalyseServices()
     assert as_automation.static_check_rules_of("checkgroup_ding", "test-host") == []
 
-    monkeypatch.setattr(config, "all_hosts", ["test-host"])
-    monkeypatch.setattr(config, "host_paths", {"test-host": "/"})
-    monkeypatch.setattr(
-        config, "static_checks", {
+    ts = Scenario()
+    ts.add_host("test-host", [])
+    ts.set_option(
+        "static_checks", {
             "checkgroup_ding": [
                 (("ding-check", "item"), [], config.ALL_HOSTS, {}),
                 (("ding-check", "item2"), [], config.ALL_HOSTS, {
@@ -68,7 +70,7 @@ def test_static_check_rules_of_host(monkeypatch):
                 }), [], config.ALL_HOSTS, {}),
             ],
         })
-    config.get_config_cache().initialize()
+    ts.apply(monkeypatch)
 
     assert as_automation.static_check_rules_of("checkgroup_ding", "test-host") == [
         ('ding-check', 'item'),
@@ -81,14 +83,13 @@ def test_static_check_rules_of_host(monkeypatch):
 def test_get_labels_of_host(monkeypatch):
     automation = automations.AutomationGetLabelsOf()
 
-    monkeypatch.setattr(config, "all_hosts", ["test-host"])
-    monkeypatch.setattr(config, "host_paths", {"test-host": "/"})
-    monkeypatch.setattr(config, "host_labels", {
+    ts = Scenario().add_host("test-host", [])
+    ts.set_option("host_labels", {
         "test-host": {
             "explicit": "ding",
         },
     })
-    config.get_config_cache().initialize()
+    ts.apply(monkeypatch)
 
     assert automation.execute(["host", "test-host"]) == {
         "labels": {
@@ -103,20 +104,16 @@ def test_get_labels_of_host(monkeypatch):
 def test_get_labels_of_service(monkeypatch):
     automation = automations.AutomationGetLabelsOf()
 
-    monkeypatch.setattr(config, "all_hosts", ["test-host"])
-    monkeypatch.setattr(config, "host_paths", {"test-host": "/"})
-
-    ruleset = [
+    ts = Scenario().add_host("test-host", [])
+    ts.set_ruleset("service_label_rules", [
         ({
             "label1": "val1"
         }, [], config.ALL_HOSTS, ["CPU load$"], {}),
         ({
             "label2": "val2"
         }, [], config.ALL_HOSTS, ["CPU load$"], {}),
-    ]
-    monkeypatch.setattr(config, "service_label_rules", ruleset)
-
-    config.get_config_cache().initialize()
+    ])
+    ts.apply(monkeypatch)
 
     assert automation.execute(["service", "test-host", "CPU load"]) == {
         "labels": {
@@ -133,14 +130,13 @@ def test_get_labels_of_service(monkeypatch):
 def test_analyse_host(monkeypatch):
     automation = automations.AutomationAnalyseHost()
 
-    monkeypatch.setattr(config, "all_hosts", ["test-host"])
-    monkeypatch.setattr(config, "host_paths", {"test-host": "/"})
-    monkeypatch.setattr(config, "host_labels", {
+    ts = Scenario().add_host("test-host", [])
+    ts.set_option("host_labels", {
         "test-host": {
             "explicit": "ding",
         },
     })
-    config.get_config_cache().initialize()
+    ts.apply(monkeypatch)
 
     assert automation.execute(["test-host"]) == {
         "labels": {

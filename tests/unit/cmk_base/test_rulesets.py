@@ -1,4 +1,6 @@
-import pytest
+# pylint: disable=redefined-outer-name
+import pytest  # type: ignore
+from testlib.base import Scenario
 
 import cmk_base.config as config
 from cmk.utils.exceptions import MKGeneralException
@@ -11,23 +13,17 @@ def fake_version(monkeypatch):
     monkeypatch.setattr(cmk, "omd_version", lambda: "1.4.0i1.cee")
 
 
-# Automatically refresh caches for each test
-@pytest.fixture(autouse=True, scope="function")
-def clear_config_caches(monkeypatch):
-    import cmk_base
-    import cmk_base.caching
-    monkeypatch.setattr(cmk_base, "config_cache", cmk_base.caching.CacheManager())
-    monkeypatch.setattr(cmk_base, "runtime_cache", cmk_base.caching.CacheManager())
+@pytest.fixture()
+def ts(monkeypatch):
+    ts = Scenario(site_id="site1")
+    ts.add_host("host1", ["tag1", "tag2"])
+    ts.add_host("host2", ["tag1"])
+    ts.add_host("host3", ["tag1", "site:site2"])
+    ts.apply(monkeypatch)
+    return ts
 
 
-def test_service_extra_conf(monkeypatch):
-    monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
-    monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/"})
-    monkeypatch.setattr(config, "clusters", {})
-
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
-
+def test_service_extra_conf(ts):
     ruleset = [
         ("1", [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
         ("2", [], config.ALL_HOSTS, config.ALL_SERVICES,
@@ -44,13 +40,13 @@ def test_service_extra_conf(monkeypatch):
         ("12", [], ["!host2"] + config.ALL_HOSTS, config.ALL_SERVICES, {}),
     ]
 
-    assert config_cache.service_extra_conf("host1", "service1", ruleset) == \
+    assert ts.config_cache.service_extra_conf("host1", "service1", ruleset) == \
             [ "1", "2", "3", "4", "7", "8", "11", "12" ]
 
-    assert config_cache.service_extra_conf("host1", "serv", ruleset) == \
+    assert ts.config_cache.service_extra_conf("host1", "serv", ruleset) == \
             [ "1", "2", "3", "4", "7", "10", "11", "12" ]
 
-    assert config_cache.service_extra_conf("host2", "service1", ruleset) == \
+    assert ts.config_cache.service_extra_conf("host2", "service1", ruleset) == \
             [ "1", "2", "3", "11" ]
 
 
@@ -87,15 +83,8 @@ def host_ruleset():
     ]
 
 
-def test_host_extra_conf(monkeypatch, host_ruleset):
-    monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
-    monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/"})
-    monkeypatch.setattr(config, "clusters", {})
-
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
-
-    assert config_cache.host_extra_conf("host1", host_ruleset) == \
+def test_host_extra_conf(ts, host_ruleset):
+    assert ts.config_cache.host_extra_conf("host1", host_ruleset) == \
             [{"1": True},
              {"2": True},
              {"3": True},
@@ -105,21 +94,14 @@ def test_host_extra_conf(monkeypatch, host_ruleset):
              {"9": True}]
 
 
-    assert config_cache.host_extra_conf("host2", host_ruleset) == \
+    assert ts.config_cache.host_extra_conf("host2", host_ruleset) == \
             [{"1": True},
              {"2": True},
              {"8": True}]
 
 
-def test_host_extra_conf_merged(monkeypatch, host_ruleset):
-    monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
-    monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/"})
-    monkeypatch.setattr(config, "clusters", {})
-
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
-
-    assert config_cache.host_extra_conf_merged("host1", host_ruleset) == \
+def test_host_extra_conf_merged(ts, host_ruleset):
+    assert ts.config_cache.host_extra_conf_merged("host1", host_ruleset) == \
             {"1": True,
              "2": True,
              "3": True,
@@ -129,7 +111,7 @@ def test_host_extra_conf_merged(monkeypatch, host_ruleset):
              "9": True}
 
 
-    assert config_cache.host_extra_conf_merged("host2", host_ruleset) == \
+    assert ts.config_cache.host_extra_conf_merged("host2", host_ruleset) == \
             {"1": True,
              "2": True,
              "8": True}
@@ -159,28 +141,16 @@ def test_host_extra_conf_merged(monkeypatch, host_ruleset):
         [[(config.NEGATE, [], config.ALL_HOSTS, ["service1"], {}),
           ([], config.ALL_HOSTS, config.ALL_SERVICES, {})], False, True]
     ])
-def test_in_boolean_serviceconf_list(monkeypatch, parameters):
-    monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
-    monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/"})
-    monkeypatch.setattr(config, "clusters", {})
-
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
-
+def test_in_boolean_serviceconf_list(ts, parameters):
     ruleset, outcome_host1, outcome_host2 = parameters
 
-    assert config_cache.in_boolean_serviceconf_list("host1", "service1", ruleset) == outcome_host1
-    assert config_cache.in_boolean_serviceconf_list("host2", "service2", ruleset) == outcome_host2
+    assert ts.config_cache.in_boolean_serviceconf_list("host1", "service1",
+                                                       ruleset) == outcome_host1
+    assert ts.config_cache.in_boolean_serviceconf_list("host2", "service2",
+                                                       ruleset) == outcome_host2
 
 
-def test_all_matching_hosts(monkeypatch):
-    monkeypatch.setattr(config, "distributed_wato_site", "site1")
-    monkeypatch.setattr(config, "all_hosts",
-                        ["host1|tag1|tag2", "host2|tag1", "host3|tag1|site:site2"])
-    monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/", "host3": "/"})
-    monkeypatch.setattr(config, "clusters", {})
-    config.get_config_cache().initialize()
-
+def test_all_matching_hosts(ts):
     assert config.all_matching_hosts(["tag1"], config.ALL_HOSTS, with_foreign_hosts=False) == \
             set(["host1", "host2"])
 

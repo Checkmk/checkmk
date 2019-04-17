@@ -1,5 +1,6 @@
 # encoding: utf-8
 import pytest  # type: ignore
+from testlib.base import Scenario
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk_base.config as config
@@ -19,21 +20,18 @@ def test_active_check_arguments(mocker):
 
 
 def test_get_host_attributes(monkeypatch):
-    monkeypatch.setattr(config, "all_hosts", ["test-host|abc"])
-    monkeypatch.setattr(config, "host_paths", {"test-host": "/"})
-    monkeypatch.setattr(config, "host_tags", {
+    ts = Scenario().add_host("test-host", ["abc"])
+    ts.set_option("host_tags", {
         "test-host": {
             "tag_group": "abc",
         },
     })
-    monkeypatch.setattr(config, "host_labels", {
+    ts.set_option("host_labels", {
         "test-host": {
             "ding": "dong",
         },
     })
-
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = ts.apply(monkeypatch)
 
     attrs = core_config.get_host_attributes("test-host", config_cache)
     assert attrs == {
@@ -78,14 +76,13 @@ def test_custom_service_attributes_of(monkeypatch):
     attributes = core_config._custom_service_attributes_of(config_cache, "luluhost", "laladescr")
     assert attributes == {}
 
-    monkeypatch.setattr(config, "all_hosts", ["luluhost"])
-    monkeypatch.setattr(config, "host_paths", {"luluhost": "/"})
-    monkeypatch.setattr(config, "custom_service_attributes", [
+    ts = Scenario().add_host("luluhost", [])
+    ts.set_ruleset("custom_service_attributes", [
         ([('deng', '1')], [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
         ([('ding', '2'), ('ding', '2a'),
           ('dong', '3')], [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
     ])
-    config_cache.initialize()
+    config_cache = ts.apply(monkeypatch)
 
     attributes = core_config._custom_service_attributes_of(config_cache, "luluhost", "laladescr")
     assert attributes == {

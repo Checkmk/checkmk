@@ -27,7 +27,7 @@ import urllib
 
 
 def parse_mrpe(info):
-    PluginData = collections.namedtuple("PluginData", ("name", "info"))
+    PluginData = collections.namedtuple("PluginData", ("name", "state", "info"))
 
     parsed = {}
     for line in info:
@@ -39,11 +39,21 @@ def parse_mrpe(info):
         else:
             name = None
 
-        if not line:
+        if len(line) < 2:
             continue
         item = urllib.unquote(line[0])
+        state = line[1]
 
-        parsed.setdefault(item, []).append(PluginData(name, line))
+        try:
+            state = int(state)
+        except ValueError:
+            pass
+        if state not in (0, 1, 2, 3):
+            line = line[:2] + ["Invalid plugin status %r. Output is:" % state] + line[2:]
+            state = 3
+
+        dataset = PluginData(name, state, line)
+        parsed.setdefault(item, []).append(dataset)
 
     return parsed
 
@@ -70,11 +80,7 @@ def check_mrpe(_no_item, _no_params, data):
 
     best_state = None
 
-    for check_name, raw_line in data:
-        try:
-            state = int(raw_line[1])
-        except (IndexError, ValueError):
-            state = None
+    for check_name, state, raw_line in data:
 
         # convert to original format by joining and replacing \1 back with \n
         rest = " ".join(raw_line[2:]).replace("\1", "\n")
@@ -83,9 +89,6 @@ def check_mrpe(_no_item, _no_params, data):
         # First line:  OUTPUT|PERFDATA
         parts = lines[0].split("|", 1)
         output = [parts[0].strip()]
-        if state is None or state not in [0, 1, 2, 3]:
-            output[0] = "Invalid plugin status %s. Output is: %s" % (state, output[0])
-            state = 3
         if len(parts) > 1:
             perfdata = parts[1].strip().split()
         else:
@@ -118,8 +121,6 @@ def check_mrpe(_no_item, _no_params, data):
             best_result = state, "\n".join(output), perf_parsed
             best_state = state
 
-    if best_state is None:
-        return (3, "Check output not found in output of MRPE")
     return best_result
 
 

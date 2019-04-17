@@ -31,7 +31,7 @@ checks = {
         ('Foo_Application', {}, [
             (0, 'OK - Foo server up and running', [])]),
         ('Mutliliner', {}, [
-            (3, 'Invalid plugin status None. Output is: M\xc3\x96\xc3\x96P - Output1\nmore output', [
+            (3, 'Invalid plugin status \'\\xc2\\xa7$%\'. Output is: M\xc3\x96\xc3\x96P - Output1\nmore output', [
                 ('the_foo', 1, 2, 3, 4, 5),
                 ('the_bar', 42, None, None, None, None),
                 ('the_gee', 23, None, None, None, None),

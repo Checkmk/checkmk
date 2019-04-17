@@ -29,7 +29,7 @@ import urllib
 def parse_mrpe(info):
     PluginData = collections.namedtuple("PluginData", ("name", "info"))
 
-    parsed = []
+    parsed = {}
     for line in info:
         # New Linux agent sends (check_name) in first column. Stay
         # compatible with MRPE versions not providing this info
@@ -38,17 +38,14 @@ def parse_mrpe(info):
             line = line[1:]
         else:
             name = None
-        parsed.append(PluginData(name, line))
+
+        if not line:
+            continue
+        item = urllib.unquote(line[0])
+
+        parsed.setdefault(item, []).append(PluginData(name, line))
 
     return parsed
-
-
-def inventory_mrpe(parsed):
-    items = []
-    for _name, line in parsed:
-        item = urllib.unquote(line[0])
-        items.append((item, None))
-    return items
 
 
 def mrpe_parse_perfdata(perfinfo):
@@ -65,61 +62,61 @@ def mrpe_parse_perfdata(perfinfo):
             return tuple([varname] + values)
 
 
-def check_mrpe(item, _no_params, parsed):
+@get_parsed_item_data
+def check_mrpe(_no_item, _no_params, data):
     # This check is cluster-aware. An item might be found
     # more than once. In that case we use the best of the
     # multiple statuses.
 
     best_state = None
 
-    for check_name, raw_line in parsed:
-        if urllib.unquote(raw_line[0]) == item:
-            try:
-                state = int(raw_line[1])
-            except (IndexError, ValueError):
-                state = None
+    for check_name, raw_line in data:
+        try:
+            state = int(raw_line[1])
+        except (IndexError, ValueError):
+            state = None
 
-            # convert to original format by joining and replacing \1 back with \n
-            rest = " ".join(raw_line[2:]).replace("\1", "\n")
-            # split into lines
-            lines = rest.split('\n')
-            # First line:  OUTPUT|PERFDATA
-            parts = lines[0].split("|", 1)
-            output = [parts[0].strip()]
-            if state is None or state not in [0, 1, 2, 3]:
-                output[0] = "Invalid plugin status %s. Output is: %s" % (state, output[0])
-                state = 3
-            if len(parts) > 1:
-                perfdata = parts[1].strip().split()
+        # convert to original format by joining and replacing \1 back with \n
+        rest = " ".join(raw_line[2:]).replace("\1", "\n")
+        # split into lines
+        lines = rest.split('\n')
+        # First line:  OUTPUT|PERFDATA
+        parts = lines[0].split("|", 1)
+        output = [parts[0].strip()]
+        if state is None or state not in [0, 1, 2, 3]:
+            output[0] = "Invalid plugin status %s. Output is: %s" % (state, output[0])
+            state = 3
+        if len(parts) > 1:
+            perfdata = parts[1].strip().split()
+        else:
+            perfdata = []
+
+        # Further lines
+        now_comes_perfdata = False
+        for line in lines[1:]:
+            if now_comes_perfdata:
+                perfdata += line.split()
             else:
-                perfdata = []
-
-            # Further lines
-            now_comes_perfdata = False
-            for line in lines[1:]:
-                if now_comes_perfdata:
-                    perfdata += line.split()
-                else:
-                    parts = line.split("|", 1)
-                    output.append(parts[0].strip())
-                    if len(parts) > 1:
-                        perfdata += parts[1].strip().split()
-                        now_comes_perfdata = True
+                parts = line.split("|", 1)
+                output.append(parts[0].strip())
+                if len(parts) > 1:
+                    perfdata += parts[1].strip().split()
+                    now_comes_perfdata = True
 
 
-            if best_state in [None, 2] \
-               or (state < best_state and state != 2):
-                perf_parsed = []
-                for perfvalue in perfdata:
-                    new_perf = mrpe_parse_perfdata(perfvalue)
-                    if new_perf:
-                        perf_parsed.append(new_perf)
+        if best_state in [None, 2] \
+           or (state < best_state and state != 2):
+            perf_parsed = []
+            for perfvalue in perfdata:
+                new_perf = mrpe_parse_perfdata(perfvalue)
+                if new_perf:
+                    perf_parsed.append(new_perf)
 
-                # name of check command needed for PNP to choose the correct template
-                if check_name:
-                    perf_parsed.append(check_name)
-                best_result = state, "\n".join(output), perf_parsed
-                best_state = state
+            # name of check command needed for PNP to choose the correct template
+            if check_name:
+                perf_parsed.append(check_name)
+            best_result = state, "\n".join(output), perf_parsed
+            best_state = state
 
     if best_state is None:
         return (3, "Check output not found in output of MRPE")
@@ -128,8 +125,8 @@ def check_mrpe(item, _no_params, parsed):
 
 check_info["mrpe"] = {
     'parse_function': parse_mrpe,
+    'inventory_function': discover(),
     'check_function': check_mrpe,
-    'inventory_function': inventory_mrpe,
     'service_description': '%s',
     'has_perfdata': True,
 }

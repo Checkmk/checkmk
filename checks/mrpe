@@ -23,10 +23,10 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import urllib
 
 
 def inventory_mrpe(info):
-    import urllib
     items = []
     for line in info:
         # New Linux agent sends (check_name) in first column. Stay
@@ -41,33 +41,34 @@ def inventory_mrpe(info):
 
 
 def mrpe_parse_perfdata(perfinfo):
+    if '=' not in perfinfo:
+        return None
     varname, valuetxt = perfinfo.split("=", 1)
     values = valuetxt.split(";")
     return tuple([varname] + values)
 
 
-def check_mrpe(item, params, info):
-    import urllib
+def check_mrpe(item, _no_params, info):
     # This check is cluster-aware. An item might be found
     # more than once. In that case we use the best of the
     # multiple statuses.
 
     best_state = None
 
-    for line in info:
-        if line[0].startswith("("):
-            check_name = line[0][1:-1]
-            line = line[1:]
+    for raw_line in info:
+        if raw_line[0].startswith("("):
+            check_name = raw_line[0][1:-1]
+            raw_line = raw_line[1:]
         else:
             check_name = None
-        if urllib.unquote(line[0]) == item:
+        if urllib.unquote(raw_line[0]) == item:
             try:
-                state = int(line[1])
-            except:
+                state = int(raw_line[1])
+            except (IndexError, ValueError):
                 state = None
 
             # convert to original format by joining and replacing \1 back with \n
-            rest = " ".join(line[2:]).replace("\1", "\n")
+            rest = " ".join(raw_line[2:]).replace("\1", "\n")
             # split into lines
             lines = rest.split('\n')
             # First line:  OUTPUT|PERFDATA
@@ -83,25 +84,24 @@ def check_mrpe(item, params, info):
 
             # Further lines
             now_comes_perfdata = False
-            for l in lines[1:]:
+            for line in lines[1:]:
                 if now_comes_perfdata:
-                    perfdata += l.split()
+                    perfdata += line.split()
                 else:
-                    parts = l.split("|", 1)
+                    parts = line.split("|", 1)
                     output.append(parts[0].strip())
                     if len(parts) > 1:
                         perfdata += parts[1].strip().split()
                         now_comes_perfdata = True
 
 
-            if best_state in [ None, 2 ] \
+            if best_state in [None, 2] \
                or (state < best_state and state != 2):
                 perf_parsed = []
                 for perfvalue in perfdata:
-                    try:
-                        perf_parsed.append(mrpe_parse_perfdata(perfvalue))
-                    except:
-                        pass
+                    new_perf = mrpe_parse_perfdata(perfvalue)
+                    if new_perf:
+                        perf_parsed.append(new_perf)
 
                 # name of check command needed for PNP to choose the correct template
                 if check_name:

@@ -1,8 +1,15 @@
 import java.text.SimpleDateFormat
 
+def DISTRO_STR = ''
+if(JOB_BASE_NAME == 'nightly_build_containerized') {
+    DISTRO_STR = DISTRO_LIST_MASTER
+} else {
+    DISTRO_STR = DISTRO_LIST_TESTBUILD
+}
+
 properties([
   parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' ),
+    string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
   ])
 ])
@@ -231,7 +238,7 @@ node {
         docker.image(IMAGE).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} -v ${PACKAGE_DIR}:${PACKAGE_DIR} -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro --network ci_local-infra") {
             stage('Archive artifacts') {
                 // Only master builds should end up on the Website
-                if (scm.branches[0].name == 'master') {
+                if (scm.branches[0].name == 'master' && JOB_BASE_NAME == 'nightly_build_containerized') {
                     sh """
                         mkdir -p /bauwelt/download/${CMK_VERS}
                         cd /bauwelt/download/${CMK_VERS}

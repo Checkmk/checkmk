@@ -65,7 +65,7 @@ from .host_sections import HostSections, MultiHostSections
 try:
     import cmk_base.cee.keepalive as keepalive
 except Exception:
-    keepalive = None
+    keepalive = None  # type: ignore
 
 
 def _in_keepalive_mode():

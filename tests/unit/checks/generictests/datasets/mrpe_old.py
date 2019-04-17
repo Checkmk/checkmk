@@ -14,9 +14,9 @@ info = [
 
 discovery = {
     '': [
-        ('Bar_Extender', None),
-        ('Foo_Application', None),
-        ('Mutliliner', None),
+        ('Bar_Extender', {}),
+        ('Foo_Application', {}),
+        ('Mutliliner', {}),
     ],
 }
 

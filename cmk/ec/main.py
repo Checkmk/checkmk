@@ -2053,7 +2053,7 @@ class EventServer(ECServerThread):
             merge_event["text"] = text
             # Better rewrite (again). Rule might have changed. Also we have changed
             # the text and the user might have his own text added via set_text.
-            self.rewrite_event(rule, merge_event, {})
+            self.rewrite_event(rule, merge_event, {}, set_first=False)
             log_event_history(self.settings, self._config, self._table_events, merge_event, "COUNTFAILED")
         else:
             # Create artifical event from scratch. Make sure that all important
@@ -2643,7 +2643,7 @@ class EventServer(ECServerThread):
         return False
 
     # Rewrite texts and compute other fields in the event
-    def rewrite_event(self, rule, event, groups):
+    def rewrite_event(self, rule, event, groups, set_first=True):
         if rule["state"] == -1:
             prio = event["priority"]
             if prio >= 5:
@@ -2666,7 +2666,8 @@ class EventServer(ECServerThread):
 
         if  ("sl" not in event) or (rule["sl"]["precedence"] == "rule"):
             event["sl"] = rule["sl"]["value"]
-        event["first"] = event["time"]
+        if set_first:
+            event["first"] = event["time"]
         event["last"] = event["time"]
         if "set_comment" in rule:
             event["comment"] = replace_groups(rule["set_comment"], event["text"], groups)

@@ -26,16 +26,27 @@
 import urllib
 
 
-def inventory_mrpe(info):
-    items = []
+def parse_mrpe(info):
+    PluginData = collections.namedtuple("PluginData", ("name", "info"))
+
+    parsed = []
     for line in info:
         # New Linux agent sends (check_name) in first column. Stay
         # compatible with MRPE versions not providing this info
         if line[0].startswith("("):
-            item = line[1]
+            name = line[0].strip('()')
+            line = line[1:]
         else:
-            item = line[0]
-        item = urllib.unquote(item)
+            name = None
+        parsed.append(PluginData(name, line))
+
+    return parsed
+
+
+def inventory_mrpe(parsed):
+    items = []
+    for _name, line in parsed:
+        item = urllib.unquote(line[0])
         items.append((item, None))
     return items
 
@@ -54,19 +65,14 @@ def mrpe_parse_perfdata(perfinfo):
             return tuple([varname] + values)
 
 
-def check_mrpe(item, _no_params, info):
+def check_mrpe(item, _no_params, parsed):
     # This check is cluster-aware. An item might be found
     # more than once. In that case we use the best of the
     # multiple statuses.
 
     best_state = None
 
-    for raw_line in info:
-        if raw_line[0].startswith("("):
-            check_name = raw_line[0][1:-1]
-            raw_line = raw_line[1:]
-        else:
-            check_name = None
+    for check_name, raw_line in parsed:
         if urllib.unquote(raw_line[0]) == item:
             try:
                 state = int(raw_line[1])
@@ -121,6 +127,7 @@ def check_mrpe(item, _no_params, info):
 
 
 check_info["mrpe"] = {
+    'parse_function': parse_mrpe,
     'check_function': check_mrpe,
     'inventory_function': inventory_mrpe,
     'service_description': '%s',

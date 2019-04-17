@@ -679,8 +679,8 @@ def vs_mkeventd_rule(customer=None):
         ),
         ( "livetime",
           Tuple(
-              title = _("Limit event livetime"),
-              help = _("If you set a livetime of an event, then it will automatically be "
+              title = _("Limit event lifetime"),
+              help = _("If you set a lifetime of an event, then it will automatically be "
                        "deleted after that time if, even if no action has taken by the user. You can "
                        "decide whether to expire open, acknowledged or both types of events. The lifetime "
                        "always starts when the event is entering the open state."),

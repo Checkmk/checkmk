@@ -1777,6 +1777,137 @@ class ELB(AWSSectionCloudwatch):
 
 
 #.
+#   .--ELBv2---------------------------------------------------------------.
+#   |                    _____ _     ____       ____                       |
+#   |                   | ____| |   | __ )_   _|___ \                      |
+#   |                   |  _| | |   |  _ \ \ / / __) |                     |
+#   |                   | |___| |___| |_) \ V / / __/                      |
+#   |                   |_____|_____|____/ \_/ |_____|                     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class ELBv2Limits(AWSSectionLimits):
+    @property
+    def name(self):
+        return "elbv2_limits"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        """
+        The AWS/ELBv2 API method 'describe_account_limits' provides limit values
+        but no values about the usage per limit thus we have to gather the usage
+        values from 'describe_load_balancers'.
+        """
+        response = self._client.describe_load_balancers()
+        load_balancers = self._get_response_content(response, 'LoadBalancers')
+
+        for load_balancer in load_balancers:
+            lb_arn = load_balancer['LoadBalancerArn']
+
+            response = self._client.describe_target_groups(LoadBalancerArn=lb_arn)
+            load_balancer['TargetGroups'] = self._get_response_content(response, 'TargetGroups')
+
+            response = self._client.describe_listeners(LoadBalancerArn=lb_arn)
+            listeners = self._get_response_content(response, 'Listeners')
+            load_balancer['Listeners'] = listeners
+
+            if load_balancer['Type'] == "application":
+                rules = []
+                for listener in listeners:
+                    response = self._client.describe_rules(ListenerArn=listener['ListenerArn'])
+                    rules.append(self._get_response_content(response, 'Rules'))
+
+                # Limit 100 holds for rules which are not default, see AWS docs:
+                # https://docs.aws.amazon.com/de_de/general/latest/gr/aws_service_limits.html
+                # > Limits für Elastic Load Balancing
+                load_balancer['Rules'] = [rule for rule in rules if not rule['IsDefault']]
+
+            response = self._client.describe_target_groups(LoadBalancerArn=lb_arn)
+            load_balancer['TargetGroups'] = self._get_response_content(response, 'TargetGroups')
+
+        response = self._client.describe_account_limits()
+        limits = self._get_response_content(response, 'Limits')
+        return load_balancers, limits
+
+    def _compute_content(self, raw_content, colleague_contents):
+        load_balancers, limits = raw_content.content
+        limits = {r["Name"]: int(r['Max']) for r in limits}
+
+        alb_count = 0
+        nlb_count = 0
+        target_groups_count = 0
+        for load_balancer in load_balancers:
+            lb_dns_name = load_balancer['DNSName']
+            lb_type = load_balancer['Type']
+
+            lb_listeners_count = len(load_balancer.get('Listeners', []))
+            lb_target_groups_count = len(load_balancer.get('TargetGroups', []))
+            target_groups_count += lb_target_groups_count
+
+            if lb_type == "application":
+                alb_count += 1
+                key = 'application'
+                title = 'Application'
+                self._add_limit(
+                    lb_dns_name,
+                    AWSLimit("application_load_balancer_rules", "Application Load Balancer Rules",
+                             limits['rules-per-application-load-balancer'],
+                             len(load_balancer.get('Rules', []))))
+
+                self._add_limit(
+                    lb_dns_name,
+                    AWSLimit(
+                        "application_load_balancer_certificates",
+                        "Application Load Balancer Certificates", 25,
+                        len([
+                            cert for cert in load_balancer.get('Certificates', [])
+                            if not cert['IsDefault']
+                        ])))
+
+            elif lb_type == "network":
+                nlb_count += 1
+                key = 'network'
+                title = 'Network'
+
+            else:
+                continue
+
+            self._add_limit(
+                lb_dns_name,
+                AWSLimit("%s_load_balancer_listeners" % key, "%s Load Balancer Listeners" % title,
+                         limits['listeners-per-%s-load-balancer' % key], lb_listeners_count))
+
+            self._add_limit(
+                lb_dns_name,
+                AWSLimit("%s_load_balancer_target_groups" % key,
+                         "%s Load Balancer Target Groups" % title,
+                         limits['targets-per-%s-load-balancer' % key], lb_target_groups_count))
+
+        self._add_limit(
+            "",
+            AWSLimit("application_load_balancers", "Application Load balancers",
+                     limits['application-load-balancers'], alb_count))
+
+        self._add_limit(
+            "",
+            AWSLimit("network_load_balancers", "Network Load balancers",
+                     limits['network-load-balancers'], nlb_count))
+
+        self._add_limit(
+            "",
+            AWSLimit("load_balancer_target_groups", "Load balancers Target Groups",
+                     limits['target-groups'], target_groups_count))
+        return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
+
+
+#.
 #   .--EBS-----------------------------------------------------------------.
 #   |                          _____ ____ ____                             |
 #   |                         | ____| __ ) ___|                            |
@@ -2420,6 +2551,7 @@ class AWSSectionsGeneric(AWSSections):
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
         elb_client = self._init_client('elb')
+        elbv2_client = self._init_client('elbv2')
         s3_client = self._init_client('s3')
         rds_client = self._init_client('rds')
         cloudwatch_client = self._init_client('cloudwatch')
@@ -2430,6 +2562,8 @@ class AWSSectionsGeneric(AWSSections):
 
         elb_limits_distributor = ResultDistributor()
         elb_summary_distributor = ResultDistributor()
+
+        elbv2_limits_distributor = ResultDistributor()
 
         ebs_limits_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
@@ -2450,6 +2584,8 @@ class AWSSectionsGeneric(AWSSections):
 
         elb_limits = ELBLimits(elb_client, region, config, elb_limits_distributor)
         elb_summary = ELBSummary(elb_client, region, config, elb_summary_distributor)
+
+        elbv2_limits = ELBv2Limits(elbv2_client, region, config, elbv2_limits_distributor)
 
         s3_limits = S3Limits(s3_client, region, config, s3_limits_distributor)
         s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
@@ -2525,6 +2661,10 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elb_health)
             self._sections.append(elb)
 
+        if 'elbv2' in services:
+            if config.service_config.get('elbv2_limits'):
+                self._sections.append(elbv2_limits)
+
         if 's3' in services:
             if config.service_config.get('s3_limits'):
                 self._sections.append(s3_limits)
@@ -2596,10 +2736,17 @@ AWSServices = [
         limits=True),
     AWSServiceAttributes(
         key="elb",
-        title="Elastic Load Balancing (ELB)",
+        title="Classic Load Balancing (ELB)",
         global_service=False,
         filter_by_names=True,
         filter_by_tags=True,
+        limits=True),
+    AWSServiceAttributes(
+        key="elbv2",
+        title="Application and Network Load Balancing (ELBv2)",
+        global_service=False,
+        filter_by_names=False,
+        filter_by_tags=False,
         limits=True),
     AWSServiceAttributes(
         key="rds",
@@ -2758,6 +2905,7 @@ def main(args=None):
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),
         ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values), args.s3_limits),
         ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), args.elb_limits),
+        ("elbv2", args.elbv2_names, (args.elbv2_tag_key, args.elbv2_tag_values), args.elbv2_limits),
         ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), args.rds_limits),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)

@@ -1,0 +1,21 @@
+Title: aws_elbv2_limits: New check which monitors AWS/ELBv2 limits
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1555322009
+Class: feature
+
+The check monitors the following limits and related default values:
+<ul>
+<li>Application Load balancers, 20</li>
+<li>Application Load Balancer Rules, 100</li>
+<li>Application Load Balancer Listeners, 50</li>
+<li>Application Load Balancer Target Groups, 3000</li>
+<li>Application Load balancer Certificates, 25</li>
+<li>Network Load balancers, 20</li>
+<li>Network Load Balancer Listeners, 50</li>
+<li>Network Load Balancer Target Groups, 3000</li>
+<li>Load balancers Target Groups, 3000</li>
+</ul>

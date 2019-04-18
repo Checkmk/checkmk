@@ -1,0 +1,10 @@
+Title: aws_elbv2_summary, aws_elbv2_summary.network: New checks which monitor AWS/ApplicationELB resp. AWS/NetworkELB
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1555515755
+Class: feature
+
+These checks give an overview of application and network load balancers.

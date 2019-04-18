@@ -2570,6 +2570,7 @@ class AWSSectionsGeneric(AWSSections):
         elb_summary_distributor = ResultDistributor()
 
         elbv2_limits_distributor = ResultDistributor()
+        elbv2_summary_distributor = ResultDistributor()
 
         ebs_limits_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
@@ -2593,6 +2594,8 @@ class AWSSectionsGeneric(AWSSections):
             elb_client, region, config, elb_summary_distributor, resource='elb')
 
         elbv2_limits = ELBv2Limits(elbv2_client, region, config, elbv2_limits_distributor)
+        elbv2_summary = ELBSummaryGeneric(
+            elbv2_client, region, config, elbv2_summary_distributor, resource='elbv2')
 
         s3_limits = S3Limits(s3_client, region, config, s3_limits_distributor)
         s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
@@ -2612,6 +2615,8 @@ class AWSSectionsGeneric(AWSSections):
         elb_labels = ELBLabelsGeneric(elb_client, region, config, resource='elb')
         elb_health = ELBHealth(elb_client, region, config)
         elb = ELB(cloudwatch_client, region, config)
+
+        elbv2_labels = ELBLabelsGeneric(elb_client, region, config, resource='elbv2')
 
         s3 = S3(cloudwatch_client, region, config)
         s3_requests = S3Requests(cloudwatch_client, region, config)
@@ -2636,6 +2641,9 @@ class AWSSectionsGeneric(AWSSections):
         elb_summary_distributor.add(elb_labels)
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
+
+        elbv2_limits_distributor.add(elbv2_summary)
+        elbv2_summary_distributor.add(elbv2_labels)
 
         s3_limits_distributor.add(s3_summary)
         s3_summary_distributor.add(s3)
@@ -2671,6 +2679,8 @@ class AWSSectionsGeneric(AWSSections):
         if 'elbv2' in services:
             if config.service_config.get('elbv2_limits'):
                 self._sections.append(elbv2_limits)
+            self._sections.append(elbv2_summary)
+            self._sections.append(elbv2_labels)
 
         if 's3' in services:
             if config.service_config.get('s3_limits'):
@@ -2752,8 +2762,8 @@ AWSServices = [
         key="elbv2",
         title="Application and Network Load Balancing (ELBv2)",
         global_service=False,
-        filter_by_names=False,
-        filter_by_tags=False,
+        filter_by_names=True,
+        filter_by_tags=True,
         limits=True),
     AWSServiceAttributes(
         key="rds",

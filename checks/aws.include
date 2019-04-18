@@ -85,6 +85,28 @@ def inventory_aws_generic_single(parsed, required_metrics):
         return [(None, {})]
 
 
+def check_aws_elb_summary_generic(item, params, load_balancers):
+    yield 0, "Balancers: %s" % len(load_balancers)
+
+    balancers_by_avail_zone = {}
+    long_output = []
+    for row in load_balancers:
+        balancer_name = row['LoadBalancerName']
+        avail_zones_txt = []
+        for avail_zone in row['AvailabilityZones']:
+            avail_zone_readable = "%s (%s)" % (AWSRegions[avail_zone[:-1]], avail_zone[-1])
+            balancers_by_avail_zone.setdefault(avail_zone_readable, []).append(balancer_name)
+            avail_zones_txt.append(avail_zone_readable)
+        long_output.append("Balancer: %s, Availability zones: %s"\
+                           % (balancer_name, ", ".join(avail_zones_txt)))
+
+    for avail_zone, balancers in sorted(balancers_by_avail_zone.iteritems()):
+        yield 0, "%s: %s" % (avail_zone, len(balancers))
+
+    if long_output:
+        yield 0, '\n%s' % '\n'.join(long_output)
+
+
 # Some limit values have dynamic names, eg.
 # 'Rules of VPC security group %s' % SECURITY_GROUP
 # At the moment we exclude them in the performance data.  If it's

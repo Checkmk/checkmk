@@ -4,8 +4,12 @@ import pytest
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    AWSColleagueContents,
+    ResultDistributor,
+    ELBLimits,
+    ELBSummary,
     ELBLabels,
+    ELBHealth,
+    ELB,
 )
 
 #TODO what about enums?
@@ -20,7 +24,7 @@ from cmk.special_agents.agent_aws import (
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-lb1 = {
+elb_lb1 = {
     'LoadBalancerName': 'string1',
     'DNSName': 'string1',
     'CanonicalHostedZoneName': 'string1',
@@ -76,7 +80,7 @@ lb1 = {
     }],
 }
 
-lb2 = {
+elb_lb2 = {
     'LoadBalancerName': 'string2',
     'DNSName': 'string2',
     'CanonicalHostedZoneName': 'string2',
@@ -135,7 +139,7 @@ lb2 = {
     }],
 }
 
-lb3 = {
+elb_lb3 = {
     'LoadBalancerName': 'string3',
     'DNSName': 'string3',
     'CanonicalHostedZoneName': 'string3',
@@ -187,6 +191,92 @@ lb3 = {
     'Scheme': 'string3',
 }
 
+elbv2_lb1 = {
+    'LoadBalancerArn': 'string1',
+    'DNSName': 'string1',
+    'CanonicalHostedZoneId': 'string1',
+    'CreatedTime': "1970-01-01",
+    'LoadBalancerName': 'string1',
+    'Scheme': "'internet-facing'|'internal'",
+    'VpcId': 'string1',
+    'State': {
+        'Code': "'active'|'provisioning'|'active_impaired'|'failed'",
+        'Reason': 'string1'
+    },
+    'Type': "'application'|'network'",
+    'AvailabilityZones': [{
+        'ZoneName': 'string1',
+        'SubnetId': 'string1',
+        'LoadBalancerAddresses': [{
+            'IpAddress': 'string1',
+            'AllocationId': 'string1'
+        },]
+    },],
+    'SecurityGroups': ['string1',],
+    'IpAddressType': "'ipv4'|'dualstack'",
+    'TagDescriptions': [{
+        'Key': 'key-string1',
+        'Value': 'value- string1',
+    }],
+}
+
+elbv2_lb2 = {
+    'LoadBalancerArn': 'string2',
+    'DNSName': 'string2',
+    'CanonicalHostedZoneId': 'string2',
+    'CreatedTime': "1970-01-01",
+    'LoadBalancerName': 'string2',
+    'Scheme': "'internet-facing'|'internal'",
+    'VpcId': 'string2',
+    'State': {
+        'Code': "'active'|'provisioning'|'active_impaired'|'failed'",
+        'Reason': 'string2'
+    },
+    'Type': "'application'|'network'",
+    'AvailabilityZones': [{
+        'ZoneName': 'string2',
+        'SubnetId': 'string2',
+        'LoadBalancerAddresses': [{
+            'IpAddress': 'string2',
+            'AllocationId': 'string2'
+        },]
+    },],
+    'SecurityGroups': ['string2',],
+    'IpAddressType': "'ipv4'|'dualstack'",
+    'TagDescriptions': [{
+        'Key': 'key-string21',
+        'Value': 'value- string21',
+    }, {
+        'Key': 'key-string22',
+        'Value': 'value- string22',
+    }],
+}
+
+elbv2_lb3 = {
+    'LoadBalancerArn': 'string3',
+    'DNSName': 'string3',
+    'CanonicalHostedZoneId': 'string3',
+    'CreatedTime': "1970-01-01",
+    'LoadBalancerName': 'string3',
+    'Scheme': "'internet-facing'|'internal'",
+    'VpcId': 'string3',
+    'State': {
+        'Code': "'active'|'provisioning'|'active_impaired'|'failed'",
+        'Reason': 'string3'
+    },
+    'Type': "'application'|'network'",
+    'AvailabilityZones': [{
+        'ZoneName': 'string3',
+        'SubnetId': 'string3',
+        'LoadBalancerAddresses': [{
+            'IpAddress': 'string3',
+            'AllocationId': 'string3'
+        },]
+    },],
+    'SecurityGroups': ['string3',],
+    'IpAddressType': "'ipv4'|'dualstack'",
+}
+
 #.
 #   .--fake client---------------------------------------------------------.
 #   |             __       _               _ _            _                |
@@ -198,31 +288,173 @@ lb3 = {
 #   '----------------------------------------------------------------------'
 
 
+class FakeCloudwatchClient(object):
+    def get_metric_data(self, MetricDataQueries, StartTime='START', EndTime='END'):
+        results = []
+        for query in MetricDataQueries:
+            results.append({
+                'Id': query['Id'],
+                'Label': query['Label'],
+                'Timestamps': ["1970-01-01",],
+                'Values': [123.0,],
+                'StatusCode': "'Complete' | 'InternalError' | 'PartialData'",
+                'Messages': [{
+                    'Code': 'string1',
+                    'Value': 'string1'
+                },]
+            })
+        return {
+            'MetricDataResults': results,
+            'NextToken': 'string',
+            'Messages': [{
+                'Code': 'string',
+                'Value': 'string'
+            },]
+        }
+
+
 class FakeELBClient(object):
-    pass
+    def describe_load_balancers(self, LoadBalancerNames=None):
+        return {'LoadBalancerDescriptions': [elb_lb1, elb_lb2, elb_lb3], 'NextMarker': 'string'}
+
+    def describe_account_limits(self):
+        return {
+            'Limits': [
+                {
+                    'Name': 'classic-load-balancers',
+                    'Max': 10,
+                },
+                {
+                    'Name': 'classic-listeners',
+                    'Max': 10,
+                },
+                {
+                    'Name': 'classic-registered-instances',
+                    'Max': 10,
+                },
+            ],
+            'NextMarker': 'string'
+        }
+
+    def describe_tags(self, LoadBalancerNames=None):
+        tag_descrs = []
+        for lb_name, lb_tags in [
+            ('string1', [{
+                'Key': 'key-string',
+                'Value': 'value-string1',
+            }]),
+            ('string2', [{
+                'Key': 'key-string',
+                'Value': 'value-string21',
+            }, {
+                'Key': 'key-string22',
+                'Value': 'value-string22',
+            }]),
+        ]:
+            if not LoadBalancerNames or lb_name in LoadBalancerNames:
+                tag_descrs.append({'LoadBalancerName': lb_name, 'Tags': lb_tags})
+        return {'TagDescriptions': tag_descrs}
+
+    def describe_instance_health(self, LoadBalancerName=None):
+        return {
+            'InstanceStates': [{
+                'InstanceId': 'string',
+                'State': 'string',
+                'ReasonCode': 'string',
+                'Description': 'string'
+            },]
+        }
+
+
+class FakeELBv2Client(object):
+    def describe_load_balancers(self, Names=None):
+        return {
+            'LoadBalancerDescriptions': [elbv2_lb1, elbv2_lb2, elbv2_lb3],
+            'NextMarker': 'string'
+        }
 
 
 #.
 
 
-@pytest.mark.parametrize("instances,expected_result_len", [
-    ([], 0),
-    ([lb1], 1),
-    ([lb1, lb2], 2),
-    ([lb1, lb2, lb3], 2),
+@pytest.mark.parametrize("tags,found_instances,found_instances_with_labels", [
+    ((None, None), ['string1', 'string2', 'string3'], ['string1', 'string2']),
+    (([['FOO']], [['BAR']]), [], []),
+    (([['key-string']], [['value-string1']]), ['string1'], ['string1']),
+    (([['key-string']], [['value-string1', 'value-string21']]), ['string1', 'string2'],
+     ['string1', 'string2']),
 ])
-def test_agent_aws_elb_labels(instances, expected_result_len):
-    section = ELBLabels(FakeELBClient(), 'region', AWSConfig('hostname', (None, None)))
-    #TODO change in the future
-    # At the moment, we simulate received results for simplicity:
-    # In the agent_aws there are connected sections like
-    # AWSLimits -> AWSSummary -> AWSLabels
-    section._received_results = {
-        'elb_summary': AWSColleagueContents({inst['DNSName']: inst for inst in instances}, 0.0),
-    }
+def test_agent_aws_elb_result_distribution(tags, found_instances, found_instances_with_labels):
+    region = 'region'
+    config = AWSConfig('hostname', (None, None))
+    config.add_single_service_config('elb_names', None)
+    config.add_service_tags('elb_tags', tags)
 
-    results = section.run().results
-    assert expected_result_len == len(results)
+    fake_elb_client = FakeELBClient()
+    fake_cloudwatch_client = FakeCloudwatchClient()
 
-    for result in results:
-        assert result.piggyback_hostname != 'string3'
+    elb_limits_distributor = ResultDistributor()
+    elb_summary_distributor = ResultDistributor()
+
+    elb_limits = ELBLimits(fake_elb_client, region, config, elb_limits_distributor)
+    elb_summary = ELBSummary(fake_elb_client, region, config, elb_summary_distributor)
+    elb_labels = ELBLabels(fake_elb_client, region, config)
+    elb_health = ELBHealth(fake_elb_client, region, config)
+    elb = ELB(fake_cloudwatch_client, region, config)
+
+    elb_limits_distributor.add(elb_summary)
+    elb_summary_distributor.add(elb_labels)
+    elb_summary_distributor.add(elb_health)
+    elb_summary_distributor.add(elb)
+
+    elb_limits_results = elb_limits.run().results
+    elb_summary_results = elb_summary.run().results
+    elb_labels_results = elb_labels.run().results
+    elb_health_results = elb_health.run().results
+    elb_results = elb.run().results
+
+    #--ELBLimits------------------------------------------------------------
+    assert elb_limits.interval == 300
+    assert elb_limits.name == "elb_limits"
+    assert len(elb_limits_results) == 4
+    for result in elb_limits_results:
+        if result.piggyback_hostname == '':
+            assert len(result.content) == 1
+        else:
+            assert len(result.content) == 2
+
+    #--ELBSummary-----------------------------------------------------------
+    assert elb_summary.interval == 300
+    assert elb_summary.name == "elb_summary"
+
+    if found_instances:
+        assert len(elb_summary_results) == 1
+        elb_summary_result = elb_summary_results[0]
+        assert elb_summary_result.piggyback_hostname == ''
+        assert len(elb_summary_result.content) == len(found_instances)
+
+    else:
+        assert len(elb_summary_results) == 0
+
+    #--ELBLabels------------------------------------------------------------
+    assert elb_labels.interval == 300
+    assert elb_labels.name == "labels"
+    assert len(elb_labels_results) == len(found_instances_with_labels)
+    for result in elb_labels_results:
+        assert result.piggyback_hostname in found_instances_with_labels
+
+    #--ELBHealth------------------------------------------------------------
+    assert elb_health.interval == 300
+    assert elb_health.name == "elb_health"
+    assert len(elb_health_results) == len(found_instances)
+    for result in elb_health_results:
+        assert result.piggyback_hostname in found_instances
+
+    #--ELB------------------------------------------------------------------
+    assert elb.interval == 300
+    assert elb.name == "elb"
+    assert len(elb_results) == len(found_instances)
+    for result in elb_results:
+        assert result.piggyback_hostname in found_instances
+        # 13 metrics
+        assert len(result.content) == 13

@@ -4,12 +4,21 @@ import pytest
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
+    ResultDistributor,
     CloudwatchAlarmsLimits,
     CloudwatchAlarms,
 )
 
 #TODO what about enums?
-#TODO modifiy AWSConfig
+
+#   .--fake client---------------------------------------------------------.
+#   |             __       _               _ _            _                |
+#   |            / _| __ _| | _____    ___| (_) ___ _ __ | |_              |
+#   |           | |_ / _` | |/ / _ \  / __| | |/ _ \ '_ \| __|             |
+#   |           |  _| (_| |   <  __/ | (__| | |  __/ | | | |_              |
+#   |           |_|  \__,_|_|\_\___|  \___|_|_|\___|_| |_|\__|             |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 class FakeCloudwatchClient(object):
@@ -145,24 +154,10 @@ class FakeCloudwatchClient(object):
         return {'MetricAlarms': alarms, 'NextToken': 'string'}
 
 
-def test_agent_aws_cloudwatch_alarms_limits():
-    section = CloudwatchAlarmsLimits(FakeCloudwatchClient(), 'region',
-                                     AWSConfig('hostname', (None, None)))
-    results = section.run().results
-    assert len(results) == 1
-
-    result = results[0]
-    assert result.piggyback_hostname == ''
-    assert len(result.content) == 1
-
-    content = result.content[0]
-    assert content.key == 'cloudwatch_alarms'
-    assert content.title == 'Cloudwatch Alarms'
-    assert content.limit == 5000
-    assert content.amount == 2
+#.
 
 
-@pytest.mark.parametrize("names,amount_alarms", [
+@pytest.mark.parametrize("alarm_names,amount_alarms", [
     (None, 2),
     ([], 2),
     (['string1'], 1),
@@ -171,13 +166,43 @@ def test_agent_aws_cloudwatch_alarms_limits():
     (['string1', 'string2'], 2),
     (['string1', 'string2', 'too many'], 2),
 ])
-def test_agent_aws_cloudwatch_alarms(names, amount_alarms):
+def test_agent_aws_cloudwatch_result_distribution(alarm_names, amount_alarms):
+    region = 'region'
     config = AWSConfig('hostname', (None, None))
-    config.add_single_service_config('cloudwatch_alarms', names)
-    section = CloudwatchAlarms(FakeCloudwatchClient(), 'region', config)
-    results = section.run().results
-    assert len(results) == 1
+    config.add_single_service_config('cloudwatch_alarms', alarm_names)
 
-    result = results[0]
-    assert result.piggyback_hostname == ''
-    assert len(result.content) == amount_alarms
+    fake_cloudwatch_client = FakeCloudwatchClient()
+
+    cloudwatch_alarms_limits_distributor = ResultDistributor()
+
+    cloudwatch_alarms_limits = CloudwatchAlarmsLimits(fake_cloudwatch_client, region, config,
+                                                      cloudwatch_alarms_limits_distributor)
+    cloudwatch_alarms = CloudwatchAlarms(fake_cloudwatch_client, region, config)
+
+    cloudwatch_alarms_limits_distributor.add(cloudwatch_alarms)
+
+    cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results
+    cloudwatch_alarms_results = cloudwatch_alarms.run().results
+
+    #--CloudwatchAlarmsLimits-----------------------------------------------
+    assert cloudwatch_alarms_limits.interval == 300
+    assert cloudwatch_alarms_limits.name == "cloudwatch_alarms_limits"
+    assert cloudwatch_alarms.interval == 300
+    assert cloudwatch_alarms.name == "cloudwatch_alarms"
+
+    assert len(cloudwatch_alarms_limits_results) == 1
+    cloudwatch_alarms_limits_result = cloudwatch_alarms_limits_results[0]
+    assert cloudwatch_alarms_limits_result.piggyback_hostname == ''
+
+    assert len(cloudwatch_alarms_limits_result.content) == 1
+    cloudwatch_alarms_limits_content = cloudwatch_alarms_limits_result.content[0]
+    assert cloudwatch_alarms_limits_content.key == 'cloudwatch_alarms'
+    assert cloudwatch_alarms_limits_content.title == 'Cloudwatch Alarms'
+    assert cloudwatch_alarms_limits_content.limit == 5000
+    assert cloudwatch_alarms_limits_content.amount == 2
+
+    #--CloudwatchAlarms-----------------------------------------------------
+    assert len(cloudwatch_alarms_results) == 1
+    cloudwatch_alarms_result = cloudwatch_alarms_results[0]
+    assert cloudwatch_alarms_result.piggyback_hostname == ''
+    assert len(cloudwatch_alarms_result.content) == amount_alarms

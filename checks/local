@@ -39,17 +39,32 @@ def _is_valid_line(line):
     return len(line) >= 4 or (len(line) == 3 and line[0] == 'P')
 
 
+def _sanitize_state(state):
+    try:
+        state = int(state)
+    except ValueError:
+        pass
+    if state not in ('P', 0, 1, 2, 3):
+        return 3, "Invalid plugin status %r. " % state
+    return state, ""
+
+
 def parse_local(info):
-    LocalResult = collections.namedtuple("LocalResult", ("node", "item", "line"))
+    LocalResult = collections.namedtuple("LocalResult", ("node", "item", "state", "line"))
 
     parsed = {}
     for line in info:
         node, stripped_line = line[0], line[1:]
-        if _is_valid_line(stripped_line):
-            item = stripped_line[1]
-        else:
-            item = None
-        parsed.setdefault(item, []).append(LocalResult(node, item, stripped_line))
+        if not _is_valid_line(stripped_line):
+            parsed.setdefault(None, []).append(LocalResult(node, None, None, stripped_line))
+            continue
+
+        state, state_msg = _sanitize_state(stripped_line[0])
+        item = stripped_line[1]
+        stripped_line = stripped_line[2:]
+        if state_msg:
+            stripped_line.insert(0, "%sOutput is:" % state_msg)
+        parsed.setdefault(item, []).append(LocalResult(node, item, state, stripped_line))
 
     return parsed
 
@@ -122,13 +137,12 @@ def inventory_local(parsed):
 
 
 # Some helper functions
-def _parse_local_line(line):
-    statechar = line[0]
-    perftxt = line[2]
+def _parse_local_line(state, line):
+    perftxt = line[0]
 
     # convert eventually escaped newinfo_line chars to real newinfo_lines
     # (will be converted back later individually for the different cores)
-    output = " ".join(line[3:]).replace("\\n", "\n")
+    output = " ".join(line[1:]).replace("\\n", "\n")
 
     perfdata = []
     compute_data = []
@@ -141,22 +155,11 @@ def _parse_local_line(line):
                 return 3, "Invalid performance data %s in local check output %s" % \
                        (perftxt, " ".join(line)), []
 
-    if statechar == 'P':
+    if state == 'P':
         state, texts = local_compute_state(compute_data)
         if output:
             texts = [output] + texts
         output = ", ".join(texts)
-
-    else:
-        try:
-            state = int(statechar)
-        except:
-            return 3, "Invalid state %s in local check output %s: must be P, 0, 1, 2 or 3" % \
-                   (statechar, " ".join(line)), []
-
-        if state not in range(0, 4):
-            output += ", local check has sent invalid state %d" % state
-            state = 3
 
     return state, output, perfdata
 
@@ -186,9 +189,10 @@ def _calculate_local_worst_state(collected_stats):
 @get_parsed_item_data
 def check_local(_no_item, params, data):
     collected_stats = {}
-    for output in data:
-        collected_stats.setdefault(output.node, {})
-        collected_stats[output.node].setdefault(output.item, _parse_local_line(output.line))
+    for result in data:
+        collected_stats.setdefault(result.node, {})
+        collected_stats[result.node].setdefault(result.item,
+                                                _parse_local_line(result.state, result.line))
 
     if params is not None and params.get("outcome_on_cluster", "worst") == "best":
         yield _calculate_local_best_state(collected_stats)

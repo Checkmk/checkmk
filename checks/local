@@ -35,6 +35,16 @@
 # P No-Text hirn=-8;-20
 
 
+def float_ignore_uom(value):
+    '''16MB -> 16.0'''
+    while value:
+        try:
+            return float(value)
+        except ValueError:
+            value = value[:-1]
+    return 0.0
+
+
 def _is_valid_line(line):
     return len(line) >= 4 or (len(line) == 3 and line[0] == 'P')
 
@@ -73,15 +83,6 @@ def parse_local(info):
 # performance data.
 def local_compute_state(perfdata):
     texts = []
-
-    # 16MB -> 16.0
-    def float_ignore_uom(value):
-        while value:
-            if value[-1] not in "0123456789.-":
-                value = value[:-1]
-            else:
-                return float(value)
-        return 0.0
 
     def outof_levels(value, levels):
         if levels is None:
@@ -137,12 +138,12 @@ def inventory_local(parsed):
 
 
 # Some helper functions
-def _parse_local_line(state, line):
-    perftxt = line[0]
+def _parse_local_line(result):
+    perftxt = result.line[0]
 
     # convert eventually escaped newinfo_line chars to real newinfo_lines
     # (will be converted back later individually for the different cores)
-    output = " ".join(line[1:]).replace("\\n", "\n")
+    output = " ".join(result.line[1:]).replace("\\n", "\n")
 
     perfdata = []
     compute_data = []
@@ -153,13 +154,15 @@ def _parse_local_line(state, line):
                 perfdata.append(new_perf)
             else:
                 return 3, "Invalid performance data %s in local check output %s" % \
-                       (perftxt, " ".join(line)), []
+                       (perftxt, " ".join(result.line)), []
 
-    if state == 'P':
+    if result.state == 'P':
         state, texts = local_compute_state(compute_data)
         if output:
-            texts = [output] + texts
+            texts.insert(0, output)
         output = ", ".join(texts)
+    else:
+        state = result.state
 
     return state, output, perfdata
 
@@ -190,9 +193,8 @@ def _calculate_local_worst_state(collected_stats):
 def check_local(_no_item, params, data):
     collected_stats = {}
     for result in data:
-        collected_stats.setdefault(result.node, {})
-        collected_stats[result.node].setdefault(result.item,
-                                                _parse_local_line(result.state, result.line))
+        node_dict = collected_stats.setdefault(result.node, {})
+        node_dict.setdefault(result.item, _parse_local_line(result))
 
     if params is not None and params.get("outcome_on_cluster", "worst") == "best":
         yield _calculate_local_best_state(collected_stats)

@@ -45,7 +45,13 @@ def mrpe_parse_perfdata(perfinfo):
         return None
     varname, valuetxt = perfinfo.split("=", 1)
     values = valuetxt.split(";")
-    return tuple([varname] + values)
+    try:
+        return tuple([varname] + [int(v) for v in values])
+    except ValueError:
+        try:
+            return tuple([varname] + [float(v) for v in values])
+        except ValueError:
+            return tuple([varname] + values)
 
 
 def check_mrpe(item, _no_params, info):

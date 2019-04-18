@@ -118,7 +118,7 @@ def _parse_perftxt(string):
 
 def parse_local(info):
     LocalResult = collections.namedtuple("LocalResult",
-                                         ("node", "item", "state", "line", "perfdata"))
+                                         ("node", "item", "state", "text", "perfdata"))
 
     parsed = {}
     for line in info:
@@ -130,11 +130,13 @@ def parse_local(info):
         state, state_msg = _sanitize_state(stripped_line[0])
         item = stripped_line[1]
         perfdata, perf_msg = _parse_perftxt(stripped_line[2])
-        stripped_line = stripped_line[3:]
+        # convert eventually escaped newinfo_line chars to real newinfo_lines
+        # (will be converted back later individually for the different cores)
+        text = " ".join(stripped_line[3:]).replace("\\n", "\n")
         if state_msg or perf_msg:
             state = 3
-            stripped_line.insert(0, "%s%sOutput is:" % (state_msg, perf_msg))
-        parsed.setdefault(item, []).append(LocalResult(node, item, state, stripped_line, perfdata))
+            text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
+        parsed.setdefault(item, []).append(LocalResult(node, item, state, text, perfdata))
 
     return parsed
 
@@ -162,19 +164,14 @@ def inventory_local(parsed):
 # Some helper functions
 def _parse_local_line(result):
 
-    # convert eventually escaped newinfo_line chars to real newinfo_lines
-    # (will be converted back later individually for the different cores)
-    output = " ".join(result.line).replace("\\n", "\n")
+    if result.state != 'P':
+        return result.state, result.text, [p.tuple for p in result.perfdata]
 
-    if result.state == 'P':
-        state, texts = local_compute_state(result.perfdata)
-        if output:
-            texts.insert(0, output)
-        output = ", ".join(texts)
-    else:
-        state = result.state
-
-    return state, output, [p.tuple for p in result.perfdata]
+    state, texts = local_compute_state(result.perfdata)
+    if result.text:
+        texts.insert(0, result.text)
+    text = ", ".join(texts)
+    return state, text, [p.tuple for p in result.perfdata]
 
 
 def _calculate_local_best_state(collected_stats):

@@ -86,7 +86,7 @@ void Global::loadFromMainConfig() {
         else if (debug_level == "yes")
             debug_level_ = LogLevel::kLogDebug;
         else if (debug_level == "all")
-            debug_level_ = LogLevel::kLogBase;
+            debug_level_ = LogLevel::kLogAll;
         else
             debug_level_ =
                 tgt::IsDebug() ? LogLevel::kLogDebug : LogLevel::kLogBase;

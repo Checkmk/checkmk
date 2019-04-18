@@ -190,10 +190,6 @@ def check_local(_no_item, params, data):
         collected_stats.setdefault(output.node, {})
         collected_stats[output.node].setdefault(output.item, _parse_local_line(output.line))
 
-    if collected_stats == {}:
-        yield 3, "No data found in agent output"
-        return
-
     if params is not None and params.get("outcome_on_cluster", "worst") == "best":
         yield _calculate_local_best_state(collected_stats)
         return

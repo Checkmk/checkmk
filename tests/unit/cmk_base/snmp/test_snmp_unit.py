@@ -1,6 +1,8 @@
 # encoding: utf-8
 
-import pytest
+import pytest  # type: ignore
+from testlib.base import Scenario
+
 import cmk_base.config as config
 import cmk_base.snmp as snmp
 
@@ -22,8 +24,9 @@ def test_sanitize_snmp_encoding(monkeypatch, encoding, columns, expected):
 
 
 def test_is_bulkwalk_host(monkeypatch):
-    monkeypatch.setattr(config, "bulkwalk_hosts", [
+    ts = Scenario().set_ruleset("bulkwalk_hosts", [
         ([], ["localhost"], {}),
     ])
-    assert config.is_bulkwalk_host("abc") is False
-    assert config.is_bulkwalk_host("localhost") is True
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config("abc").snmp_config("").is_bulkwalk_host is False
+    assert config_cache.get_host_config("localhost").snmp_config("").is_bulkwalk_host is True

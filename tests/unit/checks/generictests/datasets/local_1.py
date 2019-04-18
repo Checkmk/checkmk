@@ -15,7 +15,7 @@ info = [
     ['node_1', 'P', 'Some_yet_other_Service', 'temp=40;30;50|humidity=28;50:100;0:50;0;100'],
     ['node_2', 'P', 'Has-no-var', '-', 'This', 'has', 'no', 'variable'],
     ['node_2', 'P', 'No-Text', 'hirn=-8;-20'],
-    ['rougue', 'P', 'D\'oh!', 'this is an invalid metric|isotopes=0', 'I', 'messed', 'up!']
+    ['rogue', 'P', 'D\'oh!', 'this is an invalid metric|isotopes=0', 'I', 'messed', 'up!']
 ]
 
 
@@ -75,7 +75,7 @@ checks = {
             ]),
         ]),
         ('D\'oh!', {}, [
-            (3, "On node rougue: Invalid performance data: 'this is an invalid metric'. Output is: I messed up!", [
+            (3, "On node rogue: Invalid performance data: 'this is an invalid metric'. Output is: I messed up!", [
                 ('isotopes', 0, None, None, None, None),
             ]),
         ]),

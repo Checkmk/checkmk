@@ -1961,6 +1961,178 @@ class ELBv2TargetGroups(AWSSectionGeneric):
 
 
 #.
+#   .--Application ELB-----------------------------------------------------.
+#   |            _                _ _           _   _                      |
+#   |           / \   _ __  _ __ | (_) ___ __ _| |_(_) ___  _ __           |
+#   |          / _ \ | '_ \| '_ \| | |/ __/ _` | __| |/ _ \| '_ \          |
+#   |         / ___ \| |_) | |_) | | | (_| (_| | |_| | (_) | | | |         |
+#   |        /_/   \_\ .__/| .__/|_|_|\___\__,_|\__|_|\___/|_| |_|         |
+#   |                |_|   |_|                                             |
+#   |                          _____ _     ____                            |
+#   |                         | ____| |   | __ )                           |
+#   |                         |  _| | |   |  _ \                           |
+#   |                         | |___| |___| |_) |                          |
+#   |                         |_____|_____|____/                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class ELBv2Application(AWSSectionCloudwatch):
+    @property
+    def name(self):
+        return "elbv2_application"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('elb_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics(self, colleague_contents):
+        metrics = []
+        for idx, (load_balancer_dns_name,
+                  load_balancer) in enumerate(colleague_contents.content.iteritems()):
+            # arn:aws:elasticloadbalancing:region:account-id:loadbalancer/app/load-balancer-name/load-balancer-id
+            # We need: app/LOAD-BALANCER-NAME/LOAD-BALANCER-ID
+            load_balancer_dim = "/".join(load_balancer['LoadBalancerArn'].split("/")[-3:])
+            for metric_name, stat in [
+                ('ActiveConnectionCount', 'Sum'),
+                ('ClientTLSNegotiationErrorCount', 'Sum'),
+                ('ConsumedLCUs', 'Sum'),
+                ('HTTP_Fixed_Response_Count', 'Sum'),
+                ('HTTP_Redirect_Count', 'Sum'),
+                ('HTTP_Redirect_Url_Limit_Exceeded_Count', 'Sum'),
+                ('HTTPCode_ELB_3XX_Count', 'Sum'),
+                ('HTTPCode_ELB_4XX_Count', 'Sum'),
+                ('HTTPCode_ELB_5XX_Count', 'Sum'),
+                ('HTTPCode_ELB_500_Count', 'Sum'),
+                ('HTTPCode_ELB_502_Count', 'Sum'),
+                ('HTTPCode_ELB_503_Count', 'Sum'),
+                ('HTTPCode_ELB_504_Count', 'Sum'),
+                ('IPv6ProcessedBytes', 'Sum'),
+                ('IPv6RequestCount', 'Sum'),
+                ('NewConnectionCount', 'Sum'),
+                ('ProcessedBytes', 'Sum'),
+                ('RejectedConnectionCount', 'Sum'),
+                ('RequestCount', 'Sum'),
+                ('RuleEvaluations', 'Sum'),
+            ]:
+                metrics.append({
+                    'Id': self._create_id_for_metric_data_query(idx, metric_name),
+                    'Label': load_balancer_dns_name,
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'AWS/ApplicationELB',
+                            'MetricName': metric_name,
+                            'Dimensions': [{
+                                'Name': "LoadBalancer",
+                                'Value': load_balancer_dim,
+                            }]
+                        },
+                        'Period': self.period,
+                        'Stat': stat,
+                    },
+                })
+        return metrics
+
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}
+        for row in raw_content.content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.content.iteritems()
+        ]
+
+
+#.
+#   .--Network ELB---------------------------------------------------------.
+#   |     _   _      _                      _      _____ _     ____        |
+#   |    | \ | | ___| |___      _____  _ __| | __ | ____| |   | __ )       |
+#   |    |  \| |/ _ \ __\ \ /\ / / _ \| '__| |/ / |  _| | |   |  _ \       |
+#   |    | |\  |  __/ |_ \ V  V / (_) | |  |   <  | |___| |___| |_) |      |
+#   |    |_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\ |_____|_____|____/       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class ELBv2Network(AWSSectionCloudwatch):
+    @property
+    def name(self):
+        return "elbv2_network"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('elb_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics(self, colleague_contents):
+        metrics = []
+        for idx, (load_balancer_dns_name,
+                  load_balancer) in enumerate(colleague_contents.content.iteritems()):
+            # arn:aws:elasticloadbalancing:region:account-id:loadbalancer/net/load-balancer-name/load-balancer-id
+            # We need: net/LOAD-BALANCER-NAME/LOAD-BALANCER-ID
+            load_balancer_dim = "/".join(load_balancer['LoadBalancerArn'].split("/")[-3:])
+            for metric_name, stat in [
+                ('ActiveFlowCount', 'Average'),
+                ('ActiveFlowCount_TLS', 'Average'),
+                ('ClientTLSNegotiationErrorCount', 'Sum'),
+                ('ConsumedLCUs', 'Sum'),
+                ('HealthyHostCount', 'Maximum'),
+                ('NewFlowCount', 'Sum'),
+                ('NewFlowCount_TLS', 'Sum'),
+                ('ProcessedBytes', 'Sum'),
+                ('ProcessedBytes_TLS', 'Sum'),
+                ('TargetTLSNegotiationErrorCount', 'Sum'),
+                ('TCP_Client_Reset_Count', 'Sum'),
+                ('TCP_ELB_Reset_Count', 'Sum'),
+                ('TCP_Target_Reset_Count', 'Sum'),
+                ('UnHealthyHostCount', 'Maximum'),
+            ]:
+                metrics.append({
+                    'Id': self._create_id_for_metric_data_query(idx, metric_name),
+                    'Label': load_balancer_dns_name,
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'AWS/NetworkELB',
+                            'MetricName': metric_name,
+                            'Dimensions': [{
+                                'Name': "LoadBalancer",
+                                'Value': load_balancer_dim,
+                            }]
+                        },
+                        'Period': self.period,
+                        'Stat': stat,
+                    },
+                })
+        return metrics
+
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}
+        for row in raw_content.content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.content.iteritems()
+        ]
+
+
+#.
 #   .--EBS-----------------------------------------------------------------.
 #   |                          _____ ____ ____                             |
 #   |                         | ____| __ ) ___|                            |
@@ -2665,6 +2837,8 @@ class AWSSectionsGeneric(AWSSections):
 
         elbv2_labels = ELBLabelsGeneric(elb_client, region, config, resource='elbv2')
         elbv2_target_groups = ELBv2TargetGroups(elb_client, region, config)
+        elbv2_application = ELBv2Application(cloudwatch_client, region, config)
+        elbv2_network = ELBv2Network(cloudwatch_client, region, config)
 
         s3 = S3(cloudwatch_client, region, config)
         s3_requests = S3Requests(cloudwatch_client, region, config)
@@ -2693,6 +2867,8 @@ class AWSSectionsGeneric(AWSSections):
         elbv2_limits_distributor.add(elbv2_summary)
         elbv2_summary_distributor.add(elbv2_labels)
         elbv2_summary_distributor.add(elbv2_target_groups)
+        elbv2_summary_distributor.add(elbv2_application)
+        elbv2_summary_distributor.add(elbv2_network)
 
         s3_limits_distributor.add(s3_summary)
         s3_summary_distributor.add(s3)
@@ -2731,6 +2907,9 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elbv2_summary)
             self._sections.append(elbv2_labels)
             self._sections.append(elbv2_target_groups)
+            #TODO enable when checks are ready
+            #self._sections.append(elbv2_application)
+            #self._sections.append(elbv2_network)
 
         if 's3' in services:
             if config.service_config.get('s3_limits'):

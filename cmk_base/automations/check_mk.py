@@ -1252,7 +1252,7 @@ class AutomationDiagHost(Automation):
                     return 1, "SNMP command not implemented"
 
                 #TODO: What about SNMP management boards?
-                host_config = snmp_utils.SNMPHostConfig(
+                snmp_config = snmp_utils.SNMPHostConfig(
                     is_ipv6_primary=host_config.is_ipv6_primary,
                     hostname=hostname,
                     ipaddress=ipaddress,
@@ -1268,7 +1268,7 @@ class AutomationDiagHost(Automation):
                     oid_range_limits=config.oid_range_limits_of(hostname),
                 )
                 data = snmp.get_snmp_table(
-                    host_config,
+                    snmp_config,
                     None, ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),
                     use_snmpwalk_cache=True)
 

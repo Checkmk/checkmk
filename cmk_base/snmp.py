@@ -70,22 +70,22 @@ _g_walk_cache = {}  # type: Dict[str, List[str]]
 #TODO CACHING
 
 
-def initialize_single_oid_cache(host_config, from_disk=False):
+def initialize_single_oid_cache(snmp_config, from_disk=False):
     # type: (cmk_base.snmp_utils.SNMPHostConfig, bool) -> None
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
 
-    if not (_g_single_oid_hostname == host_config.hostname \
-       and _g_single_oid_ipaddress == host_config.ipaddress) \
+    if not (_g_single_oid_hostname == snmp_config.hostname \
+       and _g_single_oid_ipaddress == snmp_config.ipaddress) \
        or _g_single_oid_cache is None:
-        _g_single_oid_hostname = host_config.hostname
-        _g_single_oid_ipaddress = host_config.ipaddress
+        _g_single_oid_hostname = snmp_config.hostname
+        _g_single_oid_ipaddress = snmp_config.ipaddress
         if from_disk:
-            _g_single_oid_cache = _load_single_oid_cache(host_config)
+            _g_single_oid_cache = _load_single_oid_cache(snmp_config)
         else:
             _g_single_oid_cache = {}
 
 
-def write_single_oid_cache(host_config):
+def write_single_oid_cache(snmp_config):
     # type: (cmk_base.snmp_utils.SNMPHostConfig) -> None
     if not _g_single_oid_cache:
         return
@@ -93,26 +93,26 @@ def write_single_oid_cache(host_config):
     cache_dir = cmk.utils.paths.snmp_scan_cache_dir
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
-    cache_path = "%s/%s.%s" % (cache_dir, host_config.hostname, host_config.ipaddress)
+    cache_path = "%s/%s.%s" % (cache_dir, snmp_config.hostname, snmp_config.ipaddress)
     store.save_data_to_file(cache_path, _g_single_oid_cache, pretty=False)
 
 
-def set_single_oid_cache(host_config, oid, value):
+def set_single_oid_cache(snmp_config, oid, value):
     _g_single_oid_cache[oid] = value
 
 
-def _is_in_single_oid_cache(host_config, oid):
+def _is_in_single_oid_cache(snmp_config, oid):
     return oid in _g_single_oid_cache
 
 
-def _get_oid_from_single_oid_cache(host_config, oid):
+def _get_oid_from_single_oid_cache(snmp_config, oid):
     return _g_single_oid_cache.get(oid)
 
 
-def _load_single_oid_cache(host_config):
+def _load_single_oid_cache(snmp_config):
     # type: (cmk_base.snmp_utils.SNMPHostConfig) -> Dict[str, str]
-    cache_path = "%s/%s.%s" % (cmk.utils.paths.snmp_scan_cache_dir, host_config.hostname,
-                               host_config.ipaddress)
+    cache_path = "%s/%s.%s" % (cmk.utils.paths.snmp_scan_cache_dir, snmp_config.hostname,
+                               snmp_config.ipaddress)
     return store.load_data_from_file(cache_path, {})
 
 
@@ -161,7 +161,7 @@ def create_snmp_host_config(hostname):
 
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
-def get_snmp_table(host_config, check_plugin_name, oid_info, use_snmpwalk_cache):
+def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache):
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )
     # suboids is a list if OID-infixes that are put between baseoid
@@ -211,7 +211,7 @@ def get_snmp_table(host_config, check_plugin_name, oid_info, use_snmpwalk_cache)
                 index_format = column
                 continue
 
-            rowinfo = _get_snmpwalk(host_config, check_plugin_name, oid, fetchoid, column,
+            rowinfo = _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column,
                                     use_snmpwalk_cache)
 
             columns.append((fetchoid, rowinfo, value_encoding))
@@ -258,7 +258,7 @@ def get_snmp_table(host_config, check_plugin_name, oid_info, use_snmpwalk_cache)
         # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
         # get normal python strings. But for Check_MK we need unicode strings now.
         # Convert them by using the standard Check_MK approach for incoming data
-        sanitized_columns = _sanitize_snmp_encoding(host_config.hostname, new_columns)
+        sanitized_columns = _sanitize_snmp_encoding(snmp_config.hostname, new_columns)
 
         info += _construct_snmp_table_of_rows(sanitized_columns)
 
@@ -266,7 +266,7 @@ def get_snmp_table(host_config, check_plugin_name, oid_info, use_snmpwalk_cache)
 
 
 # Contextes can only be used when check_plugin_name is given.
-def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
+def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     # type: (cmk_base.snmp_utils.SNMPHostConfig, str, Optional[str], bool) -> Optional[str]
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
@@ -278,16 +278,16 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
             oid = '.' + oid
 
     # TODO: Use generic cache mechanism
-    if _is_in_single_oid_cache(host_config, oid):
+    if _is_in_single_oid_cache(snmp_config, oid):
         console.vverbose("       Using cached OID %s: " % oid)
-        value = _get_oid_from_single_oid_cache(host_config, oid)
+        value = _get_oid_from_single_oid_cache(snmp_config, oid)
         console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
         return value
 
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
     # SNMP contexts, all contextes will be queried until the first answer is received.
-    if check_plugin_name is not None and cmk_base.snmp_utils.is_snmpv3_host(host_config):
-        snmp_contexts = _snmpv3_contexts_of(host_config.hostname, check_plugin_name)
+    if check_plugin_name is not None and cmk_base.snmp_utils.is_snmpv3_host(snmp_config):
+        snmp_contexts = _snmpv3_contexts_of(snmp_config.hostname, check_plugin_name)
     else:
         snmp_contexts = [None]
 
@@ -295,8 +295,8 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
     for context_name in snmp_contexts:
         try:
             snmp_backend = SNMPBackendFactory().factory(
-                host_config, enforce_stored_walks=_enforce_stored_walks)
-            value = snmp_backend.get(host_config, oid, context_name)
+                snmp_config, enforce_stored_walks=_enforce_stored_walks)
+            value = snmp_backend.get(snmp_config, oid, context_name)
 
             if value is not None:
                 break  # Use first received answer in case of multiple contextes
@@ -310,26 +310,26 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
     else:
         console.vverbose("failed.\n")
 
-    set_single_oid_cache(host_config, oid, value)
+    set_single_oid_cache(snmp_config, oid, value)
     return value
 
 
 class SNMPBackendFactory(object):
     @staticmethod
-    def factory(host_config, enforce_stored_walks):
+    def factory(snmp_config, enforce_stored_walks):
         # type: (cmk_base.snmp_utils.SNMPHostConfig, bool) -> cmk_base.snmp_utils.ABCSNMPBackend
-        if enforce_stored_walks or config.is_usewalk_host(host_config.hostname):
+        if enforce_stored_walks or config.is_usewalk_host(snmp_config.hostname):
             return StoredWalkSNMPBackend()
 
-        if config.is_inline_snmp_host(host_config.hostname):
+        if config.is_inline_snmp_host(snmp_config.hostname):
             return inline_snmp.InlineSNMPBackend()
 
         return classic_snmp.ClassicSNMPBackend()
 
 
 class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
-    def get(self, host_config, oid, context_name=None):
-        walk = self.walk(host_config, oid)
+    def get(self, snmp_config, oid, context_name=None):
+        walk = self.walk(snmp_config, oid)
 
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
@@ -341,7 +341,7 @@ class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
 
         return None
 
-    def walk(self, host_config, oid):
+    def walk(self, snmp_config, oid):
         # type: (cmk_base.snmp_utils.SNMPHostConfig, str) -> List[Tuple[str, str]]
         if oid.startswith("."):
             oid = oid[1:]
@@ -353,20 +353,20 @@ class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
             oid_prefix = oid
             dot_star = False
 
-        path = cmk.utils.paths.snmpwalks_dir + "/" + host_config.hostname
+        path = cmk.utils.paths.snmpwalks_dir + "/" + snmp_config.hostname
 
         console.vverbose("  Loading %s from %s\n" % (oid, path))
 
         rowinfo = []  # type: List[Tuple[str, str]]
 
-        if host_config.hostname in _g_walk_cache:
-            lines = _g_walk_cache[host_config.hostname]
+        if snmp_config.hostname in _g_walk_cache:
+            lines = _g_walk_cache[snmp_config.hostname]
         else:
             try:
                 lines = file(path).readlines()
             except IOError:
                 raise MKSNMPError("No snmpwalk file %s" % path)
-            _g_walk_cache[host_config.hostname] = lines
+            _g_walk_cache[snmp_config.hostname] = lines
 
         begin = 0
         end = len(lines)
@@ -442,13 +442,13 @@ class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
         return rows
 
 
-def walk_for_export(host_config, oid):
+def walk_for_export(snmp_config, oid):
     # type: (cmk_base.snmp_utils.SNMPHostConfig, str) -> List[Tuple[str, str]]
-    if config.is_inline_snmp_host(host_config.hostname):
-        rows = inline_snmp.walk(host_config, None, oid)
+    if config.is_inline_snmp_host(snmp_config.hostname):
+        rows = inline_snmp.walk(snmp_config, None, oid)
         return inline_snmp.convert_rows_for_stored_walk(rows)
 
-    return classic_snmp.walk(host_config, oid, hex_plain=True)
+    return classic_snmp.walk(snmp_config, oid, hex_plain=True)
 
 
 def enforce_use_stored_walks():
@@ -500,39 +500,39 @@ def _snmpv3_contexts_of(hostname, check_plugin_name):
     return [None]
 
 
-def _get_snmpwalk(host_config, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache):
+def _get_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid, column, use_snmpwalk_cache):
     is_cachable = _is_snmpwalk_cachable(column)
     rowinfo = None
     if is_cachable and use_snmpwalk_cache:
         # Returns either the cached SNMP walk or None when nothing is cached
-        rowinfo = _get_cached_snmpwalk(host_config.hostname, fetchoid)
+        rowinfo = _get_cached_snmpwalk(snmp_config.hostname, fetchoid)
 
     if rowinfo is None:
-        rowinfo = _perform_snmpwalk(host_config, check_plugin_name, oid, fetchoid)
+        rowinfo = _perform_snmpwalk(snmp_config, check_plugin_name, oid, fetchoid)
 
         if is_cachable:
-            _save_snmpwalk_cache(host_config.hostname, fetchoid, rowinfo)
+            _save_snmpwalk_cache(snmp_config.hostname, fetchoid, rowinfo)
 
     return rowinfo
 
 
-def _perform_snmpwalk(host_config, check_plugin_name, base_oid, fetchoid):
+def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
     added_oids = set([])
     rowinfo = []
-    if cmk_base.snmp_utils.is_snmpv3_host(host_config):
-        snmp_contexts = _snmpv3_contexts_of(host_config.hostname, check_plugin_name)
+    if cmk_base.snmp_utils.is_snmpv3_host(snmp_config):
+        snmp_contexts = _snmpv3_contexts_of(snmp_config.hostname, check_plugin_name)
     else:
         snmp_contexts = [None]
 
     for context_name in snmp_contexts:
-        if _enforce_stored_walks or config.is_usewalk_host(host_config.hostname):
-            rows = StoredWalkSNMPBackend().walk(host_config, fetchoid)
+        if _enforce_stored_walks or config.is_usewalk_host(snmp_config.hostname):
+            rows = StoredWalkSNMPBackend().walk(snmp_config, fetchoid)
 
-        elif config.is_inline_snmp_host(host_config.hostname):
+        elif config.is_inline_snmp_host(snmp_config.hostname):
             rows = inline_snmp.walk(
-                host_config, check_plugin_name, fetchoid, base_oid, context_name=context_name)
+                snmp_config, check_plugin_name, fetchoid, base_oid, context_name=context_name)
         else:
-            rows = classic_snmp.walk(host_config, fetchoid, context_name=context_name)
+            rows = classic_snmp.walk(snmp_config, fetchoid, context_name=context_name)
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when
@@ -773,10 +773,10 @@ def do_snmpwalk(options, hostnames):
 
     for hostname in hostnames:
         #TODO: What about SNMP management boards?
-        host_config = create_snmp_host_config(hostname)
+        snmp_config = create_snmp_host_config(hostname)
 
         try:
-            _do_snmpwalk_on(host_config, options, cmk.utils.paths.snmpwalks_dir + "/" + hostname)
+            _do_snmpwalk_on(snmp_config, options, cmk.utils.paths.snmpwalks_dir + "/" + hostname)
         except Exception as e:
             console.error("Error walking %s: %s\n" % (hostname, e))
             if cmk.utils.debug.enabled():
@@ -784,13 +784,13 @@ def do_snmpwalk(options, hostnames):
         cmk_base.cleanup.cleanup_globals()
 
 
-def _do_snmpwalk_on(host_config, options, filename):
-    console.verbose("%s:\n" % host_config.hostname)
+def _do_snmpwalk_on(snmp_config, options, filename):
+    console.verbose("%s:\n" % snmp_config.hostname)
 
     oids = oids_to_walk(options)
 
     with open(filename, "w") as out:
-        for rows in _execute_walks_for_dump(host_config, oids):
+        for rows in _execute_walks_for_dump(snmp_config, oids):
             for oid, value in rows:
                 out.write("%s %s\n" % (oid, value))
             console.verbose("%d variables.\n" % len(rows))
@@ -798,11 +798,11 @@ def _do_snmpwalk_on(host_config, options, filename):
     console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))
 
 
-def _execute_walks_for_dump(host_config, oids):
+def _execute_walks_for_dump(snmp_config, oids):
     for oid in oids:
         try:
             console.verbose("Walk on \"%s\"..." % oid)
-            yield walk_for_export(host_config, oid)
+            yield walk_for_export(snmp_config, oid)
         except Exception as e:
             console.error("Error: %s\n" % e)
             if cmk.utils.debug.enabled():
@@ -844,10 +844,10 @@ def do_snmpget(*args):
 
     for hostname in hostnames:
         #TODO what about SNMP management boards?
-        host_config = create_snmp_host_config(hostname)
+        snmp_config = create_snmp_host_config(hostname)
 
-        value = get_single_oid(host_config, oid)
-        console.output("%s (%s): %r\n" % (hostname, host_config.ipaddress, value))
+        value = get_single_oid(snmp_config, oid)
+        console.output("%s (%s): %r\n" % (hostname, snmp_config.ipaddress, value))
         cmk_base.cleanup.cleanup_globals()
 
 

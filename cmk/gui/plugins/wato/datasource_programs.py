@@ -2015,7 +2015,17 @@ class RulespecSpecialAgentsAws(HostRulespec):
                           )),
                          ("elb",
                           Dictionary(
-                              title=_("Classic Elastic Load Balancing (ELB)"),
+                              title=_("Classic Load Balancing (ELB)"),
+                              elements=[
+                                  _vs_element_aws_service_selection(),
+                                  _vs_element_aws_limits(),
+                              ],
+                              optional_keys=["limits"],
+                              default_keys=["limits"],
+                          )),
+                         ("elbv2",
+                          Dictionary(
+                              title=_("Application and Network Load Balancing (ELBv2)"),
                               elements=[
                                   _vs_element_aws_service_selection(),
                                   _vs_element_aws_limits(),
@@ -2050,7 +2060,7 @@ class RulespecSpecialAgentsAws(HostRulespec):
                               default_keys=["alarms", "limits"],
                           )),
                      ],
-                     default_keys=["ec2", "ebs", "s3", "elb", "rds", "cloudwatch"],
+                     default_keys=["ec2", "ebs", "s3", "elb", "elbv2", "rds", "cloudwatch"],
                  )),
                 ("overall_tags", _vs_aws_tags(
                     _("Restrict monitoring services by one of these tags"))),

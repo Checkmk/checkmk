@@ -1,0 +1,37 @@
+title: AWS/ELBv2 Application and Network Limits
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the AWS/ELBv2 limits.  To make this check work
+ you have to configure the related special agent {Amazon Web Services (AWS)}.
+
+ Default levels are set to 80, 90 percent and the default max.
+ value is fetched from the API, ie.
+
+ - Application Load balancers, 20
+
+ - Application Load Balancer Rules, 100
+
+ - Application Load Balancer Listeners, 50
+
+ - Application Load Balancer Target Groups, 3000
+
+ - Application Load balancer Certificates, 25
+
+ - Network Load balancers, 20
+
+ - Network Load Balancer Listeners, 50
+
+ - Network Load Balancer Target Groups, 3000
+
+ - Load balancers Target Groups, 3000
+
+ These levels are configurable.
+
+ If limits are enabled all load balancers are fetched regardless of
+ possibly configured restriction to names or tags.
+
+inventory:
+ One service will be created.

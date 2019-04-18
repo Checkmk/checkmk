@@ -769,6 +769,54 @@ class RulespecCheckgroupParametersAwsElbLimits(CheckParameterRulespecWithoutItem
 
 
 #.
+#   .--ELBv2---------------------------------------------------------------.
+#   |                    _____ _     ____       ____                       |
+#   |                   | ____| |   | __ )_   _|___ \                      |
+#   |                   |  _| | |   |  _ \ \ / / __) |                     |
+#   |                   | |___| |___| |_) \ V / / __/                      |
+#   |                   |_____|_____|____/ \_/ |_____|                     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsElbv2Limits(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_elbv2_limits"
+
+    @property
+    def title(self):
+        return _("AWS/ELBv2 Limits")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('application_load_balancers', _vs_limits("Application Load balancers", 20)),
+            ('application_load_balancer_rules', _vs_limits("Application Load Balancer Rules", 100)),
+            ('application_load_balancer_listeners',
+             _vs_limits("Application Load Balancer Listeners", 50)),
+            ('application_load_balancer_target_groups',
+             _vs_limits("Application Load Balancer Target Groups", 3000)),
+            ('application_load_balancer_certificates',
+             _vs_limits("Application Load balancer Certificates", 25)),
+            ('network_load_balancers', _vs_limits("Network Load balancers", 20)),
+            ('network_load_balancer_listeners', _vs_limits("Network Load Balancer Listeners", 50)),
+            ('network_load_balancer_target_groups',
+             _vs_limits("Network Load Balancer Target Groups", 3000)),
+            ('load_balancer_target_groups', _vs_limits("Load balancers Target Groups", 3000)),
+        ])
+
+
+#.
 #   .--EBS-----------------------------------------------------------------.
 #   |                          _____ ____ ____                             |
 #   |                         | ____| __ ) ___|                            |

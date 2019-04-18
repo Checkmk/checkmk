@@ -5337,6 +5337,60 @@ metric_info['aws_ebs_block_store_space_st1'] = {
     'color': '21/a',
 }
 
+metric_info['aws_elbv2_application_load_balancers'] = {
+    'title': _('Application Load balancers'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_elbv2_application_load_balancer_rules'] = {
+    'title': _('Application Load Balancer Rules'),
+    'unit': 'count',
+    'color': '13/a',
+}
+
+metric_info['aws_elbv2_application_load_balancer_listeners'] = {
+    'title': _('Application Load Balancer Listeners'),
+    'unit': 'count',
+    'color': '15/a',
+}
+
+metric_info['aws_elbv2_application_load_balancer_target_groups'] = {
+    'title': _('Application Load Balancer Target Groups'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
+metric_info['aws_elbv2_application_load_balancer_certificates'] = {
+    'title': _('Application Load balancer Certificates'),
+    'unit': 'count',
+    'color': '23/a',
+}
+
+metric_info['aws_elbv2_network_load_balancers'] = {
+    'title': _('Network Load balancers'),
+    'unit': 'count',
+    'color': '25/a',
+}
+
+metric_info['aws_elbv2_network_load_balancer_listeners'] = {
+    'title': _('Network Load Balancer Listeners'),
+    'unit': 'count',
+    'color': '31/a',
+}
+
+metric_info['aws_elbv2_network_load_balancer_target_groups'] = {
+    'title': _('Network Load Balancer Target Groups'),
+    'unit': 'count',
+    'color': '33/a',
+}
+
+metric_info['aws_elbv2_load_balancer_target_groups'] = {
+    'title': _('Load balancers Target Groups'),
+    'unit': 'count',
+    'color': '35/a',
+}
+
 metric_info["elapsed_time"] = {
     "title": _("Elapsed time"),
     "unit": "s",

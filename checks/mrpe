@@ -62,20 +62,6 @@ def parse_mrpe(info):
     return parsed
 
 
-def mrpe_parse_perfdata(perfinfo):
-    if '=' not in perfinfo:
-        return None
-    varname, valuetxt = perfinfo.split("=", 1)
-    values = valuetxt.split(";")
-    try:
-        return tuple([varname] + [int(v) for v in values])
-    except ValueError:
-        try:
-            return tuple([varname] + [float(v) for v in values])
-        except ValueError:
-            return tuple([varname] + values)
-
-
 @get_parsed_item_data
 def check_mrpe(_no_item, _no_params, data):
     # This check is cluster-aware. An item might be found
@@ -105,7 +91,7 @@ def check_mrpe(_no_item, _no_params, data):
 
     perf_parsed = []
     for perfvalue in perfdata:
-        new_perf = mrpe_parse_perfdata(perfvalue)
+        new_perf = parse_nagios_perfstring(perfvalue)
         if new_perf:
             perf_parsed.append(new_perf)
 
@@ -121,4 +107,5 @@ check_info["mrpe"] = {
     'check_function': check_mrpe,
     'service_description': '%s',
     'has_perfdata': True,
+    'includes': ['parse_nagios.include'],
 }

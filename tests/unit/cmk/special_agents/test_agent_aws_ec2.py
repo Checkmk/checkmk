@@ -4,9 +4,15 @@ import pytest
 
 from cmk.special_agents.agent_aws import (
     _get_ec2_piggyback_hostname,
-    AWSConfig,
     AWSColleagueContents,
+    AWSEC2InstTypes,
+    AWSConfig,
+    ResultDistributor,
+    EC2Limits,
+    EC2Summary,
     EC2Labels,
+    EC2SecurityGroups,
+    EC2,
 )
 
 #TODO what about enums?
@@ -25,46 +31,7 @@ inst1 = {
     'AmiLaunchIndex': 123,
     'ImageId': 'string1',
     'InstanceId': 'string1',
-    'InstanceType':
-        "'t1.micro' | 't2.nano' | 't2.micro' | 't2.small' | 't2.medium' | 't2.large' |"
-        "'t2.xlarge' | 't2.2xlarge' | 't3.nano' | 't3.micro' | 't3.small' | 't3.medium' |"
-        "'t3.large' | 't3.xlarge' | 't3.2xlarge' | 'm1.small' | 'm1.medium' |"
-        "'m1.large' | 'm1.xlarge' | 'm3.medium' | 'm3.large' | 'm3.xlarge' |"
-        "'m3.2xlarge' | 'm4.large' | 'm4.xlarge' | 'm4.2xlarge' |"
-        "'m4.4xlarge' | 'm4.10xlarge' | 'm4.16xlarge' | 'm2.xlarge' | 'm2.2xlarge' |"
-        "'m2.4xlarge' | 'cr1.8xlarge' | 'r3.large' | 'r3.xlarge' | 'r3.2xlarge' |"
-        "'r3.4xlarge' | 'r3.8xlarge' | 'r4.large' | 'r4.xlarge' | 'r4.2xlarge' |"
-        "'r4.4xlarge' | 'r4.8xlarge' | 'r4.16xlarge' | 'r5.large' | 'r5.xlarge' |"
-        "'r5.2xlarge' | 'r5.4xlarge' | 'r5.12xlarge' | 'r5.24xlarge' | 'r5.metal' |"
-        "'r5a.large' | 'r5a.xlarge' | 'r5a.2xlarge' | 'r5a.4xlarge' | 'r5a.12xlarge' |"
-        "'r5a.24xlarge' | 'r5d.large' | 'r5d.xlarge' | 'r5d.2xlarge' | 'r5d.4xlarge' |"
-        "'r5d.12xlarge' | 'r5d.24xlarge' | 'r5d.metal' | 'r5ad.large' | 'r5ad.xlarge' |"
-        "'r5ad.2xlarge' | 'r5ad.4xlarge' | 'r5ad.8xlarge' | 'r5ad.12xlarge' |"
-        "'r5ad.16xlarge' | 'r5ad.24xlarge' | 'x1.16xlarge' | 'x1.32xlarge' |"
-        "'x1e.xlarge' | 'x1e.2xlarge' | 'x1e.4xlarge' | 'x1e.8xlarge' | 'x1e.16xlarge' |"
-        "'x1e.32xlarge' | 'i2.xlarge' | 'i2.2xlarge' | 'i2.4xlarge' | 'i2.8xlarge' |"
-        "'i3.large' | 'i3.xlarge' | 'i3.2xlarge' | 'i3.4xlarge' | 'i3.8xlarge' |"
-        "'i3.16xlarge' | 'i3.metal' | 'hi1.4xlarge' | 'hs1.8xlarge' | 'c1.medium' |"
-        "'c1.xlarge' | 'c3.large' | 'c3.xlarge' | 'c3.2xlarge' | 'c3.4xlarge' |"
-        "'c3.8xlarge' | 'c4.large' | 'c4.xlarge' | 'c4.2xlarge' | 'c4.4xlarge' |"
-        "'c4.8xlarge' | 'c5.large' | 'c5.xlarge' | 'c5.2xlarge' | 'c5.4xlarge' |"
-        "'c5.9xlarge' | 'c5.18xlarge' | 'c5d.large' | 'c5d.xlarge' | 'c5d.2xlarge' |"
-        "'c5d.4xlarge' | 'c5d.9xlarge' | 'c5d.18xlarge' | 'c5n.large' | 'c5n.xlarge' |"
-        "'c5n.2xlarge' | 'c5n.4xlarge' | 'c5n.9xlarge' | 'c5n.18xlarge' | 'cc1.4xlarge' |"
-        "'cc2.8xlarge' | 'g2.2xlarge' | 'g2.8xlarge' | 'g3.4xlarge' | 'g3.8xlarge' |"
-        "'g3.16xlarge' | 'g3s.xlarge' | 'cg1.4xlarge' | 'p2.xlarge' | 'p2.8xlarge' |"
-        "'p2.16xlarge' | 'p3.2xlarge' | 'p3.8xlarge' | 'p3.16xlarge' | 'p3dn.24xlarge' |"
-        "'d2.xlarge' | 'd2.2xlarge' | 'd2.4xlarge' | 'd2.8xlarge' | 'f1.2xlarge' |"
-        "'f1.4xlarge' | 'f1.16xlarge' | 'm5.large' | 'm5.xlarge' | 'm5.2xlarge' |"
-        "'m5.4xlarge' | 'm5.12xlarge' | 'm5.24xlarge' | 'm5.metal' | 'm5a.large' |"
-        "'m5a.xlarge' | 'm5a.2xlarge' | 'm5a.4xlarge' | 'm5a.12xlarge' | 'm5a.24xlarge' |"
-        "'m5d.large' | 'm5d.xlarge' | 'm5d.2xlarge' | 'm5d.4xlarge' | 'm5d.12xlarge' |"
-        "'m5d.24xlarge' | 'm5d.metal' | 'm5ad.large' | 'm5ad.xlarge' | 'm5ad.2xlarge' |"
-        "'m5ad.4xlarge' | 'm5ad.8xlarge' | 'm5ad.12xlarge' | 'm5ad.16xlarge' |"
-        "'m5ad.24xlarge' | 'h1.2xlarge' | 'h1.4xlarge' | 'h1.8xlarge' | 'h1.16xlarge' |"
-        "'z1d.large' | 'z1d.xlarge' | 'z1d.2xlarge' | 'z1d.3xlarge' | 'z1d.6xlarge' |"
-        "'z1d.12xlarge' | 'z1d.metal' | 'u-6tb1.metal' | 'u-9tb1.metal' | 'u-12tb1.metal'"
-        "| 'a1.medium' | 'a1.large' | 'a1.xlarge' | 'a1.2xlarge' | 'a1.4xlarge'",
+    'InstanceType': "'%s'" % "'|'".join(AWSEC2InstTypes),
     'KernelId': 'string1',
     'KeyName': 'string1',
     'LaunchTime': "1970-01-01",
@@ -211,46 +178,7 @@ inst2 = {
     'AmiLaunchIndex': 123,
     'ImageId': 'string2',
     'InstanceId': 'string2',
-    'InstanceType':
-        "'t1.micro' | 't2.nano' | 't2.micro' | 't2.small' | 't2.medium' | 't2.large' |"
-        "'t2.xlarge' | 't2.2xlarge' | 't3.nano' | 't3.micro' | 't3.small' | 't3.medium' |"
-        "'t3.large' | 't3.xlarge' | 't3.2xlarge' | 'm1.small' | 'm1.medium' |"
-        "'m1.large' | 'm1.xlarge' | 'm3.medium' | 'm3.large' | 'm3.xlarge' |"
-        "'m3.2xlarge' | 'm4.large' | 'm4.xlarge' | 'm4.2xlarge' |"
-        "'m4.4xlarge' | 'm4.10xlarge' | 'm4.16xlarge' | 'm2.xlarge' | 'm2.2xlarge' |"
-        "'m2.4xlarge' | 'cr1.8xlarge' | 'r3.large' | 'r3.xlarge' | 'r3.2xlarge' |"
-        "'r3.4xlarge' | 'r3.8xlarge' | 'r4.large' | 'r4.xlarge' | 'r4.2xlarge' |"
-        "'r4.4xlarge' | 'r4.8xlarge' | 'r4.16xlarge' | 'r5.large' | 'r5.xlarge' |"
-        "'r5.2xlarge' | 'r5.4xlarge' | 'r5.12xlarge' | 'r5.24xlarge' | 'r5.metal' |"
-        "'r5a.large' | 'r5a.xlarge' | 'r5a.2xlarge' | 'r5a.4xlarge' | 'r5a.12xlarge' |"
-        "'r5a.24xlarge' | 'r5d.large' | 'r5d.xlarge' | 'r5d.2xlarge' | 'r5d.4xlarge' |"
-        "'r5d.12xlarge' | 'r5d.24xlarge' | 'r5d.metal' | 'r5ad.large' | 'r5ad.xlarge' |"
-        "'r5ad.2xlarge' | 'r5ad.4xlarge' | 'r5ad.8xlarge' | 'r5ad.12xlarge' |"
-        "'r5ad.16xlarge' | 'r5ad.24xlarge' | 'x1.16xlarge' | 'x1.32xlarge' |"
-        "'x1e.xlarge' | 'x1e.2xlarge' | 'x1e.4xlarge' | 'x1e.8xlarge' | 'x1e.16xlarge' |"
-        "'x1e.32xlarge' | 'i2.xlarge' | 'i2.2xlarge' | 'i2.4xlarge' | 'i2.8xlarge' |"
-        "'i3.large' | 'i3.xlarge' | 'i3.2xlarge' | 'i3.4xlarge' | 'i3.8xlarge' |"
-        "'i3.16xlarge' | 'i3.metal' | 'hi1.4xlarge' | 'hs1.8xlarge' | 'c1.medium' |"
-        "'c1.xlarge' | 'c3.large' | 'c3.xlarge' | 'c3.2xlarge' | 'c3.4xlarge' |"
-        "'c3.8xlarge' | 'c4.large' | 'c4.xlarge' | 'c4.2xlarge' | 'c4.4xlarge' |"
-        "'c4.8xlarge' | 'c5.large' | 'c5.xlarge' | 'c5.2xlarge' | 'c5.4xlarge' |"
-        "'c5.9xlarge' | 'c5.18xlarge' | 'c5d.large' | 'c5d.xlarge' | 'c5d.2xlarge' |"
-        "'c5d.4xlarge' | 'c5d.9xlarge' | 'c5d.18xlarge' | 'c5n.large' | 'c5n.xlarge' |"
-        "'c5n.2xlarge' | 'c5n.4xlarge' | 'c5n.9xlarge' | 'c5n.18xlarge' | 'cc1.4xlarge' |"
-        "'cc2.8xlarge' | 'g2.2xlarge' | 'g2.8xlarge' | 'g3.4xlarge' | 'g3.8xlarge' |"
-        "'g3.16xlarge' | 'g3s.xlarge' | 'cg1.4xlarge' | 'p2.xlarge' | 'p2.8xlarge' |"
-        "'p2.16xlarge' | 'p3.2xlarge' | 'p3.8xlarge' | 'p3.16xlarge' | 'p3dn.24xlarge' |"
-        "'d2.xlarge' | 'd2.2xlarge' | 'd2.4xlarge' | 'd2.8xlarge' | 'f1.2xlarge' |"
-        "'f1.4xlarge' | 'f1.16xlarge' | 'm5.large' | 'm5.xlarge' | 'm5.2xlarge' |"
-        "'m5.4xlarge' | 'm5.12xlarge' | 'm5.24xlarge' | 'm5.metal' | 'm5a.large' |"
-        "'m5a.xlarge' | 'm5a.2xlarge' | 'm5a.4xlarge' | 'm5a.12xlarge' | 'm5a.24xlarge' |"
-        "'m5d.large' | 'm5d.xlarge' | 'm5d.2xlarge' | 'm5d.4xlarge' | 'm5d.12xlarge' |"
-        "'m5d.24xlarge' | 'm5d.metal' | 'm5ad.large' | 'm5ad.xlarge' | 'm5ad.2xlarge' |"
-        "'m5ad.4xlarge' | 'm5ad.8xlarge' | 'm5ad.12xlarge' | 'm5ad.16xlarge' |"
-        "'m5ad.24xlarge' | 'h1.2xlarge' | 'h1.4xlarge' | 'h1.8xlarge' | 'h1.16xlarge' |"
-        "'z1d.large' | 'z1d.xlarge' | 'z1d.2xlarge' | 'z1d.3xlarge' | 'z1d.6xlarge' |"
-        "'z1d.12xlarge' | 'z1d.metal' | 'u-6tb1.metal' | 'u-9tb1.metal' | 'u-12tb1.metal'"
-        "| 'a1.medium' | 'a1.large' | 'a1.xlarge' | 'a1.2xlarge' | 'a1.4xlarge'",
+    'InstanceType': "'%s'" % "'|'".join(AWSEC2InstTypes),
     'KernelId': 'string2',
     'KeyName': 'string2',
     'LaunchTime': "1970-01-01",
@@ -404,7 +332,456 @@ inst2 = {
 #   '----------------------------------------------------------------------'
 
 
+class FakeCloudwatchClient(object):
+    def get_metric_data(self, MetricDataQueries, StartTime='START', EndTime='END'):
+        results = []
+        for query in MetricDataQueries:
+            results.append({
+                'Id': query['Id'],
+                'Label': query['Label'],
+                'Timestamps': ["1970-01-01",],
+                'Values': [123.0,],
+                'StatusCode': "'Complete' | 'InternalError' | 'PartialData'",
+                'Messages': [{
+                    'Code': 'string1',
+                    'Value': 'string1'
+                },]
+            })
+        return {
+            'MetricDataResults': results,
+            'NextToken': 'string',
+            'Messages': [{
+                'Code': 'string',
+                'Value': 'string'
+            },]
+        }
+
+
 class FakeEC2Client(object):
+    def describe_instances(self, InstanceIds=None, Filters=None):
+        return {
+            'Reservations': [{
+                'Groups': [{
+                    'GroupName': 'string',
+                    'GroupId': 'string'
+                },],
+                'Instances': [inst1, inst2],
+                'OwnerId': 'string',
+                'RequesterId': 'string',
+                'ReservationId': 'string'
+            },],
+            'NextToken': 'string'
+        }
+
+    def describe_reserved_instances(self):
+        return {
+            'ReservedInstances': [{
+                'AvailabilityZone': 'string',
+                'Duration': 123,
+                'End': "1970-01-02",
+                'FixedPrice': "",
+                'InstanceCount': 123,
+                'InstanceType': "'%s'" % "'|'".join(AWSEC2InstTypes),
+                'ProductDescription': "'Linux/UNIX'|'Linux/UNIX (Amazon VPC)'|'Windows'|'Windows (Amazon VPC)'",
+                'ReservedInstancesId': 'string',
+                'Start': "1970-01-01",
+                'State': "'payment-pending'|'active'|'payment-failed'|'retired'",
+                'UsagePrice': "",
+                'CurrencyCode': 'USD',
+                'InstanceTenancy': "'default'|'dedicated'|'host'",
+                'OfferingClass': "'standard'|'convertible'",
+                'OfferingType':
+                    "'Heavy Utilization'|'Medium Utilization'|'Light Utilization'|'No Upfront'|"
+                    "'Partial Upfront'|'All Upfront'",
+                'RecurringCharges': [{
+                    'Amount': 123.0,
+                    'Frequency': 'Hourly'
+                },],
+                'Scope': "'Availability Zone'|'Region'",
+                'Tags': [{
+                    'Key': 'string',
+                    'Value': 'string'
+                },]
+            },]
+        }
+
+    def describe_addresses(self):
+        return {
+            'Addresses': [{
+                'InstanceId': 'string',
+                'PublicIp': 'string',
+                'AllocationId': 'string',
+                'AssociationId': 'string',
+                'Domain': "'vpc'|'standard'",
+                'NetworkInterfaceId': 'string',
+                'NetworkInterfaceOwnerId': 'string',
+                'PrivateIpAddress': 'string',
+                'Tags': [{
+                    'Key': 'string',
+                    'Value': 'string'
+                },],
+                'PublicIpv4Pool': 'string'
+            },]
+        }
+
+    def describe_security_groups(self):
+        return {
+            'SecurityGroups': [{
+                'Description': 'string',
+                'GroupName': 'string',
+                'IpPermissions': [{
+                    'FromPort': 123,
+                    'IpProtocol': 'string',
+                    'IpRanges': [{
+                        'CidrIp': 'string',
+                        'Description': 'string'
+                    },],
+                    'Ipv6Ranges': [{
+                        'CidrIpv6': 'string',
+                        'Description': 'string'
+                    },],
+                    'PrefixListIds': [{
+                        'Description': 'string',
+                        'PrefixListId': 'string'
+                    },],
+                    'ToPort': 123,
+                    'UserIdGroupPairs': [{
+                        'Description': 'string',
+                        'GroupId': 'string',
+                        'GroupName': 'string',
+                        'PeeringStatus': 'string',
+                        'UserId': 'string',
+                        'VpcId': 'string',
+                        'VpcPeeringConnectionId': 'string'
+                    },]
+                },],
+                'OwnerId': 'string',
+                'GroupId': 'string',
+                'IpPermissionsEgress': [{
+                    'FromPort': 123,
+                    'IpProtocol': 'string',
+                    'IpRanges': [{
+                        'CidrIp': 'string',
+                        'Description': 'string'
+                    },],
+                    'Ipv6Ranges': [{
+                        'CidrIpv6': 'string',
+                        'Description': 'string'
+                    },],
+                    'PrefixListIds': [{
+                        'Description': 'string',
+                        'PrefixListId': 'string'
+                    },],
+                    'ToPort': 123,
+                    'UserIdGroupPairs': [{
+                        'Description': 'string',
+                        'GroupId': 'string',
+                        'GroupName': 'string',
+                        'PeeringStatus': 'string',
+                        'UserId': 'string',
+                        'VpcId': 'string',
+                        'VpcPeeringConnectionId': 'string'
+                    },]
+                },],
+                'Tags': [{
+                    'Key': 'string',
+                    'Value': 'string'
+                },],
+                'VpcId': 'string'
+            },],
+            'NextToken': 'string'
+        }
+
+    def describe_network_interfaces(self):
+        return {
+            'NetworkInterfaces': [{
+                'Association': {
+                    'AllocationId': 'string',
+                    'AssociationId': 'string',
+                    'IpOwnerId': 'string',
+                    'PublicDnsName': 'string',
+                    'PublicIp': 'string'
+                },
+                'Attachment': {
+                    'AttachTime': "19070-01-01",
+                    'AttachmentId': 'string',
+                    'DeleteOnTermination': "True|False",
+                    'DeviceIndex': 123,
+                    'InstanceId': 'string',
+                    'InstanceOwnerId': 'string',
+                    'Status': "'attaching'|'attached'|'detaching'|'detached'"
+                },
+                'AvailabilityZone': 'string',
+                'Description': 'string',
+                'Groups': [{
+                    'GroupName': 'string',
+                    'GroupId': 'string'
+                },],
+                'InterfaceType': "'interface'|'natGateway'",
+                'Ipv6Addresses': [{
+                    'Ipv6Address': 'string'
+                },],
+                'MacAddress': 'string',
+                'NetworkInterfaceId': 'string',
+                'OwnerId': 'string',
+                'PrivateDnsName': 'string',
+                'PrivateIpAddress': 'string',
+                'PrivateIpAddresses': [{
+                    'Association': {
+                        'AllocationId': 'string',
+                        'AssociationId': 'string',
+                        'IpOwnerId': 'string',
+                        'PublicDnsName': 'string',
+                        'PublicIp': 'string'
+                    },
+                    'Primary': "True|False",
+                    'PrivateDnsName': 'string',
+                    'PrivateIpAddress': 'string'
+                },],
+                'RequesterId': 'string',
+                'RequesterManaged': "True|False",
+                'SourceDestCheck': "True|False",
+                'Status': "'available'|'associated'|'attaching'|'in-use'|'detaching'",
+                'SubnetId': 'string',
+                'TagSet': [{
+                    'Key': 'string',
+                    'Value': 'string'
+                },],
+                'VpcId': 'string'
+            },],
+            'NextToken': 'string'
+        }
+
+    def describe_spot_instance_requests(self):
+        return {
+            'SpotInstanceRequests': [{
+                'ActualBlockHourlyPrice': 'string',
+                'AvailabilityZoneGroup': 'string',
+                'BlockDurationMinutes': 123,
+                'CreateTime': "1970-01-01",
+                'Fault': {
+                    'Code': 'string',
+                    'Message': 'string'
+                },
+                'InstanceId': 'string',
+                'LaunchGroup': 'string',
+                'LaunchSpecification': {
+                    'UserData': 'string',
+                    'SecurityGroups': [{
+                        'GroupName': 'string',
+                        'GroupId': 'string'
+                    },],
+                    'AddressingType': 'string',
+                    'BlockDeviceMappings': [{
+                        'DeviceName': 'string',
+                        'VirtualName': 'string',
+                        'Ebs': {
+                            'DeleteOnTermination': "True|False",
+                            'Iops': 123,
+                            'SnapshotId': 'string',
+                            'VolumeSize': 123,
+                            'VolumeType': "'standard'|'io1'|'gp2'|'sc1'|'st1'",
+                            'Encrypted': "True|False",
+                            'KmsKeyId': 'string'
+                        },
+                        'NoDevice': 'string'
+                    },],
+                    'EbsOptimized': "True|False",
+                    'IamInstanceProfile': {
+                        'Arn': 'string',
+                        'Name': 'string'
+                    },
+                    'ImageId': 'string',
+                    'InstanceType': "'%s'" % "'|'".join(AWSEC2InstTypes),
+                    'KernelId': 'string',
+                    'KeyName': 'string',
+                    'NetworkInterfaces': [{
+                        'AssociatePublicIpAddress': "True|False",
+                        'DeleteOnTermination': "True|False",
+                        'Description': 'string',
+                        'DeviceIndex': 123,
+                        'Groups': ['string',],
+                        'Ipv6AddressCount': 123,
+                        'Ipv6Addresses': [{
+                            'Ipv6Address': 'string'
+                        },],
+                        'NetworkInterfaceId': 'string',
+                        'PrivateIpAddress': 'string',
+                        'PrivateIpAddresses': [{
+                            'Primary': "True|False",
+                            'PrivateIpAddress': 'string'
+                        },],
+                        'SecondaryPrivateIpAddressCount': 123,
+                        'SubnetId': 'string'
+                    },],
+                    'Placement': {
+                        'AvailabilityZone': 'string',
+                        'GroupName': 'string',
+                        'Tenancy': "'default'|'dedicated'|'host'"
+                    },
+                    'RamdiskId': 'string',
+                    'SubnetId': 'string',
+                    'Monitoring': {
+                        'Enabled': "True|False"
+                    }
+                },
+                'LaunchedAvailabilityZone': 'string',
+                'ProductDescription': "'Linux/UNIX'|'Linux/UNIX (Amazon VPC)'|'Windows'|'Windows (Amazon VPC)'",
+                'SpotInstanceRequestId': 'string',
+                'SpotPrice': 'string',
+                'State': "'open'|'active'|'closed'|'cancelled'|'failed'",
+                'Status': {
+                    'Code': 'string',
+                    'Message': 'string',
+                    'UpdateTime': "1970-01-01",
+                },
+                'Tags': [{
+                    'Key': 'string',
+                    'Value': 'string'
+                },],
+                'Type': "'one-time' | 'persistent'",
+                'ValidFrom': "1970-01-01",
+                'ValidUntil': "1970-01-01",
+                'InstanceInterruptionBehavior': "'hibernate'|'stop'|'terminate'"
+            },],
+            'NextToken': 'string'
+        }
+
+    def describe_spot_fleet_requests(self):
+        return {
+            'NextToken': 'string',
+            'SpotFleetRequestConfigs': [{
+                'ActivityStatus': "'error'|'pending_fulfillment'|'pending_termination'|'fulfilled'",
+                'CreateTime': "1970-01-01",
+                'SpotFleetRequestConfig': {
+                    'AllocationStrategy': "'lowestPrice'|'diversified'",
+                    'OnDemandAllocationStrategy': "'lowestPrice'|'prioritized'",
+                    'ClientToken': 'string',
+                    'ExcessCapacityTerminationPolicy': "'noTermination'|'default'",
+                    'FulfilledCapacity': 123.0,
+                    'OnDemandFulfilledCapacity': 123.0,
+                    'IamFleetRole': 'string',
+                    'LaunchSpecifications': [{
+                        'SecurityGroups': [{
+                            'GroupName': 'string',
+                            'GroupId': 'string'
+                        },],
+                        'AddressingType': 'string',
+                        'BlockDeviceMappings': [{
+                            'DeviceName': 'string',
+                            'VirtualName': 'string',
+                            'Ebs': {
+                                'DeleteOnTermination': "True|False",
+                                'Iops': 123,
+                                'SnapshotId': 'string',
+                                'VolumeSize': 123,
+                                'VolumeType': "'standard'|'io1'|'gp2'|'sc1'|'st1'",
+                                'Encrypted': "True|False",
+                                'KmsKeyId': 'string'
+                            },
+                            'NoDevice': 'string'
+                        },],
+                        'EbsOptimized': "True|False",
+                        'IamInstanceProfile': {
+                            'Arn': 'string',
+                            'Name': 'string'
+                        },
+                        'ImageId': 'string',
+                        'InstanceType': "'%s'" % "'|'".join(AWSEC2InstTypes),
+                        'KernelId': 'string',
+                        'KeyName': 'string',
+                        'Monitoring': {
+                            'Enabled': "True|False"
+                        },
+                        'NetworkInterfaces': [{
+                            'AssociatePublicIpAddress': "True|False",
+                            'DeleteOnTermination': "True|False",
+                            'Description': 'string',
+                            'DeviceIndex': 123,
+                            'Groups': ['string',],
+                            'Ipv6AddressCount': 123,
+                            'Ipv6Addresses': [{
+                                'Ipv6Address': 'string'
+                            },],
+                            'NetworkInterfaceId': 'string',
+                            'PrivateIpAddress': 'string',
+                            'PrivateIpAddresses': [{
+                                'Primary': "True|False",
+                                'PrivateIpAddress': 'string'
+                            },],
+                            'SecondaryPrivateIpAddressCount': 123,
+                            'SubnetId': 'string'
+                        },],
+                        'Placement': {
+                            'AvailabilityZone': 'string',
+                            'GroupName': 'string',
+                            'Tenancy': "'default'|'dedicated'|'host'"
+                        },
+                        'RamdiskId': 'string',
+                        'SpotPrice': 'string',
+                        'SubnetId': 'string',
+                        'UserData': 'string',
+                        'WeightedCapacity': 123.0,
+                        'TagSpecifications': [{
+                            'ResourceType':
+                                "'client-vpn-endpoint'|'customer-gateway'|'dedicated-host'|"
+                                "'dhcp-options'|'elastic-ip'|'fleet'|'fpga-image'|"
+                                "'host-reservation'|'image'|'instance'|'internet-gateway'|"
+                                "'launch-template'|'natgateway'|'network-acl'|"
+                                "'network-interface'|'reserved-instances'|'route-table'|"
+                                "'security-group'|'snapshot'|'spot-instances-request'|"
+                                "'subnet'|'transit-gateway'|'transit-gateway-attachment'|"
+                                "'transit-gateway-route-table'|'volume'|'vpc'|"
+                                "'vpc-peering-connection'|'vpn-connection'|'vpn-gateway'",
+                            'Tags': [{
+                                'Key': 'string',
+                                'Value': 'string'
+                            },]
+                        },]
+                    },],
+                    'LaunchTemplateConfigs': [{
+                        'LaunchTemplateSpecification': {
+                            'LaunchTemplateId': 'string',
+                            'LaunchTemplateName': 'string',
+                            'Version': 'string'
+                        },
+                        'Overrides': [{
+                            'InstanceType': "'%s'" % "'|'".join(AWSEC2InstTypes),
+                            'SpotPrice': 'string',
+                            'SubnetId': 'string',
+                            'AvailabilityZone': 'string',
+                            'WeightedCapacity': 123.0,
+                            'Priority': 123.0
+                        },]
+                    },],
+                    'SpotPrice': 'string',
+                    'TargetCapacity': 123,
+                    'OnDemandTargetCapacity': 123,
+                    'TerminateInstancesWithExpiration': "True|False",
+                    'Type': "'request'|'maintain'|'instant'",
+                    'ValidFrom': "1970-01-01",
+                    'ValidUntil': "1970-01-01",
+                    'ReplaceUnhealthyInstances': "True|False",
+                    'InstanceInterruptionBehavior': "'hibernate'|'stop'|'terminate'",
+                    'LoadBalancersConfig': {
+                        'ClassicLoadBalancersConfig': {
+                            'ClassicLoadBalancers': [{
+                                'Name': 'string'
+                            },]
+                        },
+                        'TargetGroupsConfig': {
+                            'TargetGroups': [{
+                                'Arn': 'string'
+                            },]
+                        }
+                    },
+                    'InstancePoolsToUseCount': 123
+                },
+                'SpotFleetRequestId': 'string',
+                'SpotFleetRequestState': "'submitted'|'active'|'cancelled'|'failed'|'cancelled_running'|'cancelled_terminating'|'modifying'"
+            },]
+        }
+
     def describe_tags(self, Filters=None):
         tags = [
             {
@@ -499,3 +876,53 @@ def test_agent_aws_ec2_labels(instances, len_results, expected_results):
     for result in results:
         assert result.piggyback_hostname in expected_results
         assert result.content == expected_results[result.piggyback_hostname]
+
+
+def test_agent_aws_ec2_result_distribution():
+    region = 'region'
+    config = AWSConfig('hostname', (None, None))
+    config.add_single_service_config('ec2_names', None)
+    config.add_service_tags('ec2_tags', (None, None))
+
+    fake_ec2_client = FakeEC2Client()
+    fake_cloudwatch_client = FakeCloudwatchClient()
+
+    ec2_limits_distributor = ResultDistributor()
+    ec2_summary_distributor = ResultDistributor()
+
+    ec2_limits = EC2Limits(fake_ec2_client, region, config, ec2_limits_distributor)
+    ec2_summary = EC2Summary(fake_ec2_client, region, config, ec2_summary_distributor)
+    ec2_labels = EC2Labels(fake_ec2_client, region, config)
+    ec2_security_groups = EC2SecurityGroups(fake_ec2_client, region, config)
+    ec2 = EC2(fake_cloudwatch_client, region, config)
+
+    ec2_limits_distributor.add(ec2_summary)
+    ec2_summary_distributor.add(ec2_labels)
+    ec2_summary_distributor.add(ec2_security_groups)
+    ec2_summary_distributor.add(ec2)
+
+    _ec2_limits_results = ec2_limits.run().results
+    _ec2_summary_results = ec2_summary.run().results
+    _ec2_labels_results = ec2_labels.run().results
+    _ec2_security_groups_results = ec2_security_groups.run().results
+    _ec2_results = ec2.run().results
+
+    #--EC2Limits------------------------------------------------------------
+    assert ec2_limits.interval == 300
+    assert ec2_limits.name == "ec2_limits"
+
+    #--EC2Summary-----------------------------------------------------------
+    assert ec2_summary.interval == 300
+    assert ec2_summary.name == "ec2_summary"
+
+    #--EC2Labels------------------------------------------------------------
+    assert ec2_labels.interval == 300
+    assert ec2_labels.name == "labels"
+
+    #--EC2SecurityGroups----------------------------------------------------
+    assert ec2_security_groups.interval == 300
+    assert ec2_security_groups.name == "ec2_security_groups"
+
+    #--EC2------------------------------------------------------------------
+    assert ec2.interval == 300
+    assert ec2.name == "ec2"

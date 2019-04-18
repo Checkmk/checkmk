@@ -35,12 +35,22 @@
 # P No-Text hirn=-8;-20
 
 
+def _is_valid_line(line):
+    return len(line) >= 4 or (len(line) == 3 and line[0] == 'P')
+
+
 def parse_local(info):
-    LocalResult = collections.namedtuple("LocalResult", ("node", "line"))
-    parsed = []
+    LocalResult = collections.namedtuple("LocalResult", ("node", "item", "line"))
+
+    parsed = {}
     for line in info:
         node, stripped_line = line[0], line[1:]
-        parsed.append(LocalResult(node, stripped_line))
+        if _is_valid_line(stripped_line):
+            item = stripped_line[1]
+        else:
+            item = None
+        parsed.setdefault(item, []).append(LocalResult(node, item, stripped_line))
+
     return parsed
 
 
@@ -104,22 +114,15 @@ def local_compute_state(perfdata):
 
 
 def inventory_local(parsed):
-    inventory = []
-    # Lines with P do not need to supply a text
-    for _node, line in parsed:
-        if len(line) >= 4 or len(line) == 3 and line[0] == 'P':
-            inventory.append((line[1], {}))
-        else:
-            raise MKGeneralException(
-                "Invalid line in agent section <<<local>>>: %s" % " ".join(line))
-    return inventory
+    if None in parsed:
+        output = parsed[None][0]
+        raise MKGeneralException(
+            "Invalid line in agent section <<<local>>>: %s" % " ".join(output.line))
+    return [(key, {}) for key in parsed]
 
 
 # Some helper functions
 def _parse_local_line(line):
-    if not (len(line) >= 4 or (len(line) == 3 and line[0] == 'P')):
-        return 3, "Incomplete line in local check output: %s" % " ".join(line), []
-
     statechar = line[0]
     perftxt = line[2]
 
@@ -180,14 +183,12 @@ def _calculate_local_worst_state(collected_stats):
             yield state, output, perfdata
 
 
-def check_local(item, params, parsed):
+@get_parsed_item_data
+def check_local(_no_item, params, data):
     collected_stats = {}
-    for nodename, line in parsed:
-        # Ignore invalid lines, tolerate bugs in local checks
-        # of unexperienced users
-        if len(line) >= 2 and line[1] == item:
-            collected_stats.setdefault(nodename, {})
-            collected_stats[nodename].setdefault(item, _parse_local_line(line))
+    for output in data:
+        collected_stats.setdefault(output.node, {})
+        collected_stats[output.node].setdefault(output.item, _parse_local_line(output.line))
 
     if collected_stats == {}:
         yield 3, "No data found in agent output"

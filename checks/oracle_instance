@@ -68,7 +68,17 @@ def inventory_oracle_instance(info):
     return inv_list
 
 
+def _transform_oracle_instance_params(p):
+    if "ignore_noarchivelog" in p:
+        if p["ignore_noarchivelog"]:
+            p["noarchivelog"] = 0
+        del p["ignore_noarchivelog"]
+    return p
+
+
 def check_oracle_instance(item, params, info):
+    params = _transform_oracle_instance_params(params)
+
     def state_marker(state, infotext, param, column, data):
         value = params.get(param)
         if value is not None and column == data:
@@ -194,9 +204,8 @@ def check_oracle_instance(item, params, info):
                     infotext += ', Log Mode %s' % (log_mode.lower())
                     state, infotext = state_marker(state, infotext, 'archivelog', log_mode,
                                                    'ARCHIVELOG')
-                    if not params.get('ignore_noarchivelog', False):
-                        state, infotext = state_marker(state, infotext, 'noarchivelog', log_mode,
-                                                       'NOARCHIVELOG')
+                    state, infotext = state_marker(state, infotext, 'noarchivelog', log_mode,
+                                                   'NOARCHIVELOG')
 
                     # archivelog is only valid in non pdb
                     # force logging is only usable when archivelog is enabled

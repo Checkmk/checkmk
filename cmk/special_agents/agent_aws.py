@@ -882,7 +882,7 @@ class EC2Limits(AWSSectionLimits):
     def _compute_content(self, raw_content, colleague_contents):
         reservations, reserved_instances, addresses, security_groups, interfaces, spot_inst_requests, spot_fleet_requests = raw_content.content
         instances = {inst['InstanceId']: inst for res in reservations for inst in res['Instances']}
-        res_instances = {inst['ReservedInstanceId']: inst for inst in reserved_instances}
+        res_instances = {inst['ReservedInstancesId']: inst for inst in reserved_instances}
 
         self._add_instance_limits(instances, res_instances, spot_inst_requests)
         self._add_addresses_limits(addresses)
@@ -1039,7 +1039,7 @@ class EC2Limits(AWSSectionLimits):
         active_spot_fleet_requests = 0
         total_target_cap = 0
         for spot_fleet_req in spot_fleet_requests:
-            if spot_fleet_req['State'] != 'active':
+            if spot_fleet_req['SpotFleetRequestState'] != 'active':
                 continue
 
             active_spot_fleet_requests += 1

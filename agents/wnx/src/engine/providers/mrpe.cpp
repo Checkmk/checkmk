@@ -2,26 +2,22 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/mrpe.h"
+
 #include <filesystem>
 #include <regex>
 #include <string>
 #include <string_view>
 #include <tuple>
 
-#include "fmt/format.h"
-
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-#include "common/wtools.h"
-
 #include "cfg.h"
 #include "cma_core.h"
+#include "common/wtools.h"
+#include "fmt/format.h"
 #include "glob_match.h"
-
 #include "logger.h"
-
-#include "providers/mrpe.h"
+#include "tools/_raii.h"
+#include "tools/_xlog.h"
 
 namespace cma::provider {
 
@@ -283,7 +279,9 @@ void MrpeProvider::updateSectionStatus() {
                 FixCrCnForMrpe(data);
                 data += "\n";
 
-                XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
+                if (cma::cfg::LogMrpeOutput())
+                    XLOG::t(
+                        "Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
                         wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
                 hdr += std::to_string(Code) + " ";
                 accu_ += hdr;

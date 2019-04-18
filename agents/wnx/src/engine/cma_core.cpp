@@ -237,8 +237,9 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
             auto data = wtools::ConditionallyConvertFromUTF16(Data);
             cma::tools::AddVector(accu, data);
             storeData(Pid, accu);
-            XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                    wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
+            if (cma::cfg::LogPluginOutput())
+                XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
+                        wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
         });
 
     } else {
@@ -311,8 +312,9 @@ void PluginEntry::threadCore(const std::wstring& Id) {
                 std::lock_guard l(data_lock_);
                 storeData(Pid, accu);
             }
-            XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                    wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
+            if (cma::cfg::LogPluginOutput())
+                XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
+                        wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
         });
     } else {
         // timeout or break signaled

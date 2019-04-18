@@ -59,8 +59,66 @@ def _sanitize_state(state):
     return state, ""
 
 
+def _parse_perfentry(entry):
+    '''parse single perfdata entry
+
+    return a named tuple containing check_levels compatible levels field, as well as
+    cmk_base compatible perfdata 6-tuple.
+
+    This function may raise Index- or ValueErrors.
+    '''
+    Perfdata = collections.namedtuple("Perfdata", ("name", "value", "levels", "tuple"))
+
+    name, raw = entry.split('=', 1)
+    raw = raw.split(";")
+    value = float_ignore_uom(raw[0])
+
+    # create a check_levels compatible levels quadruple
+    levels = [None] * 4
+    if len(raw) >= 2:
+        warn = raw[1].split(':', 1)
+        levels[0] = float(warn[-1])
+        if len(warn) > 1:
+            levels[2] = float(warn[0])
+    if len(raw) >= 3:
+        crit = raw[2].split(':', 1)
+        levels[1] = float(crit[-1])
+        if len(crit) > 1:
+            levels[3] = float(crit[0])
+
+    # create valid perfdata 6-tuple
+    min_ = float(raw[3]) if len(raw) >= 4 else None
+    max_ = float(raw[4]) if len(raw) >= 5 else None
+    tuple_ = (name, value, levels[0], levels[1], min_, max_)
+
+    # check_levels won't handle crit=None, if warn is present.
+    if levels[0] is not None and levels[1] is None:
+        levels[1] = float('inf')
+    if levels[2] is not None and levels[3] is None:
+        levels[3] = float('-inf')
+
+    return Perfdata(name, value, tuple(levels), tuple_)
+
+
+def _parse_perftxt(string):
+    if string == '-':
+        return [], ""
+
+    perfdata = []
+    msg = []
+    for entry in string.split('|'):
+        try:
+            perfdata.append(_parse_perfentry(entry))
+        except (ValueError, IndexError):
+            msg.append(entry)
+    if msg:
+        return perfdata, "Invalid performance data: %r. " % "|".join(msg)
+    return perfdata, ""
+
+
 def parse_local(info):
-    LocalResult = collections.namedtuple("LocalResult", ("node", "item", "state", "line"))
+    LocalResult = collections.namedtuple("LocalResult",
+                                         ("node", "item", "state", "line", "perfdata"))
 
     parsed = {}
     for line in info:
@@ -71,10 +129,12 @@ def parse_local(info):
 
         state, state_msg = _sanitize_state(stripped_line[0])
         item = stripped_line[1]
-        stripped_line = stripped_line[2:]
-        if state_msg:
-            stripped_line.insert(0, "%sOutput is:" % state_msg)
-        parsed.setdefault(item, []).append(LocalResult(node, item, state, stripped_line))
+        perfdata, perf_msg = _parse_perftxt(stripped_line[2])
+        stripped_line = stripped_line[3:]
+        if state_msg or perf_msg:
+            state = 3
+            stripped_line.insert(0, "%s%sOutput is:" % (state_msg, perf_msg))
+        parsed.setdefault(item, []).append(LocalResult(node, item, state, stripped_line, perfdata))
 
     return parsed
 
@@ -83,49 +143,11 @@ def parse_local(info):
 # performance data.
 def local_compute_state(perfdata):
     texts = []
-
-    def outof_levels(value, levels):
-        if levels is None:
-            return
-
-        if ':' in levels:
-            lower, upper = map(float, levels.split(':'))
-        else:
-            lower = None
-            upper = float(levels)
-        if value > upper:
-            return " %s > %s" % (value, upper)
-        elif lower is not None and value < lower:
-            return " %s < %s" % (value, lower)
-
     worst = 0
     for entry in perfdata:
-        if len(entry) < 3:
-            continue  # No levels attached
-        varname = entry[0]
-        value = float_ignore_uom(entry[1])
-        warn = entry[2]
-        if len(entry) >= 4:
-            crit = entry[3]
-        else:
-            crit = None
-
-        text = outof_levels(value, crit)
-        if text:
-            worst = 2
-            text = "%s%s(!!)" % (varname, text)
-            texts.append(text)
-
-        else:
-            text = outof_levels(value, warn)
-            if text:
-                worst = max(worst, 1)
-                text = "%s%s(!)" % (varname, text)
-                texts.append(text)
-
-            else:
-                texts.append("%s is %s(.)" % (varname, value))
-
+        state, text = check_levels(entry.value, None, entry.levels, infoname=entry.name)[:2]
+        worst = max(worst, state)
+        texts.append(text)
     return worst, texts
 
 
@@ -139,32 +161,20 @@ def inventory_local(parsed):
 
 # Some helper functions
 def _parse_local_line(result):
-    perftxt = result.line[0]
 
     # convert eventually escaped newinfo_line chars to real newinfo_lines
     # (will be converted back later individually for the different cores)
-    output = " ".join(result.line[1:]).replace("\\n", "\n")
-
-    perfdata = []
-    compute_data = []
-    if perftxt != "-":
-        for entry in perftxt.split('|'):
-            new_perf = parse_nagios_perfstring(entry)
-            if new_perf:
-                perfdata.append(new_perf)
-            else:
-                return 3, "Invalid performance data %s in local check output %s" % \
-                       (perftxt, " ".join(result.line)), []
+    output = " ".join(result.line).replace("\\n", "\n")
 
     if result.state == 'P':
-        state, texts = local_compute_state(compute_data)
+        state, texts = local_compute_state(result.perfdata)
         if output:
             texts.insert(0, output)
         output = ", ".join(texts)
     else:
         state = result.state
 
-    return state, output, perfdata
+    return state, output, [p.tuple for p in result.perfdata]
 
 
 def _calculate_local_best_state(collected_stats):
@@ -212,5 +222,4 @@ check_info["local"] = {
     'has_perfdata': True,
     'node_info': True,
     'group': 'local',
-    'includes': ['parse_nagios.include']
 }

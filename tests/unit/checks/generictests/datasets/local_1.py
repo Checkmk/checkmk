@@ -15,6 +15,7 @@ info = [
     ['node_1', 'P', 'Some_yet_other_Service', 'temp=40;30;50|humidity=28;50:100;0:50;0;100'],
     ['node_2', 'P', 'Has-no-var', '-', 'This', 'has', 'no', 'variable'],
     ['node_2', 'P', 'No-Text', 'hirn=-8;-20'],
+    ['rougue', 'P', 'D\'oh!', 'this is an invalid metric|isotopes=0', 'I', 'messed', 'up!']
 ]
 
 
@@ -28,6 +29,7 @@ discovery = {
         ('Some_other_Service', {}),
         ('Some_yet_other_Service', {}),
         ('This_is_OK', {}),
+        ('D\'oh!', {})
     ],
 }
 
@@ -41,7 +43,7 @@ checks = {
             (0, 'On node node_2: This has no variable', []),
         ]),
         ('No-Text', {}, [
-            (0, 'On node node_2: ', [
+            (1, 'On node node_2: hirn: -8.00 (warn/crit at -20.00/inf)', [
                 ('hirn', -8, -20, None, None, None),
             ]),
         ]),
@@ -56,20 +58,25 @@ checks = {
             ]),
         ]),
         ('Some_other_Service', {}, [
-            (0, 'On node node_1: Result is computed from two values', [
+            (1, 'On node node_1: Result is computed from two values, value1: 10.00, value2: 20.00 (warn/crit at 20.00/50.00)', [
                 ('value1', 10, 30, 50, None, None),
                 ('value2', 20, 20, 50, 0, 100),
             ]),
         ]),
         ('Some_yet_other_Service', {}, [
-            (0, 'On node node_1: ', [
+            (1, 'On node node_1: temp: 40.00 (warn/crit at 30.00/50.00), humidity: 28.00 (warn/crit below 50.00/0.00)', [
                 ('temp', 40, 30, 50, None, None),
                 ('humidity', 28, 100, 50, 0, 100),
             ]),
         ]),
         ('This_is_OK', {}, [
-            (0, 'On node node_1: ', [
+            (0, 'On node node_1: foo: 18.00', [
                 ('foo', 18, 20, 50, None, None),
+            ]),
+        ]),
+        ('D\'oh!', {}, [
+            (3, "On node rougue: Invalid performance data: 'this is an invalid metric'. Output is: I messed up!", [
+                ('isotopes', 0, None, None, None, None),
             ]),
         ]),
     ],

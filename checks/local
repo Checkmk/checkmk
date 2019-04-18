@@ -123,16 +123,10 @@ def _parse_local_line(line):
     compute_data = []
     if perftxt != "-":
         for entry in perftxt.split('|'):
-            try:
-                varname, valuetxt = entry.split('=')
-                values = valuetxt.split(';')
-                compute_data.append(tuple([varname] + values))
-                # perfdata must not contain values with colons. So we split
-                # these values and use the upper levels only.
-                upper_values = [v.split(':')[-1] for v in values]
-                perfdata.append(tuple([varname] + upper_values))
-
-            except ValueError:
+            new_perf = parse_nagios_perfstring(entry)
+            if new_perf:
+                perfdata.append(new_perf)
+            else:
                 return 3, "Invalid performance data %s in local check output %s" % \
                        (perftxt, " ".join(line)), []
 
@@ -208,4 +202,5 @@ check_info["local"] = {
     'has_perfdata': True,
     'node_info': True,
     'group': 'local',
+    'includes': ['parse_nagios.include']
 }

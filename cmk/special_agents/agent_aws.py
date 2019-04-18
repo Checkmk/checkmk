@@ -1581,22 +1581,24 @@ class ELBLimits(AWSSectionLimits):
         return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
 
 
-class ELBSummary(AWSSectionGeneric):
-    def __init__(self, client, region, config, distributor=None):
-        super(ELBSummary, self).__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config['elb_names']
-        self._tags = self._prepare_tags_for_api_response(self._config.service_config['elb_tags'])
+class ELBSummaryGeneric(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None, resource=""):
+        self._resource = resource
+        super(ELBSummaryGeneric, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['%s_names' % resource]
+        self._tags = self._prepare_tags_for_api_response(
+            self._config.service_config['%s_tags' % resource])
 
     @property
     def name(self):
-        return "elb_summary"
+        return "%s_summary" % self._resource
 
     @property
     def interval(self):
         return 300
 
     def _get_colleague_contents(self):
-        colleague = self._received_results.get('elb_limits')
+        colleague = self._received_results.get('%s_limits' % self._resource)
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
@@ -1653,13 +1655,17 @@ class ELBSummary(AWSSectionGeneric):
         return [AWSSectionResult("", computed_content.content.values())]
 
 
-class ELBLabels(AWSSectionLabels):
+class ELBLabelsGeneric(AWSSectionLabels):
+    def __init__(self, client, region, config, distributor=None, resource=""):
+        super(ELBLabelsGeneric, self).__init__(client, region, config, distributor=distributor)
+        self._resource = resource
+
     @property
     def interval(self):
         return 300
 
     def _get_colleague_contents(self):
-        colleague = self._received_results.get('elb_summary')
+        colleague = self._received_results.get('%s_summary' % self._resource)
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
@@ -2583,7 +2589,8 @@ class AWSSectionsGeneric(AWSSections):
         ebs_summary = EBSSummary(ec2_client, region, config, ebs_summary_distributor)
 
         elb_limits = ELBLimits(elb_client, region, config, elb_limits_distributor)
-        elb_summary = ELBSummary(elb_client, region, config, elb_summary_distributor)
+        elb_summary = ELBSummaryGeneric(
+            elb_client, region, config, elb_summary_distributor, resource='elb')
 
         elbv2_limits = ELBv2Limits(elbv2_client, region, config, elbv2_limits_distributor)
 
@@ -2602,7 +2609,7 @@ class AWSSectionsGeneric(AWSSections):
 
         ebs = EBS(cloudwatch_client, region, config)
 
-        elb_labels = ELBLabels(elb_client, region, config)
+        elb_labels = ELBLabelsGeneric(elb_client, region, config, resource='elb')
         elb_health = ELBHealth(elb_client, region, config)
         elb = ELB(cloudwatch_client, region, config)
 

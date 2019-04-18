@@ -6,8 +6,8 @@ from cmk.special_agents.agent_aws import (
     AWSConfig,
     ResultDistributor,
     ELBLimits,
-    ELBSummary,
-    ELBLabels,
+    ELBSummaryGeneric,
+    ELBLabelsGeneric,
     ELBHealth,
     ELB,
 )
@@ -397,8 +397,9 @@ def test_agent_aws_elb_result_distribution(tags, found_instances, found_instance
     elb_summary_distributor = ResultDistributor()
 
     elb_limits = ELBLimits(fake_elb_client, region, config, elb_limits_distributor)
-    elb_summary = ELBSummary(fake_elb_client, region, config, elb_summary_distributor)
-    elb_labels = ELBLabels(fake_elb_client, region, config)
+    elb_summary = ELBSummaryGeneric(
+        fake_elb_client, region, config, elb_summary_distributor, resource='elb')
+    elb_labels = ELBLabelsGeneric(fake_elb_client, region, config, resource='elb')
     elb_health = ELBHealth(fake_elb_client, region, config)
     elb = ELB(fake_cloudwatch_client, region, config)
 

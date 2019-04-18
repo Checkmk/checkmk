@@ -62,6 +62,74 @@ AWSStrings = Union[bytes, unicode]
 # - per account (S3)
 # - per region (EC2, EBS, ELB, RDS)
 
+#   .--overview------------------------------------------------------------.
+#   |                                        _                             |
+#   |               _____   _____ _ ____   _(_) _____      __              |
+#   |              / _ \ \ / / _ \ '__\ \ / / |/ _ \ \ /\ / /              |
+#   |             | (_) \ V /  __/ |   \ V /| |  __/\ V  V /               |
+#   |              \___/ \_/ \___|_|    \_/ |_|\___| \_/\_/                |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Overview of sections and dependencies                                |
+#   '----------------------------------------------------------------------'
+
+# CostsAndUsage
+
+# EC2Limits
+# |
+# '-- EC2Summary
+#     |
+#     |-- EC2Labels
+#     |
+#     |-- EC2SecurityGroups
+#     |
+#     '-- EC2
+
+# S3Limits
+# |
+# '-- S3Summary
+#     |
+#     |-- S3
+#     |
+#     '-- S3Requests
+
+# ELBLimits
+# |
+# '-- ELBSummaryGeneric
+#     |
+#     |-- ELBLabelsGeneric
+#     |
+#     |-- ELBHealth
+#     |
+#     '-- ELB
+
+# ELBv2Limits
+# |
+# '-- ELBSummaryGeneric
+#     |
+#     |-- ELBLabelsGeneric
+#     |
+#     |-- ELBv2TargetGroups
+#     |
+#     '-- ELBv2Application, ELBv2Network
+
+# EBSLimits,EC2Summary
+# |
+# '-- EBSSummary
+#     |
+#     '-- EBS
+
+# RDSLimits
+
+# RDSSummary
+# |
+# '-- RDS
+
+# CloudwatchAlarmsLimits
+# |
+# '-- CloudwatchAlarms
+
+#.
 #   .--for imports---------------------------------------------------------.
 #   |         __              _                            _               |
 #   |        / _| ___  _ __  (_)_ __ ___  _ __   ___  _ __| |_ ___         |

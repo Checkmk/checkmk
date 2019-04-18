@@ -35,6 +35,15 @@
 # P No-Text hirn=-8;-20
 
 
+def parse_local(info):
+    LocalResult = collections.namedtuple("LocalResult", ("node", "line"))
+    parsed = []
+    for line in info:
+        node, stripped_line = line[0], line[1:]
+        parsed.append(LocalResult(node, stripped_line))
+    return parsed
+
+
 # Compute state according to warn/crit levels contained in the
 # performance data.
 def local_compute_state(perfdata):
@@ -94,16 +103,15 @@ def local_compute_state(perfdata):
     return worst, texts
 
 
-def inventory_local(info):
+def inventory_local(parsed):
     inventory = []
     # Lines with P do not need to supply a text
-    for line in info:
-        stripped_line = line[1:]
-        if len(stripped_line) >= 4 or len(stripped_line) == 3 and stripped_line[0] == 'P':
-            inventory.append((stripped_line[1], {}))
+    for _node, line in parsed:
+        if len(line) >= 4 or len(line) == 3 and line[0] == 'P':
+            inventory.append((line[1], {}))
         else:
             raise MKGeneralException(
-                "Invalid line in agent section <<<local>>>: %s" % " ".join(stripped_line))
+                "Invalid line in agent section <<<local>>>: %s" % " ".join(line))
     return inventory
 
 
@@ -172,16 +180,14 @@ def _calculate_local_worst_state(collected_stats):
             yield state, output, perfdata
 
 
-def check_local(item, params, info):
+def check_local(item, params, parsed):
     collected_stats = {}
-    for line in info:
-        nodename = line[0]
-        stripped_line = line[1:]
+    for nodename, line in parsed:
         # Ignore invalid lines, tolerate bugs in local checks
         # of unexperienced users
-        if len(stripped_line) >= 2 and stripped_line[1] == item:
+        if len(line) >= 2 and line[1] == item:
             collected_stats.setdefault(nodename, {})
-            collected_stats[nodename].setdefault(item, _parse_local_line(stripped_line))
+            collected_stats[nodename].setdefault(item, _parse_local_line(line))
 
     if collected_stats == {}:
         yield 3, "No data found in agent output"
@@ -196,8 +202,9 @@ def check_local(item, params, info):
 
 
 check_info["local"] = {
-    'check_function': check_local,
+    'parse_function': parse_local,
     'inventory_function': inventory_local,
+    'check_function': check_local,
     'service_description': '%s',
     'has_perfdata': True,
     'node_info': True,

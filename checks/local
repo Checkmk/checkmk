@@ -130,7 +130,7 @@ def parse_local(info):
         state, state_msg = _sanitize_state(stripped_line[0])
         item = stripped_line[1]
         perfdata, perf_msg = _parse_perftxt(stripped_line[2])
-        # convert eventually escaped newinfo_line chars to real newinfo_lines
+        # convert escaped newline chars
         # (will be converted back later individually for the different cores)
         text = " ".join(stripped_line[3:]).replace("\\n", "\n")
         if state_msg or perf_msg:

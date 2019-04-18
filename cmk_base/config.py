@@ -912,24 +912,12 @@ def snmp_port_of(hostname):
     return ports[0]
 
 
-def is_bulkwalk_host(hostname):
-    # type: (str) -> bool
-    if bulkwalk_hosts:
-        return get_config_cache().in_binary_hostlist(hostname, bulkwalk_hosts)
-
-    return False
-
-
 def bulk_walk_size_of(hostname):
     bulk_sizes = get_config_cache().host_extra_conf(hostname, snmp_bulk_size)
     if not bulk_sizes:
         return 10
 
     return bulk_sizes[0]
-
-
-def is_snmpv2or3_without_bulkwalk_host(hostname):
-    return get_config_cache().in_binary_hostlist(hostname, snmpv2c_hosts)
 
 
 # TODO: Replace call sites with HostConfig access and remove this
@@ -2697,8 +2685,9 @@ class HostConfig(object):
             ipaddress=ipaddress,
             credentials=snmp_credentials_of(self.hostname),
             port=snmp_port_of(self.hostname),
-            is_bulkwalk_host=is_bulkwalk_host(self.hostname),
-            is_snmpv2or3_without_bulkwalk_host=is_snmpv2or3_without_bulkwalk_host(self.hostname),
+            is_bulkwalk_host=self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts),
+            is_snmpv2or3_without_bulkwalk_host=self._config_cache.in_binary_hostlist(
+                self.hostname, snmpv2c_hosts),
             bulk_walk_size_of=bulk_walk_size_of(self.hostname),
             timing=snmp_timing_of(self.hostname),
             oid_range_limits=oid_range_limits_of(self.hostname),

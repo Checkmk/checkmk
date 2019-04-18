@@ -60,8 +60,9 @@ def binstring_to_int(binstring):
     return value
 
 
-def is_snmpv3_host(host_config):
-    return isinstance(host_config.credentials, tuple)
+def is_snmpv3_host(snmp_config):
+    # type: (SNMPHostConfig) -> bool
+    return isinstance(snmp_config.credentials, tuple)
 
 
 # TODO: Be more specific about the possible tuples
@@ -104,7 +105,7 @@ class ABCSNMPBackend(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def get(self, host_config, oid, context_name=None):
+    def get(self, snmp_config, oid, context_name=None):
         # type: (SNMPHostConfig, str, Optional[str]) -> Optional[str]
         """Fetch a single OID from the given host in the given SNMP context
 

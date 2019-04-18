@@ -1,0 +1,12 @@
+Title: oracle_instance: Removed obsolete parameter 'ignore no archive log'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1555585076
+Class: fix
+
+The parameter 'ignore no archive log' has been removed because
+the parameter 'State in case of Archivelogmode is disabled: OK'
+has the same effect.

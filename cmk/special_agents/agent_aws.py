@@ -1913,6 +1913,53 @@ class ELBv2Limits(AWSSectionLimits):
         return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
 
 
+class ELBv2TargetGroups(AWSSectionGeneric):
+    @property
+    def name(self):
+        return "elbv2_target_groups"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('elbv2_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        load_balancers = {}
+        for load_balancer_dns_name, load_balancer in colleague_contents.content.iteritems():
+            load_balancer_type = load_balancer.get('Type')
+            if load_balancer_type not in ['application', 'network']:
+                # Just to be sure, that we do not describe target groups of other lbs
+                continue
+
+            load_balancer_arn = load_balancer['LoadBalancerArn']
+            response = self._client.describe_target_groups(LoadBalancerArn=load_balancer_arn)
+            target_groups = self._get_response_content(response, 'TargetGroups')
+            for target_group in target_groups:
+                response = self._client.describe_target_health(
+                    TargetGroupArn=target_group['TargetGroupArn'])
+                target_group_health_descrs = self._get_response_content(
+                    response, 'TargetHealthDescriptions')
+                target_group['TargetHealth'] = target_group_health_descrs.get('TargetHealth', {})
+
+            load_balancers.setdefault(load_balancer_dns_name, []).append((load_balancer_type,
+                                                                          target_groups))
+        return load_balancers
+
+    def _compute_content(self, raw_content, colleague_contents):
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, content)
+            for piggyback_hostname, content in computed_content.content.iteritems()
+        ]
+
+
 #.
 #   .--EBS-----------------------------------------------------------------.
 #   |                          _____ ____ ____                             |
@@ -2617,6 +2664,7 @@ class AWSSectionsGeneric(AWSSections):
         elb = ELB(cloudwatch_client, region, config)
 
         elbv2_labels = ELBLabelsGeneric(elb_client, region, config, resource='elbv2')
+        elbv2_target_groups = ELBv2TargetGroups(elb_client, region, config)
 
         s3 = S3(cloudwatch_client, region, config)
         s3_requests = S3Requests(cloudwatch_client, region, config)
@@ -2644,6 +2692,7 @@ class AWSSectionsGeneric(AWSSections):
 
         elbv2_limits_distributor.add(elbv2_summary)
         elbv2_summary_distributor.add(elbv2_labels)
+        elbv2_summary_distributor.add(elbv2_target_groups)
 
         s3_limits_distributor.add(s3_summary)
         s3_summary_distributor.add(s3)
@@ -2681,6 +2730,7 @@ class AWSSectionsGeneric(AWSSections):
                 self._sections.append(elbv2_limits)
             self._sections.append(elbv2_summary)
             self._sections.append(elbv2_labels)
+            self._sections.append(elbv2_target_groups)
 
         if 's3' in services:
             if config.service_config.get('s3_limits'):

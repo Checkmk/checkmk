@@ -1,0 +1,122 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#'TargetGroups': [
+#        {
+#            'TargetGroupArn': 'string',
+#            'TargetGroupName': 'string',
+#            'Protocol': 'HTTP'|'HTTPS'|'TCP'|'TLS',
+#            'Port': 123,
+#            'VpcId': 'string',
+#            'HealthCheckProtocol': 'HTTP'|'HTTPS'|'TCP'|'TLS',
+#            'HealthCheckPort': 'string',
+#            'HealthCheckEnabled': True|False,
+#            'HealthCheckIntervalSeconds': 123,
+#            'HealthCheckTimeoutSeconds': 123,
+#            'HealthyThresholdCount': 123,
+#            'UnhealthyThresholdCount': 123,
+#            'HealthCheckPath': 'string',
+#            'Matcher': {
+#                'HttpCode': 'string'
+#            },
+#            'LoadBalancerArns': [
+#                'string',
+#            ],
+#            'TargetType': 'instance'|'ip'|'lambda'
+#            'TargetHealth': {
+#                'State': 'initial'|'healthy'|'unhealthy'|'unused'|'draining'|'unavailable',
+#                'Reason': 'Elb.RegistrationInProgress'|'Elb.InitialHealthChecking'|'Target.ResponseCodeMismatch'|
+#                          'Target.Timeout'|'Target.FailedHealthChecks'|'Target.NotRegistered'|'Target.NotInUse'|
+#                          'Target.DeregistrationInProgress'|'Target.InvalidState'|'Target.IpUnusable'|
+#                          'Target.HealthCheckDisabled'|'Elb.InternalError',
+#                'Description': 'string'
+#            },
+#        },
+
+
+def parse_aws_elbv2_target_groups(info):
+    application_target_groups, network_target_groups = [], []
+    for load_balancer_type, target_groups in parse_aws(info):
+        if load_balancer_type == 'application':
+            application_target_groups.extend(target_groups)
+        elif load_balancer_type == 'network':
+            network_target_groups.extend(target_groups)
+    return application_target_groups, network_target_groups
+
+
+def check_aws_elbv2_target_groups(item, params, target_groups):
+    target_groups_by_state = {}
+    for target_group in target_groups:
+        target_groups_by_state.setdefault(
+            target_group.get('TargetHealth', {}).get('State', 'unknown'), []).append(target_group)
+
+    for state_readable, groups in target_groups_by_state.iteritems():
+        if state_readable in ['initial', 'healthy', 'unused', 'draining', 'unavailable']:
+            state = 0
+        elif state_readable in ['unhealthy']:
+            state = 2
+        else:
+            state = 3
+        yield state, '%s (%s)' % (state_readable, len(groups))
+
+
+def inventory_aws_application_elb_target_groups(parsed):
+    application_target_groups, _network_target_groups = parsed
+    if application_target_groups:
+        return [(None, {})]
+
+
+def check_aws_application_elb_target_groups(item, params, parsed):
+    application_target_groups, _network_target_groups = parsed
+    return check_aws_elbv2_target_groups(item, params, application_target_groups)
+
+
+check_info['aws_elbv2_target_groups'] = {
+    'parse_function': parse_aws_elbv2_target_groups,
+    'inventory_function': inventory_aws_application_elb_target_groups,
+    'check_function': check_aws_application_elb_target_groups,
+    'service_description': 'AWS/ApplicationELB Target Groups',
+    'includes': ['aws.include'],
+}
+
+
+def inventory_aws_network_elb_target_groups(parsed):
+    _application_target_groups, network_target_groups = parsed
+    if network_target_groups:
+        return [(None, {})]
+
+
+def check_aws_network_elb_target_groups(item, params, parsed):
+    _application_target_groups, network_target_groups = parsed
+    return check_aws_elbv2_target_groups(item, params, network_target_groups)
+
+
+check_info['aws_elbv2_target_groups.network'] = {
+    'inventory_function': inventory_aws_network_elb_target_groups,
+    'check_function': check_aws_network_elb_target_groups,
+    'service_description': 'AWS/NetworkELB Target Groups',
+    'includes': ['aws.include'],
+}

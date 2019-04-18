@@ -1017,7 +1017,7 @@ private:
     bool async_start_;
     int max_wait_;
 
-};  // namespace cma::cfg
+};
 
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
                           const std::vector<YAML::Node> Yaml);
@@ -1030,6 +1030,9 @@ extern WinPerf winperf;
 extern Plugins plugins;
 extern Plugins localGroup;
 }  // namespace groups
+
+inline bool LogPluginOutput() { return false; }
+inline bool LogMrpeOutput() { return false; }
 
 }  // namespace cma::cfg
 

@@ -26,7 +26,7 @@ public:
     GlobalLogSettings() {
         enable(LogType::log);
         enable(LogType::debug);
-        // enable(LogType::kTrace);
+        enable(LogType::trace);
         enable(LogType::stdio);
     }
 
@@ -247,15 +247,18 @@ void ChangeDebugLogLevel(int Level) {
         case LogLevel::kLogAll:
             setup::EnableTraceLog(true);
             setup::EnableDebugLog(true);
+            XLOG::t("Enabled All");
             break;
         case LogLevel::kLogDebug:
             setup::EnableTraceLog(false);
             setup::EnableDebugLog(true);
+            XLOG::d.t("Enabled Debug");
             break;
         case LogLevel::kLogBase:
         default:
             setup::EnableTraceLog(false);
             setup::EnableDebugLog(false);
+            XLOG::l.t("Enabled Base");
             break;
     }
 }

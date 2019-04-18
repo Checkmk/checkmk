@@ -1,0 +1,11 @@
+Title: oracle_rman_backups: This check is deprecated
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1555581921
+Class: feature
+
+Please update the agent plugin {{mk_oracle}} and rediscover the affected hosts.
+This check has been replaced by the {{oracle_rman}} check plugin.

@@ -24,49 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_rman_backups>>>
-# IODBSZ1 2013-04-08T16:33:53 COMPLETED 2013-04-08_16:33:54 2013-04-08_17:56:42 DB FULL
-# IODBSZ1 2013-04-23T15:28:26 RUNNING 2013-04-23_15:28:28 2013-04-23_15:31:02 ARCHIVELOG
-
 
 def inventory_oracle_rman_backups(info):
-    inventory = []
-    for line in info:
-        if line[1] != "FAILURE" and " ".join(line[5:]) in ('ARCHIVELOG', 'DB FULL', 'DB INCR'):
-            inventory.append(("%s.%s" % (line[0], " ".join(line[5:])), {}))
-    return inventory
+    return
 
 
 def check_oracle_rman_backups(item, params, info):
-    try:
-        sid, jobname = item.split('.')
-    except ValueError:
-        return (3, 'Invalid check item given (must be <SID>.<job_name>)')
-
-    data = None
-    for line in info:
-        if line[0] == sid and " ".join(line[5:]) == jobname:
-            data = line
-            break
-    if not data:
-        return (3, 'Unable to find the job')
-
-    state = 0
-    output = []
-
-    job_state = data[2]
-
-    txt = "State: %s" % job_state
-    if job_state not in ["COMPLETED", "RUNNING"]:
-        txt += " (!!)"
-        state = max(state, 2)
-    output.append(txt)
-
-    output.append("Start-Time: %s" % data[3])
-    if job_state != "RUNNING":
-        output.append("End-Time: %s" % data[4])
-
-    return (state, ", ".join(output))
+    return 1, "This check is deprecated. Please update the mk_oracle agent plugin"
 
 
 check_info['oracle_rman_backups'] = {

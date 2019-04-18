@@ -26,7 +26,7 @@
 
 import os
 import subprocess
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Tuple, Optional, Any, Dict, List  # pylint: disable=unused-import
 
 import cmk.utils.debug
 import cmk.utils.tty as tty
@@ -71,6 +71,7 @@ _g_walk_cache = {}  # type: Dict[str, List[str]]
 
 
 def initialize_single_oid_cache(host_config, from_disk=False):
+    # type: (cmk_base.snmp_utils.SNMPHostConfig, bool) -> None
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
 
     if not (_g_single_oid_hostname == host_config.hostname \
@@ -85,6 +86,7 @@ def initialize_single_oid_cache(host_config, from_disk=False):
 
 
 def write_single_oid_cache(host_config):
+    # type: (cmk_base.snmp_utils.SNMPHostConfig) -> None
     if not _g_single_oid_cache:
         return
 
@@ -108,12 +110,14 @@ def _get_oid_from_single_oid_cache(host_config, oid):
 
 
 def _load_single_oid_cache(host_config):
+    # type: (cmk_base.snmp_utils.SNMPHostConfig) -> Dict[str, str]
     cache_path = "%s/%s.%s" % (cmk.utils.paths.snmp_scan_cache_dir, host_config.hostname,
                                host_config.ipaddress)
     return store.load_data_from_file(cache_path, {})
 
 
 def cleanup_host_caches():
+    # type: () -> None
     global _g_walk_cache
     _g_walk_cache = {}
     _clear_other_hosts_oid_cache(None)
@@ -122,6 +126,7 @@ def cleanup_host_caches():
 
 
 def _clear_other_hosts_oid_cache(hostname):
+    # type: (Optional[str]) -> None
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
     if _g_single_oid_hostname != hostname:
         _g_single_oid_cache = None
@@ -262,6 +267,7 @@ def get_snmp_table(host_config, check_plugin_name, oid_info, use_snmpwalk_cache)
 
 # Contextes can only be used when check_plugin_name is given.
 def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
+    # type: (cmk_base.snmp_utils.SNMPHostConfig, str, Optional[str], bool) -> Optional[str]
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
@@ -311,6 +317,7 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
 class SNMPBackendFactory(object):
     @staticmethod
     def factory(host_config, enforce_stored_walks):
+        # type: (cmk_base.snmp_utils.SNMPHostConfig, bool) -> cmk_base.snmp_utils.ABCSNMPBackend
         if enforce_stored_walks or config.is_usewalk_host(host_config.hostname):
             return StoredWalkSNMPBackend()
 
@@ -335,6 +342,7 @@ class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
         return None
 
     def walk(self, host_config, oid):
+        # type: (cmk_base.snmp_utils.SNMPHostConfig, str) -> List[Tuple[str, str]]
         if oid.startswith("."):
             oid = oid[1:]
 
@@ -349,7 +357,7 @@ class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
 
         console.vverbose("  Loading %s from %s\n" % (oid, path))
 
-        rowinfo = []
+        rowinfo = []  # type: List[Tuple[str, str]]
 
         if host_config.hostname in _g_walk_cache:
             lines = _g_walk_cache[host_config.hostname]
@@ -435,6 +443,7 @@ class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
 
 
 def walk_for_export(host_config, oid):
+    # type: (cmk_base.snmp_utils.SNMPHostConfig, str) -> List[Tuple[str, str]]
     if config.is_inline_snmp_host(host_config.hostname):
         rows = inline_snmp.walk(host_config, None, oid)
         return inline_snmp.convert_rows_for_stored_walk(rows)

@@ -56,6 +56,7 @@ import cmk_base.utils
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.cleanup
 import cmk_base.piggyback as piggyback
+import cmk_base.snmp_utils
 from cmk_base.discovered_labels import DiscoveredHostLabelsStore
 
 # TODO: Prefix helper functions with "_".
@@ -2687,6 +2688,21 @@ class HostConfig(object):
     def _discovered_labels_of_host(self):
         # type: () -> Dict
         return DiscoveredHostLabelsStore(self.hostname).load()
+
+    def snmp_config(self, ipaddress):
+        # type: (str) -> cmk_base.snmp_utils.SNMPHostConfig
+        return cmk_base.snmp_utils.SNMPHostConfig(
+            is_ipv6_primary=self.is_ipv6_primary,
+            hostname=self.hostname,
+            ipaddress=ipaddress,
+            credentials=snmp_credentials_of(self.hostname),
+            port=snmp_port_of(self.hostname),
+            is_bulkwalk_host=is_bulkwalk_host(self.hostname),
+            is_snmpv2or3_without_bulkwalk_host=is_snmpv2or3_without_bulkwalk_host(self.hostname),
+            bulk_walk_size_of=bulk_walk_size_of(self.hostname),
+            timing=snmp_timing_of(self.hostname),
+            oid_range_limits=oid_range_limits_of(self.hostname),
+        )
 
 
 #.

@@ -61,11 +61,6 @@ class SNMPDataSource(DataSource):
         self._use_snmpwalk_cache = True
         self._ignore_check_interval = False
         self._fetched_check_plugin_names = []
-        self._credentials = config.snmp_credentials_of(self._hostname)
-        self._port = config.snmp_port_of(self._hostname)
-        self._is_bulkwalk_host = config.is_bulkwalk_host(self._hostname)
-        self._is_snmpv2or3_without_bulkwalk_host = config.is_snmpv2or3_without_bulkwalk_host(
-            self._hostname)
 
     def id(self):
         return "snmp"
@@ -76,23 +71,8 @@ class SNMPDataSource(DataSource):
     def _cpu_tracking_id(self):
         return "snmp"
 
-    # TODO: Replace SNMPHostConfig with HostConfig
-    def _get_host_config(self):
-        # type: () -> snmp_utils.SNMPHostConfig
-        return snmp_utils.SNMPHostConfig(
-            is_ipv6_primary=self._host_config.is_ipv6_primary,
-            hostname=self._hostname,
-            ipaddress=self._ipaddress,
-            credentials=self._credentials,
-            port=self._port,
-            is_bulkwalk_host=self._is_bulkwalk_host,
-            is_snmpv2or3_without_bulkwalk_host=self._is_snmpv2or3_without_bulkwalk_host,
-            bulk_walk_size_of=config.bulk_walk_size_of(self._hostname),
-            timing=config.snmp_timing_of(self._hostname),
-            oid_range_limits=config.oid_range_limits_of(self._hostname),
-        )
-
     def describe(self):
+        snmp_config = self._host_config.snmp_config(self._ipaddress)
         if config.is_usewalk_host(self._hostname):
             return "SNMP (use stored walk)"
 
@@ -101,18 +81,18 @@ class SNMPDataSource(DataSource):
         else:
             inline = "no"
 
-        if snmp_utils.is_snmpv3_host(self._get_host_config()):
-            credentials_text = "Credentials: '%s'" % ", ".join(self._credentials)
+        if snmp_utils.is_snmpv3_host(snmp_config):
+            credentials_text = "Credentials: '%s'" % ", ".join(snmp_config.credentials)
         else:
-            credentials_text = "Community: %r" % self._credentials
+            credentials_text = "Community: %r" % snmp_config.credentials
 
-        if snmp_utils.is_snmpv3_host(self._get_host_config()) or self._is_bulkwalk_host:
+        if snmp_utils.is_snmpv3_host(snmp_config) or snmp_config.is_bulkwalk_host:
             bulk = "yes"
         else:
             bulk = "no"
 
         return "%s (%s, Bulk walk: %s, Port: %d, Inline: %s)" % \
-               (self.title(), credentials_text, bulk, self._port, inline)
+               (self.title(), credentials_text, bulk, snmp_config.port, inline)
 
     def _from_cache_file(self, raw_data):
         return ast.literal_eval(raw_data)
@@ -164,7 +144,7 @@ class SNMPDataSource(DataSource):
             return self._check_plugin_names[(self._hostname, self._ipaddress)]
         except KeyError:
             check_plugin_names = self._check_plugin_name_filter_func(
-                self._get_host_config(),
+                self._host_config.snmp_config(self._ipaddress),
                 on_error=self._on_error,
                 do_snmp_scan=self._do_snmp_scan,
                 for_mgmt_board=self._for_mgmt_board)
@@ -178,7 +158,7 @@ class SNMPDataSource(DataSource):
 
         check_plugin_names = self.get_check_plugin_names()
 
-        host_config = self._get_host_config()
+        host_config = self._host_config.snmp_config(self._ipaddress)
         info = {}
         for check_plugin_name in self._sort_check_plugin_names(check_plugin_names):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch

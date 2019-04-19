@@ -142,7 +142,6 @@ def _clear_other_hosts_oid_cache(hostname):
 #   '----------------------------------------------------------------------'
 
 
-# TODO: Replace SNMPHostConfig with HostConfig
 def create_snmp_host_config(hostname):
     # type: (str) -> cmk_base.snmp_utils.SNMPHostConfig
     host_config = config.get_config_cache().get_host_config(hostname)
@@ -153,18 +152,7 @@ def create_snmp_host_config(hostname):
     if address is None:
         raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-    return cmk_base.snmp_utils.SNMPHostConfig(  # type: ignore
-        is_ipv6_primary=host_config.is_ipv6_primary,
-        hostname=hostname,
-        ipaddress=address,
-        credentials=config.snmp_credentials_of(hostname),
-        port=config.snmp_port_of(hostname),
-        is_bulkwalk_host=config.is_bulkwalk_host(hostname),
-        is_snmpv2or3_without_bulkwalk_host=config.is_snmpv2or3_without_bulkwalk_host(hostname),
-        bulk_walk_size_of=config.bulk_walk_size_of(hostname),
-        timing=config.snmp_timing_of(hostname),
-        oid_range_limits=config.oid_range_limits_of(hostname),
-    )
+    return host_config.snmp_config(address)
 
 
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.

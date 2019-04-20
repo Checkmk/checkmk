@@ -98,6 +98,8 @@ SNMPHostConfig = NamedTuple(
         # TODO: Cleanup to named tuple
         ("timing", dict),
         ("oid_range_limits", list),
+        ("snmpv3_contexts", list),
+        ("character_encoding", Optional[str]),
     ])
 
 

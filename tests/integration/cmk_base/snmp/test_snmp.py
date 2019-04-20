@@ -82,6 +82,8 @@ def snmpsim(site, request, tmp_path_factory):
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits=[],
+        snmpv3_contexts=[],
+        character_encoding=None,
     )
 
     # Ensure that snmpsim is ready for clients before starting with the tests
@@ -162,6 +164,8 @@ def test_get_single_oid_ipv6(snmpsim, backend):
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits=[],
+        snmpv3_contexts=[],
+        character_encoding=None,
     )
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -182,6 +186,8 @@ def test_get_single_oid_snmpv3(snmpsim, backend):
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits=[],
+        snmpv3_contexts=[],
+        character_encoding=None,
     )
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -287,6 +293,8 @@ def test_get_single_oid_not_resolvable(snmpsim, backend):
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits=[],
+        snmpv3_contexts=[],
+        character_encoding=None,
     )
     assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.7.0") is None
 

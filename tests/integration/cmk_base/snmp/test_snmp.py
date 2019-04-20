@@ -484,15 +484,27 @@ def test_get_simple_snmp_table_oid_end_bin(snmpsim, backend):
     ]
 
 
-def test_walk_for_export(snmpsim, backend):
-    if backend == "stored_snmp":
-        pytest.skip("Not relevant")
-
+def test_get_simple_snmp_table_with_hex_str(snmpsim, backend):
     snmp_config = snmpsim[1]
-    oid = ".1.3.6.1.2.1.11"
-    table = snmp.walk_for_export(snmp_config, oid)
+
+    table = snmp.get_snmp_table(
+        snmp_config,
+        check_plugin_name=None,
+        oid_info=(".1.3.6.1.2.1.2.2.1", [
+            "6",
+        ]),
+        use_snmpwalk_cache=False)
 
     assert table == [
+        [u''],
+        [
+            u'\x00\x12yb\xf9@',
+        ],
+    ]
+
+
+@pytest.mark.parametrize("oid,expected_table", [
+    (".1.3.6.1.2.1.11", [
         ('.1.3.6.1.2.1.11.1.0', '4294967295'),
         ('.1.3.6.1.2.1.11.2.0', '4294967295'),
         ('.1.3.6.1.2.1.11.3.0', '877474094'),
@@ -505,4 +517,33 @@ def test_walk_for_export(snmpsim, backend):
         ('.1.3.6.1.2.1.11.11.0', '292505902'),
         ('.1.3.6.1.2.1.11.12.0', '315362353'),
         ('.1.3.6.1.2.1.11.13.0', '4294967295'),
-    ]
+    ]),
+    (".1.3.6.1.2.1.1.9.1.3", [
+        ('.1.3.6.1.2.1.1.9.1.3.1', 'The SNMP Management Architecture MIB.'),
+        ('.1.3.6.1.2.1.1.9.1.3.2', 'The MIB for Message Processing and Dispatching.'),
+        ('.1.3.6.1.2.1.1.9.1.3.3',
+         'The management information definitions for the SNMP User-based Security Model.'),
+        ('.1.3.6.1.2.1.1.9.1.3.4', 'The MIB module for SNMPv2 entities'),
+        ('.1.3.6.1.2.1.1.9.1.3.5', 'The MIB module for managing TCP implementations'),
+        ('.1.3.6.1.2.1.1.9.1.3.6', 'The MIB module for managing IP and ICMP implementations'),
+        ('.1.3.6.1.2.1.1.9.1.3.7', 'The MIB module for managing UDP implementations'),
+        ('.1.3.6.1.2.1.1.9.1.3.8', 'View-based Access Control Model for SNMP.'),
+    ]),
+    (".1.3.6.1.2.1.4.21.1.1", [
+        ('.1.3.6.1.2.1.4.21.1.1.0.0.0.0', '0.0.0.0'),
+        ('.1.3.6.1.2.1.4.21.1.1.127.0.0.0', '127.0.0.0'),
+        ('.1.3.6.1.2.1.4.21.1.1.195.218.254.0', '195.218.254.0'),
+    ]),
+    (".1.3.6.1.2.1.2.2.1.6", [
+        ('.1.3.6.1.2.1.2.2.1.6.1', ''),
+        ('.1.3.6.1.2.1.2.2.1.6.2', '"00 12 79 62 F9 40 "'),
+    ]),
+])
+def test_walk_for_export(snmpsim, backend, oid, expected_table):
+    if backend == "stored_snmp":
+        pytest.skip("Not relevant")
+
+    snmp_config = snmpsim[1]
+    table = snmp.walk_for_export(snmp_config, oid)
+
+    assert table == expected_table

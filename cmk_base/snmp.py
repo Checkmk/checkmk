@@ -258,7 +258,7 @@ def get_snmp_table(snmp_config, check_plugin_name, oid_info, use_snmpwalk_cache)
         # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
         # get normal python strings. But for Check_MK we need unicode strings now.
         # Convert them by using the standard Check_MK approach for incoming data
-        sanitized_columns = _sanitize_snmp_encoding(snmp_config.hostname, new_columns)
+        sanitized_columns = _sanitize_snmp_encoding(snmp_config, new_columns)
 
         info += _construct_snmp_table_of_rows(sanitized_columns)
 
@@ -287,7 +287,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
     # SNMP contexts, all contextes will be queried until the first answer is received.
     if check_plugin_name is not None and cmk_base.snmp_utils.is_snmpv3_host(snmp_config):
-        snmp_contexts = _snmpv3_contexts_of(snmp_config.hostname, check_plugin_name)
+        snmp_contexts = _snmpv3_contexts_of(snmp_config, check_plugin_name)
     else:
         snmp_contexts = [None]
 
@@ -493,8 +493,8 @@ def _cmp_oid_pairs(pair1, pair2):
     return cmp(_oid_to_intlist(pair1[0].lstrip('.')), _oid_to_intlist(pair2[0].lstrip('.')))
 
 
-def _snmpv3_contexts_of(hostname, check_plugin_name):
-    for ty, rules in config.snmpv3_contexts_of(hostname):
+def _snmpv3_contexts_of(snmp_config, check_plugin_name):
+    for ty, rules in snmp_config.snmpv3_contexts:
         if ty is None or ty == check_plugin_name:
             return rules
     return [None]
@@ -520,7 +520,7 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
     added_oids = set([])
     rowinfo = []
     if cmk_base.snmp_utils.is_snmpv3_host(snmp_config):
-        snmp_contexts = _snmpv3_contexts_of(snmp_config.hostname, check_plugin_name)
+        snmp_contexts = _snmpv3_contexts_of(snmp_config, check_plugin_name)
     else:
         snmp_contexts = [None]
 
@@ -571,8 +571,8 @@ def _compute_fetch_oid(oid, suboid, column):
     return fetchoid, value_encoding
 
 
-def _sanitize_snmp_encoding(hostname, columns):
-    decode_string_func = lambda s: _snmp_decode_string(hostname, s)
+def _sanitize_snmp_encoding(snmp_config, columns):
+    decode_string_func = lambda s: _snmp_decode_string(snmp_config, s)
 
     for index, (column, value_encoding) in enumerate(columns):
         if value_encoding == "string":
@@ -582,16 +582,16 @@ def _sanitize_snmp_encoding(hostname, columns):
     return columns
 
 
-def _snmp_decode_string(hostname, text):
-    encoding = config.snmp_character_encoding_of(hostname)
+def _snmp_decode_string(snmp_config, text):
+    encoding = snmp_config.character_encoding
     if encoding:
         return text.decode(encoding)
-    else:
-        # Try to determine the current string encoding. In case a UTF-8 decoding fails, we decode latin1.
-        try:
-            return text.decode('utf-8')
-        except:
-            return text.decode('latin1')
+
+    # Try to determine the current string encoding. In case a UTF-8 decoding fails, we decode latin1.
+    try:
+        return text.decode('utf-8')
+    except:
+        return text.decode('latin1')
 
 
 def _snmp_decode_binary(text):

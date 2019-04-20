@@ -20,6 +20,8 @@ def test_snmp_port_spec(port, expected):
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits=[],
+        snmpv3_contexts=[],
+        character_encoding=None,
     )
     assert classic_snmp._snmp_port_spec(snmp_config) == expected
 
@@ -40,6 +42,8 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits=[],
+        snmpv3_contexts=[],
+        character_encoding=None,
     )
     assert classic_snmp._snmp_proto_spec(snmp_config) == expected
 
@@ -66,6 +70,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
                 "retries": 3
             },
             oid_range_limits=[],
+            snmpv3_contexts=[],
+            character_encoding=None,
         ),
         context_name=None,
     ), [
@@ -87,6 +93,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
                 "retries": 1
             },
             oid_range_limits=[],
+            snmpv3_contexts=[],
+            character_encoding=None,
         ),
         context_name="blabla",
     ), [
@@ -108,6 +116,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
                 "retries": 1
             },
             oid_range_limits=[],
+            snmpv3_contexts=[],
+            character_encoding=None,
         ),
         context_name="blabla",
     ), [
@@ -129,6 +139,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
                 "retries": 1
             },
             oid_range_limits=[],
+            snmpv3_contexts=[],
+            character_encoding=None,
         ),
         context_name=None,
     ), [
@@ -150,6 +162,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
                 "retries": 1
             },
             oid_range_limits=[],
+            snmpv3_contexts=[],
+            character_encoding=None,
         ),
         context_name=None,
     ), [

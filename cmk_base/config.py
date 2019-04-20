@@ -865,61 +865,6 @@ def get_explicit_service_custom_variables(hostname, description):
 #
 
 
-# Determine SNMP community for a specific host.  It the host is found
-# int the map snmp_communities, that community is returned. Otherwise
-# the snmp_default_community is returned (wich is preset with
-# "public", but can be overridden in main.mk
-def snmp_credentials_of(hostname):
-    try:
-        return explicit_snmp_communities[hostname]
-    except KeyError:
-        pass
-
-    communities = get_config_cache().host_extra_conf(hostname, snmp_communities)
-    if len(communities) > 0:
-        return communities[0]
-
-    # nothing configured for this host -> use default
-    return snmp_default_community
-
-
-def snmp_character_encoding_of(hostname):
-    entries = get_config_cache().host_extra_conf(hostname, snmp_character_encodings)
-    if len(entries) > 0:
-        return entries[0]
-
-
-def snmp_timing_of(hostname):
-    timing = get_config_cache().host_extra_conf(hostname, snmp_timing)
-    if len(timing) > 0:
-        return timing[0]
-    return {}
-
-
-def snmpv3_contexts_of(hostname):
-    return get_config_cache().host_extra_conf(hostname, snmpv3_contexts)
-
-
-def oid_range_limits_of(hostname):
-    return get_config_cache().host_extra_conf(hostname, snmp_limit_oid_range)
-
-
-def snmp_port_of(hostname):
-    # type: (str) -> int
-    ports = get_config_cache().host_extra_conf(hostname, snmp_ports)
-    if len(ports) == 0:
-        return 161
-    return ports[0]
-
-
-def bulk_walk_size_of(hostname):
-    bulk_sizes = get_config_cache().host_extra_conf(hostname, snmp_bulk_size)
-    if not bulk_sizes:
-        return 10
-
-    return bulk_sizes[0]
-
-
 # TODO: Replace call sites with HostConfig access and remove this
 def is_usewalk_host(hostname):
     return get_config_cache().get_host_config(hostname).is_usewalk_host
@@ -2683,15 +2628,62 @@ class HostConfig(object):
             is_ipv6_primary=self.is_ipv6_primary,
             hostname=self.hostname,
             ipaddress=ipaddress,
-            credentials=snmp_credentials_of(self.hostname),
-            port=snmp_port_of(self.hostname),
+            credentials=self._snmp_credentials(),
+            port=self._snmp_port(),
             is_bulkwalk_host=self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts),
             is_snmpv2or3_without_bulkwalk_host=self._config_cache.in_binary_hostlist(
                 self.hostname, snmpv2c_hosts),
-            bulk_walk_size_of=bulk_walk_size_of(self.hostname),
-            timing=snmp_timing_of(self.hostname),
-            oid_range_limits=oid_range_limits_of(self.hostname),
+            bulk_walk_size_of=self._bulk_walk_size(),
+            timing=self._snmp_timing(),
+            oid_range_limits=self._config_cache.host_extra_conf(self.hostname,
+                                                                snmp_limit_oid_range),
+            snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
+            character_encoding=self._snmp_character_encoding(),
         )
+
+    def _snmp_credentials(self):
+        """Determine SNMP credentials for a specific host
+
+        It the host is found int the map snmp_communities, that community is
+        returned. Otherwise the snmp_default_community is returned (wich is
+        preset with "public", but can be overridden in main.mk
+        """
+        try:
+            return explicit_snmp_communities[self.hostname]
+        except KeyError:
+            pass
+
+        communities = self._config_cache.host_extra_conf(self.hostname, snmp_communities)
+        if communities:
+            return communities[0]
+
+        # nothing configured for this host -> use default
+        return snmp_default_community
+
+    def _snmp_port(self):
+        # type: () -> int
+        ports = self._config_cache.host_extra_conf(self.hostname, snmp_ports)
+        if not ports:
+            return 161
+        return ports[0]
+
+    def _snmp_timing(self):
+        timing = self._config_cache.host_extra_conf(self.hostname, snmp_timing)
+        if not timing:
+            return {}
+        return timing[0]
+
+    def _bulk_walk_size(self):
+        bulk_sizes = self._config_cache.host_extra_conf(self.hostname, snmp_bulk_size)
+        if not bulk_sizes:
+            return 10
+        return bulk_sizes[0]
+
+    def _snmp_character_encoding(self):
+        entries = self._config_cache.host_extra_conf(self.hostname, snmp_character_encodings)
+        if not entries:
+            return None
+        return entries[0]
 
 
 #.

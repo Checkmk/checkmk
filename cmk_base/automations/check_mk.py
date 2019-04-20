@@ -1125,6 +1125,7 @@ class AutomationDiagHost(Automation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
+        snmp_config = host_config.snmp_config()
 
         # In 1.5 the tcp connect timeout has been added. The automation may
         # be called from a remote site with an older version. For this reason
@@ -1206,7 +1207,7 @@ class AutomationDiagHost(Automation):
                 # ('authNoPriv', 'md5', '11111111', '22222222')
                 # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
 
-                credentials = config.snmp_credentials_of(hostname)
+                credentials = snmp_config.credentials
 
                 # Insert preconfigured communitiy
                 if test == "snmpv3":
@@ -1253,20 +1254,23 @@ class AutomationDiagHost(Automation):
 
                 #TODO: What about SNMP management boards?
                 snmp_config = snmp_utils.SNMPHostConfig(
-                    is_ipv6_primary=host_config.is_ipv6_primary,
+                    is_ipv6_primary=snmp_config.is_ipv6_primary,
                     hostname=hostname,
                     ipaddress=ipaddress,
                     credentials=credentials,
-                    port=config.snmp_port_of(hostname),
+                    port=snmp_config.port,
                     is_bulkwalk_host=is_bulkwalk_host,
                     is_snmpv2or3_without_bulkwalk_host=is_snmpv2or3_without_bulkwalk_host,
-                    bulk_walk_size_of=config.bulk_walk_size_of(hostname),
+                    bulk_walk_size_of=snmp_config.bulk_walk_size_of,
                     timing={
                         'timeout': snmp_timeout,
                         'retries': snmp_retries,
                     },
-                    oid_range_limits=config.oid_range_limits_of(hostname),
+                    oid_range_limits=snmp_config.oid_range_limits,
+                    snmpv3_contexts=snmp_config.snmpv3_contexts,
+                    character_encoding=snmp_config.character_encoding,
                 )
+
                 data = snmp.get_snmp_table(
                     snmp_config,
                     None, ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),

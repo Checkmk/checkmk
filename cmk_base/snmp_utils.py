@@ -26,7 +26,7 @@
 
 import abc
 import functools
-from typing import NamedTuple, Union, Tuple, Optional  # pylint: disable=unused-import
+from typing import List, NamedTuple, Union, Tuple, Optional  # pylint: disable=unused-import
 
 OID_END = 0  # Suffix-part of OID that was not specified
 OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
@@ -102,6 +102,8 @@ SNMPHostConfig = NamedTuple(
         ("character_encoding", Optional[str]),
     ])
 
+SNMPRowInfo = List[Tuple[str, str]]
+
 
 class ABCSNMPBackend(object):
     __metaclass__ = abc.ABCMeta
@@ -115,6 +117,12 @@ class ABCSNMPBackend(object):
         request is sent to the given host.
         """
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    def walk(self, snmp_config, oid, check_plugin_name=None, table_base_oid=None,
+             context_name=None):
+        # type: (SNMPHostConfig, str, Optional[str], Optional[str], Optional[str]) -> SNMPRowInfo
+        return []
 
 
 class MutexScanRegistry(object):

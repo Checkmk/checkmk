@@ -23,7 +23,7 @@ def test_snmp_port_spec(port, expected):
         snmpv3_contexts=[],
         character_encoding=None,
     )
-    assert classic_snmp._snmp_port_spec(snmp_config) == expected
+    assert classic_snmp.ClassicSNMPBackend()._snmp_port_spec(snmp_config) == expected
 
 
 @pytest.mark.parametrize("is_ipv6,expected", [
@@ -45,7 +45,7 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
         snmpv3_contexts=[],
         character_encoding=None,
     )
-    assert classic_snmp._snmp_proto_spec(snmp_config) == expected
+    assert classic_snmp.ClassicSNMPBackend()._snmp_proto_spec(snmp_config) == expected
 
 
 SNMPSettings = collections.namedtuple("SNMPSettings", [
@@ -172,4 +172,5 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
     ]),
 ])
 def test_snmp_walk_command(monkeypatch, settings, expected):
-    assert classic_snmp._snmp_walk_command(settings.snmp_config, settings.context_name) == expected
+    assert classic_snmp.ClassicSNMPBackend()._snmp_walk_command(settings.snmp_config,
+                                                                settings.context_name) == expected

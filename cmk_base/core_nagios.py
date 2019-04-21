@@ -191,11 +191,11 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
     #  | |
     #  |_|    1. normal, physical hosts
 
-    alias = hostname
     host_spec = {
         "host_name": hostname,
         "use": config.cluster_template if is_clust else config.host_template,
         "address": ip if ip else core_config.fallback_ip_for(host_config),
+        "alias": attrs["alias"],
     }
 
     # Add custom macros
@@ -243,13 +243,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
 
     elif is_clust:
         # Special handling of clusters
-        alias = "cluster of %s" % ", ".join(nodes)
         host_spec["parents"] = ",".join(nodes)
-
-    # Output alias, but only if it's not defined in extra_host_conf
-    alias = config.alias_of(hostname, None)
-    if alias is not None:
-        host_spec["alias"] = alias
 
     # Custom configuration last -> user may override all other values
     host_spec.update(

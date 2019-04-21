@@ -22,6 +22,8 @@ def test_snmp_port_spec(port, expected):
         oid_range_limits=[],
         snmpv3_contexts=[],
         character_encoding=None,
+        is_usewalk_host=False,
+        is_inline_snmp_host=False,
     )
     assert classic_snmp.ClassicSNMPBackend()._snmp_port_spec(snmp_config) == expected
 
@@ -44,6 +46,8 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
         oid_range_limits=[],
         snmpv3_contexts=[],
         character_encoding=None,
+        is_usewalk_host=False,
+        is_inline_snmp_host=False,
     )
     assert classic_snmp.ClassicSNMPBackend()._snmp_proto_spec(snmp_config) == expected
 
@@ -72,6 +76,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             oid_range_limits=[],
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
+            is_inline_snmp_host=False,
         ),
         context_name=None,
     ), [
@@ -95,6 +101,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             oid_range_limits=[],
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
+            is_inline_snmp_host=False,
         ),
         context_name="blabla",
     ), [
@@ -118,6 +126,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             oid_range_limits=[],
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
+            is_inline_snmp_host=False,
         ),
         context_name="blabla",
     ), [
@@ -141,6 +151,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             oid_range_limits=[],
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
+            is_inline_snmp_host=False,
         ),
         context_name=None,
     ), [
@@ -164,6 +176,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             oid_range_limits=[],
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
+            is_inline_snmp_host=False,
         ),
         context_name=None,
     ), [

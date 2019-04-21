@@ -73,10 +73,10 @@ class SNMPDataSource(DataSource):
 
     def describe(self):
         snmp_config = self._host_config.snmp_config(self._ipaddress)
-        if config.is_usewalk_host(self._hostname):
+        if snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"
 
-        if config.is_inline_snmp_host(self._hostname):
+        if snmp_config.is_inline_snmp_host:
             inline = "yes"
         else:
             inline = "no"

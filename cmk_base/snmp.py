@@ -317,10 +317,10 @@ class SNMPBackendFactory(object):
     @staticmethod
     def factory(snmp_config, enforce_stored_walks):
         # type: (snmp_utils.SNMPHostConfig, bool) -> snmp_utils.ABCSNMPBackend
-        if enforce_stored_walks or config.is_usewalk_host(snmp_config.hostname):
+        if enforce_stored_walks or snmp_config.is_usewalk_host:
             return StoredWalkSNMPBackend()
 
-        if config.is_inline_snmp_host(snmp_config.hostname):
+        if snmp_config.is_inline_snmp_host:
             return inline_snmp.InlineSNMPBackend()
 
         return classic_snmp.ClassicSNMPBackend()
@@ -442,10 +442,9 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
         return rows
 
 
-# TODO: Also use the SNMPBackendFactory.
 def walk_for_export(snmp_config, oid):
     # type: (snmp_utils.SNMPHostConfig, str) -> List[Tuple[str, str]]
-    if config.is_inline_snmp_host(snmp_config.hostname):
+    if snmp_config.is_inline_snmp_host:
         backend = inline_snmp.InlineSNMPBackend()  # type: snmp_utils.ABCSNMPBackend
     else:
         backend = classic_snmp.ClassicSNMPBackend()

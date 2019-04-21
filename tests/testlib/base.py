@@ -24,7 +24,9 @@ class Scenario(object):
         #self.config["host_tags"][hostname] = tags
         return self
 
-    def add_cluster(self, hostname, tags, folder="/", nodes=None):
+    def add_cluster(self, hostname, tags=None, folder="/", nodes=None):
+        if tags is None:
+            tags = []
         if nodes is None:
             nodes = []
         name_with_tags = "%s|%s" % (hostname, "|".join(tags))
@@ -45,5 +47,6 @@ class Scenario(object):
         for key, value in self.config.items():
             monkeypatch.setattr(config, key, value)
 
+        self.config_cache = config.get_config_cache()
         self.config_cache.initialize()
         return self.config_cache

@@ -1,6 +1,12 @@
 # encoding: utf-8
-
+# pylint: disable=redefined-outer-name
 import itertools
+from StringIO import StringIO
+
+import pytest  # type: ignore
+from testlib.base import Scenario
+
+import cmk_base.core_config as core_config
 import cmk_base.core_nagios as core_nagios
 
 
@@ -21,3 +27,102 @@ def test_format_nagios_object():
 }
 
 """ % tuple(itertools.chain(*sorted(spec.items(), key=lambda x: x[0])))
+
+
+def ts():
+    ts1 = Scenario().add_host("localhost")
+    result1 = {
+        '_ADDRESS_4': '127.0.0.1',
+        '_ADDRESS_6': '',
+        '_ADDRESS_FAMILY': '4',
+        '_TAGS': '',
+        '_FILENAME': '/',
+        'address': '127.0.0.1',
+        'alias': 'localhost',
+        'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
+        'host_name': 'localhost',
+        'hostgroups': 'check_mk',
+        'use': 'check_mk_host',
+    }
+
+    yield ts1, result1
+
+    ts2 = Scenario().add_host("localhost")
+    ts2.set_option("extra_host_conf", {
+        "alias": [(u'lOCALhost', ['localhost']),],
+    })
+    result2 = {
+        '_ADDRESS_4': '127.0.0.1',
+        '_ADDRESS_6': '',
+        '_ADDRESS_FAMILY': '4',
+        '_FILENAME': '/',
+        '_TAGS': '',
+        'address': '127.0.0.1',
+        'alias': u'lOCALhost',
+        'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
+        'host_name': 'localhost',
+        'hostgroups': 'check_mk',
+        'use': 'check_mk_host',
+    }
+
+    yield ts2, result2
+
+    ts3 = Scenario().add_cluster("localhost")
+    result3 = {
+        '_ADDRESS_4': '127.0.0.1',
+        '_ADDRESS_6': '',
+        '_ADDRESS_FAMILY': '4',
+        '_FILENAME': '/',
+        '_NODEIPS': '',
+        '_NODEIPS_4': '',
+        '_NODEIPS_6': '',
+        '_NODENAMES': '',
+        '_TAGS': '',
+        'address': '127.0.0.1',
+        'alias': 'localhost',
+        'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
+        'host_name': 'localhost',
+        'hostgroups': 'check_mk',
+        'parents': '',
+        'use': 'check_mk_cluster',
+    }
+
+    yield ts3, result3
+
+    ts4 = Scenario().add_cluster("localhost")
+    ts4.set_option("extra_host_conf", {
+        "alias": [(u'lOCALhost', ['localhost']),],
+    })
+    result4 = {
+        '_ADDRESS_4': '127.0.0.1',
+        '_ADDRESS_6': '',
+        '_ADDRESS_FAMILY': '4',
+        '_FILENAME': '/',
+        '_NODEIPS': '',
+        '_NODEIPS_4': '',
+        '_NODEIPS_6': '',
+        '_NODENAMES': '',
+        '_TAGS': '',
+        'address': '127.0.0.1',
+        'alias': u'lOCALhost',
+        'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
+        'host_name': 'localhost',
+        'hostgroups': 'check_mk',
+        'parents': '',
+        'use': 'check_mk_cluster',
+    }
+
+    yield ts4, result4
+
+
+@pytest.mark.parametrize("ts,result", ts())
+def test_create_nagios_host_spec(ts, result, monkeypatch):
+    outfile = StringIO()
+    cfg = core_nagios.NagiosConfig(outfile, ["localhost"])
+
+    config_cache = ts.apply(monkeypatch)
+    host_attrs = core_config.get_host_attributes("localhost", config_cache)
+
+    host_spec = core_nagios._create_nagios_host_spec(cfg, config_cache, "localhost", host_attrs)
+
+    assert host_spec == result

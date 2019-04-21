@@ -170,11 +170,12 @@ def _create_nagios_config_host(cfg, config_cache, hostname):
     cfg.outfile.write("# ----------------------------------------------------\n")
     host_attrs = core_config.get_host_attributes(hostname, config_cache)
     if config.generate_hostconf:
-        _create_nagios_hostdefs(cfg, config_cache, hostname, host_attrs)
+        host_spec = _create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
+        cfg.outfile.write(_format_nagios_object("host", host_spec).encode("utf-8"))
     _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs)
 
 
-def _create_nagios_hostdefs(cfg, config_cache, hostname, attrs):
+def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
     host_config = config_cache.get_host_config(hostname)
     is_clust = config.is_cluster(hostname)
 
@@ -253,7 +254,7 @@ def _create_nagios_hostdefs(cfg, config_cache, hostname, attrs):
     # Custom configuration last -> user may override all other values
     host_spec.update(
         _extra_host_conf_of(config_cache, hostname, exclude=["parents"] if is_clust else []))
-    cfg.outfile.write(_format_nagios_object("host", host_spec).encode("utf-8"))
+    return host_spec
 
 
 def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):

@@ -726,18 +726,6 @@ def _host_is_member_of_site(config_cache, hostname, site):
     return True
 
 
-def alias_of(hostname, fallback):
-    # type: (str, str) -> Text
-    aliases = get_config_cache().host_extra_conf(hostname, extra_host_conf.get("alias", []))
-    if len(aliases) == 0:
-        if fallback:
-            return fallback
-
-        return hostname
-
-    return aliases[0]
-
-
 def get_additional_ipaddresses_of(hostname):
     # type: (str) -> Tuple[List[str], List[str]]
     #TODO Regarding the following configuration variables from WATO
@@ -958,6 +946,7 @@ def check_interval_of(hostname, section_name):
 
 
 # Checks whether or not the given host is a cluster host
+# TODO: Clean this up!
 def is_cluster(hostname):
     # all_configured_clusters() needs to be used, because this function affects
     # the agent bakery, which needs all configured hosts instead of just the hosts
@@ -966,6 +955,7 @@ def is_cluster(hostname):
 
 
 # Returns the nodes of a cluster, or None if hostname is not a cluster
+# TODO: Clean this up!
 def nodes_of(hostname):
     return get_config_cache().nodes_of(hostname)
 
@@ -973,6 +963,7 @@ def nodes_of(hostname):
 # Determine weather a service (found on a physical host) is a clustered
 # service and - if yes - return the cluster host of the service. If
 # no, returns the hostname of the physical host.
+# TODO: Clean this up!
 def host_of_clustered_service(hostname, servicedesc, part_of_clusters=None):
     return get_config_cache().host_of_clustered_service(
         hostname, servicedesc, part_of_clusters=part_of_clusters)
@@ -2503,6 +2494,7 @@ class HostConfig(object):
 
         self._config_cache = config_cache
 
+        self.alias = self._get_alias()
         self.is_cluster = is_cluster(hostname)
         self.part_of_clusters = self._config_cache.clusters_of(hostname)
 
@@ -2575,6 +2567,15 @@ class HostConfig(object):
         if rules:
             return rules[0]
         return "ipv4"
+
+    def _get_alias(self):
+        # type: () -> Text
+        aliases = self._config_cache.host_extra_conf(self.hostname, extra_host_conf.get(
+            "alias", []))
+        if not aliases:
+            return self.hostname
+
+        return aliases[0]
 
     def _get_host_labels(self):
         """Returns the effective set of host labels from all available sources

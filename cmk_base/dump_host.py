@@ -44,7 +44,7 @@ def dump_host(hostname):
     host_config = config_cache.get_host_config(hostname)
 
     console.output("\n")
-    if config.is_cluster(hostname):
+    if host_config.is_cluster:
         color = tty.bgmagenta
         add_txt = " (cluster of " + (", ".join(config.nodes_of(hostname))) + ")"
     else:
@@ -81,7 +81,7 @@ def dump_host(hostname):
         (tag_template % ":".join(t)) for t in sorted(config_cache.tags_of_host(hostname).items())
     ]
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
-    if config.is_cluster(hostname):
+    if host_config.is_cluster:
         parents_list = config.nodes_of(hostname)
     else:
         parents_list = config.parents_of(hostname)

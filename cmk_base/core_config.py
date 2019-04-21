@@ -403,7 +403,7 @@ def get_host_attributes(hostname, config_cache):
     attrs.update(_get_tag_attributes(host_config.label_sources, "LABELSOURCE"))
 
     if "alias" not in attrs:
-        attrs["alias"] = config.alias_of(hostname, hostname)
+        attrs["alias"] = host_config.alias
 
     # Now lookup configured IP addresses
     if host_config.is_ipv4_host:
@@ -551,14 +551,14 @@ def _ip_address_of(host_config, family=None):
     try:
         return ip_lookup.lookup_ip_address(host_config.hostname, family)
     except Exception as e:
-        if config.is_cluster(host_config.hostname):
+        if host_config.is_cluster:
             return ""
-        else:
-            _failed_ip_lookups.append(host_config.hostname)
-            if not _ignore_ip_lookup_failures:
-                warning("Cannot lookup IP address of '%s' (%s). "
-                        "The host will not be monitored correctly." % (host_config.hostname, e))
-            return fallback_ip_for(host_config.hostname, family)
+
+        _failed_ip_lookups.append(host_config.hostname)
+        if not _ignore_ip_lookup_failures:
+            warning("Cannot lookup IP address of '%s' (%s). "
+                    "The host will not be monitored correctly." % (host_config.hostname, e))
+        return fallback_ip_for(host_config.hostname, family)
 
 
 def ignore_ip_lookup_failures():

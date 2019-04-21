@@ -30,6 +30,7 @@ import signal
 import tempfile
 import time
 import copy
+from typing import List, Tuple, Optional  # pylint: disable=unused-import
 
 import six
 
@@ -99,7 +100,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
         # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
         # address is unknown). When called as non keepalive ipaddress may be None or
         # is already an address (2nd argument)
-        if ipaddress is None and not config.is_cluster(hostname):
+        if ipaddress is None and not host_config.is_cluster:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
 
         item_state.load(hostname)

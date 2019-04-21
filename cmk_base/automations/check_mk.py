@@ -1269,6 +1269,8 @@ class AutomationDiagHost(Automation):
                     oid_range_limits=snmp_config.oid_range_limits,
                     snmpv3_contexts=snmp_config.snmpv3_contexts,
                     character_encoding=snmp_config.character_encoding,
+                    is_usewalk_host=snmp_config.is_usewalk_host,
+                    is_inline_snmp_host=snmp_config.is_inline_snmp_host,
                 )
 
                 data = snmp.get_snmp_table(

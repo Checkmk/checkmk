@@ -100,6 +100,8 @@ SNMPHostConfig = NamedTuple(
         ("oid_range_limits", list),
         ("snmpv3_contexts", list),
         ("character_encoding", Optional[str]),
+        ("is_usewalk_host", bool),
+        ("is_inline_snmp_host", bool),
     ])
 
 SNMPRowInfo = List[Tuple[str, str]]

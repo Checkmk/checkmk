@@ -13,7 +13,6 @@ import cmk.utils.log as log
 import cmk.utils.debug as debug
 
 from cmk_base.exceptions import MKSNMPError
-import cmk_base.config as config
 import cmk_base.snmp as snmp
 import cmk_base.snmp_utils as snmp_utils
 
@@ -36,7 +35,7 @@ def monkeymodule(request):
     mpatch.undo()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="module", autouse=True)
 def snmpsim(site, request, tmp_path_factory):
     tmp_path = tmp_path_factory.getbasetemp()
 
@@ -70,22 +69,6 @@ def snmpsim(site, request, tmp_path_factory):
         #stderr=subprocess.STDOUT,
     )
 
-    snmp_config = snmp_utils.SNMPHostConfig(
-        is_ipv6_primary=False,
-        ipaddress="127.0.0.1",
-        hostname="localhost",
-        credentials="public",
-        port=1337,
-        # TODO: Use SNMPv2 over v1 for the moment
-        is_bulkwalk_host=False,
-        is_snmpv2or3_without_bulkwalk_host=True,
-        bulk_walk_size_of=10,
-        timing={},
-        oid_range_limits=[],
-        snmpv3_contexts=[],
-        character_encoding=None,
-    )
-
     # Ensure that snmpsim is ready for clients before starting with the tests
     def is_listening():
         if p.poll() is not None:
@@ -116,7 +99,7 @@ def snmpsim(site, request, tmp_path_factory):
 
     wait_until(is_listening, timeout=20)
 
-    yield p, snmp_config
+    yield
 
     log.set_verbosity(0)
     debug.disable()
@@ -128,18 +111,31 @@ def snmpsim(site, request, tmp_path_factory):
 
 
 # Execute all tests for all SNMP backends
-@pytest.fixture(params=["inline_snmp", "classic_snmp", "stored_snmp"], autouse=True)
-def backend(request, monkeypatch):
+@pytest.fixture(params=["inline_snmp", "classic_snmp", "stored_snmp"])
+def snmp_config(request, snmpsim, monkeypatch):
     backend_name = request.param
-    source_data_dir = Path(request.fspath.dirname) / "snmp_data" / "cmk-walk"
 
     if backend_name == "stored_snmp":
-        monkeypatch.setattr(config, "is_usewalk_host", lambda h: True)
+        source_data_dir = Path(request.fspath.dirname) / "snmp_data" / "cmk-walk"
         monkeypatch.setattr(cmk.utils.paths, "snmpwalks_dir", str(source_data_dir))
-    else:
-        monkeypatch.setattr(config, "is_inline_snmp_host", lambda h: backend_name == "inline_snmp")
 
-    return backend_name
+    return snmp_utils.SNMPHostConfig(
+        is_ipv6_primary=False,
+        ipaddress="127.0.0.1",
+        hostname="localhost",
+        credentials="public",
+        port=1337,
+        # TODO: Use SNMPv2 over v1 for the moment
+        is_bulkwalk_host=False,
+        is_snmpv2or3_without_bulkwalk_host=True,
+        bulk_walk_size_of=10,
+        timing={},
+        oid_range_limits=[],
+        snmpv3_contexts=[],
+        character_encoding=None,
+        is_usewalk_host=backend_name == "stored_snmp",
+        is_inline_snmp_host=backend_name == "inline_snmp",
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -149,55 +145,36 @@ def clear_cache(monkeypatch):
     monkeypatch.setattr(snmp, "_g_single_oid_cache", {})
 
 
-def test_get_single_oid_ipv6(snmpsim, backend):
-    if backend == "stored_snmp":
+def test_get_single_oid_ipv6(snmp_config):
+    if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    snmp_config = snmp_utils.SNMPHostConfig(
-        is_ipv6_primary=True,
-        ipaddress="::1",
-        hostname="localhost",
-        credentials="public",
-        port=1337,
-        is_bulkwalk_host=False,
-        is_snmpv2or3_without_bulkwalk_host=True,
-        bulk_walk_size_of=10,
-        timing={},
-        oid_range_limits=[],
-        snmpv3_contexts=[],
-        character_encoding=None,
-    )
+    cfg_dict = snmp_config._asdict()
+    cfg_dict["is_ipv6_primary"] = True
+    cfg_dict["ipaddress"] = "::1"
+    snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
+
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3(snmpsim, backend):
-    if backend == "stored_snmp":
+def test_get_single_oid_snmpv3(snmp_config):
+    if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    snmp_config = snmp_utils.SNMPHostConfig(
-        is_ipv6_primary=False,
-        ipaddress="127.0.0.1",
-        hostname="localhost",
-        credentials=('authNoPriv', 'md5', 'authOnlyUser', 'authOnlyUser'),
-        port=1337,
-        is_bulkwalk_host=False,
-        is_snmpv2or3_without_bulkwalk_host=True,
-        bulk_walk_size_of=10,
-        timing={},
-        oid_range_limits=[],
-        snmpv3_contexts=[],
-        character_encoding=None,
-    )
+    cfg_dict = snmp_config._asdict()
+    cfg_dict["credentials"] = ('authNoPriv', 'md5', 'authOnlyUser', 'authOnlyUser')
+    snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
+
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_wrong_credentials(snmpsim, backend):
-    if backend == "stored_snmp":
+def test_get_single_oid_wrong_credentials(snmp_config):
+    if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    cfg_dict = snmpsim[1]._asdict()
+    cfg_dict = snmp_config._asdict()
     cfg_dict["credentials"] = "dingdong"
     snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
 
@@ -205,16 +182,14 @@ def test_get_single_oid_wrong_credentials(snmpsim, backend):
     assert result is None
 
 
-def test_get_single_oid(snmpsim, backend):
-    snmp_config = snmpsim[1]
+def test_get_single_oid(snmp_config):
     result = snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
     # TODO: Encoding is incosistent between single oids and walks
     assert isinstance(result, str)
 
 
-def test_get_single_oid_cache(snmpsim, backend):
-    snmp_config = snmpsim[1]
+def test_get_single_oid_cache(snmp_config):
     oid = ".1.3.6.1.2.1.1.1.0"
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
@@ -226,14 +201,12 @@ def test_get_single_oid_cache(snmpsim, backend):
     assert isinstance(cached_oid, str)
 
 
-def test_get_single_non_prefixed_oid(snmpsim, backend):
-    snmp_config = snmpsim[1]
+def test_get_single_non_prefixed_oid(snmp_config):
     with pytest.raises(MKGeneralException, match="does not begin with"):
         snmp.get_single_oid(snmp_config, "1.3.6.1.2.1.1.1.0")
 
 
-def test_get_single_oid_next(snmpsim, backend):
-    snmp_config = snmpsim[1]
+def test_get_single_oid_next(snmp_config):
     assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.9.1.*") == ".1.3.6.1.6.3.10.3.1.1"
 
 
@@ -250,8 +223,7 @@ def test_get_single_oid_next(snmpsim, backend):
     ("Gauge32", ".1.3.6.1.2.1.6.9.0", "9"),
     ("TimeTicks", ".1.3.6.1.2.1.1.3.0", "449613886"),
 ])
-def test_get_data_types(snmpsim, backend, type_name, oid, expected_response):
-    snmp_config = snmpsim[1]
+def test_get_data_types(snmp_config, type_name, oid, expected_response):
     response = snmp.get_single_oid(snmp_config, oid)
     assert response == expected_response
     # TODO: Encoding is incosistent between single oids and walks
@@ -268,49 +240,37 @@ def test_get_data_types(snmpsim, backend, type_name, oid, expected_response):
     assert isinstance(table[0][0], unicode)
 
 
-def test_get_single_oid_value(snmpsim, backend):
-    snmp_config = snmpsim[1]
+def test_get_single_oid_value(snmp_config):
     assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.9.1.2.1") == '.1.3.6.1.6.3.10.3.1.1'
 
 
-def test_get_single_oid_not_existing(snmpsim, backend):
-    snmp_config = snmpsim[1]
+def test_get_single_oid_not_existing(snmp_config):
     assert snmp.get_single_oid(snmp_config, ".1.3.100.200.300.400") is None
 
 
-def test_get_single_oid_not_resolvable(snmpsim, backend):
-    if backend == "stored_snmp":
+def test_get_single_oid_not_resolvable(snmp_config):
+    if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    snmp_config = snmp_utils.SNMPHostConfig(
-        is_ipv6_primary=False,
-        ipaddress="bla.local",
-        hostname="localhost",
-        credentials="public",
-        port=1337,
-        is_bulkwalk_host=True,
-        is_snmpv2or3_without_bulkwalk_host=True,
-        bulk_walk_size_of=10,
-        timing={},
-        oid_range_limits=[],
-        snmpv3_contexts=[],
-        character_encoding=None,
-    )
+    cfg_dict = snmp_config._asdict()
+    cfg_dict["ipaddress"] = "bla.local"
+    snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
+
     assert snmp.get_single_oid(snmp_config, ".1.3.6.1.2.1.1.7.0") is None
 
 
-def test_get_simple_snmp_table_not_resolvable(snmpsim, backend):
-    if backend == "stored_snmp":
+def test_get_simple_snmp_table_not_resolvable(snmp_config):
+    if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    cfg_dict = snmpsim[1]._asdict()
+    cfg_dict = snmp_config._asdict()
     cfg_dict["ipaddress"] = "bla.local"
     snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
 
     # TODO: Unify different error messages
-    if backend == "inline_snmp":
+    if snmp_config.is_inline_snmp_host:
         exc_match = "Failed to initiate SNMP"
-    elif backend == "classic_snmp":
+    elif not snmp_config.is_inline_snmp_host:
         exc_match = "Unknown host"
     else:
         raise NotImplementedError()
@@ -327,18 +287,18 @@ def test_get_simple_snmp_table_not_resolvable(snmpsim, backend):
             use_snmpwalk_cache=False)
 
 
-def test_get_simple_snmp_table_wrong_credentials(snmpsim, backend):
-    if backend == "stored_snmp":
+def test_get_simple_snmp_table_wrong_credentials(snmp_config):
+    if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    cfg_dict = snmpsim[1]._asdict()
+    cfg_dict = snmp_config._asdict()
     cfg_dict["credentials"] = "dingdong"
     snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
 
     # TODO: Unify different error messages
-    if backend == "inline_snmp":
+    if snmp_config.is_inline_snmp_host:
         exc_match = "SNMP query timed out"
-    elif backend == "classic_snmp":
+    elif not snmp_config.is_inline_snmp_host:
         exc_match = "Timeout: No Response from"
     else:
         raise NotImplementedError()
@@ -356,8 +316,8 @@ def test_get_simple_snmp_table_wrong_credentials(snmpsim, backend):
 
 
 @pytest.mark.parametrize("bulk", [True, False])
-def test_get_simple_snmp_table_bulkwalk(snmpsim, backend, bulk):
-    cfg_dict = snmpsim[1]._asdict()
+def test_get_simple_snmp_table_bulkwalk(snmp_config, bulk):
+    cfg_dict = snmp_config._asdict()
     cfg_dict["is_bulkwalk_host"] = bulk
     snmp_config = snmp_utils.SNMPHostConfig(**cfg_dict)
 
@@ -381,9 +341,7 @@ def test_get_simple_snmp_table_bulkwalk(snmpsim, backend, bulk):
     assert isinstance(table[0][0], unicode)
 
 
-def test_get_simple_snmp_table(snmpsim, backend):
-    snmp_config = snmpsim[1]
-
+def test_get_simple_snmp_table(snmp_config):
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name=None,
@@ -404,9 +362,7 @@ def test_get_simple_snmp_table(snmpsim, backend):
     assert isinstance(table[0][0], unicode)
 
 
-def test_get_simple_snmp_table_oid_end(snmpsim, backend):
-    snmp_config = snmpsim[1]
-
+def test_get_simple_snmp_table_oid_end(snmp_config):
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name=None,
@@ -424,9 +380,7 @@ def test_get_simple_snmp_table_oid_end(snmpsim, backend):
     ]
 
 
-def test_get_simple_snmp_table_oid_string(snmpsim, backend):
-    snmp_config = snmpsim[1]
-
+def test_get_simple_snmp_table_oid_string(snmp_config):
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name=None,
@@ -444,9 +398,7 @@ def test_get_simple_snmp_table_oid_string(snmpsim, backend):
     ]
 
 
-def test_get_simple_snmp_table_oid_bin(snmpsim, backend):
-    snmp_config = snmpsim[1]
-
+def test_get_simple_snmp_table_oid_bin(snmp_config):
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name=None,
@@ -464,9 +416,7 @@ def test_get_simple_snmp_table_oid_bin(snmpsim, backend):
     ]
 
 
-def test_get_simple_snmp_table_oid_end_bin(snmpsim, backend):
-    snmp_config = snmpsim[1]
-
+def test_get_simple_snmp_table_oid_end_bin(snmp_config):
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name=None,
@@ -484,9 +434,7 @@ def test_get_simple_snmp_table_oid_end_bin(snmpsim, backend):
     ]
 
 
-def test_get_simple_snmp_table_with_hex_str(snmpsim, backend):
-    snmp_config = snmpsim[1]
-
+def test_get_simple_snmp_table_with_hex_str(snmp_config):
     table = snmp.get_snmp_table(
         snmp_config,
         check_plugin_name=None,
@@ -539,11 +487,9 @@ def test_get_simple_snmp_table_with_hex_str(snmpsim, backend):
         ('.1.3.6.1.2.1.2.2.1.6.2', '"00 12 79 62 F9 40 "'),
     ]),
 ])
-def test_walk_for_export(snmpsim, backend, oid, expected_table):
-    if backend == "stored_snmp":
+def test_walk_for_export(snmp_config, oid, expected_table):
+    if snmp_config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    snmp_config = snmpsim[1]
     table = snmp.walk_for_export(snmp_config, oid)
-
     assert table == expected_table

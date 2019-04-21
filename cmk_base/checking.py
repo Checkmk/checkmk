@@ -88,6 +88,9 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
     cpu_tracking.start("busy")
     console.verbose("Check_MK version %s\n" % cmk.__version__)
 
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
+
     # Exit state in various situations is configurable since 1.2.3i1
     exit_spec = config.exit_code_spec(hostname)
 
@@ -153,7 +156,8 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
         if _checkresult_file_fd is not None:
             _close_checkresult_file()
 
-        if config.record_inline_snmp_stats and config.is_inline_snmp_host(hostname):
+        if config.record_inline_snmp_stats \
+           and host_config.snmp_config(ipaddress).is_inline_snmp_host:
             inline_snmp.save_snmp_stats()
 
 

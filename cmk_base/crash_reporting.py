@@ -81,6 +81,10 @@ def _prepare_crash_dump_directory(crash_dir):
 
 def _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, is_manual_check,
                                  params, description, info, text):
+
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
+
     crash_info = crash_reporting.create_crash_info(
         "check",
         details={
@@ -92,7 +96,7 @@ def _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, i
             "item": item,
             "params": params,
             "uses_snmp": cmk_base.check_utils.is_snmp_check(check_plugin_name),
-            "inline_snmp": config.is_inline_snmp_host(hostname),
+            "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
             "manual_check": is_manual_check,
         })
     file(crash_dir + "/crash.info",

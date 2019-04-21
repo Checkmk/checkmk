@@ -861,23 +861,6 @@ def get_explicit_service_custom_variables(hostname, description):
 
 
 #
-# SNMP
-#
-
-
-# TODO: Replace call sites with HostConfig access and remove this
-def is_usewalk_host(hostname):
-    return get_config_cache().get_host_config(hostname).is_usewalk_host
-
-
-def is_inline_snmp_host(hostname):
-    # TODO: Better use "inline_snmp" once we have moved the code to an own module
-    has_inline_snmp = "netsnmp" in sys.modules
-    return has_inline_snmp and use_inline_snmp \
-           and not get_config_cache().in_binary_hostlist(hostname, non_inline_snmp_hosts)
-
-
-#
 # Groups
 #
 
@@ -2639,6 +2622,8 @@ class HostConfig(object):
                                                                 snmp_limit_oid_range),
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
+            is_usewalk_host=self.is_usewalk_host,
+            is_inline_snmp_host=self._is_inline_snmp_host(),
         )
 
     def _snmp_credentials(self):
@@ -2684,6 +2669,12 @@ class HostConfig(object):
         if not entries:
             return None
         return entries[0]
+
+    def _is_inline_snmp_host(self):
+        # TODO: Better use "inline_snmp" once we have moved the code to an own module
+        has_inline_snmp = "netsnmp" in sys.modules
+        return has_inline_snmp and use_inline_snmp \
+               and not self._config_cache.in_binary_hostlist(self.hostname, non_inline_snmp_hosts)
 
 
 #.

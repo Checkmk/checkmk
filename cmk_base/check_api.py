@@ -554,7 +554,8 @@ def get_agent_data_time():
 
 
 def _agent_cache_file_age(hostname, check_plugin_name):
-    if _config.is_cluster(hostname):
+    host_config = _config.get_config_cache().get_host_config(hostname)
+    if host_config.is_cluster:
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
 
     import cmk_base.check_utils

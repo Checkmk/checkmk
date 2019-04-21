@@ -103,7 +103,10 @@ def do_inv_check(hostname, options):
     _inv_fail_status = options.get("inv-fail-status",
                                    1)  # State in case of an error (default: WARN)
 
-    if config.is_cluster(hostname):
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
+
+    if host_config.is_cluster:
         ipaddress = None
     else:
         ipaddress = ip_lookup.lookup_ip_address(hostname)

@@ -376,7 +376,10 @@ modes.register(
 
 def mode_dump_agent(hostname):
     try:
-        if config.is_cluster(hostname):
+        config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
+
+        if host_config.is_cluster:
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = ip_lookup.lookup_ip_address(hostname)

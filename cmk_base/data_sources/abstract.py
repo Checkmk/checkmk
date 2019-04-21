@@ -662,10 +662,10 @@ class CheckMKAgentDataSource(DataSource):
         agent_info = self._get_agent_info()
         agent_version = agent_info["version"]
         output = []
-        if not config.is_cluster(self._hostname) and agent_version is not None:
+        if not self._host_config.is_cluster and agent_version is not None:
             output.append("Version: %s" % agent_version)
 
-        if not config.is_cluster(self._hostname) and agent_info["agentos"] is not None:
+        if not self._host_config.is_cluster and agent_info["agentos"] is not None:
             output.append("OS: %s" % agent_info["agentos"])
 
         return 0, ", ".join(output), []

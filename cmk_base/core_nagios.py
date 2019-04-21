@@ -177,11 +177,10 @@ def _create_nagios_config_host(cfg, config_cache, hostname):
 
 def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
     host_config = config_cache.get_host_config(hostname)
-    is_clust = config.is_cluster(hostname)
 
     ip = attrs["address"]
 
-    if is_clust:
+    if host_config.is_cluster:
         nodes = core_config.get_cluster_nodes_for_config(config_cache, host_config)
         attrs.update(core_config.get_cluster_attributes(config_cache, host_config, nodes))
 
@@ -193,7 +192,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
 
     host_spec = {
         "host_name": hostname,
-        "use": config.cluster_template if is_clust else config.host_template,
+        "use": config.cluster_template if host_config.is_cluster else config.host_template,
         "address": ip if ip else core_config.fallback_ip_for(host_config),
         "alias": attrs["alias"],
     }
@@ -204,7 +203,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
             host_spec[key] = value
 
     # Host check command might differ from default
-    command = core_config.host_check_command(config_cache, host_config, ip, is_clust,
+    command = core_config.host_check_command(config_cache, host_config, ip, host_config.is_cluster,
                                              cfg.hostcheck_commands_to_define,
                                              cfg.custom_commands_to_define)
     if command:
@@ -228,7 +227,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
         host_spec["contact_groups"] = ",".join(cgrs)
         cfg.contactgroups_to_define.update(cgrs)
 
-    if not is_clust:
+    if not host_config.is_cluster:
         # Parents for non-clusters
 
         # Get parents manually defined via extra_host_conf["parents"]. Only honor
@@ -241,13 +240,14 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
             if parents_list:
                 host_spec["parents"] = ",".join(parents_list)
 
-    elif is_clust:
+    elif host_config.is_cluster:
         # Special handling of clusters
         host_spec["parents"] = ",".join(nodes)
 
     # Custom configuration last -> user may override all other values
     host_spec.update(
-        _extra_host_conf_of(config_cache, hostname, exclude=["parents"] if is_clust else []))
+        _extra_host_conf_of(
+            config_cache, hostname, exclude=["parents"] if host_config.is_cluster else []))
     return host_spec
 
 
@@ -1090,7 +1090,7 @@ if '-d' in sys.argv:
 
 """)
 
-    needed_check_plugin_names = _get_needed_check_plugin_names(hostname, host_check_table)
+    needed_check_plugin_names = _get_needed_check_plugin_names(host_config, host_check_table)
 
     output.write("config.load_checks(check_api.get_check_api_context, %r)\n" %
                  _get_needed_check_file_names(needed_check_plugin_names))
@@ -1101,7 +1101,7 @@ if '-d' in sys.argv:
     output.write("config.load_packed_config()\n")
 
     # handling of clusters
-    if config.is_cluster(hostname):
+    if host_config.is_cluster:
         cluster_nodes = config.nodes_of(hostname)
         output.write("config.is_cluster = lambda h: h == %r\n" % hostname)
 
@@ -1115,7 +1115,7 @@ if '-d' in sys.argv:
 
     # IP addresses
     needed_ipaddresses, needed_ipv6addresses, = {}, {}
-    if config.is_cluster(hostname):
+    if host_config.is_cluster:
         for node in config.nodes_of(hostname):
             node_config = config_cache.get_host_config(node)
             if node_config.is_ipv4_host:
@@ -1213,14 +1213,14 @@ if '-d' in sys.argv:
     console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
 
-def _get_needed_check_plugin_names(hostname, host_check_table):
+def _get_needed_check_plugin_names(host_config, host_check_table):
     import cmk_base.check_table as check_table
 
     needed_check_plugin_names = set([])
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
     # to be loaded
-    sources = data_sources.DataSources(hostname, ipaddress=None)
+    sources = data_sources.DataSources(host_config.hostname, ipaddress=None)
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.programs.SpecialAgentDataSource):
             needed_check_plugin_names.add(source.special_agent_plugin_file_name)
@@ -1240,8 +1240,8 @@ def _get_needed_check_plugin_names(hostname, host_check_table):
 
     # Also include the check plugins of the cluster nodes to be able to load
     # the autochecks of the nodes
-    if config.is_cluster(hostname):
-        for node in config.nodes_of(hostname):
+    if host_config.is_cluster:
+        for node in config.nodes_of(host_config.hostname):
             needed_check_plugin_names.update(
                 [e[0] for e in check_table.get_precompiled_check_table(node, skip_ignored=False)])
 

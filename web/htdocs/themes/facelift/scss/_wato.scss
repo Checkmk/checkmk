@@ -258,283 +258,314 @@ table.validationerror  {
 
 table.data tr.data > td.bulkactions {
   background: transparent;
-  border: none solid !important;
+  border: none;
 }
 
 
-//a.service_button.disabled {
-//    pointer-events: none;
-//    cursor: default;
-//    filter: grayscale(100%);
-//    -webkit-filter: grayscale(100%);
-//    -moz-filter: grayscale(100%);
-//    -ms-filter: grayscale(100%);
-//    -o-filter: grayscale(100%);
-//    filter: gray;
-//    -webkit-filter: grayscale(1);
-//}
-//
-//.wato table.data tr.data td.bulksearch {
-//    padding-right: 0px;
-//    white-space: nowrap;
-//}
-//
-//.wato td.bulksearch input[type=text] {
-//    width: 150px;
-//    margin-right: 5px;
-//}
-//
-//.wato table.data tr.data td.bulksearch div.togglebutton.checkbox {
-//    margin-left: 0px;
-//}
-//
-//
-///* Path to current folder at top of screen */
-//.wato div.folderpath {
-//    margin-top: -5px;
-//    margin-bottom: 8px;
-//    height: 30px;
-//    position: relative;
-//    left: 4px;
-//}
-//
-//.wato div.folderpath ul {
-//    list-style-type:none;
-//    padding-left:0;
-//}
-//
-//.wato div.folderpath li {
-//    float:left;
-//    display:block;
-//    height:26px;
-//
-//    position:relative;
-//
-//    /* spacing for the image divs left/right */
-//    padding-left: 20px;
-//    padding-right: 20px;
-//
-//    /* move left border of all items 22px left to make the items overlap */
-//    margin-left: -13px;
-//
-//    color: #fff;
-//}
-//
-//.wato div.folderpath li a {
-//    color: #fff;
-//    text-decoration: none;
-//}
-//
-//.wato div.folderpath li div.content {
-//    height: 18px;
-//    background-image: url('images/breadcrumb_c_lo.png');
-//
-//    padding:4px 2px;
-//    line-height:18px;
-//}
-//
-//.wato div.folderpath li:hover div.content {
-//    background-image: url('images/breadcrumb_c_hi.png');
-//}
-//
-//.wato div.folderpath li select {
-//    padding: 2px 0px 2px 4px;
-//    background-color: #6da1b8;
-//    margin: 0;
-//    color: #fff;
-//    font-weight: normal;
-//    font-size: 9pt;
-//    border-style: none;
-//    position: relative;
-//    right: -6px;
-//    z-index: 200;
-//    height: 17px;
-//    box-shadow: none;
-//}
-//
-//.wato div.folderpath li:hover select {
-//    background-color: #7fb0c6;
-//}
-//
-//.wato div.folderpath li select option {
-//    background-color: #6da1b8;
-//}
-//
-//.wato div.folderpath li div.left,
-//.wato div.folderpath li div.right {
-//    position: absolute;
-//    width: 20px;
-//    height: 100%;
-//}
-//
-//.wato div.folderpath li div.left {
-//    top: 0;
-//    left: 0;
-//    background-image: url('images/breadcrumb_lm_lo.png');
-//}
-//
-//.wato div.folderpath li:hover div.left {
-//    background-image: url('images/breadcrumb_lm_hi.png');
-//}
-//
-//.wato div.folderpath li div.left.end {
-//    background-image: url('images/breadcrumb_l_lo.png');
-//}
-//
-//.wato div.folderpath li:hover div.left.end {
-//    background-image: url('images/breadcrumb_l_hi.png');
-//}
-//
-//.wato div.folderpath li div.right {
-//    top: 0;
-//    right: 0;
-//    background-image: url('images/breadcrumb_rm_lo.png');
-//}
-//
-//.wato div.folderpath li:hover div.right {
-//    background-image: url('images/breadcrumb_rm_hi.png');
-//}
-//
-//.wato div.folderpath li div.right.end {
-//    background-image: url('images/breadcrumb_r_lo.png');
-//}
-//
-//.wato div.folderpath li:hover div.right.end {
-//    background-image: url('images/breadcrumb_r_hi.png');
-//}
-//
-//.wato div.floatfolder {
-//    position: relative;
-//    left:-14px;
-//    float:left;
-//    background-image: url('images/folder_closed.png');
-//    background-repeat: no-repeat;
-//    background-position: top left;
-//    width: 180px;
-//    height: 140px;
-//}
-//
-//.wato div.floatfolder.open {
-//    background-image: url('images/folder_open.png');
-//}
-//
-//.wato div.floatfolder .autherr {
-//    position: absolute;
-//    top: 28px;
-//    right: 19px;
-//    z-index: 500;
-//}
-//
-//.wato div.floatfolder div.infos img {
-//    width: 14px;
-//    height: 14px;
-//    position: relative;
-//    top: -1px;
-//}
-//
-//.wato div.floatfolder .edit {
-//    position: absolute;
-//    top: 20px;
-//    right: 47px;
-//}
-//
-//.wato div.floatfolder div.popup_trigger {
-//    position: absolute;
-//    top: 20px;
-//    right: 25px;
-//}
-//
-//.wato div.floatfolder .delete {
-//    position: absolute;
-//    top: 20px;
-//    right: 3px;
-//}
-//
-//.wato div.floatfolder .infos {
-//    position: absolute;
-//    bottom: 23px;
-//    left: 20px;
-//    right: 20px;
-//    overflow: hidden;
-//}
-//
-//.wato div.floatfolder .infos .infos_content {
-//    color: #bde;
-//    overflow: hidden;
-//    white-space: nowrap;
-//    left: 0;
-//    right: 0;
-//    text-overflow: ellipsis;
-//}
-//
-//.wato div.floatfolder.open .infos {
-//    height: 50px;
-//}
-//
-//.wato div.floatfolder.open .infos .infos_content {
-//    position: absolute;
-//    bottom: 0;
-//}
-//
-//.wato div.floatfolder .title {
-//    position: absolute;
-//    bottom: 0;
-//    left: 20px;
-//    right: 20px;
-//    text-align: center;
-//
-//    color: #fff;
-//    white-space: nowrap;
-//    overflow: hidden;
-//    text-overflow: ellipsis;
-//    -o-text-overflow: ellipsis;
-//}
-//
-//.wato div.floatfolder .title a {
-//    color: #fff;
-//    font-size: 14px;
-//    text-decoration: none;
-//    position: relative;
-//    top: -2px;
-//}
-//
-//.wato img.authicon {
-//    width: 28px;
-//    height: 28px;
-//    margin-right: 10px;
-//    vertical-align: middle;
-//}
-//
-//.wato div.popup_menu {
-//    min-width: 137px;
-//}
-//
-//.wato div.popup_menu select {
-//    height: auto;
-//}
-//
-//.wato div.hoverarea {
-//    width: 154px;
-//    height: 40px;
-//    position: relative;
-//    top: 4px;
-//    left: 10px;
-//    z-index: 100;
-//}
-//
-//.wato div.floatfolder:hover {
-//    cursor:pointer;
-//}
-//
-//.wato div.floatfolder:hover a {
-//    text-decoration: underline;
-//}
-//
-//.wato div.folder_foot {
-//    clear: left;
-//    margin-bottom:10px;
-//}
-//
+a.service_button.disabled {
+    pointer-events: none;
+    cursor: default;
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+    filter: gray;
+    -webkit-filter: grayscale(1);
+}
+
+.wato table.data tr.data td.bulksearch {
+    padding-right: 0px;
+    white-space: nowrap;
+}
+
+table.data tr.data > td.bulksearch {
+  background: transparent;
+  border: 0px solid;
+}
+
+.wato td.bulksearch input[type=text] {
+    width: 150px;
+    margin-right: 5px;
+}
+
+.wato table.data tr.data td.bulksearch div.togglebutton.checkbox {
+    margin-left: 0px;
+}
+
+table.data tr.data > td.bulksearch div.togglebutton.checkbox {
+    display: inline-block;
+    margin-top: 8px;
+    height: 32px;
+    width: 32px;
+    margin-right: 8px;
+}
+
+table.data tr.data > td.bulksearch div.togglebutton.checkbox a,
+table.data tr.data > td.bulksearch div.togglebutton.checkbox body.main .popup_menu span,
+body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkbox span {
+    height: 32px;
+    box-sizing: border-box;
+    padding: 6px;
+}
+
+.wato td.bulksearch .togglebutton {
+    margin-bottom: 0px;
+}
+
+.wato td.bulksearch input.text,
+.wato td.bulksearch select.text,
+.wato td.bulksearch textarea.text,
+.wato td.bulksearch .text#mk_side_search_field {
+    width: auto;
+}
+
+/* Path to current folder at top of screen */
+.wato div.folderpath {
+    margin-top: -5px;
+    margin-bottom: 8px;
+    height: auto;
+    position: relative;
+    left: 4px;
+}
+
+.wato div.folderpath ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.wato div.folderpath li {
+    float: left;
+    display: block;
+    height: 44px;
+
+    position: relative;
+
+    /* spacing for the image divs left/right */
+    padding-left: 20px;
+    padding-right: 20px;
+
+    /* move left border of all items 22px left to make the items overlap */
+    margin-left: -13px;
+
+    color: #fff;
+    background: transparent;
+}
+
+.wato div.folderpath li a,
+.wato div.folderpath li body.main .popup_menu span,
+body.main .popup_menu .wato div.folderpath li span {
+    color: $theme-color-text;
+}
+
+.wato div.folderpath li a {
+    text-decoration: none;
+}
+
+.wato div.folderpath li div.content {
+    background: none;
+    padding: 4px;
+    color: $theme-color-text;
+    height: auto;
+    line-height: 33px;
+}
+
+.wato div.folderpath li:hover div.content {
+    background-image: none;
+}
+
+.wato div.folderpath li select {
+    padding: 2px 0px 2px 4px;
+    background: $theme-color-white;
+    margin: 0;
+    color: #fff;
+    font-weight: normal;
+    font-size: 9pt;
+    border: 1px solid $theme-color-table-border;
+    position: relative;
+    right: -6px;
+    z-index: 200;
+    height: auto;
+    box-shadow: none;
+}
+
+.wato div.folderpath li:hover select {
+    background: $theme-color-table-background;
+}
+
+.wato div.folderpath li select option {
+  background-color: $theme-color-white;
+  color: $theme-color-text;
+}
+
+.wato div.folderpath li .left,
+.wato div.folderpath li .right {
+    display: none;
+}
+
+.wato div.folderpath ul li:before {
+    content: "»";
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    font-size: 29px;
+    font-weight: 800;
+    color: $theme-color-main;
+}
+
+.wato div.folderpath ul li:first-child:before {
+    content: " ";
+}
+
+.wato div.folderpath ul:after {
+  content: " ";
+  display: block;
+  width: 0;
+  height: 0;
+  clear: both;
+}
+
+.wato div.floatfolder {
+    position: relative;
+    left:-14px;
+    float:left;
+    background-image: url('images/folder_closed.png');
+    background-repeat: no-repeat;
+    background-position: top left;
+    width: 180px;
+    height: 140px;
+}
+
+.wato div.floatfolder.open {
+    background-image: url('images/folder_open.png');
+}
+
+.wato div.floatfolder .autherr {
+    position: absolute;
+    top: 28px;
+    right: 19px;
+    z-index: 500;
+}
+
+.wato div.floatfolder div.infos img {
+    width: 14px;
+    height: 14px;
+    position: relative;
+    top: -1px;
+}
+
+.wato div.floatfolder .edit {
+    position: absolute;
+    top: 20px;
+    right: 47px;
+}
+
+.wato div.floatfolder div.popup_trigger {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+}
+
+.wato div.floatfolder .delete {
+    position: absolute;
+    top: 20px;
+    right: 3px;
+}
+
+.wato div.floatfolder .infos {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  overflow: hidden;
+}
+
+.wato div.floatfolder .infos .infos_content {
+    color: #bde;
+    overflow: hidden;
+    white-space: nowrap;
+    left: 0;
+    right: 0;
+    text-overflow: ellipsis;
+    font-size: $theme-font-size-main;
+}
+
+.wato div.floatfolder.open .infos {
+    height: 50px;
+}
+
+.wato div.floatfolder.open .infos .infos_content {
+    position: absolute;
+    bottom: 0;
+}
+
+.wato div.floatfolder .title {
+    padding: 0;
+    position: absolute;
+    bottom: -4px;
+    left: 20px;
+    right: 20px;
+    text-align: left;
+
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+}
+
+.wato div.floatfolder div.title a,
+.wato div.floatfolder div.title body.main .popup_menu span,
+body.main .popup_menu .wato div.floatfolder div.title span,
+.wato div.floatfolder.locked div.title {
+    font-size: 13px;
+    color: $theme-color-text;
+    font-weight: 500;
+}
+
+.wato div.floatfolder .title a {
+    text-decoration: none;
+    position: relative;
+    top: -2px;
+}
+
+.wato img.authicon {
+    width: 28px;
+    height: 28px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.wato div.popup_menu {
+    min-width: 137px;
+}
+
+.wato div.popup_menu select {
+    height: auto;
+}
+
+.wato div.hoverarea {
+    width: 154px;
+    height: 40px;
+    position: relative;
+    top: 4px;
+    left: 10px;
+    z-index: 100;
+}
+
+.wato div.floatfolder:hover {
+    cursor: pointer;
+}
+
+.wato div.floatfolder:hover a {
+    text-decoration: underline;
+}
+
+.wato div.folder_foot {
+    clear: left;
+    margin-bottom: 10px;
+}
+
 ///* Information boxes displayed directly in the data area */
 //.wato div.info {
 //    margin-top: 10px;

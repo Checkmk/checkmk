@@ -87,7 +87,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         if self._port is not None:
             return self._port
 
-        return config.agent_port_of(self._hostname)
+        return self._host_config.agent_port
 
     def set_timeout(self, timeout):
         self._timeout = timeout
@@ -96,7 +96,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         if self._timeout:
             return self._timeout
 
-        return config.tcp_connect_timeout_of(self._hostname)
+        return self._host_config.tcp_connect_timeout
 
     def _execute(self):
         if self._use_only_cache:
@@ -107,7 +107,7 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         port = self._get_port()
 
-        encryption_settings = config.agent_encryption_of(self._hostname)
+        encryption_settings = self._host_config.agent_encryption
 
         socktype = (socket.AF_INET6 if self._host_config.is_ipv6_primary else socket.AF_INET)
         s = socket.socket(socktype, socket.SOCK_STREAM)
@@ -174,7 +174,7 @@ class TCPDataSource(CheckMKAgentDataSource):
 
     def _sub_result_version(self, agent_info):
         agent_version = agent_info["version"]
-        expected_version = config.agent_target_version(self._hostname)
+        expected_version = self._host_config.agent_target_version
 
         if expected_version and agent_version \
              and not self._is_expected_agent_version(agent_version, expected_version):
@@ -313,7 +313,7 @@ class TCPDataSource(CheckMKAgentDataSource):
 
     def describe(self):
         """Return a short textual description of the agent"""
-        return "TCP: %s:%d" % (self._ipaddress, config.agent_port_of(self._hostname))
+        return "TCP: %s:%d" % (self._ipaddress, self._host_config.agent_port)
 
     @classmethod
     def use_only_cache(cls):

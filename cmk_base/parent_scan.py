@@ -82,8 +82,11 @@ def do_scan_parents(hosts):
         while len(chunk) < config.max_num_processes and len(hosts) > 0:
             host = hosts[0]
             del hosts[0]
+
+            host_config = config_cache.get_host_config(host)
+
             # skip hosts that already have a parent
-            if config.parents_of(host):
+            if host_config.parents:
                 console.verbose("(manual parent) ")
                 continue
             chunk.append(host)

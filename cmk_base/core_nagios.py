@@ -236,7 +236,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
                                                           config.extra_host_conf.get("parents", []))
 
         if not extra_conf_parents:
-            parents_list = config.parents_of(hostname)
+            parents_list = host_config.parents
             if parents_list:
                 host_spec["parents"] = ",".join(parents_list)
 

@@ -736,21 +736,6 @@ def get_additional_ipaddresses_of(hostname):
             host_attributes.get(hostname, {}).get("additional_ipv6addresses", []))
 
 
-def parents_of(hostname):
-    # type: (str) -> List[str]
-    config_cache = get_config_cache()
-    par = config_cache.host_extra_conf(hostname, parents)
-    # Use only those parents which are defined and active in
-    # all_hosts.
-    used_parents = []
-    for p in par:
-        ps = p.split(",")
-        for pss in ps:
-            if pss in config_cache.all_active_realhosts():
-                used_parents.append(pss)
-    return used_parents
-
-
 #
 # Management board
 #
@@ -2490,6 +2475,7 @@ class HostConfig(object):
         self.alias = self._get_alias()
         self.is_cluster = self._is_cluster()
         self.part_of_clusters = self._config_cache.clusters_of(hostname)
+        self.parents = self._get_parents()
 
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
         self.tags = self._config_cache.tag_list_of_host(self.hostname)
@@ -2569,6 +2555,16 @@ class HostConfig(object):
             return self.hostname
 
         return aliases[0]
+
+    def _get_parents(self):
+        # type: () -> List[str]
+        """Use only those parents which are defined and active in all_hosts"""
+        used_parents = []
+        for parent_names in self._config_cache.host_extra_conf(self.hostname, parents):
+            for parent_name in parent_names.split(","):
+                if parent_name in self._config_cache.all_active_realhosts():
+                    used_parents.append(parent_name)
+        return used_parents
 
     def _get_host_labels(self):
         """Returns the effective set of host labels from all available sources

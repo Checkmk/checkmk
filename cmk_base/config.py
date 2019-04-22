@@ -2473,9 +2473,12 @@ class HostConfig(object):
         self._config_cache = config_cache
 
         self.alias = self._get_alias()
-        self.is_cluster = self._is_cluster()
-        self.part_of_clusters = self._config_cache.clusters_of(hostname)
         self.parents = self._get_parents()
+
+        self.is_cluster = self._is_cluster()
+        # TODO: Rename this to self.clusters?
+        self.part_of_clusters = self._config_cache.clusters_of(hostname)
+        self.nodes = self._config_cache.nodes_of(hostname)
 
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
         self.tags = self._config_cache.tag_list_of_host(self.hostname)
@@ -2556,6 +2559,7 @@ class HostConfig(object):
 
         return aliases[0]
 
+    # TODO: Move cluster/node parent handling to this function
     def _get_parents(self):
         # type: () -> List[str]
         """Use only those parents which are defined and active in all_hosts"""
@@ -3283,12 +3287,14 @@ class ConfigCache(object):
             self._nodes_of_cache[clustername] = hosts
 
     def clusters_of(self, hostname):
+        # type: (str) -> List[str]
         """Returns names of cluster hosts the host is a node of"""
         return self._clusters_of_cache.get(hostname, [])
 
-    # TODO: cleanup none
-    # Returns the nodes of a cluster. Returns None if no match
+    # TODO: cleanup None case
     def nodes_of(self, hostname):
+        # type: (str) -> Optional[List[str]]
+        """Returns the nodes of a cluster. Returns None if no match"""
         return self._nodes_of_cache.get(hostname)
 
     def all_active_clusters(self):
@@ -3331,7 +3337,7 @@ class ConfigCache(object):
 
         # 1. New style: explicitly assigned services
         for cluster, conf in clustered_services_of.iteritems():
-            nodes = nodes_of(cluster)
+            nodes = self.nodes_of(cluster)
             if not nodes:
                 raise MKGeneralException(
                     "Invalid entry clustered_services_of['%s']: %s is not a cluster." % (cluster,

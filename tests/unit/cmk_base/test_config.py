@@ -1,4 +1,5 @@
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import pytest  # type: ignore
 from testlib.base import Scenario
@@ -317,6 +318,39 @@ def test_service_depends_on(monkeypatch):
     assert config.service_depends_on("test-host", "svc2") == []
     assert config.service_depends_on("test-host", "svc1") == ["dep1"]
     assert config.service_depends_on("test-host", "svc1-abc") == ["dep1", "dep2-abc"]
+
+
+@pytest.fixture()
+def cluster_config(monkeypatch):
+    ts = Scenario().add_host("node1").add_host("host1")
+    ts.add_cluster("cluster1", nodes=["node1"])
+    return ts.apply(monkeypatch)
+
+
+def test_host_config_is_cluster(cluster_config):
+    assert cluster_config.get_host_config("node1").is_cluster is False
+    assert cluster_config.get_host_config("host1").is_cluster is False
+    assert cluster_config.get_host_config("cluster1").is_cluster is True
+
+
+def test_host_config_part_of_clusters(cluster_config):
+    assert cluster_config.get_host_config("node1").part_of_clusters == ["cluster1"]
+    assert cluster_config.get_host_config("host1").part_of_clusters == []
+    assert cluster_config.get_host_config("cluster1").part_of_clusters == []
+
+
+def test_host_config_nodes(cluster_config):
+    assert cluster_config.get_host_config("node1").nodes is None
+    assert cluster_config.get_host_config("host1").nodes is None
+    assert cluster_config.get_host_config("cluster1").nodes == ["node1"]
+
+
+def test_host_config_parents(cluster_config):
+    assert cluster_config.get_host_config("node1").parents == []
+    assert cluster_config.get_host_config("host1").parents == []
+    # TODO: Move cluster/node parent handling to HostConfig
+    #assert cluster_config.get_host_config("cluster1").parents == ["node1"]
+    assert cluster_config.get_host_config("cluster1").parents == []
 
 
 def test_host_tags_default():

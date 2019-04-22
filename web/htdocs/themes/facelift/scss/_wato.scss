@@ -263,307 +263,305 @@ table.data tr.data > td.bulkactions {
 
 
 a.service_button.disabled {
-    pointer-events: none;
-    cursor: default;
-    filter: grayscale(100%);
-    -webkit-filter: grayscale(100%);
-    -moz-filter: grayscale(100%);
-    -ms-filter: grayscale(100%);
-    -o-filter: grayscale(100%);
-    filter: gray;
-    -webkit-filter: grayscale(1);
+  pointer-events: none;
+  cursor: default;
+  filter: grayscale(100%);
+  -webkit-filter: grayscale(100%);
+  -moz-filter: grayscale(100%);
+  -ms-filter: grayscale(100%);
+  -o-filter: grayscale(100%);
+  -webkit-filter: grayscale(1);
 }
 
 .wato table.data tr.data td.bulksearch {
-    padding-right: 0px;
-    white-space: nowrap;
+  padding-right: 0;
+  white-space: nowrap;
+
+  div.togglebutton.checkbox {
+    margin-left: 0;
+  }
 }
 
 table.data tr.data > td.bulksearch {
   background: transparent;
-  border: 0px solid;
+  border: none;
+
+  div.togglebutton.checkbox {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    margin-top: 8px;
+    margin-right: 8px;
+  }
 }
 
-.wato td.bulksearch input[type=text] {
+.wato td.bulksearch {
+  input[type=text] {
     width: 150px;
     margin-right: 5px;
-}
+  }
 
-.wato table.data tr.data td.bulksearch div.togglebutton.checkbox {
-    margin-left: 0px;
-}
+  .togglebutton {
+    margin-bottom: 0;
+  }
 
-table.data tr.data > td.bulksearch div.togglebutton.checkbox {
-    display: inline-block;
-    margin-top: 8px;
-    height: 32px;
-    width: 32px;
-    margin-right: 8px;
+  input.text,
+  select.text,
+  textarea.text,
+  .text#mk_side_search_field {
+    width: auto;
+  }
 }
 
 table.data tr.data > td.bulksearch div.togglebutton.checkbox a,
 table.data tr.data > td.bulksearch div.togglebutton.checkbox body.main .popup_menu span,
 body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkbox span {
-    height: 32px;
-    box-sizing: border-box;
-    padding: 6px;
-}
-
-.wato td.bulksearch .togglebutton {
-    margin-bottom: 0px;
-}
-
-.wato td.bulksearch input.text,
-.wato td.bulksearch select.text,
-.wato td.bulksearch textarea.text,
-.wato td.bulksearch .text#mk_side_search_field {
-    width: auto;
+  height: 32px;
+  padding: 6px;
+  box-sizing: border-box;
 }
 
 /* Path to current folder at top of screen */
 .wato div.folderpath {
-    margin-top: -5px;
-    margin-bottom: 8px;
-    height: auto;
-    position: relative;
-    left: 4px;
-}
+  position: relative;
+  left: 4px;
+  height: auto;
+  margin-top: -5px;
+  margin-bottom: 8px;
 
-.wato div.folderpath ul {
-    list-style-type: none;
+  ul {
     padding-left: 0;
-}
+    list-style-type: none;
 
-.wato div.folderpath li {
-    float: left;
-    display: block;
-    height: 44px;
+    li {
+      &:before {
+        position: absolute;
+        top: 0;
+        left: 0;
+        font-size: 29px;
+        font-weight: 800;
+        color: $theme-color-main;
+        content: "»";
+      }
 
+      &:first-child:before {
+        content: " ";
+      }
+    }
+
+    &:after {
+      display: block;
+      width: 0;
+      height: 0;
+      clear: both;
+      content: " ";
+    }
+  }
+
+  li {
     position: relative;
-
-    /* spacing for the image divs left/right */
+    display: block;
+    float: left;
+    height: 44px;
+    padding-right: 20px; /* spacing for the image divs left/right */
     padding-left: 20px;
-    padding-right: 20px;
-
-    /* move left border of all items 22px left to make the items overlap */
-    margin-left: -13px;
-
+    margin-left: -13px; /* move left border of all items 22px left to make the items overlap */
     color: #fff;
     background: transparent;
-}
 
-.wato div.folderpath li a,
-.wato div.folderpath li body.main .popup_menu span,
-body.main .popup_menu .wato div.folderpath li span {
+    a {
+      text-decoration: none;
+    }
+
+    div.content {
+      height: auto;
+      padding: 4px;
+      line-height: 33px;
+      color: $theme-color-text;
+      background: none;
+    }
+
+    select {
+      position: relative;
+      right: -6px;
+      z-index: 200;
+      height: auto;
+      padding: 2px 0 2px 4px;
+      margin: 0;
+      font-size: 12px;
+      font-weight: normal;
+      color: #fff;
+      background: $theme-color-white;
+      border: 1px solid $theme-color-table-border;
+      box-shadow: none;
+    }
+
+    &:hover {
+      div.content {
+        background-image: none;
+      }
+
+      select {
+        background: $theme-color-table-background;
+      }
+    }
+
+    select option {
+      color: $theme-color-text;
+      background-color: $theme-color-white;
+    }
+
+    .left,
+    .right {
+      display: none;
+    }
+  }
+
+  li a,
+  li body.main .popup_menu span,
+  body.main .popup_menu li span {
     color: $theme-color-text;
-}
-
-.wato div.folderpath li a {
-    text-decoration: none;
-}
-
-.wato div.folderpath li div.content {
-    background: none;
-    padding: 4px;
-    color: $theme-color-text;
-    height: auto;
-    line-height: 33px;
-}
-
-.wato div.folderpath li:hover div.content {
-    background-image: none;
-}
-
-.wato div.folderpath li select {
-    padding: 2px 0px 2px 4px;
-    background: $theme-color-white;
-    margin: 0;
-    color: #fff;
-    font-weight: normal;
-    font-size: 9pt;
-    border: 1px solid $theme-color-table-border;
-    position: relative;
-    right: -6px;
-    z-index: 200;
-    height: auto;
-    box-shadow: none;
-}
-
-.wato div.folderpath li:hover select {
-    background: $theme-color-table-background;
-}
-
-.wato div.folderpath li select option {
-  background-color: $theme-color-white;
-  color: $theme-color-text;
-}
-
-.wato div.folderpath li .left,
-.wato div.folderpath li .right {
-    display: none;
-}
-
-.wato div.folderpath ul li:before {
-    content: "»";
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    font-size: 29px;
-    font-weight: 800;
-    color: $theme-color-main;
-}
-
-.wato div.folderpath ul li:first-child:before {
-    content: " ";
-}
-
-.wato div.folderpath ul:after {
-  content: " ";
-  display: block;
-  width: 0;
-  height: 0;
-  clear: both;
+  }
 }
 
 .wato div.floatfolder {
-    position: relative;
-    left:-14px;
-    float:left;
-    background-image: url('images/folder_closed.png');
-    background-repeat: no-repeat;
-    background-position: top left;
-    width: 180px;
-    height: 140px;
-}
+  position: relative;
+  left: -14px;
+  float: left;
+  width: 180px;
+  height: 140px;
+  background-image: url("images/folder_closed.png");
+  background-position: top left;
+  background-repeat: no-repeat;
 
-.wato div.floatfolder.open {
-    background-image: url('images/folder_open.png');
-}
-
-.wato div.floatfolder .autherr {
+  .autherr {
     position: absolute;
     top: 28px;
     right: 19px;
     z-index: 500;
-}
+  }
 
-.wato div.floatfolder div.infos img {
-    width: 14px;
-    height: 14px;
+  div.infos img {
     position: relative;
     top: -1px;
-}
+    width: 14px;
+    height: 14px;
+  }
 
-.wato div.floatfolder .edit {
+  .edit {
     position: absolute;
     top: 20px;
     right: 47px;
-}
+  }
 
-.wato div.floatfolder div.popup_trigger {
+  div.popup_trigger {
     position: absolute;
     top: 20px;
     right: 25px;
-}
+  }
 
-.wato div.floatfolder .delete {
+  .delete {
     position: absolute;
     top: 20px;
     right: 3px;
-}
+  }
 
-.wato div.floatfolder .infos {
-  position: absolute;
-  bottom: 24px;
-  left: 24px;
-  right: 24px;
-  overflow: hidden;
-}
-
-.wato div.floatfolder .infos .infos_content {
-    color: #bde;
+  .infos {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    left: 24px;
     overflow: hidden;
-    white-space: nowrap;
-    left: 0;
-    right: 0;
-    text-overflow: ellipsis;
-    font-size: $theme-font-size-main;
-}
 
-.wato div.floatfolder.open .infos {
-    height: 50px;
-}
+    .infos .infos_content {
+      right: 0;
+      left: 0;
+      overflow: hidden;
+      font-size: $theme-font-size-main;
+      color: #bde;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
 
-.wato div.floatfolder.open .infos .infos_content {
+  &.open {
+    background-image: url("images/folder_open.png");
+
+    .infos {
+      height: 50px;
+
+      .infos_content {
+        position: absolute;
+        bottom: 0;
+      }
+    }
+  }
+
+  .title {
     position: absolute;
-    bottom: 0;
-}
-
-.wato div.floatfolder .title {
-    padding: 0;
-    position: absolute;
+    right: 20px;
     bottom: -4px;
     left: 20px;
-    right: 20px;
-    text-align: left;
-
-    color: #fff;
-    white-space: nowrap;
+    padding: 0;
     overflow: hidden;
+    color: #fff;
+    text-align: left;
     text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
+    white-space: nowrap;
+
+    a {
+      position: relative;
+      top: -2px;
+      text-decoration: none;
+    }
+  }
+
+  &:hover {
+    cursor: pointer;
+
+    a {
+      text-decoration: underline;
+    }
+  }
 }
 
 .wato div.floatfolder div.title a,
 .wato div.floatfolder div.title body.main .popup_menu span,
 body.main .popup_menu .wato div.floatfolder div.title span,
 .wato div.floatfolder.locked div.title {
-    font-size: 13px;
-    color: $theme-color-text;
-    font-weight: 500;
-}
-
-.wato div.floatfolder .title a {
-    text-decoration: none;
-    position: relative;
-    top: -2px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $theme-color-text;
 }
 
 .wato img.authicon {
-    width: 28px;
-    height: 28px;
-    margin-right: 10px;
-    vertical-align: middle;
+  width: 28px;
+  height: 28px;
+  margin-right: 10px;
+  vertical-align: middle;
 }
 
 .wato div.popup_menu {
-    min-width: 137px;
-}
+  min-width: 137px;
 
-.wato div.popup_menu select {
+  select {
     height: auto;
+  }
 }
 
 .wato div.hoverarea {
-    width: 154px;
-    height: 40px;
-    position: relative;
-    top: 4px;
-    left: 10px;
-    z-index: 100;
-}
-
-.wato div.floatfolder:hover {
-    cursor: pointer;
-}
-
-.wato div.floatfolder:hover a {
-    text-decoration: underline;
+  position: relative;
+  top: 4px;
+  left: 10px;
+  z-index: 100;
+  width: 154px;
+  height: 40px;
 }
 
 .wato div.folder_foot {
-    clear: left;
-    margin-bottom: 10px;
+  margin-bottom: 10px;
+  clear: left;
 }
 
 ///* Information boxes displayed directly in the data area */

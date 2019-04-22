@@ -513,7 +513,10 @@ def get_cluster_nodes_for_config(config_cache, host_config):
     # type: (config.ConfigCache, config.HostConfig) -> List[str]
     _verify_cluster_address_family(config_cache, host_config)
 
-    nodes = config.nodes_of(host_config.hostname)[:]
+    if host_config.nodes is None:
+        return []
+
+    nodes = host_config.nodes[:]
     for node in nodes:
         if node not in config_cache.all_active_realhosts():
             warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
@@ -530,9 +533,12 @@ def _verify_cluster_address_family(config_cache, host_config):
         "%s: %s" % (host_config.hostname, cluster_host_family),
     ]
 
+    if host_config.nodes is None:
+        return None
+
     address_family = cluster_host_family
     mixed = False
-    for nodename in config.nodes_of(host_config.hostname):
+    for nodename in host_config.nodes:
         node_config = config_cache.get_host_config(nodename)
         family = "IPv6" if node_config.is_ipv6_primary else "IPv4"
         address_families.append("%s: %s" % (nodename, family))

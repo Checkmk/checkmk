@@ -1103,11 +1103,11 @@ if '-d' in sys.argv:
 
     # handling of clusters
     if host_config.is_cluster:
-        cluster_nodes = config.nodes_of(hostname)
+        cluster_nodes = host_config.nodes
         output.write("config.is_cluster = lambda h: h == %r\n" % hostname)
 
         nodes_of_map = {hostname: cluster_nodes}
-        for node in config.nodes_of(hostname):
+        for node in host_config.nodes:
             nodes_of_map[node] = None
         output.write("config.nodes_of = lambda h: %r[h]\n" % nodes_of_map)
     else:
@@ -1117,7 +1117,7 @@ if '-d' in sys.argv:
     # IP addresses
     needed_ipaddresses, needed_ipv6addresses, = {}, {}
     if host_config.is_cluster:
-        for node in config.nodes_of(hostname):
+        for node in host_config.nodes:
             node_config = config_cache.get_host_config(node)
             if node_config.is_ipv4_host:
                 needed_ipaddresses[node] = ip_lookup.lookup_ipv4_address(node)
@@ -1242,7 +1242,7 @@ def _get_needed_check_plugin_names(host_config, host_check_table):
     # Also include the check plugins of the cluster nodes to be able to load
     # the autochecks of the nodes
     if host_config.is_cluster:
-        for node in config.nodes_of(host_config.hostname):
+        for node in host_config.nodes:
             needed_check_plugin_names.update(
                 [e[0] for e in check_table.get_precompiled_check_table(node, skip_ignored=False)])
 

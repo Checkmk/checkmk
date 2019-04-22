@@ -930,12 +930,6 @@ def check_interval_of(hostname, section_name):
 #   '----------------------------------------------------------------------'
 
 
-# Returns the nodes of a cluster, or None if hostname is not a cluster
-# TODO: Clean this up!
-def nodes_of(hostname):
-    return get_config_cache().nodes_of(hostname)
-
-
 # Determine weather a service (found on a physical host) is a clustered
 # service and - if yes - return the cluster host of the service. If
 # no, returns the hostname of the physical host.
@@ -3294,7 +3288,9 @@ class ConfigCache(object):
     # TODO: cleanup None case
     def nodes_of(self, hostname):
         # type: (str) -> Optional[List[str]]
-        """Returns the nodes of a cluster. Returns None if no match"""
+        """Returns the nodes of a cluster. Returns None if no match.
+
+        Use host_config.nodes instead of this method to get the node list"""
         return self._nodes_of_cache.get(hostname)
 
     def all_active_clusters(self):

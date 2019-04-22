@@ -63,8 +63,9 @@ import cmk_base.data_sources as data_sources
 class DiscoveryAutomation(Automation):
     # if required, schedule an inventory check
     def _trigger_discovery_check(self, host_config):
+        # TODO: Check the last condition ("or host_config.nodes"). Is this really correct?
         if (config.inventory_check_autotrigger and config.inventory_check_interval) and\
-                (not host_config.is_cluster or config.nodes_of(host_config.hostname)):
+                (not host_config.is_cluster or host_config.nodes):
             discovery.schedule_discovery_check(host_config.hostname)
 
 
@@ -634,7 +635,7 @@ class AutomationAnalyseServices(Automation):
         # whole function up.
         if host_config.is_cluster:
             autochecks = []
-            for node in config.nodes_of(hostname):
+            for node in host_config.nodes:
                 for check_plugin_name, item, paramstring in cmk_base.autochecks.read_autochecks_of(
                         node):
                     descr = config.service_description(node, check_plugin_name, item)

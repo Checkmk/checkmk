@@ -84,13 +84,12 @@ def do_discovery(hostnames, check_plugin_names, only_new):
     # For clusters add their nodes to the list. Clusters itself
     # cannot be discovered but the user is allowed to specify
     # them and we do discovery on the nodes instead.
-    nodes = []
     cluster_hosts = []
     for h in hostnames:
-        nodes = config.nodes_of(h)
-        if nodes:
+        host_config = config_cache.get_host_config(h)
+        if host_config.is_cluster:
             cluster_hosts.append(h)
-            hostnames += nodes
+            hostnames += host_config.nodes
 
     # Then remove clusters and make list unique
     hostnames = list(set([h for h in hostnames if not config_cache.get_host_config(h).is_cluster]))
@@ -238,7 +237,7 @@ def discover_on_host(config_cache,
         # checks of the host, so that _get_host_services() does show us the
         # new discovered check parameters.
         if mode == "refresh":
-            counts["self_removed"] += remove_autochecks_of(hostname)  # this is cluster-aware!
+            counts["self_removed"] += remove_autochecks_of(host_config)  # this is cluster-aware!
 
         if host_config.is_cluster:
             ipaddress = None
@@ -416,8 +415,8 @@ def check_discovery(hostname, ipaddress):
                 (check_plugin_name, config.service_description(hostname, check_plugin_name, item)))
 
     if need_rediscovery:
-        if host_config.is_cluster:
-            for nodename in config.nodes_of(hostname):
+        if host_config.is_cluster and host_config.nodes:
+            for nodename in host_config.nodes:
                 _set_rediscovery_flag(nodename)
         else:
             _set_rediscovery_flag(hostname)
@@ -948,8 +947,7 @@ DiscoveredServicesTable = Dict[Tuple[str, str], Tuple[str, str]]
 def _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_error):
     # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
     if host_config.is_cluster:
-        return _get_cluster_services(host_config.hostname, ipaddress, sources, multi_host_sections,
-                                     on_error)
+        return _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, on_error)
 
     return _get_node_services(host_config.hostname, ipaddress, sources, multi_host_sections,
                               on_error)
@@ -1064,11 +1062,8 @@ def _merge_manual_services(services, hostname, on_error):
     return services
 
 
-# Do the work for a cluster
-def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_error):
-    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
-    nodes = config.nodes_of(hostname)
-
+def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, on_error):
+    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
     config_cache = config.get_config_cache()
 
     # Get setting from cluster SNMP data source
@@ -1077,10 +1072,13 @@ def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_
         if isinstance(source, data_sources.SNMPDataSource):
             do_snmp_scan = source.get_do_snmp_scan()
 
+    cluster_items = {}  # type: DiscoveredServicesTable
+    if not host_config.nodes:
+        return cluster_items
+
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
-    cluster_items = {}  # type: DiscoveredServicesTable
-    for node in nodes:
+    for node in host_config.nodes:
         node_ipaddress = ip_lookup.lookup_ip_address(node)
         node_sources = _get_sources_for_discovery(
             node,
@@ -1093,8 +1091,8 @@ def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_
         services = _get_discovered_services(node, node_ipaddress, node_sources, multi_host_sections,
                                             on_error)
         for (check_plugin_name, item), (check_source, paramstring) in services.items():
-            descr = config.service_description(hostname, check_plugin_name, item)
-            if hostname == config_cache.host_of_clustered_service(node, descr):
+            descr = config.service_description(host_config.hostname, check_plugin_name, item)
+            if host_config.hostname == config_cache.host_of_clustered_service(node, descr):
                 if (check_plugin_name, item) not in cluster_items:
                     cluster_items[(check_plugin_name, item)] = (check_source, paramstring)
                 else:
@@ -1110,7 +1108,7 @@ def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_
                     # In all other cases either both must be "new" or "vanished" -> let it be
 
     # Now add manual and active serivce and handle ignored services
-    _merge_manual_services(cluster_items, hostname, on_error)
+    _merge_manual_services(cluster_items, host_config.hostname, on_error)
     return cluster_items
 
 
@@ -1389,7 +1387,7 @@ def set_autochecks_of(host_config, new_items):
     config_cache = config.get_config_cache()
 
     if host_config.is_cluster:
-        for node in config.nodes_of(hostname):
+        for node in host_config.nodes:
             new_autochecks = []
             existing = parse_autochecks_file(node)
             for check_plugin_name, item, paramstring in existing:
@@ -1425,14 +1423,13 @@ def set_autochecks_of(host_config, new_items):
 
 
 # Remove all autochecks of a host while being cluster-aware!
-def remove_autochecks_of(hostname):
+def remove_autochecks_of(host_config):
     removed = 0
-    nodes = config.nodes_of(hostname)
-    if nodes:
-        for node in nodes:
-            removed += _remove_autochecks_of_host(node)
+    if host_config.nodes:
+        for node_name in host_config.nodes:
+            removed += _remove_autochecks_of_host(node_name)
     else:
-        removed += _remove_autochecks_of_host(hostname)
+        removed += _remove_autochecks_of_host(host_config.hostname)
 
     return removed
 

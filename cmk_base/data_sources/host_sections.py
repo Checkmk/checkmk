@@ -160,9 +160,13 @@ class MultiHostSections(object):
         """
         if not service_description:
             return
-        nodes = self._config_cache.nodes_of(hostname)
+
+        host_config = self._config_cache.get_host_config(hostname)
+        nodes = host_config.nodes
+
         if nodes is None:
             return
+
         return [
             nodename for nodename in nodes
             if hostname == self._config_cache.host_of_clustered_service(
@@ -206,12 +210,12 @@ class MultiHostSections(object):
         return section_content
 
     def _get_host_entries(self, hostname, ipaddress):
-        nodes = self._config_cache.nodes_of(hostname)
-        if nodes is None:
+        host_config = self._config_cache.get_host_config(hostname)
+        if host_config.nodes is None:
             return [(hostname, ipaddress)]
-        return [
-            (node_hostname, ip_lookup.lookup_ip_address(node_hostname)) for node_hostname in nodes
-        ]
+
+        return [(node_hostname, ip_lookup.lookup_ip_address(node_hostname))
+                for node_hostname in host_config.nodes]
 
     def _update_with_node_column(self, section_content, check_plugin_name, hostname, for_discovery):
         """Add cluster node information to the section content

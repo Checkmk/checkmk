@@ -227,7 +227,7 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
     node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
     if host_config.is_cluster:
         node["is_cluster"] = True
-        _do_inv_for_cluster(hostname, inventory_tree)
+        _do_inv_for_cluster(host_config, inventory_tree)
     else:
         node["is_cluster"] = False
         _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress, inventory_tree,
@@ -260,10 +260,13 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
     return old_timestamp, inventory_tree, status_data_tree, discovered_host_labels
 
 
-def _do_inv_for_cluster(hostname, inventory_tree):
-    # type: (str, StructuredDataTree) -> None
+def _do_inv_for_cluster(host_config, inventory_tree):
+    # type: (config.HostConfig, StructuredDataTree) -> None
+    if host_config.nodes is None:
+        return
+
     inv_node = inventory_tree.get_list("software.applications.check_mk.cluster.nodes:")
-    for node_name in config.nodes_of(hostname):
+    for node_name in host_config.nodes:
         inv_node.append({
             "name": node_name,
         })

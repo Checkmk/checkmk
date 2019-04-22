@@ -84,7 +84,7 @@ def dump_host(hostname):
     if host_config.is_cluster:
         parents_list = config.nodes_of(hostname)
     else:
-        parents_list = config.parents_of(hostname)
+        parents_list = host_config.parents
     if len(parents_list) > 0:
         console.output(tty.yellow + "Parents:                " + tty.normal +
                        ", ".join(parents_list) + "\n")

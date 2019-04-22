@@ -233,7 +233,8 @@ def _list_all_hosts(hostgroups, options):
 
     hostlist = []
     for hn in hostnames:
-        for hg in config.hostgroups_of(hn):
+        host_config = config_cache.get_host_config(hn)
+        for hg in host_config.hostgroups:
             if hg in hostgroups:
                 hostlist.append(hn)
                 break

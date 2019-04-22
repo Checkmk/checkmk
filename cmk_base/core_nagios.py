@@ -209,17 +209,10 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
     if command:
         host_spec["check_command"] = command
 
-    # Host groups: If the host has no hostgroups it gets the default
-    # hostgroup (Nagios requires each host to be member of at least on
-    # group.
-    hgs = config.hostgroups_of(hostname)
-    hostgroups = ",".join(hgs)
-    if len(hgs) == 0:
-        hostgroups = config.default_host_group
-        cfg.hostgroups_to_define.add(config.default_host_group)
-    elif config.define_hostgroups:
-        cfg.hostgroups_to_define.update(hgs)
-    host_spec["hostgroups"] = hostgroups
+    hostgroups = host_config.hostgroups
+    if config.define_hostgroups:
+        cfg.hostgroups_to_define.update(hostgroups)
+    host_spec["hostgroups"] = ",".join(hostgroups)
 
     # Contact groups
     cgrs = config.contactgroups_of(hostname)

@@ -917,29 +917,6 @@ def check_interval_of(hostname, section_name):
 
 
 #.
-#   .--Cluster-------------------------------------------------------------.
-#   |                    ____ _           _                                |
-#   |                   / ___| |_   _ ___| |_ ___ _ __                     |
-#   |                  | |   | | | | / __| __/ _ \ '__|                    |
-#   |                  | |___| | |_| \__ \ ||  __/ |                       |
-#   |                   \____|_|\__,_|___/\__\___|_|                       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Code dealing with clusters (virtual hosts that are used to deal with |
-#   | services that can move between physical nodes.                       |
-#   '----------------------------------------------------------------------'
-
-
-# Determine weather a service (found on a physical host) is a clustered
-# service and - if yes - return the cluster host of the service. If
-# no, returns the hostname of the physical host.
-# TODO: Clean this up!
-def host_of_clustered_service(hostname, servicedesc, part_of_clusters=None):
-    return get_config_cache().host_of_clustered_service(
-        hostname, servicedesc, part_of_clusters=part_of_clusters)
-
-
-#.
 #   .--Services------------------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
@@ -3313,10 +3290,12 @@ class ConfigCache(object):
         # type: () -> Set[str]
         return set(strip_tags(clusters.keys()))
 
-    # Determine weather a service (found on a physical host) is a clustered
-    # service and - if yes - return the cluster host of the service. If
-    # no, returns the hostname of the physical host.
     def host_of_clustered_service(self, hostname, servicedesc, part_of_clusters=None):
+        # type: (str, Text, Optional[List[str]]) -> str
+        """Return hostname to assign the service to
+        Determine weather a service (found on a physical host) is a clustered
+        service and - if yes - return the cluster host of the service. If no,
+        returns the hostname of the physical host."""
         if part_of_clusters:
             the_clusters = part_of_clusters
         else:

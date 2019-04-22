@@ -5,6 +5,7 @@ import pytest  # type: ignore
 from testlib.base import Scenario
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
+import cmk
 import cmk.utils.paths
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
@@ -261,6 +262,67 @@ def test_prepare_check_command_not_existing_password(capsys):
         == "--pwstore=2@11@pw-id 'arg1' '--password=***' 'arg3'"
     stderr = capsys.readouterr().err
     assert "The stored password \"pw-id\" used by service \"blub\" on host \"bla\"" in stderr
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", 6556),
+    ("testhost2", 1337),
+])
+def test_host_config_agent_port(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("agent_ports", [
+        (1337, [], ["testhost2"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).agent_port == result
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", 5.0),
+    ("testhost2", 12.0),
+])
+def test_host_config_tcp_connect_timeout(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("tcp_connect_timeouts", [
+        (12.0, [], ["testhost2"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).tcp_connect_timeout == result
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", {
+        'use_regular': 'disable',
+        'use_realtime': 'enforce'
+    }),
+    ("testhost2", {
+        'use_regular': 'enforce',
+        'use_realtime': 'disable'
+    }),
+])
+def test_host_config_agent_encryption(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("agent_encryption", [
+        ({
+            'use_regular': 'enforce',
+            'use_realtime': 'disable'
+        }, [], ["testhost2"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).agent_encryption == result
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", None),
+    ("testhost2", cmk.__version__),
+])
+def test_host_config_agent_target_version(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("check_mk_agent_target_versions", [
+        ("site", [], ["testhost2"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).agent_target_version == result
 
 
 def test_http_proxies():

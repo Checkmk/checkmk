@@ -777,53 +777,6 @@ def management_credentials_of(hostname):
 
 
 #
-# Agent communication
-#
-
-
-def agent_port_of(hostname):
-    ports = get_config_cache().host_extra_conf(hostname, agent_ports)
-    if len(ports) == 0:
-        return agent_port
-
-    return ports[0]
-
-
-def tcp_connect_timeout_of(hostname):
-    timeouts = get_config_cache().host_extra_conf(hostname, tcp_connect_timeouts)
-    if len(timeouts) == 0:
-        return tcp_connect_timeout
-
-    return timeouts[0]
-
-
-def agent_encryption_of(hostname):
-    settings = get_config_cache().host_extra_conf(hostname, agent_encryption)
-    if settings:
-        return settings[0]
-
-    return {'use_regular': 'disable', 'use_realtime': 'enforce'}
-
-
-def agent_target_version(hostname):
-    agent_target_versions = get_config_cache().host_extra_conf(hostname,
-                                                               check_mk_agent_target_versions)
-    if agent_target_versions:
-        spec = agent_target_versions[0]
-        if spec == "ignore":
-            return None
-        elif spec == "site":
-            return cmk.__version__
-        elif isinstance(spec, str):
-            # Compatibility to old value specification format (a single version string)
-            return spec
-        elif spec[0] == 'specific':
-            return spec[1]
-
-        return spec  # return the whole spec in case of an "at least version" config
-
-
-#
 # Explicit custom variables
 #
 def get_explicit_service_custom_variables(hostname, description):
@@ -2647,6 +2600,53 @@ class HostConfig(object):
         the agent bakery, which needs all configured hosts instead of just the hosts
         of this site"""
         return self.hostname in self._config_cache.all_configured_clusters()
+
+    @property
+    def agent_port(self):
+        # type: () -> int
+        ports = self._config_cache.host_extra_conf(self.hostname, agent_ports)
+        if not ports:
+            return agent_port
+
+        return ports[0]
+
+    @property
+    def tcp_connect_timeout(self):
+        # type: () -> float
+        timeouts = self._config_cache.host_extra_conf(self.hostname, tcp_connect_timeouts)
+        if not timeouts:
+            return tcp_connect_timeout
+
+        return timeouts[0]
+
+    @property
+    def agent_encryption(self):
+        # type: () -> Dict[str, str]
+        settings = self._config_cache.host_extra_conf(self.hostname, agent_encryption)
+        if not settings:
+            return {'use_regular': 'disable', 'use_realtime': 'enforce'}
+        return settings[0]
+
+    @property
+    def agent_target_version(self):
+        # type: () -> Union[None, str, Tuple[str, str]]
+        agent_target_versions = self._config_cache.host_extra_conf(self.hostname,
+                                                                   check_mk_agent_target_versions)
+        if not agent_target_versions:
+            return None
+
+        spec = agent_target_versions[0]
+        if spec == "ignore":
+            return None
+        elif spec == "site":
+            return cmk.__version__
+        elif isinstance(spec, str):
+            # Compatibility to old value specification format (a single version string)
+            return spec
+        elif spec[0] == 'specific':
+            return spec[1]
+
+        return spec  # return the whole spec in case of an "at least version" config
 
 
 #.

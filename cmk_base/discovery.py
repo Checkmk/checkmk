@@ -92,7 +92,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             hostnames += nodes
 
     # Then remove clusters and make list unique
-    hostnames = list(set([h for h in hostnames if not config.is_cluster(h)]))
+    hostnames = list(set([h for h in hostnames if not config_cache.get_host_config(h).is_cluster]))
     hostnames.sort()
 
     # Now loop through all hosts
@@ -207,13 +207,14 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
 # param servic_filter: if a filter is set, it controls whether items are touched by the discovery.
 #                       if it returns False for a new item it will not be added, if it returns
 #                       False for a vanished item, that item is kept
-def discover_on_host(mode,
-                     hostname,
+def discover_on_host(config_cache,
+                     host_config,
+                     mode,
                      do_snmp_scan,
                      use_caches,
                      on_error="ignore",
                      service_filter=None):
-    config_cache = config.get_config_cache()
+    hostname = host_config.hostname
     counts = {
         "self_new": 0,
         "self_removed": 0,
@@ -238,7 +239,7 @@ def discover_on_host(mode,
         if mode == "refresh":
             counts["self_removed"] += remove_autochecks_of(hostname)  # this is cluster-aware!
 
-        if config.is_cluster(hostname):
+        if host_config.is_cluster:
             ipaddress = None
         else:
             ipaddress = ip_lookup.lookup_ip_address(hostname)
@@ -254,7 +255,7 @@ def discover_on_host(mode,
 
         # Compute current state of new and existing checks
         services = _get_host_services(
-            hostname, ipaddress, sources, multi_host_sections, on_error=on_error)
+            host_config, ipaddress, sources, multi_host_sections, on_error=on_error)
 
         # Create new list of checks
         new_items = {}
@@ -292,7 +293,7 @@ def discover_on_host(mode,
 
             else:
                 raise MKGeneralException("Unknown check source '%s'" % check_source)
-        set_autochecks_of(hostname, new_items)
+        set_autochecks_of(host_config, new_items)
 
     except MKTimeout:
         raise  # let general timeout through
@@ -321,6 +322,9 @@ def discover_on_host(mode,
 
 @cmk_base.decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def check_discovery(hostname, ipaddress):
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
+
     params = discovery_check_parameters(hostname) or \
              default_discovery_check_parameters()
 
@@ -328,7 +332,7 @@ def check_discovery(hostname, ipaddress):
 
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
-    if ipaddress is None and not config.is_cluster(hostname):
+    if ipaddress is None and not host_config.is_cluster:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
     sources = _get_sources_for_discovery(
@@ -408,7 +412,7 @@ def check_discovery(hostname, ipaddress):
                                      config.service_description(hostname, check_plugin_name, item)))
 
     if need_rediscovery:
-        if config.is_cluster(hostname):
+        if host_config.is_cluster:
             for nodename in config.nodes_of(hostname):
                 _set_rediscovery_flag(nodename)
         else:
@@ -500,7 +504,6 @@ def discover_marked_hosts(core):
     now_ts = time.time()
     end_time_ts = now_ts + _marked_host_discovery_timeout  # don't run for more than 2 minutes
     oldest_queued = _queue_age()
-    all_hosts = config_cache.all_configured_hosts()
     hosts = os.listdir(autodiscovery_dir)
     if not hosts:
         console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
@@ -512,14 +515,16 @@ def discover_marked_hosts(core):
     try:
         _set_discovery_timeout()
         for hostname in hosts:
-            if not _discover_marked_host_exists(hostname, all_hosts):
+            host_config = config_cache.get_host_config(hostname)
+
+            if not _discover_marked_host_exists(config_cache, hostname):
                 continue
 
             # Only try to discover hosts with UP state
             if host_states and host_states.get(hostname) != 0:
                 continue
 
-            if _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):
+            if _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
                 activation_required = True
 
             if time.time() > end_time_ts:
@@ -551,8 +556,8 @@ def _fetch_host_states():
     return host_states
 
 
-def _discover_marked_host_exists(hostname, all_hosts):
-    if hostname in all_hosts:
+def _discover_marked_host_exists(config_cache, hostname):
+    if hostname in config_cache.all_configured_hosts():
         return True
 
     host_flag_path = os.path.join(_get_autodiscovery_dir(), hostname)
@@ -565,7 +570,8 @@ def _discover_marked_host_exists(hostname, all_hosts):
     return False
 
 
-def _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):
+def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
+    hostname = host_config.hostname
     services_changed = False
 
     mode_table = {0: "new", 1: "remove", 2: "fixall", 3: "refresh"}
@@ -592,8 +598,9 @@ def _discover_marked_host(hostname, all_hosts, now_ts, oldest_queued):
         redisc_params = params["inventory_rediscovery"]
         console.verbose("  Doing discovery with mode '%s'...\n" % mode_table[redisc_params["mode"]])
         result, error = discover_on_host(
+            config_cache,
+            host_config,
             mode_table[redisc_params["mode"]],
-            hostname,
             do_snmp_scan=params["inventory_check_do_scan"],
             use_caches=True,
             service_filter=item_filters)
@@ -931,11 +938,13 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
 #    "clustered_new" : New service found on a node that belongs to a cluster
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
-def _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error):
-    if config.is_cluster(hostname):
-        return _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_error)
+def _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_error):
+    if host_config.is_cluster:
+        return _get_cluster_services(host_config.hostname, ipaddress, sources, multi_host_sections,
+                                     on_error)
 
-    return _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_error)
+    return _get_node_services(host_config.hostname, ipaddress, sources, multi_host_sections,
+                              on_error)
 
 
 # Do the actual work for a non-cluster host or node
@@ -1106,7 +1115,10 @@ def resolve_paramstring(check_plugin_name, paramstring):
 # all services if possible
 # TODO: Can't we reduce the duplicate code here? Check out the "checking" code
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
-    if config.is_cluster(hostname):
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
+
+    if host_config.is_cluster:
         ipaddress = None
     else:
         ipaddress = ip_lookup.lookup_ip_address(hostname)
@@ -1116,7 +1128,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
     multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
-    services = _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_error)
+    services = _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_error)
 
     table = []
     for (check_plugin_name, item), (check_source, paramstring) in services.items():
@@ -1356,13 +1368,16 @@ def _save_autochecks_file(hostname, items):
     out.write("]\n")
 
 
-def set_autochecks_of(hostname, new_items):
+def set_autochecks_of(host_config, new_items):
     # A Cluster does not have an autochecks file
     # All of its services are located in the nodes instead
     # So we cycle through all nodes remove all clustered service
     # and add the ones we've got from stdin
+
+    hostname = host_config.hostname
     config_cache = config.get_config_cache()
-    if config.is_cluster(hostname):
+
+    if host_config.is_cluster:
         for node in config.nodes_of(hostname):
             new_autochecks = []
             existing = parse_autochecks_file(node)

@@ -90,7 +90,7 @@ def _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, i
         details={
             "check_output": text,
             "host": hostname,
-            "is_cluster": config.is_cluster(hostname),
+            "is_cluster": host_config.is_cluster,
             "description": description,
             "check_type": check_plugin_name,
             "item": item,

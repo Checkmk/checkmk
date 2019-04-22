@@ -108,7 +108,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
         sources = data_sources.DataSources(hostname, ipaddress)
 
         num_success, missing_sections = \
-            _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names)
+            _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_names)
 
         if _submit_to_core:
             item_state.save(hostname)
@@ -192,7 +192,9 @@ def _check_missing_sections(missing_sections, exit_spec):
 
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
-def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names=None):
+def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_names=None):
+    # type: (data_sources.DataSources, config.HostConfig, Optional[str], Optional[List[str]]) -> Tuple[int, List[str]]
+    hostname = host_config.hostname
     config_cache = config.get_config_cache()
 
     num_success, missing_sections = 0, set()
@@ -211,11 +213,11 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
     if only_check_plugin_names is None:
-        only_check_plugin_names = set([e[0] for e in table])
+        only_check_plugins = set([e[0] for e in table])
     else:
-        only_check_plugin_names = set(only_check_plugin_names)
+        only_check_plugins = set(only_check_plugin_names)
 
-    sources.enforce_check_plugin_names(only_check_plugin_names)
+    sources.enforce_check_plugin_names(only_check_plugins)
 
     # Gather the data from the sources
     multi_host_sections = sources.get_host_sections()
@@ -229,10 +231,10 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
                 pos_match.add(check_plugin_name)
             else:
                 neg_match.add(check_plugin_name)
-        only_check_plugin_names -= (pos_match - neg_match)
+        only_check_plugins -= (pos_match - neg_match)
 
     for check_plugin_name, item, params, description in table:
-        if only_check_plugin_names is not None and check_plugin_name not in only_check_plugin_names:
+        if only_check_plugins is not None and check_plugin_name not in only_check_plugins:
             continue
 
         if belongs_to_cluster and hostname != config_cache.host_of_clustered_service(
@@ -252,7 +254,7 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
             missing_sections.add(cmk_base.check_utils.section_name_of(check_plugin_name))
 
     import cmk_base.inventory as inventory
-    inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, hostname,
+    inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,
                                                        ipaddress)
 
     missing_section_list = sorted(list(missing_sections))

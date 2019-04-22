@@ -791,10 +791,6 @@ def get_explicit_service_custom_variables(hostname, description):
 #
 
 
-def hostgroups_of(hostname):
-    return get_config_cache().host_extra_conf(hostname, host_groups)
-
-
 def contactgroups_of(hostname):
     cgrs = []
 
@@ -2647,6 +2643,18 @@ class HostConfig(object):
             return spec[1]
 
         return spec  # return the whole spec in case of an "at least version" config
+
+    @property
+    def hostgroups(self):
+        # type: () -> List[str]
+        """Returns the list of hostgroups of this host
+
+        If the host has no hostgroups it will be added to the default hostgroup
+        (Nagios requires each host to be member of at least on group."""
+        groups = self._config_cache.host_extra_conf(self.hostname, host_groups)
+        if not groups:
+            return [default_host_group]
+        return groups
 
 
 #.

@@ -30,6 +30,7 @@ In the future all inventory code should be moved to this module."""
 
 import inspect
 import os
+from typing import Tuple, Optional  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.paths
@@ -71,7 +72,10 @@ def do_inv(hostnames):
     for hostname in hostnames:
         console.section_begin(hostname)
         try:
-            if config.is_cluster(hostname):
+            config_cache = config.get_config_cache()
+            host_config = config_cache.get_host_config(hostname)
+
+            if host_config.is_cluster:
                 ipaddress = None
             else:
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
@@ -80,7 +84,7 @@ def do_inv(hostnames):
             _do_inv_for(
                 sources,
                 multi_host_sections=None,
-                hostname=hostname,
+                host_config=host_config,
                 ipaddress=ipaddress,
                 do_status_data_inv=config.do_status_data_inventory_for(hostname),
                 do_host_label_discovery=config.do_host_label_discovery_for(hostname),
@@ -117,7 +121,7 @@ def do_inv_check(hostname, options):
     old_timestamp, inventory_tree, status_data_tree, discovered_host_labels = _do_inv_for(
         sources,
         multi_host_sections=None,
-        hostname=hostname,
+        host_config=host_config,
         ipaddress=ipaddress,
         do_status_data_inv=config.do_status_data_inventory_for(hostname),
         do_host_label_discovery=config.do_host_label_discovery_for(hostname),
@@ -170,8 +174,10 @@ def do_inv_check(hostname, options):
     return status, infotexts, long_infotexts, perfdata
 
 
-def do_inventory_actions_during_checking_for(sources, multi_host_sections, hostname, ipaddress):
-    do_status_data_inventory = not config.is_cluster(hostname) \
+def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config, ipaddress):
+    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str]) -> None
+    hostname = host_config.hostname
+    do_status_data_inventory = not host_config.is_cluster \
         and config.do_status_data_inventory_for(hostname)
 
     do_host_label_discovery = config.do_host_label_discovery_for(hostname)
@@ -186,10 +192,13 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, hostn
     import cmk_base.inventory_plugins as inventory_plugins
     inventory_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
 
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
+
     _do_inv_for(
         sources,
         multi_host_sections=multi_host_sections,
-        hostname=hostname,
+        host_config=host_config,
         ipaddress=ipaddress,
         do_status_data_inv=do_status_data_inventory,
         do_host_label_discovery=do_host_label_discovery,
@@ -197,6 +206,7 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, hostn
 
 
 def _cleanup_status_data(hostname):
+    # type: (str) -> None
     filepath = "%s/%s" % (cmk.utils.paths.status_data_dir, hostname)
     if os.path.exists(filepath):  # Remove empty status data files.
         os.remove(filepath)
@@ -204,15 +214,18 @@ def _cleanup_status_data(hostname):
         os.remove(filepath + ".gz")
 
 
-def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_data_inv,
+def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_data_inv,
                 do_host_label_discovery):
+    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str], bool, bool) -> Tuple[Optional[float], StructuredDataTree, StructuredDataTree, DiscoveredHostLabels]
+    hostname = host_config.hostname
+
     _initialize_inventory_tree()
     inventory_tree = g_inv_tree
     status_data_tree = StructuredDataTree()
     discovered_host_labels = DiscoveredHostLabels(inventory_tree)
 
     node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
-    if config.is_cluster(hostname):
+    if host_config.is_cluster:
         node["is_cluster"] = True
         _do_inv_for_cluster(hostname, inventory_tree)
     else:
@@ -248,6 +261,7 @@ def _do_inv_for(sources, multi_host_sections, hostname, ipaddress, do_status_dat
 
 
 def _do_inv_for_cluster(hostname, inventory_tree):
+    # type: (str, StructuredDataTree) -> None
     inv_node = inventory_tree.get_list("software.applications.check_mk.cluster.nodes:")
     for node_name in config.nodes_of(hostname):
         inv_node.append({
@@ -366,6 +380,7 @@ def inv_tree_list(path):  # TODO Remove one day. Deprecated with version 1.5.0i3
 
 
 def _save_inventory_tree(hostname, inventory_tree):
+    # type: (str, StructuredDataTree) -> Optional[float]
     cmk.utils.store.makedirs(cmk.utils.paths.inventory_output_dir)
 
     old_time = None

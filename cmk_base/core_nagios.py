@@ -215,10 +215,10 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
     host_spec["hostgroups"] = ",".join(hostgroups)
 
     # Contact groups
-    cgrs = config.contactgroups_of(hostname)
-    if len(cgrs) > 0:
-        host_spec["contact_groups"] = ",".join(cgrs)
-        cfg.contactgroups_to_define.update(cgrs)
+    contactgroups = host_config.contactgroups
+    if contactgroups:
+        host_spec["contact_groups"] = ",".join(contactgroups)
+        cfg.contactgroups_to_define.update(contactgroups)
 
     if not host_config.is_cluster:
         # Parents for non-clusters

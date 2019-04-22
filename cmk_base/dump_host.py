@@ -92,7 +92,7 @@ def dump_host(hostname):
     console.output(tty.yellow + "Host groups:            " + tty.normal +
                    cmk_base.utils.make_utf8(", ".join(host_config.hostgroups)) + "\n")
     console.output(tty.yellow + "Contact groups:         " + tty.normal +
-                   cmk_base.utils.make_utf8(", ".join(config.contactgroups_of(hostname))) + "\n")
+                   cmk_base.utils.make_utf8(", ".join(host_config.contactgroups)) + "\n")
 
     agenttypes = []
     sources = data_sources.DataSources(hostname, ipaddress)

@@ -945,15 +945,6 @@ def check_interval_of(hostname, section_name):
 #   '----------------------------------------------------------------------'
 
 
-# Checks whether or not the given host is a cluster host
-# TODO: Clean this up!
-def is_cluster(hostname):
-    # all_configured_clusters() needs to be used, because this function affects
-    # the agent bakery, which needs all configured hosts instead of just the hosts
-    # of this site
-    return hostname in get_config_cache().all_configured_clusters()
-
-
 # Returns the nodes of a cluster, or None if hostname is not a cluster
 # TODO: Clean this up!
 def nodes_of(hostname):
@@ -1405,11 +1396,13 @@ def in_extraconf_hostlist(hostlist, hostname):
         if hostentry[0] == '@':
             if hostentry == '@all':
                 return True
-            ic = is_cluster(hostname)
-            if hostentry == '@cluster' and ic:
-                return True
-            elif hostentry == '@physical' and not ic:
-                return True
+            # TODO: Is not used anymore for a long time. Will be cleaned up
+            # with 1.6 tuple ruleset cleanup
+            #ic = is_cluster(hostname)
+            #if hostentry == '@cluster' and ic:
+            #    return True
+            #elif hostentry == '@physical' and not ic:
+            #    return True
 
         # Allow negation of hostentry with prefix '!'
         else:
@@ -2495,7 +2488,7 @@ class HostConfig(object):
         self._config_cache = config_cache
 
         self.alias = self._get_alias()
-        self.is_cluster = is_cluster(hostname)
+        self.is_cluster = self._is_cluster()
         self.part_of_clusters = self._config_cache.clusters_of(hostname)
 
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
@@ -2676,6 +2669,13 @@ class HostConfig(object):
         has_inline_snmp = "netsnmp" in sys.modules
         return has_inline_snmp and use_inline_snmp \
                and not self._config_cache.in_binary_hostlist(self.hostname, non_inline_snmp_hosts)
+
+    def _is_cluster(self):
+        """Checks whether or not the given host is a cluster host
+        all_configured_clusters() needs to be used, because this function affects
+        the agent bakery, which needs all configured hosts instead of just the hosts
+        of this site"""
+        return self.hostname in self._config_cache.all_configured_clusters()
 
 
 #.

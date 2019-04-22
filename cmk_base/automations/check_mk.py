@@ -62,10 +62,10 @@ import cmk_base.data_sources as data_sources
 
 class DiscoveryAutomation(Automation):
     # if required, schedule an inventory check
-    def _trigger_discovery_check(self, hostname):
+    def _trigger_discovery_check(self, host_config):
         if (config.inventory_check_autotrigger and config.inventory_check_interval) and\
-                (not config.is_cluster(hostname) or config.nodes_of(hostname)):
-            discovery.schedule_discovery_check(hostname)
+                (not host_config.is_cluster or config.nodes_of(host_config.hostname)):
+            discovery.schedule_discovery_check(host_config.hostname)
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -110,12 +110,15 @@ class AutomationDiscovery(DiscoveryAutomation):
         how = args[0]
         hostnames = args[1:]
 
+        config_cache = config.get_config_cache()
+
         counts = {}
         failed_hosts = {}
 
         for hostname in hostnames:
-            result, error = discovery.discover_on_host(how, hostname, do_snmp_scan, use_caches,
-                                                       on_error)
+            host_config = config_cache.get_host_config(hostname)
+            result, error = discovery.discover_on_host(config_cache, host_config, how, do_snmp_scan,
+                                                       use_caches, on_error)
             counts[hostname] = [
                 result["self_new"], result["self_removed"], result["self_kept"],
                 result["self_total"]
@@ -124,7 +127,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             if error is not None:
                 failed_hosts[hostname] = error
             else:
-                self._trigger_discovery_check(hostname)
+                self._trigger_discovery_check(host_config)
 
         return counts, failed_hosts
 
@@ -219,8 +222,12 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     def execute(self, args):
         hostname = args[0]
         new_items = ast.literal_eval(sys.stdin.read())
-        discovery.set_autochecks_of(hostname, new_items)
-        self._trigger_discovery_check(hostname)
+
+        config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
+
+        discovery.set_autochecks_of(host_config, new_items)
+        self._trigger_discovery_check(host_config)
         return None
 
 
@@ -570,11 +577,13 @@ class AutomationAnalyseServices(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
-        config_cache = config.get_config_cache()
         hostname = args[0]
         servicedesc = args[1].decode("utf-8")
 
-        service_info = self._get_service_info(config_cache, hostname, servicedesc)
+        config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
+
+        service_info = self._get_service_info(config_cache, host_config, servicedesc)
         if service_info:
             service_info.update({
                 "labels": config_cache.labels_of_service(hostname, servicedesc),
@@ -587,7 +596,8 @@ class AutomationAnalyseServices(Automation):
     # TODO: Refactor this huge function
     # TODO: Was ist mit Clustern???
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
-    def _get_service_info(self, config_cache, hostname, servicedesc):
+    def _get_service_info(self, config_cache, host_config, servicedesc):
+        hostname = host_config.hostname
         check_api_utils.set_hostname(hostname)
 
         # We just consider types of checks that are managed via WATO.
@@ -622,7 +632,7 @@ class AutomationAnalyseServices(Automation):
 
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
-        if config.is_cluster(hostname):
+        if host_config.is_cluster:
             autochecks = []
             for node in config.nodes_of(hostname):
                 for check_plugin_name, item, paramstring in cmk_base.autochecks.read_autochecks_of(

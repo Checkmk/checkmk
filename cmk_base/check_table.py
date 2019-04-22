@@ -174,7 +174,7 @@ def get_check_table(hostname,
     if host_config.is_cluster:
         single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
 
-        for node in config.nodes_of(hostname):
+        for node in host_config.nodes:
             node_checks = single_host_checks.get(node, [])
             if not skip_autochecks:
                 node_checks = node_checks + config_cache.get_autochecks_of(node)

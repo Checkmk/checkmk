@@ -250,7 +250,7 @@ class DataSources(object):
 
         # First abstract clusters/nodes/hosts
         hosts = []
-        nodes = config.nodes_of(self._hostname)
+        nodes = self._host_config.nodes
         if nodes is not None:
             for node_hostname in nodes:
                 node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)

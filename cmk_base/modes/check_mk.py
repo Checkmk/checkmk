@@ -921,6 +921,8 @@ def mode_flush(hosts):
         hosts = config_cache.all_active_hosts()
 
     for host in hosts:
+        host_config = config_cache.get_host_config(host)
+
         console.output("%-20s: " % host)
         flushed = False
 
@@ -970,7 +972,7 @@ def mode_flush(hosts):
                 console.output(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
-        count = discovery.remove_autochecks_of(host)
+        count = discovery.remove_autochecks_of(host_config)
         if count:
             flushed = True
             console.output(tty.bold + tty.cyan + " autochecks(%d)" % count)

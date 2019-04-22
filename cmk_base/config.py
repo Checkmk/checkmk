@@ -787,32 +787,6 @@ def get_explicit_service_custom_variables(hostname, description):
 
 
 #
-# Groups
-#
-
-
-def contactgroups_of(hostname):
-    cgrs = []
-
-    # host_contactgroups may take single values as well as
-    # lists as item value. Of all list entries only the first
-    # one is used. The single-contact-groups entries are all
-    # recognized.
-    first_list = True
-    for entry in get_config_cache().host_extra_conf(hostname, host_contactgroups):
-        if isinstance(entry, list) and first_list:
-            cgrs += entry
-            first_list = False
-        else:
-            cgrs.append(entry)
-
-    if monitoring_core == "nagios" and enable_rulebased_notifications:
-        cgrs.append("check-mk-notify")
-
-    return list(set(cgrs))
-
-
-#
 # Misc
 #
 
@@ -2655,6 +2629,28 @@ class HostConfig(object):
         if not groups:
             return [default_host_group]
         return groups
+
+    @property
+    def contactgroups(self):
+        # type: () -> List[str]
+        """Returns the list of contactgroups of this host"""
+        cgrs = []  # type: List[str]
+
+        # host_contactgroups may take single values as well as lists as item
+        # value. Of all list entries only the first one is used. The
+        # single-contact-groups entries are all recognized.
+        first_list = True
+        for entry in self._config_cache.host_extra_conf(self.hostname, host_contactgroups):
+            if isinstance(entry, list) and first_list:
+                cgrs += entry
+                first_list = False
+            else:
+                cgrs.append(entry)
+
+        if monitoring_core == "nagios" and enable_rulebased_notifications:
+            cgrs.append("check-mk-notify")
+
+        return list(set(cgrs))
 
 
 #.

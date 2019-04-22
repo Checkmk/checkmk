@@ -338,6 +338,19 @@ def test_host_config_hostgroups(monkeypatch, hostname, result):
     assert config_cache.get_host_config(hostname).hostgroups == result
 
 
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", []),
+    ("testhost2", ["dingdong"]),
+])
+def test_host_config_contactgroups(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("host_contactgroups", [
+        ("dingdong", [], ["testhost2"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).contactgroups == result
+
+
 def test_http_proxies():
     assert config.http_proxies == {}
 

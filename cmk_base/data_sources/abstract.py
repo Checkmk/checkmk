@@ -85,7 +85,6 @@ class DataSource(object):
         # Runtime data (managed by self.run()) - Meant for self.get_summary_result()
         self._exception = None
         self._host_sections = None
-        self._exit_code_spec = config.exit_code_spec(hostname, data_source_id=self.id())
         self._persisted_sections = None
 
         self._config_cache = config.get_config_cache()
@@ -388,16 +387,16 @@ class DataSource(object):
         exc_msg = "%s" % self._exception
 
         if isinstance(self._exception, MKEmptyAgentData):
-            status = self._exit_code_spec.get("empty_output", 2)
+            status = self._host_config.exit_code_spec().get("empty_output", 2)
 
         elif isinstance(self._exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
-            status = self._exit_code_spec.get("connection", 2)
+            status = self._host_config.exit_code_spec().get("connection", 2)
 
         elif isinstance(self._exception, MKTimeout):
-            status = self._exit_code_spec.get("timeout", 2)
+            status = self._host_config.exit_code_spec().get("timeout", 2)
 
         else:
-            status = self._exit_code_spec.get("exception", 3)
+            status = self._host_config.exit_code_spec().get("exception", 3)
 
         return status, exc_msg + check_api_utils.state_markers[status], []
 

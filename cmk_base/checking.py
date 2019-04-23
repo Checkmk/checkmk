@@ -92,8 +92,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    # Exit state in various situations is configurable since 1.2.3i1
-    exit_spec = config.exit_code_spec(hostname)
+    exit_spec = host_config.exit_code_spec()
 
     status, infotexts, long_infotexts, perfdata = 0, [], [], []
     try:

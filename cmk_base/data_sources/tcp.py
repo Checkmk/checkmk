@@ -192,12 +192,12 @@ class TCPDataSource(CheckMKAgentDataSource):
                     expected += ' release %s' % expected_version[1]['release']
             else:
                 expected = expected_version
-            status = self._exit_code_spec.get("wrong_version", 1)
+            status = self._host_config.exit_code_spec().get("wrong_version", 1)
             output = ", unexpected agent version %s (should be %s)%s" \
                      % (agent_version, expected, state_markers[status])
 
         elif config.agent_min_version and agent_version < config.agent_min_version:
-            status = self._exit_code_spec.get("wrong_version", 1)
+            status = self._host_config.exit_code_spec().get("wrong_version", 1)
             output = ", old plugin version %s (should be at least %s)%s" \
                      % (agent_version, config.agent_min_version, state_markers[status])
 

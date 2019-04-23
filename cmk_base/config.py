@@ -2091,22 +2091,6 @@ def _get_checkgroup_parameters(config_cache, host, checktype, item):
         raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
 
 
-def do_host_label_discovery_for(hostname):
-    rules = active_checks.get('cmk_inv')
-    if rules is None:
-        return True
-
-    entries = get_config_cache().host_extra_conf(hostname, rules)
-
-    if not entries:
-        return True  # No matching rule -> disable
-
-    # Convert legacy rules to current dict format (just like the valuespec)
-    params = {} if entries[0] is None else entries[0]
-
-    return params.get("host_label_inventory", True)
-
-
 def filter_by_management_board(hostname,
                                found_check_plugin_names,
                                for_mgmt_board,
@@ -2658,6 +2642,23 @@ class HostConfig(object):
         params = {} if entries[0] is None else entries[0]
 
         return params.get('status_data_inventory', False)
+
+    @property
+    def do_host_label_discovery(self):
+        # type: () -> bool
+        rules = active_checks.get('cmk_inv')
+        if rules is None:
+            return True
+
+        entries = self._config_cache.host_extra_conf(self.hostname, rules)
+
+        if not entries:
+            return True  # No matching rule -> disable
+
+        # Convert legacy rules to current dict format (just like the valuespec)
+        params = {} if entries[0] is None else entries[0]
+
+        return params.get("host_label_inventory", True)
 
 
 #.

@@ -757,11 +757,11 @@ def test_host_config_do_status_data_inventory(monkeypatch, result, ruleset):
         "host_label_inventory": False
     }, [], config.ALL_HOSTS, {})]),
 ])
-def test_do_host_label_discovery_for(monkeypatch, result, ruleset):
+def test_host_config_do_host_label_discovery_for(monkeypatch, result, ruleset):
     ts = Scenario().add_host("abc", [])
     ts.set_option("active_checks", {
         "cmk_inv": ruleset,
     })
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
-    assert config.do_host_label_discovery_for("abc") == result
+    assert config_cache.get_host_config("abc").do_host_label_discovery == result

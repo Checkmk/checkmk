@@ -135,13 +135,13 @@ def test_is_ipv6_primary_host(monkeypatch, hostname, tags, result, ruleset):
         "management_address": "lolo"
     }),
 ])
-def test_management_address_of(monkeypatch, attrs, result):
-    # Host IP address is 127.0.1.1
-    monkeypatch.setitem(config.ipaddresses, "hostname", "127.0.1.1")
+def test_host_config_management_address(monkeypatch, attrs, result):
+    ts = Scenario().add_host("hostname")
+    ts.set_option("ipaddresses", {"hostname": "127.0.1.1"})
+    ts.set_option("host_attributes", {"hostname": attrs})
+    config_cache = ts.apply(monkeypatch)
 
-    monkeypatch.setitem(config.host_attributes, "hostname", attrs)
-
-    assert config.management_address_of("hostname") == result
+    assert config_cache.get_host_config("hostname").management_address == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [

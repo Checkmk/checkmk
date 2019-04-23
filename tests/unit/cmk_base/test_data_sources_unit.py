@@ -78,7 +78,12 @@ def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, result, 
 
         monkeypatch.setattr(ip_lookup, "lookup_ip_address", raise_exc)
 
-    monkeypatch.setattr(config, "management_address_of", lambda h: address)
+    monkeypatch.setattr(config, "host_attributes", {
+        "hostname": {
+            "management_address": address
+        },
+    })
+
     assert source._management_board_ipaddress("hostname") == result
 
 

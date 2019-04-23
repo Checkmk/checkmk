@@ -81,8 +81,8 @@ def test_mgmt_explicit_settings(web, protocol, cred_attribute, credentials):
     host_config = config_cache.get_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol
-    assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_credentials_of("mgmt-host") == credentials
+    assert host_config.management_address == "127.0.0.1"
+    assert host_config.management_credentials == credentials
 
 
 def test_mgmt_explicit_address(web):
@@ -98,8 +98,8 @@ def test_mgmt_explicit_address(web):
     host_config = config_cache.get_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == "snmp"
-    assert config.management_address_of("mgmt-host") == "127.0.0.2"
-    assert config.management_credentials_of("mgmt-host") == "public"
+    assert host_config.management_address == "127.0.0.2"
+    assert host_config.management_credentials == "public"
 
 
 def test_mgmt_disabled(web):
@@ -116,8 +116,8 @@ def test_mgmt_disabled(web):
     host_config = config_cache.get_host_config("mgmt-host")
     assert host_config.has_management_board is False
     assert host_config.management_protocol is None
-    assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_credentials_of("mgmt-host") is None
+    assert host_config.management_address == "127.0.0.1"
+    assert host_config.management_credentials is None
 
 
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,folder_credentials", [
@@ -150,8 +150,8 @@ def test_mgmt_inherit_credentials_explicit_host(web, protocol, cred_attribute, c
     host_config = config_cache.get_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol
-    assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_credentials_of("mgmt-host") == credentials
+    assert host_config.management_address == "127.0.0.1"
+    assert host_config.management_credentials == credentials
 
 
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,folder_credentials", [
@@ -182,8 +182,8 @@ def test_mgmt_inherit_credentials(web, protocol, cred_attribute, credentials, fo
     host_config = config_cache.get_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol
-    assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_credentials_of("mgmt-host") == folder_credentials
+    assert host_config.management_address == "127.0.0.1"
+    assert host_config.management_credentials == folder_credentials
 
 
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,folder_credentials", [
@@ -217,8 +217,8 @@ def test_mgmt_inherit_protocol_explicit_host(web, protocol, cred_attribute, cred
     host_config = config_cache.get_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol
-    assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_credentials_of("mgmt-host") == credentials
+    assert host_config.management_address == "127.0.0.1"
+    assert host_config.management_credentials == credentials
 
 
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,folder_credentials", [
@@ -248,8 +248,8 @@ def test_mgmt_inherit_protocol(web, protocol, cred_attribute, credentials, folde
     host_config = config_cache.get_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol
-    assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_credentials_of("mgmt-host") == folder_credentials
+    assert host_config.management_address == "127.0.0.1"
+    assert host_config.management_credentials == folder_credentials
 
 
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,ruleset_credentials", [
@@ -294,8 +294,8 @@ def test_mgmt_config_ruleset(web, protocol, cred_attribute, credentials, ruleset
     host_config = config_cache.get_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol
-    assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_credentials_of("mgmt-host") == ruleset_credentials
+    assert host_config.management_address == "127.0.0.1"
+    assert host_config.management_credentials == ruleset_credentials
 
 
 @pytest.mark.parametrize("protocol,cred_attribute,folder_credentials,ruleset_credentials", [
@@ -344,8 +344,8 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(web, protocol, cred_a
     host_config = config_cache.get_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol
-    assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_credentials_of("mgmt-host") == folder_credentials
+    assert host_config.management_address == "127.0.0.1"
+    assert host_config.management_credentials == folder_credentials
 
 
 def test_mgmt_config_ruleset_order(web):
@@ -388,5 +388,5 @@ def test_mgmt_config_ruleset_order(web):
     host_config = config_cache.get_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == "snmp"
-    assert config.management_address_of("mgmt-host") == "127.0.0.1"
-    assert config.management_credentials_of("mgmt-host") == "RULESET1"
+    assert host_config.management_address == "127.0.0.1"
+    assert host_config.management_credentials == "RULESET1"

@@ -701,14 +701,14 @@ class ManagementBoardDataSource(DataSource):
     _for_mgmt_board = True
 
     def __init__(self, hostname, ipaddress):
+        super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
-        ipaddress = self._management_board_ipaddress(hostname)
-        super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
-        self._credentials = config.management_credentials_of(self._hostname)
+        self._ipaddress = self._management_board_ipaddress(hostname)
+        self._credentials = self._host_config.management_credentials
 
     def _management_board_ipaddress(self, hostname):
-        mgmt_ipaddress = config.management_address_of(hostname)
+        mgmt_ipaddress = self._host_config.management_address
 
         if mgmt_ipaddress is None:
             return None

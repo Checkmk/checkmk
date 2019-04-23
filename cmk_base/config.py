@@ -727,16 +727,6 @@ def _host_is_member_of_site(config_cache, hostname, site):
 
 
 #
-# Explicit custom variables
-#
-def get_explicit_service_custom_variables(hostname, description):
-    try:
-        return explicit_service_custom_variables[(hostname, description)]
-    except KeyError:
-        return {}
-
-
-#
 # Misc
 #
 
@@ -2831,6 +2821,13 @@ class ConfigCache(object):
             for k in self.service_extra_conf_merged(hostname, svc_desc, service_label_rules)
         })
         return labels
+
+    def get_explicit_service_custom_variables(self, hostname, description):
+        # type: (str, Text) -> Dict[str, str]
+        try:
+            return explicit_service_custom_variables[(hostname, description)]
+        except KeyError:
+            return {}
 
     def ruleset_match_object_of_service(self, hostname, svc_desc):
         # type: (str, Text) -> RulesetMatchObject

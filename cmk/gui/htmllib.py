@@ -1029,7 +1029,14 @@ class html(HTMLGenerator):
 
         self._init_screenshot_mode()
         self._init_debug_mode()
+        self._init_webapi_cors_header()
         self.init_theme()
+
+    def _init_webapi_cors_header(self):
+        # Would be better to put this to page individual code, but we currently have
+        # no mechanism for a page to set do this before the authentication is made.
+        if self.myfile == "webapi":
+            self.response.headers["Access-Control-Allow-Origin"] = "*"
 
     def init_theme(self):
         self.set_theme(config.ui_theme)

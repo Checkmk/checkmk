@@ -119,8 +119,6 @@ _FORMATTERS = {
 @cmk.gui.pages.register("webapi")
 def page_api():
     try:
-        html.response.headers["Access-Control-Allow-Origin"] = "*"
-
         pretty_print = False
         if not html.request.has_var("output_format"):
             html.set_output_format("json")

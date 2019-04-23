@@ -45,6 +45,16 @@ def float_ignore_uom(value):
     return 0.0
 
 
+def _parse_cache(line, now):
+    if not line or not line[0].startswith("cached("):
+        return 0, line
+
+    cache_raw, stripped_line = line[0], line[1:]
+    time, maxage = (float(v) for v in cache_raw[7:-1].split(',', 1))
+
+    return max(now - time - maxage, 0), stripped_line
+
+
 def _is_valid_line(line):
     return len(line) >= 4 or (len(line) == 3 and line[0] == 'P')
 
@@ -118,11 +128,13 @@ def _parse_perftxt(string):
 
 def parse_local(info):
     LocalResult = collections.namedtuple("LocalResult",
-                                         ("node", "item", "state", "text", "perfdata"))
+                                         ("node", "expired", "item", "state", "text", "perfdata"))
 
+    now = time.time()
     parsed = {}
     for line in info:
         node, stripped_line = line[0], line[1:]
+        expired, stripped_line = _parse_cache(stripped_line, now)
         if not _is_valid_line(stripped_line):
             parsed.setdefault(None, []).append(LocalResult(node, None, None, stripped_line))
             continue
@@ -136,7 +148,7 @@ def parse_local(info):
         if state_msg or perf_msg:
             state = 3
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
-        parsed.setdefault(item, []).append(LocalResult(node, item, state, text, perfdata))
+        parsed.setdefault(item, []).append(LocalResult(node, expired, item, state, text, perfdata))
 
     return parsed
 
@@ -200,8 +212,14 @@ def _calculate_local_worst_state(collected_stats):
 def check_local(_no_item, params, data):
     collected_stats = {}
     for result in data:
+        if result.expired > 0:
+            continue
         node_dict = collected_stats.setdefault(result.node, {})
         node_dict.setdefault(result.item, _parse_local_line(result))
+    if not collected_stats:
+        most_recent_expirery = min(r.expired for r in data)
+        raise MKCounterWrapped(
+            "Cached data expired %s ago." % get_age_human_readable(most_recent_expirery))
 
     if params is not None and params.get("outcome_on_cluster", "worst") == "best":
         yield _calculate_local_best_state(collected_stats)

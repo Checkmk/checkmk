@@ -726,16 +726,6 @@ def _host_is_member_of_site(config_cache, hostname, site):
     return True
 
 
-def get_additional_ipaddresses_of(hostname):
-    # type: (str) -> Tuple[List[str], List[str]]
-    #TODO Regarding the following configuration variables from WATO
-    # there's no inheritance, thus we use 'host_attributes'.
-    # Better would be to use cmk_base configuration variables,
-    # eg. like 'management_protocol'.
-    return (host_attributes.get(hostname, {}).get("additional_ipv4addresses", []),
-            host_attributes.get(hostname, {}).get("additional_ipv6addresses", []))
-
-
 #
 # Explicit custom variables
 #
@@ -2632,6 +2622,16 @@ class HostConfig(object):
                 return credentials
 
         return default_value
+
+    @property
+    def additional_ipaddresses(self):
+        # type: () -> Tuple[List[str], List[str]]
+        #TODO Regarding the following configuration variables from WATO
+        # there's no inheritance, thus we use 'host_attributes'.
+        # Better would be to use cmk_base configuration variables,
+        # eg. like 'management_protocol'.
+        return (host_attributes.get(self.hostname, {}).get("additional_ipv4addresses", []),
+                host_attributes.get(self.hostname, {}).get("additional_ipv6addresses", []))
 
     def exit_code_spec(self, data_source_id=None):
         # type: (Optional[str]) -> Dict[str, int]

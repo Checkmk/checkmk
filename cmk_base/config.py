@@ -763,18 +763,6 @@ def check_period_of(hostname, service):
     return None
 
 
-def check_interval_of(hostname, section_name):
-    if not cmk_base.cmk_base.check_utils.is_snmp_check(section_name):
-        return  # no values at all for non snmp checks
-
-    # Previous to 1.5 "match" could be a check name (including subchecks) instead of
-    # only main check names -> section names. This has been cleaned up, but we still
-    # need to be compatible. Strip of the sub check part of "match".
-    for match, minutes in get_config_cache().host_extra_conf(hostname, snmp_check_interval):
-        if match is None or match.split(".")[0] == section_name:
-            return minutes  # use first match
-
-
 #.
 #   .--Services------------------------------------------------------------.
 #   |                ____                  _                               |
@@ -2506,6 +2494,27 @@ class HostConfig(object):
         the agent bakery, which needs all configured hosts instead of just the hosts
         of this site"""
         return self.hostname in self._config_cache.all_configured_clusters()
+
+    def snmp_check_interval(self, section_name):
+        # type: (str) -> Optional[int]
+        """Return the check interval of SNMP check sections
+
+        This has been added to reduce the check interval of single SNMP checks (or
+        more precise: sections) to be executed less frequent that the "Check_MK"
+        service is executed.
+        """
+        if not cmk_base.cmk_base.check_utils.is_snmp_check(section_name):
+            return None  # no values at all for non snmp checks
+
+        # Previous to 1.5 "match" could be a check name (including subchecks) instead of
+        # only main check names -> section names. This has been cleaned up, but we still
+        # need to be compatible. Strip of the sub check part of "match".
+        for match, minutes in self._config_cache.host_extra_conf(self.hostname,
+                                                                 snmp_check_interval):
+            if match is None or match.split(".")[0] == section_name:
+                return minutes  # use first match
+
+        return None
 
     @property
     def agent_port(self):

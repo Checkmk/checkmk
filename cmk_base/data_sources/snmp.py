@@ -247,7 +247,7 @@ class SNMPDataSource(DataSource):
         persisted_sections = {}
 
         for section_name, section_content in raw_data.items():
-            check_interval = config.check_interval_of(self._hostname, section_name)
+            check_interval = self._host_config.snmp_check_interval(section_name)
             if check_interval is None:
                 continue
 

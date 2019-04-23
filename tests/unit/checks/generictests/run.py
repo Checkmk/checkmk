@@ -186,14 +186,15 @@ def run(check_manager, dataset, write=False):
     assert checklist, "Found no check plugin for %r" % dataset.checkname
 
     immu = Immutables()
-    # test the parse function
-    parsed = parse(check_manager, dataset)
-    immu.register(parsed, 'parsed')
-
-    # get the expected check results, if present
-    checks_expected = getattr(dataset, 'checks', {})
 
     with optional_freeze_time(dataset):
+        # test the parse function
+        parsed = parse(check_manager, dataset)
+        immu.register(parsed, 'parsed')
+
+        # get the expected check results, if present
+        checks_expected = getattr(dataset, 'checks', {})
+
         # LOOP OVER ALL (SUB)CHECKS
         for sname in checklist:
             subcheck = (sname + '.').split('.')[1]

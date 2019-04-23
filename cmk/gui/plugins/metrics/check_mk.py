@@ -5475,6 +5475,54 @@ metric_info["open_file_descriptors"] = {
     "color": "14/a",
 }
 
+metric_info["app"] = {
+    "title": _("Available physical processors in shared pool"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["entc"] = {
+    "title": _("Entitled capacity consumed"),
+    "unit": "%",
+    "color": "12/a",
+}
+
+metric_info["lbusy"] = {
+    "title": _("Logical processor(s) utilization"),
+    "unit": "%",
+    "color": "13/a",
+}
+
+metric_info["nsp"] = {
+    "title": _("Average processor speed"),
+    "unit": "%",
+    "color": "14/a",
+}
+
+metric_info["phint"] = {
+    "title": _("Phantom interruptions received"),
+    "unit": "count",
+    "color": "15/a",
+}
+
+metric_info["physc"] = {
+    "title": _("Physical processors consumed"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["utcyc"] = {
+    "title": _("Unaccounted turbo cycles"),
+    "unit": "%",
+    "color": "21/a",
+}
+
+metric_info["vcsw"] = {
+    "title": _("Virtual context switches"),
+    "unit": "%",
+    "color": "22/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

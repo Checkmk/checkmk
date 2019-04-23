@@ -1318,6 +1318,9 @@ class AutomationActiveCheck(Automation):
                 entries = config_cache.host_extra_conf(hostname, rules)
                 if entries:
                     act_info = config.active_check_info[plugin]
+                    # Set host name for host_name()-function (part of the Check API)
+                    # (used e.g. by check_http)
+                    check_api_utils.set_hostname(hostname)
                     for params in entries:
                         description = config.active_check_service_description(
                             hostname, plugin, params)

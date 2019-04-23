@@ -739,7 +739,7 @@ def schedule_discovery_check(hostname):
 # "warn"   -> output a warning on stderr
 # "raise"  -> let the exception come through
 def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error):
-    # Make hostname available as global variable in discovery functions
+    # Set host name for host_name()-function (part of the Check API)
     # (used e.g. by ps-discovery)
     check_api_utils.set_hostname(hostname)
 

@@ -428,7 +428,7 @@ def get_host_attributes(hostname, config_cache):
         attrs["address"] = attrs["_ADDRESS_4"]
         attrs["_ADDRESS_FAMILY"] = "4"
 
-    add_ipv4addrs, add_ipv6addrs = config.get_additional_ipaddresses_of(hostname)
+    add_ipv4addrs, add_ipv6addrs = host_config.additional_ipaddresses
     if add_ipv4addrs:
         attrs["_ADDRESSES_4"] = " ".join(add_ipv4addrs)
         for nr, ipv4_address in enumerate(add_ipv4addrs):

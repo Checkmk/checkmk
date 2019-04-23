@@ -145,6 +145,22 @@ def test_host_config_management_address(monkeypatch, attrs, result):
     assert config_cache.get_host_config("hostname").management_address == result
 
 
+@pytest.mark.parametrize("attrs,result", [
+    ({}, ([], [])),
+    ({
+        "additional_ipv4addresses": ["10.10.10.10"],
+        "additional_ipv6addresses": ["::3"],
+    }, (["10.10.10.10"], ["::3"])),
+])
+def test_host_config_additional_ipaddresses(monkeypatch, attrs, result):
+    ts = Scenario().add_host("hostname")
+    ts.set_option("ipaddresses", {"hostname": "127.0.1.1"})
+    ts.set_option("host_attributes", {"hostname": attrs})
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.get_host_config("hostname").additional_ipaddresses == result
+
+
 @pytest.mark.parametrize("hostname,tags,result", [
     ("testhost", [], True),
     ("testhost", ["cmk-agent"], True),

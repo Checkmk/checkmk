@@ -86,7 +86,7 @@ def do_inv(hostnames):
                 multi_host_sections=None,
                 host_config=host_config,
                 ipaddress=ipaddress,
-                do_status_data_inv=config.do_status_data_inventory_for(hostname),
+                do_status_data_inv=host_config.do_status_data_inventory,
                 do_host_label_discovery=config.do_host_label_discovery_for(hostname),
             )
         except Exception as e:
@@ -123,7 +123,7 @@ def do_inv_check(hostname, options):
         multi_host_sections=None,
         host_config=host_config,
         ipaddress=ipaddress,
-        do_status_data_inv=config.do_status_data_inventory_for(hostname),
+        do_status_data_inv=host_config.do_status_data_inventory,
         do_host_label_discovery=config.do_host_label_discovery_for(hostname),
     )
 
@@ -177,8 +177,7 @@ def do_inv_check(hostname, options):
 def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config, ipaddress):
     # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str]) -> None
     hostname = host_config.hostname
-    do_status_data_inventory = not host_config.is_cluster \
-        and config.do_status_data_inventory_for(hostname)
+    do_status_data_inventory = not host_config.is_cluster and host_config.do_status_data_inventory
 
     do_host_label_discovery = config.do_host_label_discovery_for(hostname)
 

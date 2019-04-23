@@ -1,0 +1,11 @@
+Title: check_http, check_mail_loop, check_smtp: Unkown state during discovery
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1556020748
+Class: fix
+
+Active checks using the host_name() API function no longer go to UNKNOWN
+during discovery.

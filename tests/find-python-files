@@ -36,6 +36,7 @@ find $REAL_SEARCH \
      -name .venv -prune -o \
      -name test_docker_parse_node_images.py -prune -o \
      -name typeshed -prune -o \
+     -name run-clang-tidy.py -prune -o \
      -type f -print | sort | while read F; do
     if [[ "$F" == *.py ]] || head -n 1 "$F" | grep -q '^#!.*python$' >/dev/null 2>&1; then
         echo "$F"

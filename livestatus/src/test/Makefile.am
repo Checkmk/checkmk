@@ -33,7 +33,10 @@ CLANG_VERSION ?= 7
 BEAR ?= bear
 CPPCHECK ?= cppcheck
 IWYU_TOOL ?= iwyu_tool
-RUN_CLANG_TIDY ?= run-clang-tidy-$(CLANG_VERSION).py
+RUN_CLANG_TIDY ?= \
+    $(abs_top_srcdir)/scripts/run-clang-tidy.py \
+        -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
+        -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet")
 
 GOOGLETEST :=$(top_srcdir)/omd/packages/googletest

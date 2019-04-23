@@ -30,7 +30,7 @@ $(OMD_INSTALL):
 	sed -i 's|###DEFAULT_RUNLEVELS###|$(DEFAULT_RUNLEVELS)|g' $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omd.service $(DESTDIR)$(OMD_ROOT)/share/omd/omd.service
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
-	install -m 644 $(PACKAGE_DIR)/$(OMD)/README $(PACKAGE_DIR)/$(OMD)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+	install -m 644 $(PACKAGE_DIR)/$(OMD)/README.md $(PACKAGE_DIR)/$(OMD)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/init_profile $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/port_is_used $(DESTDIR)$(OMD_ROOT)/lib/omd/

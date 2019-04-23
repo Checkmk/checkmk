@@ -124,10 +124,14 @@ function run_cached {
         if (( $MTIME < $MAXAGE )) ; then
             USE_CACHEFILE=1
         fi
-        CACHE_INFO=":cached($MTIME,$MAXAGE)"
-        # insert the cache info in the section header (^= after '!'),
-        # if none is present (^= before '!')
-        sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1'$CACHE_INFO'>>>/' "$CACHEFILE"
+        CACHE_INFO="cached($MTIME,$MAXAGE)"
+        if [[ $NAME == local_* ]]; then
+            sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"
+        else
+            # insert the cache info in the section header (^= after '!'),
+            # if none is present (^= before '!')
+            sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
+        fi
     fi
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]
     then

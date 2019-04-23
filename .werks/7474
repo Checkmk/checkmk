@@ -1,0 +1,13 @@
+Title: check_mk_agent: Cache information for local checks
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1556030292
+Class: feature
+
+For local checks running asynchronously the cache age information
+is now included in the agent output. Services corresponding to
+outdated check data will become stale.
+Previously the user was not able to recognize outdated data in this case.

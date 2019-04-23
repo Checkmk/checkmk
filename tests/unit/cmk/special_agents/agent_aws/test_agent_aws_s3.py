@@ -1,7 +1,10 @@
-# encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import pytest
-
+from agent_aws_fake_clients import (
+    S3ListBucketsInstanceCreator,
+    S3BucketTaggingInstanceCreator,
+)
 from cmk.special_agents.agent_aws import (
     AWSConfig,
     ResultDistributor,
@@ -10,17 +13,6 @@ from cmk.special_agents.agent_aws import (
     S3,
     S3Requests,
 )
-
-#TODO what about enums?
-
-#   .--fake client---------------------------------------------------------.
-#   |             __       _               _ _            _                |
-#   |            / _| __ _| | _____    ___| (_) ___ _ __ | |_              |
-#   |           | |_ / _` | |/ / _ \  / __| | |/ _ \ '_ \| __|             |
-#   |           |  _| (_| |   <  __/ | (__| | |  __/ | | | |_              |
-#   |           |_|  \__,_|_|\_\___|  \___|_|_|\___|_| |_|\__|             |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 
 class FakeCloudwatchClient(object):
@@ -50,131 +42,115 @@ class FakeCloudwatchClient(object):
 
 class FakeS3Client(object):
     def list_buckets(self):
-        buckets = [
-            {
-                'Name': 'string1',
-                'CreationDate': "1970-01-01",
+        return {
+            'Buckets': S3ListBucketsInstanceCreator.create_instances(amount=4),
+            'Owner': {
+                'DisplayName': 'string',
+                'ID': 'string',
             },
-            {
-                'Name': 'string2',
-                'CreationDate': "1970-01-02",
-            },
-            {
-                'Name': 'string3',
-                'CreationDate': "1970-01-03",
-            },
-            {
-                'Name': 'string4',
-                'CreationDate': "1970-01-04",
-            },
-        ]
-        return {'Buckets': buckets, 'Owner': {'DisplayName': 'string', 'ID': 'string'}}
+        }
 
     def get_bucket_location(self, Bucket=''):
-        return {
-            'string1': {
-                'LocationConstraint': 'region'
-            },
-            'string2': {
-                'LocationConstraint': 'region'
-            },
-            'string3': {
-                'LocationConstraint': 'region'
-            },
-            'string4': {
-                'LocationConstraint': 'another-region'
-            },
-        }.get(Bucket)
+        if Bucket in ['Name-0', 'Name-1', 'Name-2']:
+            return {
+                'LocationConstraint': 'region',
+            }
+        return {}
 
     def get_bucket_tagging(self, Bucket=''):
-        return {
-            'string1': {
-                'TagSet': [{
-                    'Key': 'key-string',
-                    'Value': 'val-string-1'
-                },],
-            },
-            'string2': {
-                'TagSet': [
-                    {
-                        'Key': 'key-string',
-                        'Value': 'val-string-2'
-                    },
-                    {
-                        'Key': 'key-string-22',
-                        'Value': 'val-string-22'
-                    },
-                ],
-            },
-            'string3': {},
-            'string4': {},
-        }.get(Bucket)
+        if Bucket == 'Name-0':
+            return {
+                'TagSet': S3BucketTaggingInstanceCreator.create_instances(amount=1),
+            }
+        elif Bucket == 'Name-1':
+            return {
+                'TagSet': S3BucketTaggingInstanceCreator.create_instances(amount=2),
+            }
+        return {}
 
 
-#.
+@pytest.fixture()
+def get_s3_sections():
+    def _create_s3_sections(names, tags):
+        region = 'region'
+        config = AWSConfig('hostname', (None, None))
+        config.add_single_service_config('s3_names', names)
+        config.add_service_tags('s3_tags', tags)
+
+        fake_s3_client = FakeS3Client()
+        fake_cloudwatch_client = FakeCloudwatchClient()
+
+        s3_limits_distributor = ResultDistributor()
+        s3_summary_distributor = ResultDistributor()
+
+        s3_limits = S3Limits(fake_s3_client, region, config, s3_limits_distributor)
+        s3_summary = S3Summary(fake_s3_client, region, config, s3_summary_distributor)
+        s3 = S3(fake_cloudwatch_client, region, config)
+        s3_requests = S3Requests(fake_cloudwatch_client, region, config)
+
+        s3_limits_distributor.add(s3_summary)
+        s3_summary_distributor.add(s3)
+        s3_summary_distributor.add(s3_requests)
+        return s3_limits, s3_summary, s3, s3_requests
+
+    return _create_s3_sections
 
 
-@pytest.mark.parametrize("names,tags,amount_buckets", [
+s3_params = [
     (None, (None, None), 3),
-    (['string1'], (None, None), 1),
-    (['string1', 'string2'], (None, None), 2),
-    (['string1', 'string2', 'string3'], (None, None), 3),
-    (['string1', 'string2', 'string3', 'string4'], (None, None), 3),
-    (['string1', 'string2', 'string3', 'FOOBAR'], (None, None), 3),
+    (['Name-0'], (None, None), 1),
+    (['Name-0', 'Name-1'], (None, None), 2),
+    (['Name-0', 'Name-1', 'Name-2'], (None, None), 3),
+    (['Name-0', 'Name-1', 'Name-2', 'string4'], (None, None), 3),
+    (['Name-0', 'Name-1', 'Name-2', 'FOOBAR'], (None, None), 3),
     (None, ([
-        ['key-string'],
+        ['Key-1'],
     ], [
         [
-            'val-string-1',
+            'Value-0',
+        ],
+    ]), 0),
+    (None, ([
+        ['Key-1'],
+    ], [
+        [
+            'Value-1',
         ],
     ]), 1),
     (None, ([
-        ['key-string'],
+        ['Key-0'],
     ], [
         [
-            'val-string-1',
-            'val-string-2',
+            'Value-0',
         ],
     ]), 2),
     (None, ([
-        ['key-string', 'unknown-tag'],
+        ['Key-0'],
     ], [
         [
-            'val-string-1',
-            'val-string-2',
+            'Value-0',
+            'Value-1',
+        ],
+    ]), 2),
+    (None, ([
+        ['Key-0', 'unknown-tag'],
+    ], [
+        [
+            'Value-0',
+            'Value-1',
         ],
         [
             'unknown-val',
         ],
     ]), 2),
-])
-def test_agent_aws_s3_result_distribution(names, tags, amount_buckets):
-    region = 'region'
-    config = AWSConfig('hostname', (None, None))
-    config.add_single_service_config('s3_names', names)
-    config.add_service_tags('s3_tags', tags)
+]
 
-    fake_s3_client = FakeS3Client()
-    fake_cloudwatch_client = FakeCloudwatchClient()
 
-    s3_limits_distributor = ResultDistributor()
-    s3_summary_distributor = ResultDistributor()
-
-    s3_limits = S3Limits(fake_s3_client, region, config, s3_limits_distributor)
-    s3_summary = S3Summary(fake_s3_client, region, config, s3_summary_distributor)
-    s3 = S3(fake_cloudwatch_client, region, config)
-    s3_requests = S3Requests(fake_cloudwatch_client, region, config)
-
-    s3_limits_distributor.add(s3_summary)
-    s3_summary_distributor.add(s3)
-    s3_summary_distributor.add(s3_requests)
-
+@pytest.mark.parametrize("names,tags,amount_buckets", s3_params)
+def test_agent_aws_s3_limits(get_s3_sections, names, tags, amount_buckets):
+    s3_limits, _s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
     s3_limits_results = s3_limits.run().results
-    s3_summary_results = s3_summary.run().results
-    s3_results = s3.run().results
-    s3_requests_results = s3_requests.run().results
 
-    #--S3Limits-------------------------------------------------------------
     assert s3_limits.interval == 86400
     assert s3_limits.name == "s3_limits"
 
@@ -190,38 +166,60 @@ def test_agent_aws_s3_result_distribution(names, tags, amount_buckets):
     assert s3_limits_content.limit == 100
     assert s3_limits_content.amount == 4
 
-    #--S3Summary------------------------------------------------------------
+
+@pytest.mark.parametrize("names,tags,amount_buckets", s3_params)
+def test_agent_aws_s3_summary(get_s3_sections, names, tags, amount_buckets):
+    s3_limits, s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
+    _s3_summary_results = s3_limits.run().results
+    s3_summary_results = s3_summary.run().results
+
     assert s3_summary.interval == 86400
     assert s3_summary.name == "s3_summary"
 
     assert s3_summary_results == []
 
-    #--S3-------------------------------------------------------------------
+
+@pytest.mark.parametrize("names,tags,amount_buckets", s3_params)
+def test_agent_aws_s3(get_s3_sections, names, tags, amount_buckets):
+    s3_limits, s3_summary, s3, _s3_requests = get_s3_sections(names, tags)
+    _s3_limits_results = s3_limits.run().results
+    _s3_summary_results = s3_summary.run().results
+    s3_results = s3.run().results
+
     assert s3.interval == 86400
     assert s3.name == "s3"
 
-    assert len(s3_results) == 1
+    if amount_buckets:
+        assert len(s3_results) == 1
 
-    s3_result = s3_results[0]
-    assert s3_result.piggyback_hostname == ''
+        s3_result = s3_results[0]
+        assert s3_result.piggyback_hostname == ''
 
-    # 4 (metrics) * X (buckets) == Y (len results)
-    assert len(s3_result.content) == 4 * amount_buckets
-    for row in s3_result.content:
-        assert row.get('LocationConstraint') == 'region'
-        assert 'Tagging' in row
+        # Y (len results) == 4 (metrics) * X (buckets)
+        assert len(s3_result.content) == 4 * amount_buckets
+        for row in s3_result.content:
+            assert row.get('LocationConstraint') == 'region'
+            assert 'Tagging' in row
 
-    #--S3Requests-----------------------------------------------------------
+
+@pytest.mark.parametrize("names,tags,amount_buckets", s3_params)
+def test_agent_aws_s3_requests(get_s3_sections, names, tags, amount_buckets):
+    s3_limits, s3_summary, _s3, s3_requests = get_s3_sections(names, tags)
+    _s3_limits_results = s3_limits.run().results
+    _s3_summary_results = s3_summary.run().results
+    s3_requests_results = s3_requests.run().results
+
     assert s3_requests.interval == 300
     assert s3_requests.name == "s3_requests"
 
-    assert len(s3_requests_results) == 1
+    if amount_buckets:
+        assert len(s3_requests_results) == 1
 
-    s3_requests_result = s3_requests_results[0]
-    assert s3_requests_result.piggyback_hostname == ''
+        s3_requests_result = s3_requests_results[0]
+        assert s3_requests_result.piggyback_hostname == ''
 
-    # 16 (metrics) * X (buckets) == Y (len results)
-    assert len(s3_requests_result.content) == 16 * amount_buckets
-    for row in s3_requests_result.content:
-        assert row.get('LocationConstraint') == 'region'
-        assert 'Tagging' in row
+        # Y (len results) == 16 (metrics) * X (buckets)
+        assert len(s3_requests_result.content) == 16 * amount_buckets
+        for row in s3_requests_result.content:
+            assert row.get('LocationConstraint') == 'region'
+            assert 'Tagging' in row

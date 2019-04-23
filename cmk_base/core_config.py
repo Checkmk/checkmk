@@ -358,8 +358,8 @@ def _extra_service_attributes(hostname, description, config_cache, checkname, pa
             attrs[key] = values[0]
 
     # Add explicit custom_variables
-    for varname, value in config.get_explicit_service_custom_variables(hostname,
-                                                                       description).iteritems():
+    for varname, value in config_cache.get_explicit_service_custom_variables(
+            hostname, description).iteritems():
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions

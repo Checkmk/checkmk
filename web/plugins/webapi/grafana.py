@@ -80,6 +80,8 @@ class GrafanaConnectorMetrics(APICallCollection):
         return metric_infos
 
     def _get_graph_recipes(self, request):
+        if not metrics.cmk_graphs_possible():
+            raise MKGeneralException(_("Currently not supported with this Check_MK Edition"))
         _graph_data_range, graph_recipes = metrics.graph_recipes_for_api_request(request)
         return graph_recipes
 

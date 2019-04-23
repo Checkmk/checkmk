@@ -114,24 +114,24 @@ function run_cached {
     CMDLINE=$*
 
     if [ ! -e $MK_VARDIR/cache ] ; then mkdir -p $MK_VARDIR/cache ; fi
-    CACHE_FILE=$MK_VARDIR/cache/$NAME.cache
+    CACHEFILE=$MK_VARDIR/cache/$NAME.cache
 
-    USE_CACHE_FILE=""
+    USE_CACHEFILE=""
     # Check if file exists and is recent enough
-    if [ -s $CACHE_FILE ]
+    if [ -s $CACHEFILE ]
     then
-        MTIME=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' $CACHE_FILE )
+        MTIME=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' $CACHEFILE )
         if (( $MTIME < $MAXAGE )) ; then
-            USE_CACHE_FILE=1
+            USE_CACHEFILE=1
         fi
         CACHE_INFO=":cached($MTIME,$MAXAGE)"
         # insert the cache info in the section header (^= after '!'),
         # if none is present (^= before '!')
-        sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1'$CACHE_INFO'>>>/' "$CACHE_FILE"
+        sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1'$CACHE_INFO'>>>/' "$CACHEFILE"
     fi
-    if [ -z "$USE_CACHE_FILE" -a ! -e "$CACHE_FILE.new" ]
+    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]
     then
-        nohup sh -c $CMDLINE > $CACHE_FILE.new 2> /dev/null && mv $CACHE_FILE.new $CACHE_FILE  &
+        nohup sh -c $CMDLINE > $CACHEFILE.new 2> /dev/null && mv $CACHEFILE.new $CACHEFILE  &
     fi
 }
 

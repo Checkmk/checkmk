@@ -518,7 +518,7 @@ class DataSource(object):
     @abc.abstractproperty
     def table(self):
         # type: () -> RowTable
-        """Returns a table objec that can provide a list of rows for the provided
+        """Returns a table object that can provide a list of rows for the provided
         query using the query() method."""
         raise NotImplementedError()
 

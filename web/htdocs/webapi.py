@@ -185,8 +185,6 @@ def load_plugins(force):
 
 def page_api():
     try:
-        html.set_http_header("Access-Control-Allow-Origin", "*")
-
         # The API uses JSON format by default and python as optional alternative
         output_format = html.var("output_format", "json")
         if output_format not in [ "json", "python" ]:

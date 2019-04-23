@@ -46,7 +46,8 @@ def handle_check_mk_check_result(check_plugin_name, description):
 
     def wrap(check_func):
         def wrapped_check_func(hostname, *args, **kwargs):
-            exit_spec = config.exit_code_spec(hostname)
+            host_config = config.get_config_cache().get_host_config(hostname)
+            exit_spec = host_config.exit_code_spec()
 
             status, infotexts, long_infotexts, perfdata = 0, [], [], []
 

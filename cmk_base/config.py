@@ -751,30 +751,6 @@ def get_explicit_service_custom_variables(hostname, description):
 #
 
 
-def exit_code_spec(hostname, data_source_id=None):
-    spec = {}
-    specs = get_config_cache().host_extra_conf(hostname, check_mk_exit_status)
-    for entry in specs[::-1]:
-        spec.update(entry)
-    return _get_exit_code_spec(spec, data_source_id)
-
-
-def _get_exit_code_spec(spec, data_source_id):
-    if data_source_id is not None:
-        try:
-            return spec["individual"][data_source_id]
-        except KeyError:
-            pass
-
-    try:
-        return spec["overall"]
-    except KeyError:
-        pass
-
-    # Old configuration format
-    return spec
-
-
 def check_period_of(hostname, service):
     periods = get_config_cache().service_extra_conf(hostname, service, check_periods)
     if periods:
@@ -2647,6 +2623,31 @@ class HostConfig(object):
                 return credentials
 
         return default_value
+
+    def exit_code_spec(self, data_source_id=None):
+        # type: (Optional[str]) -> Dict[str, int]
+        spec = {}  # type: Dict[str, int]
+        # TODO: Can we use host_extra_conf_merged?
+        specs = self._config_cache.host_extra_conf(self.hostname, check_mk_exit_status)
+        for entry in specs[::-1]:
+            spec.update(entry)
+        return self._merge_with_data_source_exit_code_spec(spec, data_source_id)
+
+    def _merge_with_data_source_exit_code_spec(self, spec, data_source_id):
+        # type: (Dict, Optional[str]) -> Dict[str, int]
+        if data_source_id is not None:
+            try:
+                return spec["individual"][data_source_id]
+            except KeyError:
+                pass
+
+        try:
+            return spec["overall"]
+        except KeyError:
+            pass
+
+        # Old configuration format
+        return spec
 
 
 #.

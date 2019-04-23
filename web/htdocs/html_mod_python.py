@@ -120,6 +120,11 @@ class html_mod_python(htmllib.html):
         self.set_buffering(config.buffered_http_stream)
         self.init_theme()
 
+        # Would be better to put this to page individual code, but we currently have
+        # no mechanism for a page to set do this before the authentication is made.
+        if self.myfile == "webapi":
+            self.set_http_header("Access-Control-Allow-Origin", "*")
+
 
     def init_theme(self):
         self.set_theme(config.ui_theme)

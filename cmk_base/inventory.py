@@ -87,7 +87,6 @@ def do_inv(hostnames):
                 host_config=host_config,
                 ipaddress=ipaddress,
                 do_status_data_inv=host_config.do_status_data_inventory,
-                do_host_label_discovery=config.do_host_label_discovery_for(hostname),
             )
         except Exception as e:
             if cmk.utils.debug.enabled():
@@ -124,7 +123,6 @@ def do_inv_check(hostname, options):
         host_config=host_config,
         ipaddress=ipaddress,
         do_status_data_inv=host_config.do_status_data_inventory,
-        do_host_label_discovery=config.do_host_label_discovery_for(hostname),
     )
 
     if (inventory_tree.is_empty() and status_data_tree.is_empty() and
@@ -179,12 +177,10 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_
     hostname = host_config.hostname
     do_status_data_inventory = not host_config.is_cluster and host_config.do_status_data_inventory
 
-    do_host_label_discovery = config.do_host_label_discovery_for(hostname)
-
     if not do_status_data_inventory:
         _cleanup_status_data(hostname)
 
-    if not do_status_data_inventory and not do_host_label_discovery:
+    if not do_status_data_inventory and not host_config.do_host_label_discovery:
         return  # nothing to do here
 
     # This is called during checking, but the inventory plugins are not loaded yet
@@ -200,7 +196,6 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_
         host_config=host_config,
         ipaddress=ipaddress,
         do_status_data_inv=do_status_data_inventory,
-        do_host_label_discovery=do_host_label_discovery,
     )
 
 
@@ -213,9 +208,8 @@ def _cleanup_status_data(hostname):
         os.remove(filepath + ".gz")
 
 
-def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_data_inv,
-                do_host_label_discovery):
-    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str], bool, bool) -> Tuple[Optional[float], StructuredDataTree, StructuredDataTree, DiscoveredHostLabels]
+def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_data_inv):
+    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str], bool) -> Tuple[Optional[float], StructuredDataTree, StructuredDataTree, DiscoveredHostLabels]
     hostname = host_config.hostname
 
     _initialize_inventory_tree()
@@ -241,7 +235,7 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
                                               tty.normal)
     ]
 
-    if do_host_label_discovery:
+    if host_config.do_host_label_discovery:
         DiscoveredHostLabelsStore(hostname).save(discovered_host_labels.to_dict())
         success_msg.append("and %s%s%d%s host labels" % (tty.bold, tty.yellow,
                                                          len(discovered_host_labels), tty.normal))

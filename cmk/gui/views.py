@@ -355,23 +355,14 @@ class GUIViewRenderer(ViewRenderer):
             weblib.init_selection()
 
         if self._show_buttons:
-            show_combined_graphs_button  = \
-                ("host" in self.view.datasource.infos or "service" in self.view.datasource.infos) and \
-                (isinstance(self.view.datasource.table, str)) and \
-                ("host" in self.view.datasource.table or "service" in self.view.datasource.table)
             _show_context_links(
-                view_spec,
+                self.view,
                 show_filters,
                 # Take into account: permissions, display_options
                 row_count > 0 and command_form,
                 # Take into account: layout capabilities
                 layout.can_display_checkboxes and not view_spec.get("force_checkboxes"),
                 show_checkboxes,
-                # Show link to availability
-                self.view.datasource.table in ["hosts", "services"] or
-                "aggr" in self.view.datasource.infos,
-                # Show link to combined graphs
-                show_combined_graphs_button,
             )
         # User errors in filters
         html.show_user_errors()
@@ -1665,10 +1656,12 @@ def ajax_set_viewoption():
     painter_options.save_to_config(view_name)
 
 
-def _show_context_links(thisview, show_filters, enable_commands, enable_checkboxes, show_checkboxes,
-                        show_availability, show_combined_graphs):
+def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, show_checkboxes):
     if html.output_format != "html":
         return
+
+    # TODO: Clean this up
+    thisview = view.spec
 
     html.begin_context_buttons()
 
@@ -1790,10 +1783,11 @@ def _show_context_links(thisview, show_filters, enable_commands, enable_checkbox
             _("Edit View"), url, "edit", id_="edit", bestof=config.context_buttons_to_show)
 
     if display_options.enabled(display_options.E):
-        if show_availability and config.user.may("general.see_availability"):
+        if _show_availability_context_button(view):
             html.context_button(
                 _("Availability"), html.makeuri([("mode", "availability")]), "availability")
-        if show_combined_graphs and config.combined_graphs_available():
+
+        if _show_combined_graphs_context_button(view):
             html.context_button(
                 _("Combined graphs"),
                 html.makeuri(
@@ -1809,6 +1803,23 @@ def _show_context_links(thisview, show_filters, enable_commands, enable_checkbox
         execute_hooks('buttons-end')
 
     html.end_context_buttons()
+
+
+def _show_availability_context_button(view):
+    if not config.user.may("general.see_availability"):
+        return False
+
+    if "aggr" in view.datasource.infos:
+        return True
+
+    return view.datasource.ident in ["hosts", "services"]
+
+
+def _show_combined_graphs_context_button(view):
+    if not config.combined_graphs_available():
+        return False
+
+    return view.datasource.ident in ["hosts", "services", "hostsbygroup", "servicesbygroup"]
 
 
 def _link_to_folder_by_path(path):

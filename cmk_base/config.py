@@ -737,46 +737,6 @@ def get_additional_ipaddresses_of(hostname):
 
 
 #
-# Management board
-#
-
-
-def management_address_of(hostname):
-    attributes_of_host = host_attributes.get(hostname, {})
-    if attributes_of_host.get("management_address"):
-        return attributes_of_host["management_address"]
-
-    return ipaddresses.get(hostname)
-
-
-def management_credentials_of(hostname):
-    protocol = get_config_cache().get_host_config(hostname).management_protocol
-    if protocol == "snmp":
-        credentials_variable, default_value = management_snmp_credentials, snmp_default_community
-    elif protocol == "ipmi":
-        credentials_variable, default_value = management_ipmi_credentials, None
-    elif protocol is None:
-        return None
-    else:
-        raise NotImplementedError()
-
-    # First try to use the explicit configuration of the host
-    # (set directly for a host or via folder inheritance in WATO)
-    try:
-        return credentials_variable[hostname]
-    except KeyError:
-        pass
-
-    # If a rule matches, use the first rule for the management board protocol of the host
-    rule_settings = get_config_cache().host_extra_conf(hostname, management_board_config)
-    for rule_protocol, credentials in rule_settings:
-        if rule_protocol == protocol:
-            return credentials
-
-    return default_value
-
-
-#
 # Explicit custom variables
 #
 def get_explicit_service_custom_variables(hostname, description):
@@ -2651,6 +2611,42 @@ class HostConfig(object):
             cgrs.append("check-mk-notify")
 
         return list(set(cgrs))
+
+    @property
+    def management_address(self):
+        # type: () -> Optional[str]
+        attributes_of_host = host_attributes.get(self.hostname, {})
+        if attributes_of_host.get("management_address"):
+            return attributes_of_host["management_address"]
+
+        return ipaddresses.get(self.hostname)
+
+    @property
+    def management_credentials(self):
+        protocol = self.management_protocol
+        if protocol == "snmp":
+            credentials_variable, default_value = management_snmp_credentials, snmp_default_community
+        elif protocol == "ipmi":
+            credentials_variable, default_value = management_ipmi_credentials, None
+        elif protocol is None:
+            return None
+        else:
+            raise NotImplementedError()
+
+        # First try to use the explicit configuration of the host
+        # (set directly for a host or via folder inheritance in WATO)
+        try:
+            return credentials_variable[self.hostname]
+        except KeyError:
+            pass
+
+        # If a rule matches, use the first rule for the management board protocol of the host
+        rule_settings = self._config_cache.host_extra_conf(self.hostname, management_board_config)
+        for rule_protocol, credentials in rule_settings:
+            if rule_protocol == protocol:
+                return credentials
+
+        return default_value
 
 
 #.

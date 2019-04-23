@@ -38,8 +38,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
 CXX_FLAGS          := -g -O3 -Wall -Wextra
 CLANG_VERSION      := 7
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
-CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
-export RUN_CLANG_TIDY := run-clang-tidy-$(CLANG_VERSION).py
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen

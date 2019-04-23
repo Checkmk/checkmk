@@ -9,6 +9,7 @@ import cmk
 import cmk.utils.paths
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
+import cmk_base.check_api as check_api
 
 
 def test_all_configured_realhosts(monkeypatch):
@@ -397,6 +398,22 @@ def test_host_config_exit_code_spec_individual(monkeypatch, hostname, result):
     ])
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config(hostname).exit_code_spec(data_source_id="snmp") == result
+
+
+@pytest.mark.parametrize("hostname,section_name,result", [
+    ("testhost1", "uptime", None),
+    ("testhost2", "uptime", None),
+    ("testhost1", "snmp_uptime", None),
+    ("testhost2", "snmp_uptime", 4),
+])
+def test_host_config_snmp_check_interval(monkeypatch, hostname, section_name, result):
+    config.load_checks(check_api.get_check_api_context, ["checks/uptime", "checks/snmp_uptime"])
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("snmp_check_interval", [
+        (("snmp_uptime", 4), [], ["testhost2"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).snmp_check_interval(section_name) == result
 
 
 def test_http_proxies():

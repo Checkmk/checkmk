@@ -325,7 +325,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                 check_interval = int(values[0])
             except:
                 check_interval = float(values[0])
-        value = config.check_interval_of(hostname, cmk_base.check_utils.section_name_of(checkname))
+        value = host_config.snmp_check_interval(cmk_base.check_utils.section_name_of(checkname))
         if value is not None:
             check_interval = value
 

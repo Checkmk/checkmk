@@ -2584,7 +2584,7 @@ class HostConfig(object):
         """Returns the list of hostgroups of this host
 
         If the host has no hostgroups it will be added to the default hostgroup
-        (Nagios requires each host to be member of at least on group."""
+        (Nagios requires each host to be member of at least on group)."""
         groups = self._config_cache.host_extra_conf(self.hostname, host_groups)
         if not groups:
             return [default_host_group]

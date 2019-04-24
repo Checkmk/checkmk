@@ -949,13 +949,13 @@ def _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_
     if host_config.is_cluster:
         return _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, on_error)
 
-    return _get_node_services(host_config.hostname, ipaddress, sources, multi_host_sections,
-                              on_error)
+    return _get_node_services(host_config, ipaddress, sources, multi_host_sections, on_error)
 
 
 # Do the actual work for a non-cluster host or node
-def _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_error):
-    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
+def _get_node_services(host_config, ipaddress, sources, multi_host_sections, on_error):
+    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
+    hostname = host_config.hostname
     services = _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, on_error)
 
     config_cache = config.get_config_cache()
@@ -977,8 +977,7 @@ def _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_err
                 check_source = "ignored"
             services[(check_plugin_name, item)] = ("clustered_" + check_source, paramstring)
 
-    _merge_manual_services(services, hostname, on_error)
-    return services
+    return _merge_manual_services(host_config, services, on_error)
 
 
 # Part of _get_node_services that deals with discovered services
@@ -1011,9 +1010,12 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
     return services
 
 
-# To a list of discovered services add/replace manual and active
-# checks and handle ignoration
-def _merge_manual_services(services, hostname, on_error):
+# TODO: Rename or extract disabled services handling
+def _merge_manual_services(host_config, services, on_error):
+    # type: (config.HostConfig, DiscoveredServicesTable, str) -> DiscoveredServicesTable
+    """Add/replace manual and active checks and handle ignoration"""
+    hostname = host_config.hostname
+
     # Find manual checks. These can override discovered checks -> "manual"
     manual_items = check_table.get_check_table(hostname, skip_autochecks=True)
     for (check_plugin_name, item), (params, descr, _unused_deps) in manual_items.items():
@@ -1031,11 +1033,10 @@ def _merge_manual_services(services, hostname, on_error):
         services[('custom', entry['service_description'])] = ('custom', 'None')
 
     # Similar for 'active_checks', but here we have parameters
-    for acttype, rules in config.active_checks.items():
-        entries = config_cache.host_extra_conf(hostname, rules)
+    for plugin_name, entries in host_config.active_checks:
         for params in entries:
-            descr = config.active_check_service_description(hostname, acttype, params)
-            services[(acttype, descr)] = ('active', repr(params))
+            descr = config.active_check_service_description(hostname, plugin_name, params)
+            services[(plugin_name, descr)] = ('active', repr(params))
 
     # Handle disabled services -> "ignored"
     for (check_plugin_name, item), (check_source, paramstring) in services.items():
@@ -1108,8 +1109,7 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
                     # In all other cases either both must be "new" or "vanished" -> let it be
 
     # Now add manual and active serivce and handle ignored services
-    _merge_manual_services(cluster_items, host_config.hostname, on_error)
-    return cluster_items
+    return _merge_manual_services(host_config, cluster_items, on_error)
 
 
 # Translates a parameter string (read from autochecks) to it's final value

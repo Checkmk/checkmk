@@ -595,27 +595,34 @@ sql_performance () {
 
 
 sql_tablespaces () {
-    echo "PROMPT <<<oracle_tablespaces:sep(124)>>>"
-    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
-        echo "select upper(decode(${IGNORE_DB_NAME:-0}
+    echo "PROMPT <<<oracle_tablespaces:sep(124)>>>"
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 141 ]; then
+
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}
                                  , 0, decode(vp.con_id, null, d.NAME
-                                            ,d.NAME||'.'||vp.name)
+                                            ,d.NAME||''.''||vp.name)
                                  , i.instance_name))
-                  || '|' || dbf.file_name
-                  || '|' || dbf.tablespace_name
-                  || '|' || dbf.fstatus
-                  || '|' || dbf.AUTOEXTENSIBLE
-                  || '|' || dbf.blocks
-                  || '|' || dbf.maxblocks
-                  || '|' || dbf.USER_BLOCKS
-                  || '|' || dbf.INCREMENT_BY
-                  || '|' || dbf.ONLINE_STATUS
-                  || '|' || dbf.BLOCK_SIZE
-                  || '|' || decode(tstatus,'READ ONLY', 'READONLY', tstatus)
-                  || '|' || dbf.free_blocks
-                  || '|' || dbf.contents
-                  || '|' || i.version
+                  || ''|'' || dbf.file_name
+                  || ''|'' || dbf.tablespace_name
+                  || ''|'' || dbf.fstatus
+                  || ''|'' || dbf.AUTOEXTENSIBLE
+                  || ''|'' || dbf.blocks
+                  || ''|'' || dbf.maxblocks
+                  || ''|'' || dbf.USER_BLOCKS
+                  || ''|'' || dbf.INCREMENT_BY
+                  || ''|'' || dbf.ONLINE_STATUS
+                  || ''|'' || dbf.BLOCK_SIZE
+                  || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
+                  || ''|'' || dbf.free_blocks
+                  || ''|'' || dbf.contents
+                  || ''|'' || i.version
            from v\$database d
            join v\$instance i on 1=1
            join (
@@ -632,26 +639,47 @@ sql_tablespaces () {
                     t.block_size, t.status, t.contents
                 ) dbf on 1=1
            left outer join v\$pdbs vp on dbf.con_id = vp.con_id
-           where d.database_role = 'PRIMARY';
+           where d.database_role = ''PRIMARY'''
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (121) 1: ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
 
-           select upper(decode(${IGNORE_DB_NAME:-0}
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}
                                  , 0, decode(dbf.con_id, null, d.NAME
                                             ,dbf.name)
                                  , i.instance_name))
-                  || '|' || dbf.file_name
-                  || '|' || dbf.tablespace_name
-                  || '|' || dbf.fstatus
-                  || '|' || dbf.AUTOEXTENSIBLE
-                  || '|' || dbf.blocks
-                  || '|' || dbf.maxblocks
-                  || '|' || dbf.USER_BLOCKS
-                  || '|' || dbf.INCREMENT_BY
-                  || '|' || dbf.ONLINE_STATUS
-                  || '|' || dbf.BLOCK_SIZE
-                  || '|' || decode(tstatus,'READ ONLY', 'READONLY', tstatus)
-                  || '|' || dbf.free_blocks
-                  || '|' || 'TEMPORARY'
-                  || '|' || i.version
+                  || ''|'' || dbf.file_name
+                  || ''|'' || dbf.tablespace_name
+                  || ''|'' || dbf.fstatus
+                  || ''|'' || dbf.AUTOEXTENSIBLE
+                  || ''|'' || dbf.blocks
+                  || ''|'' || dbf.maxblocks
+                  || ''|'' || dbf.USER_BLOCKS
+                  || ''|'' || dbf.INCREMENT_BY
+                  || ''|'' || dbf.ONLINE_STATUS
+                  || ''|'' || dbf.BLOCK_SIZE
+                  || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
+                  || ''|'' || dbf.free_blocks
+                  || ''|'' || ''TEMPORARY''
+                  || ''|'' || i.version
            FROM v\$database d
            JOIN v\$instance i ON 1 = 1
            JOIN (
@@ -665,7 +693,7 @@ sql_tablespaces () {
                         f.maxblocks,
                         f.user_blocks,
                         f.increment_by,
-                        'ONLINE' online_status,
+                        ''ONLINE'' online_status,
                         t.block_size,
                         t.status tstatus,
                         f.blocks - nvl(SUM(tu.blocks),0) free_blocks,
@@ -673,10 +701,10 @@ sql_tablespaces () {
                  FROM cdb_tablespaces t
                  JOIN (
                        SELECT vp.con_id
-                             ,d.name || '.'|| vp.name name
+                             ,d.name || ''.''|| vp.name name
                        FROM v\$containers vp
                        JOIN v\$database d ON 1 = 1
-                       WHERE d.cdb = 'YES'
+                       WHERE d.cdb = ''YES''
                          AND vp.con_id <> 2
                        UNION ALL
                        SELECT 0
@@ -688,7 +716,7 @@ sql_tablespaces () {
                  LEFT OUTER JOIN gv\$tempseg_usage tu ON f.con_id = tu.con_id
                                                       AND f.tablespace_name = tu.tablespace
                                                       AND f.RELATIVE_FNO = tu.SEGRFNO#
-                 WHERE t.contents = 'TEMPORARY'
+                 WHERE t.contents = ''TEMPORARY''
                  GROUP BY vp.name,
                           vp.con_id,
                           f.file_name,
@@ -703,16 +731,37 @@ sql_tablespaces () {
                           t.status,
                           t.contents
                 ) dbf ON 1 = 1
-           where d.database_role = 'PRIMARY';"
+           where d.database_role = ''PRIMARY'''
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (121) 2: ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
-        echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
-                  || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
-                  ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
-                  ||'|'|| ONLINE_STATUS ||'|'|| BLOCK_SIZE
-                  ||'|'|| decode(tstatus,'READ ONLY', 'READONLY', tstatus) || '|' || free_blocks
-                  ||'|'|| contents
-                  ||'|'|| iversion
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                  || ''|'' || file_name ||''|''|| tablespace_name ||''|''|| fstatus ||''|''|| AUTOEXTENSIBLE
+                  ||''|''|| blocks ||''|''|| maxblocks ||''|''|| USER_BLOCKS ||''|''|| INCREMENT_BY
+                  ||''|''|| ONLINE_STATUS ||''|''|| BLOCK_SIZE
+                  ||''|''|| decode(tstatus,''READ ONLY'', ''READONLY'', tstatus) || ''|'' || free_blocks
+                  ||''|''|| contents
+                  ||''|''|| iversion
            from v\$database d , v\$instance i, (
                     select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
                     f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
@@ -724,25 +773,46 @@ sql_tablespaces () {
                     group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
                     f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
                     t.block_size, t.status, t.contents)
-           where d.database_role = 'PRIMARY';
+           where d.database_role = ''PRIMARY'''
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (102) 1: ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
 
-           select upper(decode(${IGNORE_DB_NAME:-0}
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}
                                  , 0, dbf.name
                                  , i.instance_name))
-                  || '|' || dbf.file_name
-                  || '|' || dbf.tablespace_name
-                  || '|' || dbf.fstatus
-                  || '|' || dbf.AUTOEXTENSIBLE
-                  || '|' || dbf.blocks
-                  || '|' || dbf.maxblocks
-                  || '|' || dbf.USER_BLOCKS
-                  || '|' || dbf.INCREMENT_BY
-                  || '|' || dbf.ONLINE_STATUS
-                  || '|' || dbf.BLOCK_SIZE
-                  || '|' || decode(tstatus,'READ ONLY', 'READONLY', tstatus)
-                  || '|' || dbf.free_blocks
-                  || '|' || 'TEMPORARY'
-                  || '|' || i.version
+                  || ''|'' || dbf.file_name
+                  || ''|'' || dbf.tablespace_name
+                  || ''|'' || dbf.fstatus
+                  || ''|'' || dbf.AUTOEXTENSIBLE
+                  || ''|'' || dbf.blocks
+                  || ''|'' || dbf.maxblocks
+                  || ''|'' || dbf.USER_BLOCKS
+                  || ''|'' || dbf.INCREMENT_BY
+                  || ''|'' || dbf.ONLINE_STATUS
+                  || ''|'' || dbf.BLOCK_SIZE
+                  || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
+                  || ''|'' || dbf.free_blocks
+                  || ''|'' || ''TEMPORARY''
+                  || ''|'' || i.version
            FROM v\$database d
            JOIN v\$instance i ON 1 = 1
            JOIN (
@@ -755,7 +825,7 @@ sql_tablespaces () {
                         f.maxblocks,
                         f.user_blocks,
                         f.increment_by,
-                        'ONLINE' online_status,
+                        ''ONLINE'' online_status,
                         t.block_size,
                         t.status tstatus,
                         f.blocks - nvl(SUM(tu.blocks),0) free_blocks,
@@ -768,7 +838,7 @@ sql_tablespaces () {
                  LEFT OUTER JOIN dba_temp_files f ON t.tablespace_name = f.tablespace_name
                  LEFT OUTER JOIN gv\$tempseg_usage tu ON f.tablespace_name = tu.tablespace
                                                       AND f.RELATIVE_FNO = tu.SEGRFNO#
-                 WHERE t.contents = 'TEMPORARY'
+                 WHERE t.contents = ''TEMPORARY''
                  GROUP BY vp.name,
                           f.file_name,
                           t.tablespace_name,
@@ -781,7 +851,22 @@ sql_tablespaces () {
                           t.block_size,
                           t.status,
                           t.contents
-                ) dbf ON 1 = 1;"
+                ) dbf ON 1 = 1'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (102) 2: ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 92 ]; then
         echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
@@ -1114,53 +1199,85 @@ sql_undostat () {
 
 
 sql_resumable () {
+
     echo 'PROMPT <<<oracle_resumable:sep(124)>>>'
-    echo "select upper(i.INSTANCE_NAME)
-                 ||'|'|| u.username
-                 ||'|'|| a.SESSION_ID
-                 ||'|'|| a.status
-                 ||'|'|| a.TIMEOUT
-                 ||'|'|| round((sysdate-to_date(a.SUSPEND_TIME,'mm/dd/yy hh24:mi:ss'))*24*60*60)
-                 ||'|'|| a.ERROR_NUMBER
-                 ||'|'|| to_char(to_date(a.SUSPEND_TIME, 'mm/dd/yy hh24:mi:ss'),'mm/dd/yy_hh24:mi:ss')
-                 ||'|'|| a.RESUME_TIME
-                 ||'|'|| a.ERROR_MSG
-          from dba_resumable a, v\$instance i, dba_users u
-          where a.INSTANCE_ID = i.INSTANCE_NUMBER
-          and u.user_id = a.user_id
-          and a.SUSPEND_TIME is not null
-          union all
-          select upper(i.INSTANCE_NAME)
-                 || '|||||||||'
-          from v\$instance i;"
+    echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'select upper(i.INSTANCE_NAME)
+                         ||''|''|| u.username
+                         ||''|''|| a.SESSION_ID
+                         ||''|''|| a.status
+                         ||''|''|| a.TIMEOUT
+                         ||''|''|| round((sysdate-to_date(a.SUSPEND_TIME,''mm/dd/yy hh24:mi:ss''))*24*60*60)
+                         ||''|''|| a.ERROR_NUMBER
+                         ||''|''|| to_char(to_date(a.SUSPEND_TIME, ''mm/dd/yy hh24:mi:ss''),''mm/dd/yy_hh24:mi:ss'')
+                         ||''|''|| a.RESUME_TIME
+                         ||''|''|| a.ERROR_MSG
+                  from dba_resumable a, v\$instance i, dba_users u
+                  where a.INSTANCE_ID = i.INSTANCE_NUMBER
+                  and u.user_id = a.user_id
+                  and a.SUSPEND_TIME is not null
+                  union all
+                  select upper(i.INSTANCE_NAME)
+                         || ''|||||||||''
+                  from v\$instance i'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(i.instance_name) instance_name from  v\$instance i) loop
+                              dbms_output.put_line(cur1.instance_name || '| Debug: '||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
 }
 
-
 sql_jobs () {
+
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
         echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
-        echo "SELECT upper(vp.name)
-                     ||'|'|| j.OWNER
-                     ||'|'|| j.JOB_NAME
-                     ||'|'|| j.STATE
-                     ||'|'|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
-                     ||'|'|| j.RUN_COUNT
-                     ||'|'|| j.ENABLED
-                     ||'|'|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
-                     ||'|'|| NVL(j.SCHEDULE_NAME, '-')
-                     ||'|'|| jd.STATUS
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'SELECT upper(vp.name)
+                     ||''|''|| j.OWNER
+                     ||''|''|| j.JOB_NAME
+                     ||''|''|| j.STATE
+                     ||''|''|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
+                     ||''|''|| j.RUN_COUNT
+                     ||''|''|| j.ENABLED
+                     ||''|''|| NVL(j.NEXT_RUN_DATE, to_date(''1970-01-01'', ''YYYY-mm-dd''))
+                     ||''|''|| NVL(j.SCHEDULE_NAME, ''-'')
+                     ||''|''|| jd.STATUS
               FROM cdb_scheduler_jobs j
               JOIN ( SELECT vp.con_id
-                           ,d.name || '|' || vp.name name
+                           ,d.name || ''|'' || vp.name name
                        FROM v\$containers vp
                        JOIN v\$database d on 1=1
-                      WHERE d.cdb = 'YES' and vp.con_id <> 2
+                      WHERE d.cdb = ''YES'' and vp.con_id <> 2
+                        AND d.database_role = ''PRIMARY''
+                        AND d.open_mode = ''READ WRITE''
                     UNION ALL
                      SELECT 0, name
-                       FROM v\$database
+                       FROM v\$database d
+                      WHERE d.database_role = ''PRIMARY''
+                        AND d.open_mode = ''READ WRITE''
                ) vp on j.con_id = vp.con_id
-			   left outer join (SELECT con_id, owner, job_name, max(LOG_ID) log_id
+                           left outer join (SELECT con_id, owner, job_name, max(LOG_ID) log_id
                                   FROM cdb_scheduler_job_run_details dd
                                  group by con_id, owner, job_name
                                ) jm on  jm.JOB_NAME = j.JOB_NAME
@@ -1171,21 +1288,42 @@ sql_jobs () {
                               AND jd.owner = jm.OWNER
                               AND jd.JOB_NAME = jm.JOB_NAME
                               AND jd.LOG_ID = jm.LOG_ID
-              WHERE not (j.auto_drop = 'TRUE' and REPEAT_INTERVAL is null);
-             "
+              WHERE not (j.auto_drop = ''TRUE'' and REPEAT_INTERVAL is null)'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (121): ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+
         echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
-        echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name))
-                     ||'|'|| j.OWNER
-                     ||'|'|| j.JOB_NAME
-                     ||'|'|| j.STATE
-                     ||'|'|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
-                     ||'|'|| j.RUN_COUNT
-                     ||'|'|| j.ENABLED
-                     ||'|'|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
-                     ||'|'|| NVL(j.SCHEDULE_NAME, '-')
-                     ||'|'|| jd.STATUS
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+              begin
+                  begin
+                      execute immediate 'SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name))
+                     ||''|''|| j.OWNER
+                     ||''|''|| j.JOB_NAME
+                     ||''|''|| j.STATE
+                     ||''|''|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
+                     ||''|''|| j.RUN_COUNT
+                     ||''|''|| j.ENABLED
+                     ||''|''|| NVL(j.NEXT_RUN_DATE, to_date(''1970-01-01'', ''YYYY-mm-dd''))
+                     ||''|''|| NVL(j.SCHEDULE_NAME, ''-'')
+                     ||''|''|| jd.STATUS
               FROM dba_scheduler_jobs j
               join v\$database vd on 1 = 1
               join v\$instance i on 1 = 1
@@ -1198,7 +1336,25 @@ sql_jobs () {
                               on  jd.owner = jm.OWNER
                               AND jd.JOB_NAME = jm.JOB_NAME
                               AND jd.LOG_ID = jm.LOG_ID
-              WHERE not (j.auto_drop = 'TRUE' and REPEAT_INTERVAL is null);"
+              WHERE vd.database_role = ''PRIMARY''
+                AND vd.open_mode = ''READ WRITE''
+                AND not (j.auto_drop = '''TRUE'' and REPEAT_INTERVAL is null)'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from  v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (102): ' ||sqlerrm);
+                          end loop;
+                  end;
+              END;
+              /
+              set serverout off"
+
     fi
 }
 
@@ -1492,7 +1648,7 @@ sql_locks_old () {
                   exception
                       when others then
                           for cur1 in (select upper(i.instance_name) instance_name from  v\$instance i) loop
-                              dbms_output.put_line(cur1.instance_name || '|||||||||'||sqlerrm);
+                              dbms_output.put_line(cur1.instance_name || '| Debug (101): '||sqlerrm);
                           end loop;
                   end;
               END;

@@ -1,0 +1,23 @@
+Title: mk_oracle: better support for mounted databases
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1571912027
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The plugin {{mk_oracle}} showed multiple lines with errors when a database was not
+opened. That created some problems in oracle_jobs, which have been fixed.
+All other SQLs with select from the data dictionary have been redesigned to
+reduce multiple error lines to one debug line.
+
+Incomaptble Change:
+This is an incompatble Change for installations with Databases who are not opened
+in 'read write' mode. Databases in mounted state are not affected by this change!
+The SQL for oracle_jobs selects data when the Database in Primary role and
+opened 'READ WRITE'.
+
+Please update the agent plugin {{mk_oracle}}

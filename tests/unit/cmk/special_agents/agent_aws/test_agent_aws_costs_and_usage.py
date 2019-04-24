@@ -2,6 +2,7 @@
 
 from agent_aws_fake_clients import (
     CEGetCostsAndUsageInstanceCreator,)
+
 from cmk.special_agents.agent_aws import (
     AWSConfig,
     CostsAndUsage,

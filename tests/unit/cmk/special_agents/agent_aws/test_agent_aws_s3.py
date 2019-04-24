@@ -2,9 +2,11 @@
 
 import pytest
 from agent_aws_fake_clients import (
+    FakeCloudwatchClient,
     S3ListBucketsInstanceCreator,
     S3BucketTaggingInstanceCreator,
 )
+
 from cmk.special_agents.agent_aws import (
     AWSConfig,
     ResultDistributor,
@@ -13,31 +15,6 @@ from cmk.special_agents.agent_aws import (
     S3,
     S3Requests,
 )
-
-
-class FakeCloudwatchClient(object):
-    def get_metric_data(self, MetricDataQueries, StartTime='START', EndTime='END'):
-        results = []
-        for query in MetricDataQueries:
-            results.append({
-                'Id': query['Id'],
-                'Label': query['Label'],
-                'Timestamps': ["1970-01-01",],
-                'Values': [123.0,],
-                'StatusCode': "'Complete' | 'InternalError' | 'PartialData'",
-                'Messages': [{
-                    'Code': 'string1',
-                    'Value': 'string1'
-                },]
-            })
-        return {
-            'MetricDataResults': results,
-            'NextToken': 'string',
-            'Messages': [{
-                'Code': 'string',
-                'Value': 'string'
-            },]
-        }
 
 
 class FakeS3Client(object):

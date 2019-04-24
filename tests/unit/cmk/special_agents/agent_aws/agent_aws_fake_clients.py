@@ -498,6 +498,12 @@ class RDSDescribeDBInstancesInstanceCreator(InstanceCreator):
 
 
 class FakeCloudwatchClient(object):
+    def describe_alarms(self, AlarmNames=None):
+        alarms = CloudwatchDescribeAlarmsInstanceCreator.create_instances(amount=2)
+        if AlarmNames:
+            alarms = [alarm for alarm in alarms if alarm['AlarmName'] in AlarmNames]
+        return {'MetricAlarms': alarms, 'NextToken': 'string'}
+
     def get_metric_data(self, MetricDataQueries, StartTime='START', EndTime='END'):
         results = []
         for query in MetricDataQueries:

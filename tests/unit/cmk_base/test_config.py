@@ -356,6 +356,32 @@ def test_host_config_datasource_program(monkeypatch, hostname, result):
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", []),
+    ("testhost2", [
+        ("abc", {
+            "param1": 1
+        }),
+        ("xyz", {
+            "param2": 1
+        }),
+    ]),
+])
+def test_host_config_special_agents(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_option(
+        "special_agents", {
+            "abc": [({
+                "param1": 1
+            }, [], ["testhost2"], {}),],
+            "xyz": [({
+                "param2": 1
+            }, [], ["testhost2"], {}),],
+        })
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).special_agents == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", ["check_mk"]),
     ("testhost2", ["dingdong"]),
 ])

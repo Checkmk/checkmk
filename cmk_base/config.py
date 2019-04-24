@@ -2523,6 +2523,22 @@ class HostConfig(object):
         return programs[0]
 
     @property
+    def special_agents(self):
+        # type: () -> List[Tuple[str, Dict]]
+        matched = []  # type: List[Tuple[str, Dict]]
+        # Previous to 1.5.0 it was not defined in which order the special agent
+        # rules overwrite each other. When multiple special agents were configured
+        # for a single host a "random" one was picked (depending on the iteration
+        # over config.special_agents.
+        # We now sort the matching special agents by their name to at least get
+        # a deterministic order of the special agents.
+        for agentname, ruleset in sorted(special_agents.items()):
+            params = self._config_cache.host_extra_conf(self.hostname, ruleset)
+            if params:
+                matched.append((agentname, params[0]))
+        return matched
+
+    @property
     def hostgroups(self):
         # type: () -> List[str]
         """Returns the list of hostgroups of this host

@@ -566,379 +566,374 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 
 /* Information boxes displayed directly in the data area */
 .wato div.info {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding-left: 1px;
-    color: $theme-color-text;
+  padding-left: 1px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  color: $theme-color-text;
 }
 
 /* Controls for the audit log paged mechanism */
 .wato div.paged_controls {
-    float: right;
-    position: relative;
-    top: 3px;
+  position: relative;
+  top: 3px;
+  float: right;
 }
 
 /* Special styles for configuration and rule editor */
 /* TODO: Reproduce these .rule elements */
 .wato div.rule {
-    width: 500px;
-    height: 140px;
-    border: 1px solid white;
-    background-color: rgba(255, 255, 255, 0.3);
-    margin-top: 10px;
-    border-radius: 4px;
-    position: relative;
-    top: 0px;
-    left: 0px;
-}
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 500px;
+  height: 140px;
+  margin-top: 10px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border: 1px solid #fff;
+  border-radius: 4px;
 
-.wato div.rule div.nr {
-    border-radius: 10px;
-    border: 1px solid white;
-    background-color: #fcd340;
-    color: black;
-    text-align: center;
+  div.nr {
+    position: absolute;
+    top: 9px;
+    left: 9px;
     width: 20px;
     height: 20px;
-    position: absolute;
-    left: 9px;
-    top: 9px;
-}
+    color: #000;
+    text-align: center;
+    background-color: #fcd340;
+    border: 1px solid #fff;
+    border-radius: 10px;
 
-.wato div.rule div.nr b {
-    position: relative;
-    top: 3px;
+    b {
+      position: relative;
+      top: 3px;
+    }
+  }
+
+  div.title {
+    position: absolute;
+    top: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+
+    &.conditions {
+      left: 40px;
+    }
+  }
+
+  div.value.title {
+    left: 390px;
+  }
+
+  div.box {
+    position: absolute;
+    top: 30px;
+    height: 90px;
+    padding: 5px;
+    background-color: #a7bec3;
+    border: 1px solid #fff;
+    border-radius: 4px;
+
+    &.conditions {
+      left: 40px;
+      width: 330px;
+    }
+
+    &.value {
+      left: 390px;
+      width: 90px;
+    }
+  }
+
+  div.condition {
+    float: none;
+  }
 }
 
 .wato img.trans {
-    width: 20px;
-    height: 13px;
+  width: 20px;
+  height: 13px;
 }
+
 .wato td.value img {
-    width: 20px;
-    height: 20px;
+  width: 20px;
+  height: 20px;
 }
+
 .wato table.ruleeditor img,
 .wato img.ruleyesno {
-    width: 22px;
-    height: 22px;
-    position: relative;
-    top: -3px;
-}
-
-.wato div.rule div.title {
-    position: absolute;
-    top: 12px;
-    color: white;
-    font-size: 10pt;
-    font-weight: bold;
-}
-
-.wato div.rule div.conditions.title {
-    left: 40px;
-}
-
-.wato div.rule div.value.title {
-    left: 390px;
-}
-
-.wato div.rule div.box {
-    position: absolute;
-    top: 30px;
-    border: 1px solid white;
-    background-color: #a7bec3;
-    padding: 5px;
-    border-radius: 4px;
-    height: 90px;
-}
-
-.wato div.rule div.conditions.box {
-    left: 40px;
-    width: 330px;
+  position: relative;
+  top: -3px;
+  width: 22px;
+  height: 22px;
 }
 
 .wato ul.conditions {
-    padding: 0;
-    margin-left: 15px;
-    margin-top: 0;
-    margin-bottom: 0;
-    list-style-type: square;
-}
+  padding: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 15px;
+  list-style-type: square;
 
-.wato ul.conditions li {
+  li {
     padding: 0;
     margin: 0;
+  }
 }
 
-.wato div.rule div.condition {
-    float: none;
-}
-
-.wato div.rule div.value.box {
-    left: 390px;
-    width: 90px;
-}
-
-.wato form.rule_editor table.hosttags td.title {
+.wato form.rule_editor {
+  table.hosttags td.title {
     min-width: 200px;
-}
+    }
 
-.wato form.rule_editor td.tag_sel {
-    vertical-align: middle;
+  td.tag_sel {
     display: table-cell;
-}
+    vertical-align: middle;
 
-.wato form.rule_editor td.tag_sel > div {
-    white-space: nowrap;
+    > div {
+      white-space: nowrap;
+    }
+  }
 }
 
 .wato table.itemlist td {
-    margin: 0;
-    padding: 0;
+  padding: 0;
+  margin: 0;
 }
 
 /* This style destroys many other td styles since
    it is too specific or too unspecific */
 /* .wato table.form td.content td {
-    padding: 0;
-    vertical-align: middle;
+  padding: 0;
+  vertical-align: middle;
 }*/
 
 .wato table.data.ruleset tr.disabled td * {
-    color: #999;
-    text-shadow: 0px 1px 0px #fff;
+  color: #999;
+  text-shadow: 0 1px 0 #fff;
 }
 
 table.data.oddeven > tbody > .matches_search > td {
-    background-color: $theme-color-nuance-2;
+  background-color: $theme-color-nuance-2;
 }
 
 /* Special styling for Timeperiods editor */
 .wato table.timeperiod td.name {
-    width: 195px;
-}
-
-form#form_timeperiod td.vlof_content input.text:first-child {
-    margin-right: 4px;
-    width: 189px;
+  width: 195px;
 }
 
 form#form_timeperiod td.vlof_content {
-    background-image: none;
+  background-image: none;
+
+  input.text:first-child {
+    width: 189px;
+    margin-right: 4px;
+  }
 }
 
 /* Value editor */
 /* TODO: Reproduce this html element */
-.wato table.data.globalvars td {
+.wato table.data.globalvars {
+  td {
     vertical-align: top;
+    }
+
+  /* TODO: Reproduce this html element */
+  img.iconbutton {
+    width: 60px;
+    height: 16px;
+  }
 }
 
 .wato div.globalvars .toggle_switch a,
 .wato div.globalvars .toggle_switch body.main .popup_menu span,
 body.main .popup_menu .wato div.globalvars .toggle_switch span {
-  border: none;
-  box-shadow: none;
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: $theme-letter-spacing-table;
   height: 16px;
-  border-radius: 8px;
-  line-height: 16px;
+  font-size: 8px;
   font-weight: $theme-font-weight-bold;
+  line-height: 16px;
+  letter-spacing: $theme-letter-spacing-table;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 8px;
+  box-shadow: none;
 }
 
 /* TODO: Reproduce this html element */
 .wato pre.ve_textarea {
-    padding: 0px;
-    margin: 0px;
-    font-size: 8pt;
-}
-
-/* TODO: Reproduce this html element */
-.wato table.data.globalvars img.iconbutton {
-    width: 60px;
-    height: 16px;
+  padding: 0;
+  margin: 0;
+  font-size: 11px;
 }
 
 /* main menu */
 form.search, div.filter_buttons {
-    padding-top: 10px;
-    clear: both;
-    display: inline-block;
-    margin-bottom: 10px;
+  display: inline-block;
+  padding-top: 10px;
+  margin-bottom: 10px;
+  clear: both;
 }
 
 .wato form.search {
-    color: $theme-color-text;
+  color: $theme-color-text;
 }
 
 .wato div.mainmenu a,
 .wato div.mainmenu body.main .popup_menu span,
 body.main .popup_menu .wato div.mainmenu span {
-    height: 104px;
-    margin: 0px 8px 8px 0px;
-    border: 1px solid $theme-color-table-border;
-    background: $theme-color-white;
-    display: block;
-    box-shadow: none;
-}
+  display: block;
+  height: 104px;
+  margin: 0 8px 8px 0;
+  background: $theme-color-white;
+  border: 1px solid $theme-color-table-border;
+  box-shadow: none;
 
-.wato div.mainmenu a:hover,
-.wato div.mainmenu body.main .popup_menu span:hover,
-body.main .popup_menu .wato div.mainmenu span:hover {
+  &:hover {
     background: $theme-color-table-background;
+  }
 }
 
-.wato div.mainmenu a {
-    width: 317px;
-    float: left;
+.wato div.mainmenu {
+  a {
     position: relative;
+    float: left;
+    width: 317px;
     padding: 0;
-}
+  }
 
-.wato div.mainmenu div {
+  div {
     text-decoration: none;
-}
 
-.wato div.mainmenu img {
+    &.title {
+      position: absolute;
+      top: 14px;
+      left: 72px;
+      padding: 0;
+      font-weight: bold;
+      color: $theme-color-table-text;
+    }
+
+    &.subtitle {
+      position: absolute;
+      top: 32px;
+      left: 72px;
+      width: 237px;
+      padding: 16px 0;
+      overflow: hidden;
+      font-size: $theme-font-size-small;
+      font-weight: 500;
+      line-height: 1.5;
+      letter-spacing: $theme-letter-spacing-table;
+      color: $theme-color-darkgrey;
+      text-rendering: optimizeLegibility;
+    }
+  }
+
+  img {
     position: absolute;
     top: 16px;
     left: 16px;
     width: 48px;
     height: 48px;
-}
-
-.wato div.mainmenu div.title {
-    font-weight: bold;
-    position: absolute;
-    left: 72px;
-    top: 14px;
-    padding: 0;
-    color: $theme-color-table-text;
-}
-
-.wato div.mainmenu div.subtitle {
-    position: absolute;
-    left: 72px;
-    top: 32px;
-    width: 237px;
-    overflow: hidden;
-    color: $theme-color-darkgrey;
-    font-weight: 500;
-    line-height: 1.5;
-    font-size: $theme-font-size-small;
-    letter-spacing: $theme-letter-spacing-table;
-    text-rendering: optimizeLegibility;
-    padding: 16px 0px;
+  }
 }
 
 /* Special styles for roles editor (permissions) */
 /* TODO: Reproduce these table.form elements
  * It seems these are of class .nform now */
 .wato table.form table.permissions {
-    border-collapse: collapse;
-    border-spacing: 0px;
-    width: 100%;
-}
-.wato table.form table.permissions td {
-    /* border-top: 1px dotted white; */
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+
+  td {
     padding-top: 2px;
-}
-.wato table.form table.permissions td.select {
-    width: 120px;
-}
-.wato table.form table.permissions td.descr {
-    vertical-align: middle;
-}
-.wato table.form table.permissions select {
+
+    &.select {
+      width: 120px;
+    }
+
+    &.descr {
+      vertical-align: middle;
+    }
+  }
+
+  select {
     width: 110px;
+  }
 }
 
 /* page "Rulesets" */
 /* TODO: Reproduce this html element
  * It seems only div.rulesets exists, no td.rulesets */
 .wato td.rulesets {
-    padding-left: 0px;
+  padding-left: 0;
 }
 
 .wato .rulesets table.nform > tbody > tr > td.container {
-    height: auto;
+  height: auto;
 }
 
 .wato .rulesets div.ruleset {
-    float: left;
-    margin-left: 10px;
-    margin-right: 10px;
-}
+  float: left;
+  margin-right: 10px;
+  margin-left: 10px;
 
-.wato .rulesets div.ruleset div.text {
-    width: 276px;
-    padding-right: 3px;
-    overflow: hidden;
-    float: left;
-}
-
-.wato .rulesets div.ruleset div {
-    height: 16px;
-}
-
-.wato .rulesets div.ruleset a {
-    text-decoration: none;
-    color: black;
-    white-space: nowrap;
-    margin-right: 3px;
-}
-
-.wato .rulesets div.ruleset a:hover {
-    text-decoration: underline;
-}
-
-.wato .rulesets div.ruleset .dots {
-    overflow: hidden;
-}
-
-.wato .rulesets div.ruleset div.rulecount {
-    width: 16px;
-    float: left;
-    text-align: right;
-}
-
-.wato .rulesets div.ruleset a.nonzero {
-    /* font-weight: bold; */
-}
-.wato .rulesets div.ruleset a.zero {
-}
-
-.wato .rulesets div.ruleset div.rulecount.nonzero {
-    /* font-weight: bold; */
-}
-
-.wato .rulesets div.ruleset div.rulecount.zero {
-    /* color: #444; */
-}
-
-.wato .rulesets div.ruleset.nofloat {
+  &.nofloat {
     float: none;
     clear: left;
-}
+  }
 
-/* TODO: Reproduce this html element */
-.wato .rulesets div.ruleset div.help {
+  div {
+    height: 16px;
+
+    &.text {
+      float: left;
+      width: 276px;
+      padding-right: 3px;
+      overflow: hidden;
+    }
+  }
+
+  a {
+    margin-right: 3px;
+    color: #000;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .dots {
+    overflow: hidden;
+  }
+
+  div.rulecount {
+    float: left;
+    width: 16px;
+    text-align: right;
+  }
+
+  /* TODO: Reproduce this html element */
+  div.help {
     height: auto;
     clear: left;
+  }
 }
 
 input.toggle_timespecific_parameter {
-    margin-top: 5px;
+  margin-top: 5px;
 }
 
 /* Page edit_ruleset */
 /* TODO: Check whether this is still needed
  * with white color it wasn't visible anyways */
 div.varname {
-    color: white;
-    font-family: monospace, sans-serif;
+  font-family: monospace, sans-serif;
+  color: #fff;
 }
 
 ///* page "global settings*/

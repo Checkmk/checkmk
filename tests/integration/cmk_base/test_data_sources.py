@@ -6,7 +6,7 @@
 # caching is checked
 
 import pytest  # type: ignore
-from testlib import web, repo_path
+from testlib import web, repo_path  # pylint: disable=unused-import
 
 import cmk_base.config as config
 import cmk_base.modes
@@ -189,19 +189,16 @@ def test_mode_inventory_caching(test_cfg, hosts, cache, force, monkeypatch):
     kwargs.update(force[1])
 
     if cache[0] is None:
-        if not hosts[0]:
-            kwargs["_may_use_cache_file"] = True
-        else:
-            kwargs["_may_use_cache_file"] = False
+        kwargs["_may_use_cache_file"] = not hosts[0]
 
     _patch_data_source_run(monkeypatch, **kwargs)
 
     config_cache = config.get_config_cache()
 
     try:
-        if cache[0] == True:
+        if cache[0] is True:
             cmk_base.modes.check_mk.option_cache()
-        elif cache[0] == False:
+        elif cache[0] is False:
             cmk_base.modes.check_mk.option_no_cache()  # --no-cache
 
         options = {}
@@ -218,7 +215,8 @@ def test_mode_inventory_caching(test_cfg, hosts, cache, force, monkeypatch):
         else:
             valid_hosts = hosts[0]
 
-        num_runs = len([h for h in valid_hosts if not config.is_cluster(h)]) * 2
+        num_runs = len([h for h in valid_hosts if not config_cache.get_host_config(h).is_cluster
+                       ]) * 2
 
         assert _counter_run == num_runs
     finally:

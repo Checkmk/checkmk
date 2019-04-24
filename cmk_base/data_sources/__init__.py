@@ -41,6 +41,7 @@ import socket
 import subprocess
 import sys
 import time
+from typing import List  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -186,21 +187,11 @@ class DataSources(object):
         return TCPDataSource(self._hostname, self._ipaddress)
 
     def _get_special_agent_data_sources(self):
-        special_agents = []
-
-        # Previous to 1.5.0 it was not defined in which order the special agent
-        # rules overwrite eachother. When multiple special agents were configured
-        # for a single host a "random" one was picked (depending on the iteration
-        # over config.special_agents.
-        # We now sort the matching special agents by their name to at least get
-        # a deterministic order of the special agents.
-        for agentname, ruleset in sorted(config.special_agents.items()):
-            params = self._config_cache.host_extra_conf(self._hostname, ruleset)
-            if params:
-                special_agents.append(
-                    SpecialAgentDataSource(self._hostname, self._ipaddress, agentname, params[0]))
-
-        return special_agents
+        # type: () -> List[SpecialAgentDataSource]
+        return [
+            SpecialAgentDataSource(self._hostname, self._ipaddress, agentname, params)
+            for agentname, params in self._host_config.special_agents
+        ]
 
     def get_check_plugin_names(self):
         """Returns the list of check types the caller may execute on the sections produced

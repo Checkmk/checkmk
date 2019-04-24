@@ -300,3 +300,226 @@ class CEGetCostsAndUsageInstanceCreator(InstanceCreator):
                 )),
             ))
         self.add(BoolChoice('Estimated'))
+
+
+#.
+#   .--RDS------------------------------------------------------------------
+
+
+class RDSDescribeAccountAttributesInstanceCreator(InstanceCreator):
+    def _fill_instance(self):
+        # TODO for each choice one entry
+        self.add(
+            Choice('AccountQuotaName', [
+                'DBClusters',
+                'DBClusterParameterGroups',
+                'DBInstances',
+                'EventSubscriptions',
+                'ManualSnapshots',
+                'OptionGroups',
+                'DBParameterGroups',
+                'ReadReplicasPerMaster',
+                'ReservedDBInstances',
+                'DBSecurityGroups',
+                'DBSubnetGroups',
+                'SubnetsPerDBSubnetGroup',
+                'AllocatedStorage',
+                'AuthorizationsPerDBSecurityGroup',
+                'DBClusterRoles',
+            ]))
+        self.add(Int('Used'))
+        self.add(Int('Max'))
+
+
+class RDSDescribeDBInstancesInstanceCreator(InstanceCreator):
+    def _fill_instance(self):
+        self.add(Str('DBInstanceIdentifier'))
+        self.add(Str('DBInstanceClass'))
+        self.add(Str('Engine'))
+        self.add(Str('DBInstanceStatus'))
+        self.add(Str('MasterUsername'))
+        self.add(Str('DBName'))
+        self.add(Dict(
+            'Endpoint',
+            Str('Address'),
+            Int('Port'),
+            Str('HostedZoneId'),
+        ))
+        self.add(Int('AllocatedStorage'))
+        self.add(Timestamp('InstanceCreateTime'))
+        self.add(Str('PreferredBackupWindow'))
+        self.add(Int('BackupRetentionPeriod'))
+        self.add(List(
+            'DBSecurityGroups',
+            Str('DBSecurityGroupName'),
+            Str('Status'),
+        ))
+        self.add(List(
+            'VpcSecurityGroups',
+            Str('VpcSecurityGroupId'),
+            Str('Status'),
+        ))
+        self.add(
+            List(
+                'DBParameterGroups',
+                Str('DBParameterGroupName'),
+                Str('ParameterApplyStatus'),
+            ))
+        self.add(Str('AvailabilityZone'))
+        self.add(
+            Dict(
+                'DBSubnetGroup',
+                Str('DBSubnetGroupName'),
+                Str('DBSubnetGroupDescription'),
+                Str('VpcId'),
+                Str('SubnetGroupStatus'),
+                List(
+                    'Subnets',
+                    Str('SubnetIdentifier'),
+                    Dict(
+                        'SubnetAvailabilityZone',
+                        Str('Name'),
+                    ),
+                    Str('SubnetStatus'),
+                ),
+                Str('DBSubnetGroupArn'),
+            ))
+        self.add(Str('PreferredMaintenanceWindow'))
+        self.add(
+            Dict(
+                'PendingModifiedValues',
+                Str('DBInstanceClass'),
+                Int('AllocatedStorage'),
+                Str('MasterUserPassword'),
+                Int('Port'),
+                Str('BackupRetentionPeriod'),
+                BoolChoice('MultiAZ'),
+                Str('EngineVersion'),
+                Str('LicenseModel'),
+                Int('Iops'),
+                Str('DBInstanceIdentifier'),
+                Str('StorageType'),
+                Str('CACertificateIdentifier'),
+                Str('DBSubnetGroupName'),
+                Dict(
+                    'PendingCloudwatchLogsExports',
+                    Enum('LogTypesToEnable'),
+                    Enum('LogTypesToDisable'),
+                ),
+                Dict(
+                    'ProcessorFeatures',
+                    Str('Name'),
+                    Str('Value'),
+                ),
+            ))
+        self.add(Timestamp('LatestRestorableTime'))
+        self.add(BoolChoice('MultiAZ'))
+        self.add(Str('EngineVersion'))
+        self.add(BoolChoice('AutoMinorVersionUpgrade'))
+        self.add(Str('ReadReplicaSourceDBInstanceIdentifier'))
+        self.add(Enum('ReadReplicaDBInstanceIdentifiers'))
+        self.add(Enum('ReadReplicaDBClusterIdentifiers'))
+        self.add(Str('LicenseModel'))
+        self.add(Int('Iops'))
+        self.add(List(
+            'OptionGroupMemberships',
+            Str('OptionGroupName'),
+            Str('Status'),
+        ))
+        self.add(Str('CharacterSetName'))
+        self.add(Str('SecondaryAvailabilityZone'))
+        self.add(BoolChoice('PubliclyAccessible'))
+        self.add(
+            List(
+                'StatusInfos',
+                Str('StatusType'),
+                BoolChoice('Normal'),
+                Str('Status'),
+                Str('Message'),
+            ))
+        self.add(Str('StorageType'))
+        self.add(Str('TdeCredentialArn'))
+        self.add(Int('DbInstancePort'))
+        self.add(Str('DBClusterIdentifier'))
+        self.add(BoolChoice('StorageEncrypted'))
+        self.add(Str('KmsKeyId'))
+        self.add(Str('DbiResourceId'))
+        self.add(Str('CACertificateIdentifier'))
+        self.add(
+            List(
+                'DomainMemberships',
+                Str('Domain'),
+                Str('Status'),
+                Str('FQDN'),
+                Str('IAMRoleName'),
+            ))
+        self.add(BoolChoice('CopyTagsToSnapshot'))
+        self.add(Int('MonitoringInterval'))
+        self.add(Str('EnhancedMonitoringResourceArn'))
+        self.add(Str('MonitoringRoleArn'))
+        self.add(Int('PromotionTier'))
+        self.add(Str('DBInstanceArn'))
+        self.add(Str('Timezone'))
+        self.add(BoolChoice('IAMDatabaseAuthenticationEnabled'))
+        self.add(BoolChoice('PerformanceInsightsEnabled'))
+        self.add(Str('PerformanceInsightsKMSKeyId'))
+        self.add(Int('PerformanceInsightsRetentionPeriod'))
+        self.add(Enum('EnabledCloudwatchLogsExports'))
+        self.add(List(
+            'ProcessorFeatures',
+            Str('Name'),
+            Str('Value'),
+        ))
+        self.add(BoolChoice('DeletionProtection'))
+        self.add(List(
+            'AssociatedRoles',
+            Str('RoleArn'),
+            Str('FeatureName'),
+            Str('Status'),
+        ))
+        self.add(List(
+            'ListenerEndpoint',
+            Str('Address'),
+            Int('Port'),
+            Str('HostedZoneId'),
+        ))
+
+
+#.
+#.
+#   .--fake clients--------------------------------------------------------.
+#   |           __       _               _ _            _                  |
+#   |          / _| __ _| | _____    ___| (_) ___ _ __ | |_ ___            |
+#   |         | |_ / _` | |/ / _ \  / __| | |/ _ \ '_ \| __/ __|           |
+#   |         |  _| (_| |   <  __/ | (__| | |  __/ | | | |_\__ \           |
+#   |         |_|  \__,_|_|\_\___|  \___|_|_|\___|_| |_|\__|___/           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class FakeCloudwatchClient(object):
+    def get_metric_data(self, MetricDataQueries, StartTime='START', EndTime='END'):
+        results = []
+        for query in MetricDataQueries:
+            results.append({
+                'Id': query['Id'],
+                'Label': query['Label'],
+                'Timestamps': ["1970-01-01",],
+                'Values': [123.0,],
+                'StatusCode': "'Complete' | 'InternalError' | 'PartialData'",
+                'Messages': [{
+                    'Code': 'string1',
+                    'Value': 'string1'
+                },]
+            })
+        return {
+            'MetricDataResults': results,
+            'NextToken': 'string',
+            'Messages': [{
+                'Code': 'string',
+                'Value': 'string'
+            },]
+        }
+
+
+#.

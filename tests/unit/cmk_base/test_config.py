@@ -402,6 +402,27 @@ def test_host_config_only_from(monkeypatch, hostname, result):
     assert config_cache.get_host_config(hostname).only_from == result
 
 
+@pytest.mark.parametrize("hostname,core_name,result", [
+    ("testhost1", "cmc", None),
+    ("testhost2", "cmc", "command1"),
+    ("testhost3", "cmc", "smart"),
+    ("testhost3", "nagios", "ping"),
+])
+def test_host_config_explicit_check_command(monkeypatch, hostname, core_name, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_option("monitoring_core", core_name)
+    ts.set_option(
+        "host_check_commands",
+        [
+            ("command1", [], ["testhost2"], {}),
+            ("command2", [], ["testhost2"], {}),
+            ("smart", [], ["testhost3"], {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).explicit_check_command == result
+
+
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", ["check_mk"]),
     ("testhost2", ["dingdong"]),

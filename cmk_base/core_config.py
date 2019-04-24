@@ -100,19 +100,16 @@ def host_check_command(config_cache,
                        is_clust,
                        hostcheck_commands_to_define=None,
                        custom_commands_to_define=None):
-    # Check dedicated host check command
-    values = config_cache.host_extra_conf(host_config.hostname, config.host_check_commands)
-    if values:
-        value = values[0]
+
+    explicit_command = host_config.explicit_check_command
+    if explicit_command is not None:
+        value = explicit_command
     elif host_config.is_no_ip_host:
         value = "ok"
     elif config.monitoring_core == "cmc":
         value = "smart"
     else:
         value = "ping"
-
-    if config.monitoring_core != "cmc" and value == "smart":
-        value = "ping"  # avoid problems when switching back to nagios core
 
     if value == "smart" and not is_clust:
         return "check-mk-host-smart"

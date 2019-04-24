@@ -358,46 +358,6 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, "Check_MK"))
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
-    # legacy checks via legacy_checks
-    legchecks = config_cache.host_extra_conf(hostname, config.legacy_checks)
-    if len(legchecks) > 0:
-        outfile.write("\n\n# Legacy checks\n")
-    for command, description, has_perfdata in legchecks:
-        description = config.get_final_service_description(hostname, description)
-        if do_omit_service(hostname, description):
-            continue
-
-        if description in used_descriptions:
-            cn, it = used_descriptions[description]
-            core_config.warning(
-                "ERROR: Duplicate service description (legacy check) '%s' for host '%s'!\n"
-                " - 1st occurrance: checktype = %s, item = %r\n"
-                " - 2nd occurrance: checktype = legacy(%s), item = None\n" % (description, hostname,
-                                                                              cn, it, command))
-            continue
-
-        else:
-            used_descriptions[description] = ("legacy(" + command + ")", description)
-
-        if has_perfdata:
-            template = "check_mk_perf,"
-        else:
-            template = ""
-
-        service_spec = {
-            "use": "%scheck_mk_default" % template,
-            "host_name": hostname,
-            "service_description": description,
-            "check_command": _simulate_command(cfg, command),
-            "active_checks_enabled": 1,
-        }
-        service_spec.update(core_config.get_service_attributes(hostname, description, config_cache))
-        service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
-        outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
-
-        # write service dependencies for legacy checks
-        outfile.write(get_dependencies(hostname, description).encode("utf-8"))
-
     # legacy checks via active_checks
     actchecks = []
     for plugin_name, entries in host_config.active_checks:
@@ -576,7 +536,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                     }).encode("utf-8"))
 
     # No check_mk service, no legacy service -> create PING service
-    if not have_at_least_one_service and not legchecks and not actchecks and not custchecks:
+    if not have_at_least_one_service and not actchecks and not custchecks:
         _add_ping_service(cfg, config_cache, host_config,
                           host_attrs["address"], host_config.is_ipv6_primary and 6 or 4, "PING",
                           host_attrs.get("_NODEIPS"))

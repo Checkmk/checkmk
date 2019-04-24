@@ -936,7 +936,6 @@ DiscoveredServicesTable = Dict[Tuple[str, str], Tuple[str, str]]
 #    "new"           : Check is discovered but currently not yet monitored
 #    "old"           : Check is discovered and already monitored (most common)
 #    "vanished"      : Check had been discovered previously, but item has vanished
-#    "legacy"        : Check is defined via legacy_checks
 #    "active"        : Check is defined via active_checks
 #    "custom"        : Check is defined via custom_checks
 #    "manual"        : Check is a manual Check_MK check without service discovery
@@ -1022,10 +1021,6 @@ def _merge_manual_services(host_config, services, on_error):
         services[(check_plugin_name, item)] = ('manual', repr(params))
 
     config_cache = config.get_config_cache()
-    # Add legacy checks -> "legacy"
-    legchecks = config_cache.host_extra_conf(hostname, config.legacy_checks)
-    for _unused_cmd, descr, _unused_perf in legchecks:
-        services[('legacy', descr)] = ('legacy', 'None')
 
     # Add custom checks -> "custom"
     custchecks = config_cache.host_extra_conf(hostname, config.custom_checks)

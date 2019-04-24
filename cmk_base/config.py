@@ -166,7 +166,7 @@ def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
         verify_non_invalid_variables(vars_before_config)
         _verify_no_deprecated_check_rulesets()
 
-    verify_snmp_communities_type()
+    _verify_no_deprecated_variables_used()
 
 
 def load_packed_config():
@@ -405,10 +405,17 @@ def verify_non_invalid_variables(vars_before_config):
         sys.exit(1)
 
 
-def verify_snmp_communities_type():
-    # Special handling for certain deprecated variables
+def _verify_no_deprecated_variables_used():
     if isinstance(snmp_communities, dict):
         console.error("ERROR: snmp_communities cannot be a dict any more.\n")
+        sys.exit(1)
+
+    # Legacy checks have never been supported by CMC, were not configurable via WATO
+    # and have been removed with Check_MK 1.6
+    if legacy_checks:
+        console.error(
+            "Check_MK does not support the configuration variable \"legacy_checks\" anymore. "
+            "Please use custom_checks or active_checks instead.\n")
         sys.exit(1)
 
 

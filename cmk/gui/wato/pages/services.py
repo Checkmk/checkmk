@@ -95,13 +95,15 @@ class DiscoveryState(object):
     MANUAL = "manual"
     ACTIVE = "active"
     CUSTOM = "custom"
-    LEGACY = "legacy"
     CLUSTERED_OLD = "clustered_old"
     CLUSTERED_NEW = "clustered_new"
     CLUSTERED_VANISHED = "clustered_vanished"
     CLUSTERED_IGNORED = "clustered_ignored"
     ACTIVE_IGNORED = "active_ignored"
     CUSTOM_IGNORED = "custom_ignored"
+    # TODO: Were removed in 1.6 from base. Keeping this for
+    # compatibility with older remote sites. Remove with 1.7.
+    LEGACY = "legacy"
     LEGACY_IGNORED = "legacy_ignored"
 
     @classmethod
@@ -1483,6 +1485,8 @@ class DiscoveryPageRenderer(object):
                     "These services have not been found by the discovery but have been added "
                     "manually by a rule in the WATO module <i>Manual checks</i>."),
             ),
+            # TODO: Were removed in 1.6 from base. Keeping this for
+            # compatibility with older remote sites. Remove with 1.7.
             TableGroupEntry(
                 table_group=DiscoveryState.LEGACY,
                 show_bulk_actions=False,
@@ -1546,6 +1550,8 @@ class DiscoveryPageRenderer(object):
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."),
             ),
+            # TODO: Were removed in 1.6 from base. Keeping this for
+            # compatibility with older remote sites. Remove with 1.7.
             TableGroupEntry(
                 table_group=DiscoveryState.LEGACY_IGNORED,
                 show_bulk_actions=False,

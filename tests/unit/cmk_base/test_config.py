@@ -495,6 +495,29 @@ def test_host_config_extra_host_attributes(monkeypatch, hostname, result):
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", {}),
+    ("testhost2", {
+        'value1': 1,
+        'value2': 2,
+    }),
+])
+def test_host_config_inventory_parameters(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_option("inv_parameters", {
+        "if": [
+            ({
+                "value1": 1,
+            }, [], ["testhost2"], {}),
+            ({
+                "value2": 2,
+            }, [], ["testhost2"], {}),
+        ],
+    })
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).inventory_parameters("if") == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", ["check_mk"]),
     ("testhost2", ["dingdong"]),
 ])

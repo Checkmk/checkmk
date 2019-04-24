@@ -2595,6 +2595,11 @@ class HostConfig(object):
                     attrs[key] = values[0]
         return attrs
 
+    def inventory_parameters(self, section_name):
+        # type: (str) -> Dict
+        return self._config_cache.host_extra_conf_merged(self.hostname,
+                                                         inv_parameters.get(section_name, []))
+
     @property
     def hostgroups(self):
         # type: () -> List[str]

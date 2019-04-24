@@ -569,6 +569,44 @@ def test_host_config_notification_plugin_parameters(monkeypatch, hostname, resul
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", []),
+    ("testhost2", [
+        (
+            "abc",
+            [{
+                "param1": 1
+            }, {
+                "param2": 2
+            }],
+        ),
+        ("xyz", [
+            {
+                "param2": 1
+            },
+        ]),
+    ]),
+])
+def test_host_config_active_checks(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_option(
+        "active_checks", {
+            "abc": [
+                ({
+                    "param1": 1
+                }, [], ["testhost2"], {}),
+                ({
+                    "param2": 2
+                }, [], ["testhost2"], {}),
+            ],
+            "xyz": [({
+                "param2": 1
+            }, [], ["testhost2"], {}),],
+        })
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).active_checks == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", ["check_mk"]),
     ("testhost2", ["dingdong"]),
 ])

@@ -1373,7 +1373,7 @@ _check_contexts = {}  # type: Dict[str, Any]
 
 # The following data structures will be filled by the checks
 # all known checks
-check_info = {}  # type: Dict[str, Union[Tuple[Any], Dict[str, Any]]]
+check_info = {}  # type: Dict[str, Dict[str, Any]]
 # library files needed by checks
 check_includes = {}  # type: Dict[str, List[Any]]
 # optional functions for parameter precompilation
@@ -2616,6 +2616,25 @@ class HostConfig(object):
             self.hostname, notification_parameters.get(plugin_name, []))
 
     @property
+    def active_checks(self):
+        # type: () -> List[Tuple[str, List[Any]]]
+        """Returns the list of active checks configured for this host"""
+        configured_checks = []  # type: List[Tuple[str, List[Any]]]
+        for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
+            # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
+            # user has enabled the inventory for ping only hosts
+            if plugin_name == "cmk_inv" and self.is_ping_host:
+                continue
+
+            entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
+            if not entries:
+                continue
+
+            configured_checks.append((plugin_name, entries))
+
+        return configured_checks
+
+    @property
     def hostgroups(self):
         # type: () -> List[str]
         """Returns the list of hostgroups of this host
@@ -2723,6 +2742,8 @@ class HostConfig(object):
     @property
     def do_status_data_inventory(self):
         # type: () -> bool
+
+        # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
         rules = active_checks.get('cmk_inv')
         if rules is None:
             return False
@@ -2742,6 +2763,8 @@ class HostConfig(object):
     @property
     def do_host_label_discovery(self):
         # type: () -> bool
+
+        # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
         rules = active_checks.get('cmk_inv')
         if rules is None:
             return True

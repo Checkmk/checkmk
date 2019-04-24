@@ -400,18 +400,11 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
     # legacy checks via active_checks
     actchecks = []
-    for acttype, rules in config.active_checks.items():
-        entries = config_cache.host_extra_conf(hostname, rules)
-        if entries:
-            # Skip Check_MK HW/SW Inventory for all ping hosts, even when the user has enabled
-            # the inventory for ping only hosts
-            if acttype == "cmk_inv" and host_config.is_ping_host:
-                continue
-
-            cfg.active_checks_to_define.add(acttype)
-            act_info = config.active_check_info[acttype]
-            for params in entries:
-                actchecks.append((acttype, act_info, params))
+    for plugin_name, entries in host_config.active_checks:
+        cfg.active_checks_to_define.add(plugin_name)
+        act_info = config.active_check_info[plugin_name]
+        for params in entries:
+            actchecks.append((plugin_name, act_info, params))
 
     if actchecks:
         outfile.write("\n\n# Active checks\n")

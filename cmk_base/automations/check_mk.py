@@ -33,6 +33,7 @@ import time
 import shutil
 import cStringIO
 import contextlib
+from typing import Tuple, Optional, Dict, Any, Text, List  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -702,17 +703,15 @@ class AutomationAnalyseServices(Automation):
                     return result
 
         # 4. Active checks
-        for acttype, rules in config.active_checks.items():
-            entries = config_cache.host_extra_conf(hostname, rules)
-            if entries:
-                for params in entries:
-                    description = config.active_check_service_description(hostname, acttype, params)
-                    if description == servicedesc:
-                        return {
-                            "origin": "active",
-                            "checktype": acttype,
-                            "parameters": params,
-                        }
+        for plugin_name, entries in host_config.active_checks:
+            for params in entries:
+                description = config.active_check_service_description(hostname, plugin_name, params)
+                if description == servicedesc:
+                    return {
+                        "origin": "active",
+                        "checktype": plugin_name,
+                        "parameters": params,
+                    }
 
         return {}  # not found
 
@@ -1318,6 +1317,7 @@ class AutomationActiveCheck(Automation):
         item = item.decode("utf-8")
 
         config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
 
         if plugin == "custom":
             custchecks = config_cache.host_extra_conf(hostname, config.custom_checks)
@@ -1331,23 +1331,21 @@ class AutomationActiveCheck(Automation):
 
                     return -1, "Passive check - cannot be executed"
         else:
-            rules = config.active_checks.get(plugin)
-            if rules:
-                entries = config_cache.host_extra_conf(hostname, rules)
-                if entries:
-                    act_info = config.active_check_info[plugin]
-                    # Set host name for host_name()-function (part of the Check API)
-                    # (used e.g. by check_http)
-                    check_api_utils.set_hostname(hostname)
-                    for params in entries:
-                        description = config.active_check_service_description(
-                            hostname, plugin, params)
-                        if description == item:
-                            args = core_config.active_check_arguments(
-                                hostname, description, act_info["argument_function"](params))
-                            command_line = self._replace_core_macros(
-                                hostname, act_info["command_line"].replace("$ARG1$", args))
-                            return self._execute_check_plugin(command_line)
+            act_info = config.active_check_info[plugin]
+            # Set host name for host_name()-function (part of the Check API)
+            # (used e.g. by check_http)
+            check_api_utils.set_hostname(hostname)
+
+            for params in dict(host_config.active_checks).get(plugin, []):
+                description = config.active_check_service_description(hostname, plugin, params)
+                if description != item:
+                    continue
+
+                args = core_config.active_check_arguments(hostname, description,
+                                                          act_info["argument_function"](params))
+                command_line = self._replace_core_macros(
+                    hostname, act_info["command_line"].replace("$ARG1$", args))
+                return self._execute_check_plugin(command_line)
 
     def _load_resource_file(self, macros):
         try:
@@ -1522,28 +1520,31 @@ class AutomationGetServiceConfigurations(Automation):
         result = {"hosts": {}}
         config_cache = config.get_config_cache()
         for hostname in config_cache.all_active_hosts():
-            result["hosts"][hostname] = self._get_config_for_host(config_cache, hostname)
+            host_config = config_cache.get_host_config(hostname)
+            result["hosts"][hostname] = self._get_config_for_host(host_config)
 
         result["checkgroup_of_checks"] = self._get_checkgroup_of_checks()
         return result
 
-    def _get_config_for_host(self, config_cache, hostname):
+    def _get_config_for_host(self, host_config):
+        # type: (config.HostConfig) -> Dict[str, List[Tuple[str, Text, Any]]]
         return {
-            "checks": check_table.get_check_table(hostname, remove_duplicates=True),
-            "active_checks": self._get_active_checks(config_cache, hostname)
+            "checks": check_table.get_check_table(host_config.hostname, remove_duplicates=True),
+            "active_checks": self._get_active_checks(host_config)
         }
 
-    def _get_active_checks(self, config_cache, hostname):
-        # legacy checks via active_checks
+    def _get_active_checks(self, host_config):
+        # type: (config.HostConfig) -> List[Tuple[str, Text, Any]]
         actchecks = []
-        for acttype, rules in config.active_checks.iteritems():
-            entries = config_cache.host_extra_conf(hostname, rules)
+        for plugin_name, entries in host_config.active_checks:
             for params in entries:
-                description = config.active_check_service_description(hostname, acttype, params)
-                actchecks.append((acttype, description, params))
+                description = config.active_check_service_description(host_config.hostname,
+                                                                      plugin_name, params)
+                actchecks.append((plugin_name, description, params))
         return actchecks
 
     def _get_checkgroup_of_checks(self):
+        # type: () -> Dict[str, Optional[str]]
         checkgroup_of_checks = {}
         for check_plugin_name, check in config.check_info.items():
             checkgroup_of_checks[check_plugin_name] = check.get("group")

@@ -210,7 +210,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
         host_spec["check_command"] = command
 
     hostgroups = host_config.hostgroups
-    if config.define_hostgroups:
+    if config.define_hostgroups or hostgroups == [config.default_host_group]:
         cfg.hostgroups_to_define.update(hostgroups)
     host_spec["hostgroups"] = ",".join(hostgroups)
 

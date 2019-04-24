@@ -28,6 +28,7 @@ import os
 import socket
 import time
 import signal
+from typing import Callable, List, Text, Optional, Dict, Tuple  # pylint: disable=unused-import
 
 from cmk.utils.regex import regex
 import cmk.utils.tty as tty
@@ -322,13 +323,17 @@ def discover_on_host(config_cache,
 
 @cmk_base.decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def check_discovery(hostname, ipaddress):
+    # type: (str, Optional[str]) -> Tuple[int, List[Text], List[Text], List[Tuple]]
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
     params = discovery_check_parameters(hostname) or \
              default_discovery_check_parameters()
 
-    status, infotexts, long_infotexts, perfdata = 0, [], [], []
+    status = 0
+    infotexts = []
+    long_infotexts = []
+    perfdata = []  # type: List[Tuple]
 
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
@@ -346,12 +351,13 @@ def check_discovery(hostname, ipaddress):
         sources, use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
 
     services = _get_host_services(
-        hostname, ipaddress, sources, multi_host_sections, on_error="raise")
+        host_name, ipaddress, sources, multi_host_sections, on_error="raise")
 
     need_rediscovery = False
 
     params_rediscovery = params.get("inventory_rediscovery", {})
 
+    item_filters = None  # type: Optional[Callable]
     if params_rediscovery.get("service_whitelist", []) or\
             params_rediscovery.get("service_blacklist", []):
         # whitelist. if none is specified, this matches everything
@@ -363,15 +369,13 @@ def check_discovery(hostname, ipaddress):
 
         item_filters = lambda hostname, check_plugin_name, item:\
                 _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, blacklist)
-    else:
-        item_filters = None
 
     for check_state, title, params_key, default_state in [
         ("new", "unmonitored", "severity_unmonitored", config.inventory_check_severity),
         ("vanished", "vanished", "severity_vanished", 0),
     ]:
 
-        affected_check_plugin_names = {}
+        affected_check_plugin_names = {}  # type: Dict[str, int]
         count = 0
         unfiltered = False
 
@@ -386,15 +390,15 @@ def check_discovery(hostname, ipaddress):
                     unfiltered = True
 
                 long_infotexts.append(
-                    "%s: %s: %s" % (title, check_plugin_name,
-                                    config.service_description(hostname, check_plugin_name, item)))
+                    u"%s: %s: %s" % (title, check_plugin_name,
+                                     config.service_description(hostname, check_plugin_name, item)))
 
         if affected_check_plugin_names:
             info = ", ".join(["%s:%d" % e for e in affected_check_plugin_names.items()])
             st = params.get(params_key, default_state)
             status = cmk_base.utils.worst_service_state(status, st)
             infotexts.append(
-                "%d %s services (%s)%s" % (count, title, info, check_api_utils.state_markers[st]))
+                u"%d %s services (%s)%s" % (count, title, info, check_api_utils.state_markers[st]))
 
             if params.get("inventory_rediscovery", False):
                 mode = params["inventory_rediscovery"]["mode"]
@@ -403,13 +407,13 @@ def check_discovery(hostname, ipaddress):
                          (check_state == "vanished" and mode in ( 1, 2, 3 ))):
                     need_rediscovery = True
         else:
-            infotexts.append("no %s services found" % title)
+            infotexts.append(u"no %s services found" % title)
 
     for (check_plugin_name, item), (check_source, _unused_paramstring) in services.items():
         if check_source == "ignored":
             long_infotexts.append(
-                "ignored: %s: %s" % (check_plugin_name,
-                                     config.service_description(hostname, check_plugin_name, item)))
+                u"ignored: %s: %s" %
+                (check_plugin_name, config.service_description(hostname, check_plugin_name, item)))
 
     if need_rediscovery:
         if host_config.is_cluster:
@@ -417,7 +421,7 @@ def check_discovery(hostname, ipaddress):
                 _set_rediscovery_flag(nodename)
         else:
             _set_rediscovery_flag(hostname)
-        infotexts.append("rediscovery scheduled")
+        infotexts.append(u"rediscovery scheduled")
 
     # Add data source information to check results
     for source in sources.get_data_sources():
@@ -425,7 +429,7 @@ def check_discovery(hostname, ipaddress):
         # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
         if source_state != 0:
             status = max(status, source_state)
-            infotexts.append("[%s] %s" % (source.id(), source_output))
+            infotexts.append(u"[%s] %s" % (source.id(), source_output))
 
     return status, infotexts, long_infotexts, perfdata
 
@@ -923,6 +927,9 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
     return results
 
 
+DiscoveredServicesTable = Dict[Tuple[str, str], Tuple[str, str]]
+
+
 # Creates a table of all services that a host has or could have according
 # to service discovery. The result is a dictionary of the form
 # (check_plugin_name, item) -> (check_source, paramstring)
@@ -939,6 +946,7 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
 def _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_error):
+    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
     if host_config.is_cluster:
         return _get_cluster_services(host_config.hostname, ipaddress, sources, multi_host_sections,
                                      on_error)
@@ -949,6 +957,7 @@ def _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_
 
 # Do the actual work for a non-cluster host or node
 def _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_error):
+    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
     services = _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, on_error)
 
     config_cache = config.get_config_cache()
@@ -976,8 +985,9 @@ def _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_err
 
 # Part of _get_node_services that deals with discovered services
 def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, on_error):
+    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
     # Create a dict from check_plugin_name/item to check_source/paramstring
-    services = {}
+    services = {}  # type: DiscoveredServicesTable
 
     # In 'multi_host_sections = _get_host_sections_for_discovery(..)'
     # we've already discovered the right check plugin names.
@@ -1056,6 +1066,7 @@ def _merge_manual_services(services, hostname, on_error):
 
 # Do the work for a cluster
 def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_error):
+    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
     nodes = config.nodes_of(hostname)
 
     config_cache = config.get_config_cache()
@@ -1068,7 +1079,7 @@ def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
-    cluster_items = {}
+    cluster_items = {}  # type: DiscoveredServicesTable
     for node in nodes:
         node_ipaddress = ip_lookup.lookup_ip_address(node)
         node_sources = _get_sources_for_discovery(

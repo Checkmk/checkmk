@@ -645,7 +645,7 @@ class AWSSection(object):
 
         now = time.time()
         try:
-            age = now - self._cache_file.stat().st_mtime
+            mtime = self._cache_file.stat().st_mtime
         except OSError as e:
             if e.errno == 2:
                 logging.info("No such file or directory %s (calculate age)", self._cache_file)
@@ -654,11 +654,12 @@ class AWSSection(object):
                 logging.info("Cannot calculate cache file age: %s", e)
                 raise
 
+        age = now - mtime
         if age >= self.interval:
             logging.info("Cache file %s is outdated", self._cache_file)
             return False
 
-        if colleague_contents.cache_timestamp > now:
+        if colleague_contents.cache_timestamp > mtime:
             logging.info("Colleague data is newer than cache file %s", self._cache_file)
             return False
         return True

@@ -1,22 +1,11 @@
 # encoding: utf-8
 
-import pytest
-
+from agent_aws_fake_clients import (
+    CEGetCostsAndUsageInstanceCreator,)
 from cmk.special_agents.agent_aws import (
     AWSConfig,
     CostsAndUsage,
 )
-
-#TODO what about enums?
-
-#   .--fake client---------------------------------------------------------.
-#   |             __       _               _ _            _                |
-#   |            / _| __ _| | _____    ___| (_) ___ _ __ | |_              |
-#   |           | |_ / _` | |/ / _ \  / __| | |/ _ \ '_ \| __|             |
-#   |           |  _| (_| |   <  __/ | (__| | |  __/ | | | |_              |
-#   |           |_|  \__,_|_|\_\___|  \___|_|_|\___|_| |_|\__|             |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 
 class FakeCEClient(object):
@@ -27,32 +16,8 @@ class FakeCEClient(object):
                 'Type': "'DIMENSION' | 'TAG'",
                 'Key': 'string'
             },],
-            'ResultsByTime': [{
-                'TimePeriod': {
-                    'Start': 'string',
-                    'End': 'string'
-                },
-                'Total': {
-                    'string': {
-                        'Amount': 'string',
-                        'Unit': 'string'
-                    }
-                },
-                'Groups': [{
-                    'Keys': ['string',],
-                    'Metrics': {
-                        'string': {
-                            'Amount': 'string',
-                            'Unit': 'string'
-                        }
-                    }
-                },],
-                'Estimated': "True | False",
-            },]
+            'ResultsByTime': CEGetCostsAndUsageInstanceCreator.create_instances(amount=1),
         }
-
-
-#.
 
 
 def test_agent_aws_costs_and_usage():

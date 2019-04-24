@@ -78,7 +78,7 @@ input, input[type=text], input[type=password], select, textarea, div.snapin text
   input[type=radio], select[type=radio], textarea[type=radio], div.snapin select[type=radio], div.snapin textarea[type=radio], [type=radio]#mk_side_search_field {
     width: auto;
     margin-bottom: 0px; }
-  input.toggle_timespecific_parameter, select.toggle_timespecific_parameter, textarea.toggle_timespecific_parameter, div.snapin select.toggle_timespecific_parameter, div.snapin textarea.toggle_timespecific_parameter, .toggle_timespecific_parameter#mk_side_search_field {
+  select.toggle_timespecific_parameter, textarea.toggle_timespecific_parameter, div.snapin select.toggle_timespecific_parameter, div.snapin textarea.toggle_timespecific_parameter, .toggle_timespecific_parameter#mk_side_search_field {
     display: block; }
 
 select:not([multiple]) {
@@ -225,8 +225,6 @@ table {
       background-color: transparent; }
     table.data.oddeven > tbody > tr:nth-child(even) {
       background-color: transparent; }
-    table.data.oddeven > tbody > .matches_search > td, table.data.oddeven > tbody > .matches_search > td {
-      background-color: $theme-color-nuance-2 !important; }
     table.data.headerleft {
       border-spacing: 0px; }
       table.data.headerleft tbody tr td, table.data.headerleft tbody tr th, table.data.headerleft tbody tr td:nth-child(odd), table.data.headerleft tbody tr th:nth-child(odd), table.data.headerleft tbody tr td:nth-child(even), table.data.headerleft tbody tr th:nth-child(even) {
@@ -364,42 +362,12 @@ div.graph_with_timeranges {
       padding: 24px 12px 18px 12px; }
   .wato .search {
     display: block; }
-  .wato div.mainmenu a, .wato div.mainmenu body.main .popup_menu span, body.main .popup_menu .wato div.mainmenu span {
-    height: 104px;
-    margin: 0px 8px 8px 0px;
-    border: 1px solid $theme-color-table-border;
-    background: $theme-color-white;
-    display: block;
-    box-shadow: none; }
-    .wato div.mainmenu a:hover, .wato div.mainmenu body.main .popup_menu span:hover, body.main .popup_menu .wato div.mainmenu span:hover {
-      background: $theme-color-table-background; }
-  .wato div.mainmenu img {
-    top: 16px;
-    left: 16px; }
-  .wato div.mainmenu .title {
-    left: 80px;
-    padding: 0;
-    color: $theme-color-table-text; }
-  .wato div.mainmenu .subtitle {
-    left: 80px;
-    width: 200px;
-    color: $theme-color-darkgrey;
-    font-weight: 500;
-    line-height: 1.5;
-    font-size: $theme-font-size-small;
-    letter-spacing: $theme-letter-spacing-table;
-    text-rendering: optimizeLegibility;
-    padding: 16px 0px; }
   .wato .diag_host .log {
     box-shadow: none;
     padding: 8px;
     margin: 8px;
     border-radius: $theme-border-radius;
     border: 1px solid $theme-color-table-border; }
-  .wato form.search {
-    color: $theme-color-text; }
-  .wato div.info {
-    color: $theme-color-text; }
   .wato h3 {
     color: $theme-color-text;
     font-weight: $theme-font-weight-global;
@@ -457,7 +425,7 @@ table.cmc_stats {
 select.vlof_filter {
   width: auto; }
 
-.toggle_switch, .wato div.globalvars .toggle_switch {
+.toggle_switch {
   box-sizing: border-box;
   border: 1px solid $theme-color-table-border;
   background: $theme-color-white;
@@ -465,7 +433,7 @@ select.vlof_filter {
   height: 22px;
   padding: 2px;
   border-radius: 11px; }
-  .toggle_switch a, .wato div.globalvars .toggle_switch a, .toggle_switch body.main .popup_menu span, body.main .popup_menu .toggle_switch span {
+  .toggle_switch a, .toggle_switch body.main .popup_menu span, body.main .popup_menu .toggle_switch span {
     border: none;
     box-shadow: none;
     font-size: 8px;
@@ -475,17 +443,6 @@ select.vlof_filter {
     border-radius: 8px;
     line-height: 16px;
     font-weight: $theme-font-weight-bold; }
-
-.wato div.globalvars .toggle_switch a, .wato div.globalvars .toggle_switch body.main .popup_menu span, body.main .popup_menu .wato div.globalvars .toggle_switch span {
-  border: none;
-  box-shadow: none;
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: $theme-letter-spacing-table;
-  height: 16px;
-  border-radius: 8px;
-  line-height: 16px;
-  font-weight: $theme-font-weight-bold; }
 
 div.timerange {
   font-size: $theme-font-size-main;

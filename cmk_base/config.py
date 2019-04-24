@@ -2553,6 +2553,18 @@ class HostConfig(object):
         return entries[0]
 
     @property
+    def explicit_check_command(self):
+        # type: () -> Optional[str]
+        entries = self._config_cache.host_extra_conf(self.hostname, host_check_commands)
+        if not entries:
+            return None
+
+        if entries[0] == "smart" and monitoring_core != "cmc":
+            return "ping"  # avoid problems when switching back to nagios core
+
+        return entries[0]
+
+    @property
     def hostgroups(self):
         # type: () -> List[str]
         """Returns the list of hostgroups of this host

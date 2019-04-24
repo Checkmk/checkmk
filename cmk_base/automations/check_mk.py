@@ -1125,7 +1125,6 @@ class AutomationDiagHost(Automation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
-        snmp_config = host_config.snmp_config()
 
         # In 1.5 the tcp connect timeout has been added. The automation may
         # be called from a remote site with an older version. For this reason
@@ -1158,6 +1157,8 @@ class AutomationDiagHost(Automation):
                 ipaddress = ip_lookup.lookup_ip_address(hostname)
             except:
                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
+
+        snmp_config = host_config.snmp_config(ipaddress)
 
         try:
             if test == 'ping':

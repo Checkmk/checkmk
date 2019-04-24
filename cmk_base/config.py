@@ -2610,6 +2610,11 @@ class HostConfig(object):
                 hooks.append((hookname, entries[0]))
         return hooks
 
+    def notification_plugin_parameters(self, plugin_name):
+        # type: (str) -> Dict
+        return self._config_cache.host_extra_conf_merged(
+            self.hostname, notification_parameters.get(plugin_name, []))
+
     @property
     def hostgroups(self):
         # type: () -> List[str]

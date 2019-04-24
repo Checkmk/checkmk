@@ -544,6 +544,31 @@ def test_host_config_inventory_export_hooks(monkeypatch, hostname, result):
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", {}),
+    ("testhost2", {
+        'value1': 1,
+        'value2': 2,
+    }),
+])
+def test_host_config_notification_plugin_parameters(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_option(
+        "notification_parameters", {
+            "mail": [
+                ({
+                    "value1": 1,
+                }, [], ["testhost2"], {}),
+                ({
+                    "value1": 2,
+                    "value2": 2,
+                }, [], ["testhost2"], {}),
+            ],
+        })
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).notification_plugin_parameters("mail") == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", ["check_mk"]),
     ("testhost2", ["dingdong"]),
 ])

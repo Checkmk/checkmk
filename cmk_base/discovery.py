@@ -351,7 +351,7 @@ def check_discovery(hostname, ipaddress):
         sources, use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
 
     services = _get_host_services(
-        host_name, ipaddress, sources, multi_host_sections, on_error="raise")
+        host_config, ipaddress, sources, multi_host_sections, on_error="raise")
 
     need_rediscovery = False
 

@@ -383,8 +383,8 @@ def _icons_and_actions_of_service(config_cache, host_config, svcdesc, checkname,
 
 
 def get_host_attributes(hostname, config_cache):
-    attrs = _extra_host_attributes(config_cache, hostname)
     host_config = config_cache.get_host_config(hostname)
+    attrs = host_config.extra_host_attributes
 
     # Pre 1.6 legacy attribute. We have changed our whole code to use the
     # livestatus column "tags" which is populated by all attributes starting with
@@ -452,19 +452,6 @@ def get_host_attributes(hostname, config_cache):
 
 def _get_tag_attributes(collection, prefix):
     return {u"__%s_%s" % (prefix, k): unicode(v) for k, v in collection.iteritems()}
-
-
-def _extra_host_attributes(config_cache, hostname):
-    attrs = {}
-    for key, conflist in config.extra_host_conf.items():
-        values = config_cache.host_extra_conf(hostname, conflist)
-        if values:
-            if key[0] == "_":
-                key = key.upper()
-
-            if values[0] is not None:
-                attrs[key] = values[0]
-    return attrs
 
 
 def get_cluster_attributes(config_cache, host_config, nodes):

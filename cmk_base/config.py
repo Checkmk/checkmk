@@ -2577,6 +2577,11 @@ class HostConfig(object):
         return levels
 
     @property
+    def icons_and_actions(self):
+        # type: () -> List[str]
+        return list(set(self._config_cache.host_extra_conf(self.hostname, host_icons_and_actions)))
+
+    @property
     def hostgroups(self):
         # type: () -> List[str]
         """Returns the list of hostgroups of this host

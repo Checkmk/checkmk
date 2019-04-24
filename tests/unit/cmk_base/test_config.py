@@ -448,6 +448,21 @@ def test_host_config_ping_levels(monkeypatch, hostname, result):
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", []),
+    ("testhost2", ["icon1", "icon2"]),
+])
+def test_host_config_icons_and_actions(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("host_icons_and_actions", [
+        ("icon1", [], ["testhost2"], {}),
+        ("icon1", [], ["testhost2"], {}),
+        ("icon2", [], ["testhost2"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).icons_and_actions == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", ["check_mk"]),
     ("testhost2", ["dingdong"]),
 ])

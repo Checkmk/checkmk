@@ -29,7 +29,7 @@ import numbers
 import os
 import sys
 import itertools
-from typing import Optional, Any, List, Dict  # pylint: disable=unused-import
+from typing import Text, Optional, Any, List, Dict  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -168,25 +168,6 @@ def autodetect_plugin(command_line):
         except:
             pass
     return command_line
-
-
-# TODO: Better move to cmk_base.config module
-def _icons_and_actions_of(config_cache, what, hostname, svcdesc=None, checkname=None, params=None):
-    if what == 'host':
-        return list(set(config_cache.host_extra_conf(hostname, config.host_icons_and_actions)))
-    else:
-        actions = set(
-            config_cache.service_extra_conf(hostname, svcdesc, config.service_icons_and_actions))
-
-        # Some WATO rules might register icons on their own
-        if checkname:
-            checkgroup = config.check_info[checkname]["group"]
-            if checkgroup in ['ps', 'services'] and isinstance(params, dict):
-                icon = params.get('icon')
-                if icon:
-                    actions.add(icon)
-
-        return list(actions)
 
 
 def check_icmp_arguments_of(config_cache, hostname, add_defaults=True, family=None):
@@ -358,8 +339,9 @@ def _extra_service_attributes(hostname, description, config_cache, checkname, pa
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
-    actions = _icons_and_actions_of(config_cache, "service", hostname, description, checkname,
-                                    params)
+    host_config = config_cache.get_host_config(hostname)
+    actions = _icons_and_actions_of_service(config_cache, host_config, description, checkname,
+                                            params)
     if actions:
         attrs["_ACTIONS"] = ','.join(actions)
     return attrs
@@ -369,6 +351,22 @@ def _custom_service_attributes_of(config_cache, hostname, service_description):
     return dict(
         itertools.chain(*config_cache.service_extra_conf(hostname, service_description,
                                                          config.custom_service_attributes)))
+
+
+def _icons_and_actions_of_service(config_cache, host_config, svcdesc, checkname, params):
+    actions = set(
+        config_cache.service_extra_conf(host_config.hostname, svcdesc,
+                                        config.service_icons_and_actions))
+
+    # Some WATO rules might register icons on their own
+    if checkname:
+        checkgroup = config.check_info[checkname]["group"]
+        if checkgroup in ['ps', 'services'] and isinstance(params, dict):
+            icon = params.get('icon')
+            if icon:
+                actions.add(icon)
+
+    return list(actions)
 
 
 #.
@@ -442,7 +440,7 @@ def get_host_attributes(hostname, config_cache):
         attrs["_FILENAME"] = path
 
     # Add custom user icons and actions
-    actions = _icons_and_actions_of(config_cache, "host", hostname)
+    actions = host_config.icons_and_actions
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
 

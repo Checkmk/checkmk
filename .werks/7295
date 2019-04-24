@@ -1,0 +1,14 @@
+Title: postgres_stats: Optional ignore of db table
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1556035464
+Class: feature
+
+This check plugin notifies about db tables which have never been analyzed or
+vacuumed with status according to the configuration in the WATO rule
+"PostgresSQL VACUUM and ANALYZE: Age of never analyzed/vacuumed tables".
+Users can now disable this rule, such that never analyzed or vacuumed tables
+are always {OK}.

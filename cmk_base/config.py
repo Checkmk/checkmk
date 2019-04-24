@@ -2601,6 +2601,16 @@ class HostConfig(object):
                                                          inv_parameters.get(section_name, []))
 
     @property
+    def inventory_export_hooks(self):
+        # type: () -> List[Tuple[str, Dict]]
+        hooks = []  # type: List[Tuple[str, Dict]]
+        for hookname, ruleset in sorted(inv_exports.items(), key=lambda x: x[0]):
+            entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
+            if entries:
+                hooks.append((hookname, entries[0]))
+        return hooks
+
+    @property
     def hostgroups(self):
         # type: () -> List[str]
         """Returns the list of hostgroups of this host

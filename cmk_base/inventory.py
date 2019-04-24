@@ -228,7 +228,7 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
 
     inventory_tree.normalize_nodes()
     old_timestamp = _save_inventory_tree(hostname, inventory_tree)
-    _run_inventory_export_hooks(hostname, inventory_tree)
+    _run_inventory_export_hooks(host_config, inventory_tree)
 
     success_msg = [
         "Found %s%s%d%s inventory entries" % (tty.bold, tty.yellow, inventory_tree.count_entries(),
@@ -408,14 +408,9 @@ def _save_status_data_tree(hostname, status_data_tree):
         status_data_tree.save_to(cmk.utils.paths.status_data_dir, hostname)
 
 
-def _run_inventory_export_hooks(hostname, inventory_tree):
+def _run_inventory_export_hooks(host_config, inventory_tree):
     import cmk_base.inventory_plugins as inventory_plugins
-    hooks = []
-    config_cache = config.get_config_cache()
-    for hookname, ruleset in config.inv_exports.items():
-        entries = config_cache.host_extra_conf(hostname, ruleset)
-        if entries:
-            hooks.append((hookname, entries[0]))
+    hooks = host_config.inventory_export_hooks
 
     if not hooks:
         return
@@ -426,7 +421,7 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
             "Execute export hook: %s%s%s%s" % (tty.blue, tty.bold, hookname, tty.normal))
         try:
             func = inventory_plugins.inv_export[hookname]["export_function"]
-            func(hostname, params, inventory_tree.get_raw_tree())
+            func(host_config.hostname, params, inventory_tree.get_raw_tree())
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise

@@ -190,15 +190,13 @@ def _icons_and_actions_of(config_cache, what, hostname, svcdesc=None, checkname=
 
 
 def check_icmp_arguments_of(config_cache, hostname, add_defaults=True, family=None):
-    values = config_cache.host_extra_conf(hostname, config.ping_levels)
-    levels = {}
-    for value in values[::-1]:  # make first rules have precedence
-        levels.update(value)
+    host_config = config_cache.get_host_config(hostname)
+    levels = host_config.ping_levels
+
     if not add_defaults and not levels:
         return ""
 
     if family is None:
-        host_config = config_cache.get_host_config(hostname)
         family = 6 if host_config.is_ipv6_primary else 4
 
     args = []

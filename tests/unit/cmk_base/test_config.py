@@ -424,6 +424,30 @@ def test_host_config_explicit_check_command(monkeypatch, hostname, core_name, re
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", {}),
+    ("testhost2", {
+        "ding": 1,
+        "dong": 1
+    }),
+])
+def test_host_config_ping_levels(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("ping_levels", [
+        ({
+            "ding": 1,
+        }, [], ["testhost2"], {}),
+        ({
+            "ding": 3,
+        }, [], ["testhost2"], {}),
+        ({
+            "dong": 1,
+        }, [], ["testhost2"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).ping_levels == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", ["check_mk"]),
     ("testhost2", ["dingdong"]),
 ])

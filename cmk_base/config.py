@@ -2565,6 +2565,18 @@ class HostConfig(object):
         return entries[0]
 
     @property
+    def ping_levels(self):
+        # type: () -> Dict[str, Union[int, float]]
+        levels = {}  # type: Dict[str, Union[int, float]]
+
+        values = self._config_cache.host_extra_conf(self.hostname, ping_levels)
+        # TODO: Use host_extra_conf_merged?)
+        for value in values[::-1]:  # make first rules have precedence
+            levels.update(value)
+
+        return levels
+
+    @property
     def hostgroups(self):
         # type: () -> List[str]
         """Returns the list of hostgroups of this host

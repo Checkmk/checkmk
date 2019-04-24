@@ -37,7 +37,7 @@
 # postgres;pg_catalog;pg_attribute;-1;-1
 
 factory_settings["postgres_stats_default_levels"] = {
-    "never_analyze_vacuum": (0, float('inf')),
+    "never_analyze_vacuum": (0, 1000 * 365 * 24 * 3600),
 }
 
 

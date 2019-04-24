@@ -27,7 +27,9 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
+    Alternative,
     Dictionary,
+    FixedValue,
     TextAscii,
     Tuple,
 )
@@ -82,11 +84,23 @@ class RulespecCheckgroupParametersPostgresMaintenance(CheckParameterRulespecWith
                      ],
                  )),
                 ("never_analyze_vacuum",
-                 Tuple(
-                     title=_("Age of never analyzed/vacuumed tables"),
+                 Alternative(
+                     title=_("Never analyzed/vacuumed tables"),
+                     style="dropdown",
                      elements=[
-                         Age(title=_("Warning if older than"), default_value=86400 * 7),
-                         Age(title=_("Critical if older than"), default_value=86400 * 14)
+                         Tuple(
+                             title=_("Age of never analyzed/vacuumed tables"),
+                             elements=[
+                                 Age(title=_("Warning if older than"), default_value=0),
+                                 Age(title=_("Critical if older than"),
+                                     default_value=1000 * 365 * 24 * 3600)
+                             ],
+                         ),
+                         FixedValue(
+                             None,
+                             title=_("Do not check age of never analyzed/vacuumed tables"),
+                             totext="",
+                         ),
                      ],
                  )),
             ],

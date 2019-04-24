@@ -39,11 +39,11 @@ checks = {
             (0, u'2 tables were never analyzed: anrede/auftrag_mediadaten', []),
             (2, u'Unhandled tables for: 20 m (warn/crit at 16 m/18 m)', []),
         ]),
-        (u'ANALYZE adwebconnect', {"never_analyze_vacuum": (0, float('inf'))}, [
+        (u'ANALYZE adwebconnect', {'never_analyze_vacuum': (0, 1000 * 365 * 24 * 3600)}, [
             (0, u'Table: auftrag', []),
             (0, u'Time since last vacuum: 674 d', []),
             (0, u'2 tables were never analyzed: anrede/auftrag_mediadaten', []),
-            (1, u'Unhandled tables for: 20 m (warn/crit at 0.00 s/inf y)', []),
+            (1, u'Unhandled tables for: 20 m (warn/crit at 0.00 s/1000 y)', []),
         ]),
         (u'ANALYZE adwebconnect', {'never_analyze_vacuum': None}, [
             (0, u'Table: auftrag', []),

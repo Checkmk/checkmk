@@ -800,7 +800,7 @@ if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
 fi
 
 is_valid_plugin () {
-    [[ -f "$1" && -x "$1" ]] && true || false
+    [ -f "$1" ] && [ -x "$1" ] && true || false
 }
 
 # Local checks

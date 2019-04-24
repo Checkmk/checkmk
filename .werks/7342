@@ -1,0 +1,21 @@
+Title: Removed legacy_checks configuration variable
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1556126309
+Class: fix
+
+The long time deprecated configuration variable <tt>legacy_checks</tt> has been
+removed now. It was replaced by the <tt>custom_checks</tt> option which is working
+a bit different.
+
+In case you configured Check_MK only via WATO you will not be affected by this issue,
+since legacy_checks could only be configured directly in the configuration files.
+
+In case you need to migrate your configuration, you could move the configuration to
+the WATO ruleset "Classical Active and Passive Monitoring Checks". If you need to
+migrate the configuration by hand have a look at the CMC migration documentation
+(https://mathias-kettner.com/cms_cmc_migration.html#legacy_checks) which describes
+the steps.

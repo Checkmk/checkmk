@@ -179,9 +179,9 @@ class DataSources(object):
             if special_agents:
                 return special_agents[0]
 
-        programs = self._config_cache.host_extra_conf(self._hostname, config.datasource_programs)
-        if programs:
-            return DSProgramDataSource(self._hostname, self._ipaddress, programs[0])
+        datasource_program = self._host_config.datasource_program
+        if datasource_program is not None:
+            return DSProgramDataSource(self._hostname, self._ipaddress, datasource_program)
 
         return TCPDataSource(self._hostname, self._ipaddress)
 

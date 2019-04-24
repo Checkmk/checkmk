@@ -1,0 +1,25 @@
+Title: Extensions for the Kubernetes special agent and checks
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1556096926
+Class: feature
+
+This werk introduces multiple extensions for the Kubernetes special
+agent, new checks and inventory plugins:
+
+- The special agent now provides piggyback data for Pods, Deployments and Services.
+- The piggyback output is optional and can be configured via the rule for the special agent.
+- The special agent now outputs the Kubernetes labels for piggyback hosts. They are shown
+  in the HW/SW invenotry and on the host detail page of the hosts. You can add the labels to
+  other views and use the labels to filter your views. The labels will be used in more
+  upcoming features in the future.
+- The check k8s_resouces is now used for Pods as well.
+- The new summary check k8s_pod_container for the Pods of a container is added.
+- The new inventory plugin k8s_pod_info shows Pod information in the HW/SW inventory.
+- The new check k8s_replicas monitors the replica sets of Deployments.
+- The new inventory plugin k8s_service_info shows information about Kubernetes Services.
+- The new inventory plugin k8s_selector shows the selectors of Kubernetes Services.
+- The new check k8s_service_port monitors the Ports defined for Kubernetes Services.

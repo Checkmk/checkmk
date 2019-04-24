@@ -382,6 +382,27 @@ def test_host_config_special_agents(monkeypatch, hostname, result):
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", None),
+    ("testhost2", ["127.0.0.1"]),
+])
+def test_host_config_only_from(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_option(
+        "agent_config", {
+            "only_from": [
+                ([
+                    "127.0.0.1",
+                ], [], ["testhost2"], {}),
+                ([
+                    "127.0.0.2",
+                ], [], ["testhost2"], {}),
+            ],
+        })
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).only_from == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", ["check_mk"]),
     ("testhost2", ["dingdong"]),
 ])

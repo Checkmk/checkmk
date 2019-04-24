@@ -60,12 +60,18 @@ factory_settings["oracle_jobs_defaults"] = {
 
 def inventory_oracle_jobs(info):
     for line in info:
-        # old format < RDBMS 12.1
-        if len(line) >= 3 and len(line) <= 10:
-            yield "%s.%s.%s" % (line[0], line[1], line[2]), {}
-        else:
+
+        if len(line) == 11:
             # new format: sid.pdb_name.job_owner.job_name
             yield "%s.%s.%s.%s" % (line[0], line[1], line[2], line[3]), {}
+
+        elif len(line) == 10:
+            # old format without pluggable database support
+            yield "%s.%s.%s" % (line[0], line[1], line[2]), {}
+
+        elif len(line) >= 4:
+            # This is the real old - deprecated - format with missing separator ...
+            yield "%s.%s.%s" % (line[0], line[1], line[2]), {}
 
 
 def check_oracle_jobs(item, params, info):
@@ -104,7 +110,8 @@ def check_oracle_jobs(item, params, info):
 
         else:
             # really old plugins without job_owner...
-            # this should be removed in a future release!
+            # this must be removed in a future release!
+            # The missing section separator could lead to wrong format detection...
 
             # sid.job_name
             itemsid, itemname = item.split('.', 1)

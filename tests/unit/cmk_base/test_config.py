@@ -463,6 +463,38 @@ def test_host_config_icons_and_actions(monkeypatch, hostname, result):
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", {}),
+    ("testhost2", {
+        '_CUSTOM': ['value1'],
+        'dingdong': ['value1']
+    }),
+])
+def test_host_config_extra_host_attributes(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_option(
+        "extra_host_conf", {
+            "dingdong": [
+                ([
+                    "value1",
+                ], [], ["testhost2"], {}),
+                ([
+                    "value2",
+                ], [], ["testhost2"], {}),
+            ],
+            "_custom": [
+                ([
+                    "value1",
+                ], [], ["testhost2"], {}),
+                ([
+                    "value2",
+                ], [], ["testhost2"], {}),
+            ],
+        })
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).extra_host_attributes == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", ["check_mk"]),
     ("testhost2", ["dingdong"]),
 ])

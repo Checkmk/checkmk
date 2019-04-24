@@ -2582,6 +2582,20 @@ class HostConfig(object):
         return list(set(self._config_cache.host_extra_conf(self.hostname, host_icons_and_actions)))
 
     @property
+    def extra_host_attributes(self):
+        # type: () -> Dict[str, str]
+        attrs = {}
+        for key, ruleset in extra_host_conf.items():
+            values = self._config_cache.host_extra_conf(self.hostname, ruleset)
+            if values:
+                if key[0] == "_":
+                    key = key.upper()
+
+                if values[0] is not None:
+                    attrs[key] = values[0]
+        return attrs
+
+    @property
     def hostgroups(self):
         # type: () -> List[str]
         """Returns the list of hostgroups of this host

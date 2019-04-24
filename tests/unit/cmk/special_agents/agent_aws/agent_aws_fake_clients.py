@@ -480,6 +480,87 @@ class RDSDescribeDBInstancesInstanceCreator(InstanceCreator):
 
 
 #.
+#   .--ELB------------------------------------------------------------------
+
+
+class ELBDescribeLoadBalancersInstanceCreator(InstanceCreator):
+    def _fill_instance(self):
+        self.add(Str('LoadBalancerName'))
+        self.add(Str('DNSName'))
+        self.add(Str('CanonicalHostedZoneName'))
+        self.add(Str('CanonicalHostedZoneNameID'))
+        self.add(
+            List('ListenerDescriptions', [
+                Dict('Listener', [
+                    Str('Protocol'),
+                    Int('LoadBalancerPort'),
+                    Str('InstanceProtocol'),
+                    Int('InstancePort'),
+                    Str('SSLCertificateId'),
+                ]),
+                Enum('PolicyNames'),
+            ]))
+        self.add(
+            Dict('Policies', [
+                List('AppCookieStickinessPolicies', [
+                    Str('PolicyName'),
+                    Str('CookieName'),
+                ]),
+                List('LBCookieStickinessPolicies', [
+                    Str('PolicyName'),
+                    Int('CookieExpirationPeriod'),
+                ]),
+                Enum('OtherPolicies'),
+            ]))
+        self.add(List('BackendServerDescriptions', [
+            Int('InstancePort'),
+            Enum('PolicyNames'),
+        ]))
+        self.add(Enum('AvailabilityZones'))
+        self.add(Enum('Subnets'))
+        self.add(Int('VPCId'))
+        self.add(List('Instances', [
+            Str('InstanceId'),
+        ]))
+        self.add(
+            Dict('HealthCheck', [
+                Str('Target'),
+                Int('Interval'),
+                Int('Timeout'),
+                Int('UnhealthyThreshold'),
+                Int('HealthyThreshold'),
+            ]))
+        self.add(Dict('SourceSecurityGroup', [
+            Str('OwnerAlias'),
+            Str('GroupName'),
+        ]))
+        self.add(Enum('SecurityGroups'))
+        self.add(Timestamp('CreatedTime'))
+        self.add(Str('Scheme'))
+        self.add(List('TagDescriptions', [
+            Str('Key'),
+            Str('Value'),
+        ]))
+
+
+class ELBDescribeTagsInstanceCreator(InstanceCreator):
+    def _fill_instance(self):
+        self.add(Str('LoadBalancerName'))
+        self.add(List('Tags', [
+            Str('Key'),
+            Str('Value'),
+        ]))
+
+
+class ELBDescribeInstanceHealthInstanceCreator(InstanceCreator):
+    def _fill_instance(self):
+        self.add(Str('InstanceId'))
+        self.add(Choice('State', ["InService", "OutOfServic", "Unknown"]))
+        self.add(Choice('ReasonCode', ["ELB", "Instance", "N/A"]))
+        self.add(Str('Description'))
+
+
+#.
 #.
 #   .--fake clients--------------------------------------------------------.
 #   |           __       _               _ _            _                  |

@@ -223,8 +223,8 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
         _do_inv_for_cluster(host_config, inventory_tree)
     else:
         node["is_cluster"] = False
-        _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress, inventory_tree,
-                             status_data_tree, discovered_host_labels)
+        _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ipaddress,
+                             inventory_tree, status_data_tree, discovered_host_labels)
 
     inventory_tree.normalize_nodes()
     old_timestamp = _save_inventory_tree(hostname, inventory_tree)
@@ -265,8 +265,8 @@ def _do_inv_for_cluster(host_config, inventory_tree):
         })
 
 
-def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress, inventory_tree,
-                         status_data_tree, discovered_host_labels):
+def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ipaddress,
+                         inventory_tree, status_data_tree, discovered_host_labels):
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error("raise")
@@ -324,7 +324,7 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress, inve
                 kwargs[dynamic_arg_name] = dynamic_arg_value
 
         if len(inv_function_args) == 2:
-            params = _get_inv_params(hostname, section_name)
+            params = host_config.inventory_parameters(section_name)
             args = [section_content, params]
         else:
             args = [section_content]
@@ -338,11 +338,6 @@ def _gather_snmp_check_plugin_names_inventory(host_config,
                                               for_mgmt_board=False):
     return snmp_scan.gather_snmp_check_plugin_names(
         host_config, on_error, do_snmp_scan, for_inventory=True, for_mgmt_board=for_mgmt_board)
-
-
-def _get_inv_params(hostname, section_name):
-    return config.get_config_cache().host_extra_conf_merged(
-        hostname, config.inv_parameters.get(section_name, []))
 
 
 #.

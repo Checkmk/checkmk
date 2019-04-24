@@ -2510,6 +2510,19 @@ class HostConfig(object):
         return spec  # return the whole spec in case of an "at least version" config
 
     @property
+    def datasource_program(self):
+        # type: () -> Optional[str]
+        """Return the command line to execute instead of contacting the agent
+
+        In case no datasource program is configured for a host return None
+        """
+        programs = self._config_cache.host_extra_conf(self.hostname, datasource_programs)
+        if not programs:
+            return None
+
+        return programs[0]
+
+    @property
     def hostgroups(self):
         # type: () -> List[str]
         """Returns the list of hostgroups of this host

@@ -2,7 +2,7 @@
 
 import pytest
 from agent_aws_fake_clients import (
-    CloudwatchDescribeAlarmsInstanceCreator,)
+    FakeCloudwatchClient,)
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
@@ -10,14 +10,6 @@ from cmk.special_agents.agent_aws import (
     CloudwatchAlarmsLimits,
     CloudwatchAlarms,
 )
-
-
-class FakeCloudwatchClient(object):
-    def describe_alarms(self, AlarmNames=None):
-        alarms = CloudwatchDescribeAlarmsInstanceCreator.create_instances(amount=2)
-        if AlarmNames:
-            alarms = [alarm for alarm in alarms if alarm['AlarmName'] in AlarmNames]
-        return {'MetricAlarms': alarms, 'NextToken': 'string'}
 
 
 @pytest.fixture()

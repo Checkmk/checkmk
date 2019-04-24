@@ -271,3 +271,32 @@ class CloudwatchDescribeAlarmsInstanceCreator(InstanceCreator):
                 Str('Label'),
                 BoolChoice('ReturnData'),
             ))
+
+
+#.
+#   .--CE-------------------------------------------------------------------
+
+
+class CEGetCostsAndUsageInstanceCreator(InstanceCreator):
+    def _fill_instance(self):
+        self.add(Dict(
+            'TimePeriod',
+            Str('Start'),
+            Str('End'),
+        ))
+        self.add(Dict('Total', Dict(
+            'string',
+            Str('Amount'),
+            Str('Unit'),
+        )))
+        self.add(
+            List(
+                'Groups',
+                Enum('Keys'),
+                Dict('Metrics', Dict(
+                    'string',
+                    Str('Amount'),
+                    Str('Unit'),
+                )),
+            ))
+        self.add(BoolChoice('Estimated'))

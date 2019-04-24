@@ -906,9 +906,7 @@ def test_get_inventory(web):
 
 
 def test_get_user_sites(web, graph_test_config):
-    assert web.get_user_sites() == [
-        [u'heute', u'Der Master'],
-    ]
+    assert web.get_user_sites()[0][0] == web.site.id
 
 
 def test_get_host_names(web, graph_test_config):
@@ -962,11 +960,11 @@ def test_get_graph_recipes(web, graph_test_config):
                     u'expression': [
                         u'operator', u'+',
                         [[
-                            u'rrd', u'heute', u'test-host-get-graph', u'Check_MK', u'user_time',
+                            u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'user_time',
                             None, 1.0
                         ],
                          [
-                             u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                             u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
                              u'children_user_time', None, 1.0
                          ]]
                     ],
@@ -979,11 +977,11 @@ def test_get_graph_recipes(web, graph_test_config):
                                  u'expression': [
                                      u'operator', u'+',
                                      [[
-                                         u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
                                          u'system_time', None, 1.0
                                      ],
                                       [
-                                          u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                                          u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
                                           u'children_system_time', None, 1.0
                                       ]]
                                  ],
@@ -994,7 +992,7 @@ def test_get_graph_recipes(web, graph_test_config):
                              {
                                  u'color': u'#00b2ff',
                                  u'expression': [
-                                     u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                                     u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
                                      u'cmk_time_agent', None, 1.0
                                  ],
                                  u'line_type': u'stack',
@@ -1004,7 +1002,7 @@ def test_get_graph_recipes(web, graph_test_config):
                              {
                                  u'color': u'#00d1ff',
                                  u'expression': [
-                                     u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                                     u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
                                      u'cmk_time_ds', None, 1.0
                                  ],
                                  u'line_type': u'stack',
@@ -1014,7 +1012,7 @@ def test_get_graph_recipes(web, graph_test_config):
                              {
                                  u'color': u'#d080af',
                                  u'expression': [
-                                     u'rrd', u'heute', u'test-host-get-graph', u'Check_MK',
+                                     u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
                                      u'execution_time', None, 1.0
                                  ],
                                  u'line_type': u'line',
@@ -1028,7 +1026,7 @@ def test_get_graph_recipes(web, graph_test_config):
                         u'graph_index': 0,
                         u'host_name': u'test-host-get-graph',
                         u'service_description': u'Check_MK',
-                        u'site': u'heute'
+                        u'site': web.site.id
                     }
                 ],
                 u'title': u'Time usage by phase',

@@ -2539,6 +2539,20 @@ class HostConfig(object):
         return matched
 
     @property
+    def only_from(self):
+        # type: () -> Optional[Union[List[str], str]]
+        """The agent of a host may be configured to be accessible only from specific IPs"""
+        ruleset = agent_config.get("only_from", [])
+        if not ruleset:
+            return None
+
+        entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
+        if not entries:
+            return None
+
+        return entries[0]
+
+    @property
     def hostgroups(self):
         # type: () -> List[str]
         """Returns the list of hostgroups of this host

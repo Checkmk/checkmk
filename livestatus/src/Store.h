@@ -90,7 +90,8 @@ public:
     void tryFinishStatehistCache();
     bool addObjectHistcache(Object *object);
     void addAlertToStatehistCache(Object *object, int state,
-                                  const char *output);
+                                  const std::string &output,
+                                  const std::string &long_output);
     void addDowntimeToStatehistCache(Object *object, bool started);
     void addFlappingToStatehistCache(Object *object, bool started);
 #else

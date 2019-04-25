@@ -628,7 +628,8 @@ class AWSSection(object):
         # Cache is only used if the age is lower than section interval AND
         # the collected data from colleagues are not newer
         self._cache_file_dir.mkdir(parents=True, exist_ok=True)
-        if use_cache and self._cache_is_recent_enough(colleague_contents):
+        if (use_cache and self.get_validity_from_args(colleague_contents) and
+                self._cache_is_recent_enough()):
             raw_content, cache_timestamp = self._read_from_cache()
         else:
             raw_content = self._fetch_raw_content(colleague_contents)
@@ -652,20 +653,26 @@ class AWSSection(object):
             logging.info("Cannot calculate cache file age: %s", exc)
             raise
 
-    def _cache_is_recent_enough(self, colleague_contents):
+    def _cache_is_recent_enough(self):
         mtime = self.cache_timestamp
         if mtime is None:
             return False
 
         age = time.time() - mtime
+        if 0 < age < self.interval:
+            return True
+
         if age < 0:
             logging.info("Cache file from future considered invalid: %s", self._cache_file)
-            return False
-        if age >= self.interval:
+        else:
             logging.info("Cache file %s is outdated", self._cache_file)
-            return False
+        return False
 
-        if colleague_contents.cache_timestamp > mtime:
+    def get_validity_from_args(self, colleague_contents):
+        my_cache_timestamp = self.cache_timestamp
+        if my_cache_timestamp is None:
+            return False
+        if colleague_contents.cache_timestamp > my_cache_timestamp:
             logging.info("Colleague data is newer than cache file %s", self._cache_file)
             return False
         return True

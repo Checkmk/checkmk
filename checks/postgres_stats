@@ -90,34 +90,34 @@ def check_postgres_stats(item, params, parsed):
     if not never_checked:
         set_item_state(key, now)
         yield 0, "No never checked tables"
+        return
 
-    elif never_checked:
-        infotext = "%d tables were never %s: %s%s" % \
-                   (len(never_checked), text, "/".join(never_checked[:5]),
-                    len(never_checked) > 5 and " (first %d shown)" % min(5, len(never_checked)) or "")
+    count = len(never_checked)
+    infotext = "%d tables were never %s: %s%s" % (count, text, "/".join(never_checked[:5]),
+                                                  " (first 5 shown)" if count > 5 else "")
 
-        if "never_analyze_vacuum" in params:
-            last_ts = get_item_state(key)
-            if last_ts is None:
-                set_item_state(key, now)
-                yield 0, infotext
-                return
+    if "never_analyze_vacuum" in params:
+        last_ts = get_item_state(key)
+        if last_ts is None:
+            set_item_state(key, now)
+            yield 0, infotext
+            return
 
-            age = now - last_ts
-            warn, crit = params["never_analyze_vacuum"]
-            state = 0
-            if age >= crit:
-                state = 2
-            elif age >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %s/%s)" % \
-                            (get_age_human_readable(warn),
-                             get_age_human_readable(crit),)
-            yield state, infotext
+        age = now - last_ts
+        warn, crit = params["never_analyze_vacuum"]
+        state = 0
+        if age >= crit:
+            state = 2
+        elif age >= warn:
+            state = 1
+        if state:
+            infotext += " (warn/crit at %s/%s)" % \
+                        (get_age_human_readable(warn),
+                         get_age_human_readable(crit),)
+        yield state, infotext
 
-        else:
-            yield 1, infotext
+    else:
+        yield 1, infotext
 
 
 check_info['postgres_stats'] = {

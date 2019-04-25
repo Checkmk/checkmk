@@ -35,12 +35,12 @@ checks = {
     '': [
         (u'ANALYZE adwebconnect', {'never_analyze_vacuum': (1000, 1100)}, [
             (0, u'Table: auftrag', []),
-            (0, 'Time since last vacuum 674 d', []),
+            (0, 'Time since last vacuum: 674 d', []),
             (2, u'2 tables were never analyzed: anrede/auftrag_mediadaten (warn/crit at 16 m/18 m)', []),
         ]),
         (u'ANALYZE adwebconnect', {}, [
             (0, u'Table: auftrag', []),
-            (0, 'Time since last vacuum 674 d', []),
+            (0, 'Time since last vacuum: 674 d', []),
             (1, u'2 tables were never analyzed: anrede/auftrag_mediadaten', []),
         ]),
         (u'ANALYZE postgres', {}, [
@@ -48,7 +48,7 @@ checks = {
         ]),
         (u'VACUUM adwebconnect', {}, [
             (0, u'Table: auftrag', []),
-            (0, 'Time since last vacuum 674 d', []),
+            (0, 'Time since last vacuum: 674 d', []),
             (1, u'2 tables were never vacuumed: anrede/auftrag_mediadaten', []),
         ]),
         (u'VACUUM postgres', {}, [

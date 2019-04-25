@@ -77,22 +77,14 @@ def check_postgres_stats(item, params, parsed):
 
     now = time.time()
     if oldest_element:
-        oldest_time = int(oldest_element[stats_field])
-        warn, crit = params.get("last_%s" % paramskey, (None, None))
         yield 0, "Table: %s" % oldest_element["tname"]
-
-        state = 0
-        if crit and now - crit > oldest_time:
-            state = 2
-        elif warn and now - warn > oldest_time:
-            state = 1
-
-        extra_info = ""
-        if state:
-            extra_info = " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
-                                                    get_age_human_readable(crit))
-        yield state, "Time since last vacuum %s%s" % (get_age_human_readable(now - oldest_time),
-                                                      extra_info)
+        oldest_age = time.time() - int(oldest_element[stats_field])
+        yield check_levels(
+            oldest_age,
+            None,
+            params.get("last_%s" % paramskey),
+            human_readable_func=get_age_human_readable,
+            infoname='Time since last vacuum')
 
     key = "postgres_stats.%s" % item
     if not never_checked:

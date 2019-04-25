@@ -824,6 +824,7 @@ sql_dataguard_stats () {
                      ||'|'|| d.FS_FAILOVER_OBSERVER_HOST
                      ||'|'|| d.FS_FAILOVER_CURRENT_TARGET
                      ||'|'|| ms.status
+                     ||'|'|| d.open_mode
               FROM  v\$database d
               JOIN  v\$parameter vp on 1=1
               JOIN v\$instance i on 1=1

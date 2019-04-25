@@ -147,8 +147,8 @@ class WMITable(object):
             if wmi_status.lower() == "timeout":
                 self.timed_out = True
 
-    def get(self, row, column):
-        if self.timed_out:
+    def get(self, row, column, silently_skip_timed_out=False):
+        if not silently_skip_timed_out and self.timed_out:
             raise MKCounterWrapped('WMI query timed out')
         return self._get_row_col_value(row, column)
 
@@ -294,7 +294,9 @@ def _prepare_wmi_table(parsed, tablename, line, key, timestamp, frequency):
 
 
 def wmi_filter_global_only(tables, row):
-    return all(table.get(row, "Name") == "_Global_" for table in tables.values())
+    return all(
+        table.get(row, "Name", silently_skip_timed_out=True) == "_Global_"
+        for table in tables.values())
 
 
 #.

@@ -223,12 +223,9 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
     if not host_config.is_cluster:
         # Parents for non-clusters
 
-        # Get parents manually defined via extra_host_conf["parents"]. Only honor
-        # variable "parents" and implicit parents if this setting is empty
-        extra_conf_parents = config_cache.host_extra_conf(hostname,
-                                                          config.extra_host_conf.get("parents", []))
-
-        if not extra_conf_parents:
+        # Get parents explicitly defined for host/folder via extra_host_conf["parents"]. Only honor
+        # the ruleset "parents" in case no explicit parents are set
+        if not attrs.get("parents", []):
             parents_list = host_config.parents
             if parents_list:
                 host_spec["parents"] = ",".join(parents_list)
@@ -241,6 +238,7 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
     host_spec.update(
         _extra_host_conf_of(
             config_cache, hostname, exclude=["parents"] if host_config.is_cluster else []))
+
     return host_spec
 
 

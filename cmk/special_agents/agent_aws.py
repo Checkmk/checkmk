@@ -778,10 +778,6 @@ class AWSSectionLimits(AWSSection):
 class AWSSectionLabels(AWSSection):
     __metaclass__ = abc.ABCMeta
 
-    @property
-    def name(self):
-        return "labels"
-
     def _create_results(self, computed_content):
         assert isinstance(
             computed_content.content,
@@ -1198,6 +1194,10 @@ class EC2Summary(AWSSectionGeneric):
 
 
 class EC2Labels(AWSSectionLabels):
+    @property
+    def name(self):
+        return "ec2_labels"
+
     @property
     def interval(self):
         return 300
@@ -1727,6 +1727,10 @@ class ELBLabelsGeneric(AWSSectionLabels):
     def __init__(self, client, region, config, distributor=None, resource=""):
         super(ELBLabelsGeneric, self).__init__(client, region, config, distributor=distributor)
         self._resource = resource
+
+    @property
+    def name(self):
+        return "elb_generic_labels"
 
     @property
     def interval(self):
@@ -2799,7 +2803,7 @@ class AWSSections(object):
                 self._write_section_result(section_name, cached_suffix, result)
 
     def _write_section_result(self, section_name, cached_suffix, result):
-        if section_name == "labels":
+        if section_name.endswith("labels"):
             section_header = "<<<%s:sep(0)%s>>>\n" % (section_name, cached_suffix)
         else:
             section_header = "<<<aws_%s%s>>>\n" % (section_name, cached_suffix)

@@ -2333,12 +2333,17 @@ class HostConfig(object):
     # TODO: Move cluster/node parent handling to this function
     def _get_parents(self):
         # type: () -> List[str]
-        """Use only those parents which are defined and active in all_hosts"""
+        """Returns the parents of a host configured via ruleset "parents"
+
+        Use only those parents which are defined and active in all_hosts"""
         used_parents = []
+
+        # Respect the ancient parents ruleset. This can not be configured via WATO and should be removed one day
         for parent_names in self._config_cache.host_extra_conf(self.hostname, parents):
             for parent_name in parent_names.split(","):
                 if parent_name in self._config_cache.all_active_realhosts():
                     used_parents.append(parent_name)
+
         return used_parents
 
     def _get_host_labels(self):

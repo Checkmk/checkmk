@@ -638,23 +638,29 @@ class AWSSection(object):
             cache_timestamp = time.time()
         return AWSRawContent(raw_content, cache_timestamp)
 
-    def _cache_is_recent_enough(self, colleague_contents):
+    @property
+    def cache_timestamp(self):
         if not self._cache_file.exists():
-            logging.info("New cache file %s", self._cache_file)
+            return None
+
+        try:
+            return self._cache_file.stat().st_mtime
+        except OSError as exc:
+            if exc.errno == 2:
+                logging.info("No such file or directory %s (cache_timestamp)", self._cache_file)
+                return None
+            logging.info("Cannot calculate cache file age: %s", exc)
+            raise
+
+    def _cache_is_recent_enough(self, colleague_contents):
+        mtime = self.cache_timestamp
+        if mtime is None:
             return False
 
-        now = time.time()
-        try:
-            mtime = self._cache_file.stat().st_mtime
-        except OSError as e:
-            if e.errno == 2:
-                logging.info("No such file or directory %s (calculate age)", self._cache_file)
-                return False
-            else:
-                logging.info("Cannot calculate cache file age: %s", e)
-                raise
-
-        age = now - mtime
+        age = time.time() - mtime
+        if age < 0:
+            logging.info("Cache file from future considered invalid: %s", self._cache_file)
+            return False
         if age >= self.interval:
             logging.info("Cache file %s is outdated", self._cache_file)
             return False

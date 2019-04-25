@@ -2686,6 +2686,14 @@ class HostConfig(object):
         return list(set(cgrs))
 
     @property
+    def rrd_config(self):
+        # type: () -> Optional[Dict]
+        entries = self._config_cache.host_extra_conf(self.hostname, cmc_host_rrd_config)
+        if not entries:
+            return None
+        return entries[0]
+
+    @property
     def management_address(self):
         # type: () -> Optional[str]
         attributes_of_host = host_attributes.get(self.hostname, {})
@@ -2988,6 +2996,14 @@ class ConfigCache(object):
         match_object.service_description = svc_desc
 
         return match_object
+
+    def rrd_config_of_service(self, hostname, description):
+        # type: (str, Text) -> Optional[Dict]
+        rrdconf = self.service_extra_conf(hostname, description, cmc_service_rrd_config)
+        if not rrdconf:
+            return None
+
+        return rrdconf[0]
 
     def set_all_processed_hosts(self, all_processed_hosts):
         self._all_processed_hosts = set(all_processed_hosts)

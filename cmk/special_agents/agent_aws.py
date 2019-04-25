@@ -1242,6 +1242,7 @@ class EC2Labels(AWSSectionLabels):
                 continue
             computed_content.setdefault(ec2_piggyback_hostname, {}).setdefault(
                 tag['Key'], tag['Value'])
+
         return AWSComputedContent(computed_content, raw_content.cache_timestamp)
 
 

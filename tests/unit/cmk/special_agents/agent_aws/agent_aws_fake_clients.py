@@ -2,6 +2,8 @@
 
 import abc
 import random
+from cmk.special_agents.agent_aws import (
+    AWSEC2InstTypes,)
 
 #   .--entities------------------------------------------------------------.
 #   |                             _   _ _   _                              |
@@ -561,207 +563,545 @@ class ELBDescribeInstanceHealthIC(InstanceCreator):
 #   .--EC2------------------------------------------------------------------
 
 
+class EC2DescribeReservedInstancesIC(InstanceCreator):
+    def _fill_instance(self):
+        self.add(Str('AvailabilityZone'))
+        self.add(Int('Duration'))
+        self.add(Timestamp('End'))
+        self.add(Str('FixedPrice'))
+        self.add(Int('InstanceCount'))
+        self.add(Choice('InstanceType', AWSEC2InstTypes))
+        self.add(
+            Choice('ProductDescription', [
+                'Linux/UNIX',
+                'Linux/UNIX (Amazon VPC)',
+                'Windows',
+                'Windows (Amazon VPC)',
+            ]))
+        self.add(Str('ReservedInstancesId'))
+        self.add(Timestamp('Start'))
+        self.add(Choice('State', [
+            'payment-pending',
+            'active',
+            'payment-failed',
+            'retired',
+        ]))
+        self.add(Str('UsagePrice'))
+        self.add(Choice('CurrencyCode', ['USD']))
+        self.add(Choice('InstanceTenancy', [
+            'default',
+            'dedicated',
+            'host',
+        ]))
+        self.add(Choice('OfferingClass', [
+            'standard',
+            'convertible',
+        ]))
+        self.add(
+            Choice('OfferingType', [
+                'Heavy Utilization',
+                'Medium Utilization',
+                'Light Utilization',
+                'No Upfront',
+                'Partial Upfront',
+                'All Upfront',
+            ]))
+        self.add(List('RecurringCharges', [
+            Float('Amount'),
+            Str('Frequency'),
+        ]))
+        self.add(Choice('Scope', [
+            'Availability Zone',
+            'Region',
+        ]))
+        self.add(List('Tags', [
+            Str('Key'),
+            Str('Value'),
+        ]))
+
+
+class EC2DescribeAddressesIC(InstanceCreator):
+    def _fill_instance(self):
+        self.add(Str('InstanceId'))
+        self.add(Str('PublicIp'))
+        self.add(Str('AllocationId'))
+        self.add(Str('AssociationId'))
+        self.add(Choice('Domain', [
+            'vpc',
+            'standard',
+        ]))
+        self.add(Str('NetworkInterfaceId'))
+        self.add(Str('NetworkInterfaceOwnerId'))
+        self.add(Str('PrivateIpAddress'))
+        self.add(List('Tags', [
+            Str('Key'),
+            Str('Value'),
+        ]))
+        self.add(Str('PublicIpv4Pool'))
+
+
+class EC2DescribeSecurityGroupsIC(InstanceCreator):
+    def _fill_instance(self):
+        self.add(Str('Description'))
+        self.add(Str('GroupName'))
+        self.add(
+            List('IpPermissions', [
+                Int('FromPort'),
+                Str('IpProtocol'),
+                List('IpRanges', [
+                    Str('CidrIp'),
+                    Str('Description'),
+                ]),
+                List('Ipv6Ranges', [
+                    Str('CidrIpv6'),
+                    Str('Description'),
+                ]),
+                List('PrefixListIds', [
+                    Str('Description'),
+                    Str('PrefixListId'),
+                ]),
+                Int('ToPort'),
+                List('UserIdGroupPairs', [
+                    Str('Description'),
+                    Str('GroupId'),
+                    Str('GroupName'),
+                    Str('PeeringStatus'),
+                    Str('UserId'),
+                    Str('VpcId'),
+                    Str('VpcPeeringConnectionId'),
+                ]),
+            ]))
+        self.add(Str('OwnerId'))
+        self.add(Str('GroupId'))
+        self.add(
+            List('IpPermissionsEgress', [
+                Int('FromPort'),
+                Str('IpProtocol'),
+                List('IpRanges', [
+                    Str('CidrIp'),
+                    Str('Description'),
+                ]),
+                List('Ipv6Ranges', [
+                    Str('CidrIpv6'),
+                    Str('Description'),
+                ]),
+                List('PrefixListIds', [
+                    Str('Description'),
+                    Str('PrefixListId'),
+                ]),
+                Int('ToPort'),
+                List('UserIdGroupPairs', [
+                    Str('Description'),
+                    Str('GroupId'),
+                    Str('GroupName'),
+                    Str('PeeringStatus'),
+                    Str('UserId'),
+                    Str('VpcId'),
+                    Str('VpcPeeringConnectionId'),
+                ]),
+            ]))
+        self.add(List('Tags', [
+            Str('Key'),
+            Str('Value'),
+        ]))
+        self.add(Str('VpcId'))
+
+
+class EC2DescribeNetworkInterfacesIC(InstanceCreator):
+    def _fill_instance(self):
+        self.add(
+            Dict('Association', [
+                Str('AllocationId'),
+                Str('AssociationId'),
+                Str('IpOwnerId'),
+                Str('PublicDnsName'),
+                Str('PublicIp'),
+            ]))
+        self.add(
+            Dict('Attachment', [
+                Timestamp('AttachTime'),
+                Str('AttachmentId'),
+                BoolChoice('DeleteOnTermination'),
+                Int('DeviceIndex'),
+                Str('InstanceId'),
+                Str('InstanceOwnerId'),
+                Choice('Status', [
+                    'attaching',
+                    'attached',
+                    'detaching',
+                    'detached',
+                ]),
+            ]))
+        self.add(Str('AvailabilityZone'))
+        self.add(Str('Description'))
+        self.add(List('Groups', [
+            Str('GroupName'),
+            Str('GroupId'),
+        ]))
+        self.add(Choice('InterfaceType', [
+            'interface',
+            'natGateway',
+        ]))
+        self.add(List('Ipv6Addresses', [
+            Str('Ipv6Address'),
+        ]))
+        self.add(Str('MacAddress'))
+        self.add(Str('NetworkInterfaceId'))
+        self.add(Str('OwnerId'))
+        self.add(Str('PrivateDnsName'))
+        self.add(Str('PrivateIpAddress'))
+        self.add(
+            List('PrivateIpAddresses', [
+                Dict('Association', [
+                    Str('AllocationId'),
+                    Str('AssociationId'),
+                    Str('IpOwnerId'),
+                    Str('PublicDnsName'),
+                    Str('PublicIp'),
+                ]),
+                BoolChoice('Primary'),
+                Str('PrivateDnsName'),
+                Str('PrivateIpAddress'),
+            ]))
+        self.add(Str('RequesterId'))
+        self.add(BoolChoice('RequesterManaged'))
+        self.add(BoolChoice('SourceDestCheck'))
+        self.add(
+            Choice('Status', [
+                'available',
+                'associated',
+                'attaching',
+                'in-use',
+                'detaching',
+            ]))
+        self.add(Str('SubnetId'))
+        self.add(List('TagSet', [
+            Str('Key'),
+            Str('Value'),
+        ]))
+        self.add(Str('VpcId'))
+
+
+class EC2DescribeSpotInstanceRequestsIC(InstanceCreator):
+    def _fill_instance(self):
+        self.add(Str('ActualBlockHourlyPrice'))
+        self.add(Str('AvailabilityZoneGroup'))
+        self.add(Int('BlockDurationMinutes'))
+        self.add(Timestamp('CreateTime'))
+        self.add(Dict('Fault', [
+            Str('Code'),
+            Str('Message'),
+        ]))
+        self.add(Str('InstanceId'))
+        self.add(Str('LaunchGroup'))
+        self.add(
+            Dict('LaunchSpecification', [
+                Str('UserData'),
+                List('SecurityGroups', [
+                    Str('GroupName'),
+                    Str('GroupId'),
+                ]),
+                Str('AddressingType'),
+                List('BlockDeviceMappings', [
+                    Str('DeviceName'),
+                    Str('VirtualName'),
+                    Dict('Ebs', [
+                        BoolChoice('DeleteOnTermination'),
+                        Int('Iops'),
+                        Str('SnapshotId'),
+                        Int('VolumeSize'),
+                        Choice('VolumeType', [
+                            'standard',
+                            'io1',
+                            'gp2',
+                            'sc1',
+                            'st1',
+                        ]),
+                        BoolChoice('Encrypted'),
+                        Str('KmsKeyId'),
+                    ]),
+                    Str('NoDevice'),
+                ]),
+                BoolChoice('EbsOptimized'),
+                Dict('IamInstanceProfile', [
+                    Str('Arn'),
+                    Str('Name'),
+                ]),
+                Str('ImageId'),
+                Choice('InstanceType', AWSEC2InstTypes),
+                Str('KernelId'),
+                Str('KeyName'),
+                List('NetworkInterfaces', [
+                    BoolChoice('AssociatePublicIpAddress'),
+                    BoolChoice('DeleteOnTermination'),
+                    Str('Description'),
+                    Int('DeviceIndex'),
+                    Choice('Groups', ['string']),
+                    Int('Ipv6AddressCount'),
+                    List('Ipv6Addresses', [
+                        Str('Ipv6Address'),
+                    ]),
+                    Str('NetworkInterfaceId'),
+                    Str('PrivateIpAddress'),
+                    List('PrivateIpAddresses', [
+                        BoolChoice('Primary'),
+                        Str('PrivateIpAddress'),
+                    ]),
+                    Int('SecondaryPrivateIpAddressCount'),
+                    Str('SubnetId'),
+                ]),
+                List('Placement', [
+                    Str('AvailabilityZone'),
+                    Str('GroupName'),
+                    Choice('Tenancy', [
+                        'default',
+                        'dedicated',
+                        'host',
+                    ]),
+                ]),
+                Str('RamdiskId'),
+                Str('SubnetId'),
+                Dict('Monitoring', [BoolChoice('Enabled')]),
+            ]))
+        self.add(Str('LaunchedAvailabilityZone'))
+        self.add(
+            Choice('ProductDescription', [
+                'Linux/UNIX',
+                'Linux/UNIX (Amazon VPC)',
+                'Windows',
+                'Windows (Amazon VPC)',
+            ]))
+        self.add(Str('SpotInstanceRequestId'))
+        self.add(Str('SpotPrice'))
+        self.add(Choice('State', [
+            'open',
+            'active',
+            'closed',
+            'cancelled',
+            'failed',
+        ]))
+        self.add(Dict('Status', [
+            Str('Code'),
+            Str('Message'),
+            Timestamp('UpdateTime'),
+        ]))
+        self.add(List('Tags', [
+            Str('Key'),
+            Str('Value'),
+        ]))
+        self.add(Choice('Type', [
+            'one-time',
+            'persistent',
+        ]))
+        self.add(Timestamp('ValidFrom'))
+        self.add(Timestamp('ValidUntil'))
+        self.add(Choice('InstanceInterruptionBehavior', [
+            'hibernate',
+            'stop',
+            'terminate',
+        ]))
+
+
+class EC2DescribeSpotFleetRequestsIC(InstanceCreator):
+    def _fill_instance(self):
+        self.add(
+            Choice('ActivityStatus', [
+                'error',
+                'pending_fulfillment',
+                'pending_termination',
+                'fulfilled',
+            ]))
+        self.add(Timestamp('CreateTime'))
+        self.add(
+            Dict('SpotFleetRequestConfig', [
+                Choice('AllocationStrategy', [
+                    'lowestPrice',
+                    'diversified',
+                ]),
+                Choice('OnDemandAllocationStrategy', [
+                    'lowestPrice',
+                    'prioritized',
+                ]),
+                Str('ClientToken'),
+                Choice('ExcessCapacityTerminationPolicy', [
+                    'noTermination',
+                    'default',
+                ]),
+                Int('FulfilledCapacity'),
+                Int('OnDemandFulfilledCapacity'),
+                Str('IamFleetRole'),
+                List('LaunchSpecifications', [
+                    List('SecurityGroups', [
+                        Str('GroupName'),
+                        Str('GroupId'),
+                    ]),
+                    Str('AddressingType'),
+                    List('BlockDeviceMappings', [
+                        Str('DeviceName'),
+                        Str('VirtualName'),
+                        Dict('Ebs', [
+                            BoolChoice('DeleteOnTermination'),
+                            Int('Iops'),
+                            Str('SnapshotId'),
+                            Int('VolumeSize'),
+                            Choice('VolumeType', [
+                                'standard',
+                                'io1',
+                                'gp2',
+                                'sc1',
+                                'st1',
+                            ]),
+                            BoolChoice('Encrypted'),
+                            Int('KmsKeyId'),
+                        ]),
+                        Str('NoDevice'),
+                    ]),
+                    BoolChoice('EbsOptimized'),
+                    Dict('IamInstanceProfile', [
+                        Str('Arn'),
+                        Str('Name'),
+                    ]),
+                    Str('ImageId'),
+                    Choice('InstanceType', AWSEC2InstTypes),
+                    Str('KernelId'),
+                    Str('KeyName'),
+                    Dict('Monitoring', [BoolChoice('Enabled')]),
+                    List('NetworkInterfaces', [
+                        BoolChoice('AssociatePublicIpAddress'),
+                        BoolChoice('DeleteOnTermination'),
+                        Str('Description'),
+                        Int('DeviceIndex'),
+                        Choice('Groups', ['string']),
+                        Int('Ipv6AddressCount'),
+                        List('Ipv6Addresses', [
+                            Str('Ipv6Address'),
+                        ]),
+                        Str('NetworkInterfaceId'),
+                        Str('PrivateIpAddress'),
+                        List('PrivateIpAddresses', [
+                            BoolChoice('Primary'),
+                            Str('PrivateIpAddress'),
+                        ]),
+                        Int('SecondaryPrivateIpAddressCount'),
+                        Str('SubnetId'),
+                    ]),
+                    List('Placement', [
+                        Str('AvailabilityZone'),
+                        Str('GroupName'),
+                        Choice('Tenancy', [
+                            'default',
+                            'dedicated',
+                            'host',
+                        ]),
+                    ]),
+                    Str('RamdiskId'),
+                    Str('SpotPrice'),
+                    Str('SubnetId'),
+                    Str('UserData'),
+                    Float('WeightedCapacity'),
+                    List('TagSpecifications', [
+                        Choice('ResourceType', [
+                            'client-vpn-endpoint',
+                            'customer-gateway',
+                            'dedicated-host',
+                            'dhcp-options',
+                            'elastic-ip',
+                            'fleet',
+                            'fpga-image',
+                            'host-reservation',
+                            'image',
+                            'instance',
+                            'internet-gateway',
+                            'launch-template',
+                            'natgateway',
+                            'network-acl',
+                            'network-interface',
+                            'reserved-instances',
+                            'route-table',
+                            'security-group',
+                            'snapshot',
+                            'spot-instances-request',
+                            'subnet',
+                            'transit-gateway',
+                            'transit-gateway-attachment',
+                            'transit-gateway-route-table',
+                            'volume',
+                            'vpc',
+                            'vpc-peering-connection',
+                            'vpn-connection',
+                            'vpn-gateway',
+                        ]),
+                    ]),
+                    List('Tags', [
+                        Str('Key'),
+                        Str('Value'),
+                    ]),
+                ]),
+                List('LaunchTemplateConfigs', [
+                    Dict('LaunchTemplateSpecification', [
+                        Str('LaunchTemplateId'),
+                        Str('LaunchTemplateName'),
+                        Str('Version'),
+                    ]),
+                    List('Overrides', [
+                        Choice('InstanceType', AWSEC2InstTypes),
+                        Str('SpotPrice'),
+                        Str('SubnetId'),
+                        Str('AvailabilityZone'),
+                        Float('WeightedCapacity'),
+                        Float('Priority'),
+                    ]),
+                ]),
+                Str('SpotPrice'),
+                Int('TargetCapacity'),
+                Int('OnDemandTargetCapacity'),
+                BoolChoice('TerminateInstancesWithExpiration'),
+                Choice('Type', [
+                    'request',
+                    'maintain',
+                    'instant',
+                ]),
+                Timestamp('ValidFrom'),
+                Timestamp('ValidUntil'),
+                BoolChoice('ReplaceUnhealthyInstances'),
+                Choice('InstanceInterruptionBehavior', [
+                    'hibernate',
+                    'stop',
+                    'terminate',
+                ]),
+                Dict('LoadBalancersConfig', [
+                    Dict('ClassicLoadBalancersConfig', [
+                        List('ClassicLoadBalancers', [
+                            Str('Name'),
+                        ]),
+                    ]),
+                    Dict('TargetGroupsConfig', [
+                        List('TargetGroups', [
+                            Str('Arn'),
+                        ]),
+                    ]),
+                ]),
+                Int('InstancePoolsToUseCount'),
+            ]))
+        self.add(Str('SpotFleetRequestId'))
+        self.add(
+            Choice('SpotFleetRequestState', [
+                'submitted',
+                'active',
+                'cancelled',
+                'failed',
+                'cancelled_running',
+                'cancelled  _terminating',
+                'modifying',
+            ]))
+
+
 class EC2DescribeInstancesIC(InstanceCreator):
     def _fill_instance(self):
         self.add(Int('AmiLaunchIndex'))
         self.add(Str('ImageId'))
         self.add(Str('InstanceId'))
-        self.add(
-            Choice('InstanceType', [
-                't1.micro',
-                't2.nano',
-                't2.micro',
-                't2.small',
-                't2.medium',
-                't2.large',
-                't2.xlarge',
-                't2.2xlarge',
-                't3.nano',
-                't3.micro',
-                't3.small',
-                't3.medium',
-                't3.large',
-                't3.xlarge',
-                't3.2xlarge',
-                'm1.small',
-                'm1.medium',
-                'm1.large',
-                'm1.xlarge',
-                'm3.medium',
-                'm3.large',
-                'm3.xlarge',
-                'm3.2xlarge',
-                'm4.large',
-                'm4.xlarge',
-                'm4.2xlarge',
-                'm4.4xlarge',
-                'm4.10xlarge',
-                'm4.16xlarge',
-                'm2.xlarge',
-                'm2.2xlarge',
-                'm2.4xlarge',
-                'cr1.8xlarge',
-                'r3.large',
-                'r3.xlarge',
-                'r3.2xlarge',
-                'r3.4xlarge',
-                'r3.8xlarge',
-                'r4.large',
-                'r4.xlarge',
-                'r4.2xlarge',
-                'r4.4xlarge',
-                'r4.8xlarge',
-                'r4.16xlarge',
-                'r5.large',
-                'r5.xlarge',
-                'r5.2xlarge',
-                'r5.4xlarge',
-                'r5.12xlarge',
-                'r5.24xlarge',
-                'r5.metal',
-                'r5a.large',
-                'r5a.xlarge',
-                'r5a.2xlarge',
-                'r5a.4xlarge',
-                'r5a.12xlarge',
-                'r5a.24xlarge',
-                'r5d.large',
-                'r5d.xlarge',
-                'r5d.2xlarge',
-                'r5d.4xlarge',
-                'r5d.12xlarge',
-                'r5d.24xlarge',
-                'r5d.metal',
-                'r5ad.large',
-                'r5ad.xlarge',
-                'r5ad.2xlarge',
-                'r5ad.4xlarge',
-                'r5ad.8xlarge',
-                'r5ad.12xlarge',
-                'r5ad.16xlarge',
-                'r5ad.24xlarge',
-                'x1.16xlarge',
-                'x1.32xlarge',
-                'x1e.xlarge',
-                'x1e.2xlarge',
-                'x1e.4xlarge',
-                'x1e.8xlarge',
-                'x1e.16xlarge',
-                'x1e.32xlarge',
-                'i2.xlarge',
-                'i2.2xlarge',
-                'i2.4xlarge',
-                'i2.8xlarge',
-                'i3.large',
-                'i3.xlarge',
-                'i3.2xlarge',
-                'i3.4xlarge',
-                'i3.8xlarge',
-                'i3.16xlarge',
-                'i3.metal',
-                'hi1.4xlarge',
-                'hs1.8xlarge',
-                'c1.medium',
-                'c1.xlarge',
-                'c3.large',
-                'c3.xlarge',
-                'c3.2xlarge',
-                'c3.4xlarge',
-                'c3.8xlarge',
-                'c4.large',
-                'c4.xlarge',
-                'c4.2xlarge',
-                'c4.4xlarge',
-                'c4.8xlarge',
-                'c5.large',
-                'c5.xlarge',
-                'c5.2xlarge',
-                'c5.4xlarge',
-                'c5.9xlarge',
-                'c5.18xlarge',
-                'c5d.large',
-                'c5d.xlarge',
-                'c5d.2xlarge',
-                'c5d.4xlarge',
-                'c5d.9xlarge',
-                'c5d.18xlarge',
-                'c5n.large',
-                'c5n.xlarge',
-                'c5n.2xlarge',
-                'c5n.4xlarge',
-                'c5n.9xlarge',
-                'c5n.18xlarge',
-                'cc1.4xlarge',
-                'cc2.8xlarge',
-                'g2.2xlarge',
-                'g2.8xlarge',
-                'g3.4xlarge',
-                'g3.8xlarge',
-                'g3.16xlarge',
-                'g3s.xlarge',
-                'cg1.4xlarge',
-                'p2.xlarge',
-                'p2.8xlarge',
-                'p2.16xlarge',
-                'p3.2xlarge',
-                'p3.8xlarge',
-                'p3.16xlarge',
-                'p3dn.24xlarge',
-                'd2.xlarge',
-                'd2.2xlarge',
-                'd2.4xlarge',
-                'd2.8xlarge',
-                'f1.2xlarge',
-                'f1.4xlarge',
-                'f1.16xlarge',
-                'm5.large',
-                'm5.xlarge',
-                'm5.2xlarge',
-                'm5.4xlarge',
-                'm5.12xlarge',
-                'm5.24xlarge',
-                'm5.metal',
-                'm5a.large',
-                'm5a.xlarge',
-                'm5a.2xlarge',
-                'm5a.4xlarge',
-                'm5a.12xlarge',
-                'm5a.24xlarge',
-                'm5d.large',
-                'm5d.xlarge',
-                'm5d.2xlarge',
-                'm5d.4xlarge',
-                'm5d.12xlarge',
-                'm5d.24xlarge',
-                'm5d.metal',
-                'm5ad.large',
-                'm5ad.xlarge',
-                'm5ad.2xlarge',
-                'm5ad.4xlarge',
-                'm5ad.8xlarge',
-                'm5ad.12xlarge',
-                'm5ad.16xlarge',
-                'm5ad.24xlarge',
-                'h1.2xlarge',
-                'h1.4xlarge',
-                'h1.8xlarge',
-                'h1.16xlarge',
-                'z1d.large',
-                'z1d.xlarge',
-                'z1d.2xlarge',
-                'z1d.3xlarge',
-                'z1d.6xlarge',
-                'z1d.12xlarge',
-                'z1d.metal',
-                'u-6tb1.metal',
-                'u-9tb1.metal',
-                'u-12tb1.metal',
-                'a1.medium',
-                'a1.large',
-                'a1.xlarge',
-                'a1.2xlarge',
-                'a1.4xlarge',
-            ]))
+        self.add(Choice('InstanceType', AWSEC2InstTypes))
         self.add(Str('KernelId'))
         self.add(Str('KeyName'))
         self.add(Timestamp('LaunchTime'))
@@ -1072,6 +1412,45 @@ class EC2DescribeVolumeStatusIC(InstanceCreator):
                     'insufficient-data',
                 ]),
             ]))
+
+
+class EC2DescribeTagsIC(InstanceCreator):
+    def _fill_instance(self):
+        self.add(Str('Key'))
+        self.add(Str('ResourceId'))
+        self.add(
+            Choice('ResourceType', [
+                'client-vpn-endpoint',
+                'customer-gateway',
+                'dedicated-host',
+                'dhcp-options',
+                'elastic-ip',
+                'fleet',
+                'fpga-image',
+                'host-reservation',
+                'image',
+                'instance',
+                'internet-gateway',
+                'launch-template',
+                'natgateway',
+                'network-acl',
+                'network-interface',
+                'reserved-instances',
+                'route-table',
+                'security-group',
+                'snapshot',
+                'spot-instances-request',
+                'subnet',
+                'transit-gateway',
+                'transit-gateway-attachment',
+                'transit-gateway-route-table',
+                'volume',
+                'vpc',
+                'vpc-peering-connection',
+                'vpn-connection',
+                'vpn-gateway',
+            ]))
+        self.add(Str('Value'))
 
 
 #.

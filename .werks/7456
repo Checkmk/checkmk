@@ -1,0 +1,10 @@
+Title: dotnet_clrmemory: Fixed crash caused by WMI timeout
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p17
+Date: 1556198161
+Class: fix
+
+During discovery WMI timeouts should not be raised.

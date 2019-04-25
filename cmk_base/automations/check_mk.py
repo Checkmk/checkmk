@@ -1217,16 +1217,10 @@ class AutomationDiagHost(Automation):
 
                 # Determine SNMPv2/v3 community
                 if hostname not in config.explicit_snmp_communities:
-                    communities = config_cache.host_extra_conf(hostname, config.snmp_communities)
-                    for entry in communities:
-                        if (test == "snmpv3") and not isinstance(entry, tuple):
-                            continue
-
-                        if (test != "snmpv3") and isinstance(entry, tuple):
-                            continue
-
-                        credentials = entry
-                        break
+                    cred = host_config.snmp_credentials_of_version(
+                        snmp_version=3 if test == "snmpv3" else 2)
+                    if cred is not None:
+                        credentials = cred
 
                 # SNMP versions
                 if test in ['snmpv2', 'snmpv3']:

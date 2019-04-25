@@ -2761,7 +2761,7 @@ class AWSSections(object):
                 if self._debug:
                     raise
             except Exception as e:
-                logging.info(e)
+                logging.info("%s: %s", section.__class__.__name__, e)
                 if self._debug:
                     raise
                 exceptions.append(e)

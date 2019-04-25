@@ -2875,6 +2875,8 @@ class HostConfig(object):
 #   +----------------------------------------------------------------------+
 
 
+# TODO: Shouldn't we find a better place for the *_of_service() methods?
+# Wouldn't it be better to make them part of HostConfig?
 class ConfigCache(object):
     def __init__(self):
         super(ConfigCache, self).__init__()
@@ -3621,6 +3623,10 @@ class CEEConfigCache(ConfigCache):
 
         return rrdconf[0]
 
+    def recurring_downtimes_of_service(self, hostname, description):
+        # type: (str, Text) -> List[Dict[str, Union[int, str]]]
+        return self.service_extra_conf(hostname, description, service_recurring_downtimes)
+
 
 # TODO: Find a clean way to move this to cmk_base.cee. This will be possible once the
 # configuration settings are not held in cmk_base.config namespace anymore.
@@ -3634,3 +3640,8 @@ class CEEHostConfig(HostConfig):
         if not entries:
             return None
         return entries[0]
+
+    @property
+    def recurring_downtimes(self):
+        # type: () -> List[Dict[str, Union[int, str]]]
+        return self._config_cache.host_extra_conf(self.hostname, host_recurring_downtimes)

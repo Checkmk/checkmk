@@ -2602,6 +2602,29 @@ class HostConfig(object):
                     attrs[key] = values[0]
         return attrs
 
+    @property
+    def discovery_check_parameters(self):
+        # type: () -> Dict
+        """Compute the parameters for the discovery check for a host
+
+        Note: if the discovery check is disabled for that host, default parameters
+        will be returned. A "check_interval" of None means the check should not be added.
+        """
+        entries = self._config_cache.host_extra_conf(self.hostname, periodic_discovery)
+        if not entries:
+            return self._default_discovery_check_parameters()
+
+        return entries[0]
+
+    def _default_discovery_check_parameters(self):
+        """Support legacy single value global configurations. Otherwise return the defaults"""
+        return {
+            "check_interval": inventory_check_interval,
+            "severity_unmonitored": inventory_check_severity,
+            "severity_vanished": 0,
+            "inventory_check_do_scan": inventory_check_do_scan,
+        }
+
     def inventory_parameters(self, section_name):
         # type: (str) -> Dict
         return self._config_cache.host_extra_conf_merged(self.hostname,

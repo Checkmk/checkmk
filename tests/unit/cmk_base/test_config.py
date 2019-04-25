@@ -518,6 +518,34 @@ def test_host_config_inventory_parameters(monkeypatch, hostname, result):
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", {
+        'check_interval': None,
+        'inventory_check_do_scan': True,
+        'severity_unmonitored': 1,
+        'severity_vanished': 0,
+    }),
+    ("testhost2", {
+        "check_interval": 1,
+    }),
+])
+def test_host_config_discovery_check_parameters(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_option(
+        "periodic_discovery",
+        [
+            ({
+                "check_interval": 1,
+            }, [], ["testhost2"], {}),
+            ({
+                "check_interval": 2,
+            }, [], ["testhost2"], {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).discovery_check_parameters == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", []),
     ("testhost2", [
         ("abc", {

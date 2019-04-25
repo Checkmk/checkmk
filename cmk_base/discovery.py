@@ -326,8 +326,7 @@ def check_discovery(hostname, ipaddress):
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    params = discovery_check_parameters(hostname) or \
-             default_discovery_check_parameters()
+    params = host_config.discovery_check_parameters
 
     status = 0
     infotexts = []
@@ -431,30 +430,6 @@ def check_discovery(hostname, ipaddress):
             infotexts.append(u"[%s] %s" % (source.id(), source_output))
 
     return status, infotexts, long_infotexts, perfdata
-
-
-# Compute the parameters for the discovery check for a host. Note:
-# if the discovery check is disabled for that host, default parameters
-# will be returned.
-def discovery_check_parameters(hostname):
-    entries = config.get_config_cache().host_extra_conf(hostname, config.periodic_discovery)
-    if entries:
-        return entries[0]
-
-    elif config.inventory_check_interval:
-        # Support legacy global configurations
-        return default_discovery_check_parameters()
-
-    return None
-
-
-def default_discovery_check_parameters():
-    return {
-        "check_interval": config.inventory_check_interval,
-        "severity_unmonitored": config.inventory_check_severity,
-        "severity_vanished": 0,
-        "inventory_check_do_scan": config.inventory_check_do_scan,
-    }
 
 
 def _set_rediscovery_flag(hostname):
@@ -582,7 +557,7 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
     console.verbose("%s%s%s:\n" % (tty.bold, hostname, tty.normal))
     host_flag_path = os.path.join(_get_autodiscovery_dir(), hostname)
 
-    params = discovery_check_parameters(hostname) or default_discovery_check_parameters()
+    params = host_config.discovery_check_parameters
     params_rediscovery = params.get("inventory_rediscovery", {})
     if "service_blacklist" in params_rediscovery or "service_whitelist" in params_rediscovery:
         # whitelist. if none is specified, this matches everything

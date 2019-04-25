@@ -8,6 +8,7 @@
 #include "OffsetStringServiceMacroColumn.h"
 #include "Row.h"
 #include "Store.h"
+#include "data_encoding.h"
 #include "gtest/gtest.h"
 #include "nagios.h"
 

@@ -682,25 +682,16 @@ class AutomationAnalyseServices(Automation):
                 }
 
         # 3. Classical checks
-        for nr, entry in enumerate(config.custom_checks):
-            if len(entry) == 4:
-                rule, tags, hosts, options = entry
-                if options.get("disabled"):
-                    continue
-            else:
-                rule, tags, hosts = entry
-
-            matching_hosts = config.all_matching_hosts(tags, hosts, with_foreign_hosts=True)
-            if hostname in matching_hosts:
-                desc = rule["service_description"]
-                if desc == servicedesc:
-                    result = {
-                        "origin": "classic",
-                        "rule_nr": nr,
-                    }
-                    if "command_line" in rule:  # Only active checks have a command line
-                        result["command_line"] = rule["command_line"]
-                    return result
+        for nr, entry in enumerate(host_config.custom_checks):
+            desc = entry["service_description"]
+            if desc == servicedesc:
+                result = {
+                    "origin": "classic",
+                    "rule_nr": nr,
+                }
+                if "command_line" in entry:  # Only active checks have a command line
+                    result["command_line"] = entry["command_line"]
+                return result
 
         # 4. Active checks
         for plugin_name, entries in host_config.active_checks:
@@ -1316,20 +1307,19 @@ class AutomationActiveCheck(Automation):
         hostname, plugin, item = args
         item = item.decode("utf-8")
 
-        config_cache = config.get_config_cache()
-        host_config = config_cache.get_host_config(hostname)
+        host_config = config.get_config_cache().get_host_config(hostname)
 
         if plugin == "custom":
-            custchecks = config_cache.host_extra_conf(hostname, config.custom_checks)
-            for entry in custchecks:
-                if entry["service_description"] == item:
-                    command_line = self._replace_core_macros(hostname, entry.get(
-                        "command_line", ""))
-                    if command_line:
-                        command_line = core_config.autodetect_plugin(command_line)
-                        return self._execute_check_plugin(command_line)
+            for entry in host_config.custom_checks:
+                if entry["service_description"] != item:
+                    continue
 
-                    return -1, "Passive check - cannot be executed"
+                command_line = self._replace_core_macros(hostname, entry.get("command_line", ""))
+                if command_line:
+                    command_line = core_config.autodetect_plugin(command_line)
+                    return self._execute_check_plugin(command_line)
+
+                return -1, "Passive check - cannot be executed"
         else:
             act_info = config.active_check_info[plugin]
             # Set host name for host_name()-function (part of the Check API)

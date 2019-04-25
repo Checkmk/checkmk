@@ -426,7 +426,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             outfile.write(get_dependencies(hostname, description).encode("utf-8"))
 
     # Legacy checks via custom_checks
-    custchecks = config_cache.host_extra_conf(hostname, config.custom_checks)
+    custchecks = host_config.custom_checks
     if custchecks:
         outfile.write("\n\n# Custom checks\n")
         for entry in custchecks:

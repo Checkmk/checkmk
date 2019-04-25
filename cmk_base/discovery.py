@@ -1020,11 +1020,8 @@ def _merge_manual_services(host_config, services, on_error):
     for (check_plugin_name, item), (params, descr, _unused_deps) in manual_items.items():
         services[(check_plugin_name, item)] = ('manual', repr(params))
 
-    config_cache = config.get_config_cache()
-
     # Add custom checks -> "custom"
-    custchecks = config_cache.host_extra_conf(hostname, config.custom_checks)
-    for entry in custchecks:
+    for entry in host_config.custom_checks:
         services[('custom', entry['service_description'])] = ('custom', 'None')
 
     # Similar for 'active_checks', but here we have parameters

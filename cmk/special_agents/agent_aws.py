@@ -2376,12 +2376,19 @@ class EBSSummary(AWSSectionGeneric):
 
         content_by_piggyback_hosts = {}
         for vol in raw_content.content.itervalues():
+            instance_names = []
             for attachment in vol['Attachments']:
-                attachment_id = attachment['InstanceId']
-                instance_name = instance_name_mapping.get(attachment_id)
+                # Just for security
+                if vol['VolumeId'] != attachment['VolumeId']:
+                    continue
+                instance_name = instance_name_mapping.get(attachment['InstanceId'])
                 if instance_name is None:
                     instance_name = ""
-                content_by_piggyback_hosts.setdefault(instance_name, []).append(vol)
+                instance_names.append(instance_name)
+
+            # Should be attached to max. one instance
+            for instance_name in instance_names:
+                content_by_piggyback_hosts.setdefault(instance_name, [vol])
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):

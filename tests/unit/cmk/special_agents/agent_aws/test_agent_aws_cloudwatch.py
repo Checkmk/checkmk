@@ -78,3 +78,18 @@ def test_agent_aws_cloudwatch_alarms(get_cloudwatch_alarms_sections, alarm_names
     cloudwatch_alarms_result = cloudwatch_alarms_results[0]
     assert cloudwatch_alarms_result.piggyback_hostname == ''
     assert len(cloudwatch_alarms_result.content) == amount_alarms
+
+
+@pytest.mark.parametrize("alarm_names,amount_alarms", cloudwatch_params)
+def test_agent_aws_cloudwatch_alarms_without_limits(get_cloudwatch_alarms_sections, alarm_names,
+                                                    amount_alarms):
+    _cloudwatch_alarms_limits, cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
+    cloudwatch_alarms_results = cloudwatch_alarms.run().results
+
+    assert cloudwatch_alarms.interval == 300
+    assert cloudwatch_alarms.name == "cloudwatch_alarms"
+
+    assert len(cloudwatch_alarms_results) == 1
+    cloudwatch_alarms_result = cloudwatch_alarms_results[0]
+    assert cloudwatch_alarms_result.piggyback_hostname == ''
+    assert len(cloudwatch_alarms_result.content) == amount_alarms

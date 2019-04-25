@@ -56,11 +56,11 @@ class FakeEC2Client(object):
 
 @pytest.fixture()
 def get_ebs_sections():
-    def _create_ebs_sections(ebs_tags):
+    def _create_ebs_sections(names, tags):
         region = 'region'
         config = AWSConfig('hostname', (None, None))
-        config.add_single_service_config('ebs_names', None)
-        config.add_service_tags('ebs_tags', ebs_tags)
+        config.add_single_service_config('ebs_names', names)
+        config.add_service_tags('ebs_tags', tags)
         config.add_single_service_config('ec2_names', None)
         config.add_service_tags('ec2_tags', (None, None))
 
@@ -85,16 +85,22 @@ def get_ebs_sections():
 
 
 ebs_params = [
-    ((None, None), 3),
-    (([['Key-0']], [['Value-0']]), 3),
-    (([['Key-0']], [['Value-X']]), 0),
-    (([['Key-X']], [['Value-X']]), 0),
+    (None, (None, None), 3),
+    (None, ([['Key-0']], [['Value-0']]), 3),
+    (None, ([['Key-0']], [['Value-X']]), 0),
+    (None, ([['Key-X']], [['Value-X']]), 0),
+    (None, ([['Key-0']], [['Value-0', 'Value-X']]), 3),
+    (['VolumeId-0'], (None, None), 1),
+    (['VolumeId-0', 'VolumeId-1'], (None, None), 2),
+    (['VolumeId-0', 'Foobar'], (None, None), 1),
+    (['VolumeId-0', 'VolumeId-1', 'Foobar'], (None, None), 2),
+    (['Foo', 'Bar'], (None, None), 0),
 ]
 
 
-@pytest.mark.parametrize("ebs_tags,found_ebs", ebs_params)
-def test_agent_aws_ebs_limits(get_ebs_sections, ebs_tags, found_ebs):
-    ec2_summary, ebs_limits, _ebs_summary, _ebs = get_ebs_sections(ebs_tags)
+@pytest.mark.parametrize("names,tags,found_ebs", ebs_params)
+def test_agent_aws_ebs_limits(get_ebs_sections, names, tags, found_ebs):
+    ec2_summary, ebs_limits, _ebs_summary, _ebs = get_ebs_sections(names, tags)
     _ec2_summary_results = ec2_summary.run().results
     ebs_limits_results = ebs_limits.run().results
 
@@ -119,9 +125,9 @@ def test_agent_aws_ebs_limits(get_ebs_sections, ebs_tags, found_ebs):
         ]
 
 
-@pytest.mark.parametrize("ebs_tags,found_ebs", ebs_params)
-def test_agent_aws_ebs_summary(get_ebs_sections, ebs_tags, found_ebs):
-    ec2_summary, ebs_limits, ebs_summary, _ebs = get_ebs_sections(ebs_tags)
+@pytest.mark.parametrize("names,tags,found_ebs", ebs_params)
+def test_agent_aws_ebs_summary(get_ebs_sections, names, tags, found_ebs):
+    ec2_summary, ebs_limits, ebs_summary, _ebs = get_ebs_sections(names, tags)
     _ec2_summary_results = ec2_summary.run().results
     _ebs_limits_results = ebs_limits.run().results
     ebs_summary_results = ebs_summary.run().results
@@ -132,9 +138,9 @@ def test_agent_aws_ebs_summary(get_ebs_sections, ebs_tags, found_ebs):
     assert len(ebs_summary_results) == found_ebs
 
 
-@pytest.mark.parametrize("ebs_tags,found_ebs", ebs_params)
-def test_agent_aws_ebs(get_ebs_sections, ebs_tags, found_ebs):
-    ec2_summary, ebs_limits, ebs_summary, ebs = get_ebs_sections(ebs_tags)
+@pytest.mark.parametrize("names,tags,found_ebs", ebs_params)
+def test_agent_aws_ebs(get_ebs_sections, names, tags, found_ebs):
+    ec2_summary, ebs_limits, ebs_summary, ebs = get_ebs_sections(names, tags)
     _ec2_summary_results = ec2_summary.run().results
     _ebs_limits_results = ebs_limits.run().results
     _ebs_summary_results = ebs_summary.run().results
@@ -145,15 +151,14 @@ def test_agent_aws_ebs(get_ebs_sections, ebs_tags, found_ebs):
 
     assert len(ebs_results) == found_ebs
 
-    if found_ebs:
-        ebs_result = ebs_results[0]
+    for result in ebs_results:
         # Y (len results) == 6 (metrics) * X (buckets)
         # But: 5 metrics for all volume types
-        assert len(ebs_result.content) >= 5 * found_ebs
+        assert len(result.content) >= 5
 
 
 def test_agent_aws_ebs_summary_without_limits(get_ebs_sections):
-    ec2_summary, _ebs_limits, ebs_summary, _ebs = get_ebs_sections((None, None))
+    ec2_summary, _ebs_limits, ebs_summary, _ebs = get_ebs_sections(None, (None, None))
     _ec2_summary_results = ec2_summary.run().results
     ebs_summary_results = ebs_summary.run().results
 
@@ -164,7 +169,7 @@ def test_agent_aws_ebs_summary_without_limits(get_ebs_sections):
 
 
 def test_agent_aws_ebs_without_limits(get_ebs_sections):
-    ec2_summary, _ebs_limits, ebs_summary, ebs = get_ebs_sections((None, None))
+    ec2_summary, _ebs_limits, ebs_summary, ebs = get_ebs_sections(None, (None, None))
     _ec2_summary_results = ec2_summary.run().results
     _ebs_summary_results = ebs_summary.run().results
     ebs_results = ebs.run().results
@@ -172,11 +177,9 @@ def test_agent_aws_ebs_without_limits(get_ebs_sections):
     assert ebs.interval == 300
     assert ebs.name == "ebs"
 
-    found_ebs = 3
-    assert len(ebs_results) == found_ebs
+    assert len(ebs_results) == 3
 
-    if found_ebs:
-        ebs_result = ebs_results[0]
+    for result in ebs_results:
         # Y (len results) == 6 (metrics) * X (buckets)
         # But: 5 metrics for all volume types
-        assert len(ebs_result.content) >= 5 * found_ebs
+        assert len(result.content) >= 5

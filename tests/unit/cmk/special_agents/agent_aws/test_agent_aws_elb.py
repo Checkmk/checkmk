@@ -3,9 +3,9 @@
 import pytest
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
-    ELBDescribeLoadBalancersInstanceCreator,
-    ELBDescribeTagsInstanceCreator,
-    ELBDescribeInstanceHealthInstanceCreator,
+    ELBDescribeLoadBalancersIC,
+    ELBDescribeTagsIC,
+    ELBDescribeInstanceHealthIC,
 )
 
 from cmk.special_agents.agent_aws import (
@@ -22,8 +22,7 @@ from cmk.special_agents.agent_aws import (
 class FakeELBClient(object):
     def describe_load_balancers(self, LoadBalancerNames=None):
         return {
-            'LoadBalancerDescriptions':
-                ELBDescribeLoadBalancersInstanceCreator.create_instances(amount=3),
+            'LoadBalancerDescriptions': ELBDescribeLoadBalancersIC.create_instances(amount=3),
             'NextMarker': 'string',
         }
 
@@ -51,13 +50,11 @@ class FakeELBClient(object):
         for lb_name in LoadBalancerNames:
             if lb_name not in ["LoadBalancerName-0", "LoadBalancerName-1"]:
                 continue
-            tag_descrs.extend(ELBDescribeTagsInstanceCreator.create_instances(amount=1))
+            tag_descrs.extend(ELBDescribeTagsIC.create_instances(amount=1))
         return {'TagDescriptions': tag_descrs}
 
     def describe_instance_health(self, LoadBalancerName=None):
-        return {
-            'InstanceStates': ELBDescribeInstanceHealthInstanceCreator.create_instances(amount=1)
-        }
+        return {'InstanceStates': ELBDescribeInstanceHealthIC.create_instances(amount=1)}
 
 
 @pytest.fixture()

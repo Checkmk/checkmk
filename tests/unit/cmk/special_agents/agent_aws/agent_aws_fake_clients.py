@@ -150,13 +150,13 @@ class InstanceCreator(object):
 #   .--S3-------------------------------------------------------------------
 
 
-class S3ListBucketsInstanceCreator(InstanceCreator):
+class S3ListBucketsIC(InstanceCreator):
     def _fill_instance(self):
         self.add(Str('Name'))
         self.add(Timestamp('CreationDate'))
 
 
-class S3BucketTaggingInstanceCreator(InstanceCreator):
+class S3BucketTaggingIC(InstanceCreator):
     def _fill_instance(self):
         self.add(Str('Key'))
         self.add(Str('Value'))
@@ -166,7 +166,7 @@ class S3BucketTaggingInstanceCreator(InstanceCreator):
 #   .--Cloudwatch-----------------------------------------------------------
 
 
-class CloudwatchDescribeAlarmsInstanceCreator(InstanceCreator):
+class CloudwatchDescribeAlarmsIC(InstanceCreator):
     def _fill_instance(self):
         self.add(Str('AlarmName'))
         self.add(Str('AlarmArn'))
@@ -291,7 +291,7 @@ class CloudwatchDescribeAlarmsInstanceCreator(InstanceCreator):
 #   .--CE-------------------------------------------------------------------
 
 
-class CEGetCostsAndUsageInstanceCreator(InstanceCreator):
+class CEGetCostsAndUsageIC(InstanceCreator):
     def _fill_instance(self):
         self.add(Dict('TimePeriod', [
             Str('Start'),
@@ -316,7 +316,7 @@ class CEGetCostsAndUsageInstanceCreator(InstanceCreator):
 #   .--RDS------------------------------------------------------------------
 
 
-class RDSDescribeAccountAttributesInstanceCreator(InstanceCreator):
+class RDSDescribeAccountAttributesIC(InstanceCreator):
     def _fill_instance(self):
         # TODO for each choice one entry
         self.add(
@@ -341,7 +341,7 @@ class RDSDescribeAccountAttributesInstanceCreator(InstanceCreator):
         self.add(Int('Max'))
 
 
-class RDSDescribeDBInstancesInstanceCreator(InstanceCreator):
+class RDSDescribeDBInstancesIC(InstanceCreator):
     def _fill_instance(self):
         self.add(Str('DBInstanceIdentifier'))
         self.add(Str('DBInstanceClass'))
@@ -483,7 +483,7 @@ class RDSDescribeDBInstancesInstanceCreator(InstanceCreator):
 #   .--ELB------------------------------------------------------------------
 
 
-class ELBDescribeLoadBalancersInstanceCreator(InstanceCreator):
+class ELBDescribeLoadBalancersIC(InstanceCreator):
     def _fill_instance(self):
         self.add(Str('LoadBalancerName'))
         self.add(Str('DNSName'))
@@ -543,7 +543,7 @@ class ELBDescribeLoadBalancersInstanceCreator(InstanceCreator):
         ]))
 
 
-class ELBDescribeTagsInstanceCreator(InstanceCreator):
+class ELBDescribeTagsIC(InstanceCreator):
     def _fill_instance(self):
         self.add(Str('LoadBalancerName'))
         self.add(List('Tags', [
@@ -552,7 +552,7 @@ class ELBDescribeTagsInstanceCreator(InstanceCreator):
         ]))
 
 
-class ELBDescribeInstanceHealthInstanceCreator(InstanceCreator):
+class ELBDescribeInstanceHealthIC(InstanceCreator):
     def _fill_instance(self):
         self.add(Str('InstanceId'))
         self.add(Choice('State', ["InService", "OutOfServic", "Unknown"]))
@@ -574,7 +574,7 @@ class ELBDescribeInstanceHealthInstanceCreator(InstanceCreator):
 
 class FakeCloudwatchClient(object):
     def describe_alarms(self, AlarmNames=None):
-        alarms = CloudwatchDescribeAlarmsInstanceCreator.create_instances(amount=2)
+        alarms = CloudwatchDescribeAlarmsIC.create_instances(amount=2)
         if AlarmNames:
             alarms = [alarm for alarm in alarms if alarm['AlarmName'] in AlarmNames]
         return {'MetricAlarms': alarms, 'NextToken': 'string'}

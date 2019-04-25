@@ -38,6 +38,7 @@ from typing import Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional 
 
 import six
 
+import cmk
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.regex import regex, is_regex
@@ -2746,14 +2747,6 @@ class HostConfig(object):
         return list(set(cgrs))
 
     @property
-    def rrd_config(self):
-        # type: () -> Optional[Dict]
-        entries = self._config_cache.host_extra_conf(self.hostname, cmc_host_rrd_config)
-        if not entries:
-            return None
-        return entries[0]
-
-    @property
     def management_address(self):
         # type: () -> Optional[str]
         attributes_of_host = host_attributes.get(self.hostname, {})
@@ -2986,7 +2979,8 @@ class ConfigCache(object):
         if host_config:
             return host_config
 
-        host_config = self._host_configs[hostname] = HostConfig(self, hostname)
+        config_class = HostConfig if cmk.is_raw_edition() else CEEHostConfig
+        host_config = self._host_configs[hostname] = config_class(self, hostname)
         return host_config
 
     def _collect_hosttags(self):
@@ -3056,14 +3050,6 @@ class ConfigCache(object):
         match_object.service_description = svc_desc
 
         return match_object
-
-    def rrd_config_of_service(self, hostname, description):
-        # type: (str, Text) -> Optional[Dict]
-        rrdconf = self.service_extra_conf(hostname, description, cmc_service_rrd_config)
-        if not rrdconf:
-            return None
-
-        return rrdconf[0]
 
     def set_all_processed_hosts(self, all_processed_hosts):
         self._all_processed_hosts = set(all_processed_hosts)
@@ -3617,5 +3603,34 @@ def get_config_cache():
     # type: () -> ConfigCache
     config_cache = cmk_base.config_cache.get_dict("config_cache")
     if not config_cache:
-        config_cache["cache"] = ConfigCache()
+        cache_class = ConfigCache if cmk.is_raw_edition() else CEEConfigCache
+        config_cache["cache"] = cache_class()
     return config_cache["cache"]
+
+
+# TODO: Find a clean way to move this to cmk_base.cee. This will be possible once the
+# configuration settings are not held in cmk_base.config namespace anymore.
+class CEEConfigCache(ConfigCache):
+    """Encapsulates the CEE specific functionality"""
+
+    def rrd_config_of_service(self, hostname, description):
+        # type: (str, Text) -> Optional[Dict]
+        rrdconf = self.service_extra_conf(hostname, description, cmc_service_rrd_config)
+        if not rrdconf:
+            return None
+
+        return rrdconf[0]
+
+
+# TODO: Find a clean way to move this to cmk_base.cee. This will be possible once the
+# configuration settings are not held in cmk_base.config namespace anymore.
+class CEEHostConfig(HostConfig):
+    """Encapsulates the CEE specific functionality"""
+
+    @property
+    def rrd_config(self):
+        # type: () -> Optional[Dict]
+        entries = self._config_cache.host_extra_conf(self.hostname, cmc_host_rrd_config)
+        if not entries:
+            return None
+        return entries[0]

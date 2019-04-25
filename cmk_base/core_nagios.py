@@ -235,9 +235,11 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
         host_spec["parents"] = ",".join(nodes)
 
     # Custom configuration last -> user may override all other values
-    host_spec.update(
-        _extra_host_conf_of(
-            config_cache, hostname, exclude=["parents"] if host_config.is_cluster else []))
+    # TODO: Find a generic mechanism for CMC and Nagios
+    for key, value in host_config.extra_host_attributes.iteritems():
+        if host_config.is_cluster and key == "parents":
+            continue
+        host_spec[key] = value
 
     return host_spec
 
@@ -821,12 +823,6 @@ def _quote_nagios_string(s):
     return "'" + s.replace('\\', '\\\\').replace("'", "'\"'\"'").replace('!', '\\!') + "'"
 
 
-def _extra_host_conf_of(config_cache, hostname, exclude=None):
-    if exclude is None:
-        exclude = []
-    return _extra_conf_of(config_cache, config.extra_host_conf, hostname, None, exclude)
-
-
 # Collect all extra configuration data for a service
 def _extra_service_conf_of(cfg, config_cache, hostname, description):
     service_spec = {}
@@ -850,20 +846,10 @@ def _extra_service_conf_of(cfg, config_cache, hostname, description):
     return service_spec
 
 
-def _extra_conf_of(config_cache, confdict, hostname, service, exclude=None):
-    if exclude is None:
-        exclude = []
-
+def _extra_conf_of(config_cache, confdict, hostname, service):
     result = {}
     for key, conflist in confdict.items():
-        if service is not None:
-            values = config_cache.service_extra_conf(hostname, service, conflist)
-        else:
-            values = config_cache.host_extra_conf(hostname, conflist)
-
-        if exclude and key in exclude:
-            continue
-
+        values = config_cache.service_extra_conf(hostname, service, conflist)
         if values:
             result[key] = values[0]
 

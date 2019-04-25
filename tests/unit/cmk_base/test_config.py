@@ -655,6 +655,26 @@ def test_host_config_contactgroups(monkeypatch, hostname, result):
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", None),
+    ("testhost2", {
+        "1": 1
+    }),
+])
+def test_host_config_rrd_config(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("cmc_host_rrd_config", [
+        ({
+            "1": 1
+        }, [], ["testhost2"], {}),
+        ({
+            "2": 2
+        }, [], ["testhost2"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).rrd_config == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", {}),
     ("testhost2", {
         'empty_output': 1
@@ -942,6 +962,26 @@ def test_labels_of_service(monkeypatch):
         "label1": "ruleset",
         "label2": "ruleset",
     }
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", None),
+    ("testhost2", {
+        "1": 1
+    }),
+])
+def test_config_cache_rrd_config_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("cmc_service_rrd_config", [
+        ({
+            "1": 1
+        }, [], ["testhost2"], ["CPU load$"], {}),
+        ({
+            "2": 2
+        }, [], ["testhost2"], ["CPU load$"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.rrd_config_of_service(hostname, "CPU load") == result
 
 
 def test_config_cache_get_host_config():

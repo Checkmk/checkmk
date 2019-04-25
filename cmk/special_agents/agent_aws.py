@@ -2338,62 +2338,50 @@ class EBSSummary(AWSSectionGeneric):
     def _fetch_raw_content(self, colleague_contents):
         col_volumes, _col_instances = colleague_contents.content
         if self._tags is None and self._names is not None:
-            return self._fetch_volumes_filtered_by_names(col_volumes)
-        if self._tags is not None:
-            return self._fetch_volumes_filtered_by_tags(col_volumes)
-        return self._fetch_volumes_without_filter()
+            volumes = self._fetch_volumes_filtered_by_names(col_volumes)
+        elif self._tags is not None:
+            volumes = self._fetch_volumes_filtered_by_tags(col_volumes)
+        else:
+            volumes = self._fetch_volumes_without_filter()
+
+        for vol_id, vol in volumes.iteritems():
+            response = self._client.describe_volume_status(VolumeIds=[vol_id])
+            for state in self._get_response_content(response, 'VolumeStatuses'):
+                if state['VolumeId'] == vol_id:
+                    vol.setdefault('VolumeStatus', state['VolumeStatus'])
+        return volumes
 
     def _fetch_volumes_filtered_by_names(self, col_volumes):
         if col_volumes:
-            volumes = {
-                vol['VolumeId']: vol for vol in col_volumes if vol['VolumeId'] in self._names
-            }
-        else:
-            volumes = self._format_volumes(self._client.describe_volumes(VolumeIds=self._names))
-        return (volumes,
-                self._format_volume_states(
-                    self._client.describe_volume_status(VolumeIds=self._names)))
+            return {vol['VolumeId']: vol for vol in col_volumes if vol['VolumeId'] in self._names}
+        return self._format_volumes(self._client.describe_volumes(VolumeIds=self._names))
 
     def _fetch_volumes_filtered_by_tags(self, col_volumes):
         if col_volumes:
             tags = self._prepare_tags_for_api_response(self._tags)
-            volumes = {
+            return {
                 vol['VolumeId']: vol for vol in col_volumes for tag in vol['Tags'] if tag in tags
             }
-        else:
-            volumes = self._format_volumes(self._client.describe_volumes(Filters=self._tags))
-        return (volumes,
-                self._format_volume_states(self._client.describe_volume_status(Filters=self._tags)))
+        return self._format_volumes(self._client.describe_volumes(Filters=self._tags))
 
     def _fetch_volumes_without_filter(self):
-        return (self._format_volumes(self._client.describe_volumes()),
-                self._format_volume_states(self._client.describe_volume_status()))
+        return self._format_volumes(self._client.describe_volumes())
 
     def _format_volumes(self, response):
         return {r['VolumeId']: r for r in self._get_response_content(response, 'Volumes')}
-
-    def _format_volume_states(self, response):
-        return {r['VolumeId']: r for r in self._get_response_content(response, 'VolumeStatuses')}
 
     def _compute_content(self, raw_content, colleague_contents):
         _col_volumes, col_instances = colleague_contents.content
         instance_name_mapping = {v['InstanceId']: k for k, v in col_instances.iteritems()}
 
-        volumes, volume_states = raw_content.content
-        content = []
-        for volume_id in set(volumes.keys()).union(set(volume_states.keys())):
-            volume = volumes.get(volume_id, {})
-            volume.update(volume_states.get(volume_id, {}))
-            content.append(volume)
-
         content_by_piggyback_hosts = {}
-        for row in content:
-            for attachment in row['Attachments']:
+        for vol in raw_content.content.itervalues():
+            for attachment in vol['Attachments']:
                 attachment_id = attachment['InstanceId']
                 instance_name = instance_name_mapping.get(attachment_id)
                 if instance_name is None:
                     instance_name = ""
-                content_by_piggyback_hosts.setdefault(instance_name, []).append(row)
+                content_by_piggyback_hosts.setdefault(instance_name, []).append(vol)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):

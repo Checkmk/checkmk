@@ -711,26 +711,6 @@ def test_host_config_contactgroups(monkeypatch, hostname, result):
 
 
 @pytest.mark.parametrize("hostname,result", [
-    ("testhost1", None),
-    ("testhost2", {
-        "1": 1
-    }),
-])
-def test_host_config_rrd_config(monkeypatch, hostname, result):
-    ts = Scenario().add_host(hostname)
-    ts.set_ruleset("cmc_host_rrd_config", [
-        ({
-            "1": 1
-        }, [], ["testhost2"], {}),
-        ({
-            "2": 2
-        }, [], ["testhost2"], {}),
-    ])
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).rrd_config == result
-
-
-@pytest.mark.parametrize("hostname,result", [
     ("testhost1", {}),
     ("testhost2", {
         'empty_output': 1
@@ -1039,31 +1019,21 @@ def test_labels_of_service(monkeypatch):
     }
 
 
-@pytest.mark.parametrize("hostname,result", [
-    ("testhost1", None),
-    ("testhost2", {
-        "1": 1
-    }),
+@pytest.mark.parametrize("edition_short,expected_cache_class_name,expected_host_class_name", [
+    ("cme", "CEEConfigCache", "CEEHostConfig"),
+    ("cee", "CEEConfigCache", "CEEHostConfig"),
+    ("cre", "ConfigCache", "HostConfig"),
 ])
-def test_config_cache_rrd_config_of_service(monkeypatch, hostname, result):
-    ts = Scenario().add_host(hostname)
-    ts.set_ruleset("cmc_service_rrd_config", [
-        ({
-            "1": 1
-        }, [], ["testhost2"], ["CPU load$"], {}),
-        ({
-            "2": 2
-        }, [], ["testhost2"], ["CPU load$"], {}),
-    ])
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.rrd_config_of_service(hostname, "CPU load") == result
+def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache_class_name,
+                                      expected_host_class_name):
+    monkeypatch.setattr(cmk, "edition_short", lambda: edition_short)
 
-
-def test_config_cache_get_host_config():
-    cache = config.ConfigCache()
+    cache = config.get_config_cache()
+    assert cache.__class__.__name__ == expected_cache_class_name
     assert cache._host_configs == {}
 
     host_config = cache.get_host_config("xyz")
+    assert host_config.__class__.__name__ == expected_host_class_name
     assert isinstance(host_config, config.HostConfig)
     assert host_config is cache.get_host_config("xyz")
 

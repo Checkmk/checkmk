@@ -894,7 +894,7 @@ def test_agent_aws_ec2_result_distribution():
 
     #--EC2Labels------------------------------------------------------------
     assert ec2_labels.interval == 300
-    assert ec2_labels.name == "labels"
+    assert ec2_labels.name == "ec2_labels"
 
     #--EC2SecurityGroups----------------------------------------------------
     assert ec2_security_groups.interval == 300

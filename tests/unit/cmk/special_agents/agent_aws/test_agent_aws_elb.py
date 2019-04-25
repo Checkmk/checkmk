@@ -416,7 +416,7 @@ def test_agent_aws_elb_result_distribution(tags, found_instances, found_instance
 
     #--ELBLabels------------------------------------------------------------
     assert elb_labels.interval == 300
-    assert elb_labels.name == "labels"
+    assert elb_labels.name == "elb_generic_labels"
     assert len(elb_labels_results) == len(found_instances_with_labels)
     for result in elb_labels_results:
         assert result.piggyback_hostname in found_instances_with_labels

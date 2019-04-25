@@ -778,6 +778,25 @@ def test_host_config_exit_code_spec_individual(monkeypatch, hostname, result):
     assert config_cache.get_host_config(hostname).exit_code_spec(data_source_id="snmp") == result
 
 
+@pytest.mark.parametrize("hostname,version,result", [
+    ("testhost1", 2, None),
+    ("testhost2", 2, "bla"),
+    ("testhost2", 3, ('noAuthNoPriv', 'v3')),
+    ("testhost3", 2, "bla"),
+    ("testhost3", 3, None),
+    ("testhost4", 2, None),
+    ("testhost4", 3, ('noAuthNoPriv', 'v3')),
+])
+def test_host_config_snmp_credentials_of_version(monkeypatch, hostname, version, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("snmp_communities", [
+        ("bla", [], ["testhost2", "testhost3"], {}),
+        (('noAuthNoPriv', 'v3'), [], ["testhost2", "testhost4"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).snmp_credentials_of_version(version) == result
+
+
 @pytest.mark.parametrize("hostname,section_name,result", [
     ("testhost1", "uptime", None),
     ("testhost2", "uptime", None),

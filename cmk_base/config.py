@@ -2397,11 +2397,12 @@ class HostConfig(object):
         )
 
     def _snmp_credentials(self):
+        # type: () -> cmk_base.snmp_utils.SNMPCredentials
         """Determine SNMP credentials for a specific host
 
         It the host is found int the map snmp_communities, that community is
         returned. Otherwise the snmp_default_community is returned (wich is
-        preset with "public", but can be overridden in main.mk
+        preset with "public", but can be overridden in main.mk.
         """
         try:
             return explicit_snmp_communities[self.hostname]
@@ -2414,6 +2415,19 @@ class HostConfig(object):
 
         # nothing configured for this host -> use default
         return snmp_default_community
+
+    def snmp_credentials_of_version(self, snmp_version):
+        # type: (int) -> Optional[cmk_base.snmp_utils.SNMPCredentials]
+        for entry in self._config_cache.host_extra_conf(self.hostname, snmp_communities):
+            if snmp_version == 3 and not isinstance(entry, tuple):
+                continue
+
+            if snmp_version != 3 and isinstance(entry, tuple):
+                continue
+
+            return entry
+
+        return None
 
     def _snmp_port(self):
         # type: () -> int

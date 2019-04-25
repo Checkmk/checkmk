@@ -114,7 +114,7 @@ def host_check_command(config_cache,
     if value == "smart" and not is_clust:
         return "check-mk-host-smart"
 
-    elif value in ["ping", "smart"]:  # Cluster host
+    if value in ["ping", "smart"]:  # Cluster host
         ping_args = check_icmp_arguments_of(config_cache, host_config.hostname)
 
         if is_clust and ip:  # Do check cluster IP address if one is there
@@ -126,10 +126,10 @@ def host_check_command(config_cache,
 
         return None
 
-    elif value == "ok":
+    if value == "ok":
         return "check-mk-host-ok"
 
-    elif value == "agent" or value[0] == "service":
+    if value == "agent" or value[0] == "service":
         service = "Check_MK" if value == "agent" else value[1]
 
         if config.monitoring_core == "cmc":
@@ -142,10 +142,10 @@ def host_check_command(config_cache,
               host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
         return command
 
-    elif value[0] == "tcp":
+    if value[0] == "tcp":
         return "check-mk-host-tcp!" + str(value[1])
 
-    elif value[0] == "custom":
+    if value[0] == "custom":
         try:
             custom_commands_to_define.add("check-mk-custom")
         except:

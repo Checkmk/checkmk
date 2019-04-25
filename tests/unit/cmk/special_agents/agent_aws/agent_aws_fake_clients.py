@@ -40,13 +40,10 @@ class List(Entity):
             list_ = []
             for choice in self._from_choice.choices:
                 elem = {self._from_choice.key: choice}
-                elem.update(
-                    {e.key: e.create("%s-%s" % (idx, choice), amount) for e in self._elements})
+                elem.update({e.key: e.create(choice, amount) for e in self._elements})
                 list_.append(elem)
             return list_
-        return [{e.key: e.create("%s-%s" % (idx, x), amount)
-                 for e in self._elements}
-                for x in xrange(amount)]
+        return [{e.key: e.create(x, amount) for e in self._elements} for x in xrange(amount)]
 
 
 class Dict(Entity):

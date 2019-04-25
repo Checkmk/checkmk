@@ -91,9 +91,9 @@ elb_params = [
     ((None, None), ['LoadBalancerName-0', 'LoadBalancerName-1', 'LoadBalancerName-2'],
      ['LoadBalancerName-0', 'LoadBalancerName-1']),
     (([['FOO']], [['BAR']]), [], []),
-    (([['Key-0-0']], [['Value-0-0']]), ['LoadBalancerName-0', 'LoadBalancerName-1'],
+    (([['Key-0']], [['Value-0']]), ['LoadBalancerName-0', 'LoadBalancerName-1'],
      ['LoadBalancerName-0', 'LoadBalancerName-1']),
-    (([['Key-0-0', 'Foo']], [['Value-0-0', 'Bar']]), ['LoadBalancerName-0', 'LoadBalancerName-1'],
+    (([['Key-0', 'Foo']], [['Value-0', 'Bar']]), ['LoadBalancerName-0', 'LoadBalancerName-1'],
      ['LoadBalancerName-0', 'LoadBalancerName-1']),
 ]
 

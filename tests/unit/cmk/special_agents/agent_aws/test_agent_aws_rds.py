@@ -2,7 +2,7 @@
 
 import pytest
 from agent_aws_fake_clients import (
-    RDSDescribeDBInstancesInstanceCreator,
+    RDSDescribeDBInstancesIC,
     FakeCloudwatchClient,
 )
 
@@ -105,7 +105,7 @@ class FakeRDSClient(object):
     def describe_db_instances(self, DBInstanceIdentifier=None, Filters=None):
         return {
             'Marker': 'string',
-            'DBInstances': RDSDescribeDBInstancesInstanceCreator.create_instances(amount=2),
+            'DBInstances': RDSDescribeDBInstancesIC.create_instances(amount=2),
         }
 
 

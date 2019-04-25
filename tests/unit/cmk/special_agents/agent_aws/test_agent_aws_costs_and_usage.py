@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 from agent_aws_fake_clients import (
-    CEGetCostsAndUsageInstanceCreator,)
+    CEGetCostsAndUsageIC,)
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
@@ -17,7 +17,7 @@ class FakeCEClient(object):
                 'Type': "'DIMENSION' | 'TAG'",
                 'Key': 'string'
             },],
-            'ResultsByTime': CEGetCostsAndUsageInstanceCreator.create_instances(amount=1),
+            'ResultsByTime': CEGetCostsAndUsageIC.create_instances(amount=1),
         }
 
 

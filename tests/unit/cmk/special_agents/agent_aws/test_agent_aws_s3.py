@@ -200,3 +200,58 @@ def test_agent_aws_s3_requests(get_s3_sections, names, tags, amount_buckets):
         for row in s3_requests_result.content:
             assert row.get('LocationConstraint') == 'region'
             assert 'Tagging' in row
+
+
+@pytest.mark.parametrize("names,tags,amount_buckets", s3_params)
+def test_agent_aws_s3_summary_without_limits(get_s3_sections, names, tags, amount_buckets):
+    _s3_limits, s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
+    s3_summary_results = s3_summary.run().results
+
+    assert s3_summary.interval == 86400
+    assert s3_summary.name == "s3_summary"
+
+    assert s3_summary_results == []
+
+
+@pytest.mark.parametrize("names,tags,amount_buckets", s3_params)
+def test_agent_aws_s3_without_limits(get_s3_sections, names, tags, amount_buckets):
+    _s3_limits, s3_summary, s3, _s3_requests = get_s3_sections(names, tags)
+    _s3_summary_results = s3_summary.run().results
+    s3_results = s3.run().results
+
+    assert s3.interval == 86400
+    assert s3.name == "s3"
+
+    if amount_buckets:
+        assert len(s3_results) == 1
+
+        s3_result = s3_results[0]
+        assert s3_result.piggyback_hostname == ''
+
+        # Y (len results) == 4 (metrics) * X (buckets)
+        assert len(s3_result.content) == 4 * amount_buckets
+        for row in s3_result.content:
+            assert row.get('LocationConstraint') == 'region'
+            assert 'Tagging' in row
+
+
+@pytest.mark.parametrize("names,tags,amount_buckets", s3_params)
+def test_agent_aws_s3_requests_without_limits(get_s3_sections, names, tags, amount_buckets):
+    _s3_limits, s3_summary, _s3, s3_requests = get_s3_sections(names, tags)
+    _s3_summary_results = s3_summary.run().results
+    s3_requests_results = s3_requests.run().results
+
+    assert s3_requests.interval == 300
+    assert s3_requests.name == "s3_requests"
+
+    if amount_buckets:
+        assert len(s3_requests_results) == 1
+
+        s3_requests_result = s3_requests_results[0]
+        assert s3_requests_result.piggyback_hostname == ''
+
+        # Y (len results) == 16 (metrics) * X (buckets)
+        assert len(s3_requests_result.content) == 16 * amount_buckets
+        for row in s3_requests_result.content:
+            assert row.get('LocationConstraint') == 'region'
+            assert 'Tagging' in row

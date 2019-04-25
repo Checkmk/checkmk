@@ -89,26 +89,34 @@ def ts():
 
     yield ts3, result3
 
-    ts4 = Scenario().add_cluster("localhost")
+    ts4 = Scenario().add_cluster("localhost", nodes=["node1", "node2"])
+    ts4.add_host("node1")
+    ts4.add_host("node2")
+    ts4.add_host("switch")
+    ts4.set_option("ipaddresses", {
+        "node1": "127.0.0.1",
+        "node2": "127.0.0.2",
+    })
     ts4.set_option("extra_host_conf", {
         "alias": [(u'lOCALhost', ['localhost']),],
+        "parents": [('switch', ['node1', 'node2']),],
     })
     result4 = {
         '_ADDRESS_4': '127.0.0.1',
         '_ADDRESS_6': '',
         '_ADDRESS_FAMILY': '4',
         '_FILENAME': '/',
-        '_NODEIPS': '',
-        '_NODEIPS_4': '',
+        '_NODEIPS': '127.0.0.1 127.0.0.2',
+        '_NODEIPS_4': '127.0.0.1 127.0.0.2',
         '_NODEIPS_6': '',
-        '_NODENAMES': '',
+        '_NODENAMES': 'node1 node2',
         '_TAGS': '',
         'address': '127.0.0.1',
         'alias': u'lOCALhost',
         'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
         'host_name': 'localhost',
         'hostgroups': 'check_mk',
-        'parents': '',
+        'parents': 'node1,node2',
         'use': 'check_mk_cluster',
     }
 
@@ -124,5 +132,22 @@ def test_create_nagios_host_spec(ts, result, monkeypatch):
     host_attrs = core_config.get_host_attributes("localhost", config_cache)
 
     host_spec = core_nagios._create_nagios_host_spec(cfg, config_cache, "localhost", host_attrs)
-
     assert host_spec == result
+
+    if "node1" in config_cache.all_configured_hosts():
+        host_attrs = core_config.get_host_attributes("node1", config_cache)
+        host_spec = core_nagios._create_nagios_host_spec(cfg, config_cache, "node1", host_attrs)
+        assert host_spec == {
+            '_ADDRESS_4': '127.0.0.1',
+            '_ADDRESS_6': '',
+            '_ADDRESS_FAMILY': '4',
+            '_FILENAME': '/',
+            '_TAGS': '',
+            'address': '127.0.0.1',
+            'alias': 'node1',
+            'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
+            'host_name': 'node1',
+            'hostgroups': 'check_mk',
+            'parents': 'switch',
+            'use': 'check_mk_host',
+        }

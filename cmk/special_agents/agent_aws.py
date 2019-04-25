@@ -2927,7 +2927,6 @@ class AWSSectionsGeneric(AWSSections):
         ec2_summary_distributor.add(ec2_security_groups)
         ec2_summary_distributor.add(ec2)
         ec2_summary_distributor.add(ebs_summary)
-        ec2_summary_distributor.add(ebs)
 
         ebs_limits_distributor.add(ebs_summary)
         ebs_summary_distributor.add(ebs)

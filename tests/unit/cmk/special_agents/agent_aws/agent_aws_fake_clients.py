@@ -30,23 +30,39 @@ class Entity(object):
 
 
 class List(Entity):
-    def __init__(self, key, *elements):
+    def __init__(self, key, elements, from_choice=None):
         super(List, self).__init__(key)
         self._elements = elements
+        self._from_choice = from_choice
 
     def create(self, idx, amount):
+        if self._from_choice:
+            list_ = []
+            for choice in self._from_choice.choices:
+                elem = {self._from_choice.key: choice}
+                elem.update(
+                    {e.key: e.create("%s-%s" % (idx, choice), amount) for e in self._elements})
+                list_.append(elem)
+            return list_
         return [{e.key: e.create("%s-%s" % (idx, x), amount)
                  for e in self._elements}
                 for x in xrange(amount)]
 
 
 class Dict(Entity):
-    def __init__(self, key, *values):
+    def __init__(self, key, values, enumerate_keys=None):
         super(Dict, self).__init__(key)
         self._values = values
+        self._enumerate_keys = enumerate_keys
 
     def create(self, idx, amount):
-        return {v.key: v.create(idx, amount) for v in self._values}
+        dict_ = {}
+        if self._enumerate_keys:
+            for x in xrange(amount):
+                this_idx = "%s-%s" % (self._enumerate_keys.key, x)
+                dict_.update({this_idx: self._enumerate_keys.create(this_idx, amount)})
+        dict_.update({v.key: v.create(idx, amount) for v in self._values})
+        return dict_
 
 
 #   ---behavioural----------------------------------------------------------
@@ -83,10 +99,10 @@ class Enum(Entity):
 class Choice(Entity):
     def __init__(self, key, choices):
         super(Choice, self).__init__(key)
-        self._choices = choices
+        self.choices = choices
 
     def create(self, idx, amount):
-        return random.choice(self._choices)
+        return random.choice(self.choices)
 
 
 class BoolChoice(Choice):
@@ -174,11 +190,10 @@ class CloudwatchDescribeAlarmsInstanceCreator(InstanceCreator):
             'Maximum',
         ]))
         self.add(Str('ExtendedStatistic'))
-        self.add(List(
-            'Dimensions',
+        self.add(List('Dimensions', [
             Str('Name'),
             Str('Value'),
-        ))
+        ]))
         self.add(Int('Period'))
         self.add(
             Choice('Unit', [
@@ -223,21 +238,19 @@ class CloudwatchDescribeAlarmsInstanceCreator(InstanceCreator):
         self.add(Str('TreatMissingData'))
         self.add(Str('EvaluateLowSampleCountPercentile'))
         self.add(
-            List(
-                'Metrics',
+            List('Metrics', [
                 Str('Id'),
-                Dict(
-                    'MetricStat',
-                    Dict(
-                        'Metric',
+                Dict('MetricStat', [
+                    Dict('Metric', [
                         Str('Namespace'),
                         Str('MetricName'),
-                        List(
-                            'Dimensions',
+                        List('Dimensions', [
                             Str('Name'),
                             Str('Value'),
-                        ),
-                    ), Int('Period'), Str('Stat'),
+                        ]),
+                    ]),
+                    Int('Period'),
+                    Str('Stat'),
                     Choice('Unit', [
                         'Seconds',
                         'Microseconds',
@@ -266,11 +279,12 @@ class CloudwatchDescribeAlarmsInstanceCreator(InstanceCreator):
                         'Terabits/Second',
                         'Count/Second',
                         'None',
-                    ])),
+                    ])
+                ]),
                 Str('Expression'),
                 Str('Label'),
                 BoolChoice('ReturnData'),
-            ))
+            ]))
 
 
 #.
@@ -279,26 +293,22 @@ class CloudwatchDescribeAlarmsInstanceCreator(InstanceCreator):
 
 class CEGetCostsAndUsageInstanceCreator(InstanceCreator):
     def _fill_instance(self):
-        self.add(Dict(
-            'TimePeriod',
+        self.add(Dict('TimePeriod', [
             Str('Start'),
             Str('End'),
-        ))
-        self.add(Dict('Total', Dict(
-            'string',
+        ]))
+        self.add(Dict('Total', [Dict('string', [
             Str('Amount'),
             Str('Unit'),
-        )))
+        ])]))
         self.add(
-            List(
-                'Groups',
+            List('Groups', [
                 Enum('Keys'),
-                Dict('Metrics', Dict(
-                    'string',
+                Dict('Metrics', [Dict('string', [
                     Str('Amount'),
                     Str('Unit'),
-                )),
-            ))
+                ])]),
+            ]))
         self.add(BoolChoice('Estimated'))
 
 
@@ -339,55 +349,47 @@ class RDSDescribeDBInstancesInstanceCreator(InstanceCreator):
         self.add(Str('DBInstanceStatus'))
         self.add(Str('MasterUsername'))
         self.add(Str('DBName'))
-        self.add(Dict(
-            'Endpoint',
+        self.add(Dict('Endpoint', [
             Str('Address'),
             Int('Port'),
             Str('HostedZoneId'),
-        ))
+        ]))
         self.add(Int('AllocatedStorage'))
         self.add(Timestamp('InstanceCreateTime'))
         self.add(Str('PreferredBackupWindow'))
         self.add(Int('BackupRetentionPeriod'))
-        self.add(List(
-            'DBSecurityGroups',
+        self.add(List('DBSecurityGroups', [
             Str('DBSecurityGroupName'),
             Str('Status'),
-        ))
-        self.add(List(
-            'VpcSecurityGroups',
+        ]))
+        self.add(List('VpcSecurityGroups', [
             Str('VpcSecurityGroupId'),
             Str('Status'),
-        ))
+        ]))
         self.add(
-            List(
-                'DBParameterGroups',
+            List('DBParameterGroups', [
                 Str('DBParameterGroupName'),
                 Str('ParameterApplyStatus'),
-            ))
+            ]))
         self.add(Str('AvailabilityZone'))
         self.add(
-            Dict(
-                'DBSubnetGroup',
+            Dict('DBSubnetGroup', [
                 Str('DBSubnetGroupName'),
                 Str('DBSubnetGroupDescription'),
                 Str('VpcId'),
                 Str('SubnetGroupStatus'),
-                List(
-                    'Subnets',
+                List('Subnets', [
                     Str('SubnetIdentifier'),
-                    Dict(
-                        'SubnetAvailabilityZone',
+                    Dict('SubnetAvailabilityZone', [
                         Str('Name'),
-                    ),
+                    ]),
                     Str('SubnetStatus'),
-                ),
+                ]),
                 Str('DBSubnetGroupArn'),
-            ))
+            ]))
         self.add(Str('PreferredMaintenanceWindow'))
         self.add(
-            Dict(
-                'PendingModifiedValues',
+            Dict('PendingModifiedValues', [
                 Str('DBInstanceClass'),
                 Int('AllocatedStorage'),
                 Str('MasterUserPassword'),
@@ -401,17 +403,15 @@ class RDSDescribeDBInstancesInstanceCreator(InstanceCreator):
                 Str('StorageType'),
                 Str('CACertificateIdentifier'),
                 Str('DBSubnetGroupName'),
-                Dict(
-                    'PendingCloudwatchLogsExports',
+                Dict('PendingCloudwatchLogsExports', [
                     Enum('LogTypesToEnable'),
                     Enum('LogTypesToDisable'),
-                ),
-                Dict(
-                    'ProcessorFeatures',
+                ]),
+                Dict('ProcessorFeatures', [
                     Str('Name'),
                     Str('Value'),
-                ),
-            ))
+                ]),
+            ]))
         self.add(Timestamp('LatestRestorableTime'))
         self.add(BoolChoice('MultiAZ'))
         self.add(Str('EngineVersion'))
@@ -421,22 +421,20 @@ class RDSDescribeDBInstancesInstanceCreator(InstanceCreator):
         self.add(Enum('ReadReplicaDBClusterIdentifiers'))
         self.add(Str('LicenseModel'))
         self.add(Int('Iops'))
-        self.add(List(
-            'OptionGroupMemberships',
+        self.add(List('OptionGroupMemberships', [
             Str('OptionGroupName'),
             Str('Status'),
-        ))
+        ]))
         self.add(Str('CharacterSetName'))
         self.add(Str('SecondaryAvailabilityZone'))
         self.add(BoolChoice('PubliclyAccessible'))
         self.add(
-            List(
-                'StatusInfos',
+            List('StatusInfos', [
                 Str('StatusType'),
                 BoolChoice('Normal'),
                 Str('Status'),
                 Str('Message'),
-            ))
+            ]))
         self.add(Str('StorageType'))
         self.add(Str('TdeCredentialArn'))
         self.add(Int('DbInstancePort'))
@@ -446,13 +444,12 @@ class RDSDescribeDBInstancesInstanceCreator(InstanceCreator):
         self.add(Str('DbiResourceId'))
         self.add(Str('CACertificateIdentifier'))
         self.add(
-            List(
-                'DomainMemberships',
+            List('DomainMemberships', [
                 Str('Domain'),
                 Str('Status'),
                 Str('FQDN'),
                 Str('IAMRoleName'),
-            ))
+            ]))
         self.add(BoolChoice('CopyTagsToSnapshot'))
         self.add(Int('MonitoringInterval'))
         self.add(Str('EnhancedMonitoringResourceArn'))
@@ -465,24 +462,21 @@ class RDSDescribeDBInstancesInstanceCreator(InstanceCreator):
         self.add(Str('PerformanceInsightsKMSKeyId'))
         self.add(Int('PerformanceInsightsRetentionPeriod'))
         self.add(Enum('EnabledCloudwatchLogsExports'))
-        self.add(List(
-            'ProcessorFeatures',
+        self.add(List('ProcessorFeatures', [
             Str('Name'),
             Str('Value'),
-        ))
+        ]))
         self.add(BoolChoice('DeletionProtection'))
-        self.add(List(
-            'AssociatedRoles',
+        self.add(List('AssociatedRoles', [
             Str('RoleArn'),
             Str('FeatureName'),
             Str('Status'),
-        ))
-        self.add(List(
-            'ListenerEndpoint',
+        ]))
+        self.add(List('ListenerEndpoint', [
             Str('Address'),
             Int('Port'),
             Str('HostedZoneId'),
-        ))
+        ]))
 
 
 #.

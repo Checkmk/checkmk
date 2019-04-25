@@ -607,6 +607,28 @@ def test_host_config_active_checks(monkeypatch, hostname, result):
 
 
 @pytest.mark.parametrize("hostname,result", [
+    ("testhost1", []),
+    ("testhost2", [{
+        "param1": 1
+    }, {
+        "param2": 2
+    }]),
+])
+def test_host_config_custom_checks(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("custom_checks", [
+        ({
+            "param1": 1
+        }, [], ["testhost2"], {}),
+        ({
+            "param2": 2
+        }, [], ["testhost2"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).custom_checks == result
+
+
+@pytest.mark.parametrize("hostname,result", [
     ("testhost1", ["check_mk"]),
     ("testhost2", ["dingdong"]),
 ])

@@ -2625,7 +2625,11 @@ class HostConfig(object):
     @property
     def active_checks(self):
         # type: () -> List[Tuple[str, List[Any]]]
-        """Returns the list of active checks configured for this host"""
+        """Returns the list of active checks configured for this host
+
+        These are configured using the active check formalization of WATO
+        where the whole parameter set is configured using valuespecs.
+        """
         configured_checks = []  # type: List[Tuple[str, List[Any]]]
         for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
             # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
@@ -2640,6 +2644,12 @@ class HostConfig(object):
             configured_checks.append((plugin_name, entries))
 
         return configured_checks
+
+    @property
+    def custom_checks(self):
+        # type: () -> List[Dict]
+        """Return the free form configured custom checks without formalization"""
+        return self._config_cache.host_extra_conf(self.hostname, custom_checks)
 
     @property
     def hostgroups(self):

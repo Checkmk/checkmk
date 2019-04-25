@@ -52,34 +52,6 @@ def test_registered_automations(site):
     assert sorted(needed_automations) == sorted(registered_automations)
 
 
-def test_static_check_rules_of_host(monkeypatch):
-    as_automation = automations.AutomationAnalyseServices()
-    assert as_automation.static_check_rules_of("checkgroup_ding", "test-host") == []
-
-    ts = Scenario()
-    ts.add_host("test-host", [])
-    ts.set_option(
-        "static_checks", {
-            "checkgroup_ding": [
-                (("ding-check", "item"), [], config.ALL_HOSTS, {}),
-                (("ding-check", "item2"), [], config.ALL_HOSTS, {
-                    "disabled": True
-                }),
-                (("dong-check", "item2", {
-                    "param1": 1
-                }), [], config.ALL_HOSTS, {}),
-            ],
-        })
-    ts.apply(monkeypatch)
-
-    assert as_automation.static_check_rules_of("checkgroup_ding", "test-host") == [
-        ('ding-check', 'item'),
-        ('dong-check', 'item2', {
-            'param1': 1
-        }),
-    ]
-
-
 def test_get_labels_of_host(monkeypatch):
     automation = automations.AutomationGetLabelsOf()
 

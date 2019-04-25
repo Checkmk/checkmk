@@ -613,24 +613,16 @@ class AutomationAnalyseServices(Automation):
         table = check_table.get_check_table(hostname, remove_duplicates=True)
 
         # 1. Manual checks
-        for checkgroup_name in config.static_checks:
-            for value in self.static_check_rules_of(checkgroup_name, hostname):
-                # Parameters are optional
-                if len(value) == 2:
-                    checktype, item = value
-                    params = None
-                else:
-                    checktype, item, params = value
-
-                descr = config.service_description(hostname, checktype, item)
-                if descr == servicedesc:
-                    return {
-                        "origin": "static",
-                        "checkgroup": checkgroup_name,
-                        "checktype": checktype,
-                        "item": item,
-                        "parameters": params,
-                    }
+        for checkgroup_name, checktype, item, params in host_config.static_checks:
+            descr = config.service_description(hostname, checktype, item)
+            if descr == servicedesc:
+                return {
+                    "origin": "static",
+                    "checkgroup": checkgroup_name,
+                    "checktype": checktype,
+                    "item": item,
+                    "parameters": params,
+                }
 
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
@@ -705,10 +697,6 @@ class AutomationAnalyseServices(Automation):
                     }
 
         return {}  # not found
-
-    def static_check_rules_of(self, checkgroup_name, hostname):
-        config_cache = config.get_config_cache()
-        return config_cache.host_extra_conf(hostname, config.static_checks.get(checkgroup_name, []))
 
 
 automations.register(AutomationAnalyseServices())

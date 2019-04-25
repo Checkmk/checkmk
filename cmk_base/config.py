@@ -2680,6 +2680,24 @@ class HostConfig(object):
         return self._config_cache.host_extra_conf(self.hostname, custom_checks)
 
     @property
+    def static_checks(self):
+        # type: () -> List[Tuple[str, str, str, Any]]
+        """Returns a table of all "manual checks" configured for this host"""
+        matched = []
+        for checkgroup_name in static_checks:
+            for entry in self._config_cache.host_extra_conf(self.hostname,
+                                                            static_checks.get(checkgroup_name, [])):
+                if len(entry) == 2:
+                    checktype, item = entry
+                    params = None
+                else:
+                    checktype, item, params = entry
+
+                matched.append((checkgroup_name, checktype, item, params))
+
+        return matched
+
+    @property
     def hostgroups(self):
         # type: () -> List[str]
         """Returns the list of hostgroups of this host

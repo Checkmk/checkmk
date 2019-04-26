@@ -459,7 +459,7 @@ def test_host_config_icons_and_actions(monkeypatch, hostname, result):
         ("icon2", [], ["testhost2"], {}),
     ])
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).icons_and_actions == result
+    assert sorted(config_cache.get_host_config(hostname).icons_and_actions) == sorted(result)
 
 
 @pytest.mark.parametrize("hostname,result", [

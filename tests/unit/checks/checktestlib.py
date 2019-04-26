@@ -104,7 +104,7 @@ class BasicCheckResult(Tuploid):
         self.multiline = None
 
         assert status in [0, 1, 2, 3], \
-               "BasicCheckResult: status must be in (0, 1, 2, 3) - not %r" % status
+               "BasicCheckResult: status must be in (0, 1, 2, 3) - not %r" % (status,)
 
         ti = type(infotext)
         assert ti in [str, unicode], \

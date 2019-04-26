@@ -76,12 +76,10 @@ $(test_neb_SOURCES): build_googletest
 build_googletest:
 	bash -c "make -C $(GOOGLETEST) build" > /dev/null
 
-# NOTE: cppcheck up to 7287ffe (2019-04-15) understands only the old "command
-# style", so we have to stick with that for now. :-/
 compile_commands.json: Makefile $(wildcard *.cc  *.h)
 	$(MAKE) -C $(top_srcdir) .venv
 	$(MAKE) -j4 -C ..
-	$(MAKE) -Bnwk | PIPENV_MAX_DEPTH=4 pipenv run compiledb --command-style
+	$(MAKE) -Bnwk | PIPENV_MAX_DEPTH=4 pipenv run compiledb
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)

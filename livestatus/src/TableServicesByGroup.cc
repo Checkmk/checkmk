@@ -36,6 +36,8 @@ extern servicegroup *servicegroup_list;
 namespace {
 struct servicebygroup {
     service _service;
+    // cppcheck is too dumb to see usage in the DANGEROUS_OFFSETOF macro
+    // cppcheck-suppress unusedStructMember
     servicegroup *_servicegroup;
 };
 }  // namespace

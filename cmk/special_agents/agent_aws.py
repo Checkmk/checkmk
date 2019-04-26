@@ -552,7 +552,7 @@ class AWSSection(object):
         pass
 
     @abc.abstractproperty
-    def interval(self):
+    def cache_interval(self):
         """
         In general the default resolution of AWS metrics is 5 min (300 sec)
         The default resolution of AWS S3 metrics is 1 day (86400 sec)
@@ -562,7 +562,7 @@ class AWSSection(object):
 
     @property
     def period(self):
-        return 2 * self.interval
+        return 2 * self.cache_interval
 
     def _send(self, content):
         self._distributor.distribute(self, content)
@@ -655,7 +655,7 @@ class AWSSection(object):
             return False
 
         age = time.time() - mtime
-        if 0 <= age < self.interval:
+        if 0 <= age < self.cache_interval:
             return True
 
         if age < 0:
@@ -873,7 +873,7 @@ class CostsAndUsage(AWSSectionGeneric):
         return "costs_and_usage"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 86400
 
     def _get_colleague_contents(self):
@@ -884,7 +884,7 @@ class CostsAndUsage(AWSSectionGeneric):
         now = time.time()
         response = self._client.get_cost_and_usage(
             TimePeriod={
-                'Start': time.strftime(fmt, time.gmtime(now - self.interval)),
+                'Start': time.strftime(fmt, time.gmtime(now - self.cache_interval)),
                 'End': time.strftime(fmt, time.gmtime(now)),
             },
             Granularity='DAILY',
@@ -923,7 +923,7 @@ class EC2Limits(AWSSectionLimits):
         return "ec2_limits"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1140,7 +1140,7 @@ class EC2Summary(AWSSectionGeneric):
         return "ec2_summary"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1209,7 +1209,7 @@ class EC2Labels(AWSSectionLabels):
         return "ec2_labels"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1253,7 +1253,7 @@ class EC2SecurityGroups(AWSSectionGeneric):
         return "ec2_security_groups"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1299,7 +1299,7 @@ class EC2(AWSSectionCloudwatch):
         return "ec2"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1377,7 +1377,7 @@ class EBSLimits(AWSSectionLimits):
         return "ebs_limits"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1455,7 +1455,7 @@ class EBSSummary(AWSSectionGeneric):
         return "ebs_summary"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1543,7 +1543,7 @@ class EBS(AWSSectionCloudwatch):
         return "ebs"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1625,7 +1625,7 @@ class S3Limits(AWSSectionLimits):
         return "s3_limits"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 86400
 
     def _get_colleague_contents(self):
@@ -1655,7 +1655,7 @@ class S3Summary(AWSSectionGeneric):
         return "s3_summary"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 86400
 
     def _get_colleague_contents(self):
@@ -1730,7 +1730,7 @@ class S3(AWSSectionCloudwatch):
         return "s3"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         # BucketSizeBytes and NumberOfObjects are available per day
         # and must include 00:00h
         return 86400
@@ -1793,7 +1793,7 @@ class S3Requests(AWSSectionCloudwatch):
         return "s3_requests"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1870,7 +1870,7 @@ class ELBLimits(AWSSectionLimits):
         return "elb_limits"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1924,7 +1924,7 @@ class ELBSummaryGeneric(AWSSectionGeneric):
         return "%s_summary" % self._resource
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1995,7 +1995,7 @@ class ELBLabelsGeneric(AWSSectionLabels):
         return "elb_generic_labels"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2021,7 +2021,7 @@ class ELBHealth(AWSSectionGeneric):
         return "elb_health"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2056,7 +2056,7 @@ class ELB(AWSSectionCloudwatch):
         return "elb"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2133,7 +2133,7 @@ class ELBv2Limits(AWSSectionLimits):
         return "elbv2_limits"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2250,7 +2250,7 @@ class ELBv2TargetGroups(AWSSectionGeneric):
         return "elbv2_target_groups"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2317,7 +2317,7 @@ class ELBv2Application(AWSSectionCloudwatch):
         return "elbv2_application"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2403,7 +2403,7 @@ class ELBv2Network(AWSSectionCloudwatch):
         return "elbv2_network"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2502,7 +2502,7 @@ class RDSLimits(AWSSectionLimits):
         return "rds_limits"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2538,7 +2538,7 @@ class RDSSummary(AWSSectionGeneric):
         return "rds_summary"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2573,7 +2573,7 @@ class RDS(AWSSectionCloudwatch):
         return "rds"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2659,7 +2659,7 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
         return "cloudwatch_alarms_limits"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2685,7 +2685,7 @@ class CloudwatchAlarms(AWSSectionGeneric):
         return "cloudwatch_alarms"
 
     @property
-    def interval(self):
+    def cache_interval(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2771,8 +2771,9 @@ class AWSSections(object):
                     raise
                 exceptions.append(e)
             else:
-                results.setdefault((section.name, section_result.cache_timestamp, section.interval),
-                                   section_result.results)
+                results.setdefault(
+                    (section.name, section_result.cache_timestamp, section.cache_interval),
+                    section_result.results)
 
         self._write_exceptions(exceptions)
         self._write_section_results(results)

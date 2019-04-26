@@ -128,7 +128,7 @@ def test_agent_aws_s3_limits(get_s3_sections, names, tags, amount_buckets):
     s3_limits, _s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
     s3_limits_results = s3_limits.run().results
 
-    assert s3_limits.interval == 86400
+    assert s3_limits.cache_interval == 86400
     assert s3_limits.name == "s3_limits"
 
     assert len(s3_limits_results) == 1
@@ -150,7 +150,7 @@ def test_agent_aws_s3_summary(get_s3_sections, names, tags, amount_buckets):
     _s3_summary_results = s3_limits.run().results
     s3_summary_results = s3_summary.run().results
 
-    assert s3_summary.interval == 86400
+    assert s3_summary.cache_interval == 86400
     assert s3_summary.name == "s3_summary"
 
     assert s3_summary_results == []
@@ -163,7 +163,7 @@ def test_agent_aws_s3(get_s3_sections, names, tags, amount_buckets):
     _s3_summary_results = s3_summary.run().results
     s3_results = s3.run().results
 
-    assert s3.interval == 86400
+    assert s3.cache_interval == 86400
     assert s3.name == "s3"
 
     if amount_buckets:
@@ -186,7 +186,7 @@ def test_agent_aws_s3_requests(get_s3_sections, names, tags, amount_buckets):
     _s3_summary_results = s3_summary.run().results
     s3_requests_results = s3_requests.run().results
 
-    assert s3_requests.interval == 300
+    assert s3_requests.cache_interval == 300
     assert s3_requests.name == "s3_requests"
 
     if amount_buckets:
@@ -207,7 +207,7 @@ def test_agent_aws_s3_summary_without_limits(get_s3_sections, names, tags, amoun
     _s3_limits, s3_summary, _s3, _s3_requests = get_s3_sections(names, tags)
     s3_summary_results = s3_summary.run().results
 
-    assert s3_summary.interval == 86400
+    assert s3_summary.cache_interval == 86400
     assert s3_summary.name == "s3_summary"
 
     assert s3_summary_results == []
@@ -219,7 +219,7 @@ def test_agent_aws_s3_without_limits(get_s3_sections, names, tags, amount_bucket
     _s3_summary_results = s3_summary.run().results
     s3_results = s3.run().results
 
-    assert s3.interval == 86400
+    assert s3.cache_interval == 86400
     assert s3.name == "s3"
 
     if amount_buckets:
@@ -241,7 +241,7 @@ def test_agent_aws_s3_requests_without_limits(get_s3_sections, names, tags, amou
     _s3_summary_results = s3_summary.run().results
     s3_requests_results = s3_requests.run().results
 
-    assert s3_requests.interval == 300
+    assert s3_requests.cache_interval == 300
     assert s3_requests.name == "s3_requests"
 
     if amount_buckets:

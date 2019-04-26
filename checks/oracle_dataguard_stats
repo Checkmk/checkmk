@@ -38,6 +38,7 @@
 factory_settings["oracle_dataguard_stats"] = {
     "apply_lag": (3600, 14400),
     "active_dataguard_option": 1,
+    "primary_broker_state": False,
 }
 
 
@@ -151,8 +152,13 @@ def check_oracle_dataguard_stats(item, params, parsed):
                                                'LOG SWITCH GAP'):
                 yield 0, "Switchover to standby possible"
             else:
-                yield 2, "Switchover to standby not possible! reason: %s" % dgdata[
-                    'switchover_status'].lower()
+                primary_broker_state = params.get("primary_broker_state")
+                if primary_broker_state or dgdata['broker_state'].lower() == 'enabled':
+                    # We need primary_broker_state False for Data-Guards without Broker
+                    yield 2, "Switchover to standby not possible! reason: %s"\
+                             % dgdata['switchover_status'].lower()
+                else:
+                    yield 0, "Switchoverstate ignored "
 
         elif dgdata['database_role'] == 'PHYSICAL STANDBY':
 
@@ -160,8 +166,8 @@ def check_oracle_dataguard_stats(item, params, parsed):
             if dgdata['switchover_status'] in ('SYNCHRONIZED', 'NOT ALLOWED', 'SESSIONS ACTIVE'):
                 yield 0, "Switchover to primary possible"
             else:
-                yield 2, "Switchover to primary not possible! reason: %s" % dgdata[
-                    'switchover_status']
+                yield 2, "Switchover to primary not possible! reason: %s"\
+                         % dgdata['switchover_status']
 
     if dgdata['database_role'] == 'PHYSICAL STANDBY':
 

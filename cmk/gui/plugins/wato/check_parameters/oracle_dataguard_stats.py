@@ -31,6 +31,7 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
     MonitoringState,
+    Checkbox,
 )
 
 from cmk.gui.plugins.wato import (
@@ -71,6 +72,14 @@ class RulespecCheckgroupParametersOracleDataguardStats(CheckParameterRulespecWit
                      title=_("State in case of Active Data-Guard Option is active: "),
                      help=_("The Active Data-Guard Option needs an addional License from Oracle."),
                      default_value=1,
+                 )),
+                ("primary_broker_state",
+                 Checkbox(
+                     title=_("Check State of Broker on Primary: "),
+                     default_value=False,
+                     help=_(
+                         "Data-Guards with dg_broker_start=false needs Ignore Brokerstate to monitor "
+                         "the Switchoverstate on Primary."),
                  )),
                 ("apply_lag",
                  Tuple(

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Place for common code shared among different Check_MK special agents"""
 
+import datetime
 import getopt
 import json
 import pprint
@@ -93,3 +94,11 @@ USAGE: agent_%s --section_url [{section_name},{url}]
                     print line
         else:
             return content
+
+
+def datetime_serializer(obj):
+    """Custom serializer to pass to json dump functions"""
+    if isinstance(obj, datetime.datetime):
+        return obj.__str__()
+    # fall back to json default behaviour:
+    raise TypeError("%r is not JSON serializable" % obj)

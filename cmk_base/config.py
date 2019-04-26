@@ -3706,3 +3706,9 @@ class CEEHostConfig(HostConfig):
         settings.update(
             self._config_cache.host_extra_conf_merged(self.hostname, cmc_smartping_settings))
         return settings
+
+    @property
+    def lnx_remote_alert_handlers(self):
+        # type: () -> List[Dict[str, str]]
+        return self._config_cache.host_extra_conf(self.hostname,
+                                                  agent_config.get("lnx_remote_alert_handlers", []))

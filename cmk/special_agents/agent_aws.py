@@ -629,7 +629,7 @@ class AWSSection(object):
                 self._cache_is_recent_enough()):
             raw_content = self._read_from_cache()
         else:
-            raw_content = self._fetch_raw_content(colleague_contents)
+            raw_content = self.get_live_data(colleague_contents)
             # TODO: Write cache only when _compute_section_content succeeded?
             if use_cache:
                 self._write_to_cache(raw_content)
@@ -709,7 +709,7 @@ class AWSSection(object):
         pass
 
     @abc.abstractmethod
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         """
         Call API methods, eg. 'response = ec2_client.describe_instances()' and
         extract content from raw content.  Raw contents basically consist of
@@ -810,7 +810,7 @@ class AWSSectionGeneric(AWSSection):
 class AWSSectionCloudwatch(AWSSection):
     __metaclass__ = abc.ABCMeta
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         end_time = time.time()
         start_time = end_time - self.period
         metrics = self._get_metrics(colleague_contents)
@@ -879,7 +879,7 @@ class CostsAndUsage(AWSSectionGeneric):
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         fmt = "%Y-%m-%d"
         now = time.time()
         response = self._client.get_cost_and_usage(
@@ -929,7 +929,7 @@ class EC2Limits(AWSSectionLimits):
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         response = self._client.describe_instances()
         reservations = self._get_response_content(response, 'Reservations')
 
@@ -1149,7 +1149,7 @@ class EC2Summary(AWSSectionGeneric):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         if self._tags is None and self._names is not None:
             return self._fetch_instances_filtered_by_names(colleague_contents.content)
         if self._tags is not None:
@@ -1218,7 +1218,7 @@ class EC2Labels(AWSSectionLabels):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         response = self._client.describe_tags(Filters=[{
             'Name': 'resource-id',
             'Values': [inst['InstanceId'] for inst in colleague_contents.content.itervalues()],
@@ -1262,7 +1262,7 @@ class EC2SecurityGroups(AWSSectionGeneric):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         response = self._describe_security_groups()
         return {
             group['GroupId']: group
@@ -1383,7 +1383,7 @@ class EBSLimits(AWSSectionLimits):
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         response = self._client.describe_volumes()
         volumes = self._get_response_content(response, 'Volumes')
 
@@ -1474,7 +1474,7 @@ class EBSSummary(AWSSectionGeneric):
 
         return AWSColleagueContents((volumes, instances), max_cache_timestamp)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         col_volumes, _col_instances = colleague_contents.content
         if self._tags is None and self._names is not None:
             volumes = self._fetch_volumes_filtered_by_names(col_volumes)
@@ -1631,7 +1631,7 @@ class S3Limits(AWSSectionLimits):
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         """
         There's no API method for getting account limits thus we have to
         fetch all buckets.
@@ -1664,7 +1664,7 @@ class S3Summary(AWSSectionGeneric):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         found_buckets = []
         for bucket in self._list_buckets(colleague_contents):
             bucket_name = bucket['Name']
@@ -1876,7 +1876,7 @@ class ELBLimits(AWSSectionLimits):
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         """
         The AWS/ELB API method 'describe_account_limits' provides limit values
         but no values about the usage per limit thus we have to gather the usage
@@ -1933,7 +1933,7 @@ class ELBSummaryGeneric(AWSSectionGeneric):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         found_load_balancers = []
         for load_balancer in self._describe_load_balancers(colleague_contents):
             load_balancer_name = load_balancer['LoadBalancerName']
@@ -2004,7 +2004,7 @@ class ELBLabelsGeneric(AWSSectionLabels):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         return colleague_contents.content
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -2030,7 +2030,7 @@ class ELBHealth(AWSSectionGeneric):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         load_balancers = {}
         for load_balancer_dns_name, load_balancer in colleague_contents.content.iteritems():
             load_balancer_name = load_balancer['LoadBalancerName']
@@ -2139,7 +2139,7 @@ class ELBv2Limits(AWSSectionLimits):
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         """
         The AWS/ELBv2 API method 'describe_account_limits' provides limit values
         but no values about the usage per limit thus we have to gather the usage
@@ -2259,7 +2259,7 @@ class ELBv2TargetGroups(AWSSectionGeneric):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         load_balancers = {}
         for load_balancer_dns_name, load_balancer in colleague_contents.content.iteritems():
             load_balancer_type = load_balancer.get('Type')
@@ -2508,7 +2508,7 @@ class RDSLimits(AWSSectionLimits):
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         """
         AWS/RDS API method 'describe_account_attributes' already sends
         limit and usage values.
@@ -2544,7 +2544,7 @@ class RDSSummary(AWSSectionGeneric):
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         response = self._describe_db_instances()
         return self._get_response_content(response, 'DBInstances')
 
@@ -2665,7 +2665,7 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         response = self._client.describe_alarms()
         return self._get_response_content(response, 'MetricAlarms')
 
@@ -2694,7 +2694,7 @@ class CloudwatchAlarms(AWSSectionGeneric):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents([], 0.0)
 
-    def _fetch_raw_content(self, colleague_contents):
+    def get_live_data(self, colleague_contents):
         if self._names:
             if colleague_contents.content:
                 return [

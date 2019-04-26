@@ -579,7 +579,8 @@ class AWSSection(object):
             colleague_contents.cache_timestamp,
             float), "%s: Cache timestamp of colleague contents must be of type 'float'" % self.name
 
-        raw_content = self._get_raw_content(colleague_contents, use_cache=use_cache)
+        raw_data = self._get_raw_content(colleague_contents, use_cache=use_cache)
+        raw_content = AWSRawContent(raw_data, self.cache_timestamp if use_cache else time.time())
         assert isinstance(
             raw_content,
             AWSRawContent), "%s: Raw content must be of type 'AWSRawContent'" % self.name
@@ -626,14 +627,13 @@ class AWSSection(object):
         self._cache_file_dir.mkdir(parents=True, exist_ok=True)
         if (use_cache and self.get_validity_from_args(colleague_contents) and
                 self._cache_is_recent_enough()):
-            raw_content, cache_timestamp = self._read_from_cache()
+            raw_content = self._read_from_cache()
         else:
             raw_content = self._fetch_raw_content(colleague_contents)
             # TODO: Write cache only when _compute_section_content succeeded?
             if use_cache:
                 self._write_to_cache(raw_content)
-            cache_timestamp = time.time()
-        return AWSRawContent(raw_content, cache_timestamp)
+        return raw_content
 
     @property
     def cache_timestamp(self):
@@ -680,7 +680,7 @@ class AWSSection(object):
         except IOError as e:
             if e.errno == errno.ENOENT:
                 logging.info("No such file or directory %s (read from cache)", self._cache_file)
-                return None, 0.0
+                return None
             else:
                 logging.info("Cannot read from cache file: %s", e)
                 raise
@@ -689,7 +689,7 @@ class AWSSection(object):
         except ValueError as e:
             logging.info("Cannot load raw content: %s", e)
             content = None
-        return content, self._cache_file.stat().st_mtime
+        return content
 
     def _write_to_cache(self, raw_content):
         json_dump = json.dumps(raw_content, default=datetime_serializer)

@@ -85,7 +85,7 @@ def test_agent_aws_elbv2_limits(get_elbv2_sections):
     elbv2_limits, _elbv2_summary, _elbv2_target_groups = get_elbv2_sections(None, (None, None))
     _elbv2_limits_results = elbv2_limits.run().results
 
-    assert elbv2_limits.interval == 300
+    assert elbv2_limits.cache_interval == 300
     assert elbv2_limits.name == "elbv2_limits"
 
 
@@ -94,7 +94,7 @@ def test_agent_aws_elbv2_summary(get_elbv2_sections):
     _elbv2_limits_results = elbv2_limits.run().results
     _elbv2_summary_results = elbv2_summary.run().results
 
-    assert elbv2_summary.interval == 300
+    assert elbv2_summary.cache_interval == 300
     assert elbv2_summary.name == "elbv2_summary"
 
 
@@ -104,5 +104,5 @@ def test_agent_aws_elbv2_target_groups(get_elbv2_sections):
     _elbv2_summary_results = elbv2_summary.run().results
     _elbv2_target_groups_results = elbv2_target_groups.run().results
 
-    assert elbv2_target_groups.interval == 300
+    assert elbv2_target_groups.cache_interval == 300
     assert elbv2_target_groups.name == "elbv2_target_groups"

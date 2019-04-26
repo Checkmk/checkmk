@@ -29,7 +29,7 @@ def test_agent_aws_costs_and_usage():
     ce_results = ce.run().results
 
     #--CE-------------------------------------------------------------------
-    assert ce.interval == 86400
+    assert ce.cache_interval == 86400
     assert ce.name == "costs_and_usage"
     assert len(ce_results) == 1
     ce_result = ce_results[0]

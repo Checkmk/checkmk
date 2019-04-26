@@ -104,7 +104,7 @@ def test_agent_aws_ebs_limits(get_ebs_sections, names, tags, found_ebs):
     _ec2_summary_results = ec2_summary.run().results
     ebs_limits_results = ebs_limits.run().results
 
-    assert ebs_limits.interval == 300
+    assert ebs_limits.cache_interval == 300
     assert ebs_limits.name == "ebs_limits"
 
     assert len(ebs_limits_results) == 1
@@ -132,7 +132,7 @@ def test_agent_aws_ebs_summary(get_ebs_sections, names, tags, found_ebs):
     _ebs_limits_results = ebs_limits.run().results
     ebs_summary_results = ebs_summary.run().results
 
-    assert ebs_summary.interval == 300
+    assert ebs_summary.cache_interval == 300
     assert ebs_summary.name == "ebs_summary"
 
     assert len(ebs_summary_results) == found_ebs
@@ -146,7 +146,7 @@ def test_agent_aws_ebs(get_ebs_sections, names, tags, found_ebs):
     _ebs_summary_results = ebs_summary.run().results
     ebs_results = ebs.run().results
 
-    assert ebs.interval == 300
+    assert ebs.cache_interval == 300
     assert ebs.name == "ebs"
 
     assert len(ebs_results) == found_ebs
@@ -162,7 +162,7 @@ def test_agent_aws_ebs_summary_without_limits(get_ebs_sections):
     _ec2_summary_results = ec2_summary.run().results
     ebs_summary_results = ebs_summary.run().results
 
-    assert ebs_summary.interval == 300
+    assert ebs_summary.cache_interval == 300
     assert ebs_summary.name == "ebs_summary"
 
     assert len(ebs_summary_results) == 3
@@ -174,7 +174,7 @@ def test_agent_aws_ebs_without_limits(get_ebs_sections):
     _ebs_summary_results = ebs_summary.run().results
     ebs_results = ebs.run().results
 
-    assert ebs.interval == 300
+    assert ebs.cache_interval == 300
     assert ebs.name == "ebs"
 
     assert len(ebs_results) == 3

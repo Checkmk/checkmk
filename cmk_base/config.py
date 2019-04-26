@@ -3627,6 +3627,14 @@ class CEEConfigCache(ConfigCache):
         # type: (str, Text) -> List[Dict[str, Union[int, str]]]
         return self.service_extra_conf(hostname, description, service_recurring_downtimes)
 
+    def flap_settings_of_service(self, hostname, description):
+        # type: (str, Text) -> Tuple[float, float, float]
+        values = self.service_extra_conf(hostname, description, cmc_service_flap_settings)
+        if not values:
+            return cmc_flap_settings
+
+        return values[0]
+
 
 # TODO: Find a clean way to move this to cmk_base.cee. This will be possible once the
 # configuration settings are not held in cmk_base.config namespace anymore.
@@ -3645,3 +3653,12 @@ class CEEHostConfig(HostConfig):
     def recurring_downtimes(self):
         # type: () -> List[Dict[str, Union[int, str]]]
         return self._config_cache.host_extra_conf(self.hostname, host_recurring_downtimes)
+
+    @property
+    def flap_settings(self):
+        # type: () -> Tuple[float, float, float]
+        values = self._config_cache.host_extra_conf(self.hostname, cmc_host_flap_settings)
+        if not values:
+            return cmc_flap_settings
+
+        return values[0]

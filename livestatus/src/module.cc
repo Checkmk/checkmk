@@ -690,13 +690,15 @@ std::string check_path(const std::string &name, const std::string &path) {
 }
 
 void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
-    // set default path to our logfile to be in the same path as nagios.log
-    extern char *log_file;
-    std::string lf{log_file};
-    auto slash = lf.rfind('/');
-    fl_paths._logfile =
-        (slash == std::string::npos ? "/tmp/" : lf.substr(0, slash + 1)) +
-        "livestatus.log";
+    {
+        // set default path to our logfile to be in the same path as nagios.log
+        extern char *log_file;
+        std::string lf{log_file};
+        auto slash = lf.rfind('/');
+        fl_paths._logfile =
+            (slash == std::string::npos ? "/tmp/" : lf.substr(0, slash + 1)) +
+            "livestatus.log";
+    }
 
     if (args_orig == nullptr) {
         return;  // no arguments, use default options

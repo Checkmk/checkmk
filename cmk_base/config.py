@@ -3643,6 +3643,15 @@ class CEEConfigCache(ConfigCache):
             return False
         return entries[0]
 
+    def state_translation_of_service(self, hostname, description):
+        # type: (str, Text) -> Dict
+        entries = self.service_extra_conf(hostname, description, service_state_translation)
+
+        spec = {}  # type: Dict
+        for entry in entries[::-1]:
+            spec.update(entry)
+        return spec
+
 
 # TODO: Find a clean way to move this to cmk_base.cee. This will be possible once the
 # configuration settings are not held in cmk_base.config namespace anymore.
@@ -3679,3 +3688,13 @@ class CEEHostConfig(HostConfig):
         if not entries:
             return False
         return entries[0]
+
+    @property
+    def state_translation(self):
+        # type: () -> Dict
+        entries = self._config_cache.host_extra_conf(self.hostname, host_state_translation)
+
+        spec = {}  # type: Dict
+        for entry in entries[::-1]:
+            spec.update(entry)
+        return spec

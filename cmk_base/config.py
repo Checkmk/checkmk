@@ -3698,3 +3698,11 @@ class CEEHostConfig(HostConfig):
         for entry in entries[::-1]:
             spec.update(entry)
         return spec
+
+    @property
+    def smartping_settings(self):
+        # type: () -> Dict
+        settings = {"timeout": 2.5}
+        settings.update(
+            self._config_cache.host_extra_conf_merged(self.hostname, cmc_smartping_settings))
+        return settings

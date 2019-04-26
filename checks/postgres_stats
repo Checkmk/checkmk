@@ -43,6 +43,32 @@ def inventory_postgres_stats(parsed):
         yield "ANALYZE %s" % db, {}
 
 
+def _check_never_checked(item, text, never_checked, params, now):
+    key = "postgres_stats.%s" % item
+    if not never_checked:
+        set_item_state(key, now)
+        yield 0, "No never checked tables"
+        return
+
+    count = len(never_checked)
+    infotext = "%d tables were never %s: %s%s" % (count, text, "/".join(never_checked[:5]),
+                                                  " (first 5 shown)" if count > 5 else "")
+    levels = params.get("never_analyze_vacuum")
+    yield int(levels is None), infotext
+
+    last_ts = get_item_state(key)
+    if last_ts is None:
+        set_item_state(key, now)
+        return
+    yield check_levels(
+        now - last_ts,
+        None,
+        levels,
+        human_readable_func=get_age_human_readable,
+        infoname='Unhandled tables for',
+    )
+
+
 def check_postgres_stats(item, params, parsed):
     item_type, database = item.split(" ", 1)
 
@@ -78,7 +104,7 @@ def check_postgres_stats(item, params, parsed):
     now = time.time()
     if oldest_element:
         yield 0, "Table: %s" % oldest_element["tname"]
-        oldest_age = time.time() - int(oldest_element[stats_field])
+        oldest_age = now - int(oldest_element[stats_field])
         yield check_levels(
             oldest_age,
             None,
@@ -86,30 +112,8 @@ def check_postgres_stats(item, params, parsed):
             human_readable_func=get_age_human_readable,
             infoname='Time since last vacuum')
 
-    key = "postgres_stats.%s" % item
-    if not never_checked:
-        set_item_state(key, now)
-        yield 0, "No never checked tables"
-        return
-
-    count = len(never_checked)
-    levels = params.get("never_analyze_vacuum")
-    infotext = "%d tables were never %s: %s%s" % (count, text, "/".join(never_checked[:5]),
-                                                  " (first 5 shown)" if count > 5 else "")
-
-    yield int(levels is None), infotext
-
-    last_ts = get_item_state(key)
-    if last_ts is None:
-        set_item_state(key, now)
-        return
-    yield check_levels(
-        now - last_ts,
-        None,
-        levels,
-        human_readable_func=get_age_human_readable,
-        infoname='Unhandled tables for',
-    )
+    for subresult in _check_never_checked(item, text, never_checked, params, now):
+        yield subresult
 
 
 check_info['postgres_stats'] = {

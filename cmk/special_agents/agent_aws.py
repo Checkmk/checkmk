@@ -2156,9 +2156,6 @@ class ELBv2Limits(AWSSectionLimits):
                 # > Limits für Elastic Load Balancing
                 load_balancer['Rules'] = [rule for rule in rules if not rule['IsDefault']]
 
-            response = self._client.describe_target_groups(LoadBalancerArn=lb_arn)
-            load_balancer['TargetGroups'] = self._get_response_content(response, 'TargetGroups')
-
         response = self._client.describe_account_limits()
         limits = self._get_response_content(response, 'Limits')
         return load_balancers, limits
@@ -2257,9 +2254,12 @@ class ELBv2TargetGroups(AWSSectionGeneric):
                 # Just to be sure, that we do not describe target groups of other lbs
                 continue
 
-            load_balancer_arn = load_balancer['LoadBalancerArn']
-            response = self._client.describe_target_groups(LoadBalancerArn=load_balancer_arn)
-            target_groups = self._get_response_content(response, 'TargetGroups')
+            if 'TargetGroups' not in load_balancer:
+                response = self._client.describe_target_groups(
+                    LoadBalancerArn=load_balancer['LoadBalancerArn'])
+                load_balancer['TargetGroups'] = self._get_response_content(response, 'TargetGroups')
+
+            target_groups = load_balancer.get('TargetGroups', [])
             for target_group in target_groups:
                 response = self._client.describe_target_health(
                     TargetGroupArn=target_group['TargetGroupArn'])

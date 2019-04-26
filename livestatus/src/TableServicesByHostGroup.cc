@@ -35,6 +35,8 @@ extern hostgroup *hostgroup_list;
 namespace {
 struct servicebyhostgroup {
     service _service;
+    // cppcheck is too dumb to see usage in the DANGEROUS_OFFSETOF macro
+    // cppcheck-suppress unusedStructMember
     hostgroup *_hostgroup;
 };
 }  // namespace

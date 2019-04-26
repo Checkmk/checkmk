@@ -1,5 +1,4 @@
 missingIncludeSystem
-missingOverride
 noConstructor
 noExplicitConstructor
 passedByValue
@@ -14,3 +13,8 @@ useStlAlgorithm
 //
 unmatchedSuppression:*/include/boost/*
 preprocessorErrorDirective:*/include/boost/*
+// The TEST/TEST_F macros from googletest do not contain "override".
+unmatchedSuppression:*/include/gtest/*
+missingOverride:*/include/gtest/*
+unmatchedSuppression:test_*.cc
+missingOverride:test_*.cc

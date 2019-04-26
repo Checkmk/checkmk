@@ -3,14 +3,14 @@
 import pytest
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
-    EC2DescribeInstancesIC,
-    EC2DescribeReservedInstancesIC,
-    EC2DescribeAddressesIC,
-    EC2DescribeSecurityGroupsIC,
-    EC2DescribeNetworkInterfacesIC,
-    EC2DescribeSpotInstanceRequestsIC,
-    EC2DescribeSpotFleetRequestsIC,
-    EC2DescribeTagsIC,
+    EC2DescribeInstancesIB,
+    EC2DescribeReservedInstancesIB,
+    EC2DescribeAddressesIB,
+    EC2DescribeSecurityGroupsIB,
+    EC2DescribeNetworkInterfacesIB,
+    EC2DescribeSpotInstanceRequestsIB,
+    EC2DescribeSpotFleetRequestsIB,
+    EC2DescribeTagsIB,
 )
 
 from cmk.special_agents.agent_aws import (
@@ -32,7 +32,7 @@ class FakeEC2Client(object):
                     'GroupName': 'string',
                     'GroupId': 'string'
                 },],
-                'Instances': EC2DescribeInstancesIC.create_instances(amount=3),
+                'Instances': EC2DescribeInstancesIB.create_instances(amount=3),
                 'OwnerId': 'string',
                 'RequesterId': 'string',
                 'ReservationId': 'string'
@@ -42,35 +42,35 @@ class FakeEC2Client(object):
 
     def describe_reserved_instances(self):
         return {
-            'ReservedInstances': EC2DescribeReservedInstancesIC.create_instances(amount=3),
+            'ReservedInstances': EC2DescribeReservedInstancesIB.create_instances(amount=3),
         }
 
     def describe_addresses(self):
         return {
-            'Addresses': EC2DescribeAddressesIC.create_instances(amount=3),
+            'Addresses': EC2DescribeAddressesIB.create_instances(amount=3),
         }
 
     def describe_security_groups(self, InstanceIds=None, Filters=None):
         return {
-            'SecurityGroups': EC2DescribeSecurityGroupsIC.create_instances(amount=3),
+            'SecurityGroups': EC2DescribeSecurityGroupsIB.create_instances(amount=3),
             'NextToken': 'string',
         }
 
     def describe_network_interfaces(self):
         return {
-            'NetworkInterfaces': EC2DescribeNetworkInterfacesIC.create_instances(amount=3),
+            'NetworkInterfaces': EC2DescribeNetworkInterfacesIB.create_instances(amount=3),
             'NextToken': 'string',
         }
 
     def describe_spot_instance_requests(self):
         return {
-            'SpotInstanceRequests': EC2DescribeSpotInstanceRequestsIC.create_instances(amount=3),
+            'SpotInstanceRequests': EC2DescribeSpotInstanceRequestsIB.create_instances(amount=3),
             'NextToken': 'string',
         }
 
     def describe_spot_fleet_requests(self):
         return {
-            'SpotFleetRequestConfigs': EC2DescribeSpotFleetRequestsIC.create_instances(amount=3),
+            'SpotFleetRequestConfigs': EC2DescribeSpotFleetRequestsIB.create_instances(amount=3),
             'NextToken': 'string',
         }
 
@@ -79,7 +79,7 @@ class FakeEC2Client(object):
         for filter_ in Filters:
             for value in filter_['Values']:
                 if value == 'InstanceId-0':
-                    tags = EC2DescribeTagsIC.create_instances(amount=1)
+                    tags = EC2DescribeTagsIB.create_instances(amount=1)
                     break
         for tag in tags:
             tag['ResourceId'] = tag['ResourceId'].replace('ResourceId', 'InstanceId')

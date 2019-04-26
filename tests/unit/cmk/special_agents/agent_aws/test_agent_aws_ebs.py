@@ -3,10 +3,10 @@
 import pytest
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
-    EC2DescribeInstancesIC,
-    EC2DescribeVolumesIC,
-    EC2DescribeSnapshotsIC,
-    EC2DescribeVolumeStatusIC,
+    EC2DescribeInstancesIB,
+    EC2DescribeVolumesIB,
+    EC2DescribeSnapshotsIB,
+    EC2DescribeVolumeStatusIB,
 )
 
 from cmk.special_agents.agent_aws import (
@@ -27,7 +27,7 @@ class FakeEC2Client(object):
                     'GroupName': 'string',
                     'GroupId': 'string'
                 },],
-                'Instances': EC2DescribeInstancesIC.create_instances(amount=2),
+                'Instances': EC2DescribeInstancesIB.create_instances(amount=2),
                 'OwnerId': 'string',
                 'RequesterId': 'string',
                 'ReservationId': 'string',
@@ -37,19 +37,19 @@ class FakeEC2Client(object):
 
     def describe_snapshots(self):
         return {
-            'Snapshots': EC2DescribeSnapshotsIC.create_instances(amount=3),
+            'Snapshots': EC2DescribeSnapshotsIB.create_instances(amount=3),
             'NextToken': 'string',
         }
 
     def describe_volumes(self, VolumeIds=None, Filters=None):
         return {
-            'Volumes': EC2DescribeVolumesIC.create_instances(amount=3),
+            'Volumes': EC2DescribeVolumesIB.create_instances(amount=3),
             'NextToken': 'string',
         }
 
     def describe_volume_status(self, VolumeIds=None, Filters=None):
         return {
-            'VolumeStatuses': EC2DescribeVolumeStatusIC.create_instances(amount=3),
+            'VolumeStatuses': EC2DescribeVolumeStatusIB.create_instances(amount=3),
             'NextToken': 'string',
         }
 

@@ -2149,7 +2149,7 @@ class ELBv2Limits(AWSSectionLimits):
                 rules = []
                 for listener in listeners:
                     response = self._client.describe_rules(ListenerArn=listener['ListenerArn'])
-                    rules.append(self._get_response_content(response, 'Rules'))
+                    rules.extend(self._get_response_content(response, 'Rules'))
 
                 # Limit 100 holds for rules which are not default, see AWS docs:
                 # https://docs.aws.amazon.com/de_de/general/latest/gr/aws_service_limits.html

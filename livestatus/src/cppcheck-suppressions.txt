@@ -6,7 +6,6 @@ noExplicitConstructor
 passedByValue
 preprocessorErrorDirective
 redundantAssignment
-shadowVar
 shiftTooManyBitsSigned
 sizeofFunctionCall
 uninitMemberVar

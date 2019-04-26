@@ -566,6 +566,23 @@ class ELBDescribeInstanceHealthIB(InstanceBuilder):
         ]
 
 
+class ELBDescribeAccountLimitsIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [
+            List(
+                'Limits',
+                [
+                    Int('Max'),
+                ],
+                from_choice=Choice('Name', [
+                    "classic-load-balancers",
+                    "classic-listeners",
+                    "classic-registered-instances",
+                ]),
+            ),
+        ]
+
+
 #.
 #   .--ELBv2----------------------------------------------------------------
 

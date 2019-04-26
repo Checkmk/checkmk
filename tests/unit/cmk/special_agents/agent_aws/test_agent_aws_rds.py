@@ -2,8 +2,9 @@
 
 import pytest
 from agent_aws_fake_clients import (
-    RDSDescribeDBInstancesIB,
     FakeCloudwatchClient,
+    RDSDescribeDBInstancesIB,
+    RDSDescribeAccountAttributesIB,
 )
 
 from cmk.special_agents.agent_aws import (
@@ -18,88 +19,8 @@ from cmk.special_agents.agent_aws import (
 class FakeRDSClient(object):
     def describe_account_attributes(self):
         return {
-            'AccountQuotas': [
-                {
-                    'AccountQuotaName': 'unused',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'DBClusters',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'DBClusterParameterGroups',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'DBInstances',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'EventSubscriptions',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'ManualSnapshots',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'OptionGroups',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'DBParameterGroups',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'ReadReplicasPerMaster',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'ReservedDBInstances',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'DBSecurityGroups',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'DBSubnetGroups',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'SubnetsPerDBSubnetGroup',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'AllocatedStorage',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'AuthorizationsPerDBSecurityGroup',
-                    'Used': 1,
-                    'Max': 2,
-                },
-                {
-                    'AccountQuotaName': 'DBClusterRoles',
-                    'Used': 1,
-                    'Max': 2,
-                },
-            ]
+            'AccountQuotas': RDSDescribeAccountAttributesIB.create_instances(amount=1)[0]
+                             ['AccountQuotas'],
         }
 
     def describe_db_instances(self, DBInstanceIdentifier=None, Filters=None):

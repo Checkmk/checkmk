@@ -6,6 +6,7 @@ from agent_aws_fake_clients import (
     ELBDescribeLoadBalancersIB,
     ELBDescribeTagsIB,
     ELBDescribeInstanceHealthIB,
+    ELBDescribeAccountLimitsIB,
 )
 
 from cmk.special_agents.agent_aws import (
@@ -28,21 +29,8 @@ class FakeELBClient(object):
 
     def describe_account_limits(self):
         return {
-            'Limits': [
-                {
-                    'Name': 'classic-load-balancers',
-                    'Max': 10,
-                },
-                {
-                    'Name': 'classic-listeners',
-                    'Max': 10,
-                },
-                {
-                    'Name': 'classic-registered-instances',
-                    'Max': 10,
-                },
-            ],
-            'NextMarker': 'string'
+            'Limits': ELBDescribeAccountLimitsIB.create_instances(amount=1)[0]['Limits'],
+            'NextMarker': 'string',
         }
 
     def describe_tags(self, LoadBalancerNames=None):

@@ -3,8 +3,8 @@
 import pytest
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
-    S3ListBucketsIC,
-    S3BucketTaggingIC,
+    S3ListBucketsIB,
+    S3BucketTaggingIB,
 )
 
 from cmk.special_agents.agent_aws import (
@@ -20,7 +20,7 @@ from cmk.special_agents.agent_aws import (
 class FakeS3Client(object):
     def list_buckets(self):
         return {
-            'Buckets': S3ListBucketsIC.create_instances(amount=4),
+            'Buckets': S3ListBucketsIB.create_instances(amount=4),
             'Owner': {
                 'DisplayName': 'string',
                 'ID': 'string',
@@ -37,11 +37,11 @@ class FakeS3Client(object):
     def get_bucket_tagging(self, Bucket=''):
         if Bucket == 'Name-0':
             return {
-                'TagSet': S3BucketTaggingIC.create_instances(amount=1),
+                'TagSet': S3BucketTaggingIB.create_instances(amount=1),
             }
         elif Bucket == 'Name-1':
             return {
-                'TagSet': S3BucketTaggingIC.create_instances(amount=2),
+                'TagSet': S3BucketTaggingIB.create_instances(amount=2),
             }
         return {}
 

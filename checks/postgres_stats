@@ -36,6 +36,10 @@
 # postgres;pg_catalog;pg_authid;-1;-1
 # postgres;pg_catalog;pg_attribute;-1;-1
 
+factory_settings["postgres_stats_default_levels"] = {
+    "never_analyze_vacuum": (0, float('inf')),
+}
+
 
 def inventory_postgres_stats(parsed):
     for db in parsed:
@@ -53,8 +57,7 @@ def _check_never_checked(item, text, never_checked, params, now):
     count = len(never_checked)
     infotext = "%d tables were never %s: %s%s" % (count, text, "/".join(never_checked[:5]),
                                                   " (first 5 shown)" if count > 5 else "")
-    levels = params.get("never_analyze_vacuum")
-    yield int(levels is None), infotext
+    yield 0, infotext
 
     last_ts = get_item_state(key)
     if last_ts is None:
@@ -63,7 +66,7 @@ def _check_never_checked(item, text, never_checked, params, now):
     yield check_levels(
         now - last_ts,
         None,
-        levels,
+        params.get("never_analyze_vacuum"),
         human_readable_func=get_age_human_readable,
         infoname='Unhandled tables for',
     )
@@ -122,5 +125,6 @@ check_info['postgres_stats'] = {
     "inventory_function": inventory_postgres_stats,
     "service_description": "PostgreSQL %s",
     "group": "postgres_maintenance",
+    "default_levels_variable": "postgres_stats_default_levels",
     "includes": ["postgres.include"],
 }

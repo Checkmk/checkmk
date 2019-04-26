@@ -4,7 +4,6 @@ missingOverride
 noConstructor
 noExplicitConstructor
 passedByValue
-preprocessorErrorDirective
 redundantAssignment
 shiftTooManyBitsSigned
 sizeofFunctionCall
@@ -13,3 +12,6 @@ unmatchedSuppression
 unusedFunction
 unusedPrivateFunction
 useStlAlgorithm
+//
+unmatchedSuppression:*/include/boost/*
+preprocessorErrorDirective:*/include/boost/*

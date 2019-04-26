@@ -72,5 +72,7 @@ void RendererPython::outputBlob(const std::vector<char> &value) {
 }
 
 void RendererPython::outputString(const std::string &value) {
+    // cppcheck is too dumb to see that we just take the address... :-/
+    // cppcheck-suppress containerOutOfBoundsIndexExpression
     outputUnicodeString("u", &value[0], &value[value.size()], _data_encoding);
 }

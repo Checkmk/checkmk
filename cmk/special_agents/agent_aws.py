@@ -29,7 +29,6 @@ Special agent for monitoring Amazon web services (AWS) with Check_MK.
 
 import abc
 import argparse
-import datetime
 import json
 import logging
 import sys
@@ -44,6 +43,8 @@ import botocore  # type: ignore
 from cmk.utils.paths import tmp_dir
 import cmk.utils.store as store
 import cmk.utils.password_store
+
+from cmk.special_agents.utils import datetime_serializer
 
 AWSStrings = Union[bytes, unicode]
 
@@ -457,11 +458,6 @@ AWSEC2LimitsSpecial = {
 #   '----------------------------------------------------------------------'
 
 
-def _datetime_converter(o):
-    if isinstance(o, datetime.datetime):
-        return o.__str__()
-
-
 def _chunks(list_, length=100):
     return [list_[i:i + length] for i in xrange(0, len(list_), length)]
 
@@ -683,7 +679,7 @@ class AWSSection(object):
         return content, self._cache_file.stat().st_mtime
 
     def _write_to_cache(self, raw_content):
-        json_dump = json.dumps(raw_content, default=_datetime_converter)
+        json_dump = json.dumps(raw_content, default=datetime_serializer)
         store.save_file(str(self._cache_file), json_dump)
 
     @abc.abstractmethod
@@ -2811,7 +2807,7 @@ class AWSSections(object):
             if write_piggyback_header:
                 sys.stdout.write("<<<<%s>>>>\n" % row.piggyback_hostname)
             sys.stdout.write(section_header)
-            sys.stdout.write("%s\n" % json.dumps(row.content, default=_datetime_converter))
+            sys.stdout.write("%s\n" % json.dumps(row.content, default=datetime_serializer))
             if write_piggyback_header:
                 sys.stdout.write("<<<<>>>>\n")
 

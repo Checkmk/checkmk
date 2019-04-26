@@ -3635,6 +3635,14 @@ class CEEConfigCache(ConfigCache):
 
         return values[0]
 
+    def log_long_output_of_service(self, hostname, description):
+        # type: (str, Text) -> bool
+        entries = self.service_extra_conf(hostname, description,
+                                          cmc_service_long_output_in_monitoring_history)
+        if not entries:
+            return False
+        return entries[0]
+
 
 # TODO: Find a clean way to move this to cmk_base.cee. This will be possible once the
 # configuration settings are not held in cmk_base.config namespace anymore.
@@ -3662,3 +3670,12 @@ class CEEHostConfig(HostConfig):
             return cmc_flap_settings
 
         return values[0]
+
+    @property
+    def log_long_output(self):
+        # type: () -> bool
+        entries = self._config_cache.host_extra_conf(self.hostname,
+                                                     cmc_host_long_output_in_monitoring_history)
+        if not entries:
+            return False
+        return entries[0]

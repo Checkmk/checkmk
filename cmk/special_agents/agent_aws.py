@@ -33,7 +33,6 @@ import json
 import logging
 import sys
 import time
-import errno
 from typing import (  # pylint: disable=unused-import
     Union, NamedTuple, Any, List,
 )
@@ -41,10 +40,11 @@ from pathlib2 import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
 from cmk.utils.paths import tmp_dir
-import cmk.utils.store as store
 import cmk.utils.password_store
-
-from cmk.special_agents.utils import datetime_serializer
+from cmk.special_agents.utils import (
+    datetime_serializer,
+    DataCache,
+)
 
 AWSStrings = Union[bytes, unicode]
 
@@ -535,17 +535,17 @@ AWSComputedContent = NamedTuple("AWSComputedContent", [
 AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
 
 
-class AWSSection(object):
+class AWSSection(DataCache):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, client, region, config, distributor=None):
+        cache_dir = AWSCacheFilePath / region / config.hostname
+        super(AWSSection, self).__init__(cache_dir, self.name)
         self._client = client
         self._region = region
         self._config = config
         self._distributor = ResultDistributor() if distributor is None else distributor
         self._received_results = {}
-        self._cache_file_dir = AWSCacheFilePath / self._region / self._config.hostname
-        self._cache_file = AWSCacheFilePath / self._region / self._config.hostname / self.name
 
     @abc.abstractproperty
     def name(self):
@@ -579,7 +579,7 @@ class AWSSection(object):
             colleague_contents.cache_timestamp,
             float), "%s: Cache timestamp of colleague contents must be of type 'float'" % self.name
 
-        raw_data = self._get_raw_content(colleague_contents, use_cache=use_cache)
+        raw_data = self.get_data(colleague_contents, use_cache=use_cache)
         raw_content = AWSRawContent(raw_data, self.cache_timestamp if use_cache else time.time())
         assert isinstance(
             raw_content,
@@ -621,50 +621,7 @@ class AWSSection(object):
             final_results.append(result)
         return AWSSectionResults(final_results, computed_content.cache_timestamp)
 
-    def _get_raw_content(self, colleague_contents, use_cache=False):
-        # Cache is only used if the age is lower than section interval AND
-        # the collected data from colleagues are not newer
-        self._cache_file_dir.mkdir(parents=True, exist_ok=True)
-        if (use_cache and self.get_validity_from_args(colleague_contents) and
-                self._cache_is_recent_enough()):
-            raw_content = self._read_from_cache()
-        else:
-            raw_content = self.get_live_data(colleague_contents)
-            # TODO: Write cache only when _compute_section_content succeeded?
-            if use_cache:
-                self._write_to_cache(raw_content)
-        return raw_content
-
-    @property
-    def cache_timestamp(self):
-        if not self._cache_file.exists():
-            return None
-
-        try:
-            return self._cache_file.stat().st_mtime
-        except OSError as e:
-            if e.errno == 2:
-                logging.info("No such file or directory %s (calculate age)", self._cache_file)
-                return None
-            logging.info("Cannot calculate cache file age: %s", e)
-            raise
-
-    def _cache_is_recent_enough(self):
-        mtime = self.cache_timestamp
-        if mtime is None:
-            return False
-
-        age = time.time() - mtime
-        if 0 <= age < self.cache_interval:
-            return True
-
-        if age < 0:
-            logging.info("Cache file from future considered invalid: %s", self._cache_file)
-        else:
-            logging.info("Cache file %s is outdated", self._cache_file)
-        return False
-
-    def get_validity_from_args(self, colleague_contents):
+    def get_validity_from_args(self, colleague_contents):  # pylint: disable=arguments-differ
         my_cache_timestamp = self.cache_timestamp
         if my_cache_timestamp is None:
             return False
@@ -672,28 +629,6 @@ class AWSSection(object):
             logging.info("Colleague data is newer than cache file %s", self._cache_file)
             return False
         return True
-
-    def _read_from_cache(self):
-        try:
-            with self._cache_file.open(encoding="utf-8") as f:
-                raw_content = f.read().strip()
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                logging.info("No such file or directory %s (read from cache)", self._cache_file)
-                return None
-            else:
-                logging.info("Cannot read from cache file: %s", e)
-                raise
-        try:
-            content = json.loads(raw_content)
-        except ValueError as e:
-            logging.info("Cannot load raw content: %s", e)
-            content = None
-        return content
-
-    def _write_to_cache(self, raw_content):
-        json_dump = json.dumps(raw_content, default=datetime_serializer)
-        store.save_file(str(self._cache_file), json_dump)
 
     @abc.abstractmethod
     def _get_colleague_contents(self):
@@ -709,7 +644,7 @@ class AWSSection(object):
         pass
 
     @abc.abstractmethod
-    def get_live_data(self, colleague_contents):
+    def get_live_data(self, colleague_contents):  # pylint: disable=arguments-differ
         """
         Call API methods, eg. 'response = ec2_client.describe_instances()' and
         extract content from raw content.  Raw contents basically consist of

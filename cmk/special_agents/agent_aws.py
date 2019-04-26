@@ -628,8 +628,7 @@ class AWSSection(object):
         # Cache is only used if the age is lower than section interval AND
         # the collected data from colleagues are not newer
         self._cache_file_dir.mkdir(parents=True, exist_ok=True)
-        if (use_cache and self.get_validity_from_args(colleague_contents) and
-                self._cache_is_recent_enough()):
+        if use_cache and self._cache_is_recent_enough(colleague_contents):
             raw_content, cache_timestamp = self._read_from_cache()
         else:
             raw_content = self._fetch_raw_content(colleague_contents)
@@ -639,40 +638,28 @@ class AWSSection(object):
             cache_timestamp = time.time()
         return AWSRawContent(raw_content, cache_timestamp)
 
-    @property
-    def cache_timestamp(self):
+    def _cache_is_recent_enough(self, colleague_contents):
         if not self._cache_file.exists():
-            return None
+            logging.info("New cache file %s", self._cache_file)
+            return False
 
+        now = time.time()
         try:
-            return self._cache_file.stat().st_mtime
-        except OSError as exc:
-            if exc.errno == 2:
-                logging.info("No such file or directory %s (cache_timestamp)", self._cache_file)
-                return None
-            logging.info("Cannot calculate cache file age: %s", exc)
-            raise
+            mtime = self._cache_file.stat().st_mtime
+        except OSError as e:
+            if e.errno == 2:
+                logging.info("No such file or directory %s (calculate age)", self._cache_file)
+                return False
+            else:
+                logging.info("Cannot calculate cache file age: %s", e)
+                raise
 
-    def _cache_is_recent_enough(self):
-        mtime = self.cache_timestamp
-        if mtime is None:
-            return False
-
-        age = time.time() - mtime
-        if 0 < age < self.interval:
-            return True
-
-        if age < 0:
-            logging.info("Cache file from future considered invalid: %s", self._cache_file)
-        else:
+        age = now - mtime
+        if age >= self.interval:
             logging.info("Cache file %s is outdated", self._cache_file)
-        return False
-
-    def get_validity_from_args(self, colleague_contents):
-        my_cache_timestamp = self.cache_timestamp
-        if my_cache_timestamp is None:
             return False
-        if colleague_contents.cache_timestamp > my_cache_timestamp:
+
+        if colleague_contents.cache_timestamp > mtime:
             logging.info("Colleague data is newer than cache file %s", self._cache_file)
             return False
         return True
@@ -1346,6 +1333,257 @@ class EC2(AWSSectionCloudwatch):
                         'Unit': unit,
                     },
                 })
+        return metrics
+
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}
+        for row in raw_content.content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.content.iteritems()
+        ]
+
+
+#.
+#   .--EBS-----------------------------------------------------------------.
+#   |                          _____ ____ ____                             |
+#   |                         | ____| __ ) ___|                            |
+#   |                         |  _| |  _ \___ \                            |
+#   |                         | |___| |_) |__) |                           |
+#   |                         |_____|____/____/                            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# EBS are attached to EC2 instances. Thus we put the content to related EC2
+# instance as piggyback host.
+
+
+class EBSLimits(AWSSectionLimits):
+    @property
+    def name(self):
+        return "ebs_limits"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        response = self._client.describe_volumes()
+        volumes = self._get_response_content(response, 'Volumes')
+
+        response = self._client.describe_snapshots()
+        snapshots = self._get_response_content(response, 'Snapshots')
+        return volumes, snapshots
+
+    def _compute_content(self, raw_content, colleague_contents):
+        volumes, snapshots = raw_content.content
+
+        vol_storage_standard = 0
+        vol_storage_io1 = 0
+        vol_storage_gp2 = 0
+        vol_storage_sc1 = 0
+        vol_storage_st1 = 0
+        vol_iops_io1 = 0
+        for volume in volumes:
+            vol_type = volume['VolumeType']
+            vol_size = volume['Size']
+            if vol_type == 'standard':
+                vol_storage_standard += vol_size
+            elif vol_type == 'io1':
+                vol_storage_io1 += vol_size
+                vol_iops_io1 += volume['Iops']
+            elif vol_type == 'gp2':
+                vol_storage_gp2 += vol_size
+            elif vol_type == 'sc1':
+                vol_storage_sc1 += vol_size
+            elif vol_type == 'st1':
+                vol_storage_st1 += vol_size
+            else:
+                logging.info("%s: Unhandled volume type: '%s'", self.name, vol_type)
+
+        # These are total limits and not instance specific
+        # Space values are in TiB.
+        self._add_limit(
+            "", AWSLimit('block_store_snapshots', 'Block store snapshots', 100000, len(snapshots)))
+        self._add_limit(
+            "",
+            AWSLimit('block_store_space_standard', 'Magnetic volumes space', 300,
+                     vol_storage_standard))
+        self._add_limit(
+            "", AWSLimit('block_store_space_io1', 'Provisioned IOPS SSD space', 300,
+                         vol_storage_io1))
+        self._add_limit(
+            "",
+            AWSLimit('block_store_iops_io1', 'Provisioned IOPS SSD IO operations per second',
+                     300000, vol_storage_io1))
+        self._add_limit(
+            "", AWSLimit('block_store_space_gp2', 'General Purpose SSD space', 300,
+                         vol_storage_gp2))
+        self._add_limit("", AWSLimit('block_store_space_sc1', 'Cold HDD space', 300,
+                                     vol_storage_sc1))
+        self._add_limit(
+            "",
+            AWSLimit('block_store_space_st1', 'Throughput Optimized HDD space', 300,
+                     vol_storage_st1))
+        return AWSComputedContent(volumes, raw_content.cache_timestamp)
+
+
+class EBSSummary(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None):
+        super(EBSSummary, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['ebs_names']
+        self._tags = self._config.service_config['ebs_tags']
+
+    @property
+    def name(self):
+        return "ebs_summary"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('ebs_limits')
+        volumes = []
+        max_cache_timestamp = 0.0
+        if colleague and colleague.content:
+            max_cache_timestamp = max(max_cache_timestamp, colleague.cache_timestamp)
+            volumes = colleague.content
+
+        colleague = self._received_results.get('ec2_summary')
+        instances = []
+        if colleague and colleague.content:
+            max_cache_timestamp = max(max_cache_timestamp, colleague.cache_timestamp)
+            instances = colleague.content
+
+        return AWSColleagueContents((volumes, instances), max_cache_timestamp)
+
+    def _fetch_raw_content(self, colleague_contents):
+        col_volumes, _col_instances = colleague_contents.content
+        if self._tags is None and self._names is not None:
+            volumes = self._fetch_volumes_filtered_by_names(col_volumes)
+        elif self._tags is not None:
+            volumes = self._fetch_volumes_filtered_by_tags(col_volumes)
+        else:
+            volumes = self._fetch_volumes_without_filter()
+
+        for vol_id, vol in volumes.iteritems():
+            response = self._client.describe_volume_status(VolumeIds=[vol_id])
+            for state in self._get_response_content(response, 'VolumeStatuses'):
+                if state['VolumeId'] == vol_id:
+                    vol.setdefault('VolumeStatus', state['VolumeStatus'])
+        return volumes
+
+    def _fetch_volumes_filtered_by_names(self, col_volumes):
+        if col_volumes:
+            return {vol['VolumeId']: vol for vol in col_volumes if vol['VolumeId'] in self._names}
+        return self._format_volumes(self._client.describe_volumes(VolumeIds=self._names))
+
+    def _fetch_volumes_filtered_by_tags(self, col_volumes):
+        if col_volumes:
+            tags = self._prepare_tags_for_api_response(self._tags)
+            return {
+                vol['VolumeId']: vol for vol in col_volumes for tag in vol['Tags'] if tag in tags
+            }
+        return self._format_volumes(self._client.describe_volumes(Filters=self._tags))
+
+    def _fetch_volumes_without_filter(self):
+        return self._format_volumes(self._client.describe_volumes())
+
+    def _format_volumes(self, response):
+        return {r['VolumeId']: r for r in self._get_response_content(response, 'Volumes')}
+
+    def _compute_content(self, raw_content, colleague_contents):
+        _col_volumes, col_instances = colleague_contents.content
+        instance_name_mapping = {v['InstanceId']: k for k, v in col_instances.iteritems()}
+
+        content_by_piggyback_hosts = {}
+        for vol in raw_content.content.itervalues():
+            instance_names = []
+            for attachment in vol['Attachments']:
+                # Just for security
+                if vol['VolumeId'] != attachment['VolumeId']:
+                    continue
+                instance_name = instance_name_mapping.get(attachment['InstanceId'])
+                if instance_name is None:
+                    instance_name = ""
+                instance_names.append(instance_name)
+
+            # Should be attached to max. one instance
+            for instance_name in instance_names:
+                content_by_piggyback_hosts.setdefault(instance_name, [vol])
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.content.iteritems()
+        ]
+
+
+class EBS(AWSSectionCloudwatch):
+    @property
+    def name(self):
+        return "ebs"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('ebs_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents([(instance_name, row['VolumeId'], row['VolumeType'])
+                                         for instance_name, rows in colleague.content.iteritems()
+                                         for row in rows], colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    def _get_metrics(self, colleague_contents):
+        metrics = []
+        for idx, (instance_name, volume_name, volume_type) in enumerate(colleague_contents.content):
+            for metric_name, unit, volume_types in [
+                ("VolumeReadOps", "Count", []),
+                ("VolumeWriteOps", "Count", []),
+                ("VolumeReadBytes", "Bytes", []),
+                ("VolumeWriteBytes", "Bytes", []),
+                ("VolumeQueueLength", "Count", []),
+                ("BurstBalance", "Percent", ["gp2", "st1", "sc1"]),
+                    #("VolumeThroughputPercentage", "Percent", ["io1"]),
+                    #("VolumeConsumedReadWriteOps", "Count", ["io1"]),
+                    #("VolumeTotalReadTime", "Seconds", []),
+                    #("VolumeTotalWriteTime", "Seconds", []),
+                    #("VolumeIdleTime", "Seconds", []),
+                    #("VolumeStatus", None, []),
+                    #("IOPerformance", None, ["io1"]),
+            ]:
+                if volume_types and volume_type not in volume_types:
+                    continue
+                metric = {
+                    'Id': self._create_id_for_metric_data_query(idx, metric_name),
+                    'Label': instance_name,
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'AWS/EBS',
+                            'MetricName': metric_name,
+                            'Dimensions': [{
+                                'Name': "VolumeID",
+                                'Value': volume_name,
+                            }]
+                        },
+                        'Period': self.period,
+                        'Stat': 'Average',
+                    },
+                }
+                if unit:
+                    metric['MetricStat']['Unit'] = unit
+                metrics.append(metric)
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -2204,257 +2442,6 @@ class ELBv2Network(AWSSectionCloudwatch):
                         'Stat': stat,
                     },
                 })
-        return metrics
-
-    def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}
-        for row in raw_content.content:
-            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
-        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
-
-    def _create_results(self, computed_content):
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.content.iteritems()
-        ]
-
-
-#.
-#   .--EBS-----------------------------------------------------------------.
-#   |                          _____ ____ ____                             |
-#   |                         | ____| __ ) ___|                            |
-#   |                         |  _| |  _ \___ \                            |
-#   |                         | |___| |_) |__) |                           |
-#   |                         |_____|____/____/                            |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-# EBS are attached to EC2 instances. Thus we put the content to related EC2
-# instance as piggyback host.
-
-
-class EBSLimits(AWSSectionLimits):
-    @property
-    def name(self):
-        return "ebs_limits"
-
-    @property
-    def interval(self):
-        return 300
-
-    def _get_colleague_contents(self):
-        return AWSColleagueContents(None, 0.0)
-
-    def _fetch_raw_content(self, colleague_contents):
-        response = self._client.describe_volumes()
-        volumes = self._get_response_content(response, 'Volumes')
-
-        response = self._client.describe_snapshots()
-        snapshots = self._get_response_content(response, 'Snapshots')
-        return volumes, snapshots
-
-    def _compute_content(self, raw_content, colleague_contents):
-        volumes, snapshots = raw_content.content
-
-        vol_storage_standard = 0
-        vol_storage_io1 = 0
-        vol_storage_gp2 = 0
-        vol_storage_sc1 = 0
-        vol_storage_st1 = 0
-        vol_iops_io1 = 0
-        for volume in volumes:
-            vol_type = volume['VolumeType']
-            vol_size = volume['Size']
-            if vol_type == 'standard':
-                vol_storage_standard += vol_size
-            elif vol_type == 'io1':
-                vol_storage_io1 += vol_size
-                vol_iops_io1 += volume['Iops']
-            elif vol_type == 'gp2':
-                vol_storage_gp2 += vol_size
-            elif vol_type == 'sc1':
-                vol_storage_sc1 += vol_size
-            elif vol_type == 'st1':
-                vol_storage_st1 += vol_size
-            else:
-                logging.info("%s: Unhandled volume type: '%s'", self.name, vol_type)
-
-        # These are total limits and not instance specific
-        # Space values are in TiB.
-        self._add_limit(
-            "", AWSLimit('block_store_snapshots', 'Block store snapshots', 100000, len(snapshots)))
-        self._add_limit(
-            "",
-            AWSLimit('block_store_space_standard', 'Magnetic volumes space', 300,
-                     vol_storage_standard))
-        self._add_limit(
-            "", AWSLimit('block_store_space_io1', 'Provisioned IOPS SSD space', 300,
-                         vol_storage_io1))
-        self._add_limit(
-            "",
-            AWSLimit('block_store_iops_io1', 'Provisioned IOPS SSD IO operations per second',
-                     300000, vol_storage_io1))
-        self._add_limit(
-            "", AWSLimit('block_store_space_gp2', 'General Purpose SSD space', 300,
-                         vol_storage_gp2))
-        self._add_limit("", AWSLimit('block_store_space_sc1', 'Cold HDD space', 300,
-                                     vol_storage_sc1))
-        self._add_limit(
-            "",
-            AWSLimit('block_store_space_st1', 'Throughput Optimized HDD space', 300,
-                     vol_storage_st1))
-        return AWSComputedContent(volumes, raw_content.cache_timestamp)
-
-
-class EBSSummary(AWSSectionGeneric):
-    def __init__(self, client, region, config, distributor=None):
-        super(EBSSummary, self).__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config['ebs_names']
-        self._tags = self._config.service_config['ebs_tags']
-
-    @property
-    def name(self):
-        return "ebs_summary"
-
-    @property
-    def interval(self):
-        return 300
-
-    def _get_colleague_contents(self):
-        colleague = self._received_results.get('ebs_limits')
-        volumes = []
-        max_cache_timestamp = 0.0
-        if colleague and colleague.content:
-            max_cache_timestamp = max(max_cache_timestamp, colleague.cache_timestamp)
-            volumes = colleague.content
-
-        colleague = self._received_results.get('ec2_summary')
-        instances = []
-        if colleague and colleague.content:
-            max_cache_timestamp = max(max_cache_timestamp, colleague.cache_timestamp)
-            instances = colleague.content
-
-        return AWSColleagueContents((volumes, instances), max_cache_timestamp)
-
-    def _fetch_raw_content(self, colleague_contents):
-        col_volumes, _col_instances = colleague_contents.content
-        if self._tags is None and self._names is not None:
-            volumes = self._fetch_volumes_filtered_by_names(col_volumes)
-        elif self._tags is not None:
-            volumes = self._fetch_volumes_filtered_by_tags(col_volumes)
-        else:
-            volumes = self._fetch_volumes_without_filter()
-
-        for vol_id, vol in volumes.iteritems():
-            response = self._client.describe_volume_status(VolumeIds=[vol_id])
-            for state in self._get_response_content(response, 'VolumeStatuses'):
-                if state['VolumeId'] == vol_id:
-                    vol.setdefault('VolumeStatus', state['VolumeStatus'])
-        return volumes
-
-    def _fetch_volumes_filtered_by_names(self, col_volumes):
-        if col_volumes:
-            return {vol['VolumeId']: vol for vol in col_volumes if vol['VolumeId'] in self._names}
-        return self._format_volumes(self._client.describe_volumes(VolumeIds=self._names))
-
-    def _fetch_volumes_filtered_by_tags(self, col_volumes):
-        if col_volumes:
-            tags = self._prepare_tags_for_api_response(self._tags)
-            return {
-                vol['VolumeId']: vol for vol in col_volumes for tag in vol['Tags'] if tag in tags
-            }
-        return self._format_volumes(self._client.describe_volumes(Filters=self._tags))
-
-    def _fetch_volumes_without_filter(self):
-        return self._format_volumes(self._client.describe_volumes())
-
-    def _format_volumes(self, response):
-        return {r['VolumeId']: r for r in self._get_response_content(response, 'Volumes')}
-
-    def _compute_content(self, raw_content, colleague_contents):
-        _col_volumes, col_instances = colleague_contents.content
-        instance_name_mapping = {v['InstanceId']: k for k, v in col_instances.iteritems()}
-
-        content_by_piggyback_hosts = {}
-        for vol in raw_content.content.itervalues():
-            instance_names = []
-            for attachment in vol['Attachments']:
-                # Just for security
-                if vol['VolumeId'] != attachment['VolumeId']:
-                    continue
-                instance_name = instance_name_mapping.get(attachment['InstanceId'])
-                if instance_name is None:
-                    instance_name = ""
-                instance_names.append(instance_name)
-
-            # Should be attached to max. one instance
-            for instance_name in instance_names:
-                content_by_piggyback_hosts.setdefault(instance_name, [vol])
-        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
-
-    def _create_results(self, computed_content):
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.content.iteritems()
-        ]
-
-
-class EBS(AWSSectionCloudwatch):
-    @property
-    def name(self):
-        return "ebs"
-
-    @property
-    def interval(self):
-        return 300
-
-    def _get_colleague_contents(self):
-        colleague = self._received_results.get('ebs_summary')
-        if colleague and colleague.content:
-            return AWSColleagueContents([(instance_name, row['VolumeId'], row['VolumeType'])
-                                         for instance_name, rows in colleague.content.iteritems()
-                                         for row in rows], colleague.cache_timestamp)
-        return AWSColleagueContents([], 0.0)
-
-    def _get_metrics(self, colleague_contents):
-        metrics = []
-        for idx, (instance_name, volume_name, volume_type) in enumerate(colleague_contents.content):
-            for metric_name, unit, volume_types in [
-                ("VolumeReadOps", "Count", []),
-                ("VolumeWriteOps", "Count", []),
-                ("VolumeReadBytes", "Bytes", []),
-                ("VolumeWriteBytes", "Bytes", []),
-                ("VolumeQueueLength", "Count", []),
-                ("BurstBalance", "Percent", ["gp2", "st1", "sc1"]),
-                    #("VolumeThroughputPercentage", "Percent", ["io1"]),
-                    #("VolumeConsumedReadWriteOps", "Count", ["io1"]),
-                    #("VolumeTotalReadTime", "Seconds", []),
-                    #("VolumeTotalWriteTime", "Seconds", []),
-                    #("VolumeIdleTime", "Seconds", []),
-                    #("VolumeStatus", None, []),
-                    #("IOPerformance", None, ["io1"]),
-            ]:
-                if volume_types and volume_type not in volume_types:
-                    continue
-                metric = {
-                    'Id': self._create_id_for_metric_data_query(idx, metric_name),
-                    'Label': instance_name,
-                    'MetricStat': {
-                        'Metric': {
-                            'Namespace': 'AWS/EBS',
-                            'MetricName': metric_name,
-                            'Dimensions': [{
-                                'Name': "VolumeID",
-                                'Value': volume_name,
-                            }]
-                        },
-                        'Period': self.period,
-                        'Stat': 'Average',
-                    },
-                }
-                if unit:
-                    metric['MetricStat']['Unit'] = unit
-                metrics.append(metric)
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):

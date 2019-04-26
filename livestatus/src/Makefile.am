@@ -190,8 +190,10 @@ iwyu: compile_commands.json
 cppcheck: compile_commands.json
 	$(CPPCHECK) -UCMC --enable=all --suppressions-list=cppcheck-suppressions.txt --inline-suppr --project=compile_commands.json --quiet --template=gcc
 
+# We need to mangle the result a bit to make Jenkins' Cppcheck plugin happy
 cppcheck-xml: compile_commands.json
 	$(CPPCHECK) -UCMC --enable=all --suppressions-list=cppcheck-suppressions.txt --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
+	sed -i "s%\\(<location file=\"\\)%\\1$(subdir)/%" cppcheck-result.xml
 
 documentation:
 	$(DOXYGEN) doc/Doxyfile

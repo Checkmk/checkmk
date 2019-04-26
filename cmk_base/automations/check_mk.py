@@ -1320,22 +1320,26 @@ class AutomationActiveCheck(Automation):
                     return self._execute_check_plugin(command_line)
 
                 return -1, "Passive check - cannot be executed"
-        else:
+
+        try:
             act_info = config.active_check_info[plugin]
-            # Set host name for host_name()-function (part of the Check API)
-            # (used e.g. by check_http)
-            check_api_utils.set_hostname(hostname)
+        except KeyError:
+            return None
 
-            for params in dict(host_config.active_checks).get(plugin, []):
-                description = config.active_check_service_description(hostname, plugin, params)
-                if description != item:
-                    continue
+        # Set host name for host_name()-function (part of the Check API)
+        # (used e.g. by check_http)
+        check_api_utils.set_hostname(hostname)
 
-                args = core_config.active_check_arguments(hostname, description,
-                                                          act_info["argument_function"](params))
-                command_line = self._replace_core_macros(
-                    hostname, act_info["command_line"].replace("$ARG1$", args))
-                return self._execute_check_plugin(command_line)
+        for params in dict(host_config.active_checks).get(plugin, []):
+            description = config.active_check_service_description(hostname, plugin, params)
+            if description != item:
+                continue
+
+            args = core_config.active_check_arguments(hostname, description,
+                                                      act_info["argument_function"](params))
+            command_line = self._replace_core_macros(
+                hostname, act_info["command_line"].replace("$ARG1$", args))
+            return self._execute_check_plugin(command_line)
 
     def _load_resource_file(self, macros):
         try:

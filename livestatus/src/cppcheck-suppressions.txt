@@ -1,7 +1,6 @@
 missingIncludeSystem
 passedByValue
 redundantAssignment
-shiftTooManyBitsSigned
 uninitMemberVar
 unmatchedSuppression
 unusedFunction

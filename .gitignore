@@ -50,3 +50,5 @@ tests/web/data/*
 htmlcov/
 artefacts/
 node_modules/
+.vscode/*
+*/.vscode/*

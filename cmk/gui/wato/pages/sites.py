@@ -327,7 +327,7 @@ class ModeEditSite(WatoMode):
                    "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
                    "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix."
                   ) % proxy_docu_url,
-                 allow_empty=False,
+                 allow_empty=True,
              )),
             ("status_host",
              Alternative(

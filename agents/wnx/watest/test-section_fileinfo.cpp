@@ -115,7 +115,7 @@ TEST(FileInfoTest, Globs) {
 TEST(FileInfoTest, Base) {
     using namespace cma::provider;
     using namespace cma::cfg;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     constexpr const char* hdr = "<<<fileinfo:sep(124)>>>\n";
 
     //
@@ -146,7 +146,7 @@ TEST(FileInfoTest, Base) {
         EXPECT_TRUE(!out.empty());
     }
     // reload config
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
 
     {
         FileInfo fi;
@@ -188,7 +188,7 @@ TEST(FileInfoTest, YmlCheck) {
 
 TEST(FileInfoTest, Reality) {
     namespace fs = std::filesystem;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     ASSERT_TRUE(fs::exists("c:\\windows\\system32"))
         << "unit tests works for windows on c in windows folder";
 

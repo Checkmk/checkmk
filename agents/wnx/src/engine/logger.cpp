@@ -100,7 +100,8 @@ static int XLogType2Marker(xlog::Type Lt) {
 
 // get base global variable
 // modifies it!
-static auto CalcLogParam(const xlog::LogParam &Param, int Modifications) {
+static std::tuple<int, int, std::string, std::string, xlog::internal::Colors>
+CalcLogParam(const xlog::LogParam &Param, int Modifications) {
     using namespace xlog::internal;
 
     auto &lp = Param;
@@ -221,7 +222,9 @@ void Emitter::postProcessAndPrint(const std::string &String) {
     // EVENT
     if (setup::IsEventLogEnabled() && (directions & xlog::kEventPrint)) {
         // we do not need to format string for the event
-        details::LogWindowsEventCritical(EventClass::kDefault, String.c_str());
+        auto windows_event_log_id = cma::IsService() ? EventClass::kSrvDefault
+                                                     : EventClass::kAppDefault;
+        details::LogWindowsEventCritical(windows_event_log_id, String.c_str());
     }
 
     // USUAL

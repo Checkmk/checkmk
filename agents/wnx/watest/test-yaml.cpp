@@ -58,7 +58,7 @@ static std::filesystem::path CreateTestFile(const std::filesystem::path& Name,
 // memory tester
 TEST(AgentConfig, MemoryLeaks) {
     for (auto i = 0; i < 100; i++) {
-        OnStart(kTest);
+        OnStart(AppType::test);
         cma::provider::MrpeProvider m;
         m.generateContent(cma::section::kUseEmbeddedName);
         cma::tools::sleep(5000);
@@ -78,7 +78,7 @@ TEST(AgentConfig, Aggregate) {
 
     std::error_code ec;
     ON_OUT_OF_SCOPE(for (auto& f : cfgs) fs::remove(f, ec););
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
 
     for (auto& f : cfgs) fs::remove(f, ec);
     auto root_file = fs::path(details::G_ConfigInfo.getRootYamlPath());
@@ -146,8 +146,8 @@ TEST(AgentConfig, Aggregate) {
 TEST(AgentConfig, ReloadWithTimestamp) {
     namespace fs = std::filesystem;
     using namespace std::chrono;
-    cma::OnStart(cma::kTest);
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
+    cma::OnStart(cma::AppType::test);
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
     {
         // prepare file
         auto path = CreateYamlnInTemp("test.yml", "global:\n    ena: yes\n");
@@ -435,7 +435,7 @@ TEST(AgentConfig, UTF16LE) {
 
     EXPECT_TRUE(utf8_from_utf16 == name_utf8);
 
-    cma::OnStart(cma::StartTypes::kTest);
+    cma::OnStart(cma::AppType::test);
 }
 
 TEST(AgentConfig, FailScenario) {
@@ -506,7 +506,7 @@ TEST(AgentConfig, FailScenario) {
     using namespace YAML;
     auto node = GetNode(groups::kGlobal, "xxx2");
     EXPECT_TRUE(node.IsNull() || !node.IsDefined());
-    cma::OnStart(cma::StartTypes::kTest);
+    cma::OnStart(cma::AppType::test);
     success = loader(L"StranegName.yml");
     EXPECT_FALSE(success);
 }
@@ -553,7 +553,7 @@ TEST(AgentConfig, FunctionalityCheck) {
     XLOG::setup::ChangeLogFileName("b.log");
     XLOG::setup::EnableDebugLog(true);
     XLOG::setup::EnableWinDbg(false);
-    OnStart(cma::StartTypes::kTest);
+    OnStart(cma::AppType::test);
     auto fname = std::string(XLOG::l.getLogParam().filename());
     EXPECT_TRUE(fname != "b.log");
     fs::path p = fname;
@@ -584,7 +584,7 @@ TEST(AgentConfig, FunctionalityCheck) {
         delete_required = true;
         file_to_delete = user_f;
     }
-    OnStart(kTest, true);
+    OnStart(AppType::test, cma::YamlCacheOp::update);
     auto expected_name =
         details::G_ConfigInfo.getCacheDir() / source_name.filename();
     std::error_code ec;
@@ -605,7 +605,7 @@ TEST(AgentConfig, FunctionalityCheck) {
         fs::remove(file_to_delete, ec);  // clean user folder
         fs::remove(expected_name, ec);   // clean cache folder
     }
-    cma::OnStart(cma::StartTypes::kTest);
+    cma::OnStart(cma::AppType::test);
 }
 
 TEST(AgentConfig, SectionLoader) {

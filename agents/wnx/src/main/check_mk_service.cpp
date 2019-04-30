@@ -134,8 +134,8 @@ namespace details {
 extern bool G_Service;
 }
 
-StartTypes AppDefaultType() {
-    return details::G_Service ? StartTypes::kService : StartTypes::kExe;
+AppType AppDefaultType() {
+    return details::G_Service ? AppType::srv : AppType::exe;
 }
 
 template <typename T>

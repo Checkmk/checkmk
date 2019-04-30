@@ -132,8 +132,8 @@ void Device::connectFrom(std::string_view Address, int Port,
         }
     }
 
-    XLOG::d.i("Realtime kick from '{}' mem:{} df:{} winperf:{}", Address, use_mem_, use_df_, use_winperf_processor_);
-
+    XLOG::d.i("Realtime kick from '{}' mem:{} df:{} winperf:{}", Address,
+              use_mem_, use_df_, use_winperf_processor_);
 
     cv_.notify_one();
 }
@@ -253,10 +253,6 @@ void Device::mainThread() {
                 connected = connectSocket(io_context, s, ip_address, port);
                 counter = 0;
                 if (connected) connect_required = false;
-            }
-
-            if (port == 0) {
-                XLOG::t.i("Testing mode enabled for RT Thread");
             }
 
             if (working_period_) {

@@ -243,7 +243,7 @@ int MainFunction(int argc, wchar_t const* argv[]) {
 }  // namespace cma::provider
 
 namespace cma {
-StartTypes AppDefaultType() { return StartTypes::kExe; }
+AppType AppDefaultType() { return AppType::exe; }
 }  // namespace cma
 
 #if !defined(CMK_TEST)

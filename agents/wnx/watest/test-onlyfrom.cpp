@@ -4,11 +4,9 @@
 //
 #include "pch.h"
 
+#include "cfg.h"
 #include "common/cfg_info.h"
 #include "external_port.h"
-
-#include "cfg.h"
-
 #include "onlyfrom.h"
 
 std::string network_list[] = {
@@ -140,7 +138,7 @@ TEST(OnlyFromTest, Base) {
     using namespace std::chrono;
     using namespace xlog::internal;
 
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
     {
         auto yaml = GetLoadedConfig();
         yaml[groups::kGlobal][vars::kOnlyFrom] =
@@ -261,7 +259,7 @@ TEST(OnlyFromTest, Ipv6) {
     using namespace std::chrono;
     using namespace xlog::internal;
 
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
     {
         auto yaml = GetLoadedConfig();
         yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("::1 127.0.0.1");

@@ -522,7 +522,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& ConfigFileNames,
     return false;
 }  // namespace cma::cfg
 
-std::vector<std::wstring> DefaultConfigArray(StartTypes Type) {
+std::vector<std::wstring> DefaultConfigArray(AppType Type) {
     std::vector<std::wstring> cfg_files;
     cfg_files.emplace_back(files::kDefaultMainConfig);
     return cfg_files;

@@ -14,7 +14,7 @@
 TEST(InstallAuto, LowLevel) {
     using namespace cma::install;
     namespace fs = std::filesystem;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
 
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
@@ -60,7 +60,7 @@ TEST(InstallAuto, LowLevel) {
 }
 
 TEST(InstallAuto, TopLevel) {
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     using namespace cma::install;
     using namespace cma::tools;
     namespace fs = std::filesystem;

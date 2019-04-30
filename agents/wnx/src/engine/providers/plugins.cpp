@@ -62,7 +62,7 @@ void PluginsProvider::loadConfig() {
         GetVal(cfg_name_, vars::kPluginMaxWait, kDefaultPluginTimeout);
 
     if (configured_timeout < timeout_) {
-        XLOG::d("Timeout is corrected fropm {} to {}", timeout_,
+        XLOG::d("Timeout is corrected from {} to {}", timeout_,
                 configured_timeout);
         timeout_ = configured_timeout;
     }

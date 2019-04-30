@@ -211,7 +211,7 @@ plugins:
     # default value, you may disable all scripts in local with no
     player: '' # [-] when empty we wil use default value, i.e. our player
 
-    max_wait: 11 # max timeout for every sync plugin. Agen will gather plugins data no more than max_wait time.
+    max_wait: 60 # max timeout for every sync plugin. Agen will gather plugins data no more than max_wait time.
                  # this is useful to terminate badly written or hanging plugins   
 
 
@@ -268,7 +268,7 @@ local:
     # default value, you may disable all scripts in local with no
     player: '' # [-] when empty we wil use default value, i.e. our player
 
-    max_wait: 11 # max timeout for every sync plugin. Agen will gather plugins data no more than max_wait time.
+    max_wait: 60 # max timeout for every sync plugin. Agen will gather plugins data no more than max_wait time.
                  # this is useful to terminate badly written or hanging plugins   
 
 

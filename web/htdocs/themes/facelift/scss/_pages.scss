@@ -30,28 +30,58 @@ Boston, MA 02110-1301 USA.
    styles are not used in the sidebar and in Mobile. */
 
 
-.tagify, .tagify[readonly] {
+.tagify {
+  $self: &;
+  $tagMargin: 0 0 2px 5px;
+  $tagPad: .1em .3em;
+
   border: none;
 
+  #{ $self }__input {
+    padding: $tagPad;
+    margin: $tagMargin;
+  }
+
+  &[readonly] {
+    tag > div {
+      padding: $tagPad;
+    }
+  }
+
   tag {
-    margin: 0 0 0 5px;
+    margin: 0 0 2px 5px;
 
     > div {
+      padding: $tagPad;
+      padding-right: nth($tagPad, 2) * 5;
+      margin: $tagMargin;
       color: #fff;
     }
 
     x {
-      font-size: 11px;
+      top: 45%;
+      right: 2px;
+      font-size: 10px;
+      line-height: 14px;
     }
 
     &:hover:not([readonly]) div::before {
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
       opacity: 0.5;
       box-shadow: none;
     }
 
     > div::before {
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
       background: #00a8b5;
       box-shadow: none;
+      animation: none;
     }
 
     &.explicit > div::before {

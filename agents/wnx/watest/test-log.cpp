@@ -376,7 +376,7 @@ TEST(LogTest, Yaml) {
     fs::path logf = log_file_name;
     fs::remove(logf);
 
-    cma::OnStart(cma::StartTypes::kTest);
+    cma::OnStart(cma::AppType::test);
     setup::ChangeLogFileName(logf.u8string());
 
     XLOG::l("simple test");

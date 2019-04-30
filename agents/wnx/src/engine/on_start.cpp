@@ -1,14 +1,13 @@
 // Configuration Parameters for whole Agent
 #include "stdafx.h"
 
+#include "on_start.h"
+
 #include <atomic>
 #include <string>
 
-#include "common/cfg_info.h"
-
 #include "cfg.h"
-#include "on_start.h"
-
+#include "common/cfg_info.h"
 #include "windows_service_api.h"
 
 namespace cma {
@@ -20,19 +19,19 @@ static std::atomic<bool> S_OnStartCalled = false;
 bool ConfigLoaded() { return S_ConfigLoaded; }
 namespace cfg {
 
-bool DetermineWorkingFolders(StartTypes Type) {
+bool DetermineWorkingFolders(AppType Type) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
     switch (Type) {
-        case kExe:
+        case AppType::exe:
             details::G_ConfigInfo.initAll(L"", L"", L"");
             break;
 
-        case kService:
+        case AppType::srv:
             details::G_ConfigInfo.initAll(cma::srv::kServiceName, L"", L"");
             break;
 
-        case kTest:  // only watest
+        case AppType::test:  // only watest
         {
             auto remote_machine_string =
                 cma::tools::win::GetEnv(L"REMOTE_MACHINE");
@@ -58,7 +57,8 @@ bool DetermineWorkingFolders(StartTypes Type) {
             );
             break;
         }
-        default:
+        case AppType::automatic:
+            XLOG::l.crit("Invalid value of the AppType");
             break;
     };
     return true;
@@ -67,9 +67,9 @@ bool DetermineWorkingFolders(StartTypes Type) {
 }  // namespace cfg
 
 // must be called on start
-bool OnStart(StartTypes Type, bool UpdateCacheOnSuccess,
-             std::wstring ConfigFile) {
-    if (Type == kDefault) Type = AppDefaultType();
+bool OnStart(AppType Type, YamlCacheOp UpdateCacheOnSuccess,
+             const std::wstring& ConfigFile) {
+    if (Type == AppType::automatic) Type = AppDefaultType();
 
     wtools::InitWindowsCom();
 
@@ -92,7 +92,8 @@ bool OnStart(StartTypes Type, bool UpdateCacheOnSuccess,
     }
 
     S_ConfigLoaded = cma::cfg::InitializeMainConfig(
-        cfg_files, UpdateCacheOnSuccess, Type != kTest);
+        cfg_files, UpdateCacheOnSuccess == YamlCacheOp::update,
+        Type != AppType::test);
 
     if (S_ConfigLoaded) {
         cma::cfg::ProcessKnownConfigGroups();

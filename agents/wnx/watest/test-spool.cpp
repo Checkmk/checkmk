@@ -84,7 +84,7 @@ TEST(SectionProviderSpool, BaseApi) {
 
 TEST(SectionProviderSpool, ReadFiles) {
     namespace fs = std::filesystem;
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
 
     SpoolProvider spool;
     fs::path dir = cma::cfg::GetSpoolDir();

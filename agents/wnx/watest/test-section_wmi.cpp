@@ -3,23 +3,19 @@
 //
 #include "pch.h"
 
-#include "common/wtools.h"
-#include "tools/_misc.h"
-#include "tools/_process.h"
-
 #include "cfg.h"
-
+#include "common/wtools.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/mem.h"
 #include "providers/p_perf_counters.h"
 #include "providers/services.h"
 #include "providers/system_time.h"
-
 #include "providers/wmi.h"
-
 #include "service_processor.h"
 #include "test_tools.h"
+#include "tools/_misc.h"
+#include "tools/_process.h"
 
 namespace wtools {
 
@@ -97,7 +93,7 @@ namespace cma::provider {
 TEST(ProviderTest, WmiBadName) {  //
     using namespace std::chrono;
 
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     {
         Wmi badname("badname");
         EXPECT_EQ(badname.object(), L"");
@@ -188,7 +184,7 @@ TEST(ProviderTest, WmiAll) {  //
         EXPECT_TRUE(!ohm.isAllowedByCurrentConfig());
         tst::EnableSectionsNode(cma::provider::kOhm);
         EXPECT_TRUE(ohm.isAllowedByCurrentConfig());
-        ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
+        ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
         EXPECT_TRUE(ohm.isAllowedByTime());
     }
 

@@ -10,16 +10,12 @@
 #include <future>
 #include <string_view>
 
-#include "common/cfg_info.h"
-
-#include "read_file.h"
-
 #include "cfg.h"
 #include "cfg_details.h"
-
 #include "cma_core.h"
-
+#include "common/cfg_info.h"
 #include "providers/plugins.h"
+#include "read_file.h"
 
 namespace cma {  // to become friendly for wtools classes
 
@@ -144,7 +140,7 @@ TEST(PluginTest, Extensions) {
 TEST(PluginTest, ConfigFolders) {
     using namespace cma::cfg;
     using namespace wtools;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     {
         std::string s = "@core\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
@@ -367,7 +363,7 @@ TEST(PluginTest, FilesAndFolders) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     {
         EXPECT_EQ(groups::localGroup.foldersCount(), 1);
         EXPECT_EQ(groups::plugins.foldersCount(), 4);
@@ -502,7 +498,7 @@ TEST(PluginTest, GeneratePluginEntry) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     {
         {
             auto pv = FilterPathVector(pv_main, exe_units_base, false);
@@ -645,7 +641,7 @@ TEST(PluginTest, SyncStartSimulationFuture) {
     using namespace wtools;
     namespace fs = std::filesystem;
     using namespace std::chrono;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     std::vector<Plugins::ExeUnit> exe_units = {
         //
         {"*.cmd", false, 10, 0, 3, true},  //
@@ -830,7 +826,7 @@ TEST(PluginTest, AsyncStartSimulation) {
     using namespace wtools;
     namespace fs = std::filesystem;
     using namespace std::chrono;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     PrepareStructures();
 
     std::error_code ec;
@@ -1054,7 +1050,7 @@ TEST(PluginTest, SyncStartSimulation) {
     using namespace wtools;
     namespace fs = std::filesystem;
     using namespace std::chrono;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     std::vector<Plugins::ExeUnit> exe_units = {
         //
         {"*.cmd", false, 10, 0, 3, true},  //

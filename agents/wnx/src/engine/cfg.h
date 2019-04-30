@@ -71,10 +71,10 @@ constexpr const wchar_t* kDefaultDevUt = L"check_mk_dev_unit_testing.yml";
 // we have to init folders depending from start type
 // test, exe or service
 // This is done once for whole life-cycle
-bool DetermineWorkingFolders(StartTypes Type);
+bool DetermineWorkingFolders(AppType Type);
 
 // 2. Prepare List of possible config names
-std::vector<std::wstring> DefaultConfigArray(StartTypes Type);
+std::vector<std::wstring> DefaultConfigArray(AppType Type);
 
 // 3.
 // must be called o program start.

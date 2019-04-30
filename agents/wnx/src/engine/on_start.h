@@ -5,20 +5,23 @@
 
 namespace cma {
 
-enum StartTypes { kDefault = 99, kService = 0, kTest, kExe };
+enum class AppType { automatic = 99, srv = 0, test, exe };
+enum class YamlCacheOp { nothing, update };
 
-StartTypes AppDefaultType();  // defined by main
+AppType AppDefaultType();  // defined by main
 
 // must be called on start
-bool OnStart(StartTypes Type = kDefault, bool UpdateCacheOnSuccess = false,
-             std::wstring ConfigFile = L"");
+bool OnStart(AppType Type = AppType::automatic,
+             YamlCacheOp UpdateCacheOnSuccess = YamlCacheOp::nothing,
+             const std::wstring& ConfigFile = L"");
 
-inline bool OnStartApp(bool UpdateCacheOnSuccess = true) {
-    return OnStart(kDefault, UpdateCacheOnSuccess);
+inline bool OnStartApp(YamlCacheOp UpdateCacheOnSuccess = YamlCacheOp::update) {
+    return OnStart(AppType::automatic, UpdateCacheOnSuccess);
 }
 
-inline bool OnStartTest(bool UpdateCacheOnSuccess = false) {
-    return OnStart(kTest, false);
+inline bool OnStartTest(
+    YamlCacheOp UpdateCacheOnSuccess = YamlCacheOp::nothing) {
+    return OnStart(AppType::test, UpdateCacheOnSuccess);
 }
 
 // recommended to be called on exit. BUT, PLEASE WAIT FOR ALL THREADS/ ASYNC

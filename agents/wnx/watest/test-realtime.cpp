@@ -7,12 +7,10 @@
 #include <thread>
 
 #include "asio.h"
-
-#include "common/cfg_info.h"
-#include "tools/_misc.h"
-
 #include "cfg.h"
+#include "common/cfg_info.h"
 #include "realtime.h"
+#include "tools/_misc.h"
 
 namespace tst {
 void DisableSectionsNode(std::string_view Str) {
@@ -168,8 +166,9 @@ TEST(RealtimeTest, PackData) {
 TEST(RealtimeTest, Base) {
     // stub
 
-    cma::OnStart(cma::kTest);
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));  // restore original config
+    cma::OnStart(cma::AppType::test);
+    ON_OUT_OF_SCOPE(
+        cma::OnStart(cma::AppType::test));  // restore original config
     {
         // we disable sections to be sure that realtime sections are executed
         // even being disabled

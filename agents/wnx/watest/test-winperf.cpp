@@ -212,7 +212,7 @@ TEST(WinPerfTest, Calls) {
 
 TEST(WinPerfTest, Config) {
     using namespace cma::cfg;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     {
         auto c = groups::winperf.counters();
         EXPECT_TRUE(c.size() >= 3)

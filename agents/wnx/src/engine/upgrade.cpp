@@ -18,7 +18,7 @@
 namespace cma::cfg::upgrade {
 
 // SERVICE_AUTO_START : SERVICE_DISABLED
-enum class StartType {
+enum class ServiceStartType {
     disable = SERVICE_DISABLED,
     auto_start = SERVICE_AUTO_START
 
@@ -369,7 +369,7 @@ bool StartWindowsService(const std::wstring& Name) {
     return true;
 }
 
-bool WinServiceChangeStartType(const std::wstring Name, StartType Type) {
+bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
     auto manager_handle = OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
     if (!manager_handle) {
         XLOG::l.crit("Cannot open SC MAnager {}", GetLastError());
@@ -446,7 +446,8 @@ bool ActivateLegacyAgent() {
     wtools::SetRegistryValue(
         L"SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", L"StartType",
         SERVICE_AUTO_START);
-    return WinServiceChangeStartType(L"check_mk_agent", StartType::auto_start);
+    return WinServiceChangeStartType(L"check_mk_agent",
+                                     ServiceStartType::auto_start);
 }
 bool DeactivateLegacyAgent() {
     wtools::SetRegistryValue(
@@ -457,7 +458,8 @@ bool DeactivateLegacyAgent() {
         RegDeleteKey(HKEY_LOCAL_MACHINE,
                      L"SYSTEM\\CurrentControlSet\\Services\\WinRing0_1_2_0");
     */
-    return WinServiceChangeStartType(L"check_mk_agent", StartType::disable);
+    return WinServiceChangeStartType(L"check_mk_agent",
+                                     ServiceStartType::disable);
 }
 
 int WaitForStatus(std::function<int(const std::wstring&)> StatusChecker,

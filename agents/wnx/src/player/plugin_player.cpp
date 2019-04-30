@@ -9,10 +9,9 @@
 // system C++
 
 // Project
+#include "carrier.h"
 #include "common/cmdline_info.h"
 #include "common/mailslot_transport.h"
-
-#include "carrier.h"
 #include "on_start.h"
 #include "player.h"
 #include "player_api.h"
@@ -299,7 +298,6 @@ int MainRunOnce(int argc, wchar_t const* argv[]) {
     return RunMe(name, argv[1], id_val, timeout_val, exe);
 }
 
-// #TODO make this function common
 // main
 int MainFunction(int argc, wchar_t const* argv[]) {
     // parse command line
@@ -315,7 +313,7 @@ int MainFunction(int argc, wchar_t const* argv[]) {
     argc -= 2;
     argv += 2;
 
-    cma::OnStart(cma::StartTypes::kService, false);
+    cma::OnStart(cma::AppType::srv, cma::YamlCacheOp::nothing);
     ON_OUT_OF_SCOPE(cma::OnExit());
 
     // check and call:
@@ -333,7 +331,7 @@ int MainFunction(int argc, wchar_t const* argv[]) {
 }  // namespace cma::player
 
 namespace cma {
-StartTypes AppDefaultType() { return StartTypes::kExe; }
+AppType AppDefaultType() { return AppType::exe; }
 }  // namespace cma
 
 #if !defined(CMK_TEST)

@@ -160,9 +160,9 @@ TEST(CvtTest, LogFilesSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kLogFiles].IsMap());
@@ -209,9 +209,9 @@ TEST(CvtTest, LogWatchSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kLogWatchEvent].IsMap());
@@ -260,9 +260,9 @@ TEST(CvtTest, MrpeSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kMrpe].IsMap());
@@ -301,9 +301,9 @@ TEST(CvtTest, PluginsLocalSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kLocal].IsMap());
@@ -372,9 +372,9 @@ TEST(CvtTest, PsSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kPs].IsMap());
@@ -406,9 +406,9 @@ TEST(CvtTest, FileInfoSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kFileInfo].IsMap());
@@ -444,9 +444,9 @@ TEST(CvtTest, WinPerfSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kWinPerf].IsMap());
@@ -486,9 +486,9 @@ TEST(CvtTest, GlobalSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kGlobal].IsMap());

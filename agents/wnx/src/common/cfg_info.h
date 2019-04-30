@@ -26,7 +26,8 @@ enum class EventLevel : int {
 enum EventClass {
     kBadException = 4,  // exception is strange
     kBadLogic = 12,     // logic is not a good one
-    kDefault = 20       // this is default value
+    kAppDefault = 20,   // default value for any exe/test
+    kSrvDefault = 30    // default value for service
 };
 // end of windows specific
 

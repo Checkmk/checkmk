@@ -34,7 +34,7 @@ public:
         using namespace cma::cfg;
         std::error_code ec;
         std::filesystem::remove(cma::cfg::GetBakeryFile(), ec);
-        cma::OnStart(cma::kTest);
+        cma::OnStart(cma::AppType::test);
 
         auto yaml = GetLoadedConfig();
         auto sections =
@@ -46,7 +46,7 @@ public:
         ProcessKnownConfigGroups();
         SetupEnvironmentFromGroups();
     }
-    ~YamlLoaderMrpe() { OnStart(cma::kTest); }
+    ~YamlLoaderMrpe() { OnStart(cma::AppType::test); }
 };
 
 TEST(SectionProviderMrpe, Construction) {

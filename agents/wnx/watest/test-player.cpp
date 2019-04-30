@@ -5,24 +5,21 @@
 
 #include <time.h>
 
-#include "common/cfg_info.h"
-#include "common/mailslot_transport.h"
-#include "common/wtools.h"
-#include "tools/_misc.h"
-#include "tools/_process.h"
-#include "tools/_raii.h"
-
-#include "carrier.h"
-#include "player.h"
-#include "read_file.h"
-
-#include "cfg.h"
-#include "cfg_details.h"
-
 #include <chrono>
 #include <filesystem>
 
+#include "carrier.h"
+#include "cfg.h"
+#include "cfg_details.h"
 #include "cma_core.h"
+#include "common/cfg_info.h"
+#include "common/mailslot_transport.h"
+#include "common/wtools.h"
+#include "player.h"
+#include "read_file.h"
+#include "tools/_misc.h"
+#include "tools/_process.h"
+#include "tools/_raii.h"
 
 namespace cma::player {  // to become friendly for wtools classes
 TEST(PlayerTest, Pipe) {
@@ -143,7 +140,7 @@ TEST(PlayerTest, Extensions) {
 TEST(PlayerTest, ConfigFolders) {
     using namespace cma::cfg;
     using namespace wtools;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     {
         std::string s = "@core\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);

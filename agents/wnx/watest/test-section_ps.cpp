@@ -3,15 +3,12 @@
 //
 #include "pch.h"
 
+#include "cfg.h"
 #include "common/wtools.h"
+#include "providers/ps.h"
+#include "service_processor.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-
-#include "cfg.h"
-
-#include "providers/ps.h"
-
-#include "service_processor.h"
 
 namespace cma::provider {
 std::string OutputProcessLine(ULONGLONG virtual_size,
@@ -40,7 +37,7 @@ std::vector<std::string> SpecialProcesses = {
 TEST(PsTest, All) {  //
     using namespace std::chrono;
 
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
 
     ULONGLONG virtual_size = 1ull * 1024 * 1024 * 1024 * 1024;
     ULONGLONG working_set_size = 2ull * 1024 * 1024 * 1024 * 1024;

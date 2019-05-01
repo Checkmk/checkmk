@@ -5,6 +5,7 @@ DOKUWIKI_DIR = $(DOKUWIKI)-$(DOKUWIKI_VERS)
 DOKUWIKI_BUILD := $(BUILD_HELPER_DIR)/$(DOKUWIKI_DIR)-build
 DOKUWIKI_INSTALL := $(BUILD_HELPER_DIR)/$(DOKUWIKI_DIR)-install
 DOKUWIKI_UNPACK := $(BUILD_HELPER_DIR)/$(DOKUWIKI_DIR)-unpack
+DOKUWIKI_SKEL := $(BUILD_HELPER_DIR)/$(DOKUWIKI_DIR)-skel
 DOKUWIKI_UNPACK_ADDITIONAL := $(BUILD_HELPER_DIR)/$(DOKUWIKI_DIR)-unpack-additional
 DOKUWIKI_PATCHING := $(BUILD_HELPER_DIR)/$(DOKUWIKI_DIR)-patching
 
@@ -13,6 +14,7 @@ DOKUWIKI_PATCHING := $(BUILD_HELPER_DIR)/$(DOKUWIKI_DIR)-patching
 $(DOKUWIKI): $(DOKUWIKI_BUILD)
 
 $(DOKUWIKI)-install: $(DOKUWIKI_INSTALL)
+$(DOKUWIKI)-skel: $(DOKUWIKI_SKEL)
 
 $(DOKUWIKI_UNPACK_ADDITIONAL): $(DOKUWIKI_UNPACK) 
 	$(TAR_GZ) $(PACKAGE_DIR)/$(DOKUWIKI)/template-arctictut.tgz -C $(DOKUWIKI_DIR)/lib/tpl/
@@ -57,7 +59,7 @@ $(DOKUWIKI_INSTALL): $(DOKUWIKI_BUILD)
 #	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
 #	rm -rf $(DESTDIR)$(OMD_ROOT)/var
 
-$(DOKUWIKI)-skel: $(DOKUWIKI_INSTALL)
+$(DOKUWIKI_SKEL): $(DOKUWIKI_INSTALL)
 	$(MKDIR) $(SKEL)/etc/dokuwiki
 	$(MKDIR) $(SKEL)/var/dokuwiki/lib/plugins
 	cp $(DOKUWIKI_DIR)/conf/*.conf				$(SKEL)/etc/dokuwiki/.
@@ -74,6 +76,7 @@ $(DOKUWIKI)-skel: $(DOKUWIKI_INSTALL)
 	for i in `ls -1 $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/` ; do \
 	    $(LN) -s ../../../../share/dokuwiki/htdocs/lib/plugins/$$i . ; \
 	done
+	$(TOUCH) $@
 
 $(DOKUWIKI)-clean:
 	# Remove files created by build/install

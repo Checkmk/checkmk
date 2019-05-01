@@ -9,12 +9,14 @@ else
 endif
 
 OMD_INSTALL := $(BUILD_HELPER_DIR)/$(OMD_DIR)-install
+OMD_SKEL := $(BUILD_HELPER_DIR)/$(OMD_DIR)-skel
 
 .PHONY: $(OMD) $(OMD)-install $(OMD)-skel
 
 $(OMD):
 
 $(OMD)-install: $(OMD_INSTALL)
+$(OMD)-skel: $(OMD_SKEL)
 
 $(OMD_INSTALL):
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/omd.bin $(DESTDIR)$(OMD_ROOT)/bin/omd
@@ -37,10 +39,10 @@ $(OMD_INSTALL):
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/bash_completion $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/hooks/* $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-
 	$(TOUCH) $@
 
-$(OMD)-skel:
+$(OMD_SKEL): $(OMD_INSTALL)
 	$(MKDIR) $(SKEL)/etc/bash_completion.d
+	$(TOUCH) $@
 
 $(OMD)-clean:

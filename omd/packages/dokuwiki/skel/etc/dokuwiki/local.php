@@ -12,5 +12,6 @@ $conf['multisite']['auth_secret'] = '/omd/sites/###SITE###/etc/auth.secret';
 $conf['multisite']['auth_serials'] = '/omd/sites/###SITE###/etc/auth.serials';
 $conf['multisite']['htpasswd'] = '/omd/sites/###SITE###/etc/htpasswd';
 $conf['tpl']['vector']['vector_navigation_location'] = 'sidebar';
+$conf['dmode'] = 0770;
 
 ?>

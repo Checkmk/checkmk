@@ -3,6 +3,7 @@ DISTNAME := $(CHECK_MK)-$(CMK_VERSION)
 
 CHECK_MK_BUILD := $(BUILD_HELPER_DIR)/$(DISTNAME)-build
 CHECK_MK_INSTALL := $(BUILD_HELPER_DIR)/$(DISTNAME)-install
+CHECK_MK_SKEL := $(BUILD_HELPER_DIR)/$(DISTNAME)-skel
 CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(DISTNAME)-patching
 
 .PHONY: $(CHECK_MK) $(CHECK_MK)-install $(CHECK_MK)-skel $(CHECK_MK)-clean
@@ -10,6 +11,7 @@ CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(DISTNAME)-patching
 $(CHECK_MK): $(CHECK_MK_BUILD)
 
 $(CHECK_MK)-install: $(CHECK_MK_INSTALL)
+$(CHECK_MK)-skel: $(CHECK_MK_SKEL)
 
 # This step creates a tar archive containing the sources
 # which are need for the build step
@@ -113,9 +115,10 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	#chmod +x $(DESTDIR)$(OMD_ROOT)/bin/*
 	$(TOUCH) $@
 
-$(CHECK_MK)-skel:
+$(CHECK_MK_SKEL): $(CHECK_MK_INSTALL)
 	$(RM) $(SKEL)/etc/check_mk/main.mk-*
 	$(RM) $(SKEL)/etc/check_mk/multisite.mk-*
+	$(TOUCH) $@
 
 $(CHECK_MK)-clean:
 	$(RM) -r check_mk-*.*.*[0-9] werks ChangeLog $(BUILD_HELPER_DIR)/$(CHECK_MK)*

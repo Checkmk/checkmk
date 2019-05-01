@@ -1031,4 +1031,4 @@ def select_language(user):
               'Note: currently Multisite is internationalized '
               'but comes without any actual localisations (translations). If you want to '
               'create you own translation, you find <a href="%(url)s">documentation online</a>.') %
-            {"url": "https://mathias-kettner.com/checkmk_multisite_cmk.gui.i18n.html"})
+            {"url": "https://checkmk.com/checkmk_multisite_cmk.gui.i18n.html"})

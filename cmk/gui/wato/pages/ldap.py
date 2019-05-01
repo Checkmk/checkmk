@@ -255,8 +255,8 @@ class ModeEditLDAPConnection(LDAPMode):
                        'hit the "Save & Test" button to execute the tests. After '
                        'the page reload, you should see the results of the test here.'),
                      _('If you need help during configuration or experience problems, please refer '
-                       'to the Multisite <a target="_blank" '
-                       'href="https://mathias-kettner.com/checkmk_multisite_ldap_integration.html">'
+                       'to the <a target="_blank" '
+                       'href="https://checkmk.com/checkmk_multisite_ldap_integration.html">'
                        'LDAP Documentation</a>.'))))
         else:
             connection = userdb.get_connection(self._connection_id)

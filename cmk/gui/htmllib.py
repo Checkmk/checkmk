@@ -1776,7 +1776,7 @@ class html(HTMLGenerator):
             onclick="cmk.help.toggle()",
             style="display:none",
             cssclass=cssclass)
-        self.open_a(href="https://mathias-kettner.com", class_="head_logo")
+        self.open_a(href="https://checkmk.com", class_="head_logo", target="_blank")
         self.img(src="themes/%s/images/logo_cmk_small.png" % self._theme)
         self.close_a()
         self.close_td()

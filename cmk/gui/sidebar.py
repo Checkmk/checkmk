@@ -554,8 +554,8 @@ class SidebarRenderer(object):
         html.close_div()
 
         html.open_div(class_=["copyright"])
-        html.write("&copy; " + html.render_a(
-            "Mathias Kettner", target="_blank", href="https://mathias-kettner.com"))
+        html.write("&copy; " +
+                   html.render_a("tribe29 GmbH", target="_blank", href="https://checkmk.com"))
         html.close_div()
         html.close_div()
 

@@ -111,6 +111,5 @@ class RulespecCheckgroupParametersMtr(CheckParameterRulespecWithItem):
     def item_spec(self):
         return TextAscii(
             title=_("MTR destination"),
-            help=_(
-                "Specify the name of the destination host, i.e. <tt>www.mathias-kettner.com</tt>"),
+            help=_("Specify the name of the destination host, i.e. <tt>checkmk.com</tt>"),
             allow_empty=False)

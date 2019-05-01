@@ -509,7 +509,7 @@ def normal_login_page(called_directly=True):
         footer.append("Version: %s" % cmk.__version__)
 
     footer.append(
-        "&copy; %s" % html.render_a("Mathias Kettner", href="https://mathias-kettner.com"))
+        "&copy; %s" % html.render_a("tribe29 GmbH", href="https://checkmk.com", target="_blank"))
 
     html.write(HTML(" - ").join(footer))
 
@@ -517,8 +517,8 @@ def normal_login_page(called_directly=True):
         html.br()
         html.br()
         html.write(
-            _('You can use, modify and distribute Check_MK under the terms of the <a href="%s">'
-              'GNU GPL Version 2</a>.') % "https://mathias-kettner.com/gpl.html")
+            _('You can use, modify and distribute Check_MK under the terms of the <a href="%s" target="_blank">'
+              'GNU GPL Version 2</a>.') % "https://checkmk.com/gpl.html")
 
     html.close_div()
 

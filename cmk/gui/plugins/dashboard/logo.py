@@ -58,6 +58,6 @@ class MKLogoDashlet(Dashlet):
         return False  # can not be selected using the dashboard editor
 
     def show(self):
-        html.open_a(href="https://mathias-kettner.com/check_mk.html")
+        html.open_a(href="https://checkmk.com/", target="_blank")
         html.img(html.theme_url("images/check_mk.trans.120.png"), style="margin-right: 30px;")
         html.close_a()

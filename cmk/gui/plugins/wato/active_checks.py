@@ -1374,7 +1374,7 @@ class RulespecActiveChecksLdap(HostRulespec):
                     allow_empty=False),
                 TextAscii(
                     title=_("Base DN"),
-                    help=_("LDAP base, e.g. ou=Development, o=Mathias Kettner GmbH, c=de"),
+                    help=_("LDAP base, e.g. ou=Development, o=tribe29 GmbH, c=de"),
                     allow_empty=False,
                     size=60),
                 Dictionary(

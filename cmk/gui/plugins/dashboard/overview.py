@@ -61,18 +61,15 @@ class OverviewDashlet(Dashlet):
         html.open_table(class_="dashlet_overview")
         html.open_tr()
         html.open_td(valign="top")
-        html.open_a(href="https://mathias-kettner.com/check_mk.html")
+        html.open_a(href="https://checkmk.com/")
         html.img(html.theme_url("images/check_mk.trans.120.png"), style="margin-right: 30px;")
         html.close_a()
         html.close_td()
 
         html.open_td()
-        html.h2("Check_MK Multisite")
-        html.write_html(
-            'Welcome to Check_MK Multisite. If you want to learn more about Multisite, please visit '
-            'our <a href="https://mathias-kettner.com/checkmk_multisite.html">online documentation</a>. '
-            'Multisite is part of <a href="https://mathias-kettner.com/check_mk.html">Check_MK</a> - an Open Source '
-            'project by <a href="https://mathias-kettner.com">Mathias Kettner</a>.')
+        html.h2("CheckMK")
+        html.write_html('Welcome to CheckMK. If you want to learn more about CheckMK, please visit '
+                        'our <a href="https://checkmk.com/" target="_blank">user manual</a>.')
         html.close_td()
 
         html.close_tr()

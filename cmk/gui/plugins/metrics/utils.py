@@ -149,7 +149,7 @@ This methods must not return None or anything else. It must strictly
 return a tuple of perf_data list and the check_command. In case of
 errors during parsing it returns an empty list for the perf_data.
 """
-    # Strip away arguments like in "check_http!-H mathias-kettner.de"
+    # Strip away arguments like in "check_http!-H checkmk.com"
     if hasattr(check_command, 'split'):
         check_command = check_command.split("!")[0]
 

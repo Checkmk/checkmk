@@ -281,8 +281,8 @@ class ModeEditSite(WatoMode):
             raise MKUserError("id", _("This id is already being used by another connection."))
 
     def _livestatus_elements(self):
-        proxy_docu_url = "https://mathias-kettner.com/checkmk_multisite_modproxy.html"
-        status_host_docu_url = "https://mathias-kettner.com/checkmk_multisite_statushost.html"
+        proxy_docu_url = "https://checkmk.com/checkmk_multisite_modproxy.html"
+        status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"
         site_choices = [("", _("(no status host)"))] + [
             (sk, si.get("alias", sk)) for (sk, si) in self._site_mgmt.load_sites().items()
         ]

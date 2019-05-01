@@ -264,7 +264,7 @@ def handle_report_form(tardata, what):
               "already have a support contract, then please use your personal "
               "support email address to send us a mail refering to your crash "
               "report.<br>If you are interested in the details about support, "
-              "you find details on <a href=\"http://mathias-kettner.com/"
+              "you find details on <a href=\"https://checkmk.com/"
               "checkmk_support_contract.html\" target=_blank>our website</a>."))
         html.close_div()
         html.open_div(id_="fail_msg", style="display:none")
@@ -276,7 +276,7 @@ def handle_report_form(tardata, what):
             _("Failed to send the crash report. Please download it manually and send it "
               "to <a href=\"%s\">%s</a>") % (report_url, get_crash_report_target(what)))
         html.close_div()
-        html.javascript("cmk.crash_reporting.submit('https://mathias-kettner.de/crash_report.php', " \
+        html.javascript("cmk.crash_reporting.submit('https://checkmk.com/crash_report.php', " \
                                             "'%s');" % url_encoded_params)
     except MKUserError as e:
         action_message = "%s" % e

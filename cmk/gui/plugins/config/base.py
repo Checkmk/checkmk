@@ -136,7 +136,7 @@ view_option_refreshes = [30, 60, 90, 0]
 view_option_columns = [1, 2, 3, 4, 5, 6, 8, 10, 12]
 
 # MISC
-doculink_urlformat = "http://mathias-kettner.com/checkmk_%s.html"
+doculink_urlformat = "https://checkmk.com/checkmk_%s.html"
 
 view_action_defaults = {
     "ack_sticky": True,
@@ -163,7 +163,7 @@ custom_links['guest'] = [
 # The members of the role 'user' get the same links as the guests
 # but some in addition
 custom_links['user'] = custom_links['guest'] + [("Open Source Components", False, [
-    ("Check_MK", "https://mathias-kettner.com", None, "_blank"),
+    ("CheckMK", "https://checkmk.com", None, "_blank"),
     ("Nagios", "https://www.nagios.org/", None, "_blank"),
     ("PNP4Nagios", "https://pnp4nagios.org/", None, "_blank"),
     ("NagVis", "https://nagvis.org/", None, "_blank"),
@@ -172,10 +172,9 @@ custom_links['user'] = custom_links['guest'] + [("Open Source Components", False
 
 # The admins yet get further links
 custom_links['admin'] = custom_links['user'] + [("Support", False, [
-    ("Mathias Kettner", "https://mathias-kettner.com/"),
-    ("Check_MK Mailinglists", "https://mathias-kettner.com/community.php"),
-    ("Check_MK Exchange", "https://mathias-kettner.com/check_mk-exchange.php", None, "_blank"),
-    ("Monitoring Portal (German)", "https://monitoring-portal.org", None, "_blank"),
+    ("CheckMK", "https://checkmk.com/", None, "_blank"),
+    ("CheckMK Mailinglists", "https://checkmk.com/community.php", None, "_blank"),
+    ("CheckMK Exchange", "https://checkmk.com/check_mk-exchange.php", None, "_blank"),
 ])]
 
 #  __     __         _

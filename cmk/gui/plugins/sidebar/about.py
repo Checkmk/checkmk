@@ -45,7 +45,7 @@ class About(SidebarSnapin):
 
     def show(self):
         html.open_ul()
-        bulletlink(_("Homepage"), "https://mathias-kettner.com/check_mk.html", target="_blank")
-        bulletlink(_("Documentation"), "https://mathias-kettner.com/cms.html", target="_blank")
-        bulletlink(_("Download"), "https://mathias-kettner.com/download.php", target="_blank")
+        bulletlink(_("Homepage"), "https://checkmk.com/check_mk.html", target="_blank")
+        bulletlink(_("Documentation"), "https://checkmk.com/cms.html", target="_blank")
+        bulletlink(_("Download"), "https://checkmk.com/download.php", target="_blank")
         html.close_ul()

@@ -216,9 +216,7 @@ def page_login():
     html.open_div(id_="loginfoot")
     html.img("themes/classic/images/logo_cmk_small.png", class_="logomk")
     html.div(
-        HTML(
-            _("&copy; <a target=\"_blank\" href=\"https://mathias-kettner.com\">Mathias Kettner</a>"
-             )),
+        HTML(_("&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>")),
         class_="copyright")
     jqm_page_footer()
     mobile_html_foot()

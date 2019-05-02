@@ -2,30 +2,26 @@
 #include "stdafx.h"
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #include <direct.h>  // known path
 #include <shellapi.h>
 #include <shlobj.h>  // known path
+#include <windows.h>
 
 #include <atomic>
 #include <filesystem>
 #include <string>
 
+#include "cfg.h"
+#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
-
+#include "logger.h"
+#include "read_file.h"
 #include "tools/_misc.h"     // setenv
 #include "tools/_process.h"  // GetSomeFolder...
 #include "tools/_raii.h"     // on out
 #include "tools/_tgt.h"      // we need IsDebug
-
 #include "yaml-cpp/yaml.h"
-
-#include "cfg.h"
-#include "cfg_details.h"
-#include "logger.h"
-#include "read_file.h"
 
 namespace cma {
 namespace details {
@@ -965,8 +961,7 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& ConfigFileName,
     // check root
     auto& root = yamls[0];
     if (!root.exists() || root.data().empty() || root.bad()) {
-        XLOG::l.crit("Cannot find/read root cfg '{}'. Installation damaged.",
-                     root.path_.u8string());
+        XLOG::d("Cannot find/read root cfg '{}'. ", root.path_.u8string());
         return LoadCfgStatus::kAllFailed;
     }
 

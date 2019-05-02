@@ -54,17 +54,6 @@ def pagerduty_severity(state):
     }[state]
 
 
-def perf_values(data):
-    entry = ['Value', 'warn_level', 'crit_level', 'min', 'max']
-    return ",".join([e + '=' + v for e, v in zip(entry, data.split(";")) if v])
-
-
-def construct_perfdata(data):
-    data = (item.split("=") for item in data.split())
-    data = {k: perf_values(v) for k, v in data}
-    return data
-
-
 def pagerduty_msg(context):
     # type: (Dict) -> Dict
     """Build the PagerDuty incident payload"""
@@ -76,13 +65,11 @@ def pagerduty_msg(context):
         incident_key = '{SERVICEDESC}/{HOSTNAME}:{HOSTADDRESS}'.format(**context).replace(" ", "")
         incident = "{SERVICESTATE}: {SERVICEDESC} on {HOSTNAME}".format(**context)
         output = context["SERVICEOUTPUT"]
-        perfdata = construct_perfdata(context["SERVICEPERFDATA"])
         incident_url = service_url
     else:
         state = context["HOSTSTATE"]
         incident_key = '{HOSTNAME}:{HOSTADDRESS}'.format(**context).replace(" ", "")
         incident = '{HOSTNAME} is {HOSTSTATE}'.format(**context)
-        perfdata = construct_perfdata(context["HOSTPERFDATA"])
         output = context["HOSTOUTPUT"]
         incident_url = host_url
 
@@ -98,7 +85,6 @@ def pagerduty_msg(context):
                 "info": output,
                 "host": context.get('HOSTNAME'),
                 "host_address": context.get('HOSTADDRESS'),
-                "perfdata": perfdata,
             }
         }
     }

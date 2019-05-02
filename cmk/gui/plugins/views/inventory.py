@@ -93,11 +93,11 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
         tree_id = "/" + str(row["invhist_time"])
         tree_renderer = DeltaNodeRenderer(row["site"], row["host_name"], tree_id, invpath)
 
-    parsed_path, attributes_key = inventory.parse_tree_path(invpath)
-    if attributes_key is None:
+    parsed_path, attribute_keys = inventory.parse_tree_path(invpath)
+    if attribute_keys is None:
         return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
     return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath,
-                                            attributes_key)
+                                            attribute_keys)
 
 
 def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):
@@ -115,8 +115,8 @@ def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
 
 
 def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath,
-                                     attributes_key):
-    if attributes_key == []:
+                                     attribute_keys):
+    if attribute_keys == []:
         child = struct_tree.get_sub_numeration(parsed_path)
     else:
         child = struct_tree.get_sub_attributes(parsed_path)
@@ -127,10 +127,10 @@ def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, in
     with html.plugged():
         if invpath.endswith(".") or invpath.endswith(":"):
             invpath = invpath[:-1]
-        if attributes_key == []:
+        if attribute_keys == []:
             tree_renderer.show_numeration(child, path=invpath)
         else:
-            tree_renderer.show_attribute(child.get_child_data().get(attributes_key),
+            tree_renderer.show_attribute(child.get_child_data().get(attribute_keys),
                                          _inv_display_hint(invpath))
         code = html.drain()
     return "", code
@@ -966,7 +966,7 @@ def _create_view_enabled_check_func(invpath, is_history=False):
         if struct_tree.is_empty():
             return False
 
-        parsed_path, unused_key = inventory.parse_tree_path(invpath)
+        parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
         if parsed_path:
             children = struct_tree.get_sub_children(parsed_path)
         else:
@@ -1782,7 +1782,7 @@ def ajax_inv_render_tree():
     if struct_tree is None:
         html.show_error(_("No such inventory tree."))
 
-    parsed_path, _attributes_key = inventory.parse_tree_path(invpath)
+    parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)
     else:

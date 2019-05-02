@@ -1,5 +1,6 @@
 # Default Check MK configuration file
 # Copyright Mathias Kettner GmbH
+# version 10008
 
 # global must be presented
 # IMPORTANT notes
@@ -194,15 +195,18 @@ fileinfo:
 logwatch:
     enabled: yes
     
-    sendall: no
-    vista_api: no # this is RECOMMENDED settinsg
+    sendall: no   # this is MANDATORY
+    vista_api: no # this is RECOMMENDED
 
-    logfile: # 
-        - 'Application': crit context # allowed <crit|warn|all|off> + [context|nocontext]
-        - 'System': warn nocontext 
-        - 'Demo': all nocontext # allowed crit, warn, all, off
+    logfile: # entries in the windows eventlog
+        # Format is sequence 
+        # - 'EventLogName': <crit|warn|all|off> + [context|nocontext]
+        # end of documentation
+        #- 'Application': crit context # example
+        #- 'System': warn nocontext    # another example
+        #- 'YourOwn': all nocontext    # yet another example
         - '': warn nocontext # allowed crit, warn, all, off
-        - '*': off nocontext # allowed crit, warn, all, off, do not remove this
+        - '*': warn nocontext # This is default params for not missing entries
 
 plugins:
     # scripts in plugin

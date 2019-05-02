@@ -2858,6 +2858,14 @@ class HostConfig(object):
 
         return params.get("host_label_inventory", True)
 
+    @property
+    def service_level(self):
+        # type: () -> Optional[int]
+        entries = self._config_cache.host_extra_conf(self.hostname, host_service_levels)
+        if not entries:
+            return None
+        return entries[0]
+
 
 #.
 #   .--Configuration Cache-------------------------------------------------.
@@ -3099,6 +3107,13 @@ class ConfigCache(object):
         return dict(
             itertools.chain(
                 *self.service_extra_conf(hostname, description, custom_service_attributes)))
+
+    def service_level_of_service(self, hostname, description):
+        # type: (str, Text) -> Optional[int]
+        entries = self.service_extra_conf(hostname, description, service_service_levels)
+        if not entries:
+            return None
+        return entries[0]
 
     def get_explicit_service_custom_variables(self, hostname, description):
         # type: (str, Text) -> Dict[str, str]

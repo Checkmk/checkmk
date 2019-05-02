@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-r"""
-Test Check API
-==============
-
-"""
 import math
-import pytest
+import pytest  # type: ignore
+from testlib.base import Scenario
 
 import cmk_base.check_api as check_api
 import cmk_base.config as config
+import cmk_base.check_api_utils as check_api_utils
 
 
 @check_api.get_parsed_item_data
@@ -237,3 +234,32 @@ def test_http_proxy(mocker):
     proxy_patch = mocker.patch.object(config, "get_http_proxy")
     check_api.get_http_proxy(("url", "http://xy:123"))
     assert proxy_patch.called_once()
+
+
+def test_get_effective_service_level(monkeypatch):
+    ts = Scenario().add_host("testhost1")
+    ts.add_host("testhost2")
+    ts.add_host("testhost3")
+    ts.set_ruleset(
+        "host_service_levels",
+        [
+            (10, [], ["testhost2"], {}),
+            (2, [], ["testhost2"], {}),
+        ],
+    )
+    ts.set_ruleset(
+        "service_service_levels",
+        [
+            (33, [], ["testhost1"], ["CPU load$"], {}),
+        ],
+    )
+    ts.apply(monkeypatch)
+
+    check_api_utils.set_service("cpu.loads", "CPU load")
+
+    check_api_utils.set_hostname("testhost1")
+    assert check_api.get_effective_service_level() == 33
+    check_api_utils.set_hostname("testhost2")
+    assert check_api.get_effective_service_level() == 10
+    check_api_utils.set_hostname("testhost3")
+    assert check_api.get_effective_service_level() == 0

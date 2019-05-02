@@ -201,17 +201,17 @@ def savefloat(f):
         return 0.0
 
 
-# Compatibility wrapper for the pre 1.6 existant conf.service_extra_conf()
+# Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()
 def service_extra_conf(hostname, service, ruleset):
     return _config.get_config_cache().service_extra_conf(hostname, service, ruleset)
 
 
-# Compatibility wrapper for the pre 1.6 existant conf.service_extra_conf()
+# Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()
 def host_extra_conf(hostname, ruleset):
     return _config.get_config_cache().host_extra_conf(hostname, ruleset)
 
 
-# Compatibility wrapper for the pre 1.6 existant conf.service_extra_conf()
+# Compatibility wrapper for the pre 1.6 existant config.in_binary_hostlist()
 def in_binary_hostlist(hostname, ruleset):
     return _config.get_config_cache().in_binary_hostlist(hostname, ruleset)
 
@@ -504,15 +504,14 @@ def get_effective_service_level():
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
     config_cache = _config.get_config_cache()
-    service_levels = config_cache.service_extra_conf(host_name(), service_description(),
-                                                     _config.service_service_levels)
+    service_level = config_cache.service_level_of_service(host_name(), service_description())
+    if service_level is not None:
+        return service_level
 
-    if service_levels:
-        return service_levels[0]
-    else:
-        service_levels = config_cache.host_extra_conf(host_name(), _config.host_service_levels)
-        if service_levels:
-            return service_levels[0]
+    service_level = config_cache.get_host_config(host_name()).service_level
+    if service_level is not None:
+        return service_level
+
     return 0
 
 

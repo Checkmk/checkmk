@@ -1136,6 +1136,23 @@ def test_config_cache_custom_attributes_of_service(monkeypatch, hostname, result
     assert config_cache.custom_attributes_of_service(hostname, "CPU load") == result
 
 
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", None),
+    ("testhost2", 10),
+])
+def test_config_cache_service_level_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset(
+        "service_service_levels",
+        [
+            (10, [], ["testhost2"], ["CPU load$"], {}),
+            (2, [], ["testhost2"], ["CPU load$"], {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.service_level_of_service(hostname, "CPU load") == result
+
+
 @pytest.mark.parametrize("edition_short,expected_cache_class_name,expected_host_class_name", [
     ("cme", "CEEConfigCache", "CEEHostConfig"),
     ("cee", "CEEConfigCache", "CEEHostConfig"),
@@ -1253,3 +1270,20 @@ def test_host_config_do_host_label_discovery_for(monkeypatch, result, ruleset):
     config_cache = ts.apply(monkeypatch)
 
     assert config_cache.get_host_config("abc").do_host_label_discovery == result
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", None),
+    ("testhost2", 10),
+])
+def test_host_config_service_level(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset(
+        "host_service_levels",
+        [
+            (10, [], ["testhost2"], {}),
+            (2, [], ["testhost2"], {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).service_level == result

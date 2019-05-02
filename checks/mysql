@@ -250,3 +250,132 @@ check_info['mysql.connections'] = {
     "group": "mysql_connections",
     "has_perfdata": True,
 }
+
+#
+# Galera Sync Status
+#
+
+def inventory_mysql_galerasync(parsed):
+    for instance, values in parsed.items():
+        if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_local_state_comment' in values:
+            yield instance, {}
+
+def check_mysql_galerasync(item, _no_params, parsed):
+    if item in parsed:
+        values = parsed[item]
+        if u'wsrep_local_state_comment' in values:
+            if values[u'wsrep_local_state_comment'] == 'Synced':
+                return (0, 'wsrep_local_state_comment is %s' % values[u'wsrep_local_state_comment'])
+            else:
+                return (2, 'wsrep_local_state_comment is %s' % values[u'wsrep_local_state_comment'])
+
+check_info['mysql.galerasync'] = {
+    "inventory_function"      : inventory_mysql_galerasync,
+    "check_function"          : check_mysql_galerasync,
+    "service_description"     : "MySQL Galera Sync %s",
+    "has_perfdata"            : False,
+}
+
+#
+# Galera Donor
+#
+
+def inventory_mysql_galeradonor(parsed):
+    for instance, values in parsed.items():
+        if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_sst_donor' in values:
+            yield instance, {'wsrep_sst_donor': values['wsrep_sst_donor']}
+
+def check_mysql_galeradonor(item, params, parsed):
+    if item in parsed:
+        values = parsed[item]
+        if u'wsrep_sst_donor' in values:
+            if values[u'wsrep_sst_donor'] == params['wsrep_sst_donor']:
+                return (0, 'wsrep_sst_donor contains "%s"' % values[u'wsrep_sst_donor'])
+            else:
+                return (1, 'wsrep_sst_donor contains "%s" and not "%s"' % (values[u'wsrep_sst_donor'], params['wsrep_sst_donor']))
+
+check_info['mysql.galeradonor'] = {
+    "inventory_function"      : inventory_mysql_galeradonor,
+    "check_function"          : check_mysql_galeradonor,
+    "service_description"     : "MySQL Galera Donor %s",
+    "has_perfdata"            : False,
+}
+
+#
+# Galera Startup
+#
+
+def inventory_mysql_galerastartup(parsed):
+    for instance, values in parsed.items():
+        if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_cluster_address' in values:
+            yield instance, {}
+
+def check_mysql_galerastartup(item, _no_params, parsed):
+    if item in parsed:
+        values = parsed[item]
+        if u'wsrep_cluster_address' in values:
+            if values[u'wsrep_cluster_address'] == 'gcomm://':
+                return (2, 'wsrep_cluster_address is empty')
+            else:
+                return (0, 'wsrep_cluster_address contains %s' % values[u'wsrep_cluster_address'])
+
+check_info['mysql.galerastartup'] = {
+    "inventory_function"      : inventory_mysql_galerastartup,
+    "check_function"          : check_mysql_galerastartup,
+    "service_description"     : "MySQL Galera Startup %s",
+    "has_perfdata"            : False,
+}
+
+#
+# Galera Cluster Size
+#
+
+def inventory_mysql_galerasize(parsed):
+    for instance, values in parsed.items():
+        if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_cluster_size' in values:
+            yield instance, {'invsize': saveint(values[u'wsrep_cluster_size'])}
+
+def check_mysql_galerasize(item, params, parsed):
+    if item in parsed:
+        values = parsed[item]
+        if u'wsrep_cluster_size' in values:
+            size = saveint(values[u'wsrep_cluster_size'])
+            res = 0
+            txt = 'wsrep_cluster_size = %d' % size
+            perfdata = [('galera_size', size)]
+            if size != params['invsize']:
+                res = 2
+                txt += ', size at discovery was %d' % params['invsize']
+            return (res, txt, perfdata)
+
+check_info['mysql.galerasize'] = {
+    "inventory_function"  : inventory_mysql_galerasize,
+    "check_function"      : check_mysql_galerasize,
+    "service_description" : "MySQL Galera Size %s",
+    "has_perfdata"        : True,
+}
+
+#
+# Galera Status
+#
+
+def inventory_mysql_galerastatus(parsed):
+    for instance, values in parsed.items():
+        if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_cluster_status' in values:
+            yield instance, {}
+
+def check_mysql_galerastatus(item, _no_params, parsed):
+    if item in parsed:
+        values = parsed[item]
+        if u'wsrep_cluster_status' in values:
+            if values[u'wsrep_cluster_status'] == 'Primary':
+                return (0, 'wsrep_cluster_status is %s' % values[u'wsrep_cluster_status'])
+            else:
+                return (2, 'wsrep_cluster_status is %s' % values[u'wsrep_cluster_status'])
+
+check_info['mysql.galerastatus'] = {
+    "inventory_function"      : inventory_mysql_galerastatus,
+    "check_function"          : check_mysql_galerastatus,
+    "service_description"     : "MySQL Galera Status %s",
+    "has_perfdata"            : False,
+}

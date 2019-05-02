@@ -1945,13 +1945,13 @@ class RulespecSpecialAgentsAws(HostRulespec):
             elements=[
                 ("access_key_id",
                  TextAscii(
-                     title=_("The access key for your AWS account"),
+                     title=_("The access key ID for your AWS account"),
                      allow_empty=False,
                      size=50,
                  )),
                 ("secret_access_key",
                  IndividualOrStoredPassword(
-                     title=_("The secret key for your AWS account"),
+                     title=_("The secret access key for your AWS account"),
                      allow_empty=False,
                  )),
                 ("global_services",

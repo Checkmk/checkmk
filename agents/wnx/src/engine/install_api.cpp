@@ -3,22 +3,21 @@
 
 #include "stdafx.h"
 
+#include "install_api.h"
+
 #include <filesystem>
 #include <string>
 
-#include "common/wtools.h"   // converts
-#include "tools/_process.h"  // start process
-
 #include "cfg.h"
+#include "common/wtools.h"  // converts
 #include "logger.h"
-
-#include "install_api.h"
+#include "tools/_process.h"  // start process
 
 namespace cma {
 
 namespace install {
 
-std::filesystem::path MakeTempFileNameInTempPath(const std::wstring& Name) {
+std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name) {
     namespace fs = std::filesystem;
     // Find Temporary Folder
     fs::path temp_folder = cma::tools::win::GetTempFolder();
@@ -136,10 +135,9 @@ bool NeedInstall(const std::filesystem::path& IncomingFile,
 
 // check that update exists and exec it
 // returns true when update found and ready to exec
-bool CheckForUpdateFile(const std::wstring& Name,
-                        const std::wstring& DirWithMsi, UpdateType Update,
-                        bool StartUpdateProcess,
-                        const std::wstring& BackupPath) {
+bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
+                        UpdateType Update, UpdateProcess StartUpdateProcess,
+                        std::wstring_view BackupPath) {
     namespace fs = std::filesystem;
 
     // find path to msiexec, in Windows it is in System32 folder
@@ -153,11 +151,11 @@ bool CheckForUpdateFile(const std::wstring& Name,
     if (!fs::exists(msi_base, ec)) return false;  // this is ok
 
     switch (Update) {
-        case kMsiExec:
-        case kMsiExecQuiet:
+        case UpdateType::exec_normal:
+        case UpdateType::exec_quiet:
             break;
-        default:
-            XLOG::l("Invalid Option {}", Update);
+        default:  // safety, MSVC give us no warning
+            XLOG::l("Invalid Option '{}'", static_cast<int>(Update));
             return false;
     }
 
@@ -176,20 +174,22 @@ bool CheckForUpdateFile(const std::wstring& Name,
     BackupFile(msi_to_install, BackupPath);
 
     // Prepare Command
-    std::wstring command = exe + L" ";
-    // original line includes also command  REINSTALL=ALL
-    // this doesn't work well when you have more than one FEATURE(new agent)
-    // and no defined REINSTALL in the MSI
-    command =
-        command + L" /i " + msi_to_install.wstring() + L" REINSTALLMODE=amus ";
 
-    if (Update == kMsiExecQuiet)  // this is only normal method
-        command += L" /quiet";    // but MS doesn't care at all :)
+    std::wstring command = exe;
+
+    // msiexecs' parameters below are not fixed unfortunately
+    // documentation is scarce and method of installation in MK
+    // is not a special standard
+    command += L" /i " + msi_to_install.wstring() +
+               L" REINSTALL=ALL REINSTALLMODE=amus ";
+
+    if (Update == UpdateType::exec_quiet)  // this is only normal method
+        command += L" /quiet";             // but MS doesn't care at all :)
 
     XLOG::l.i("File '{}' exists\n Command is '{}'", msi_to_install.u8string(),
               wtools::ConvertToUTF8(command.c_str()));
 
-    if (!StartUpdateProcess) {
+    if (StartUpdateProcess == UpdateProcess::skip) {
         XLOG::l.i("Actual Updating is disabled");
         return true;
     }

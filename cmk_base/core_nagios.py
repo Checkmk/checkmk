@@ -250,6 +250,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
     host_config = config_cache.get_host_config(hostname)
 
+    check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
+
     #   _____
     #  |___ /
     #    |_ \
@@ -314,20 +316,14 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
                         "dependent_service_description": description,
                     }).encode("utf-8"))
 
+        # TODO: Find a generic (CMC/Nagios) place for this logic
         # Add the check interval of either the Check_MK service or
         # (if configured) the snmp_check_interval for snmp based checks
-        check_interval = 1  # default hardcoded interval
-        # Customized interval of Check_MK service
-        values = config_cache.service_extra_conf(
-            hostname, "Check_MK", config.extra_service_conf.get('check_interval', []))
-        if values:
-            try:
-                check_interval = int(values[0])
-            except:
-                check_interval = float(values[0])
         value = host_config.snmp_check_interval(cmk_base.check_utils.section_name_of(checkname))
         if value is not None:
             check_interval = value
+        else:
+            check_interval = check_mk_attrs["check_interval"]
 
         service_spec = {
             "use": template,
@@ -354,7 +350,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             "host_name": hostname,
             "service_description": "Check_MK",
         }
-        service_spec.update(core_config.get_service_attributes(hostname, "Check_MK", config_cache))
+        service_spec.update(check_mk_attrs)
         service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, "Check_MK"))
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 

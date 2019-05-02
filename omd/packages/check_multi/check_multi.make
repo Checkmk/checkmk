@@ -101,7 +101,7 @@ $(CHECK_MULTI_INSTALL): $(CHECK_MULTI_BUILD)
 	$(TOUCH) $@
 
 $(CHECK_MULTI)-clean:
-	rm -rf $(CHECK_MULTI_DIR) $(BUILD_HELPER_DIR)/$(CHECK_MULTI)*
+	rm -rf $(CHECK_MULTI_DIR) check_multi $(BUILD_HELPER_DIR)/$(CHECK_MULTI)*
 
 $(CHECK_MULTI)-get:
 	#wget --no-clobber my-plugin.de/check_multi/check_multi-stable-$(CHECK_MULTI_VERS).tar.gz

@@ -1094,6 +1094,19 @@ def test_config_cache_contactgroups_of_service(monkeypatch, hostname, result):
     assert config_cache.contactgroups_of_service(hostname, "CPU load") == result
 
 
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", "24X7"),
+    ("testhost2", "workhours"),
+])
+def test_config_cache_passive_check_period_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("check_periods", [
+        ("workhours", [], ["testhost2"], ["CPU load$"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.passive_check_period_of_service(hostname, "CPU load") == result
+
+
 @pytest.mark.parametrize("edition_short,expected_cache_class_name,expected_host_class_name", [
     ("cme", "CEEConfigCache", "CEEHostConfig"),
     ("cee", "CEEConfigCache", "CEEHostConfig"),

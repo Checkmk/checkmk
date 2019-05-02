@@ -1204,22 +1204,6 @@ def in_extraconf_hostlist(hostlist, hostname):
     return False
 
 
-def parse_host_rule(rule):
-    rule, rule_options = get_rule_options(rule)
-
-    num_elements = len(rule)
-    if num_elements == 2:
-        item, hostlist = rule
-        tags = []
-    elif num_elements == 3:
-        item, tags, hostlist = rule
-    else:
-        raise MKGeneralException("Invalid entry '%r' in host configuration list: must "
-                                 "have 2 or 3 entries" % (rule,))
-
-    return item, tags, hostlist, rule_options
-
-
 def get_rule_options(entry):
     """Get the options from a rule.
 
@@ -3376,7 +3360,7 @@ class ConfigCache(object):
             console.warning('deprecated entry [ "" ] in host configuration list')
 
         for rule in ruleset:
-            item, tags, hostlist, rule_options = parse_host_rule(rule)
+            item, tags, hostlist, rule_options = self._parse_host_rule(rule)
             if rule_options.get("disabled"):
                 continue
 
@@ -3385,6 +3369,21 @@ class ConfigCache(object):
             new_rules.append((item, self.all_matching_hosts(tags, hostlist, with_foreign_hosts)))
 
         return new_rules
+
+    def _parse_host_rule(self, rule):
+        rule, rule_options = get_rule_options(rule)
+
+        num_elements = len(rule)
+        if num_elements == 2:
+            item, hostlist = rule
+            tags = []
+        elif num_elements == 3:
+            item, tags, hostlist = rule
+        else:
+            raise MKGeneralException("Invalid entry '%r' in host configuration list: must "
+                                     "have 2 or 3 entries" % (rule,))
+
+        return item, tags, hostlist, rule_options
 
     def service_extra_conf(self, hostname, service, ruleset):
         """Compute outcome of a service rule set that has an item."""
@@ -3745,6 +3744,39 @@ class CEEConfigCache(ConfigCache):
         if not entries:
             return None
         return entries[0]
+
+    # TODO: Cleanup the GENERIC_AGENT duplication with cmk_base.cee.agent_bakyery.GENERIC_AGENT
+    def matched_agent_config_entries(self, hostname):
+        # type: (Union[bool, str]) -> Dict[str, Any]
+        GENERIC_AGENT = True
+        matched = {}
+        for varname, ruleset in agent_config.items() + [("agent_port", agent_ports),
+                                                        ("agent_encryption", agent_encryption)]:
+            if hostname is GENERIC_AGENT:
+                matched[varname] = self._generic_host_extra_conf(ruleset)
+            else:
+                matched[varname] = self.host_extra_conf(hostname, ruleset)
+
+        return matched
+
+    def _generic_host_extra_conf(self, ruleset):
+        """Compute ruleset for "generic" host
+
+        This fictious host has no name and no tags. It matches all rules that
+        do not require specific hosts or tags. But it matches rules that e.g.
+        except specific hosts or tags (is not, has not set)
+        """
+        entries = []
+
+        for rule in ruleset:
+            item, tags, hostlist = self._parse_host_rule(rule)[:-1]
+            if tags and not hosttags_match_taglist([], tags):
+                continue
+            if not in_extraconf_hostlist(hostlist, ""):
+                continue
+
+            entries.append(item)
+        return entries
 
 
 # TODO: Find a clean way to move this to cmk_base.cee. This will be possible once the

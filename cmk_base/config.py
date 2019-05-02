@@ -3075,6 +3075,13 @@ class ConfigCache(object):
 
         return list(cgrs)
 
+    def passive_check_period_of_service(self, hostname, description):
+        # type: (str, Text) -> str
+        passive_check_period = self.service_extra_conf(hostname, description, check_periods)
+        if not passive_check_period:
+            return "24X7"
+        return passive_check_period[0]
+
     def get_explicit_service_custom_variables(self, hostname, description):
         # type: (str, Text) -> Dict[str, str]
         try:

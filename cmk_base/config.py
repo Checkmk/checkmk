@@ -3034,16 +3034,27 @@ class ConfigCache(object):
         return labels
 
     def get_extra_attributes_of_service(self, hostname, description):
-        # type: (str, Text) -> Dict[str, str]
-        attrs = {}
+        # type: (str, Text) -> Dict[str, Any]
+        attrs = {
+            "check_interval": 1.0,  # 1 minute
+        }
         for key, conflist in extra_service_conf.items():
             values = self.service_extra_conf(hostname, description, conflist)
-            if values:
-                if key[0] == "_":
-                    key = key.upper()
+            if not values:
+                continue
 
-                if values[0] is not None:
-                    attrs[key] = values[0]
+            value = values[0]
+            if value is None:
+                continue
+
+            if key == "check_interval":
+                value = float(value)
+
+            if key[0] == "_":
+                key = key.upper()
+
+            attrs[key] = value
+
         return attrs
 
     def icons_and_actions_of_service(self, hostname, description, checkname, params):

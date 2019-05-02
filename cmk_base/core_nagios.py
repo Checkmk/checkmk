@@ -828,12 +828,10 @@ def _extra_service_conf_of(cfg, config_cache, hostname, description):
     service_spec = {}
 
     # Contact groups
-    sercgr = config_cache.service_extra_conf(hostname, description, config.service_contactgroups)
-    cfg.contactgroups_to_define.update(sercgr)
-    if len(sercgr) > 0:
-        if config.enable_rulebased_notifications:
-            sercgr.append("check-mk-notify")  # not nessary if not explicit groups defined
+    sercgr = config_cache.contactgroups_of_service(hostname, description)
+    if sercgr:
         service_spec["contact_groups"] = ",".join(sercgr)
+        cfg.contactgroups_to_define.update(sercgr)
 
     sergr = config_cache.servicegroups_of_service(hostname, description)
     if sergr:

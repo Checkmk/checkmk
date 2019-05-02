@@ -310,6 +310,20 @@ def active_check_arguments(hostname, description, args):
 #   '----------------------------------------------------------------------'
 
 
+def get_cmk_passive_service_attributes(config_cache, host_config, description, checkname, params,
+                                       check_mk_attrs):
+    attrs = get_service_attributes(host_config.hostname, description, config_cache, checkname,
+                                   params)
+
+    value = host_config.snmp_check_interval(config_cache.section_name_of(checkname))
+    if value is not None:
+        attrs["check_interval"] = value
+    else:
+        attrs["check_interval"] = check_mk_attrs["check_interval"]
+
+    return attrs
+
+
 def get_service_attributes(hostname, description, config_cache, checkname=None, params=None):
     attrs = _extra_service_attributes(hostname, description, config_cache, checkname, params)
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))

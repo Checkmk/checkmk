@@ -6,6 +6,7 @@ from testlib.base import Scenario
 from cmk.utils.exceptions import MKGeneralException
 import cmk_base.config as config
 import cmk_base.core_config as core_config
+import cmk_base.check_api as check_api
 
 
 def test_active_check_arguments(mocker):
@@ -47,6 +48,37 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
         'address': '0.0.0.0',
         'alias': 'test-host',
     }
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("localhost", {
+        'check_interval': 1.0,
+        'contact_groups': u'ding',
+    }),
+    ("blub", {
+        'check_interval': 40.0
+    }),
+])
+def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
+    config.load_checks(check_api.get_check_api_context, ["checks/cpu"])
+
+    ts = Scenario().add_host("localhost")
+    ts.add_host("blub")
+    ts.set_option(
+        "extra_service_conf", {
+            "contact_groups": [(u'ding', ['localhost'], ["CPU load$"]),],
+            "check_interval": [
+                (40.0, ['blub'], ["Check_MK$"]),
+                (33.0, ['localhost'], ["CPU load$"]),
+            ],
+        })
+    config_cache = ts.apply(monkeypatch)
+    host_config = config_cache.get_host_config(hostname)
+    check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
+
+    service_spec = core_config.get_cmk_passive_service_attributes(
+        config_cache, host_config, "CPU load", "cpu.loads", {}, check_mk_attrs)
+    assert service_spec == result
 
 
 @pytest.mark.parametrize("tag_groups,result", [({

@@ -29,7 +29,7 @@ def test_format_nagios_object():
 """ % tuple(itertools.chain(*sorted(spec.items(), key=lambda x: x[0])))
 
 
-def ts():
+def ts_test_create_nagios_host_spec():
     ts1 = Scenario().add_host("localhost")
     result1 = {
         '_ADDRESS_4': '127.0.0.1',
@@ -123,7 +123,7 @@ def ts():
     yield ts4, result4
 
 
-@pytest.mark.parametrize("ts,result", ts())
+@pytest.mark.parametrize("ts,result", ts_test_create_nagios_host_spec())
 def test_create_nagios_host_spec(ts, result, monkeypatch):
     outfile = StringIO()
     cfg = core_nagios.NagiosConfig(outfile, ["localhost"])

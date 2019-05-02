@@ -10,10 +10,8 @@
 #include <string_view>
 
 #include "common/cfg_info.h"
-
-#include "section_header.h"
-
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma {
 
@@ -55,10 +53,32 @@ public:
         : loaded_(false)
         , context_(false)
         , level_(cma::cfg::EventLevels::kOff) {}
+
+    LogWatchEntry(const LogWatchEntry& Rhs)
+        : loaded_(Rhs.loaded_)
+        , context_(Rhs.context_)
+        , level_(Rhs.level_)
+        , name_(Rhs.name_) {}
+
+    LogWatchEntry& operator=(const LogWatchEntry& Rhs) {
+        loaded_ = Rhs.loaded_;
+        context_ = Rhs.context_;
+        level_ = Rhs.level_;
+        name_ = Rhs.name_;
+    }
+
+    LogWatchEntry(LogWatchEntry&& Rhs) = default;
+    LogWatchEntry& operator=(LogWatchEntry&& Rhs) = default;
+    ~LogWatchEntry() = default;
+
     // bool loadFrom(const YAML::Node Node) noexcept;
     bool loadFromMapNode(const YAML::Node Node) noexcept;
     bool loadFrom(std::string_view Line) noexcept;
     void init(std::string_view Name, std::string_view Param, bool Context);
+    LogWatchEntry& withDefault() {
+        init("*", ConvertLogWatchLevelToString(cfg::EventLevels::kWarn), true);
+        return *this;
+    }
 
     const std::string name() const noexcept {
         if (loaded_) return name_;
@@ -112,6 +132,7 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class LogWatchEventTest;
     FRIEND_TEST(LogWatchEventTest, Base);
+    FRIEND_TEST(LogWatchEventTest, TestDefaultEntry);
 #endif
 };
 
@@ -126,6 +147,8 @@ std::vector<std::string> GatherEventLogEntriesFromRegistry();
 // returns count of processed Logs entries
 int UpdateEventLogStates(StateVector& States, std::vector<std::string> Logs,
                          bool SendAll);
+
+LogWatchEntry GenerateDefaultValue();
 
 // Fix Values in states according to the config
 void UpdateStatesByConfig(StateVector& States,

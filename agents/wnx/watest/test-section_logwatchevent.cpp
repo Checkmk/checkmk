@@ -5,16 +5,13 @@
 
 #include <filesystem>
 
-#include "common/wtools.h"
-#include "tools/_misc.h"
-#include "tools/_process.h"
-
 #include "cfg.h"
-
+#include "common/wtools.h"
 #include "providers/logwatch_event.h"
 #include "providers/logwatch_event_details.h"
-
 #include "service_processor.h"
+#include "tools/_misc.h"
+#include "tools/_process.h"
 
 namespace cma::provider {
 class YamlLoader {
@@ -32,7 +29,21 @@ public:
     ~YamlLoader() { OnStart(cma::kTest); }
 };
 
-constexpr int LogWatchSections = 5;
+static void LoadTestConfig(YAML::Node Node) {
+    Node["logwatch"] = YAML::Load(
+        "  enabled : yes\n"
+        "  sendall : no\n"
+        "  vista_api: no\n"
+        "  logfile :\n"
+        "    - 'Application': crit context\n"
+        "    - 'System' : warn nocontext\n"
+        "    - 'Demo' : all nocontext\n"
+        "    - '': off nocontext\n"
+        "    - '*' : warn context\n");
+}
+
+constexpr int LogWatchSections_Main = 2;
+constexpr int LogWatchSections_Test = 5;
 
 TEST(LogWatchEventTest, Consts) {
     using namespace std;
@@ -118,7 +129,6 @@ TEST(LogWatchEventTest, Config) {
     using namespace cma::cfg;
     YamlLoader w;
     {
-        auto cfg = cma::cfg::GetLoadedConfig();
         auto enabled = GetVal(groups::kLogWatchEvent, vars::kEnabled, false);
         EXPECT_EQ(enabled, true);
         auto vista_api =
@@ -131,15 +141,54 @@ TEST(LogWatchEventTest, Config) {
         auto sections =
             GetNode(groups::kLogWatchEvent, vars::kLogWatchEventLogFile);
         ASSERT_TRUE(sections.IsSequence());
-        ASSERT_EQ(sections.size(), LogWatchSections);
+        ASSERT_EQ(sections.size(), LogWatchSections_Main);
 
         // data to be tested against
-        const RawLogWatchData base[LogWatchSections] = {
+        const RawLogWatchData base[LogWatchSections_Test] = {
+            {false, "", cma::cfg::EventLevels::kOff, false},
+            {true, "*", cma::cfg::EventLevels::kWarn, false},
+        };
+
+        int pos = 0;
+        for (const auto& sec : sections) {
+            auto type = sec.Type();
+            if (!sec.IsMap()) continue;
+            YAML::Emitter emit;
+            emit << sec;
+            LogWatchEntry lwe;
+            lwe.loadFrom(emit.c_str());
+            EXPECT_EQ(lwe.loaded(), base[pos].loaded_);
+            EXPECT_EQ(lwe.level(), base[pos].level_);
+            EXPECT_EQ(lwe.name(), base[pos].name_);
+            EXPECT_EQ(lwe.context(), base[pos].context_);
+            pos++;
+        }
+    }
+
+    {
+        auto cfg = cma::cfg::GetLoadedConfig();
+        LoadTestConfig(cfg);
+        auto enabled = GetVal(groups::kLogWatchEvent, vars::kEnabled, false);
+        EXPECT_EQ(enabled, true);
+        auto vista_api =
+            GetVal(groups::kLogWatchEvent, vars::kLogWatchEventVistaApi, false);
+        EXPECT_EQ(vista_api, false);
+        auto send_all =
+            GetVal(groups::kLogWatchEvent, vars::kLogWatchEventSendall, false);
+        EXPECT_EQ(send_all, false);
+
+        auto sections =
+            GetNode(groups::kLogWatchEvent, vars::kLogWatchEventLogFile);
+        ASSERT_TRUE(sections.IsSequence());
+        ASSERT_EQ(sections.size(), LogWatchSections_Test);
+
+        // data to be tested against
+        const RawLogWatchData base[LogWatchSections_Test] = {
             {true, "Application", cma::cfg::EventLevels::kCrit, true},
             {true, "System", cma::cfg::EventLevels::kWarn, false},
             {true, "Demo", cma::cfg::EventLevels::kAll, false},
             {false, "", cma::cfg::EventLevels::kOff, false},
-            {true, "*", cma::cfg::EventLevels::kOff, false},
+            {true, "*", cma::cfg::EventLevels::kWarn, true},
         };
 
         int pos = 0;
@@ -224,6 +273,7 @@ TEST(LogWatchEventTest, ConfigStruct) {
     YamlLoader w;
     {
         auto cfg = cma::cfg::GetLoadedConfig();
+        LoadTestConfig(cfg);
         auto enabled = GetVal(groups::kLogWatchEvent, vars::kEnabled, false);
         auto vista_api =
             GetVal(groups::kLogWatchEvent, vars::kLogWatchEventVistaApi, false);
@@ -233,7 +283,7 @@ TEST(LogWatchEventTest, ConfigStruct) {
         auto sections =
             GetNode(groups::kLogWatchEvent, vars::kLogWatchEventLogFile);
         ASSERT_TRUE(sections.IsSequence());
-        EXPECT_EQ(sections.size(), LogWatchSections);
+        EXPECT_EQ(sections.size(), LogWatchSections_Test);
         {
             auto app = sections[0];
             ASSERT_TRUE(app.IsMap());
@@ -283,7 +333,10 @@ TEST(LogWatchEventTest, ConfigLoad) {
     using namespace cma::cfg;
     using namespace cma::provider;
     YamlLoader w;
+
     {
+        auto cfg = cma::cfg::GetLoadedConfig();
+        LoadTestConfig(cfg);
         LogWatchEvent lw;
         lw.loadConfig();
         auto e = lw.entries();
@@ -480,10 +533,48 @@ TEST(LogWatchEventTest, TestAddLog) {
     }
 }
 
+TEST(LogWatchEventTest, TestDefaultEntry) {
+    {
+        StateVector st;
+        st.emplace_back("Abc");
+        LogWatchEvent lw;
+        LogWatchEntry dflt_entry = GenerateDefaultValue();
+        LogWatchEntry entry;
+        entry.loadFrom("'*': warn context");
+        EXPECT_EQ(dflt_entry.name(), entry.name());
+        EXPECT_EQ(dflt_entry.level(), entry.level());
+        EXPECT_EQ(dflt_entry.context(), entry.context());
+
+        lw.entries_.push_back(entry);
+        lw.default_entry_ = 0;
+        UpdateStatesByConfig(st, lw.entries(), lw.defaultEntry());
+        EXPECT_EQ(st[0].in_config_, true);
+        EXPECT_EQ(st[0].level_, cma::cfg::EventLevels::kWarn);
+        EXPECT_EQ(st[0].hide_context_, false);
+    }
+
+    {
+        StateVector st;
+        st.emplace_back("Abc");
+        LogWatchEvent lw;
+        LogWatchEntry entry;
+        entry.loadFrom("'*': off context");
+        lw.entries_.push_back(entry);
+        lw.default_entry_ = 0;
+        UpdateStatesByConfig(st, lw.entries(), lw.defaultEntry());
+        EXPECT_EQ(st[0].in_config_, false);
+        EXPECT_EQ(st[0].level_, cma::cfg::EventLevels::kOff);
+        EXPECT_EQ(st[0].hide_context_, false);
+    }
+}
+
 TEST(LogWatchEventTest, TestMakeBody) {
     using namespace std;
     using namespace cma::cfg;
     namespace fs = std::filesystem;
+    YamlLoader w;
+    auto cfg = cma::cfg::GetLoadedConfig();
+    LoadTestConfig(cfg);
 
     LogWatchEvent lwe;
     auto statefiles = lwe.makeStateFilesTable();
@@ -623,7 +714,12 @@ TEST(LogWatchEventTest, TestNotSendAll) {
     using namespace std;
     using namespace cma::cfg;
     namespace fs = std::filesystem;
+
+    // we are loading special test config with more or less custom data
+    YamlLoader w;
     auto cfg = cma::cfg::GetLoadedConfig();
+    LoadTestConfig(cfg);
+
     auto x = cfg[groups::kLogWatchEvent];
     auto old = x[vars::kLogWatchEventSendall].as<bool>(false);
     x[vars::kLogWatchEventSendall] = false;
@@ -645,7 +741,12 @@ TEST(LogWatchEventTest, TestNotSendAllVista) {
     using namespace std;
     using namespace cma::cfg;
     namespace fs = std::filesystem;
+
+    // we are loading special test config with more or less custom data
+    YamlLoader w;
     auto cfg = cma::cfg::GetLoadedConfig();
+    LoadTestConfig(cfg);
+
     auto x = cfg[groups::kLogWatchEvent];
     auto old = x[vars::kLogWatchEventSendall].as<bool>(false);
     x[vars::kLogWatchEventSendall] = false;

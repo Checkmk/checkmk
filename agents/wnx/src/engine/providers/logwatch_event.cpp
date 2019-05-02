@@ -2,28 +2,23 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/logwatch_event.h"
+
 #include <filesystem>
 #include <limits>
 #include <regex>
 #include <string>
 #include <tuple>
 
-#include "fmt/format.h"
-
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-#include "common/wtools.h"
-
 #include "cfg.h"
-
-#include "logger.h"
-
+#include "common/wtools.h"
 #include "eventlog/eventlogbase.h"
 #include "eventlog/eventlogvista.h"
-
-#include "providers/logwatch_event.h"
+#include "fmt/format.h"
+#include "logger.h"
 #include "providers/logwatch_event_details.h"
+#include "tools/_raii.h"
+#include "tools/_xlog.h"
 
 namespace cma::provider {
 
@@ -398,9 +393,13 @@ std::string ReadDataFromLog(bool VistaApi, State& St, bool& LogExists) {
     }
 }
 
+LogWatchEntry GenerateDefaultValue() { return LogWatchEntry().withDefault(); }
+
 void UpdateStatesByConfig(StateVector& States,
-                          const LogWatchEntryVector& ConfigEntries,
+                          const std::vector<LogWatchEntry>& ConfigEntries,
                           const LogWatchEntry* Default) {
+    LogWatchEntry default_entry = Default ? *Default : GenerateDefaultValue();
+
     // filtering states
     for (auto& s : States) {
         bool found = false;
@@ -420,10 +419,11 @@ void UpdateStatesByConfig(StateVector& States,
         if (found) continue;
 
         // not found - attempting to load default value
-        if (Default) {
-            s.hide_context_ = Default->context();
-            s.level_ = Default->level();
-        }
+        s.hide_context_ = !default_entry.context();
+        s.level_ = default_entry.level();
+
+        // if default level isn't off, then we set entry as configured
+        if (s.level_ != cfg::EventLevels::kOff) s.in_config_ = true;
     }
 }
 

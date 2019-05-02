@@ -2,6 +2,8 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/spool.h"
+
 #include <chrono>
 #include <filesystem>
 #include <regex>
@@ -9,21 +11,15 @@
 #include <string_view>
 #include <tuple>
 
-#include "fmt/format.h"
-
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-#include "common/wtools.h"
-
 #include "cfg.h"
 #include "cma_core.h"
+#include "common/wtools.h"
+#include "fmt/format.h"
 #include "glob_match.h"
-
 #include "logger.h"
 #include "read_file.h"
-
-#include "providers/spool.h"
+#include "tools/_raii.h"
+#include "tools/_xlog.h"
 
 namespace cma::provider {
 
@@ -103,7 +99,7 @@ std::string SpoolProvider::makeBody() const {
     fs::path dir = cma::cfg::GetSpoolDir();
     // check presence of the folder
     if (!IsDirectoryValid(dir)) {
-        XLOG::l("Spool directory absent. But spool is requested");
+        XLOG::d("Spool directory absent. But spool is requested");
         return {};
     }
 

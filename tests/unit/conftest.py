@@ -17,7 +17,7 @@ def site(request):
 @pytest.fixture()
 def fixup_ip_lookup(monkeypatch):
     # Fix IP lookup when
-    def _getaddrinfo(hostname, family):
+    def _getaddrinfo(host, port, family=None, socktype=None, proto=None, flags=None):
         if family == socket.AF_INET:
             return "0.0.0.0"
         raise NotImplementedError()

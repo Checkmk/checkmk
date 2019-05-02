@@ -69,7 +69,7 @@ def test_files_not_in_version_path(version_path, what):
             "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/COPYING.gz$",
             "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/TEAM$",
             "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/copyright$",
-            "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/README$",
+            "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/README.md$",
             "/etc/$",
             "/etc/init.d/$",
             "/etc/init.d/check-mk-(raw|enterprise|managed)-.*$",

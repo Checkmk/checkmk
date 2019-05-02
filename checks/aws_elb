@@ -152,7 +152,7 @@ def check_aws_elb_http_elb(item, params, parsed):
             continue
 
         http_errors_rate = get_rate('aws_elb_http_backend.%sxx' % http_errors_nr, now, http_errors)
-        yield (0, '%s00-Errors: %s/s' % (http_errors_nr, http_errors_rate),
+        yield (0, '%sXX-Errors: %s/s' % (http_errors_nr, http_errors_rate),
                [('http_%sxx_rate' % http_errors_nr, http_errors_rate)])
 
         try:
@@ -165,7 +165,7 @@ def check_aws_elb_http_elb(item, params, parsed):
                 'http_%sxx_perc' % http_errors_nr,
                 params.get('levels_http_%sxx_perc' % http_errors_nr),
                 human_readable_func=get_percent_human_readable,
-                infoname="%s00-Errors of total requests" % http_errors_nr)
+                infoname="%sXX-Errors of total requests" % http_errors_nr)
 
 
 check_info['aws_elb.http_elb'] = {
@@ -204,7 +204,7 @@ def check_aws_elb_http_backend(item, params, parsed):
             continue
 
         http_errors_rate = get_rate('aws_elb_http_backend.%sxx' % http_errors_nr, now, http_errors)
-        yield (0, '%s00-Errors: %s/s' % (http_errors_nr, http_errors_rate),
+        yield (0, '%sXX-Errors: %s/s' % (http_errors_nr, http_errors_rate),
                [('http_%sxx_rate' % http_errors_nr, http_errors_rate)])
 
         try:
@@ -217,15 +217,15 @@ def check_aws_elb_http_backend(item, params, parsed):
                 'http_%sxx_perc' % http_errors_nr,
                 params.get('levels_http_%sxx_perc' % http_errors_nr),
                 human_readable_func=get_percent_human_readable,
-                infoname="%s00-Errors of total requests" % http_errors_nr)
+                infoname="%sXX-Errors of total requests" % http_errors_nr)
 
     http_backend_2xx = parsed.get('HTTPCode_Backend_2XX')
     if http_backend_2xx is not None:
-        yield 0, '200-Requests: %s/s' % get_rate('aws_elb_http_backend.2xx', now, http_backend_2xx)
+        yield 0, '2XX-Requests: %s/s' % get_rate('aws_elb_http_backend.2xx', now, http_backend_2xx)
 
     http_backend_3xx = parsed.get('HTTPCode_Backend_3XX')
     if http_backend_3xx is not None:
-        yield 0, '300-Requests: %s/s' % get_rate('aws_elb_http_backend.3xx', now, http_backend_3xx)
+        yield 0, '3XX-Requests: %s/s' % get_rate('aws_elb_http_backend.3xx', now, http_backend_3xx)
 
 
 check_info['aws_elb.http_backend'] = {

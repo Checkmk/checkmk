@@ -5133,6 +5133,84 @@ for inst_type in AWSEC2InstTypes:
         'color': '11/a',
     }
 
+metric_info['aws_consumed_lcus'] = {
+    'title': _('Consumed Load Balancer Capacity Units'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_active_connections'] = {
+    'title': _('Active Connections'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_new_connections'] = {
+    'title': _('New Connections'),
+    'unit': 'count',
+    'color': '13/a',
+}
+
+metric_info['aws_rejected_connections'] = {
+    'title': _('Rejected Connections'),
+    'unit': 'count',
+    'color': '15/a',
+}
+
+metric_info['aws_client_tls_errors'] = {
+    'title': _('Client TLS errors'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
+metric_info['aws_http_redirects'] = {
+    'title': _('HTTP Redirects'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_http_redirect_url_limit'] = {
+    'title': _('HTTP Redirects URL Limit Exceeded'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_http_fixed_response'] = {
+    'title': _('HTTP Fixed Responses'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws__proc_bytes'] = {
+    'title': _('Processed Bytes'),
+    'unit': 'bytes',
+    'color': '11/a',
+}
+
+metric_info['aws_proc_bytes_tls'] = {
+    'title': _('TLS Processed Bytes'),
+    'unit': 'bytes',
+    'color': '12/a',
+}
+
+metric_info['aws_ipv6_proc_bytes'] = {
+    'title': _('IPv6 Processed Bytes'),
+    'unit': 'bytes',
+    'color': '13/a',
+}
+
+metric_info['aws_ipv6_requests'] = {
+    'title': _('IPv6 Requests'),
+    'unit': 'count',
+    'color': '15/a',
+}
+
+metric_info['aws_rule_evaluations'] = {
+    'title': _('Rule Evaluations'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
 metric_info['get_requests'] = {
     'title': _('GET Requests'),
     'unit': '1/s',

@@ -511,31 +511,34 @@ class Container(NodeAttribute):
         sub_node = self._get_sub_node(path[:1])
         if sub_node is None:
             return None
+
         edge = path.pop(0)
         sub_node_abs_path = sub_node.get_absolute_path()
         if path:
             container = sub_node.get_node_container()
             if container is not None:
                 filtered = container.get_filtered_branch(path, keys, Container())
-                parent.add_child(edge, filtered, sub_node_abs_path)
-        else:
+                if filtered is not None:
+                    parent.add_child(edge, filtered, sub_node_abs_path)
+            return parent
+
+        if keys is None:
+            for child in sub_node.get_node_children():
+                parent.add_child(edge, child, sub_node_abs_path)
+            return parent
+
+        numeration = sub_node.get_node_numeration()
+        if numeration is not None:
             if keys:
-                container = sub_node.get_node_container()
-                if container is not None:
-                    parent.add_child(edge, container, sub_node_abs_path)
+                numeration = numeration.get_filtered_data(keys)
+            parent.add_child(edge, numeration, sub_node_abs_path)
 
-                numeration = sub_node.get_node_numeration()
-                if numeration is not None:
-                    filtered_numeration = numeration.get_filtered_data(keys)
-                    parent.add_child(edge, filtered_numeration, sub_node_abs_path)
+        attributes = sub_node.get_node_attributes()
+        if attributes is not None:
+            if keys:
+                attributes = attributes.get_filtered_data(keys)
+            parent.add_child(edge, attributes, sub_node_abs_path)
 
-                attributes = sub_node.get_node_attributes()
-                if attributes is not None:
-                    filtered_attributes = attributes.get_filtered_data(keys)
-                    parent.add_child(edge, filtered_attributes, sub_node_abs_path)
-            else:
-                for child in sub_node.get_node_children():
-                    parent.add_child(edge, child, sub_node_abs_path)
         return parent
 
     #   ---getting [sub] nodes/node attributes----------------------------------
@@ -652,8 +655,6 @@ class Leaf(NodeAttribute):
         for k, v in entries.iteritems():
             if k in keys:
                 filtered.setdefault(k, v)
-            else:
-                filtered.setdefault(k, None)
         return filtered
 
 
@@ -832,7 +833,9 @@ class Numeration(Leaf):
         filtered = Numeration()
         numeration = []
         for entry in self._numeration:
-            numeration.append(self._get_filtered_entries(entry, keys))
+            filtered_entry = self._get_filtered_entries(entry, keys)
+            if filtered_entry:
+                numeration.append(filtered_entry)
         filtered.set_child_data(numeration)
         return filtered
 

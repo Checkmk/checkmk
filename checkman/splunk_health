@@ -1,0 +1,14 @@
+title: Splunk: Health
+agents: splunk
+catalog: app/splunk
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the health of splunk components like data forwarding, file
+ monitor input and index processor.
+
+ Details for each component can be found in the long output of the check.
+
+inventory:
+ One service will be created
+

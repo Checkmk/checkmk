@@ -5685,6 +5685,36 @@ metric_info["vcsw"] = {
     "color": "22/a",
 }
 
+metric_info["job_total"] = {
+    "title": _("Total number of jobs"),
+    "unit": "count",
+    "color": "26/a",
+}
+
+metric_info["failed_jobs"] = {
+    "title": _("Total number of failed jobs"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["zombie_jobs"] = {
+    "title": _("Total number of zombie jobs"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["splunk_slave_usage_bytes"] = {
+    "title": _("Slave usage bytes across all pools"),
+    "unit": "bytes",
+    "color": "11/a",
+}
+
+metric_info["fired_alerts"] = {
+    "title": _("Number of fired alerts"),
+    "unit": "count",
+    "color": "22/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

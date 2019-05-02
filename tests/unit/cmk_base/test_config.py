@@ -1081,6 +1081,19 @@ def test_config_cache_servicegroups_of_service(monkeypatch, hostname, result):
     assert config_cache.servicegroups_of_service(hostname, "CPU load") == result
 
 
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", []),
+    ("testhost2", ["dingdong"]),
+])
+def test_config_cache_contactgroups_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("service_contactgroups", [
+        ("dingdong", [], ["testhost2"], "CPU load", {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.contactgroups_of_service(hostname, "CPU load") == result
+
+
 @pytest.mark.parametrize("edition_short,expected_cache_class_name,expected_host_class_name", [
     ("cme", "CEEConfigCache", "CEEHostConfig"),
     ("cee", "CEEConfigCache", "CEEHostConfig"),

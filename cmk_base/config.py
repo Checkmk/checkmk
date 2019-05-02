@@ -3064,6 +3064,17 @@ class ConfigCache(object):
         """Returns the list of servicegroups of this services"""
         return self.service_extra_conf(hostname, description, service_groups)
 
+    def contactgroups_of_service(self, hostname, description):
+        # type: (str, Text) -> List[str]
+        """Returns the list of contactgroups of this service"""
+        cgrs = set()  # type: Set[str]
+        cgrs.update(self.service_extra_conf(hostname, description, service_contactgroups))
+
+        if monitoring_core == "nagios" and enable_rulebased_notifications:
+            cgrs.add("check-mk-notify")
+
+        return list(cgrs)
+
     def get_explicit_service_custom_variables(self, hostname, description):
         # type: (str, Text) -> Dict[str, str]
         try:

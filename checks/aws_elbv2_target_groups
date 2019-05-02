@@ -70,8 +70,10 @@ def parse_aws_elbv2_target_groups(info):
 def check_aws_elbv2_target_groups(item, params, target_groups):
     target_groups_by_state = {}
     for target_group in target_groups:
-        target_groups_by_state.setdefault(
-            target_group.get('TargetHealth', {}).get('State', 'unknown'), []).append(target_group)
+        for target_health in target_group.get('TargetHealthDescriptions', []):
+            target_groups_by_state.setdefault(
+                target_health.get('TargetHealth', {}).get('State', 'unknown'),
+                []).append(target_group)
 
     for state_readable, groups in target_groups_by_state.iteritems():
         if state_readable in ['initial', 'healthy', 'unused', 'draining', 'unavailable']:

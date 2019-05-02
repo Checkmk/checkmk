@@ -1052,7 +1052,7 @@ def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result)
             ],
         })
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_extra_attributes_of_service(hostname, "CPU load") == result
+    assert config_cache.extra_attributes_of_service(hostname, "CPU load") == result
 
 
 @pytest.mark.parametrize("hostname,result", [

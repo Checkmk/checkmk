@@ -34,6 +34,7 @@ import os
 import py_compile
 import struct
 import sys
+import itertools
 from typing import Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
 import six
@@ -3081,6 +3082,12 @@ class ConfigCache(object):
         if not passive_check_period:
             return "24X7"
         return passive_check_period[0]
+
+    def custom_attributes_of_service(self, hostname, description):
+        # type: (str, Text) -> Dict[str, str]
+        return dict(
+            itertools.chain(
+                *self.service_extra_conf(hostname, description, custom_service_attributes)))
 
     def get_explicit_service_custom_variables(self, hostname, description):
         # type: (str, Text) -> Dict[str, str]

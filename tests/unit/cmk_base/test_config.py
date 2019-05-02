@@ -1107,6 +1107,31 @@ def test_config_cache_passive_check_period_of_service(monkeypatch, hostname, res
     assert config_cache.passive_check_period_of_service(hostname, "CPU load") == result
 
 
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", {}),
+    ("testhost2", {
+        'ATTR1': 'value1',
+        'ATTR2': 'value2',
+    }),
+])
+def test_config_cache_custom_attributes_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset(
+        "custom_service_attributes",
+        [
+            ([
+                ("ATTR1", "value1"),
+                ("ATTR2", "value2"),
+            ], [], ["testhost2"], ["CPU load$"], {}),
+            ([
+                ("ATTR1", "value1"),
+            ], [], ["testhost2"], ["CPU load$"], {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.custom_attributes_of_service(hostname, "CPU load") == result
+
+
 @pytest.mark.parametrize("edition_short,expected_cache_class_name,expected_host_class_name", [
     ("cme", "CEEConfigCache", "CEEHostConfig"),
     ("cee", "CEEConfigCache", "CEEHostConfig"),

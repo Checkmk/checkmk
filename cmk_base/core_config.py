@@ -334,9 +334,7 @@ def _extra_service_attributes(hostname, description, config_cache, checkname, pa
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
-    host_config = config_cache.get_host_config(hostname)
-    actions = _icons_and_actions_of_service(config_cache, host_config, description, checkname,
-                                            params)
+    actions = config_cache.icons_and_actions_of_service(hostname, description, checkname, params)
     if actions:
         attrs["_ACTIONS"] = ','.join(actions)
     return attrs
@@ -346,22 +344,6 @@ def _custom_service_attributes_of(config_cache, hostname, service_description):
     return dict(
         itertools.chain(*config_cache.service_extra_conf(hostname, service_description,
                                                          config.custom_service_attributes)))
-
-
-def _icons_and_actions_of_service(config_cache, host_config, svcdesc, checkname, params):
-    actions = set(
-        config_cache.service_extra_conf(host_config.hostname, svcdesc,
-                                        config.service_icons_and_actions))
-
-    # Some WATO rules might register icons on their own
-    if checkname:
-        checkgroup = config.check_info[checkname]["group"]
-        if checkgroup in ['ps', 'services'] and isinstance(params, dict):
-            icon = params.get('icon')
-            if icon:
-                actions.add(icon)
-
-    return list(actions)
 
 
 #.

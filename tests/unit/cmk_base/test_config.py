@@ -1051,6 +1051,23 @@ def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result)
     assert config_cache.get_extra_attributes_of_service(hostname, "CPU load") == result
 
 
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", []),
+    ("testhost2", ["icon1", "icon2"]),
+])
+def test_config_cache_icons_and_actions(monkeypatch, hostname, result):
+    config.load_checks(check_api.get_check_api_context, ["checks/ps"])
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("service_icons_and_actions", [
+        ("icon1", [], ["testhost2"], "CPU load$", {}),
+        ("icon1", [], ["testhost2"], "CPU load$", {}),
+        ("icon2", [], ["testhost2"], "CPU load$", {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert sorted(config_cache.icons_and_actions_of_service(hostname, "CPU load", "ps",
+                                                            {})) == sorted(result)
+
+
 @pytest.mark.parametrize("edition_short,expected_cache_class_name,expected_host_class_name", [
     ("cme", "CEEConfigCache", "CEEHostConfig"),
     ("cee", "CEEConfigCache", "CEEHostConfig"),

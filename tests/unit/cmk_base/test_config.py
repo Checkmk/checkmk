@@ -1020,16 +1020,20 @@ def test_labels_of_service(monkeypatch):
 
 
 @pytest.mark.parametrize("hostname,result", [
-    ("testhost1", {}),
+    ("testhost1", {
+        "check_interval": 1.0
+    }),
     ("testhost2", {
         '_CUSTOM': ['value1'],
-        'dingdong': ['value1']
+        'dingdong': ['value1'],
+        'check_interval': 10.0,
     }),
 ])
 def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result):
     ts = Scenario().add_host(hostname)
     ts.set_option(
         "extra_service_conf", {
+            "check_interval": [("10", [], ["testhost2"], "CPU load$", {}),],
             "dingdong": [
                 ([
                     "value1",

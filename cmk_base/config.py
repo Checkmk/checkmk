@@ -3711,6 +3711,13 @@ class CEEConfigCache(ConfigCache):
 
         return entries[0]
 
+    def graphite_metrics_of_service(self, hostname, description):
+        # type: (str, Text) -> Optional[List[str]]
+        entries = self.service_extra_conf(hostname, description, cmc_graphite_service_metrics)
+        if not entries:
+            return None
+        return entries[0]
+
 
 # TODO: Find a clean way to move this to cmk_base.cee. This will be possible once the
 # configuration settings are not held in cmk_base.config namespace anymore.

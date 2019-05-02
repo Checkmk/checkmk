@@ -3033,13 +3033,13 @@ class ConfigCache(object):
         })
         return labels
 
-    def get_extra_attributes_of_service(self, hostname, description):
+    def extra_attributes_of_service(self, hostname, description):
         # type: (str, Text) -> Dict[str, Any]
         attrs = {
             "check_interval": 1.0,  # 1 minute
         }
-        for key, conflist in extra_service_conf.items():
-            values = self.service_extra_conf(hostname, description, conflist)
+        for key, ruleset in extra_service_conf.iteritems():
+            values = self.service_extra_conf(hostname, description, ruleset)
             if not values:
                 continue
 

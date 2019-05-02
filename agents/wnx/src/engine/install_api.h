@@ -7,23 +7,24 @@
 
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 namespace cma {
 
 namespace install {
-enum UpdateType { kMsiExec, kMsiExecQuiet };
-constexpr const wchar_t* const kDefaultMsiFileName = L"check_mk_agent.msi";
+enum class UpdateType { exec_normal, exec_quiet };
+enum class UpdateProcess { execute, skip };
+constexpr const std::wstring_view kDefaultMsiFileName = L"check_mk_agent.msi";
 
 // TEST(InstallAuto, TopLevel)
-// StartUpdateProcess == false when we only testing functionality
+// set StartUpdateProcess to 'skip' to test functionality
 // BackupPath may be empty, normally points out on the install folder
 // DirWithMsi is update dir in ProgramData
-bool CheckForUpdateFile(const std::wstring& Name,
-                        const std::wstring& DirWithMsi, UpdateType Update,
-                        bool StartUpdateProcess,
-                        const std::wstring& BackupPath = L"");
+bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
+                        UpdateType Update, UpdateProcess StartUpdateProcess,
+                        std::wstring_view BackupPath = L"");
 
-std::filesystem::path MakeTempFileNameInTempPath(const std::wstring& Name);
+std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name);
 
 // internal API with diag published to simplify testing or for later use
 // ****************************************
@@ -41,7 +42,7 @@ bool MvFile(const std::filesystem::path& Old,
 void BackupFile(const std::filesystem::path& File,
                 const std::filesystem::path& Dir) noexcept;
 
-// noexcept check whther incoming file is newer
+// noexcept check whether incoming file is newer
 bool NeedInstall(const std::filesystem::path& IncomingFile,
                  const std::filesystem::path& BackupDir) noexcept;
 // ****************************************

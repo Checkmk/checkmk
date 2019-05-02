@@ -197,11 +197,11 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
             // this part of code have to be tested manually
             // scripting is possible but complicated
             CheckForUpdateFile(
-                kDefaultMsiFileName,        // file we are looking for
-                GetUpdateDir(),             // dir where file we're searching
-                UpdateType::kMsiExecQuiet,  // quiet for production
-                true,                       // start update when file found
-                GetMsiBackupDir());         // dir where file to backup
+                kDefaultMsiFileName,     // file we are looking for
+                GetUpdateDir(),          // dir where file we're searching
+                UpdateType::exec_quiet,  // quiet for production
+                UpdateProcess::execute,  // start update when file found
+                GetMsiBackupDir());      // dir where file to backup
             return true;
         });
     }

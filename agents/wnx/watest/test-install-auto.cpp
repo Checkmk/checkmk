@@ -7,10 +7,8 @@
 #include <fstream>
 
 #include "common/wtools.h"
-
 #include "install_api.h"
 #include "service_processor.h"
-
 #include "test-tools.h"
 
 TEST(InstallAuto, LowLevel) {
@@ -86,16 +84,20 @@ TEST(InstallAuto, TopLevel) {
     auto to_install = MakeTempFileNameInTempPath(name);
     EXPECT_TRUE(!to_install.empty());
     {
-        auto result = CheckForUpdateFile(name, in, (UpdateType)535, false);
+        auto result = CheckForUpdateFile(name, in.wstring(), (UpdateType)535,
+                                         UpdateProcess::skip);
         EXPECT_FALSE(result);
 
-        result = CheckForUpdateFile(name, L"", kMsiExecQuiet, false);
+        result = CheckForUpdateFile(name, L"", UpdateType::exec_quiet,
+                                    UpdateProcess::skip);
         EXPECT_FALSE(result);
 
-        result = CheckForUpdateFile(L"invalidname", L"", kMsiExecQuiet, false);
+        result = CheckForUpdateFile(L"invalidname", L"", UpdateType::exec_quiet,
+                                    UpdateProcess::skip);
         EXPECT_FALSE(result);
 
-        result = CheckForUpdateFile(name, in, kMsiExecQuiet, false, out);
+        result = CheckForUpdateFile(name, in.wstring(), UpdateType::exec_quiet,
+                                    UpdateProcess::skip, out.wstring());
         EXPECT_TRUE(result);
 
         EXPECT_TRUE(fs::exists(to_install, ec));

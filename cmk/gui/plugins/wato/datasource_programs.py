@@ -2169,3 +2169,80 @@ class RulespecSpecialAgentsElasticsearch(HostRulespec):
                 ),
             ],
         )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsSplunk(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:splunk"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check state of splunk"),
+            help=_("Requests data from a splunk instance."),
+            optional_keys=["port"],
+            elements=[
+                ("instance",
+                 TextAscii(
+                     title=_("Splunk instance to query."),
+                     help=_("Use this option to set which host should be checked "
+                            "by the special agent."),
+                     size=32,
+                     allow_empty=False,
+                 )),
+                ("user", TextAscii(title=_("Username"), size=32, allow_empty=False)),
+                ("password", PasswordFromStore(
+                    title=_("Password of the user"),
+                    allow_empty=False,
+                )),
+                ("protocol",
+                 DropdownChoice(
+                     title=_("Protocol"),
+                     choices=[
+                         ("http", "HTTP"),
+                         ("https", "HTTPS"),
+                     ],
+                     default_value="https")),
+                ("port",
+                 Integer(
+                     title=_("Port"),
+                     help=
+                     _("Use this option to query a port which is different from standard port 8089."
+                      ),
+                     default_value=8089,
+                     allow_empty=False,
+                 )),
+                ("infos",
+                 ListChoice(
+                     title=_("Informations to query"),
+                     help=_("Defines what information to query. You can "
+                            "choose to query license state and usage, splunk "
+                            "system messages, splunk jobs, shown in the job "
+                            "menu within splunk. You can also query for "
+                            "component health and fired alerts."),
+                     choices=[
+                         ("license_state", _("Licence state")),
+                         ("license_usage", _("Licence usage")),
+                         ("system_msg", _("System messages")),
+                         ("jobs", _("Jobs")),
+                         ("health", _("Health")),
+                         ("alerts", _("Alerts")),
+                     ],
+                     default_value=[
+                         "license_state", "license_usage", "system_msg", "jobs", "health", "alerts"
+                     ],
+                     allow_empty=False,
+                 )),
+            ],
+        )

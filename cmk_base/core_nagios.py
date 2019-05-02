@@ -835,8 +835,8 @@ def _extra_service_conf_of(cfg, config_cache, hostname, description):
             sercgr.append("check-mk-notify")  # not nessary if not explicit groups defined
         service_spec["contact_groups"] = ",".join(sercgr)
 
-    sergr = config_cache.service_extra_conf(hostname, description, config.service_groups)
-    if len(sergr) > 0:
+    sergr = config_cache.servicegroups_of_service(hostname, description)
+    if sergr:
         service_spec["service_groups"] = ",".join(sergr)
         if config.define_servicegroups:
             cfg.servicegroups_to_define.update(sergr)

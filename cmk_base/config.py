@@ -3059,6 +3059,11 @@ class ConfigCache(object):
 
         return list(actions)
 
+    def servicegroups_of_service(self, hostname, description):
+        # type: (str, Text) -> List[str]
+        """Returns the list of servicegroups of this services"""
+        return self.service_extra_conf(hostname, description, service_groups)
+
     def get_explicit_service_custom_variables(self, hostname, description):
         # type: (str, Text) -> Dict[str, str]
         try:

@@ -3045,6 +3045,20 @@ class ConfigCache(object):
                     attrs[key] = values[0]
         return attrs
 
+    def icons_and_actions_of_service(self, hostname, description, checkname, params):
+        # type: (str, Text, str, Dict) -> List[str]
+        actions = set(self.service_extra_conf(hostname, description, service_icons_and_actions))
+
+        # Some WATO rules might register icons on their own
+        if checkname:
+            checkgroup = check_info[checkname]["group"]
+            if checkgroup in ['ps', 'services'] and isinstance(params, dict):
+                icon = params.get('icon')
+                if icon:
+                    actions.add(icon)
+
+        return list(actions)
+
     def get_explicit_service_custom_variables(self, hostname, description):
         # type: (str, Text) -> Dict[str, str]
         try:

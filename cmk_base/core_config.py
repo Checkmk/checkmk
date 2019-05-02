@@ -326,12 +326,7 @@ def _extra_service_attributes(hostname, description, config_cache, checkname, pa
                                                         description).iteritems():
         attrs["_%s" % varname.upper()] = value
 
-    for key, conflist in config.extra_service_conf.items():
-        values = config_cache.service_extra_conf(hostname, description, conflist)
-        if values:
-            if key[0] == "_":
-                key = key.upper()
-            attrs[key] = values[0]
+    attrs.update(config_cache.get_extra_attributes_of_service(hostname, description))
 
     # Add explicit custom_variables
     for varname, value in config_cache.get_explicit_service_custom_variables(

@@ -1019,6 +1019,38 @@ def test_labels_of_service(monkeypatch):
     }
 
 
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", {}),
+    ("testhost2", {
+        '_CUSTOM': ['value1'],
+        'dingdong': ['value1']
+    }),
+])
+def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_option(
+        "extra_service_conf", {
+            "dingdong": [
+                ([
+                    "value1",
+                ], [], ["testhost2"], "CPU load$", {}),
+                ([
+                    "value2",
+                ], [], ["testhost2"], "CPU load$", {}),
+            ],
+            "_custom": [
+                ([
+                    "value1",
+                ], [], ["testhost2"], "CPU load$", {}),
+                ([
+                    "value2",
+                ], [], ["testhost2"], "CPU load$", {}),
+            ],
+        })
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_extra_attributes_of_service(hostname, "CPU load") == result
+
+
 @pytest.mark.parametrize("edition_short,expected_cache_class_name,expected_host_class_name", [
     ("cme", "CEEConfigCache", "CEEHostConfig"),
     ("cee", "CEEConfigCache", "CEEHostConfig"),

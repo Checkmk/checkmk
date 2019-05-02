@@ -3032,6 +3032,19 @@ class ConfigCache(object):
         })
         return labels
 
+    def get_extra_attributes_of_service(self, hostname, description):
+        # type: (str, Text) -> Dict[str, str]
+        attrs = {}
+        for key, conflist in extra_service_conf.items():
+            values = self.service_extra_conf(hostname, description, conflist)
+            if values:
+                if key[0] == "_":
+                    key = key.upper()
+
+                if values[0] is not None:
+                    attrs[key] = values[0]
+        return attrs
+
     def get_explicit_service_custom_variables(self, hostname, description):
         # type: (str, Text) -> Dict[str, str]
         try:

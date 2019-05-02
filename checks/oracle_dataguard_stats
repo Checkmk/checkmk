@@ -113,9 +113,9 @@ def check_oracle_dataguard_stats(item, params, parsed):
         yield 0, "Broker %s" % (dgdata['broker_state'].lower())
 
         # Observer is only usable with enabled Fast Start Failover!
-        if 'fs_failover_status' in dgdata and dgdata['fs_failover_status'] <> 'DISABLED':
+        if 'fs_failover_status' in dgdata and dgdata['fs_failover_status'] != 'DISABLED':
 
-            if dgdata['fs_failover_observer_present'] <> 'YES':
+            if dgdata['fs_failover_observer_present'] != 'YES':
                 yield 2, "Observer not connected"
             else:
                 yield 0, "Observer connected %s from host %s" % (
@@ -210,7 +210,7 @@ def check_oracle_dataguard_stats(item, params, parsed):
                     yield 0, '%s %s' % (dgstat_param, get_age_human_readable(seconds)), perfdata
                 else:
                     if seconds is None:
-                        # seconds is None => state <> 0 from upper checks
+                        # seconds is None => state != 0 from upper checks
                         yield state, '%s unknown time' % (dgstat_param), perfdata
                     else:
                         yield state, '%s %s %s' % (dgstat_param, get_age_human_readable(seconds),

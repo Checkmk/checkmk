@@ -57,9 +57,9 @@ def inventory_oracle_instance(info):
             # possible multitenant entry?
             if len(line) > 12:
 
-                # every pdb has a con_id <> 0
+                # every pdb has a con_id != 0
                 # Multitenant use DB_NAME.PDB_NAME as Service
-                if line[12] == ('TRUE') and line[13] <> '0':
+                if line[12] == ('TRUE') and line[13] != '0':
                     inv_list.append((("%s.%s" % (line[0], line[14])), {}))
                     continue
 
@@ -99,7 +99,7 @@ def check_oracle_instance(item, params, info):
 
         if len(line) > 12:
             # Multitenant!
-            if line[12] == ('TRUE') and line[13] <> '0':
+            if line[12] == ('TRUE') and line[13] != '0':
                 itemname = ("%s.%s" % (line[0], line[14]))
                 pdb = True
 

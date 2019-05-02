@@ -119,10 +119,10 @@ def parse_oracle_asm_diskgroup(info):
         if first_node == '':
             first_node = node_name
 
-        elif first_node <> node_name:
+        elif first_node != node_name:
             continue
 
-        if len(stripped_line) <> 12:
+        if len(stripped_line) != 12:
 
             # old format without fg data
             parsed.setdefault(
@@ -323,7 +323,7 @@ def check_oracle_asm_diskgroup(item, params, parsed):
 
                 infotext += ', %i disks' % dg_disks
 
-                if dgtype <> 'EXTERN':
+                if dgtype != 'EXTERN':
 
                     # EXTERN Redundancy has only 1 FG. => useless information
                     infotext += ' in %i failgroups' % fg_count

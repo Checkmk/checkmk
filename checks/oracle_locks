@@ -92,7 +92,7 @@ def check_oracle_locks(item, params, info):
     elif lockcount > 10:
         infotext = 'more then 10 locks existing!'
 
-    if state <> -1:
+    if state != -1:
         return (state, infotext)
 
     # In case of missing information we assume that the login into

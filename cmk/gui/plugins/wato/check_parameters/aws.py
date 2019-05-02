@@ -816,6 +816,37 @@ class RulespecCheckgroupParametersAwsElbv2Limits(CheckParameterRulespecWithoutIt
         ])
 
 
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsElbv2LCU(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_elbv2_lcu"
+
+    @property
+    def title(self):
+        return _("AWS/ELBv2 LCU")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('levels',
+             Tuple(
+                 title=_('Upper levels for load balancer capacity units'),
+                 elements=[
+                     Float(title=_('Warning at')),
+                     Float(title=_('Critical at')),
+                 ])),
+        ])
+
+
 #.
 #   .--EBS-----------------------------------------------------------------.
 #   |                          _____ ____ ____                             |

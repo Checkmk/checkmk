@@ -1871,14 +1871,7 @@ class ELBSummaryGeneric(AWSSectionGeneric):
     def get_live_data(self, colleague_contents):
         found_load_balancers = []
         for load_balancer in self._describe_load_balancers(colleague_contents):
-            load_balancer_name = load_balancer['LoadBalancerName']
-            try:
-                response = self._client.describe_tags(LoadBalancerNames=[load_balancer_name])
-            except botocore.exceptions.ClientError as e:
-                # If there are no tags attached to a bucket we receive a 'ClientError'
-                logging.info("%s/%s: No tags set, %s", self.name, load_balancer_name, e)
-                response = {}
-
+            response = self._get_load_balancer_tags(load_balancer)
             tagging = [
                 tag for tag_descr in self._get_response_content(response, 'TagDescriptions')
                 for tag in tag_descr['Tags']
@@ -1887,6 +1880,19 @@ class ELBSummaryGeneric(AWSSectionGeneric):
                 load_balancer['TagDescriptions'] = tagging
                 found_load_balancers.append(load_balancer)
         return found_load_balancers
+
+    def _get_load_balancer_tags(self, load_balancer):
+        try:
+            if self._resource == "elb":
+                return self._client.describe_tags(
+                    LoadBalancerNames=[load_balancer['LoadBalancerName']])
+            elif self._resource == "elbv2":
+                return self._client.describe_tags(ResourceArns=[load_balancer['LoadBalancerArn']])
+            return {}
+        except botocore.exceptions.ClientError as e:
+            # If there are no tags attached to a bucket we receive a 'ClientError'
+            logging.info("%s/%s: No tags set, %s", self.name, load_balancer['LoadBalancerName'], e)
+            return {}
 
     def _describe_load_balancers(self, colleague_contents):
         if self._tags is None and self._names is not None:
@@ -1933,12 +1939,12 @@ class ELBSummaryGeneric(AWSSectionGeneric):
 
 class ELBLabelsGeneric(AWSSectionLabels):
     def __init__(self, client, region, config, distributor=None, resource=""):
-        super(ELBLabelsGeneric, self).__init__(client, region, config, distributor=distributor)
         self._resource = resource
+        super(ELBLabelsGeneric, self).__init__(client, region, config, distributor=distributor)
 
     @property
     def name(self):
-        return "elb_generic_labels"
+        return "%s_generic_labels" % self._resource
 
     @property
     def cache_interval(self):

@@ -30,7 +30,7 @@ class FakeELBv2Client(object):
             'NextMarker': 'string',
         }
 
-    def describe_tags(self, LoadBalancerNames=None):
+    def describe_tags(self, ResourceArns=None):
         return {
             'TagDescriptions': ELBDescribeTagsIB.create_instances(amount=1),
         }

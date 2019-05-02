@@ -3695,6 +3695,15 @@ class CEEConfigCache(ConfigCache):
             spec.update(entry)
         return spec
 
+    def check_timeout_of_service(self, hostname, description):
+        # type: (str, Text) -> int
+        """Returns the check timeout in seconds"""
+        entries = self.service_extra_conf(hostname, description, cmc_service_check_timeout)
+        if not entries:
+            return cmc_check_timeout
+
+        return entries[0]
+
 
 # TODO: Find a clean way to move this to cmk_base.cee. This will be possible once the
 # configuration settings are not held in cmk_base.config namespace anymore.

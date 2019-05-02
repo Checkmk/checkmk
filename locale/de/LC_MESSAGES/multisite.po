@@ -31,7 +31,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.8.11\n"
+"X-Generator: Poedit 2.0.6\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Bookmarks: -1,-1,1412,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: /home/mk/git/check_mk/web/htdocs\n"
@@ -580,9 +580,9 @@ msgstr "%sRoundtrip-Minimum"
 msgid "%sRound trip standard devation"
 msgstr "%sRoundtrip-Standardabweichung"
 
+#, fuzzy
 msgid ""
-"&copy; <a target=\"_blank\" href=\"https://mathias-kettner.com\">Mathias "
-"Kettner</a>"
+"&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>"
 msgstr ""
 "&copy; <a target=\"_blank\" href=\"https://mathias-kettner.com\">Mathias "
 "Kettner</a>"
@@ -1917,6 +1917,8 @@ msgid ""
 "API Key to use. Depending on your opsgenie subscription you can use global or "
 "team integration api keys."
 msgstr ""
+"Zu verwendender API-Key. Abhängig von Ihrem opsgenie-Abonnement, können Sie "
+"globale oder Team Keys verwenden."
 
 msgid "API key"
 msgstr "API-Schlüssel"
@@ -1998,6 +2000,10 @@ msgstr "Verarbeitungsdauer"
 #, fuzzy
 msgid "AWS/ELB Statistics"
 msgstr "MSSQL Statistiken"
+
+#, fuzzy
+msgid "AWS/ELBv2 Limits"
+msgstr "Verarbeitungsdauer"
 
 msgid "AWS/RDS CPU Credits"
 msgstr "AWS/RDS CPU Credits"
@@ -2422,7 +2428,7 @@ msgid "Activate pending changes"
 msgstr "Aktiviere offene Änderungen"
 
 msgid "Activate resultion with following resolution transistion ID"
-msgstr ""
+msgstr "Resolution mit der folgenden resultion transition ID aktivieren"
 
 msgid "Activate selected"
 msgstr "Ausgewählte aktivieren"
@@ -2993,10 +2999,10 @@ msgid "Additional messages describing rule state"
 msgstr "Zusätzliche Nachrichten die den Regel-Status beschreiben"
 
 msgid "Additional note that will be added while closing the alert."
-msgstr ""
+msgstr "Zusätzliche Notiz, die beim Schließen des Alerts hinzugefügt wird."
 
 msgid "Additional note that will be added while creating the alert."
-msgstr ""
+msgstr "Zusätzliche Notiz, die beim Erstellen des Alerts hinzugefügt wird."
 
 msgid "Additional options"
 msgstr "Zusätzliche Optionen"
@@ -4533,6 +4539,28 @@ msgstr "Anwendung (regulärer Ausdruck)"
 msgid "Application / Syslog-Tag"
 msgstr "Anwendung/Syslog Tag"
 
+#, fuzzy
+msgid "Application Load Balancer Listeners"
+msgstr "F5 Loadbalancer-Pools"
+
+#, fuzzy
+msgid "Application Load Balancer Rules"
+msgstr "Anwendungslogs"
+
+msgid "Application Load Balancer Target Groups"
+msgstr ""
+
+#, fuzzy
+msgid "Application Load balancer Certificates"
+msgstr "Anwendungen, Prozesse & Services"
+
+#, fuzzy
+msgid "Application Load balancers"
+msgstr "Anwendungslogs"
+
+msgid "Application and Network Load Balancing (ELBv2)"
+msgstr ""
+
 msgid "Application name"
 msgstr "Name der Anwendung"
 
@@ -5144,6 +5172,9 @@ msgstr "Verfügbare Agenten-Konfigurationen"
 msgid "Available capacity"
 msgstr "Verfügbare Kapazität"
 
+msgid "Available physical processors in shared pool"
+msgstr ""
+
 msgid "Available snapins"
 msgstr "Verfügbare Elemente"
 
@@ -5210,6 +5241,10 @@ msgstr "urchschnittliche Latenz von Storage-Anfragen"
 msgid "Average latency used by Azure Storage to process a successful request"
 msgstr ""
 "Durchschnittliche Latenzzeit, von Azure Storage für eine erfolgreiche Anfrage"
+
+#, fuzzy
+msgid "Average processor speed"
+msgstr "Durchschnittliche Antwortzeit"
 
 msgid "Average read request size"
 msgstr "Durchschnittliche Lese-Request-Größe"
@@ -6618,6 +6653,8 @@ msgid ""
 "Caller is the user on behalf of whom the incident is being reported within "
 "servicenow. Please enter the name of the caller here."
 msgstr ""
+"Caller ist der Benutzer, für den der Incident in Servicenow gemeldet wird. "
+"Bitte geben Sie hier den Namen ein."
 
 msgid "Calling final hooks"
 msgstr "Rufe finale Hooks auf"
@@ -6648,7 +6685,7 @@ msgid "Cancel previous notifications"
 msgstr "Bisherige Alarme löschen"
 
 msgid "Canceled"
-msgstr ""
+msgstr "Abgebrochen"
 
 msgid "Cannot calculate graph recipes"
 msgstr "Kann Graphdefinitionen nicht berechnen"
@@ -7781,7 +7818,7 @@ msgstr "Klasse von Hosts"
 msgid "Classes"
 msgstr "Klassen"
 
-msgid "Classic Elastic Load Balancing (ELB)"
+msgid "Classic Load Balancing (ELB)"
 msgstr ""
 
 msgid "Classical"
@@ -8434,7 +8471,7 @@ msgstr ""
 "finden."
 
 msgid "Configure the JIRA URL here."
-msgstr ""
+msgstr "Konfigurieren Sie hier die JIRA URL."
 
 msgid "Configure the agent updater whether to connect via proxy server."
 msgstr ""
@@ -8444,6 +8481,9 @@ msgid ""
 "Configure the base URL for the Monitoring Web-GUI here. Include the site "
 "name. Used for link to check_mk out of jira."
 msgstr ""
+"Konfigurieren Sie hier die Basis-URL für die Monitoring Web-GUI und geben Sie "
+"den Namen der Site mit an. Die URL wird für Links zu check_mk aus Jira heraus "
+"verwendet."
 
 #, python-format
 msgid ""
@@ -8500,6 +8540,7 @@ msgstr ""
 
 msgid "Configure your servicenow URL here (eg. https://myservicenow.com)."
 msgstr ""
+"Konfigurieren Sie hier die Servicenow URL (bspw. https://myservicenow.com)."
 
 msgid "Configured feature mismatch"
 msgstr "Diskrepanz konfigurierter Features"
@@ -9659,7 +9700,8 @@ msgstr "Nutzer angelegt: %s"
 msgid "Created snapshot %s"
 msgstr "Sicherung %s erzeugt"
 
-msgid "Created with Check_MK Version $CHECK_MK_VERSION$"
+#, fuzzy
+msgid "Created with CheckMK Version $CHECK_MK_VERSION$"
 msgstr "Erstellt mit Check_MK-Version $CHECK_MK_VERSION$"
 
 #, fuzzy
@@ -9937,6 +9979,9 @@ msgstr "Deaktiviere diesen Alarm"
 
 msgid "Currently in downtime"
 msgstr "Zur Zeit in Wartung"
+
+msgid "Currently not supported with this Check_MK Edition"
+msgstr ""
 
 msgid "Currently open events of a host that is monitored"
 msgstr "Offene Events von einem überwachten Host"
@@ -10799,6 +10844,8 @@ msgid ""
 "Defines what information to query. Checks for Cluster, Indices and Shard "
 "statistics follow soon."
 msgstr ""
+"Legt fest, welche Informationen abgefragt werden sollen. Checks für Cluster-, "
+"Index- und Shard-Statistiken folgen in Kürze."
 
 msgid "Degraded hosts"
 msgstr "Degraded Hosts"
@@ -10825,7 +10872,7 @@ msgid "Delay:"
 msgstr "Verzögerung:"
 
 msgid "Delayed unassigned shards"
-msgstr ""
+msgstr "Delayed unassigned shards"
 
 msgid "Delete"
 msgstr "Lösche"
@@ -11454,11 +11501,15 @@ msgid ""
 "Description field of host alert that is generally used to provide a detailed "
 "information about the alert."
 msgstr ""
+"Beschreibungsfeld für Host Alerts. Wird dazu verwendet, detaillierte "
+"Informationen zum Alert bereitzustellen."
 
 msgid ""
 "Description field of service alert that is generally used to provide a "
 "detailed information about the alert."
 msgstr ""
+"Beschreibungsfeld für Service Alerts. Wird dazu verwendet, detaillierte "
+"Informationen zum Alert bereitzustellen."
 
 #, fuzzy
 msgid "Description for host alerts"
@@ -12045,6 +12096,10 @@ msgstr "Inode-Benutzung in Ausgabe des Checks anzeigen"
 msgid "Display legend for timeline"
 msgstr "Legende für die Zeitleiste anzeigen"
 
+#, python-format
+msgid "Display long output in timeline (<a href=\"%s\">Enable via WATO</a>)"
+msgstr ""
+
 msgid "Display mode of entries"
 msgstr "Anzeigemodus"
 
@@ -12489,6 +12544,10 @@ msgstr "Phasen gleichen Zustands nicht zusammenfassen"
 
 msgid "Do not monitor"
 msgstr "Nicht überwachen"
+
+#, fuzzy
+msgid "Do not monitor containers as piggyback hosts"
+msgstr "Übersetzung von Hostnamen für Huckepack-Hosts"
 
 msgid "Do not offer this action as a command on open events"
 msgstr "Biete Aktion nicht als Befehl für offene Ereignisse an"
@@ -13665,16 +13724,16 @@ msgid "Elastic IP Addresses"
 msgstr "IP-Adressen"
 
 msgid "Elasticsearch Cluster Health"
-msgstr ""
+msgstr "Elasticsearch Cluster Health"
 
 msgid "Elasticsearch Cluster Shards"
-msgstr ""
+msgstr "Elasticsearch Cluster Shards"
 
 msgid "Elasticsearch Cluster Tasks"
-msgstr ""
+msgstr "Elasticsearch Cluster Tasks"
 
 msgid "Elasticsearch Nodes"
-msgstr ""
+msgstr "Elasticsearch Nodes"
 
 msgid "Electrical Apparent Power"
 msgstr "Elektrische Scheinleistung"
@@ -14180,6 +14239,9 @@ msgstr "Enterasys Netzteileinstellungen"
 msgid "Enterasys Switch: Temperature"
 msgstr "Enterasys Switch: Temperatur"
 
+msgid "Entitled capacity consumed"
+msgstr ""
+
 #, fuzzy
 msgid "Entitlement"
 msgstr "Elemente"
@@ -14577,9 +14639,6 @@ msgstr "Leere Merkmale ausklammern"
 
 msgid "Exclude hosts where the agent is unreachable"
 msgstr "Hosts ausschließen, deren Agent nicht erreichbar ist"
-
-msgid "Exclude individual containers from monitoring"
-msgstr ""
 
 #, fuzzy
 msgid "Exclude reserved space"
@@ -15384,6 +15443,10 @@ msgstr "FibreChannel Ports (FCMGMT MIB)"
 
 msgid "Fibrechannel Interfaces"
 msgstr "Fibrechannel-Schnittstellen"
+
+#, fuzzy
+msgid "Fieldnames to query"
+msgstr "Zu übersetzende Hostnamen"
 
 msgid "File"
 msgstr "Datei"
@@ -17227,7 +17290,7 @@ msgid "Here you can configure timeout settings in seconds."
 msgstr "Verbindungstimeout"
 
 msgid "Here you can configure timeout settings."
-msgstr ""
+msgstr "Hier können Sie Timeout Einstellungen konfigurieren."
 
 msgid ""
 "Here you can configure whether and how the creation of RRD files is being "
@@ -17308,6 +17371,18 @@ msgstr ""
 "Jobs festlegen."
 
 msgid ""
+"Here you can define fieldnames that should be used in the search. Regexp "
+"query is allowed as described <a href=\"https://www.elastic.co/guide/en/"
+"elasticsearch/reference/current/query-dsl-regexp-query.html\"target=\"_blank"
+"\">here</a>. If you want to speed up your search, use defined indices."
+msgstr ""
+"Hier können Sie Feldnamen definieren, die bei der Suche verwendet werden "
+"sollen. Eine Regexp-Abfrage ist wie <a href=\"https://www.elastic.co/guide/en/"
+"elasticsearch/reference/current/query-dsl-regexp-query.html\"target=\"_blank"
+"\">hier</a> beschrieben zulässig. Wenn Sie Ihre Suche beschleunigen möchten, "
+"verwenden Sie zusätzlich definierte Indizes."
+
+msgid ""
 "Here you can define levels on the CPU utilization of single processes. For "
 "performance reasons CPU Averaging will not be applied to to the levels of "
 "single processes."
@@ -17320,21 +17395,38 @@ msgid ""
 "Here you can define the state of the incident in case of a downtime of the "
 "affected host or service."
 msgstr ""
+"Hier können Sie den Status des Incidents im Falle einer Downtime des "
+"betroffenen Host oder Service definieren."
 
 msgid ""
 "Here you can define the state of the incident in case of an acknowledgement "
 "of the affected host or service problem."
 msgstr ""
+"Hier können Sie den Status des Incidents im Falle eines Acknowledgements des "
+"betroffenen Host oder Service definieren."
 
 msgid ""
 "Here you can define the state of the incident in case of an acknowledgement "
 "of the host or service problem."
 msgstr ""
+"Hier können Sie den Status des Incidents im Falle eines Acknowledgements des "
+"Host- oder Serviceproblems definieren."
 
 msgid ""
 "Here you can define the state of the incident in case of an ending "
 "acknowledgement of the host or service problem."
 msgstr ""
+"Hier können Sie den Status des Incidents im Falle eines auslaufenden "
+"Acknowledgements des Host- oder Serviceproblems definieren."
+
+msgid ""
+"Here you can define the timerange to query, eg. the last x minutes from now. "
+"The query will then check for the count of log messages in the defined range. "
+"Default is 1 minute."
+msgstr ""
+"Hier können Sie den Zeitbereich für die Abfrage festlegen, z.Bsp. die letzten "
+"x Minuten von jetzt an. Die Abfrage überprüft dann die Anzahl der Log "
+"Einträge im definierten Bereich. Standardeinstellung ist 1 Minute."
 
 msgid ""
 "Here you can define tree configurations for the snapin <i>Virtual Host-Trees</"
@@ -17345,6 +17437,37 @@ msgstr ""
 "<i>Virtuelle Hostbäume</i>. Diese Bäume organisieren Ihre Hosts auf Basis "
 "ihrer Werte in bestimmten Merkmalsgruppen. Jede Gruppe von Hostmerkmalen "
 "erzeugt eine Ebene im Baum."
+
+msgid ""
+"Here you can define what index should be queried for the defined search. You "
+"can query one or multiple indices. Without this option all indices are "
+"queried. If you want to speed up your search, use definded indices."
+msgstr ""
+"Hier können Sie festlegen, welcher Index für die definierte Suche abgefragt "
+"werden soll. Sie können einen oder mehrere Indizes abfragen. Ohne diese "
+"Option werden alle Indizes abgefragt. Wenn Sie Ihre Suche beschleunigen "
+"möchten, verwenden Sie definierte Indizes."
+
+msgid ""
+"Here you can define what search pattern should be used. You can use Kibana "
+"query language as described <a href=\"https://www.elastic.co/guide/en/kibana/"
+"current/kuery-query.html\"target=\"_blank\">here</a>. To optimize search "
+"speed, use defined indices and fields otherwise all indices and fields will "
+"be searched."
+msgstr ""
+"Hier können Sie festlegen, welches Suchmuster verwendet werden soll. Sie "
+"können die Kibana-Abfragesprache wie <a href=\"https://www.elastic.co/guide/"
+"de/kibana/current/kuery-query.html\"target=\"_blank\"> hier </a> beschrieben "
+"verwenden. Verwenden Sie zur Optimierung der Suchgeschwindigkeit definierte "
+"Indizes und Felder, ansonsten werden alle Indizes und Felder durchsucht."
+
+msgid ""
+"Here you can define what service description (item) is used for the created "
+"service. The resulting item is always prefixed with 'Elasticsearch Query'."
+msgstr ""
+"Hier können Sie festlegen, welche Service Description (Item) für den "
+"erzeugten Service verwendet wird. Dem resultierenden Item wird immer "
+"'Elasticsearch Query' vorangestellt."
 
 msgid ""
 "Here you can deploy a plugin for monitoring the quarantine queue, tasks and "
@@ -17457,6 +17580,8 @@ msgid ""
 "Here you can set a custom label for new issues. If not set, 'monitoring' will "
 "be used."
 msgstr ""
+"Hier können Sie ein benutzerdefiniertes Label für neue Issues festlegen. Wenn "
+"hier nichts definiert ist, wird 'monitoring' verwendet."
 
 msgid "Here you can set a manual address if the server differs from the host"
 msgstr ""
@@ -17622,6 +17747,11 @@ msgstr ""
 "Hier kann spezifiziert werden, welcher Service Level verwendet wird, wenn die "
 "Nachricht schon einen Service Level enthält."
 
+msgid "Here you cand define which protocol to use, default is https."
+msgstr ""
+"Hier können Sie festlegen, welches Protokoll verwendet werden soll. Der "
+"Standardwert ist https."
+
 msgid ""
 "Here you get feedback about recent agent rollouts. If you e.g. restrict a new "
 "rollout to a known list of five hosts, then these five should appear here at "
@@ -17720,7 +17850,7 @@ msgid "Hide user rules"
 msgstr "Benutzerregeln zu"
 
 msgid "High"
-msgstr ""
+msgstr "Hoch"
 
 #, fuzzy
 msgid "High alerts"
@@ -19124,14 +19254,6 @@ msgstr ""
 "überflüssig."
 
 msgid ""
-"If active, only a single summary item is displayed. The summary will "
-"explicitly mention sensors in warn/crit state but the sensors that are ok are "
-"aggregated."
-msgstr ""
-"Wenn aktiviert, dann wird nur ein einziger Service für IPMI erzeugt. Dieser "
-"listet dann nur solche Sensoren auf, die in einem Warn/Crit-Zustand sind."
-
-msgid ""
 "If active, the long output of this service will contain a list of all the "
 "matching processes and their details (i.e. PID, CPU usage, memory usage). "
 "Please note that HTML output will only work if \"Escape HTML codes in plugin "
@@ -19935,9 +20057,10 @@ msgstr ""
 "Sie den gespeicherten Zeitbereich des Archivs. jeder Datenpunkt benötigt 8 "
 "Byte pro gewählter Aggregation (MIN, MAX, AVERAGE)."
 
+#, fuzzy
 msgid ""
 "If you need help during configuration or experience problems, please refer to "
-"the Multisite <a target=\"_blank\" href=\"https://mathias-kettner.com/"
+"the <a target=\"_blank\" href=\"https://checkmk.com/"
 "checkmk_multisite_ldap_integration.html\">LDAP Documentation</a>."
 msgstr ""
 "Wenn Sie während der Konfiguration Hilfe benötigen, dann finden Sie diese in "
@@ -20268,9 +20391,6 @@ msgstr "Ignoriere geplante Wartungszeiten"
 msgid "Ignore soft query limit"
 msgstr "Ignoriere weiches Abfragelimit"
 
-msgid "Ignore state of no-archive log"
-msgstr "Ignoriere no-archive-log-Status"
-
 msgid "Ignore temporary Tablespaces (Default)"
 msgstr "Temporäre Tablespaces ignorieren (Standard)"
 
@@ -20297,6 +20417,7 @@ msgstr "Diese Schwellwerte ignorieren"
 
 msgid "Ignore unverified HTTPS request warnings. Use with caution."
 msgstr ""
+"Ignoriere unverified HTTPS request warnings. Bitte mit Vorsicht verwenden."
 
 msgid "Ignore used space"
 msgstr "Verwendeten Speicherplatz ignorieren"
@@ -20336,6 +20457,8 @@ msgstr "Einstellung sofort umschalten"
 
 msgid "Impact"
 msgstr ""
+"\n"
+"Auswirkung"
 
 msgid "Import"
 msgstr "Importieren"
@@ -20918,6 +21041,10 @@ msgstr "Index-Platz"
 
 msgid "Indexspace wasted"
 msgstr "Ungenutzter Indexbereich"
+
+#, fuzzy
+msgid "Indices to query"
+msgstr "Zu übersetzende Hostnamen"
 
 msgid "Individual automation user credentials"
 msgstr "Individuelle Automatisierungs-Benutzerdaten"
@@ -21663,7 +21790,7 @@ msgid "Is up and available"
 msgstr "Ist erreichbar und verfügbar"
 
 msgid "Is used to specify which domain the alert is related to."
-msgstr ""
+msgstr "Wird verwendet, um anzugeben, auf welche Domäne sich der Alert bezieht."
 
 #, fuzzy
 msgid "Issue type ID"
@@ -21774,8 +21901,11 @@ msgstr "Item-Liste"
 msgid "Item name"
 msgstr "Itemname"
 
+msgid "Item suffix"
+msgstr "Item suffix"
+
 msgid "JIRA URL"
-msgstr ""
+msgstr "JIRA URL"
 
 msgid "JMX monitoring of Java JVMs using Jolokia"
 msgstr "JMX-Überwachung von Java JVMs mithilfe von Jolokia"
@@ -22037,7 +22167,8 @@ msgstr "LDAP Attribut für Suche. Standard: <tt>(objectclass=*)</tt>."
 msgid "LDAP attribute to sync"
 msgstr "LDAP Attribut für Synchronisation"
 
-msgid "LDAP base, e.g. ou=Development, o=Mathias Kettner GmbH, c=de"
+#, fuzzy
+msgid "LDAP base, e.g. ou=Development, o=tribe29 GmbH, c=de"
 msgstr "LDAP Base, z.B. ou=Development, o=Mathias Kettner GmbH, c=de"
 
 #, python-format
@@ -22173,6 +22304,10 @@ msgstr "Letzter Eintrag"
 
 msgid "Last Error"
 msgstr "Letzter Fehler"
+
+#, fuzzy
+msgid "Last Known Long Output"
+msgstr "Letzte bekannte Pluginausgabe"
 
 msgid "Last Known Plugin Output"
 msgstr "Letzte bekannte Pluginausgabe"
@@ -23150,6 +23285,10 @@ msgstr "F5 Loadbalancer-Pools"
 msgid "Load balancers"
 msgstr "F5 Loadbalancer-Pools"
 
+#, fuzzy
+msgid "Load balancers Target Groups"
+msgstr "F5 Loadbalancer-Pools"
+
 msgid "Load in a new window / tab"
 msgstr "In einem neuen Fenster/Tab laden"
 
@@ -23501,6 +23640,10 @@ msgstr "Logical Volume Pool"
 
 msgid "Logical Volume Pools (LVM)"
 msgstr "Logical Volume Pools (LVM)"
+
+#, fuzzy
+msgid "Logical processor(s) utilization"
+msgstr "Auslastung des Storageprozessors"
 
 msgid "Login"
 msgstr "Login"
@@ -24836,6 +24979,8 @@ msgstr "Mediation Server - Fehlerindex für Leseaufrufe"
 
 msgid "Medium"
 msgstr ""
+"\n"
+"Mittel"
 
 msgid "MegaRAID monitoring (Windows)"
 msgstr "MegaRAID-Überwachung (Windows)"
@@ -26174,6 +26319,18 @@ msgstr "Netzwerk-ID"
 msgid "Network Interface and Switch Port Discovery"
 msgstr "Serviceerkennung für Netzwerkschnittstellen und Ports"
 
+#, fuzzy
+msgid "Network Load Balancer Listeners"
+msgstr "F5 Loadbalancer-Pools"
+
+#, fuzzy
+msgid "Network Load Balancer Target Groups"
+msgstr "Netzwerkschnittstellen-Gruppen"
+
+#, fuzzy
+msgid "Network Load balancers"
+msgstr "F5 Loadbalancer-Pools"
+
 msgid "Network Scan"
 msgstr "Netzwerk-Scan"
 
@@ -27013,7 +27170,7 @@ msgid "Note while closing"
 msgstr "Status wenn fehlend"
 
 msgid "Note while creating"
-msgstr ""
+msgstr "Hinweis beim Erstellen"
 
 msgid ""
 "Note: Expiration of acknowledgements only works when using the Check_MK Micro "
@@ -27859,7 +28016,7 @@ msgid "On Down host"
 msgstr "Bei Host DOWN"
 
 msgid "On Hold"
-msgstr ""
+msgstr "In Wartestellung"
 
 msgid ""
 "On this page you can test the defined logfile patterns against a custom text, "
@@ -27918,7 +28075,7 @@ msgid "One of the subelements is in a scheduled downtime."
 msgstr "Eins der Unterelemente ist in eine Wartungszeit"
 
 msgid "Ongoing shard info requests"
-msgstr ""
+msgstr "Laufende Shard-Informationsanfragen"
 
 msgid "Online"
 msgstr "online"
@@ -28576,14 +28733,14 @@ msgid "P1 - Critical"
 msgstr "Kritisch"
 
 msgid "P2 - High"
-msgstr ""
+msgstr "P2 - Hoch"
 
 #, fuzzy
 msgid "P3 - Moderate"
 msgstr "moderat"
 
 msgid "P4 - Low"
-msgstr ""
+msgstr "P4 - Niedrig"
 
 #, fuzzy
 msgid "P5 - Informational"
@@ -29505,6 +29662,9 @@ msgstr ""
 msgid "Personal Settings"
 msgstr "Persönliche Einstellungen"
 
+msgid "Phantom interruptions received"
+msgstr ""
+
 msgid "Phase"
 msgstr "Phase"
 
@@ -29563,6 +29723,10 @@ msgstr "Physikalische Speicherbelegung, in Prozent vom gesamten RAM"
 
 msgid "Physical port states to discover"
 msgstr "Physikalische Status, die überwacht werden sollen"
+
+#, fuzzy
+msgid "Physical processors consumed"
+msgstr "Physikalischer Speicherverbrauch"
 
 msgid "Physical state of port"
 msgstr "Physischer Status des Ports"
@@ -30856,6 +31020,9 @@ msgstr "Anfrage"
 msgid "Query Time Limit"
 msgstr "Zeitbegrenzung für Abfrage"
 
+msgid "Query elasticsearch logs"
+msgstr "Abfrage von Elasticsearch Logs"
+
 msgid "Query or SQL statement"
 msgstr "Query oder SQL-Anfrage"
 
@@ -32056,7 +32223,7 @@ msgid "Request wait time"
 msgstr "Request-Wartezeite"
 
 msgid "Requests data about elasticsearch clusters, nodes and indices."
-msgstr ""
+msgstr "Fordert Daten zu Elasticsearch-Clustern, Knoten und Indizes an."
 
 msgid "Requests in Processing"
 msgstr "Aktuell bearbeitete Anfragen"
@@ -32166,7 +32333,7 @@ msgid "Resident size"
 msgstr "Resident size"
 
 msgid "Resolved"
-msgstr ""
+msgstr "Gelöst"
 
 msgid "Resource Group"
 msgstr "Ressourcengruppe"
@@ -32645,7 +32812,7 @@ msgid "Running elsewhere"
 msgstr "Läuft anderweitig"
 
 msgid "Running nodes by nodes type"
-msgstr ""
+msgstr "Laufende Nodes nach Nodes Typ"
 
 msgid "Running sessions"
 msgstr "Laufende Sitzungen"
@@ -33294,6 +33461,10 @@ msgstr "In diesem Ordner suchen"
 msgid "Search only the entry at the base DN"
 msgstr "Eintrag nur in Basis DN suchen"
 
+#, fuzzy
+msgid "Search pattern"
+msgstr "Suchfilter"
+
 msgid "Search performance data"
 msgstr "Nach Metriken suchen"
 
@@ -33423,6 +33594,10 @@ msgid ""
 "r_PrioritizationOfIncidents.html\" target=\"_blank\">ServiceNow Incident</a> "
 "for more information."
 msgstr ""
+"Siehe <a href=\"https://docs.servicenow.com/bundle/helsinki-it-service-"
+"management/page/product/incident-management/reference/"
+"r_PrioritizationOfIncidents.html\" target=\"_blank\">ServiceNow Incident</a> "
+"für weitere Informationen."
 
 msgid ""
 "See <a href=\"https://pushover.net/api#sounds\" target=\"_blank\">Pushover "
@@ -34580,7 +34755,7 @@ msgid "Settings for incident state in case of acknowledgement"
 msgstr "Normalen Zustand benutzen, Quittierung ignorieren"
 
 msgid "Settings for incident state in case of downtime"
-msgstr ""
+msgstr "Einstellungen für den Status des Incidents im Falle einer Downtime."
 
 msgid "Settings for local checks"
 msgstr "Einstellungen für lokale Checks"
@@ -36017,9 +36192,8 @@ msgstr ""
 msgid "Specify the name of the ASM Disk Group "
 msgstr "Geben Sie den Namen der ASM-Diskgruppe an"
 
-msgid ""
-"Specify the name of the destination host, i.e. <tt>www.mathias-kettner.com</"
-"tt>"
+#, fuzzy
+msgid "Specify the name of the destination host, i.e. <tt>checkmk.com</tt>"
 msgstr ""
 "Geben Sie den Namen des Zielhosts an, z.B. <tt>www.mathias-kettner.com</tt>"
 
@@ -37564,6 +37738,9 @@ msgid ""
 "Team names which will be responsible for the alert. If the API Key belongs to "
 "a team integration, this field will be overwritten with the owner team."
 msgstr ""
+"Teamnamen, die für den Alert verantwortlich sind. Wenn der API-Schlüssel zu "
+"einer Teamintegration gehört, wird dieses Feld mit dem Besitzerteam "
+"überschrieben."
 
 msgid ""
 "Tell the jolokia plugin to stop waiting for a response from each configured "
@@ -37707,21 +37884,29 @@ msgstr "Textausgabe"
 msgid ""
 "Text that should be set in field <tt>Description</tt> for host notifications."
 msgstr ""
+"Text, der im Feld <tt>Description</tt> für Host Benachrichtigungen verwendet "
+"werden soll."
 
 msgid ""
 "Text that should be set in field <tt>Description</tt> for service "
 "notifications."
 msgstr ""
+"Text, der im Feld <tt>Description</tt> für Service Benachrichtigungen "
+"verwendet werden soll."
 
 msgid ""
 "Text that should be set in field <tt>Short description</tt> for host "
 "notifications."
 msgstr ""
+"Text, der im Feld <tt>Short description</tt> für Host Benachrichtigungen "
+"verwendet werden soll."
 
 msgid ""
 "Text that should be set in field <tt>Short description</tt> for service "
 "notifications."
 msgstr ""
+"Text, der im Feld <tt>Short description</tt> für Service Benachrichtigungen "
+"verwendet werden soll."
 
 msgid "Text to cancel event(s)"
 msgstr "Text um Ereignis(se) abzubrechen"
@@ -40237,33 +40422,47 @@ msgstr ""
 "Filedeskriptoren auf dem Host, der das Plugin ausführt."
 
 msgid "The numerical JIRA custom field ID for host problems."
-msgstr ""
+msgstr "Die numerische JIRA custom field ID für Hostprobleme."
 
 msgid "The numerical JIRA custom field ID for service problems."
-msgstr ""
+msgstr "Die numerische JIRA custom field ID für Serviceprobleme."
 
 msgid ""
 "The numerical JIRA issue type ID. If not set, it will be retrieved from a "
 "custom user attribute named <tt>jiraissuetype</tt>. If that is not set, the "
 "notification will fail."
 msgstr ""
+"Die numerische JIRA issue type ID. Wenn nicht festgelegt, wird sie von einem "
+"benutzerdefinierten Benutzerattribut mit dem Namen <tt> jiraissuetype </ tt> "
+"abgerufen. Wenn dieses Attribut nicht festgelegt ist, schlägt die "
+"Benachrichtigung fehl."
 
 msgid ""
 "The numerical JIRA priority ID. If not set, it will be retrieved from a "
 "custom user attribute named <tt>jirapriority</tt>. If that is not set, the "
 "standard priority will be used."
 msgstr ""
+"Die numerische JIRA priority ID. Wenn nicht festgelegt, wird sie von einem "
+"benutzerdefinierten Benutzerattribut mit dem Namen <tt> jirapriority </ tt> "
+"abgerufen. Wenn dieses Attribut nicht festgelegt ist, schlägt die "
+"Benachrichtigung fehl."
 
 msgid ""
 "The numerical JIRA project ID. If not set, it will be retrieved from a custom "
 "user attribute named <tt>jiraproject</tt>. If that is not set, the "
 "notification will fail."
 msgstr ""
+"Die numerische JIRA project ID. Wenn nicht festgelegt, wird sie von einem "
+"benutzerdefinierten Benutzerattribut mit dem Namen <tt> jiraproject </ tt> "
+"abgerufen. Wenn dieses Attribut nicht festgelegt ist, schlägt die "
+"Benachrichtigung fehl."
 
 msgid ""
 "The numerical JIRA resolution transition ID. 11 - 'To Do', 21 - 'In "
 "Progress', 31 - 'Done'"
 msgstr ""
+"The numerische JIRA resolution transition ID. 11 - 'To Do', 21 - 'In "
+"Progress', 31 - 'Done'"
 
 msgid "The offset in ms at which a critical state is triggered."
 msgstr "Verschiebung in ms ab dem der Status CRIT gemeldet wird."
@@ -44909,6 +45108,10 @@ msgstr "Schwellwerte für die Alarme pro Kontakt"
 msgid "Thresholds for quality of time"
 msgstr "Schwellwerte für die Zeitqualität"
 
+#, fuzzy
+msgid "Thresholds on message count"
+msgstr "Nachrichtenanzahl"
+
 msgid "Throttle periodic notifications"
 msgstr "Periodische Alarme drosseln"
 
@@ -46114,6 +46317,9 @@ msgstr "Fehler beim Hochladen des Symbols: %s"
 msgid "Unable to upload image: %s"
 msgstr "Fehler beim Hochladen des Bilds: %s"
 
+msgid "Unaccounted turbo cycles"
+msgstr ""
+
 #, python-format
 msgid "Unacknowledge this test result for site %s"
 msgstr "Entferne Quittierung dieses Testresultats für die Instanz %s"
@@ -46125,7 +46331,7 @@ msgid "Unallocated space"
 msgstr "Unzugewiesener Platz"
 
 msgid "Unassigned shards"
-msgstr ""
+msgstr "Nicht zugeordnete Shards"
 
 #, fuzzy
 msgid "Unblended costs"
@@ -47294,6 +47500,8 @@ msgstr ""
 msgid ""
 "Use this option to query a port which is different from standard port 9200."
 msgstr ""
+"Verwenden Sie diese Option, um einen Port abzufragen, der sich vom "
+"Standardport 9200 unterscheidet."
 
 msgid ""
 "Use this option to set which host should be checked by the special agent. If "
@@ -47301,6 +47509,10 @@ msgid ""
 "(fallback). The check will only output data from the first host that sends a "
 "response."
 msgstr ""
+"Verwenden Sie diese Option, um festzulegen, welcher Host vom Spezialagenten "
+"geprüft werden soll. Wenn die Verbindung zum ersten Server fehlschlägt, wird "
+"der nächste Server abgefragt (Fallback). Die Prüfung gibt nur Daten vom "
+"ersten Host aus, der eine Antwort sendet."
 
 #, python-format
 msgid "Use this ruleset to assign <a href=\"%s\">%s</a> to services."
@@ -47310,6 +47522,15 @@ msgid "Use this ruleset to assign labels to hosts of your choice."
 msgstr ""
 
 msgid "Use this ruleset to assign labels to service of your choice."
+msgstr ""
+
+msgid ""
+"Use this ruleset to make the long output available in the monitoring history "
+"(which also makes it available for availability processing). Be aware: "
+"Enabling this option may increase the filesystem space consumption of your "
+"monitoring history depending on the amount of data your hosts or services put "
+"in the long output. You should only enable this for the objects you need it "
+"for."
 msgstr ""
 
 msgid ""
@@ -48085,6 +48306,10 @@ msgstr "Virtuelles Systeme"
 
 msgid "Virtual addresses for mapping"
 msgstr "Virtuelle Adressraum für Mappings"
+
+#, fuzzy
+msgid "Virtual context switches"
+msgstr "Freiwillige Kontextwechsel"
 
 msgid ""
 "Virtual displays the quantity of virtual memory used by the mongod process. "
@@ -50098,6 +50323,12 @@ msgstr "Schreibepufferauslastung"
 msgid "Write latency"
 msgstr "Schreibelatenz"
 
+msgid "Write long output of hosts to monitoring history"
+msgstr ""
+
+msgid "Write long output of services to monitoring history"
+msgstr ""
+
 msgid "Write operations"
 msgstr "Schreibzugriffe"
 
@@ -50676,6 +50907,10 @@ msgstr ""
 "nützlich sein um den Grund für die aktivierten Konfigurationsänderungen zu "
 "hinterlegen."
 
+msgid "You can search indices for defined patterns in defined fieldnames."
+msgstr ""
+"Sie können Indizes nach definierten Mustern in definierten Feldnamen suchen."
+
 #, python-format
 msgid ""
 "You can select either from the shipped images or upload your own images. Copy "
@@ -50930,10 +51165,10 @@ msgstr ""
 "einem Service passen, wird der Service zur ersten passenden Gruppe "
 "hinzugefügt."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You can use, modify and distribute Check_MK under the terms of the <a href="
-"\"%s\">GNU GPL Version 2</a>."
+"\"%s\" target=\"_blank\">GNU GPL Version 2</a>."
 msgstr ""
 "Sie dürfen Check_MK unter den Bedingungen der <a href='%s'>GNU GPL Version 2</"
 "a> benutzen, verändern und weitergeben."
@@ -51497,6 +51732,7 @@ msgstr "Ihre Änderungen wurden gespeichert."
 msgid "Your contact groups are <b>%s</b>."
 msgstr "Ihre Kontakt-Gruppen sind <b>%s</b>."
 
+#, fuzzy
 msgid ""
 "Your crash report has been submitted (ID: ###ID###). Thanks for your "
 "participation, it is very important for the quality of Check_MK."
@@ -51508,8 +51744,8 @@ msgid ""
 "help you within the scope of professional support. If you already have a "
 "support contract, then please use your personal support email address to send "
 "us a mail refering to your crash report.<br>If you are interested in the "
-"details about support, you find details on <a href=\"http://mathias-kettner."
-"com/checkmk_support_contract.html\" target=_blank>our website</a>."
+"details about support, you find details on <a href=\"https://checkmk.com/"
+"checkmk_support_contract.html\" target=_blank>our website</a>."
 msgstr ""
 "Ihr Crashreport ist eingereicht (ID: ###ID###). Vielen Dank für Ihre "
 "Teilnahme, es ist sehr wichtig, um die Qualität von Check_MK zu verbessern."
@@ -52467,6 +52703,10 @@ msgstr "Lockwaits/sec"
 msgid "log file %s on all hosts"
 msgstr "Logdatei %s auf allen Hosts"
 
+#, fuzzy
+msgid "log messages"
+msgstr "Logmeldungen"
+
 msgid "log switches / hour"
 msgstr "Logswitches / Stunde"
 
@@ -53303,6 +53543,18 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid ""
+#~ "If active, only a single summary item is displayed. The summary will "
+#~ "explicitly mention sensors in warn/crit state but the sensors that are ok "
+#~ "are aggregated."
+#~ msgstr ""
+#~ "Wenn aktiviert, dann wird nur ein einziger Service für IPMI erzeugt. "
+#~ "Dieser listet dann nur solche Sensoren auf, die in einem Warn/Crit-Zustand "
+#~ "sind."
+
+#~ msgid "Ignore state of no-archive log"
+#~ msgstr "Ignoriere no-archive-log-Status"
 
 #~ msgid "(default topic)"
 #~ msgstr "(Standardthema)"
@@ -55819,9 +56071,6 @@ msgstr "z/OS"
 
 #~ msgid "Agent Bakery & Update"
 #~ msgstr "Agentenbäcker & Updates"
-
-#~ msgid "Application Logs"
-#~ msgstr "Anwendungslogs"
 
 #~ msgid "Baked agents including signatures"
 #~ msgstr "Gebackene Agenten inklusive Signaturen"

@@ -82,7 +82,7 @@ def parse_vnx_quotas(info):
             parsed["fs"].setdefault(stripped_entries[0], {"data": stripped_entries[1].split(",")})
 
         elif section == "quotas":
-            if len(stripped_entries) <> 5:
+            if len(stripped_entries) != 5:
                 continue
 
             dms, fs, mp, used_str, limit_str = stripped_entries

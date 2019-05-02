@@ -254,8 +254,8 @@ node {
             stage('Packaging Tests') {
                 try {
                     dir("${DAILY_DATA}/git/tests") {
-                        withEnv(["VERSION_PATH=i${ARCHIVE_DIR}", "PYTEST_ADDOPTS='--junitxml=\"${WORKSPACE}/junit.xml\"'"]) {
-                            sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-packaging"
+                        withEnv(["VERSION_PATH=${ARCHIVE_DIR}", "PYTEST_ADDOPTS='--junitxml=\"${WORKSPACE}/junit.xml\"'", "EDITION=cee"]) {
+                            sh "make test-packaging"
                         }
                     }
                 } finally {

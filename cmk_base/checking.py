@@ -240,8 +240,8 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
                 hostname, description):
             continue
 
-        success = execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item,
-                                params, description)
+        success = execute_check(config_cache, multi_host_sections, hostname, ipaddress,
+                                check_plugin_name, item, params, description)
         if success:
             num_success += 1
         elif success is None:
@@ -260,21 +260,20 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     return num_success, missing_section_list
 
 
-def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params,
-                  description):
+def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_plugin_name, item,
+                  params, description):
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
     check_api_utils.set_service(check_plugin_name, description)
     item_state.set_item_state_prefix(check_plugin_name, item)
 
     # Skip checks that are not in their check period
-    period = config.check_period_of(hostname, description)
-    if period and not cmk_base.core.check_timeperiod(period):
-        console.verbose(
-            "Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
-        return None
-
-    elif period:
+    period = config_cache.check_period_of_service(hostname, description)
+    if period is not None:
+        if not cmk_base.core.check_timeperiod(period):
+            console.verbose(
+                "Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
+            return None
         console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
 
     section_name = cmk_base.check_utils.section_name_of(check_plugin_name)

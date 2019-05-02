@@ -2,12 +2,14 @@
 
 import pytest
 from agent_aws_fake_clients import (
+    FakeCloudwatchClient,
     ELBv2DescribeLoadBalancersIB,
     ELBv2DescribeTargetGroupsIB,
     ELBv2DescribeListenersIB,
     ELBv2DescribeRulesIB,
     ELBv2DescribeAccountLimitsIB,
     ELBv2DescribeTargetHealthIB,
+    ELBDescribeTagsIB,
 )
 
 from cmk.special_agents.agent_aws import (
@@ -16,6 +18,8 @@ from cmk.special_agents.agent_aws import (
     ELBv2Limits,
     ELBSummaryGeneric,
     ELBv2TargetGroups,
+    ELBv2Application,
+    ELBv2Network,
 )
 
 
@@ -24,6 +28,11 @@ class FakeELBv2Client(object):
         return {
             'LoadBalancers': ELBv2DescribeLoadBalancersIB.create_instances(amount=1),
             'NextMarker': 'string',
+        }
+
+    def describe_tags(self, LoadBalancerNames=None):
+        return {
+            'TagDescriptions': ELBDescribeTagsIB.create_instances(amount=1),
         }
 
     def describe_target_groups(self, LoadBalancerArn=None):
@@ -65,6 +74,7 @@ def get_elbv2_sections():
         config.add_service_tags('elbv2_tags', tags)
 
         fake_elbv2_client = FakeELBv2Client()
+        fake_cloudwatch_client = FakeCloudwatchClient()
 
         elbv2_limits_distributor = ResultDistributor()
         elbv2_summary_distributor = ResultDistributor()
@@ -73,16 +83,21 @@ def get_elbv2_sections():
         elbv2_summary = ELBSummaryGeneric(
             fake_elbv2_client, region, config, elbv2_summary_distributor, resource='elbv2')
         elbv2_target_groups = ELBv2TargetGroups(fake_elbv2_client, region, config)
+        elbv2_application = ELBv2Application(fake_cloudwatch_client, region, config)
+        elbv2_network = ELBv2Network(fake_cloudwatch_client, region, config)
 
         elbv2_limits_distributor.add(elbv2_summary)
         elbv2_summary_distributor.add(elbv2_target_groups)
-        return elbv2_limits, elbv2_summary, elbv2_target_groups
+        elbv2_summary_distributor.add(elbv2_application)
+        elbv2_summary_distributor.add(elbv2_network)
+        return elbv2_limits, elbv2_summary, elbv2_target_groups, elbv2_application, elbv2_network
 
     return _create_elbv2_sections
 
 
 def test_agent_aws_elbv2_limits(get_elbv2_sections):
-    elbv2_limits, _elbv2_summary, _elbv2_target_groups = get_elbv2_sections(None, (None, None))
+    elbv2_limits, _elbv2_summary, _elbv2_target_groups, _elbv2_application, _elbv2_network = get_elbv2_sections(
+        None, (None, None))
     _elbv2_limits_results = elbv2_limits.run().results
 
     assert elbv2_limits.cache_interval == 300
@@ -90,7 +105,8 @@ def test_agent_aws_elbv2_limits(get_elbv2_sections):
 
 
 def test_agent_aws_elbv2_summary(get_elbv2_sections):
-    elbv2_limits, elbv2_summary, _elbv2_target_groups = get_elbv2_sections(None, (None, None))
+    elbv2_limits, elbv2_summary, _elbv2_target_groups, _elbv2_application, _elbv2_network = get_elbv2_sections(
+        None, (None, None))
     _elbv2_limits_results = elbv2_limits.run().results
     _elbv2_summary_results = elbv2_summary.run().results
 
@@ -99,10 +115,33 @@ def test_agent_aws_elbv2_summary(get_elbv2_sections):
 
 
 def test_agent_aws_elbv2_target_groups(get_elbv2_sections):
-    elbv2_limits, elbv2_summary, elbv2_target_groups = get_elbv2_sections(None, (None, None))
+    elbv2_limits, elbv2_summary, elbv2_target_groups, _elbv2_application, _elbv2_network = get_elbv2_sections(
+        None, (None, None))
     _elbv2_limits_results = elbv2_limits.run().results
     _elbv2_summary_results = elbv2_summary.run().results
     _elbv2_target_groups_results = elbv2_target_groups.run().results
 
     assert elbv2_target_groups.cache_interval == 300
     assert elbv2_target_groups.name == "elbv2_target_groups"
+
+
+def test_agent_aws_elbv2_application(get_elbv2_sections):
+    elbv2_limits, elbv2_summary, _elbv2_target_groups, elbv2_application, _elbv2_network = get_elbv2_sections(
+        None, (None, None))
+    _elbv2_limits_results = elbv2_limits.run().results
+    _elbv2_summary_results = elbv2_summary.run().results
+    _elbv2_application_results = elbv2_application.run().results
+
+    assert elbv2_application.cache_interval == 300
+    assert elbv2_application.name == "elbv2_application"
+
+
+def test_agent_aws_elbv2_network(get_elbv2_sections):
+    elbv2_limits, elbv2_summary, _elbv2_target_groups, _elbv2_application, elbv2_network = get_elbv2_sections(
+        None, (None, None))
+    _elbv2_limits_results = elbv2_limits.run().results
+    _elbv2_summary_results = elbv2_summary.run().results
+    _elbv2_network_results = elbv2_network.run().results
+
+    assert elbv2_network.cache_interval == 300
+    assert elbv2_network.name == "elbv2_network"

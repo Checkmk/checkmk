@@ -221,3 +221,201 @@ check_info['mysql.connections'] = {
     "group": "mysql_connections",
     "has_perfdata": True,
 }
+
+#.
+#   .--Galera Sync Status--------------------------------------------------.
+#   |         ____       _                  ____                           |
+#   |        / ___| __ _| | ___ _ __ __ _  / ___| _   _ _ __   ___         |
+#   |       | |  _ / _` | |/ _ \ '__/ _` | \___ \| | | | '_ \ / __|        |
+#   |       | |_| | (_| | |  __/ | | (_| |  ___) | |_| | | | | (__         |
+#   |        \____|\__,_|_|\___|_|  \__,_| |____/ \__, |_| |_|\___|        |
+#   |                                             |___/                    |
+#   |                    ____  _        _                                  |
+#   |                   / ___|| |_ __ _| |_ _   _ ___                      |
+#   |                   \___ \| __/ _` | __| | | / __|                     |
+#   |                    ___) | || (_| | |_| |_| \__ \                     |
+#   |                   |____/ \__\__,_|\__|\__,_|___/                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
+def inventory_mysql_galerasync(parsed):
+    for instance, data in parsed.iteritems():
+        if data.get('wsrep_provider') is not None and 'wsrep_local_state_comment' in data:
+            yield instance, {}
+
+
+@get_parsed_item_data
+def check_mysql_galerasync(item, _no_params, data):
+    wsrep_local_state_comment = data.get('wsrep_local_state_comment')
+    if wsrep_local_state_comment is None:
+        return
+
+    if wsrep_local_state_comment == 'Synced':
+        state = 0
+    else:
+        state = 2
+    return state, 'WSREP local state comment: %s' % wsrep_local_state_comment
+
+
+check_info['mysql.galerasync'] = {
+    "inventory_function": inventory_mysql_galerasync,
+    "check_function": check_mysql_galerasync,
+    "service_description": "MySQL Galera Sync %s",
+}
+
+#.
+#   .--Galera Donor--------------------------------------------------------.
+#   |      ____       _                  ____                              |
+#   |     / ___| __ _| | ___ _ __ __ _  |  _ \  ___  _ __   ___  _ __      |
+#   |    | |  _ / _` | |/ _ \ '__/ _` | | | | |/ _ \| '_ \ / _ \| '__|     |
+#   |    | |_| | (_| | |  __/ | | (_| | | |_| | (_) | | | | (_) | |        |
+#   |     \____|\__,_|_|\___|_|  \__,_| |____/ \___/|_| |_|\___/|_|        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
+def inventory_mysql_galeradonor(parsed):
+    for instance, data in parsed.iteritems():
+        if data.get('wsrep_provider') is not None and 'wsrep_sst_donor' in data:
+            yield instance, {'wsrep_sst_donor': data['wsrep_sst_donor']}
+
+
+@get_parsed_item_data
+def check_mysql_galeradonor(item, params, data):
+    wsrep_sst_donor = data.get('wsrep_sst_donor')
+    if wsrep_sst_donor is None:
+        return
+
+    state = 0
+    infotext = 'WSREP SST donor: %s' % wsrep_sst_donor
+
+    p_wsrep_sst_donor = params['wsrep_sst_donor']
+    if wsrep_sst_donor != p_wsrep_sst_donor:
+        state = 1
+        infotext += ' (at discovery: %s)' % p_wsrep_sst_donor
+
+    return state, infotext
+
+
+check_info['mysql.galeradonor'] = {
+    "inventory_function": inventory_mysql_galeradonor,
+    "check_function": check_mysql_galeradonor,
+    "service_description": "MySQL Galera Donor %s",
+}
+
+#.
+#   .--Galera Startup------------------------------------------------------.
+#   |  ____       _                  ____  _             _                 |
+#   | / ___| __ _| | ___ _ __ __ _  / ___|| |_ __ _ _ __| |_ _   _ _ __    |
+#   || |  _ / _` | |/ _ \ '__/ _` | \___ \| __/ _` | '__| __| | | | '_ \   |
+#   || |_| | (_| | |  __/ | | (_| |  ___) | || (_| | |  | |_| |_| | |_) |  |
+#   | \____|\__,_|_|\___|_|  \__,_| |____/ \__\__,_|_|   \__|\__,_| .__/   |
+#   |                                                             |_|      |
+#   +----------------------------------------------------------------------+
+
+
+def inventory_mysql_galerastartup(parsed):
+    for instance, data in parsed.iteritems():
+        if data.get('wsrep_provider') is not None and 'wsrep_cluster_address' in data:
+            yield instance, {}
+
+
+@get_parsed_item_data
+def check_mysql_galerastartup(item, _no_params, data):
+    wsrep_cluster_address = data.get("wsrep_cluster_address")
+    if wsrep_cluster_address is None:
+        return
+
+    if wsrep_cluster_address == 'gcomm://':
+        return 2, 'WSREP cluster address is empty'
+    return 0, 'WSREP cluster address: %s' % wsrep_cluster_address
+
+
+check_info['mysql.galerastartup'] = {
+    "inventory_function": inventory_mysql_galerastartup,
+    "check_function": check_mysql_galerastartup,
+    "service_description": "MySQL Galera Startup %s",
+}
+
+#.
+#   .--Galera Cluster Size-------------------------------------------------.
+#   |     ____       _                   ____ _           _                |
+#   |    / ___| __ _| | ___ _ __ __ _   / ___| |_   _ ___| |_ ___ _ __     |
+#   |   | |  _ / _` | |/ _ \ '__/ _` | | |   | | | | / __| __/ _ \ '__|    |
+#   |   | |_| | (_| | |  __/ | | (_| | | |___| | |_| \__ \ ||  __/ |       |
+#   |    \____|\__,_|_|\___|_|  \__,_|  \____|_|\__,_|___/\__\___|_|       |
+#   |                                                                      |
+#   |                           ____  _                                    |
+#   |                          / ___|(_)_______                            |
+#   |                          \___ \| |_  / _ \                           |
+#   |                           ___) | |/ /  __/                           |
+#   |                          |____/|_/___\___|                           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
+def inventory_mysql_galerasize(parsed):
+    for instance, data in parsed.iteritems():
+        if data.get('wsrep_provider') is not None and 'wsrep_cluster_size' in data:
+            yield instance, {'invsize': data['wsrep_cluster_size']}
+
+
+@get_parsed_item_data
+def check_mysql_galerasize(item, params, data):
+    wsrep_cluster_size = data.get("wsrep_cluster_size")
+    if wsrep_cluster_size is None:
+        return
+
+    state = 0
+    infotext = 'WSREP cluster size: %s' % wsrep_cluster_size
+
+    p_wsrep_cluster_size = params['invsize']
+    if wsrep_cluster_size != p_wsrep_cluster_size:
+        state = 2
+        infotext += ' (at discovery: %s)' % p_wsrep_cluster_size
+
+    return state, infotext
+
+
+check_info['mysql.galerasize'] = {
+    "inventory_function": inventory_mysql_galerasize,
+    "check_function": check_mysql_galerasize,
+    "service_description": "MySQL Galera Size %s",
+}
+
+#.
+#   .--Galera Status-------------------------------------------------------.
+#   |      ____       _                  ____  _        _                  |
+#   |     / ___| __ _| | ___ _ __ __ _  / ___|| |_ __ _| |_ _   _ ___      |
+#   |    | |  _ / _` | |/ _ \ '__/ _` | \___ \| __/ _` | __| | | / __|     |
+#   |    | |_| | (_| | |  __/ | | (_| |  ___) | || (_| | |_| |_| \__ \     |
+#   |     \____|\__,_|_|\___|_|  \__,_| |____/ \__\__,_|\__|\__,_|___/     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
+def inventory_mysql_galerastatus(parsed):
+    for instance, data in parsed.iteritems():
+        if data.get('wsrep_provider') is not None and 'wsrep_cluster_status' in data:
+            yield instance, {}
+
+
+@get_parsed_item_data
+def check_mysql_galerastatus(item, _no_params, data):
+    wsrep_cluster_status = data.get('wsrep_cluster_status')
+    if wsrep_cluster_status is None:
+        return
+
+    if wsrep_cluster_status == 'Primary':
+        state = 0
+    else:
+        state = 2
+    return state, 'WSREP cluster status: %s' % wsrep_cluster_status
+
+
+check_info['mysql.galerastatus'] = {
+    "inventory_function": inventory_mysql_galerastatus,
+    "check_function": check_mysql_galerastatus,
+    "service_description": "MySQL Galera Status %s",
+}

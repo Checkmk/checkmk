@@ -1,0 +1,10 @@
+Title: mysql.galerasync, mysql.galeradonor, mysql.galerastartup, mysql.galerasize, mysql.galerastatus: New checks for MySQL Galera
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564494611
+Class: feature
+
+

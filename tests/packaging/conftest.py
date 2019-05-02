@@ -2,6 +2,13 @@ import os
 import pytest
 
 
+# Packaging tests should not be executed in site.
+# -> Disabled site fixture for them
+@pytest.fixture(scope="session")
+def site(request):
+    pass
+
+
 @pytest.fixture(scope="module")
 def version_path():
     path = os.environ.get("VERSION_PATH")

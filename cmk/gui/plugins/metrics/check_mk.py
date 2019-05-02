@@ -497,6 +497,24 @@ metric_info["writing"] = {
     "color": "21/a",
 }
 
+metric_info["apply_finish_time"] = {
+    "title": _("Apply Finish Time"),
+    "unit": "s",
+    "color": "11/a",
+}
+
+metric_info["transport_lag"] = {
+    "title": _("Transport Lag"),
+    "unit": "s",
+    "color": "16/a",
+}
+
+metric_info["apply_lag"] = {
+    "title": _("Apply Lag"),
+    "unit": "s",
+    "color": "21/a",
+}
+
 metric_info["rtt"] = {
     "title": _("Round trip time"),
     "unit": "s",

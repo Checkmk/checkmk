@@ -5145,10 +5145,22 @@ metric_info['aws_active_connections'] = {
     'color': '11/a',
 }
 
+metric_info['aws_active_tls_connections'] = {
+    'title': _('Active TLS Connections'),
+    'unit': 'count',
+    'color': '12/a',
+}
+
 metric_info['aws_new_connections'] = {
     'title': _('New Connections'),
     'unit': 'count',
     'color': '13/a',
+}
+
+metric_info['aws_new_tls_connections'] = {
+    'title': _('New TLS Connections'),
+    'unit': 'count',
+    'color': '14/a',
 }
 
 metric_info['aws_rejected_connections'] = {
@@ -5209,6 +5221,36 @@ metric_info['aws_rule_evaluations'] = {
     'title': _('Rule Evaluations'),
     'unit': 'count',
     'color': '21/a',
+}
+
+metric_info['aws_failed_tls_client_handshake'] = {
+    'title': _('Failed TLS Client Handshake'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
+metric_info['aws_failed_tls_target_handshake'] = {
+    'title': _('Failed TLS Target Handshake'),
+    'unit': 'count',
+    'color': '23/a',
+}
+
+metric_info['aws_tcp_client_rst'] = {
+    'title': _('TCP Client Resets'),
+    'unit': 'count',
+    'color': '31/a',
+}
+
+metric_info['aws_tcp_elb_rst'] = {
+    'title': _('TCP ELB Resets'),
+    'unit': 'count',
+    'color': '33/a',
+}
+
+metric_info['aws_tcp_target_rst'] = {
+    'title': _('TCP Target Resets'),
+    'unit': 'count',
+    'color': '35/a',
 }
 
 metric_info['get_requests'] = {

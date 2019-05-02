@@ -28,7 +28,6 @@ import abc
 import numbers
 import os
 import sys
-import itertools
 from typing import Text, Optional, Any, List, Dict  # pylint: disable=unused-import
 
 import cmk.utils.paths
@@ -322,8 +321,8 @@ def _extra_service_attributes(hostname, description, config_cache, checkname, pa
 
     # Add service custom_variables. Name conflicts are prevented by the GUI, but just
     # to be sure, add them first. The other definitions will override the custom attributes.
-    for varname, value in _custom_service_attributes_of(config_cache, hostname,
-                                                        description).iteritems():
+    for varname, value in config_cache.custom_attributes_of_service(hostname,
+                                                                    description).iteritems():
         attrs["_%s" % varname.upper()] = value
 
     attrs.update(config_cache.get_extra_attributes_of_service(hostname, description))
@@ -338,12 +337,6 @@ def _extra_service_attributes(hostname, description, config_cache, checkname, pa
     if actions:
         attrs["_ACTIONS"] = ','.join(actions)
     return attrs
-
-
-def _custom_service_attributes_of(config_cache, hostname, service_description):
-    return dict(
-        itertools.chain(*config_cache.service_extra_conf(hostname, service_description,
-                                                         config.custom_service_attributes)))
 
 
 #.

@@ -70,24 +70,3 @@ def test_get_tag_attributes(tag_groups, result):
     for k, v in attributes.items():
         assert isinstance(k, unicode)
         assert isinstance(v, unicode)
-
-
-def test_custom_service_attributes_of(monkeypatch):
-    config_cache = config.get_config_cache()
-    attributes = core_config._custom_service_attributes_of(config_cache, "luluhost", "laladescr")
-    assert attributes == {}
-
-    ts = Scenario().add_host("luluhost", [])
-    ts.set_ruleset("custom_service_attributes", [
-        ([('deng', '1')], [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
-        ([('ding', '2'), ('ding', '2a'),
-          ('dong', '3')], [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
-    ])
-    config_cache = ts.apply(monkeypatch)
-
-    attributes = core_config._custom_service_attributes_of(config_cache, "luluhost", "laladescr")
-    assert attributes == {
-        "deng": "1",
-        "ding": "2a",
-        "dong": "3",
-    }

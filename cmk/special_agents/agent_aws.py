@@ -2278,7 +2278,7 @@ class ELBv2TargetGroups(AWSSectionGeneric):
                     TargetGroupArn=target_group['TargetGroupArn'])
                 target_group_health_descrs = self._get_response_content(
                     response, 'TargetHealthDescriptions')
-                target_group['TargetHealth'] = target_group_health_descrs.get('TargetHealth', {})
+                target_group['TargetHealthDescriptions'] = target_group_health_descrs
 
             load_balancers.setdefault(load_balancer_dns_name, []).append((load_balancer_type,
                                                                           target_groups))

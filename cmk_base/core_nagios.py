@@ -497,14 +497,19 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         service_spec = {
             "use": config.inventory_check_template,
             "host_name": hostname,
-            "normal_check_interval": params["check_interval"],
-            "retry_check_interval": params["check_interval"],
             "service_description": service_discovery_name,
         }
         service_spec.update(
             core_config.get_service_attributes(hostname, service_discovery_name, config_cache))
+
         service_spec.update(
             _extra_service_conf_of(cfg, config_cache, hostname, service_discovery_name))
+
+        service_spec.update({
+            "check_interval": params["check_interval"],
+            "retry_interval": params["check_interval"],
+        })
+
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
         if have_at_least_one_service:

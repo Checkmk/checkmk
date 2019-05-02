@@ -57,4 +57,4 @@ $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 $(NAGVIS)-skel:
 
 $(NAGVIS)-clean:
-	$(RM) -r $(NAGVIS)-*.*.[0-9] $(NAGVIS)-*.*-nightly $(BUILD_HELPER_DIR)/$(NAGVIS)*
+	$(RM) -r $(NAGVIS)-*.*.*[0-9] $(NAGVIS)-*.*-nightly $(BUILD_HELPER_DIR)/$(NAGVIS)*

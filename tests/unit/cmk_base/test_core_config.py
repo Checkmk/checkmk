@@ -1,5 +1,6 @@
 # encoding: utf-8
 import pytest  # type: ignore
+import socket
 from testlib.base import Scenario
 
 from cmk.utils.exceptions import MKGeneralException
@@ -19,7 +20,7 @@ def test_active_check_arguments(mocker):
     assert prepare_check_command.called_once()
 
 
-def test_get_host_attributes(monkeypatch):
+def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     ts = Scenario().add_host("test-host", ["abc"])
     ts.set_option("host_tags", {
         "test-host": {

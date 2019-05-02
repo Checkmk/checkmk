@@ -1153,6 +1153,25 @@ def test_config_cache_service_level_of_service(monkeypatch, hostname, result):
     assert config_cache.service_level_of_service(hostname, "CPU load") == result
 
 
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", None),
+    ("testhost2", None),
+    ("testhost3", "xyz"),
+])
+def test_config_cache_check_period_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset(
+        "check_periods",
+        [
+            ("24X7", [], ["testhost2"], ["CPU load$"], {}),
+            ("xyz", [], ["testhost3"], ["CPU load$"], {}),
+            ("zzz", [], ["testhost3"], ["CPU load$"], {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.check_period_of_service(hostname, "CPU load") == result
+
+
 @pytest.mark.parametrize("edition_short,expected_cache_class_name,expected_host_class_name", [
     ("cme", "CEEConfigCache", "CEEHostConfig"),
     ("cee", "CEEConfigCache", "CEEHostConfig"),

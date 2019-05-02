@@ -735,23 +735,6 @@ def _host_is_member_of_site(config_cache, hostname, site):
     return True
 
 
-#
-# Misc
-#
-
-
-def check_period_of(hostname, service):
-    periods = get_config_cache().service_extra_conf(hostname, service, check_periods)
-    if periods:
-        period = periods[0]
-        if period == "24X7":
-            return None
-
-        return period
-
-    return None
-
-
 #.
 #   .--Services------------------------------------------------------------.
 #   |                ____                  _                               |
@@ -3114,6 +3097,18 @@ class ConfigCache(object):
         if not entries:
             return None
         return entries[0]
+
+    def check_period_of_service(self, hostname, description):
+        # type: (str, Text) -> Optional[str]
+        entries = self.service_extra_conf(hostname, description, check_periods)
+        if not entries:
+            return None
+
+        entry = entries[0]
+        if entry == "24X7":
+            return None
+
+        return entry
 
     def get_explicit_service_custom_variables(self, hostname, description):
         # type: (str, Text) -> Dict[str, str]

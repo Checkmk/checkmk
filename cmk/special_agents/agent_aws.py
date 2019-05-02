@@ -1896,9 +1896,20 @@ class ELBSummaryGeneric(AWSSectionGeneric):
                     if load_balancer['LoadBalancerName'] in self._names
                 ]
             response = self._client.describe_load_balancers(LoadBalancerNames=self._names)
+
         else:
+            if colleague_contents.content:
+                return colleague_contents.content
+
             response = self._client.describe_load_balancers()
-        return self._get_response_content(response, 'LoadBalancerDescriptions')
+
+        if self._resource == "elb":
+            response_key = "LoadBalancerDescriptions"
+        elif self._resource == "elbv2":
+            response_key = "LoadBalancers"
+        else:
+            response_key = None
+        return self._get_response_content(response, response_key)
 
     def _matches_tag_conditions(self, tagging):
         if self._names is not None:
@@ -2256,7 +2267,7 @@ class ELBv2Application(AWSSectionCloudwatch):
         return 300
 
     def _get_colleague_contents(self):
-        colleague = self._received_results.get('elb_summary')
+        colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
@@ -2342,7 +2353,7 @@ class ELBv2Network(AWSSectionCloudwatch):
         return 300
 
     def _get_colleague_contents(self):
-        colleague = self._received_results.get('elb_summary')
+        colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)

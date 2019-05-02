@@ -824,20 +824,8 @@ def _extra_service_conf_of(cfg, config_cache, hostname, description):
         service_spec["service_groups"] = ",".join(sergr)
         if config.define_servicegroups:
             cfg.servicegroups_to_define.update(sergr)
-    service_spec.update(
-        _extra_conf_of(config_cache, config.extra_service_conf, hostname, description))
 
     return service_spec
-
-
-def _extra_conf_of(config_cache, confdict, hostname, service):
-    result = {}
-    for key, conflist in confdict.items():
-        values = config_cache.service_extra_conf(hostname, service, conflist)
-        if values:
-            result[key] = values[0]
-
-    return result
 
 
 #.

@@ -407,49 +407,42 @@ class AzureMetricParseError(ValueError):
     pass
 
 
-class AzureMetric(object):  # pylint: disable=too-many-instance-attributes
+def create_metric_dict(metric, aggregation, interval_id, filter_):
 
-    HEADER = ("name", "aggregation", "value", "unit", "timestamp", "filter", "interval_id",
-              "interval")
+    metric_dict = {
+        'name': metric.name.value,
+        'aggregation': aggregation,
+        'value': None,
+        'unit': metric.unit.name,
+        'timestamp': None,
+        'filter': filter_,
+        'interval_id': interval_id,
+        'interval': None,
+    }
 
-    def __init__(self, metric, aggregation, interval_id, filter_):
-        super(AzureMetric, self).__init__()
+    count = len(metric.timeseries)
+    if count == 0:
+        msg = "no timeseries found for metric %r" % metric.name.value
+        raise AzureMetricParseError('info', msg)
 
-        self.name = metric.name.value
-        self.aggregation = aggregation
-        self.value = None
-        self.unit = metric.unit.name
-        self.timestamp = None
-        self.filter = filter_
-        self.interval_id = interval_id
-        self.interval = None
+    for measurement in reversed(metric.timeseries):
+        if not measurement.data:
+            continue
 
-        count = len(metric.timeseries)
-        if count == 0:
-            msg = "no timeseries found for metric %r" % self.name
-            raise AzureMetricParseError('info', msg)
+        try:
+            metric_dict['interval'] = str(measurement.data[-1].time_stamp -
+                                          measurement.data[-2].time_stamp)
+        except (IndexError, TypeError):
+            pass
 
-        for measurement in reversed(metric.timeseries):
-            if not measurement.data:
-                continue
+        for data in reversed(measurement.data):
+            LOG.debug("data: %s", data)
+            metric_dict['value'] = getattr(data, aggregation, None)
+            if metric_dict['value'] is not None:
+                metric_dict['timestamp'] = str(calendar.timegm(data.time_stamp.utctimetuple()))
+                return metric_dict
 
-            try:
-                self.interval = (measurement.data[-1].time_stamp - measurement.data[-2].time_stamp)
-            except (IndexError, TypeError):
-                pass
-
-            for data in reversed(measurement.data):
-                LOG.debug("data: %s", data)
-                self.value = getattr(data, aggregation, None)
-                if self.value is not None:
-                    self.timestamp = calendar.timegm(data.time_stamp.utctimetuple())
-                    return
-
-        raise AzureMetricParseError('warning', "not found: %s (%s)" % (self.name, aggregation))
-
-    @property
-    def tuple(self):
-        return tuple(getattr(self, field) for field in AzureMetric.HEADER)
+    raise AzureMetricParseError('warning', "not found: %s (%s)" % (metric.name.value, aggregation))
 
 
 class AzureResource(object):
@@ -472,8 +465,8 @@ class AzureResource(object):
     def dumpinfo(self):
         lines = [("Resource",), (json.dumps(self.info),)]
         if self.metrics:
-            lines += [("metrics following", len(self.metrics)), AzureMetric.HEADER]
-            lines += [m.tuple for m in self.metrics]
+            lines += [("metrics following", len(self.metrics))]
+            lines += [(json.dumps(m),) for m in self.metrics]
         return lines
 
 
@@ -607,7 +600,7 @@ class MetricsCollecter(object):
         metrics = []
         for raw_metric in raw_metrics:
             try:
-                metrics.append(AzureMetric(raw_metric, aggregation, interval, filter_))
+                metrics.append(create_metric_dict(raw_metric, aggregation, interval, filter_))
             except AzureMetricParseError as exc:
                 err.add(exc[0], rid, exc[1])
                 LOG.warning(exc.args[1])

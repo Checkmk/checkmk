@@ -449,8 +449,8 @@ def check_levels(value,
     else:
         infotext = "%s%s" % (human_readable_func(value), unit_info)
 
-    # None, {} or (None, None) -> do not check any levels
-    if not params or params == (None, None):
+    # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
+    if not params or set(params) <= {None}:
         if dsname:
             return 0, infotext, [(dsname, value)]
         return 0, infotext, []

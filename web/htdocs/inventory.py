@@ -45,15 +45,15 @@ from pathlib2 import Path
 
 def get_inventory_data(inventory_tree, tree_path):
     invdata = None
-    parsed_path, attributes_key = parse_tree_path(tree_path)
-    if attributes_key == []:
+    parsed_path, attribute_keys = parse_tree_path(tree_path)
+    if attribute_keys == []:
         numeration = inventory_tree.get_sub_numeration(parsed_path)
         if numeration is not None:
             invdata = numeration.get_child_data()
-    elif attributes_key:
+    elif attribute_keys:
         attributes =  inventory_tree.get_sub_attributes(parsed_path)
         if attributes is not None:
-            invdata = attributes.get_child_data().get(attributes_key)
+            invdata = attributes.get_child_data().get(attribute_keys)
     return invdata
 
 
@@ -67,13 +67,13 @@ def parse_tree_path(tree_path):
     # .software.packages:        (list) => path = ["software", "packages"],     key = []
     if tree_path.endswith(":"):
         path = tree_path[:-1].strip(".").split(".")
-        attributes_key = []
+        attribute_keys = []
     elif tree_path.endswith("."):
         path = tree_path[:-1].strip(".").split(".")
-        attributes_key = None
+        attribute_keys = None
     else:
         path = tree_path.strip(".").split(".")
-        attributes_key = path.pop(-1)
+        attribute_keys = [path.pop(-1)]
 
     parsed_path = []
     for part in path:
@@ -91,7 +91,7 @@ def parse_tree_path(tree_path):
                 pass
             finally:
                 parsed_path.append(part)
-    return parsed_path, attributes_key
+    return parsed_path, attribute_keys
 
 
 def sort_children(children):

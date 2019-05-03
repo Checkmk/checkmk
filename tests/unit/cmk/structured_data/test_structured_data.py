@@ -556,6 +556,42 @@ def test_structured_data_StructuredDataTree_filtered_tree(tree, paths, unavail):
         assert filtered.get_sub_container(path) is None
 
 
+@pytest.mark.parametrize("tree,paths,node_types,amount_if_entries", [
+    (tree_new_interfaces, [(['networking'], None)], [Container, Attributes], 3178),
+    (tree_new_interfaces, [(['networking'], [])], [Attributes], None),
+    (tree_new_interfaces, [
+        (['networking'], ['total_interfaces', 'total_ethernet_ports', 'available_ethernet_ports'])
+    ], [Attributes], None),
+    (tree_new_interfaces, [(['networking', 'interfaces'], None)], [Container], 3178),
+    (tree_new_interfaces, [(['networking', 'interfaces'], [])], [Container], 3178),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status'])], [Container], 326),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'FOOBAR'])], [Container],
+     326),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status'])],
+     [Container], 652),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status', 'FOOBAR'])
+                          ], [Container], 652),
+])
+def test_structured_data_StructuredDataTree_filtered_tree_networking(tree, paths, node_types,
+                                                                     amount_if_entries):
+    filtered = tree.get_filtered_tree(paths)
+    assert filtered.has_edge('networking')
+    assert not filtered.has_edge('hardware')
+    assert not filtered.has_edge('software')
+
+    children = filtered.get_sub_children(['networking'])
+    assert len(children) == len(node_types)
+    for child in children:
+        assert type(child) in node_types  # pylint: disable=unidiomatic-typecheck
+
+    interfaces = filtered.get_sub_numeration(['networking', 'interfaces'])
+    if Container in node_types:
+        assert bool(interfaces)
+        assert interfaces.count_entries() == amount_if_entries
+    else:
+        assert interfaces is None
+
+
 def test_structured_data_StructuredDataTree_building_tree():
     def plugin_dict():
         node = struct_tree.get_dict("level0_0.level1_dict.")

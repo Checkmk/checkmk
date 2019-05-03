@@ -3160,7 +3160,7 @@ def ajax_inv_render_tree():
     if struct_tree is None:
         html.show_error(_("No such inventory tree."))
 
-    parsed_path, attributes_key = inventory.parse_tree_path(invpath)
+    parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)
     else:

@@ -359,8 +359,12 @@ clean: $(addsuffix -clean,$(PACKAGES))
 # Only for development: install tarball below /
 xzf:
 	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
-	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
-	chmod 4775 $(OMD_ROOT)/bin/mkeventd_open514
+	chmod 750 $(OMD_ROOT)/lib/nagios/plugins/check_dhcp
+	setcap 'cap_net_raw,cap_net_bind_service=+ep' $(OMD_ROOT)/lib/nagios/plugins/check_dhcp
+	chmod 750 $(OMD_ROOT)/lib/nagios/plugins/check_icmp
+	setcap "cap_net_raw+ep" $(OMD_ROOT)/lib/nagios/plugins/check_icmp
+	chmod 750 $(OMD_ROOT)/bin/mkeventd_open514
+	setcap "cap_net_bind_service+ep" $(OMD_ROOT)/bin/mkeventd_open514
 	$(APACHE_CTL) -k graceful
 
 setup:

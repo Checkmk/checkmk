@@ -1,5 +1,6 @@
 DISTRO_CODE     = sles12
 OS_PACKAGES     =
+OS_PACKAGES    += libcap-progs # needed for setting special file permissions
 OS_PACKAGES    += cronie # needed for sites cron jobs
 OS_PACKAGES      += net-tools # traceroute is needed for Check_MK parent scan
 OS_PACKAGES    += apache2

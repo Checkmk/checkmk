@@ -37,6 +37,9 @@ enum EventClass {
 namespace cma::cfg {
 enum LogLevel { kLogBase = 0, kLogDebug = 1, kLogAll = 2 };
 
+constexpr int kBackupLogMaxCount = 5;
+constexpr size_t kBackupLogMaxSize = 8 * 1024 * 1024;
+
 constexpr int kDefaultLogLevel = kLogBase;
 
 // #TODO CONFIRM VALUE:

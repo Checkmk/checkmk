@@ -5,15 +5,14 @@
 #pragma once
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <strstream>
 
-#include "common/wtools.h"
-
 #include "common/cfg_info.h"
-#include "tools/_xlog.h"
-
+#include "common/wtools.h"
 #include "fmt/color.h"
 #include "fmt/format.h"
+#include "tools/_xlog.h"
 
 // User defined converter required to logging correctly data from wstring
 template <>
@@ -43,6 +42,16 @@ namespace XLOG::details {
     XLOG::LogWindowsEventWarn(2, "My Warning {}", "warning!");
     XLOG::LogWindowsEventInfo(3, "My Information {}", "info!");
 #endif
+
+// converts "filename", 0 into "filename" and "filename", N into "filename.N"
+std::string MakeBackupLogName(std::string_view filename,
+                              unsigned int index) noexcept;
+
+// internal engine to print text in file with optional backing up
+// thread safe(no race condition)
+void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
+                              unsigned int max_backup_count,
+                              std::string_view text) noexcept;
 
 // check status of duplication
 bool IsDuplicatedOnStdio();

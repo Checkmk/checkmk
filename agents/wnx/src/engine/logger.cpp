@@ -2,6 +2,10 @@
 
 #include "logger.h"
 
+#include <filesystem>
+
+#include "cfg.h"
+
 namespace XLOG {
 
 Emitter l(LogType::log);
@@ -152,8 +156,61 @@ static auto CalcLogParam(const xlog::LogParam &Param, int Modifications) {
     return std::make_tuple(directions, flags, prefix, marker, c);
 }
 
+namespace details {
+static std::mutex g_backup_lock_mutex;  // intentionally global
+constexpr unsigned int file_text_header_size = 24;
+
+std::string MakeBackupLogName(std::string_view filename,
+                              unsigned int index) noexcept {
+    std::string name;
+    if (filename.data()) name += filename;
+
+    if (index == 0) return name;
+    return name + "." + std::to_string(index);
+}
+
+constexpr unsigned int kMaxAllowedBackupCount = 32;
+constexpr size_t kMaxAllowedBackupSize = 1024 * 1024 * 256;
+
+void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
+                              unsigned int max_backup_count,
+                              std::string_view text) noexcept {
+    // sanity check
+    if (max_backup_count > kMaxAllowedBackupCount)
+        max_backup_count = kMaxAllowedBackupCount;
+
+    if (max_size > kMaxAllowedBackupSize) max_size = kMaxAllowedBackupSize;
+
+    namespace fs = std::filesystem;
+    std::lock_guard lk(g_backup_lock_mutex);
+
+    fs::path log_file(filename);
+
+    std::error_code ec;
+    auto size = fs::file_size(log_file, ec);
+    if (ec.value() != 0) size = 0;
+
+    if (size + text.size() + file_text_header_size > max_size) {
+        // required backup
+
+        // making chain of backups
+        for (auto i = max_backup_count; i > 0; --i) {
+            auto old_file = MakeBackupLogName(filename, i - 1);
+            auto new_file = MakeBackupLogName(filename, i);
+            fs::rename(old_file, new_file, ec);
+        }
+
+        // clean main file(may be required)
+        fs::remove(filename, ec);
+    }
+
+    xlog::internal_PrintStringFile(filename.data(), text.data());
+}
+}  // namespace details
+
 // output string in different directions
 void Emitter::postProcessAndPrint(const std::string &String) {
+    using namespace cma::cfg;
     using namespace xlog;
     if (!CalcEnabled(mods_, type_)) return;
 
@@ -182,10 +239,13 @@ void Emitter::postProcessAndPrint(const std::string &String) {
 
     // FILE
     if (directions & xlog::kFilePrint) {
-        if (lp.filename() && lp.filename()[0]) {
+        auto fname = lp.filename();
+        if (fname && fname[0]) {
             auto for_file =
                 xlog::formatString(flags, marker_ascii.c_str(), String.c_str());
-            xlog::internal_PrintStringFile(lp.filename(), for_file.c_str());
+
+            details::WriteToLogFileWithBackup(fname, GetBackupLogMaxSize(),
+                                              GetBackupLogMaxCount(), for_file);
         }
     }
 

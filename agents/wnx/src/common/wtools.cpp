@@ -379,11 +379,12 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
     XLOG::l.i("Damned handlers registered");
 
     try {
+        using namespace cma::cfg;
         // Tell SCM that the service is starting.
         setServiceStatus(SERVICE_START_PENDING);
 
-        cma::cfg::upgrade::UpgradeLegacy(false);
-        cma::cfg::cap::Install();
+        upgrade::UpgradeLegacy(upgrade::Force::no);
+        cap::Install();
 
         // Perform service-specific initialization.
         processor_->startService();

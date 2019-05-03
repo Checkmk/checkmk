@@ -459,7 +459,7 @@ int ExecUpgradeParam(bool Force) {
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::EnableDebugLog(true);
     XLOG::setup::EnableTraceLog(true);
-    UpgradeLegacy(Force);
+    UpgradeLegacy(Force ? Force::yes : Force::no);
     XLOG::l.i("End of!");
 
     return 0;

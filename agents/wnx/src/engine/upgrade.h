@@ -7,11 +7,9 @@
 #include <string>
 #include <string_view>
 
-#include "common/wtools.h"
-
-#include "logger.h"
-
 #include "cfg.h"
+#include "common/wtools.h"
+#include "logger.h"
 
 namespace cma::cfg::upgrade {
 constexpr std::string_view kBakeryMarker =
@@ -20,7 +18,8 @@ constexpr std::string_view kBakeryMarker =
 // Main API
 // ********************************
 // The only API used in Production
-bool UpgradeLegacy(bool ForceUpgrade = false);
+enum class Force { no, yes };
+bool UpgradeLegacy(Force force_upgrade = Force::no);
 
 // Intermediate API used in testing
 int CopyAllFolders(const std::filesystem::path& LegacyRoot,
@@ -67,8 +66,8 @@ bool FindStopDeactivateLegacyAgent();
 
 // Intermediate API used ONLY in testing
 // we will not start LWA again
-bool FindActivateStartLegacyAgent(
-    bool StartOhm = false);  // StartOhm only for testing!
+enum class AddAction { nothing, start_ohm };
+bool FindActivateStartLegacyAgent(AddAction action = AddAction::nothing);
 
 // Low Level API
 std::wstring FindLegacyAgent();
@@ -97,6 +96,9 @@ int CopyFolderRecursive(
     const std::function<bool(std::filesystem::path)>& Predicate) noexcept;
 
 bool RunDetachedProcess(const std::wstring& Name);
+namespace details {
+bool IsIgnoredFile(const std::filesystem::path& filename);
+}
 
 }  // namespace cma::cfg::upgrade
 

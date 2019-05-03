@@ -91,10 +91,11 @@ static void ServiceUsage(const std::wstring &Comment) {
         // second row
         kStopLegacyParam, kStartLegacyParam);
 
-    xlog::sendStringToStdio("To Upgrade Legacy Agent:\n", Colors::kPink);
+    xlog::sendStringToStdio("To Upgrade Legacy Agent(migration):\n",
+                            Colors::kPink);
     printf(
         "\t%s.exe %ls [force]\n"
-        "\tforce - optional parameter to force upgrading\n",
+        "\tforce - upgrading(migration) is forced\n",
         kServiceExeName,  // service name from th project definitions
 
         // first Row

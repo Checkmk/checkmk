@@ -8,6 +8,7 @@
 #include <string>
 
 #include "cvt.h"
+#include "glob_match.h"
 #include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_raii.h"
@@ -53,6 +54,42 @@ int CopyAllFolders(const std::filesystem::path& LegacyRoot,
     return count;
 }
 
+namespace details {
+
+constexpr const std::string_view ignored_exts[] = {".ini", ".exe", ".log",
+                                                   ".tmp"};
+
+constexpr const std::string_view ignored_names[] = {
+    "plugins.cap",
+};
+
+// single point entry to determine that file is ignored
+bool IsIgnoredFile(const std::filesystem::path& filename) {
+    using namespace cma::tools;
+
+    // check extension
+    auto extension = filename.extension();
+    auto extension_string = extension.u8string();
+    StringLower(extension_string);
+
+    for (auto ext : ignored_exts)
+        if (ext == extension_string) return true;
+
+    // check name
+    auto fname = filename.filename().u8string();
+    StringLower(fname);
+
+    for (auto name : ignored_names)
+        if (fname == name) return true;
+
+    // check mask
+    std::string mask = "uninstall_*.bat";
+    if (GlobMatch(mask, fname)) return true;
+
+    return false;
+}
+}  // namespace details
+
 // copies all files from root, exception is ini and exe
 // returns count of files copied
 int CopyRootFolder(const std::filesystem::path& LegacyRoot,
@@ -67,9 +104,11 @@ int CopyRootFolder(const std::filesystem::path& LegacyRoot,
         const auto& p = dirEntry.path();
         if (fs::is_directory(p, ec)) continue;
 
-        auto extension = p.extension();
-        if (IsEqual(extension.wstring(), L".ini")) continue;
-        if (IsEqual(extension.wstring(), L".exe")) continue;
+        if (details::IsIgnoredFile(p)) {
+            XLOG::l.i("File '{}' in root folder '{}' is ignored", p.u8string(),
+                      LegacyRoot.u8string());
+            continue;
+        }
 
         // Copy to the targetParentPath which we just created.
         fs::copy(p, ProgramData, fs::copy_options::overwrite_existing, ec);
@@ -440,6 +479,33 @@ int WaitForStatus(std::function<int(const std::wstring&)> StatusChecker,
     return status;
 }
 
+static void LogAndDisplayErrorMessage(int status) {
+    auto driver_body =
+        cma::cfg::details::FindServiceImagePath(L"winring0_1_2_0");
+
+    using namespace xlog::internal;
+    if (!driver_body.empty()) {
+        xlog::sendStringToStdio("Probably you have : ", Colors::kGreen);
+        XLOG::l.crit("Failed to stop kernel legacy driver winring0_1_2_0 [{}]",
+                     status);
+        return;
+    }
+
+    if (status == SERVICE_STOP_PENDING) {
+        XLOG::l.crit(
+            "Can't stop windows kernel driver 'winring0_1_2_0', integral part of Open Hardware Monitor\n"
+            "'winring0_1_2_0' registry entry is absent, but driver is running having 'SERVICE_STOP_PENDING' state\n"
+            "THIS IS ABNORMAL. You must REBOOT Windows. And repeat action.");
+        return;
+    }
+
+    // this may be ok
+    xlog::sendStringToStdio("This is just info: ", Colors::kGreen);
+    XLOG::l.w(
+        "Can't stop winring0_1_2_0 [{}], probably you have no 'Open Hardware Monitor' running.",
+        status);
+}
+
 bool FindStopDeactivateLegacyAgent() {
     XLOG::l.t("Find, stop and deactivate");
     if (!cma::tools::win::IsElevated()) {
@@ -482,32 +548,34 @@ bool FindStopDeactivateLegacyAgent() {
     StopWindowsService(L"winring0_1_2_0");
     status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                            SERVICE_STOPPED, 5000);
-    if (status != SERVICE_STOPPED) {
-        auto driver_body = details::FindServiceImagePath(L"winring0_1_2_0");
-        if (driver_body.empty()) {
-            if (status == SERVICE_STOP_PENDING) {
-                XLOG::l.crit(
-                    "Can't stop windows kernel driver 'winring0_1_2_0', integral part of Open Hardware Monitor\n"
-                    "'winring0_1_2_0' registry entry is absent, but driver is running having 'SERVICE_STOP_PENDING' state\n"
-                    "THIS IS ABNORMAL. You must REBOOT Windows. And repeat action.");
-            } else {
-                xlog::sendStringToStdio("This is not error, just info: ",
-                                        xlog::internal::Colors::kGreen);
-                XLOG::l.w(
-                    "Can't stop winring0_1_2_0, probably you have no 'Open Hardware Monitor' running.");
-            }
-        } else {
-            xlog::sendStringToStdio("Probably you have : ",
-                                    xlog::internal::Colors::kGreen);
-            XLOG::l.crit("Failed to stop kernel legacy driver winring0_1_2_0");
-        }
+    if (status == SERVICE_STOPPED) return true;
+
+    LogAndDisplayErrorMessage(status);
+
+    return false;
+}
+
+static bool RunOhm(const std::filesystem::path& lwa_path) noexcept {
+    namespace fs = std::filesystem;
+    fs::path ohm = lwa_path;
+    ohm /= "bin";
+    ohm /= "OpenHardwareMonitorCLI.exe";
+    std::error_code ec;
+    if (!fs::exists(ohm, ec)) {
+        XLOG::l.crit(
+            "OpenHardwareMonitor not installed,"
+            "please, add it to the Legacy Agent folder");
         return false;
     }
 
+    XLOG::l.t("Starting open hardware monitor...");
+    RunDetachedProcess(ohm.wstring());
+    WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0", SERVICE_RUNNING,
+                  5000);
     return true;
 }
 
-bool FindActivateStartLegacyAgent(bool StartOhm) {
+bool FindActivateStartLegacyAgent(AddAction action) {
     XLOG::l.t("Find, activate and start");
     namespace fs = std::filesystem;
     if (!cma::tools::win::IsElevated()) {
@@ -544,21 +612,8 @@ bool FindActivateStartLegacyAgent(bool StartOhm) {
         return false;
     }
 
-    if (StartOhm) {
-        fs::path ohm = path;
-        ohm /= "bin";
-        ohm /= "OpenHardwareMonitorCLI.exe";
-        std::error_code ec;
-        if (!fs::exists(ohm, ec))
-            XLOG::l.crit(
-                "OpenHardwareMonitor not installed, please, add it to the Legacy Agent folder");
-        else {
-            XLOG::l.t("Starting open hardware monitor...");
-            RunDetachedProcess(ohm.wstring());
-            WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
-                          SERVICE_RUNNING, 5000);
-        }
-    }
+    // mostly for test and security
+    if (action == AddAction::start_ohm) RunOhm(path);
 
     return true;
 }
@@ -630,24 +685,28 @@ bool CreateProtocolFile(std::filesystem::path ProtocolFile,
 }
 
 // The only API entry DIRECTLY used in production
-bool UpgradeLegacy(bool ForceUpdate) {
-    XLOG::l.i("Starting upgrade process...");
+bool UpgradeLegacy(Force force_upgrade) {
+    XLOG::l.i("Starting upgrade(migration) process...");
     if (!cma::tools::win::IsElevated()) {
         XLOG::l(
             "You have to be in elevated to use this function.\nPlease, run as Administrator");
         return false;
     }
-    if (ForceUpdate) {
-        xlog::sendStringToStdio("Update is forced by command line\n",
-                                xlog::internal::kYellow);
+
+    bool force = Force::yes == force_upgrade;
+
+    if (force) {
+        xlog::sendStringToStdio(
+            "Upgrade(migration) is forced by command line\n",
+            xlog::internal::kYellow);
     }
     namespace fs = std::filesystem;
     fs::path protocol_file = cma::cfg::GetRootDir();
     protocol_file /= cma::cfg::files::kUpgradeProtocol;
     std::error_code ec;
 
-    if (fs::exists(protocol_file, ec) && !ForceUpdate) {
-        XLOG::l.i("Protocol File {} exists, upgrade not required",
+    if (fs::exists(protocol_file, ec) && !force) {
+        XLOG::l.i("Protocol File '{}' exists, upgrade(migration) not required",
                   protocol_file.u8string());
         return false;
     }
@@ -656,9 +715,9 @@ bool UpgradeLegacy(bool ForceUpdate) {
     if (path.empty()) {
         XLOG::l.t("Legacy Agent not found Upgrade is not possible");
         return true;
-    } else {
-        XLOG::l.i("Legacy Agent is found in '{}'", wtools::ConvertToUTF8(path));
     }
+    XLOG::l.i("Legacy Agent is found in '{}'", wtools::ConvertToUTF8(path));
+
     auto success = FindStopDeactivateLegacyAgent();
     if (!success) {
         XLOG::l("Legacy Agent is not possible to stop");

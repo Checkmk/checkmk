@@ -6,15 +6,13 @@
 
 #include <filesystem>
 
+#include "cfg.h"
+#include "read_file.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-
-#include "cfg.h"
-#include "read_file.h"
 #include "upgrade.h"
-
-#include "test_tools.h"
 
 namespace cma::cfg::upgrade {
 
@@ -326,24 +324,27 @@ TEST(UpgradeTest, CopyFolders) {
     ASSERT_TRUE(!path.empty())
         << "Legacy Agent is absent. Either install it or simulate it";
 
-    auto p = path / "marker.tmp";
+    auto source_file = path / "marker.tmpx";
     {
-        std::ofstream ofs(p);
+        std::ofstream ofs(source_file);
 
-        ASSERT_TRUE(ofs) << "Can't open file " << p.u8string() << "error "
-                         << GetLastError() << "\n";
+        ASSERT_TRUE(ofs) << "Can't open file " << source_file.u8string()
+                         << "error " << GetLastError() << "\n";
         ofs << "@marker\n";
     }
     auto count_root = CopyRootFolder(path, cma::cfg::GetTempDir());
     EXPECT_GE(count_root, 1);
 
     fs::path target_file = cma::cfg::GetTempDir();
-    target_file /= "marker.tmp";
+    target_file /= "marker.tmpx";
     std::error_code ec;
     EXPECT_TRUE(fs::exists(target_file, ec));
 
     auto count = CopyAllFolders(path, cma::cfg::GetTempDir());
     EXPECT_GE(count, 5);
+
+    ON_OUT_OF_SCOPE(fs::remove(target_file, ec));
+    ON_OUT_OF_SCOPE(fs::remove(source_file, ec));
 
     tst::SafeCleanTempDir();
 }
@@ -365,6 +366,21 @@ TEST(UpgradeTest, CopyFiles) {
     tst::SafeCleanTempDir();
 }
 
+TEST(UpgradeTest, IgnoreApi) {
+    EXPECT_TRUE(details::IsIgnoredFile("adda/dsds.ini"));
+    EXPECT_TRUE(details::IsIgnoredFile("dsds.log"));
+    EXPECT_TRUE(details::IsIgnoredFile("adda/dsds.eXe"));
+    EXPECT_TRUE(details::IsIgnoredFile("adda/dsds.tmP"));
+    EXPECT_TRUE(details::IsIgnoredFile("uninstall_pluginS.BAT"));
+    EXPECT_TRUE(details::IsIgnoredFile("uninstall_xxx.BAT"));
+    EXPECT_FALSE(details::IsIgnoredFile("adda/dsds.CAP"));
+
+    EXPECT_TRUE(details::IsIgnoredFile("plugins.CAP"));
+
+    EXPECT_FALSE(details::IsIgnoredFile("aas.PY"));
+    EXPECT_FALSE(details::IsIgnoredFile("aasAA."));
+}
+
 TEST(UpgradeTest, TopLevelApi) {
     if (!cma::tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)
@@ -375,7 +391,7 @@ TEST(UpgradeTest, TopLevelApi) {
     wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
     StopWindowsService(L"winring0_1_2_0");
 
-    EXPECT_TRUE(FindActivateStartLegacyAgent(true));
+    EXPECT_TRUE(FindActivateStartLegacyAgent(AddAction::start_ohm));
     // sleep below is required to wait till check mk restarts ohm.
     // during restart registry entry may disappear
     tools::sleep(1000);

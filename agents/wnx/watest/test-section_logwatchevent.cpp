@@ -10,24 +10,11 @@
 #include "providers/logwatch_event.h"
 #include "providers/logwatch_event_details.h"
 #include "service_processor.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
 namespace cma::provider {
-class YamlLoader {
-public:
-    YamlLoader() {
-        using namespace cma::cfg;
-        std::error_code ec;
-        std::filesystem::remove(cma::cfg::GetBakeryFile(), ec);
-        cma::OnStart(cma::kTest);
-
-        auto yaml = GetLoadedConfig();
-        ProcessKnownConfigGroups();
-        SetupEnvironmentFromGroups();
-    }
-    ~YamlLoader() { OnStart(cma::kTest); }
-};
 
 static void LoadTestConfig(YAML::Node Node) {
     Node["logwatch"] = YAML::Load(
@@ -127,7 +114,7 @@ TEST(LogWatchEventTest, LoadFrom) {
 TEST(LogWatchEventTest, Config) {
     using namespace std;
     using namespace cma::cfg;
-    YamlLoader w;
+    tst::YamlLoader w;
     {
         auto enabled = GetVal(groups::kLogWatchEvent, vars::kEnabled, false);
         EXPECT_EQ(enabled, true);
@@ -270,7 +257,7 @@ TEST(LogWatchEventTest, ConfigStruct) {
         EXPECT_TRUE(lwe.level() == cma::cfg::EventLevels::kAll);
     }
 
-    YamlLoader w;
+    tst::YamlLoader w;
     {
         auto cfg = cma::cfg::GetLoadedConfig();
         LoadTestConfig(cfg);
@@ -332,7 +319,7 @@ TEST(LogWatchEventTest, ConfigLoad) {
     using namespace std;
     using namespace cma::cfg;
     using namespace cma::provider;
-    YamlLoader w;
+    tst::YamlLoader w;
 
     {
         auto cfg = cma::cfg::GetLoadedConfig();
@@ -572,7 +559,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
     using namespace std;
     using namespace cma::cfg;
     namespace fs = std::filesystem;
-    YamlLoader w;
+    tst::YamlLoader w;
     auto cfg = cma::cfg::GetLoadedConfig();
     LoadTestConfig(cfg);
 
@@ -716,7 +703,7 @@ TEST(LogWatchEventTest, TestNotSendAll) {
     namespace fs = std::filesystem;
 
     // we are loading special test config with more or less custom data
-    YamlLoader w;
+    tst::YamlLoader w;
     auto cfg = cma::cfg::GetLoadedConfig();
     LoadTestConfig(cfg);
 
@@ -743,7 +730,7 @@ TEST(LogWatchEventTest, TestNotSendAllVista) {
     namespace fs = std::filesystem;
 
     // we are loading special test config with more or less custom data
-    YamlLoader w;
+    tst::YamlLoader w;
     auto cfg = cma::cfg::GetLoadedConfig();
     LoadTestConfig(cfg);
 

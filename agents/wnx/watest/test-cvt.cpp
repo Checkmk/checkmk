@@ -5,23 +5,16 @@
 
 #include <filesystem>
 
+#include "cvt.h"
+#include "lwa/types.h"
+#include "providers/logwatch_event.h"
+#include "providers/mrpe.h"
+#include "read_file.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-
-#include "read_file.h"
 #include "yaml-cpp/yaml.h"
-
-#include "cvt.h"
-
-#include "read_file.h"
-
-#include "lwa/types.h"
-
-#include "providers/logwatch_event.h"
-#include "providers/mrpe.h"
-
-#include "test-tools.h"
 
 template <class T>
 std::string type_name() {

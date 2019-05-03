@@ -5,20 +5,15 @@
 
 #include <filesystem>
 
+#include "cap.h"
+#include "cfg.h"
+#include "lwa/types.h"
+#include "read_file.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-
-#include "read_file.h"
 #include "yaml-cpp/yaml.h"
-
-#include "cap.h"
-#include "cfg.h"
-
-#include "read_file.h"
-
-#include "lwa/types.h"
-#include "test-tools.h"
 
 namespace cma::cfg::cap {
 

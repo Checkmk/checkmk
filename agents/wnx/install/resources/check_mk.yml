@@ -185,12 +185,12 @@ fileinfo:
     path:
         - ''  # empty strings will be ignored
         - '--' # all string without "C:\" or "\\" at start will be ignored too for security reason
-        - 'c:\a\a' # generates missing| string
-        # - "c:\\Users\\Public\\*.log" # real string to process
-        - "this\\is\\not\\recommended\\" # double quoating uses escape sequences
+        # - 'c:\a\a' # generates missing| string
+        # - 'c:\Users\Public\*.log' # real string to process
+        # - "this\\is\\not\\recommended\\" # double quoating uses escape sequences
         # - 'c:\Users\Public\**\Desktop.ini' works, 8 files to control
         # - 'c:\Windows\Resources\**\aero\aero*.*' works too, you will get two files in 'c:\Windows\Resources\Themes\aero\'
-        - 'c:\dev\shared_public\*.*' # typical test folder, provided during development
+        # - 'c:\dev\shared_public\*.*' # typical test folder, provided during development
 
 logwatch:
     enabled: yes

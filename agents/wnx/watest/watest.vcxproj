@@ -280,6 +280,7 @@ check_watest.cmd watest
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="test_tools.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\extlibs\googletest\googletest\src\gtest-all.cc">
@@ -319,7 +320,6 @@ check_watest.cmd watest
     <ClCompile Include="test-service.cpp" />
     <ClCompile Include="test-skype.cpp" />
     <ClCompile Include="test-spool.cpp" />
-    <ClCompile Include="test-tools.cpp" />
     <ClCompile Include="test-upgrade.cpp" />
     <ClCompile Include="test-winperf.cpp" />
     <ClCompile Include="test-wtools.cpp" />
@@ -333,6 +333,7 @@ check_watest.cmd watest
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="test_tools.cpp" />
     <ClCompile Include="watest.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -8,6 +8,21 @@
 #include "cfg.h"
 
 namespace tst {
+class YamlLoader {
+public:
+    YamlLoader() {
+        using namespace cma::cfg;
+        std::error_code ec;
+        std::filesystem::remove(cma::cfg::GetBakeryFile(), ec);
+        cma::OnStart(cma::kTest);
+
+        auto yaml = GetLoadedConfig();
+        ProcessKnownConfigGroups();
+        SetupEnvironmentFromGroups();
+    }
+    ~YamlLoader() { OnStart(cma::kTest); }
+};
+
 inline void CreateFile(std::filesystem::path Path, std::string Content) {
     std::ofstream ofs(Path);
 

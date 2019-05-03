@@ -3633,47 +3633,47 @@ class ConfigCache(object):
         except KeyError:
             pass
 
-        # if we have just a list of strings just take it as list of hostnames
         if conf and isinstance(conf[0], str):
-            result = hostname in conf
-            cache[cache_id] = result
-        else:
-            for entry in conf:
-                actual_host_tags = self.tag_list_of_host(hostname)
-                entry, rule_options = get_rule_options(entry)
-                if rule_options.get("disabled"):
-                    continue
+            raise NotImplementedError("Unsupported ruleset found: %s. Please "
+                                      "remove the configuration in case you don't need it "
+                                      "anymore. Otherwise contact the checkMK team." % conf)
 
-                try:
-                    # Negation via 'NEGATE'
-                    if entry[0] == NEGATE:
-                        entry = entry[1:]
-                        negate = True
-                    else:
-                        negate = False
-                    # entry should be one-tuple or two-tuple. Tuple's elements are
-                    # lists of strings. User might forget comma in one tuple. Then the
-                    # entry is the list itself.
-                    if isinstance(entry, list):
-                        hostlist = entry
+        for entry in conf:
+            actual_host_tags = self.tag_list_of_host(hostname)
+            entry, rule_options = get_rule_options(entry)
+            if rule_options.get("disabled"):
+                continue
+
+            try:
+                # Negation via 'NEGATE'
+                if entry[0] == NEGATE:
+                    entry = entry[1:]
+                    negate = True
+                else:
+                    negate = False
+                # entry should be one-tuple or two-tuple. Tuple's elements are
+                # lists of strings. User might forget comma in one tuple. Then the
+                # entry is the list itself.
+                if isinstance(entry, list):
+                    hostlist = entry
+                    tags = []
+                else:
+                    if len(entry) == 1:  # 1-Tuple with list of hosts
+                        hostlist = entry[0]
                         tags = []
                     else:
-                        if len(entry) == 1:  # 1-Tuple with list of hosts
-                            hostlist = entry[0]
-                            tags = []
-                        else:
-                            tags, hostlist = entry
+                        tags, hostlist = entry
 
-                    if hosttags_match_taglist(actual_host_tags, tags) and \
-                           in_extraconf_hostlist(hostlist, hostname):
-                        cache[cache_id] = not negate
-                        break
-                except:
-                    # TODO: Fix this too generic catching (+ bad error message)
-                    raise MKGeneralException("Invalid entry '%r' in host configuration list: "
-                                             "must be tuple with 1 or 2 entries" % (entry,))
-            else:
-                cache[cache_id] = False
+                if hosttags_match_taglist(actual_host_tags, tags) and \
+                       in_extraconf_hostlist(hostlist, hostname):
+                    cache[cache_id] = not negate
+                    break
+            except:
+                # TODO: Fix this too generic catching (+ bad error message)
+                raise MKGeneralException("Invalid entry '%r' in host configuration list: "
+                                         "must be tuple with 1 or 2 entries" % (entry,))
+        else:
+            cache[cache_id] = False
 
         return cache[cache_id]
 

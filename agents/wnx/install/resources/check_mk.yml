@@ -137,8 +137,9 @@ winperf:
     counters:
         - 234: phydisk
         - 510: if
-        - 638: tcp_conn
-        - Terminal Services: ts_sessions
+        - 238: processor
+        #- 638: tcp_conn
+        #- Terminal Services: ts_sessions
 
 logfiles:
     enabled: no

@@ -10493,8 +10493,7 @@ class ModeEditSiteGlobals(ModeSites, ModeGlobalSettings):
 
 
     def title(self):
-        return _("Edit site specific global settings of %s") % \
-               html.render_tt(self._site_id)
+        return _("Edit site specific global settings of %s") % self._site_id
 
 
     def buttons(self):

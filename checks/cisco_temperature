@@ -347,98 +347,16 @@ def inventory_cisco_temperature_dom(parsed):
         yield item, {}
 
 
-def _determine_all_levels(dlh_upper, dlh_lower, user_levels, dev_levels):
-    """
-    Backend-specific generic determintation of levels dependent on the device
-    handling configuration, the user and device levels. The returned levels
-    are conform to the levels expected by the generic check_levels() function.
-
-    dlh_upper/lower:
-    - "no":         Sets user_levels to None.
-    - "usr":        Uses user_levels, ignores dev_levels.
-    - "dev":        Uses dev_levels, ignores usr_levels.
-    - "devdefault": Uses device's upper/lower_levels if present,
-    - "usrdefault": Uses user upper/lower_levels if present, otherwise device's_upper/lower_levels.
-    usr_levels:     Tuple[warn_upper, crit_upper, warn_lower, crit_lower]
-    dev_levels:     Tuple[warn_upper, crit_upper, warn_lower, crit_lower]
-
-    In case the user_levels or dev_levels are prefered over the other choice
-    dependent on the dlh selection ("usrdefault", "devdefault") but only upper or lower
-    levels defined the overall levels are merged:
-
-    E.g. with dlh "usrdefault", user_levels (None, None, -1.0, -2.0) and
-    dev_levels (-1.3, 1.699, -7.3, -11.301) are merged into (-1.3, 1.699, -1.0, -2.0).
-
-    Raises ValueError in case of unsupported value passed to dlh_upper/lower.
-    """
-
-    def _determine_levels(dlh, user_levels, dev_levels):
-        """
-        Same as _determine_all_levels() but for upper or lower levels only.
-
-        dlh: Same as in _determine_all_levels() but for upper or lower levels only.
-        user_levels: Tuple[warn, crit]
-        device_levels: Tuple[warn, crit]
-        """
-        if dlh not in ("no", "usr", "dev", "usrdefault", "devdefault"):
-            raise ValueError("Invalid value for dlh %s" % dlh)
-        if not isinstance(user_levels, tuple):
-            raise TypeError("Invalid type for user_levels %s" % type(user_levels))
-        if len(user_levels) != 2:
-            raise TypeError("user_levels supports 2-Tuple only but is %s" % type(user_levels))
-        if not isinstance(dev_levels, tuple):
-            raise TypeError("Invalid type for dev_levels %s" % type(dev_levels))
-        if len(dev_levels) != 2:
-            raise TypeError("user_levels supports 2-Tuple only but is %s" % type(dev_levels))
-        if dlh == "usr":
-            levels = user_levels
-        elif dlh == "dev":
-            levels = dev_levels
-        else:
-            if dev_levels is None:
-                levels = (None, None)
-            if dlh == "devdefault":
-                levels = tuple(x if x is not None else y for x, y in zip(dev_levels, user_levels))
-            elif dlh == "usrdefault":
-                levels = tuple(y if y is not None else x for x, y in zip(dev_levels, user_levels))
-            else:  # "no"
-                levels = (None, None)
-        return levels
-
-    upper_levels = _determine_levels(dlh_upper, user_levels[0:2], dev_levels[0:2])
-    lower_levels = _determine_levels(dlh_lower, user_levels[2:4], dev_levels[2:4])
-
-    levels = upper_levels + lower_levels
-
-    if levels == (None, None, None, None):
-        levels = None  # for check_levels() compatibility, no checking
-    return levels
+def _determine_levels(user_levels, device_levels):
+    if isinstance(user_levels, tuple):
+        return user_levels
+    elif user_levels:
+        return device_levels
+    return (None, None)
 
 
 def check_cisco_temperature_dom(item, params, parsed):
     # TODO perf, precision, severity, etc.
-
-    def _get_device_level_handling_and_user_levels(levels):
-        """
-        Maps WATO UI specific levels into generically manageable information.
-
-        levels: upper or lower user levels
-         - False: set device handling indicator to "no checking", set user_levels to Tuple[None, None]
-         - True: set device handling indicator to "use device levels", set user_levels to Tuple[None, None]
-         - Tuple[warn, crit]: upper or lower user levels
-
-        Returns: device level handling indicator and user levels as Tuple["no"/"dev"/"usr", 2-Tuple[]]
-
-        Raises TypeError in case levels types are not valid.
-        """
-        if isinstance(levels, tuple) and len(levels) == 2 and all(
-                isinstance(x, float) for x in levels):
-            return "usr", levels
-        elif levels is True:
-            return "dev", (None, None)
-        elif levels is False:
-            return "no", (None, None)
-        raise TypeError("levels does only accept Bool and 2-Tuple but is %s" % type(levels))
 
     data = parsed.get('14', {}).get(item, {})
     reading = data.get('reading')
@@ -449,17 +367,13 @@ def check_cisco_temperature_dom(item, params, parsed):
     state, state_readable = data['dev_state']
     yield state, 'Status: %s' % state_readable
 
-    # Map WATO configuration of levels to check_levels() compatible tuple.
-    # Default value in case of missing WATO config is use device levels.
-    upper_levels = params.get("power_levels_upper", True)
-    dlh_upper, user_levels_upper = _get_device_level_handling_and_user_levels(upper_levels)
-    lower_levels = params.get("power_levels_lower", True)
-    dlh_lower, user_levels_lower = _get_device_level_handling_and_user_levels(lower_levels)
-
-    user_levels = user_levels_upper + user_levels_lower
     device_levels = data.get('dev_levels', (None, None, None, None))
 
-    levels = _determine_all_levels(dlh_upper, dlh_lower, user_levels, device_levels)
+    # Map WATO configuration of levels to check_levels() compatible tuple.
+    # Default value in case of missing WATO config is use device levels.
+    levels = (_determine_levels(params.get("power_levels_upper", True), device_levels[0:2]) +
+              _determine_levels(params.get("power_levels_lower", True), device_levels[2:4]))
+
     if "Transmit" in data["descr"]:
         dsname = "output_signal_power_dbm"
     elif "Receive" in data["descr"]:

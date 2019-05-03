@@ -608,15 +608,14 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
 
         return metrics
 
-    def get_metrics(self, resource, err):
+    # TODO: adding the metrics as a side effect is not good.
+    #       I'll get the caching right, then change this back. (mo)
+    def collect_metrics(self, resource, err):
         metric_params = METRICS_SELECTED.get(resource.info["type"], [])
 
-        metrics = []
         for metricnames, interval, aggregation, filter_ in metric_params:
-            metrics += self._fetch_specific_metrics(resource, metricnames, interval, aggregation,
-                                                    filter_, err)
-
-        return metrics
+            resource.metrics += self._fetch_specific_metrics(resource, metricnames, interval,
+                                                             aggregation, filter_, err)
 
 
 def process_resource(args):
@@ -625,8 +624,7 @@ def process_resource(args):
     client.process_specific(resource)
 
     err = IssueCollecter()  # pass this to methods to collect issues
-    for metric in client.get_metrics(resource, err):
-        resource.metrics.append(metric)
+    client.collect_metrics(resource, err)
 
     agent_info_section = AzureSection('agent_info')
     agent_info_section.add(('remaining-reads', client.remaining_reads))

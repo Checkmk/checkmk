@@ -23,7 +23,7 @@ isort = "*"
 pdbpp = "*"
 freezegun = "*"
 # We have to use a snapshot, a version which works for us has not been released yet. :-/
-compiledb = {file = "http://nexus.lan.tribe29.com/repository/archives/compiledb-1604e14.tar.gz"}
+compiledb = {path = "./omd/packages/python-modules/src/compiledb-1604e14.tar.gz"}
 
 [packages]
 setuptools_scm = "==3.1.0"

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9efcaf0f8f7170fc275250fcf3e68dbc34480276627ba78d9de6528ef880d554"
+            "sha256": "db23de596318955f08951a87dca949d06ee2387f1aecfbc2903377c576fa5f6b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1054,7 +1054,7 @@
             "version": "==3.0.4"
         },
         "compiledb": {
-            "file": "http://nexus.lan.tribe29.com/repository/archives/compiledb-1604e14.tar.gz"
+            "path": "./omd/packages/python-modules/src/compiledb-1604e14.tar.gz"
         },
         "configparser": {
             "hashes": [
@@ -1156,7 +1156,7 @@
                 "sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca",
                 "sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50"
             ],
-            "markers": "python_version < '3.3'",
+            "markers": "python_version < '3.0'",
             "version": "==1.0.2"
         },
         "futures": {
@@ -1199,11 +1199,11 @@
         },
         "isort": {
             "hashes": [
-                "sha256:1349c6f7c2a0f7539f5f2ace51a9a8e4a37086ce4de6f78f5f53fb041d0a3cd5",
-                "sha256:f09911f6eb114e5592abe635aded8bf3d2c3144ebcfcaf81ee32e7af7b7d1870"
+                "sha256:01cb7e1ca5e6c5b3f235f0385057f70558b70d2f00320208825fa62887292f43",
+                "sha256:268067462aed7eb2a1e237fcb287852f22077de3fb07964e87e00f829eea2d1a"
             ],
             "index": "pypi",
-            "version": "==4.3.18"
+            "version": "==4.3.17"
         },
         "lazy-object-proxy": {
             "hashes": [
@@ -1280,11 +1280,11 @@
         },
         "mock": {
             "hashes": [
-                "sha256:5eda46efb363128828d6fd2bf8d16f6ebb66f5b543b9f7f8f4eb224c5cb503fe",
-                "sha256:d659f8ef8810ff4c3f8f973d113a05d291a08ab0f7ed17bd60887983b93a0f9a"
+                "sha256:5ce3c71c5545b472da17b72268978914d0252980348636840bd34a00b5cc96c1",
+                "sha256:b158b6df76edd239b8208d481dc46b6afd45a846b7812ff0ce58971cf5bc8bba"
             ],
             "markers": "python_version < '3.0'",
-            "version": "==3.0.3"
+            "version": "==2.0.0"
         },
         "mockldap": {
             "hashes": [

@@ -495,7 +495,7 @@ class AzureComputeClient(object):
             vmach.piggytargets.append(vmach.info["name"])
 
 
-class AzureClient(object):  # pylint: disable=too-many-instance-attributes
+class AzureClient(object):
 
     SPECIFIC_CLIENTS = {
         'Microsoft.Compute/virtualMachines': AzureComputeClient,
@@ -504,7 +504,6 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
     def __init__(self, args):
         super(AzureClient, self).__init__()
         self.args = args
-        self.remaining_reads = "unknown (no metrics fetched)"
 
         self._creds = ServicePrincipalCredentials(
             client_id=args.client, secret=args.secret, tenant=args.tenant)
@@ -514,7 +513,6 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         self._resource_client = ResourceManagementClient(self._creds, self.args.subscription)
 
         self.specific_clients = {}
-        self.timespans = self._get_timespans()
         self._cache = {}
 
     def init_specific(self, resources):
@@ -543,6 +541,15 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
             self._cache["resources"] = map(AzureResource, raw_resources)
         return self._cache["resources"]
 
+
+class MetricsCollecter(object):
+    def __init__(self, resource, debug=False):
+        super(MetricsCollecter, self).__init__()
+        self.debug = debug
+        self.resource = resource
+        self.remaining_reads = "unknown (no metrics fetched)"
+        self.timespans = self._get_timespans()
+
     @staticmethod
     def _get_timespans(time_end=datetime.datetime.utcnow()):
         """compute timespans dict"""
@@ -558,11 +565,12 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
             "PT1H": interval(hours=3),
         }
 
-    def _metric_api_call(self, rid, timespan, interval, metric, aggregation, filter_):
+    def _metric_api_call(self, monitor_client, timespan, interval, metric, aggregation, filter_):
+        rid = self.resource.info['id']
         LOG.debug(
             "metrics.list(%r, timespan=%r, interval=%r, metric=%r, aggregation=%r,"
             " filter=%r, raw=True)", rid, timespan, interval, metric, aggregation, filter_)
-        raw = self.monitor_client.metrics.list(
+        raw = monitor_client.metrics.list(
             rid,
             timespan=timespan,
             interval=interval,
@@ -577,17 +585,18 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         raw_metrics = list(raw.output.value)
         return raw.response, raw_metrics
 
-    def _fetch_specific_metrics(self, resource, metricnames, interval, aggregation, filter_, err):
+    def _fetch_specific_metrics(self, monitor_client, metricnames, interval, aggregation, filter_,
+                                err):
         if metricnames.count(',') >= 20:
             raise ValueError("Azure API won't have requests with more than 20 metrics!")
 
-        rid = resource.info["id"]
+        rid = self.resource.info["id"]
         timespan = self.timespans[interval]
 
         try:
-            response, raw_metrics = self._metric_api_call(rid, timespan, interval, metricnames,
-                                                          aggregation, filter_)
-        except () if self.args.debug else ErrorResponseException as exc:
+            response, raw_metrics = self._metric_api_call(monitor_client, timespan, interval,
+                                                          metricnames, aggregation, filter_)
+        except () if self.debug else ErrorResponseException as exc:
             err.add("exception", rid, exc.message)
             LOG.exception(exc)
             return []
@@ -607,12 +616,12 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
 
     # TODO: adding the metrics as a side effect is not good.
     #       I'll get the caching right, then change this back. (mo)
-    def collect_metrics(self, resource, err):
-        metric_params = METRICS_SELECTED.get(resource.info["type"], [])
+    def collect_metrics(self, monitor_client, err):
+        metric_params = METRICS_SELECTED.get(self.resource.info["type"], [])
 
         for metricnames, interval, aggregation, filter_ in metric_params:
-            resource.metrics += self._fetch_specific_metrics(resource, metricnames, interval,
-                                                             aggregation, filter_, err)
+            self.resource.metrics += self._fetch_specific_metrics(
+                monitor_client, metricnames, interval, aggregation, filter_, err)
 
 
 def process_resource(args):
@@ -621,10 +630,12 @@ def process_resource(args):
     client.process_specific(resource)
 
     err = IssueCollecter()  # pass this to methods to collect issues
-    client.collect_metrics(resource, err)
+
+    metrics_collecter = MetricsCollecter(resource, debug=client.args.debug)
+    metrics_collecter.collect_metrics(client.monitor_client, err)
 
     agent_info_section = AzureSection('agent_info')
-    agent_info_section.add(('remaining-reads', client.remaining_reads))
+    agent_info_section.add(('remaining-reads', metrics_collecter.remaining_reads))
     agent_info_section.add(err.dumpinfo())
 
     sections = [agent_info_section]

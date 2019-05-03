@@ -10,16 +10,13 @@
 #include <future>
 #include <string_view>
 
-#include "common/cfg_info.h"
-
-#include "read_file.h"
-
 #include "cfg.h"
 #include "cfg_details.h"
-
 #include "cma_core.h"
-
+#include "common/cfg_info.h"
 #include "providers/mrpe.h"
+#include "read_file.h"
+#include "test_tools.h"
 
 /*
 Typic output:
@@ -31,9 +28,9 @@ Codepage:        437 (chcp.com) sk 1 Geben Sie das Kennwort fuer "sk" ein:
 
 namespace cma::provider {  // to become friendly for wtools classes
 
-class YamlLoader {
+class YamlLoaderMrpe {
 public:
-    YamlLoader() {
+    YamlLoaderMrpe() {
         using namespace cma::cfg;
         std::error_code ec;
         std::filesystem::remove(cma::cfg::GetBakeryFile(), ec);
@@ -49,11 +46,11 @@ public:
         ProcessKnownConfigGroups();
         SetupEnvironmentFromGroups();
     }
-    ~YamlLoader() { OnStart(cma::kTest); }
+    ~YamlLoaderMrpe() { OnStart(cma::kTest); }
 };
 
 TEST(SectionProviderMrpe, Construction) {
-    YamlLoader w;
+    YamlLoaderMrpe w;
     using namespace cma::cfg;
     EXPECT_TRUE(cma::cfg::groups::global.allowedSection(groups::kMrpe));
     MrpeProvider mrpe;
@@ -85,7 +82,7 @@ void replaceYamlSeq(const std::string Group, const std::string SeqName,
 }
 
 TEST(SectionProviderMrpe, SmallApi) {
-    YamlLoader w;
+    YamlLoaderMrpe w;
     std::string s = "a\rb\n\n";
     FixCrCnForMrpe(s);
     EXPECT_EQ(s, "a b\1\1");
@@ -101,7 +98,7 @@ TEST(SectionProviderMrpe, SmallApi) {
 }
 
 TEST(SectionProviderMrpe, ConfigLoad) {
-    YamlLoader w;
+    YamlLoaderMrpe w;
     using namespace cma::cfg;
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
@@ -115,7 +112,7 @@ TEST(SectionProviderMrpe, ConfigLoad) {
 
         ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
         auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
-        ASSERT_EQ(entries.size(), 3)
+        ASSERT_EQ(entries.size(), 2)
             << "check that yml is ok";  // include and check
     }
 
@@ -149,8 +146,23 @@ TEST(SectionProviderMrpe, ConfigLoad) {
     EXPECT_EQ(mrpe.entries_.size(), 3);
 }  // namespace cma::provider
 
+TEST(SectionProviderMrpe, YmlCheck) {
+    using namespace cma::cfg;
+    tst::YamlLoader w;
+    auto cfg = cma::cfg::GetLoadedConfig();
+
+    auto mrpe_node = cfg[groups::kMrpe];
+    ASSERT_TRUE(mrpe_node.IsDefined());
+    ASSERT_TRUE(mrpe_node.IsMap());
+
+    auto enabled = GetVal(groups::kMrpe, vars::kEnabled, false);
+    EXPECT_TRUE(enabled);
+    auto paths = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
+    EXPECT_EQ(paths.size(), 2);
+}
+
 TEST(SectionProviderMrpe, Run) {
-    YamlLoader w;
+    YamlLoaderMrpe w;
     using namespace cma::cfg;
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
@@ -164,7 +176,7 @@ TEST(SectionProviderMrpe, Run) {
 
         ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
         auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
-        ASSERT_EQ(entries.size(), 3)
+        ASSERT_EQ(entries.size(), 2)
             << "check that yml is ok";  // include and check
     }
 

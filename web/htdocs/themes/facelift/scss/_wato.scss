@@ -734,33 +734,6 @@ form#form_timeperiod td.vlof_content {
 
 /* Value editor */
 /* TODO: Reproduce this html element */
-.wato table.data.globalvars {
-  td {
-    vertical-align: top;
-    }
-
-  /* TODO: Reproduce this html element */
-  img.iconbutton {
-    width: 60px;
-    height: 16px;
-  }
-}
-
-.wato div.globalvars .toggle_switch a,
-.wato div.globalvars .toggle_switch body.main .popup_menu span,
-body.main .popup_menu .wato div.globalvars .toggle_switch span {
-  height: 16px;
-  font-size: 8px;
-  font-weight: $theme-font-weight-bold;
-  line-height: 16px;
-  letter-spacing: $theme-letter-spacing-table;
-  text-transform: uppercase;
-  border: none;
-  border-radius: 8px;
-  box-shadow: none;
-}
-
-/* TODO: Reproduce this html element */
 .wato pre.ve_textarea {
   padding: 0;
   margin: 0;
@@ -937,200 +910,228 @@ div.varname {
 }
 
 /* page "global settings*/
-.wato div.globalvars a {
+.wato div.globalvars {
+  a {
+    color: #000;
     text-decoration: none;
-    color: black;
-}
 
-.wato div.globalvars a:hover {
-    text-decoration: underline;
-}
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 
-.wato div.globalvars td.simple a.modified,
-.wato div.globalvars td.simple div.toggle_switch_container.modified,
-.wato div.globalvars td.content a.modified > table {
-    border-radius: 5px 5px 5px 5px;
-    border: 1px solid #cdf;
-    box-shadow: 3px 3px 5px #eee inset;
+  td.simple a.modified,
+  td.simple div.toggle_switch_container.modified,
+  td.content a.modified > table {
+    padding: 1px 4px 2px;
     margin-left: -4px;
-    padding: 1px 4px 2px 4px;
-}
+    border: 1px solid #cdf;
+    border-radius: 5px;
+    box-shadow: 3px 3px 5px #eee inset;
+  }
 
-.wato div.globalvars td.simple a.modified.globally,
-.wato div.globalvars td.simple div.toggle_switch_container.modified.globally,
-.wato div.globalvars td.content a.modified.globally > table {
+  td.simple a.modified.globally,
+  td.simple div.toggle_switch_container.modified.globally,
+  td.content a.modified.globally > table {
     box-shadow: 3px 3px 5px #8bc7e5 inset;
-}
+  }
 
-.wato div.globalvars td.simple div.toggle_switch_container {
+  td.simple div.toggle_switch_container {
     width: 56px;
-}
+  }
 
-/* TODO: Reproduce this html class "vs_dict_text" */
-.wato div.globalvars a.modified table.vs_dict_text {
+  /* TODO: Reproduce this html class "vs_dict_text" */
+  a.modified table.vs_dict_text {
     border-collapse: separate;
-}
+  }
 
-.wato div.globalvars div.title a.modified {
-    box-shadow: none;
+  div.title a.modified {
     border: none;
-}
+    box-shadow: none;
+  }
 
-/* TODO: Reproduce this html element */
-.wato div.globalvars td.content img.iconbutton {
+  /* TODO: Reproduce this html element */
+  td.content img.iconbutton {
     width: 60px;
     height: 16px;
-}
+  }
 
-.wato div.globalvars td.legend {
-    padding-top: 0px;
+  td.legend {
     width: 320px;
+    padding-top: 0;
+
+    div.title {
+      max-width: 284px;
+    }
+  }
 }
 
-.wato div.globalvars td.legend div.title {
-    max-width: 284px;
+.wato div.globalvars .toggle_switch a,
+.wato div.globalvars .toggle_switch body.main .popup_menu span,
+body.main .popup_menu .wato div.globalvars .toggle_switch span {
+  height: 16px;
+  font-size: 8px;
+  font-weight: $theme-font-weight-bold;
+  line-height: 16px;
+  letter-spacing: $theme-letter-spacing-table;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 8px;
+  box-shadow: none;
 }
 
-/* TODO: Reproduce these table.data.globalvars html elements */
+
 /* Table in page "Global variables" */
+/* TODO: Reproduce these table.data.globalvars html elements */
 .wato table.data.globalvars {
-    width: 100%;
-}
+  width: 100%;
 
-.wato table.data.globalvars td.title {
-    width: 430px;
-}
+  td {
+    vertical-align: top;
 
-.wato table.data.globalvars td.varname {
-    width: 300px;
+    &.title {
+      width: 430px;
+    }
+
+    &.varname {
+      width: 300px;
+    }
+  }
+
+  img.iconbutton {
+    width: 60px;
+    height: 16px;
+  }
 }
 
 /* activation */
-
 .wato table.data.activation a.disabled {
-    pointer-events: none;
-}
-
-.wato table.changes tr.foreign.not_permitted td {
-    color: #f00;
+  pointer-events: none;
 }
 
 .wato table.changes {
-    width: 100%;
+  width: 100%;
+
+  tr.foreign.not_permitted td {
+    color: #f00;
+  }
 }
 
 /* TODO: Reproduce this html element */
 .wato table.data div.act_success img {
-    width: 18px;
-    height: 18px;
-    vertical-align: middle;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
 }
 
 /* Replication */
 .wato table.data td.repprogress {
-    width: 160px;
-    position: relative;
-    padding: 0;
-    margin: 0;
+  position: relative;
+  width: 160px;
+  padding: 0;
+  margin: 0;
 }
 
-.wato td.repprogress div.msg {
+.wato td.repprogress {
+  div.msg {
     position: absolute;
-    z-index: 20;
-    width: 160px;
-    text-align: center;
     top: 6px;
     left: 0;
+    z-index: 20;
+    width: 160px;
     height: 16px;
-}
+    text-align: center;
+  }
 
-.wato td.repprogress div.progress {
+  div.progress {
     position: absolute;
+    top: 4px;
     left: 0;
     z-index: 0;
-    top: 4px;
     height: 24px;
-    border-radius: $theme-border-radius;
-    box-sizing: border-box;
-    background: $theme-color-state-6-background;
     padding-top: 10px;
-    font-size: 8pt;
-    box-shadow: none;
+    font-size: 11px;
     color: $theme-color-black;
+    background: $theme-color-state-6-background;
     border: 1px solid $theme-color-nuance-17;
+    border-radius: $theme-border-radius;
+    box-shadow: none;
+    box-sizing: border-box;
+
+    &.state_success {
+      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
+      background: $theme-color-state-success-background;
+      border-color: $theme-color-state-success-border;
+    }
+
+    &.state_error {
+      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
+      background: $theme-color-state-2-background;
+      border-color: $theme-color-state-2-border;
+    }
+
+    &.state_warning {
+      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
+      background: $theme-color-main;
+      border-color: $theme-color-state-warning-border;
+    }
+  }
 }
 
-.wato td.repprogress div.progress.state_success {
-  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
-  background: $theme-color-state-success-background;
-  border-color: $theme-color-state-success-border
-}
-
-
-.wato td.repprogress div.progress.state_error {
-  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
-  background: $theme-color-state-2-background;
-  border-color: $theme-color-state-2-border
-}
-
-.wato td.repprogress div.progress.state_warning {
-  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
-  background: $theme-color-main;
-  border-color: $theme-color-state-warning-border
-}
-
+/* TODO: Either remove this style or remove all repprogress styles from above */
 .wato td.details,
 .wato th.header_details,
 .wato td.repprogress,
 .wato th.header_repprogress {
-    display: none;
+  display: none;
 }
 
 .wato td.tag-ellipsis {
-    max-width: 300px;
+  max-width: 300px;
 }
 
 /* TODO: Reproduce this html element */
 .wato td#repmsg_local {
-    width: 280px;
+  width: 280px;
 }
 
 table.data tr.notification_context table {
-    margin: 5px;
-    box-shadow: none;
-    border: 1px solid $theme-color-table-border;
-}
+  margin: 5px;
+  border: 1px solid $theme-color-table-border;
+  box-shadow: none;
 
-table.data tr.notification_context table th,
-table.data tr.notification_context table td {
+  th, td {
     font-family: monospace;
-}
+  }
 
-table.data tr.notification_context table th {
-    background-color: whitesmoke;
-    border: 1px solid $theme-color-table-border;
+  th {
     padding: 2px 4px;
     color: $theme-color-text;
-}
+    background-color: #f5f5f5;
+    border: 1px solid $theme-color-table-border;
+  }
 
-table.data tr.notification_context table td {
+  td {
+    padding: 2px 4px;
     background-color: $theme-color-table-background;
     border: 1px solid $theme-color-table-border;
-    padding: 2px 4px;
+  }
 }
 
 /* TODO: Reproduce this dcd_log_entries html class */
-table.data tr.data.dcd_log_entries > td {
+table.data tr.data.dcd_log_entries {
+  > td {
     font-family: monospace, sans-serif;
-    background-color: #000000;
-    color: #ffffff;
-}
+    color: #fff;
+    background-color: #000;
+  }
 
-table.data tr.data.dcd_log_entries pre {
-    overflow-y: scroll;
-    resize:both;
+  pre {
     max-height: 300px;
+    overflow-y: scroll;
     text-overflow: ellipsis;
+    resize: both;
+  }
 }
 
 ///*-------------------------------------------------------------------------.

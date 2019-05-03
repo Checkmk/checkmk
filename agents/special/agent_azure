@@ -509,28 +509,13 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         self._creds = ServicePrincipalCredentials(
             client_id=args.client, secret=args.secret, tenant=args.tenant)
         # azure-api-call
-        self._monitor_client = MonitorManagementClient(self._creds, self.args.subscription)
+        self.monitor_client = MonitorManagementClient(self._creds, self.args.subscription)
         # azure-api-call
         self._resource_client = ResourceManagementClient(self._creds, self.args.subscription)
 
         self.specific_clients = {}
         self.timespans = self._get_timespans()
         self._cache = {}
-
-    @staticmethod
-    def _get_timespans(time_end=datetime.datetime.utcnow()):
-        """compute timespans dict"""
-
-        def interval(**kwargs):
-            start = time_end - datetime.timedelta(**kwargs)
-            return "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                              time_end.strftime("%Y-%m-%dT%H:%M:%SZ"))
-
-        return {
-            "PT1M": interval(minutes=3),
-            "PT5M": interval(minutes=15),
-            "PT1H": interval(hours=3),
-        }
 
     def init_specific(self, resources):
         r_types = set(r.info["type"] for r in resources)
@@ -558,11 +543,26 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
             self._cache["resources"] = map(AzureResource, raw_resources)
         return self._cache["resources"]
 
+    @staticmethod
+    def _get_timespans(time_end=datetime.datetime.utcnow()):
+        """compute timespans dict"""
+
+        def interval(**kwargs):
+            start = time_end - datetime.timedelta(**kwargs)
+            return "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                              time_end.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+        return {
+            "PT1M": interval(minutes=3),
+            "PT5M": interval(minutes=15),
+            "PT1H": interval(hours=3),
+        }
+
     def _metric_api_call(self, rid, timespan, interval, metric, aggregation, filter_):
         LOG.debug(
             "metrics.list(%r, timespan=%r, interval=%r, metric=%r, aggregation=%r,"
             " filter=%r, raw=True)", rid, timespan, interval, metric, aggregation, filter_)
-        raw = self._monitor_client.metrics.list(
+        raw = self.monitor_client.metrics.list(
             rid,
             timespan=timespan,
             interval=interval,
@@ -587,9 +587,7 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         try:
             response, raw_metrics = self._metric_api_call(rid, timespan, interval, metricnames,
                                                           aggregation, filter_)
-        except ErrorResponseException as exc:
-            if self.args.debug:
-                raise exc
+        except () if self.args.debug else ErrorResponseException as exc:
             err.add("exception", rid, exc.message)
             LOG.exception(exc)
             return []

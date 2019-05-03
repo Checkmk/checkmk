@@ -194,7 +194,6 @@ extra_host_conf = {}
 extra_service_conf = {}
 extra_nagios_conf = ""
 service_descriptions = {}
-scanparent_hosts = [(_ALL_HOSTS)]
 host_attributes = {}  # needed by WATO, ignored by Check_MK
 ping_levels = []  # special parameters for host/PING check_command
 host_check_commands = []  # alternative host check instead of check_icmp

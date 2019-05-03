@@ -48,10 +48,7 @@ def do_scan_parents(hosts):
     config_cache = config.get_config_cache()
 
     if not hosts:
-        hosts = [
-            h for h in config_cache.all_active_realhosts()
-            if config_cache.in_binary_hostlist(h, config.scanparent_hosts)
-        ]
+        hosts = config_cache.all_active_realhosts()
 
     parent_hosts = []
     parent_ips = {}

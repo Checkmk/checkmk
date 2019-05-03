@@ -936,213 +936,203 @@ div.varname {
   color: #fff;
 }
 
-///* page "global settings*/
-//.wato div.globalvars a {
-//    text-decoration: none;
-//    color: black;
-//}
-//.wato div.globalvars a:hover {
-//    text-decoration: underline;
-//}
-//
-//.wato div.globalvars td.simple a.modified,
-//.wato div.globalvars td.simple div.toggle_switch_container.modified,
-//.wato div.globalvars td.content a.modified > table {
-//    border-radius: 5px 5px 5px 5px;
-//    border: 1px solid #cdf;
-//    box-shadow: 3px 3px 5px #eee inset;
-//    margin-left: -4px;
-//    padding-bottom: 18px;
-//    padding: 1px 4px 2px 4px;
-//}
-//
-//.wato div.globalvars td.simple a.modified.globally,
-//.wato div.globalvars td.simple div.toggle_switch_container.modified.globally,
-//.wato div.globalvars td.content a.modified.globally > table {
-//    box-shadow: 3px 3px 5px #8bc7e5 inset;
-//}
-//
-//.wato div.globalvars td.simple div.toggle_switch_container {
-//    width: 56px;
-//}
-//
-//.wato div.globalvars a.modified table.vs_dict_text {
-//    border-collapse: separate;
-//}
-//
-//.wato div.globalvars div.title a.modified {
-//    box-shadow: none;
-//    border: none;
-//    /* font-weight: bold; */
-//}
-//
-//.wato div.globalvars td.content img.iconbutton {
-//    width: 60px;
-//    height: 16px;
-//}
-//
-//.wato div.globalvars td.legend {
-//    padding-top: 0px;
-//}
-//
-//.wato div.globalvars td.legend {
-//    width: 350px;
-//}
-//
-//.wato div.globalvars td.legend div.title {
-//    max-width: 350px;
-//}
-//
-///*.wato div.globalvars td {
-//    height: 20px;
-//}*/
-//
-///* Table in page "Global variables" */
-//.wato table.data.globalvars {
-//    width: 100%;
-//}
-//.wato table.data.globalvars td.title {
-//    width: 430px;
-//}
-//.wato table.data.globalvars td.varname {
-//    width: 300px;
-//}
-//
-//.wato table.changes tr.foreign td {
-//    text-decoration: italic;
-//}
-//
-///* activation */
-//
-//.wato table.data.activation a.disabled {
-//    pointer-events: none;
-//}
-//
-//.wato table.changes tr.foreign.not_permitted td {
-//    color: #f00;
-//}
-//
-//.wato table.changes {
-//    width: 100%;
-//}
-//
-//.wato table.data div.act_success {
-//}
-//
-//.wato table.data div.act_success img {
-//    width: 18px;
-//    height: 18px;
-//    vertical-align: middle;
-//}
-//
-///* Replication */
-//.wato table.data td.repprogress {
-//    width: 160px;
-//    position: relative;
-//    padding: 0;
-//    margin: 0;
-//}
-//
-//.wato td.repprogress div.msg {
-//    position: absolute;
-//    z-index: 20;
-//    width: 160px;
-//    text-align: center;
-//    top: 6px;
-//    left: 0;
-//    height: 16px;
-//}
-//
-//.wato td.repprogress div.progress {
-//    position: absolute;
-//    top: 0;
-//    left: 0;
-//    z-index: 0;
-//    top: 3px;
-//
-//    height: 16px;
-//
-//    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#00bfe2+0,5dddf5+57,05c1e3+74,00bee0+100 */
-//    background: #00bfe2; /* Old browsers */
-//    background: -moz-linear-gradient(top, #00bfe2 0%, #5dddf5 57%, #05c1e3 74%, #00bee0 100%); /* FF3.6-15 */
-//    background: -webkit-linear-gradient(top, #00bfe2 0%,#5dddf5 57%,#05c1e3 74%,#00bee0 100%); /* Chrome10-25,Safari5.1-6 */
-//    background: linear-gradient(to bottom, #00bfe2 0%,#5dddf5 57%,#05c1e3 74%,#00bee0 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-//    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00bfe2', endColorstr='#00bee0',GradientType=0 ); /* IE6-9 */
-//
-//    padding-top: 4px;
-//    font-size: 8pt;
-//    box-shadow: 0.5px 0.5px 1px #224466 inset;
-//    color: black;
-//}
-//
-//.wato td.repprogress div.progress.state_success {
-//    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
-//    background: #bfd255; /* Old browsers */
-//    background: -moz-linear-gradient(top, #bfd255 0%, #8eb92a 50%, #72aa00 51%, #9ecb2d 100%); /* FF3.6-15 */
-//    background: -webkit-linear-gradient(top, #bfd255 0%,#8eb92a 50%,#72aa00 51%,#9ecb2d 100%); /* Chrome10-25,Safari5.1-6 */
-//    background: linear-gradient(to bottom, #bfd255 0%,#8eb92a 50%,#72aa00 51%,#9ecb2d 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-//    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bfd255', endColorstr='#9ecb2d',GradientType=0 ); /* IE6-9 */
-//}
-//
-//.wato td.repprogress div.progress.state_error {
-//    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
-//    background: #f3c5bd; /* Old browsers */
-//    background: -moz-linear-gradient(top, #f3c5bd 0%, #e86c57 50%, #ea2803 51%, #ff6600 75%, #c72200 100%); /* FF3.6-15 */
-//    background: -webkit-linear-gradient(top, #f3c5bd 0%,#e86c57 50%,#ea2803 51%,#ff6600 75%,#c72200 100%); /* Chrome10-25,Safari5.1-6 */
-//    background: linear-gradient(to bottom, #f3c5bd 0%,#e86c57 50%,#ea2803 51%,#ff6600 75%,#c72200 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-//    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f3c5bd', endColorstr='#c72200',GradientType=0 ); /* IE6-9 */
-//}
-//
-//.wato td.repprogress div.progress.state_warning {
-//    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
-//    background: #fceabb; /* Old browsers */
-//    background: -moz-linear-gradient(top, #fceabb 0%, #fccd4d 50%, #f8b500 51%, #fbdf93 100%); /* FF3.6-15 */
-//    background: -webkit-linear-gradient(top, #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%); /* Chrome10-25,Safari5.1-6 */
-//    background: linear-gradient(to bottom, #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-//    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fceabb', endColorstr='#fbdf93',GradientType=0 ); /* IE6-9 */
-//}
-//
-//.wato td.details,
-//.wato th.header_details,
-//.wato td.repprogress,
-//.wato th.header_repprogress {
-//    display: none;
-//}
-//
-//.wato td.tag-ellipsis {
-//    max-width: 300px;
-//}
-//
-//.wato td#repmsg_local {
-//    width: 280px;
-//}
-//
-//tr.hidden {
-//    display: none;
-//}
-//
-//table.data tr.notification_context table {
-//    margin: 5px;
-//}
-//
-//table.data tr.notification_context table th,
-//table.data tr.notification_context table td {
-//    font-family: monospace;
-//}
-//
-//table.data tr.data.dcd_log_entries > td {
-//    font-family: monospace, sans-serif;
-//    background-color: #000000;
-//    color: #ffffff;
-//}
-//
-//table.data tr.data.dcd_log_entries pre {
-//    overflow-y: scroll;
-//    resize:both;
-//    max-height: 300px;
-//    text-overflow: ellipsis;
-//}
-//
+/* page "global settings*/
+.wato div.globalvars a {
+    text-decoration: none;
+    color: black;
+}
+
+.wato div.globalvars a:hover {
+    text-decoration: underline;
+}
+
+.wato div.globalvars td.simple a.modified,
+.wato div.globalvars td.simple div.toggle_switch_container.modified,
+.wato div.globalvars td.content a.modified > table {
+    border-radius: 5px 5px 5px 5px;
+    border: 1px solid #cdf;
+    box-shadow: 3px 3px 5px #eee inset;
+    margin-left: -4px;
+    padding: 1px 4px 2px 4px;
+}
+
+.wato div.globalvars td.simple a.modified.globally,
+.wato div.globalvars td.simple div.toggle_switch_container.modified.globally,
+.wato div.globalvars td.content a.modified.globally > table {
+    box-shadow: 3px 3px 5px #8bc7e5 inset;
+}
+
+.wato div.globalvars td.simple div.toggle_switch_container {
+    width: 56px;
+}
+
+/* TODO: Reproduce this html class "vs_dict_text" */
+.wato div.globalvars a.modified table.vs_dict_text {
+    border-collapse: separate;
+}
+
+.wato div.globalvars div.title a.modified {
+    box-shadow: none;
+    border: none;
+}
+
+/* TODO: Reproduce this html element */
+.wato div.globalvars td.content img.iconbutton {
+    width: 60px;
+    height: 16px;
+}
+
+.wato div.globalvars td.legend {
+    padding-top: 0px;
+    width: 320px;
+}
+
+.wato div.globalvars td.legend div.title {
+    max-width: 284px;
+}
+
+/* TODO: Reproduce these table.data.globalvars html elements */
+/* Table in page "Global variables" */
+.wato table.data.globalvars {
+    width: 100%;
+}
+
+.wato table.data.globalvars td.title {
+    width: 430px;
+}
+
+.wato table.data.globalvars td.varname {
+    width: 300px;
+}
+
+/* activation */
+
+.wato table.data.activation a.disabled {
+    pointer-events: none;
+}
+
+.wato table.changes tr.foreign.not_permitted td {
+    color: #f00;
+}
+
+.wato table.changes {
+    width: 100%;
+}
+
+/* TODO: Reproduce this html element */
+.wato table.data div.act_success img {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+}
+
+/* Replication */
+.wato table.data td.repprogress {
+    width: 160px;
+    position: relative;
+    padding: 0;
+    margin: 0;
+}
+
+.wato td.repprogress div.msg {
+    position: absolute;
+    z-index: 20;
+    width: 160px;
+    text-align: center;
+    top: 6px;
+    left: 0;
+    height: 16px;
+}
+
+.wato td.repprogress div.progress {
+    position: absolute;
+    left: 0;
+    z-index: 0;
+    top: 4px;
+    height: 24px;
+    border-radius: $theme-border-radius;
+    box-sizing: border-box;
+    background: $theme-color-state-6-background;
+    padding-top: 10px;
+    font-size: 8pt;
+    box-shadow: none;
+    color: $theme-color-black;
+    border: 1px solid $theme-color-nuance-17;
+}
+
+.wato td.repprogress div.progress.state_success {
+  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
+  background: $theme-color-state-success-background;
+  border-color: $theme-color-state-success-border
+}
+
+
+.wato td.repprogress div.progress.state_error {
+  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
+  background: $theme-color-state-2-background;
+  border-color: $theme-color-state-2-border
+}
+
+.wato td.repprogress div.progress.state_warning {
+  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
+  background: $theme-color-main;
+  border-color: $theme-color-state-warning-border
+}
+
+.wato td.details,
+.wato th.header_details,
+.wato td.repprogress,
+.wato th.header_repprogress {
+    display: none;
+}
+
+.wato td.tag-ellipsis {
+    max-width: 300px;
+}
+
+/* TODO: Reproduce this html element */
+.wato td#repmsg_local {
+    width: 280px;
+}
+
+table.data tr.notification_context table {
+    margin: 5px;
+    box-shadow: none;
+    border: 1px solid $theme-color-table-border;
+}
+
+table.data tr.notification_context table th,
+table.data tr.notification_context table td {
+    font-family: monospace;
+}
+
+table.data tr.notification_context table th {
+    background-color: whitesmoke;
+    border: 1px solid $theme-color-table-border;
+    padding: 2px 4px;
+    color: $theme-color-text;
+}
+
+table.data tr.notification_context table td {
+    background-color: $theme-color-table-background;
+    border: 1px solid $theme-color-table-border;
+    padding: 2px 4px;
+}
+
+/* TODO: Reproduce this dcd_log_entries html class */
+table.data tr.data.dcd_log_entries > td {
+    font-family: monospace, sans-serif;
+    background-color: #000000;
+    color: #ffffff;
+}
+
+table.data tr.data.dcd_log_entries pre {
+    overflow-y: scroll;
+    resize:both;
+    max-height: 300px;
+    text-overflow: ellipsis;
+}
+
 ///*-------------------------------------------------------------------------.
 //|               ____                                                       |
 //|              |  _ \ _ __ ___   __ _ _ __ ___  ___ ___                    |

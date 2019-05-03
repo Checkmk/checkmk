@@ -98,6 +98,14 @@ std::wstring GetPathOfUserConfig() noexcept {
     return details::G_ConfigInfo.getUserYamlPath();
 }
 
+int GetBackupLogMaxCount() noexcept {
+    return details::G_ConfigInfo.getBackupLogMaxCount();
+}
+
+size_t GetBackupLogMaxSize() noexcept {
+    return details::G_ConfigInfo.getBackupLogMaxSize();
+}
+
 std::wstring GetPathOfLoadedConfig() noexcept {
     using namespace wtools;
 

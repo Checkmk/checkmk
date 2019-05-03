@@ -132,6 +132,9 @@ std::wstring GetWorkingDir() noexcept;
 std::wstring GetWorkingDir() noexcept;
 std::wstring GetMsiExecPath() noexcept;
 
+int GetBackupLogMaxCount() noexcept;
+size_t GetBackupLogMaxSize() noexcept;
+
 bool IsLoadedConfigOk() noexcept;
 
 bool StoreUserYamlToCache() noexcept;
@@ -1016,7 +1019,6 @@ private:
     std::string exe_name_;
     bool async_start_;
     int max_wait_;
-
 };
 
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,

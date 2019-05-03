@@ -178,15 +178,18 @@ class ModeDiscovery(WatoMode):
 
         self._host.need_permission("read")
 
+        action = DiscoveryAction.NONE
         if config.user.may("wato.services"):
             show_checkboxes = config.user.load_file("discovery_checkboxes", False)
+            if html.request.var("_scan") == "1":
+                action = DiscoveryAction.SCAN
         else:
             show_checkboxes = False
 
         show_parameters = not config.user.load_file("parameter_column", False)
 
         self._options = DiscoveryOptions(
-            action=DiscoveryAction.NONE,
+            action=action,
             show_checkboxes=show_checkboxes,
             show_parameters=show_parameters,
             ignore_errors=bool(html.request.var("ignoreerrors")),
@@ -1563,10 +1566,6 @@ class DiscoveryPageRenderer(object):
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."),
             ),
         ]
-
-
-class ModeFirstDiscovery(ModeDiscovery):
-    pass
 
 
 @page_registry.register_page("wato_ajax_execute_check")

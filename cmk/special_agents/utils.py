@@ -117,7 +117,7 @@ class DataCache(object):
     def __init__(self, cache_file_dir, cache_file_name, debug=False):
         self._cache_file_dir = Path(cache_file_dir)
         self._cache_file = self._cache_file_dir / ("%s.cache" % cache_file_name)
-        self._exceptions = () if debug else (OSError, IOError, ValueError)
+        self.debug = debug
 
     @abc.abstractproperty
     def cache_interval(self):
@@ -191,15 +191,19 @@ class DataCache(object):
         if (use_cache and self.get_validity_from_args(args) and self._cache_is_valid()):
             try:
                 return self.get_cached_data()
-            except self._exceptions as exc:
+            except (OSError, IOError, ValueError) as exc:
                 logging.info("Getting live data (failed to read from cache: %s).", exc)
+                if self.debug:
+                    raise
 
         live_data = self.get_live_data(args)
         if use_cache:
             try:
                 self._write_to_cache(live_data)
-            except self._exceptions as exc:
+            except (OSError, IOError, TypeError) as exc:
                 logging.info("Failed to write data to cache file: %s", exc)
+                if self.debug:
+                    raise
         return live_data
 
     def _write_to_cache(self, raw_content):

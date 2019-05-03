@@ -21,10 +21,10 @@ def test_datacache_init(tmpdir):
     tcache = TestCache(tmpdir, 'test')
     assert isinstance(tcache._cache_file_dir, Path)
     assert isinstance(tcache._cache_file, Path)
-    assert tcache._exceptions == (OSError, IOError, ValueError)
+    assert not tcache.debug
 
     tc_debug = TestCache(tmpdir, 'test', debug=True)
-    assert tc_debug._exceptions == ()
+    assert tc_debug.debug
 
     with pytest.raises(TypeError):
         DataCache('foo', 'bar')  # pylint: disable=abstract-class-instantiated

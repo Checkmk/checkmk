@@ -569,8 +569,8 @@ const std::wstring FindConfigFile(std::filesystem::path Dir,
     if (fs::exists(file_path, ec)) {
         return file_path.lexically_normal().wstring();
     }
-    XLOG::l("Config file '{}' not found, status [{}] '{}'",
-            file_path.u8string(), ec.value(), ec.message());
+    XLOG::l("Config file '{}' not found, status [{}]: {}", file_path.u8string(),
+            ec.value(), ec.message());
     return {};
 }
 };  // namespace cma::cfg

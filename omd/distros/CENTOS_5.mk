@@ -1,5 +1,6 @@
 DISTRO_CODE       = el5
 OS_PACKAGES       =
+OS_PACKAGES      += libcap # needed for setting special file permissions
 OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Check_MK parent scan
 OS_PACKAGES      += curl

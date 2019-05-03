@@ -518,20 +518,19 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         self._cache = {}
 
     @staticmethod
-    def _get_timespans():
+    def _get_timespans(time_end=datetime.datetime.utcnow()):
         """compute timespans dict"""
-        t_end = datetime.datetime.utcnow()
 
         def interval(**kwargs):
-            start = t_end - datetime.timedelta(**kwargs)
+            start = time_end - datetime.timedelta(**kwargs)
             return "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                              t_end.strftime("%Y-%m-%dT%H:%M:%SZ"))
+                              time_end.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
-        timespans = {}
-        timespans["PT1M"] = interval(minutes=3)
-        timespans["PT5M"] = interval(minutes=15)
-        timespans["PT1H"] = interval(hours=3)
-        return timespans
+        return {
+            "PT1M": interval(minutes=3),
+            "PT5M": interval(minutes=15),
+            "PT1H": interval(hours=3),
+        }
 
     def init_specific(self, resources):
         r_types = set(r.info["type"] for r in resources)

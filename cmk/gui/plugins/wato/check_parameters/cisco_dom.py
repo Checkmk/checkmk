@@ -70,11 +70,6 @@ def _vs_cisco_dom(which_levels):
             default_value=True,  # use device levels
             elements=[
                 FixedValue(
-                    False,
-                    title=_("No levels"),
-                    totext="",
-                ),
-                FixedValue(
                     True,
                     title=_("Use device levels"),
                     totext="",
@@ -85,6 +80,11 @@ def _vs_cisco_dom(which_levels):
                         Float(title=_(_button_text_warn(which_levels)), unit=_("dBm")),
                         Float(title=_(_button_text_crit(which_levels)), unit=_("dBm")),
                     ]),
+                FixedValue(
+                    False,
+                    title=_("No levels"),
+                    totext="",
+                ),
             ]))
 
 

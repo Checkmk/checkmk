@@ -291,15 +291,15 @@ local:
 
 
 mrpe:
-    # scripts in plugin
     enabled: yes
 
-    # 10 is default
-    timeout: 10
+    # 60 is default, this is safe value, because mrpe checks are relative fast ergo
+    # hitting this timeout is virtually not possible
+    timeout: 60
 
-    # entries and cfg as in the Legacy agent
+    # entries and cfg are the same as in the Legacy agent
     config:
-        - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
-        - include sk = @data\mrpe_checks.cfg
+        # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
+        - include user_name = @data\mrpe_checks.cfg
         - include = @data\mrpe_checks.cfg
 

@@ -5,23 +5,18 @@
 
 #include <filesystem>
 
+#include "cfg.h"
 #include "common/wtools.h"
+#include "glob_match.h"
+#include "providers/fileinfo.h"
+#include "providers/fileinfo_details.h"
+#include "service_processor.h"
+#include "test-utf-names.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
-#include "cfg.h"
-
-#include "providers/fileinfo.h"
-#include "providers/fileinfo_details.h"
-
-#include "glob_match.h"
-#include "service_processor.h"
-
-#include "test-utf-names.h"
-
 namespace cma::provider {
-
-std::string ProcessEntry(const std::string Entry);
 
 std::filesystem::path BuildTestUNC() {
     auto comp = cma::tools::win::GetEnv("COMPUTERNAME");
@@ -174,6 +169,21 @@ TEST(FileInfoTest, Base) {
         auto out = fi.makeBody();
         ASSERT_TRUE(!out.empty());
     }
+}
+
+TEST(FileInfoTest, YmlCheck) {
+    using namespace cma::cfg;
+    tst::YamlLoader w;
+    auto cfg = cma::cfg::GetLoadedConfig();
+
+    auto fileinfo_node = cfg[groups::kFileInfo];
+    ASSERT_TRUE(fileinfo_node.IsDefined());
+    ASSERT_TRUE(fileinfo_node.IsMap());
+
+    auto enabled = GetVal(groups::kFileInfo, vars::kEnabled, false);
+    EXPECT_TRUE(enabled);
+    auto paths = GetArray<std::string>(groups::kFileInfo, vars::kFileInfoPath);
+    EXPECT_EQ(paths.size(), 2);
 }
 
 TEST(FileInfoTest, Reality) {

@@ -10,7 +10,7 @@
 
 #include "cfg.h"
 #include "glob_match.h"
-#include "test-tools.h"
+#include "test_tools.h"
 #include "test-utf-names.h"
 
 namespace tst {

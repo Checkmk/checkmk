@@ -21,7 +21,7 @@
 
 #include "providers/spool.h"
 
-#include "test-tools.h"
+#include "test_tools.h"
 
 static void CleanFolder(std::filesystem::path Dir) {
     namespace fs = std::filesystem;

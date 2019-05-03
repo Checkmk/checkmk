@@ -14,7 +14,7 @@
 #include "read_file.h"
 #include "upgrade.h"
 
-#include "test-tools.h"
+#include "test_tools.h"
 
 namespace cma::cfg::upgrade {
 

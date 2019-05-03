@@ -16,7 +16,7 @@
 #include "read_file.h"
 #include "yaml-cpp/yaml.h"
 
-#include "test-tools.h"
+#include "test_tools.h"
 
 namespace wtools {  // to become friendly for cma::cfg classes
 

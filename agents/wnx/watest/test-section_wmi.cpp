@@ -19,7 +19,7 @@
 #include "providers/wmi.h"
 
 #include "service_processor.h"
-#include "test-tools.h"
+#include "test_tools.h"
 
 namespace wtools {
 

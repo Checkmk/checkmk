@@ -9,7 +9,7 @@
 #include "common/wtools.h"
 #include "install_api.h"
 #include "service_processor.h"
-#include "test-tools.h"
+#include "test_tools.h"
 
 TEST(InstallAuto, LowLevel) {
     using namespace cma::install;

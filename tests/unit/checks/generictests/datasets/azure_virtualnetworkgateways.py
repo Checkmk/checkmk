@@ -7,13 +7,9 @@ info = [
         u'{"group": "Glastonbury", "name": "MeinGateway", "location": "westeurope", "provider": "Microsoft.Network", "type": "Microsoft.Network/virtualNetworkGateways", "id": "/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/Glastonbury/providers/Microsoft.Network/virtualNetworkGateways/MeinGateway", "subscription": "2fac104f-cb9c-461d-be57-037039662426"}'
     ],
     [u'metrics following', u'3'],
-    [u'name', u'aggregation', u'value', u'unit', u'timestamp', u'timegrain', u'filters'],
-    [
-        u'AverageBandwidth', u'average', u'13729.0', u'bytes_per_second', u'1545049860', u'PT1M',
-        u'None'
-    ],
-    [u'P2SBandwidth', u'average', u'0.0', u'bytes_per_second', u'1545050040', u'PT1M', u'None'],
-    [u'P2SConnectionCount', u'maximum', u'1.0', u'count', u'1545050040', u'PT1M', u'None'],
+    ['{"filter": null, "unit": "bytes_per_second", "name": "AverageBandwidth", "interval_id": "PT1M", "timestamp": "1545049860", "interval": "0:01:00", "aggregation": "average", "value": 13729.0}'],
+    ['{"name": "P2SBandwidth", "aggregation": "average", "value": 0.0, "unit": "bytes_per_second", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter": null}'],
+    ['{"name": "P2SConnectionCount", "aggregation": "maximum", "value": 1.0, "unit": "count", "timestamp": "1545050040", "interval_id": "PT1M", "interval": "0:01:00", "filter":   null}'],
 ]
 
 discovery = {'': [(u'MeinGateway', {})]}

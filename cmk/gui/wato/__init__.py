@@ -245,7 +245,6 @@ from cmk.gui.wato.pages.rulesets import (
 from cmk.gui.wato.pages.search import ModeSearch
 from cmk.gui.wato.pages.services import (
     ModeDiscovery,
-    ModeFirstDiscovery,
     ModeAjaxExecuteCheck,
 )
 from cmk.gui.wato.pages.sites import (

@@ -41,7 +41,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException
+from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException, HTTPRedirect
 from cmk.gui.valuespec import ListOfStrings, Hostname
 from cmk.gui.wato.pages.folders import delete_host_after_confirm
 
@@ -327,19 +327,26 @@ class CreateHostMode(HostMode):
 
         self._host = watolib.Folder.current().host(hostname)
 
+        inventory_url = watolib.folder_preserving_link([
+            ("mode", "inventory"),
+            ("host", self._host.name()),
+            ("_scan", "1"),
+        ])
+
         if not self._host.is_ping_host():
             create_msg = _('Successfully created the host. Now you should do a '
                            '<a href="%s">service discovery</a> in order to auto-configure '
-                           'all services to be checked on this host.') % \
-                            watolib.folder_preserving_link([("mode", "inventory"), ("host", self._host.name())])
+                           'all services to be checked on this host.') % inventory_url
         else:
             create_msg = None
 
         if html.request.var("services"):
-            return "inventory"
-        elif html.request.var("diag_host"):
+            raise HTTPRedirect(inventory_url)
+
+        if html.request.var("diag_host"):
             html.request.set_var("_try", "1")
             return "diag_host", create_msg
+
         return "folder", create_msg
 
     def _show_host_name(self):

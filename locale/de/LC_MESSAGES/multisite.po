@@ -20456,9 +20456,7 @@ msgid "Immediately toggle this setting"
 msgstr "Einstellung sofort umschalten"
 
 msgid "Impact"
-msgstr ""
-"\n"
-"Auswirkung"
+msgstr "Auswirkung"
 
 msgid "Import"
 msgstr "Importieren"
@@ -24978,9 +24976,7 @@ msgid "MediationServer - Load Call Failure Index"
 msgstr "Mediation Server - Fehlerindex für Leseaufrufe"
 
 msgid "Medium"
-msgstr ""
-"\n"
-"Mittel"
+msgstr "Mittel"
 
 msgid "MegaRAID monitoring (Windows)"
 msgstr "MegaRAID-Überwachung (Windows)"

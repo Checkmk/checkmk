@@ -377,7 +377,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     html.icon_button(
                         url="javascript:void(0)",
                         id_="activate_%s" % site_id,
-                        cssclass=["activate_site"],
+                        cssclass="activate_site",
                         title=_("This site is not update and needs a replication. Start it now."),
                         icon="need_replicate",
                         onclick="cmk.activation.activate_changes(\"site\", \"%s\")" % site_id)
@@ -386,7 +386,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     html.icon_button(
                         url="javascript:void(0)",
                         id_="activate_%s" % site_id,
-                        cssclass=["activate_site"],
+                        cssclass="activate_site",
                         title=_(
                             "This site needs a restart for activating the changes. Start it now."),
                         icon="need_restart",

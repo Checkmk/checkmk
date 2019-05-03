@@ -194,18 +194,6 @@ table {
       border: 1px solid $theme-color-background; }
     table.data tr th a.toggle_actions img, table.data tr th body.main .popup_menu span.toggle_actions img, body.main .popup_menu table.data tr th span.toggle_actions img {
       filter: invert(100%); }
-    table.data tr.notification_context table {
-      box-shadow: none;
-      border: 1px solid $theme-color-table-border; }
-      table.data tr.notification_context table th {
-        background-color: whitesmoke;
-        border: 1px solid $theme-color-table-border;
-        padding: 2px 4px;
-        color: $theme-color-text; }
-      table.data tr.notification_context table td {
-        background-color: $theme-color-table-background;
-        border: 1px solid $theme-color-table-border;
-        padding: 2px 4px; }
     table.data td {
       padding: 4px 8px;
       border: none;
@@ -638,37 +626,6 @@ table.data > tbody > tr > td.job_state.job_initialized {
   background-color: $theme-color-state-3-background !important;
   border-color: $theme-color-nuance-16 !important; }
 
-.wato td.repprogress div.progress {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 0;
-  top: 4px;
-  border-radius: $theme-border-radius;
-  box-sizing: border-box;
-  height: 24px;
-  background: $theme-color-state-6-background;
-  padding-top: 10px;
-  font-size: 8pt;
-  box-shadow: none;
-  color: $theme-color-black;
-  border: 1px solid $theme-color-nuance-17; }
-
-.wato td.repprogress div.progress.state_success {
-  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
-  background: $theme-color-state-success-background;
-  border-color: $theme-color-state-success-border !important; }
-
-.wato td.repprogress div.progress.state_error {
-  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
-  background: $theme-color-state-2-background;
-  border-color: $theme-color-state-2-border !important; }
-
-.wato td.repprogress div.progress.state_warning {
-  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
-  background: $theme-color-main;
-  border-color: $theme-color-state-warning-border !important; }
-
 .status_label {
   box-shadow: none;
   height: 16px;
@@ -861,4 +818,8 @@ img.glass {
     box-shadow: none;
     background: $theme-color-white;
     border: 1px solid $theme-color-table-border;
+}
+
+tr.hidden {
+    display: none;
 }

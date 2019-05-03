@@ -5,21 +5,17 @@
 
 #include <filesystem>
 
+#include "cfg.h"
+#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "providers/mrpe.h"
+#include "read_file.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-
-#include "read_file.h"
 #include "yaml-cpp/yaml.h"
-
-#include "cfg_details.h"
-
-#include "cfg.h"
-
-#include "providers/mrpe.h"
 
 namespace cma::cfg::details {  // to become friendly for cma::cfg classes
 
@@ -111,11 +107,12 @@ TEST(AgentConfig, Aggregate) {
                        "    -   9999 : the_the\n"
                        "    - Terminal Services: ts_sessions\n");
         auto r = YAML::LoadFile(cfgs[0].u8string());
-        ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(), 4);
+        ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(), 3);
         auto b = YAML::LoadFile(cfgs[1].u8string());
         ASSERT_EQ(b[groups::kWinPerf][vars::kWinPerfCounters].size(), 4);
         ConfigInfo::smartMerge(r, b);
-        ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(), 5);
+        ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(),
+                  6);  // three new, 638, 9999 and ts
         ASSERT_EQ(r["bakery"]["status"].as<std::string>(), "loaded");
     }
 
@@ -129,7 +126,7 @@ TEST(AgentConfig, Aggregate) {
     auto x = yaml["global"]["enabled"].as<bool>();
     ASSERT_EQ(yaml["global"]["enabled"].as<bool>(), false);
     ASSERT_EQ(yaml["global"]["async"].as<bool>(), true);
-    ASSERT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 5);
+    ASSERT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 6);
 
     CreateTestFile(cfgs[2], "user:\n  status: 'loaded'\nglobal:\n  port: 111");
 
@@ -141,7 +138,7 @@ TEST(AgentConfig, Aggregate) {
     ASSERT_EQ(yaml["global"]["enabled"].as<bool>(), false);
     ASSERT_EQ(yaml["global"]["port"].as<int>(), 111);
     ASSERT_EQ(yaml["global"]["async"].as<bool>(), true);
-    ASSERT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 5);
+    ASSERT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 6);
     EXPECT_TRUE(G_ConfigInfo.isBakeryLoaded());
     EXPECT_TRUE(G_ConfigInfo.isUserLoaded());
 }
@@ -383,7 +380,7 @@ TEST(AgentConfig, WorkScenario) {
 
         auto winperf_counters =
             GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
-        EXPECT_EQ(winperf_counters.size(), 4);
+        EXPECT_EQ(winperf_counters.size(), 3);
         for (const auto& counter : winperf_counters) {
             auto id = counter.first;
             EXPECT_TRUE(id != "");

@@ -10,17 +10,12 @@
 #include <future>
 #include <string_view>
 
-#include "common/cfg_info.h"
-
-#include "read_file.h"
-
 #include "cfg.h"
 #include "cfg_details.h"
-
 #include "cma_core.h"
-
+#include "common/cfg_info.h"
 #include "providers/spool.h"
-
+#include "read_file.h"
 #include "test_tools.h"
 
 static void CleanFolder(std::filesystem::path Dir) {
@@ -68,7 +63,7 @@ TEST(SectionProviderSpool, BaseApi) {
     namespace fs = std::filesystem;
     fs::path dir = cma::cfg::GetSpoolDir();
     EXPECT_TRUE(cma::provider::IsDirectoryValid(dir));
-    EXPECT_FALSE(cma::provider::IsDirectoryValid(dir / "a"));
+    EXPECT_FALSE(cma::provider::IsDirectoryValid(dir / "<GTEST>"));
 
     ASSERT_TRUE(!dir.empty() &&
                 dir.u8string().find("\\spool") != std::string::npos);

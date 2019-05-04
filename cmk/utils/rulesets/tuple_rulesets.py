@@ -212,7 +212,7 @@ class RulesetToDictTransformer(object):
 
             tag_group_id = self._tag_groups[tag_id]
 
-            conditions["host_tags." + tag_group_id] = {"ne": tag_id} if negate else tag_id
+            conditions["host_tags." + tag_group_id] = {"$ne": tag_id} if negate else tag_id
 
         return conditions
 

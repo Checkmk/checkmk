@@ -270,6 +270,23 @@ BINARY_HOST_RULESET = [
             },
         },
     ),
+    Case(
+        ident="not_equal_tag_match",
+        is_service=False,
+        is_binary=True,
+        old=(['!TAG1', '!TAG2'], tuple_rulesets.ALL_HOSTS),
+        new={
+            "value": True,
+            "condition": {
+                'host_tags.TG1': {
+                    '$ne': 'TAG1'
+                },
+                'host_tags.TG2': {
+                    '$ne': 'TAG2'
+                },
+            },
+        },
+    ),
 ]
 
 NON_BINARY_SERVICE_RULESET = [
@@ -441,6 +458,7 @@ BINARY_SERVICE_RULESET = [
 
 TAG_TO_GROUP_MAP = {
     "TAG1": "TG1",
+    "TAG2": "TG2",
     "tag": "tg_group1",
     "specs": "tg_group2",
 }

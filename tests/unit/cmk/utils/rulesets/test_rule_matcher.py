@@ -82,6 +82,14 @@ NESTED_FIELD_MATCHES = [
         "$ne": "test"
     }}, [HOST_PROD]),
     Case({"tags.not_existing": "test"}, []),
+    Case({
+        "tags.not_existing": {
+            "$ne": "test"
+        },
+        "tags.not_existing2": {
+            "$ne": "test"
+        },
+    }, [HOST_PROD, HOST_TEST]),
 ]
 
 COMPARISON_MATCHES = [

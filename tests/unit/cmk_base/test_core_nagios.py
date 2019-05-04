@@ -29,9 +29,8 @@ def test_format_nagios_object():
 """ % tuple(itertools.chain(*sorted(spec.items(), key=lambda x: x[0])))
 
 
-def ts_test_create_nagios_host_spec():
-    ts1 = Scenario().add_host("localhost")
-    result1 = {
+@pytest.mark.parametrize("hostname,result", [
+    ("localhost", {
         '_ADDRESS_4': '127.0.0.1',
         '_ADDRESS_6': '',
         '_ADDRESS_FAMILY': '4',
@@ -43,33 +42,22 @@ def ts_test_create_nagios_host_spec():
         'host_name': 'localhost',
         'hostgroups': 'check_mk',
         'use': 'check_mk_host',
-    }
-
-    yield ts1, result1
-
-    ts2 = Scenario().add_host("localhost")
-    ts2.set_option("extra_host_conf", {
-        "alias": [(u'lOCALhost', ['localhost']),],
-    })
-    result2 = {
-        '_ADDRESS_4': '127.0.0.1',
+    }),
+    ("host2", {
+        '_ADDRESS_4': '0.0.0.0',
         '_ADDRESS_6': '',
         '_ADDRESS_FAMILY': '4',
         '_FILENAME': '/',
         '_TAGS': '',
-        'address': '127.0.0.1',
+        'address': '0.0.0.0',
         'alias': u'lOCALhost',
         'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
-        'host_name': 'localhost',
+        'host_name': 'host2',
         'hostgroups': 'check_mk',
         'use': 'check_mk_host',
-    }
-
-    yield ts2, result2
-
-    ts3 = Scenario().add_cluster("localhost")
-    result3 = {
-        '_ADDRESS_4': '127.0.0.1',
+    }),
+    ("cluster1", {
+        '_ADDRESS_4': '',
         '_ADDRESS_6': '',
         '_ADDRESS_FAMILY': '4',
         '_FILENAME': '/',
@@ -78,31 +66,16 @@ def ts_test_create_nagios_host_spec():
         '_NODEIPS_6': '',
         '_NODENAMES': '',
         '_TAGS': '',
-        'address': '127.0.0.1',
-        'alias': 'localhost',
-        'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
-        'host_name': 'localhost',
+        'address': '0.0.0.0',
+        'alias': 'cluster1',
+        'check_command': 'check-mk-host-ping-cluster!-w 200.00,80.00% -c 500.00,100.00%',
+        'host_name': 'cluster1',
         'hostgroups': 'check_mk',
         'parents': '',
         'use': 'check_mk_cluster',
-    }
-
-    yield ts3, result3
-
-    ts4 = Scenario().add_cluster("localhost", nodes=["node1", "node2"])
-    ts4.add_host("node1")
-    ts4.add_host("node2")
-    ts4.add_host("switch")
-    ts4.set_option("ipaddresses", {
-        "node1": "127.0.0.1",
-        "node2": "127.0.0.2",
-    })
-    ts4.set_option("extra_host_conf", {
-        "alias": [(u'lOCALhost', ['localhost']),],
-        "parents": [('switch', ['node1', 'node2']),],
-    })
-    result4 = {
-        '_ADDRESS_4': '127.0.0.1',
+    }),
+    ("cluster2", {
+        '_ADDRESS_4': '',
         '_ADDRESS_6': '',
         '_ADDRESS_FAMILY': '4',
         '_FILENAME': '/',
@@ -111,43 +84,61 @@ def ts_test_create_nagios_host_spec():
         '_NODEIPS_6': '',
         '_NODENAMES': 'node1 node2',
         '_TAGS': '',
-        'address': '127.0.0.1',
-        'alias': u'lOCALhost',
-        'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
-        'host_name': 'localhost',
+        'address': '0.0.0.0',
+        'alias': u'CLUSTer',
+        'check_command': 'check-mk-host-ping-cluster!-w 200.00,80.00% -c 500.00,100.00%',
+        'host_name': 'cluster2',
         'hostgroups': 'check_mk',
         'parents': 'node1,node2',
         'use': 'check_mk_cluster',
-    }
+    }),
+    ("node1", {
+        '_ADDRESS_4': '127.0.0.1',
+        '_ADDRESS_6': '',
+        '_ADDRESS_FAMILY': '4',
+        '_FILENAME': '/',
+        '_TAGS': '',
+        'address': '127.0.0.1',
+        'alias': 'node1',
+        'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
+        'host_name': 'node1',
+        'hostgroups': 'check_mk',
+        'parents': 'switch',
+        'use': 'check_mk_host',
+    }),
+])
+def test_create_nagios_host_spec(hostname, result, monkeypatch):
+    ts = Scenario().add_host("localhost")
+    ts.add_host("host2")
+    ts.add_cluster("cluster1")
 
-    yield ts4, result4
+    ts.add_cluster("cluster2", nodes=["node1", "node2"])
+    ts.add_host("node1")
+    ts.add_host("node2")
+    ts.add_host("switch")
+    ts.set_option("ipaddresses", {
+        "node1": "127.0.0.1",
+        "node2": "127.0.0.2",
+    })
 
+    ts.set_option("extra_host_conf", {
+        "alias": [(u'lOCALhost', ['localhost']),],
+    })
 
-@pytest.mark.parametrize("ts,result", ts_test_create_nagios_host_spec())
-def test_create_nagios_host_spec(ts, result, monkeypatch):
+    ts.set_option(
+        "extra_host_conf", {
+            "alias": [
+                (u'lOCALhost', ['host2']),
+                (u'CLUSTer', ['cluster2']),
+            ],
+            "parents": [('switch', ['node1', 'node2']),],
+        })
+
     outfile = StringIO()
-    cfg = core_nagios.NagiosConfig(outfile, ["localhost"])
+    cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
     config_cache = ts.apply(monkeypatch)
-    host_attrs = core_config.get_host_attributes("localhost", config_cache)
+    host_attrs = core_config.get_host_attributes(hostname, config_cache)
 
-    host_spec = core_nagios._create_nagios_host_spec(cfg, config_cache, "localhost", host_attrs)
+    host_spec = core_nagios._create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
     assert host_spec == result
-
-    if "node1" in config_cache.all_configured_hosts():
-        host_attrs = core_config.get_host_attributes("node1", config_cache)
-        host_spec = core_nagios._create_nagios_host_spec(cfg, config_cache, "node1", host_attrs)
-        assert host_spec == {
-            '_ADDRESS_4': '127.0.0.1',
-            '_ADDRESS_6': '',
-            '_ADDRESS_FAMILY': '4',
-            '_FILENAME': '/',
-            '_TAGS': '',
-            'address': '127.0.0.1',
-            'alias': 'node1',
-            'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
-            'host_name': 'node1',
-            'hostgroups': 'check_mk',
-            'parents': 'switch',
-            'use': 'check_mk_host',
-        }

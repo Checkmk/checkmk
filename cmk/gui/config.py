@@ -33,6 +33,7 @@ from typing import Callable, Union, Tuple, Dict  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
 
+import cmk
 import cmk.gui.utils as utils
 import cmk.gui.tags
 import cmk.gui.i18n
@@ -1082,11 +1083,11 @@ def extend_user_modified_tag_groups(host_tags):
 
 
 def omd_site():
-    return os.environ["OMD_SITE"]
+    return cmk.omd_site()
 
 
 def url_prefix():
-    return "/%s/" % omd_site()
+    return "/%s/" % cmk.omd_site()
 
 
 use_siteicons = False

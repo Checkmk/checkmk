@@ -1,5 +1,11 @@
 import socket
 import pytest  # type: ignore
+import cmk
+
+
+@pytest.fixture(autouse=True)
+def patch_omd_site(monkeypatch):
+    monkeypatch.setattr(cmk, "omd_site", lambda: "NO_SITE")
 
 
 # Unit tests should not be executed in site.

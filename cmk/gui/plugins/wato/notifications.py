@@ -85,6 +85,10 @@ def transform_forth_html_mail_url_prefix(p):
     return ("manual", v)
 
 
+def local_site_url():
+    return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/",
+
+
 @notification_parameter_registry.register
 class NotificationParameterMail(NotificationParameter):
     @property
@@ -276,9 +280,7 @@ class NotificationParameterSlack(NotificationParameter):
                                   regex_error=_("The URL must begin with <tt>http</tt> or "
                                                 "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
                                   size=64,
-                                  default_value="http://" + socket.gethostname() + "/" +
-                                  (config.omd_site() and config.omd_site() + "/" or
-                                   "") + "check_mk/",
+                                  default_value=local_site_url,
                               )),
                          ],
                      ),
@@ -344,9 +346,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                                   regex_error=_("The URL must begin with <tt>http</tt> or "
                                                 "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
                                   size=64,
-                                  default_value="http://" + socket.gethostname() + "/" +
-                                  (config.omd_site() and config.omd_site() + "/" or
-                                   "") + "check_mk/",
+                                  default_value=local_site_url,
                               )),
                          ],
                      ),
@@ -404,9 +404,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
                                   regex_error=_("The URL must begin with <tt>http</tt> or "
                                                 "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
                                   size=64,
-                                  default_value="http://" + socket.gethostname() + "/" +
-                                  (config.omd_site() and config.omd_site() + "/" or
-                                   "") + "check_mk/",
+                                  default_value=local_site_url,
                               )),
                          ],
                      ),
@@ -1058,8 +1056,7 @@ class NotificationParameterPushover(NotificationParameter):
                      regex_error=_("The URL must begin with <tt>http</tt> or "
                                    "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
                      size=64,
-                     default_value="http://" + socket.gethostname() + "/" +
-                     (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
+                     default_value=local_site_url,
                  )),
                 (
                     "proxy_url",

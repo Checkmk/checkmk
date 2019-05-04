@@ -34,14 +34,8 @@ def register_builtin_html():
 @pytest.fixture()
 def load_config(register_builtin_html):
     old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
-
-    multisite_mk = Path(cmk.utils.paths.default_config_dir) / "multisite.mk"
-    multisite_mk.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-    multisite_mk.touch()  # pylint: disable=no-member
     config.initialize()
-
     yield
-
     cmk.utils.log.logger.setLevel(old_root_log_level)
 
 

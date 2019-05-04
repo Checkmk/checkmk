@@ -153,18 +153,16 @@ def initialize():
     cmk.gui.i18n.set_user_localizations(user_localizations)
 
 
-# Read in a multisite.d/*.mk file
-def include(filename):
-    if not filename.startswith("/"):
-        filename = cmk.utils.paths.default_config_dir + "/" + filename
-
-    # Config file is obligatory. An empty example is installed
-    # during setup.sh. Better signal an error then simply ignore
-    # Absence.
+def _load_config_file(path):
+    # type: (str) -> None
+    """Load the given GUI configuration file"""
     try:
-        execfile(filename, globals(), globals())
+        execfile(path, globals(), globals())
+    except IOError as e:
+        if e.errno != errno.ENOENT:  # No such file or directory
+            raise
     except Exception as e:
-        raise MKConfigError(_("Cannot read configuration file %s: %s:") % (filename, e))
+        raise MKConfigError(_("Cannot read configuration file %s: %s:") % (path, e))
 
 
 # Load multisite.mk and all files in multisite.d/. This will happen
@@ -184,7 +182,7 @@ def load_config():
     sites = default_single_site_configuration()
 
     # First load main file
-    include("multisite.mk")
+    _load_config_file(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
     # Load also recursively all files below multisite.d
     conf_dir = cmk.utils.paths.default_config_dir + "/multisite.d"
@@ -197,7 +195,7 @@ def load_config():
 
     filelist.sort()
     for p in filelist:
-        include(p)
+        _load_config_file(p)
 
     if sites:
         sites = migrate_old_site_config(sites)

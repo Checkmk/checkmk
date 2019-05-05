@@ -19,7 +19,8 @@ class Scenario(object):
         if tags is None:
             tags = []
 
-        self.config["all_hosts"].append("%s|%s" % (hostname, "|".join(tags)))
+        name_with_tags = hostname if not tags else "%s|%s" % (hostname, "|".join(tags))
+        self.config["all_hosts"].append(name_with_tags)
         self.config["host_paths"][hostname] = folder
         #self.config["host_tags"][hostname] = tags
         return self
@@ -29,7 +30,7 @@ class Scenario(object):
             tags = []
         if nodes is None:
             nodes = []
-        name_with_tags = "%s|%s" % (hostname, "|".join(tags))
+        name_with_tags = hostname if not tags else "%s|%s" % (hostname, "|".join(tags))
         self.config["clusters"][name_with_tags] = nodes
         self.config["host_paths"][hostname] = folder
         #self.config["host_tags"][hostname] = tags

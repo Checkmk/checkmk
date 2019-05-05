@@ -375,7 +375,7 @@ def get_host_attributes(hostname, config_cache):
     # "__TAG_" instead. We may deprecate this is one day.
     attrs["_TAGS"] = " ".join(sorted(config_cache.get_host_config(hostname).tags))
 
-    attrs.update(_get_tag_attributes(config_cache.tags_of_host(hostname), "TAG"))
+    attrs.update(_get_tag_attributes(host_config.tag_groups, "TAG"))
     attrs.update(_get_tag_attributes(host_config.labels, "LABEL"))
     attrs.update(_get_tag_attributes(host_config.label_sources, "LABELSOURCE"))
 

@@ -77,9 +77,7 @@ def dump_host(hostname):
                    (addresses if addresses is not None else "No IP") + "\n")
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
-    tags = [
-        (tag_template % ":".join(t)) for t in sorted(config_cache.tags_of_host(hostname).items())
-    ]
+    tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.items())]
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
     # TODO: Clean this up once cluster parent handling has been moved to HostConfig
     if host_config.is_cluster:

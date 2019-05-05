@@ -35,7 +35,7 @@ import py_compile
 import struct
 import sys
 import itertools
-from typing import Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
+from typing import Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
 import six
 
@@ -622,7 +622,7 @@ def strip_tags(tagged_hostlist):
 # This function should only be used during duplicate host check! It has to work like
 # all_active_hosts() but with the difference that duplicates are not removed.
 def _all_active_hosts_with_duplicates():
-    # type: () -> Set[str]
+    # type: () -> List[str]
     # Only available with CEE
     if "shadow_hosts" in globals():
         shadow_host_entries = shadow_hosts.keys()
@@ -632,40 +632,34 @@ def _all_active_hosts_with_duplicates():
     config_cache = get_config_cache()
     return _filter_active_hosts(config_cache, strip_tags(all_hosts)  \
                                + strip_tags(clusters.keys()) \
-                               + strip_tags(shadow_host_entries), keep_duplicates=True)
+                               + strip_tags(shadow_host_entries))
 
 
-def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False, keep_duplicates=False):
+def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False):
+    # type: (ConfigCache, Iterable[str], bool) -> List[str]
     """Returns a set of active hosts for this site"""
-    if only_hosts is None and distributed_wato_site is None:
-        active_hosts = hostlist
+    if only_hosts is None:
+        if distributed_wato_site is None:
+            return list(hostlist)
 
-    elif only_hosts is None:
-        active_hosts = [
+        return [
             hostname for hostname in hostlist
             if _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
         ]
 
-    elif distributed_wato_site is None:
+    if distributed_wato_site is None:
         if keep_offline_hosts:
-            active_hosts = hostlist
-        else:
-            active_hosts = [
-                hostname for hostname in hostlist
-                if config_cache.in_binary_hostlist(hostname, only_hosts)
-            ]
-
-    else:
-        active_hosts = [
+            return list(hostlist)
+        return [
             hostname for hostname in hostlist
-            if (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts)) and
-            _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
+            if config_cache.in_binary_hostlist(hostname, only_hosts)
         ]
 
-    if keep_duplicates:
-        return active_hosts
-
-    return set(active_hosts)
+    return [
+        hostname for hostname in hostlist
+        if (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts)) and
+        _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
+    ]
 
 
 def _host_is_member_of_site(config_cache, hostname, site):
@@ -700,10 +694,11 @@ def all_offline_hosts():
     # type: () -> Set[str]
     config_cache = get_config_cache()
 
-    hostlist = _filter_active_hosts(
-        config_cache,
-        config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters()),
-        keep_offline_hosts=True)
+    hostlist = set(
+        _filter_active_hosts(
+            config_cache,
+            config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters()),
+            keep_offline_hosts=True))
 
     return set([
         hostname for hostname in hostlist
@@ -3510,7 +3505,7 @@ class ConfigCache(object):
 
     def _get_all_active_realhosts(self):
         # type: () -> Set[str]
-        return _filter_active_hosts(self, self._all_configured_realhosts)
+        return set(_filter_active_hosts(self, self._all_configured_realhosts))
 
     def all_configured_realhosts(self):
         # type: () -> Set[str]
@@ -3560,7 +3555,7 @@ class ConfigCache(object):
 
     def _get_all_active_clusters(self):
         # type: () -> Set[str]
-        return _filter_active_hosts(self, self.all_configured_clusters())
+        return set(_filter_active_hosts(self, self.all_configured_clusters()))
 
     def all_configured_clusters(self):
         # type: () -> Set[str]

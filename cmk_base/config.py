@@ -668,6 +668,15 @@ def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False, keep_
     return set(active_hosts)
 
 
+def _host_is_member_of_site(config_cache, hostname, site):
+    # type: (ConfigCache, str, str) -> bool
+    for tag in config_cache.get_host_config(hostname).tags:
+        if tag.startswith("site:"):
+            return site == tag[5:]
+    # hosts without a site: tag belong to all sites
+    return True
+
+
 def duplicate_hosts():
     # type: () -> List[str]
     seen_hostnames = set()  # type: Set[str]
@@ -711,28 +720,6 @@ def all_configured_offline_hosts():
         hostname for hostname in hostlist
         if not config_cache.in_binary_hostlist(hostname, only_hosts)
     ])
-
-
-#.
-#   .--Hosts---------------------------------------------------------------.
-#   |                       _   _           _                              |
-#   |                      | | | | ___  ___| |_ ___                        |
-#   |                      | |_| |/ _ \/ __| __/ __|                       |
-#   |                      |  _  | (_) \__ \ |_\__ \                       |
-#   |                      |_| |_|\___/|___/\__|___/                       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Helper functions for dealing with hosts.                            |
-#   '----------------------------------------------------------------------'
-
-
-def _host_is_member_of_site(config_cache, hostname, site):
-    # type: (ConfigCache, str, str) -> bool
-    for tag in config_cache.get_host_config(hostname).tags:
-        if tag.startswith("site:"):
-            return site == tag[5:]
-    # hosts without a site: tag belong to all sites
-    return True
 
 
 #.
@@ -2221,8 +2208,8 @@ class HostConfig(object):
         self.nodes = self._config_cache.nodes_of(hostname)
 
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
-        self.tags = self._config_cache.tag_list_of_host(self.hostname)
-        self.tag_groups = host_tags.get(hostname, {})
+        self.tags = self._config_cache.tag_list_of_host(hostname)
+        self.tag_groups = self._config_cache.tags_of_host(hostname)
         self.labels = self._get_host_labels()
         self.label_sources = self._get_host_label_sources()
         self.ruleset_match_object = self._get_ruleset_match_object()

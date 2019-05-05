@@ -14,7 +14,7 @@ import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
         'address_family': 'ip-v4-only',
         'ip-v4': 'ip-v4',
         'agent': 'no-agent',
-        'snmp': 'no-snmp',
+        'snmp_ds': 'no-snmp',
         'ping': 'ping',
         'site': 'ding',
         'piggyback': 'auto-piggyback',
@@ -26,7 +26,7 @@ import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
     }, {
         'agent': 'no-agent',
         'address_family': 'no-ip',
-        'snmp': 'no-snmp',
+        'snmp_ds': 'no-snmp',
         'site': 'NO_SITE',
         'piggyback': 'auto-piggyback',
     }),
@@ -36,7 +36,7 @@ import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
         'agent': 'cmk-agent',
         'address_family': 'ip-v4-only',
         'ip-v4': 'ip-v4',
-        'snmp': 'no-snmp',
+        'snmp_ds': 'no-snmp',
         'site': '',
         'tcp': 'tcp',
         'piggyback': 'auto-piggyback',
@@ -52,15 +52,15 @@ def test_host_tags(attributes, expected_tags):
 @pytest.mark.usefixtures("load_config")
 @pytest.mark.parametrize("attributes,result", [
     ({
-        "tag_snmp": "no-snmp",
+        "tag_snmp_ds": "no-snmp",
         "tag_agent": "no-agent",
     }, True),
     ({
-        "tag_snmp": "no-snmp",
+        "tag_snmp_ds": "no-snmp",
         "tag_agent": "cmk-agent",
     }, False),
     ({
-        "tag_snmp": "no-snmp",
+        "tag_snmp_ds": "no-snmp",
         "tag_agent": "no-agent",
         "tag_address_family": "no-ip",
     }, False),

@@ -578,7 +578,7 @@ class BuiltinTagConfig(TagConfig):
                 ],
             },
             {
-                'id': 'snmp',
+                'id': 'snmp_ds',
                 'title': _('SNMP'),
                 'topic': _('Data sources'),
                 'tags': [{

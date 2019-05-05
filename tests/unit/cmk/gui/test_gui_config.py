@@ -812,7 +812,7 @@ def test_html_set_theme(my_theme, register_builtin_html):
 @pytest.mark.usefixtures("load_config")
 def test_default_tags():
     groups = {
-        "snmp": [
+        "snmp_ds": [
             'no-snmp',
             'snmp-v1',
             'snmp-v2',

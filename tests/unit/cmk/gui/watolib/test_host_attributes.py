@@ -264,7 +264,7 @@ expected_attributes = {
         'show_inherited_value': True,
         'topic': u'Data sources'
     },
-    'tag_snmp': {
+    'tag_snmp_ds': {
         'depends_on_roles': [],
         'depends_on_tags': [],
         'editable': True,
@@ -478,7 +478,7 @@ def test_host_attributes(for_what):
         "data_sources": [
             'tag_agent',
             'tag_piggyback',
-            'tag_snmp',
+            'tag_snmp_ds',
         ],
         "management_board": [
             'management_address',

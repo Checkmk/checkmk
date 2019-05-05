@@ -541,9 +541,18 @@ class CREFolder(BaseFolder):
 
     def _transform_old_attributes(self, attributes):
         """Mangle all attribute structures read from the disk to prepare it for the current logic"""
-        attributes = self._transform_old_agent_type_in_attributes(attributes)
+        attributes = self._transform_pre_15_agent_type_in_attributes(attributes)
         attributes = self._transform_none_value_site_attribute(attributes)
         attributes = self._add_missing_meta_data(attributes)
+        attributes = self._transform_tag_snmp_ds(attributes)
+        return attributes
+
+    # In versions previous to 1.6 checkMK had a tag group named "snmp" and an
+    # auxiliary tag named "snmp" in the builtin tags. This name conflict had to
+    # be resolved. The tag group has been changed to "snmp_ds" to fix it.
+    def _transform_tag_snmp_ds(self, attributes):
+        if "tag_snmp" in attributes:
+            attributes["tag_snmp_ds"] = attributes.pop("tag_snmp")
         return attributes
 
     # 1.6 introduced meta_data for hosts and folders to keep information about their
@@ -566,7 +575,7 @@ class CREFolder(BaseFolder):
     #    ],
     #)
     #
-    def _transform_old_agent_type_in_attributes(self, attributes):
+    def _transform_pre_15_agent_type_in_attributes(self, attributes):
         if "tag_agent" not in attributes:
             return attributes  # Nothing set here, no transformation necessary
 
@@ -1921,7 +1930,7 @@ class CREHost(WithPermissionsAndAttributes):
         # Because we need information from multiple attributes to get this
         # information, we need to add this decision here.
         # Skip this in case no-ip is configured: A ping check is useless in this case
-        if tag_groups["snmp"] == "no-snmp" \
+        if tag_groups["snmp_ds"] == "no-snmp" \
            and tag_groups["agent"] == "no-agent" \
            and tag_groups["address_family"] != "no-ip":
             tag_groups["ping"] = "ping"
@@ -1932,12 +1941,12 @@ class CREHost(WithPermissionsAndAttributes):
         aux_tag_ids = [t.id for t in config.tags.aux_tag_list.get_tags()]
 
         # Be compatible to: Agent type -> SNMP v2 or v3
-        if tag_groups["agent"] == "no-agent" and tag_groups["snmp"] == "snmp-v2" \
+        if tag_groups["agent"] == "no-agent" and tag_groups["snmp_ds"] == "snmp-v2" \
            and "snmp-only" in aux_tag_ids:
             tag_groups["snmp-only"] = "snmp-only"
 
         # Be compatible to: Agent type -> Dual: SNMP + TCP
-        if tag_groups["agent"] == "cmk-agent" and tag_groups["snmp"] == "snmp-v2" \
+        if tag_groups["agent"] == "cmk-agent" and tag_groups["snmp_ds"] == "snmp-v2" \
            and "snmp-tcp" in aux_tag_ids:
             tag_groups["snmp-tcp"] = "snmp-tcp"
 

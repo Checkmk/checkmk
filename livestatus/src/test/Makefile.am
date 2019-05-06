@@ -79,7 +79,7 @@ build_googletest:
 compile_commands.json: Makefile $(wildcard *.cc  *.h)
 	$(MAKE) -C $(top_srcdir) .venv
 	$(MAKE) -j4 -C ..
-	$(MAKE) -Bnwk | PIPENV_MAX_DEPTH=4 pipenv run compiledb
+	LANG=C $(MAKE) -Bnwk | PIPENV_MAX_DEPTH=4 pipenv run compiledb
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)

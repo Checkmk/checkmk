@@ -107,9 +107,9 @@ inline const std::wstring GetDefaultPrefixName() {
 const std::vector<std::wstring>& ExternalCommandPaths();
 
 // API to find a file on exe path
-const std::wstring FindExeFileOnPath(const std::wstring File);
-const std::wstring FindConfigFile(std::filesystem::path Dir,
-                                  const std::wstring File);
+const std::wstring FindExeFileOnPath(const std::wstring& File);
+const std::wstring FindConfigFile(const std::filesystem::path& Dir,
+                                  const std::wstring& File);
 
 // API for testing and logging
 std::vector<std::filesystem::path> GetExePaths();

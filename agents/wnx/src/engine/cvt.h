@@ -7,31 +7,27 @@
 #include <string>
 #include <string_view>
 
-#include "common/cfg_info.h"
-
-#include "common/wtools.h"
-
-#include "yaml-cpp/yaml.h"
-
-#include "logger.h"
-
 #include "cfg.h"
+#include "common/cfg_info.h"
+#include "common/wtools.h"
+#include "logger.h"
+#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg::cvt {
 //
-[[deprecated]] YAML::Node LoadIni(const std::filesystem::path IniFile);
+[[deprecated]] YAML::Node LoadIni(const std::filesystem::path& IniFile);
 
 }  // namespace cma::cfg::cvt
 
 namespace cma::cfg::cvt {
 class ParserImplementation;
-bool CheckIniFile(const std::filesystem::path Path);
+bool CheckIniFile(const std::filesystem::path& Path);
 
 // Engine to parse ini and generate YAML
 // implementation in the lwa folder
 class Parser {
 public:
-    Parser() : pi_(nullptr) {}
+    Parser() {}
 
     virtual ~Parser();
 
@@ -49,7 +45,7 @@ public:
     Parser& operator=(Parser&&) = delete;
 
 private:
-    ParserImplementation* pi_;
+    ParserImplementation* pi_ = nullptr;
 };
 }  // namespace cma::cfg::cvt
 

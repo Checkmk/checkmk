@@ -1359,7 +1359,7 @@ std::wstring WmiWrapper::produceTable(
     return result;
 }
 
-std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring> Names,
+std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring>& Names,
                                    const std::wstring& Target) noexcept {
     // build name_list string if any or assign "*"
     auto name_list = cma::tools::JoinVector(Names, L",");
@@ -1375,7 +1375,7 @@ std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring> Names,
 
 // work horse to ask certain names from the target
 // on error returns empty string
-std::wstring WmiWrapper::queryTable(const std::vector<std::wstring> Names,
+std::wstring WmiWrapper::queryTable(const std::vector<std::wstring>& Names,
                                     const std::wstring& Target) noexcept {
     auto query_text = makeQuery(Names, Target);
 
@@ -1396,7 +1396,7 @@ std::wstring WmiWrapper::queryTable(const std::vector<std::wstring> Names,
 // on error returns nullptr
 // Release MUST!!!
 IEnumWbemClassObject* WmiWrapper::queryEnumerator(
-    const std::vector<std::wstring> Names,
+    const std::vector<std::wstring>& Names,
     const std::wstring& Target) noexcept {
     auto query_text = makeQuery(Names, Target);
 
@@ -1405,7 +1405,7 @@ IEnumWbemClassObject* WmiWrapper::queryEnumerator(
     return wtools::WmiExecQuery(services_, query_text);
 }
 
-HMODULE LoadWindowsLibrary(const std::wstring DllPath) {
+HMODULE LoadWindowsLibrary(const std::wstring& DllPath) {
     // this should be sufficient most of the time
     static const size_t buffer_size = 128;
 
@@ -1472,7 +1472,7 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath) {
 
 // gtest [+]
 // returns data from the root machine registry
-uint32_t GetRegistryValue(const std::wstring Key, const std::wstring Value,
+uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                           uint32_t Default) noexcept {
     HKEY hkey = 0;
     auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
@@ -1495,7 +1495,7 @@ uint32_t GetRegistryValue(const std::wstring Key, const std::wstring Value,
 
 // gtest [+]
 // returns data from the root machine registry
-bool SetRegistryValue(const std::wstring Key, const std::wstring Value,
+bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                       uint32_t Data) noexcept {
     auto ret = RegSetKeyValue(HKEY_LOCAL_MACHINE, Key.c_str(), Value.c_str(),
                               REG_DWORD, &Data, 4);
@@ -1504,8 +1504,9 @@ bool SetRegistryValue(const std::wstring Key, const std::wstring Value,
     return ret == ERROR_SUCCESS;
 }
 
-std::wstring GetRegistryValue(const std::wstring Key, const std::wstring Value,
-                              const std::wstring Default) noexcept {
+std::wstring GetRegistryValue(const std::wstring& Key,
+                              const std::wstring& Value,
+                              const std::wstring& Default) noexcept {
     HKEY hkey = 0;
     auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
     if (ERROR_SUCCESS == result && hkey) {

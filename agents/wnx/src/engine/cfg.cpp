@@ -543,7 +543,7 @@ void SetupEnvironmentFromGroups() {
 
 // Find any file, usually executable on one of the our paths
 // for execution
-const std::wstring FindExeFileOnPath(const std::wstring File) {
+const std::wstring FindExeFileOnPath(const std::wstring& File) {
     using namespace std::filesystem;
     auto paths = details::G_ConfigInfo.getExePaths();
     for (const auto& dir : paths) {
@@ -560,8 +560,8 @@ std::vector<std::filesystem::path> GetExePaths() {
 }
 
 // Find cfg file, usually YAML on one of the our paths for config
-const std::wstring FindConfigFile(std::filesystem::path Dir,
-                                  const std::wstring File) {
+const std::wstring FindConfigFile(const std::filesystem::path& Dir,
+                                  const std::wstring& File) {
     namespace fs = std::filesystem;
     XLOG::d.t("trying path {}", Dir.u8string());
     auto file_path = Dir / File;
@@ -1020,7 +1020,7 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& ConfigFileName,
 
 // LOOOONG operation
 // when failed old config retained
-bool ConfigInfo::loadDirect(const std::filesystem::path FullPath) {
+bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
     namespace fs = std::filesystem;
     int error = 0;
     auto file = FullPath;

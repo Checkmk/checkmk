@@ -2,9 +2,8 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #include <shlobj.h>  // known path
+#include <windows.h>
 
 #include <fstream>
 #include <string>
@@ -20,11 +19,11 @@ inline bool RunCommandAndWait(const std::wstring& Command) {
     si.cb = sizeof(STARTUPINFO);
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
-    PROCESS_INFORMATION pi{0};
+    PROCESS_INFORMATION pi{nullptr};
     memset(&pi, 0, sizeof(pi));
     // CREATE_NEW_CONSOLE
 
-    if (::CreateProcessW(NULL,  // stupid windows want null here
+    if (::CreateProcessW(nullptr,  // stupid windows want null here
                          const_cast<wchar_t*>(Command.c_str()),  // win32!
                          nullptr,  // security attribute
                          nullptr,  // thread attribute
@@ -52,7 +51,7 @@ inline bool RunDetachedCommand(const std::string& Command) {
     memset(&pi, 0, sizeof(pi));
     // CREATE_NEW_CONSOLE
 
-    if (::CreateProcessA(NULL,  // stupid windows want null here
+    if (::CreateProcessA(nullptr,  // stupid windows want null here
                          const_cast<char*>(Command.c_str()),  // win32!
                          nullptr,  // security attribute
                          nullptr,  // thread attribute
@@ -92,7 +91,7 @@ inline uint32_t RunStdCommand(
     PROCESS_INFORMATION pi{0};
     memset(&pi, 0, sizeof(pi));
 
-    if (::CreateProcessW(NULL,  // stupid windows want null here
+    if (::CreateProcessW(nullptr,  // stupid windows want null here
                          const_cast<wchar_t*>(Command.c_str()),  // win32!
                          nullptr,        // security attribute
                          nullptr,        // thread attribute

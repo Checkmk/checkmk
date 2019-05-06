@@ -333,7 +333,7 @@ public:
 
         if (handle_ == INVALID_HANDLE_VALUE) {
             auto error = GetLastError();
-            handle_ = 0;
+            handle_ = nullptr;
             // please do not use printf - chrome host app communicates with
             // chrome via stdin/stdout making printf breaks communication
             // printf("Error %d opening file %s\n", error, name_.c_str());
@@ -345,7 +345,7 @@ public:
                     name_.c_str())
                 .filelog(GetMailApiLog());
 
-        return handle_ != 0;
+        return handle_ != nullptr;
     }
 
     bool Close() {
@@ -359,7 +359,7 @@ public:
                         name_.c_str(), error)
                     .filelog(GetMailApiLog());
             } else
-                handle_ = 0;
+                handle_ = nullptr;
         }
         return true;
     }
@@ -376,7 +376,7 @@ public:
         DWORD cbWritten = 0;
         auto fResult = WriteFile(handle_, Data, Len, &cbWritten, nullptr);
 
-        if (!fResult) {
+        if (0 == fResult) {
             xlog::l(IsMailApiTraced(), "Bad write %d", GetLastError())
                 .filelog(GetMailApiLog());
 
@@ -386,7 +386,7 @@ public:
         return true;
     }
 
-    int Get(void* Data, int MaxLen) {
+    int Get(void* Data, unsigned int MaxLen) {
         std::lock_guard<std::mutex> lck(lock_);
         if (!handle_ || IsPostman()) return FAILED_INIT;
         auto hEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -405,15 +405,14 @@ public:
         ov.OffsetHigh = 0;
         ov.hEvent = hEvent;
 
-        int message_size = 0;
-        int message_count = 0;
+        DWORD message_size = 0;
+        DWORD message_count = 0;
 
-        auto fResult =
-            GetMailslotInfo(handle_,                 // mailslot handle
-                            nullptr,                 // no maximum message size
-                            (DWORD*)&message_size,   // size of next message
-                            (DWORD*)&message_count,  // number of messages
-                            nullptr);                // no read time-out
+        auto fResult = GetMailslotInfo(handle_,  // mailslot handle
+                                       nullptr,  // no maximum message size
+                                       &message_size,   // size of next message
+                                       &message_count,  // number of messages
+                                       nullptr);        // no read time-out
 
         if (!fResult) return ErrCodes::FAILED_INFO;
 
@@ -425,20 +424,16 @@ public:
 
         if (MaxLen < message_size) return ErrCodes::TOO_SMALL;
 
-        int message_read = 0;
-        fResult =
-            ReadFile(handle_, Data, message_size, (DWORD*)&message_read, &ov);
+        DWORD message_read = 0;
+        fResult = ReadFile(handle_, Data, message_size, &message_read, &ov);
 
-        if (fResult) {
-            return message_read;
-        } else {
-            auto error = GetLastError();
-            xlog::l(IsMailApiTraced(), "Failed read mail slot with error %d",
-                    error)
-                .filelog(GetMailApiLog());
+        if (fResult) return message_read;
 
-            return ErrCodes::FAILED_READ;
-        }
+        auto error = GetLastError();
+        xlog::l(IsMailApiTraced(), "Failed read mail slot with error %d", error)
+            .filelog(GetMailApiLog());
+
+        return ErrCodes::FAILED_READ;
     }
 
     void MailBoxThread(cma::MailBoxThreadFoo Foo, int SleepValue,
@@ -480,7 +475,7 @@ public:
             security_attribute_keeper;  // black magic behind, do not try to
                                         // understand, RAII auto-destroy
         auto sa = security_attribute_keeper.get();
-        if (!sa) {
+        if (nullptr == sa) {
             xlog::l(IsMailApiTraced(), "Failed to create security descriptor")
                 .filelog(GetMailApiLog());
             return INVALID_HANDLE_VALUE;

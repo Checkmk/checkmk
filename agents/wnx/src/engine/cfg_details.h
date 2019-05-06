@@ -137,7 +137,7 @@ namespace details {
 class ConfigInfo {
     enum { kMaxFiles = 3 };
     struct YamlData {
-        YamlData(std::filesystem::path Path,
+        YamlData(const std::filesystem::path& Path,
                  std::filesystem::file_time_type Timestamp)
             : path_(Path), bad_(false) {}
 
@@ -210,10 +210,9 @@ public:
     // #TODO probably replace with shared_ptr
     YAML::Node getConfig() const noexcept {
         std::lock_guard lk(lock_);
-        if (ok_)
-            return yaml_;
-        else
-            return {};
+        if (ok_) return yaml_;
+
+        return {};
     }
 
     std::wstring getRootYamlPath() const noexcept {
@@ -350,7 +349,7 @@ public:
                            bool MergeSequences = false);
 
     // THIS IS ONLY FOR TESTING
-    bool loadDirect(const std::filesystem::path FullPath);
+    bool loadDirect(const std::filesystem::path& FullPath);
 
 private:
     std::vector<YamlData> buildYamlData(

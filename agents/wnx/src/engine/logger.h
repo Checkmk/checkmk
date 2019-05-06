@@ -144,14 +144,14 @@ namespace xlog {
 inline std::string formatString(int Fl, const char* Prefix,
                                 const char* String) {
     std::string s;
-    auto length = String ? strlen(String) : 0;
+    auto length = String != nullptr ? strlen(String) : 0;
     auto prefix = Fl & Flags::kNoPrefix ? nullptr : Prefix;
-    length += prefix ? strlen(prefix) : 0;
+    length += prefix != nullptr ? strlen(prefix) : 0;
     length++;
 
     try {
         s.reserve(length);
-        if (prefix) s = prefix;
+        if (prefix != nullptr) s = prefix;
         s += String;
     } catch (const std::exception&) {
         return {};
@@ -350,6 +350,8 @@ public:
         constructed_ = kConstructedValue;
     }
 
+    Emitter operator=(const Emitter& Rhs) = delete;
+
     ~Emitter() {
         if (copy_) flush();
     }
@@ -398,14 +400,14 @@ public:
             }
 
             std::lock_guard lk(lock_);
-            postProcessAndPrint(s.c_str());
+            postProcessAndPrint(s);
             return s;
         } catch (...) {
             auto s =
                 fmt::format("Invalid parameters for log string \"{}\"", Format);
             auto e = *this;
             e.mods_ = XLOG::kCritError;
-            e.postProcessAndPrint(s.c_str());
+            e.postProcessAndPrint(s);
             return s;
         }
     }
@@ -422,14 +424,14 @@ public:
 
             auto e = (*this).operator()(Flags);
             std::lock_guard lk(lock_);
-            e.postProcessAndPrint(s.c_str());
+            e.postProcessAndPrint(s);
             return s;
         } catch (...) {
             auto s =
                 fmt::format("Invalid parameters for log string \"{}\"", Format);
             auto e = *this;
             e.mods_ = XLOG::kCritError;
-            e.postProcessAndPrint(s.c_str());
+            e.postProcessAndPrint(s);
             return s;
         }
     }
@@ -474,14 +476,14 @@ public:
             auto s = fmt::format(Format, args...);
             auto e = *this;
             e.mods_ |= Modifications;
-            e.postProcessAndPrint(s.c_str());
+            e.postProcessAndPrint(s);
             return s;
         } catch (...) {
             auto s =
                 fmt::format("Invalid parameters for log string \"{}\"", Format);
             auto e = *this;
             e.mods_ |= XLOG::kCritError;
-            e.postProcessAndPrint(s.c_str());
+            e.postProcessAndPrint(s);
             return s;
         }
     }
@@ -613,8 +615,6 @@ private:
         }
         copy_ = true;
     }
-
-    Emitter operator=(const Emitter& Rhs) = delete;
 
     // this if for stream operations
     // called from destructor

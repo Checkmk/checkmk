@@ -29,7 +29,7 @@ import socket
 import time
 import signal
 from typing import Callable, List, Text, Optional, Dict, Tuple  # pylint: disable=unused-import
-import pathlib2 as pathlib
+from pathlib2 import Path
 
 from cmk.utils.regex import regex
 import cmk.utils.tty as tty
@@ -1338,7 +1338,7 @@ def _save_autochecks_file(hostname, items):
     if not os.path.exists(cmk.utils.paths.autochecks_dir):
         os.makedirs(cmk.utils.paths.autochecks_dir)
 
-    filepath = pathlib.Path() / cmk.utils.paths.autochecks_dir / ("%s.mk" % hostname)
+    filepath = Path(cmk.utils.paths.autochecks_dir) / ("%s.mk" % hostname)
     content = []
     content.append("[")
     for check_plugin_name, item, paramstring in items:

@@ -906,6 +906,7 @@ def get_final_service_description(hostname, description):
 
 
 def service_ignored(hostname, check_plugin_name, description):
+    # type: (str, str, Text) -> bool
     if check_plugin_name and check_plugin_name in ignored_checktypes:
         return True
 
@@ -1294,6 +1295,7 @@ def in_extraconf_servicelist(servicelist, service):
 
 
 def _in_servicematcher_list(service_matchers, item):
+    # type: (List[Tuple[bool, Callable]], Text) -> bool
     for negate, func in service_matchers:
         result = func(item)
         if result:
@@ -3342,6 +3344,7 @@ class ConfigCache(object):
 
         return self._host_extra_conf_match_cache[cache_id][hostname]
 
+    # TODO: Cleanup external in_binary_hostlist call sites
     def in_binary_hostlist(self, hostname, conf):
         cache = self._in_binary_hostlist_cache
 
@@ -3492,11 +3495,14 @@ class ConfigCache(object):
 
         return new_rules
 
-    # Compute outcome of a service rule set that just say yes/no
     def in_boolean_serviceconf_list(self, hostname, descr, ruleset):
-        # When the requested host is part of the local sites configuration,
-        # then use only the sites hosts for processing the rules
+        # type: (str, Text, List) -> bool
+        """Compute outcome of a service rule set that just say yes/no"""
+
+        # Optimization: When the requested host is part of the local sites
+        # configuration, then use only the sites hosts for processing the rules
         with_foreign_hosts = hostname not in self._all_processed_hosts
+
         cache_id = id(ruleset), with_foreign_hosts
         try:
             ruleset = self._in_boolean_service_conf_list_ruleset_cache[cache_id]
@@ -3506,12 +3512,12 @@ class ConfigCache(object):
 
         for negate, hosts, service_matchers in ruleset:
             if hostname in hosts:
-                cache_id = service_matchers, descr
+                match_cache_id = service_matchers, descr
                 try:
-                    match = self._in_boolean_service_conf_list_match_cache[cache_id]
+                    match = self._in_boolean_service_conf_list_match_cache[match_cache_id]
                 except KeyError:
                     match = _in_servicematcher_list(service_matchers, descr)
-                    self._in_boolean_service_conf_list_match_cache[cache_id] = match
+                    self._in_boolean_service_conf_list_match_cache[match_cache_id] = match
 
                 if match:
                     return not negate

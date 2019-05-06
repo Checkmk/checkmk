@@ -3342,6 +3342,59 @@ class ConfigCache(object):
 
         return self._host_extra_conf_match_cache[cache_id][hostname]
 
+    def in_binary_hostlist(self, hostname, conf):
+        cache = self._in_binary_hostlist_cache
+
+        cache_id = id(conf), hostname
+        try:
+            return cache[cache_id]
+        except KeyError:
+            pass
+
+        if conf and isinstance(conf[0], str):
+            raise NotImplementedError("Unsupported ruleset found: %s. Please "
+                                      "remove the configuration in case you don't need it "
+                                      "anymore. Otherwise contact the checkMK team." % conf)
+
+        for entry in conf:
+            actual_host_tags = self.tag_list_of_host(hostname)
+            entry, rule_options = get_rule_options(entry)
+            if rule_options.get("disabled"):
+                continue
+
+            try:
+                # Negation via 'NEGATE'
+                if entry[0] == NEGATE:
+                    entry = entry[1:]
+                    negate = True
+                else:
+                    negate = False
+                # entry should be one-tuple or two-tuple. Tuple's elements are
+                # lists of strings. User might forget comma in one tuple. Then the
+                # entry is the list itself.
+                if isinstance(entry, list):
+                    hostlist = entry
+                    tags = []
+                else:
+                    if len(entry) == 1:  # 1-Tuple with list of hosts
+                        hostlist = entry[0]
+                        tags = []
+                    else:
+                        tags, hostlist = entry
+
+                if hosttags_match_taglist(actual_host_tags, tags) and \
+                       in_extraconf_hostlist(hostlist, hostname):
+                    cache[cache_id] = not negate
+                    break
+            except:
+                # TODO: Fix this too generic catching (+ bad error message)
+                raise MKGeneralException("Invalid entry '%r' in host configuration list: "
+                                         "must be tuple with 1 or 2 entries" % (entry,))
+        else:
+            cache[cache_id] = False
+
+        return cache[cache_id]
+
     def _convert_host_ruleset(self, ruleset, with_foreign_hosts):
         new_rules = []
         if len(ruleset) == 1 and ruleset[0] == "":
@@ -3611,59 +3664,6 @@ class ConfigCache(object):
             return the_clusters[0]
 
         return hostname
-
-    def in_binary_hostlist(self, hostname, conf):
-        cache = self._in_binary_hostlist_cache
-
-        cache_id = id(conf), hostname
-        try:
-            return cache[cache_id]
-        except KeyError:
-            pass
-
-        if conf and isinstance(conf[0], str):
-            raise NotImplementedError("Unsupported ruleset found: %s. Please "
-                                      "remove the configuration in case you don't need it "
-                                      "anymore. Otherwise contact the checkMK team." % conf)
-
-        for entry in conf:
-            actual_host_tags = self.tag_list_of_host(hostname)
-            entry, rule_options = get_rule_options(entry)
-            if rule_options.get("disabled"):
-                continue
-
-            try:
-                # Negation via 'NEGATE'
-                if entry[0] == NEGATE:
-                    entry = entry[1:]
-                    negate = True
-                else:
-                    negate = False
-                # entry should be one-tuple or two-tuple. Tuple's elements are
-                # lists of strings. User might forget comma in one tuple. Then the
-                # entry is the list itself.
-                if isinstance(entry, list):
-                    hostlist = entry
-                    tags = []
-                else:
-                    if len(entry) == 1:  # 1-Tuple with list of hosts
-                        hostlist = entry[0]
-                        tags = []
-                    else:
-                        tags, hostlist = entry
-
-                if hosttags_match_taglist(actual_host_tags, tags) and \
-                       in_extraconf_hostlist(hostlist, hostname):
-                    cache[cache_id] = not negate
-                    break
-            except:
-                # TODO: Fix this too generic catching (+ bad error message)
-                raise MKGeneralException("Invalid entry '%r' in host configuration list: "
-                                         "must be tuple with 1 or 2 entries" % (entry,))
-        else:
-            cache[cache_id] = False
-
-        return cache[cache_id]
 
 
 def get_config_cache():

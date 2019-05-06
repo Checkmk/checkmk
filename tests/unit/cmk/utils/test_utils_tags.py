@@ -328,6 +328,16 @@ def test_tag_config_update_tag_group(test_cfg):
     test_cfg.validate_config()
 
 
+def test_tag_group_get_tag_group_config(test_cfg):
+    tg = test_cfg.get_tag_group("criticality")
+    assert tg.get_tag_group_config("prod") == {'bla': 'bla', 'criticality': 'prod'}
+
+
+def test_tag_group_get_tag_group_config_unknown_choice(test_cfg):
+    tg = test_cfg.get_tag_group("criticality")
+    assert tg.get_tag_group_config("prodX") == {'criticality': 'prodX'}
+
+
 def test_aux_tag_list_remove(test_cfg):
     assert "xyz" not in test_cfg.aux_tag_list.get_tag_ids()
     test_cfg.aux_tag_list.remove("xyz")  # not existing -> fine

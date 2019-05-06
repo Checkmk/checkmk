@@ -293,6 +293,17 @@ class TagGroup(object):
             choices.append((tag.id, tag.title))
         return choices
 
+    def get_tag_group_config(self, value):
+        """Return the set of tag groups which should be set for a host based on the given value"""
+        tag_groups = {self.id: value}
+
+        # add optional aux tags
+        for grouped_tag in self.tags:
+            if grouped_tag.id == value:
+                tag_groups.update({t: t for t in grouped_tag.aux_tag_ids})
+
+        return tag_groups
+
 
 class TagConfig(object):
     """Container object encapsulating a whole set of configured

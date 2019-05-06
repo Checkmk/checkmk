@@ -822,14 +822,7 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec):
 
     def get_tag_groups(self, value):
         """Return set of tag groups to set (handles secondary tags)"""
-        tag_groups = {self._tag_group.id: value}
-
-        # add optional aux tags
-        for grouped_tag in self._tag_group.tags:
-            if grouped_tag.id == value:
-                tag_groups.update({t: t for t in grouped_tag.aux_tag_ids})
-
-        return tag_groups
+        return self._tag_group.get_tag_group_config(value)
 
 
 class ABCHostAttributeHostTagList(ABCHostAttributeTag):

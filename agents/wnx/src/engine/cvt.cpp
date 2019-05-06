@@ -1,23 +1,21 @@
 // Windows Tools
 #include "stdafx.h"
 
+#include "cvt.h"
+
 #include <cstdint>
 #include <filesystem>
 #include <string>
 
+#include "SimpleIni.h"
+#include "logger.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
-
-#include "logger.h"
-
-#include "cvt.h"
-
-#include "SimpleIni.h"
 
 namespace cma::cfg::cvt {
 
 // this function is deprecated
-YAML::Node LoadIni(const std::filesystem::path IniFile) {
+YAML::Node LoadIni(const std::filesystem::path& IniFile) {
     namespace fs = std::filesystem;
     if (IniFile.empty()) {
         XLOG::l("Empty file name to load");

@@ -1,10 +1,9 @@
 // Assorted routines
 #pragma once
 
-#include <string.h>
 #include <cctype>
-
 #include <chrono>
+#include <cstring>
 #include <cwctype>
 #include <filesystem>
 #include <optional>
@@ -14,11 +13,10 @@
 #include <type_traits>
 #include <vector>
 
+#include "fmt/format.h"
 #include "tools/_raii.h"
 #include "tools/_tgt.h"
 #include "tools/_xlog.h"
-
-#include "fmt/format.h"
 
 // Popular Data Structures Here
 // I am not sure...
@@ -469,7 +467,7 @@ inline std::wstring JoinVector(const std::vector<std::wstring> Values,
                                const std::wstring& Separator) {
     std::wstring values_string;
     size_t sz = 0;
-    if (Values.size() == 0) {
+    if (Values.empty()) {
         return {};
     }
 
@@ -490,7 +488,7 @@ inline std::string JoinVector(const std::vector<std::string>& Values,
                               const std::string& Separator) {
     std::string values_string;
     size_t sz = 0;
-    if (Values.size() == 0) {
+    if (Values.empty()) {
         return {};
     }
 
@@ -526,7 +524,7 @@ inline std::string TimeToString(
 
 inline auto SecondsSinceEpoch() {
     auto time_since = std::chrono::system_clock::now().time_since_epoch();
-    const std::chrono::duration<long long> now =
+    const auto now =
         std::chrono::duration_cast<std::chrono::seconds>(time_since);
     return now.count();
 }

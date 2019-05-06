@@ -13,12 +13,12 @@
 #define _WIN32_DCOM
 
 #include <Wbemidl.h>
-#include <assert.h>
 #include <comdef.h>
 #include <shellapi.h>
 #include <tlhelp32.h>
 
 #include <atomic>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <mutex>
@@ -80,7 +80,7 @@ bool UninstallService(const wchar_t* ServiceName,
 // This is just to check validness during initial development
 class BaseServiceProcessor {
 public:
-    virtual ~BaseServiceProcessor() {}
+    virtual ~BaseServiceProcessor() = default;
     // Standard Windows API to Service hit here
     virtual void stopService() = 0;
     virtual void startService() = 0;
@@ -94,11 +94,11 @@ public:
 // keeps two handles
 class SimplePipe {
 public:
-    SimplePipe() : read_(0), write_(0), sa_initialized_(false) {
+    SimplePipe() : read_(nullptr), write_(nullptr), sa_initialized_(false) {
         sa_.lpSecurityDescriptor = &sd_;
         sa_.nLength = sizeof(SECURITY_ATTRIBUTES);
 
-        sa_.bInheritHandle = true;  // allow handle inherit for child process
+        sa_.bInheritHandle = TRUE;  // allow handle inherit for child process
     }
 
     SimplePipe(const SimplePipe&) = delete;
@@ -122,8 +122,8 @@ public:
         }
 
         if (!::CreatePipe(&read_, &write_, &sa_, 0)) {
-            read_ = 0;
-            write_ = 0;
+            read_ = nullptr;
+            write_ = nullptr;
             xlog::l("Failed to create pipe, %d", GetLastError()).print();
             return false;
         }
@@ -134,8 +134,8 @@ public:
                 .print();
             ::CloseHandle(read_);
             ::CloseHandle(write_);
-            read_ = 0;
-            write_ = 0;
+            read_ = nullptr;
+            write_ = nullptr;
             return false;
         }
         xlog::v("Allocated  2 handle %p %p", read_, write_);
@@ -147,12 +147,12 @@ public:
         if (read_) {
             CloseHandle(read_);
             xlog::v("Closed read %p", read_);
-            read_ = 0;
+            read_ = nullptr;
         }
         if (write_) {
             CloseHandle(write_);
             xlog::v("Closed write %p", write_);
-            write_ = 0;
+            write_ = nullptr;
         }
     }
 
@@ -168,7 +168,7 @@ public:
     const HANDLE moveWrite() noexcept {
         std::lock_guard lk(lock_);
         auto write = write_;
-        write_ = 0;
+        write_ = nullptr;
         return write;
     }
 
@@ -702,7 +702,7 @@ std::string ConditionallyConvertFromUTF16(const std::vector<T>& Data) {
 // local implementation of shitty registry access functions
 inline uint32_t LocalReadUint32(const char* RootName, const char* Name,
                                 uint32_t DefaultValue = 0) {
-    HKEY hKey = 0;
+    HKEY hKey = nullptr;
     auto result =
         RegOpenKeyExA(HKEY_LOCAL_MACHINE, RootName, 0, KEY_QUERY_VALUE, &hKey);
     if (result != ERROR_SUCCESS) return DefaultValue;
@@ -875,19 +875,20 @@ public:
 
     // work horse to ask certain names from the target
     // on error returns empty string
-    std::wstring queryTable(const std::vector<std::wstring> Names,
+    std::wstring queryTable(const std::vector<std::wstring>& Names,
                             const std::wstring& Target) noexcept;
 
     // special purposes: formatting for PS for example
     // on error returns nullptr
     // You have to call Release for returned object!!!
-    IEnumWbemClassObject* queryEnumerator(const std::vector<std::wstring> Names,
-                                          const std::wstring& Target) noexcept;
+    IEnumWbemClassObject* queryEnumerator(
+        const std::vector<std::wstring>& Names,
+        const std::wstring& Target) noexcept;
 
 private:
     void close() noexcept;
     // build valid WQL query
-    static std::wstring makeQuery(const std::vector<std::wstring> Names,
+    static std::wstring makeQuery(const std::vector<std::wstring>& Names,
                                   const std::wstring& Target) noexcept;
 
     mutable std::mutex lock_;
@@ -895,7 +896,7 @@ private:
     IWbemServices* services_;
 };
 
-HMODULE LoadWindowsLibrary(const std::wstring DllPath);
+HMODULE LoadWindowsLibrary(const std::wstring& DllPath);
 
 // Look into the registry in order to find out, which
 // event logs are available
@@ -904,16 +905,17 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath);
 
 // gtest [+]
 // returns data from the root machine registry
-uint32_t GetRegistryValue(const std::wstring Key, const std::wstring Value,
+uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                           uint32_t Default) noexcept;
 
 // gtest [+]
 // returns data from the root machine registry
-bool SetRegistryValue(const std::wstring Key, const std::wstring Value,
+bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                       uint32_t Data) noexcept;
 
-std::wstring GetRegistryValue(const std::wstring Key, const std::wstring Value,
-                              const std::wstring Default) noexcept;
+std::wstring GetRegistryValue(const std::wstring& Key,
+                              const std::wstring& Value,
+                              const std::wstring& Default) noexcept;
 
 }  // namespace wtools
 

@@ -2,19 +2,18 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/internal.h"
+
 #include <chrono>
 #include <functional>
 #include <iostream>
 #include <string>
 #include <tuple>
 
+#include "cfg.h"
+#include "common/mailslot_transport.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
-
-#include "cfg.h"
-
-#include "common/mailslot_transport.h"
-#include "providers/internal.h"
 
 namespace cma {
 
@@ -25,7 +24,7 @@ namespace provider {
 auto SplitStringLine(const std::string& Line) {
     using namespace cma::carrier;
     std::string cur_string = Line;
-    std::string marker = "";
+    std::string marker;
     {
         auto end = cur_string.find_first_of(' ');
         if (end == std::string::npos) {
@@ -147,23 +146,23 @@ bool Basic::sendGatheredData(const std::string& CommandLine) {
 
     auto section = generateContent(section_name);
     // optional send something to log
-    if (0) {
+    if (false) {
         auto title = fmt::format("from {} section", uniq_name_);
         carrier_.sendLog(uniq_name_, title.data(), title.length() + 1);
     }
 
     // send data
-    if (section.size()) {
+    if (!section.empty()) {
         if (section.back() == '\0')
             section.pop_back();  // some plugins may add zero. remove it
         if (section.back() == '\n') section.pop_back();
         carrier_.sendData(uniq_name_, marker, section.c_str(), section.size());
         return true;
-    } else {
-        // empty data are send to unblock waiters on server side
-        carrier_.sendData(uniq_name_, marker, nullptr, 0);
-        return false;
     }
+
+    // empty data are send to unblock waiters on server side
+    carrier_.sendData(uniq_name_, marker, nullptr, 0);
+    return false;
 }
 
 // #TODO gtest
@@ -174,7 +173,7 @@ bool Synchronous::startSynchronous(
                                       // grpc - for GRPC
                                       // rest - for Rest
     const std::string& CommandLine,   // format "id name whatever"
-    std::chrono::milliseconds) {
+    std::chrono::milliseconds Period) {
     using namespace cma::section;
     try {
         carrier_.establishCommunication(InternalPort);

@@ -225,7 +225,7 @@ std::string ReplacePredefinedMarkers(const std::string Path) {
 }
 
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
-                          const std::vector<YAML::Node> Yaml) {
+                          const std::vector<YAML::Node>& Yaml) {
     for (const auto& entry : Yaml) {
         try {
             // --exception control start --
@@ -249,7 +249,7 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
     }
 }
 
-void Plugins::loadFromMainConfig(const std::string GroupName) {
+void Plugins::loadFromMainConfig(const std::string& GroupName) {
     using namespace std;
     using namespace cma::cfg;
     auto config = GetLoadedConfig();

@@ -720,6 +720,7 @@ private:
 
             bool only_v4 = !ipv6_;
             bool entry_ipv6 = of::IsIpV6(entry);
+            //::IsIpV6(entry);
 
             // skipping ipv6 entries in ipv4 mode
             if (only_v4 && entry_ipv6) continue;
@@ -963,7 +964,7 @@ public:
     Plugins() : max_wait_(kDefaultPluginTimeout), async_start_(true) {}
 
     // API:
-    void loadFromMainConfig(const std::string GroupName);
+    void loadFromMainConfig(const std::string& GroupName);
 
     // relative high level API to build intermediate data structures
     // from raw data inside the class
@@ -1022,7 +1023,7 @@ private:
 };
 
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
-                          const std::vector<YAML::Node> Yaml);
+                          const std::vector<YAML::Node>& Yaml);
 
 // used to setup on start and forever. These environment variables are stable
 void SetupPluginEnvironment();

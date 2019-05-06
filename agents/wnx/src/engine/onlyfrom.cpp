@@ -1,6 +1,8 @@
 // Windows Tools
 #include "stdafx.h"
 
+#include "onlyfrom.h"
+
 #include <string>
 #include <string_view>
 
@@ -9,52 +11,48 @@
 #include "asio/ip/address_v6.hpp"
 #include "asio/ip/network_v4.hpp"
 #include "asio/ip/network_v6.hpp"
-
-#include "tools/_raii.h"
-
 #include "cfg.h"
 #include "logger.h"
-
-#include "onlyfrom.h"
+#include "tools/_raii.h"
 
 namespace cma::cfg::of {
 
-bool IsNetworkV4(const std::string_view Str) {
+bool IsNetworkV4(std::string_view Str) {
     std::error_code ec;
     asio::ip::make_network_v4(Str, ec);
     return ec.value() == 0;
 }
 
-bool IsNetworkV6(const std::string_view Str) {
+bool IsNetworkV6(std::string_view Str) {
     std::error_code ec;
     asio::ip::make_network_v6(Str, ec);
     return ec.value() == 0;
 }
 
-bool IsNetwork(const std::string_view Str) {
+bool IsNetwork(std::string_view Str) {
     return IsNetworkV4(Str) || IsNetworkV6(Str);
 }
 
-bool IsAddressV4(const std::string_view Str) {
+bool IsAddressV4(std::string_view Str) {
     std::error_code ec;
     asio::ip::make_address_v4(Str, ec);
     return ec.value() == 0;
 }
 
-bool IsAddressV6(const std::string_view Str) {
+bool IsAddressV6(std::string_view Str) {
     std::error_code ec;
     asio::ip::make_address_v6(Str, ec);
     return ec.value() == 0;
 }
-bool IsAddress(const std::string_view Str) {
+bool IsAddress(std::string_view Str) {
     return IsAddressV4(Str) || IsAddressV6(Str);
 }
 
-bool IsIpV6(const std::string_view Str) {
+bool IsIpV6(std::string_view Str) {
     return IsAddressV6(Str) || IsNetworkV6(Str);
 }
 
-bool IsValid(const std::string_view Template, const std::string_view Address) {
+bool IsValid(std::string_view Template, std::string_view Address) {
     try {
         if (IsAddress(Template)) {
             auto address_t = asio::ip::make_address(Template);

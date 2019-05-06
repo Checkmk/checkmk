@@ -178,7 +178,7 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 
 compile_commands.json: Makefile $(wildcard *.cc *.h)
 	$(MAKE) -C $(top_srcdir) .venv
-	$(MAKE) -Bnwk | pipenv run compiledb
+	LANG=C $(MAKE) -Bnwk | pipenv run compiledb
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)

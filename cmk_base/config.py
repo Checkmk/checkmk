@@ -700,6 +700,9 @@ def all_offline_hosts():
             config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters()),
             keep_offline_hosts=True))
 
+    if only_hosts is None:
+        return set()
+
     return set([
         hostname for hostname in hostlist
         if not config_cache.in_binary_hostlist(hostname, only_hosts)
@@ -710,6 +713,9 @@ def all_configured_offline_hosts():
     # type: () -> Set[str]
     config_cache = get_config_cache()
     hostlist = config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters())
+
+    if only_hosts is None:
+        return set()
 
     return set([
         hostname for hostname in hostlist

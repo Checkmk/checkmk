@@ -36,6 +36,7 @@ import cmk.utils.tty as tty
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
+import cmk.utils.store as store
 
 import cmk_base.crash_reporting
 import cmk_base.config as config

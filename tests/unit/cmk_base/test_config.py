@@ -85,6 +85,46 @@ def test_all_active_hosts(monkeypatch):
     assert config_cache.all_active_hosts() == set(["cluster1", "cluster3", "real1", "real3"])
 
 
+def test_config_cache_tag_to_group_map(monkeypatch):
+    ts = Scenario()
+    ts.set_option(
+        "tag_config", {
+            "aux_tags": [],
+            "tag_groups": [{
+                'id': 'dingeling',
+                'title': u'Dung',
+                'tags': [{
+                    'aux_tags': [],
+                    'id': 'dong',
+                    'title': u'ABC'
+                },],
+            }],
+        })
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache._get_tag_to_group_map() == {
+        'all-agents': 'agent',
+        'auto-piggyback': 'piggyback',
+        'cmk-agent': 'agent',
+        'dong': 'dingeling',
+        'ip-v4': 'ip-v4',
+        'ip-v4-only': 'address_family',
+        'ip-v4v6': 'address_family',
+        'ip-v6': 'ip-v6',
+        'ip-v6-only': 'address_family',
+        'no-agent': 'agent',
+        'no-ip': 'address_family',
+        'no-piggyback': 'piggyback',
+        'no-snmp': 'snmp',
+        'piggyback': 'piggyback',
+        'ping': 'ping',
+        'snmp': 'snmp',
+        'snmp-v1': 'snmp',
+        'snmp-v2': 'snmp',
+        'special-agents': 'agent',
+        'tcp': 'tcp',
+    }
+
+
 @pytest.mark.parametrize("hostname,tags,result", [
     ("testhost", [], True),
     ("testhost", ["ip-v4"], True),

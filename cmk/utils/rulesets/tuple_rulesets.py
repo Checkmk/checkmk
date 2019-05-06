@@ -210,7 +210,8 @@ class RulesetToDictTransformer(object):
                 tag_id = tag_id[1:]
                 negate = True
 
-            tag_group_id = self._tag_groups[tag_id]
+            # Assume it's an aux tag in case there is a tag configured without known group
+            tag_group_id = self._tag_groups.get(tag_id, tag_id)
 
             conditions["host_tags." + tag_group_id] = {"$ne": tag_id} if negate else tag_id
 

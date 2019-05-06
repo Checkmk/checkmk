@@ -31,10 +31,14 @@ def parse_ceph_status(info):
     except:
         import simplejson as json
 
-    parsed = ""
-    for line in info:
-        parsed += " ".join(line)
-    return json.loads(parsed)
+    joined_lines = [" ".join(line) for line in info]
+    parsed = json.loads(''.join(joined_lines))
+
+    # ceph health' JSON format has changed in luminous
+    if "health" in parsed and "status" not in parsed["health"]:
+        parsed["health"]["status"] = parsed["health"].get("overall_status")
+
+    return parsed
 
 
 def ceph_check_epoch(_id, epoch, params):
@@ -83,7 +87,7 @@ def check_ceph_status(_no_item, params, parsed):
         "HEALTH_ERR": (2, "error"),
     }
 
-    overall_status = parsed["health"]["overall_status"]
+    overall_status = parsed["health"]["status"]
     state, state_readable = map_health_states.get(overall_status,
                                                   (3, "unknown[%s]" % overall_status))
     yield state, 'Status: %s' % state_readable

@@ -1,0 +1,12 @@
+Title: ceph_status: Adapt to new health field name 'status'
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p17
+Date: 1557129950
+
+Ceph health' JSON format has changed in luminous, which lead to a false {WARN} state
+for affected devices.

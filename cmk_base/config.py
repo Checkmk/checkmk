@@ -44,10 +44,11 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.regex import regex, is_regex
 import cmk.utils.translations
-import cmk.utils.rulesets.tuple_rulesets
+import cmk.utils.tags
+import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.store as store
 import cmk.utils
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RulesetMatcher
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 
 import cmk_base
@@ -1319,11 +1320,11 @@ def _in_servicematcher_list(service_matchers, item):
 
 # Conveniance macros for legacy tuple based host and service rules
 # TODO: Deprecate these in a gentle way
-PHYSICAL_HOSTS = cmk.utils.rulesets.tuple_rulesets.PHYSICAL_HOSTS
-CLUSTER_HOSTS = cmk.utils.rulesets.tuple_rulesets.CLUSTER_HOSTS
-ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS
-ALL_SERVICES = cmk.utils.rulesets.tuple_rulesets.ALL_SERVICES
-NEGATE = cmk.utils.rulesets.tuple_rulesets.NEGATE
+PHYSICAL_HOSTS = tuple_rulesets.PHYSICAL_HOSTS
+CLUSTER_HOSTS = tuple_rulesets.CLUSTER_HOSTS
+ALL_HOSTS = tuple_rulesets.ALL_HOSTS
+ALL_SERVICES = tuple_rulesets.ALL_SERVICES
+NEGATE = tuple_rulesets.NEGATE
 
 # TODO: Cleanup access to check_info[] -> replace it by different function calls
 # like for example check_exists(...)
@@ -2844,6 +2845,11 @@ class ConfigCache(object):
         self._collect_hosttags()
         self._setup_clusters_nodes_cache()
 
+        # Converts pre 1.6 tuple rulesets in place to 1.6+ format
+        self.tuple_transformer = tuple_rulesets.RulesetToDictTransformer(
+            tag_to_group_map=self._get_tag_to_group_map())
+        self.ruleset_matcher = RulesetMatcher()
+
         self._all_configured_clusters = self._get_all_configured_clusters()
         self._all_configured_realhosts = self._get_all_configured_realhosts()
         self._all_configured_hosts = self._get_all_configured_hosts()
@@ -2928,6 +2934,10 @@ class ConfigCache(object):
         # Keep HostConfig instances created with the current configuration cache
         self._host_configs = {}
 
+    def _get_tag_to_group_map(self):
+        tags = cmk.utils.tags.get_effective_tag_config(tag_config)
+        return tuple_rulesets.get_tag_to_group_map(tags)
+
     def get_host_config(self, hostname):
         # type: (str) -> HostConfig
         """Returns a HostConfig instance for the given host
@@ -2954,8 +2964,11 @@ class ConfigCache(object):
         empty list."""
         return self._hosttags.get(hostname, [])
 
+    # TODO: check all call sites and remove this or make it private?
     def tags_of_host(self, hostname):
-        """Returns the dict of all configured tag groups and values of a host"""
+        """Returns the dict of all configured tag groups and values of a host
+
+        In case you have a HostConfig object available better use HostConfig.tag_groups"""
         return host_tags.get(hostname, {})
 
     def tags_of_service(self, hostname, svc_desc):

@@ -22,12 +22,7 @@ def test_active_check_arguments(mocker):
 
 
 def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
-    ts = Scenario().add_host("test-host", ["abc"])
-    ts.set_option("host_tags", {
-        "test-host": {
-            "tag_group": "abc",
-        },
-    })
+    ts = Scenario().add_host("test-host", tags={"agent": "no-agent"})
     ts.set_option("host_labels", {
         "test-host": {
             "ding": "dong",
@@ -41,8 +36,15 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
         '_ADDRESS_6': '',
         '_ADDRESS_FAMILY': '4',
         '_FILENAME': '/wato/hosts.mk',
-        '_TAGS': 'abc',
-        '__TAG_tag_group': 'abc',
+        '_TAGS': 'auto-piggyback ip-v4 ip-v4-only lan no-agent no-snmp prod site:unit',
+        u'__TAG_address_family': u'ip-v4-only',
+        u'__TAG_agent': u'no-agent',
+        u'__TAG_criticality': u'prod',
+        u'__TAG_ip-v4': u'ip-v4',
+        u'__TAG_networking': u'lan',
+        u'__TAG_piggyback': u'auto-piggyback',
+        u'__TAG_site': u'unit',
+        u'__TAG_snmp_ds': u'no-snmp',
         '__LABEL_ding': 'dong',
         '__LABELSOURCE_ding': 'explicit',
         'address': '0.0.0.0',

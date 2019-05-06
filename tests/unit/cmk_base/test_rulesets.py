@@ -16,9 +16,9 @@ def fake_version(monkeypatch):
 @pytest.fixture()
 def ts(monkeypatch):
     ts = Scenario(site_id="site1")
-    ts.add_host("host1", ["tag1", "tag2"])
-    ts.add_host("host2", ["tag1"])
-    ts.add_host("host3", ["tag1", "site:site2"])
+    ts.add_host("host1", tags={"agent": "no-agent", "criticality": "test"})
+    ts.add_host("host2", tags={"agent": "no-agent"})
+    ts.add_host("host3", tags={"agent": "no-agent", "site": "site2"})
     ts.apply(monkeypatch)
     return ts
 
@@ -28,8 +28,8 @@ def test_service_extra_conf(ts):
         ("1", [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
         ("2", [], config.ALL_HOSTS, config.ALL_SERVICES,
          {}),  # Duplicate test to detect caching issues
-        ("3", ["tag1"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
-        ("4", ["tag2"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
+        ("3", ["no-agent"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
+        ("4", ["test"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
         ("5", ["tag3"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
         ("6", ["tag3"], ["host1"], config.ALL_SERVICES, {}),
         ("7", [], ["host1"], config.ALL_SERVICES, {}),
@@ -58,16 +58,16 @@ def host_ruleset():
         }, [], config.ALL_HOSTS, {}),
         ({
             "2": True
-        }, ["tag1"], config.ALL_HOSTS, {}),
+        }, ["no-agent"], config.ALL_HOSTS, {}),
         ({
             "3": True
-        }, ["tag2"], config.ALL_HOSTS, {}),
+        }, ["test"], config.ALL_HOSTS, {}),
         ({
             "4": True
         }, ["tag3"], config.ALL_HOSTS, {}),
         ({
             "5": True
-        }, ["tag1"], ["host1"], {}),
+        }, ["no-agent"], ["host1"], {}),
         ({
             "6": True
         }, ["tag3"], ["host1"], {}),
@@ -126,12 +126,12 @@ def test_host_extra_conf_merged(ts, host_ruleset):
         [[([], config.ALL_HOSTS, config.ALL_SERVICES, {})], True, True],
         [[([], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, True],
         [[([], ["!host1", "!host2"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, False],
-        [[(["tag2"], config.ALL_HOSTS, config.ALL_SERVICES, {})], True, False],
-        [[(["tag2"], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, False],
+        [[(["test"], config.ALL_HOSTS, config.ALL_SERVICES, {})], True, False],
+        [[(["test"], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, False],
         [[([], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, True],
         [[(config.NEGATE, [], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, False
         ],
-        [[(config.NEGATE, ["tag2"], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False,
+        [[(config.NEGATE, ["test"], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False,
          False],
         [[([], config.ALL_HOSTS, ["serv"], {})], True, True],
         [[(config.NEGATE, [], config.ALL_HOSTS, ["serv"], {})], False, False],
@@ -151,37 +151,37 @@ def test_in_boolean_serviceconf_list(ts, parameters):
 
 
 def test_all_matching_hosts(ts):
-    assert config.all_matching_hosts(["tag1"], config.ALL_HOSTS, with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["no-agent"], config.ALL_HOSTS, with_foreign_hosts=False) == \
             set(["host1", "host2"])
 
-    assert config.all_matching_hosts(["tag2"], config.ALL_HOSTS, with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["test"], config.ALL_HOSTS, with_foreign_hosts=False) == \
             set(["host1"])
 
-    assert config.all_matching_hosts(["!tag2"], config.ALL_HOSTS, with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["!test"], config.ALL_HOSTS, with_foreign_hosts=False) == \
             set(["host2"])
 
-    assert config.all_matching_hosts(["!tag2"], config.ALL_HOSTS, with_foreign_hosts=True) == \
+    assert config.all_matching_hosts(["!test"], config.ALL_HOSTS, with_foreign_hosts=True) == \
             set(["host2", "host3"])
 
-    assert config.all_matching_hosts(["tag1"], [], with_foreign_hosts=True) == \
+    assert config.all_matching_hosts(["no-agent"], [], with_foreign_hosts=True) == \
             set([])
 
-    assert config.all_matching_hosts(["tag1"], ["host1"], with_foreign_hosts=True) == \
+    assert config.all_matching_hosts(["no-agent"], ["host1"], with_foreign_hosts=True) == \
             set(["host1"])
 
-    assert config.all_matching_hosts(["!tag1"], ["host1"], with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["!no-agent"], ["host1"], with_foreign_hosts=False) == \
             set([])
 
-    assert config.all_matching_hosts(["tag1"], ["~h"], with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["no-agent"], ["~h"], with_foreign_hosts=False) == \
             set(["host1", "host2"])
 
-    assert config.all_matching_hosts(["tag1"], ["~.*2"], with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["no-agent"], ["~.*2"], with_foreign_hosts=False) == \
             set(["host2"])
 
-    assert config.all_matching_hosts(["tag1"], ["~.*2$"], with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["no-agent"], ["~.*2$"], with_foreign_hosts=False) == \
             set(["host2"])
 
-    assert config.all_matching_hosts(["tag1"], ["~2"], with_foreign_hosts=False) == \
+    assert config.all_matching_hosts(["no-agent"], ["~2"], with_foreign_hosts=False) == \
             set([])
 
 
@@ -249,28 +249,20 @@ def test_get_rule_options_missing_options():
 
 
 def test_hosttags_match_taglist():
-    assert config.hosttags_match_taglist(["tag1"], ["tag1"])
-    assert config.hosttags_match_taglist(["tag1", "tag2"], ["tag1"])
-    assert config.hosttags_match_taglist(["tag1", "tag2"], ["tag1", "tag2"])
+    assert config.hosttags_match_taglist(["no-agent"], ["no-agent"])
+    assert config.hosttags_match_taglist(["no-agent", "test"], ["no-agent"])
+    assert config.hosttags_match_taglist(["no-agent", "test"], ["no-agent", "test"])
 
 
 def test_hosttags_match_taglist_not_matching():
-    assert not config.hosttags_match_taglist(["tag1"], ["tag2"])
-    assert not config.hosttags_match_taglist(["tag", "tag1", "tag22"], ["tag2"])
-    assert not config.hosttags_match_taglist(["tag1", "tag2"], ["tag2", "tag3"])
+    assert not config.hosttags_match_taglist(["no-agent"], ["test"])
+    assert not config.hosttags_match_taglist(["tag", "no-agent", "test2"], ["test"])
+    assert not config.hosttags_match_taglist(["no-agent", "test"], ["test", "tag3"])
 
 
 def test_hosttags_match_taglist_negate():
-    assert not config.hosttags_match_taglist(["tag1", "tag2"], ["tag1", "!tag2"])
-    assert config.hosttags_match_taglist(["tag1"], ["tag1", "!tag2"])
-
-    assert not config.hosttags_match_taglist(["tag1", "tag2"], ["!tag2+"])
-
-
-def test_hosttags_match_taglist_prefix():
-    assert config.hosttags_match_taglist(["tag1", "tag2"], ["tag2+"])
-    assert config.hosttags_match_taglist(["tag1", "tax2"], ["tag+"])
-    assert not config.hosttags_match_taglist(["tag1", "tag2"], ["tag3+"])
+    assert not config.hosttags_match_taglist(["no-agent", "test"], ["no-agent", "!test"])
+    assert config.hosttags_match_taglist(["no-agent"], ["no-agent", "!test"])
 
 
 def test_parse_negated():

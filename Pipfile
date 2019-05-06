@@ -24,7 +24,7 @@ pdbpp = "*"
 freezegun = "*"
 # We have to use a snapshot, a version which works for us has not been released yet. :-/
 # Workaround: We need to upload the Archive and cannot use it from our Git due to a Pipenv bug
-compiledb = {file = "http://nexus:8081/repository/archives/compiledb-1604e14.tar.gz"}
+compiledb = {file = "http://nexus.lan.tribe29.com:8081/repository/archives/compiledb-1604e14.tar.gz"}
 
 [packages]
 setuptools_scm = "==3.1.0"

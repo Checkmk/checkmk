@@ -27,9 +27,23 @@
 
 import re
 import abc
+from typing import Dict  # pylint: disable=unused-import
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
+
+
+def get_effective_tag_config(tag_config):
+    # type: (Dict) -> TagConfig
+    # We don't want to access the plain config data structure during GUI code processing
+    tags = TagConfig()
+    tags.parse_config(tag_config)
+
+    # Merge builtin tags with configured tags. The logic favors the configured tags, even
+    # when the user config should not conflict with the builtin tags. This is something
+    # which could be left over from pre 1.5 setups.
+    tags += BuiltinTagConfig()
+    return tags
 
 
 def transform_pre_16_tags(tag_groups, aux_tags):
@@ -181,11 +195,6 @@ class AuxTagList(object):
 
     def get_choices(self):
         return [(aux_tag.id, aux_tag.title) for aux_tag in self._tags]
-
-
-class BuiltinAuxTagList(AuxTagList):
-    def append(self, aux_tag):
-        self._append(aux_tag)
 
 
 class GroupedTag(ABCTag):
@@ -498,3 +507,151 @@ class TagConfig(object):
         result["aux_tags"] = self.aux_tag_list.get_dict_format()
 
         return result
+
+
+class BuiltinAuxTagList(AuxTagList):
+    def append(self, aux_tag):
+        self._append(aux_tag)
+
+
+class BuiltinTagConfig(TagConfig):
+    def __init__(self):
+        super(BuiltinTagConfig, self).__init__()
+        self.parse_config({
+            "tag_groups": self._builtin_tag_groups(),
+            "aux_tags": self._builtin_aux_tags(),
+        })
+
+    def _initialize(self):
+        self.tag_groups = []
+        self.aux_tag_list = BuiltinAuxTagList()
+
+    def _builtin_tag_groups(self):
+        return [
+            {
+                'id': 'agent',
+                'title': _('Check_MK Agent'),
+                'topic': _('Data sources'),
+                'tags': [
+                    {
+                        'id': 'cmk-agent',
+                        'title': _('Contact either Check_MK Agent or use datasource program'),
+                        'aux_tags': ['tcp'],
+                    },
+                    {
+                        'id': 'all-agents',
+                        'title': _('Contact Check_MK agent and all enabled datasource programs'),
+                        'aux_tags': ['tcp'],
+                    },
+                    {
+                        'id': 'special-agents',
+                        'title': _('Use all enabled datasource programs'),
+                        'aux_tags': ['tcp'],
+                    },
+                    {
+                        'id': 'no-agent',
+                        'title': _('No agent'),
+                        'aux_tags': [],
+                    },
+                ],
+            },
+            {
+                'id': 'piggyback',
+                'title': _("Piggyback"),
+                'topic': _('Data sources'),
+                'tags': [
+                    {
+                        "id": "auto-piggyback",
+                        "title": _("Legacy: Automatically detect piggyback usage"),
+                        "aux_tags": []
+                    },
+                    {
+                        "id": "piggyback",
+                        "title": _("Use piggyback data"),
+                        "aux_tags": [],
+                    },
+                    {
+                        "id": "no-piggyback",
+                        "title": _("Do not use piggyback data"),
+                        "aux_tags": [],
+                    },
+                ],
+            },
+            {
+                'id': 'snmp',
+                'title': _('SNMP'),
+                'topic': _('Data sources'),
+                'tags': [{
+                    'id': 'no-snmp',
+                    'title': _('No SNMP'),
+                    'aux_tags': [],
+                }, {
+                    'id': 'snmp-v2',
+                    'title': _('SNMP v2 or v3'),
+                    'aux_tags': ['snmp'],
+                }, {
+                    'id': 'snmp-v1',
+                    'title': _('SNMP v1'),
+                    'aux_tags': ['snmp'],
+                }],
+            },
+            {
+                'id': 'address_family',
+                'title': _('IP Address Family'),
+                'topic': u'Address',
+                'tags': [
+                    {
+                        'id': 'ip-v4-only',
+                        'title': _('IPv4 only'),
+                        'aux_tags': ['ip-v4'],
+                    },
+                    {
+                        'id': 'ip-v6-only',
+                        'title': _('IPv6 only'),
+                        'aux_tags': ['ip-v6'],
+                    },
+                    {
+                        'id': 'ip-v4v6',
+                        'title': _('IPv4/IPv6 dual-stack'),
+                        'aux_tags': ['ip-v4', 'ip-v6'],
+                    },
+                    {
+                        'id': 'no-ip',
+                        'title': _('No IP'),
+                        'aux_tags': [],
+                    },
+                ],
+            },
+        ]
+
+    def _builtin_aux_tags(self):
+        return [
+            {
+                'id': 'ip-v4',
+                'topic': _('Address'),
+                'title': _('IPv4'),
+            },
+            {
+                'id': 'ip-v6',
+                'topic': _('Address'),
+                'title': _('IPv6'),
+            },
+            {
+                'id': 'snmp',
+                'topic': _('Data sources'),
+                'title': _('Monitor via SNMP'),
+            },
+            {
+                'id': 'tcp',
+                'topic': _('Data sources'),
+                'title': _('Monitor via Check_MK Agent'),
+            },
+            {
+                'id': 'ping',
+                'topic': _('Data sources'),
+                'title': _('Only ping this device'),
+            },
+        ]
+
+    def insert_tag_group(self, tag_group):
+        self._insert_tag_group(tag_group)

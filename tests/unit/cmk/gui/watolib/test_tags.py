@@ -5,7 +5,7 @@ import pytest  # type: ignore
 from pathlib2 import Path
 
 import cmk.gui.watolib.utils
-import cmk.gui.tags as tags
+import cmk.utils.tags as tags
 import cmk.gui.watolib.tags
 from cmk.gui.watolib.tags import TagConfigFile
 

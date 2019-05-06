@@ -5,8 +5,7 @@ import pytest  # type: ignore
 
 from cmk.gui.exceptions import MKUserError
 
-import cmk.gui.watolib.utils
-import cmk.gui.tags as tags
+import cmk.utils.tags as tags
 
 
 @pytest.fixture()
@@ -73,7 +72,7 @@ def test_cfg():
 
 
 def test_convert_pre_16_tags():
-    dict_config = cmk.gui.tags.transform_pre_16_tags(
+    dict_config = tags.transform_pre_16_tags(
         [
             ('criticality', u'Criticality', [
                 ('prod', u'Productive system', ['bla']),

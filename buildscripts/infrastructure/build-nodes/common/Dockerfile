@@ -33,7 +33,6 @@ RUN apt-get update \
     libboost-dev \
     libboost-system-dev \
     libclang-7-dev \
-    libcloog-ppl1 \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \

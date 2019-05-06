@@ -14,13 +14,13 @@ public:
         using namespace cma::cfg;
         std::error_code ec;
         std::filesystem::remove(cma::cfg::GetBakeryFile(), ec);
-        cma::OnStart(cma::kTest);
+        cma::OnStart(cma::AppType::test);
 
         auto yaml = GetLoadedConfig();
         ProcessKnownConfigGroups();
         SetupEnvironmentFromGroups();
     }
-    ~YamlLoader() { OnStart(cma::kTest); }
+    ~YamlLoader() { OnStart(cma::AppType::test); }
 };
 
 inline void CreateFile(std::filesystem::path Path, std::string Content) {

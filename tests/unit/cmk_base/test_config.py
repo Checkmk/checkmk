@@ -12,7 +12,49 @@ import cmk_base.piggyback as piggyback
 import cmk_base.check_api as check_api
 
 
-def test_all_configured_realhosts(monkeypatch):
+def test_duplicate_hosts(monkeypatch):
+    ts = Scenario()
+    ts.add_host("bla1")
+    ts.add_host("bla1")
+    ts.add_host("zzz")
+    ts.add_host("zzz")
+    ts.add_host("yyy")
+    ts.apply(monkeypatch)
+    assert config.duplicate_hosts() == ["bla1", "zzz"]
+
+
+def test_all_offline_hosts(monkeypatch):
+    ts = Scenario()
+    ts.add_host("blub", ["offline"])
+    ts.add_host("bla")
+    ts.apply(monkeypatch)
+    assert config.all_offline_hosts() == set()
+
+
+def test_all_offline_hosts_with_wato_default_config(monkeypatch):
+    ts = Scenario(site_id="site1")
+    ts.set_ruleset("only_hosts", [
+        (["!offline"], config.ALL_HOSTS),
+    ])
+    ts.add_host("blub1", ["offline"])
+    ts.add_host("blub2", ["offline", "site:site2"])
+    ts.add_host("bla")
+    ts.apply(monkeypatch)
+    assert config.all_offline_hosts() == set(["blub1"])
+
+
+def test_all_configured_offline_hosts(monkeypatch):
+    ts = Scenario(site_id="site1")
+    ts.set_ruleset("only_hosts", [
+        (["!offline"], config.ALL_HOSTS),
+    ])
+    ts.add_host("blub1", ["offline", "site:site1"])
+    ts.add_host("blub2", ["offline", "site:site2"])
+    ts.apply(monkeypatch)
+    assert config.all_offline_hosts() == set(["blub1"])
+
+
+def test_all_configured_hosts(monkeypatch):
     ts = Scenario(site_id="site1")
     ts.add_host("real1", ["site:site1"])
     ts.add_host("real2", ["site:site2"])
@@ -26,6 +68,21 @@ def test_all_configured_realhosts(monkeypatch):
     assert config_cache.all_configured_realhosts() == set(["real1", "real2", "real3"])
     assert config_cache.all_configured_hosts() == set(
         ["cluster1", "cluster2", "cluster3", "real1", "real2", "real3"])
+
+
+def test_all_active_hosts(monkeypatch):
+    ts = Scenario(site_id="site1")
+    ts.add_host("real1", ["site:site1"])
+    ts.add_host("real2", ["site:site2"])
+    ts.add_host("real3", [])
+    ts.add_cluster("cluster1", ["site:site1"], nodes=["node1"])
+    ts.add_cluster("cluster2", ["site:site2"], nodes=["node2"])
+    ts.add_cluster("cluster3", [], nodes=["node3"])
+
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.all_active_clusters() == set(["cluster1", "cluster3"])
+    assert config_cache.all_active_realhosts() == set(["real1", "real3"])
+    assert config_cache.all_active_hosts() == set(["cluster1", "cluster3", "real1", "real3"])
 
 
 @pytest.mark.parametrize("hostname,tags,result", [

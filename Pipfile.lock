@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9f48473f7896536f450eb385c041745c6028ebadb0ae29b516b1b678d4e0fc7b"
+            "sha256": "cf2db0742979e1e3530150d7cc4572ce18251fb3eb98740531d21c6ff5cfe9eb"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1010,7 +1010,7 @@
                 "sha256:9d98697f088eb1b0fa451391f91afb5e3ebde16bbdb272819fd091151fda4f1a",
                 "sha256:f0b0e4eba956de51238e17573b7087e852dfe9854afd2e9c873f73fc0ca0a6dd"
             ],
-            "markers": "python_version == '2.7'",
+            "markers": "python_version < '3.2'",
             "version": "==1.5"
         },
         "backports.ssl-match-hostname": {
@@ -1054,7 +1054,7 @@
             "version": "==3.0.4"
         },
         "compiledb": {
-            "file": "http://nexus:8081/repository/archives/compiledb-1604e14.tar.gz"
+            "file": "http://nexus:8081/repository/archives/compiledb-10a1da2.tar.gz"
         },
         "configparser": {
             "hashes": [
@@ -1280,11 +1280,11 @@
         },
         "mock": {
             "hashes": [
-                "sha256:5eda46efb363128828d6fd2bf8d16f6ebb66f5b543b9f7f8f4eb224c5cb503fe",
-                "sha256:d659f8ef8810ff4c3f8f973d113a05d291a08ab0f7ed17bd60887983b93a0f9a"
+                "sha256:21a2c07af3bbc4a77f9d14ac18fcc1782e8e7ea363df718740cdeaf61995b5e7",
+                "sha256:7868db2825a1563578869d4a011a036503a2f1d60f9ff9dd1e3205cd6e25fcec"
             ],
             "markers": "python_version < '3.0'",
-            "version": "==3.0.3"
+            "version": "==3.0.4"
         },
         "mockldap": {
             "hashes": [

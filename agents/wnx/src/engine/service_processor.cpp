@@ -235,6 +235,18 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     preLoadConfig();
     // sections to be kicked out
     tryToKick(uptime_provider_, Tp, Ip);
+
+    // #TODO remove the warning and relocate this block back at the end after beta-testing
+    // We have RElocated winperf here just to be compatible with older servers to avoid
+    // winperf_if check crash. We have no 100% guarantee, that winperf comes before plugin winperf
+    // but it's good enough for beta with older servers(which we're not going to support in release)
+    //
+    // WinPerf Processing
+    if (groups::winperf.enabledInConfig() &&
+        groups::global.allowedSection(vars::kWinPerfPrefixDefault)) {
+        kickWinPerf(Tp, Ip);
+    }
+
     tryToKick(df_provider_, Tp, Ip);
     tryToKick(mem_provider_, Tp, Ip);
     tryToKick(services_provider_, Tp, Ip);
@@ -260,12 +272,6 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
                 "Starting OHM in non elevated mode has no sense. Please start it by self or change to the elevated mode");
         } else
             ohm_process_.start(cma::provider::GetOhmCliPath().wstring());
-    }
-
-    // WinPerf Processing
-    if (groups::winperf.enabledInConfig() &&
-        groups::global.allowedSection(vars::kWinPerfPrefixDefault)) {
-        kickWinPerf(Tp, Ip);
     }
 
     // Plugins Processing

@@ -1,6 +1,7 @@
 # Default Check MK configuration file
 # Copyright Mathias Kettner GmbH
-# version 10008
+# version 10009
+# tag '06.05.2019'
 
 # global must be presented
 # IMPORTANT notes

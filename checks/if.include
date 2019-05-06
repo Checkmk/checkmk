@@ -302,6 +302,23 @@ def _prepare_if_group_patterns_from_conf():
     return group_patterns
 
 
+def _uses_description_and_alias(settings):
+    uses_description = settings.get('use_desc', if_inventory_uses_description)
+    if uses_description:
+        return True, False
+
+    uses_alias = settings.get('use_alias', if_inventory_uses_alias)
+    if uses_alias:
+        return False, True
+
+    item_appearance = settings.get('item_appearance', if_inventory_uses_description)
+    if item_appearance == 'descr':
+        return True, False
+    if item_appearance == 'alias':
+        return False, True
+    return False, False
+
+
 def inventory_if_common(info, has_nodeinfo=False):
     if has_nodeinfo:
         length = 21
@@ -330,8 +347,7 @@ def inventory_if_common(info, has_nodeinfo=False):
     group_patterns = _prepare_if_group_patterns_from_conf()
     for settings in settings_sets:
         global_seen_items = set()
-        uses_description = settings.get('use_desc', if_inventory_uses_description)
-        uses_alias = settings.get('use_alias', if_inventory_uses_alias)
+        uses_description, uses_alias = _uses_description_and_alias(settings)
         # Need to copy porttypes as the discovery function appends to the list below.
         # The check must not modify the global if_inventory_porttypes configuration variable.
         porttypes = settings.get('porttypes', if_inventory_porttypes)[:]

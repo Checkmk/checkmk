@@ -655,3 +655,55 @@ class BuiltinTagConfig(TagConfig):
 
     def insert_tag_group(self, tag_group):
         self._insert_tag_group(tag_group)
+
+
+def sample_tag_config():
+    """Returns the WATO sample tag config
+
+    The difference between the builtin and sample tag config is that the builtin
+    tag configuration can not be changed by the user. The sample tag config is
+    created on site creation (more precisely: during first WATO access).
+    """
+    return {
+        'aux_tags': [],
+        'tag_groups': [
+            {
+                'id': 'criticality',
+                'tags': [{
+                    'aux_tags': [],
+                    'id': 'prod',
+                    'title': u'Productive system'
+                }, {
+                    'aux_tags': [],
+                    'id': 'critical',
+                    'title': u'Business critical'
+                }, {
+                    'aux_tags': [],
+                    'id': 'test',
+                    'title': u'Test system'
+                }, {
+                    'aux_tags': [],
+                    'id': 'offline',
+                    'title': u'Do not monitor this host'
+                }],
+                'title': u'Criticality'
+            },
+            {
+                'id': 'networking',
+                'tags': [{
+                    'aux_tags': [],
+                    'id': 'lan',
+                    'title': u'Local network (low latency)'
+                }, {
+                    'aux_tags': [],
+                    'id': 'wan',
+                    'title': u'WAN (high latency)'
+                }, {
+                    'aux_tags': [],
+                    'id': 'dmz',
+                    'title': u'DMZ (low latency, secure access)'
+                }],
+                'title': u'Networking Segment'
+            },
+        ],
+    }

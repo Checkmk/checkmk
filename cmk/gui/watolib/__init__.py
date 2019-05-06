@@ -513,49 +513,7 @@ def _create_sample_config():
 
 def _initialize_tag_config():
     tag_config = cmk.utils.tags.TagConfig()
-    tag_config.parse_config({
-        'aux_tags': [],
-        'tag_groups': [
-            {
-                'id': 'criticality',
-                'tags': [{
-                    'aux_tags': [],
-                    'id': 'prod',
-                    'title': u'Productive system'
-                }, {
-                    'aux_tags': [],
-                    'id': 'critical',
-                    'title': u'Business critical'
-                }, {
-                    'aux_tags': [],
-                    'id': 'test',
-                    'title': u'Test system'
-                }, {
-                    'aux_tags': [],
-                    'id': 'offline',
-                    'title': u'Do not monitor this host'
-                }],
-                'title': u'Criticality'
-            },
-            {
-                'id': 'networking',
-                'tags': [{
-                    'aux_tags': [],
-                    'id': 'lan',
-                    'title': u'Local network (low latency)'
-                }, {
-                    'aux_tags': [],
-                    'id': 'wan',
-                    'title': u'WAN (high latency)'
-                }, {
-                    'aux_tags': [],
-                    'id': 'dmz',
-                    'title': u'DMZ (low latency, secure access)'
-                }],
-                'title': u'Networking Segment'
-            },
-        ],
-    })
+    tag_config.parse_config(cmk.utils.tags.sample_tag_config())
     TagConfigFile().save(tag_config.get_dict_format())
     # Make sure the host tag attributes are immediately declared!
     config.tags = tag_config

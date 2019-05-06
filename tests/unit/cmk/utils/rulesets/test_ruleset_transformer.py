@@ -5,6 +5,7 @@ from typing import NamedTuple
 from pathlib2 import Path
 import pytest  # type: ignore
 import cmk.utils.paths
+import cmk.utils.tags
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 from cmk.utils.exceptions import MKGeneralException
 
@@ -505,31 +506,35 @@ def test_transform(case, rule_options):
 
 
 def test_get_tag_to_group_map(monkeypatch):
-    # Would be cleaner to use existing fixtures from tests/unit/cmk/gui/conftest.py
-    import cmk.gui.config as gui_config
-    monkeypatch.setattr(gui_config, "omd_site", lambda: "NO_SITE")
-    multisite_mk = Path(cmk.utils.paths.default_config_dir) / "multisite.mk"
-    multisite_mk.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-    multisite_mk.touch()  # pylint: disable=no-member
-
-    assert tuple_rulesets.get_tag_to_group_map(tuple_rulesets.get_tag_config_from_gui()) == {
-        'ip-v4v6': 'address_family',
-        'snmp-v1': 'snmp',
-        'ip-v6': 'ip-v6',
-        'all-agents': 'agent',
-        'ip-v4': 'ip-v4',
-        'snmp': 'snmp',
-        'cmk-agent': 'agent',
-        'ip-v6-only': 'address_family',
-        'ping': 'ping',
-        'auto-piggyback': 'piggyback',
-        'tcp': 'tcp',
-        'no-snmp': 'snmp',
-        'piggyback': 'piggyback',
-        'ip-v4-only': 'address_family',
-        'snmp-v2': 'snmp',
-        'no-piggyback': 'piggyback',
-        'no-ip': 'address_family',
-        'no-agent': 'agent',
-        'special-agents': 'agent',
+    tag_config = cmk.utils.tags.TagConfig()
+    tag_config.parse_config({
+        'aux_tags': [{
+            'id': 'bla',
+            'title': u'bl\xfcb'
+        }],
+        'tag_groups': [
+            {
+                'id': 'criticality',
+                'tags': [{
+                    'aux_tags': ["bla"],
+                    'id': 'prod',
+                    'title': u'Productive system'
+                },],
+                'title': u'Criticality'
+            },
+            {
+                'id': 'networking',
+                'tags': [{
+                    'aux_tags': [],
+                    'id': 'lan',
+                    'title': u'Local network (low latency)'
+                },],
+                'title': u'Networking Segment'
+            },
+        ],
+    })
+    assert tuple_rulesets.get_tag_to_group_map(tag_config) == {
+        'bla': 'bla',
+        'lan': 'networking',
+        'prod': 'criticality',
     }

@@ -2215,7 +2215,6 @@ class HostConfig(object):
         self.tag_groups = self._config_cache.tags_of_host(hostname)
         self.labels = self._get_host_labels()
         self.label_sources = self._get_host_label_sources()
-        self.ruleset_match_object = self._get_ruleset_match_object()
 
         # Basic types
         self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
@@ -2257,14 +2256,6 @@ class HostConfig(object):
         # Whether or not the given host is configured to be monitored primarily via IPv6
         self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) \
                                 or (self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6")
-
-    def _get_ruleset_match_object(self):
-        # type: () -> RulesetMatchObject
-        """Construct the dictionary object that is needed to match this host to rulesets"""
-        return RulesetMatchObject(
-            host_name=self.hostname,
-            host_tags=self.tag_groups,
-        )
 
     @property
     def has_piggyback_data(self):
@@ -3091,6 +3082,17 @@ class ConfigCache(object):
         except KeyError:
             return {}
 
+    # TODO: Move to HostConfig? Is currently not possible to have this in HostConfig because
+    # the constructor executes rule matching functions. Moved the computation to this place
+    # to prevent dependency issues for the moment.
+    def ruleset_match_object_of_host(self, hostname):
+        # type: (str) -> RulesetMatchObject
+        """Construct the dictionary object that is needed to match this host to rulesets"""
+        return RulesetMatchObject(
+            host_name=hostname,
+            host_tags=self.tags_of_host(hostname),
+        )
+
     def ruleset_match_object_of_service(self, hostname, svc_desc):
         # type: (str, Text) -> RulesetMatchObject
         """Construct the dictionary object that is needed to match this service to rulesets
@@ -3098,11 +3100,8 @@ class ConfigCache(object):
         This is done by loading the host match object and extending it with the
         information of this service.
         """
-        host_config = self.get_host_config(hostname)
-        match_object = host_config.ruleset_match_object.copy()
-
+        match_object = self.ruleset_match_object_of_host(hostname)
         match_object.service_description = svc_desc
-
         return match_object
 
     def set_all_processed_hosts(self, all_processed_hosts):

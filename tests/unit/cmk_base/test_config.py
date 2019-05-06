@@ -1248,7 +1248,7 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
     assert host_config is cache.get_host_config("xyz")
 
 
-def test_host_ruleset_match_object_of_host(monkeypatch):
+def test_config_cache_ruleset_match_object_of_host(monkeypatch):
     ts = Scenario()
     ts.set_option("host_tags", {
         "test-host": {
@@ -1258,16 +1258,16 @@ def test_host_ruleset_match_object_of_host(monkeypatch):
     ts.add_host("test-host", ["abc"])
     config_cache = ts.apply(monkeypatch)
 
-    cfg = config_cache.get_host_config("xyz")
-    assert isinstance(cfg.ruleset_match_object, RulesetMatchObject)
-    assert cfg.ruleset_match_object.to_dict() == {
+    ruleset_match_object = config_cache.ruleset_match_object_of_host("xyz")
+    assert isinstance(ruleset_match_object, RulesetMatchObject)
+    assert ruleset_match_object.to_dict() == {
         "host_tags": {},
         "host_name": "xyz",
     }
 
-    cfg = config_cache.get_host_config("test-host")
-    assert isinstance(cfg.ruleset_match_object, RulesetMatchObject)
-    assert cfg.ruleset_match_object.to_dict() == {
+    ruleset_match_object = config_cache.ruleset_match_object_of_host("test-host")
+    assert isinstance(ruleset_match_object, RulesetMatchObject)
+    assert ruleset_match_object.to_dict() == {
         "host_name": "test-host",
         "host_tags": {
             "tag_group": "abc",

@@ -69,8 +69,8 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
         "node1": [("smart.temp", "auto-clustered", {}), ("smart.temp", "auto-not-clustered", {})],
     }
 
-    ts = Scenario().add_host(hostname, tags=["test"])
-    ts.add_host("ping-host", tags=["no-agent"])
+    ts = Scenario().add_host(hostname, tags={"criticality": "test"})
+    ts.add_host("ping-host", tags={"agent": "no-agent"})
     ts.add_host("node1")
     ts.add_cluster("cluster1", nodes=["node1"])
     ts.set_option(

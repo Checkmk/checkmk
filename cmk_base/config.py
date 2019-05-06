@@ -605,11 +605,9 @@ def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False):
 
 def _host_is_member_of_site(config_cache, hostname, site):
     # type: (ConfigCache, str, str) -> bool
-    for tag in config_cache.get_host_config(hostname).tags:
-        if tag.startswith("site:"):
-            return site == tag[5:]
     # hosts without a site: tag belong to all sites
-    return True
+    return config_cache.get_host_config(hostname).tag_groups.get(
+        "site", distributed_wato_site) == distributed_wato_site
 
 
 def duplicate_hosts():
@@ -2163,9 +2161,9 @@ class HostConfig(object):
         self.is_snmp_host = self._config_cache.in_binary_hostlist(hostname, snmp_hosts)
         self.is_usewalk_host = self._config_cache.in_binary_hostlist(hostname, usewalk_hosts)
 
-        if "piggyback" in self.tags:
+        if self.tag_groups["piggyback"] == "piggyback":
             self.is_piggyback_host = True
-        elif "no-piggyback" in self.tags:
+        elif self.tag_groups["piggyback"] == "no-piggyback":
             self.is_piggyback_host = False
         else:  # Legacy automatic detection
             self.is_piggyback_host = self.has_piggyback_data
@@ -2180,20 +2178,20 @@ class HostConfig(object):
                             not self.has_management_board
 
         self.is_dual_host = self.is_tcp_host and self.is_snmp_host
-        self.is_all_agents_host = "all-agents" in self.tags
-        self.is_all_special_agents_host = "special-agents" in self.tags
+        self.is_all_agents_host = self.tag_groups["agent"] == "all-agents"
+        self.is_all_special_agents_host = self.tag_groups["agent"] == "special-agents"
 
         # IP addresses
         # Whether or not the given host is configured not to be monitored via IP
-        self.is_no_ip_host = "no-ip" in self.tags
-        self.is_ipv6_host = "ip-v6" in self.tags
+        self.is_no_ip_host = self.tag_groups["address_family"] == "no-ip"
+        self.is_ipv6_host = "ip-v6" in self.tag_groups
         # Whether or not the given host is configured to be monitored via IPv4.
         # This is the case when it is set to be explicit IPv4 or implicit (when
         # host is not an IPv6 host and not a "No IP" host)
-        self.is_ipv4_host = "ip-v4" in self.tags or (not self.is_ipv6_host and
-                                                     not self.is_no_ip_host)
+        self.is_ipv4_host = "ip-v4" in self.tag_groups \
+                or (not self.is_ipv6_host and not self.is_no_ip_host)
 
-        self.is_ipv4v6_host = "ip-v6" in self.tags and "ip-v4" in self.tags
+        self.is_ipv4v6_host = "ip-v6" in self.tag_groups and "ip-v4" in self.tag_groups
 
         # Whether or not the given host is configured to be monitored primarily via IPv6
         self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) \
@@ -2892,16 +2890,23 @@ class ConfigCache(object):
         return host_config
 
     def _collect_hosttags(self):
-        for tagged_host in all_hosts + clusters.keys():
-            parts = tagged_host.split("|")
-            self._hosttags[parts[0]] = set(parts[1:])
+        for hostname, tag_groups in host_tags.iteritems():
+            # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
+            # but there was a single tag group added with it's leading tag group id. This
+            # was the internal "site" tag that is created by HostAttributeSite.
+            tags = set(v for k, v in tag_groups.iteritems() if k != "site")
+            tags.add("site:%s" % tag_groups["site"])
+            self._hosttags[hostname] = tags
 
+    # Kept for compatibility with pre 1.6 sites
+    # TODO: Clean up all call sites one day (1.7?)
     # TODO: check all call sites and remove this
     def tag_list_of_host(self, hostname):
+        # type: (str) -> Set[str]
         """Returns the list of all configured tags of a host. In case
         a host has no tags configured or is not known, it returns an
         empty list."""
-        return self._hosttags.get(hostname, [])
+        return self._hosttags[hostname]
 
     # TODO: check all call sites and remove this or make it private?
     def tags_of_host(self, hostname):

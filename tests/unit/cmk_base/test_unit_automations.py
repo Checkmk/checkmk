@@ -55,7 +55,7 @@ def test_registered_automations(site):
 def test_get_labels_of_host(monkeypatch):
     automation = automations.AutomationGetLabelsOf()
 
-    ts = Scenario().add_host("test-host", [])
+    ts = Scenario().add_host("test-host")
     ts.set_option("host_labels", {
         "test-host": {
             "explicit": "ding",
@@ -76,7 +76,7 @@ def test_get_labels_of_host(monkeypatch):
 def test_get_labels_of_service(monkeypatch):
     automation = automations.AutomationGetLabelsOf()
 
-    ts = Scenario().add_host("test-host", [])
+    ts = Scenario().add_host("test-host")
     ts.set_ruleset("service_label_rules", [
         ({
             "label1": "val1"
@@ -102,7 +102,7 @@ def test_get_labels_of_service(monkeypatch):
 def test_analyse_host(monkeypatch):
     automation = automations.AutomationAnalyseHost()
 
-    ts = Scenario().add_host("test-host", [])
+    ts = Scenario().add_host("test-host")
     ts.set_option("host_labels", {
         "test-host": {
             "explicit": "ding",

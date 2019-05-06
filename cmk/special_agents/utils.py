@@ -127,14 +127,14 @@ class DataCache(object):
         pass
 
     @abc.abstractmethod
-    def get_validity_from_args(self, args):
+    def get_validity_from_args(self, *args):
         """
         Decide whether we need to update the cache due to new arguments
         """
         pass
 
     @abc.abstractmethod
-    def get_live_data(self, args):
+    def get_live_data(self, *args):
         """
         This is the function that will be called if no cached data can be found.
         """
@@ -187,8 +187,9 @@ class DataCache(object):
             raise
         return content
 
-    def get_data(self, args, use_cache=True):
-        if (use_cache and self.get_validity_from_args(args) and self._cache_is_valid()):
+    def get_data(self, *args, **kwargs):
+        use_cache = kwargs.pop('use_cache', True)
+        if (use_cache and self.get_validity_from_args(*args) and self._cache_is_valid()):
             try:
                 return self.get_cached_data()
             except (OSError, IOError, ValueError) as exc:
@@ -196,7 +197,7 @@ class DataCache(object):
                 if self.debug:
                     raise
 
-        live_data = self.get_live_data(args)
+        live_data = self.get_live_data(*args)
         if use_cache:
             try:
                 self._write_to_cache(live_data)

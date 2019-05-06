@@ -30,6 +30,7 @@ import sys
 import time
 import inspect
 import signal
+import pathlib2 as pathlib
 
 from cmk.regex import regex
 import cmk.tty as tty
@@ -1467,16 +1468,18 @@ def _remove_autochecks_file(hostname):
         pass
 
 
-# FIXME TODO: Consolidate with automation.py automation_write_autochecks_file()
 def _save_autochecks_file(hostname, items):
     if not os.path.exists(cmk.paths.autochecks_dir):
         os.makedirs(cmk.paths.autochecks_dir)
-    filepath = "%s/%s.mk" % (cmk.paths.autochecks_dir, hostname)
-    out = file(filepath, "w")
-    out.write("[\n")
+
+    filepath = pathlib.Path() / cmk.paths.autochecks_dir / ("%s.mk" % hostname)
+    content = []
+    content.append("[")
     for check_plugin_name, item, paramstring in items:
-        out.write("  (%r, %r, %s),\n" % (check_plugin_name, item, paramstring))
-    out.write("]\n")
+        content.append("  (%r, %r, %s)," % (check_plugin_name, item, paramstring))
+    content.append("]\n")
+
+    store.save_file(str(filepath), "\n".join(content))
 
 
 def set_autochecks_of(hostname, new_items):

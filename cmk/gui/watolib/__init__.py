@@ -71,7 +71,7 @@ import cmk.utils.plugin_registry
 
 import cmk.gui.utils
 import cmk.gui.sites
-import cmk.gui.tags
+import cmk.utils.tags
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -512,7 +512,7 @@ def _create_sample_config():
 
 
 def _initialize_tag_config():
-    tag_config = cmk.gui.tags.TagConfig()
+    tag_config = cmk.utils.tags.TagConfig()
     tag_config.parse_config({
         'aux_tags': [],
         'tag_groups': [

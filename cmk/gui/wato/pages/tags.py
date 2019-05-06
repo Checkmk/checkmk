@@ -49,7 +49,7 @@ from cmk.gui.valuespec import (
     Transform,
 )
 
-import cmk.gui.tags
+import cmk.utils.tags
 from cmk.gui.watolib.tags import TagConfigFile
 
 from cmk.gui.plugins.wato.utils.main_menu import (
@@ -82,13 +82,13 @@ class ModeTags(WatoMode):
 
     def __init__(self):
         super(ModeTags, self).__init__()
-        self._builtin_config = config.BuiltinTagConfig()
+        self._builtin_config = cmk.utils.tags.BuiltinTagConfig()
 
         self._tag_config_file = TagConfigFile()
-        self._tag_config = cmk.gui.tags.TagConfig()
+        self._tag_config = cmk.utils.tags.TagConfig()
         self._tag_config.parse_config(self._tag_config_file.load_for_reading())
 
-        self._effective_config = cmk.gui.tags.TagConfig()
+        self._effective_config = cmk.utils.tags.TagConfig()
         self._effective_config.parse_config(self._tag_config.get_dict_format())
         self._effective_config += self._builtin_config
 
@@ -289,12 +289,12 @@ class ABCEditTagMode(WatoMode):
     def __init__(self):
         super(ABCEditTagMode, self).__init__()
         self._tag_config_file = TagConfigFile()
-        self._untainted_hosttags_config = cmk.gui.tags.TagConfig()
+        self._untainted_hosttags_config = cmk.utils.tags.TagConfig()
         self._untainted_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
-        self._effective_config = cmk.gui.tags.TagConfig()
+        self._effective_config = cmk.utils.tags.TagConfig()
         self._effective_config.parse_config(self._untainted_hosttags_config.get_dict_format())
-        self._effective_config += cmk.gui.config.BuiltinTagConfig()
+        self._effective_config += cmk.utils.tags.BuiltinTagConfig()
 
         self._id = self._get_id()
         self._new = self._is_new_tag()
@@ -353,7 +353,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         super(ModeEditAuxtag, self).__init__()
 
         if self._new:
-            self._aux_tag = cmk.gui.tags.AuxTag()
+            self._aux_tag = cmk.utils.tags.AuxTag()
         else:
             self._aux_tag = self._untainted_hosttags_config.aux_tag_list.get_aux_tag(self._id)
 
@@ -381,10 +381,10 @@ class ModeEditAuxtag(ABCEditTagMode):
         aux_tag_spec = vs.from_html_vars("aux_tag")
         vs.validate_value(aux_tag_spec, "aux_tag")
 
-        self._aux_tag = cmk.gui.tags.AuxTag(aux_tag_spec)
+        self._aux_tag = cmk.utils.tags.AuxTag(aux_tag_spec)
         self._aux_tag.validate()
 
-        changed_hosttags_config = cmk.gui.tags.TagConfig()
+        changed_hosttags_config = cmk.utils.tags.TagConfig()
         changed_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
         if self._new:
@@ -429,10 +429,10 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(self._id)
         if not self._untainted_tag_group:
-            self._untainted_tag_group = cmk.gui.tags.TagGroup()
+            self._untainted_tag_group = cmk.utils.tags.TagGroup()
 
         self._tag_group = self._untainted_hosttags_config.get_tag_group(
-            self._id) or cmk.gui.tags.TagGroup()
+            self._id) or cmk.utils.tags.TagGroup()
 
     def _get_id(self):
         return html.request.var("edit", html.request.var("tag_id"))
@@ -455,10 +455,10 @@ class ModeEditTagGroup(ABCEditTagMode):
         vs.validate_value(tag_group_spec, "tag_group")
 
         # Create new object with existing host tags
-        changed_hosttags_config = cmk.gui.tags.TagConfig()
+        changed_hosttags_config = cmk.utils.tags.TagConfig()
         changed_hosttags_config.parse_config(self._tag_config_file.load_for_modification())
 
-        changed_tag_group = cmk.gui.tags.TagGroup(tag_group_spec)
+        changed_tag_group = cmk.utils.tags.TagGroup(tag_group_spec)
         self._tag_group = changed_tag_group
 
         if self._new:

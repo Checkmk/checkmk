@@ -32,7 +32,7 @@ import os
 
 import cmk
 
-import cmk.gui.tags
+import cmk.utils.tags
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
@@ -774,7 +774,7 @@ class APICallHosttags(APICallCollection):
         }
 
     def _get(self, request):
-        hosttags_config = cmk.gui.tags.TagConfig()
+        hosttags_config = cmk.utils.tags.TagConfig()
         hosttags_config.parse_config(TagConfigFile().load_for_reading())
 
         hosttags_dict = hosttags_config.get_dict_format()
@@ -786,11 +786,11 @@ class APICallHosttags(APICallCollection):
         return hosttags_dict
 
     def _get_builtin_tags_configuration(self):
-        return config.BuiltinTagConfig().get_dict_format()
+        return cmk.utils.tags.BuiltinTagConfig().get_dict_format()
 
     def _set(self, request):
         tag_config_file = TagConfigFile()
-        hosttags_config = cmk.gui.tags.TagConfig()
+        hosttags_config = cmk.utils.tags.TagConfig()
         hosttags_config.parse_config(tag_config_file.load_for_modification())
 
         hosttags_dict = hosttags_config.get_dict_format()
@@ -804,7 +804,7 @@ class APICallHosttags(APICallCollection):
         used_tags = self._get_used_grouped_tags()
         used_tags.update(self._get_used_rule_tags())
 
-        changed_hosttags_config = cmk.gui.tags.TagConfig()
+        changed_hosttags_config = cmk.utils.tags.TagConfig()
         changed_hosttags_config.parse_config(request)
         changed_hosttags_config.validate_config()
 
@@ -812,7 +812,7 @@ class APICallHosttags(APICallCollection):
         new_tags.update(changed_hosttags_config.get_tag_ids_with_group_prefix())
 
         # Remove the builtin hoststags from the list of used_tags
-        builtin_config = config.BuiltinTagConfig()
+        builtin_config = cmk.utils.tags.BuiltinTagConfig()
         used_tags.discard(builtin_config.get_tag_ids_with_group_prefix())
 
         missing_tags = used_tags - new_tags

@@ -30,7 +30,6 @@ import logging
 import cmk
 import cmk.utils.paths
 
-import cmk.gui.tags
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib

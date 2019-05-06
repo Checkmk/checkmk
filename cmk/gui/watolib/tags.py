@@ -31,8 +31,7 @@ from pathlib2 import Path
 import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.tags
-import cmk.gui.config as config
+import cmk.utils.tags
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -58,8 +57,8 @@ class TagConfigFile(WatoSimpleConfigFile):
                 "wato_aux_tags": []
             }, lock=lock)
 
-        return cmk.gui.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
-                                                  legacy_cfg["wato_aux_tags"])
+        return cmk.utils.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
+                                                    legacy_cfg["wato_aux_tags"])
 
     # TODO: Move the hosttag export to a hook
     def save(self, cfg):
@@ -91,9 +90,9 @@ def _export_hosttags_to_php(cfg):
     path = php_api_dir + '/hosttags.php'
     store.mkdir(php_api_dir)
 
-    tag_config = cmk.gui.tags.TagConfig()
+    tag_config = cmk.utils.tags.TagConfig()
     tag_config.parse_config(cfg)
-    tag_config += config.BuiltinTagConfig()
+    tag_config += cmk.utils.tags.BuiltinTagConfig()
 
     # need an extra lock file, since we move the auth.php.tmp file later
     # to auth.php. This move is needed for not having loaded incomplete

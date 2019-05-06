@@ -536,26 +536,18 @@ class AzureClient(object):
 
 
 class MetricsCollecter(object):
+
+    NOW = datetime.datetime.utcnow()
+
     def __init__(self, resource, debug=False):
         super(MetricsCollecter, self).__init__()
         self.debug = debug
         self.resource = resource
         self.remaining_reads = "unknown (no metrics fetched)"
-        self.timespans = self._get_timespans()
-
-    @staticmethod
-    def _get_timespans(time_end=datetime.datetime.utcnow()):
-        """compute timespans dict"""
-
-        def interval(**kwargs):
-            start = time_end - datetime.timedelta(**kwargs)
-            return "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                              time_end.strftime("%Y-%m-%dT%H:%M:%SZ"))
-
-        return {
-            "PT1M": interval(minutes=3),
-            "PT5M": interval(minutes=15),
-            "PT1H": interval(hours=3),
+        self.timedeltas = {
+            "PT1M": datetime.timedelta(minutes=1),
+            "PT5M": datetime.timedelta(minutes=5),
+            "PT1H": datetime.timedelta(hours=1),
         }
 
     def _metric_api_call(self, monitor_client, timespan, interval, metric, aggregation, filter_):
@@ -584,7 +576,10 @@ class MetricsCollecter(object):
             raise ValueError("Azure API won't have requests with more than 20 metrics!")
 
         rid = self.resource.info["id"]
-        timespan = self.timespans[interval]
+
+        start = self.NOW - 3 * self.timedeltas[interval]
+        timespan = "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                              self.NOW.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
         try:
             response, raw_metrics = self._metric_api_call(monitor_client, timespan, interval,

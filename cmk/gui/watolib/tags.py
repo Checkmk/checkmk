@@ -33,12 +33,19 @@ import cmk.utils.store as store
 
 import cmk.utils.tags
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
-from cmk.gui.watolib.utils import multisite_dir
+from cmk.gui.watolib.utils import (
+    multisite_dir,
+    wato_root_dir,
+)
 
 
 class TagConfigFile(WatoSimpleConfigFile):
-    """Handles loading the 1.6 tag definitions from tags.mk or
-    the pre 1.6 tag configuration from hosttags.mk"""
+    """Handles loading the 1.6 tag definitions from GUI tags.mk or
+    the pre 1.6 tag configuration from hosttags.mk
+
+    When saving the configuration it also writes out the tags.mk for
+    the cmk_base world.
+    """
 
     def __init__(self):
         file_path = Path(multisite_dir()) / "tags.mk"
@@ -63,7 +70,13 @@ class TagConfigFile(WatoSimpleConfigFile):
     # TODO: Move the hosttag export to a hook
     def save(self, cfg):
         super(TagConfigFile, self).save(cfg)
+        self._save_base_config(cfg)
         _export_hosttags_to_php(cfg)
+
+    def _save_base_config(self, cfg):
+        base_config_file = WatoSimpleConfigFile(
+            config_file_path=Path(wato_root_dir()) / "tags.mk", config_variable="tag_config")
+        base_config_file.save(cfg)
 
 
 # Creates a includable PHP file which provides some functions which

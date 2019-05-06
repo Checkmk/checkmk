@@ -129,6 +129,10 @@ dummy_check_commandline = 'echo "ERROR - you did an active check on this service
 nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()='
 
 # Data to be defined in main.mk
+tag_config = {
+    "aux_tags": [],
+    "tag_groups": [],
+}
 checks = []
 static_checks = {}
 check_parameters = []

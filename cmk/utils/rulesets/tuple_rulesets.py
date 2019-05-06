@@ -217,7 +217,6 @@ class RulesetToDictTransformer(object):
         return conditions
 
 
-# Is there a better way?
 def get_tag_to_group_map(tag_config):
     """The old rules only have a list of tags and don't know anything about the
     tag groups they are coming from. Create a map based on the current tag config
@@ -231,13 +230,3 @@ def get_tag_to_group_map(tag_config):
         for grouped_tag in tag_group.tags:
             tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
     return tag_id_to_tag_group_id_map
-
-
-# Normally it is not allowed to import cmk.gui.* from cmk.utils. This is denied
-# by our module layering. We make an exception here to be able to cleanly migrate
-# the list of tags to the new dict tag-group -> tag format. Without the help of
-# the GUI config this would not be possible
-def get_tag_config_from_gui():
-    import cmk.gui.config as gui_config
-    gui_config.load_config()
-    return gui_config.tags

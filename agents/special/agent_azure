@@ -68,6 +68,7 @@ METRICS_SELECTED = {
     # to add a new metric, just add a made up name, run the
     # agent, and you'll get a error listing available metrics!
     # key: list of (name(s), interval, aggregation, filter)
+    # NB: Azure API won't have requests with more than 20 metric names at once
     'Microsoft.Network/virtualNetworkGateways': [
         ('AverageBandwidth,P2SBandwidth', 'PT1M', 'average', None),
         ('P2SConnectionCount', 'PT1M', 'maximum', None),
@@ -572,10 +573,7 @@ class MetricsCollecter(object):
 
     def _fetch_specific_metrics(self, monitor_client, metricnames, interval, aggregation, filter_,
                                 err):
-        if metricnames.count(',') >= 20:
-            raise ValueError("Azure API won't have requests with more than 20 metrics!")
-
-        rid = self.resource.info["id"]
+        resource_id = self.resource.info["id"]
 
         start = self.NOW - 3 * self.timedeltas[interval]
         timespan = "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -585,7 +583,7 @@ class MetricsCollecter(object):
             response, raw_metrics = self._metric_api_call(monitor_client, timespan, interval,
                                                           metricnames, aggregation, filter_)
         except () if self.debug else ErrorResponseException as exc:
-            err.add("exception", rid, exc.message)
+            err.add("exception", resource_id, exc.message)
             LOG.exception(exc)
             return []
 
@@ -597,7 +595,7 @@ class MetricsCollecter(object):
             try:
                 metrics.append(create_metric_dict(raw_metric, aggregation, interval, filter_))
             except AzureMetricParseError as exc:
-                err.add(exc[0], rid, exc[1])
+                err.add(exc[0], resource_id, exc[1])
                 LOG.warning(exc.args[1])
 
         return metrics
@@ -615,13 +613,21 @@ class MetricsCollecter(object):
 def process_resource(args):
     resource, client = args
 
+    #
+    # process the resource with all clients specific to the resource type
+    #
     client.process_specific(resource)
 
+    #
+    # gather all metrics of the resource
+    #
     err = IssueCollecter()  # pass this to methods to collect issues
-
     metrics_collecter = MetricsCollecter(resource, debug=client.args.debug)
     metrics_collecter.collect_metrics(client.monitor_client, err)
 
+    #
+    # create all sections
+    #
     agent_info_section = AzureSection('agent_info')
     agent_info_section.add(('remaining-reads', metrics_collecter.remaining_reads))
     agent_info_section.add(err.dumpinfo())

@@ -38,6 +38,7 @@ Special agent for monitoring azure cloud applications with Check_MK.
 import json
 import datetime
 import calendar
+import string
 import sys
 import re
 import argparse
@@ -45,6 +46,8 @@ import logging
 
 from multiprocessing import Process, Lock, Queue
 from Queue import Empty as QueueEmpty
+
+from pathlib2 import Path
 
 # We have to set a null handler for logging before importing the azure stuff.
 #   Otherwise a warning will be sent to stderr - and if for some other reason
@@ -59,6 +62,9 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.common.credentials import ServicePrincipalCredentials
 logging.getLogger().handlers.pop()
 
+from cmk.utils.paths import tmp_dir
+
+from cmk.special_agents.utils import DataCache
 import cmk.utils.password_store
 cmk.utils.password_store.replace_passwords()
 
@@ -82,6 +88,8 @@ METRICS_SELECTED = {
                                            'PT1H', 'total', None),],
     'Microsoft.Web/sites': [('CpuTime,AverageResponseTime,Http5xx', 'PT1M', 'total', None),],
 }
+
+AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"
 
 
 class AsyncMapper(object):  # pylint: disable=too-few-public-methods
@@ -536,23 +544,36 @@ class AzureClient(object):
         return self._cache["resources"]
 
 
-class MetricsCollecter(object):
+class MetricCache(DataCache):
 
     NOW = datetime.datetime.utcnow()
 
-    def __init__(self, resource, debug=False):
-        super(MetricsCollecter, self).__init__()
-        self.debug = debug
-        self.resource = resource
-        self.remaining_reads = "unknown (no metrics fetched)"
-        self.timedeltas = {
+    def __init__(self, resource, metric_definition, debug=False):
+        self.metric_definition = metric_definition
+        metricnames = metric_definition[0]
+        super(MetricCache, self).__init__(self.get_cache_path(resource), metricnames, debug=debug)
+        self.remaining_reads = None
+        self.timedelta = {
             "PT1M": datetime.timedelta(minutes=1),
             "PT5M": datetime.timedelta(minutes=5),
             "PT1H": datetime.timedelta(hours=1),
-        }
+        }[metric_definition[1]]
 
-    def _metric_api_call(self, monitor_client, timespan, interval, metric, aggregation, filter_):
-        rid = self.resource.info['id']
+    @staticmethod
+    def get_cache_path(resource):
+        valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+        subdir = ''.join(c if c in valid_chars else '_' for c in resource.info['id'])
+        return AZURE_CACHE_FILE_PATH / subdir
+
+    @property
+    def cache_interval(self):
+        return self.timedelta.seconds
+
+    def get_validity_from_args(self, *args):
+        return True
+
+    @staticmethod
+    def _metric_api_call(monitor_client, rid, timespan, interval, metric, aggregation, filter_):
         LOG.debug(
             "metrics.list(%r, timespan=%r, interval=%r, metric=%r, aggregation=%r,"
             " filter=%r, raw=True)", rid, timespan, interval, metric, aggregation, filter_)
@@ -571,17 +592,16 @@ class MetricsCollecter(object):
         raw_metrics = list(raw.output.value)
         return raw.response, raw_metrics
 
-    def _fetch_specific_metrics(self, monitor_client, metricnames, interval, aggregation, filter_,
-                                err):
-        resource_id = self.resource.info["id"]
+    def get_live_data(self, monitor_client, resource_id, err):  # pylint: disable=arguments-differ
+        metricnames, interval, aggregation, filter_ = self.metric_definition
 
-        start = self.NOW - 3 * self.timedeltas[interval]
+        start = self.NOW - 3 * self.timedelta
         timespan = "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
                               self.NOW.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
         try:
-            response, raw_metrics = self._metric_api_call(monitor_client, timespan, interval,
-                                                          metricnames, aggregation, filter_)
+            response, raw_metrics = self._metric_api_call(
+                monitor_client, resource_id, timespan, interval, metricnames, aggregation, filter_)
         except () if self.debug else ErrorResponseException as exc:
             err.add("exception", resource_id, exc.message)
             LOG.exception(exc)
@@ -600,36 +620,35 @@ class MetricsCollecter(object):
 
         return metrics
 
-    # TODO: adding the metrics as a side effect is not good.
-    #       I'll get the caching right, then change this back. (mo)
-    def collect_metrics(self, monitor_client, err):
-        metric_params = METRICS_SELECTED.get(self.resource.info["type"], [])
 
-        for metricnames, interval, aggregation, filter_ in metric_params:
-            self.resource.metrics += self._fetch_specific_metrics(
-                monitor_client, metricnames, interval, aggregation, filter_, err)
+def gather_metrics(client, resource):
+    '''
+    Gather all metrics for a resource. These metrics have different time
+    resolutions, so every metric needs its own cache.
+    Along the way collect ocurrring errors and keep track of the remaining
+    API reads.
+    '''
+    err = IssueCollecter()
+    metric_definitions = METRICS_SELECTED.get(resource.info["type"], [])
+    remaining_api_reads = None
+    for metric_def in metric_definitions:
+        cache = MetricCache(resource, metric_def, debug=client.args.debug)
+        resource.metrics += cache.get_data(client.monitor_client, resource.info['id'], err)
+        remaining_api_reads = (min((remaining_api_reads, cache.remaining_reads)) or
+                               cache.remaining_reads or remaining_api_reads)
+    remaining_api_reads = remaining_api_reads or "unknown (no metrics fetched)"
+    return remaining_api_reads, err
 
 
 def process_resource(args):
     resource, client = args
 
-    #
-    # process the resource with all clients specific to the resource type
-    #
     client.process_specific(resource)
 
-    #
-    # gather all metrics of the resource
-    #
-    err = IssueCollecter()  # pass this to methods to collect issues
-    metrics_collecter = MetricsCollecter(resource, debug=client.args.debug)
-    metrics_collecter.collect_metrics(client.monitor_client, err)
+    remaining_api_reads, err = gather_metrics(client, resource)
 
-    #
-    # create all sections
-    #
     agent_info_section = AzureSection('agent_info')
-    agent_info_section.add(('remaining-reads', metrics_collecter.remaining_reads))
+    agent_info_section.add(('remaining-reads', remaining_api_reads))
     agent_info_section.add(err.dumpinfo())
 
     sections = [agent_info_section]

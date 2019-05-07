@@ -69,14 +69,24 @@ ruleset = [
         },
         "options": {},
     },
+    {
+        "value": "BLA",
+        "condition": {
+            "host_name": "xyz",
+        },
+        "options": {
+            "disabled": True,
+        },
+    },
 ]
 
 
 def test_basic_host_ruleset_get_matching_rules():
     matcher = RulesetMatcher()
     assert matcher.get_matching_rules(RulesetMatchObject(host_name="abc"), ruleset=ruleset) == []
+    assert matcher.get_matching_rules(RulesetMatchObject(host_name="xyz"), ruleset=ruleset) == []
     assert matcher.get_matching_rules(
-        RulesetMatchObject(host_name="host1"), ruleset=ruleset) == ruleset
+        RulesetMatchObject(host_name="host1"), ruleset=ruleset) == ruleset[:-1]
     assert matcher.get_matching_rules(
         RulesetMatchObject(host_name="host2"), ruleset=ruleset) == [ruleset[1]]
 
@@ -84,6 +94,7 @@ def test_basic_host_ruleset_get_matching_rules():
 def test_basic_host_ruleset_get_values():
     matcher = RulesetMatcher()
     assert matcher.get_values(RulesetMatchObject(host_name="abc"), ruleset=ruleset) == []
+    assert matcher.get_values(RulesetMatchObject(host_name="xyz"), ruleset=ruleset) == []
     assert matcher.get_values(
         RulesetMatchObject(host_name="host1"), ruleset=ruleset) == ["BLA", "BLUB"]
     assert matcher.get_values(RulesetMatchObject(host_name="host2"), ruleset=ruleset) == ["BLUB"]
@@ -122,12 +133,24 @@ dict_ruleset = [
         },
         "options": {},
     },
+    {
+        "value": {
+            "hu": "BLA"
+        },
+        "condition": {
+            "host_name": "xyz",
+        },
+        "options": {
+            "disabled": True,
+        },
+    },
 ]
 
 
 def test_basic_host_ruleset_get_merged_dict_values():
     matcher = RulesetMatcher()
     assert matcher.get_merged_dict(RulesetMatchObject(host_name="abc"), ruleset=dict_ruleset) == {}
+    assert matcher.get_merged_dict(RulesetMatchObject(host_name="xyz"), ruleset=dict_ruleset) == {}
     assert matcher.get_merged_dict(
         RulesetMatchObject(host_name="host1"), ruleset=dict_ruleset) == {
             "hu": "BLA",
@@ -168,12 +191,22 @@ binary_ruleset = [
         },
         "options": {},
     },
+    {
+        "value": True,
+        "condition": {
+            "host_name": "xyz",
+        },
+        "options": {
+            "disabled": True,
+        },
+    },
 ]
 
 
 def test_basic_host_ruleset_is_matching():
     matcher = RulesetMatcher()
     assert matcher.is_matching(RulesetMatchObject(host_name="abc"), ruleset=binary_ruleset) is False
+    assert matcher.is_matching(RulesetMatchObject(host_name="xyz"), ruleset=binary_ruleset) is False
     assert matcher.is_matching(
         RulesetMatchObject(host_name="host1"), ruleset=binary_ruleset) is True
     assert matcher.is_matching(

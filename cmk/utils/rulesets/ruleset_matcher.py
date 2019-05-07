@@ -74,6 +74,9 @@ class RulesetMatcher(object):
 
         Replaces in_binary_hostlist / in_boolean_serviceconf_list"""
         for rule in ruleset:
+            if rule.get("options", {}).get("disabled", False):
+                continue
+
             if self._matcher.match(match_object.to_dict(), rule["condition"]):
                 return rule["value"]
         return False
@@ -102,6 +105,6 @@ class RulesetMatcher(object):
         """Filter the ruleset of this matcher for the given object and return the filtered rule list
         """
         return [
-            rule for rule in ruleset
-            if self._matcher.match(match_object.to_dict(), rule["condition"])
+            rule for rule in ruleset if not rule.get("options", {}).get("disabled", False) and
+            self._matcher.match(match_object.to_dict(), rule["condition"])
         ]

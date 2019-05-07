@@ -10,6 +10,10 @@ RUN yum -y --enablerepo=extras install \
     centos-release-scl-rh \
     && yum -y install \
     curl \
+    && curl http://mirror.ghettoforge.org/distributions/gf/el/6/plus/x86_64/rsync-3.1.2-1.gf.el6.x86_64.rpm --output rsync-3.1.2-1.gf.el6.x86_64.rpm \
+    && rpm -i rsync-3.1.2-1.gf.el6.x86_64.rpm \
+    && rm rsync-3.1.2-1.gf.el6.x86_64.rpm \
+    && yum -y install \
     dpkg \
     enchant \
     gcc \

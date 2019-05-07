@@ -59,7 +59,7 @@ TEST(WinPerfTest, YmlCheck) {
                                                         counter.second);
         StringLower(counter_low.first);
         StringLower(counter_low.second);
-        auto found = Find(base_counters, counter_low);
+        auto found = cma::tools::find(base_counters, counter_low);
         if (found) found_count++;
     }
 

@@ -3,17 +3,26 @@
 
 #include "pch.h"
 
+#include "test_tools.h"
+
 #include <filesystem>
 
+#include "cfg.h"
 #include "common/cfg_info.h"
+#include "glob_match.h"
+#include "test-utf-names.h"
 #include "tools/_misc.h"
 
-#include "cfg.h"
-#include "glob_match.h"
-#include "test_tools.h"
-#include "test-utf-names.h"
-
 namespace tst {
+
+void PrintNode(YAML::Node node, std::string_view S) {
+    if (tgt::IsDebug()) {
+        YAML::Emitter emit;
+        emit << node;
+        XLOG::l("{}:\n{}", S, emit.c_str());
+    }
+}
+
 void SafeCleanTempDir() {
     namespace fs = std::filesystem;
     auto temp_dir = cma::cfg::GetTempDir();

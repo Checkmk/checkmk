@@ -470,6 +470,7 @@ TEST(UpgradeTest, FindLwa) {
 
     // start
     RunDetachedProcess(ohm.wstring());
+    cma::tools::sleep(1000);
     auto status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                                 SERVICE_RUNNING, 5000);
     EXPECT_EQ(status, SERVICE_RUNNING);

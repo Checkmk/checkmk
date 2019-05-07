@@ -91,13 +91,11 @@ bool OnStart(AppType Type, YamlCacheOp UpdateCacheOnSuccess,
         cfg_files.push_back(ConfigFile);
     }
 
-    S_ConfigLoaded = cma::cfg::InitializeMainConfig(
-        cfg_files, UpdateCacheOnSuccess == YamlCacheOp::update,
-        Type != AppType::test);
+    S_ConfigLoaded = cfg::InitializeMainConfig(cfg_files, YamlCacheOp::update);
 
     if (S_ConfigLoaded) {
-        cma::cfg::ProcessKnownConfigGroups();
-        cma::cfg::SetupEnvironmentFromGroups();
+        cfg::ProcessKnownConfigGroups();
+        cfg::SetupEnvironmentFromGroups();
     }
 
     XLOG::l.i("Loaded start config {}",

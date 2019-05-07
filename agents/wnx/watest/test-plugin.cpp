@@ -366,7 +366,7 @@ TEST(PluginTest, FilesAndFolders) {
     cma::OnStart(cma::AppType::test);
     {
         EXPECT_EQ(groups::localGroup.foldersCount(), 1);
-        EXPECT_EQ(groups::plugins.foldersCount(), 4);
+        EXPECT_EQ(groups::plugins.foldersCount(), 2);
         PathVector pv;
         for (auto& folder : groups::plugins.folders()) {
             pv.emplace_back(folder);
@@ -393,15 +393,15 @@ TEST(PluginTest, FilesAndFolders) {
             cma::cfg::groups::kPlugins, cma::cfg::vars::kPluginsExecution);
         std::vector<Plugins::ExeUnit> exe_units;
         cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-        ASSERT_EQ(exe_units.size(), 5);
+        ASSERT_EQ(exe_units.size(), 3);
 
         EXPECT_EQ(exe_units[2].async(), false);
         EXPECT_EQ(exe_units[2].cacheAge(), 0);
 
-        EXPECT_EQ(exe_units[0].timeout(), 120);
-        EXPECT_EQ(exe_units[0].cacheAge(), 3600);
-        EXPECT_EQ(exe_units[0].async(), true);
-        EXPECT_EQ(exe_units[0].retry(), 3);
+        EXPECT_EQ(exe_units[0].timeout(), 30);
+        EXPECT_EQ(exe_units[0].cacheAge(), 0);
+        EXPECT_EQ(exe_units[0].async(), false);
+        EXPECT_EQ(exe_units[0].retry(), 0);
     }
 
     {

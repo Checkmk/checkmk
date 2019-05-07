@@ -504,12 +504,16 @@ inline std::string JoinVector(const std::vector<std::string>& Values,
     return values_string;
 }
 
+// temporary and limited ersatz for the future range::find
 template <typename T>
-bool Find(const std::vector<T>& Vector, const T& Value) {
-    if (Vector.empty()) return false;
+bool find(const std::vector<T>& Vector, const T& Value) {
+    return Vector.end() != std::find(Vector.begin(), Vector.end(), Value);
+}
 
-    auto found = std::find(Vector.begin(), Vector.end(), Value);
-    return found != Vector.end();
+// temporary and limited ersatz for the future range::none_of
+template <typename T, typename Pr>
+bool none_of(const std::vector<T>& Vector, Pr p) {
+    return std::none_of(Vector.begin(), Vector.end(), p);
 }
 
 inline std::string TimeToString(

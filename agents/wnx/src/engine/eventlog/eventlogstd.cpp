@@ -6,11 +6,9 @@
 #include <map>
 #include <string>
 
-#include "tools/_raii.h"
-
 #include "common/wtools.h"
-
 #include "logger.h"
+#include "tools/_raii.h"
 namespace cma::evl {
 std::vector<std::wstring> MessageResolver::getMessageFiles(
     LPCWSTR source) const {
@@ -87,12 +85,10 @@ std::wstring MessageResolver::resolveInt(DWORD eventID, LPCWSTR dllpath,
             eventID / 65536,   // "Qualifiers": no idea what *that* is
             eventID % 65536);  // the actual event id
 
-    XLOG::t("Formatting Message");
     DWORD len =
         ::FormatMessageW(dwFlags, dll, eventID,
                          0,  // accept any language
                          &result[0], (DWORD)result.size(), (char **)parameters);
-    XLOG::t("Formatting Message - DONE");
 
     // this trims the result string or empties it if formatting failed
     result.resize(len);

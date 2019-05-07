@@ -239,19 +239,16 @@ class NotificationParameterSlack(NotificationParameter):
             elements=[
                 ("webhook_url",
                  CascadingDropdown(
-                     title=_("Slack Webhook-URL"),
+                     title=_("Webhook-URL"),
                      help=
-                     _("URL from Slack Webhook. Setup one " +
-                       "<a href=\"https://my.slack.com/services/new/incoming-webhook/\" target=\"_blank\"> here </a>"
+                     _("Webhook URL. Setup Slack Webhook " +
+                       "<a href=\"https://my.slack.com/services/new/incoming-webhook/\" target=\"_blank\">here</a>"
+                       "<br />For Mattermost follow the documentation "
+                       "<a href=\"https://docs.mattermost.com/developer/webhooks-incoming.html\" target=\"_blank\">here</a>"
                        "<br />This URL can also be collected from the Password Store from Check_MK."
                       ),
-                     choices=[("webhook_url", _("Webhook URL"),
-                               HTTPUrl(
-                                   size=80,
-                                   allow_empty=False,
-                                   regex="^https://hooks.slack.com/services/.+",
-                                   regex_error=_("The Webhook-URL must begin with "
-                                                 "<tt>https://hooks.slack.com/services/</tt>"))),
+                     choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,
+                                                                        allow_empty=False)),
                               ("store", _("URL from password store"),
                                DropdownChoice(
                                    sorted=True,

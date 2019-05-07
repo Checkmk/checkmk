@@ -624,7 +624,7 @@ class Site(object):
             if rc != 0:
                 raise Exception("Failed to execute '%s'. Exit code: %d" % (cmd, rc))
 
-        execute("sudo /bin/cp -pr %s %s" % (src_path, self.version.version_path()))
+        execute("sudo /bin/cp -a %s %s" % (src_path, self.version.version_path()))
 
         execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" % (src_version, new_version_name,
                                                           self.version.version_path()))

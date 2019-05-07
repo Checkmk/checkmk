@@ -39,6 +39,8 @@ def pagerduty_event_type(event):
         "PROBLEM": "trigger",
         "ACKNOWLEDGEMENT": "acknowledge",
         "RECOVERY": "resolve",
+        "FLAPPINGSTART": "trigger",
+        "FLAPPINGSTOP": "resolve",
     }[event]
 
 

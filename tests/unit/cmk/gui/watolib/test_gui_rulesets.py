@@ -28,7 +28,7 @@ def _rule(ruleset_name):
     ])
 def test_rule_initialize(register_builtin_html, ruleset_name, default_value):
     rule = _rule(ruleset_name)
-    assert rule.condition == {}
+    assert isinstance(rule.conditions, rulesets.RuleConditions)
     assert rule.rule_options == {}
     assert rule.value == default_value
 
@@ -60,7 +60,7 @@ def test_rule_from_config_unhandled_format():
             ("VAL", ["HOSTLIST"]),
             {
                 "value": "VAL",
-                "condition": {
+                "conditions": {
                     'host_name': ['HOSTLIST'],
                 },
             },
@@ -70,7 +70,7 @@ def test_rule_from_config_unhandled_format():
             ("VAL", ["tag", "specs"], ["HOSTLIST"]),
             {
                 "value": "VAL",
-                "condition": {
+                "conditions": {
                     'host_name': ['HOSTLIST'],
                     'host_tags': {
                         'specs': 'specs',
@@ -82,7 +82,7 @@ def test_rule_from_config_unhandled_format():
         # binary host ruleset
         ("only_hosts", (["HOSTLIST"],), {
             "value": True,
-            "condition": {
+            "conditions": {
                 'host_name': ['HOSTLIST'],
             }
         }),
@@ -91,14 +91,14 @@ def test_rule_from_config_unhandled_format():
             ["HOSTLIST"],
         ), {
             "value": False,
-            "condition": {
+            "conditions": {
                 'host_name': ['HOSTLIST'],
             },
         }),
         # non-binary service ruleset
         ("checkgroup_parameters:local", ("VAL", ["HOSTLIST"], ["SVC", "LIST"]), {
             "value": "VAL",
-            "condition": {
+            "conditions": {
                 'service_description': [{
                     '$regex': 'SVC'
                 }, {
@@ -110,7 +110,7 @@ def test_rule_from_config_unhandled_format():
         # binary service ruleset
         ("clustered_services", (["HOSTLIST"], ["SVC", "LIST"]), {
             "value": True,
-            "condition": {
+            "conditions": {
                 'service_description': [{
                     '$regex': 'SVC'
                 }, {
@@ -121,7 +121,7 @@ def test_rule_from_config_unhandled_format():
         }),
         ("clustered_services", (rulesets.NEGATE, ["HOSTLIST"], ["SVC", "LIST"]), {
             "value": False,
-            "condition": {
+            "conditions": {
                 'service_description': [{
                     '$regex': 'SVC'
                 }, {
@@ -140,7 +140,10 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
     rule = ruleset.get_folder_rules(hosts_and_folders.Folder.root_folder())[0]
 
     for key, val in expected_attributes.items():
-        assert getattr(rule, key) == val
+        if key == "conditions":
+            assert rule.conditions.to_config() == val
+        else:
+            assert getattr(rule, key) == val
 
     if rule_options is not None:
         assert rule.rule_options == rule_options
@@ -171,7 +174,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
             },
             {
                 "value": "VAL",
-                "condition": {
+                "conditions": {
                     'host_name': ['HOSTLIST'],
                 },
             },
@@ -190,7 +193,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
             },
             {
                 "value": "VAL",
-                "condition": {
+                "conditions": {
                     'host_name': ['HOSTLIST'],
                     'host_tags': {
                         'specs': 'specs',
@@ -207,7 +210,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
             },
         }, {
             "value": True,
-            "condition": {
+            "conditions": {
                 'host_name': ['HOSTLIST'],
             },
         }),
@@ -218,7 +221,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
             },
         }, {
             "value": False,
-            "condition": {
+            "conditions": {
                 'host_name': ['HOSTLIST'],
             },
         }),
@@ -235,7 +238,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
             },
         }, {
             "value": "VAL",
-            "condition": {
+            "conditions": {
                 'service_description': [{
                     '$regex': 'SVC'
                 }, {
@@ -257,7 +260,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
             },
         }, {
             "value": True,
-            "condition": {
+            "conditions": {
                 'service_description': [{
                     '$regex': 'SVC'
                 }, {
@@ -278,7 +281,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
             },
         }, {
             "value": False,
-            "condition": {
+            "conditions": {
                 'service_description': [{
                     '$regex': 'SVC'
                 }, {
@@ -297,7 +300,10 @@ def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rul
     rule.from_config(rule_spec)
 
     for key, val in expected_attributes.items():
-        assert getattr(rule, key) == val
+        if key == "conditions":
+            assert rule.conditions.to_config() == val
+        else:
+            assert getattr(rule, key) == val
 
     if rule_options is not None:
         assert rule.rule_options == rule_options

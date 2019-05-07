@@ -298,10 +298,7 @@ class RulesetOptimizier(object):
         if not patterns:
             return False, regex(u"")  # Match everything
 
-        negate = False
-        if isinstance(patterns, dict) and "$nor" in patterns:
-            negate = True
-            patterns = patterns["$nor"]
+        negate, patterns = parse_negated_condition_list(patterns)
 
         pattern_parts = []
         for p in patterns:
@@ -374,10 +371,7 @@ class RulesetOptimizier(object):
         if not host_entries:
             return True
 
-        negate = False
-        if isinstance(host_entries, dict) and "$nor" in host_entries:
-            negate = True
-            host_entries = host_entries["$nor"]
+        negate, host_entries = parse_negated_condition_list(host_entries)
 
         for entry in host_entries:
             use_regex = isinstance(entry, dict)
@@ -411,9 +405,9 @@ class RulesetOptimizier(object):
         if hostlist is None:
             host_parts.append(None)
         else:
-            if isinstance(hostlist, dict) and "$nor" in hostlist:
+            negate, hostlist = parse_negated_condition_list(hostlist)
+            if negate:
                 host_parts.append("!")
-                hostlist = hostlist["$nor"]
 
             for h in hostlist:
                 if isinstance(h, dict):
@@ -518,6 +512,14 @@ class RulesetOptimizier(object):
             group_ref = tuple(sorted(self._hosttags_without_folder[hostname]))
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref
+
+
+def parse_negated_condition_list(entries):
+    negate = False
+    if isinstance(entries, dict) and "$nor" in entries:
+        negate = True
+        entries = entries["$nor"]
+    return negate, entries
 
 
 def in_extraconf_hostlist(hostlist, hostname):
@@ -732,7 +734,7 @@ class RulesetToDictTransformer(object):
             host_list = tuple_rule[1]
 
         condition = {}
-        condition.update(self._transform_host_tags(host_tags))
+        condition.update(self.transform_host_tags(host_tags))
         condition.update(self._transform_host_list(host_list))
         return condition
 
@@ -782,7 +784,7 @@ class RulesetToDictTransformer(object):
             return {"host_name": {"$nor": sub_conditions}}
         return {"host_name": sub_conditions}
 
-    def _transform_host_tags(self, host_tags):
+    def transform_host_tags(self, host_tags):
         if not host_tags:
             return {}
 

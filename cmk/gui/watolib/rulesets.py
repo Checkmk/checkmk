@@ -30,6 +30,7 @@ from typing import Optional  # pylint: disable=unused-import
 
 import cmk.utils.regex
 import cmk.utils.store as store
+import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -76,7 +77,7 @@ class RulesetCollection(object):
 
         config_dict = {
             "ALL_HOSTS": ALL_HOSTS,
-            "ALL_SERVICES": [""],
+            "ALL_SERVICES": ALL_SERVICES,
             "NEGATE": NEGATE,
             "FOLDER_PATH": folder.path(),
         }
@@ -274,6 +275,10 @@ class Ruleset(object):
         # Temporary needed during search result processing
         self.search_matching_rules = []
 
+        # Converts pre 1.6 tuple rulesets in place to 1.6+ format
+        self.tuple_transformer = tuple_rulesets.RulesetToDictTransformer(
+            tag_to_group_map=tuple_rulesets.get_tag_to_group_map(config.tags))
+
     def is_empty(self):
         return self.num_rules() == 0
 
@@ -326,6 +331,9 @@ class Ruleset(object):
         # Resets the rules of this ruleset for this folder!
         self._rules[folder.path()] = []
 
+        self.tuple_transformer.transform_in_place(
+            rules_config, is_service=bool(self.item_type()), is_binary=not self.valuespec())
+
         for rule_config in rules_config:
             rule = Rule(folder, self)
             rule.from_config(rule_config)
@@ -347,9 +355,13 @@ class Ruleset(object):
             if self.is_optional():
                 content += "\nif %s is None:\n    %s = []\n" % (varname, varname)
 
+        # When using pprint we get a deterministic representation of the
+        # data structures because it cares about sorting of the dict keys
+        repr_func = pprint.pformat if config.wato_use_git else repr
+
         content += "\n%s = [\n" % varname
         for rule in self._rules[folder.path()]:
-            content += rule.to_config()
+            content += "%s,\n" % repr_func(rule.to_config())
         content += "] + %s\n\n" % varname
 
         return content
@@ -558,17 +570,10 @@ class Ruleset(object):
 
 class Rule(object):
     @classmethod
-    def create(cls, folder, ruleset, host_list, item_list):
+    def create(cls, folder, ruleset):
         rule = Rule(folder, ruleset)
-
         if rule.ruleset.valuespec():
             rule.value = rule.ruleset.valuespec().default_value()
-
-        rule.host_list = host_list
-
-        if rule.ruleset.item_type():
-            rule.item_list = item_list
-
         return rule
 
     def __init__(self, folder, ruleset):
@@ -581,15 +586,12 @@ class Rule(object):
 
     def clone(self):
         cloned = Rule(self.folder, self.ruleset)
-        cloned.from_config(self.to_dict_config())
+        cloned.from_config(self.to_config())
         return cloned
 
     def _initialize(self):
-        self.tag_specs = []
-        self.host_list = []
-        self.item_list = None
+        self.condition = {}
         self.rule_options = {}
-
         if self.ruleset.valuespec():
             self.value = None
         else:
@@ -605,8 +607,6 @@ class Rule(object):
     def _parse_rule(self, rule_config):
         if isinstance(rule_config, dict):
             self._parse_dict_rule(rule_config)
-        elif isinstance(rule_config, tuple):
-            self._parse_tuple_rule(rule_config)
         else:
             raise NotImplementedError()
 
@@ -614,136 +614,31 @@ class Rule(object):
     # ruleset types
     def _parse_dict_rule(self, rule_config):
         self.rule_options = rule_config.get("options", {})
+        self.value = rule_config["value"]
+        self.condition = rule_config["condition"]
 
-        # Extract value from front, if rule has a value
-        if self.ruleset.valuespec():
-            self.value = rule_config["value"]
-        else:
-            if rule_config.get("negate"):
-                self.value = False
-            else:
-                self.value = True
+        #conditions = rule_config["conditions"]
+        #self.host_list = conditions.get("host_specs", [])
 
-        conditions = rule_config["conditions"]
-        self.host_list = conditions.get("host_specs", [])
+        #if self.ruleset.item_type():
+        #    self.item_list = conditions.get("service_specs")
 
-        if self.ruleset.item_type():
-            self.item_list = conditions.get("service_specs")
-
-        # Remove folder tag from tag list
-        tag_specs = conditions.get("host_tags", [])
-        self.tag_specs = [t for t in tag_specs if not t.startswith("/")]
-
-    # Parses the pre 1.6 tuple format. Since 1.6 Check_MK writes out the dict
-    # format handled by _parse_dict_rule(). Deprecate this one day.
-    def _parse_tuple_rule(self, rule_config):
-        if isinstance(rule_config[-1], dict):
-            self.rule_options = rule_config[-1]
-            rule_config = rule_config[:-1]
-
-        # Extract value from front, if rule has a value
-        if self.ruleset.valuespec():
-            self.value = rule_config[0]
-            rule_config = rule_config[1:]
-        else:
-            if rule_config[0] == NEGATE:
-                self.value = False
-                rule_config = rule_config[1:]
-            else:
-                self.value = True
-
-        # Extract liste of items from back, if rule has items
-        if self.ruleset.item_type():
-            self.item_list = rule_config[-1]
-            rule_config = rule_config[:-1]
-
-        # Rest is host list or tag list + host list
-        if len(rule_config) == 1:
-            tag_specs = []
-            self.host_list = rule_config[0]
-        else:
-            tag_specs = rule_config[0]
-            self.host_list = rule_config[1]
-
-        # Remove folder tag from tag list
-        self.tag_specs = [t for t in tag_specs if not t.startswith("/")]
+        ## Remove folder tag from tag list
+        #tag_specs = conditions.get("host_tags", [])
+        #self.tag_specs = [t for t in tag_specs if not t.startswith("/")]
 
     def to_config(self):
-        content = "  ( "
-
-        # When using pprint we get a deterministic representation of the
-        # data structures because it cares about sorting of the dict keys
-        repr_func = pprint.pformat if config.wato_use_git else repr
-
-        if self.ruleset.valuespec():
-            content += repr_func(self.value) + ", "
-        elif not self.value:
-            content += "NEGATE, "
-
-        content += "["
-        for tag in self.tag_specs:
-            content += repr(tag)
-            content += ", "
-
-        if not self.folder.is_root():
-            content += "'/' + FOLDER_PATH + '/+'"
-
-        content += "], "
-
-        if self.host_list and self.host_list[-1] == ALL_HOSTS[0]:
-            if len(self.host_list) > 1:
-                content += repr(self.host_list[:-1])
-                content += " + ALL_HOSTS"
-            else:
-                content += "ALL_HOSTS"
-        else:
-            content += repr(self.host_list)
-
-        if self.ruleset.item_type():
-            content += ", "
-            if self.item_list == ALL_SERVICES:
-                content += "ALL_SERVICES"
-            else:
-                if self.item_list[-1] == ALL_SERVICES[0]:
-                    content += repr(self.item_list[:-1])
-                    content += " + ALL_SERVICES"
-                else:
-                    content += repr(self.item_list)
-
-        rule_options = self._rule_options_to_config()
-        if rule_options:
-            content += ", %s" % repr_func(rule_options)
-
-        content += " ),\n"
-
-        return content
-
-    def to_dict_config(self):
         result = {
-            "conditions": {},
+            "value": self.value,
+            "condition": self.condition,
         }
 
         rule_options = self._rule_options_to_config()
         if rule_options:
             result["options"] = rule_options
 
-        if self.ruleset.valuespec():
-            result["value"] = self.value
-        elif self.value is False:
-            result["negate"] = True
-
-        result["conditions"]["host_specs"] = self.host_list
-        if self.tag_specs:
-            result["conditions"]["host_tags"] = self.tag_specs
-
-        if self.ruleset.item_type():
-            result["conditions"]["service_specs"] = self.item_list
-
         return result
 
-    # Append rule options, but only if they are not trivial. That way we
-    # keep as close as possible to the original Check_MK in rules.mk so that
-    # command line users will feel at home...
     def _rule_options_to_config(self):
         ro = {}
         if self.rule_options.get("disabled"):
@@ -868,7 +763,7 @@ class Rule(object):
             except Exception as e:
                 logger.exception()
                 html.show_warning(
-                    _("Failed to search rule of ruleset '%s' in folder '%s' (%s): %s") %
+                    _("Failed to search rule of ruleset '%s' in folder '%s' (%r): %s") %
                     (self.ruleset.title(), self.folder.title(), self.to_config(), e))
 
         if value_text is not None and not _match_search_expression(search_options, "rule_value",

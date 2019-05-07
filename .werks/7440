@@ -1,0 +1,11 @@
+Title: Added Mattermost support in notification plugin
+Level: 1
+Component: notifications
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p17
+Date: 1557244621
+
+Mattermost is an Open Source alternative to Slack. It provides an equivalent Web Hook API to Slack and thus can be used in the same way as the current Slack notification plugin works.

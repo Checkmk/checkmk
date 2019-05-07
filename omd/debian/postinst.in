@@ -61,13 +61,13 @@ case "$1" in
       if [ -f $PROGRAM_PATH ]; then
         setperm root omd 750 $PROGRAM_PATH
 
-        if [ "$PROGRAM" = "nagios/plugins/check_icmp" ]; then
+        if [ "$PROGRAM" = "lib/nagios/plugins/check_icmp" ]; then
             CAP="cap_net_raw+ep"
-        elif [ "$PROGRAM" = "nagios/plugins/check_dhcp" ]; then
+        elif [ "$PROGRAM" = "lib/nagios/plugins/check_dhcp" ]; then
             CAP="cap_net_raw,cap_net_bind_service=+ep"
-        elif [ "$PROGRAM" = "cmc/icmpsender" ]; then
+        elif [ "$PROGRAM" = "lib/cmc/icmpsender" ]; then
             CAP="cap_net_raw+ep"
-        elif [ "$PROGRAM" = "cmc/icmpreceiver" ]; then
+        elif [ "$PROGRAM" = "lib/cmc/icmpreceiver" ]; then
             CAP="cap_net_raw+ep"
         elif [ "$PROGRAM" = "bin/mkeventd_open514" ]; then
 	    CAP="cap_net_bind_service+ep"

@@ -165,6 +165,32 @@ LOGICAL_MATCHES = [
             }
         }
     }}, [HOST_PROD]),
+    Case({
+        '$and': [
+            {
+                '$or': [{
+                    'name': {
+                        '$regex': '^prod'
+                    },
+                }, {
+                    'name': {
+                        '$regex': '^test'
+                    },
+                }]
+            },
+            {
+                '$or': [{
+                    'multiline_attr': {
+                        '$regex': '^aa'
+                    }
+                }, {
+                    'multiline_attr': {
+                        '$regex': '^xyz'
+                    }
+                }]
+            },
+        ]
+    }, [HOST_TEST]),
 ]
 
 EVALUATION_MATCHES = [

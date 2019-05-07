@@ -236,10 +236,11 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     // sections to be kicked out
     tryToKick(uptime_provider_, Tp, Ip);
 
-    // #TODO remove warning and relocate this block back at the end after beta-testing
-    // We have RElocated winperf here just to be compatible with older servers to
-    // winperf check crash. This is not 100% guarantee, that we get winperf before plugin winperf
-    // but good enough for older servers(which we should not support in any case)
+    // #TODO remove warning and relocate this block back at the end after
+    // beta-testing We have RElocated winperf here just to be compatible with
+    // older servers to winperf check crash. This is not 100% guarantee, that we
+    // get winperf before plugin winperf but good enough for older servers(which
+    // we should not support in any case)
     //
     // WinPerf Processing
     if (groups::winperf.enabledInConfig() &&
@@ -318,7 +319,7 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
     auto fname = cma::cfg::GetCurrentLogFileName();
 
     auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(Data);
-    XLOG::t("Received {} bytes from {}\n", Len, dt->providerId());
+    XLOG::d.t("Received [{}] bytes from '{}'\n", Len, dt->providerId());
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT

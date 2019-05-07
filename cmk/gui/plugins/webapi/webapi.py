@@ -634,7 +634,7 @@ class APICallRules(APICallCollection):
 
         ruleset_dict = {}
         for folder, _rule_index, rule in ruleset.get_rules():
-            ruleset_dict.setdefault(folder.path(), []).append(rule.to_dict_config())
+            ruleset_dict.setdefault(folder.path(), []).append(rule.to_config())
 
         return ruleset_dict
 
@@ -675,8 +675,6 @@ class APICallRules(APICallCollection):
         rule_vs = watolib.Ruleset(ruleset_name).rulespec.valuespec
         for folder_path, rules in new_ruleset.items():
             for rule in rules:
-                if "negate" in rule:
-                    continue  # ugly, rules with a boolean value have a different representation
                 value = rule["value"]
                 try:
                     rule_vs.validate_datatype(value, "test_value")

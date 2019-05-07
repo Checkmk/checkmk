@@ -851,8 +851,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 ruleset.delete_rule(rule)
 
         elif service_patterns:
-            rule = watolib.Rule.create(folder, ruleset, [self._host.name()],
-                                       sorted(service_patterns))
+            rule = watolib.Rule.create(folder, ruleset)
+            rule.host_list = [self._host.name()]
+            rule.item_list = sorted(service_patterns)
             rule.value = value
             ruleset.prepend_rule(folder, rule)
 

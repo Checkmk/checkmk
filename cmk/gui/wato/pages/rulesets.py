@@ -32,7 +32,7 @@ import json
 import re
 from typing import NamedTuple, List, Optional
 
-from cmk.utils.regex import escape_regex_chars
+#from cmk.utils.regex import escape_regex_chars
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -1379,7 +1379,7 @@ class EditRuleMode(WatoMode):
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
 
     def _show_rule_representation(self):
-        content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_dict_config()))
+        content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_config()))
 
         html.write(_("This rule representation can be used for Web API calls."))
         html.br()
@@ -1852,21 +1852,22 @@ class ModeNewRule(EditRuleMode):
         return self._get_rule_conditions_from_vars().folder_path
 
     def _set_rule(self):
-        host_list = watolib.ALL_HOSTS
-        item_list = [""]
+        #host_list = watolib.ALL_HOSTS
+        #item_list = [""]
+        #
+        #if html.request.has_var("_new_host_rule"):
+        #    hostname = html.request.var("host")
+        #    if hostname:
+        #        host_list = [hostname]
 
-        if html.request.has_var("_new_host_rule"):
-            hostname = html.request.var("host")
-            if hostname:
-                host_list = [hostname]
-
-            if self._rulespec.item_type:
-                item = watolib.mk_eval(
-                    html.request.var("item")) if html.request.has_var("item") else watolib.NO_ITEM
-                if item != watolib.NO_ITEM:
-                    item_list = ["%s$" % escape_regex_chars(item)]
-
-        self._rule = watolib.Rule.create(self._folder, self._ruleset, host_list, item_list)
+        #    if self._rulespec.item_type:
+        #        item = watolib.mk_eval(
+        #            html.request.var("item")) if html.request.has_var("item") else watolib.NO_ITEM
+        #        if item != watolib.NO_ITEM:
+        #            item_list = ["%s$" % escape_regex_chars(item)]
+        #
+        #self._rule = watolib.Rule.create(self._folder, self._ruleset, host_list, item_list)
+        pass
 
     def _save_rule(self):
         self._ruleset.append_rule(self._folder, self._rule)

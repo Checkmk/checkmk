@@ -165,6 +165,11 @@ LOGICAL_MATCHES = [
             }
         }
     }}, [HOST_PROD]),
+    Case({"name": {
+        "$not": {
+            "$regex": "^prod"
+        }
+    }}, [HOST_TEST]),
     Case({
         '$and': [
             {

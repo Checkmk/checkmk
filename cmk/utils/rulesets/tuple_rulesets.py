@@ -97,10 +97,10 @@ class RulesetToDictTransformer(object):
             rule["condition"] = {
                 "$and": [
                     {
-                        "$or": host_condition.pop("$or")
+                        "$nor": host_condition.pop("$nor")
                     },
                     {
-                        "$or": service_condition.pop("$or")
+                        "$nor": service_condition.pop("$nor")
                     },
                 ]
             }
@@ -216,8 +216,12 @@ class RulesetToDictTransformer(object):
         """
         if len(sub_conditions) == 1:
             if sub_op == "$eq":
-                return {field: check_item}
-            return sub_conditions[0]
+                return {field: {"$ne": check_item} if negate else check_item}
+            if sub_op == "$regex":
+                if negate:
+                    return {field: {"$not": {"$regex": check_item}}}
+                return sub_conditions[0]
+            raise NotImplementedError()
 
         op = "$nor" if negate else "$or"
         return {op: sub_conditions}

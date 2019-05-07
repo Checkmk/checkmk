@@ -1,7 +1,6 @@
 missingIncludeSystem
 unmatchedSuppression
 unusedFunction
-unusedPrivateFunction
 useStlAlgorithm
 // The TEST/TEST_F macros from googletest do not contain "override".
 missingOverride:test_*.cc

@@ -225,11 +225,7 @@ plugins:
 
     # folders are scanned top -> down
     # duplicated files will be removed
-    folders: 
-        - '@core\'        # folder with Check MK plugins(installation)
-        - '@user\'        # folder in ProgramData/CheckMk/agent/plugins
-        - 'd:\myplugins\' # absolute path here
-        - 'c:\__zx\'      # 
+    folders: ['@core', '@user' ]       # folder in ProgramData/CheckMk/agent/plugins
 
     # example: mk_inventory.vbs
     # plugin is executed asynchronous
@@ -241,24 +237,24 @@ plugins:
     execution:
         # execution pattern for  windows-updates.vbs:
         # all parameters below are DEFAULT set for every entry
-        - pattern     : '@user\mk_inventory.vbs'  # Plugin name or absolute path . * and ? are allowed
-          run         : yes                 # execute this plugin if plugin found
-          async       : yes                 # async plugin is a bit special. Normally you will get delayed data.
-          timeout     : 120                 # after 120 seconds process will be killed.
-          cache_age   : 3600                # only combined with async, upto 3600 seconds we may reuse plugin output
-          retry_count : 3                   # failure on start plugin, before stopping
-          cmd_line    : ''                  # [-] command line
-          description : 'In free form'      # [-] will be stored in the log
-
-        - pattern     : '@user\win_license.bat'   # Plugin name. * and ? are allowed
-          run         : no                  # do not execute this plugin even if plugin found
+        #- pattern     : '@user\mk_inventory.vbs'  # Plugin name or absolute path . * and ? are allowed
+        #  run         : yes                 # execute this plugin if plugin found
+        #  async       : yes                 # async plugin is a bit special. Normally you will get delayed data.
+        #  timeout     : 120                 # after 120 seconds process will be killed.
+        #  cache_age   : 3600                # only combined with async, upto 3600 seconds we may reuse plugin output
+        #  retry_count : 3                   # failure on start plugin, before stopping
+        #  cmd_line    : ''                  # [-] command line
+        #  description : 'In free form'      # [-] will be stored in the log
+        #
+        #  pattern     : '@user\win_license.bat'   # Plugin name. * and ? are allowed
+        #  run         : no                  # do not execute this plugin even if plugin found
 
         - pattern     : '@user\*.*'         # in the ProgramData folder. DO NOT REMOVE THIS ENTRY
-          timeout     : 10                  # after 10 seconds process will be killed.
+          timeout     : 30                  # after 30 seconds process will be killed.
           run         : yes                 # ALL FOUND files ARE DISABLED this Current Default Behavior
 
         - pattern     : '@core\*.*'         # in the ProgramFiles folder. DO NOT REMOVE THIS ENTRY
-          timeout     : 10                  # after 10 seconds process will be killed.
+          timeout     : 30                  # after 30 seconds process will be killed.
           run         : no                  # ALL FOUND files ARE DISABLED this Default Behavior
 
         - pattern     : '*'                 # This is safety entry. Try not use plugins outside your predefined folder

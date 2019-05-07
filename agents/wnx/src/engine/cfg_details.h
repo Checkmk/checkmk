@@ -346,8 +346,8 @@ public:
     }
 
     // main api call to load all three configs
-    LoadCfgStatus loadAggregated(const std::wstring& ConfigFileName,
-                                 bool SaveOnSuccess, bool RestoreOnFail);
+    LoadCfgStatus loadAggregated(const std::wstring& config_filename,
+                                 YamlCacheOp cache_op);
 
     static bool smartMerge(YAML::Node Target, YAML::Node Src,
                            bool MergeSequences = false);

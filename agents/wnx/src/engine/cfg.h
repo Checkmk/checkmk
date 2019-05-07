@@ -80,8 +80,7 @@ std::vector<std::wstring> DefaultConfigArray(AppType Type);
 // must be called o program start.
 // and check done too
 [[nodiscard]] bool InitializeMainConfig(
-    const std::vector<std::wstring>& ConfigFileNames, bool LoadCacheOnFailure,
-    bool UseAggregation);
+    const std::vector<std::wstring>& config_filenames, YamlCacheOp cache_op);
 
 // *******************************************************
 // Internal API
@@ -472,28 +471,30 @@ std::vector<T> GetArray(const YAML::Node& Yaml, std::string Name,
     return {};
 }
 
-/*
-// deprecated
-inline YAML::Node GetRootSection(std::string Section, int* Error = 0) noexcept {
-    using namespace cma::cfg;
-
-    auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) {
-        if (Error) *Error = Error::kEmpty;
-        return {};
-    }
+template <typename T>
+std::vector<T> GetArray(YAML::Node node) noexcept {
     try {
-        return yaml[Section];
-    } catch (const exception& e) {
-        XLOG::l("Cannot read section {} in yml file {} .{} code:{}",
-                Section,                                         //
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()),  //
-                e.what());
-        if (Error) *Error = Error::kNotFound;
-        return {};
+        if (node.IsDefined() && node.IsSequence())
+            return ConvertNode2Sequence<T>(node);
+        XLOG::d.t("Invalid node type {}", node.Type());
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read node '{}'", e.what());
     }
+    return {};
 }
-*/
+
+// Merging API. Used to help merge our config files correctly, normally it is
+// internal.
+// API uses std::string because of YAML has no good support for
+// string_view Merges sequence target_group[name] <--- source_group[name] if
+// name exists in target no action
+bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
+                         const std::string& name) noexcept;
+// Merges map target_group[name] <--- source_group[name] using key
+// if entry with key exists in target no action
+bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
+                      const std::string& name, const std::string& key) noexcept;
+// ***********************************************************
 
 namespace details {
 void KillDefaultConfig();
@@ -654,11 +655,11 @@ public:
         std::lock_guard lk(lock_);
 
         // most important is disabled
-        if (cma::tools::Find(disabled_sections_, std::string(Name)))
+        if (cma::tools::find(disabled_sections_, std::string(Name)))
             return false;
 
         if (!enabled_sections_.empty()) {
-            return cma::tools::Find(enabled_sections_, std::string(Name));
+            return cma::tools::find(enabled_sections_, std::string(Name));
         }
 
         // default: both entries are empty,  section is enabled
@@ -669,7 +670,7 @@ public:
         std::lock_guard lk(lock_);
 
         // most important is disabled
-        return cma::tools::Find(disabled_sections_, Name);
+        return cma::tools::find(disabled_sections_, Name);
     }
 
     bool isIpAddressAllowed(std::string_view Ip) const {

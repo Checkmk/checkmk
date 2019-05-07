@@ -63,6 +63,87 @@ std::wstring WinPerf::buildCmdLine() const {
     return cmd_line;
 }
 
+// if not empty returns contents of the array
+template <typename T>
+static std::vector<T> OverrideTargetIfEmpty(YAML::Node target,
+                                            YAML::Node source) {
+    // special case: we have no node or no valid node in target
+    auto target_array = GetArray<T>(target);
+    if (target_array.empty()) {
+        // we override if we have good source
+        // this is important for the strange case with old or bad file
+        target = source;
+        return {};
+    }
+    return target_array;
+}
+
+// merge source's content into the target if the content is absent in the target
+// returns false only when data-structures are invalid
+bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
+                         const std::string& name) noexcept {
+    try {
+        // check for source. if empty, leave
+        auto source = source_group[name];
+        if (!source.IsDefined() || !source.IsSequence()) return true;
+
+        // check for target. if empty, override with non empty source, leave
+        auto target = target_group[name];
+        auto target_array = OverrideTargetIfEmpty<std::string>(target, source);
+        if (target_array.empty()) return true;  // nothing to process
+
+        // merging
+        auto source_array = GetArray<std::string>(source);
+
+        for (auto source_entry : source_array) {
+            auto found = cma::tools::find(target_array, source_entry);
+            if (!found) target.push_back(source_entry);
+        }
+
+    } catch (const std::exception& e) {
+        XLOG::d.t("Failed to merge yaml '{}' seq '{}'", name, e.what());
+        return false;
+    }
+    return true;
+}
+
+// merge source's content into the target if the content is absent in the target
+// returns false only when data-structures are invalid
+bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
+                      const std::string& name,
+                      const std::string& key) noexcept {
+    try {
+        // check for source, if empty -> leave
+        auto source = source_group[name];
+        if (!source.IsDefined() || !source.IsSequence()) return true;
+
+        // check for target, if empty override with non empty source and leave
+        auto target = target_group[name];
+        auto target_array = OverrideTargetIfEmpty<YAML::Node>(target, source);
+        if (target_array.empty()) return true;  // nothing to process
+
+        // merging
+        // GetVal is used to avoid loop-breaking exceptions on strange or
+        // obsolete node
+        auto source_array = GetArray<YAML::Node>(source);
+        for (auto source_entry : source_array) {
+            auto source_key = GetVal(source_entry, key, std::string());
+
+            if (source_key.empty()) continue;  // we skip empty(and bad!)
+
+            if (cma::tools::none_of(target_array, [&](YAML::Node Node) {
+                    return source_key == GetVal(Node, key, std::string());
+                }))
+                target.push_back(source_entry);
+        }
+    } catch (const std::exception& e) {
+        XLOG::d.t("Failed to merge yaml '{}.{}' map '{}'", name, key, e.what());
+        return false;
+    }
+
+    return true;
+}
+
 // we have chaos with globals
 namespace details {
 ConfigInfo G_ConfigInfo;
@@ -207,8 +288,8 @@ bool StoreUserYamlToCache() noexcept {
     StoreFileToCache(user_file);
     return true;
 }
-// Copies any file to cache with extension last successfully loaded yaml file in
-// the cache
+// Copies any file to cache with extension last successfully loaded yaml
+// file in the cache
 std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
@@ -477,13 +558,13 @@ namespace cma::cfg {
 // looks on path for config
 // accepts either full path or just name of config
 // Returns loaded one
-bool InitializeMainConfig(const std::vector<std::wstring>& ConfigFileNames,
-                          bool UseCacheOnFailure, bool UseAggregation) {
+bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
+                          YamlCacheOp cache_op) {
     namespace fs = std::filesystem;
     // ATTEMPT TO LOAD root config
     std::wstring usable_name;
 
-    for (auto& name : ConfigFileNames) {
+    for (auto& name : config_filenames) {
         // Root
         auto full_path = FindConfigFile(GetRootDir(), name);
         if (full_path.empty()) {
@@ -510,8 +591,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& ConfigFileNames,
         break;
     }
 
-    auto code = details::G_ConfigInfo.loadAggregated(
-        usable_name, UseCacheOnFailure, UseCacheOnFailure);
+    auto code = details::G_ConfigInfo.loadAggregated(usable_name, cache_op);
 
     if (code >= 0) return true;
 
@@ -520,10 +600,11 @@ bool InitializeMainConfig(const std::vector<std::wstring>& ConfigFileNames,
               details::G_ConfigInfo.getRootDir().u8string(), code);
 
     return false;
-}  // namespace cma::cfg
+}
 
 std::vector<std::wstring> DefaultConfigArray(AppType Type) {
     std::vector<std::wstring> cfg_files;
+
     cfg_files.emplace_back(files::kDefaultMainConfig);
     return cfg_files;
 }
@@ -817,60 +898,65 @@ static std::string GetMapNodeName(const YAML::Node& Node) noexcept {
     }
 }
 
-// #TODO logging, unit testing and simplifying. This is trash!
+constexpr bool IsSmartMerge(std::string_view name) {
+    return name == groups::kWinPerf;
+}
+
+// #TODO simplifying
 bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src,
                             bool MergeSequences) {
     // we are scanning source
     for (YAML::const_iterator it = Src.begin(); it != Src.end(); ++it) {
-        auto& f = it->first;
-        auto& s = it->second;
-        if (!f.IsDefined()) {
+        auto& source_name = it->first;
+        auto& source_value = it->second;
+        if (!source_name.IsDefined()) {
             XLOG::l.bp(XLOG_FLINE + "  problems here");
             continue;
         }
 
         auto name = it->first.as<std::string>();
-        auto grp = Target[name];
-        if (IsYamlMap(grp)) {
-            if (IsYamlMap(s)) {
-                for (YAML::const_iterator itx = s.begin(); itx != s.end();
-                     ++itx) {
-                    auto merge_seq = name == groups::kWinPerf;
-                    smartMerge(grp, s, merge_seq);
+        XLOG::l("Processing '{}'", name);
+        auto target_value = Target[name];
+        if (IsYamlMap(target_value)) {
+            if (IsYamlMap(source_value)) {
+                for (YAML::const_iterator itx = source_value.begin();
+                     itx != source_value.end(); ++itx) {
+                    auto merge_seq = IsSmartMerge(name);
+                    smartMerge(target_value, source_value, merge_seq);
                 }
             } else {
-                if (s.IsNull()) continue;  // empty skipped
+                if (source_value.IsNull()) continue;  // empty skipped
                 XLOG::l(XLOG_FLINE + " expected map from source {}", name);
             }
             continue;
-        } else if (IsYamlSeq(grp)) {
-            if (IsYamlSeq(s)) {
+        } else if (IsYamlSeq(target_value)) {
+            if (IsYamlSeq(source_value)) {
                 if (MergeSequences) {
                     // special case when we are merging some sequences from
                     // different files
-                    for (auto entry : s) {
+                    for (auto entry : source_value) {
                         auto s_name = GetMapNodeName(entry);
                         if (s_name.empty()) continue;
 
                         bool found = false;
-                        for (auto g_entry : grp) {
-                            auto g_name = GetMapNodeName(g_entry);
-                            if (g_name == s_name) {
+                        for (auto target_entry : target_value) {
+                            auto target_name = GetMapNodeName(target_entry);
+                            if (target_name == s_name) {
                                 found = true;
                                 break;
                             }
                         }
-                        if (!found) grp.push_back(entry);
+                        if (!found) target_value.push_back(entry);
                     }
                 } else
-                    grp = s;
+                    target_value = source_value;
             } else {
                 XLOG::l.bp(XLOG_FLINE + " bad my bad");
             }
             continue;
         } else {
-            if (s.IsDefined())
-                grp = s;
+            if (source_value.IsDefined())
+                target_value = source_value;
             else {
                 XLOG::l.bp(XLOG_FLINE + " bad src");
             }
@@ -898,6 +984,23 @@ std::vector<ConfigInfo::YamlData> ConfigInfo::buildYamlData(
     return yamls;
 }
 
+// declares what should be merged
+static void PreMergeSections(YAML::Node target, YAML::Node source) {
+    // plugins:
+    auto tgt_plugin = target[groups::kPlugins];
+    const auto src_plugin = source[groups::kPlugins];
+
+    MergeStringSequence(tgt_plugin, src_plugin, vars::kPluginsFolders);
+    MergeMapSequence(tgt_plugin, src_plugin, vars::kPluginsExecution,
+                     vars::kPluginPattern);
+
+    // local:
+    auto tgt_local = target[groups::kLocal];
+    auto src_local = source[groups::kLocal];
+
+    MergeStringSequence(tgt_local, src_local, vars::kPluginsFolders);
+}
+
 // Config is typical config from the root
 // we will load all others configs and try to merge
 // success ALWAYS
@@ -908,8 +1011,12 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node Config,
     bool user_ok = false;
     try {
         if (Yd[1].exists()) {
-            YAML::Node b = YAML::LoadFile(Yd[1].path_.u8string());
-            smartMerge(Config, b);
+            auto bakery = YAML::LoadFile(Yd[1].path_.u8string());
+            // special cases for plugins and folder
+            PreMergeSections(bakery, Config);
+
+            // normal cases
+            smartMerge(Config, bakery);
             bakery_ok = true;
         }
     } catch (...) {
@@ -918,8 +1025,11 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node Config,
 
     try {
         if (Yd[2].exists()) {
-            YAML::Node b = YAML::LoadFile(Yd[2].path_.u8string());
-            smartMerge(Config, b);
+            auto user = YAML::LoadFile(Yd[2].path_.u8string());
+            // special cases for plugins and folder
+            PreMergeSections(user, Config);
+            // normal cases
+            smartMerge(Config, user);
             user_ok = true;
         }
     } catch (...) {
@@ -954,17 +1064,15 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node Config,
 // ON SUCCESS -> all successfully loaded diles are cached
 // ON FAIL
 // standard call is tryAggregateLoad(L"check_mk.yml", true, true);
-// #TODO make this function elegant. REFACTOR ASAP
-LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& ConfigFileName,
-                                         bool SaveOnSuccess,
-                                         bool RestoreOnFail) {
-    if (ConfigFileName.empty()) {
+LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& config_filename,
+                                         YamlCacheOp cache_op) {
+    if (config_filename.empty()) {
         XLOG::l(XLOG_FLINE + " empty name");
         return LoadCfgStatus::kAllFailed;
     }
     namespace fs = std::filesystem;
     using namespace cma::tools;
-    std::vector<YamlData> yamls = buildYamlData(ConfigFileName);
+    std::vector<YamlData> yamls = buildYamlData(config_filename);
 
     // check root
     auto& root = yamls[0];
@@ -994,7 +1102,8 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& ConfigFileName,
         if (config[groups::kGlobal].IsDefined()) {
             loadYamlDataWithMerge(config, yamls);
 
-            if (ok_ && user_ok_ && SaveOnSuccess) StoreUserYamlToCache();
+            if (ok_ && user_ok_ && cache_op == YamlCacheOp::update)
+                StoreUserYamlToCache();
             return LoadCfgStatus::kFileLoaded;
         } else {
             error_code = ErrorCode::kNotCheckMK;

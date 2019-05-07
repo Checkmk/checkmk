@@ -308,7 +308,7 @@ TEST(Wtools, Perf2) {
             wtools::perf::FindPerfIndexInRegistry(L"Terminal Services");
         ASSERT_TRUE(index.has_value());
         int i = index.value();
-        EXPECT_TRUE(cma::tools::Find(TsValues, i));
+        EXPECT_TRUE(cma::tools::find(TsValues, i));
     }
     {
         auto index = wtools::perf::FindPerfIndexInRegistry(L"Memory");

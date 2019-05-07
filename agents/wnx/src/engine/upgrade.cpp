@@ -569,6 +569,7 @@ bool FindStopDeactivateLegacyAgent() {
 
     XLOG::l.t("Killing open hardware monitor...");
     wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
+    wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1); // we may have two :)
 
     XLOG::l.t("Stopping winring0_1_2_0...");
     StopWindowsService(L"winring0_1_2_0");
@@ -577,6 +578,11 @@ bool FindStopDeactivateLegacyAgent() {
 
     if (status == SERVICE_STOPPED) return true;
     if (status == 1060) return true;  // case when driver killed by OHM
+
+    // below we have variants when damned OHM kill and remove damned
+    // driver before we have a chance to check its stop
+    if (status == 1060) return true;
+    if (status == -1) return true;
 
     LogAndDisplayErrorMessage(status);
 

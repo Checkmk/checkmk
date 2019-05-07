@@ -268,7 +268,7 @@ check_info['mysql.connections'] = {
 #   +----------------------------------------------------------------------+
 
 def inventory_mysql_galerasync(parsed):
-    for instance, values in parsed.items():
+    for instance, values in parsed.iteritems():
         if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_local_state_comment' in values:
             yield instance, {}
 
@@ -299,7 +299,7 @@ check_info['mysql.galerasync'] = {
 #   +----------------------------------------------------------------------+
 
 def inventory_mysql_galeradonor(parsed):
-    for instance, values in parsed.items():
+    for instance, values in parsed.iteritems():
         if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_sst_donor' in values:
             yield instance, {'wsrep_sst_donor': values['wsrep_sst_donor']}
 
@@ -330,7 +330,7 @@ check_info['mysql.galeradonor'] = {
 #   +----------------------------------------------------------------------+
 
 def inventory_mysql_galerastartup(parsed):
-    for instance, values in parsed.items():
+    for instance, values in parsed.iteritems():
         if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_cluster_address' in values:
             yield instance, {}
 
@@ -367,7 +367,7 @@ check_info['mysql.galerastartup'] = {
 #   +----------------------------------------------------------------------+
 
 def inventory_mysql_galerasize(parsed):
-    for instance, values in parsed.items():
+    for instance, values in parsed.iteritems():
         if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_cluster_size' in values:
             yield instance, {'invsize': saveint(values[u'wsrep_cluster_size'])}
 
@@ -402,7 +402,7 @@ check_info['mysql.galerasize'] = {
 #   +----------------------------------------------------------------------+
 
 def inventory_mysql_galerastatus(parsed):
-    for instance, values in parsed.items():
+    for instance, values in parsed.iteritems():
         if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_cluster_status' in values:
             yield instance, {}
 

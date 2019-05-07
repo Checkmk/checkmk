@@ -619,7 +619,6 @@ void TableStateHistory::answerQuery(Query *query) {
 
                 // Set absent state
                 hst->_state = -1;
-                hst->_until = hst->_time;
                 hst->_debug_info = "UNMONITORED";
                 hst->_log_output = "";
                 hst->_long_log_output = "";

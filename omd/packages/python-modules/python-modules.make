@@ -200,6 +200,8 @@ PYTHON_MODULES_LIST += opsgenie-sdk-0.3.1.tar.gz
 PYTHON_MODULES_LIST += pytz-2019.1.tar.gz
 # Added for easier debugging of check plugins in OMD scope
 PYTHON_MODULES_LIST += pdbpp-0.10.0.tar.gz
+PYTHON_MODULES_LIST += PySnooper-0.0.31.tar.gz
+
 
 # NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
 # because the SSSE3 detection in pycryptodomex is slightly broken. :-/

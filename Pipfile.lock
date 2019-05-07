@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cf2db0742979e1e3530150d7cc4572ce18251fb3eb98740531d21c6ff5cfe9eb"
+            "sha256": "a3d0a3f3876cca3c5eca23e70fec626ea2ba78aa8fdb9b982e60fade917300c8"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -697,6 +697,7 @@
                 "sha256:6488f1423b00f73b7ad5167885312bb0ce410d3312eb212393795b53c8caa580"
             ],
             "index": "pypi",
+            "markers": "extra == 'security'",
             "version": "==18.0.0"
         },
         "pypdf2": {
@@ -1010,7 +1011,7 @@
                 "sha256:9d98697f088eb1b0fa451391f91afb5e3ebde16bbdb272819fd091151fda4f1a",
                 "sha256:f0b0e4eba956de51238e17573b7087e852dfe9854afd2e9c873f73fc0ca0a6dd"
             ],
-            "markers": "python_version < '3.2'",
+            "markers": "python_version < '3'",
             "version": "==1.5"
         },
         "backports.ssl-match-hostname": {
@@ -1156,7 +1157,7 @@
                 "sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca",
                 "sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50"
             ],
-            "markers": "python_version < '3.3'",
+            "markers": "python_version < '3.0'",
             "version": "==1.0.2"
         },
         "futures": {
@@ -1385,6 +1386,14 @@
                 "sha256:292570f34b5502e871bbb966d639474f2b57fbfcd3373c2d6a2f3d56e681a775"
             ],
             "version": "==0.9.0"
+        },
+        "pysnooper": {
+            "hashes": [
+                "sha256:e7ca9700a6288532589b24b2664655a8ff61854459f1233642e21bcc336ead7c",
+                "sha256:eb22671c528bee36891d3284135693e2cda3014f2d8b6e9d4296b62266541ece"
+            ],
+            "index": "pypi",
+            "version": "==0.0.31"
         },
         "pytest": {
             "hashes": [

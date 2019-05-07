@@ -1,5 +1,5 @@
 missingIncludeSystem
-unmatchedSuppression
+// Too many false positives... :-/
 unusedFunction
 useStlAlgorithm
 // The TEST/TEST_F macros from googletest do not contain "override".
@@ -13,3 +13,4 @@ unmatchedSuppression:test_*.cc
 unmatchedSuppression:*/include/boost/*
 unmatchedSuppression:*/include/gtest/*
 unmatchedSuppression:*/include/re2/*
+unmatchedSuppression

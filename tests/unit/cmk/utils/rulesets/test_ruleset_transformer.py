@@ -455,6 +455,64 @@ BINARY_SERVICE_RULESET = [
             },
         },
     ),
+    Case(
+        ident="list_of_hosts_and_services",
+        is_service=True,
+        is_binary=True,
+        old=(tuple_rulesets.NEGATE, ["HOST", "LIST"], ["SVC", "LIST"]),
+        new={
+            "value": False,
+            "condition": {
+                '$or': [{
+                    'service_description': {
+                        '$regex': '^SVC'
+                    }
+                }, {
+                    'service_description': {
+                        '$regex': '^LIST'
+                    }
+                }],
+                'host_name': {
+                    '$in': ['HOST', 'LIST']
+                }
+            }
+        },
+    ),
+    Case(
+        ident="list_of_host_regexes_and_services",
+        is_service=True,
+        is_binary=True,
+        old=(tuple_rulesets.NEGATE, ["~HOST", "~LIST"], ["SVC", "LIST"]),
+        new={
+            "value": False,
+            "condition": {
+                '$and': [
+                    {
+                        '$or': [{
+                            'host_name': {
+                                '$regex': '^HOST'
+                            },
+                        }, {
+                            'host_name': {
+                                '$regex': '^LIST'
+                            },
+                        }]
+                    },
+                    {
+                        '$or': [{
+                            'service_description': {
+                                '$regex': '^SVC'
+                            }
+                        }, {
+                            'service_description': {
+                                '$regex': '^LIST'
+                            }
+                        }]
+                    },
+                ]
+            }
+        },
+    ),
 ]
 
 TAG_TO_GROUP_MAP = {

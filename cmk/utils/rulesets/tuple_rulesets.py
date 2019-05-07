@@ -75,11 +75,38 @@ class RulesetToDictTransformer(object):
         rule["value"] = value
 
         # Extract list of items from back, if rule has items
+        service_condition = {}
         if is_service:
-            rule["condition"].update(self._transform_item_list(tuple_rule.pop()))
+            service_condition = self._transform_item_list(tuple_rule.pop())
 
         # Rest is host list or tag list + host list
-        rule["condition"].update(self._transform_host_conditions(tuple_rule))
+        host_condition = self._transform_host_conditions(tuple_rule)
+
+        if "$or" in service_condition and "$or" in host_condition:
+            rule["condition"] = {
+                "$and": [
+                    {
+                        "$or": host_condition.pop("$or")
+                    },
+                    {
+                        "$or": service_condition.pop("$or")
+                    },
+                ]
+            }
+        elif "$nor" in service_condition and "$nor" in host_condition:
+            rule["condition"] = {
+                "$and": [
+                    {
+                        "$or": host_condition.pop("$or")
+                    },
+                    {
+                        "$or": service_condition.pop("$or")
+                    },
+                ]
+            }
+
+        rule["condition"].update(service_condition)
+        rule["condition"].update(host_condition)
 
         return rule
 

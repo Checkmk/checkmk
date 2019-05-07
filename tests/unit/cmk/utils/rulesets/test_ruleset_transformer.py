@@ -2,7 +2,6 @@
 # pylint: disable=redefined-outer-name
 
 from typing import NamedTuple
-from pathlib2 import Path
 import pytest  # type: ignore
 import cmk.utils.paths
 import cmk.utils.tags
@@ -140,6 +139,36 @@ NON_BINARY_HOST_RULESET = [
             "condition": {
                 "host_name": {
                     "$nin": ["HOST1", "HOST2"],
+                },
+            },
+        },
+    ),
+    Case(
+        ident="single_host_negated",
+        is_service=False,
+        is_binary=False,
+        old=("VAL", ["!HOST1"]),
+        new={
+            "value": "VAL",
+            "condition": {
+                "host_name": {
+                    "$ne": "HOST1",
+                },
+            },
+        },
+    ),
+    Case(
+        ident="single_host_regex_negated",
+        is_service=False,
+        is_binary=False,
+        old=("VAL", ["!~HOST1"]),
+        new={
+            "value": "VAL",
+            "condition": {
+                "host_name": {
+                    "$not": {
+                        "$regex": "^HOST1"
+                    },
                 },
             },
         },
@@ -291,6 +320,38 @@ BINARY_HOST_RULESET = [
 ]
 
 NON_BINARY_SERVICE_RULESET = [
+    Case(
+        ident="simple_single_service",
+        is_service=True,
+        is_binary=False,
+        old=("VAL", ["HOST"], ["SVC"]),
+        new={
+            "value": "VAL",
+            "condition": {
+                "service_description": {
+                    "$regex": "^SVC"
+                },
+                "host_name": "HOST",
+            },
+        },
+    ),
+    Case(
+        ident="simple_single_service_negated",
+        is_service=True,
+        is_binary=False,
+        old=("VAL", ["HOST"], ["!SVC"]),
+        new={
+            "value": "VAL",
+            "condition": {
+                "service_description": {
+                    "$not": {
+                        "$regex": "^SVC"
+                    }
+                },
+                "host_name": "HOST",
+            },
+        },
+    ),
     Case(
         ident="simple",
         is_service=True,
@@ -500,6 +561,41 @@ BINARY_SERVICE_RULESET = [
                     },
                     {
                         '$or': [{
+                            'service_description': {
+                                '$regex': '^SVC'
+                            }
+                        }, {
+                            'service_description': {
+                                '$regex': '^LIST'
+                            }
+                        }]
+                    },
+                ]
+            }
+        },
+    ),
+    Case(
+        ident="list_of_host_regexes_and_services_negated",
+        is_service=True,
+        is_binary=True,
+        old=(tuple_rulesets.NEGATE, ["!~HOST", "!~LIST"], ["!SVC", "!LIST"]),
+        new={
+            "value": False,
+            "condition": {
+                '$and': [
+                    {
+                        '$nor': [{
+                            'host_name': {
+                                '$regex': '^HOST'
+                            },
+                        }, {
+                            'host_name': {
+                                '$regex': '^LIST'
+                            },
+                        }]
+                    },
+                    {
+                        '$nor': [{
                             'service_description': {
                                 '$regex': '^SVC'
                             }

@@ -1,0 +1,12 @@
+Title: fireeye_mail: Fix the rate and considered time duration of received mails
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p17
+Date: 1557246919
+
+The rate of received mails is performance data compatible and consistent to the
+other fireeye sub checks mails per second.

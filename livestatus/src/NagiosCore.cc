@@ -44,7 +44,7 @@ void NagiosPaths::dump(Logger *logger) {
     Notice(logger) << "mkeventd socket path = '" << _mkeventd_socket << "'";
 }
 
-NagiosCore::NagiosCore(NagiosPaths paths, NagiosLimits limits,
+NagiosCore::NagiosCore(NagiosPaths paths, const NagiosLimits &limits,
                        NagiosAuthorization authorization,
                        Encoding data_encoding)
     : _logger_livestatus(Logger::getLogger("cmk.livestatus"))

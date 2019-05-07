@@ -67,7 +67,7 @@ struct NagiosAuthorization {
 
 class NagiosCore : public MonitoringCore {
 public:
-    NagiosCore(NagiosPaths paths, NagiosLimits limits,
+    NagiosCore(NagiosPaths paths, const NagiosLimits &limits,
                NagiosAuthorization authorization, Encoding data_encoding);
 
     Host *find_host(const std::string &name) override;

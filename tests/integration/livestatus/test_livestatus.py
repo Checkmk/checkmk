@@ -73,7 +73,7 @@ def test_host_custom_variables(default_cfg, site):
         u'networking': u'lan',
         u'piggyback': u'auto-piggyback',
         u'site': unicode(site.id),
-        u'snmp': u'no-snmp',
+        u'snmp_ds': u'no-snmp',
         u'tcp': u'tcp',
     }
 

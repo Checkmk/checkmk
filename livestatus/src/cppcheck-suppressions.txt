@@ -1,5 +1,4 @@
 missingIncludeSystem
-redundantAssignment
 uninitMemberVar
 unmatchedSuppression
 unusedFunction

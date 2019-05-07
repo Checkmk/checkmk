@@ -120,7 +120,7 @@ public:
                 auto port_name = Proc->getInternalPort();
                 auto id = Tp.time_since_epoch().count();
                 goGoGo(SectionName, CommandLine, port_name, id);
-                XLOG::l.t("Provider {} started, id {} port {}",
+                XLOG::l.t("Provider '{}' started, id '{}' port [{}]",
                           provider_uniq_name_, id, port_name);
 
                 return true;
@@ -287,7 +287,9 @@ private:
                     auto started = startProviders(tp.value(), "");
                     auto block = getAnswer(started);
                     block.emplace_back('\0');
-                    printf("%s", block.data());
+                    auto count = printf("%s", block.data());
+                    if (count != block.size())
+                        XLOG::l("Binary data at offset [{}]", count);
                 }
                 return;
             }
@@ -485,7 +487,7 @@ private:
 
         // now wait for answers
         if (!answer_.waitAnswer(std::chrono::seconds(max_timeout_))) {
-            XLOG::l(XLOG_FLINE + " no full answer: awaited {}, received {}",
+            XLOG::l(XLOG_FLINE + " no full answer: awaited [{}], received [{}]",
                     answer_.awaitingSegments(),   // expected count
                     answer_.receivedSegments());  // on the hand
         }

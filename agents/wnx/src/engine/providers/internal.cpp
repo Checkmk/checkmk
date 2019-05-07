@@ -81,7 +81,7 @@ std::string Basic::generateContent(const std::string_view& SectionName,
     try {
         auto section_body = makeBody();
         if (section_body.empty()) {
-            XLOG::d("Section {} cannot provide data", uniq_name_);
+            XLOG::d("Section '{}' cannot provide data", uniq_name_);
             return {};
         }
         // header-less mode is for the Plugins and Local

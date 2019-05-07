@@ -235,6 +235,8 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
                                     uint32_t Code,
                                     const std::vector<char>& Data) {
             auto data = wtools::ConditionallyConvertFromUTF16(Data);
+            if (data.size() && data.back() == 0)
+                data.pop_back();  // conditional convert adds 0
             cma::tools::AddVector(accu, data);
             storeData(Pid, accu);
             if (cma::cfg::LogPluginOutput())
@@ -595,6 +597,7 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
 std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
     using namespace std;
     using DataBlock = vector<char>;
+    XLOG::d.i("To start [{}] sync plugins", Plugins.size());
 
     vector<future<DataBlock>> results;
     int requested_count = 0;

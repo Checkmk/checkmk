@@ -111,9 +111,9 @@ std::pair<std::string, std::filesystem::path> parseIncludeEntry(
     fs::path path = potential_path;  // last is path
 
     if (!cma::tools::IsRegularFileValid(path)) {
-        XLOG::d("File {} is not valid for entry {} in config {}",
-                path.u8string(), Entry,
-                cma::cfg::GetPathOfLoadedConfigAsString());
+        XLOG::d(
+            "File '{}' is not valid or missing for entry '{}' in config '{}'",
+            path.u8string(), Entry, cma::cfg::GetPathOfLoadedConfigAsString());
         return {};
     }
     return {include_user, path};
@@ -129,7 +129,7 @@ void MrpeProvider::addParsedIncludes() {
 
         std::ifstream ifs(path);
         if (!ifs) {
-            XLOG::d("File is really  bad for entry {} in {}", entry,
+            XLOG::d("File is really  bad for entry '{}' in '{}'", entry,
                     cma::cfg::GetPathOfLoadedConfigAsString());
             continue;
         }

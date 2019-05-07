@@ -216,12 +216,12 @@ std::string Wmi::makeBody() const {
         // special case for aggregating subs section into one
         std::string subs_out;
         for (auto& sub : sub_objects_) {
-            XLOG::l.t("sub section {}", sub.getUniqName());
+            XLOG::l.t("sub section '{}'", sub.getUniqName());
             subs_out += sub.generateContent();
         }
         return subs_out;
     }
-    XLOG::l.t("main section {}", getUniqName());
+    XLOG::l.t("main section '{}'", getUniqName());
     return GenerateTable(name_space_, object_, columns_);
 }
 
@@ -266,7 +266,7 @@ void SubSection::setupByName() {
     } catch (const std::exception& e) {
         // section not described in data
         // BUT MUST BE, this is developers error
-        XLOG::l.crit("Invalid Name of the sub section {}. Exception: {}",
+        XLOG::l.crit("Invalid Name of the sub section '{}'. Exception: '{}'",
                      uniq_name_, e.what());
         object_ = L"";
         name_space_ = L"";
@@ -284,7 +284,7 @@ std::string SubSection::generateContent() const {
     try {
         if (section_body.empty()) {
             // this is not normal usually
-            XLOG::d("SubSection {} cannot provide data", uniq_name_);
+            XLOG::d("SubSection '{}' cannot provide data", uniq_name_);
             return {};
         } else {
             // print header with default or commanded section name

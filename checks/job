@@ -108,21 +108,22 @@ def inventory_job(parsed):
                 yield jobname, {}
 
 
+def _process_start_time(value, state, warn, crit):
+    display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
+    job_age = time.time() - value
+    if crit > 0 and job_age >= crit:
+        state = max(state, 2)
+        display_value += "(!!) (more than %s ago)" % get_age_human_readable(crit)
+    elif warn > 0 and job_age >= warn:
+        state = max(state, 1)
+        display_value += "(!!) (more than %s ago)" % get_age_human_readable(warn)
+    return state, display_value
+
+
 @get_parsed_item_data
 def check_job(item, params, nodes):
-    def process_start_time(value, state, warn, crit):
-        display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
-        job_age = time.time() - value
-        if crit > 0 and job_age >= crit:
-            state = max(state, 2)
-            display_value += "(!!) (more than %s ago)" % get_age_human_readable(crit)
-        elif warn > 0 and job_age >= warn:
-            state = max(state, 1)
-            display_value += "(!!) (more than %s ago)" % get_age_human_readable(warn)
-        return state, display_value
-
     states = []
-    warn, crit = params.get('age')
+    warn, crit = params['age']
     results = []
     for node_info, job in nodes.iteritems():
         if node_info:
@@ -141,7 +142,7 @@ def check_job(item, params, nodes):
 
         if 'running_start_time' in job:
             output.append('%sCurrently running' % node_infotext)
-            state, display_value = process_start_time(job['running_start_time'], state, warn, crit)
+            state, display_value = _process_start_time(job['running_start_time'], state, warn, crit)
             output.append('(Started: %s)' % display_value)
             results.append((state, ' '.join(output)))
             states.append(state)
@@ -165,22 +166,18 @@ def check_job(item, params, nodes):
             ('vol_context_switches', 'Vol. Context Switches'),
             ('invol_context_switches', 'Invol. Context Switches'),
         ]:
-            value_str = job.get(key)
-            if value_str is None:
+            value = job.get(key)
+            if value is None:
                 continue
 
             if key in ['max_res_bytes', 'avg_mem_bytes']:
-                value = int(value_str)
                 display_value = get_bytes_human_readable(value, 1000)
             elif key in ['real_time', 'user_time', 'system_time']:
-                value = float(value_str)
                 display_value = get_age_human_readable(value)
             elif key == 'start_time':
-                value = float(value_str)
-                state, display_value = process_start_time(value, state, warn, crit)
+                state, display_value = _process_start_time(value, state, warn, crit)
             else:
-                display_value = value_str
-                value = float(value_str)
+                display_value = str(value)
 
             output.append('%s: %s' % (title, display_value))
             perfdata.append((key, value))

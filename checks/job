@@ -64,7 +64,7 @@ def parse_job(info):
         return float(parts[-1]) + min_sec + hour_sec
 
     parsed = {}
-    job = None
+    job = {}
     prefix = None
     for line in info:
         node_info = line[0]
@@ -81,7 +81,7 @@ def parse_job(info):
                 "state": jobstate,
             })
 
-        elif job is not None and prefix is not None and len(line) == 2:
+        elif job and prefix is not None and len(line) == 2:
             key, val = line
             # Convert several keys/values
             if key == 'real_time':
@@ -95,8 +95,7 @@ def parse_job(info):
             elif key in ['max_res_kbytes', 'avg_mem_kbytes']:
                 key = key.replace('kbytes', 'bytes')
                 val = int(val) * 1000
-            # TODO: Fix the code and remove the pragma below!
-            job[prefix + key] = val  # pylint: disable=unsupported-assignment-operation
+            job[prefix + key] = val
 
     return parsed
 

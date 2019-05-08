@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,59 +24,81 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# example output
-
-factory_settings["lvm_lvs_default_levels"] = {
-    "levels_data": (80.0, 90.0),
-    "levels_meta": (80.0, 90.0),
-}
-
 
 def parse_lvm_lvs(info):
-    parsed = {}
-    for line in info:
-        item = "%s/%s" % (line[1], line[4])
-        if not line[4] == "" and not item in parsed:
-            parsed[item] = []
 
+    parsed = {'Pool': {}, 'Cache': {}}
+    thinpools = set()
+    cache_pool = {}
+    cache_pool_meta = {}
+    thin_pool_meta = {}
+
+    # get lvs on thin pools
+    for line in info:
+        if line[2][0] == 'V' and not line[4] == "":
+            item = "%s/%s" % (line[1], line[4])
+            thinpools.add(item)
+        
     for line in info:
         item = "%s/%s" % (line[1], line[0])
-        if item in parsed:
-            parsed[item] = {"data": line[6], "meta": line[7]}
+        if line[2][0] == 't' and item in thinpools:
+            # thin pool
+            parsed['Pool'][item] = {"pool_size": saveint(line[3]),
+                                    "data": savefloat(line[6]),
+                                    "meta": savefloat(line[7])}
+            thin_pool_meta['%s/[%s_tmeta]' % (line[1], line[0])] = item
+        if line[2][0] == 'C' and line[4] and line[5]:
+            # cached lvm
+            parsed['Cache'][item] = {"data": savefloat(line[6]),
+                                     "meta": savefloat(line[7]),
+                                     "sync": savefloat(line[9])}
+            cache_pool['%s/%s' % (line[1], line[4])] = item
+        if line[2][0] == 'C' and item in cache_pool:
+            cache_pool_meta[item[:-1] + '_cmeta]'] = item
+            parsed['Cache'][cache_pool[item]]['pool_size'] = saveint(line[3])
+        if line[2][0] == 'e':
+            if item in cache_pool_meta:
+                parsed['Cache'][cache_pool[cache_pool_meta[item]]]['meta_size'] = saveint(line[3])
+            if item in thin_pool_meta:
+                parsed['Pool'][thin_pool_meta[item]]['meta_size'] = saveint(line[3])
 
     return parsed
 
 
 def inventory_lvm_lvs(parsed):
-    for key in parsed.iterkeys():
-        yield (key, {})
+    for lvtype, lvs in parsed.iteritems():
+        for key, values in lvs.iteritems():
+            if 'pool_size' in values and 'data' in values:
+                yield ( "%s %s" % (key, lvtype), {} )
+            if 'meta_size' in values and 'meta' in values:
+                yield ( "%s Meta" % key, {} )
 
 
 def check_lvm_lvs(item, params, parsed):
-    for key, values in parsed.iteritems():
-        if item == key:
-            for key, value in values.iteritems():
-                value = float(value)
-                warn, crit = params["levels_%s" % key]
-                if value >= crit:
-                    state = 2
-                elif value >= warn:
-                    state = 1
-                else:
-                    state = 0
-
-                key = key[0].upper() + key[1:]
-                yield 0, "%s usage: %.2f %%" % (key, value)
-                if state:
-                    yield state, "(warn/crit at %s/%s)" % (warn, crit)
-
+    lvname, lvtype = item.split(" ")
+    if lvtype in parsed:
+        size_mb = parsed[lvtype][lvname]['pool_size'] / 1024 / 1024
+        used_mb = size_mb * parsed[lvtype][lvname]['data'] / 100
+        avail_mb = size_mb - used_mb
+        yield df_check_filesystem_list(item, params, [ ( item, size_mb, avail_mb, 0) ])
+    if lvtype == 'Meta':
+        found = False
+        for pooltype in parsed.keys():
+            if lvname in parsed[pooltype]:
+                found = pooltype
+        if found:
+            size_mb = parsed[found][lvname]['meta_size'] / 1024 / 1024
+            used_mb = size_mb * parsed[found][lvname]['meta'] / 100
+            avail_mb = size_mb - used_mb
+            yield df_check_filesystem_list(item, params, [ ( item, size_mb, avail_mb, 0) ])        
 
 check_info['lvm_lvs'] = {
     'parse_function': parse_lvm_lvs,
     'inventory_function': inventory_lvm_lvs,
     'check_function': check_lvm_lvs,
-    'service_description': 'LVM LV Pool %s',
+    'service_description': 'LVM LV %s',
     'has_perfdata': True,
-    'default_levels_variable': 'lvm_lvs_default_levels',
-    'group': 'lvm_lvs_pools',
+    'default_levels_variable': 'filesystem_default_levels',
+    'group': 'filesystem',
+    'includes': [ 'size_trend.include', 'df.include' ],
 }

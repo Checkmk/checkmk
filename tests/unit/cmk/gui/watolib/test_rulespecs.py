@@ -655,7 +655,6 @@ def test_grouped_rulespecs():
             'static_checks:prism_container',
             'static_checks:inotify',
             'static_checks:emcvnx_disks',
-            'static_checks:lvm_lvs_pools',
             'static_checks:emcvnx_storage_pools',
             'static_checks:emcvnx_storage_pools_tiering',
             'static_checks:filehandler',
@@ -725,7 +724,6 @@ def test_grouped_rulespecs():
             'checkgroup_parameters:prism_container',
             'checkgroup_parameters:inotify',
             'checkgroup_parameters:emcvnx_disks',
-            'checkgroup_parameters:lvm_lvs_pools',
             'checkgroup_parameters:emcvnx_storage_pools',
             'checkgroup_parameters:emcvnx_storage_pools_tiering',
             'checkgroup_parameters:filehandler',
@@ -6413,21 +6411,6 @@ expected_rulespecs = {
         'item_type': None,
         'match_type': 'dict',
         'title': u'Enterasys LSNAT Bindings',
-        'valuespec_class_name': 'TimeperiodValuespec'
-    },
-    'checkgroup_parameters:lvm_lvs_pools': {
-        'factory_default': [],
-        'group_name': 'checkparams/storage',
-        'help': None,
-        'is_deprecated': False,
-        'is_optional': False,
-        'item_enum': None,
-        'item_help': None,
-        'item_name': u'Logical Volume Pool',
-        'item_spec_class_name': 'TextAscii',
-        'item_type': 'item',
-        'match_type': 'dict',
-        'title': u'Logical Volume Pools (LVM)',
         'valuespec_class_name': 'TimeperiodValuespec'
     },
     'checkgroup_parameters:mail_latency': {
@@ -14608,21 +14591,6 @@ expected_rulespecs = {
         'item_type': None,
         'match_type': 'all',
         'title': u'Enterasys LSNAT Bindings',
-        'valuespec_class_name': 'Tuple'
-    },
-    'static_checks:lvm_lvs_pools': {
-        'factory_default': [],
-        'group_name': 'static/storage',
-        'help': None,
-        'is_deprecated': False,
-        'is_optional': False,
-        'item_enum': None,
-        'item_help': None,
-        'item_name': None,
-        'item_spec_class_name': 'TextAscii',
-        'item_type': None,
-        'match_type': 'all',
-        'title': u'Logical Volume Pools (LVM)',
         'valuespec_class_name': 'Tuple'
     },
     'static_checks:mail_latency': {

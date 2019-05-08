@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import copy
 import urlparse
 import six
 
@@ -1302,7 +1303,7 @@ class RulespecActiveChecksHttp(HostRulespec):
     def _transform_check_http(self, params):
         if isinstance(params, dict):
             return params
-        name, mode = params
+        name, mode = copy.deepcopy(params)
         # The "verbose" option was part configurable since 1.5.0i1 and has been dropped
         # with 1.5.0p12 (see #5224 and #7079 for additional information).
         mode.pop("verbose", None)

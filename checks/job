@@ -53,15 +53,28 @@ factory_settings["job_default_levels"] = {
 }
 
 
+def _job_parse_real_time(s):
+    parts = s.split(':')
+    min_sec, hour_sec = 0, 0
+    if len(parts) == 3:
+        hour_sec = int(parts[0]) * 60 * 60
+    if len(parts) >= 2:
+        min_sec = int(parts[-2]) * 60
+    return float(parts[-1]) + min_sec + hour_sec
+
+
+def _job_parse_key_values(line):
+    key, val = line
+    if key == 'real_time':
+        return key, _job_parse_real_time(val)
+    if key in ('user_time', 'system_time'):
+        return key, float(val)
+    if key in ('max_res_kbytes', 'avg_mem_kbytes'):
+        return key.replace('kbytes', 'bytes'), int(val) * 1000
+    return key, int(val)
+
+
 def parse_job(info):
-    def job_parse_real_time(s):
-        parts = s.split(':')
-        min_sec, hour_sec = 0, 0
-        if len(parts) == 3:
-            hour_sec = int(parts[0]) * 60 * 60
-        if len(parts) >= 2:
-            min_sec = int(parts[-2]) * 60
-        return float(parts[-1]) + min_sec + hour_sec
 
     parsed = {}
     job = {}
@@ -82,19 +95,7 @@ def parse_job(info):
             })
 
         elif job and prefix is not None and len(line) == 2:
-            key, val = line
-            # Convert several keys/values
-            if key == 'real_time':
-                val = job_parse_real_time(val)
-            elif key in ['user_time', 'system_time']:
-                val = float(val)
-            elif key in [
-                    'exit_code', 'invol_context_switches', 'vol_context_switches', 'start_time'
-            ]:
-                val = int(val)
-            elif key in ['max_res_kbytes', 'avg_mem_kbytes']:
-                key = key.replace('kbytes', 'bytes')
-                val = int(val) * 1000
+            key, val = _job_parse_key_values(line)
             job[prefix + key] = val
 
     return parsed

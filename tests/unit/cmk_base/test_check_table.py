@@ -101,7 +101,4 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
     monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: autochecks.get(h, []))
 
     config.load_checks(check_api.get_check_api_context, ["checks/smart"])
-    config.add_wato_static_checks_to_checks()
-    config.initialize_check_caches()
-
     assert check_table.get_check_table(hostname) == expected_result

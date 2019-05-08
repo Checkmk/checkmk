@@ -115,9 +115,6 @@ def dump_host(hostname):
 
     headers = ["checktype", "item", "params", "description", "groups"]
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
-    if config.service_dependencies != []:
-        headers.append("depends on")
-        colors.append(tty.magenta)
 
     tty.print_table(headers, colors, [[
         checktype,
@@ -125,8 +122,8 @@ def dump_host(hostname):
         _evaluate_params(params),
         cmk_base.utils.make_utf8(description),
         cmk_base.utils.make_utf8(",".join(
-            config_cache.servicegroups_of_service(hostname, description))), ",".join(deps)
-    ] for checktype, item, params, description, deps in check_items], "  ")
+            config_cache.servicegroups_of_service(hostname, description)))
+    ] for checktype, item, params, description in check_items], "  ")
 
 
 def _evaluate_params(params):

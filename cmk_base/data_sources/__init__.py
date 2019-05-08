@@ -246,11 +246,11 @@ class DataSources(object):
             for node_hostname in nodes:
                 node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
 
-                table = check_table.get_precompiled_check_table(
+                node_check_names = check_table.get_needed_check_names(
                     node_hostname, remove_duplicates=True, filter_mode="only_clustered")
 
                 node_data_sources = DataSources(node_hostname, node_ipaddress)
-                node_data_sources.enforce_check_plugin_names(set([e[0] for e in table]))
+                node_data_sources.enforce_check_plugin_names(set(node_check_names))
                 hosts.append((node_hostname, node_ipaddress, node_data_sources,
                               config.cluster_max_cachefile_age))
         else:

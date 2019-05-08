@@ -677,7 +677,11 @@ std::string ConditionallyConvertFromUTF16(const std::vector<T>& utf16_data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
     if (utf16_data.empty()) return {};
 
-    bool convert_required = utf16_data[0] == '\xFF' && utf16_data[1] == '\xFE';
+    constexpr T char_0 = static_cast<T>('\xFF');
+    constexpr T char_1 = static_cast<T>('\xFE');
+
+    bool convert_required = utf16_data.size() > 1 && utf16_data[0] == char_0 &&
+                            utf16_data[1] == char_1;
 
     std::string data;
     if (convert_required) {
@@ -686,15 +690,16 @@ std::string ConditionallyConvertFromUTF16(const std::vector<T>& utf16_data) {
         std::wstring wdata(raw_data, raw_data + (utf16_data.size() - 2) / 2);
         if (wdata.empty()) return {};
 
-        if (wdata.back() != 0) wdata += L'\0';
-
         data = wtools::ConvertToUTF8(wdata);
     } else {
         data.assign(utf16_data.begin(), utf16_data.end());
     }
 
-    // place in string 0 at the end
-    if (data.back() != 0) data.push_back('\0');
+    // trick to place in string 0 at the end without changing length
+    // this is required for some stupid engines like iostream+YAML
+    auto length = data.size();
+    if (data.capacity() <= length) data.reserve(length + 1);
+    data[length] = 0;
 
     return data;
 }

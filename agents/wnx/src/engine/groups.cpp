@@ -259,7 +259,7 @@ void Plugins::loadFromMainConfig(const std::string& GroupName) {
     reset();
     units_.resize(0);
 
-    local_ = GroupName == groups::kLocalGroup;
+    local_ = GroupName == groups::kLocal;
 
     // attempt to load all
     try {

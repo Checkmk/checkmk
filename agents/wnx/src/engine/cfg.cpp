@@ -533,7 +533,7 @@ void ProcessKnownConfigGroups() {
     groups::global.loadFromMainConfig();
     groups::winperf.loadFromMainConfig();
     groups::plugins.loadFromMainConfig(groups::kPlugins);
-    groups::localGroup.loadFromMainConfig(groups::kLocalGroup);
+    groups::localGroup.loadFromMainConfig(groups::kLocal);
 }
 
 // API take loaded config and use it!

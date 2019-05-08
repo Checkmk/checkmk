@@ -5,22 +5,54 @@
 
 #include <filesystem>
 
+#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "read_file.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-
-#include "cfg_details.h"
-
-#include "read_file.h"
 #include "yaml-cpp/yaml.h"
-
-#include "test_tools.h"
 
 namespace wtools {  // to become friendly for cma::cfg classes
 
-TEST(Wtooks, FreqCo) {
+TEST(Wtools, ConditionallyConvert) {
+    {
+        std::vector<uint8_t> a;
+
+        auto ret = wtools::ConditionallyConvertFromUTF16(a);
+        EXPECT_TRUE(ret.empty());
+        a.push_back('a');
+        ret = wtools::ConditionallyConvertFromUTF16(a);
+        EXPECT_EQ(1, ret.size());
+        EXPECT_EQ(1, strlen(ret.c_str()));
+    }
+    {
+        std::vector<uint8_t> a;
+
+        auto ret = wtools::ConditionallyConvertFromUTF16(a);
+        EXPECT_TRUE(ret.empty());
+        a.push_back('\xFF');
+        ret = wtools::ConditionallyConvertFromUTF16(a);
+        EXPECT_EQ(1, ret.size());
+
+        a.push_back('\xFE');
+        ret = wtools::ConditionallyConvertFromUTF16(a);
+        EXPECT_EQ(0, ret.size());
+
+        const wchar_t* text = L"abcde";
+        auto data = reinterpret_cast<const uint8_t*>(text);
+        for (int i = 0; i < 10; ++i) {
+            a.push_back(data[i]);
+        }
+        ret = wtools::ConditionallyConvertFromUTF16(a);
+        EXPECT_EQ(5, ret.size());
+        EXPECT_EQ(5, strlen(ret.c_str()));
+    }
+}
+
+TEST(Wtools, FreqCo) {
     auto f = wtools::QueryPerformanceFreq();
     LARGE_INTEGER freq;
     ::QueryPerformanceFrequency(&freq);

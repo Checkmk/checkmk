@@ -8,11 +8,10 @@ constexpr const char* const kWinPerf = "winperf";
 constexpr const char* const kLogFiles = "logfiles";
 constexpr const char* const kPs = "ps";
 constexpr const char* const kPlugins = "plugins";
-constexpr const char* const kLocal = "local";
 constexpr const char* const kFileInfo = "fileinfo";
 constexpr const char* const kMrpe = "mrpe";
 constexpr const char* const kLogWatchEvent = "logwatch";
-constexpr const char* const kLocalGroup = "local";
+constexpr const char* const kLocal = "local";
 }  // namespace groups
 
 // ALL name of variables in the YAML

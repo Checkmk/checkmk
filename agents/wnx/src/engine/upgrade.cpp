@@ -203,71 +203,58 @@ uint32_t GetServiceHint(SC_HANDLE ServiceHandle) {
 
 int SendServiceCommand(SC_HANDLE Handle, uint32_t Command) {
     SERVICE_STATUS_PROCESS ssp;
-    if (FALSE == ControlService(Handle, Command, (LPSERVICE_STATUS)&ssp)) {
-        XLOG::l("ControlService failed [{}]", GetLastError());
+    if (FALSE == ::ControlService(Handle, Command, (LPSERVICE_STATUS)&ssp)) {
+        XLOG::l("ControlService command [{}] failed [{}]", Command,
+                GetLastError());
         return -1;
     }
     return ssp.dwCurrentState;
 }
 
-std::pair<SC_HANDLE, SC_HANDLE> OpenServiceForControl(
-    const std::wstring& Name) {
+std::tuple<SC_HANDLE, SC_HANDLE, DWORD> OpenServiceForControl(
+    const std::wstring& service_name) {
     auto manager_handle =
-        OpenSCManager(nullptr,                 // local computer
-                      nullptr,                 // ServicesActive database
-                      SC_MANAGER_ALL_ACCESS);  // full access rights
+        ::OpenSCManager(nullptr,                 // local computer
+                        nullptr,                 // ServicesActive database
+                        SC_MANAGER_ALL_ACCESS);  // full access rights
 
     if (nullptr == manager_handle) {
-        XLOG::l("OpenSCManager failed {}", GetLastError());
-        return {nullptr, nullptr};
+        auto error = ::GetLastError();
+        XLOG::l("OpenSCManager failed [{}]", error);
+        return {nullptr, nullptr, error};
     }
 
     // Get a handle to the service.
 
     auto handle =
-        OpenService(manager_handle,  // SCM database
-                    Name.c_str(),    // name of service
-                    SERVICE_STOP | SERVICE_START | SERVICE_QUERY_STATUS |
-                        SERVICE_ENUMERATE_DEPENDENTS);
+        ::OpenService(manager_handle,        // SCM database
+                      service_name.c_str(),  // name of service
+                      SERVICE_STOP | SERVICE_START | SERVICE_QUERY_STATUS |
+                          SERVICE_ENUMERATE_DEPENDENTS);
 
     if (nullptr == handle) {
-        XLOG::l("OpenService {} failed {}", wtools::ConvertToUTF8(Name),
-                GetLastError());
-        return {manager_handle, handle};
+        auto error = ::GetLastError();
+        XLOG::l("OpenService '{}' failed [{}]",
+                wtools::ConvertToUTF8(service_name), error);
+        return {manager_handle, handle, error};
     }
-    return {manager_handle, handle};
+
+    return {manager_handle, handle, 0};
 }
 
 int GetServiceStatusByName(const std::wstring& Name) {
-    auto [manager_handle, handle] = OpenServiceForControl(Name);
+    auto [manager_handle, handle, err] = OpenServiceForControl(Name);
+
     ON_OUT_OF_SCOPE(if (manager_handle) CloseServiceHandle(manager_handle));
     ON_OUT_OF_SCOPE(if (handle) CloseServiceHandle(handle));
-    if (!handle) return -1;
+
+    if (!handle) return err;
+
     return GetServiceStatus(handle);
 }
 
-bool StopWindowsService(const std::wstring& Name) {
-    XLOG::l.t("Service {} stopping ...", wtools::ConvertToUTF8(Name));
-    // SERVICE_STATUS_PROCESS ssp;
-    DWORD start_time = GetTickCount();
-    DWORD timeout = 30000;  // 30-second time-out
-
-    // Get a handle to the SCM database.
-    auto [manager_handle, handle] = OpenServiceForControl(Name);
-    ON_OUT_OF_SCOPE(if (manager_handle) CloseServiceHandle(manager_handle));
-    ON_OUT_OF_SCOPE(if (handle) CloseServiceHandle(handle));
-    if (!handle) return false;
-
-    // Make sure the service is not already stopped.
-    auto status = GetServiceStatus(handle);
-    if (status == -1) return false;
-
-    if (status == SERVICE_STOPPED) {
-        XLOG::l.i("Service '{}' is already stopped.",
-                  wtools::ConvertToUTF8(Name));
-        return true;
-    }
-
+// from MS MSDN
+static uint32_t CalcDelay(SC_HANDLE handle) noexcept {
     auto hint = GetServiceHint(handle);
     // Do not wait longer than the wait hint. A good interval is
     // one-tenth of the wait hint but not less than 1 second
@@ -277,24 +264,37 @@ bool StopWindowsService(const std::wstring& Name) {
         delay = 1000;
     else if (delay > 10000)
         delay = 10000;
+    return delay;
+}
 
+// internal function based om MS logic from the MSDN, and the logic is not a
+// so good as for 2019
+static bool TryStopService(SC_HANDLE handle, const std::string& name_to_log,
+                           DWORD current_status) noexcept {
+    auto status = current_status;
+    auto delay = CalcDelay(handle);
+    constexpr DWORD timeout = 30000;  // 30-second time-out
+    DWORD start_time = GetTickCount();
     // If a stop is pending, wait for it.
-    if (status == SERVICE_STOP_PENDING) XLOG::l.t("Service stop pending...");
+    if (status == SERVICE_STOP_PENDING) {
+        XLOG::l.i("Service stop pending...");
 
-    while (status == SERVICE_STOP_PENDING) {
-        cma::tools::sleep(delay);
+        while (status == SERVICE_STOP_PENDING) {
+            cma::tools::sleep(delay);
 
-        status = GetServiceStatus(handle);
-        if (status == -1) return false;
+            status = GetServiceStatus(handle);
 
-        if (status == SERVICE_STOPPED) {
-            XLOG::l.i("Service stopped successfully.");
-            return true;
-        }
+            if (status == -1) return false;
 
-        if (GetTickCount() - start_time > timeout) {
-            XLOG::l("Service stop timed out during pending");
-            return false;
+            if (status == SERVICE_STOPPED) {
+                XLOG::l.i("Service '{}' stopped successfully.", name_to_log);
+                return true;
+            }
+
+            if (GetTickCount() - start_time > timeout) {
+                XLOG::l("Service stop timed out during pending");
+                return false;
+            }
         }
     }
 
@@ -310,63 +310,89 @@ bool StopWindowsService(const std::wstring& Name) {
 
         status = GetServiceStatus(handle);
         if (status == -1) return false;
-        if (status == SERVICE_STOPPED) return true;
 
         if (GetTickCount() - start_time > timeout) {
-            XLOG::l("Wait timed out for '{}'", wtools::ConvertToUTF8(Name));
+            XLOG::l("Wait timed out for '{}'", name_to_log);
             return false;
         }
     }
 
-    XLOG::l.i("Service stopped successfully");
+    XLOG::l.i("Service '{}' really stopped", name_to_log);
+
     return true;
 }
 
-bool StartWindowsService(const std::wstring& Name) {
-    // SERVICE_STATUS_PROCESS ssp;
-    DWORD start_time = GetTickCount();
-    DWORD timeout = 30000;  // 30-second time-out
+bool StopWindowsService(const std::wstring& service_name) {
+    auto name_to_log = wtools::ConvertToUTF8(service_name);
+    XLOG::l.t("Service {} stopping ...", name_to_log);
 
     // Get a handle to the SCM database.
-    auto [manager_handle, handle] = OpenServiceForControl(Name);
+    auto [manager_handle, handle, error] = OpenServiceForControl(service_name);
     ON_OUT_OF_SCOPE(if (manager_handle) CloseServiceHandle(manager_handle));
     ON_OUT_OF_SCOPE(if (handle) CloseServiceHandle(handle));
-    if (nullptr == handle) return false;
+    if (nullptr == handle) {
+        XLOG::l("Cannot open service '{}' with error [{}]", name_to_log, error);
+        return false;
+    }
 
     // Make sure the service is not already stopped.
     auto status = GetServiceStatus(handle);
-    switch (status) {
-        case -1:
-            return false;
-        case SERVICE_RUNNING:
-            XLOG::l.i("Service is already running.");
-            return true;
-        case SERVICE_STOPPED:
-            break;
-        case SERVICE_STOP_PENDING:
-        default:
-            XLOG::l.i(
-                "Service is in strange and stupid mode = {}. This is not a problem, just Windows Feature",
-                status);
-            wtools::KillProcess(Name + L".exe", 1);
-            break;
+    if (status == -1) return false;
+
+    if (status == SERVICE_STOPPED) {
+        XLOG::l.i("Service '{}' is already stopped.", name_to_log);
+        return true;
+    }
+
+    return TryStopService(handle, name_to_log, status);
+}
+
+static void LogStartStatus(const std::wstring& service_name, DWORD last_error_code) {
+    auto name = wtools::ConvertToUTF8(service_name);
+    if (last_error_code == 0) {
+        XLOG::l.i("Service '{}' started successfully ", name);
+        return;
+    }
+
+    if (last_error_code == 1056) {
+        XLOG::l.t("Service '{}' already started [1056]", name);
+        return;
+    }
+    XLOG::l("Service '{}' start failed [{}]", name, last_error_code);
+}
+
+bool StartWindowsService(const std::wstring& service_name) {
+    // Get a handle to the SCM database.
+    auto [manager_handle, handle, error] = OpenServiceForControl(service_name);
+    ON_OUT_OF_SCOPE(if (manager_handle) CloseServiceHandle(manager_handle));
+    ON_OUT_OF_SCOPE(if (handle) CloseServiceHandle(handle));
+
+    if (nullptr == handle) {
+        XLOG::l("Cannot open service '{}' with error [{}]",
+                wtools::ConvertToUTF8(service_name), error);
+        return false;
+    }
+
+    // Make sure the service is not already started
+    auto status = GetServiceStatus(handle);
+    if (status == -1) return false;  // trash
+
+    if (status == SERVICE_RUNNING) {
+        XLOG::l.i("Service is already running.");
+        return true;
+    }
+
+    if (status != SERVICE_STOPPED) {
+        XLOG::l.i(
+            "Service is in strange mode = [{}]. This is not a problem, just Windows Feature",
+            status);
+        // use hammer
+        wtools::KillProcess(service_name + L".exe", 1);
     }
 
     // Send a start code to the service.
     auto ret = ::StartService(handle, 0, nullptr);
-    if (ret == TRUE)
-        XLOG::l.i("Service '{}' started successfully ",
-                  wtools::ConvertToUTF8(Name));
-    else {
-        auto err = GetLastError();
-        if (err == 1056) {
-            XLOG::l.t("Service '{}' already started",
-                      wtools::ConvertToUTF8(Name));
-            return true;
-        }
-        XLOG::l("Service '{}' start failed {} ", wtools::ConvertToUTF8(Name),
-                err);
-    }
+    LogStartStatus(service_name, ret == TRUE ? 0 : ::GetLastError());
 
     return true;
 }
@@ -552,7 +578,9 @@ bool FindStopDeactivateLegacyAgent() {
     StopWindowsService(L"winring0_1_2_0");
     status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                            SERVICE_STOPPED, 5000);
+
     if (status == SERVICE_STOPPED) return true;
+    if (status == 1060) return true;  // case when driver killed by OHM
 
     LogAndDisplayErrorMessage(status);
 

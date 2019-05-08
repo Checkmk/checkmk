@@ -24,6 +24,7 @@
 
 #include "Logfile.h"
 #include <fcntl.h>
+#include <algorithm>
 #include <cstdlib>
 #include <sstream>
 #include <utility>
@@ -135,11 +136,11 @@ void Logfile::loadRange(size_t max_lines_per_logfile, FILE *file,
         }
         _lineno++;
         // remove trailing newline (should be nuked, see above)
-        for (auto &ch : linebuffer) {
-            if (ch == '\0' || ch == '\n') {
-                ch = '\0';
-                break;
-            }
+        auto it =
+            std::find_if(linebuffer.begin(), linebuffer.end(),
+                         [](auto ch) { return ch == '\0' || ch == '\n'; });
+        if (it != linebuffer.end()) {
+            *it = '\0';
         }
         if (processLogLine(_lineno, &linebuffer[0], missing_types)) {
             _log_cache->logLineHasBeenAdded(this, logclasses);

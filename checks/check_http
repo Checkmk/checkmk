@@ -24,11 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import copy
+
 
 def _transform_check_http(params):
     if isinstance(params, dict):
         return params
-    name, mode = params
+    name, mode = copy.deepcopy(params)
     mode_name = 'cert' if "cert_days" in mode else 'url'
 
     transformed = {"name": name, "mode": (mode_name, mode)}

@@ -84,10 +84,9 @@ def parse_mysql(info):
 
     return parsed
 
-
-def check_mysql_version(item, _no_params, parsed):
-    if item in parsed and not len(parsed[item]) == 0:
-        values = parsed[item]
+@get_parsed_item_data
+def check_mysql_version(item, _no_params, values):
+    if 'version' in values:
         return 0, "Version: " + values['version']
 
 
@@ -115,9 +114,11 @@ check_info['mysql'] = {
 # }
 
 
-def check_mysql_sessions(item, params, parsed):
-    if item in parsed and not len(parsed[item]) == 0:
-        values = parsed[item]
+@get_parsed_item_data
+def check_mysql_sessions(item, params, values):
+    if not ("Threads_connected" in values and "Threads_running" in values and "Connections" in values):
+        return 3, "Incomplete agent output"
+    else:
         total_sessions = values["Threads_connected"]
         running_sessions = values["Threads_running"]
         connects = get_rate("mysql.sessions", time.time(), values["Connections"])
@@ -166,15 +167,13 @@ check_info['mysql.sessions'] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_mysql_iostat(item, params, parsed):
-    if item in parsed:
-        values = parsed[item]
+@get_parsed_item_data
+def check_mysql_iostat(item, params, values):
+    if not ("Innodb_data_read" in values and "Innodb_data_written" in values):
+        return 3, "Incomplete agent output"
 
-        if not ("Innodb_data_read" in values and "Innodb_data_written" in values):
-            return 3, "Incomplete agent output"
-
-        line = [None, None, values["Innodb_data_read"] / 512, values["Innodb_data_written"] / 512]
-        return check_diskstat_line(time.time(), 'innodb_io' + item, params, line)
+    line = [None, None, values["Innodb_data_read"] / 512, values["Innodb_data_written"] / 512]
+    return check_diskstat_line(time.time(), 'innodb_io' + item, params, line)
 
 
 check_info['mysql.innodb_io'] = {
@@ -199,43 +198,42 @@ check_info['mysql.innodb_io'] = {
 
 # TODO: This check should rather output the current number of connections.
 # The historic maximum can be viewed in the RRD data...
-def check_mysql_connections(item, params, parsed):
-    if item in parsed:
-        values = parsed[item]
-        if 'Max_used_connections' not in values:
-            return 3, 'Connection information are missing'
+@get_parsed_item_data
+def check_mysql_connections(item, params, values):
+    if 'Max_used_connections' not in values:
+        return 3, 'Connection information are missing'
 
-        # The maximum number of connections that have been in use simultaneously
-        # since the server started.
-        conn = float(values['Max_used_connections'])
+    # The maximum number of connections that have been in use simultaneously
+    # since the server started.
+    conn = float(values['Max_used_connections'])
 
-        # Maximum number of possible parallel connections
-        max_conn = float(values['max_connections'])
+    # Maximum number of possible parallel connections
+    max_conn = float(values['max_connections'])
 
-        perc_used = conn / max_conn * 100
+    perc_used = conn / max_conn * 100
 
-        status = 0
-        status_txt = ''
-        perf_data = [
-            ("connections_max_used", conn),
-            ("connections_max", max_conn),
-            ('connections_perc_used', perc_used),
-        ]
+    status = 0
+    status_txt = ''
+    perf_data = [
+        ("connections_max_used", conn),
+        ("connections_max", max_conn),
+        ('connections_perc_used', perc_used),
+    ]
 
-        if 'perc_used' in params:
-            warn, crit = params['perc_used']
-            if perc_used >= crit:
-                status = 2
-                status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                             'has been reached at least once since program start' % crit
-            elif perc_used >= warn:
-                status = 1
-                status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                             'has been reached at least once since program start' % warn
+    if 'perc_used' in params:
+        warn, crit = params['perc_used']
+        if perc_used >= crit:
+            status = 2
+            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
+                         'has been reached at least once since program start' % crit
+        elif perc_used >= warn:
+            status = 1
+            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
+                         'has been reached at least once since program start' % warn
 
 
-        return status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' % \
-                (conn, max_conn, perc_used, status_txt), perf_data
+    return status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' % \
+            (conn, max_conn, perc_used, status_txt), perf_data
 
 
 @discover
@@ -272,15 +270,14 @@ def inventory_mysql_galerasync(parsed):
         if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_local_state_comment' in values:
             yield instance, {}
 
-def check_mysql_galerasync(item, _no_params, parsed):
-    if item in parsed:
-        values = parsed[item]
-        if u'wsrep_local_state_comment' in values:
-            if values[u'wsrep_local_state_comment'] == 'Synced':
-                state = 0
-            else:
-                state = 2
-            return (state, 'WSREP local state comment: %s' % values[u'wsrep_local_state_comment'])
+@get_parsed_item_data
+def check_mysql_galerasync(item, _no_params, values):
+    if u'wsrep_local_state_comment' in values:
+        if values[u'wsrep_local_state_comment'] == 'Synced':
+            state = 0
+        else:
+            state = 2
+        return (state, 'WSREP local state comment: %s' % values[u'wsrep_local_state_comment'])
 
 check_info['mysql.galerasync'] = {
     "inventory_function"      : inventory_mysql_galerasync,
@@ -304,14 +301,13 @@ def inventory_mysql_galeradonor(parsed):
         if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_sst_donor' in values:
             yield instance, {'wsrep_sst_donor': values['wsrep_sst_donor']}
 
-def check_mysql_galeradonor(item, params, parsed):
-    if item in parsed:
-        values = parsed[item]
-        if u'wsrep_sst_donor' in values:
-            if values[u'wsrep_sst_donor'] == params['wsrep_sst_donor']:
-                return (0, 'WSREP sst donor contains "%s"' % values[u'wsrep_sst_donor'])
-            else:
-                return (1, 'WSREP sst donor contains "%s" and not "%s"' % (values[u'wsrep_sst_donor'], params['wsrep_sst_donor']))
+@get_parsed_item_data
+def check_mysql_galeradonor(item, params, values):
+    if u'wsrep_sst_donor' in values:
+        if values[u'wsrep_sst_donor'] == params['wsrep_sst_donor']:
+            return (0, 'WSREP sst donor contains "%s"' % values[u'wsrep_sst_donor'])
+        else:
+            return (1, 'WSREP sst donor contains "%s" and not "%s"' % (values[u'wsrep_sst_donor'], params['wsrep_sst_donor']))
 
 check_info['mysql.galeradonor'] = {
     "inventory_function"      : inventory_mysql_galeradonor,
@@ -335,14 +331,13 @@ def inventory_mysql_galerastartup(parsed):
         if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_cluster_address' in values:
             yield instance, {}
 
-def check_mysql_galerastartup(item, _no_params, parsed):
-    if item in parsed:
-        values = parsed[item]
-        if u'wsrep_cluster_address' in values:
-            if values[u'wsrep_cluster_address'] == 'gcomm://':
-                return (2, 'WSREP cluster address is empty')
-            else:
-                return (0, 'WSREP cluster address contains %s' % values[u'wsrep_cluster_address'])
+@get_parsed_item_data
+def check_mysql_galerastartup(item, _no_params, values):
+    if u'wsrep_cluster_address' in values:
+        if values[u'wsrep_cluster_address'] == 'gcomm://':
+            return (2, 'WSREP cluster address is empty')
+        else:
+            return (0, 'WSREP cluster address contains %s' % values[u'wsrep_cluster_address'])
 
 check_info['mysql.galerastartup'] = {
     "inventory_function"      : inventory_mysql_galerastartup,
@@ -372,18 +367,17 @@ def inventory_mysql_galerasize(parsed):
         if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_cluster_size' in values:
             yield instance, {'invsize': saveint(values[u'wsrep_cluster_size'])}
 
-def check_mysql_galerasize(item, params, parsed):
-    if item in parsed:
-        values = parsed[item]
-        if u'wsrep_cluster_size' in values:
-            size = saveint(values[u'wsrep_cluster_size'])
-            res = 0
-            txt = 'wsrep_cluster_size = %d' % size
-            perfdata = [('galera_size', size)]
-            if size != params['invsize']:
-                res = 2
-                txt += ', size at discovery was %d' % params['invsize']
-            return (res, txt, perfdata)
+@get_parsed_item_data
+def check_mysql_galerasize(item, params, values):
+    if u'wsrep_cluster_size' in values:
+        size = saveint(values[u'wsrep_cluster_size'])
+        res = 0
+        txt = 'wsrep_cluster_size = %d' % size
+        perfdata = [('galera_size', size)]
+        if size != params['invsize']:
+            res = 2
+            txt += ', size at discovery was %d' % params['invsize']
+        return (res, txt, perfdata)
 
 check_info['mysql.galerasize'] = {
     "inventory_function"  : inventory_mysql_galerasize,
@@ -407,15 +401,14 @@ def inventory_mysql_galerastatus(parsed):
         if values.get('wsrep_provider', 'none') != 'none' and u'wsrep_cluster_status' in values:
             yield instance, {}
 
-def check_mysql_galerastatus(item, _no_params, parsed):
-    if item in parsed:
-        values = parsed[item]
-        if u'wsrep_cluster_status' in values:
-            if values[u'wsrep_cluster_status'] == 'Primary':
-                state = 0
-            else:
-                state = 2
-            return (state, 'WSREP cluster status: %s' % values[u'wsrep_cluster_status'])
+@get_parsed_item_data
+def check_mysql_galerastatus(item, _no_params, values):
+    if u'wsrep_cluster_status' in values:
+        if values[u'wsrep_cluster_status'] == 'Primary':
+            state = 0
+        else:
+            state = 2
+        return (state, 'WSREP cluster status: %s' % values[u'wsrep_cluster_status'])
 
 check_info['mysql.galerastatus'] = {
     "inventory_function"      : inventory_mysql_galerastatus,

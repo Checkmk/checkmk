@@ -176,11 +176,12 @@ int CopyFolderRecursive(
 int GetServiceStatus(SC_HANDLE ServiceHandle) {
     DWORD bytes_needed = 0;
     SERVICE_STATUS_PROCESS ssp;
+    auto buffer = reinterpret_cast<LPBYTE>(&ssp);
 
-    if (!QueryServiceStatusEx(ServiceHandle, SC_STATUS_PROCESS_INFO,
-                              (LPBYTE)&ssp, sizeof(SERVICE_STATUS_PROCESS),
-                              &bytes_needed)) {
-        XLOG::l("QueryServiceStatusEx failed {}", GetLastError());
+    if (FALSE == QueryServiceStatusEx(ServiceHandle, SC_STATUS_PROCESS_INFO,
+                                      buffer, sizeof(SERVICE_STATUS_PROCESS),
+                                      &bytes_needed)) {
+        XLOG::l("QueryServiceStatusEx failed [{}]", GetLastError());
         return -1;
     }
     return ssp.dwCurrentState;
@@ -189,11 +190,12 @@ int GetServiceStatus(SC_HANDLE ServiceHandle) {
 uint32_t GetServiceHint(SC_HANDLE ServiceHandle) {
     DWORD bytes_needed = 0;
     SERVICE_STATUS_PROCESS ssp;
+    auto buffer = reinterpret_cast<LPBYTE>(&ssp);
 
-    if (!QueryServiceStatusEx(ServiceHandle, SC_STATUS_PROCESS_INFO,
-                              (LPBYTE)&ssp, sizeof(SERVICE_STATUS_PROCESS),
-                              &bytes_needed)) {
-        XLOG::l("QueryServiceStatusEx failed {}", GetLastError());
+    if (FALSE == QueryServiceStatusEx(ServiceHandle, SC_STATUS_PROCESS_INFO,
+                                      buffer, sizeof(SERVICE_STATUS_PROCESS),
+                                      &bytes_needed)) {
+        XLOG::l("QueryServiceStatusEx failed [{}]", GetLastError());
         return 0;
     }
     return ssp.dwWaitHint;
@@ -201,8 +203,8 @@ uint32_t GetServiceHint(SC_HANDLE ServiceHandle) {
 
 int SendServiceCommand(SC_HANDLE Handle, uint32_t Command) {
     SERVICE_STATUS_PROCESS ssp;
-    if (!ControlService(Handle, Command, (LPSERVICE_STATUS)&ssp)) {
-        XLOG::l("ControlService failed {}", GetLastError());
+    if (FALSE == ControlService(Handle, Command, (LPSERVICE_STATUS)&ssp)) {
+        XLOG::l("ControlService failed [{}]", GetLastError());
         return -1;
     }
     return ssp.dwCurrentState;
@@ -215,7 +217,7 @@ std::pair<SC_HANDLE, SC_HANDLE> OpenServiceForControl(
                       nullptr,                 // ServicesActive database
                       SC_MANAGER_ALL_ACCESS);  // full access rights
 
-    if (!manager_handle) {
+    if (nullptr == manager_handle) {
         XLOG::l("OpenSCManager failed {}", GetLastError());
         return {nullptr, nullptr};
     }
@@ -228,7 +230,7 @@ std::pair<SC_HANDLE, SC_HANDLE> OpenServiceForControl(
                     SERVICE_STOP | SERVICE_START | SERVICE_QUERY_STATUS |
                         SERVICE_ENUMERATE_DEPENDENTS);
 
-    if (!handle) {
+    if (nullptr == handle) {
         XLOG::l("OpenService {} failed {}", wtools::ConvertToUTF8(Name),
                 GetLastError());
         return {manager_handle, handle};
@@ -329,7 +331,7 @@ bool StartWindowsService(const std::wstring& Name) {
     auto [manager_handle, handle] = OpenServiceForControl(Name);
     ON_OUT_OF_SCOPE(if (manager_handle) CloseServiceHandle(manager_handle));
     ON_OUT_OF_SCOPE(if (handle) CloseServiceHandle(handle));
-    if (!handle) return false;
+    if (nullptr == handle) return false;
 
     // Make sure the service is not already stopped.
     auto status = GetServiceStatus(handle);
@@ -352,7 +354,7 @@ bool StartWindowsService(const std::wstring& Name) {
 
     // Send a start code to the service.
     auto ret = ::StartService(handle, 0, nullptr);
-    if (ret)
+    if (ret == TRUE)
         XLOG::l.i("Service '{}' started successfully ",
                   wtools::ConvertToUTF8(Name));
     else {
@@ -371,7 +373,7 @@ bool StartWindowsService(const std::wstring& Name) {
 
 bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
     auto manager_handle = OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
-    if (!manager_handle) {
+    if (nullptr == manager_handle) {
         XLOG::l.crit("Cannot open SC MAnager {}", GetLastError());
         return false;
     }
@@ -379,7 +381,7 @@ bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
 
     auto handle =
         OpenService(manager_handle, Name.c_str(), SERVICE_CHANGE_CONFIG);
-    if (!handle) {
+    if (nullptr == handle) {
         XLOG::l.crit("Cannot open Service {}, error =  {}",
                      wtools::ConvertToUTF8(Name), GetLastError());
         return false;
@@ -398,9 +400,9 @@ bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
                             nullptr,            // account name: no change
                             nullptr,            // password: no change
                             nullptr);           // display name: no change
-    if (!result) {
-        XLOG::l("ChangeServiceConfig {} failed {}", wtools::ConvertToUTF8(Name),
-                GetLastError());
+    if (0 == result) {
+        XLOG::l("ChangeServiceConfig '{}' failed [{}]",
+                wtools::ConvertToUTF8(Name), GetLastError());
         return false;
     }
 
@@ -466,11 +468,11 @@ int WaitForStatus(std::function<int(const std::wstring&)> StatusChecker,
                   const std::wstring& ServiceName, int ExpectedStatus,
                   int Time) {
     int status = -1;
-    while (1) {
+    while (true) {
         status = StatusChecker(ServiceName);
         if (status == ExpectedStatus) return status;
         if (Time >= 0) {
-            Sleep(1000);
+            cma::tools::sleep(1000);
             XLOG::l.i("1 second is over status is {}, t=required {}...", status,
                       ExpectedStatus);
         } else
@@ -634,14 +636,14 @@ bool RunDetachedProcess(const std::wstring& Name) {
     auto ret = CreateProcessW(
         nullptr,       // application name
         windows_name,  // Command line options
-        NULL,          // Process handle not inheritable
-        NULL,          // Thread handle not inheritable
+        nullptr,       // Process handle not inheritable
+        nullptr,       // Thread handle not inheritable
         FALSE,         // Set handle inheritance to FALSE
         CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS,  // No creation flags
-        NULL,  // Use parent's environment block
-        NULL,  // Use parent's starting directory
-        &si,   // Pointer to STARTUPINFO structure
-        &pi);  // Pointer to PROCESS_INFORMATION structure
+        nullptr,  // Use parent's environment block
+        nullptr,  // Use parent's starting directory
+        &si,      // Pointer to STARTUPINFO structure
+        &pi);     // Pointer to PROCESS_INFORMATION structure
     if (ret != TRUE) {
         XLOG::l("Cant start the process {}, error is {}",
                 wtools::ConvertToUTF8(Name), GetLastError());
@@ -666,8 +668,8 @@ std::string GetTimeString() {
     return sss.str().c_str();
 }
 
-bool CreateProtocolFile(std::filesystem::path ProtocolFile,
-                        const std::string_view OptionalContent) {
+bool CreateProtocolFile(std::filesystem::path& ProtocolFile,
+                        std::string_view OptionalContent) {
     try {
         std::ofstream ofs(ProtocolFile, std::ios::binary);
 
@@ -849,7 +851,7 @@ bool ConvertIniFiles(const std::filesystem::path& LegacyRoot,
 }
 
 // read first line and check for a marker
-bool IsBakeryIni(const std::filesystem::path Path) noexcept {
+bool IsBakeryIni(const std::filesystem::path& Path) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
     if (!fs::exists(Path, ec)) return false;
@@ -871,7 +873,7 @@ bool IsBakeryIni(const std::filesystem::path Path) noexcept {
     }
 }
 
-std::string MakeComments(const std::filesystem::path SourceFilePath,
+std::string MakeComments(const std::filesystem::path& SourceFilePath,
                          bool Bakery) noexcept {
     return fmt::format(
         "# Converted from '{}'\n"
@@ -881,7 +883,7 @@ std::string MakeComments(const std::filesystem::path SourceFilePath,
                : "# original INI file was managed by user\n");
 }
 
-bool StoreYaml(const std::filesystem::path File, const YAML::Node Yaml,
+bool StoreYaml(const std::filesystem::path& File, YAML::Node Yaml,
                const std::string Comment) noexcept {
     std::ofstream ofs(File, std::ios::binary);
     if (ofs) {
@@ -893,10 +895,10 @@ bool StoreYaml(const std::filesystem::path File, const YAML::Node Yaml,
 }
 
 std::filesystem::path CreateYamlFromIniSmart(
-    const std::filesystem::path IniFile,  // ini file to use
-    const std::filesystem::path Pd,       // directory to send
-    const std::string YamlName,           // name to be used in output
-    bool ForceBakeryFile) noexcept {      // in some create bakery!
+    const std::filesystem::path& IniFile,  // ini file to use
+    const std::filesystem::path& Pd,       // directory to send
+    const std::string& YamlName,           // name to be used in output
+    bool ForceBakeryFile) noexcept {       // in some create bakery!
     namespace fs = std::filesystem;
     auto yaml = LoadIni(IniFile);
 

@@ -179,7 +179,7 @@ int TestMainServiceSelf(int Interval) {
                 XLOG::l("Can't connect to {}:{}, waiting for 5 seconds",
                         address, port);
 
-                // methods below is not a good still we do not want
+                // method below is not good, still we do not want
                 // to over complicate the code just for testing purposes
                 for (int i = 0; i < 5; i++) {
                     if (stop) break;

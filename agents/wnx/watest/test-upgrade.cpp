@@ -472,24 +472,41 @@ TEST(UpgradeTest, FindLwa) {
                                 SERVICE_RUNNING, 5000);
     EXPECT_EQ(status, SERVICE_RUNNING);
     StartWindowsService(L"check_mk_agent");
-    status = GetServiceStatusByName(L"check_mk_agent");
+    // wait for service status
+    for (int i = 0; i < 5; ++i) {
+        status = GetServiceStatusByName(L"check_mk_agent");
+        if (status == SERVICE_RUNNING) break;
+        XLOG::l.i("RETRY wait for 'running' status, current is [{}]", status);
+        cma::tools::sleep(1000);
+    }
+
     EXPECT_EQ(status, SERVICE_RUNNING);
     status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                            SERVICE_RUNNING, 5000);
     EXPECT_EQ(status, SERVICE_RUNNING);
     // now we have to be in the usual state of LWA
 
-    // stop service
-    StopWindowsService(L"check_mk_agent");
-    status = GetServiceStatusByName(L"check_mk_agent");
-    EXPECT_EQ(status, SERVICE_STOPPED);
-    EXPECT_TRUE(DeactivateLegacyAgent());
-    EXPECT_FALSE(IsLegacyAgentActive());
+    // stop OHM trash
     wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
     StopWindowsService(L"winring0_1_2_0");
     status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                            SERVICE_STOPPED, 5000);
+    EXPECT_TRUE(status == SERVICE_STOPPED || status == 1060);
+
+    // stop service
+    StopWindowsService(L"check_mk_agent");
+    // wait few seconds
+    status = GetServiceStatusByName(L"check_mk_agent");
+    if (status != SERVICE_STOPPED) {
+        xlog::sendStringToStdio("Service Killed with a hammer\n",
+                                xlog::internal::Colors::kYellow);
+        wtools::KillProcess(L"check_mk_agent.exe", 9);
+        status = SERVICE_STOPPED;
+    }
+
     EXPECT_EQ(status, SERVICE_STOPPED);
+    EXPECT_TRUE(DeactivateLegacyAgent());
+    EXPECT_FALSE(IsLegacyAgentActive());
 }
 
 }  // namespace cma::cfg::upgrade

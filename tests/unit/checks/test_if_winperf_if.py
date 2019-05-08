@@ -152,3 +152,103 @@ def test_winperf_if_inventory_teaming(check_manager, monkeypatch, settings, info
     actual_discovery = check.run_discovery(parsed)
     assertDiscoveryResultsEqual(check, DiscoveryResult(expected_discovery),
                                 DiscoveryResult(actual_discovery))
+
+
+winperf_if_section_44 = [
+    [u'Node', u'MACAddress', u'Name', u'NetConnectionID', u'NetConnectionStatus'],
+    [u'NODE1', u'', u'WAN Miniport (L2TP)', u'', u''],
+    [u'NODE1', u'', u'WAN Miniport (SSTP)', u'', u''],
+    [u'NODE1', u'', u'WAN Miniport (IKEv2)', u'', u''],
+    [u'NODE1', u'', u'WAN Miniport (PPTP)', u'', u''],
+    [u'NODE1', u'', u'WAN Miniport (PPPOE)', u'', u''],
+    [u'NODE1', u'', u'WAN Miniport (IP)', u'', u''],
+    [u'NODE1', u'', u'WAN Miniport (IPv6)', u'', u''],
+    [u'NODE1', u'', u'WAN Miniport (Network Monitor)', u'', u''],
+    [u'NODE1', u'', u'Hyper-V Virtual Ethernet Adapter', u'', u''],
+    [u'NODE1', u'', u'Microsoft Kernel Debug Network Adapter', u'', u''],
+    [u'NODE1', u'', u'RAS Async Adapter', u'', u''],
+    [u'NODE1', u'', u'Broadcom NetXtreme Gigabit Ethernet', u'SLOT 3 Port 1', u'4'],
+    [u'NODE1', u'', u'Broadcom NetXtreme Gigabit Ethernet', u'SLOT 3 Port 2', u'4'],
+    [
+        u'NODE1', u'AA:AA:AA:AA:AA:AA', u'Broadcom BCM57800 NetXtreme II 10 GigE (NDIS VBD Client)',
+        u'NIC2', u'2'
+    ],
+    [u'NODE1', u'', u'Broadcom NetXtreme Gigabit Ethernet', u'SLOT 3 Port 4', u'4'],
+    [u'NODE1', u'', u'Broadcom NetXtreme Gigabit Ethernet', u'SLOT 3 Port 3', u'4'],
+    [u'NODE1', u'', u'Broadcom BCM57800 NetXtreme II 1 GigE (NDIS VBD Client)', u'NIC4', u'4'],
+    [u'NODE1', u'', u'Broadcom BCM57800 NetXtreme II 1 GigE (NDIS VBD Client)', u'NIC3', u'4'],
+    [
+        u'NODE1', u'AA:AA:AA:AA:AA:AA', u'Broadcom BCM57800 NetXtreme II 10 GigE (NDIS VBD Client)',
+        u'NIC1', u'2'
+    ],
+    [u'NODE1', u'', u'Microsoft ISATAP Adapter', u'', u''],
+    [u'NODE1', u'', u'Microsoft ISATAP Adapter #2', u'', u''],
+    [u'NODE1', u'', u'Microsoft ISATAP Adapter #3', u'', u''],
+    [u'NODE1', u'', u'Microsoft ISATAP Adapter #4', u'', u''],
+    [u'NODE1', u'', u'Microsoft Network Adapter Multiplexor Default Miniport', u'', u''],
+    [
+        u'NODE1', u'AA:AA:AA:AA:AA:AA', u'Microsoft Network Adapter Multiplexor Driver', u'10GTeam',
+        u'2'
+    ],
+    [u'NODE1', u'', u'Hyper-V Virtual Switch Extension Adapter', u'', u''],
+    [u'NODE1', u'AA:AA:AA:AA:AA:AA', u'Hyper-V Virtual Ethernet Adapter #2', u'Management', u'2'],
+    [u'NODE1', u'AA:AA:AA:AA:AA:AA', u'Hyper-V Virtual Ethernet Adapter #3', u'CSV', u'2'],
+    [u'NODE1', u'AA:AA:AA:AA:AA:AA', u'Hyper-V Virtual Ethernet Adapter #4', u'Live', u'2'],
+    [u'NODE1', u'AA:AA:AA:AA:AA:AA', u'Hyper-V Virtual Ethernet Adapter #5', u'iSCSI1', u'2'],
+    [u'NODE1', u'AA:AA:AA:AA:AA:AA', u'Hyper-V Virtual Ethernet Adapter #6', u'iSCSI2', u'2'],
+    [u'NODE1', u'', u'Microsoft ISATAP Adapter #5', u'', u''],
+    [u'NODE1', u'AA:AA:AA:AA:AA:AA', u'Microsoft Failover Cluster Virtual Adapter', u'', u''],
+    [u'NODE1', u'', u'Microsoft ISATAP Adapter #6', u'', u''],
+]
+
+winperf_if_section = [
+    [u'1418225545.73', u'510'],
+    [
+        u'8',
+        u'instances:',
+        u'Broadcom_ABC123_NetXtreme_123_GigE_[Client1]__138',
+        u'Broadcom_ABC456_NetXtreme_456_GigE_[Client2]__137',
+        u'isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1}',
+        u'isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1}',
+        u'isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1}',
+        u'isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1}',
+        u'isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1}',
+        u'isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1}',
+    ],
+    [u'-122', u'3361621296', u'97386123', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'-110', u'3437962', u'13245121', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'-244', u'2946102', u'6234996', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'-58', u'491860', u'7010125', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [
+        u'10', u'1410065408', u'1410065408', u'100000', u'100000', u'100000', u'100000', u'100000',
+        u'100000', u'large_rawcount'
+    ],
+    [u'-246', u'3188924403', u'3975676452', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'14', u'1707835', u'4996570', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'16', u'1237965', u'1238278', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'18', u'302', u'148', u'0', u'0', u'0', u'0', u'0', u'0', u'large_rawcount'],
+    [u'20', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'large_rawcount'],
+    [u'22', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'large_rawcount'],
+    [u'-4', u'172696893', u'416676967', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'26', u'484056', u'7001439', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'28', u'7804', u'8686', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'30', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'large_rawcount'],
+    [u'32', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'large_rawcount'],
+    [u'34', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'large_rawcount'],
+    [u'1086', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'large_rawcount'],
+    [u'1088', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'large_rawcount'],
+    [u'1090', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'1092', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'bulk_count'],
+    [u'1094', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'large_rawcount'],
+]
+
+
+@pytest.mark.parametrize(
+    "info",
+    [
+        winperf_if_section + winperf_if_section_44,
+        #winperf_if_section_44 + winperf_if_section,
+    ])
+def test_winperf_if_parse_sections(check_manager, info):
+    check = check_manager.get_check('winperf_if')
+    check.run_parse(info)

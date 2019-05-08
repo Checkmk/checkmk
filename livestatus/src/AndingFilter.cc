@@ -64,7 +64,7 @@ std::unique_ptr<Filter> AndingFilter::partialFilter(
     std::function<bool(const Column &)> predicate) const {
     Filters filters;
     std::transform(
-        _subfilters.begin(), _subfilters.end(), std::back_inserter(filters),
+        _subfilters.cbegin(), _subfilters.cend(), std::back_inserter(filters),
         [&](const auto &filter) { return filter->partialFilter(predicate); });
     return make(kind(), std::move(filters));
 }
@@ -110,9 +110,9 @@ std::optional<std::bitset<32>> AndingFilter::valueSetLeastUpperBoundFor(
     std::chrono::seconds timezone_offset) const {
     std::optional<std::bitset<32>> result;
     for (const auto &filter : _subfilters) {
-        if (auto foo = filter->valueSetLeastUpperBoundFor(column_name,
+        if (auto lub = filter->valueSetLeastUpperBoundFor(column_name,
                                                           timezone_offset)) {
-            result = result ? (*result & *foo) : foo;
+            result = result ? (*result & *lub) : lub;
         }
     }
     return result;
@@ -124,7 +124,7 @@ std::unique_ptr<Filter> AndingFilter::copy() const {
 
 std::unique_ptr<Filter> AndingFilter::negate() const {
     Filters filters;
-    std::transform(_subfilters.begin(), _subfilters.end(),
+    std::transform(_subfilters.cbegin(), _subfilters.cend(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->negate(); });
     return OringFilter::make(kind(), std::move(filters));
@@ -142,7 +142,7 @@ Filters AndingFilter::disjuncts() const {
 
 Filters AndingFilter::conjuncts() const {
     Filters filters;
-    std::transform(_subfilters.begin(), _subfilters.end(),
+    std::transform(_subfilters.cbegin(), _subfilters.cend(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->copy(); });
     return filters;

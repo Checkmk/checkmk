@@ -96,11 +96,11 @@ def winperf_if_normalize_nic_name(name, nic_names):
     return mod_nic_name
 
 
-def parse_winperf_if(info):
+def _parse_winperf_if_section(info):
     try:
         timestamp_info, names_info, data = info[0], info[1], info[2:]
     except (IndexError, ValueError):
-        return None, [], [], [], {}
+        return None, {}, [], [], {}, {}
 
     try:
         agent_timestamp = float(timestamp_info[0])
@@ -219,6 +219,12 @@ def parse_winperf_if(info):
                     nics[nic_name].update(as_dict)
     except StopIteration:
         pass
+    return agent_timestamp, nics, dhcp_lines, nic_names, nic_index, teaming_info
+
+
+def parse_winperf_if(info):
+    agent_timestamp, nics, dhcp_lines, nic_names, nic_index, teaming_info = _parse_winperf_if_section(
+        info)
 
     # Now convert the dicts into the format that is needed by if.include
     converted = []

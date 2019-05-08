@@ -13,7 +13,7 @@
 namespace cma {
 
 // internal global variables:
-static bool S_ConfigLoaded = 0;
+static bool S_ConfigLoaded = false;
 static std::atomic<bool> S_OnStartCalled = false;
 
 bool ConfigLoaded() { return S_ConfigLoaded; }

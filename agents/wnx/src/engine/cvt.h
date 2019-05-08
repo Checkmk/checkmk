@@ -27,9 +27,14 @@ bool CheckIniFile(const std::filesystem::path& Path);
 // implementation in the lwa folder
 class Parser {
 public:
-    Parser() {}
-
+    Parser() = default;
     virtual ~Parser();
+
+    // no copy, no move
+    Parser(const Parser&) = delete;
+    Parser(Parser&&) = delete;
+    Parser& operator=(const Parser&) = delete;
+    Parser& operator=(Parser&&) = delete;
 
     void prepare();
     bool readIni(std::filesystem::path Path, bool Local);
@@ -37,12 +42,6 @@ public:
     void emitYaml(std::ostream& Out);
 
     YAML::Node emitYaml() noexcept;
-
-    // no copy, no move
-    Parser(const Parser&) = delete;
-    Parser(Parser&&) = delete;
-    Parser& operator=(const Parser&) = delete;
-    Parser& operator=(Parser&&) = delete;
 
 private:
     ParserImplementation* pi_ = nullptr;

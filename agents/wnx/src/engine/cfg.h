@@ -129,7 +129,6 @@ std::wstring GetTempDir() noexcept;
 std::wstring GetLogDir() noexcept;
 std::string GetHostName() noexcept;
 std::wstring GetWorkingDir() noexcept;
-std::wstring GetWorkingDir() noexcept;
 std::wstring GetMsiExecPath() noexcept;
 
 int GetBackupLogMaxCount() noexcept;
@@ -161,9 +160,9 @@ enum FallbackPolicy {
 };
 
 // YAML API is here
-YAML::Node LoadAndCheckYamlFile(const std::wstring FileName, int Fallback,
+YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName, int Fallback,
                                 int* ErrorCodePtr = nullptr) noexcept;
-YAML::Node LoadAndCheckYamlFile(const std::wstring FileName,
+YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName,
                                 int* ErrorCodePtr = nullptr) noexcept;
 
 // ***********************************************************
@@ -172,7 +171,7 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring FileName,
 // usage auto x = GetVal("global", "name", false);
 template <typename T>
 T GetVal(std::string Section, std::string Name, T Default,
-         int* ErrorOut = 0) noexcept {
+         int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
@@ -194,7 +193,7 @@ T GetVal(std::string Section, std::string Name, T Default,
 
 // usage auto x = GetVal("global", "name");
 inline YAML::Node GetNode(std::string Section, std::string Name,
-                          int* ErrorOut = 0) noexcept {
+                          int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
@@ -231,7 +230,7 @@ inline std::optional<YAML::Node> GetGroupLoaded(const std::string& Section) {
 // safe method yo extract value from the yaml
 template <typename T>
 T GetVal(const YAML::Node& Yaml, std::string Name, T Default,
-         int* ErrorOut = 0) noexcept {
+         int* ErrorOut = nullptr) noexcept {
     if (Yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
         return Default;
@@ -310,7 +309,7 @@ inline StringPairArray ConvertNode2StringPairArray(
 
 template <typename T>
 std::vector<T> GetArray(const std::string& Section, const std::string& Name,
-                        int* ErrorOut = 0) noexcept {
+                        int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
@@ -321,10 +320,10 @@ std::vector<T> GetArray(const std::string& Section, const std::string& Name,
         auto val = section[Name];
         if (val.IsDefined() && val.IsSequence())
             return ConvertNode2Sequence<T>(val);
-        else
-            // this is OK when nothing inside
-            XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
-                      val.Type());
+
+        // this is OK when nothing inside
+        XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
+                  val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
@@ -338,10 +337,11 @@ std::vector<T> GetArray(const std::string& Section, const std::string& Name,
 // sequences of maps  '- name: value'
 inline StringPairArray GetPairArray(const std::string& Section,
                                     const std::string& Name,
-                                    int* ErrorOut = 0) noexcept {
+                                    int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
+
         return {};
     }
     try {
@@ -349,10 +349,10 @@ inline StringPairArray GetPairArray(const std::string& Section,
         auto val = section[Name];
         if (val.IsDefined() && val.IsSequence())
             return ConvertNode2StringPairArray(val);
-        else
-            // this is OK when nothing inside
-            XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
-                      val.Type());
+
+        // this is OK when nothing inside
+        XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
+                  val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
@@ -372,18 +372,18 @@ inline std::vector<std::string> StringToTable(const std::string& WholeValue) {
 }
 
 // gets string from the yaml and split it in table using space as divider
-inline std::vector<std::string> GetInternalArray(const YAML::Node& Yaml,
-                                                 const std::string& Name,
-                                                 int* ErrorOut = 0) noexcept {
+inline std::vector<std::string> GetInternalArray(
+    const YAML::Node& Yaml, const std::string& Name,
+    int* ErrorOut = nullptr) noexcept {
     try {
         auto val = Yaml[Name];
         if (val.IsDefined() && val.IsScalar()) {
             auto str = val.as<std::string>();
             return StringToTable(str);
-        } else {
-            // this is OK when nothing inside
-            XLOG::d.t("Absent/Empty node '{}' type is {}", Name, val.Type());
         }
+        // this is OK when nothing inside
+        XLOG::d.t("Absent/Empty node '{}' type is {}", Name, val.Type());
+
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file '{}' with '{}' code:{}",
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
@@ -392,9 +392,9 @@ inline std::vector<std::string> GetInternalArray(const YAML::Node& Yaml,
 }
 
 // gets string from the yaml and split it in table using space as divider
-inline std::vector<std::string> GetInternalArray(const std::string& Section,
-                                                 const std::string& Name,
-                                                 int* ErrorOut = 0) noexcept {
+inline std::vector<std::string> GetInternalArray(
+    const std::string& Section, const std::string& Name,
+    int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
@@ -415,7 +415,7 @@ inline std::vector<std::string> GetInternalArray(const std::string& Section,
 // opposite operation for the GetInternalArray
 inline void PutInternalArray(YAML::Node Yaml, const std::string& Name,
                              std::vector<std::string>& Arr,
-                             int* ErrorOut = 0) noexcept {
+                             int* ErrorOut = nullptr) noexcept {
     try {
         auto section = Yaml[Name];
         if (Arr.empty()) {
@@ -436,7 +436,7 @@ inline void PutInternalArray(YAML::Node Yaml, const std::string& Name,
 inline void PutInternalArray(const std::string& Section,
                              const std::string& Name,
                              std::vector<std::string>& Arr,
-                             int* ErrorOut = 0) noexcept {
+                             int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
@@ -454,7 +454,7 @@ inline void PutInternalArray(const std::string& Section,
 
 template <typename T>
 std::vector<T> GetArray(const YAML::Node& Yaml, std::string Name,
-                        int* ErrorOut = 0) noexcept {
+                        int* ErrorOut = nullptr) noexcept {
     if (Yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
         return {};
@@ -657,7 +657,7 @@ public:
         if (cma::tools::Find(disabled_sections_, std::string(Name)))
             return false;
 
-        if (enabled_sections_.size()) {
+        if (!enabled_sections_.empty()) {
             return cma::tools::Find(enabled_sections_, std::string(Name));
         }
 
@@ -800,7 +800,7 @@ private:
 struct WinPerf : public Group {
 public:
     struct Counter {
-        Counter() {}
+        Counter() = default;
         Counter(const std::string Id, const std::string Name)
             : id_(Id), name_(Name) {}
         auto name() const noexcept { return name_; }

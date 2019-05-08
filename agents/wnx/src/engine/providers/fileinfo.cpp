@@ -2,26 +2,22 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/fileinfo.h"
+
 #include <filesystem>
 #include <regex>
 #include <string>
 #include <tuple>
 
-#include "fmt/format.h"
-
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-#include "common/wtools.h"
-
 #include "cfg.h"
 #include "cma_core.h"
+#include "common/wtools.h"
+#include "fmt/format.h"
 #include "glob_match.h"
-
 #include "logger.h"
-
-#include "providers/fileinfo.h"
 #include "providers/fileinfo_details.h"
+#include "tools/_raii.h"
+#include "tools/_xlog.h"
 
 namespace cma::provider::details {
 
@@ -53,8 +49,8 @@ std::filesystem::path GetOsPathWithCase(
 
     // Scan all path and read for every chunk correct representation
     // from OS
-    for (auto it = body.begin(), end = body.end(); it != end; ++it) {
-        head_part /= ReadBaseNameWithCase(head_part / *it);
+    for (const auto &part : body) {
+        head_part /= ReadBaseNameWithCase(head_part / part);
     }
 
     return head_part;

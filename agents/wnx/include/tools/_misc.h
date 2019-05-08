@@ -546,7 +546,7 @@ auto formatv(const std::string Format, const Args&... args) {
         std::apply(print_message, x);
     } catch (const std::exception&) {
         // XLOG::l.crit("Invalid string to format \"{}\"", std::get<0>(x));
-        XLOG::l.crit("Invalid string/parameters to format '{}'", Format);
+        xlog::l("Invalid string/parameters to format '%s'", Format.c_str());
     }
     return buffer;
 }

@@ -615,7 +615,7 @@ const bool GetCurrentEventLog() {
 namespace cma::cfg {
 
 // Safe loader of any yaml file with fallback on fail
-YAML::Node LoadAndCheckYamlFile(const std::wstring FileName, int Fallback,
+YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName, int Fallback,
                                 int* ErrorCodePtr) noexcept {
     namespace fs = std::filesystem;
     auto file_name = wtools::ConvertToUTF8(FileName);
@@ -659,7 +659,7 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring FileName, int Fallback,
     }
 }
 
-YAML::Node LoadAndCheckYamlFile(const std::wstring FileName,
+YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName,
                                 int* ErrorCodePtr) noexcept {
     return LoadAndCheckYamlFile(FileName, kNone, ErrorCodePtr);
 }

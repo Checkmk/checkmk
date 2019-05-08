@@ -39,24 +39,24 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
 
 // This function will use correct extension and correct sub path
 std::filesystem::path CreateYamlFromIniSmart(
-    const std::filesystem::path IniFile,     // ini file to use
-    const std::filesystem::path Pd,          // directory to send
-    const std::string YamlName,              // name to be used in output
+    const std::filesystem::path& IniFile,    // ini file to use
+    const std::filesystem::path& Pd,         // directory to send
+    const std::string& YamlName,             // name to be used in output
     bool ForceBakeryFile = false) noexcept;  // in some create bakery!
 
 // after upgrade we create in root our protocol
-bool CreateProtocolFile(std::filesystem::path ProtocolFile,
-                        const std::string_view OptionalContent);
+bool CreateProtocolFile(std::filesystem::path& ProtocolFile,
+                        std::string_view OptionalContent);
 // LOW level
 // gtest [+]
 std::optional<YAML::Node> LoadIni(std::filesystem::path File);
 // gtest [+]
-bool StoreYaml(const std::filesystem::path File, const YAML::Node Yaml,
+bool StoreYaml(const std::filesystem::path& File, YAML::Node Yaml,
                const std::string Comment) noexcept;
 // gtest [+]
-bool IsBakeryIni(const std::filesystem::path Path) noexcept;
+bool IsBakeryIni(const std::filesystem::path& Path) noexcept;
 // gtest [+]
-std::string MakeComments(const std::filesystem::path SourceFilePath,
+std::string MakeComments(const std::filesystem::path& SourceFilePath,
                          bool Bakery) noexcept;
 // --------------------------------------------
 

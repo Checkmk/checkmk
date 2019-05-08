@@ -9,9 +9,8 @@
 #include <string>
 
 #include "cma_core.h"
-#include "section_header.h"
-
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma::provider::details {
 
@@ -31,10 +30,12 @@ void GatherMatchingFilesRecursive(
                                                // fileinfo.path
     PathVector &Files) noexcept;               // input and output
 
-void GatherMatchingFilesAndDirs(const std::filesystem::path &searchPath,
-                                const std::filesystem::path &filePattern,
-                                const std::filesystem::path &dirPattern,
-                                PathVector &files, PathVector &dirs);
+void GatherMatchingFilesAndDirs(
+    const std::filesystem::path &SearchDir,    // c:\windows
+    const std::filesystem::path &DirPattern,   // c:\windows\L*
+    const std::filesystem::path &FilePattern,  // c:\windows\L*\*.log
+    PathVector &FilesFound,                    // output
+    PathVector &DirsFound);
 
 // MAIN API C ALL
 PathVector FindFilesByMask(const std::wstring Mask);

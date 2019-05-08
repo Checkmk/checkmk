@@ -644,18 +644,16 @@ inline std::wstring GetCurrentExePath() noexcept {
     std::wstring exe_path;
     int args_count = 0;
     auto arg_list = ::CommandLineToArgvW(GetCommandLineW(), &args_count);
-    if (arg_list) {
-        ON_OUT_OF_SCOPE(LocalFree(arg_list););
-        fs::path exe = arg_list[0];
-        try {
-            if (exists(exe)) {
-                exe_path = exe.parent_path();
-            }
-        } catch (const std::exception&) {
-            // not possible, btw, but policy is noexcept
-        }
-    }
-    return exe_path;
+    if (nullptr == arg_list) return {};
+
+    ON_OUT_OF_SCOPE(::LocalFree(arg_list););
+    fs::path exe = arg_list[0];
+
+    std::error_code ec;
+    if (fs::exists(exe, ec)) return exe.parent_path();
+    xlog::l("Impossible exception: [%d] %s", ec.value(), ec.message());
+
+    return {};
 }
 
 // wrapper for win32 specific function
@@ -673,50 +671,52 @@ inline int DataCountOnHandle(HANDLE Handle) {
     return read_count;
 }
 
+// templated to support uint8_t and int8_t and char and unsigned char
 template <typename T>
-std::string ConditionallyConvertFromUTF16(const std::vector<T>& Data) {
-    if (Data.empty()) return {};
-    bool convert_required =
-        Data.data()[0] == '\xFF' && Data.data()[1] == '\xFE';
+std::string ConditionallyConvertFromUTF16(const std::vector<T>& utf16_data) {
+    static_assert(sizeof(T) == 1, "Invalid Data Type in template");
+    if (utf16_data.empty()) return {};
+
+    bool convert_required = utf16_data[0] == '\xFF' && utf16_data[1] == '\xFE';
 
     std::string data;
     if (convert_required) {
-        auto raw_data = reinterpret_cast<const wchar_t*>(Data.data() + 2);
-        std::wstring wdata(raw_data, raw_data + (Data.size() - 2) / 2);
+        auto raw_data = reinterpret_cast<const wchar_t*>(utf16_data.data() + 2);
+
+        std::wstring wdata(raw_data, raw_data + (utf16_data.size() - 2) / 2);
         if (wdata.empty()) return {};
+
         if (wdata.back() != 0) wdata += L'\0';
+
         data = wtools::ConvertToUTF8(wdata);
     } else {
-        data.assign(Data.begin(), Data.end());
+        data.assign(utf16_data.begin(), utf16_data.end());
     }
 
-    // trick to place in string 0 at the end
-    if (data.back() != 0) {
-        data.reserve(data.size() + 1);
-        data.data()[data.size()] = 0;
-    }
+    // place in string 0 at the end
+    if (data.back() != 0) data.push_back('\0');
 
     return data;
 }
 
 // local implementation of shitty registry access functions
 inline uint32_t LocalReadUint32(const char* RootName, const char* Name,
-                                uint32_t DefaultValue = 0) {
+                                uint32_t DefaultValue = 0) noexcept {
     HKEY hKey = nullptr;
     auto result =
         RegOpenKeyExA(HKEY_LOCAL_MACHINE, RootName, 0, KEY_QUERY_VALUE, &hKey);
+
     if (result != ERROR_SUCCESS) return DefaultValue;
 
     DWORD value = 0;
     DWORD type = REG_DWORD;
     DWORD size = sizeof(DWORD);
-    result = RegQueryValueExA(hKey, Name, 0, &type, (PBYTE)&value, &size);
+    result = RegQueryValueExA(hKey, Name, nullptr, &type, (PBYTE)&value, &size);
     RegCloseKey(hKey);
 
-    if (result == ERROR_SUCCESS)
-        return value;
-    else
-        return DefaultValue;
+    if (result == ERROR_SUCCESS) return value;
+
+    return DefaultValue;
 }
 
 void InitWindowsCom();

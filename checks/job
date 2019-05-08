@@ -161,7 +161,6 @@ def _process_job_stats(job, age_levels):
 
 @get_parsed_item_data
 def check_job(item, params, nodes):
-    states = []
     warn, crit = params['age']
     results = []
     for node_info, job in nodes.iteritems():
@@ -171,8 +170,7 @@ def check_job(item, params, nodes):
             node_infotext = ""
 
         if job.get("exit_code") is None:
-            results.append((3, '%sGot incomplete information for this job' % node_infotext))
-            states.append(3)
+            results.append((3, '%sGot incomplete information for this job' % node_infotext), [])
             continue
 
         output = []
@@ -182,22 +180,17 @@ def check_job(item, params, nodes):
             output.append('%sCurrently running' % node_infotext)
             state, display_value = _process_start_time(job['running_start_time'], warn, crit)
             output.append('(Started: %s)' % display_value)
-            results.append((state, ' '.join(output)))
-            states.append(state)
+            results.append((state, ' '.join(output), []))
             continue
 
         state, text, perfdata = _process_job_stats(job, (warn, crit))
         results.append((state, '%s%s' % (node_infotext, text), perfdata))
-        states.append(state)
 
     if params.get("outcome_on_cluster", "worst") == "best":
-        infotexts = []
-        perfdata = []
-        for result in results:
-            infotexts.append(result[1])
-            if len(result) > 2:
-                perfdata += result[2]
-        yield min(states), ", ".join(infotexts), perfdata
+        state = min(state for state, _text, _metrics in results)
+        text = ", ".join(text for _state, text, _metrics in results)
+        perfdata = sum((metrics for _state, _text, metrics in results), [])
+        yield state, text, perfdata
     else:
         for result in results:
             yield result

@@ -342,9 +342,9 @@ def add_wato_static_checks_to_checks():
             except KeyError:
                 continue
 
-            # Make sure, that for dictionary based checks
-            # at least those keys defined in the factory
-            # settings are present in the parameters
+            # Make sure, that for dictionary based checks at least those keys
+            # defined in the factory settings are present in the parameters
+            # TODO: Isn't this done during checking for all checks in more generic code?
             if isinstance(params, dict):
                 def_levels_varname = check_plugin_info.get("default_levels_variable")
                 if def_levels_varname:
@@ -420,6 +420,15 @@ def _verify_no_deprecated_variables_used():
             "Check_MK does not support the configuration variable \"legacy_checks\" anymore. "
             "Please use custom_checks or active_checks instead.\n")
         sys.exit(1)
+
+    # "checks" declarations were never possible via WATO. They can be configured using
+    # "static_checks" using the GUI. "checks" has been removed with Check_MK 1.6.
+    #if checks:
+    #    console.error(
+    #        "Check_MK does not support the configuration variable \"checks\" anymore. "
+    #        "Please use \"static_checks\" instead (which is configurable via \"Manual checks\" in WATO).\n"
+    #    )
+    #    sys.exit(1)
 
 
 def _verify_no_deprecated_check_rulesets():

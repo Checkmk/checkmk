@@ -199,6 +199,8 @@ PYTHON_MODULES_LIST += jira-2.0.0.tar.gz
 PYTHON_MODULES_LIST += opsgenie-sdk-0.3.1.tar.gz
 PYTHON_MODULES_LIST += pytz-2019.1.tar.gz
 # Added for easier debugging of check plugins in OMD scope
+PYTHON_MODULES_LIST += fancycompleter-0.8.tar.gz # needed for pdbpp
+PYTHON_MODULES_LIST += wmctrl-0.3.tar.gz # needed for pdbpp
 PYTHON_MODULES_LIST += pdbpp-0.10.0.tar.gz
 PYTHON_MODULES_LIST += PySnooper-0.0.31.tar.gz
 

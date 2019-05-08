@@ -295,8 +295,6 @@ table {
     border: 1px solid $theme-color-nuance-3; }
     table td {
       vertical-align: middle; }
-      div.diag_host > table > tbody > tr > td {
-        vertical-align: unset; }
 
 /* Graphs */
 div.graph_with_timeranges {
@@ -339,23 +337,8 @@ div.graph_with_timeranges {
   #reload_pause_counter {
     color: $theme-color-lightgrey; }
 
-  .wato table.progress {
-    border: 1px solid $theme-color-table-border;
-    border-radius: $theme-border-radius;
-    background: $theme-color-white; }
-    .wato table.progress td.stats td, .wato table.progress td.stats th {
-      border-color: $theme-color-table-border;
-      padding: 6px 0 6px 0 }
-    .wato table.progress td.stats {
-      padding: 24px 12px 18px 12px; }
   .wato .search {
     display: block; }
-  .wato .diag_host .log {
-    box-shadow: none;
-    padding: 8px;
-    margin: 8px;
-    border-radius: $theme-border-radius;
-    border: 1px solid $theme-color-table-border; }
   .wato h3 {
     color: $theme-color-text;
     font-weight: $theme-font-weight-global;
@@ -606,7 +589,7 @@ table.data.werks tr:nth-child(odd) td.werkcompincomp_ack {
 table.data.werks tr:nth-child(even) td.werkcompincomp_ack {
   background-color: $theme-color-state-8-background; }
 
-table.data > tbody > tr > td.job_state.job_finished, .wato #progress_bar.finished td.left {
+table.data > tbody > tr > td.job_state.job_finished {
   background-color: $theme-color-state-success-background;
   box-shadow: none; }
 
@@ -785,7 +768,7 @@ body.main {
     body.main .popup_menu a, body.main .popup_menu span {
       color: $theme-color-text; }
 
-div.log_output, .wato table.progress td.log > div {
+div.log_output {
   background: $theme-color-sidebar-background;
   color: $theme-color-lightgrey;
   font-family: monospace;

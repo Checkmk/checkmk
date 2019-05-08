@@ -150,8 +150,8 @@ def test_winperf_if_inventory_teaming(check_manager, monkeypatch, settings, info
     monkeypatch.setitem(check.context, "_prepare_if_group_patterns_from_conf", lambda: {})
     parsed = check.run_parse(info)
     actual_discovery = check.run_discovery(parsed)
-    assertDiscoveryResultsEqual(check, DiscoveryResult(expected_discovery),
-                                DiscoveryResult(actual_discovery))
+    assertDiscoveryResultsEqual(check, DiscoveryResult(sorted(expected_discovery)),
+                                DiscoveryResult(sorted(actual_discovery)))
 
 
 winperf_if_section_44 = [

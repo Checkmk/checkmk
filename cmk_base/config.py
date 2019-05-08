@@ -201,8 +201,6 @@ def _perform_post_config_loading_actions():
     # is not working with the checks. In this case also don't load the
     # static checks into the configuration.
     if any_check_loaded():
-        add_wato_static_checks_to_checks()
-        initialize_check_caches()
         set_check_variables_for_checks()
 
 
@@ -311,73 +309,6 @@ def _verify_non_duplicate_hosts():
         sys.exit(3)
 
 
-# Add WATO-configured explicit checks to (possibly empty) checks
-# statically defined in checks.
-def add_wato_static_checks_to_checks():
-    global checks
-
-    static = []
-    for entries in static_checks.values():
-        for entry in entries:
-            entry, rule_options = get_rule_options(entry)
-            if rule_options.get("disabled"):
-                continue
-
-            # Parameters are optional
-            if len(entry[0]) == 2:
-                checktype, item = entry[0]
-                params = None
-            else:
-                checktype, item, params = entry[0]
-            if len(entry) == 3:
-                taglist, hostlist = entry[1:3]
-            else:
-                hostlist = entry[1]
-                taglist = []
-
-            # Do not process manual checks that are related to not existing or have not
-            # loaded check files
-            try:
-                check_plugin_info = check_info[checktype]
-            except KeyError:
-                continue
-
-            # Make sure, that for dictionary based checks at least those keys
-            # defined in the factory settings are present in the parameters
-            # TODO: Isn't this done during checking for all checks in more generic code?
-            if isinstance(params, dict):
-                def_levels_varname = check_plugin_info.get("default_levels_variable")
-                if def_levels_varname:
-                    for key, value in factory_settings.get(def_levels_varname, {}).items():
-                        if key not in params:
-                            params[key] = value
-
-            static.append((taglist, hostlist, checktype, item, params))
-
-    # Note: We need to reverse the order of the static_checks. This is because
-    # users assume that earlier rules have precedence over later ones. For static
-    # checks that is important if there are two rules for a host with the same
-    # combination of check type and item. When the variable 'checks' is evaluated,
-    # *later* rules have precedence. This is not consistent with the rest, but a
-    # result of this "historic implementation".
-    static.reverse()
-
-    # Now prepend to checks. That makes that checks variable have precedence
-    # over WATO.
-    checks = static + checks
-
-
-def initialize_check_caches():
-    single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
-    multi_host_checks = cmk_base.config_cache.get_list("multi_host_checks")
-
-    for entry in checks:
-        if len(entry) == 4 and isinstance(entry[0], str):
-            single_host_checks.setdefault(entry[0], []).append(entry)
-        else:
-            multi_host_checks.append(entry)
-
-
 def set_folder_paths(new_hosts, filename):
     if not filename.startswith(cmk.utils.paths.check_mk_config_dir):
         return
@@ -423,12 +354,12 @@ def _verify_no_deprecated_variables_used():
 
     # "checks" declarations were never possible via WATO. They can be configured using
     # "static_checks" using the GUI. "checks" has been removed with Check_MK 1.6.
-    #if checks:
-    #    console.error(
-    #        "Check_MK does not support the configuration variable \"checks\" anymore. "
-    #        "Please use \"static_checks\" instead (which is configurable via \"Manual checks\" in WATO).\n"
-    #    )
-    #    sys.exit(1)
+    if checks:
+        console.error(
+            "Check_MK does not support the configuration variable \"checks\" anymore. "
+            "Please use \"static_checks\" instead (which is configurable via \"Manual checks\" in WATO).\n"
+        )
+        sys.exit(1)
 
 
 def _verify_no_deprecated_check_rulesets():
@@ -2872,8 +2803,6 @@ class ConfigCache(object):
         self._all_processed_hosts = self._all_active_hosts
 
     def _initialize_caches(self):
-        self.single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
-        self.multi_host_checks = cmk_base.config_cache.get_list("multi_host_checks")
         self.check_table_cache = cmk_base.config_cache.get_dict("check_tables")
 
         self._cache_is_snmp_check = cmk_base.runtime_cache.get_dict("is_snmp_check")

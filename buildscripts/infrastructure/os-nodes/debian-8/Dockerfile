@@ -28,7 +28,7 @@ RUN apt-get update \
     vim \
     && pip3 install --upgrade setuptools \
     && pip3 install git+https://github.com/pypa/pipenv.git \
-    && curl -sL https://deb.nodesource.com/setup_11.x | bash - \
+    && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs \
     && apt-get install -y \
     $PACKAGES \

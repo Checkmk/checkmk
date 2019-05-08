@@ -10,9 +10,8 @@
 #include <string_view>
 
 #include "cma_core.h"
-#include "section_header.h"
-
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma {
 
@@ -60,9 +59,9 @@ protected:
 
 class LocalProvider : public PluginsProvider {
 public:
-    LocalProvider() : PluginsProvider(cma::section::kLocalGroup, '\0') {
+    LocalProvider() : PluginsProvider(cma::section::kLocal, '\0') {
         local_ = true;
-        cfg_name_ = cma::cfg::groups::kLocalGroup;
+        cfg_name_ = cma::cfg::groups::kLocal;
     }
     virtual void updateSectionStatus();
 };

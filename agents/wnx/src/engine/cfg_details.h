@@ -187,6 +187,10 @@ class ConfigInfo {
                     XLOG::l("Cannot load cfg '{}'", path_.u8string());
                     data_.clear();
                 }
+            } catch (const std::exception& e) {
+                XLOG::l(XLOG::kBp)(
+                    XLOG_FLINE + " exception in the yaml file: '{}'", e.what());
+                bad_ = true;
             } catch (...) {
                 XLOG::l(XLOG::kBp)(XLOG_FLINE + " exception bad");
                 bad_ = true;

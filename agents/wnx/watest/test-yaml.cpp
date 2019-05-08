@@ -66,6 +66,22 @@ TEST(AgentConfig, MemoryLeaks) {
 }
 #endif
 
+TEST(AgentConfig, MainYaml) {
+    auto root_dir = details::G_ConfigInfo.getRootDir();
+    root_dir /= files::kDefaultMainConfig;
+    auto load = YAML::LoadFile(root_dir.u8string());
+    EXPECT_TRUE(load.IsMap());
+    EXPECT_TRUE(load[groups::kGlobal].IsMap());
+    EXPECT_TRUE(load[groups::kFileInfo].IsMap());
+    EXPECT_TRUE(load[groups::kLocal].IsMap());
+    EXPECT_TRUE(load[groups::kLogFiles].IsMap());
+    EXPECT_TRUE(load[groups::kLogWatchEvent].IsMap());
+    EXPECT_TRUE(load[groups::kMrpe].IsMap());
+    EXPECT_TRUE(load[groups::kPlugins].IsMap());
+    EXPECT_TRUE(load[groups::kPs].IsMap());
+    EXPECT_TRUE(load[groups::kWinPerf].IsMap());
+}
+
 TEST(AgentConfig, Aggregate) {
     namespace fs = std::filesystem;
     std::wstring temporary_name = L"tmp_";
@@ -321,7 +337,7 @@ TEST(AgentConfig, WorkScenario) {
     EXPECT_TRUE(only_from.size() == 0);
 
 #if 0
-	// should not supported
+    // should not supported
     auto host = GetArray<string>(groups::kGlobal, vars::kHost);
     EXPECT_TRUE(host.size() == 1);
 #endif
@@ -639,7 +655,7 @@ TEST(AgentConfig, SectionLoader) {
     EXPECT_TRUE(p.foldersCount() == 4);
 
     Plugins p_local;
-    p.loadFromMainConfig(groups::kLocalGroup);
+    p.loadFromMainConfig(groups::kLocal);
     EXPECT_TRUE(p.enabledInConfig());
     EXPECT_TRUE(p.existInConfig());
     EXPECT_EQ(p.unitsCount(), 2);

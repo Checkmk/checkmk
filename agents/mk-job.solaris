@@ -45,6 +45,8 @@ fi
 MYSELF=`id | awk -F')' '{print $1}' | awk -F'(' '{print $2}'`
 OUTPUT_PATH=$MK_VARDIR/job/$MYSELF
 IDENT=$1
+RUNNING_FILE="$OUTPUT_PATH/$IDENT.$$running"
+
 shift
 
 if [ ! -d "$OUTPUT_PATH" ]; then
@@ -63,14 +65,14 @@ if ! type $1 >/dev/null 2>&1; then
 fi
 
 
-echo "start_time `perl -e 'print time'`" > "$OUTPUT_PATH/$IDENT.running"
+echo "start_time `perl -e 'print time'`" > "$RUNNING_FILE"
 
 info=`(/usr/bin/time -p sh -c "$@ 2>/dev/null 1>&2" 2>&1; echo $?) | sed -e 's/,/\./g'`
 RC=`echo $info | awk '{print $7}'`
 
-(echo $info | awk '{print "exit_code "$7"\nreal_time "$2"\nuser_time "$4"\nsystem_time "$6""}') >> "$OUTPUT_PATH/$IDENT.running"
-(echo -e "reads 0\nwrites 0\nmax_res_kbytes 0\navg_mem_kbytes 0\ninvol_context_switches 0\nvol_context_switches 0";) >> "$OUTPUT_PATH/$IDENT.running"
+(echo $info | awk '{print "exit_code "$7"\nreal_time "$2"\nuser_time "$4"\nsystem_time "$6""}') >> "$RUNNING_FILE"
+(echo -e "reads 0\nwrites 0\nmax_res_kbytes 0\navg_mem_kbytes 0\ninvol_context_switches 0\nvol_context_switches 0";) >> "$RUNNING_FILE"
 
-mv "$OUTPUT_PATH/$IDENT.running" "$OUTPUT_PATH/$IDENT"
+mv "$RUNNING_FILE" "$OUTPUT_PATH/$IDENT"
 exit $RC
 

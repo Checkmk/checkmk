@@ -17,8 +17,6 @@ RUN yum -y --enablerepo=extras install \
     krb5-devel \
     make \
     mysql-devel \
-    nodejs \
-    npm \
     openldap-devel \
     postfix \
     python27 \
@@ -30,9 +28,11 @@ RUN yum -y --enablerepo=extras install \
     which
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && scl enable python27 'python get-pip.py'
-RUN scl enable python27 'pip install --upgrade setuptools virtualenv' \
+    && scl enable python27 'pip install --upgrade setuptools virtualenv' \
     && scl enable python27 'pip install git+https://github.com/pypa/pipenv.git'
+    && curl -sL https://rpm.nodesource.com/setup_12.x | bash -
 RUN yum -y install \
+    nodejs \
     $PACKAGES \
     && yum clean all
 

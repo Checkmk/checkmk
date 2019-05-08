@@ -329,13 +329,14 @@ class TagConfig(object):
     def get_topic_choices(self):
         names = set([])
         for tag_group in self.tag_groups:
-            topic = tag_group.topic
+            topic = tag_group.topic or _('Tags')
             if topic:
                 names.add((topic, topic))
 
         for aux_tag in self.aux_tag_list.get_tags():
-            if aux_tag.topic:
-                names.add((aux_tag.topic, aux_tag.topic))
+            topic = aux_tag.topic or _('Tags')
+            if topic:
+                names.add((topic, topic))
 
         return sorted(list(names), key=lambda x: x[1])
 

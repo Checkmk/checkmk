@@ -803,16 +803,12 @@ def check_logwatch_ec(item, params, info):
 
     forwarded_logfiles = set([])
 
-    # Get the logwatch patterns if they are not already precompiled
-    # The precompile feature is not required when using the cmc as core
-    if not is_cmc() and "logwatch_settings" not in params:
-        params = logwatch_ec_precompile(host_name(), item, params)
-
     # Keep track of reclassifed lines
     rclfd_total = 0
     rclfd_to_ignore = 0
 
     logfile_reclassify_settings = {}
+    service_level = get_effective_service_level()
 
     def add_reclassify_settings(settings):
         if isinstance(settings, dict):
@@ -826,18 +822,12 @@ def check_logwatch_ec(item, params, info):
     for logfile, lines in logs.items():
         logfile_reclassify_settings["reclassify_patterns"] = []
         logfile_reclassify_settings["reclassify_states"] = {}
+
         # Determine logwatch patterns specifically for this logfile
-        if is_cmc():
+        if params.get("logwatch_reclassify"):
             logfile_settings = service_extra_conf(host_name(), logfile, logwatch_rules)
             for settings in logfile_settings:
                 add_reclassify_settings(settings)
-        else:
-            for entry in params["logwatch_settings"]:
-                settings, log_items = entry
-                for log_item in log_items:
-                    reg = regex(log_item)
-                    if reg.search(logfile):
-                        add_reclassify_settings(settings)
 
         for line in lines:
             rclfd_level = None
@@ -854,8 +844,7 @@ def check_logwatch_ec(item, params, info):
                         continue
 
             msg = '<%d>' % (facility + logwatch_to_prio(rclfd_level or line[0]),)
-            msg += '@%s;%d;; %s %s: %s' % (cur_time, params.get("service_level", 0), host_name(),
-                                           logfile, line[2:])
+            msg += '@%s;%d;; %s %s: %s' % (cur_time, service_level, host_name(), logfile, line[2:])
 
             messages.append(msg)
             forwarded_logfiles.add(logfile)
@@ -1140,62 +1129,6 @@ def logwatch_spool_drop_messages(path, result):
 def logwatch_spool_path():
     return logwatch_spool_dir + "/" + host_name()
 
-
-def logwatch_ec_precompile(hostname, item, params):
-    params = params.copy()
-
-    params["service_level"] = get_effective_service_level()
-
-    if (is_cmc() or not params.get("logwatch_reclassify")):
-        params.update({"logwatch_settings": []})
-        return params
-
-    params.update(
-        {"logwatch_settings": _precompile_ec_logwatch_settings(hostname, params, logwatch_rules)})
-    return params
-
-
-def _precompile_ec_logwatch_settings(hostname, params, logwatch_rules):
-    """The following code is used for creating the params of precompiled checks
-    and when Check_MK is called on the command line.
-    Check_MK in keepalive mode (in a running cmc) should never reach this code..."""
-
-    # Bring the logwatch_rules structure in a host ruleset structure to be able
-    # to use the generic host_extra_conf rule matching function
-    host_rules = []
-    for rule in logwatch_rules:
-        rule, rule_options = get_rule_options(rule)
-
-        if len(rule) == 3:
-            settings, hostlist, servlist = rule
-            tags = []
-        elif len(rule) == 4:
-            settings, tags, hostlist, servlist = rule
-        else:
-            continue
-
-        host_rules.append(((settings, servlist), tags, hostlist, rule_options))
-
-    ruleset = host_extra_conf(hostname, host_rules)
-
-    # Do not use rules with configured items where no item matches the
-    # "restrict_logfiles" condition (if applicable)
-    logwatch_settings = []
-    for rule in ruleset:
-        settings, rule_items = rule
-        if params.get("restrict_logfiles"):
-            for rule_item in rule_items:
-                if rule_item == "" or logwatch_ec_forwarding_enabled(params, rule_item):
-                    logwatch_settings.append((settings, rule_items))
-                    break
-        else:
-            logwatch_settings.append((settings, rule_items))
-
-    return logwatch_settings
-
-
-precompile_params['logwatch.ec'] = logwatch_ec_precompile
-precompile_params['logwatch.ec_single'] = logwatch_ec_precompile
 
 check_info['logwatch.ec'] = {
     'check_function': check_logwatch_ec,

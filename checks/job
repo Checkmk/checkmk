@@ -120,6 +120,46 @@ def _process_start_time(value, state, warn, crit):
     return state, display_value
 
 
+def _process_job_stats(job, age_levels):
+    txt = 'Exit-Code: %d' % job['exit_code']
+    state = 0
+    if job['exit_code'] != 0:
+        state = 2
+        txt += ' (!!)'
+    output = [txt]
+    perfdata = []
+
+    for key, title in (
+        ('start_time', 'Started'),
+        ('real_time', 'Real-Time'),
+        ('user_time', 'User-Time'),
+        ('system_time', 'System-Time'),
+        ('reads', 'Filesystem Reads'),
+        ('writes', 'Filesystem Writes'),
+        ('max_res_bytes', 'Max. Memory'),
+        ('avg_mem_bytes', 'Avg. Memory'),
+        ('vol_context_switches', 'Vol. Context Switches'),
+        ('invol_context_switches', 'Invol. Context Switches'),
+    ):
+        value = job.get(key)
+        if value is None:
+            continue
+
+        if key in ['max_res_bytes', 'avg_mem_bytes']:
+            display_value = get_bytes_human_readable(value, 1000)
+        elif key in ['real_time', 'user_time', 'system_time']:
+            display_value = get_age_human_readable(value)
+        elif key == 'start_time':
+            state, display_value = _process_start_time(value, state, *age_levels)
+        else:
+            display_value = str(value)
+
+        output.append('%s: %s' % (title, display_value))
+        perfdata.append((key, value))
+
+    return state, ', '.join(output), perfdata
+
+
 @get_parsed_item_data
 def check_job(item, params, nodes):
     states = []
@@ -148,40 +188,8 @@ def check_job(item, params, nodes):
             states.append(state)
             continue
 
-        txt = '%sExit-Code: %d' % (node_infotext, job['exit_code'])
-        if job['exit_code'] != 0:
-            state = max(state, 2)
-            txt += ' (!!)'
-        output.append(txt)
-
-        for key, title in [
-            ('start_time', 'Started'),
-            ('real_time', 'Real-Time'),
-            ('user_time', 'User-Time'),
-            ('system_time', 'System-Time'),
-            ('reads', 'Filesystem Reads'),
-            ('writes', 'Filesystem Writes'),
-            ('max_res_bytes', 'Max. Memory'),
-            ('avg_mem_bytes', 'Avg. Memory'),
-            ('vol_context_switches', 'Vol. Context Switches'),
-            ('invol_context_switches', 'Invol. Context Switches'),
-        ]:
-            value = job.get(key)
-            if value is None:
-                continue
-
-            if key in ['max_res_bytes', 'avg_mem_bytes']:
-                display_value = get_bytes_human_readable(value, 1000)
-            elif key in ['real_time', 'user_time', 'system_time']:
-                display_value = get_age_human_readable(value)
-            elif key == 'start_time':
-                state, display_value = _process_start_time(value, state, warn, crit)
-            else:
-                display_value = str(value)
-
-            output.append('%s: %s' % (title, display_value))
-            perfdata.append((key, value))
-        results.append((state, ', '.join(output), perfdata))
+        state, text, perfdata = _process_job_stats(job, (warn, crit))
+        results.append((state, '%s%s' % (node_infotext, text), perfdata))
         states.append(state)
 
     if params.get("outcome_on_cluster", "worst") == "best":

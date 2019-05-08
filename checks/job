@@ -75,7 +75,6 @@ def _job_parse_key_values(line):
 
 
 def parse_job(info):
-
     parsed = {}
     job = {}
     prefix = None
@@ -84,8 +83,9 @@ def parse_job(info):
         line = line[1:]
         if line[0] == "==>" and line[-1] == "<==":
             jobname = " ".join(line[1:-1])
-            if jobname.endswith(".running"):
-                jobname, jobstate = jobname.rsplit(".", 1)
+            if jobname.endswith("running"):
+                jobstate = "running"
+                jobname = jobname.rsplit(".", 1)[0]
                 prefix = "running_"
             else:
                 jobstate = None
@@ -96,7 +96,10 @@ def parse_job(info):
 
         elif job and prefix is not None and len(line) == 2:
             key, val = _job_parse_key_values(line)
-            job[prefix + key] = val
+            if prefix:
+                job.setdefault(prefix + key, []).append(val)
+            else:
+                job[key] = val
 
     return parsed
 
@@ -160,7 +163,7 @@ def _process_job_stats(job, age_levels):
 
 
 @get_parsed_item_data
-def check_job(item, params, nodes):
+def check_job(_no_item, params, nodes):
     warn, crit = params['age']
     results = []
     for node_info, job in nodes.iteritems():
@@ -172,7 +175,8 @@ def check_job(item, params, nodes):
 
         state, text, perfdata = _process_job_stats(job, (warn, crit))
         if 'running_start_time' in job:
-            state, display_value = _process_start_time(job['running_start_time'], warn, crit)
+            running_start_time = min(job['running_start_time'])
+            state, display_value = _process_start_time(running_start_time, warn, crit)
             prefix = '%sCurrently running (started: %s), Previous result (considered OK): ' \
                      % (prefix, display_value)
         results.append((state, '%s%s' % (prefix, text), perfdata))

@@ -29,8 +29,18 @@ info = [
     ['NODE1', 'avg_mem_kbytes', '0'],
     ['NODE1', 'invol_context_switches', '1'],
     ['NODE1', 'vol_context_switches', '2'],
-    ['NODE1', '==>', 'SNOWWHITE.running', '<=='],
+    ['NODE1', '==>', 'SNOWWHITE.27997running', '<=='],
     ['NODE1', 'start_time', '1557301261'],
+    ['NODE1', '==>', 'SNOWWHITE.28912running', '<=='],
+    ['NODE1', 'start_time', '1557301321'],
+    ['NODE1', '==>', 'SNOWWHITE.29381running', '<=='],
+    ['NODE1', 'start_time', '1557301381'],
+    ['NODE1', '==>', 'SNOWWHITE.30094running', '<=='],
+    ['NODE1', 'start_time', '1557301441'],
+    ['NODE1', '==>', 'SNOWWHITE.30747running', '<=='],
+    ['NODE1', 'start_time', '1537301501'],
+    ['NODE1', '==>', 'SNOWWHITE.31440running', '<=='],
+    ['NODE1', 'start_time', '1557301561']
 ]
 
 
@@ -62,7 +72,7 @@ checks = {
                 ]),
         ]),
         ('SNOWWHITE', {'age': (0, 0)}, [
-            (0, '[NODE1] Currently running (started: 2019-05-08 09:41:01),'
+            (0, '[NODE1] Currently running (started: 2018-09-18 22:11:41),'
                 ' Previous result (considered OK): Exit-Code: 1 (!!),'
                 ' Started: 2019-05-08 09:40:01, Real-Time: 6 m,'
                 ' User-Time: 0.00 s, System-Time: 0.00 s, Filesystem Reads: 0,'

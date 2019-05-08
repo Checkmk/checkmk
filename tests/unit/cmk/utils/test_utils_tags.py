@@ -144,6 +144,7 @@ def test_tag_config_get_topic_choices(test_cfg):
     assert sorted(test_cfg.get_topic_choices()) == sorted([
         ("Blubberei", "Blubberei"),
         ("Bluna", "Bluna"),
+        ("Tags", "Tags"),
     ])
 
 

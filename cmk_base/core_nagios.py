@@ -1000,19 +1000,6 @@ if '-d' in sys.argv:
 
     output.write("config.load_packed_config()\n")
 
-    # handling of clusters
-    if host_config.is_cluster:
-        cluster_nodes = host_config.nodes
-        output.write("config.is_cluster = lambda h: h == %r\n" % hostname)
-
-        nodes_of_map = {hostname: cluster_nodes}
-        for node in host_config.nodes:
-            nodes_of_map[node] = None
-        output.write("config.nodes_of = lambda h: %r[h]\n" % nodes_of_map)
-    else:
-        output.write("config.is_cluster = lambda h: False\n")
-        output.write("config.nodes_of = lambda h: None\n")
-
     # IP addresses
     needed_ipaddresses, needed_ipv6addresses, = {}, {}
     if host_config.is_cluster:
@@ -1044,28 +1031,6 @@ if '-d' in sys.argv:
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
     output.write("config.ipv6addresses = %r\n\n" % needed_ipv6addresses)
-
-    # datasource programs. Is this host relevant?
-
-    # I think this is not needed anymore. Keep it here for reference
-    #
-    ## Parameters for checks: Default values are defined in checks/*. The
-    ## variables might be overridden by the user in main.mk. We need
-    ## to set the actual values of those variables here. Otherwise the users'
-    ## settings would get lost. But we only need to set those variables that
-    ## influence the check itself - not those needed during inventory.
-    #for var in config.check_config_variables:
-    #    output.write("%s = %r\n" % (var, getattr(config, var)))
-
-    ## The same for those checks that use the new API
-    #for check_type in needed_check_types:
-    #    # Note: check_type might not be in config.check_info. This is
-    #    # the case, if "mem" has been added to "extra_sections" and thus
-    #    # to "needed_check_types" - despite the fact that only subchecks
-    #    # mem.* exist
-    #    if check_type in config.check_info:
-    #        for var in config.check_info[check_type].get("check_config_variables", []):
-    #            output.write("%s = %r\n" % (var, getattr(config, var)))
 
     # perform actual check with a general exception handler
     output.write("try:\n")

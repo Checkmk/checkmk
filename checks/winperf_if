@@ -59,6 +59,13 @@
 # WINDOWSXP,08:00:27:35:20:4D,Ethernetadapter der AMD-PCNET-Familie,LAN-Verbindung 2,2
 # WINDOWSXP,08:00:27:35:20:4D,Paketplaner-Miniport,,
 #
+# ------- DHCP-section -------
+# This section had a live time of two months (26.10. - 11.12.2015) and was replaced by
+# '<<<winperf_if>>>'
+# [dhcp_start]
+# ...
+# [dhcp_end]
+#
 # Example output for the optional dhcp section. If this plugin is active, any interface for which
 # dhcp is enabled will warn
 # <<<dhcp:sep(44)>>>

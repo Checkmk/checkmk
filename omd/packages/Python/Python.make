@@ -1,6 +1,6 @@
 # Package definition
 PYTHON := Python
-PYTHON_VERS := 2.7.15
+PYTHON_VERS := 2.7.16
 PYTHON_DIR := $(PYTHON)-$(PYTHON_VERS)
 
 PYTHON_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build
@@ -54,7 +54,7 @@ $(PACKAGE_DIR)/$(PYTHON)/sitecustomize.pyc: $(PACKAGE_DIR)/$(PYTHON)/sitecustomi
 	export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	$(PACKAGE_PYTHON_EXECUTABLE) -m py_compile $< 
+	$(PACKAGE_PYTHON_EXECUTABLE) -m py_compile $<
 
 # The compiler detection code below is basically what part of AC_PROC_CXX does.
 bin/gcc:
@@ -92,7 +92,7 @@ bin/g++:
 	$(RM) bin/g++ ; \
 	$(LN) -s "$$CXX" bin/g++
 
-.NOTPARALLEL $(PYTHON_INSTALL): $(PYTHON_BUILD) 
+.NOTPARALLEL $(PYTHON_INSTALL): $(PYTHON_BUILD)
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used

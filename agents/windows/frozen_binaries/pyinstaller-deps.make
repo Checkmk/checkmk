@@ -1,4 +1,4 @@
-PYTHON_VERSION = 2.7.15
+PYTHON_VERSION = 2.7.16
 BUILD_DIR := $(shell realpath ./../../winbuild)
 PLUGINS_DIR := $(shell realpath ./../../plugins)
 

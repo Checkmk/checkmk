@@ -222,10 +222,34 @@ def get_precompiled_check_table(hostname,
                                 remove_duplicates=True,
                                 filter_mode=None,
                                 skip_ignored=True):
+    """The precompiled check table is somehow special compared to the regular check table.
+
+    a) It is sorted by the service dependencies (which are only relevant for Nagios)
+    b) More important: Some special checks pre-compue a new set of parameters
+       using a plugin specific precompile_params function. It's purpose is to
+       perform time consuming ruleset evaluations once without the need to perform
+       it during each check execution.
+
+       The effective check parameters are calculated in these steps:
+
+       1. Read from config
+         a) autochecks + cmk_base.config.compute_check_parameters()
+         b) static checks
+
+       2. Execute the precompile params function
+         The precompile_params function can base on the "params" from a static check or
+         autocheck and computes a new "params".
+
+         This is the last step that may be cached across the single executions.
+
+       3. Execute the check
+         During check execution will update the check parameters once more with
+         checking.determine_check_params() right before execution the check.
+    """
     host_checks = get_sorted_check_table(
         hostname, remove_duplicates, filter_mode=filter_mode, skip_ignored=skip_ignored)
     precomp_table = []
-    for check_plugin_name, item, params, description, _unused_deps in host_checks:
+    for check_plugin_name, item, params, description in host_checks:
         # make these globals available to the precompile function
         check_api_utils.set_service(check_plugin_name, description)
         item_state.set_item_state_prefix(check_plugin_name, item)
@@ -265,6 +289,17 @@ def remove_duplicate_checks(check_table):
     return without_duplicates
 
 
+def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
+    # type: (str, bool, Optional[str], bool) -> List[str]
+    return [
+        e[0] for e in get_check_table(
+            hostname,
+            remove_duplicates=remove_duplicates,
+            filter_mode=filter_mode,
+            skip_ignored=skip_ignored)
+    ]
+
+
 # remove_duplicates: Automatically remove SNMP based checks
 # if there already is a TCP based one with the same
 # description. E.g: df vs hr_fs.
@@ -293,7 +328,7 @@ def get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None, 
                     deps_fulfilled = False
                     break
             if deps_fulfilled:
-                ordered.append(check)
+                ordered.append(check[:-1])
                 at_least_one_hit = True
             else:
                 left.append(check)

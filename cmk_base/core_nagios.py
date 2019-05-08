@@ -912,7 +912,6 @@ def stripped_python_file(filename):
 
 
 def _precompile_hostcheck(config_cache, hostname):
-    import cmk_base.check_table as check_table
     host_config = config_cache.get_host_config(hostname)
 
     console.verbose("%s%s%-16s%s:", tty.bold, tty.blue, hostname, tty.normal, stream=sys.stderr)
@@ -927,10 +926,8 @@ def _precompile_hostcheck(config_cache, hostname):
         except:
             pass
 
-    # check table, enriched with addition precompiled information.
-    host_check_table = check_table.get_precompiled_check_table(
-        hostname, filter_mode="include_clustered", skip_ignored=False)
-    if not host_check_table:
+    needed_check_plugin_names = _get_needed_check_plugin_names(host_config)
+    if not needed_check_plugin_names:
         console.verbose("(no Check_MK checks)\n")
         return
 
@@ -994,8 +991,6 @@ if '-d' in sys.argv:
     cmk.utils.debug.enable()
 
 """)
-
-    needed_check_plugin_names = _get_needed_check_plugin_names(host_config, host_check_table)
 
     output.write("config.load_checks(check_api.get_check_api_context, %r)\n" %
                  _get_needed_check_file_names(needed_check_plugin_names))
@@ -1118,9 +1113,8 @@ if '-d' in sys.argv:
     console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
 
-def _get_needed_check_plugin_names(host_config, host_check_table):
+def _get_needed_check_plugin_names(host_config):
     import cmk_base.check_table as check_table
-
     needed_check_plugin_names = set([])
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
@@ -1131,11 +1125,8 @@ def _get_needed_check_plugin_names(host_config, host_check_table):
             needed_check_plugin_names.add(source.special_agent_plugin_file_name)
 
     # Collect the needed check plugin names using the host check table
-    for check_plugin_name, _unused_item, _unused_param, _descr in host_check_table:
-        if check_plugin_name not in config.check_info:
-            sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_plugin_name)
-            continue
-
+    for check_plugin_name in check_table.get_needed_check_names(
+            host_config.hostname, filter_mode="include_clustered", skip_ignored=False):
         if config.check_info[check_plugin_name].get("extra_sections"):
             for section_name in config.check_info[check_plugin_name]["extra_sections"]:
                 if section_name in config.check_info:
@@ -1148,7 +1139,7 @@ def _get_needed_check_plugin_names(host_config, host_check_table):
     if host_config.is_cluster:
         for node in host_config.nodes:
             needed_check_plugin_names.update(
-                [e[0] for e in check_table.get_precompiled_check_table(node, skip_ignored=False)])
+                check_table.get_needed_check_names(node, skip_ignored=False))
 
     return needed_check_plugin_names
 

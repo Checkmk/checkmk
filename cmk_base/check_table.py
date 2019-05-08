@@ -41,6 +41,7 @@ CheckTable = Dict[Tuple[str, Text], Tuple[Any, Text, List[Text]]]
 
 # TODO: This is just a first cleanup step: Continue cleaning this up.
 # - Check all call sites and cleanup the different
+# - Make this a helper object of HostConfig?
 class HostCheckTable(object):
     def __init__(self, config_cache, host_config):
         # type: (config.ConfigCache, config.HostConfig) -> None
@@ -66,34 +67,32 @@ class HostCheckTable(object):
         self.skip_autochecks = skip_autochecks
         self.filter_mode = filter_mode
         self.skip_ignored = skip_ignored
-        config_cache = self._config_cache
-        host_config = self._host_config
-        hostname = host_config.hostname
+        hostname = self._host_config.hostname
 
-        if host_config.is_ping_host:
+        if self._host_config.is_ping_host:
             skip_autochecks = True
 
         # speed up multiple lookup of same host
-        check_table_cache = config_cache.check_table_cache
+        check_table_cache = self._config_cache.check_table_cache
         table_cache_id = hostname, filter_mode
 
         if not skip_autochecks and use_cache and table_cache_id in check_table_cache:
             # TODO: The whole is_dual_host handling needs to be cleaned up. The duplicate checking
             #       needs to be done in all cases since a host can now have a lot of different data
             #       sources.
-            if remove_duplicates and host_config.is_dual_host:
+            if remove_duplicates and self._host_config.is_dual_host:
                 return remove_duplicate_checks(check_table_cache[table_cache_id])
             return check_table_cache[table_cache_id]
 
         check_table = {}  # type: CheckTable
 
-        single_host_checks = config_cache.single_host_checks
-        multi_host_checks = config_cache.multi_host_checks
+        single_host_checks = self._config_cache.single_host_checks
+        multi_host_checks = self._config_cache.multi_host_checks
 
         # Now process all entries that are specific to the host
         # in search (single host) or that might match the host.
         if not skip_autochecks:
-            for entry in config_cache.get_autochecks_of(hostname):
+            for entry in self._config_cache.get_autochecks_of(hostname):
                 check_table.update(self._handle_entry(entry))
 
         for entry in single_host_checks.get(hostname, []):
@@ -103,19 +102,19 @@ class HostCheckTable(object):
             check_table.update(self._handle_entry(entry))
 
         # Now add checks a cluster might receive from its nodes
-        if host_config.is_cluster:
+        if self._host_config.is_cluster:
             single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
 
-            for node in host_config.nodes or []:
+            for node in self._host_config.nodes or []:
                 node_checks = single_host_checks.get(node, [])
                 if not skip_autochecks:
-                    node_checks = node_checks + config_cache.get_autochecks_of(node)
+                    node_checks = node_checks + self._config_cache.get_autochecks_of(node)
                 for entry in node_checks:
                     if len(entry) == 4:
                         entry = entry[1:]  # drop hostname from single_host_checks
                     checkname, item, params = entry
                     descr = config.service_description(node, checkname, item)
-                    if hostname == config_cache.host_of_clustered_service(node, descr):
+                    if hostname == self._config_cache.host_of_clustered_service(node, descr):
                         cluster_params = config.compute_check_parameters(
                             hostname, checkname, item, params)
                         check_table.update(

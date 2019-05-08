@@ -164,27 +164,18 @@ def check_job(item, params, nodes):
     warn, crit = params['age']
     results = []
     for node_info, job in nodes.iteritems():
-        if node_info:
-            node_infotext = "[%s] " % node_info
-        else:
-            node_infotext = ""
+        prefix = "[%s] " % node_info if node_info else ""
 
         if job.get("exit_code") is None:
-            results.append((3, '%sGot incomplete information for this job' % node_infotext), [])
-            continue
-
-        output = []
-        perfdata = []
-
-        if 'running_start_time' in job:
-            output.append('%sCurrently running' % node_infotext)
-            state, display_value = _process_start_time(job['running_start_time'], warn, crit)
-            output.append('(Started: %s)' % display_value)
-            results.append((state, ' '.join(output), []))
+            results.append((3, '%sGot incomplete information for this job' % prefix), [])
             continue
 
         state, text, perfdata = _process_job_stats(job, (warn, crit))
-        results.append((state, '%s%s' % (node_infotext, text), perfdata))
+        if 'running_start_time' in job:
+            state, display_value = _process_start_time(job['running_start_time'], warn, crit)
+            prefix = '%sCurrently running (started: %s), Previous result (considered OK): ' \
+                     % (prefix, display_value)
+        results.append((state, '%s%s' % (prefix, text), perfdata))
 
     if params.get("outcome_on_cluster", "worst") == "best":
         state = min(state for state, _text, _metrics in results)

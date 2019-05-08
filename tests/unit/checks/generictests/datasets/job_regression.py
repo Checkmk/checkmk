@@ -62,8 +62,23 @@ checks = {
                 ]),
         ]),
         ('SNOWWHITE', {'age': (0, 0)}, [
-            (0, '[NODE1] Currently running (Started: 2019-05-08 09:41:01)', [
-                ]),
+            (0, '[NODE1] Currently running (started: 2019-05-08 09:41:01),'
+                ' Previous result (considered OK): Exit-Code: 1 (!!),'
+                ' Started: 2019-05-08 09:40:01, Real-Time: 6 m,'
+                ' User-Time: 0.00 s, System-Time: 0.00 s, Filesystem Reads: 0,'
+                ' Filesystem Writes: 0, Max. Memory: 2.22 MB, Avg. Memory: 0.00 B,'
+                ' Vol. Context Switches: 2, Invol. Context Switches: 1', [
+                    ('start_time', 1557301201.),
+                    ('real_time', 360.0),
+                    ('user_time', 0.0),
+                    ('system_time', 0.0),
+                    ('reads', 0),
+                    ('writes', 0),
+                    ('max_res_bytes', 2224000),
+                    ('avg_mem_bytes', 0),
+                    ('vol_context_switches', 2),
+                    ('invol_context_switches', 1),
+            ]),
         ]),
     ],
 }

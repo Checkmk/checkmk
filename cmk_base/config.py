@@ -946,6 +946,7 @@ def _checktype_ignored_for_host(host, checktype):
 # c) This function implements some specific regex replacing match+replace which makes it incompatible to
 #    regular service rulesets. Therefore service_extra_conf() can not easily be used :-/
 def service_depends_on(hostname, servicedesc):
+    # type: (str, Text) -> List[Text]
     """Return a list of services this services depends upon"""
     deps = []
     config_cache = get_config_cache()
@@ -956,7 +957,7 @@ def service_depends_on(hostname, servicedesc):
 
         if len(entry) == 3:
             depname, hostlist, patternlist = entry
-            tags = []
+            tags = []  # type: List[str]
         elif len(entry) == 4:
             depname, tags, hostlist, patternlist = entry
         else:

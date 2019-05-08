@@ -52,12 +52,10 @@ std::unique_ptr<Filter> AndingFilter::make(Kind kind, Filters subfilters) {
 
 bool AndingFilter::accepts(Row row, const contact *auth_user,
                            std::chrono::seconds timezone_offset) const {
-    for (const auto &filter : _subfilters) {
-        if (!filter->accepts(row, auth_user, timezone_offset)) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(
+        _subfilters.cbegin(), _subfilters.cend(), [&](const auto &filter) {
+            return filter->accepts(row, auth_user, timezone_offset);
+        });
 }
 
 std::unique_ptr<Filter> AndingFilter::partialFilter(

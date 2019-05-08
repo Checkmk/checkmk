@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "opids.h"
+#include <algorithm>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -51,12 +52,10 @@ std::unordered_map<std::string, RelationalOperator> fromString = {
 std::ostream &operator<<(std::ostream &os, const RelationalOperator &relOp) {
     // Slightly inefficient, but this doesn't matter for our purposes. We could
     // use Boost.Bimap or use 2 maps if really necessary.
-    for (const auto &strAndOp : fromString) {
-        if (strAndOp.second == relOp) {
-            return os << strAndOp.first;
-        }
-    }
-    return os;
+    auto it =
+        std::find_if(fromString.cbegin(), fromString.cend(),
+                     [&](auto &strAndOp) { return strAndOp.second == relOp; });
+    return it == fromString.cend() ? os : (os << it->first);
 }
 
 RelationalOperator relationalOperatorForName(const std::string &name) {

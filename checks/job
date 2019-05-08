@@ -108,16 +108,14 @@ def inventory_job(parsed):
                 yield jobname, {}
 
 
-def _process_start_time(value, state, warn, crit):
+def _process_start_time(value, warn, crit):
     display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
     job_age = time.time() - value
-    if crit > 0 and job_age >= crit:
-        state = max(state, 2)
-        display_value += "(!!) (more than %s ago)" % get_age_human_readable(crit)
-    elif warn > 0 and job_age >= warn:
-        state = max(state, 1)
-        display_value += "(!!) (more than %s ago)" % get_age_human_readable(warn)
-    return state, display_value
+    if crit and job_age >= crit:
+        return 2, display_value + "(!!) (more than %s ago)" % get_age_human_readable(crit)
+    if warn and job_age >= warn:
+        return 1, display_value + "(!!) (more than %s ago)" % get_age_human_readable(warn)
+    return 0, display_value
 
 
 def _process_job_stats(job, age_levels):
@@ -150,7 +148,8 @@ def _process_job_stats(job, age_levels):
         elif key in ['real_time', 'user_time', 'system_time']:
             display_value = get_age_human_readable(value)
         elif key == 'start_time':
-            state, display_value = _process_start_time(value, state, *age_levels)
+            sub_state, display_value = _process_start_time(value, *age_levels)
+            state = max(sub_state, state)
         else:
             display_value = str(value)
 
@@ -176,13 +175,12 @@ def check_job(item, params, nodes):
             states.append(3)
             continue
 
-        state = 0
         output = []
         perfdata = []
 
         if 'running_start_time' in job:
             output.append('%sCurrently running' % node_infotext)
-            state, display_value = _process_start_time(job['running_start_time'], state, warn, crit)
+            state, display_value = _process_start_time(job['running_start_time'], warn, crit)
             output.append('(Started: %s)' % display_value)
             results.append((state, ' '.join(output)))
             states.append(state)

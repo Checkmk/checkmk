@@ -82,12 +82,7 @@ def check_winperf_util(_no_item, params, info):
         cpusecs_per_sec = ticks_per_sec / 10000000.0
 
         if what == "util":
-            used_perc = 100.0 * (1 - cpusecs_per_sec)
-        else:
-            used_perc = 100.0 * cpusecs_per_sec
-        used_perc = _clamp_percentage(used_perc)
-
-        if what == "util":
+            used_perc = _clamp_percentage(100.0 * (1 - cpusecs_per_sec))
             cores = []
             for i in range(num_cpus):
                 core_ticks = int(line[1 + i])
@@ -108,8 +103,10 @@ def check_winperf_util(_no_item, params, info):
                         perfdata[0] = perfdata[0][:5] + (num_cpus,)
                     yield status, infotext, perfdata
         elif what == "user":
+            used_perc = _clamp_percentage(100.0 * cpusecs_per_sec)
             yield 0, "%s perc: %.1f %%" % (what, used_perc), [(what, used_perc)]
         else:  # privileged
+            used_perc = _clamp_percentage(100.0 * cpusecs_per_sec)
             yield 0, "%s perc: %.1f %%" % (what, used_perc)
 
     if wrapped:

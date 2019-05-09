@@ -228,6 +228,23 @@ NON_BINARY_HOST_RULESET = [
         },
     ),
     Case(
+        ident="host_tags_with_folder",
+        is_service=False,
+        is_binary=False,
+        old=("VAL", ["tag", "specs", '/aaa/+'], ["HOSTLIST"]),
+        new={
+            "value": "VAL",
+            "condition": {
+                "host_name": "HOSTLIST",
+                "host_folder": {
+                    "$regex": "^/aaa/"
+                },
+                "host_tags.tg_group1": "tag",
+                "host_tags.tg_group2": "specs",
+            }
+        },
+    ),
+    Case(
         ident="host_tags",
         is_service=False,
         is_binary=False,

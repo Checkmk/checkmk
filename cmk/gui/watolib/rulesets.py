@@ -55,6 +55,11 @@ from cmk.gui.watolib.utils import (
     NEGATE,
 )
 
+# This macro is needed to make the to_config() methods be able to use native
+# pprint/repr for the ruleset data structures. Have a look at
+# to_config_with_folder_macro() for further information.
+_FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
+
 
 class RuleConditions(object):
     def __init__(self, host_folder, host_tags=None, host_name=None, service_description=None):
@@ -71,7 +76,34 @@ class RuleConditions(object):
         self.service_description = conditions.get("service_description")
         return self
 
-    def to_config(self):
+    def to_config_with_folder_macro(self):
+        """Create serializable data structure for the conditions
+
+        In the WATO folder hierarchy each folder may have a rules.mk which
+        contains the rules of that folder.
+
+        It is an important feature that there is no path stored in the .mk
+        files of the folders. This makes the user able to move the folders around
+        without the need to update the files.
+
+        However, Checkmk still needs the information which rule has been loaded
+        from which folder. To make this possible we add the _FOLDER_PATH_MACRO here
+        and replace it with the FOLDER_PATH reference before writing the rules.mk to
+        disk.
+
+        Checkmk can then resolve the FOLDER_PATH while loading the configuration file.
+        Have a look at _load_folder_rulesets() for an example.
+        """
+        cfg = self._to_config()
+        cfg["host_folder"] = _FOLDER_PATH_MACRO
+        return cfg
+
+    def to_config_with_folder(self):
+        cfg = self._to_config()
+        cfg["host_folder"] = self.host_folder
+        return cfg
+
+    def _to_config(self):
         cfg = {}
 
         if self.host_tags:
@@ -83,11 +115,6 @@ class RuleConditions(object):
         if self.service_description is not None:
             cfg["service_description"] = self.service_description
 
-        return cfg
-
-    def to_predefined_conditions_config(self):
-        cfg = self.to_config()
-        cfg["host_folder"] = self.host_folder
         return cfg
 
     def has_only_explicit_service_conditions(self):
@@ -214,6 +241,11 @@ class RulesetCollection(object):
                 continue  # don't save empty rule sets
 
             content += ruleset.to_config(folder)
+
+        # Adding this instead of the full path makes it easy to move config
+        # files around. The real FOLDER_PATH will be added dynamically while
+        # loading the file in cmk_base.config
+        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/' + FOLDER_PATH")
 
         store.save_mk_file(folder.rules_file_path(), content, add_header=not config.wato_use_git)
 
@@ -703,13 +735,20 @@ class Rule(object):
         self.rule_options = rule_config.get("options", {})
         self.value = rule_config["value"]
 
+        conditions = rule_config["condition"].copy()
+
+        # Is known because of the folder associated with this object. Remove the
+        # rendundant information here. It will be added dynamically in to_config()
+        # for writing it back
+        conditions.pop("host_folder", None)
+
         self.conditions = RuleConditions(self.folder.path())
-        self.conditions.from_config(rule_config["condition"])
+        self.conditions.from_config(conditions)
 
     def to_config(self):
         result = {
             "value": self.value,
-            "condition": self.conditions.to_config(),
+            "condition": self.conditions.to_config_with_folder_macro(),
         }
 
         rule_options = self._rule_options_to_config()
@@ -752,17 +791,18 @@ class Rule(object):
         host = host_folder.host(hostname)
         match_object = RulesetMatchObject(
             host_name=hostname,
+            host_folder=host_folder.path(),
             host_tags=host.tag_groups(),
         )
 
-        if self._matcher.match(match_object.to_dict(), self.conditions.to_config()):
+        if self._matcher.match(match_object.to_dict(), self.conditions.to_config_with_folder()):
             return
 
         yield _("The rule does not match")
 
     def matches_item(self, item):
         match_object = RulesetMatchObject(service_description=item)
-        return self._matcher.match(match_object.to_dict(), self.conditions.to_config())
+        return self._matcher.match(match_object.to_dict(), self.conditions.to_config_with_folder())
 
     def matches_search(self, search_options):
         if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(

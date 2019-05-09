@@ -755,8 +755,10 @@ bool UpgradeLegacy(Force force_upgrade) {
 
     count += CopyRootFolder(path, cma::cfg::GetUserDir());
 
+    XLOG::l.i("Converting ini file");
     ConvertIniFiles(path, cma::cfg::GetUserDir());
 
+    XLOG::l.i("Saving protocol file");
     // making protocol file:
     CreateProtocolFile(protocol_file, {});
 

@@ -205,12 +205,24 @@ private:
     SECURITY_ATTRIBUTES sa_;
 };
 
-// process terminators
-bool KillProcess(uint32_t ProcessId, int Code = -1) noexcept;
+// scans all processes in system and calls op
+// returns false only when something is really bad
+// based on ToolHelp api family
+// normally require elevation
+// if op returns false, scan will be stopped(this is only optimization)
+bool ScanProcessList(std::function<bool(const PROCESSENTRY32&)> op);
+
+// standard process terminator
+bool KillProcess(uint32_t process_id, int exit_code = -1) noexcept;
 
 // process terminator
 // used to kill OpenHardwareMonitor
-bool KillProcess(const std::wstring& Name, int Code = 9) noexcept;
+bool KillProcess(const std::wstring& process_name, int exit_code = 9) noexcept;
+
+// special function to kill suspicious processes with all here childs
+// useful mostly to stop legacy agent which may have plugins running
+bool KillProcessFully(const std::wstring& process_name,
+                      int exit_code = 9) noexcept;
 
 // WIN32 described method of killing process tree
 inline void KillProcessTree(uint32_t ProcessId) {
@@ -240,6 +252,13 @@ public:
         , exit_code_(STILL_ACTIVE)
         , job_handle_(nullptr)
         , process_handle_(nullptr) {}
+
+    // no copy, no move
+    AppRunner(const AppRunner&) = delete;
+    AppRunner(AppRunner&&) = delete;
+    AppRunner& operator=(const AppRunner&) = delete;
+    AppRunner& operator=(AppRunner&&) = delete;
+
     ~AppRunner() {
         kill(true);
         stdio_.shutdown();

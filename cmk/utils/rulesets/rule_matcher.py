@@ -176,6 +176,9 @@ def _nor(entry, condition, match_func):
 
 
 def _regex(entry, condition):
+    if entry is None:
+        return False
+
     supported_flags = [("i", re.I), ("m", re.M), ("s", re.S), ("x", re.X)]
     flags = reduce(operator.or_,
                    (v for c, v in supported_flags if c in condition.get("$options", [])), 0)

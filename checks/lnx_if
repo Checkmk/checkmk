@@ -98,8 +98,12 @@ def _parse_lnx_if_ipaddress(lines):
 
         if line[0].startswith('link/'):
             # link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-            iface[line[0]] = line[1]
-            iface[line[2]] = line[3]
+            # link/none
+            try:
+                iface[line[0]] = line[1]
+                iface[line[2]] = line[3]
+            except IndexError:
+                pass
 
         elif line[0].startswith('inet'):
             # inet 127.0.0.1/8 scope host lo

@@ -37,13 +37,14 @@ from cmk.utils.rulesets.rule_matcher import RuleMatcher
 
 class RulesetMatchObject(object):
     """Wrapper around dict to ensure the ruleset match objects are correctly created"""
-    __slots__ = ["host_name", "host_tags", "service_description"]
+    __slots__ = ["host_name", "host_tags", "host_folder", "service_description"]
 
-    def __init__(self, host_name=None, host_tags=None, service_description=None):
-        # type: (Optional[str], Optional[Dict[Text, Text]], Optional[Text]) -> None
+    def __init__(self, host_name=None, host_tags=None, host_folder=None, service_description=None):
+        # type: (Optional[str], Optional[Dict[Text, Text]], Optional[str], Optional[Text]) -> None
         super(RulesetMatchObject, self).__init__()
         self.host_name = host_name
         self.host_tags = host_tags
+        self.host_folder = host_folder
         self.service_description = service_description
 
     def to_dict(self):

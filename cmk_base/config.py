@@ -3082,6 +3082,7 @@ class ConfigCache(object):
         """Construct the dictionary object that is needed to match this host to rulesets"""
         return RulesetMatchObject(
             host_name=hostname,
+            host_folder=self._host_paths.get(hostname, "/"),
             host_tags=self.tags_of_host(hostname),
         )
 

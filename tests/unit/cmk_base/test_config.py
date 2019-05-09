@@ -1503,6 +1503,7 @@ def test_config_cache_ruleset_match_object_of_host(monkeypatch):
     ruleset_match_object = config_cache.ruleset_match_object_of_host("xyz")
     assert isinstance(ruleset_match_object, RulesetMatchObject)
     assert ruleset_match_object.to_dict() == {
+        "host_folder": '/wato/',
         "host_tags": {
             'address_family': 'ip-v4-only',
             'agent': 'cmk-agent',
@@ -1520,6 +1521,7 @@ def test_config_cache_ruleset_match_object_of_host(monkeypatch):
     ruleset_match_object = config_cache.ruleset_match_object_of_host("test-host")
     assert isinstance(ruleset_match_object, RulesetMatchObject)
     assert ruleset_match_object.to_dict() == {
+        "host_folder": '/wato/',
         "host_name": "test-host",
         "host_tags": {
             'address_family': 'ip-v4-only',
@@ -1543,6 +1545,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch):
     obj = config_cache.ruleset_match_object_of_service("xyz", "bla blä")
     assert isinstance(obj, RulesetMatchObject)
     assert obj.to_dict() == {
+        "host_folder": '/wato/',
         "host_name": "xyz",
         "host_tags": {
             'address_family': 'ip-v4-only',
@@ -1561,6 +1564,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch):
     obj = config_cache.ruleset_match_object_of_service("test-host", "CPU load")
     assert isinstance(obj, RulesetMatchObject)
     assert obj.to_dict() == {
+        "host_folder": '/wato/',
         "host_name": "test-host",
         "host_tags": {
             'address_family': 'ip-v4-only',

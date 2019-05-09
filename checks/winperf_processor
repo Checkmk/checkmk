@@ -50,10 +50,8 @@ def check_winperf_util(_no_item, params, info):
         return
 
     wrapped = False
-    matched = False
     for line in winperf_lines:
 
-        matched = True
         what = what_map[line[0]]
         # Windows sends one counter for each CPU plus one counter that
         # sums up to total (called _Total). We only need that last value.
@@ -112,9 +110,6 @@ def check_winperf_util(_no_item, params, info):
             yield 0, "%s perc: %.1f %%" % (what, used_perc), [(what, used_perc)]
         else:  # privileged
             yield 0, "%s perc: %.1f %%" % (what, used_perc)
-
-    if not matched:
-        return
 
     if wrapped:
         # all counters initialized, NOW we can raise the exception

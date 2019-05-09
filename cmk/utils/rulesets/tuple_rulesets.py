@@ -230,12 +230,14 @@ class RulesetToDictTransformer(object):
         if not host_tags:
             return {}
 
-        # Remove folder tag from tag list
-        # TODO: where to put the folder to instead?
-        host_tags = [t for t in host_tags if not t.startswith("/")]
-
         conditions = {}
         for tag_id in host_tags:
+            # Folder is either not present (main folder) or in this format
+            # "/abc/+" which matches on folder "abc" and all subfolders.
+            if tag_id.startswith("/"):
+                conditions["host_folder"] = {"$regex": "^%s" % tag_id.rstrip("+")}
+                continue
+
             negate = False
             if tag_id[0] == '!':
                 tag_id = tag_id[1:]

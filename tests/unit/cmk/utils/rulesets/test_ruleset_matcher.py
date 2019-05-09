@@ -13,6 +13,7 @@ def test_ruleset_match_object_no_conditions():
     x = RulesetMatchObject()
     assert x.host_name is None
     assert x.host_tags is None
+    assert x.host_folder is None
     assert x.service_description is None
 
 
@@ -32,15 +33,21 @@ def test_ruleset_match_object_host_tags():
     assert obj.host_tags == {"tag_group1": "tag1"}
 
 
+def test_ruleset_match_object_host_folder():
+    obj = RulesetMatchObject(host_folder="/abc/")
+    assert obj.host_folder == "/abc/"
+
+
 def test_ruleset_match_object_service_description():
     obj = RulesetMatchObject(service_description=u"Ümlaut")
     assert obj.service_description == u"Ümlaut"
 
 
 def test_ruleset_match_object_to_dict():
-    obj = RulesetMatchObject(host_name="abc", service_description=u"Ümlaut")
+    obj = RulesetMatchObject(host_name="abc", host_folder="/abc/", service_description=u"Ümlaut")
     assert obj.to_dict() == {
         "host_name": "abc",
+        "host_folder": "/abc/",
         "service_description": u"Ümlaut",
     }
 
@@ -78,6 +85,22 @@ ruleset = [
             "disabled": True,
         },
     },
+    {
+        "value": "LEVEL1",
+        "condition": {
+            "host_folder": {
+                "$regex": "^/lvl1/"
+            },
+        },
+    },
+    {
+        "value": "LEVEL2",
+        "condition": {
+            "host_folder": {
+                "$regex": "^/lvl1/lvl2/"
+            },
+        },
+    },
 ]
 
 
@@ -86,7 +109,7 @@ def test_basic_host_ruleset_get_matching_rules():
     assert matcher.get_matching_rules(RulesetMatchObject(host_name="abc"), ruleset=ruleset) == []
     assert matcher.get_matching_rules(RulesetMatchObject(host_name="xyz"), ruleset=ruleset) == []
     assert matcher.get_matching_rules(
-        RulesetMatchObject(host_name="host1"), ruleset=ruleset) == ruleset[:-1]
+        RulesetMatchObject(host_name="host1"), ruleset=ruleset) == ruleset[:2]
     assert matcher.get_matching_rules(
         RulesetMatchObject(host_name="host2"), ruleset=ruleset) == [ruleset[1]]
 
@@ -98,6 +121,14 @@ def test_basic_host_ruleset_get_values():
     assert matcher.get_values(
         RulesetMatchObject(host_name="host1"), ruleset=ruleset) == ["BLA", "BLUB"]
     assert matcher.get_values(RulesetMatchObject(host_name="host2"), ruleset=ruleset) == ["BLUB"]
+
+
+def test_basic_host_ruleset_get_values_subfolders():
+    matcher = RulesetMatcher()
+    assert matcher.get_values(RulesetMatchObject(), ruleset=ruleset) == []
+    assert matcher.get_values(RulesetMatchObject(host_folder="/level1/"), ruleset=ruleset) == []
+    assert matcher.get_values(
+        RulesetMatchObject(host_folder="/level1/level2/"), ruleset=ruleset) == []
 
 
 dict_ruleset = [

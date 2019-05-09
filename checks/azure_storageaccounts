@@ -64,8 +64,8 @@ check_info['azure_storageaccounts'] = {
     'service_description': "Storage %s account",
     'includes': ['azure.include'],
     'has_perfdata': True,
-    'default_levels_variable': 'levels_azure_storageaccount',
-    'group': 'azure_storageaccount',
+    'default_levels_variable': 'levels_azure_storageaccounts',
+    'group': 'azure_storageaccounts',
 }
 
 
@@ -87,8 +87,8 @@ check_info['azure_storageaccounts.flow'] = {
     'service_description': "Storage %s flow",
     'has_perfdata': True,
     'includes': ['azure.include'],
-    'default_levels_variable': 'levels_azure_storageaccount',
-    'group': 'azure_storageaccount',
+    'default_levels_variable': 'levels_azure_storageaccounts',
+    'group': 'azure_storageaccounts',
 }
 
 
@@ -113,6 +113,6 @@ check_info['azure_storageaccounts.performance'] = {
     'service_description': "Storage %s performance",
     'has_perfdata': True,
     'includes': ['azure.include'],
-    'default_levels_variable': 'levels_azure_storageaccount',
-    'group': 'azure_storageaccount',
+    'default_levels_variable': 'levels_azure_storageaccounts',
+    'group': 'azure_storageaccounts',
 }

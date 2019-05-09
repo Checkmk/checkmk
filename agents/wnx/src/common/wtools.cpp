@@ -383,8 +383,8 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
         // Tell SCM that the service is starting.
         setServiceStatus(SERVICE_START_PENDING);
 
-        upgrade::UpgradeLegacy(upgrade::Force::no);
         cap::Install();
+        upgrade::UpgradeLegacy(upgrade::Force::no);
 
         // Perform service-specific initialization.
         processor_->startService();

@@ -17,6 +17,75 @@
 
 namespace wtools {  // to become friendly for cma::cfg classes
 
+TEST(Wtools, ScanProcess) {
+    std::vector<std::string> names;
+
+    wtools::ScanProcessList([&names](const PROCESSENTRY32& entry) -> auto {
+        names.push_back(wtools::ConvertToUTF8(entry.szExeFile));
+        return true;
+    });
+    EXPECT_TRUE(!names.empty());
+    for (auto& name : names) cma::tools::StringLower(name);
+
+    // check that we do not have own process
+    EXPECT_FALSE(cma::tools::Find(names, std::string("watest32.exe")));
+    EXPECT_FALSE(cma::tools::Find(names, std::string("watest64.exe")));
+    EXPECT_TRUE(cma::tools::Find(names, std::string("svchost.exe")));
+
+    {
+        tst::YamlLoader w;
+        tst::SafeCleanTempDir();
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+        namespace fs = std::filesystem;
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+
+        fs::path temp_dir = cma::cfg::GetTempDir();
+        std::error_code ec;
+
+        auto exe_a = temp_dir / "a.cmd";
+        auto exe_b = temp_dir / "b.cmd";
+        auto exe_c = temp_dir / "c.cmd";
+
+        tst::CreateFile(exe_a, "@echo start\n call " + exe_b.u8string());
+        tst::CreateFile(exe_b, "@echo start\n call " + exe_c.u8string());
+        tst::CreateFile(exe_c, "@echo start\n powershell Start-Sleep 10000");
+        auto proc_id = cma::tools::RunStdCommand(exe_a.wstring(), false);
+        EXPECT_TRUE(proc_id != 0);
+
+        names.clear();
+        bool found = false;
+        std::wstring proc_name;
+        DWORD parent_process_id = 0;
+        wtools::ScanProcessList([
+            proc_id, &proc_name, &found, &names, &parent_process_id
+        ](const PROCESSENTRY32& entry) -> auto {
+            names.push_back(wtools::ConvertToUTF8(entry.szExeFile));
+            if (entry.th32ProcessID == proc_id) {
+                proc_name = entry.szExeFile;
+                parent_process_id = entry.th32ParentProcessID;
+                found = true;
+            }
+            return true;
+        });
+        EXPECT_TRUE(found);
+        EXPECT_TRUE(proc_name == L"cmd.exe");
+        EXPECT_EQ(parent_process_id, ::GetCurrentProcessId());
+        KillProcessTree(proc_id);
+        KillProcess(proc_id);
+
+        found = false;
+        wtools::ScanProcessList(
+            [&found, proc_id ](const PROCESSENTRY32& entry) -> auto {
+                if (entry.th32ProcessID == proc_id) {
+                    found = true;
+                }
+                return true;
+            });
+        EXPECT_FALSE(found);
+    }
+}
+
 TEST(Wtools, ConditionallyConvert) {
     {
         std::vector<uint8_t> a;

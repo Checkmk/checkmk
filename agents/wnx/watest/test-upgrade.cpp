@@ -387,7 +387,9 @@ TEST(UpgradeTest, TopLevelApi) {
             .w("Program is not elevated, testing is not possible");
         return;
     }
-    wtools::KillProcess(L"check_mk_agent.exe", 1);
+    wtools::KillProcessFully(L"check_mk_agent.exe", 1);
+
+    // normally this is not mandatory, but we may have few OHM running
     wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
     StopWindowsService(L"winring0_1_2_0");
 
@@ -500,7 +502,10 @@ TEST(UpgradeTest, FindLwa) {
     if (status != SERVICE_STOPPED) {
         xlog::sendStringToStdio("Service Killed with a hammer\n",
                                 xlog::internal::Colors::kYellow);
-        wtools::KillProcess(L"check_mk_agent.exe", 9);
+        wtools::KillProcessFully(L"check_mk_agent.exe", 9);
+
+        // normally this is not mandatory, but we may have few OHM running
+        wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
         status = SERVICE_STOPPED;
     }
 

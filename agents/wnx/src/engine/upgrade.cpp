@@ -347,7 +347,8 @@ bool StopWindowsService(const std::wstring& service_name) {
     return TryStopService(handle, name_to_log, status);
 }
 
-static void LogStartStatus(const std::wstring& service_name, DWORD last_error_code) {
+static void LogStartStatus(const std::wstring& service_name,
+                           DWORD last_error_code) {
     auto name = wtools::ConvertToUTF8(service_name);
     if (last_error_code == 0) {
         XLOG::l.i("Service '{}' started successfully ", name);
@@ -387,7 +388,7 @@ bool StartWindowsService(const std::wstring& service_name) {
             "Service is in strange mode = [{}]. This is not a problem, just Windows Feature",
             status);
         // use hammer
-        wtools::KillProcess(service_name + L".exe", 1);
+        wtools::KillProcessFully(service_name + L".exe", 1);
     }
 
     // Send a start code to the service.
@@ -481,11 +482,6 @@ bool DeactivateLegacyAgent() {
     wtools::SetRegistryValue(
         L"SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", L"StartType",
         SERVICE_DISABLED);
-    /*
-        wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
-        RegDeleteKey(HKEY_LOCAL_MACHINE,
-                     L"SYSTEM\\CurrentControlSet\\Services\\WinRing0_1_2_0");
-    */
     return WinServiceChangeStartType(L"check_mk_agent",
                                      ServiceStartType::disable);
 }
@@ -554,7 +550,7 @@ bool FindStopDeactivateLegacyAgent() {
     auto ret = StopWindowsService(L"check_mk_agent");
     if (!ret) {
         XLOG::l.crit("Failed to stop check_mk_agent");
-        if (!wtools::KillProcess(L"check_mk_agent.exe", 9)) return false;
+        if (!wtools::KillProcessFully(L"check_mk_agent.exe", 9)) return false;
     }
 
     XLOG::l.t("Checking check_mk_agent status...");

@@ -1570,15 +1570,21 @@ std::wstring GetRegistryValue(const std::wstring& Key,
 // process terminators
 bool KillProcess(uint32_t ProcessId, int Code) noexcept {
     auto handle = OpenProcess(PROCESS_TERMINATE, FALSE, ProcessId);
-    if (!handle) return true;
+    if (nullptr == handle) {
+        if (GetLastError() == 5) {
+            XLOG::d("Cannot open process for termination ACCESS is DENIED'{}'",
+                    ProcessId);
+        }
+        return true;
+    }
     ON_OUT_OF_SCOPE(CloseHandle(handle));
 
     if (!TerminateProcess(handle, Code)) {
         // - we have no problem(process already dead) - ignore
         // - we have problem: either code is invalid or something wrong
         // with Windows in all cases just report
-        xlog::d("Cannot terminate process %d gracefully, error %d", ProcessId,
-                GetLastError());
+        XLOG::d("Cannot terminate process '{}' gracefully, error [{}]",
+                ProcessId, GetLastError());
     }
 
     return true;
@@ -1586,9 +1592,11 @@ bool KillProcess(uint32_t ProcessId, int Code) noexcept {
 
 // process terminator
 // used to kill OpenHardwareMonitor
-bool KillProcess(const std::wstring& Name, int Code) noexcept {
+bool KillProcess(const std::wstring& process_name, int exit_code) noexcept {
     auto snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
     if (snapshot == nullptr) return false;
+
+    auto current_process_id = GetCurrentProcessId();
 
     ON_OUT_OF_SCOPE(CloseHandle(snapshot));
 
@@ -1596,15 +1604,58 @@ bool KillProcess(const std::wstring& Name, int Code) noexcept {
     entry32.dwSize = sizeof(entry32);
     auto result = Process32First(snapshot, &entry32);
     while (result) {
-        if (cma::tools::IsEqual(entry32.szExeFile, Name)) {
+        if (cma::tools::IsEqual(entry32.szExeFile, process_name) &&
+            (entry32.th32ProcessID != current_process_id)) {
             auto process =
                 OpenProcess(PROCESS_TERMINATE, 0, (DWORD)entry32.th32ProcessID);
             if (process) {
-                TerminateProcess(process, Code);
+                TerminateProcess(process, exit_code);
                 CloseHandle(process);
             }
         }
         result = Process32Next(snapshot, &entry32);
+    }
+
+    return true;
+}
+
+// returns false only when something is really bad
+// based on ToolHelp api family
+// normally require elevation
+// if op returns false, scan will be stopped(this is only optimization)
+bool ScanProcessList(std::function<bool(const PROCESSENTRY32&)> op) {
+    auto snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
+    if (snapshot == nullptr) return false;
+    ON_OUT_OF_SCOPE(::CloseHandle(snapshot));
+
+    auto current_process_id = ::GetCurrentProcessId();
+
+    // scan...
+    PROCESSENTRY32 entry32;
+    entry32.dwSize = sizeof(entry32);
+    auto result = ::Process32First(snapshot, &entry32);
+    while (result) {
+        if ((entry32.th32ProcessID != current_process_id)) {
+            if (false == op(entry32)) return true;
+        }
+        result = ::Process32Next(snapshot, &entry32);
+    }
+
+    return true;
+}
+
+// finds all process and kills them with all their childs
+bool KillProcessFully(const std::wstring& process_name,
+                      int exit_code) noexcept {
+    std::vector<DWORD> processes_to_kill;
+    ScanProcessList([&processes_to_kill](const PROCESSENTRY32& entry) -> bool {
+        processes_to_kill.push_back(entry.th32ProcessID);
+        return true;
+    });
+
+    for (auto proc_id : processes_to_kill) {
+        KillProcessTree(proc_id);
+        KillProcess(proc_id, exit_code);
     }
 
     return true;

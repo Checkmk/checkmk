@@ -740,12 +740,14 @@ class Site(object):
                    or os.path.exists("%s/lib/python2.7/site-packages/%s" % (self.root, file_name)):
                     continue
 
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %  # nosec
-                             (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
+            assert os.system(
+                "sudo rsync -a --usermap=*:%s --groupmap=*:%s %s %s/local/lib/python/" %  # nosec
+                (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
 
         for file_name in ["py.test", "pytest"]:
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %  # nosec
-                             (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
+            assert os.system(
+                "sudo rsync -a --usermap=*:%s --groupmap=*:%s %s %s/local/bin" %  # nosec
+                (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
 
     def rm_if_not_reusing(self):
         if not self.reuse:

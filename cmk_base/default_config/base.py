@@ -148,7 +148,7 @@ host_label_rules = []  # Assign labels via ruleset to hosts
 service_label_rules = []  # Asssing labels via ruleset to services
 # TODO: This is a derived variable. Should be handled like others
 # (hosttags, service_service_levels, ...)
-host_paths = {}
+host_paths = {}  # Map of hostnames to .mk files declaring the hosts (e.g. /wato/hosts.mk)
 snmp_hosts = [
     (['snmp'], _ALL_HOSTS),
 ]

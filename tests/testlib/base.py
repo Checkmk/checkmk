@@ -15,24 +15,24 @@ class Scenario(object):
         }
         self.config_cache = config.get_config_cache()
 
-    def add_host(self, hostname, tags=None, folder="/"):
+    def add_host(self, hostname, tags=None, host_path="/wato/hosts.mk"):
         if tags is None:
             tags = []
 
         name_with_tags = hostname if not tags else "%s|%s" % (hostname, "|".join(tags))
         self.config["all_hosts"].append(name_with_tags)
-        self.config["host_paths"][hostname] = folder
+        self.config["host_paths"][hostname] = host_path
         #self.config["host_tags"][hostname] = tags
         return self
 
-    def add_cluster(self, hostname, tags=None, folder="/", nodes=None):
+    def add_cluster(self, hostname, tags=None, host_path="/wato/hosts.mk", nodes=None):
         if tags is None:
             tags = []
         if nodes is None:
             nodes = []
         name_with_tags = hostname if not tags else "%s|%s" % (hostname, "|".join(tags))
         self.config["clusters"][name_with_tags] = nodes
-        self.config["host_paths"][hostname] = folder
+        self.config["host_paths"][hostname] = host_path
         #self.config["host_tags"][hostname] = tags
         return self
 

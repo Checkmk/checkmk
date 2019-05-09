@@ -125,6 +125,45 @@ def test_config_cache_tag_to_group_map(monkeypatch):
     }
 
 
+@pytest.mark.parametrize("hostname,tags,host_path,result", [
+    ("none", [], "/hosts.mk", 0),
+    ("main", ["/wato/"], "/wato/hosts.mk", 0),
+    ("sub1", ["/wato/level1/"], "/wato/level1/hosts.mk", 1),
+    ("sub2", ["/wato/level1/level2/"], "/wato/level1/level2/hosts.mk", 2),
+    ("sub3", ["/wato/level1/level3/"], "/wato/level1/level3/hosts.mk", 3),
+    ("sub11", ["/wato/level11/"], "/wato/level11/hosts.mk", 11),
+    ("sub22", ["/wato/level11/level22/"], "/wato/level11/level22/hosts.mk", 22),
+])
+def test_host_folder_matching(monkeypatch, hostname, tags, host_path, result):
+    ts = Scenario().add_host(hostname, tags=tags, host_path=host_path)
+    ts.set_ruleset("agent_ports", [
+        (22, ["/wato/level11/level22/+"], config.ALL_HOSTS),
+        (11, ["/wato/level11/+"], config.ALL_HOSTS),
+        (3, ["/wato/level1/level3/+"], config.ALL_HOSTS),
+        (2, ["/wato/level1/level2/+"], config.ALL_HOSTS),
+        (1, ["/wato/level1/+"], config.ALL_HOSTS),
+        (0, [], config.ALL_HOSTS),
+    ])
+
+    config_cache = ts.apply(monkeypatch)
+
+    # TODO: ConfigCache._initialize_host_lookup() requires the directory structure
+    # to really exist. This should be improved. Quick patch it here.
+    monkeypatch.setattr(
+        config_cache, "_folder_path_set",
+        set([
+            '/+',
+            '/wato/+',
+            '/wato/level1/+',
+            '/wato/level1/level2/+',
+            '/wato/level1/level3/+',
+            '/wato/level11/+',
+            '/wato/level11/level22/+',
+        ]))
+
+    assert config_cache.get_host_config(hostname).agent_port == result
+
+
 @pytest.mark.parametrize("hostname,tags,result", [
     ("testhost", [], True),
     ("testhost", ["ip-v4"], True),

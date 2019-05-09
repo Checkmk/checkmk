@@ -35,6 +35,7 @@ requests = $(SRC_DIR)/pip/requests-2.21.0-py2.py3-none-any.whl
 setuptools = $(SRC_DIR)/pip/setuptools-40.8.0-py2.py3-none-any.whl
 six = $(SRC_DIR)/pip/six-1.12.0-py2.py3-none-any.whl
 urllib3 = $(SRC_DIR)/pip/urllib3-1.24.1-py2.py3-none-any.whl
+wheel = $(SRC_DIR)/pip/wheel-0.33.1-py2.py3-none-any.whl
 win_inet_pton = $(SRC_DIR)/pip/win_inet_pton-1.0.1.tar.gz
 
 # This list expands to filenames and is meant to be used
@@ -65,6 +66,7 @@ PYTHON_PACKAGE_FILES = \
 	$(setuptools) \
 	$(six) \
 	$(urllib3) \
+	$(wheel) \
 	$(win_inet_pton)
 
 # This list is meant to be used as target(s) for manual download

@@ -40,7 +40,7 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
         '_ADDRESS_4': '0.0.0.0',
         '_ADDRESS_6': '',
         '_ADDRESS_FAMILY': '4',
-        '_FILENAME': '/',
+        '_FILENAME': '/wato/hosts.mk',
         '_TAGS': 'abc',
         '__TAG_tag_group': 'abc',
         '__LABEL_ding': 'dong',

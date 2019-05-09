@@ -93,6 +93,7 @@ PYTHON_PACKAGES = \
 	setuptools \
 	six \
 	urllib3 \
+	wheel \
 	win_inet_pton
 
 # Matching from filename to download-string.
@@ -123,6 +124,7 @@ $(requests) := requests==2.21.0
 $(setuptools) := setuptools==40.8.0
 $(six) := six==1.12
 $(urllib3) := urllib3==1.24.1
+$(wheel) := wheel==0.33.1
 $(win_inet_pton) := win_inet_pton==1.0.1
 
 $(BUILD_DIR)/drive_c/Python27/python.exe: $(SRC_DIR)/python-$(PYTHON_VERSION).msi

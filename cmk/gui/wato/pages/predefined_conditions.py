@@ -68,7 +68,7 @@ def vs_conditions():
     return Transform(
         VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
         forth=lambda c: RuleConditions(None).from_config(c),
-        back=lambda c: c.to_predefined_conditions_config(),
+        back=lambda c: c.to_config_with_folder(),
     )
 
 

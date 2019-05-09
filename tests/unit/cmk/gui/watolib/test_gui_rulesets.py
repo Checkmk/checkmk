@@ -141,7 +141,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
 
     for key, val in expected_attributes.items():
         if key == "conditions":
-            assert rule.conditions.to_config() == val
+            assert rule.conditions._to_config() == val
         else:
             assert getattr(rule, key) == val
 
@@ -301,7 +301,7 @@ def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rul
 
     for key, val in expected_attributes.items():
         if key == "conditions":
-            assert rule.conditions.to_config() == val
+            assert rule.conditions._to_config() == val
         else:
             assert getattr(rule, key) == val
 
@@ -311,7 +311,9 @@ def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rul
         assert rule.rule_options == {}
 
     # test for synchronous to_dict on the way
-    assert rule.to_config() == rule_spec
+    rule_spec_for_config = rule_spec.copy()
+    rule_spec_for_config["condition"]["host_folder"] = rulesets._FOLDER_PATH_MACRO
+    assert rule.to_config() == rule_spec_for_config
 
 
 @pytest.mark.parametrize("wato_use_git,expected_result", [
@@ -319,10 +321,12 @@ def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rul
 checkgroup_parameters.setdefault('local', [])
 
 checkgroup_parameters['local'] = [
-{'condition': {'host_name': ['HOSTLIST'],
+{'condition': {'host_folder': '%#%FOLDER_PATH%#%',
+               'host_name': ['HOSTLIST'],
                'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}]},
  'value': 'VAL'},
-{'condition': {'host_name': ['HOSTLIST'],
+{'condition': {'host_folder': '%#%FOLDER_PATH%#%',
+               'host_name': ['HOSTLIST'],
                'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}]},
  'value': 'VAL2'},
 ] + checkgroup_parameters['local']
@@ -332,8 +336,8 @@ checkgroup_parameters['local'] = [
 checkgroup_parameters.setdefault('local', [])
 
 checkgroup_parameters['local'] = [
-{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_name': ['HOSTLIST']}, 'value': 'VAL'},
-{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_name': ['HOSTLIST']}, 'value': 'VAL2'},
+{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL'},
+{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL2'},
 ] + checkgroup_parameters['local']
 
 """),

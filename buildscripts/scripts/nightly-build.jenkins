@@ -175,7 +175,6 @@ node {
         docker.image(IMAGE).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} --network ci_local-infra") {
             stage('create tarball') {
                sh 'rm -rf *'
-               sh "pip install backports.functools_lru_cache"
                unstash name: 'WinMSI'
                sh "mv check_mk_agent* ${DAILY_DATA}/agents/"
                dir("${DAILY_DATA}/git") {

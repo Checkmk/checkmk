@@ -37,82 +37,184 @@ Boston, MA 02110-1301 USA.
   OK:      #41a62a
 */
 
-//td.state {
-//    text-align: center;
-//    font-weight: bold;
-//    width: 32px;
-//}
-//
-//td.svcstate.stale {
-//    background-image: url("images/white_60percent.png");
-//    background-repeat: repeat;
-//}
-//
-//table.data tr.data td.stale,
-//table.data td.perfometer.stale div.title {
-//    color: #888;
-//    text-shadow: 0.8px 0.8px 0.8px #fff;
-//}
-//
-//table.data tr.data td.stale.state2,
-//table.data tr.data td.stale.hstate1 {
-//    color: #a00;
-//    text-shadow: 0.8px 0.8px 0.8px #f88;
-//}
-//
-//
-///* OK/UP */
-///* TODO: Replace class "odd0" with "odd state0" */
-//.state0, .hstate0, .state0 a, .hstate0 a {
-//    background-color: #0b3; color: #fff;
-//}
-//.odd0 .state0, .odd0 .hstate0, .odd0 .state0 a, .odd0 .hstate0 a {
-//    background-color: #1c4;
-//}
-//.even0 .state0, .even0 .hstate0, .even0 .state0 a, .even0 .hstate0 a {
-//    background-color: #0b3;
-//}
-//
-//
-//
-//.hstate {
-//    white-space: nowrap;
-//}
-///* WARN */
-//.state1, .even1 .state1, .state1 a, tr.groupheader td.state1 {
-//    background-color: #f8f800; color: #000;
-//}
-//.odd0 .state1, .odd1 .state1 {
-//    background-color: #ff5;
-//}
-//
-///* CRIT/DOWN */
-//.state2, .even0 .state2, .even2 .state2, .hstate1, .state2 a, .hstate2 a {
-//    background-color: #f00; color: #fff;
-//}
-//.odd0 .state2, .odd2 .state2 {
-//    background-color: #f44;
-//}
-//
-//
-///* UNKNOWN / UNREACH */
-//.state3, .hstate2, .state3 a, .hstate2 a {
-//    background-color: #f80; color: #fff;
-//}
-//.odd0 .state3, .odd3 .state3 {
-//    background-color: #f91;
-//}
-//
-///* PENDING */
-//.statep, .hstatep, .statep a, .hstatep a {
-//    background-color: #888; color: #fff;
-//}
-//
-///* in DOWNTIME */
-//.stated, .hstated, .stated a, .hstated a {
-//    background-color: #0af; color: #fff;
-//}
-//
+.state {
+  box-shadow: none;
+}
+
+.stale .state {
+  background-image: none !important;
+  text-shadow: none !important;
+  filter: saturate(50%) brightness(105%);
+}
+
+td.state {
+    text-align: center;
+    font-weight: bold;
+    width: 32px;
+}
+
+td.svcstate.stale {
+    background-image: url("images/white_60percent.png");
+    background-repeat: repeat;
+}
+
+table.data tr.data td.stale,
+table.data td.perfometer.stale div.title {
+    color: #888;
+    text-shadow: 0.8px 0.8px 0.8px #fff;
+}
+
+table.data tr.data td.stale.state2,
+table.data tr.data td.stale.hstate1 {
+    color: $theme-color-lightgrey !important;
+    text-shadow: 0.8px 0.8px 0.8px #f88;
+}
+
+
+/* OK/UP */
+/* TODO: Replace class "odd0" with "odd state0" */
+.state0,
+.hstate0,
+.state0 a,
+.state0 body.main .popup_menu span,
+body.main .popup_menu .state0 span,
+.hstate0 a,
+.hstate0 body.main .popup_menu span,
+body.main .popup_menu .hstate0 span {
+  background-color: $theme-color-state-success-background !important;
+  border-color: $theme-color-state-success-border !important;
+}
+
+.state0 *,
+.hstate0 *,
+.state0 a *,
+.state0 body.main .popup_menu span *,
+body.main .popup_menu .state0 span *,
+.hstate0 a *,
+.hstate0 body.main .popup_menu span *,
+body.main .popup_menu .hstate0 span * {
+    color: $theme-color-text !important;
+}
+
+.odd0 .state0,
+.odd0 .hstate0,
+.odd0 .state0 a,
+.odd0 .state0 body.main .popup_menu span,
+body.main .popup_menu .odd0 .state0 span,
+.odd0 .hstate0 a,
+.odd0 .hstate0 body.main .popup_menu span,
+body.main .popup_menu .odd0 .hstate0 span {
+  background-color: $theme-color-state-success-background !important;
+  border-color: $theme-color-state-success-border !important;
+}
+
+.even0 .state0,
+.even0 .hstate0,
+.even0 .state0 a,
+.even0 .state0 body.main .popup_menu span,
+body.main .popup_menu .even0 .state0 span,
+.even0 .hstate0 a,
+.even0 .hstate0 body.main .popup_menu span,
+body.main .popup_menu .even0 .hstate0 span {
+  background-color: $theme-color-state-success-background !important;
+  border-color: $theme-color-state-success-border !important;
+}
+
+.hstate {
+    white-space: nowrap;
+}
+
+/* WARN */
+.state1,
+.even1 .state1,
+.state1 a,
+.state1 body.main .popup_menu span,
+body.main .popup_menu .state1 span,
+tr.groupheader td.state1 {
+  background-color: $theme-color-main !important;
+  color: $theme-color-black !important;
+  border-color: $theme-color-state-warning-border !important;
+}
+
+.odd0 .state1,
+.odd1 .state1 {
+  background-color: $theme-color-main !important;
+  border-color: $theme-color-state-warning-border !important;
+}
+
+/* CRIT/DOWN */
+.state2.state2.state2,
+.even0 .state2,
+.even2 .state2,
+.hstate1,
+.state2 a,
+.state2 body.main .popup_menu span,
+body.main .popup_menu .state2 span,
+.hstate2 a,
+.hstate2 body.main .popup_menu span,
+body.main .popup_menu .hstate2 span {
+  background-color: $theme-color-state-2-background !important;
+  border-color: $theme-color-state-2-border !important;
+  color: $theme-color-lightgrey !important;
+}
+
+.odd0 .state2,
+.odd2 .state2 {
+  background-color: $theme-color-state-2-background !important;
+  color: $theme-color-white !important;
+  border-color: $theme-color-state-2-border !important;
+  color: $theme-color-lightgrey !important;
+}
+
+/* UNKNOWN / UNREACH */
+.state3,
+.hstate2,
+.state3 a,
+.state3 body.main .popup_menu span,
+body.main .popup_menu .state3 span,
+.hstate2 a,
+.hstate2 body.main .popup_menu span,
+body.main .popup_menu .hstate2 span {
+  background-color: $theme-color-state-3-background !important;
+  color: $theme-color-white !important;
+  border-color: $theme-color-state-3-border !important;
+}
+
+.odd0 .state3,
+.odd3 .state3 {
+  background-color: $theme-color-state-3-background !important;
+  color: $theme-color-white !important;
+  border-color: $theme-color-state-3-border !important;
+}
+
+/* PENDING */
+.statep,
+.hstatep,
+.statep a,
+.statep body.main .popup_menu span,
+body.main .popup_menu .statep span,
+.hstatep a,
+.hstatep body.main .popup_menu span,
+body.main .popup_menu .hstatep span {
+  background-color: $theme-color-state-4-background !important;
+  color: $theme-color-white !important;
+  border-color: $theme-color-state-4-border !important;
+}
+
+/* in DOWNTIME */
+.stated,
+.hstated,
+.stated a,
+.stated body.main .popup_menu span,
+body.main .popup_menu .stated span,
+.hstated a,
+.hstated body.main .popup_menu span,
+body.main .popup_menu .hstated span {
+  background-color: $theme-color-state-4-background !important;
+  color: $theme-color-white !important;
+  border-color: $theme-color-state-4-border !important;
+}
+
 ///* inline state markers in check output */
 //b.stmark {
 //    margin-left: 2px;
@@ -131,18 +233,25 @@ Boston, MA 02110-1301 USA.
 //    vertical-align: middle;
 //    margin: 1px;
 //}
-//
-///* *some* problem */
-//.states, .hstates {
-//    background-image: url("images/someproblem.png");
-//    background-position: center center;
-//    background-repeat: repeat;
-//    color: #000;
-//}
-//.states a, .hstates a {
-//    color: #000;
-//}
-//
+
+/* *some* problem */
+.states, .hstates {
+    background-image: url("images/someproblem.png");
+    background-position: center center;
+    background-repeat: repeat;
+    color: #000;
+}
+
+.states a, .hstates a {
+    color: #000;
+}
+
+.states {
+  background-image: none;
+  background-color: $theme-color-state-3-background;
+  transition: background-color .15s ease-in-out;
+}
+
 ///* Status of sites in sidebar and in WATO */
 //
 //.status_label {

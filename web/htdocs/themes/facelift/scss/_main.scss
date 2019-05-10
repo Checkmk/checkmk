@@ -420,76 +420,9 @@ body.main input, body.main select, body.main textarea, body.main #mk_side_search
 body.main.visible div.foldable .title {
   color: $theme-color-text; }
 
-.state {
-  box-shadow: none; }
-
 div.color {
   box-shadow: none;
   border-radius: $theme-border-radius; }
-
-.states {
-  background-image: none;
-  background-color: $theme-color-state-3-background;
-  transition: background-color .15s ease-in-out; }
-
-.state0, .hstate0, .state0 a, .state0 body.main .popup_menu span, body.main .popup_menu .state0 span, .hstate0 a, .hstate0 body.main .popup_menu span, body.main .popup_menu .hstate0 span {
-  background-color: $theme-color-state-success-background !important;
-  border-color: $theme-color-state-success-border !important; }
-  .state0 *, .hstate0 *, .state0 a *, .state0 body.main .popup_menu span *, body.main .popup_menu .state0 span *, .hstate0 a *, .hstate0 body.main .popup_menu span *, body.main .popup_menu .hstate0 span * {
-    color: $theme-color-text !important; }
-
-.odd0 .state0, .odd0 .hstate0, .odd0 .state0 a, .odd0 .state0 body.main .popup_menu span, body.main .popup_menu .odd0 .state0 span, .odd0 .hstate0 a, .odd0 .hstate0 body.main .popup_menu span, body.main .popup_menu .odd0 .hstate0 span {
-  background-color: $theme-color-state-success-background !important;
-  border-color: $theme-color-state-success-border !important; }
-
-.even0 .state0, .even0 .hstate0, .even0 .state0 a, .even0 .state0 body.main .popup_menu span, body.main .popup_menu .even0 .state0 span, .even0 .hstate0 a, .even0 .hstate0 body.main .popup_menu span, body.main .popup_menu .even0 .hstate0 span {
-  background-color: $theme-color-state-success-background !important;
-  border-color: $theme-color-state-success-border !important; }
-
-.state1, .even1 .state1, .state1 a, .state1 body.main .popup_menu span, body.main .popup_menu .state1 span, tr.groupheader td.state1 {
-  background-color: $theme-color-main !important;
-  color: $theme-color-black !important;
-  border-color: $theme-color-state-warning-border !important; }
-
-.odd0 .state1, .odd1 .state1 {
-  background-color: $theme-color-main !important;
-  border-color: $theme-color-state-warning-border !important; }
-
-.state2.state2.state2, .even0 .state2, .even2 .state2, .hstate1, .state2 a, .state2 body.main .popup_menu span, body.main .popup_menu .state2 span, .hstate2 a, .hstate2 body.main .popup_menu span, body.main .popup_menu .hstate2 span {
-  background-color: $theme-color-state-2-background !important;
-  border-color: $theme-color-state-2-border !important;
-  color: $theme-color-lightgrey !important; }
-
-.odd0 .state2, .odd2 .state2 {
-  background-color: $theme-color-state-2-background !important;
-  color: $theme-color-white !important;
-  border-color: $theme-color-state-2-border !important;
-  color: $theme-color-lightgrey !important; }
-
-.state3, .hstate2, .state3 a, .state3 body.main .popup_menu span, body.main .popup_menu .state3 span, .hstate2 a, .hstate2 body.main .popup_menu span, body.main .popup_menu .hstate2 span {
-  background-color: $theme-color-state-3-background !important;
-  color: $theme-color-white !important;
-  border-color: $theme-color-state-3-border !important; }
-
-.odd0 .state3, .odd3 .state3 {
-  background-color: $theme-color-state-3-background !important;
-  color: $theme-color-white !important;
-  border-color: $theme-color-state-3-border !important; }
-
-.statep, .hstatep, .statep a, .statep body.main .popup_menu span, body.main .popup_menu .statep span, .hstatep a, .hstatep body.main .popup_menu span, body.main .popup_menu .hstatep span {
-  background-color: $theme-color-state-4-background !important;
-  color: $theme-color-white !important;
-  border-color: $theme-color-state-4-border !important; }
-
-.stated, .hstated, .stated a, .stated body.main .popup_menu span, body.main .popup_menu .stated span, .hstated a, .hstated body.main .popup_menu span, body.main .popup_menu .hstated span {
-  background-color: $theme-color-state-4-background !important;
-  color: $theme-color-white !important;
-  border-color: $theme-color-state-4-border !important; }
-
-.stale .state {
-  background-image: none !important;
-  text-shadow: none !important;
-  filter: saturate(50%) brightness(105%); }
 
 th.header_state {
   background: transparent !important;

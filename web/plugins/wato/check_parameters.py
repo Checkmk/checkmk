@@ -14587,6 +14587,7 @@ register_check_parameters(subgroup_applications,
                     )
                 ],
                 optional_keys = ['restrict_logfiles', 'expected_logfiles', 'logwatch_reclassify', 'separate_checks'],
+                ignored_keys=['service_level'],
             ),
         ],
         default_value = '',

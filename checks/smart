@@ -92,7 +92,11 @@ def parse_smart_normalized_values(info):
 
             field = line[4]
             if field != "Unknown_Attribute":
-                value = int(line[6])
+                try:
+                    value = int(line[6])
+                except ValueError:
+                    disk[field] = None, None
+                    continue
                 if isinstance(line[8], int):
                     threshold = int(line[8])
                 else:
@@ -171,6 +175,9 @@ def check_smart_stats(item, params, info):
         # value now. Only for this field.
         if field == "Reallocated_Event_Count":
             norm_value, norm_threshold = normalized[item][field]
+            if norm_value is None:
+                yield 0, infotext, [(field, value)]
+                continue
             hints.append("normalized value: %d" % norm_value)
             if norm_value <= norm_threshold:
                 state = 2

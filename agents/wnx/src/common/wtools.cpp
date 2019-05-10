@@ -1648,10 +1648,16 @@ bool ScanProcessList(std::function<bool(const PROCESSENTRY32&)> op) {
 bool KillProcessFully(const std::wstring& process_name,
                       int exit_code) noexcept {
     std::vector<DWORD> processes_to_kill;
-    ScanProcessList([&processes_to_kill](const PROCESSENTRY32& entry) -> bool {
-        processes_to_kill.push_back(entry.th32ProcessID);
-        return true;
-    });
+    auto name = process_name;
+    cma::tools::WideLower(name);
+    ScanProcessList(
+        [&processes_to_kill, name](const PROCESSENTRY32& entry) -> bool {
+            std::wstring incoming_name = entry.szExeFile;
+            cma::tools::WideLower(incoming_name);
+            if (name == incoming_name)
+                processes_to_kill.push_back(entry.th32ProcessID);
+            return true;
+        });
 
     for (auto proc_id : processes_to_kill) {
         KillProcessTree(proc_id);

@@ -460,7 +460,13 @@ grep ^/dev < /proc/mounts | grep -v " squashfs "
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+if [ -e /proc/self/ns ]; then
+    # Only report processes of the current process namespace in case the system supports namespaces
+    PIDNS=$(ls -Li /proc/self/ns/pid | cut -f1 -d " ")
+    ps ax -o pidns,user:32,vsz,rss,cputime,etime,pid,command --columns 10000 | grep "^$PIDNS" | cut -f "2-" -d " " | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+else
+    ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+fi
 
 # Memory usage
 section_mem

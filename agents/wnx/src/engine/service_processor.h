@@ -229,6 +229,9 @@ private:
     void informDevice(cma::rt::Device& Device, std::string_view Ip) const
         noexcept;
 
+    // used to start OpenHardwareMonitor if conditions are ok
+    bool conditionallyStartOhm() noexcept;
+
     // this thread is HOSTING THREAD for start next services
     // Io
     // All providers
@@ -264,6 +267,7 @@ private:
                         XLOG::d.i("Connected from '{}'", Ip.c_str());
                         cma::OnStartApp();
                         cma::cfg::SetupRemoteHostEnvironment(Ip);
+                        conditionallyStartOhm(); // start may happen when config changed
                         informDevice(rt_device, Ip);
 
                         // 2. processing

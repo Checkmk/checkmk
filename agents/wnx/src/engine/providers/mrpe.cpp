@@ -75,9 +75,7 @@ void MrpeProvider::addParsedConfig() {
         entries_.begin(),      // from
         entries_.end(),        // to
         [](MrpeEntry Entry) {  // lambda to delete
-            std::error_code ec;
-            return !std::filesystem::exists(Entry.full_path_name_, ec) ||
-                   !std::filesystem::is_regular_file(Entry.full_path_name_, ec);
+            return !cma::tools::IsValidRegularFile(Entry.full_path_name_);
         }  //
     );
 
@@ -110,7 +108,7 @@ std::pair<std::string, std::filesystem::path> parseIncludeEntry(
     potential_path = cma::cfg::ReplacePredefinedMarkers(potential_path);
     fs::path path = potential_path;  // last is path
 
-    if (!cma::tools::IsRegularFileValid(path)) {
+    if (!cma::tools::IsValidRegularFile(path)) {
         XLOG::d(
             "File '{}' is not valid or missing for entry '{}' in config '{}'",
             path.u8string(), Entry, cma::cfg::GetPathOfLoadedConfigAsString());

@@ -444,15 +444,16 @@ std::wstring FindLegacyAgent() {
 
     if (image_path.empty()) return {};
 
+    // remove double quotes
     if (image_path.back() == L'\"') image_path.pop_back();
     auto path = image_path.c_str();
     if (*path == L'\"') ++path;
 
     fs::path p = path;
-    std::error_code ec;
-    if (!fs::exists(p, ec) || !fs::is_regular_file(p, ec)) {
+    if (!cma::tools::IsValidRegularFile(p)) {
         XLOG::d(
-            "Agent is found in registry {}, but absent on the disk. Assuming that now agenny installed",
+            "Agent is found in registry '{}', but absent on the disk."
+            "Assuming that agent is installed",
             p.u8string());
         return {};
     }
@@ -885,11 +886,7 @@ bool ConvertIniFiles(const std::filesystem::path& LegacyRoot,
 
 // read first line and check for a marker
 bool IsBakeryIni(const std::filesystem::path& Path) noexcept {
-    namespace fs = std::filesystem;
-    std::error_code ec;
-    if (!fs::exists(Path, ec)) return false;
-
-    if (!fs::is_regular_file(Path, ec)) return false;
+    if (!cma::tools::IsValidRegularFile(Path)) return false;
 
     try {
         std::ifstream ifs(Path, std::ios::binary);

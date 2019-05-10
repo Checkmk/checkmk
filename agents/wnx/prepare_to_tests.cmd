@@ -14,12 +14,13 @@ mkdir %root%\utils 2> nul
 mkdir %root%\providers 2> nul
 mkdir %root%\exe 2> nul
 mkdir %root%\pdb 2> nul
+mkdir %user_dir%\bin 2> nul
 
 if not exist "..\windows\plugins" powershell Write-Host "Folder agents\windows\plugins doesnt exist. Check prep\checkout routine" -Foreground Red && exit 33
 
 powershell Write-Host "Installation simulation Root Folder: plugins, ohm, yml"  -Foreground Green
 copy ..\windows\plugins\*.*         	%root%\plugins\ > nul || powershell Write-Host "Failed plugins copy" -Foreground Red	&& exit 3
-copy .\test_files\ohm\cli\*.*       	%root%\bin\ > nul     || powershell Write-Host "Failed ohm copy. Try to kill Open Hardware Monitor: taskkill /F /IM OpenhardwareMonitorCLI.exe" -Foreground Red		&& exit 4
+copy .\test_files\ohm\cli\*.*       	%user_dir%\bin\ > nul || powershell Write-Host "Failed ohm copy. Try to kill Open Hardware Monitor: taskkill /F /IM OpenhardwareMonitorCLI.exe" -Foreground Red		&& exit 4
 copy .\install\resources\check_mk.yml  	%root%\ > nul         || powershell Write-Host "Failed check_mk.yml copy" -Foreground Red	&& exit 5
 
 powershell Write-Host "1. Test machine preparation: Shared Folder"  -Foreground Green

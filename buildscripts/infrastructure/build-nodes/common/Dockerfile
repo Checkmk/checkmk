@@ -78,7 +78,7 @@ RUN apt-get update \
     valgrind \
     && rm -rf /var/lib/apt/lists/*
 
-run curl -sL https://deb.nodesource.com/setup_11.x | bash - \
+run curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
@@ -86,7 +86,8 @@ RUN pip install -U git+https://github.com/pypa/pipenv.git@c4341a7d5dcd2bdb6f04de
 
 RUN pip install \
     pathlib2 \
-    typing
+    typing \
+    backports.functools_lru_cache
 
 RUN apt-get update \
     && apt-get install -y \

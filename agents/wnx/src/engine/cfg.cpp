@@ -481,16 +481,17 @@ void Folders::cleanAll() {
 }
 
 //
-// Not API. But quit important
+// Not API, but quite important
 // Create project defined Directory Structure in the Data Folder
 // gtest[+] indirectly
 // Returns error code
-static auto CreateTree(const std::filesystem::path& Path) {
+static int CreateTree(const std::filesystem::path& base_path) noexcept {
     namespace fs = std::filesystem;
 
     // directories to be created
     // should be more clear defined in cfg_info
     auto dir_list = {dirs::kBakery,         // config file(s)
+                     dirs::kAgentBin,       // placeholder for ohm
                      dirs::kCache,          // cached data from agent
                      dirs::kState,          // state folder
                      dirs::kSpool,          // keine Ahnung
@@ -498,11 +499,12 @@ static auto CreateTree(const std::filesystem::path& Path) {
                      dirs::kLocal,          // user local plugins
                      dirs::kTemp,           //
                      dirs::kInstall,        // for installing data
+                     dirs::kUpdate,         // for incoming MSI
                      dirs::kPluginConfig};  //
 
     for (auto dir : dir_list) {
         std::error_code ec;
-        auto success = fs::create_directories(Path / dir, ec);
+        auto success = fs::create_directories(base_path / dir, ec);
         if (!success && ec.value() != 0) return ec.value();
     }
 

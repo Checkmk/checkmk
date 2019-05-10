@@ -132,16 +132,15 @@ auto ConstructVector(Args&... Str) {
     return std::vector{Str...};
 };
 
-inline bool IsRegularFileValid(std::filesystem::path& Path) {
+// check for existence and regularity
+// #TODO gtest
+inline bool IsValidRegularFile(const std::filesystem::path& filepath) {
     namespace fs = std::filesystem;
-    std::error_code ec;
-    if (!fs::exists(Path, ec)) {
-        return false;
-    }
 
-    if (!fs::is_regular_file(Path)) {
-        return false;
-    }
+    std::error_code ec;
+    if (!fs::exists(filepath, ec)) return false;
+
+    if (!fs::is_regular_file(filepath)) return false;
 
     return true;
 }

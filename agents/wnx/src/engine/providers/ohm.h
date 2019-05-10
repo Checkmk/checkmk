@@ -10,13 +10,12 @@
 #include <string_view>
 
 #include "cma_core.h"
-#include "section_header.h"
-
 #include "providers/internal.h"
 #include "providers/wmi.h"
+#include "section_header.h"
 
 namespace cma::provider {
-std::filesystem::path GetOhmCliPath();
+std::filesystem::path GetOhmCliPath() noexcept;
 
 constexpr std::string_view kOpenHardwareMonitorCli =
     "OpenHardwareMonitorCLI.exe";

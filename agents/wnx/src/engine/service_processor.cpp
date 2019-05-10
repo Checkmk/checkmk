@@ -211,6 +211,7 @@ void ServiceProcessor::preLoadConfig() {
 void ServiceProcessor::preStart() {
     XLOG::l.i("Pre Start actions");
     cma::cfg::SetupPluginEnvironment();
+    conditionallyStartOhm();
 
     auto& plugins = plugins_provider_.getEngine();
     plugins.preStart();
@@ -220,7 +221,35 @@ void ServiceProcessor::preStart() {
     XLOG::l.i("Pre Start actions ended");
 }
 
-// This is simple function which kicks to call
+// conditions are: yml + exists(ohm) + elevated
+// true on succesful start or if OHM is already started
+bool ServiceProcessor::conditionallyStartOhm() noexcept {
+    using namespace cma::tools;
+
+    auto& ohm_engine = ohm_provider_.getEngine();
+    if (!ohm_engine.isAllowedByCurrentConfig()) {
+        XLOG::d.i("OHM starting skipped due to config");
+        return false;
+    }
+
+    if (!win::IsElevated()) {
+        XLOG::d(
+            "Starting OHM in non elevated mode has no sense."
+            "Please start it by self or change to the elevated mode");
+        return false;
+    }
+
+    auto ohm_exe = cma::provider::GetOhmCliPath();
+    if (IsValidRegularFile(ohm_exe)) {
+        ohm_process_.start(ohm_exe.wstring());
+        return true;
+    }
+
+    XLOG::d("OHM file '{}' is not found", ohm_exe.u8string());
+    return false;
+}
+
+// This is relative simple function which kicks to call
 // different providers
 int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     using namespace cma::cfg;
@@ -228,10 +257,6 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     vf_.clear();
     max_timeout_ = 0;
 
-#if 0
-    vf_.emplace_back(txt_provider_.kick(Tp, this));
-    if (0) vf_.emplace_back(file_provider_.kick(Tp, this));
-#endif
     preLoadConfig();
     // sections to be kicked out
     tryToKick(uptime_provider_, Tp, Ip);
@@ -266,15 +291,6 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     tryToKick(skype_provider_, Tp, Ip);
     tryToKick(spool_provider_, Tp, Ip);
     tryToKick(ohm_provider_, Tp, Ip);
-    auto& ohm_engine = ohm_provider_.getEngine();
-    if (ohm_engine.isAllowedByCurrentConfig()) {
-        if (!cma::tools::win::IsElevated()) {
-            XLOG::d(
-                "Starting OHM in non elevated mode has no sense. Please start it by self or change to the elevated mode");
-        } else
-            ohm_process_.start(cma::provider::GetOhmCliPath().wstring());
-    }
-
     // Plugins Processing
 #if 0
     // we do not use anymore separate plugin process(player)

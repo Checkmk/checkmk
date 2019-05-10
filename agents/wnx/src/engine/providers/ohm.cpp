@@ -2,34 +2,33 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/ohm.h"
+
 #include <filesystem>
 #include <regex>
 #include <string>
 #include <string_view>
 #include <tuple>
 
+#include "cfg.h"
+#include "cma_core.h"
+#include "common/wtools.h"
 #include "fmt/format.h"
-
+#include "glob_match.h"
+#include "logger.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
-#include "common/wtools.h"
-
-#include "cfg.h"
-#include "cma_core.h"
-#include "glob_match.h"
-
-#include "logger.h"
-
-#include "providers/ohm.h"
-
 namespace cma::provider {
 
-std::filesystem::path GetOhmCliPath() {
+// makes OHM binary filename
+std::filesystem::path GetOhmCliPath() noexcept {
     namespace fs = std::filesystem;
-    fs::path ohm_exe = cma::cfg::GetRootDir();
+
+    fs::path ohm_exe = cma::cfg::GetUserDir();
     ohm_exe /= cma::cfg::dirs::kAgentBin;
     ohm_exe /= cma::provider::kOpenHardwareMonitorCli;
+
     return ohm_exe;
 }
 

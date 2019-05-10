@@ -80,8 +80,7 @@ void BackupFile(const std::filesystem::path& File,
         return;
     }
 
-    if (File.empty() || !fs::exists(File, ec) ||
-        !fs::is_regular_file(File, ec)) {
+    if (File.empty() || !cma::tools::IsValidRegularFile(File)) {
         XLOG::l("Backup of the '{}' impossible", File.u8string());
         return;
     }

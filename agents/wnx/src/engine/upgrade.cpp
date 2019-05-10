@@ -32,8 +32,8 @@ int CopyAllFolders(const std::filesystem::path& LegacyRoot,
         return 0;
     }
 
-    const std::wstring folders[] = {L"config", L"plugins", L"local", L"mrpe",
-                                    L"state"};
+    const std::wstring folders[] = {L"config", L"plugins", L"local",
+                                    L"mrpe",   L"state",   L"bin"};
     auto count = 0;
     for_each(folders, std::end(folders),
 
@@ -569,7 +569,8 @@ bool FindStopDeactivateLegacyAgent() {
 
     XLOG::l.t("Killing open hardware monitor...");
     wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
-    wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1); // we may have two :)
+    wtools::KillProcess(L"Openhardwaremonitorcli.exe",
+                        1);  // we may have two :)
 
     XLOG::l.t("Stopping winring0_1_2_0...");
     StopWindowsService(L"winring0_1_2_0");

@@ -568,11 +568,11 @@ TEST(AgentConfig, WorkScenario) {
     {
         auto sections_enabled =
             GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
-        EXPECT_EQ(sections_enabled.size(), 19);
+        EXPECT_EQ(sections_enabled.size(), 20);
 
         auto sections_disabled =
             GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
-        EXPECT_EQ(sections_disabled.size(), 4);
+        EXPECT_EQ(sections_disabled.size(), 3);
     }
 
     {

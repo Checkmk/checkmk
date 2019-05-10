@@ -28,9 +28,9 @@ TEST(Wtools, ScanProcess) {
     for (auto& name : names) cma::tools::StringLower(name);
 
     // check that we do not have own process
-    EXPECT_FALSE(cma::tools::Find(names, std::string("watest32.exe")));
-    EXPECT_FALSE(cma::tools::Find(names, std::string("watest64.exe")));
-    EXPECT_TRUE(cma::tools::Find(names, std::string("svchost.exe")));
+    EXPECT_FALSE(cma::tools::find(names, std::string("watest32.exe")));
+    EXPECT_FALSE(cma::tools::find(names, std::string("watest64.exe")));
+    EXPECT_TRUE(cma::tools::find(names, std::string("svchost.exe")));
 
     {
         tst::YamlLoader w;

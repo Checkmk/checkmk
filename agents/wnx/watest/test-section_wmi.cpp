@@ -181,7 +181,7 @@ TEST(ProviderTest, WmiAll) {  //
         EXPECT_EQ(ohm.nameSpace(), L"Root\\OpenHardwareMonitor");
         EXPECT_EQ(ohm.columns().size(), 5);
         auto body = ohm.makeBody();
-        EXPECT_TRUE(!ohm.isAllowedByCurrentConfig());
+        EXPECT_TRUE(ohm.isAllowedByCurrentConfig());
         tst::EnableSectionsNode(cma::provider::kOhm);
         EXPECT_TRUE(ohm.isAllowedByCurrentConfig());
         ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));

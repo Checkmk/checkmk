@@ -60,10 +60,10 @@ global:
     async: yes
 
     # Just output certain sections
-    sections: check_mk mrpe skype spool plugins local winperf uptime systemtime df mem services msexch dotnet_clrmemory wmi_webservices wmi_cpuload ps fileinfo logwatch
+    sections: check_mk mrpe skype spool plugins local winperf uptime systemtime df mem services msexch dotnet_clrmemory wmi_webservices wmi_cpuload ps fileinfo logwatch openhardwaremonitor 
     
     # forced to not use
-    disabled_sections: openhardwaremonitor _logfiles winperf_xxx badname
+    disabled_sections: _logfiles winperf_xxx badname
 
     #realtime data description
     realtime:

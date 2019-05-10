@@ -1457,45 +1457,45 @@ div.diag_host > table > tbody > tr > td {
 '-------------------------------------------------------------------------*/
 
 table.setting td.reason {
-    float: none;
-    width: 180px;
-    display: inline-block;
-    color: white;
-    font-style: italic;
-}
+  display: inline-block;
+  float: none;
+  width: 180px;
+  font-style: italic;
+  color: #fff;
 
-table.setting td.reason i { /* default value */
+  i { /* default value */
     color: #b6c8d1;
-}
+  }
 
-table.setting td.reason a {
+  a {
     text-decoration: none;
-}
 
-table.setting td.reason a:hover {
-    text-decoration: underline;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
 td.settingvalue.unused, td.settingvalue.unused td {
-    font-style: italic;
-    color: #256;
+  font-style: italic;
+  color: #256;
 }
 
 .wato table.nform div.title a {
-    color: black;
-    text-decoration: none;
-}
+  color: #000;
+  text-decoration: none;
 
-.wato table.nform div.title a:hover {
+  &:hover {
     text-decoration: underline;
+  }
 }
 
 table.nform.rulesettings td.legend {
-    width: 300px;
-}
+  width: 300px;
 
-table.nform.rulesettings td.legend div.title {
+  div.title {
     max-width: 300px;
+  }
 }
 
 /*--Profile Repl-----------------------------------------------------------.
@@ -1507,65 +1507,71 @@ table.nform.rulesettings td.legend div.title {
 |                                                  |_|                     |
 '-------------------------------------------------------------------------*/
 
-#profile_repl .site {
-    margin: 0 5px 5px 0;
+#profile_repl {
+  .site {
+    width: 158px;
     padding: 2px;
-    border-radius: 1ex;
-    box-shadow: none;
+    margin: 0 5px 5px 0;
+    text-overflow: ellipsis;
     background: $theme-color-white;
     border: 1px solid $theme-color-table-border;
-    width: 158px;
-    text-overflow: ellipsis;
+    border-radius: 6px;
+    box-shadow: none;
+
+    div, span {
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+
+  div {
+    &.repl_status {
+      background-size: contain;
+    }
+
+    &.repl_locked {
+      background-image: url("images/icon_repl_locked.png");
+    }
+
+    &.repl_pending {
+      background-image: url("images/icon_repl_pending.png");
+    }
+
+    &.repl_failed {
+      background-image: url("images/icon_repl_failed.png");
+    }
+
+    &.repl_25 {
+      background-image: url("images/icon_repl_25.png");
+    }
+
+    &.repl_50 {
+      background-image: url("images/icon_repl_50.png");
+    }
+
+    &.repl_75 {
+      background-image: url("images/icon_repl_75.png");
+    }
+
+    &.repl_success {
+      background-image: url("images/icon_success.png");
+    }
+  }
 }
 
-#profile_repl div.site div, #profile_repl div.site span {
-    vertical-align: middle;
-    display: inline-block;
-}
-
-#profile_repl div.repl_status {
-    background-size: contain;
-}
-
-#profile_repl div.repl_locked {
-    background-image: url(images/icon_repl_locked.png);
-}
-
-#profile_repl div.repl_pending {
-    background-image: url(images/icon_repl_pending.png);
-}
-
-#profile_repl div.repl_failed {
-    background-image: url(images/icon_repl_failed.png);
-}
-
-#profile_repl div.repl_25 {
-    background-image: url(images/icon_repl_25.png);
-}
-
-#profile_repl div.repl_50 {
-    background-image: url(images/icon_repl_50.png);
-}
-
-#profile_repl div.repl_75 {
-    background-image: url(images/icon_repl_75.png);
-}
-
-#profile_repl div.repl_success {
-    background-image: url(images/icon_success.png);
-}
-
-.wato table.data.check_catalog td.title {
-    width: 500px;
+.wato table.data.check_catalog td {
+  &.title {
     display: table-cell;
-}
+    width: 500px;
+  }
 
-.wato table.data.check_catalog td.name {
+  &.name {
     width: 200px;
-}
+  }
 
-.wato table.data.check_catalog td.agents {
+  &.agents {
     width: 200px;
+  }
 }
 
 /*--Best practices---------------------------------------------------------.
@@ -1578,36 +1584,37 @@ table.nform.rulesettings td.legend div.title {
  '-------------------------------------------------------------------------*/
 
 .wato table.data.analyze_config {
-    width: 100%;
-}
+  width: 100%;
 
-.wato table.data.analyze_config td.state div {
+  td.state div {
     position: relative;
     line-height: 20px;
-}
+  }
 
-.wato table.data.analyze_config th.header_state {
+  th.header_state {
     width: 100px;
-}
+  }
 
-.wato table.data.analyze_config td.state a {
-    background: transparent;
+  td.state a {
     position: absolute;
     right: 0;
-}
+    background: transparent;
+  }
 
-.wato table.data.analyze_config td.state.acknowledged {
+  td.state.acknowledged {
     background-image: url("images/white_60percent.png");
     background-repeat: repeat;
-}
+  }
 
-.wato table.data.analyze_config tr.ac_test_details td a {
+  tr.ac_test_details td a {
     text-decoration: underline;
-}
 
-.wato table.data.analyze_config tr.ac_test_details td a:hover {
-    text-decoration: none;
+    &:hover {
+      text-decoration: none;
+    }
+  }
 }
 
 table.data.analyze_config td.buttons {
-        min-width: 25px }
+  min-width: 25px;
+}

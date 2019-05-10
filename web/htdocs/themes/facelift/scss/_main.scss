@@ -167,28 +167,6 @@ table {
         table.data tr.data > td.last_col {
           border-right: 1px solid $theme-color-table-border;
           border-radius: 0px 4px 4px 0px; }
-        table.data tr.data > td.perfometer {
-          padding: 4px;
-          width: 150px; }
-          table.data tr.data > td.perfometer table {
-            border: none; }
-          table.data tr.data > td.perfometer .title {
-            padding: 0px;
-            top: 2px;
-            color: $theme-color-text;
-            font-weight: $theme-font-weight-bold;
-            width: 100%;
-            letter-spacing: 0;
-            font-size: $theme-font-size-main;
-            margin: 0px; }
-          table.data tr.data > td.perfometer .content {
-            padding: 0px;
-            width: 100%;
-            overflow: hidden;
-            border: 1px solid $theme-color-table-border;
-            filter: saturate(50%); }
-          table.data tr.data > td.perfometer .glass {
-            display: none; }
     table.data tr td.gap {
       background: $theme-color-background;
       border: 1px solid $theme-color-background; }
@@ -537,17 +515,6 @@ table.data > tbody > tr > td.job_state.job_initialized {
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
   background-color: $theme-color-state-3-background !important;
   border-color: $theme-color-nuance-16 !important; }
-
-.status_label {
-  box-shadow: none;
-  height: 16px;
-  padding: 2px;
-  box-sizing: border-box; }
-  .status_label.online {
-    background-color: $theme-color-state-success-background;
-    border-color: $theme-color-state-success-border !important;
-    color: $theme-color-text !important;
-    font-weight: 500; }
 
 div.info {
   color: $theme-color-text;

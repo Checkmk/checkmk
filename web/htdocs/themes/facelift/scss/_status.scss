@@ -215,24 +215,25 @@ body.main .popup_menu .hstated span {
   border-color: $theme-color-state-4-border !important;
 }
 
-///* inline state markers in check output */
-//b.stmark {
-//    margin-left: 2px;
-//    padding: 1px 3px;
-//    border-radius: 4px;
-//    font-size: 7pt;
-//    border: 1px solid #666;
-//    position: relative;
-//    top: -1px;
-//}
-//
-///* inline icon in plugin output for URLs */
-//img.pluginurl {
-//    width: 16px;
-//    height: 16px;
-//    vertical-align: middle;
-//    margin: 1px;
-//}
+/* inline state markers in check output */
+b.stmark {
+    margin-left: 2px;
+    padding: 1px 3px;
+    border-radius: 4px;
+    font-size: 7pt;
+    border: 1px solid #666;
+    position: relative;
+    top: -1px;
+}
+
+/* inline icon in plugin output for URLs */
+/* TODO: Reproduce this html element */
+img.pluginurl {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin: 1px;
+}
 
 /* *some* problem */
 .states, .hstates {
@@ -252,171 +253,210 @@ body.main .popup_menu .hstated span {
   transition: background-color .15s ease-in-out;
 }
 
-///* Status of sites in sidebar and in WATO */
-//
-//.status_label {
-//    border-color: #1b333d #264c18 #1b333d #274141;
-//    border-radius: 4px;
-//    border-style: solid;
-//    border-width: 1px;
-//    box-shadow: 0 0 1px rgba(255, 255, 255, 0.8),
-//                1px 1px 0px 0px rgba(255, 255, 255, 0.4) inset;
-//
-//    width: 56px;
-//    height: 12px;
-//
-//    font-size: 7pt;
-//    color: #fff;
-//    text-align: center;
-//    line-height: 12px;
-//
-//    cursor: default;
-//}
-//
-//.status_label.button {
-//    cursor: pointer;
-//}
-//
-//.status_label.button:hover {
-//    /* TODO: create a better hover effect */
-//    opacity: 0.5;
-//    filter: alpha(opacity=50); /* For IE8 and earlier */
-//}
-//
-//.status_label.disabled {
-//    background-color: #787878;
-//    color: #b2b2b2;
-//}
-//.status_label.dead     {
-//    background-color: #b91e1d;
-//}
-//.status_label.down     {
-//    background-color: #f60000;
-//}
-//.status_label.online   {
-//    background-color: #54a626;
-//}
-//.status_label.partial {
-//    background-color: #bd8a3f;
-//}
-//.status_label.unknown  {
-//    background-color: #a96394;
-//}
-//.status_label.unreach  {
-//    background-color: #ef7b08;
-//}
-//.status_label.waiting  {
-//    background-color: #3574c2;
-//}
-//
-//
-///* Performeter styling */
-//
-//table.data tr.data td.perfometer {
-//    padding: 1px 2px 2px 1px;
-//    width: 120px;
-//    height: 22px;
-//    vertical-align: middle;
-//}
-//
-//td.perfometer > a {
-//    display: block;
-//    position: relative;
-//}
-//
-//td.perfometer > a.disabled {
-//    cursor: auto;
-//}
-//
-//td.perfometer div.content {
-//   width: 120px;
-//   z-index: 20;
-//}
-//
-//td.perfometer div.title {
-//    position: absolute;
-//    top: 1px;
-//    overflow: hidden;
-//    line-height: 22px;
-//    margin: 0 3px;
-//    width: 114px;
-//    text-align: center;
-//    white-space: nowrap;
-//    z-index: 40;
-//}
-//
-//td.perfometer div.glass {
-//   position: absolute;
-//   top: 1px;
-//   left: 2px;
-//   width: 120px;
-//   height: 22px;
-//   margin-bottom: 1px;
-//   z-index: 30;
-//   display: block;
-//   background-image: url(images/perfometer-bg.png);
-//}
-//
-//
-//td.perfometer table {
-//    width: 100%;
-//    height: 22px;
-//    border-spacing: 0px;
-//    padding: 0;
-//    margin: 0;
-//    border: 1px solid #aaa;
-//    height: 24px;
-//}
-//
-//table.data td.perfometer td.inner {
-//    padding: 0;
-//    margin: 0;
-//    border: none;
-//    height: 22px;
-//    padding: 0px 0px 0px 1px;
-//}
-//
-//table.data td.perfometer div.stacked table:first-child {
-//    border-bottom-style: none;
-//}
-//
-//table.data td.perfometer div.stacked table {
-//    height: 12px;
-//}
-//
-//table.data td.perfometer div.stacked td.inner {
-//    height: 10px;
-//}
-//
-//td.perfometer a {
-//    color: #000;
-//    text-decoration: none;
-//}
-//
-//td.statex {  /* zero count */
-//  color: #ccc;
-//}
-//
-///* Row coloring in case of the different states */
-//tr.odd0, tr.oddp        { background-color: #eee; }
-//tr.even0, tr.evenp       { background-color: #ddd; }
-//
-//td.odd0.sla  { background-color: #aaa; }
-//td.odd0  { background-color: #eee; }
-//td.even0 { background-color: #ddd; }
-//
-//tr.odd1        { background-color: #ffc; }
-//tr.even1       { background-color: #ffa; }
-//
-//tr.odd2        { background-color: #fcc; }
-//tr.even2       { background-color: #faa; }
-//
-//tr.odd3        { background-color: #ffe0a0; }
-//tr.even3       { background-color: #ffefaf; }
-//
-///* Row headers in single dataset layout */
-//
-//
+/* Status of sites in sidebar and in WATO */
+
+.status_label {
+    border-color: #1b333d #264c18 #1b333d #274141;
+    border-radius: 4px;
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: none;
+    width: 56px;
+    height: 16px;
+    font-size: 7pt;
+    color: #fff;
+    text-align: center;
+    line-height: 12px;
+    cursor: default;
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+.status_label.button {
+    cursor: pointer;
+}
+
+.status_label.button:hover {
+    /* TODO: create a better hover effect */
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
+.status_label.disabled {
+    background-color: #787878;
+    color: #b2b2b2;
+}
+
+.status_label.dead     {
+    background-color: #b91e1d;
+}
+
+.status_label.down     {
+    background-color: #f60000;
+}
+
+.status_label.online {
+    background-color: $theme-color-state-success-background;
+    border-color: $theme-color-state-success-border !important;
+    color: $theme-color-text !important;
+    font-weight: 500;
+}
+
+.status_label.partial {
+    background-color: #bd8a3f;
+}
+
+.status_label.unknown  {
+    background-color: #a96394;
+}
+
+.status_label.unreach  {
+    background-color: #ef7b08;
+}
+
+.status_label.waiting  {
+    background-color: #3574c2;
+}
+
+
+/* Performeter styling */
+
+table.data tr.data td.perfometer {
+    padding: 1px 2px 2px 1px;
+    width: 120px;
+    height: 22px;
+    vertical-align: middle;
+}
+
+table.data tr.data > td.perfometer {
+  padding: 4px;
+  width: 150px;
+}
+
+td.perfometer a {
+    color: #000;
+    text-decoration: none;
+}
+
+td.perfometer > a {
+    display: block;
+    position: relative;
+}
+
+td.perfometer > a.disabled {
+    cursor: auto;
+}
+
+td.perfometer div.content {
+   width: 120px;
+   z-index: 20;
+}
+
+table.data tr.data > td.perfometer .content {
+    padding: 0px;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid $theme-color-table-border;
+    filter: saturate(50%);
+}
+
+td.perfometer div.title {
+    position: absolute;
+    top: 1px;
+    overflow: hidden;
+    line-height: 22px;
+    margin: 0 3px;
+    width: 114px;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 40;
+}
+
+table.data tr.data > td.perfometer .title {
+    padding: 0px;
+    top: 2px;
+    color: $theme-color-text;
+    font-weight: $theme-font-weight-bold;
+    width: 100%;
+    letter-spacing: 0;
+    font-size: $theme-font-size-main;
+    margin: 0px;
+}
+
+td.perfometer div.glass {
+   position: absolute;
+   top: 1px;
+   left: 2px;
+   width: 120px;
+   height: 22px;
+   margin-bottom: 1px;
+   z-index: 30;
+   display: block;
+   background-image: url(images/perfometer-bg.png);
+}
+
+table.data tr.data > td.perfometer .glass {
+    display: none;
+}
+
+td.perfometer table {
+    width: 100%;
+    height: 22px;
+    border-spacing: 0px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #aaa;
+    height: 24px;
+}
+
+table.data tr.data > td.perfometer table {
+    border: none;
+}
+
+table.data td.perfometer td.inner {
+    padding: 0;
+    margin: 0;
+    border: none;
+    height: 22px;
+    padding: 0px 0px 0px 1px;
+}
+
+table.data td.perfometer div.stacked table:first-child {
+    border-bottom-style: none;
+}
+
+table.data td.perfometer div.stacked table {
+    height: 12px;
+}
+
+table.data td.perfometer div.stacked td.inner {
+    height: 10px;
+}
+
+td.statex {  /* zero count */
+  color: #ccc;
+}
+
+/* Row coloring in case of the different states */
+tr.odd0, tr.oddp { background-color: #eee; }
+tr.even0, tr.evenp       { background-color: #ddd; }
+
+td.odd0.sla  { background-color: #aaa; }
+td.odd0  { background-color: #eee; }
+td.even0 { background-color: #ddd; }
+
+tr.odd1        { background-color: #ffc; }
+tr.even1       { background-color: #ffa; }
+
+tr.odd2        { background-color: #fcc; }
+tr.even2       { background-color: #faa; }
+
+tr.odd3        { background-color: #ffe0a0; }
+tr.even3       { background-color: #ffefaf; }
+
+/* Row headers in single dataset layout */
+
+
 ///*-------------------------------------------------------------------------.
 //|                 ____       _       _                                     |
 //|                |  _ \ __ _(_)_ __ | |_ ___ _ __ ___                      |

@@ -44,8 +44,12 @@ def parse_cisco_secure(info):
             status_int = None
         # violationCount is initialized with 0 when security is enabled. When not, the
         # value is reported as empty string. saveint() makes life easier here.
-        parsed.append((names[num][0], int(names[num][1]), enabled_txt, status_int,
-                       saveint(violation_count), mac))
+        if num in names:
+            parsed.append((names[num][0], int(names[num][1]), enabled_txt, status_int,
+                           saveint(violation_count), mac))
+        else:
+            parsed.append((num, 0, enabled_txt, status_int, saveint(violation_count),
+                           mac))
     return parsed
 
 

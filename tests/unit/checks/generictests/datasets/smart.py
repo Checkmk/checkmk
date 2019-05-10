@@ -1,3 +1,4 @@
+# -*- encoding: utf-8
 # yapf: disable
 
 
@@ -311,9 +312,9 @@ info = [[u'ADATA_SSD_S510_120GB_blub',
          u'246',
          u'CRC_Error_Count',
          u'0x0032',
-         u'000',
-         u'000',
-         u'000',
+         u'---',
+         u'---',
+         u'---',
          u'Old_age',
          u'Always',
          u'-',

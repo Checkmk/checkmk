@@ -86,6 +86,7 @@ def _is_ucd(oid):
             "barracuda",
             "pfsense",
             "genugate",
+            "bomgar",
     ]:
         if name in sys_descr:
             return True
@@ -105,6 +106,7 @@ def _is_ucd_mem(oid):
     for name in [
             "pfsense",
             "ironport model c3",
+            "bomgar",
     ]:
         if name in sys_descr and not oid(".1.3.6.1.2.1.25.1.1.0"):
             return True

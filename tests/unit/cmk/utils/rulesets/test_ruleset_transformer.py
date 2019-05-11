@@ -133,7 +133,7 @@ NON_BINARY_HOST_RULESET = [
         ident="hosts_negated",
         is_service=False,
         is_binary=False,
-        old=("VAL", ["!HOST1", "!HOST2"]),
+        old=("VAL", ["!HOST1", "!HOST2"] + tuple_rulesets.ALL_HOSTS),
         new={
             "value": "VAL",
             "condition": {
@@ -147,7 +147,7 @@ NON_BINARY_HOST_RULESET = [
         ident="single_host_negated",
         is_service=False,
         is_binary=False,
-        old=("VAL", ["!HOST1"]),
+        old=("VAL", ["!HOST1"] + tuple_rulesets.ALL_HOSTS),
         new={
             "value": "VAL",
             "condition": {
@@ -161,7 +161,7 @@ NON_BINARY_HOST_RULESET = [
         ident="single_host_regex_negated",
         is_service=False,
         is_binary=False,
-        old=("VAL", ["!~HOST1"]),
+        old=("VAL", ["!~HOST1"] + tuple_rulesets.ALL_HOSTS),
         new={
             "value": "VAL",
             "condition": {
@@ -197,7 +197,7 @@ NON_BINARY_HOST_RULESET = [
         ident="hosts_negated_with_regex",
         is_service=False,
         is_binary=False,
-        old=("VAL", ["!~HOST1", "!HOST2"]),
+        old=("VAL", ["!~HOST1", "!HOST2"] + tuple_rulesets.ALL_HOSTS),
         new={
             "value": "VAL",
             "condition": {
@@ -356,7 +356,7 @@ NON_BINARY_SERVICE_RULESET = [
         ident="simple_single_service_negated",
         is_service=True,
         is_binary=False,
-        old=("VAL", ["HOST"], ["!SVC"]),
+        old=("VAL", ["HOST"], ["!SVC"] + tuple_rulesets.ALL_SERVICES),
         new={
             "value": "VAL",
             "condition": {
@@ -415,7 +415,7 @@ NON_BINARY_SERVICE_RULESET = [
         ident="negated_with_all_hosts",
         is_service=True,
         is_binary=False,
-        old=("VAL", tuple_rulesets.ALL_HOSTS, ["!SVC", "!LIST"]),
+        old=("VAL", tuple_rulesets.ALL_HOSTS, ["!SVC", "!LIST"] + tuple_rulesets.ALL_SERVICES),
         new={
             "value": "VAL",
             "condition": {
@@ -595,7 +595,8 @@ BINARY_SERVICE_RULESET = [
         ident="list_of_host_regexes_and_services_negated",
         is_service=True,
         is_binary=True,
-        old=(tuple_rulesets.NEGATE, ["!~HOST", "!~LIST"], ["!SVC", "!LIST"]),
+        old=(tuple_rulesets.NEGATE, ["!~HOST", "!~LIST"] + tuple_rulesets.ALL_HOSTS,
+             ["!SVC", "!LIST"] + tuple_rulesets.ALL_SERVICES),
         new={
             "value": False,
             "condition": {

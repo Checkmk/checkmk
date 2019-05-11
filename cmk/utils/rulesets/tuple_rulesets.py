@@ -124,6 +124,10 @@ class RulesetToDictTransformer(object):
         # TODO: This is WATO specific. Should we handle this like base did before?
         negate = item_list[0].startswith("!")
 
+        # Remove ALL_SERVICES from end of negated lists
+        if negate and item_list[-1] == ALL_SERVICES[0]:
+            item_list = item_list[:-1]
+
         # Construct list of all item conditions
         for check_item in item_list:
             if check_item[0] == '!':  # strip negate character
@@ -160,6 +164,10 @@ class RulesetToDictTransformer(object):
         # host expressions are negated.
         # TODO: This is WATO specific. Should we handle this like base did before?
         negate = host_list[0].startswith("!")
+
+        # Remove ALL_HOSTS from end of negated lists
+        if negate and host_list[-1] == ALL_HOSTS[0]:
+            host_list = host_list[:-1]
 
         num_conditions = len(host_list)
         has_regex = self._host_list_has_regex(host_list)

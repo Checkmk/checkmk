@@ -172,11 +172,21 @@ class AllRulesets(RulesetCollection):
 
         self._load_folder_rulesets(folder, only_varname)
 
-    # Load all rules of all folders
     def load(self):
+        """Load all rules of all folders"""
         self._load_rulesets_recursively(Folder.root_folder())
 
     def save_folder(self, folder):
+        self._save_folder(folder)
+
+    def save(self):
+        """Save all rulesets of all folders recursively"""
+        self._save_rulesets_recursively(Folder.root_folder())
+
+    def _save_rulesets_recursively(self, folder):
+        for subfolder in folder.all_subfolders().values():
+            self._save_rulesets_recursively(subfolder)
+
         self._save_folder(folder)
 
 

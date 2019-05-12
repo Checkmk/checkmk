@@ -38,6 +38,7 @@ $(OMD_INSTALL):
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/port_is_used $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/bash_completion $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/hooks/* $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
 

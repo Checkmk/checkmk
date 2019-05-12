@@ -109,6 +109,9 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_AUTHORISATION $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/cmk.post-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
+
 	# GUI-Test (in doc/helpers)
 	#$(TAR_GZ) $(DISTNAME)/doc.tar.gz -C $(DESTDIR)$(OMD_ROOT)/bin \
 	#    --strip-components 1 helpers/guitest

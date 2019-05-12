@@ -101,6 +101,15 @@ ruleset = [
             },
         },
     },
+    {
+        "value": "XYZ",
+        "condition": {
+            "host_name": {
+                "$in": [],
+            },
+        },
+        "options": {},
+    },
 ]
 
 

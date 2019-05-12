@@ -115,7 +115,7 @@ class RulesetToDictTransformer(object):
             return {}
 
         if not item_list:
-            raise NotImplementedError()
+            return {"service_description": {"$in": []}}
 
         sub_conditions = []
 
@@ -156,7 +156,7 @@ class RulesetToDictTransformer(object):
             return {}
 
         if not host_list:
-            raise NotImplementedError()
+            return {"host_name": {"$in": []}}
 
         sub_conditions = []
 

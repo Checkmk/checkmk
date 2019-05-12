@@ -41,6 +41,9 @@ SIMPLE_MATCHES = [
     Case({"name": {
         "$in": ["prod-host", "test-host"]
     }}, [HOST_PROD, HOST_TEST]),
+    Case({"name": {
+        "$in": []
+    }}, []),
     Case({
         "name": "prod-host",
         "tags": {
@@ -135,6 +138,9 @@ COMPARISON_MATCHES = [
     Case({"service_level": {
         "$nin": [1, 2, 10]
     }}, [HOST_PROD]),
+    Case({"service_level": {
+        "$in": []
+    }}, []),
 ]
 
 LOGICAL_MATCHES = [

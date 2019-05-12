@@ -102,6 +102,20 @@ NON_BINARY_HOST_RULESET = [
         },
     ),
     Case(
+        ident="empty_host_list",
+        is_service=False,
+        is_binary=False,
+        old=("VAL", []),
+        new={
+            "value": "VAL",
+            "condition": {
+                "host_name": {
+                    "$in": []
+                }
+            },
+        },
+    ),
+    Case(
         ident="list_no_regex",
         is_service=False,
         is_binary=False,
@@ -386,6 +400,21 @@ NON_BINARY_SERVICE_RULESET = [
                         "$regex": "^LIST"
                     },
                 }],
+                "host_name": "HOSTLIST",
+            },
+        },
+    ),
+    Case(
+        ident="empty_item_list",
+        is_service=True,
+        is_binary=False,
+        old=("VAL", ["HOSTLIST"], []),
+        new={
+            "value": "VAL",
+            "condition": {
+                "service_description": {
+                    "$in": [],
+                },
                 "host_name": "HOSTLIST",
             },
         },

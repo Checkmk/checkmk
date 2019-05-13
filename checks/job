@@ -170,7 +170,7 @@ def check_job(_no_item, params, nodes):
         prefix = "[%s] " % node_info if node_info else ""
 
         if job.get("exit_code") is None:
-            results.append((3, '%sGot incomplete information for this job' % prefix), [])
+            results.append((3, '%sGot incomplete information for this job' % prefix))
             continue
 
         state, text, perfdata = _process_job_stats(job, (warn, crit))

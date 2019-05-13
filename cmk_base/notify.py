@@ -737,7 +737,7 @@ def rbn_match_escalation(rule, context):
             notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
         else:
             notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
-        if notification_number < from_number or notification_number > to_number:
+        if not from_number <= notification_number <= to_number:
             return "The notification number %d does not lie in range %d ... %d" % (
                 notification_number, from_number, to_number)
 

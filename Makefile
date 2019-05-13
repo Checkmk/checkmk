@@ -304,6 +304,9 @@ optimize-images:
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
 node_modules: package.json
+	if curl --head 'http://nexus.lan.tribe29.com:8081/#browse/browse:npm-proxy' | grep '200\ OK'; then \
+            npm config set registry http://nexus.lan.tribe29.com:8081/repository/npm-proxy/; \
+        fi
 	npm install --unsafe-perm
 
 web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)

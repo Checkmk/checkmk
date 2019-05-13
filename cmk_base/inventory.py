@@ -376,7 +376,7 @@ def _save_inventory_tree(hostname, inventory_tree):
 
     old_time = None
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
-    if inventory_tree:
+    if not inventory_tree.is_empty():
         old_tree = StructuredDataTree().load_from(filepath)
         old_tree.normalize_nodes()
         if old_tree.is_equal(inventory_tree):

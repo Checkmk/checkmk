@@ -79,6 +79,14 @@
 #  Index 12 -- # of milliseconds spent doing I/Os
 #  Index 13 -- weighted # of milliseconds spent doing I/Os
 
+#  Kernel 4.18+ appends four more fields for discard
+#		tracking putting the total at 18:
+
+#  Index 14 -- discards completed successfully
+#  Index 15 -- discards merged
+#  Index 16 -- sectors discarded
+#  Index 17 -- time spent discarding
+
 # Convert information to generic format also generated
 # by winperf_phydisk
 # [ now, [( disk, readctr, writectr ), ... ]]
@@ -134,10 +142,18 @@ def parse_diskstat(info):
         if line[3] in real_partitions:
             continue
 
-        node_name, major, minor, device, \
-            read_ios, _read_merges, read_sectors, read_ticks, \
-            write_ios, _write_merges, write_sectors, write_ticks, \
-            ios_in_prog, total_ticks, _rq_ticks = line
+        try:
+            node_name, major, minor, device, \
+                read_ios, _read_merges, read_sectors, read_ticks, \
+                write_ios, _write_merges, write_sectors, write_ticks, \
+                ios_in_prog, total_ticks, _rq_ticks = line
+        except ValueError:
+            # kernel 4.18+
+            node_name, major, minor, device, \
+                read_ios, _read_merges, read_sectors, read_ticks, \
+                write_ios, _write_merges, write_sectors, write_ticks, \
+                ios_in_prog, total_ticks, _rq_ticks, discards_completed, \
+                discards_merged, sectors_discarded, time_discard = line
 
         if (node_name, int(major), int(minor)) in name_info:
             device = name_info[(node_name, int(major), int(minor))]

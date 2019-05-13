@@ -1,0 +1,11 @@
+Title: HW/SW inventory: Avoid saving empty inventory trees
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0p17
+Date: 1557738784
+Class: fix
+
+Previously empty inventory trees were stored. The consequence might
+be that HW/SW archive entries were produced.

@@ -295,7 +295,10 @@ class TagGroup(object):
 
     def get_tag_group_config(self, value):
         """Return the set of tag groups which should be set for a host based on the given value"""
-        tag_groups = {self.id: value}
+        tag_groups = {}
+
+        if value is not None:
+            tag_groups[self.id] = value
 
         # add optional aux tags
         for grouped_tag in self.tags:

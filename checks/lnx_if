@@ -108,7 +108,7 @@ def _parse_lnx_if_ipaddress(lines):
         elif line[0].startswith('inet'):
             # inet 127.0.0.1/8 scope host lo
             # inet6 ::1/128 scope host
-            iface[line[0]] = line[1]
+            iface.setdefault(line[0], []).append(line[1])
     return ip_stats
 
 

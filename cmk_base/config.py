@@ -3071,7 +3071,8 @@ class ConfigCache(object):
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = hostname not in self._all_processed_hosts
-        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(ruleset, with_foreign_hosts)
+        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
+            ruleset, with_foreign_hosts, is_binary=False)
 
         entries = []
 
@@ -3104,10 +3105,10 @@ class ConfigCache(object):
         # Optimization: When the requested host is part of the local sites
         # configuration, then use only the sites hosts for processing the rules
         with_foreign_hosts = hostname not in self._all_processed_hosts
-        optimized_ruleset = self.ruleset_optimizer.get_boolean_service_ruleset(
-            ruleset, with_foreign_hosts)
+        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
+            ruleset, with_foreign_hosts, is_binary=True)
 
-        for negate, hosts, service_conditions in optimized_ruleset:
+        for value, hosts, service_conditions in optimized_ruleset:
             if hostname not in hosts:
                 continue
 
@@ -3118,7 +3119,7 @@ class ConfigCache(object):
                 self._service_match_cache[match_cache_id] = match
 
             if match:
-                return not negate
+                return value
 
         return False  # no match. Do not ignore
 

@@ -726,13 +726,16 @@ class S3(AWSSectionCloudwatch):
             ]:
                 for storage_class in storage_classes:
                     metrics.append({
-                        'Id': self._create_id_for_metric_data_query(idx, metric_name,
-                                                                    storage_class),
-                        'Label': bucket_name,
+                        'Id':
+                            self._create_id_for_metric_data_query(idx, metric_name, storage_class),
+                        'Label':
+                            bucket_name,
                         'MetricStat': {
                             'Metric': {
-                                'Namespace': 'AWS/S3',
-                                'MetricName': metric_name,
+                                'Namespace':
+                                    'AWS/S3',
+                                'MetricName':
+                                    metric_name,
                                 'Dimensions': [{
                                     'Name': "BucketName",
                                     'Value': bucket_name,
@@ -935,8 +938,10 @@ class ELB(AWSSectionCloudwatch):
                     'Label': load_balancer_dns_name,
                     'MetricStat': {
                         'Metric': {
-                            'Namespace': 'AWS/ELB',
-                            'MetricName': metric_name,
+                            'Namespace':
+                                'AWS/ELB',
+                            'MetricName':
+                                metric_name,
                             'Dimensions': [{
                                 'Name': "LoadBalancerName",
                                 'Value': load_balancer_name,
@@ -996,7 +1001,7 @@ class EBSSummary(AWSSectionGeneric):
         return AWSColleagueContents({}, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
-        response_volumes, response_volume_stats = self._describe_volumes()
+        response_volumes = self._describe_volumes()
         try:
             volumes = {r['VolumeId']: r for r in response_volumes['Volumes']}
         except KeyError as e:
@@ -1004,6 +1009,7 @@ class EBSSummary(AWSSectionGeneric):
             volumes = {}
 
         try:
+            response_volume_stats = self._client.describe_volume_status(VolumeIds=volumes.keys())
             volume_states = {r['VolumeId']: r for r in response_volume_stats['VolumeStatuses']}
         except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e,
@@ -1014,14 +1020,11 @@ class EBSSummary(AWSSectionGeneric):
     def _describe_volumes(self):
         if self._names is not None:
             response_volumes = self._client.describe_volumes(VolumeIds=self._names)
-            response_volume_stats = self._client.describe_volume_status(VolumeIds=self._names)
         elif self._tags is not None:
             response_volumes = self._client.describe_volumes(Filters=self._tags)
-            response_volume_stats = self._client.describe_volume_status(Filters=self._tags)
         else:
             response_volumes = self._client.describe_volumes()
-            response_volume_stats = self._client.describe_volume_status()
-        return response_volumes, response_volume_stats
+        return response_volumes
 
     def _compute_content(self, raw_content, colleague_contents):
         volumes, volume_states = raw_content.content

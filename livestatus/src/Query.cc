@@ -442,7 +442,7 @@ void Query::parseStatsGroupLine(char *line) {
 
 void Query::parseColumnsLine(char *line) {
     std::string str = line;
-    const std::string sep = " \t\n\v\f\r";
+    std::string sep = " \t\n\v\f\r";
     for (auto pos = str.find_first_not_of(sep); pos != std::string::npos;) {
         auto space = str.find_first_of(sep, pos);
         auto column_name =

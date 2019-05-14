@@ -134,12 +134,8 @@ def check_smart_stats(item, params, info):
     normalized = parse_smart_normalized_values(info)
 
     if item not in disks:
-        return 3, "Disk not found"
+        return
     disk = disks[item]
-
-    state = 0
-    infos = []
-    perfdata = []
 
     for unit, field, descr in [
         (' hours', 'Power_On_Hours', 'Powered on'),
@@ -155,32 +151,34 @@ def check_smart_stats(item, params, info):
         ('', 'UDMA_CRC_Error_Count', 'UDMA CRC errors'),
         ('', 'CRC_Error_Count', 'UDMA CRC errors'),
     ]:
-        if field not in disk:
+        value = disk.get(field)
+        if value is None:
             continue
 
-        value = disk[field]
-        infos.append("%s: %d%s" % (descr, value, unit))
-        perfdata.append((field, value))
+        infotext = "%s: %d%s" % (descr, value, unit)
 
         ref_value = params.get(field)
-        if not ref_value:
+        if ref_value is None:
+            yield 0, infotext, [(field, value)]
             continue
 
+        state = 2 if value > ref_value else 0
+        hint = "was %d during discovery" if value > ref_value else ""
         # For reallocated event counts we experienced to many reported errors for disks
         # which still seem to be OK. The raw value increased by a small amount but the
         # aggregated value remained at it's initial/ok state. So we use the aggregated
         # value now. Only for this field.
         if field == "Reallocated_Event_Count":
-            infos[-1] += " (was %d during discovery; normalized value looks OK)" % ref_value
             norm_value, norm_threshold = normalized[item][field]
+            if hint != "":
+                hint += ", "
             if norm_value <= norm_threshold:
                 state = 2
+                hint += "normalized value: %d (!!)" % norm_value
+            else:
+                hint += "normalized value: %d" % norm_value
 
-        elif value > ref_value:
-            state = 2
-            infos[-1] += "(!!) (was %d during discovery)" % ref_value
-
-    return state, ", ".join(infos), perfdata
+        yield state, infotext + " (%s)" % hint if hint else infotext, [(field, value)]
 
 
 check_info["smart.stats"] = {

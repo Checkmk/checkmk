@@ -105,3 +105,1586 @@ Boston, MA 02110-1301 USA.
     cursor: pointer;
   }
 }
+
+
+/*-------------------------------------------------------------------------.
+|                   ____                           _                       |
+|                  / ___| ___ _ __   ___ _ __ __ _| |                      |
+|                 | |  _ / _ \ '_ \ / _ \ '__/ _` | |                      |
+|                 | |_| |  __/ | | |  __/ | | (_| | |                      |
+|                  \____|\___|_| |_|\___|_|  \__,_|_|                      |
+|                                                                          |
++--------------------------------------------------------------------------+
+| General styles used in the pages                                         |
+'-------------------------------------------------------------------------*/
+
+//h3 {
+//    color: white;
+//    margin-bottom: 2px;
+//    font-size: 12pt;
+//    font-weight: normal;
+//}
+//
+///*-------------------------------------------------------------------------.
+//|                                       _                                  |
+//|                       _ __ ___   __ _(_)_ __                             |
+//|                      | '_ ` _ \ / _` | | '_ \                            |
+//|                      | | | | | | (_| | | | | |                           |
+//|                      |_| |_| |_|\__,_|_|_| |_|                           |
+//|                                                                          |
+//+--------------------------------------------------------------------------+
+//| Styles for the main frame (its body, header, footer, etc.)               |
+//'-------------------------------------------------------------------------*/
+//
+//body.main {
+//    background-image: url("images/contentframe_background.jpg");
+//    padding: 10px 10px 0 10px;
+//    background-attachment: fixed;
+//    background-repeat: repeat;
+//    font-family: arial, helvetica, sans-serif;
+//    font-size: 9pt;
+//    margin: 0;
+//    /* avoid white background shining through in case of unaligned image in zoomed browser view */
+//    background-color: #426D8A;
+//}
+//
+///* Can be toggled with N/n display option */
+//body.main.inline {
+//    padding: 0;
+//    background: none;
+//}
+//
+///* Special mode for creating screenshots of single elements. Omit background.
+//   This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
+//   on the URL */
+//body.main.screenshotmode {
+//    background-image: url("");
+//    background-color: white; /* #5893af; */
+//}
+//
+//body.main div.main {
+//    padding-left: 10px;
+//    border-left: 1px solid red;
+//}
+//
+///* The content page header containing the title, user, date */
+//body.main table.header {
+//    width: 100%;
+//    max-width: 100%;
+//    margin: 0 0 5px 0;
+//    padding: 0px 0px 10px 0px;
+//    border-spacing: 0px;
+//    color: #fff;
+//}
+//
+//body.main table.header td {
+//    white-space: nowrap;
+//    overflow: hidden;
+//    text-overflow: ellipsis;
+//    -o-text-overflow: ellipsis;
+//    vertical-align: bottom;
+//    color: #fff;
+//}
+//body.main table.header td.heading {
+//    font-size: 15pt;
+//    padding-left: 0px;
+//    height: 31px;
+//    max-width: 100px;
+//}
+//
+//body.main table.header td.heading img {
+//    height: 24px;
+//    width: 24px;
+//    margin-right: 3px;
+//    vertical-align: middle;
+//}
+//
+//body.main table.header td.heading a,
+//body.main table.header td.heading a:hover {
+//    text-decoration: none;
+//}
+//
+//body.main table.header td.right {
+//    text-align: right;
+//    font-size: 10pt;
+//    width: 1%;
+//}
+//
+//
+//body.main table.header td.right img {
+//    width: 19px;
+//    height: 19px;
+//    vertical-align: bottom;
+//}
+//
+//body.main table.header td.right a.head_logo img {
+//    width: 20px;
+//    height: 23px;
+//    margin: 0 0 1px 5px;
+//}
+//
+//body.main table.header td.right a.head_logo img:hover {
+//    opacity: 0.5;
+//    filter: alpha(opacity=50);
+//}
+//
+//body.main hr.header {
+//    background-color: #fff;
+//    height: 1px;
+//    position: absolute;
+//    width: 100%;
+//    left: 0px;
+//    padding: 0;
+//    margin: 0;
+//    border: 0;
+//    top: 42px;
+//    /* Needed for older IE versions */
+//    color: #fff;
+//}
+//
+//#headinfo {
+//  margin-right: 10px;
+//}
+//
+//body.main div.urldebug {
+//    color: white;
+//    width: 100%;
+//    font-size: 8pt;
+//    font-family: monospace;
+//    position: relative;
+//    top: -14px;
+//}
+//
+//
+///* The content page footer containing optional status icons */
+//body.main table.footer {
+//    margin-top: 10px;
+//    width: 100%;
+//    color: #fff;
+//}
+//
+//body.main table.footer td.left   { text-align: left; }
+//body.main table.footer td.middle { text-align: center; }
+//body.main table.footer td.right  { text-align: right; }
+//body.main table.footer a { color: #246; }
+//
+//div#foot_refresh, div#foot_refresh_time {
+//    display: inline-block;
+//}
+//
+//#reload_pause {
+//    display: block;
+//    position: fixed;
+//    right: 20px;
+//    top: 20px;
+//    width: 90px;
+//    height: 90px;
+//    background-color: #111;
+//    opacity: 0.8;
+//    filter: alpha(opacity=80); /* For IE8 and earlier */
+//    border-radius: 5px;
+//    padding: 10px;
+//    text-decoration: none;
+//    z-index: 40;
+//    text-align: center;
+//}
+//
+//.pause_bar {
+//    display: inline-block;
+//    width: 20px;
+//    height: 60px;
+//    margin-top: 5px;
+//    margin-bottom: 5px;
+//    background-color: #fff;
+//    opacity: 0.9;
+//    filter: alpha(opacity=90); /* For IE8 and earlier */
+//    border-radius: 5px;
+//}
+//
+//.pause_bar.p1 {
+//    margin-left: 15px;
+//    margin-right: 5px;
+//}
+//
+//.pause_bar.p2 {
+//    margin-left: 5px;
+//    margin-right: 15px;
+//}
+//
+//#reload_pause_counter {
+//    font-weight: bold;
+//    color: #fff;
+//    text-align: center;
+//    font-size: 120%;
+//    text-decoration: none;
+//}
+//
+//#reload_pause_counter:hover {
+//    text-decoration: underline;
+//}
+//
+//
+///*-------------------------------------------------------------------------.
+//|         ____            _            _   _ _       _                     |
+//|        / ___|___  _ __ | |_ _____  _| |_| (_)_ __ | | _____              |
+//|       | |   / _ \| '_ \| __/ _ \ \/ / __| | | '_ \| |/ / __|             |
+//|       | |__| (_) | | | | ||  __/>  <| |_| | | | | |   <\__ \             |
+//|        \____\___/|_| |_|\__\___/_/\_\\__|_|_|_| |_|_|\_\___/             |
+//|                                                                          |
+//+--------------------------------------------------------------------------+
+//| The blue buttons at the top of the screen used for navigation.           |
+//'-------------------------------------------------------------------------*/
+//
+//div.contextlinks {
+//    margin-top: 8px;
+//    margin-bottom: 10px;
+//}
+//
+//div.contextlinks .end {
+//    clear: left;
+//}
+//
+//div.contextlink,
+//div.togglebutton {
+//    float: left;
+//    position: relative;
+//    overflow: hidden;
+//    white-space: nowrap;
+//    text-align: center;
+//    vertical-align: middle;
+//    width: 158px;
+//    height: 23px;
+//    position: relative;
+//}
+//
+//div.contextlink.short {
+//    width: 38px;
+//}
+//
+///* TODO: Consolidate button styling with other buttons (e.g. sidebar button) */
+//div.contextlink a,
+//div.togglebutton a,
+//div.togglebutton.off a,
+//div.togglebutton.off a:hover,
+//div.togglebutton.off a:active {
+//    position: absolute;
+//    top: 1px;
+//    left: 0;
+//    right: 4px;
+//    bottom: 1px;
+//    color: #fff;
+//    text-decoration: none;
+//    font-weight: bold;
+//    display: block;
+//    text-overflow: ellipsis;
+//    overflow: hidden;
+//    line-height: 18px;
+//    box-shadow: none;
+//    cursor: pointer;
+//
+//    background-color: #497e95;
+//    border-width: 1px;
+//    border-style: solid;
+//    border-color: #86a9b8 #22404d #22414d #86a9b8;
+//    border-radius: 5px 5px 5px 5px;
+//    box-shadow: 1px 1px 1.5px rgba(0, 0, 0, 0.2);
+//}
+//
+//div.togglebutton.off a {
+//    cursor: auto;
+//}
+//
+//div.contextlink a:hover,
+//div.togglebutton a:hover {
+//    background-color: #6da1b8;
+//    text-decoration: none;
+//}
+//
+//div.contextlink a:active,
+//div.togglebutton a:active,
+//div.togglebutton.down a {
+//    border-color:  #22414d #86a9b8 #86a9b8 #22404d;
+//    background-color: #3b6678;
+//    box-shadow: inset 0 0 0.5px #444444;
+//}
+//
+//div.togglebutton.down a:hover {
+//    background-color: #497e95;
+//}
+//
+//div.contextlink a:focus,
+//div.togglebutton a:focus {
+//    outline: none;
+//}
+//
+//div.contextlink.hot a {
+//    border-color: #d4a466 #633e0d #633e0d #d4a466;
+//    background-color: #c37d19;
+//}
+//
+//div.contextlink.hot a:hover {
+//    background-color: #deb548;
+//}
+//
+//div.contextlink.hot a:active {
+//    background-color: #c37d19;
+//    border-color: #6d5723 #d9bf81 #d9bf81 #6d5723;
+//}
+//
+///* Icon image in a context button */
+//div.contextlink img {
+//   width: 18px;
+//   height: 18px;
+//   margin-right: 5px;
+//   position: relative;
+//   top: -1px;
+//}
+//
+//div.togglebutton {
+//    width: 25px;
+//}
+//
+//div.togglebutton a,
+//div.togglebutton.off a,
+//div.togglebutton.off a:hover {
+//    right: 1px;
+//}
+//
+//div.togglebutton img {
+//    width: 18px;
+//    height: 18px;
+//}
+//
+//div.togglebutton.off {
+//    opacity: 0.5;
+//    filter: alpha(opacity=50);
+//}
+//
+//div.togglebutton:active:not(.off) img,
+//div.togglebutton.down:not(.off) img {
+//    position: relative;
+//    left: 1px;
+//}
+//
+///*-------------------------------------------------------------------------.
+//|            ____        _          _____     _     _                      |
+//|           |  _ \  __ _| |_ __ _  |_   _|_ _| |__ | | ___                 |
+//|           | | | |/ _` | __/ _` |   | |/ _` | '_ \| |/ _ \                |
+//|           | |_| | (_| | || (_| |   | | (_| | |_) | |  __/                |
+//|           |____/ \__,_|\__\__,_|   |_|\__,_|_.__/|_|\___|                |
+//|                                                                          |
+//+--------------------------------------------------------------------------+
+//| Styles for table that should rows of data. Such tables are used in the   |
+//| Status-GUI, in WATO and in custom modules that use similar tables.       |
+//'-------------------------------------------------------------------------*/
+//
+//table.data {
+//    border-spacing: 0px;
+//    margin: 0;
+//    padding: 0;
+//    empty-cells: show;
+//    width: 100%;
+//}
+//
+//table.data {
+//    color: black;
+//}
+//
+//table.data .checkbox_hover {
+//    background-image: url("images/checkbox_hover_bg.png");
+//    background-attachment: fixed;
+//}
+//
+//
+//table.data th {
+//    font-weight: normal;
+//    border-right: 1px solid #ccc;
+//    background-color: #999;
+//    padding: 2px 2px;
+//    text-align: center;
+//    color: #fff;
+//    vertical-align: middle;
+//}
+//table.data th:last-child {
+//    border-right-style: none;
+//}
+//
+//table.data td.buttons {
+//    white-space: nowrap;
+//    width: 1%;
+//}
+//
+//table.data td.count {
+//    text-align: right;
+//    font-weight: bold;
+//    font-family: sans-serif;
+//}
+//
+//table.data td.number {
+//    text-align: right;
+//    white-space: nowrap;
+//}
+//
+//table.data td.nobr {
+//    white-space: nowrap;
+//}
+//
+//table.data td.center {
+//    text-align: center;
+//}
+//
+//table.data td.unused {
+//    color: #888;
+//    text-shadow: 1px 1px 0.5px #fff;
+//}
+//
+//td.narrow {
+//    width: 10px;
+//}
+//td.wide {
+//    width: 100%;
+//}
+//
+//table.data.oddeven > tbody > tr:nth-child(odd) {
+//    background-color: #eee;
+//}
+//
+//table.data.oddeven > tbody > tr:nth-child(even) {
+//    background-color: #ddd;
+//}
+//
+//table.data.oddeven > tbody > tr.groupheader {
+//    background-color: transparent;
+//}
+//
+///* Two-lined header, for example in WATO: ChangeLog->Site Status */
+//table.data tr.dualheader th {
+//    border-bottom: 1px solid #ccc;
+//}
+//
+//
+///* Table header links (For sorting) */
+//table.data th.sort {
+//    /* text-decoration: underline; */
+//}
+//
+//table.data th.sort:hover {
+//    background-color: #B2B2B2;
+//    cursor: pointer;
+//}
+//
+//table.data th.sort:hover {
+//    color: #000;
+//}
+//
+//table.data th.asc {
+//    /* color: #CBDCF2; */
+//}
+//
+//table.data th.desc {
+//    /* color: #CBDCF2; */
+//}
+//
+//table.data th.tablegap {
+//    background-color: transparent; /* none; */
+//}
+//
+//table.data tr.data > td {
+//    border-right: 1px solid #ccc;
+//    padding: 2px 4px;
+//    height: 22px;
+//    vertical-align: middle;
+//}
+//table.data tr.data > td:last-child {
+//    border-right-style: none;
+//}
+//
+//table.data a {
+//    text-decoration: none;
+//    color: black;
+//}
+//table.data a:hover {
+//    text-decoration: underline;
+//}
+//
+//table.data tr.data td.checkbox {
+//    width: 20px;
+//    text-align: center;
+//}
+//table.data tr.data td.checkbox input {
+//    margin: 0px;
+//}
+//
+//table.data th input.checkgroup {
+//    height: 12px;
+//    width: 16px;
+//    padding: 0;
+//    margin: 0;
+//    text-align: center;
+//    vertical-align: middle;
+//    font-size: 5pt;
+//    line-height: 4pt;
+//}
+//
+//table.data td.host {
+//    border-style: none;
+//    font-weight: bold;
+//    padding-top: 1ex;
+//    padding-left: 0px;
+//    font-size: 120%;
+//}
+//
+///* Link to object in the classic nagios GUI */
+//table.data td.singleicon img {
+//    margin: 0;
+//    padding: 0;
+//}
+//table.data td.singleicon {
+//    width: 16px;
+//    text-align: center;
+//}
+//
+//table.data tr.actions td {
+//    padding: 5px;
+//}
+//table.data tr.actions div {
+//    display: inline-block;
+//}
+//table.data tr.actions td div.search input[type="text"] {
+//    margin-right: 2px;
+//}
+//table.data tr.actions.no_match td {
+//    padding: 5px;
+//}
+//table.data tr th {
+//    vertical-align: baseline;
+//}
+//
+//table.data tr div.toggle_actions {
+//    position: relative;
+//    padding-left: 14px;
+//}
+//
+//table.data tr a.toggle_actions {
+//    position: absolute;
+//    top: 0;
+//    left: 0;
+//    margin: 0;
+//    padding: 0;
+//}
+//table.data tr th a.toggle_actions img {
+//    vertical-align: top;
+//    width: 12px;
+//    height: 13px;
+//    padding: 0;
+//    position: relative;
+//    top: 2px;
+//}
+//
+///* Group header used in table, box and tiled layout */
+//table.groupheader {
+//    margin: 0px;
+//    border: 0px;
+//    padding: 6px 0px 3px 0px;
+//}
+//
+//table.data tr.groupheader,
+//table.data tr.groupheader.td {
+//    background-color: transparent;
+//}
+//
+//tr.groupheader td {
+//    border-style: none;
+//    margin: 0px;
+//    padding-top: 2px;
+//    font-weight: bold;
+//    color: #fff;
+//}
+//tr.groupheader a {
+//    color: #fff;
+//    text-decoration: none;
+//}
+//
+//tr.groupheader a:hover {
+//    text-decoration: underline;
+//}
+//
+//tr.data.grouped_row_header td {
+//    cursor: pointer;
+//}
+//
+//tr.data.grouped_row_header img.treeangle {
+//    margin-left: 0;
+//}
+//
+//tr.data.group_end {
+//    border-bottom: 2px solid #ccc;
+//}
+//
+///* state in group header must have fixed width */
+//.groupheader td.state {
+//    border: 1px solid #000000;
+//    border-radius: 5px;
+//    box-shadow: 1px 1px 2px #444444;
+//    padding: 2px 5px;
+//    width: 50px;
+//}
+//
+//img.iconbutton {
+//    width: 20px;
+//    height: 20px;
+//    padding: 0px 2px;
+//}
+//
+//
+//.wato a.checkbox img.iconbutton {
+//    width: 60px;
+//    height: 16px;
+//}
+//
+//img.iconbutton:hover {
+//    opacity: 0.5;
+//    filter: alpha(opacity=50); /* For IE8 and earlier */
+//}
+//
+///* reschedule check icon */
+//img.iconbutton.reloading,
+//img.icon.reloading {
+//    -webkit-animation:spin 1s linear infinite;
+//    -moz-animation:spin 1s linear infinite;
+//    animation:spin 1s linear infinite;
+//}
+//@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+//@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+//@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+//
+//img.iconbutton.reload_failed {
+//    -webkit-filter: sepia(100%);
+//    filter: sepia(100%);
+//}
+//
+///* Table with captions on the left side. Used e.g. for man pages and werks */
+//
+//table.data.headerleft th {
+//    text-align: left;
+//    padding: 4px 5px;
+//}
+//table.data.headerleft td {
+//    padding: 4px 5px;
+//}
+//
+//table.data.headerleft > tbody > tr:nth-child(odd) > th {
+//    background-color: #73a1b4;
+//}
+//
+//table.data.headerleft > tbody > tr:nth-child(even) > th {
+//    background-color: #7fadc0;
+//}
+//
+//table.data.headerleft > tbody > tr:nth-child(odd) > td {
+//    background-color: #ddd;
+//}
+//table.data.headerleft > tbody > tr:nth-child(even) > td {
+//    background-color: #eee;
+//}
+//
+//
+///*-------------------------------------------------------------------------.
+//|                    _____                                                 |
+//|                   |  ___|__  _ __ _ __ ___  ___                          |
+//|                   | |_ / _ \| '__| '_ ` _ \/ __|                         |
+//|                   |  _| (_) | |  | | | | | \__ \                         |
+//|                   |_|  \___/|_|  |_| |_| |_|___/                         |
+//|                                                                          |
+//+--------------------------------------------------------------------------+
+//| Input forms (e.g. Filters, Commands, WATO)                               |
+//'-------------------------------------------------------------------------*/
+//
+//input[type=text], textarea {
+//    box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
+//    position: relative;
+//}
+//
+//input[type=password] {
+//    box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
+//}
+//input[type=text], input[type=password] {
+//    height: 18px;
+//    padding: 3px 3px 1px 3px;
+//    vertical-align: middle;
+//}
+//select {
+//    height: 24px;
+//    box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
+//    vertical-align: middle;
+//    padding-top: 4px;
+//
+//}
+//
+//select[multiple=multiple] {
+//    height: auto;
+//}
+//
+//input[type=radio] {
+//    margin-left: 0px;
+//}
+//input[type=checkbox] {
+//    margin-left: 0px;
+//}
+//
+//
+//h2.formcaption {
+//  font-size: 100%;
+//  margin-bottom: 0px;
+//}
+//
+///* TODO: lm: Is this table.form used anywhere? If not, remove it! */
+//
+//table.form {
+//    background-color: rgba(255, 255, 255, 0.2);
+//    border-collapse: collapse;
+//    empty-cells: show;
+//    border-spacing: 0px;
+//    margin: 0px 10px 10px 0px;
+//    border-width: 1px;
+//    border-style: none none solid solid;
+//    border-color: #2f5f74;
+//}
+///* Sorry for the mess here. It is due to using foldable_containter
+//   within a form table (currently only in WATO in the host and
+//   folder properties) */
+//
+//table.form.nomargin {
+//    margin: 0;
+//    border-bottom-style: none;
+//}
+//
+//table.form.nomargin td.title {
+//    background-color: rgba(255, 255, 255, 0.2);
+//}
+//
+//table.form > tbody > tr > td {
+//    padding: 5px 8px;
+//    color: #000;
+//    border-width: 1px;
+//    border-color: #2f5f73;
+//    border-style: solid solid none none;
+//}
+//
+//table.form img.toggleheader {
+//    width: 20px;
+//    height: 20px;
+//    cursor: auto;
+//    padding-right: 5px;
+//    vertical-align: middle;
+//}
+//table.form img.toggleheader.hover {
+//    cursor: pointer;
+//}
+//
+//
+///* Bottom row with action buttons, right justified */
+//table.form td.buttons {
+//    color: #274750;
+//}
+//
+///* Inter-heading row over complete width */
+//table.form td.title {
+//    border-right-style: solid;
+//    font-weight: bold;
+//}
+//
+//table.form td.legend.border {
+///*    border-right-style: solid; */
+//}
+//table.form td.hilite {
+//    background-color: rgba(255, 255, 255, 0.2);
+//    margin: 10px;
+//}
+//
+//table.form td.lgend.button {
+//    text-align: right;
+//}
+//
+//td.content hr {
+//    height: 1px;
+//    border-style: none;
+//    background-color: rgba(255, 255, 255, 0.2);
+//}
+//
+//td.legend {
+//    width: 150px;
+//}
+//
+//input.tab#results, input.tabactive#results { background-color: #fe6; }
+//
+///* input elements in forms */
+//
+//table.form input.number {
+//    text-align: right;
+//}
+//
+//div.textinputlegend {
+//    font-size: 80%;
+//}
+//
+//input.date, input.time {
+//    font-family: monospace;
+//}
+//
+//.inputerror input, .inputerror textarea, .inputerror span.checkbox, .inputerror > select {
+//    background-color: #f84;
+//}
+//
+//.inputerror span.checkbox {
+//    display: block;
+//    float: left;
+//    height: 17px;
+//    margin-right: 2px;
+//}
+//
+//.inputerror span.checkbox input {
+//    margin: 1px;
+//}
+//
+//span.checkbox {
+//    white-space: nowrap;
+//    line-height: 14px;
+//}
+//
+//
+///* Next-Generation forms */
+//table.nform {
+//    border-spacing: 0px;
+//    margin: 0;
+//    padding: 0;
+//    empty-cells: show;
+//    width: 100%;
+//    border: 1px solid green;
+//    border-radius: 5px;
+//    box-shadow: 0px 0px 2px #000;
+//    margin-bottom: 10px;
+//    background-color: rgba(160, 181, 190, 0.6);
+//    border-color: #86A9B8 #22404D #22414D #86A9B8;
+//    border-width: 1px;
+//    border-style: solid;
+//}
+//
+//body.main.screenshotmode table.nform {
+//    background-color: #508aa1;
+//    background-image: none;
+//}
+//
+//table.nform tr.closed {
+//    display: none;
+//}
+//
+//table.nform tr.heading td {
+//    color: white;
+//}
+//table.nform tr.heading > td {
+//    border-radius: 5px 5px 0px 0px;
+//    background-color: rgba(255, 255, 255, 0.2);
+//    height: 20px;
+//    vertical-align: middle;
+//    padding-left: 10px;
+//    cursor: pointer;
+//}
+//
+//table.nform > tbody > tr td {
+//    color: black;
+//}
+//
+//table.nform > tbody > tr > td {
+//    vertical-align: middle;
+//}
+//
+//table.nform > tbody > tr > td.simple {
+//    line-height: 20px;
+//}
+//
+//table.nform td.legend {
+//    text-align: left;
+//    width: 240px;
+//    padding-right: 8px;
+//    vertical-align: top;
+//    padding-left: 10px;
+//    line-height: 28px;
+//}
+//table.nform td.legend.simple {
+//    padding-top: 5px;
+//}
+//
+//table.nform.narrow td.legend {
+//    height: 18px;
+//}
+//
+//table.nform.narrow td.content {
+//    height: 18px;
+//    padding-bottom: 2px;
+//}
+//
+//table.nform td.legend div.title {
+//    float: left;
+//    overflow: hidden;
+//    white-space: nowrap;
+//    max-width: 240px;
+//}
+//table.nform td.legend div.title.withcheckbox {
+//    max-width: 210px;
+//    margin-right: 6px;
+//}
+//table.nform .dots {
+//    color: #444;
+//    margin-left: 5px;
+//}
+//table.nform td.legend div.checkbox {
+//    float: left;
+//}
+//
+//table.nform td.content {
+//    padding-left: 10px;
+//    padding-right: 10px;
+//}
+//table.nform td.content.simple {
+//    padding-bottom: 0px;
+//}
+//
+//table.nform td.buttons {
+//}
+//
+//table.nform tr.top td {
+//    height: 6px;
+//}
+//
+//table.nform tr.bottom td {
+//    height: 5px;
+//}
+//
+///*-------------------------------------------------------------------------.
+//|                     _        _   _                                       |
+//|                    / \   ___| |_(_) ___  _ __  ___                       |
+//|                   / _ \ / __| __| |/ _ \| '_ \/ __|                      |
+//|                  / ___ \ (__| |_| | (_) | | | \__ \                      |
+//|                 /_/   \_\___|\__|_|\___/|_| |_|___/                      |
+//|                                                                          |
+//+--------------------------------------------------------------------------+
+//| Confirmation dialogs, success and error messages when performing actions |
+//'-------------------------------------------------------------------------*/
+//div.really, div.success, div.error, div.message, div.warning {
+//    margin: 2em 0em;
+//    padding: 1em 2em;
+//}
+//
+//div.message {
+//    color: black;
+//}
+//
+//div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
+//     font-size: 12pt;
+//     font-weight: bold;
+//     margin-bottom: 5px;
+//     color: white;
+//     margin-left: 0px;
+//}
+//
+//div.really, div.success {
+//    color: black;
+//}
+//
+//form.confirm {
+//    margin-top: 8px;
+//    position: relative;
+//    left: -1px;
+//}
+//
+///*-------------------------------------------------------------------------.
+//|                         _   _      _                                     |
+//|                        | | | | ___| |_ __                                |
+//|                        | |_| |/ _ \ | '_ \                               |
+//|                        |  _  |  __/ | |_) |                              |
+//|                        |_| |_|\___|_| .__/                               |
+//|                                     |_|                                  |
+//+--------------------------------------------------------------------------+
+//|                                                                          |
+//'-------------------------------------------------------------------------*/
+//
+//body.main table.header td.right a#helpbutton img {
+//    margin: 1px 5px;
+//}
+//
+//a#helpbutton.passive {
+//    filter: grayscale(100%);
+//    -webkit-filter: grayscale(100%);
+//    -moz-filter: grayscale(100%);
+//    -ms-filter: grayscale(100%);
+//    -o-filter: grayscale(100%);
+//    filter: gray;
+//    -webkit-filter: grayscale(1);
+//}
+//
+//div.help {
+//    background-image: url("images/helpbackground.jpg");
+//    background-color: #FFFFCC;
+//    border-radius: 5px;
+//    box-shadow: 0 0 10px #fff;
+//    margin: 6px 3px 10px 3px;
+//    padding: 5px;
+//    font-weight: normal;
+//    font-size: 12px;
+//    text-align: left;
+//    color: black;
+//    display: inline-block;
+//}
+//
+//div.help a {
+//    color: black;
+//}
+//
+//div.help a:hover {
+//    text-decoration: none;
+//}
+//
+//table.data div.help {
+//    box-shadow: 0 0 3px #000;
+//}
+//
+//div.help table.help {
+//    border-collapse: collapse;
+//    empty-cells: show;
+//}
+//
+//div.help table.help td {
+//    border: 1px solid black;
+//    vertical-align: top;
+//}
+//
+//div.help table.help td.tt {
+//    font-family: courier, monospace;
+//}
+//
+//div.help tt {
+//    font-family: courier, monospace;
+//    color: #000099;
+//}
+//
+///*--Popupmenu--------------------------------------------------------------.
+//|       ____                                                               |
+//|      |  _ \ ___  _ __  _   _ _ __  _ __ ___   ___ _ __  _   _            |
+//|      | |_) / _ \| '_ \| | | | '_ \| '_ ` _ \ / _ \ '_ \| | | |           |
+//|      |  __/ (_) | |_) | |_| | |_) | | | | | |  __/ | | | |_| |           |
+//|      |_|   \___/| .__/ \__,_| .__/|_| |_| |_|\___|_| |_|\__,_|           |
+//|                 |_|         |_|                                          |
+//'-------------------------------------------------------------------------*/
+//
+//body.main .popup_menu {
+//    position: absolute;
+//    top: 15px;
+//    left: 15px;
+//    z-index: 50;
+//
+//    min-width: 300px;
+//
+//    color: #fff;
+//    background-color: #508AA1;
+//    border-width: 1px;
+//    border-style: solid;
+//    border-color: #9bc #367 #367 #9bc;
+//    box-shadow:  0.5px 0.5px 16px #467;
+//    border-radius: 5px;
+//    white-space: normal;
+//}
+//
+//body.main .popup_menu div.wrapper {
+//    position: relative;
+//}
+//
+//body.main .popup_menu div.content {
+//    padding: 5px 8px;
+//}
+//
+//body.main .popup_menu.resizable div.resizer {
+//    width: 15px;
+//    height: 15px;
+//    bottom: 0;
+//    right: 0;
+//    background-color: #508AA1;
+//    position: absolute;
+//    pointer-events: none;
+//    cursor: se-resize;
+//}
+//
+//body.main div.popup_menu.resizable div.content {
+//    resize: both;
+//    overflow: auto;
+//    min-height: 150px;
+//    min-width: 312px;
+//}
+//
+//body.main .popup_menu img {
+//    width: 12px;
+//    height: auto;
+//    vertical-align: bottom;
+//    margin-right: 3px;
+//}
+//
+//body.main .popup_menu ul {
+//    list-style: none;
+//    margin: 0;
+//    padding: 0;
+//}
+//
+//body.main .popup_menu a,
+//body.main table.footer .popup_menu a,
+//body.main .popup_menu span {
+//    display: block;
+//    padding-top: 1px;
+//    padding-bottom: 1px;
+//    text-align: left;
+//    text-decoration: none;
+//    color: #fff;
+//}
+//
+//body.main .popup_menu span {
+//    padding-left: 0px;
+//    font-weight: bold;
+//    margin-top: 8px;
+//}
+//
+//body.main .popup_menu li:first-child span {
+//    margin-top: 0;
+//}
+//
+//body.main .popup_menu a:hover,
+//body.main table.footer .popup_menu a:hover {
+//    text-decoration: underline;
+//}
+//
+//#popup_menu .icons {
+//    position: relative;
+//    height: 100%;
+//    width: 100%;
+//    min-height: 150px;
+//    min-width: 312px;
+//}
+//
+//#popup_menu .icons ul {
+//    list-style: none;
+//    height: 21px;
+//    margin: 0;
+//    padding: 0;
+//    border-bottom: 1px solid #e5e5e5;
+//}
+//
+//#popup_menu .icons li {
+//    float: left;
+//}
+//
+//#popup_menu .icons li a {
+//    display: block;
+//    height: 21px;
+//    padding: 0 5px;
+//    line-height: 21px;
+//    border-right: 1px solid #fff;
+//}
+//
+//#popup_menu .icons li a:hover {
+//    text-decoration: none;
+//    background-color: #629BB1;
+//    color: #fff;
+//}
+//
+//#popup_menu .icons li.active a {
+//    border-bottom: 1px solid #508AA1;
+//    color: #000;
+//}
+//
+//#popup_menu .icons div.icon_container {
+//    position: absolute;
+//    overflow-y: auto;
+//    padding: 5px;
+//    top: 26px;
+//    left: 0;
+//    right: 0;
+//    bottom: 38px;
+//}
+//
+//#popup_menu .icons a.icon {
+//    display: inline-block;
+//    cursor: pointer;
+//}
+//
+//#popup_menu .icons.show_names a.icon {
+//    width: 100px;
+//}
+//
+//#popup_menu .icons a.icon span {
+//    display: none;
+//}
+//
+//#popup_menu .icons.show_names a.icon span {
+//    display: inline-block;
+//    font-weight: normal;
+//
+//    text-overflow: ellipsis;
+//    width: 62px;
+//    overflow: hidden;
+//    margin: 0;
+//    white-space: nowrap;
+//    line-height: 19px;
+//    vertical-align: middle;
+//}
+//
+//#popup_menu .icons.show_names a.icon span:hover {
+//    text-decoration: underline;
+//}
+//
+//#popup_menu .icons img.icon {
+//    width: 20px;
+//    height: 20px;
+//}
+//
+//#popup_menu .icons div.buttons {
+//    position: absolute;
+//    right: 10px;
+//    bottom: 10px;
+//}
+//
+///*--Various----------------------------------------------------------------.
+//|                __     __         _                                       |
+//|                \ \   / /_ _ _ __(_) ___  _   _ ___                       |
+//|                 \ \ / / _` | '__| |/ _ \| | | / __|                      |
+//|                  \ V / (_| | |  | | (_) | |_| \__ \                      |
+//|                   \_/ \__,_|_|  |_|\___/ \__,_|___/                      |
+//|                                                                          |
+//'-------------------------------------------------------------------------*/
+//
+//div.keysym {
+//    text-align: center;
+//    color: white;
+//    /* font-style: italic; */
+//    border-width: 2px;
+//    border-style: solid;
+//    border-color: #888 #444 #000 #666;
+//    border-radius: 4px;
+//    box-shadow: 0.5px 0.5px 1px #000;
+//    background-color: #333;
+//    padding: 2px 5px;
+//    margin: 0px 1px;
+//    display: inline-block;
+//}
+//
+//
+///* Contextlinks with embedded keyboard button */
+//div.contextlink div.keysym {
+//    background-color: #467;
+//    border-color: #8ab #245 #134 #79a;
+//    border-width: 2px;
+//    padding: 1px 5px;
+//    font-size: 6pt;
+//    position: absolute;
+//    top: 4px;
+//    right: 5px;
+//}
+//
+//div.contextlink.button a {
+//    width: 135px;
+//}
+//
+//div.log_output {
+//    font-family: monospace, sans-serif;
+//    box-shadow: 1px 1px 3px #888 inset;
+//    overflow-x: scroll;
+//    padding: 5px 5px;
+//    vertical-align: top;
+//    background-color: #fff;
+//    color: black;
+//    /* below resize option is css3 */
+//}
+//
+//a.element_dragger {
+//    cursor: move;
+//}
+//
+//a.element_dragger:hover {
+//    opacity: 0.5;
+//    filter: alpha(opacity=50); /* For IE8 and earlier */
+//}
+//
+//.dragging {
+//    cursor: move;
+//    box-shadow: 0px 2px 10px 0px rgba(0,0,0,0.6);
+//    -webkit-transform: scale(1.005);
+//    -moz-transform: scale(1.005);
+//    -ms-transform: scale(1.005);
+//    -o-transform: scale(1.005);
+//    transform: scale(1.005);
+//}
+//
+//td.sla_spec table table,
+//td.invtree table,
+//td.agent_config table.rulesets table,
+//table.data tr.ac_test_details table,
+//table.data tr.notification_context table {
+//   border-collapse: collapse;
+//   border: 0.5px solid black;
+//   box-shadow: 0.5px 0.5px 1px #ccc;
+//   margin-top: 3px;
+//}
+//
+//td.sla_spec table td,
+//td.invtree table td,
+//td.agent_config table.rulesets table td,
+//td.invtree table th,
+//td.agent_config table.rulesets table td.title,
+//table.data.single tr.data td.invtree table td,
+//table.data.single tr.data td.invtree table th,
+//table.data tr.ac_test_details table td,
+//table.data tr.notification_context table td,
+//table.data tr.notification_context table th,
+//td.rule_conditions table td {
+//    border: 1px solid #888;
+//    padding: 1px 5px;
+//    height: 14px;
+//}
+//
+//td.sla_spec table td.title,
+//td.invtree table th,
+//td.agent_config table.rulesets table td.title,
+//table.data tr.notification_context table th {
+//    text-align: left;
+//}
+//
+//td.sla_spec table td,
+//td.invtree table td,
+//td.agent_config table.rulesets table td,
+//table.data tr.ac_test_details table td,
+//table.data tr.notification_context table td,
+//td.rule_conditions table td {
+//    background-color: #fff;
+//}
+//
+//td.sla_spec table td.title,
+//td.agent_config table.rulesets table td.title,
+//table.data tr.notification_context table th,
+//td.rule_conditions table td.title {
+//    background-color: #999;
+//    color: #fff;
+//}
+//
+//table.agents tbody > tr.data > td {
+//    vertical-align: top;
+//    line-height: 20px;
+//}
+//
+//table.agents tbody > tr.data > td.agent_config {
+//    vertical-align: middle;
+//    line-height: normal;
+//}
+//
+//
+///*-------------------------------------------------------------------------.
+//|         ____       _                                                     |
+//|        |  _ \  ___| |__  _   _  __ _  __   ____ _ _ __ ___               |
+//|        | | | |/ _ \ '_ \| | | |/ _` | \ \ / / _` | '__/ __|              |
+//|        | |_| |  __/ |_) | |_| | (_| |  \ V / (_| | |  \__ \              |
+//|        |____/ \___|_.__/ \__,_|\__, |   \_/ \__,_|_|  |___/              |
+//|                                |___/                                     |
+//+--------------------------------------------------------------------------+
+//| html.debug_vars() outputs the variables in the current URL.              |
+//'-------------------------------------------------------------------------*/
+//
+//table.debug_vars {
+//    border-collapse: collapse;
+//}
+//table.debug_vars th {
+//    border: 1px solid #080;
+//    background-color: #8c8;
+//    font-weight: bold;
+//}
+//table.debug_vars td.left {
+//    background-color: #395;
+//    color: white;
+//    font-weight: bold;
+//}
+//table.debug_vars td.right {
+//    background-color: #8fc;
+//    color: black;
+//    font-weight: bold;
+//}
+//table.debug_vars td {
+//    padding: 2px 6px;
+//    border: 1px solid #050;
+//    font-family: courier, monospace;
+//}
+//
+///* Popup for adding to visuals (Dashboard, Reports */
+//
+//div.pnp_graph, div.popup_trigger {
+//    position: relative;
+//}
+//
+//div.popup_trigger {
+//    display: inline-block;
+//}
+//
+//div.pnp_graph a.popup_trigger {
+//    position: absolute;
+//    top: 10px;
+//    left: 10px;
+//
+//    display: block;
+//    width: 20px;
+//    height: 20px;
+//    background-image: url(images/icon_menu.png);
+//    background-size: contain;
+//}
+//
+//div.pnp_graph a.popup_trigger:hover {
+//    cursor: pointer;
+//}
+//
+//tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
+//    border: none;
+//    box-shadow: none;
+//    margin: 0;
+//}
+//
+//div.popup_trigger img.iconbutton {
+//    padding: 0;
+//}
+//
+//
+//td.job_state{
+//    color: white;
+//    box-shadow: 0.5px 0.5px 2px #000 inset;
+//    text-align: center;
+//    font-weight: bold;
+//}
+//
+//table.data > tbody > tr > td.job_state.job_finished {
+//    background-color: #00c020;
+//    box-shadow: 0px 0px 3px #ccffcc inset;
+//}
+//
+//table.data > tbody > tr > td.job_state.job_exception{
+//    background-color: #bc5b4e;
+//    box-shadow: 0px 0px 2px #000 inset;
+//}
+//
+//table.data > tbody > tr > td.job_state.job_running{
+//    background-color: #c020c0;
+//    box-shadow: 0px 0px 2px #000 inset;
+//}
+//
+//table.data > tbody > tr > td.job_state.job_initialized{
+//    color: black;
+//    background-color: #cccccc;
+//}
+//
+//table.data.job_details.headerleft {
+//    width: 100%;
+//}
+//
+//table.data.job_details > tbody > tr > th {
+//    width: 150px;
+//}
+//
+//table.data.job_details div.log_output > pre{
+//    margin: 0;
+//}
+//
+///* Fixed job columns */
+//table.data.job_table > tbody > tr > td.job_actions {
+//    width: 50px;
+//}
+//
+//table.data.job_table> tbody > tr > td.job_state {
+//    width: 50px;
+//}
+//
+//
+//table.data.job_table> tbody > tr > td.job_started {
+//    width: 160px;
+//}
+//
+//table.data.job_table> tbody > tr > td.job_pid{
+//    width: 40px;
+//    text-align: right;
+//}
+//
+//.tagify {
+//  $self: &;
+//  $tagMargin: 0 0 2px 5px;
+//  $tagPad: .1em .3em;
+//
+//  border: none;
+//
+//  #{ $self }__input {
+//    padding: $tagPad;
+//    margin: $tagMargin;
+//  }
+//
+//  &[readonly] {
+//    tag > div {
+//      padding: $tagPad;
+//    }
+//  }
+//
+//  tag {
+//    margin: 0 0 2px 5px;
+//
+//    > div {
+//      padding: $tagPad;
+//      padding-right: nth($tagPad, 2) * 5;
+//      margin: $tagMargin;
+//      color: #fff;
+//    }
+//
+//    x {
+//      top: 45%;
+//      right: 2px;
+//      font-size: 10px;
+//      line-height: 14px;
+//    }
+//
+//    &:hover:not([readonly]) div::before {
+//      top: 0;
+//      right: 0;
+//      bottom: 0;
+//      left: 0;
+//      opacity: 0.5;
+//      box-shadow: none;
+//    }
+//
+//    > div::before {
+//      top: 0;
+//      right: 0;
+//      bottom: 0;
+//      left: 0;
+//      background: #00a8b5;
+//      box-shadow: none;
+//      animation: none;
+//    }
+//
+//    &.explicit > div::before {
+//      background: #774898;
+//    }
+//
+//    &.ruleset > div::before {
+//      background: #de4383;
+//    }
+//
+//    &.discovered > div::before {
+//      background: #f3ae4b;
+//    }
+//  }
+//
+//  &:hover {
+//    border-color: none;
+//  }
+//
+//  a tag {
+//    cursor: pointer;
+//  }
+//}

@@ -1,0 +1,10 @@
+Title: agent_aws: Fixed filtering EBS volumes by tags
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p17
+Date: 1557816497
+Class: fix
+
+

@@ -70,11 +70,11 @@ std::optional<std::string> CustomVariableExpander::expand(
         return {};
     }
 
-    RegExp regExp(str.substr(_prefix.size()), RegExp::Case::ignore,
-                  RegExp::Syntax::literal);
+    RegExp re(str.substr(_prefix.size()), RegExp::Case::ignore,
+              RegExp::Syntax::literal);
     for (const auto &[name, value] :
          _mc->customAttributes(&_cvm, AttributeKind::custom_variables)) {
-        if (regExp.match(name)) {
+        if (re.match(name)) {
             return value;
         }
     }

@@ -561,8 +561,8 @@ void TableStateHistory::answerQuery(Query *query) {
                     entry->_kind == LogEntryKind::state_host ||
                     entry->_kind == LogEntryKind::downtime_alert_host) {
                     if (state_changed != 0) {
-                        for (auto &_service : state->_services) {
-                            updateHostServiceState(query, entry, _service,
+                        for (auto &svc : state->_services) {
+                            updateHostServiceState(query, entry, svc,
                                                    only_update);
                         }
                     }

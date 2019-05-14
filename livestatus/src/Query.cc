@@ -399,10 +399,10 @@ void Query::parseStatsLine(char *line) {
     auto it = stats_ops.find(col_or_op);
     if (it == stats_ops.end()) {
         column = _table.column(col_or_op);
-        auto relOp = relationalOperatorForName(nextStringArgument(&line));
+        auto rel_op = relationalOperatorForName(nextStringArgument(&line));
         auto operand = mk::lstrip(line);
         sc = std::make_unique<StatsColumnCount>(
-            column->createFilter(Filter::Kind::stats, relOp, operand));
+            column->createFilter(Filter::Kind::stats, rel_op, operand));
     } else {
         column = _table.column(nextStringArgument(&line));
         sc = std::make_unique<StatsColumnOp>(it->second, column.get());
@@ -416,9 +416,9 @@ void Query::parseStatsLine(char *line) {
 
 void Query::parseFilterLine(char *line, FilterStack &filters) {
     auto column = _table.column(nextStringArgument(&line));
-    auto relOp = relationalOperatorForName(nextStringArgument(&line));
+    auto rel_op = relationalOperatorForName(nextStringArgument(&line));
     auto operand = mk::lstrip(line);
-    auto sub_filter = column->createFilter(Filter::Kind::row, relOp, operand);
+    auto sub_filter = column->createFilter(Filter::Kind::row, rel_op, operand);
     filters.push_back(std::move(sub_filter));
     _all_columns.insert(column);
 }

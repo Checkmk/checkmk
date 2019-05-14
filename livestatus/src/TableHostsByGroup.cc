@@ -36,17 +36,17 @@ extern hostgroup *hostgroup_list;
 
 namespace {
 struct hostbygroup {
-    host _host;
+    host hst;
     // cppcheck is too dumb to see usage in the DANGEROUS_OFFSETOF macro
     // cppcheck-suppress unusedStructMember
-    hostgroup *_hostgroup;
+    hostgroup *host_group;
 };
 }  // namespace
 
 TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
     TableHosts::addColumns(this, "", -1, -1);
     TableHostGroups::addColumns(this, "hostgroup_",
-                                DANGEROUS_OFFSETOF(hostbygroup, _hostgroup));
+                                DANGEROUS_OFFSETOF(hostbygroup, host_group));
 }
 
 std::string TableHostsByGroup::name() const { return "hostsbygroup"; }
@@ -74,6 +74,6 @@ void TableHostsByGroup::answerQuery(Query *query) {
 }
 
 bool TableHostsByGroup::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for(core(), ctc, &rowData<hostbygroup>(row)->_host,
+    return is_authorized_for(core(), ctc, &rowData<hostbygroup>(row)->hst,
                              nullptr);
 }

@@ -246,19 +246,19 @@ public:
         if (fields.size() != 3) {
             throw std::invalid_argument("expected 3 arguments");
         }
-        _name = fields[0];
-        _from = std::stoi(fields[1]);
-        _to = std::stoi(fields[2]);
+        name_ = fields[0];
+        from_ = std::stoi(fields[1]);
+        to_ = std::stoi(fields[2]);
     }
 
-    std::string name() const { return _name; }
-    int from() const { return _from; }
-    int to() const { return _to; }
+    std::string name() const { return name_; }
+    int from() const { return from_; }
+    int to() const { return to_; }
 
 private:
-    std::string _name;
-    int _from;
-    int _to;
+    std::string name_;
+    int from_;
+    int to_;
 };
 }  // namespace
 

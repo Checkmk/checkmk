@@ -55,16 +55,18 @@
 #endif
 
 struct LogRow {
-    LogEntry *_entry;
-    host *_host;
-    service *_service;
-    const contact *_contact;
-    Command _command;
+    LogEntry *entry;
+    host *hst;
+    service *svc;
+    // cppcheck is too dumb to see usage in the DANGEROUS_OFFSETOF macro
+    // cppcheck-suppress unusedStructMember
+    const contact *ctc;
+    Command command;
 };
 
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
-    auto entry_offset = DANGEROUS_OFFSETOF(LogRow, _entry);
+    auto entry_offset = DANGEROUS_OFFSETOF(LogRow, entry);
     addColumn(std::make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (UNIX timestamp)", entry_offset, -1, -1,
         DANGEROUS_OFFSETOF(LogEntry, _time)));
@@ -126,14 +128,14 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
 
     // join host and service tables
     TableHosts::addColumns(this, "current_host_",
-                           DANGEROUS_OFFSETOF(LogRow, _host), -1);
+                           DANGEROUS_OFFSETOF(LogRow, hst), -1);
     TableServices::addColumns(this, "current_service_",
-                              DANGEROUS_OFFSETOF(LogRow, _service),
+                              DANGEROUS_OFFSETOF(LogRow, svc),
                               false /* no hosts table */);
     TableContacts::addColumns(this, "current_contact_",
-                              DANGEROUS_OFFSETOF(LogRow, _contact));
+                              DANGEROUS_OFFSETOF(LogRow, ctc));
     TableCommands::addColumns(this, "current_command_",
-                              DANGEROUS_OFFSETOF(LogRow, _command));
+                              DANGEROUS_OFFSETOF(LogRow, command));
 }
 
 std::string TableLog::name() const { return "log"; }
@@ -222,15 +224,15 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
 
 bool TableLog::isAuthorized(Row row, const contact *ctc) const {
     auto lr = rowData<LogRow>(row);
-    service *svc = lr->_service;
-    host *hst = lr->_host;
+    service *svc = lr->svc;
+    host *hst = lr->hst;
 
     if (hst != nullptr || svc != nullptr) {
         return is_authorized_for(core(), ctc, hst, svc);
         // suppress entries for messages that belong to hosts that do not exist
         // anymore.
     }
-    auto clazz = lr->_entry->_class;
+    auto clazz = lr->entry->_class;
     return !(clazz == LogEntry::Class::alert ||
              clazz == LogEntry::Class::hs_notification ||
              clazz == LogEntry::Class::passivecheck ||

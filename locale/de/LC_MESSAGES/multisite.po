@@ -52939,7 +52939,7 @@ msgid "only v6"
 msgstr "nur v6"
 
 msgid "only when the host is not in downtime"
-msgstr "nur wenn der Host in Wartung ist"
+msgstr "nur wenn der Host nicht in Wartung ist"
 
 msgid "open"
 msgstr "offen"

@@ -35,7 +35,7 @@ import py_compile
 import struct
 import sys
 import itertools
-from typing import Pattern, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
+from typing import Generator, Pattern, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
 import six
 
@@ -3067,29 +3067,7 @@ class ConfigCache(object):
 
     def service_extra_conf(self, hostname, service, ruleset):
         """Compute outcome of a service rule set that has an item."""
-
-        # When the requested host is part of the local sites configuration,
-        # then use only the sites hosts for processing the rules
-        with_foreign_hosts = hostname not in self._all_processed_hosts
-        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
-            ruleset, with_foreign_hosts, is_binary=False)
-
-        entries = []
-
-        for value, hosts, service_conditions in optimized_ruleset:
-            if hostname not in hosts:
-                continue
-
-            descr_cache_id = service_conditions, service
-            match = self._service_match_cache.get(descr_cache_id)
-            if match is None:
-                match = _in_servicematcher_list(service_conditions, service)
-                self._service_match_cache[descr_cache_id] = match
-
-            if match:
-                entries.append(value)
-
-        return entries
+        return list(self._match_service_ruleset(hostname, service, ruleset, is_binary=False))
 
     def service_extra_conf_merged(self, hostname, service, ruleset):
         rule_dict = {}
@@ -3098,30 +3076,34 @@ class ConfigCache(object):
                 rule_dict.setdefault(key, value)
         return rule_dict
 
-    def in_boolean_serviceconf_list(self, hostname, descr, ruleset):
+    def in_boolean_serviceconf_list(self, hostname, description, ruleset):
         # type: (str, Text, List) -> bool
         """Compute outcome of a service rule set that just say yes/no"""
+        for value in self._match_service_ruleset(hostname, description, ruleset, is_binary=True):
+            return value
+        return False  # no match. Do not ignore
 
-        # Optimization: When the requested host is part of the local sites
-        # configuration, then use only the sites hosts for processing the rules
+    def _match_service_ruleset(self, hostname, description, ruleset, is_binary):
+        # type: (str, Text, List, bool) -> Generator
+
+        # When the requested host is part of the local sites configuration,
+        # then use only the sites hosts for processing the rules
         with_foreign_hosts = hostname not in self._all_processed_hosts
         optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
-            ruleset, with_foreign_hosts, is_binary=True)
+            ruleset, with_foreign_hosts, is_binary=is_binary)
 
         for value, hosts, service_conditions in optimized_ruleset:
             if hostname not in hosts:
                 continue
 
-            match_cache_id = service_conditions, descr
-            match = self._service_match_cache.get(match_cache_id)
+            descr_cache_id = service_conditions, description
+            match = self._service_match_cache.get(descr_cache_id)
             if match is None:
-                match = _in_servicematcher_list(service_conditions, descr)
-                self._service_match_cache[match_cache_id] = match
+                match = _in_servicematcher_list(service_conditions, description)
+                self._service_match_cache[descr_cache_id] = match
 
             if match:
-                return value
-
-        return False  # no match. Do not ignore
+                yield value
 
     def all_processed_hosts(self):
         # type: () -> Set[str]

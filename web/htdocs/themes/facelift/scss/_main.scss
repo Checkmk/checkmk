@@ -6,16 +6,6 @@
 html {
   font-size: $theme-font-size-global; }
 
-h1, h2, h3, h4 {
-  color: $theme-color-text; }
-
-body.main {
-  background: $theme-color-background;
-  padding: 80px 32px;
-  font-size: $theme-font-size-main;
-  font-weight: $theme-font-weight-global;
-  color: $theme-color-text; }
-
 body.main.screenshotmode table.nform {
     background-color: #ffffff;
 }
@@ -110,8 +100,10 @@ table.vs_duallist a.control, table.vs_duallist body.main .popup_menu span.contro
 body.main img.treeangle {
   filter: invert(100%); }
 
-body.main .popup_menu a, body.main .popup_menu span, body.main table.footer, body.main table.footer .popup_menu a, body.main table.footer .popup_menu span, body.main .popup_menu span {
-  color: $theme-color-text; }
+body.main .popup_menu a,
+body.main .popup_menu span {
+  color: $theme-color-text;
+}
 
 .op {
   width: 60px !important; }
@@ -305,11 +297,6 @@ div.graph_with_timeranges {
       border-right: 0px solid; }
     div.graph_with_timeranges table.timeranges > tbody > tr > td:last-child {
       border-left: 0px solid; }
-
-#reload_pause {
-  top: 80px; }
-  #reload_pause_counter {
-    color: $theme-color-lightgrey; }
 
 td.agent_config table.rulesets td {
   vertical-align: top; }
@@ -521,134 +508,10 @@ div.info {
 .filterform input, .filterform select, .filterform textarea, .filterform div.snapin select, div.snapin .filterform select, .filterform div.snapin textarea, div.snapin .filterform textarea, .filterform #mk_side_search_field {
   column-span: all !important; }
 
-div.contextlink, div.togglebutton {
-  height: 36px;
-  margin-right: 12px;
-  margin-bottom: 12px;
-  border-radius: $theme-border-radius;
-  border: 0px solid $theme-color-table-border;
-  box-sizing: border-box;
-  font-size: $theme-font-size-small; }
-  div.contextlink a, div.togglebutton a, div.contextlink body.main .popup_menu span, body.main .popup_menu div.contextlink span, div.togglebutton body.main .popup_menu span, body.main .popup_menu div.togglebutton span {
-    background: $theme-color-white;
-    color: $theme-color-text;
-    box-shadow: none;
-    box-sizing: border-box;
-    padding: 8px;
-    position: relative;
-    font-weight: $theme-font-weight-global;
-    font-size: $theme-font-size-global;
-    letter-spacing: $theme-letter-spacing;
-    border: none;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    border: 1px solid $theme-color-table-border;
-    height: 34px; }
-    div.contextlink a:hover, div.togglebutton a:hover, div.contextlink body.main .popup_menu span:hover, body.main .popup_menu div.contextlink span:hover, div.togglebutton body.main .popup_menu span:hover, body.main .popup_menu div.togglebutton span:hover {
-      color: $theme-color-text;
-      box-shadow: none;
-      padding: 8px;
-      position: relative;
-      font-weight: $theme-font-weight-global;
-      font-size: $theme-font-size-global;
-      letter-spacing: $theme-letter-spacing;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0; }
-  div.contextlink:hover a, div.togglebutton:hover a, div.contextlink:hover body.main .popup_menu span, body.main .popup_menu div.contextlink:hover span, div.togglebutton:hover body.main .popup_menu span, body.main .popup_menu div.togglebutton:hover span, div.contextlink:active a, div.togglebutton:active a, div.contextlink:active body.main .popup_menu span, body.main .popup_menu div.contextlink:active span, div.togglebutton:active body.main .popup_menu span, body.main .popup_menu div.togglebutton:active span, div.contextlink:focus a, div.togglebutton:focus a, div.contextlink:focus body.main .popup_menu span, body.main .popup_menu div.contextlink:focus span, div.togglebutton:focus body.main .popup_menu span, body.main .popup_menu div.togglebutton:focus span {
-    background: $theme-button-background;
-    color: $theme-color-text;
-    box-shadow: none;
-    padding: 8px;
-    position: relative;
-    font-weight: $theme-font-weight-global;
-    font-size: $theme-font-size-global;
-    letter-spacing: $theme-letter-spacing;
-    border: none;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    border: 1px solid $theme-color-table-border; }
-  div.contextlink.down a, div.down.togglebutton a, div.contextlink.down body.main .popup_menu span, body.main .popup_menu div.contextlink.down span, div.down.togglebutton body.main .popup_menu span, body.main .popup_menu div.down.togglebutton span {
-    background-color: $theme-color-text-light;
-    border-color: $theme-button-border;
-    box-shadow: none; }
-    div.contextlink.down a:hover, div.down.togglebutton a:hover, div.contextlink.down body.main .popup_menu span:hover, body.main .popup_menu div.contextlink.down span:hover, div.down.togglebutton body.main .popup_menu span:hover, body.main .popup_menu div.down.togglebutton span:hover {
-      background-color: $theme-button-border;
-      border-color: #cccccc; }
-
-div.togglebutton {
-  height: 34px;
-  width: 34px; }
-
-div.togglebutton.off {
-  height: 34px;
-  width: 34px;
-  margin-right: 12px;
-  margin-bottom: 12px;
-  border-radius: $theme-border-radius;
-  border: 1px solid $theme-color-table-border;
-  box-sizing: border-box;
-  font-size: $theme-font-size-small; }
-  div.togglebutton.off a, div.togglebutton.off body.main .popup_menu span, body.main .popup_menu div.togglebutton.off span {
-    background: $theme-color-white;
-    color: $theme-color-text;
-    box-shadow: none;
-    padding: 8px;
-    position: relative;
-    font-weight: $theme-font-weight-global;
-    font-size: $theme-font-size-global;
-    letter-spacing: $theme-letter-spacing;
-    border: none;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    border: 0px solid; }
-    div.togglebutton.off a:hover, div.togglebutton.off body.main .popup_menu span:hover, body.main .popup_menu div.togglebutton.off span:hover {
-      background: $theme-button-background;
-      color: $theme-color-text;
-      box-shadow: none;
-      padding: 8px;
-      position: relative;
-      font-weight: $theme-font-weight-global;
-      font-size: $theme-font-size-global;
-      letter-spacing: $theme-letter-spacing;
-      border: none;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      border: 0px solid; }
-
 body.main {
   /* POPUPS */ }
   body.main a, body.main .popup_menu span {
     color: $theme-color-text; }
-  body.main table.header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 64px;
-    width: 100%;
-    background: $theme-color-white;
-    border-bottom: 1px solid $theme-color-table-border;
-    z-index: 1000;
-    padding: 8px 32px; }
-    body.main table.header td {
-      vertical-align: middle; }
-      body.main table.header td.heading a, body.main table.header td.heading .popup_menu span, body.main .popup_menu table.header td.heading span {
-        color: $theme-color-text; }
-      body.main table.header td.right {
-        color: $theme-color-text; }
-        body.main table.header td.right img {
-          vertical-align: middle; }
-        body.main table.header td.right * {
-          color: $theme-color-text; }
   body.main .popup_menu {
     background-color: $theme-color-white;
     border: 1px solid $theme-color-table-border;
@@ -670,9 +533,6 @@ div.log_output {
     color: $theme-color-lightgrey;
     font-family: monospace;
     font-size: $theme-font-size-global; }
-
-div.contextlinks {
-  margin-bottom: 0px; }
 
 table.nform tr.open td.content .checkbox {
   margin-left: 4px; }

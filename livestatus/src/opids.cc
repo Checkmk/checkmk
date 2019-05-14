@@ -30,7 +30,7 @@
 #include "RegExp.h"
 
 namespace {
-std::unordered_map<std::string, RelationalOperator> fromString = {
+std::unordered_map<std::string, RelationalOperator> fl_from_string = {
     {"=", RelationalOperator::equal},
     {"!=", RelationalOperator::not_equal},
     {"~", RelationalOperator::matches},
@@ -53,14 +53,14 @@ std::ostream &operator<<(std::ostream &os, const RelationalOperator &relOp) {
     // Slightly inefficient, but this doesn't matter for our purposes. We could
     // use Boost.Bimap or use 2 maps if really necessary.
     auto it =
-        std::find_if(fromString.cbegin(), fromString.cend(),
+        std::find_if(fl_from_string.cbegin(), fl_from_string.cend(),
                      [&](auto &strAndOp) { return strAndOp.second == relOp; });
-    return it == fromString.cend() ? os : (os << it->first);
+    return it == fl_from_string.cend() ? os : (os << it->first);
 }
 
 RelationalOperator relationalOperatorForName(const std::string &name) {
-    auto it = fromString.find(name);
-    if (it == fromString.end()) {
+    auto it = fl_from_string.find(name);
+    if (it == fl_from_string.end()) {
         throw std::runtime_error("invalid operator '" + name + "'");
     }
     return it->second;

@@ -379,7 +379,7 @@ std::string extractStateType(const std::string &str) {
     return str;
 }
 
-std::unordered_map<std::string, ServiceState> serviceStateTypes{
+std::unordered_map<std::string, ServiceState> fl_service_state_types{
     // normal states
     {"OK", ServiceState::ok},
     {"WARNING", ServiceState::warning},
@@ -388,7 +388,7 @@ std::unordered_map<std::string, ServiceState> serviceStateTypes{
     // states from "... ALERT"/"... NOTIFICATION"
     {"RECOVERY", ServiceState::ok}};
 
-std::unordered_map<std::string, HostState> hostStateTypes{
+std::unordered_map<std::string, HostState> fl_host_state_types{
     // normal states
     {"UP", HostState::up},
     {"DOWN", HostState::down},
@@ -405,12 +405,12 @@ std::unordered_map<std::string, HostState> hostStateTypes{
 
 // static
 ServiceState LogEntry::parseServiceState(const std::string &str) {
-    auto it = serviceStateTypes.find(extractStateType(str));
-    return it == serviceStateTypes.end() ? ServiceState::ok : it->second;
+    auto it = fl_service_state_types.find(extractStateType(str));
+    return it == fl_service_state_types.end() ? ServiceState::ok : it->second;
 }
 
 // static
 HostState LogEntry::parseHostState(const std::string &str) {
-    auto it = hostStateTypes.find(extractStateType(str));
-    return it == hostStateTypes.end() ? HostState::up : it->second;
+    auto it = fl_host_state_types.find(extractStateType(str));
+    return it == fl_host_state_types.end() ? HostState::up : it->second;
 }

@@ -155,27 +155,30 @@ def check_smart_stats(item, params, info):
         ('', 'UDMA_CRC_Error_Count', 'UDMA CRC errors'),
         ('', 'CRC_Error_Count', 'UDMA CRC errors'),
     ]:
-        if field in disk:
-            value = disk[field]
-            infos.append("%s: %d%s" % (descr, value, unit))
-            perfdata.append((field, value))
+        if field not in disk:
+            continue
 
-            if field in params:
-                ref_value = params[field]
+        value = disk[field]
+        infos.append("%s: %d%s" % (descr, value, unit))
+        perfdata.append((field, value))
 
-                # For reallocated event counts we experienced to many reported errors for disks
-                # which still seem to be OK. The raw value increased by a small amount but the
-                # aggregated value remained at it's initial/ok state. So we use the aggregated
-                # value now. Only for this field.
-                if field == "Reallocated_Event_Count":
-                    infos[-1] += " (was %d during discovery; normalized value looks OK)" % ref_value
-                    norm_value, norm_threshold = normalized[item][field]
-                    if norm_value <= norm_threshold:
-                        state = 2
+        ref_value = params.get(field)
+        if not ref_value:
+            continue
 
-                elif value > ref_value:
-                    state = 2
-                    infos[-1] += "(!!) (was %d during discovery)" % ref_value
+        # For reallocated event counts we experienced to many reported errors for disks
+        # which still seem to be OK. The raw value increased by a small amount but the
+        # aggregated value remained at it's initial/ok state. So we use the aggregated
+        # value now. Only for this field.
+        if field == "Reallocated_Event_Count":
+            infos[-1] += " (was %d during discovery; normalized value looks OK)" % ref_value
+            norm_value, norm_threshold = normalized[item][field]
+            if norm_value <= norm_threshold:
+                state = 2
+
+        elif value > ref_value:
+            state = 2
+            infos[-1] += "(!!) (was %d during discovery)" % ref_value
 
     return state, ", ".join(infos), perfdata
 

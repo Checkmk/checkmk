@@ -232,7 +232,7 @@ void* GetOffsetInBytes(T* Object, size_t Offset) {
     return static_cast<void*>(reinterpret_cast<char*>(Object) + Offset);
 }
 
-// returns const void*. #TODO make it with templates C++
+// returns const void*, never fails
 template <typename T>
 const void* GetOffsetInBytes(const T* Object, size_t Offset) {
     return static_cast<const void*>(reinterpret_cast<const char*>(Object) +
@@ -254,19 +254,6 @@ std::optional<uint64_t> ConvertToUint64(const T& Str) noexcept {
         return std::stoull(Str);
     } catch (const std::exception&) {
         return {};
-    }
-}
-
-// #TODO to be tested - do not use it
-template <typename T, typename U>
-U ConvertToUint(const T& Str, U Default) noexcept {
-    static_assert(std::is_arithmetic<U> && std::is_unsigned<U>,
-                  "U is not good type");
-    try {
-        if constexpr (sizeof(U) <= 4) return std::stoul(Str);
-        return std::stoull(Str);
-    } catch (const std::exception&) {
-        return Default;
     }
 }
 
@@ -364,7 +351,7 @@ inline std::vector<std::string_view> ToView(
 // string splitter
 // gtest [+]
 inline std::vector<std::string> SplitString(const std::string& In,
-                                            const std::string Delim,
+                                            const std::string& Delim,
                                             int MaxCount = 0) noexcept {
     // sanity
     if (In.empty()) return {};
@@ -397,7 +384,7 @@ inline std::vector<std::string> SplitString(const std::string& In,
 // "a.b", "." => {"a", "b"}
 // ".b", "." => { "b"}
 inline std::vector<std::wstring> SplitString(const std::wstring& In,
-                                             const std::wstring Delim,
+                                             const std::wstring& Delim,
                                              int MaxCount = 0) noexcept {
     // sanity
     if (In.empty()) return {};

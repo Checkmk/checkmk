@@ -212,28 +212,25 @@ def test_in_extraconf_hostlist():
 def test_parse_host_rule():
     config_cache = config.get_config_cache()
     config_cache.initialize()
-    options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = ('all', [], config.ALL_HOSTS, options)
-    assert config_cache.ruleset_optimizer.parse_host_rule(entry) == ('all', [], config.ALL_HOSTS,
-                                                                     options)
+    entry = ('all', [], config.ALL_HOSTS)
+    assert config_cache.ruleset_optimizer.parse_host_rule(
+        entry, is_binary=False) == ('all', [], config.ALL_HOSTS)
 
 
 def test_parse_host_rule_without_tags():
     config_cache = config.get_config_cache()
     config_cache.initialize()
-    options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = ('all', config.ALL_HOSTS, options)
-    assert config_cache.ruleset_optimizer.parse_host_rule(entry) == ('all', [], config.ALL_HOSTS,
-                                                                     options)
+    entry = ('all', config.ALL_HOSTS)
+    assert config_cache.ruleset_optimizer.parse_host_rule(
+        entry, is_binary=False) == ('all', [], config.ALL_HOSTS)
 
 
 def test_parse_host_rule_invalid_length():
     config_cache = config.get_config_cache()
     config_cache.initialize()
-    options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = (None, None, 'all', config.ALL_HOSTS, options)
+    entry = (None, None, 'all', config.ALL_HOSTS)
     with pytest.raises(MKGeneralException):
-        assert config_cache.ruleset_optimizer.parse_host_rule(entry)
+        assert config_cache.ruleset_optimizer.parse_host_rule(entry, is_binary=False)
 
 
 def test_get_rule_options_regular_rule():

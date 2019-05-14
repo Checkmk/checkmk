@@ -25,8 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+from typing import Text, Pattern, Tuple, List  # pylint: disable=unused-import
 
-from cmk.utils.regex import regex, is_regex
+from cmk.utils.regex import regex
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
@@ -426,51 +427,26 @@ def hosttags_match_taglist(hosttags, required_tags):
     return True
 
 
-# Converts a regex pattern which is used to e.g. match services within Check_MK
-# to a function reference to a matching function which takes one parameter to
-# perform the matching and returns a two item tuple where the first element
-# tells wether or not the pattern is negated and the second element the outcome
-# of the match.
-# This function tries to parse the pattern and return different kind of matching
-# functions which can then be performed faster than just using the regex match.
-def _convert_pattern(pattern):
-    def is_infix_string_search(pattern):
-        return pattern.startswith('.*') and not is_regex(pattern[2:])
-
-    def is_exact_match(pattern):
-        return pattern[-1] == '$' and not is_regex(pattern[:-1])
-
-    def is_prefix_match(pattern):
-        return pattern[-2:] == '.*' and not is_regex(pattern[:-2])
-
-    if pattern == '':
-        return False, lambda txt: True  # empty patterns match always
-
-    negate, pattern = _parse_negated(pattern)
-
-    if is_exact_match(pattern):
-        # Exact string match
-        return negate, lambda txt: pattern[:-1] == txt
-
-    elif is_infix_string_search(pattern):
-        # Using regex to search a substring within text
-        return negate, lambda txt: pattern[2:] in txt
-
-    elif is_prefix_match(pattern):
-        # prefix match with tailing .*
-        pattern = pattern[:-2]
-        return negate, lambda txt: txt[:len(pattern)] == pattern
-
-    elif is_regex(pattern):
-        # Non specific regex. Use real prefix regex matching
-        return negate, lambda txt: regex(pattern).match(txt) is not None
-
-    # prefix match without any regex chars
-    return negate, lambda txt: txt[:len(pattern)] == pattern
-
-
 def convert_pattern_list(patterns):
-    return tuple([_convert_pattern(p) for p in patterns])
+    # type: (List[Text]) -> Tuple[bool, Pattern[Text]]
+    """Compiles a list of service match patterns to a single regex
+
+    Reducing the number of individual regex matches improves the performance dramatically.
+    This function assumes either all or no pattern is negated (like WATO creates the rules).
+    """
+    if not patterns:
+        return False, regex("")  # No pattern -> match everything
+
+    pattern_parts = []
+    negate = patterns[0].startswith("!")
+
+    for pattern in patterns:
+        # Skip ALL_SERVICES from end of negated lists
+        if negate and pattern == ALL_SERVICES[0]:
+            continue
+        pattern_parts.append(_parse_negated(pattern)[1])
+
+    return negate, regex("(?:%s)" % "|".join("(?:%s)" % p for p in pattern_parts))
 
 
 def _parse_negated(pattern):

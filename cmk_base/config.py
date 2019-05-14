@@ -35,7 +35,7 @@ import py_compile
 import struct
 import sys
 import itertools
-from typing import Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
+from typing import Pattern, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
 import six
 
@@ -1086,15 +1086,12 @@ def in_extraconf_servicelist(servicelist, service):
     return _in_servicematcher_list(tuple_rulesets.convert_pattern_list(servicelist), service)
 
 
-def _in_servicematcher_list(service_matchers, item):
-    # type: (List[Tuple[bool, Callable]], Text) -> bool
-    for negate, func in service_matchers:
-        result = func(item)
-        if result:
-            return not negate
-
-    # no match in list -> negative answer
-    return False
+def _in_servicematcher_list(service_conditions, item):
+    # type: (Tuple[bool, Pattern[Text]], Text) -> bool
+    negate, pattern = service_conditions
+    if pattern.match(item) is not None:
+        return not negate
+    return negate
 
 
 #.

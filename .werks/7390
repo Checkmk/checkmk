@@ -1,0 +1,15 @@
+Title: ipmi_sensors: Stop flooding syslog if no IPMI devices are present
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p17
+Date: 1554283471
+
+In case no IPMI device was present on a system, the system log was flooded
+with error messages.
+We no longer call ipmi-sensors if no IPMI devices are found. Considered IPMI
+devices are all that match "/dev/ipmi*" (in particular /dev/ipmi0, /dev/ipmi/0
+and /dev/ipmidev/0).

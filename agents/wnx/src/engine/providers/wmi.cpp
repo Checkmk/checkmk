@@ -221,11 +221,11 @@ std::string Wmi::makeBody() const {
         }
         return subs_out;
     }
-    XLOG::l.t("main section '{}'", getUniqName());
+    XLOG::l.i("main section '{}'", getUniqName());
     return GenerateTable(name_space_, object_, columns_);
 }
 
-// gtest is not easy here, #TODO rethink how test this
+// [+] gtest
 bool Wmi::isAllowedByCurrentConfig() const {
     using namespace cma::cfg;
 
@@ -233,7 +233,7 @@ bool Wmi::isAllowedByCurrentConfig() const {
     auto name = getUniqName();
     bool allowed = groups::global.allowedSection(name);
     if (!allowed) {
-        XLOG::l.t("{} is skipped by config", name);
+        XLOG::l.t("'{}' is skipped by config", name);
         return false;
     }
 
@@ -249,7 +249,7 @@ bool Wmi::isAllowedByCurrentConfig() const {
         if (!groups::global.isSectionDisabled(sub_name)) return true;
     }
 
-    XLOG::l.t("{} and subs are skipped by config", name);
+    XLOG::l.t("'{}' and subs are skipped by config", name);
     return false;
 }
 
@@ -292,9 +292,10 @@ std::string SubSection::generateContent() const {
                              section_body);
         }
     } catch (const std::exception& e) {
-        XLOG::l.crit("Exception {} in {}", e.what(), uniq_name_);
+        XLOG::l.crit(XLOG_FUNC + " Exception '{}' in '{}'", e.what(),
+                     uniq_name_);
     } catch (...) {
-        XLOG::l.crit("Exception UNKNOWN in {}", uniq_name_);
+        XLOG::l.crit(XLOG_FUNC + " Exception UNKNOWN in '{}'", uniq_name_);
     }
     return {};
 }

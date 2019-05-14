@@ -946,9 +946,8 @@ std::string GetName(uint32_t CounterType) noexcept {
 
 }  // namespace perf
 
-static std::mutex ComLock;
-static bool WindowsComInitialized = false;  // #VIP #Global
-                                            // controls availability of WMI
+static std::mutex g_com_lock;                   // #VIP on start
+static bool g_windows_com_initialized = false;  // #VIP on start
 
 bool InitWindowsComSecurity() {  // Initialize
     auto hres =
@@ -964,11 +963,12 @@ bool InitWindowsComSecurity() {  // Initialize
         );
 
     if (hres == RPC_E_TOO_LATE) {
-        XLOG::l.w("Stupid Windows {:#X}", (unsigned)hres);
+        XLOG::l.w(XLOG_FUNC + " win security TOO LATE");
         return true;
     }
     if (FAILED(hres)) {
-        XLOG::l.crit("Error Windows Security {:X}", (unsigned)hres);
+        XLOG::l.crit(XLOG_FUNC + " win security error {:#X}",
+                     static_cast<unsigned>(hres));
         return false;  // Program has failed.
     }
 
@@ -978,26 +978,24 @@ bool InitWindowsComSecurity() {  // Initialize
 }
 
 void InitWindowsCom() {
-    std::lock_guard lk(ComLock);
-    if (WindowsComInitialized) return;
-    auto hres = CoInitializeEx(0, COINIT_MULTITHREADED);
-    WORD wVersionRequested;
-    WSADATA wsaData;
-    int err;
+    std::lock_guard lk(g_com_lock);
+    if (g_windows_com_initialized) return;
 
-    /* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
-    wVersionRequested = MAKEWORD(2, 2);
+    auto hres = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
-    err = WSAStartup(wVersionRequested, &wsaData);
+    // Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h
+    auto wVersionRequested = MAKEWORD(2, 2);
+    WSADATA wsaData{0};
+    int err = WSAStartup(wVersionRequested, &wsaData);
     if (err != 0) {
-        /* Tell the user that we could not find a usable */
-        /* Winsock DLL.                                  */
-        printf("WSAStartup failed with error: %d\n", err);
+        // Tell the user that we could not find a usable Winsock DLL.
+        XLOG::l.crit("WSAStartup failed with error: {:#X}\n",
+                     static_cast<unsigned>(err));
         return;
     }
 
     if (FAILED(hres)) {
-        XLOG::l.crit("Can't init COM {:#X}", (unsigned)hres);
+        XLOG::l.crit("Can't init COM {:#X}", static_cast<unsigned>(hres));
         return;
     }
     auto ret = InitWindowsComSecurity();
@@ -1009,20 +1007,20 @@ void InitWindowsCom() {
 
     XLOG::l.i("COM initialized");
 
-    WindowsComInitialized = true;
+    g_windows_com_initialized = true;
 }
 
 void CloseWindowsCom() {
-    std::lock_guard lk(ComLock);
-    if (!WindowsComInitialized) return;
+    std::lock_guard lk(g_com_lock);
+    if (!g_windows_com_initialized) return;
     CoUninitialize();
     XLOG::l.i("COM closed");
-    WindowsComInitialized = false;
+    g_windows_com_initialized = false;
 }
 
 bool IsWindowsComInitialized() {
-    std::lock_guard lk(ComLock);
-    return WindowsComInitialized;
+    std::lock_guard lk(g_com_lock);
+    return g_windows_com_initialized;
 }
 
 std::wstring WmiGetWstring(const VARIANT& Var) {
@@ -1073,7 +1071,7 @@ std::wstring WmiStringFromObject(IWbemClassObject* Object,
         // data
         VARIANT value;
         // Get the value of the Name property
-        auto hres = Object->Get(name.c_str(), 0, &value, 0, 0);
+        auto hres = Object->Get(name.c_str(), 0, &value, nullptr, nullptr);
         if (SUCCEEDED(hres)) {
             ON_OUT_OF_SCOPE(VariantClear(&value));
             result += wtools::WmiGetWstring(value) + L",";
@@ -1090,7 +1088,7 @@ std::wstring WmiStringFromObject(IWbemClassObject* Object,
     // data
     VARIANT value;
     // Get the value of the Name property
-    auto hres = Object->Get(Name.c_str(), 0, &value, 0, 0);
+    auto hres = Object->Get(Name.c_str(), 0, &value, nullptr, nullptr);
     if (FAILED(hres)) return {};
 
     ON_OUT_OF_SCOPE(VariantClear(&value));
@@ -1103,7 +1101,7 @@ std::optional<std::wstring> WmiTryGetString(IWbemClassObject* Object,
     // data
     VARIANT value;
     // Get the value of the Name property
-    auto hres = Object->Get(Name.c_str(), 0, &value, 0, 0);
+    auto hres = Object->Get(Name.c_str(), 0, &value, nullptr, nullptr);
     if (FAILED(hres)) return {};
 
     ON_OUT_OF_SCOPE(VariantClear(&value));
@@ -1116,7 +1114,7 @@ uint64_t WmiUint64FromObject(IWbemClassObject* Object,
     // data
     VARIANT value;
     // Get the value of the Name property
-    auto hres = Object->Get(Name.c_str(), 0, &value, 0, 0);
+    auto hres = Object->Get(Name.c_str(), 0, &value, nullptr, nullptr);
     if (FAILED(hres)) return 0;
 
     ON_OUT_OF_SCOPE(VariantClear(&value));
@@ -1131,7 +1129,7 @@ std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject* WmiObject) {
     SAFEARRAY* names = nullptr;
     HRESULT res = WmiObject->GetNames(
         nullptr, WBEM_FLAG_ALWAYS | WBEM_FLAG_NONSYSTEM_ONLY, nullptr, &names);
-    if (FAILED(res) || !names) {
+    if (FAILED(res) || nullptr == names) {
         XLOG::l.e("Failed to get names from WmiObject {:#X}", res);
         return {};  // Program has failed.
     }
@@ -1167,7 +1165,7 @@ std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject* WmiObject) {
         }
         ON_OUT_OF_SCOPE(::SysFreeString(property_name));
 
-        result.push_back(std::wstring(property_name));
+        result.emplace_back(std::wstring(property_name));
     }
 
     return result;
@@ -1187,8 +1185,8 @@ IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
 
     if (SUCCEEDED(hres)) return enumerator;
     // SHOULD NOT HAPPEN
-    XLOG::l.e("Failed query wmi {:#X}, query is {}", (unsigned)hres,
-              ConvertToUTF8(Query));
+    XLOG::l.e("Failed query wmi {:#X}, query is {}",
+              static_cast<unsigned>(hres), ConvertToUTF8(Query));
     return nullptr;  // Program has failed.
 }
 
@@ -1196,10 +1194,11 @@ bool WmiWrapper::open() noexcept {  // Obtain the initial locator to Windows
                                     // Management
                                     // on a particular host computer.
     std::lock_guard lk(lock_);
-    IWbemLocator* locator = 0;
+    IWbemLocator* locator = nullptr;
 
-    auto hres = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
-                                 IID_IWbemLocator, (LPVOID*)&locator);
+    auto hres =
+        CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER,
+                         IID_IWbemLocator, reinterpret_cast<LPVOID*>(&locator));
 
     if (FAILED(hres)) {
         XLOG::l.crit("Can't Create Instance WMI {:#X}",
@@ -1213,12 +1212,12 @@ bool WmiWrapper::open() noexcept {  // Obtain the initial locator to Windows
 // clean all
 void WmiWrapper::close() noexcept {
     std::lock_guard lk(lock_);
-    if (locator_) {
+    if (nullptr != locator_) {
         locator_->Release();
         locator_ = nullptr;
     }
 
-    if (services_) {
+    if (nullptr != services_) {
         services_->Release();
         services_ = nullptr;
     }
@@ -1233,12 +1232,12 @@ bool WmiWrapper::connect(const std::wstring& NameSpace) noexcept {
         return false;
     }
     std::lock_guard lk(lock_);
-    if (!locator_) {
+    if (nullptr == locator_) {
         XLOG::l.crit(XLOG_FUNC + " what about open before connect?");
         return false;
     }
 
-    if (services_) {
+    if (nullptr != services_) {
         XLOG::l.w(XLOG_FUNC + " already connected");
         return true;
     }
@@ -1251,10 +1250,10 @@ bool WmiWrapper::connect(const std::wstring& NameSpace) noexcept {
         locator_->ConnectServer(_bstr_t(NameSpace.c_str()),  // WMI namespace
                                 nullptr,                     // User name
                                 nullptr,                     // User password
-                                0,                           // Locale
+                                nullptr,                     // Locale
                                 0,                           // Security flags
-                                0,                           // Authority
-                                0,                           // Context object
+                                nullptr,                     // Authority
+                                nullptr,                     // Context object
                                 &services_  // IWbemServices proxy
         );
 
@@ -1268,7 +1267,7 @@ bool WmiWrapper::connect(const std::wstring& NameSpace) noexcept {
 // This is OPTIONAL feature, LWA doesn't use it
 bool WmiWrapper::impersonate() noexcept {
     std::lock_guard lk(lock_);
-    if (!services_) {
+    if (nullptr == services_) {
         XLOG::l.e(XLOG_FUNC + " not connected");
         return false;
     }
@@ -1296,7 +1295,7 @@ bool WmiWrapper::impersonate() noexcept {
 // RETURNS RAW OBJECT
 // returns nullptr on any error
 IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator) {
-    if (!Enumerator) {
+    if (nullptr == Enumerator) {
         XLOG::l.e("nullptr in Enumerator");
         return nullptr;
     }
@@ -1333,9 +1332,9 @@ std::wstring WmiWrapper::produceTable(
     // setup default names vector
     auto names = Names;
 
-    while (Enumerator) {
+    while (nullptr != Enumerator) {
         wmi_object = WmiGetNextObject(Enumerator);
-        if (!wmi_object) break;
+        if (nullptr == wmi_object) break;
         ON_OUT_OF_SCOPE(wmi_object->Release());
 
         // names
@@ -1384,7 +1383,7 @@ std::wstring WmiWrapper::queryTable(const std::vector<std::wstring>& Names,
     auto enumerator = wtools::WmiExecQuery(services_, query_text);
 
     // make a table using enumerator and supplied Names vector
-    if (!enumerator) {
+    if (nullptr == enumerator) {
         return {};
     }
     ON_OUT_OF_SCOPE(enumerator->Release());
@@ -1411,14 +1410,15 @@ HMODULE LoadWindowsLibrary(const std::wstring& DllPath) {
 
     std::wstring dllpath_expanded;
     dllpath_expanded.resize(buffer_size, '\0');
-    DWORD required = ExpandEnvironmentStringsW(
-        DllPath.c_str(), &dllpath_expanded[0], (DWORD)dllpath_expanded.size());
+    DWORD required =
+        ExpandEnvironmentStringsW(DllPath.c_str(), &dllpath_expanded[0],
+                                  static_cast<DWORD>(dllpath_expanded.size()));
 
     if (required > dllpath_expanded.size()) {
         dllpath_expanded.resize(required + 1);
-        required =
-            ExpandEnvironmentStringsW(DllPath.c_str(), &dllpath_expanded[0],
-                                      (DWORD)dllpath_expanded.size());
+        required = ExpandEnvironmentStringsW(
+            DllPath.c_str(), &dllpath_expanded[0],
+            static_cast<DWORD>(dllpath_expanded.size()));
     } else if (required == 0) {
         dllpath_expanded = DllPath;
     }
@@ -1465,7 +1465,7 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath) {
             XLOG::l("Failed to enum {} error {}", key_name, r);
             break;
         }
-        entries.push_back(key_name);
+        entries.emplace_back(key_name);
     };
     return entries;
 }
@@ -1474,16 +1474,16 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath) {
 // returns data from the root machine registry
 uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                           uint32_t Default) noexcept {
-    HKEY hkey = 0;
+    HKEY hkey = nullptr;
     auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
-    if (ERROR_SUCCESS == ret && hkey) {
+    if (ERROR_SUCCESS == ret && nullptr != hkey) {
         ON_OUT_OF_SCOPE(RegCloseKey(hkey));
         DWORD type = REG_DWORD;
         uint32_t buffer;
         DWORD count = sizeof(buffer);
-        ret = RegQueryValueExW(hkey, Value.c_str(), 0, &type,
+        ret = RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
                                reinterpret_cast<LPBYTE>(&buffer), &count);
-        if (ret == ERROR_SUCCESS && count && type == REG_DWORD) {
+        if (ret == ERROR_SUCCESS && 0 != count && type == REG_DWORD) {
             return buffer;
         }
     }
@@ -1507,14 +1507,14 @@ bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
 std::wstring GetRegistryValue(const std::wstring& Key,
                               const std::wstring& Value,
                               const std::wstring& Default) noexcept {
-    HKEY hkey = 0;
+    HKEY hkey = nullptr;
     auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
-    if (ERROR_SUCCESS == result && hkey) {
+    if (ERROR_SUCCESS == result && nullptr != hkey) {
         ON_OUT_OF_SCOPE(RegCloseKey(hkey));
         DWORD type = REG_SZ;
         wchar_t buffer[512];
         DWORD count = sizeof(buffer);
-        auto ret = RegQueryValueExW(hkey, Value.c_str(), 0, &type,
+        auto ret = RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
                                     reinterpret_cast<LPBYTE>(buffer), &count);
 
         // check for errors
@@ -1538,7 +1538,7 @@ std::wstring GetRegistryValue(const std::wstring& Key,
             ON_OUT_OF_SCOPE(delete[] buffer_big);
             DWORD count = sizeof(count);
             ret =
-                RegQueryValueExW(hkey, Value.c_str(), 0, &type,
+                RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
                                  reinterpret_cast<LPBYTE>(buffer_big), &count);
 
             // check for errors
@@ -1579,7 +1579,7 @@ bool KillProcess(uint32_t ProcessId, int Code) noexcept {
     }
     ON_OUT_OF_SCOPE(CloseHandle(handle));
 
-    if (!TerminateProcess(handle, Code)) {
+    if (FALSE == TerminateProcess(handle, Code)) {
         // - we have no problem(process already dead) - ignore
         // - we have problem: either code is invalid or something wrong
         // with Windows in all cases just report
@@ -1603,12 +1603,12 @@ bool KillProcess(const std::wstring& process_name, int exit_code) noexcept {
     PROCESSENTRY32 entry32;
     entry32.dwSize = sizeof(entry32);
     auto result = Process32First(snapshot, &entry32);
-    while (result) {
+    while (0 != result) {
         if (cma::tools::IsEqual(entry32.szExeFile, process_name) &&
             (entry32.th32ProcessID != current_process_id)) {
             auto process =
-                OpenProcess(PROCESS_TERMINATE, 0, (DWORD)entry32.th32ProcessID);
-            if (process) {
+                OpenProcess(PROCESS_TERMINATE, 0, entry32.th32ProcessID);
+            if (nullptr != process) {
                 TerminateProcess(process, exit_code);
                 CloseHandle(process);
             }
@@ -1634,9 +1634,9 @@ bool ScanProcessList(std::function<bool(const PROCESSENTRY32&)> op) {
     PROCESSENTRY32 entry32;
     entry32.dwSize = sizeof(entry32);
     auto result = ::Process32First(snapshot, &entry32);
-    while (result) {
+    while (result != 0) {
         if ((entry32.th32ProcessID != current_process_id)) {
-            if (false == op(entry32)) return true;
+            if (!op(entry32)) return true;  // break on false returned
         }
         result = ::Process32Next(snapshot, &entry32);
     }
@@ -1672,7 +1672,7 @@ bool KillProcessFully(const std::wstring& process_name,
 // verified code from the legacy client
 // gtest is not required
 inline SOCKET RemoveSocketInheritance(SOCKET OldSocket) {
-    HANDLE new_handle = 0;
+    HANDLE new_handle = nullptr;
 
     ::DuplicateHandle(::GetCurrentProcess(),
                       reinterpret_cast<HANDLE>(OldSocket),

@@ -65,7 +65,7 @@ bool IsSpoolFileValid(const std::filesystem::path &Path) {
     }
 
     const auto filename = Path.filename().string();
-    const int max_age = isdigit(filename[0]) ? atoi(filename.c_str()) : -1;
+    const int max_age = 0 != isdigit(filename[0]) ? atoi(filename.c_str()) : -1;
 
     if (max_age >= 0) {
         // extremely stupid

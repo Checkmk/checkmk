@@ -24,8 +24,9 @@ static const char *GetServiceStartType(SC_HANDLE manager_handle,
     ON_OUT_OF_SCOPE(CloseServiceHandle(handle));
 
     DWORD bytes_required = 0;
-    if (TRUE == ::QueryServiceConfig(handle, nullptr, 0, &bytes_required))
+    if (TRUE == ::QueryServiceConfig(handle, nullptr, 0, &bytes_required)) {
         return "invalid2";  // should not happen!
+    }
 
     if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) return "invalid3";
 
@@ -33,8 +34,10 @@ static const char *GetServiceStartType(SC_HANDLE manager_handle,
     auto buffer = std::make_unique<unsigned char[]>(buf_size);
     auto lpsc = reinterpret_cast<LPQUERY_SERVICE_CONFIGW>(buffer.get());
 
-    if (FALSE == ::QueryServiceConfig(handle, lpsc, buf_size, &bytes_required))
+    if (FALSE ==
+        ::QueryServiceConfig(handle, lpsc, buf_size, &bytes_required)) {
         return "invalid4";  // should not happen!
+    }
 
     switch (lpsc->dwStartType) {
         case SERVICE_AUTO_START:
@@ -79,7 +82,7 @@ static std::tuple<DWORD, DWORD> EnumAllServices(SC_HANDLE Handle) {
     DWORD num_services = 0;
 
     ::EnumServicesStatusExW(Handle, SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
-                            SERVICE_STATE_ALL, NULL, 0, &bytes_needed,
+                            SERVICE_STATE_ALL, nullptr, 0, &bytes_needed,
                             &num_services, nullptr, nullptr);
 
     return {bytes_needed, num_services};

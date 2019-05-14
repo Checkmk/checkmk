@@ -48,5 +48,5 @@ check_info['cisco_oldcpu'] = {
     # e.g. 'Cisco Catalyst 3850 Series Switches'
     'snmp_scan_function': snmp_scan_cisco_oldcpu,
     'group': "cpu_utilization",
-    'includes': ["cpu_util.include", "cisco_cpu.include"],
+    'includes': ["cpu_util.include", "cisco_cpu_scan_functions.include"],
 }

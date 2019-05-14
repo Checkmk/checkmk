@@ -81,5 +81,5 @@ check_info["cisco_cpu_multiitem"] = {
             ])
     ],
     'snmp_scan_function': snmp_scan_cisco_cpu_multiitem,
-    'includes': ["cisco_cpu.include"],
+    'includes': ["cisco_cpu_scan_functions.include"],
 }

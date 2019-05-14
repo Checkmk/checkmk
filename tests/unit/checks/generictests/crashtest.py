@@ -37,6 +37,7 @@ import tarfile
 import pytest
 
 import generictests
+from generictests.regression import WritableDataset
 from checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks
@@ -46,7 +47,7 @@ class SkipReport(RuntimeError):
     pass
 
 
-class CrashDataset(object):
+class CrashDataset(WritableDataset):
     def __init__(self, crash_report_fn):
         '''
         Try to create a dataset like object from a crash report
@@ -66,8 +67,10 @@ class CrashDataset(object):
             if '/local/share/check_mk/checks/' in line[0]:
                 raise SkipReport("local check plugin")
 
+        init_dict = {}
         self.full_checkname = crashinfo['details']['check_type']
-        self.checkname = self.full_checkname.split('.', 1)[0]
+        checkname = self.full_checkname.split('.', 1)[0]
+        init_dict['checkname'] = checkname
 
         local_vars_encoded = crashinfo.get('local_vars')
         if not local_vars_encoded:
@@ -88,10 +91,12 @@ class CrashDataset(object):
         if not ('info' in local_vars or 'parsed' in local_vars):
             raise SkipReport("found neither 'info' nor 'parsed'")
 
-        self.parsed = local_vars.get('parsed')
-        self.info = local_vars.get('info')
+        init_dict['parsed'] = local_vars.get('parsed')
+        init_dict['info'] = local_vars.get('info')
         self.vars = local_vars
         self.crash_id = crash_report_fn[-20:-7]
+        filepath = '/tmp/tmp_testfile_%s_%s.py' % (checkname, self.crash_id)
+        super(CrashDataset, self).__init__(filepath, init_dict)
 
     def __repr__(self):
         return 'CrashDataset(checkname=%r, id=%r)' % (self.checkname, self.crash_id)
@@ -128,15 +133,17 @@ class CrashReportList(list):
 
 
 def test_crashreport(check_manager, crashdata):
-
-    generictests.run(check_manager, crashdata)
-
-    if 'item' in crashdata.vars:
-        item = crashdata.vars['item']
-        params = crashdata.vars.get('params', {})
-        check = check_manager.get_check(crashdata.full_checkname)
-        if crashdata.parsed:
-            raw_result = check.run_check(item, params, crashdata.parsed)
-        else:
-            raw_result = check.run_check(item, params, crashdata.info)
-        print(CheckResult(raw_result))
+    try:
+        generictests.run(check_manager, crashdata)
+        if 'item' in crashdata.vars:
+            item = crashdata.vars['item']
+            params = crashdata.vars.get('params', {})
+            check = check_manager.get_check(crashdata.full_checkname)
+            if crashdata.parsed:
+                raw_result = check.run_check(item, params, crashdata.parsed)
+            else:
+                raw_result = check.run_check(item, params, crashdata.info)
+            print(CheckResult(raw_result))
+    except:
+        crashdata.write()
+        raise

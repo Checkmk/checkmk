@@ -265,7 +265,6 @@ else
         sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 fi
 
-
 # Statgrab
 # source: http://www.i-scream.org/libstatgrab/
 # binary: http://www.opencsw.org/
@@ -294,8 +293,17 @@ then
     egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
 
     [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
-fi
 
+else
+    # Memory
+    # <<<solaris_mem>>> should be used if statgrab is missing and top is available.
+    if [ -x /usr/bin/top ] || [ -x /usr/local/bin/top ]
+    then
+        echo "<<<solaris_mem>>>"
+        if [ -x /usr/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
+        if [ -x /usr/local/bin/top ]; then /usr/local/bin/top | grep '^Memory:'; fi
+    fi
+fi
 
 # /proc/cpu
 # Simulated Output of Linux /proc/cpu
@@ -333,19 +341,6 @@ if [ $? -eq 0 ]
 then
     echo '<<<ntp>>>'
     ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
-fi
-
-
-# Memory
-# <<<solaris_mem>>> should be used if statgrab is missing and top is available.
-if ! type statgrab &>/dev/null;
-then
-    if [ -x /usr/bin/top ] || [ -x /usr/local/bin/top ]
-    then
-        echo "<<<solaris_mem>>>"
-        if [ -x /usr/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
-        if [ -x /usr/local/bin/top ]; then /usr/local/bin/top | grep '^Memory:'; fi
-    fi
 fi
 
 if type prtdiag >/dev/null 2>&1

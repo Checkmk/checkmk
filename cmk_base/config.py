@@ -3000,6 +3000,17 @@ class ConfigCache(object):
         return rule_dict
 
     def host_extra_conf(self, hostname, ruleset):
+        return list(self._match_host_ruleset(hostname, ruleset, is_binary=False))
+
+    # TODO: Cleanup external in_binary_hostlist call sites
+    def in_binary_hostlist(self, hostname, ruleset):
+        for value in self._match_host_ruleset(hostname, ruleset, is_binary=True):
+            return value
+        return False  # no match. Do not ignore
+
+    def _match_host_ruleset(self, hostname, ruleset, is_binary):
+        # type: (str, List, bool) -> Generator
+
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = hostname not in self._all_processed_hosts
@@ -3008,7 +3019,7 @@ class ConfigCache(object):
             cached = self._host_extra_conf_match_cache[cache_id]
         except KeyError:
             optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
-                ruleset, with_foreign_hosts, is_binary=False)
+                ruleset, with_foreign_hosts, is_binary=is_binary)
 
             cached = {}
             for value, hostname_list in optimized_ruleset:
@@ -3016,55 +3027,8 @@ class ConfigCache(object):
                     cached.setdefault(other_hostname, []).append(value)
             self._host_extra_conf_match_cache[cache_id] = cached
 
-        return cached.get(hostname, [])
-
-    # TODO: Cleanup external in_binary_hostlist call sites
-    def in_binary_hostlist(self, hostname, conf):
-        cache = self._in_binary_hostlist_cache
-
-        cache_id = id(conf), hostname
-        try:
-            return cache[cache_id]
-        except KeyError:
-            pass
-
-        if conf and isinstance(conf[0], str):
-            raise NotImplementedError("Unsupported ruleset found: %s. Please "
-                                      "remove the configuration in case you don't need it "
-                                      "anymore. Otherwise contact the checkMK team." % conf)
-
-        for entry in conf:
-            actual_host_tags = self.tag_list_of_host(hostname)
-            entry, rule_options = get_rule_options(entry)
-            if rule_options.get("disabled"):
-                continue
-
-            try:
-                # Negation via 'NEGATE'
-                if entry[0] == NEGATE:
-                    entry = entry[1:]
-                    negate = True
-                else:
-                    negate = False
-
-                if len(entry) == 1:  # 1-Tuple with list of hosts
-                    hostlist = entry[0]
-                    tags = []
-                else:
-                    tags, hostlist = entry
-
-                if tuple_rulesets.hosttags_match_taglist(actual_host_tags, tags) and \
-                       tuple_rulesets.in_extraconf_hostlist(hostlist, hostname):
-                    cache[cache_id] = not negate
-                    break
-            except:
-                # TODO: Fix this too generic catching (+ bad error message)
-                raise MKGeneralException("Invalid entry '%r' in host configuration list: "
-                                         "must be tuple with 1 or 2 entries" % (entry,))
-        else:
-            cache[cache_id] = False
-
-        return cache[cache_id]
+        for value in cached.get(hostname, []):
+            yield value
 
     def service_extra_conf(self, hostname, service, ruleset):
         """Compute outcome of a service rule set that has an item."""

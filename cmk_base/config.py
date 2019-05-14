@@ -3007,7 +3007,8 @@ class ConfigCache(object):
         try:
             cached = self._host_extra_conf_match_cache[cache_id]
         except KeyError:
-            optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(ruleset, with_foreign_hosts)
+            optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
+                ruleset, with_foreign_hosts, is_binary=False)
 
             cached = {}
             for value, hostname_list in optimized_ruleset:
@@ -3321,7 +3322,8 @@ class CEEConfigCache(ConfigCache):
         entries = []
 
         for rule in ruleset:
-            item, tags, hostlist = self.ruleset_optimizer.parse_host_rule(rule)[:-1]
+            rule, _rule_options = get_rule_options(rule)
+            item, tags, hostlist = self.ruleset_optimizer.parse_host_rule(rule, is_binary=False)
             if tags and not tuple_rulesets.hosttags_match_taglist([], tags):
                 continue
             if not tuple_rulesets.in_extraconf_hostlist(hostlist, ""):

@@ -81,42 +81,59 @@ class RulesetOptimizier(object):
         # TODO: Clean this one up?
         self._initialize_host_lookup()
 
-    def get_host_ruleset(self, ruleset, with_foreign_hosts):
+    def get_host_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         cache_id = id(ruleset), with_foreign_hosts
         try:
             ruleset = self._host_ruleset_cache[cache_id]
         except KeyError:
-            ruleset = self._convert_host_ruleset(ruleset, with_foreign_hosts)
+            ruleset = self._convert_host_ruleset(ruleset, with_foreign_hosts, is_binary)
             self._host_ruleset_cache[cache_id] = ruleset
         return ruleset
 
-    def _convert_host_ruleset(self, ruleset, with_foreign_hosts):
+    def _convert_host_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         new_rules = []
         for rule in ruleset:
-            item, tags, hostlist, rule_options = self.parse_host_rule(rule)
+            rule, rule_options = get_rule_options(rule)
             if rule_options.get("disabled"):
                 continue
 
+            value, tags, hostlist = self.parse_host_rule(rule, is_binary)
+
             # Directly compute set of all matching hosts here, this
             # will avoid recomputation later
-            new_rules.append((item, self.all_matching_hosts(tags, hostlist, with_foreign_hosts)))
+            new_rules.append((value, self.all_matching_hosts(tags, hostlist, with_foreign_hosts)))
 
         return new_rules
 
-    def parse_host_rule(self, rule):
-        rule, rule_options = get_rule_options(rule)
+    def parse_host_rule(self, rule, is_binary):
+        if is_binary:
+            if rule[0] == NEGATE:  # this entry is logically negated
+                value = False
+                rule = rule[1:]
+            else:
+                value = True
 
-        num_elements = len(rule)
-        if num_elements == 2:
-            item, hostlist = rule
-            tags = []
-        elif num_elements == 3:
-            item, tags, hostlist = rule
+            num_elements = len(rule)
+            if num_elements == 1:
+                hostlist = rule
+                tags = []
+            elif num_elements == 2:
+                tags, hostlist = rule
+            else:
+                raise MKGeneralException("Invalid entry '%r' in configuration: "
+                                         "must have 1 or 2 elements" % (rule,))
         else:
-            raise MKGeneralException("Invalid entry '%r' in host configuration list: must "
-                                     "have 2 or 3 entries" % (rule,))
+            num_elements = len(rule)
+            if num_elements == 2:
+                value, hostlist = rule
+                tags = []
+            elif num_elements == 3:
+                value, tags, hostlist = rule
+            else:
+                raise MKGeneralException("Invalid entry '%r' in host configuration list: must "
+                                         "have 2 or 3 entries" % (rule,))
 
-        return item, tags, hostlist, rule_options
+        return value, tags, hostlist
 
     def get_service_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         cache_id = id(ruleset), with_foreign_hosts

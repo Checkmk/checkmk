@@ -904,7 +904,7 @@ constexpr bool IsSmartMerge(std::string_view name) {
     return name == groups::kWinPerf;
 }
 
-// #TODO simplifying
+// #TODO simplify
 bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src,
                             bool MergeSequences) {
     // we are scanning source
@@ -919,46 +919,62 @@ bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src,
         auto name = it->first.as<std::string>();
         XLOG::l("Processing '{}'", name);
         auto target_value = Target[name];
-        if (IsYamlMap(target_value)) {
-            if (IsYamlMap(source_value)) {
-                for (YAML::const_iterator itx = source_value.begin();
-                     itx != source_value.end(); ++itx) {
-                    auto merge_seq = IsSmartMerge(name);
-                    smartMerge(target_value, source_value, merge_seq);
-                }
-            } else {
-                if (source_value.IsNull()) continue;  // empty skipped
-                XLOG::l(XLOG_FLINE + " expected map from source {}", name);
-            }
-            continue;
-        } else if (IsYamlSeq(target_value)) {
-            if (IsYamlSeq(source_value)) {
-                if (MergeSequences) {
-                    // special case when we are merging some sequences from
-                    // different files
-                    for (auto entry : source_value) {
-                        auto s_name = GetMapNodeName(entry);
-                        if (s_name.empty()) continue;
 
-                        bool found = false;
-                        for (auto target_entry : target_value) {
-                            auto target_name = GetMapNodeName(target_entry);
-                            if (target_name == s_name) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) target_value.push_back(entry);
-                    }
-                } else
-                    target_value = source_value;
-            } else {
-                XLOG::l.bp(XLOG_FLINE + " bad my bad");
+        // cases to process
+        //    target ----     source -----------
+        // 1. MAP: valid is   MAP, all other skipped
+        // 2. SEQ: valid is   SEQ, all other skipped
+        // 3. OTHER: valid is DEFINED
+
+        if (IsYamlMap(target_value)) {
+            // MAP
+            if (!IsYamlMap(source_value)) {
+                if (!source_value.IsNull())
+                    XLOG::l(XLOG_FLINE + " expected map '{}', we have [{}]",
+                            name, source_value.Type());
+                continue;
             }
-            continue;
-        } else {
-            if (source_value.IsDefined())
+
+            // MAP-MAP
+            for (YAML::const_iterator itx = source_value.begin();
+                 itx != source_value.end(); ++itx) {
+                auto merge_seq = IsSmartMerge(name);
+                smartMerge(target_value, source_value, merge_seq);
+            }
+
+        } else if (IsYamlSeq(target_value)) {
+            // SEQ
+
+            if (!IsYamlSeq(source_value)) {
+                XLOG::l.t(
+                    XLOG_FLINE + " skipping section '{}' as different type",
+                    name);  // may happen when with empty sequence sections
+                continue;
+            }
+
+            // SEQ-SEQ here
+            if (!MergeSequences) {
                 target_value = source_value;
+                continue;
+            }
+
+            // special case when we are merging some sequences from
+            // different files
+            for (auto entry : source_value) {
+                auto s_name = GetMapNodeName(entry);
+                if (s_name.empty()) continue;
+
+                if (std::none_of(std::begin(target_value),
+                                 std::end(target_value),
+                                 [s_name](YAML::Node Node) -> bool {
+                                     return s_name == GetMapNodeName(Node);
+                                 }))
+                    target_value.push_back(entry);
+            }
+        } else {
+            // SCALAR or UNDEF
+            if (source_value.IsDefined())
+                target_value = source_value;  // other just override
             else {
                 XLOG::l.bp(XLOG_FLINE + " bad src");
             }

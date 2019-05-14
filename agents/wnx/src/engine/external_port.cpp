@@ -1,14 +1,13 @@
 #include "stdafx.h"
 
+#include "external_port.h"
+
 #include <iostream>
 
 #include "asio.h"
-
 #include "cfg.h"
-
-#include "external_port.h"
-
 #include "encryption.h"
+#include "realtime.h"
 
 using asio::ip::tcp;
 
@@ -62,6 +61,38 @@ size_t AsioSession::allocCryptBuffer(
     }
     return crypt_segment_size;
 }
+
+// returns 0 on failure
+static size_t WriteDataToSocket(asio::ip::tcp::socket &sock, const char *data,
+                                size_t sz) noexcept {
+    using namespace asio;
+
+    if (nullptr == data) {
+        XLOG::l.bp(XLOG_FUNC + " nullptr in");
+        return 0;
+    }
+
+    // asio execution
+    std::error_code ec;
+    auto written_bytes =
+        write(sock, buffer(data, sz), transfer_exactly(sz), ec);
+
+    // error processing
+    if (ec.value() != 0) {
+        XLOG::d(XLOG_FUNC + " write [{}] bytes to socket failed [{}] '{}'", sz,
+                ec.value(), ec.message());
+        return 0;
+    }
+
+    return written_bytes;
+}
+
+// returns 0 on failure
+static size_t WriteStringToSocket(asio::ip::tcp::socket &sock,
+                                  std::string_view str) noexcept {
+    return WriteDataToSocket(sock, str.data(), str.size());
+}
+
 // To send data
 void AsioSession::do_write(const void *Data, std::size_t Length,
                            cma::encrypt::Commander *Crypt) {
@@ -84,7 +115,7 @@ void AsioSession::do_write(const void *Data, std::size_t Length,
                 [this, self, to_send, Length](std::error_code ec,
                                               std::size_t length) {
                     XLOG::t.i(
-                        "Send {} from {} data with code {} left to send {}",
+                        "Send [{}] from [{}] data with code [{}] left to send [{}]",
                         length, to_send, ec.value(), Length);
                     if (!ec && !mode_one_shot_ && length == Length) {
                         do_read();
@@ -92,31 +123,37 @@ void AsioSession::do_write(const void *Data, std::size_t Length,
                 });
         } else {
             // correct code is here
-            size_t ret = 0;
+            size_t written_bytes = 0;
             if (Crypt) {
                 if (!crypt_buf_len) {
-                    XLOG::l(
-                        "No data sending, encrypt is requested, but encryption is failed");
+                    XLOG::l("Encrypt is requested, but encryption is failed");
                     return;
                 }
+
                 // encryption
                 auto buf = crypt_buf_.get();
                 memcpy(buf, data, to_send);
                 auto [success, len] = Crypt->encode(buf, to_send, crypt_buf_len,
                                                     Length == to_send);
-                // sending
-                if (success) {
-                    ret = asio::write(socket_, asio::buffer(buf, len),
-                                      asio::transfer_exactly(len));
-                } else {
-                    ret = 0;
-                    XLOG::l.crit("CANNOT ENCRYPT {}.", len);
+                // checking
+                if (!success) {
+                    XLOG::l.crit(XLOG_FUNC + "CANNOT ENCRYPT {}.", len);
                     return;
                 }
+
+                // sending
+                // suboptimal method, but one additional packet pro 1 minute
+                // means for TCP nothing. Still candidate to optimize
+                if (static_cast<const void *>(data) == Data)
+                    WriteStringToSocket(socket_, cma::rt::kPlainHeader);
+
+                written_bytes = WriteDataToSocket(socket_, buf, len);
+
             } else
-                ret = asio::write(socket_, asio::buffer(data, to_send),
-                                  asio::transfer_exactly(to_send));
-            XLOG::t.i("Send {} from {} data to send {}", ret, to_send, Length);
+                written_bytes = WriteDataToSocket(socket_, data, to_send);
+
+            XLOG::t.i("Send [{}] from [{}] data to send [{}]", written_bytes,
+                      to_send, Length);
         }
 
         // send;

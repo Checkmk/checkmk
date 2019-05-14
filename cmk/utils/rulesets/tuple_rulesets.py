@@ -158,12 +158,11 @@ class RulesetOptimizier(object):
 
     def get_boolean_service_ruleset(self, ruleset, with_foreign_hosts):
         cache_id = id(ruleset), with_foreign_hosts
-        try:
-            ruleset = self._in_boolean_service_conf_list_ruleset_cache[cache_id]
-        except KeyError:
-            ruleset = self._convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
-            self._in_boolean_service_conf_list_ruleset_cache[cache_id] = ruleset
-        return ruleset
+        cached_ruleset = self._in_boolean_service_conf_list_ruleset_cache.get(cache_id)
+        if cached_ruleset is None:
+            cached_ruleset = self._convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
+            self._in_boolean_service_conf_list_ruleset_cache[cache_id] = cached_ruleset
+        return cached_ruleset
 
     def _convert_boolean_service_ruleset(self, ruleset, with_foreign_hosts):
         new_rules = []

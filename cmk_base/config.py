@@ -3049,18 +3049,12 @@ class ConfigCache(object):
                     negate = True
                 else:
                     negate = False
-                # entry should be one-tuple or two-tuple. Tuple's elements are
-                # lists of strings. User might forget comma in one tuple. Then the
-                # entry is the list itself.
-                if isinstance(entry, list):
-                    hostlist = entry
+
+                if len(entry) == 1:  # 1-Tuple with list of hosts
+                    hostlist = entry[0]
                     tags = []
                 else:
-                    if len(entry) == 1:  # 1-Tuple with list of hosts
-                        hostlist = entry[0]
-                        tags = []
-                    else:
-                        tags, hostlist = entry
+                    tags, hostlist = entry
 
                 if tuple_rulesets.hosttags_match_taglist(actual_host_tags, tags) and \
                        tuple_rulesets.in_extraconf_hostlist(hostlist, hostname):
@@ -3121,16 +3115,18 @@ class ConfigCache(object):
             ruleset, with_foreign_hosts)
 
         for negate, hosts, service_matchers in optimized_ruleset:
-            if hostname in hosts:
-                match_cache_id = service_matchers, descr
-                try:
-                    match = self._in_boolean_service_conf_list_match_cache[match_cache_id]
-                except KeyError:
-                    match = _in_servicematcher_list(service_matchers, descr)
-                    self._in_boolean_service_conf_list_match_cache[match_cache_id] = match
+            if hostname not in hosts:
+                continue
 
-                if match:
-                    return not negate
+            match_cache_id = service_matchers, descr
+            match = self._in_boolean_service_conf_list_match_cache.get(match_cache_id)
+            if match is None:
+                match = _in_servicematcher_list(service_matchers, descr)
+                self._in_boolean_service_conf_list_match_cache[match_cache_id] = match
+
+            if match:
+                return not negate
+
         return False  # no match. Do not ignore
 
     def all_processed_hosts(self):

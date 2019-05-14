@@ -645,7 +645,7 @@ void TableStateHistory::answerQuery(Query *query) {
 int TableStateHistory::updateHostServiceState(Query *query,
                                               const LogEntry *entry,
                                               HostServiceState *hs_state,
-                                              const bool only_update) {
+                                              bool only_update) {
     int state_changed = 1;
 
     // Revive host / service if it was unmonitored

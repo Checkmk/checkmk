@@ -48,7 +48,7 @@ private:
     void sendRequest(std::ostream &os) override { os << command_; }
     void receiveReply(std::istream &is) override { std::getline(is, result_); }
 
-    const std::string command_;
+    std::string command_;
     std::string result_;
 };
 
@@ -67,7 +67,7 @@ public:
     };
 
 private:
-    const std::string blob_;
+    std::string blob_;
 };
 }  // namespace
 

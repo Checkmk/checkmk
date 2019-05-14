@@ -2679,13 +2679,10 @@ class ConfigCache(object):
         self._autochecks_cache = {}
 
         # Caches for host_extra_conf
-        self._host_extra_conf_match_cache = {}
+        self._host_match_cache = {}
 
         # Caches for service_extra_conf
         self._service_match_cache = {}
-
-        # Cache for in_binary_hostlist
-        self._in_binary_hostlist_cache = {}
 
         # Caches for nodes and clusters
         self._clusters_of_cache = {}
@@ -3015,9 +3012,10 @@ class ConfigCache(object):
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = hostname not in self._all_processed_hosts
         cache_id = id(ruleset), with_foreign_hosts
-        try:
-            cached = self._host_extra_conf_match_cache[cache_id]
-        except KeyError:
+
+        if cache_id in self._host_match_cache:
+            cached = self._host_match_cache[cache_id]
+        else:
             optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
                 ruleset, with_foreign_hosts, is_binary=is_binary)
 
@@ -3025,7 +3023,7 @@ class ConfigCache(object):
             for value, hostname_list in optimized_ruleset:
                 for other_hostname in hostname_list:
                     cached.setdefault(other_hostname, []).append(value)
-            self._host_extra_conf_match_cache[cache_id] = cached
+            self._host_match_cache[cache_id] = cached
 
         for value in cached.get(hostname, []):
             yield value
@@ -3061,9 +3059,10 @@ class ConfigCache(object):
             if hostname not in hosts:
                 continue
 
-            descr_cache_id = service_conditions, description
-            match = self._service_match_cache.get(descr_cache_id)
-            if match is None:
+            descr_cache_id = description, service_conditions
+            if descr_cache_id in self._service_match_cache:
+                match = self._service_match_cache[descr_cache_id]
+            else:
                 match = _in_servicematcher_list(service_conditions, description)
                 self._service_match_cache[descr_cache_id] = match
 

@@ -83,11 +83,12 @@ class RulesetOptimizier(object):
 
     def get_host_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         cache_id = id(ruleset), with_foreign_hosts
-        try:
-            ruleset = self._host_ruleset_cache[cache_id]
-        except KeyError:
-            ruleset = self._convert_host_ruleset(ruleset, with_foreign_hosts, is_binary)
-            self._host_ruleset_cache[cache_id] = ruleset
+
+        if cache_id in self._host_ruleset_cache:
+            return self._host_ruleset_cache[cache_id]
+
+        ruleset = self._convert_host_ruleset(ruleset, with_foreign_hosts, is_binary)
+        self._host_ruleset_cache[cache_id] = ruleset
         return ruleset
 
     def _convert_host_ruleset(self, ruleset, with_foreign_hosts, is_binary):
@@ -138,12 +139,12 @@ class RulesetOptimizier(object):
     def get_service_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         cache_id = id(ruleset), with_foreign_hosts
 
-        cached_ruleset = self._service_ruleset_cache.get(cache_id)
-        if cached_ruleset is None:
-            cached_ruleset = self._convert_service_ruleset(
-                ruleset, with_foreign_hosts=with_foreign_hosts, is_binary=is_binary)
-            self._service_ruleset_cache[cache_id] = cached_ruleset
+        if cache_id in self._service_ruleset_cache:
+            return self._service_ruleset_cache[cache_id]
 
+        cached_ruleset = self._convert_service_ruleset(
+            ruleset, with_foreign_hosts=with_foreign_hosts, is_binary=is_binary)
+        self._service_ruleset_cache[cache_id] = cached_ruleset
         return cached_ruleset
 
     def _convert_service_ruleset(self, ruleset, with_foreign_hosts, is_binary):

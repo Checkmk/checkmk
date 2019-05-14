@@ -685,7 +685,7 @@ inline int DataCountOnHandle(HANDLE Handle) {
     auto peek_result =
         ::PeekNamedPipe(Handle, nullptr, 0, nullptr, &read_count, nullptr);
 
-    if (!peek_result) return 0;
+    if (0 == peek_result) return 0;
 
     return read_count;
 }
@@ -726,17 +726,17 @@ std::string ConditionallyConvertFromUTF16(const std::vector<T>& utf16_data) {
 // local implementation of shitty registry access functions
 inline uint32_t LocalReadUint32(const char* RootName, const char* Name,
                                 uint32_t DefaultValue = 0) noexcept {
-    HKEY hKey = nullptr;
+    HKEY hkey = nullptr;
     auto result =
-        RegOpenKeyExA(HKEY_LOCAL_MACHINE, RootName, 0, KEY_QUERY_VALUE, &hKey);
+        RegOpenKeyExA(HKEY_LOCAL_MACHINE, RootName, 0, KEY_QUERY_VALUE, &hkey);
 
     if (result != ERROR_SUCCESS) return DefaultValue;
 
     DWORD value = 0;
     DWORD type = REG_DWORD;
     DWORD size = sizeof(DWORD);
-    result = RegQueryValueExA(hKey, Name, nullptr, &type, (PBYTE)&value, &size);
-    RegCloseKey(hKey);
+    result = RegQueryValueExA(hkey, Name, nullptr, &type, (PBYTE)&value, &size);
+    RegCloseKey(hkey);
 
     if (result == ERROR_SUCCESS) return value;
 

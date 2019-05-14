@@ -52,7 +52,7 @@ bool CreateProtocolFile(std::filesystem::path& ProtocolFile,
 std::optional<YAML::Node> LoadIni(std::filesystem::path File);
 // gtest [+]
 bool StoreYaml(const std::filesystem::path& File, YAML::Node Yaml,
-               const std::string Comment) noexcept;
+               const std::string& Comment) noexcept;
 // gtest [+]
 bool IsBakeryIni(const std::filesystem::path& Path) noexcept;
 // gtest [+]

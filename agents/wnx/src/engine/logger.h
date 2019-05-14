@@ -191,12 +191,12 @@ static uint16_t GetColorAttribute(Colors color) {
 static int GetBitOffset(uint16_t color_mask) {
     if (color_mask == 0) return 0;
 
-    int bitOffset = 0;
+    int bit_offset = 0;
     while ((color_mask & 1) == 0) {
         color_mask >>= 1;
-        ++bitOffset;
+        ++bit_offset;
     }
-    return bitOffset;
+    return bit_offset;
 }
 
 static uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
@@ -211,11 +211,11 @@ static uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
 
     uint16_t new_color =
         GetColorAttribute(color) | existing_bg | FOREGROUND_INTENSITY;
-    static const int bg_bitOffset = GetBitOffset(background_mask);
-    static const int fg_bitOffset = GetBitOffset(foreground_mask);
+    static const int bg_bit_offset = GetBitOffset(background_mask);
+    static const int fg_bit_offset = GetBitOffset(foreground_mask);
 
-    if (((new_color & background_mask) >> bg_bitOffset) ==
-        ((new_color & foreground_mask) >> fg_bitOffset)) {
+    if (((new_color & background_mask) >> bg_bit_offset) ==
+        ((new_color & foreground_mask) >> fg_bit_offset)) {
         new_color ^= FOREGROUND_INTENSITY;  // invert intensity
     }
     return new_color;

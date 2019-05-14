@@ -147,9 +147,10 @@ def check_veeam_client(item, params, parsed):
             infotexts.append("Duration: %s" % get_age_human_readable(duration))
             perfdata.append(('duration', duration))
 
-    AvgSpeedBps = int(data['AvgSpeedBps'])
-    perfdata.append(('avgspeed', AvgSpeedBps))
-    infotexts.append(("Average Speed: %s/s" % get_bytes_human_readable(AvgSpeedBps)))
+    if "AvgSpeedBps" in data:
+        avg_speed_bps = int(data['AvgSpeedBps'])
+        perfdata.append(('avgspeed', avg_speed_bps))
+        infotexts.append(("Average Speed: %s/s" % get_bytes_human_readable(avg_speed_bps)))
 
     # Append backup server if available
     if "BackupServer" in data:

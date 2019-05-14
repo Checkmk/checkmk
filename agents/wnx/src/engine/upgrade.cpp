@@ -100,8 +100,8 @@ int CopyRootFolder(const std::filesystem::path& LegacyRoot,
 
     auto count = 0;
     std::error_code ec;
-    for (const auto& dirEntry : fs::directory_iterator(LegacyRoot, ec)) {
-        const auto& p = dirEntry.path();
+    for (const auto& dir_entry : fs::directory_iterator(LegacyRoot, ec)) {
+        const auto& p = dir_entry.path();
         if (fs::is_directory(p, ec)) continue;
 
         if (details::IsIgnoredFile(p)) {
@@ -136,32 +136,32 @@ int CopyFolderRecursive(
 
     try {
         std::error_code ec;
-        for (const auto& dirEntry :
+        for (const auto& dir_entry :
              fs::recursive_directory_iterator(Source, ec)) {
-            const auto& p = dirEntry.path();
+            const auto& p = dir_entry.path();
             if (Predicate(p)) {
                 // Create path in target, if not existing.
-                const auto relativeSrc = fs::relative(p, Source);
-                const auto targetParentPath = Target / relativeSrc;
+                const auto relative_src = fs::relative(p, Source);
+                const auto target_parent_path = Target / relative_src;
                 if (fs::is_directory(p))
 
                 {
-                    fs::create_directories(targetParentPath, ec);
+                    fs::create_directories(target_parent_path, ec);
                     if (ec.value() != 0) {
                         XLOG::l("Failed create folder '{} error {}",
-                                targetParentPath.u8string(), ec.value());
+                                target_parent_path.u8string(), ec.value());
                         continue;
                     }
                 } else {
                     // Copy to the targetParentPath which we just created.
-                    fs::copy(p, targetParentPath,
+                    fs::copy(p, target_parent_path,
                              fs::copy_options::overwrite_existing, ec);
                     if (ec.value() == 0) {
                         count++;
                         continue;
                     }
                     XLOG::l("during copy from '{}' to '{}' error {}",
-                            p.u8string(), targetParentPath.u8string(),
+                            p.u8string(), target_parent_path.u8string(),
                             ec.value());
                 }
             }
@@ -203,7 +203,8 @@ uint32_t GetServiceHint(SC_HANDLE ServiceHandle) {
 
 int SendServiceCommand(SC_HANDLE Handle, uint32_t Command) {
     SERVICE_STATUS_PROCESS ssp;
-    if (FALSE == ::ControlService(Handle, Command, (LPSERVICE_STATUS)&ssp)) {
+    if (FALSE == ::ControlService(Handle, Command,
+                                  reinterpret_cast<LPSERVICE_STATUS>(&ssp))) {
         XLOG::l("ControlService command [{}] failed [{}]", Command,
                 GetLastError());
         return -1;
@@ -248,7 +249,7 @@ int GetServiceStatusByName(const std::wstring& Name) {
     ON_OUT_OF_SCOPE(if (manager_handle) CloseServiceHandle(manager_handle));
     ON_OUT_OF_SCOPE(if (handle) CloseServiceHandle(handle));
 
-    if (!handle) return err;
+    if (nullptr == handle) return err;
 
     return GetServiceStatus(handle);
 }
@@ -697,7 +698,7 @@ std::string GetTimeString() {
     sss << p_time << "." << std::setfill('0') << std::setw(3) << ms.count()
         << std::ends;
 
-    return sss.str().c_str();
+    return sss.str();
 }
 
 bool CreateProtocolFile(std::filesystem::path& ProtocolFile,
@@ -708,7 +709,7 @@ bool CreateProtocolFile(std::filesystem::path& ProtocolFile,
         if (ofs) {
             ofs << "Upgraded:\n";
             ofs << "  time: '" << GetTimeString() << "'\n";
-            if (OptionalContent.size()) {
+            if (!OptionalContent.empty()) {
                 ofs << OptionalContent;
                 ofs << "\n";
             }
@@ -914,7 +915,7 @@ std::string MakeComments(const std::filesystem::path& SourceFilePath,
 }
 
 bool StoreYaml(const std::filesystem::path& File, YAML::Node Yaml,
-               const std::string Comment) noexcept {
+               const std::string& Comment) noexcept {
     std::ofstream ofs(File, std::ios::binary);
     if (ofs) {
         ofs << Comment;

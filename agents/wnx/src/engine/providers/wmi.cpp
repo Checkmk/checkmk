@@ -39,7 +39,7 @@ using NamedWmiSources = std::unordered_map<std::string, WmiSource>;
 // we configure our provider using static table with strings
 // NOTHING MORE. ZERO OF PROGRAMMING
 
-NamedWmiSources G_SectionObjects = {
+NamedWmiSources g_section_objects = {
     // start
 
     //
@@ -92,14 +92,14 @@ NamedWmiSources G_SectionObjects = {
 };
 
 // Columns
-NamedWideStringVector G_SectionColumns = {
+NamedWideStringVector g_section_columns = {
     // start
     {kOhm,  //
      {L"Index", L"Name", L"Parent", L"SensorType", L"Value"}}
     // end
 };
 
-NamedStringVector G_SectionSubs = {
+NamedStringVector g_section_subs = {
     // start
     {kWmiCpuLoad,  //
      {kSubSectionSystemPerf, kSubSectionComputerSystem}},
@@ -119,7 +119,7 @@ using namespace std::chrono;
 
 // #TODO: confirm values, now 3600 seconds
 // #TODO test it
-std::unordered_map<std::string, std::chrono::duration<int>> G_DelaysOnFail = {
+std::unordered_map<std::string, std::chrono::duration<int>> g_delays_on_fail = {
     {kDotNetClrMemory, cma::cfg::G_DefaultDelayOnFail},  //
     {kWmiWebservices, cma::cfg::G_DefaultDelayOnFail},   //
     {kWmiCpuLoad, cma::cfg::G_DefaultDelayOnFail},       //
@@ -129,7 +129,7 @@ std::unordered_map<std::string, std::chrono::duration<int>> G_DelaysOnFail = {
 void Wmi::setupByName() {
     // setup namespace and object
     try {
-        auto& x = G_SectionObjects[uniq_name_];
+        auto& x = g_section_objects[uniq_name_];
         name_space_ = x.first;
         object_ = x.second;
     } catch (const std::exception& e) {
@@ -144,7 +144,7 @@ void Wmi::setupByName() {
 
     // setup columns if any
     try {
-        auto& x = G_SectionColumns[uniq_name_];
+        auto& x = g_section_columns[uniq_name_];
         columns_ = x;
     } catch (const std::exception&) {
         // ignoring this exception fully:
@@ -153,7 +153,7 @@ void Wmi::setupByName() {
 
     // setup columns if any
     try {
-        auto& subs = G_SectionSubs[uniq_name_];
+        auto& subs = g_section_subs[uniq_name_];
         for (auto& sub : subs) {
             sub_objects_.emplace_back(sub);
         }
@@ -164,7 +164,7 @@ void Wmi::setupByName() {
 
     // setup delay on fail
     try {
-        const auto& delay_in_seconds = G_DelaysOnFail[uniq_name_];
+        const auto& delay_in_seconds = g_delays_on_fail[uniq_name_];
         delay_on_fail_ = delay_in_seconds;
     } catch (const std::exception&) {
         // do nothing here
@@ -184,7 +184,7 @@ std::string GenerateTable(const std::wstring& NameSpace,
     if (Object.empty()) return "";
 
     auto id = [ NameSpace, Object ]() -> auto {
-        return fmt::formatv("\"{}\\{}\"",              //
+        return fmt::formatv(R"("{}\{}")",              //
                             ConvertToUTF8(NameSpace),  //
                             ConvertToUTF8(Object));
     };
@@ -239,7 +239,7 @@ bool Wmi::isAllowedByCurrentConfig() const {
 
     // Wmi itself is allowed, we check conditions
     // 1. without sub section:
-    if (sub_objects_.size() == 0) return true;
+    if (sub_objects_.empty()) return true;
 
     // 2. with sub_section, check situation when parent
     // is allowed, but all sub  DISABLED DIRECTLY
@@ -260,7 +260,7 @@ bool Wmi::isAllowedByCurrentConfig() const {
 void SubSection::setupByName() {
     // setup namespace and object
     try {
-        auto& x = G_SectionObjects[uniq_name_];
+        auto& x = g_section_objects[uniq_name_];
         name_space_ = x.first;
         object_ = x.second;
     } catch (const std::exception& e) {
@@ -286,11 +286,12 @@ std::string SubSection::generateContent() const {
             // this is not normal usually
             XLOG::d("SubSection '{}' cannot provide data", uniq_name_);
             return {};
-        } else {
-            // print header with default or commanded section name
-            return std::move(section::MakeSubSectionHeader(uniq_name_) +
-                             section_body);
         }
+
+        // print header with default or commanded section name
+        return std::move(section::MakeSubSectionHeader(uniq_name_) +
+                         section_body);
+
     } catch (const std::exception& e) {
         XLOG::l.crit(XLOG_FUNC + " Exception '{}' in '{}'", e.what(),
                      uniq_name_);

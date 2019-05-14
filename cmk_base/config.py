@@ -2682,11 +2682,7 @@ class ConfigCache(object):
         self._host_extra_conf_match_cache = {}
 
         # Caches for service_extra_conf
-        self._service_extra_conf_host_matched_ruleset_cache = {}
-        self._service_extra_conf_match_cache = {}
-
-        # Caches for in_boolean_serviceconf_list
-        self._in_boolean_service_conf_list_match_cache = {}
+        self._service_match_cache = {}
 
         # Cache for in_binary_hostlist
         self._in_binary_hostlist_cache = {}
@@ -3079,18 +3075,15 @@ class ConfigCache(object):
 
         entries = []
 
-        for value, hosts, service_matchers in optimized_ruleset:
+        for value, hosts, service_conditions in optimized_ruleset:
             if hostname not in hosts:
                 continue
 
-            descr_cache_id = service_matchers, service
-
-            # 20% faster without exception handling
-            #            self._profile_log("descr cache id %r" % (descr_cache_id))
-            match = self._service_extra_conf_match_cache.get(descr_cache_id)
+            descr_cache_id = service_conditions, service
+            match = self._service_match_cache.get(descr_cache_id)
             if match is None:
-                match = _in_servicematcher_list(service_matchers, service)
-                self._service_extra_conf_match_cache[descr_cache_id] = match
+                match = _in_servicematcher_list(service_conditions, service)
+                self._service_match_cache[descr_cache_id] = match
 
             if match:
                 entries.append(value)
@@ -3114,15 +3107,15 @@ class ConfigCache(object):
         optimized_ruleset = self.ruleset_optimizer.get_boolean_service_ruleset(
             ruleset, with_foreign_hosts)
 
-        for negate, hosts, service_matchers in optimized_ruleset:
+        for negate, hosts, service_conditions in optimized_ruleset:
             if hostname not in hosts:
                 continue
 
-            match_cache_id = service_matchers, descr
-            match = self._in_boolean_service_conf_list_match_cache.get(match_cache_id)
+            match_cache_id = service_conditions, descr
+            match = self._service_match_cache.get(match_cache_id)
             if match is None:
-                match = _in_servicematcher_list(service_matchers, descr)
-                self._in_boolean_service_conf_list_match_cache[match_cache_id] = match
+                match = _in_servicematcher_list(service_conditions, descr)
+                self._service_match_cache[match_cache_id] = match
 
             if match:
                 return not negate

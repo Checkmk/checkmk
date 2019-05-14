@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
+
+from cmk.utils.regex import regex, is_regex
+import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
 # Conveniance macros for legacy tuple based host and service rules
@@ -37,6 +41,448 @@ NEGATE = '@negate'  # negation in boolean lists
 # - Is it worth to detect matches that are no regex matches?
 # - We could remove .* from end of regexes
 # - What's about compilation of the regexes?
+
+
+def get_rule_options(entry):
+    """Get the options from a rule.
+
+    Pick out the option element of a rule. Currently the options "disabled"
+    and "comments" are being honored."""
+    if isinstance(entry[-1], dict):
+        return entry[:-1], entry[-1]
+
+    return entry, {}
+
+
+class RulesetOptimizier(object):
+    def __init__(self, config_cache, host_paths):
+        super(RulesetOptimizier, self).__init__()
+        self._config_cache = config_cache
+        self._host_paths = host_paths
+
+        self._service_ruleset_cache = {}
+        self._host_ruleset_cache = {}
+        self._in_boolean_service_conf_list_ruleset_cache = {}
+        self._all_matching_hosts_match_cache = {}
+
+        # Reference dirname -> hosts in this dir including subfolders
+        self._folder_host_lookup = {}
+        # All used folders used for various set intersection operations
+        self._folder_path_set = set()
+        # Provides a list of hosts with the same hosttags, excluding the folder
+        self._hosts_grouped_by_tags = {}
+        # Reference hostname -> tag group reference
+        self._host_grouped_ref = {}
+
+        # TODO: The folder will not be part of new dict tags anymore. This can
+        # be cleaned up then.
+        self._hosttags_without_folder = {}
+
+        # TODO: Clean this one up?
+        self._initialize_host_lookup()
+
+    def get_host_ruleset(self, ruleset, with_foreign_hosts):
+        cache_id = id(ruleset), with_foreign_hosts
+        try:
+            ruleset = self._host_ruleset_cache[cache_id]
+        except KeyError:
+            ruleset = self._convert_host_ruleset(ruleset, with_foreign_hosts)
+            self._host_ruleset_cache[cache_id] = ruleset
+        return ruleset
+
+    def _convert_host_ruleset(self, ruleset, with_foreign_hosts):
+        new_rules = []
+        for rule in ruleset:
+            item, tags, hostlist, rule_options = self.parse_host_rule(rule)
+            if rule_options.get("disabled"):
+                continue
+
+            # Directly compute set of all matching hosts here, this
+            # will avoid recomputation later
+            new_rules.append((item, self.all_matching_hosts(tags, hostlist, with_foreign_hosts)))
+
+        return new_rules
+
+    def parse_host_rule(self, rule):
+        rule, rule_options = get_rule_options(rule)
+
+        num_elements = len(rule)
+        if num_elements == 2:
+            item, hostlist = rule
+            tags = []
+        elif num_elements == 3:
+            item, tags, hostlist = rule
+        else:
+            raise MKGeneralException("Invalid entry '%r' in host configuration list: must "
+                                     "have 2 or 3 entries" % (rule,))
+
+        return item, tags, hostlist, rule_options
+
+    def get_service_ruleset(self, ruleset, with_foreign_hosts):
+        cache_id = id(ruleset), with_foreign_hosts
+
+        cached_ruleset = self._service_ruleset_cache.get(cache_id)
+        if cached_ruleset is None:
+            cached_ruleset = self._convert_service_ruleset(
+                ruleset, with_foreign_hosts=with_foreign_hosts)
+            self._service_ruleset_cache[cache_id] = cached_ruleset
+
+        return cached_ruleset
+
+    def _convert_service_ruleset(self, ruleset, with_foreign_hosts):
+        new_rules = []
+        for rule in ruleset:
+            rule, rule_options = get_rule_options(rule)
+            if rule_options.get("disabled"):
+                continue
+
+            num_elements = len(rule)
+            if num_elements == 3:
+                item, hostlist, servlist = rule
+                tags = []
+            elif num_elements == 4:
+                item, tags, hostlist, servlist = rule
+            else:
+                raise MKGeneralException("Invalid rule '%r' in service configuration "
+                                         "list: must have 3 or 4 elements" % (rule,))
+
+            # Directly compute set of all matching hosts here, this
+            # will avoid recomputation later
+            hosts = self.all_matching_hosts(tags, hostlist, with_foreign_hosts)
+
+            # And now preprocess the configured patterns in the servlist
+            new_rules.append((item, hosts, convert_pattern_list(servlist)))
+
+        return new_rules
+
+    def get_boolean_service_ruleset(self, ruleset, with_foreign_hosts):
+        cache_id = id(ruleset), with_foreign_hosts
+        try:
+            ruleset = self._in_boolean_service_conf_list_ruleset_cache[cache_id]
+        except KeyError:
+            ruleset = self._convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
+            self._in_boolean_service_conf_list_ruleset_cache[cache_id] = ruleset
+        return ruleset
+
+    def _convert_boolean_service_ruleset(self, ruleset, with_foreign_hosts):
+        new_rules = []
+        for rule in ruleset:
+            entry, rule_options = get_rule_options(rule)
+            if rule_options.get("disabled"):
+                continue
+
+            if entry[0] == NEGATE:  # this entry is logically negated
+                negate = True
+                entry = entry[1:]
+            else:
+                negate = False
+
+            if len(entry) == 2:
+                hostlist, servlist = entry
+                tags = []
+            elif len(entry) == 3:
+                tags, hostlist, servlist = entry
+            else:
+                raise MKGeneralException("Invalid entry '%r' in configuration: "
+                                         "must have 2 or 3 elements" % (entry,))
+
+            # Directly compute set of all matching hosts here, this
+            # will avoid recomputation later
+            hosts = self.all_matching_hosts(tags, hostlist, with_foreign_hosts)
+            new_rules.append((negate, hosts, convert_pattern_list(servlist)))
+
+        return new_rules
+
+    def all_matching_hosts(self, tags, hostlist, with_foreign_hosts):
+        """Returns a set containing the names of hosts that match the given
+        tags and hostlist conditions."""
+        cache_id = tuple(tags), tuple(hostlist), with_foreign_hosts
+
+        try:
+            return self._all_matching_hosts_match_cache[cache_id]
+        except KeyError:
+            pass
+
+        if with_foreign_hosts:
+            valid_hosts = self._config_cache.all_configured_hosts()
+        else:
+            valid_hosts = self._config_cache.all_processed_hosts()
+
+        tags_set = set(tags)
+        tags_set_without_folder = tags_set
+        # TODO: Scope
+        rule_path_set = tags_set.intersection(self._folder_path_set)
+        tags_set_without_folder = tags_set - rule_path_set
+
+        if rule_path_set:
+            # More than one dynamic folder in one rule is simply wrong..
+            rule_path = list(rule_path_set)[0]
+        else:
+            rule_path = "/+"
+
+        # Thin out the valid hosts further. If the rule is located in a folder
+        # we only need the intersection of the folders hosts and the previously determined valid_hosts
+        valid_hosts = self.get_hosts_within_folder(rule_path,
+                                                   with_foreign_hosts).intersection(valid_hosts)
+
+        # Contains matched hosts
+
+        if tags_set_without_folder and hostlist == ALL_HOSTS:
+            return self._match_hosts_by_tags(cache_id, valid_hosts, tags_set_without_folder)
+
+        matching = set([])
+        only_specific_hosts = not bool([x for x in hostlist if x[0] in ["@", "!", "~"]])
+
+        # If no tags are specified and there are only specific hosts we already have the matches
+        if not tags_set_without_folder and only_specific_hosts:
+            matching = valid_hosts.intersection(hostlist)
+        # If no tags are specified and the hostlist only include @all (all hosts)
+        elif not tags_set_without_folder and hostlist == ALL_HOSTS:
+            matching = valid_hosts
+        else:
+            # If the rule has only exact host restrictions, we can thin out the list of hosts to check
+            if only_specific_hosts:
+                hosts_to_check = valid_hosts.intersection(set(hostlist))
+            else:
+                hosts_to_check = valid_hosts
+
+            for hostname in hosts_to_check:
+                # When no tag matching is requested, do not filter by tags. Accept all hosts
+                # and filter only by hostlist
+                if (not tags or hosttags_match_taglist(
+                        self._config_cache.tag_list_of_host(hostname), tags_set_without_folder)):
+                    if in_extraconf_hostlist(hostlist, hostname):
+                        matching.add(hostname)
+
+        self._all_matching_hosts_match_cache[cache_id] = matching
+        return matching
+
+    def _match_hosts_by_tags(self, cache_id, valid_hosts, tags_set_without_folder):
+        matching = set([])
+        has_specific_folder_tag = sum([x[0] == "/" for x in tags_set_without_folder])
+        negative_match_tags = set()
+        positive_match_tags = set()
+        for tag in tags_set_without_folder:
+            if tag[0] == "!":
+                negative_match_tags.add(tag[1:])
+            else:
+                positive_match_tags.add(tag)
+
+        if has_specific_folder_tag or self._config_cache.all_processed_hosts_similarity < 3:
+            # Without shared folders
+            for hostname in valid_hosts:
+                tags = self._config_cache.tag_list_of_host(hostname)
+                if not positive_match_tags - tags:
+                    if not negative_match_tags.intersection(tags):
+                        matching.add(hostname)
+
+            self._all_matching_hosts_match_cache[cache_id] = matching
+            return matching
+
+        # With shared folders
+        checked_hosts = set()
+        for hostname in valid_hosts:
+            if hostname in checked_hosts:
+                continue
+
+            hosts_with_same_tag = self._filter_hosts_with_same_tags_as_host(hostname, valid_hosts)
+            checked_hosts.update(hosts_with_same_tag)
+
+            tags = self._config_cache.tag_list_of_host(hostname)
+            if not positive_match_tags - tags:
+                if not negative_match_tags.intersection(tags):
+                    matching.update(hosts_with_same_tag)
+
+        self._all_matching_hosts_match_cache[cache_id] = matching
+        return matching
+
+    def _filter_hosts_with_same_tags_as_host(self, hostname, hosts):
+        return self._hosts_grouped_by_tags[self._host_grouped_ref[hostname]].intersection(hosts)
+
+    def get_hosts_within_folder(self, folder_path, with_foreign_hosts):
+        cache_id = with_foreign_hosts, folder_path
+        if cache_id not in self._folder_host_lookup:
+            hosts_in_folder = set()
+            # Strip off "+"
+            folder_path_tmp = folder_path[:-1]
+            relevant_hosts = self._config_cache.all_configured_hosts(
+            ) if with_foreign_hosts else self._config_cache.all_processed_hosts()
+            for hostname in relevant_hosts:
+                if self._host_paths[hostname].startswith(folder_path_tmp):
+                    hosts_in_folder.add(hostname)
+            self._folder_host_lookup[cache_id] = hosts_in_folder
+            return hosts_in_folder
+        return self._folder_host_lookup[cache_id]
+
+    def _initialize_host_lookup(self):
+        # Determine hosts within folders
+        # TODO: Cleanup this directory access for folder computation
+        dirnames = [
+            x[0][len(cmk.utils.paths.check_mk_config_dir):] + "/+"
+            for x in os.walk(cmk.utils.paths.check_mk_config_dir)
+        ]
+        self._folder_path_set = set(dirnames)
+
+        # Determine hosttags without folder tag
+        for hostname in self._config_cache.all_configured_hosts():
+            tags_without_folder = set(self._config_cache.tag_list_of_host(hostname))
+            try:
+                tags_without_folder.remove(self._host_paths[hostname])
+            except KeyError:
+                pass
+
+            self._hosttags_without_folder[hostname] = tags_without_folder
+
+        # Determine hosts with same tag setup (ignoring folder tag)
+        for hostname in self._config_cache.all_configured_hosts():
+            group_ref = tuple(sorted(self._hosttags_without_folder[hostname]))
+            self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
+            self._host_grouped_ref[hostname] = group_ref
+
+
+def in_extraconf_hostlist(hostlist, hostname):
+    """Whether or not the given host matches the hostlist.
+
+    Entries in list are hostnames that must equal the hostname.
+    Expressions beginning with ! are negated: if they match,
+    the item is excluded from the list.
+
+    Expressions beginning with ~ are treated as regular expression.
+    Also the three special tags '@all', '@clusters', '@physical'
+    are allowed.
+    """
+
+    # Migration help: print error if old format appears in config file
+    # FIXME: When can this be removed?
+    try:
+        if hostlist[0] == "":
+            raise MKGeneralException('Invalid empty entry [ "" ] in configuration')
+    except IndexError:
+        pass  # Empty list, no problem.
+
+    for hostentry in hostlist:
+        if hostentry == '':
+            raise MKGeneralException('Empty hostname in host list %r' % hostlist)
+        negate = False
+        use_regex = False
+        if hostentry[0] == '@':
+            if hostentry == '@all':
+                return True
+            # TODO: Is not used anymore for a long time. Will be cleaned up
+            # with 1.6 tuple ruleset cleanup
+            #ic = is_cluster(hostname)
+            #if hostentry == '@cluster' and ic:
+            #    return True
+            #elif hostentry == '@physical' and not ic:
+            #    return True
+
+        # Allow negation of hostentry with prefix '!'
+        else:
+            if hostentry[0] == '!':
+                hostentry = hostentry[1:]
+                negate = True
+
+            # Allow regex with prefix '~'
+            if hostentry[0] == '~':
+                hostentry = hostentry[1:]
+                use_regex = True
+
+        try:
+            if not use_regex and hostname == hostentry:
+                return not negate
+            # Handle Regex. Note: hostname == True -> generic unknown host
+            elif use_regex and hostname != True:
+                if regex(hostentry).match(hostname) is not None:
+                    return not negate
+        except MKGeneralException:
+            if cmk.utils.debug.enabled():
+                raise
+
+    return False
+
+
+def hosttags_match_taglist(hosttags, required_tags):
+    """Check if a host fulfills the requirements of a tag list.
+
+    The host must have all tags in the list, except
+    for those negated with '!'. Those the host must *not* have!
+    A trailing + means a prefix match."""
+    for tag in required_tags:
+        negate, tag = _parse_negated(tag)
+        if tag and tag[-1] == '+':
+            tag = tag[:-1]
+            matches = False
+            for t in hosttags:
+                if t.startswith(tag):
+                    matches = True
+                    break
+
+        else:
+            matches = tag in hosttags
+
+        if matches == negate:
+            return False
+
+    return True
+
+
+# Converts a regex pattern which is used to e.g. match services within Check_MK
+# to a function reference to a matching function which takes one parameter to
+# perform the matching and returns a two item tuple where the first element
+# tells wether or not the pattern is negated and the second element the outcome
+# of the match.
+# This function tries to parse the pattern and return different kind of matching
+# functions which can then be performed faster than just using the regex match.
+def _convert_pattern(pattern):
+    def is_infix_string_search(pattern):
+        return pattern.startswith('.*') and not is_regex(pattern[2:])
+
+    def is_exact_match(pattern):
+        return pattern[-1] == '$' and not is_regex(pattern[:-1])
+
+    def is_prefix_match(pattern):
+        return pattern[-2:] == '.*' and not is_regex(pattern[:-2])
+
+    if pattern == '':
+        return False, lambda txt: True  # empty patterns match always
+
+    negate, pattern = _parse_negated(pattern)
+
+    if is_exact_match(pattern):
+        # Exact string match
+        return negate, lambda txt: pattern[:-1] == txt
+
+    elif is_infix_string_search(pattern):
+        # Using regex to search a substring within text
+        return negate, lambda txt: pattern[2:] in txt
+
+    elif is_prefix_match(pattern):
+        # prefix match with tailing .*
+        pattern = pattern[:-2]
+        return negate, lambda txt: txt[:len(pattern)] == pattern
+
+    elif is_regex(pattern):
+        # Non specific regex. Use real prefix regex matching
+        return negate, lambda txt: regex(pattern).match(txt) is not None
+
+    # prefix match without any regex chars
+    return negate, lambda txt: txt[:len(pattern)] == pattern
+
+
+def convert_pattern_list(patterns):
+    return tuple([_convert_pattern(p) for p in patterns])
+
+
+def _parse_negated(pattern):
+    # Allow negation of pattern with prefix '!'
+    try:
+        negate = pattern[0] == '!'
+        if negate:
+            pattern = pattern[1:]
+    except IndexError:
+        negate = False
+
+    return negate, pattern
 
 
 class RulesetToDictTransformer(object):

@@ -262,12 +262,12 @@ class ECTableConnection : public EventConsoleConnection {
 public:
     ECTableConnection(Logger *logger, std::string path, std::string command)
         : EventConsoleConnection(logger, move(path))
-        , _command(std::move(command)) {}
+        , command_(std::move(command)) {}
 
 private:
-    void sendRequest(std::ostream &os) override { os << _command; }
+    void sendRequest(std::ostream &os) override { os << command_; }
     void receiveReply(std::istream & /*is*/) override {}
-    std::string _command;
+    std::string command_;
 };
 }  // namespace
 

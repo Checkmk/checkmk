@@ -276,109 +276,109 @@ namespace {
 // cppcheck-suppress noConstructor
 class SumAggregation : public Aggregation {
 public:
-    void update(double value) override { _sum += value; }
-    double value() const override { return _sum; }
+    void update(double value) override { sum_ += value; }
+    double value() const override { return sum_; }
 
 private:
-    double _sum{0};
+    double sum_{0};
 };
 
 // cppcheck-suppress noConstructor
 class MinAggregation : public Aggregation {
 public:
     void update(double value) override {
-        if (_first || value < _sum) {
-            _sum = value;
+        if (first_ || value < sum_) {
+            sum_ = value;
         }
-        _first = false;
+        first_ = false;
     }
 
-    double value() const override { return _sum; }
+    double value() const override { return sum_; }
 
 private:
-    bool _first{true};
+    bool first_{true};
     // NOTE: This default is wrong, the neutral element for min is +Inf. Apart
-    // from being more consistent, using it would remove the need for _first.
-    double _sum{0};
+    // from being more consistent, using it would remove the need for first_.
+    double sum_{0};
 };
 
 // cppcheck-suppress noConstructor
 class MaxAggregation : public Aggregation {
 public:
     void update(double value) override {
-        if (_first || value > _sum) {
-            _sum = value;
+        if (first_ || value > sum_) {
+            sum_ = value;
         }
-        _first = false;
+        first_ = false;
     }
 
-    double value() const override { return _sum; }
+    double value() const override { return sum_; }
 
 private:
-    bool _first{true};
+    bool first_{true};
     // NOTE: This default is wrong, the neutral element for max is -Inf. Apart
-    // from being more consistent, using it would remove the need for _first.
-    double _sum{0};
+    // from being more consistent, using it would remove the need for first_.
+    double sum_{0};
 };
 
 // cppcheck-suppress noConstructor
 class AvgAggregation : public Aggregation {
 public:
     void update(double value) override {
-        _count++;
-        _sum += value;
+        count_++;
+        sum_ += value;
     }
 
-    double value() const override { return _sum / _count; }
+    double value() const override { return sum_ / count_; }
 
 private:
-    std::uint32_t _count{0};
-    double _sum{0};
+    std::uint32_t count_{0};
+    double sum_{0};
 };
 
 // cppcheck-suppress noConstructor
 class StdAggregation : public Aggregation {
 public:
     void update(double value) override {
-        _count++;
-        _sum += value;
-        _sum_of_squares += value * value;
+        count_++;
+        sum_ += value;
+        sum_of_squares_ += value * value;
     }
 
     double value() const override {
-        auto mean = _sum / _count;
-        return sqrt(_sum_of_squares / _count - mean * mean);
+        auto mean = sum_ / count_;
+        return sqrt(sum_of_squares_ / count_ - mean * mean);
     }
 
 private:
-    std::uint32_t _count{0};
-    double _sum{0};
-    double _sum_of_squares{0};
+    std::uint32_t count_{0};
+    double sum_{0};
+    double sum_of_squares_{0};
 };
 
 // cppcheck-suppress noConstructor
 class SumInvAggregation : public Aggregation {
 public:
-    void update(double value) override { _sum += 1.0 / value; }
-    double value() const override { return _sum; }
+    void update(double value) override { sum_ += 1.0 / value; }
+    double value() const override { return sum_; }
 
 private:
-    double _sum{0};
+    double sum_{0};
 };
 
 // cppcheck-suppress noConstructor
 class AvgInvAggregation : public Aggregation {
 public:
     void update(double value) override {
-        _count++;
-        _sum += 1.0 / value;
+        count_++;
+        sum_ += 1.0 / value;
     }
 
-    double value() const override { return _sum / _count; }
+    double value() const override { return sum_ / count_; }
 
 private:
-    std::uint32_t _count{0};
-    double _sum{0};
+    std::uint32_t count_{0};
+    double sum_{0};
 };
 
 std::map<std::string, AggregationFactory> stats_ops{

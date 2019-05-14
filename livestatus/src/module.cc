@@ -269,7 +269,7 @@ private:
             os << FormattedTimePoint(record.getTimePoint()) << " ["
                << tl_info->name << "] " << record.getMessage();
         }
-    } _formatter;
+    };
 };
 }  // namespace
 

@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_recovery_area>>>
-# TUX12C 0 4800 19 0
+# <<<oracle_longactivesessions:seq(124)>>>
+# instance_name | sid | serial | machine | process | osuser | program | last_call_el | sql_id
 
 # Columns:
 # ORACLE_SID serial# machine process osuser program last_call_el sql_id

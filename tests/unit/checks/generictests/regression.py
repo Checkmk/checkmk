@@ -82,6 +82,8 @@ class WritableDataset(object):
             k_str = '%s = ' % k
             v_str = pprint.pformat(v).replace('\n', '\n' + ' ' * len(k_str))
             content += ['', '', k_str + v_str]
+        if not content:
+            return
         with open(self.filename, 'w') as f:
             for comment in self.comments:
                 f.write('# %s\n' % comment)

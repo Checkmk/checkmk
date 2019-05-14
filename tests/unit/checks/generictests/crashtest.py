@@ -58,13 +58,14 @@ class CrashDataset(object):
             content = tar.extractfile('crash.info').read()
         crashinfo = json.loads(content)
 
+        if crashinfo['crash_type'] != 'check':
+            raise SkipReport("crash type: %s" % crashinfo['crash_type'])
+
         traceback = crashinfo.get('exc_traceback', [])
         for line in traceback:
             if '/local/share/check_mk/checks/' in line[0]:
                 raise SkipReport("local check plugin")
 
-        if crashinfo['crash_type'] != 'check':
-            raise SkipReport("crash type: %s" % crashinfo['crash_type'])
         self.full_checkname = crashinfo['details']['check_type']
         self.checkname = self.full_checkname.split('.', 1)[0]
 

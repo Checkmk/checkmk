@@ -48,6 +48,13 @@ if not send_path and not spool_dir:
     sys.stderr.write(
         'Error: SMS Tools binaries (sendsms or smssend) not found and spool dir does not exists.\n')
     sys.exit(2)  # Fatal error, no retry
+    
+recipient = os.environ['NOTIFY_CONTACTPAGER'].replace(" ", "")
+contactname = os.environ['NOTIFY_CONTACTNAME']
+if not recipient:
+    sys.stderr.write(
+        'Error: Pager Number of %s not set\n' % contactname)
+    sys.exit(2)  # Fatal error, no retry   
 
 max_len = 160
 message = os.environ['NOTIFY_HOSTNAME'] + " "
@@ -88,8 +95,6 @@ elif notification_type == "ACKNOWLEDGEMENT":
 elif notification_type == "CUSTOM":
     message += " Custom Notification"
     message += " " + os.environ['NOTIFY_NOTIFICATIONCOMMENT']
-
-recipient = os.environ['NOTIFY_CONTACTPAGER'].replace(" ", "")
 
 
 def quote_message(msg, max_length=None):

@@ -11,6 +11,7 @@ def pytest_generate_tests(metafunc):
     # if the argument is specified in the list of test "fixturenames".
     if 'datasetfile' in metafunc.fixturenames and metafunc.config.option.datasetfile is not None:
         metafunc.parametrize('datasetfile', [metafunc.config.option.datasetfile])
+
     if 'crashdata' in metafunc.fixturenames and metafunc.config.option.crashstates is not None:
-        crash_reports = reversed(CrashReportList(metafunc.config.option.crashstates))
+        crash_reports = CrashReportList(metafunc.config.option.crashstates)
         metafunc.parametrize('crashdata', crash_reports, ids=[r.crash_id for r in crash_reports])

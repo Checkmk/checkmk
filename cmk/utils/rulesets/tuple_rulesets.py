@@ -63,7 +63,6 @@ class RulesetOptimizier(object):
 
         self._service_ruleset_cache = {}
         self._host_ruleset_cache = {}
-        self._in_boolean_service_conf_list_ruleset_cache = {}
         self._all_matching_hosts_match_cache = {}
 
         # Reference dirname -> hosts in this dir including subfolders
@@ -119,77 +118,57 @@ class RulesetOptimizier(object):
 
         return item, tags, hostlist, rule_options
 
-    def get_service_ruleset(self, ruleset, with_foreign_hosts):
+    def get_service_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         cache_id = id(ruleset), with_foreign_hosts
 
         cached_ruleset = self._service_ruleset_cache.get(cache_id)
         if cached_ruleset is None:
             cached_ruleset = self._convert_service_ruleset(
-                ruleset, with_foreign_hosts=with_foreign_hosts)
+                ruleset, with_foreign_hosts=with_foreign_hosts, is_binary=is_binary)
             self._service_ruleset_cache[cache_id] = cached_ruleset
 
         return cached_ruleset
 
-    def _convert_service_ruleset(self, ruleset, with_foreign_hosts):
+    def _convert_service_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         new_rules = []
         for rule in ruleset:
             rule, rule_options = get_rule_options(rule)
             if rule_options.get("disabled"):
                 continue
 
-            num_elements = len(rule)
-            if num_elements == 3:
-                item, hostlist, servlist = rule
-                tags = []
-            elif num_elements == 4:
-                item, tags, hostlist, servlist = rule
+            if is_binary:
+                if rule[0] == NEGATE:  # this entry is logically negated
+                    value = False
+                    rule = rule[1:]
+                else:
+                    value = True
+
+                num_elements = len(rule)
+                if num_elements == 2:
+                    hostlist, servlist = rule
+                    tags = []
+                elif num_elements == 3:
+                    tags, hostlist, servlist = rule
+                else:
+                    raise MKGeneralException("Invalid entry '%r' in configuration: "
+                                             "must have 2 or 3 elements" % (rule,))
             else:
-                raise MKGeneralException("Invalid rule '%r' in service configuration "
-                                         "list: must have 3 or 4 elements" % (rule,))
+                num_elements = len(rule)
+                if num_elements == 3:
+                    value, hostlist, servlist = rule
+                    tags = []
+                elif num_elements == 4:
+                    value, tags, hostlist, servlist = rule
+                else:
+                    raise MKGeneralException("Invalid rule '%r' in service configuration "
+                                             "list: must have 3 or 4 elements" % (rule,))
 
             # Directly compute set of all matching hosts here, this
             # will avoid recomputation later
             hosts = self.all_matching_hosts(tags, hostlist, with_foreign_hosts)
 
             # And now preprocess the configured patterns in the servlist
-            new_rules.append((item, hosts, convert_pattern_list(servlist)))
-
-        return new_rules
-
-    def get_boolean_service_ruleset(self, ruleset, with_foreign_hosts):
-        cache_id = id(ruleset), with_foreign_hosts
-        cached_ruleset = self._in_boolean_service_conf_list_ruleset_cache.get(cache_id)
-        if cached_ruleset is None:
-            cached_ruleset = self._convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
-            self._in_boolean_service_conf_list_ruleset_cache[cache_id] = cached_ruleset
-        return cached_ruleset
-
-    def _convert_boolean_service_ruleset(self, ruleset, with_foreign_hosts):
-        new_rules = []
-        for rule in ruleset:
-            entry, rule_options = get_rule_options(rule)
-            if rule_options.get("disabled"):
-                continue
-
-            if entry[0] == NEGATE:  # this entry is logically negated
-                negate = True
-                entry = entry[1:]
-            else:
-                negate = False
-
-            if len(entry) == 2:
-                hostlist, servlist = entry
-                tags = []
-            elif len(entry) == 3:
-                tags, hostlist, servlist = entry
-            else:
-                raise MKGeneralException("Invalid entry '%r' in configuration: "
-                                         "must have 2 or 3 elements" % (entry,))
-
-            # Directly compute set of all matching hosts here, this
-            # will avoid recomputation later
-            hosts = self.all_matching_hosts(tags, hostlist, with_foreign_hosts)
-            new_rules.append((negate, hosts, convert_pattern_list(servlist)))
+            new_rules.append((value, hosts, convert_pattern_list(servlist)))
 
         return new_rules
 

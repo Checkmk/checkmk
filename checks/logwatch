@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import os
 import cmk.utils.paths
 import cmk.utils.debug
@@ -477,7 +478,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     try:
         os.makedirs(logdir)
     except OSError, e:
-        if e.errno == 17:
+        if e.errno == errno.EEXIST:
             pass  # Exists
         else:
             raise
@@ -1025,7 +1026,7 @@ def logwatch_spool_messages(message_chunks, result):
     try:
         os.makedirs(path)
     except OSError, e:
-        if e.errno == 17:
+        if e.errno == errno.EEXIST:
             pass  # Exists
         else:
             raise
@@ -1040,7 +1041,7 @@ def logwatch_spool_messages(message_chunks, result):
                 os.unlink(spool_file_path)
                 continue
             except OSError, e:
-                if e.errno == 2:
+                if e.errno == errno.ENOENT:
                     continue
                 else:
                     raise
@@ -1067,7 +1068,7 @@ def logwatch_load_spooled_messages(method, result):
     try:
         spool_files = sorted(os.listdir(logwatch_spool_path()))
     except OSError, e:
-        if e.errno == 2:  # No such file or directory
+        if e.errno == errno.ENOENT:
             return []
         else:
             raise
@@ -1116,7 +1117,7 @@ def logwatch_load_spooled_messages(method, result):
         try:
             messages = ast.literal_eval(open(path).read())
         except IOError, e:
-            if e.errno == 2:  # No such file or directory
+            if e.errno == errno.ENOENT:
                 continue
             else:
                 raise

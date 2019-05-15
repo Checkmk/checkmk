@@ -110,7 +110,7 @@ def test_livestatus_ipv6_connection():
         except socket.error as e:
             # Skip this test in case ::1 can not be bound to
             # (happened in docker container with IPv6 disabled)
-            if e.errno == 99:  # Cannot assign requested address
+            if e.errno == errno.EADDRNOTAVAIL:
                 pytest.skip("Unable to bind to ::1 (%s)" % e)
 
         port = sock.getsockname()[1]  # pylint: disable=no-member

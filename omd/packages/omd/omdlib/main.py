@@ -1796,7 +1796,7 @@ def call_init_script(scriptpath, command):
         return subprocess.call([scriptpath, command]) in [0, 5]
     except OSError as e:
         sys.stderr.write("ERROR: Failed to run '%s': %s\n" % (scriptpath, e))
-        if e.errno == 13:  # [Errno 13] Permission denied
+        if e.errno == errno.EACCES:
             return False
 
 
@@ -2645,7 +2645,7 @@ def omd_versions():
     try:
         return sorted([v for v in os.listdir("/omd/versions") if v != "default"])
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT:
             return []
         else:
             raise
@@ -3483,7 +3483,7 @@ def main_init_action(site, command, args, options=None):
                         break
                     buf += b
             except IOError as e:
-                if e.errno == 11:  # Resource temporarily unavailable
+                if e.errno == errno.EAGAIN:
                     pass
                 else:
                     raise
@@ -3814,7 +3814,7 @@ def kill_site_user_processes(site, exclude_current_and_parents=False):
                     sys.stdout.write("Killing process %d...\n" % pid)
                 os.kill(pid, signal.SIGKILL)
             except OSError as e:
-                if e.errno == 3:
+                if e.errno == errno.ESRCH:
                     pids.remove(pid)  # No such process
                 else:
                     raise
@@ -3929,7 +3929,7 @@ def _cleanup_global_files():
         try:
             os.unlink(path)
         except OSError as e:
-            if e.errno == 2:
+            if e.errno == errno.ENOENT:
                 pass
             else:
                 raise
@@ -4673,7 +4673,7 @@ def main():
     try:
         g_orig_wd = os.getcwd()
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT:
             g_orig_wd = "/"
         else:
             raise

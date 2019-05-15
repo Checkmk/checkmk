@@ -51,6 +51,7 @@ __version__ = "1.6.0i1"
 #   |                            |_|                                       |
 #   '----------------------------------------------------------------------'
 
+import errno
 import os
 import re
 import ast
@@ -325,7 +326,7 @@ class Test(object):
         try:
             os.makedirs(test_dir)
         except OSError, e:
-            if e.errno == 17:  # file exists
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
@@ -2567,7 +2568,7 @@ class TestAgentBasedStandardHosts(TestCase):
         try:
             os.makedirs(config_dir)
         except OSError, e:
-            if e.errno == 17:  # file exists
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
@@ -2625,7 +2626,7 @@ class TestAgentBasedStandardHosts(TestCase):
         try:
             os.makedirs(config_dir)
         except OSError, e:
-            if e.errno == 17:  # file exists
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
@@ -2755,7 +2756,7 @@ class TestAgentBasedStandardHosts(TestCase):
                 try:
                     shutil.copytree(src_dir, target_dir)
                 except OSError, e:
-                    if e.errno == 17:  # file exists
+                    if e.errno == errno.EEXIST:
                         pass
                     else:
                         raise

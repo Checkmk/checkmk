@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import ast
+import errno
 import glob
 import os
 import subprocess
@@ -753,7 +754,7 @@ class AutomationDeleteHosts(Automation):
         try:
             ds_directories = os.listdir(cmk.utils.paths.data_source_cache_dir)
         except OSError as e:
-            if e.errno == 2:
+            if e.errno == errno.ENOENT:
                 ds_directories = []
             else:
                 raise
@@ -764,7 +765,7 @@ class AutomationDeleteHosts(Automation):
             try:
                 os.unlink(filename)
             except OSError as e:
-                if e.errno == 2:
+                if e.errno == errno.ENOENT:
                     pass
                 else:
                     raise
@@ -1184,7 +1185,7 @@ class AutomationDiagHost(Automation):
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.STDOUT)
                 except OSError as e:
-                    if e.errno == 2:
+                    if e.errno == errno.ENOENT:
                         return 1, "Cannot find binary <tt>traceroute</tt>."
                     else:
                         raise

@@ -863,7 +863,7 @@ class ReplicationStatusFetcher(object):
             #    try:
             #        os.close(x)
             #    except OSError, e:
-            #        if e.errno == 9: # Bad file descriptor
+            #        if e.errno == errno.EBADF:
             #            pass
             #        else:
             #            raise

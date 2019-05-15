@@ -49,6 +49,7 @@
 
 import abc
 import copy
+import errno
 from multiprocessing.pool import ThreadPool
 from multiprocessing import TimeoutError
 import os
@@ -405,7 +406,7 @@ class LDAPUserConnector(UserConnector):
         try:
             shutil.rmtree(cls._ldap_caches_filepath())
         except OSError as e:
-            if e.errno != 2:
+            if e.errno != errno.ENOENT:
                 raise
 
     # Bind with the default credentials

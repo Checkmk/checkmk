@@ -3080,7 +3080,7 @@ class StatusServer(ECServerThread):
                 try:
                     self._answer_query(client_socket, query, response)
                 except socket.error as e:
-                    if e.errno == 32:  # Broken pipe -> ignore this
+                    if e.errno == errno.EPIPE:
                         pass
                     else:
                         raise

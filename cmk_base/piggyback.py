@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import os
 import tempfile
 
@@ -83,7 +84,7 @@ def get_piggyback_files(piggyback_max_cachefile_age, hostname):
     try:
         source_host_names = [e.name for e in host_piggyback_dir.iterdir()]
     except OSError as e:
-        if e.errno == 2:  # No such file or directory
+        if e.errno == errno.ENOENT:
             return files
         else:
             raise
@@ -130,7 +131,7 @@ def _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
         # (We're using os.utime() in _store_status_file_of())
         return os.stat(status_file_path)[8] > os.stat(piggyback_file_path)[8]
     except OSError as e:
-        if e.errno == 2:  # No such file or directory
+        if e.errno == errno.ENOENT:
             return True
         else:
             raise
@@ -145,7 +146,7 @@ def _remove_piggyback_file(piggyback_file_path):
         os.remove(piggyback_file_path)
         return True
     except OSError as e:
-        if e.errno == 2:  # No such file or directory
+        if e.errno == errno.ENOENT:
             return False
         else:
             raise
@@ -195,7 +196,7 @@ def _store_status_file_of(status_file_path, piggyback_file_paths):
             try:
                 os.utime(piggyback_file_path, status_file_times)
             except OSError as e:
-                if e.errno == 2:  # No such file or directory
+                if e.errno == errno.ENOENT:
                     continue
                 else:
                     raise
@@ -278,7 +279,7 @@ def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
         try:
             os.rmdir(backed_host_dir_path)
         except OSError as e:
-            if e.errno == 39:  #Directory not empty
+            if e.errno == errno.ENOTEMPTY:
                 pass
             else:
                 raise

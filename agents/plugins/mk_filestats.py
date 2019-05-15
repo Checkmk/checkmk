@@ -98,6 +98,8 @@ described by the following four phases:
 You should find an example configuration file at
 '../cfg_examples/filestats.cfg' relative to this file.
 """
+
+import errno
 import re
 import os
 import sys
@@ -176,7 +178,7 @@ class LazyFileStats(object):
         try:
             stat = os.stat(path)
         except OSError, exc:
-            self.stat_status = "file vanished" if exc.errno == 2 else str(exc)
+            self.stat_status = "file vanished" if exc.errno == errno.ENOENT else str(exc)
             return
 
         try:

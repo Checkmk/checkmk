@@ -660,8 +660,7 @@ def process_resource(args):
     return [agent_info_section, section]
 
 
-def write_group_info(client, resources):
-    monitored_groups = sorted(set(r.info['group'] for r in resources))
+def write_group_info(client, monitored_groups):
 
     for group in client.list_groups():
         if group.name in monitored_groups and group.tags:
@@ -707,8 +706,8 @@ def main(argv=None):
         client = AzureClient(credentials, args)
         resources = [r for r in client.list_resources() if selector.do_monitor(r)]
         client.init_specific(resources)
-
-        write_group_info(client, resources)
+        monitored_groups = sorted(set(r.info['group'] for r in resources))
+        write_group_info(client, monitored_groups)
 
         func_args = ((resource, client) for resource in resources)
         map_ = map if args.sequential else AsyncMapper(args.timeout, args.debug)

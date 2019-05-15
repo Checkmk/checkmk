@@ -104,8 +104,8 @@ def check_esx_vsphere_datastores(item, params, info):
                 prov_warn_mb = None
                 prov_crit_mb = None
             perfdata += [
-                ('uncommitted', str(uncommitted_mb) + 'MB'),
-                ('overprovisioned', str(prov_mb) + 'MB', prov_warn_mb, prov_crit_mb),
+                ('uncommitted', uncommitted_mb),
+                ('overprovisioned', prov_mb, prov_warn_mb, prov_crit_mb),
             ]
 
     if not store["accessible"]:

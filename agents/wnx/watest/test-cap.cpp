@@ -20,7 +20,7 @@ namespace cma::cfg::cap {
 TEST(CapTest, Reinstall) {
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
-    auto [target, source] = tst::CreateInOut();
+    auto [source, target] = tst::CreateInOut();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
     std::error_code ec;
 
@@ -61,11 +61,55 @@ TEST(CapTest, Reinstall) {
     tst::SafeCleanTempDir();
 }
 
+TEST(CapTest, InstallFileAsCopy) {
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [source, target] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    std::error_code ec;
+
+    std::wstring file_name = L"check_mk.copy.tmp";
+    auto target_file = target / file_name;
+    auto source_file = source / file_name;
+
+    fs::remove(target_file, ec);
+
+    // absent source and target
+    {
+        bool res = true;
+        EXPECT_NO_THROW(res = InstallFileAsCopy(L"", L"", L""));  //
+        EXPECT_FALSE(res);
+
+        EXPECT_NO_THROW(res = InstallFileAsCopy(L"sdf", L"c:\\", L"c:\\"));  //
+        EXPECT_TRUE(res);
+
+        EXPECT_NO_THROW(
+            res = InstallFileAsCopy(L":\\\\wefewfw", L"sssssssss", L"scc"));  //
+        EXPECT_FALSE(res);
+    }
+
+    // absent source
+    {
+        tst::CreateFile(target_file, "1");
+        EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
+                                      source.wstring()));  //
+        ASSERT_FALSE(fs::exists(target_file, ec)) << "must be removed";
+    }
+
+    // target presented
+    {
+        tst::CreateFile(source_file, "2");
+        EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
+                                      source.wstring()));  //
+        EXPECT_TRUE(fs::exists(target_file, ec)) << "must be presented";
+    }
+}
+
 TEST(CapTest, InstallIni) {
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
     tst::SafeCleanBakeryDir();
-    auto [target, source] = tst::CreateInOut();
+    auto [source, target] = tst::CreateInOut();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(); tst::SafeCleanBakeryDir(););
     std::error_code ec;
 
@@ -107,7 +151,7 @@ TEST(CapTest, InstallIni) {
 TEST(CapTest, InstallCap) {
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
-    auto [target, source] = tst::CreateInOut();
+    auto [source, target] = tst::CreateInOut();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
     std::error_code ec;
 

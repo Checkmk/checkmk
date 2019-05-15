@@ -11,14 +11,19 @@
 #include <tuple>
 
 #include "common/cfg_info.h"
-
 #include "common/wtools.h"
-
 #include "logger.h"
 
 namespace cma::cfg::cap {
 
+// main API
 void Install();
+
+// support
+bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
+                       std::wstring_view target_dir,  // @user
+                       std::wstring_view source_dir)  // @root/install
+    noexcept;
 
 bool NeedReinstall(const std::filesystem::path Target,
                    const std::filesystem::path Src);

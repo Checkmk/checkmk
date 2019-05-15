@@ -271,7 +271,7 @@ uint64_t ConvertToUint64(const T& Str, uint64_t Default) noexcept {
 namespace win {
 template <typename T>
 inline bool SetEnv(const std::basic_string<T>& EnvVarName,
-                   const std::basic_string<T>& EnvVarValue) {
+                   const std::basic_string<T>& EnvVarValue) noexcept {
     auto cmd = EnvVarName;
     if constexpr (sizeof(T) == 1) {
         cmd += "=" + EnvVarValue;
@@ -283,21 +283,21 @@ inline bool SetEnv(const std::basic_string<T>& EnvVarName,
 }
 
 template <typename T>
-std::basic_string<T> GetEnv(const T* Name) {
-    T remote_machine_string[MAX_PATH];
-    remote_machine_string[0] = 0;
+std::basic_string<T> GetEnv(const T* Name) noexcept {
+    T env_var_value[MAX_PATH];
+    env_var_value[0] = 0;
 
     // we need constexpr here to eliminate compilation error
     if constexpr (sizeof(T) == 1) {
-        ::GetEnvironmentVariableA(Name, remote_machine_string, MAX_PATH);
+        ::GetEnvironmentVariableA(Name, env_var_value, MAX_PATH);
     } else {
-        ::GetEnvironmentVariableW(Name, remote_machine_string, MAX_PATH);
+        ::GetEnvironmentVariableW(Name, env_var_value, MAX_PATH);
     }
-    return std::basic_string<T>(remote_machine_string);
+    return std::basic_string<T>(env_var_value);
 }
 
 template <typename T>
-std::basic_string<T> GetEnv(const std::basic_string<T>& Name) {
+std::basic_string<T> GetEnv(const std::basic_string<T>& Name) noexcept {
     return GetEnv(Name.c_str());
 }
 

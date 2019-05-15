@@ -861,13 +861,6 @@ bool ConvertIniFiles(const std::filesystem::path& LegacyRoot,
                      const std::filesystem::path& ProgramData) {
     namespace fs = std::filesystem;
     using namespace cma::cfg;
-    {
-        std::error_code ec;
-        auto user_ini = (ProgramData / files::kDefaultMainConfig)
-                            .replace_extension(files::kDefaultUserExt);
-        XLOG::l.t("Removing {}", user_ini.u8string());
-        fs::remove(user_ini, ec);
-    }
 
     {
         std::error_code ec;

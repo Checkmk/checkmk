@@ -202,7 +202,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
                 GetUpdateDir(),          // dir where file we're searching
                 UpdateType::exec_quiet,  // quiet for production
                 UpdateProcess::execute,  // start update when file found
-                GetMsiBackupDir());      // dir where file to backup
+                GetUserInstallDir());    // dir where file to backup
             return true;
         });
     }

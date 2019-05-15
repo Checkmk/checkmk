@@ -32,11 +32,6 @@ enum Error {
 
 };
 
-namespace dirs {
-constexpr const wchar_t* kCapInstallDir = L"install";
-constexpr const wchar_t* kMsiInstallDir = L"install";
-}  // namespace dirs
-
 namespace files {
 
 // names of file
@@ -45,6 +40,9 @@ constexpr const wchar_t* kDefaultMainConfig = L"check_mk.yml";
 
 constexpr const wchar_t* kCapFile = L"plugins.cap";
 constexpr const wchar_t* kIniFile = L"check_mk.ini";
+
+constexpr std::wstring_view kDatFile = L"checkmk.dat";
+constexpr std::wstring_view kUserYmlFile = L"check_mk.user.yml";
 
 // extensions
 constexpr const wchar_t* kDefaultBakeryExt = L".bakery.yml";
@@ -115,14 +113,15 @@ std::string GetPathOfLoadedConfigAsString() noexcept;
 std::wstring GetUserPluginsDir() noexcept;
 std::wstring GetSystemPluginsDir() noexcept;
 std::wstring GetRootDir() noexcept;
+std::wstring GetFileInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetUserDir() noexcept;
 std::wstring GetBakeryDir() noexcept;
 std::filesystem::path GetBakeryFile() noexcept;
 std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
 std::wstring GetPluginConfigDir() noexcept;
-std::wstring GetUpdateDir() noexcept;
-std::wstring GetMsiBackupDir() noexcept;  // storage for MSI installed
+std::wstring GetUpdateDir() noexcept;       // for incoming MSI
+std::wstring GetUserInstallDir() noexcept;  // storage for installed files
 std::wstring GetSpoolDir() noexcept;
 std::wstring GetTempDir() noexcept;
 std::wstring GetLogDir() noexcept;

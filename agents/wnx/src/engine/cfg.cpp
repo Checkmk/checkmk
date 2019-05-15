@@ -222,19 +222,24 @@ std::wstring GetBakeryDir() noexcept {
 }
 
 std::filesystem::path GetBakeryFile() noexcept {
-    std::filesystem::path bakery = details::G_ConfigInfo.getBakeryDir();
+    auto bakery = details::G_ConfigInfo.getBakeryDir();
     bakery /= files::kDefaultMainConfig;
     bakery.replace_extension(files::kDefaultBakeryExt);
     return bakery;
 }
 
-std::wstring GetMsiBackupDir() noexcept {
-    std::filesystem::path data_dir = details::G_ConfigInfo.getUserDir();
-    return data_dir / dirs::kMsiInstallDir;
+std::wstring GetUserInstallDir() noexcept {
+    auto data_dir = details::G_ConfigInfo.getUserDir();
+    return data_dir / dirs::kUserInstallDir;
 }
 
 std::wstring GetRootDir() noexcept {
     return details::G_ConfigInfo.getRootDir();
+}
+
+std::wstring GetFileInstallDir() noexcept {
+    auto root = details::G_ConfigInfo.getRootDir();
+    return root / dirs::kFileInstallDir;
 }
 
 std::wstring GetLocalDir() noexcept {
@@ -750,7 +755,8 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName,
 void SetupPluginEnvironment() {
     using namespace std;
     std::pair<std::string, std::wstring> dirs[] = {
-        //
+        // string conversion  is required because of string used in interfaces
+        // of SetEnv and ConvertToUTF8
         {string(envs::kMkLocalDirName), cma::cfg::GetLocalDir()},
         {string(envs::kMkStateDirName), cma::cfg::GetStateDir()},
         {string(envs::kMkPluginsDirName), cma::cfg::GetUserPluginsDir()},
@@ -758,6 +764,8 @@ void SetupPluginEnvironment() {
         {string(envs::kMkLogDirName), cma::cfg::GetLogDir()},
         {string(envs::kMkConfDirName), cma::cfg::GetPluginConfigDir()},
         {string(envs::kMkSpoolDirName), cma::cfg::GetSpoolDir()},
+        {string(envs::kMkInstallDirName), cma::cfg::GetUserInstallDir()},
+        {string(envs::kMkMsiPathName), cma::cfg::GetUpdateDir()},
         //
     };
 

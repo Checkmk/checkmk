@@ -145,15 +145,17 @@ constexpr const wchar_t* kAgentBin = L"bin";              // legacy for OHM
 constexpr const wchar_t* kAgentProviders = L"providers";  // only agent's exe
 constexpr const wchar_t* kAgentUtils = L"utils";          // anything to use
 constexpr const wchar_t* kAgentMrpe = L"mrpe";            // mrpe
+constexpr const wchar_t* kFileInstallDir = L"install";    // from here!
 
 // ProgramData/CheckMK/Agent
-constexpr const wchar_t* kCache = L"cache";          // owned by agent
-constexpr const wchar_t* kUserPlugins = L"plugins";  // owned by user
-constexpr const wchar_t* kLocal = L"local";          // owned by user
-constexpr const wchar_t* kInstall = L"install";      // owned by site
-constexpr const wchar_t* kBakery = L"bakery";        // owned by site
-constexpr const wchar_t* kState = L"state";          // owned by plugins
-constexpr const wchar_t* kPluginConfig = L"config";  // owned by plugins
+constexpr const wchar_t* kCache = L"cache";             // owned by agent
+constexpr const wchar_t* kUserPlugins = L"plugins";     // owned by user
+constexpr const wchar_t* kLocal = L"local";             // owned by user
+constexpr const wchar_t* kInstall = L"install";         // owned by agent
+constexpr const wchar_t* kUserInstallDir = L"install";  // owned by agent
+constexpr const wchar_t* kBakery = L"bakery";           // owned by site
+constexpr const wchar_t* kState = L"state";             // owned by plugins
+constexpr const wchar_t* kPluginConfig = L"config";     // owned by plugins
 
 constexpr const wchar_t* kSpool = L"spool";    // owned by user/sys plugins
 constexpr const wchar_t* kTemp = L"temp";      // owned by user plugins
@@ -172,6 +174,9 @@ constexpr const char* const kMkPluginsDirName = "MK_PLUGINSDIR";
 constexpr const char* const kMkLogDirName = "MK_LOGDIR";
 constexpr const char* const kRemoteHost = "REMOTE_HOST";
 constexpr const char* const kRemote = "REMOTE";
+
+constexpr std::string_view kMkInstallDirName = "MK_INSTALLDIR";
+constexpr std::string_view kMkMsiPathName = "MK_MSI_PATH";
 
 };  // namespace envs
 

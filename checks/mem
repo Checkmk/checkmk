@@ -258,13 +258,9 @@ def check_mem_linux(_no_item, params, info):
         return
 
     # SReclaimable is not available for older kernels
-    if "SReclaimable" not in meminfo:
-        meminfo["SReclaimable"] = 0
-        meminfo["SUnreclaim"] = meminfo["Slab"]
-
     # Compute memory used by caches, that can be considered "free"
     meminfo["Caches"] = meminfo["Cached"] + meminfo["Buffers"] \
-                      + meminfo["SwapCached"] + meminfo["SReclaimable"]
+                      + meminfo["SwapCached"] + meminfo.get("SReclaimable", 0)
 
     # RAM
     meminfo["MemUsed"] = meminfo["MemTotal"] - meminfo["MemFree"] - meminfo["Caches"]

@@ -357,16 +357,13 @@ class Selector(object):
 class Section(object):
     LOCK = Lock()
 
-    def __init__(self, name, piggytarget, separator):
+    def __init__(self, name, piggytargets, separator, options):
         super(Section, self).__init__()
         self._sep = chr(separator)
-        self._head = []
+        self._piggytargets = list(piggytargets)
         self._cont = []
-        self._foot = []
-        if piggytarget:
-            self._head.append('<<<<%s>>>>\n' % piggytarget)
-            self._foot.append('<<<<>>>>\n')
-        self._head.append('<<<%s:sep(%d)>>>\n' % (name, separator))
+        section_options = ':'.join(['sep(%d)' % separator] + options)
+        self._title = '<<<%s:%s>>>\n' % (name, section_options)
 
     def formatline(self, tokens):
         return self._sep.join(map(str, tokens)) + '\n'
@@ -384,18 +381,23 @@ class Section(object):
         if not self._cont:
             return
         with self.LOCK:
-            sys.stdout.writelines(self._head + self._cont + self._foot)
+            for piggytarget in self._piggytargets:
+                sys.stdout.write('<<<<%s>>>>\n' % piggytarget)
+                sys.stdout.write(self._title)
+                sys.stdout.writelines(self._cont)
+            sys.stdout.write('<<<<>>>>\n')
             sys.stdout.flush()
 
 
 class AzureSection(Section):
-    def __init__(self, name, piggytarget=None):
-        super(AzureSection, self).__init__('azure_%s' % name, piggytarget, separator=124)
+    def __init__(self, name, piggytargets=('',)):
+        super(AzureSection, self).__init__(
+            'azure_%s' % name, piggytargets, separator=124, options=[])
 
 
 class LabelsSection(Section):
     def __init__(self, piggytarget):
-        super(LabelsSection, self).__init__("labels", piggytarget, separator=0)
+        super(LabelsSection, self).__init__("labels", [piggytarget], separator=0, options=[])
 
 
 class IssueCollecter(object):
@@ -652,13 +654,10 @@ def process_resource(args):
     agent_info_section.add(('remaining-reads', remaining_api_reads))
     agent_info_section.add(err.dumpinfo())
 
-    sections = [agent_info_section]
-    for piggytarget in resource.piggytargets:
-        section = AzureSection(resource.section, piggytarget)
-        section.add(resource.dumpinfo())
-        sections.append(section)
+    section = AzureSection(resource.section, resource.piggytargets)
+    section.add(resource.dumpinfo())
 
-    return sections
+    return [agent_info_section, section]
 
 
 def write_group_info(client, resources):
@@ -673,10 +672,9 @@ def write_group_info(client, resources):
     section = AzureSection('agent_info')
     section.add(('monitored-groups', json.dumps(monitored_groups)))
     section.write()
-    # create empty agent_info section for all groups, otherwise
+    # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
-    for group in monitored_groups:
-        AzureSection('agent_info', group).write()
+    AzureSection('agent_info', monitored_groups).write()
 
 
 def write_exception_to_agent_info_section(exception):

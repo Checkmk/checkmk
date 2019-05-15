@@ -270,14 +270,12 @@ info_empty_inodes = [
 def test_df_discovery_with_parse(check_manager, info, expected_result, inventory_df_rules):
     check = check_manager.get_check("df")
 
-    def mocked_host_extra_conf(_hostname, ruleset):
-        if ruleset is check.context.get("filesystem_groups"):
-            return []
-        elif ruleset is check.context.get("inventory_df_rules"):
-            return [inventory_df_rules]
+    def mocked_host_extra_conf_merged(_hostname, ruleset):
+        if ruleset is check.context.get("inventory_df_rules"):
+            return inventory_df_rules
         raise AssertionError("Unknown/unhandled ruleset used in mock of host_extra_conf")
 
-    with MockHostExtraConf(check, mocked_host_extra_conf):
+    with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
         raw_discovery_result = check.run_discovery(check.run_parse(info))
 
     discovery_result = DiscoveryResult(raw_discovery_result)

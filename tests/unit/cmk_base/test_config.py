@@ -150,7 +150,7 @@ def test_host_folder_matching(monkeypatch, hostname, host_path, result):
     # TODO: ConfigCache._initialize_host_lookup() requires the directory structure
     # to really exist. This should be improved. Quick patch it here.
     monkeypatch.setattr(
-        config_cache.ruleset_optimizer, "_folder_path_set",
+        config_cache.ruleset_matcher.ruleset_optimizer, "_folder_path_set",
         set([
             '/+',
             '/wato/+',

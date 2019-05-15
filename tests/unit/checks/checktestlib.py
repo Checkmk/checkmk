@@ -483,9 +483,9 @@ class MockHostExtraConf(object):
 
     See for example 'test_df_check.py'.
     """
-    TARGET = 'cmk_base.config.host_extra_conf'
 
-    def __init__(self, check, mock_config):
+    def __init__(self, check, mock_config, target="host_extra_conf"):
+        self.target = target
         self.context = None
         self.check = check
         self.config = mock_config
@@ -495,7 +495,7 @@ class MockHostExtraConf(object):
         if callable(self.config):
             return self.config(_hostname, _ruleset)
 
-        if isinstance(self.config, dict):
+        if self.target == "host_extra_conf" and isinstance(self.config, dict):
             return [self.config]
         return self.config
 
@@ -505,7 +505,7 @@ class MockHostExtraConf(object):
         config_cache = cmk_base.config.get_config_cache()
         self.context = mock.patch.object(
             config_cache,
-            "host_extra_conf",
+            self.target,
             # I'm the MockObj myself!
             new_callable=lambda: self)
         return self.context.__enter__()

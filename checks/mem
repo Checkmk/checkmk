@@ -235,15 +235,17 @@ def check_mem_levels(title,
                     state = 2
                 elif used >= warn:
                     state = 1
+                levels_info = "at"
             else:
                 free = total - used
                 if free < crit:
                     state = 2
                 elif free < warn:
                     state = 1
+                levels_info = "below"
 
             if state:
-                infotext += " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn),
+                infotext += " (warn/crit %s %s/%s)" % (levels_info, get_bytes_human_readable(warn),
                                                        get_bytes_human_readable(crit))
 
     if not perc_shown and show_percentage:

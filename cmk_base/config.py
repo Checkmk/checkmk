@@ -3229,32 +3229,11 @@ class CEEConfigCache(ConfigCache):
         for varname, ruleset in agent_config.items() + [("agent_port", agent_ports),
                                                         ("agent_encryption", agent_encryption)]:
             if hostname is GENERIC_AGENT:
-                matched[varname] = self._generic_host_extra_conf(ruleset)
+                matched[varname] = self.ruleset_matcher.get_values_for_generic_agent_host(ruleset)
             else:
                 matched[varname] = self.host_extra_conf(hostname, ruleset)
 
         return matched
-
-    def _generic_host_extra_conf(self, ruleset):
-        """Compute ruleset for "generic" host
-
-        This fictious host has no name and no tags. It matches all rules that
-        do not require specific hosts or tags. But it matches rules that e.g.
-        except specific hosts or tags (is not, has not set)
-        """
-        entries = []
-
-        for rule in ruleset:
-            rule, _rule_options = tuple_rulesets.get_rule_options(rule)
-            item, tags, hostlist = self.ruleset_matcher.ruleset_optimizer.parse_host_rule(
-                rule, is_binary=False)
-            if tags and not tuple_rulesets.hosttags_match_taglist([], tags):
-                continue
-            if not tuple_rulesets.in_extraconf_hostlist(hostlist, ""):
-                continue
-
-            entries.append(item)
-        return entries
 
 
 # TODO: Find a clean way to move this to cmk_base.cee. This will be possible once the

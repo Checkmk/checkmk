@@ -115,6 +115,27 @@ class RulesetMatcher(object):
         for value in cached.get(hostname, []):
             yield value
 
+    # TODO: Find a way to use the generic get_values
+    def get_values_for_generic_agent_host(self, ruleset):
+        """Compute ruleset for "generic" host
+
+        This fictious host has no name and no tags. It matches all rules that
+        do not require specific hosts or tags. But it matches rules that e.g.
+        except specific hosts or tags (is not, has not set)
+        """
+        entries = []
+
+        for rule in ruleset:
+            rule, _rule_options = get_rule_options(rule)
+            item, tags, hostlist = self.ruleset_optimizer.parse_host_rule(rule, is_binary=False)
+            if tags and not hosttags_match_taglist([], tags):
+                continue
+            if not in_extraconf_hostlist(hostlist, ""):
+                continue
+
+            entries.append(item)
+        return entries
+
 
 class RulesetOptimizier(object):
     def __init__(self, config_cache):

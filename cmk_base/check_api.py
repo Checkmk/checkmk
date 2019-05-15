@@ -228,7 +228,13 @@ get_rule_options = _config.get_rule_options
 # the future check API. It's kept here for compatibility reasons for now.
 in_extraconf_hostlist = _config.in_extraconf_hostlist
 hosttags_match_taglist = _config.hosttags_match_taglist
-all_matching_hosts = _config.all_matching_hosts
+
+
+# These functions were used in some specific checks until 1.6. Don't add it to
+# the future check API. It's kept here for compatibility reasons for now.
+def all_matching_hosts(tags, hostlist, with_foreign_hosts):
+    return _config.get_config_cache().ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        tags, hostlist, with_foreign_hosts)
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to

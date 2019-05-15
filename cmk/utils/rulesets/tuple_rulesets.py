@@ -162,7 +162,7 @@ class RulesetOptimizier(object):
 
             # Directly compute set of all matching hosts here, this
             # will avoid recomputation later
-            new_rules.append((value, self.all_matching_hosts(tags, hostlist, with_foreign_hosts)))
+            new_rules.append((value, self._all_matching_hosts(tags, hostlist, with_foreign_hosts)))
 
         return new_rules
 
@@ -243,14 +243,14 @@ class RulesetOptimizier(object):
 
             # Directly compute set of all matching hosts here, this
             # will avoid recomputation later
-            hosts = self.all_matching_hosts(tags, hostlist, with_foreign_hosts)
+            hosts = self._all_matching_hosts(tags, hostlist, with_foreign_hosts)
 
             # And now preprocess the configured patterns in the servlist
             new_rules.append((value, hosts, convert_pattern_list(servlist)))
 
         return new_rules
 
-    def all_matching_hosts(self, tags, hostlist, with_foreign_hosts):
+    def _all_matching_hosts(self, tags, hostlist, with_foreign_hosts):
         """Returns a set containing the names of hosts that match the given
         tags and hostlist conditions."""
         cache_id = tuple(tags), tuple(hostlist), with_foreign_hosts

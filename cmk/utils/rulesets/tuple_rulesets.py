@@ -67,9 +67,6 @@ class RulesetMatcher(object):
 
         self.ruleset_optimizer = RulesetOptimizier(config_cache)
 
-        # Caches for host_extra_conf
-        self._host_match_cache = {}
-
     def is_matching(self, match_object, ruleset):
         # type: (TupleMatchObject, List[Dict]) -> bool
         """Compute outcome of a ruleset set that just says yes/no
@@ -103,21 +100,10 @@ class RulesetMatcher(object):
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = match_object.host_name not in self._config_cache.all_processed_hosts()
-        cache_id = id(ruleset), with_foreign_hosts
+        optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
+            ruleset, with_foreign_hosts, is_binary=is_binary)
 
-        if cache_id in self._host_match_cache:
-            cached = self._host_match_cache[cache_id]
-        else:
-            optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
-                ruleset, with_foreign_hosts, is_binary=is_binary)
-
-            cached = {}
-            for value, hostname_list in optimized_ruleset:
-                for other_hostname in hostname_list:
-                    cached.setdefault(other_hostname, []).append(value)
-            self._host_match_cache[cache_id] = cached
-
-        for value in cached.get(match_object.host_name, []):
+        for value in optimized_ruleset.get(match_object.host_name, []):
             yield value
 
     # TODO: Find a way to use the generic get_values
@@ -178,7 +164,13 @@ class RulesetOptimizier(object):
         return ruleset
 
     def _convert_host_ruleset(self, ruleset, with_foreign_hosts, is_binary):
-        new_rules = []
+        """Precompute host lookup map
+
+        Instead of a ruleset like list structure with precomputed host lists we compute a
+        direct map for hostname based lookups for the matching rule values
+        """
+        host_values = {}
+
         for rule in ruleset:
             rule, rule_options = get_rule_options(rule)
             if rule_options.get("disabled"):
@@ -186,11 +178,10 @@ class RulesetOptimizier(object):
 
             value, tags, hostlist = self.parse_host_rule(rule, is_binary)
 
-            # Directly compute set of all matching hosts here, this
-            # will avoid recomputation later
-            new_rules.append((value, self._all_matching_hosts(tags, hostlist, with_foreign_hosts)))
+            for hostname in self._all_matching_hosts(tags, hostlist, with_foreign_hosts):
+                host_values.setdefault(hostname, []).append(value)
 
-        return new_rules
+        return host_values
 
     def parse_host_rule(self, rule, is_binary):
         if is_binary:

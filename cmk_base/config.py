@@ -2979,14 +2979,17 @@ class ConfigCache(object):
             return result
 
     def host_extra_conf_merged(self, hostname, ruleset):
-        return self.ruleset_matcher.get_merged_dict(hostname, ruleset)
+        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=None)
+        return self.ruleset_matcher.get_merged_dict(match_object, ruleset)
 
     def host_extra_conf(self, hostname, ruleset):
-        return list(self.ruleset_matcher.get_values(hostname, ruleset, is_binary=False))
+        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=None)
+        return list(self.ruleset_matcher.get_values(match_object, ruleset, is_binary=False))
 
     # TODO: Cleanup external in_binary_hostlist call sites
     def in_binary_hostlist(self, hostname, ruleset):
-        return self.ruleset_matcher.is_matching(hostname, ruleset)
+        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=None)
+        return self.ruleset_matcher.is_matching(match_object, ruleset)
 
     def service_extra_conf(self, hostname, service, ruleset):
         """Compute outcome of a service rule set that has an item."""

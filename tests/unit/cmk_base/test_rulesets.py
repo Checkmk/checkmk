@@ -213,7 +213,7 @@ def test_parse_host_rule():
     config_cache = config.get_config_cache()
     config_cache.initialize()
     entry = ('all', [], config.ALL_HOSTS)
-    assert config_cache.ruleset_optimizer.parse_host_rule(
+    assert config_cache.ruleset_matcher.ruleset_optimizer.parse_host_rule(
         entry, is_binary=False) == ('all', [], config.ALL_HOSTS)
 
 
@@ -221,7 +221,7 @@ def test_parse_host_rule_without_tags():
     config_cache = config.get_config_cache()
     config_cache.initialize()
     entry = ('all', config.ALL_HOSTS)
-    assert config_cache.ruleset_optimizer.parse_host_rule(
+    assert config_cache.ruleset_matcher.ruleset_optimizer.parse_host_rule(
         entry, is_binary=False) == ('all', [], config.ALL_HOSTS)
 
 
@@ -230,7 +230,8 @@ def test_parse_host_rule_invalid_length():
     config_cache.initialize()
     entry = (None, None, 'all', config.ALL_HOSTS)
     with pytest.raises(MKGeneralException):
-        assert config_cache.ruleset_optimizer.parse_host_rule(entry, is_binary=False)
+        assert config_cache.ruleset_matcher.ruleset_optimizer.parse_host_rule(
+            entry, is_binary=False)
 
 
 def test_get_rule_options_regular_rule():

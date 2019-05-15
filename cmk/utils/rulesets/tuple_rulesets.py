@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-from typing import Text, Pattern, Tuple, List  # pylint: disable=unused-import
+from typing import Generator, Dict, Text, Pattern, Tuple, List  # pylint: disable=unused-import
 
 from cmk.utils.regex import regex
 import cmk.utils.paths
@@ -55,11 +55,71 @@ def get_rule_options(entry):
     return entry, {}
 
 
+class RulesetMatcher(object):
+    def __init__(self, config_cache):
+        super(RulesetMatcher, self).__init__()
+        self._config_cache = config_cache
+
+        self.ruleset_optimizer = RulesetOptimizier(config_cache)
+
+        # Caches for host_extra_conf
+        self._host_match_cache = {}
+
+    def is_matching(self, hostname, ruleset):
+        # type: (str, List[Dict]) -> bool
+        """Compute outcome of a ruleset set that just says yes/no
+
+        The binary match only cares about the first matching rule of an object.
+        Depending on the value the outcome is negated or not.
+
+        Replaces in_binary_hostlist / in_boolean_serviceconf_list"""
+        for value in self.get_values(hostname, ruleset, is_binary=True):
+            return value
+        return False  # no match. Do not ignore
+
+    def get_merged_dict(self, hostname, ruleset):
+        # type: (str, List[Dict]) -> Dict
+        """Returns a dictionary of the merged dict values of the matched rules
+        The first dict setting a key defines the final value.
+
+        Replaces host_extra_conf_merged / service_extra_conf_merged"""
+        merged_dict = {}  # type: Dict
+        for rule_dict in self.get_values(hostname, ruleset, is_binary=False):
+            for key, value in rule_dict.items():
+                merged_dict.setdefault(key, value)
+        return merged_dict
+
+    def get_values(self, hostname, ruleset, is_binary):
+        # type: (str, List, bool) -> Generator
+        """Returns a list of the values of the matched rules
+
+        Replaces host_extra_conf / service_extra_conf"""
+
+        # When the requested host is part of the local sites configuration,
+        # then use only the sites hosts for processing the rules
+        with_foreign_hosts = hostname not in self._config_cache.all_processed_hosts()
+        cache_id = id(ruleset), with_foreign_hosts
+
+        if cache_id in self._host_match_cache:
+            cached = self._host_match_cache[cache_id]
+        else:
+            optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
+                ruleset, with_foreign_hosts, is_binary=is_binary)
+
+            cached = {}
+            for value, hostname_list in optimized_ruleset:
+                for other_hostname in hostname_list:
+                    cached.setdefault(other_hostname, []).append(value)
+            self._host_match_cache[cache_id] = cached
+
+        for value in cached.get(hostname, []):
+            yield value
+
+
 class RulesetOptimizier(object):
-    def __init__(self, config_cache, host_paths):
+    def __init__(self, config_cache):
         super(RulesetOptimizier, self).__init__()
         self._config_cache = config_cache
-        self._host_paths = host_paths
 
         self._service_ruleset_cache = {}
         self._host_ruleset_cache = {}
@@ -305,7 +365,7 @@ class RulesetOptimizier(object):
             relevant_hosts = self._config_cache.all_configured_hosts(
             ) if with_foreign_hosts else self._config_cache.all_processed_hosts()
             for hostname in relevant_hosts:
-                if self._host_paths[hostname].startswith(folder_path_tmp):
+                if self._config_cache.host_path(hostname).startswith(folder_path_tmp):
                     hosts_in_folder.add(hostname)
             self._folder_host_lookup[cache_id] = hosts_in_folder
             return hosts_in_folder
@@ -324,7 +384,7 @@ class RulesetOptimizier(object):
         for hostname in self._config_cache.all_configured_hosts():
             tags_without_folder = set(self._config_cache.tag_list_of_host(hostname))
             try:
-                tags_without_folder.remove(self._host_paths[hostname])
+                tags_without_folder.remove(self._config_cache.host_path(hostname))
             except KeyError:
                 pass
 

@@ -48,7 +48,7 @@ import cmk.utils.tags
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.store as store
 import cmk.utils
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RulesetMatcher
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 
 import cmk_base
@@ -1072,8 +1072,8 @@ def get_http_proxy(http_proxy):
 
 
 def all_matching_hosts(tags, hostlist, with_foreign_hosts):
-    return get_config_cache().ruleset_optimizer.all_matching_hosts(tags, hostlist,
-                                                                   with_foreign_hosts)
+    return get_config_cache().ruleset_matcher.ruleset_optimizer.all_matching_hosts(
+        tags, hostlist, with_foreign_hosts)
 
 
 in_extraconf_hostlist = tuple_rulesets.in_extraconf_hostlist
@@ -2636,7 +2636,7 @@ class ConfigCache(object):
         # Converts pre 1.6 tuple rulesets in place to 1.6+ format
         self.tuple_transformer = tuple_rulesets.RulesetToDictTransformer(
             tag_to_group_map=self._get_tag_to_group_map())
-        self.ruleset_optimizer = tuple_rulesets.RulesetOptimizier(self, host_paths)
+        self.ruleset_matcher = tuple_rulesets.RulesetMatcher(self)
 
         self._all_configured_clusters = self._get_all_configured_clusters()
         self._all_configured_realhosts = self._get_all_configured_realhosts()
@@ -2646,8 +2646,6 @@ class ConfigCache(object):
         self._all_active_realhosts = self._get_all_active_realhosts()
         self._all_active_hosts = self._get_all_active_hosts()
         self._all_processed_hosts = self._all_active_hosts
-
-        self.ruleset_matcher = RulesetMatcher()
 
     def _initialize_caches(self):
         self.check_table_cache = cmk_base.config_cache.get_dict("check_tables")
@@ -2677,9 +2675,6 @@ class ConfigCache(object):
 
         # Autochecks cache
         self._autochecks_cache = {}
-
-        # Caches for host_extra_conf
-        self._host_match_cache = {}
 
         # Caches for service_extra_conf
         self._service_match_cache = {}
@@ -2723,6 +2718,10 @@ class ConfigCache(object):
                 dirname_of_host += "/"
             host_dirs[hostname] = dirname_of_host
         return host_dirs
+
+    def host_path(self, hostname):
+        # type: (str) -> str
+        return self._host_paths.get(hostname, "/")
 
     def _collect_hosttags(self):
         for hostname, tag_groups in host_tags.iteritems():
@@ -2936,7 +2935,7 @@ class ConfigCache(object):
         # the scope of relevant hosts has changed. This is -good-, since the values in this
         # lookup are iterated one by one later on in all_matching_hosts
         # TODO: Fix scope
-        self.ruleset_optimizer._folder_host_lookup = {}
+        self.ruleset_matcher.ruleset_optimizer._folder_host_lookup = {}
 
         self._adjust_processed_hosts_similarity()
 
@@ -2947,7 +2946,7 @@ class ConfigCache(object):
         used_groups = set()
         for hostname in self._all_processed_hosts:
             # TODO: Fix scope
-            used_groups.add(self.ruleset_optimizer._host_grouped_ref[hostname])
+            used_groups.add(self.ruleset_matcher.ruleset_optimizer._host_grouped_ref[hostname])
         self._all_processed_hosts_similarity = (
             1.0 * len(self._all_processed_hosts) / len(used_groups))
 
@@ -2989,44 +2988,15 @@ class ConfigCache(object):
             self._cache_is_tcp_check[check_plugin_name] = result
             return result
 
-    def host_extra_conf_merged(self, hostname, conf):
-        rule_dict = {}
-        for rule in self.host_extra_conf(hostname, conf):
-            for key, value in rule.items():
-                rule_dict.setdefault(key, value)
-        return rule_dict
+    def host_extra_conf_merged(self, hostname, ruleset):
+        return self.ruleset_matcher.get_merged_dict(hostname, ruleset)
 
     def host_extra_conf(self, hostname, ruleset):
-        return list(self._match_host_ruleset(hostname, ruleset, is_binary=False))
+        return list(self.ruleset_matcher.get_values(hostname, ruleset, is_binary=False))
 
     # TODO: Cleanup external in_binary_hostlist call sites
     def in_binary_hostlist(self, hostname, ruleset):
-        for value in self._match_host_ruleset(hostname, ruleset, is_binary=True):
-            return value
-        return False  # no match. Do not ignore
-
-    def _match_host_ruleset(self, hostname, ruleset, is_binary):
-        # type: (str, List, bool) -> Generator
-
-        # When the requested host is part of the local sites configuration,
-        # then use only the sites hosts for processing the rules
-        with_foreign_hosts = hostname not in self._all_processed_hosts
-        cache_id = id(ruleset), with_foreign_hosts
-
-        if cache_id in self._host_match_cache:
-            cached = self._host_match_cache[cache_id]
-        else:
-            optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
-                ruleset, with_foreign_hosts, is_binary=is_binary)
-
-            cached = {}
-            for value, hostname_list in optimized_ruleset:
-                for other_hostname in hostname_list:
-                    cached.setdefault(other_hostname, []).append(value)
-            self._host_match_cache[cache_id] = cached
-
-        for value in cached.get(hostname, []):
-            yield value
+        return self.ruleset_matcher.is_matching(hostname, ruleset)
 
     def service_extra_conf(self, hostname, service, ruleset):
         """Compute outcome of a service rule set that has an item."""
@@ -3052,7 +3022,7 @@ class ConfigCache(object):
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = hostname not in self._all_processed_hosts
-        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
+        optimized_ruleset = self.ruleset_matcher.ruleset_optimizer.get_service_ruleset(
             ruleset, with_foreign_hosts, is_binary=is_binary)
 
         for value, hosts, service_conditions in optimized_ruleset:
@@ -3286,7 +3256,8 @@ class CEEConfigCache(ConfigCache):
 
         for rule in ruleset:
             rule, _rule_options = get_rule_options(rule)
-            item, tags, hostlist = self.ruleset_optimizer.parse_host_rule(rule, is_binary=False)
+            item, tags, hostlist = self.ruleset_matcher.ruleset_optimizer.parse_host_rule(
+                rule, is_binary=False)
             if tags and not tuple_rulesets.hosttags_match_taglist([], tags):
                 continue
             if not tuple_rulesets.in_extraconf_hostlist(hostlist, ""):

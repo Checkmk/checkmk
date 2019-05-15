@@ -653,15 +653,6 @@ extern XLOG::Emitter stdio;  // only print
 
 // API:
 //
-// #TODO make ONE ENTRY we have to many methods to setup and to read setup
-// as in example below
-namespace setup {
-class VeryBestConfigForAgentFromSergey {
-    bool event_;
-    bool windbg_;
-};
-
-}  // namespace setup
 
 // bad example of engineering.
 // #TODO fix this make one entry point(Global Object)

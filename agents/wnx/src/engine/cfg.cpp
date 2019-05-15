@@ -1101,7 +1101,6 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& config_filename,
 
     // check user
     auto& user = yamls[2];
-    bool try_cache = user.exists() && user.bad();
 
     bool changed = false;
     for (auto& yd : yamls) {

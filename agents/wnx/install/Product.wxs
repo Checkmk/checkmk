@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?define CompanyName = "Mathias Kettner GmbH"?>
 <?define ProductName = "Check MK Service"?>
-<?define ProductVersion = "1.6.0"?>
+<?define ProductVersion = "2.0.1"?>
 <?define ProductId = "{C3BDE55B-4C42-48D0-8792-B1DE5174C202}"?>
 <?define ProductUpgradeCode = "83F434E9-EA96-4881-AA93-E21B27285C05"?>
-<?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1D7E"?>
+<!-- IMPORTANT NOTE: If you change architecture, please change the package code TOO -->
+<?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1D9F"?>
 <?define FolderName = "check_mk_service"?>
 <?define ServiceName = "CheckMkService"?>
 <?define ServiceDisplayName = "Check MK Service"?>
@@ -163,9 +164,27 @@
         <File Id="plugins_cap"
               Source="resources\plugins.cap"
               KeyPath="yes"
-              Checksum="yes" DiskId="2"
-              />
+              Checksum="yes" 
+              DiskId="2"/>
       </Component>
+      
+      <Component Id="checkmk.dat" Guid="{77EB5469-AD06-4B52-A408-C2F4151C7114}">
+        <File Id="checkmk.dat"
+              Source="resources\checkmk.dat" 
+              KeyPath="yes"
+              Checksum="yes"
+              DiskId="2" />
+      </Component>
+
+      <Component Id="check_mk.user.yml" Guid="{FB530333-4B0E-4C13-BF01-4F980B1C7326}">
+        <File Id="check_mk.user.yml" 
+              Source="resources\check_mk.user.yml" 
+              KeyPath="yes"
+              Checksum="yes"
+              DiskId="2" />
+      </Component>
+
+
     </DirectoryRef>
 
     <DirectoryRef Id="plugins">
@@ -290,6 +309,8 @@
       -->
       <ComponentRef Id="check_mk_ini_" />
       <ComponentRef Id="plugins_cap_" />
+      <ComponentRef Id="checkmk.dat" />
+      <ComponentRef Id="check_mk.user.yml" />
     </Feature>
 
     <Feature Id="plugins_binaries" Title="Plugins for Windows" Level="1">
@@ -348,13 +369,13 @@
       <!-- <Component Id="ProductComponent"> -->
       <!-- TODO: Insert files, registry keys, and other resources here. -->
       <!-- </Component> -->
-      <Component Id="check_mk_data"
-                 Guid="{382114FC-FB0C-4A15-AECE-CD489957DDFC}">
-        <File Id="check_mk.dat"
-              Source="resources\check_mk.dat"
-              Name="check_mk.dat"
+      <Component Id="check_mk_marker"
+                 Guid="{F3949AC9-2D27-4A96-81C7-9C5599E8AF8F}">
+        <File Id="check_mk.marker"
+              Source="resources\check_mk.marker"
+              Name="check_mk.marker"
               KeyPath="yes"
-              Checksum="yes" 
+              Checksum="yes"
               DiskId="1" />
       </Component>
 
@@ -420,10 +441,10 @@
         <File Id="check_mk.yml" Source="resources\check_mk.yml" DiskId="1" />
       </Component>
 
-      <Component Id="faq.txt" Guid="{E5DC6560-A666-4939-A441-3861BE025A27}">
-        <File Id="faq.txt" Source="resources\faq.txt" DiskId="1" />
+      <Component Id="readme.md" Guid="{14F083A7-2ACE-4738-A8E4-3D5D8C1DA50C}">
+        <File Id="readme.md" Source="resources\readme.md" DiskId="1" />
       </Component>
-
+      
       <!-- not required anybmore -->
       <Component Id="RegistryEntries"
                  Guid="F95DD079-D93F-441B-9D38-CA6D9500C6A7"

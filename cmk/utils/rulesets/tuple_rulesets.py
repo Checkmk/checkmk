@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-from typing import Generator, Dict, Text, Pattern, Tuple, List  # pylint: disable=unused-import
+from typing import NamedTuple, Generator, Dict, Text, Pattern, Tuple, List  # pylint: disable=unused-import
 
 from cmk.utils.regex import regex
 import cmk.utils.paths
@@ -42,6 +42,11 @@ NEGATE = '@negate'  # negation in boolean lists
 # - Is it worth to detect matches that are no regex matches?
 # - We could remove .* from end of regexes
 # - What's about compilation of the regexes?
+
+TupleMatchObject = NamedTuple("TupleMatchObject", [
+    ("host_name", str),
+    ("service_description", Text),
+])
 
 
 def get_rule_options(entry):
@@ -65,39 +70,39 @@ class RulesetMatcher(object):
         # Caches for host_extra_conf
         self._host_match_cache = {}
 
-    def is_matching(self, hostname, ruleset):
-        # type: (str, List[Dict]) -> bool
+    def is_matching(self, match_object, ruleset):
+        # type: (TupleMatchObject, List[Dict]) -> bool
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
         Depending on the value the outcome is negated or not.
 
         Replaces in_binary_hostlist / in_boolean_serviceconf_list"""
-        for value in self.get_values(hostname, ruleset, is_binary=True):
+        for value in self.get_values(match_object, ruleset, is_binary=True):
             return value
         return False  # no match. Do not ignore
 
-    def get_merged_dict(self, hostname, ruleset):
-        # type: (str, List[Dict]) -> Dict
+    def get_merged_dict(self, match_object, ruleset):
+        # type: (TupleMatchObject, List[Dict]) -> Dict
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         Replaces host_extra_conf_merged / service_extra_conf_merged"""
         merged_dict = {}  # type: Dict
-        for rule_dict in self.get_values(hostname, ruleset, is_binary=False):
+        for rule_dict in self.get_values(match_object, ruleset, is_binary=False):
             for key, value in rule_dict.items():
                 merged_dict.setdefault(key, value)
         return merged_dict
 
-    def get_values(self, hostname, ruleset, is_binary):
-        # type: (str, List, bool) -> Generator
+    def get_values(self, match_object, ruleset, is_binary):
+        # type: (TupleMatchObject, List, bool) -> Generator
         """Returns a list of the values of the matched rules
 
         Replaces host_extra_conf / service_extra_conf"""
 
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
-        with_foreign_hosts = hostname not in self._config_cache.all_processed_hosts()
+        with_foreign_hosts = match_object.host_name not in self._config_cache.all_processed_hosts()
         cache_id = id(ruleset), with_foreign_hosts
 
         if cache_id in self._host_match_cache:
@@ -112,7 +117,7 @@ class RulesetMatcher(object):
                     cached.setdefault(other_hostname, []).append(value)
             self._host_match_cache[cache_id] = cached
 
-        for value in cached.get(hostname, []):
+        for value in cached.get(match_object.host_name, []):
             yield value
 
     # TODO: Find a way to use the generic get_values

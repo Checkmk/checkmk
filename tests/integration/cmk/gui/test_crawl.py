@@ -329,7 +329,7 @@ class TestCrawler(object):
         try:
             self.stats = eval(file(self.stats_file()).read())
         except IOError as e:
-            if e.errno == 2:
+            if e.errno == errno.ENOENT:
                 pass  # Not existing files are OK
             else:
                 raise

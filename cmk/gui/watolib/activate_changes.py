@@ -23,6 +23,8 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+
+import errno
 import ast
 import os
 import shutil
@@ -156,7 +158,7 @@ def _cleanup_legacy_replication_status():
     try:
         os.unlink(var_dir + "replication_status.mk")
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT:
             pass  # Not existant -> OK
         else:
             raise
@@ -166,7 +168,7 @@ def clear_site_replication_status(site_id):
     try:
         os.unlink(_site_replication_status_path(site_id))
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT:
             pass  # Not existant -> OK
         else:
             raise
@@ -522,7 +524,7 @@ class ActivateChangesManager(ActivateChanges):
         try:
             os.makedirs(os.path.dirname(self._info_path()))
         except OSError as e:
-            if e.errno == 17:  # File exists
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
@@ -682,7 +684,7 @@ class ActivateChangesManager(ActivateChanges):
         try:
             os.makedirs(tmp_dir)
         except OSError as e:
-            if e.errno == 17:  # File exists
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
@@ -856,7 +858,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             try:
                 os.close(x)
             except OSError as e:
-                if e.errno == 9:  # Bad file descriptor
+                if e.errno == errno.EBADF:
                     pass
                 else:
                     raise
@@ -1028,7 +1030,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         try:
             os.unlink(self._snapshot_file)
         except OSError as e:
-            if e.errno == 2:
+            if e.errno == errno.ENOENT:
                 pass  # Not existant -> OK
             else:
                 raise

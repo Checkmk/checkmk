@@ -120,7 +120,7 @@ def initial_state(site, scenario):
             try:
                 return inode_before != os.stat(site.path("var/check_mk/core/history")).st_ino
             except OSError as e:
-                if e.errno == 2:
+                if e.errno == errno.ENOENT:
                     return False
                 else:
                     raise e

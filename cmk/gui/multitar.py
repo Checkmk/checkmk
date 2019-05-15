@@ -27,6 +27,7 @@
 # This module contains some helper functions dealing with the creation
 # of multi-tier tar files (tar files containing tar files)
 
+import errno
 import hashlib
 import os
 import tarfile
@@ -686,7 +687,7 @@ def wipe_directory(path):
                 try:
                     os.remove(p)
                 except OSError as e:
-                    if e.errno == 2:  # no such file or directory
+                    if e.errno == errno.ENOENT:
                         continue
                     else:
                         raise

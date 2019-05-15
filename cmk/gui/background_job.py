@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import logging
 import multiprocessing
 import os
@@ -359,7 +360,7 @@ class BackgroundJob(object):
         try:
             shutil.rmtree(self._work_dir)
         except OSError as e:
-            if e.errno == 2:  # No such file or directory
+            if e.errno == errno.ENOENT:
                 pass
             else:
                 raise

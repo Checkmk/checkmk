@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import os
 import re
 import time
@@ -2560,7 +2561,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
         try:
             file_names = os.listdir(path)
         except OSError as e:
-            if e.errno == 2:  # not existing directories are ok
+            if e.errno == errno.ENOENT:
                 return found
             else:
                 raise

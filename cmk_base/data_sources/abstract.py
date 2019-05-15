@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import os
 import socket
 import time
@@ -240,7 +241,7 @@ class DataSource(object):
             try:
                 os.makedirs(os.path.dirname(cachefile))
             except OSError as e:
-                if e.errno == 17:  # File exists
+                if e.errno == errno.EEXIST:
                     pass
                 else:
                     raise
@@ -435,7 +436,7 @@ class DataSource(object):
         try:
             os.makedirs(os.path.dirname(file_path))
         except OSError as e:
-            if e.errno == 17:  # File exists
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise

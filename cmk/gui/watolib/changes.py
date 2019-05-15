@@ -26,6 +26,7 @@
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
 import ast
+import errno
 import os
 import time
 
@@ -191,7 +192,7 @@ class SiteChanges(object):
                 if entry:
                     changes.append(ast.literal_eval(entry))
         except IOError as e:
-            if e.errno == 2:  # No such file or directory
+            if e.errno == errno.ENOENT:
                 pass
             else:
                 raise
@@ -231,7 +232,7 @@ class SiteChanges(object):
         try:
             os.unlink(self._site_changes_path())
         except OSError as e:
-            if e.errno == 2:
+            if e.errno == errno.ENOENT:
                 pass  # Not existant -> OK
             else:
                 raise

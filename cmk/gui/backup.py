@@ -30,6 +30,7 @@
 # BE AWARE: This code is directly used by the appliance. So if you are
 # about to refactor things, you will have to care about the appliance!
 
+import errno
 import glob
 import os
 import shutil
@@ -224,7 +225,7 @@ class MKBackupJob(object):
         try:
             os.unlink(self.state_file_path())
         except OSError as e:
-            if e.errno == 2:
+            if e.errno == errno.ENOENT:
                 pass
             else:
                 raise
@@ -233,7 +234,7 @@ class MKBackupJob(object):
         try:
             state = json.load(file(self.state_file_path()))
         except IOError as e:
-            if e.errno == 2:  # not existant
+            if e.errno == errno.ENOENT:  # not existant
                 state = {
                     "state": None,
                     "started": None,
@@ -289,7 +290,7 @@ class MKBackupJob(object):
         try:
             os.killpg(pgid, signal.SIGTERM)
         except OSError as e:
-            if e.errno == 3:
+            if e.errno == errno.ESRCH:
                 pass
             else:
                 raise
@@ -304,7 +305,7 @@ class MKBackupJob(object):
             try:
                 os.killpg(pgid, signal.SIGKILL)
             except OSError as e:
-                if e.errno == 3:
+                if e.errno == errno.ESRCH:
                     pass
                 else:
                     raise

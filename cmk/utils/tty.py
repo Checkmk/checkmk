@@ -26,6 +26,7 @@
 """This module contains constants and functions for neat output formating
 on ttys while being compatible when the command is not attached to a TTY"""
 
+import errno
 import fcntl
 import sys
 import struct
@@ -89,10 +90,10 @@ def get_size():
     except io.UnsupportedOperation:
         pass  # When sys.stdout is StringIO() or similar, then .fileno() is not available
     except IOError as e:
-        if e.errno == 25:
+        if e.errno == errno.ENOTTY:
             # Inappropriate ioctl for device: Occurs when redirecting output
             pass
-        elif e.errno == 22:
+        elif e.errno == errno.EINVAL:
             # Invalid argument: Occurs e.g. when executing from cron
             pass
         else:

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import os
 import re
 import signal
@@ -122,7 +123,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
                 pid = int(file(pidfile).read().strip())
                 os.kill(pid, signal.SIGUSR1)
             except IOError as e:
-                if e.errno == 2:  # No such file or directory
+                if e.errno == errno.ENOENT:
                     pass
                 else:
                     raise
@@ -296,7 +297,7 @@ class ConfigDomainCACertificates(ConfigDomain):
         try:
             return [match.group(0) for match in self._PEM_RE.finditer(open("%s" % path).read())]
         except IOError as e:
-            if e.errno == 2:  # No such file or directory
+            if e.errno == errno.ENOENT:
                 # Silently ignore e.g. dangling symlinks
                 return []
             else:

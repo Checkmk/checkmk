@@ -196,7 +196,7 @@ class BackupTarFile(tarfile.TarFile):
             while not answer.endswith("\n"):
                 answer += self._sock.recv(1024)
         except socket.error as e:
-            if e.errno == 32:  # Broken pipe
+            if e.errno == errno.EPIPE:
                 self._sock = None
                 if self._verbose:
                     sys.stdout.write("skipping rrdcached command (broken pipe)\n")

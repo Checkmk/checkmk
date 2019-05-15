@@ -1,15 +1,15 @@
-# Check\_MK - Your complete IT monitoring solution
+# Checkmk - Your complete IT monitoring solution
 
-Check\_MK is available in several editions. The Check\_MK Raw Edition is free and
-100% open-source. The Check\_MK Enterprise Edition includes several additional
+Checkmk is available in several editions. The Checkmk Raw Edition is free and
+100% open-source. The Checkmk Enterprise Edition includes several additional
 features and professional support from the authors, billed annually. A demo
 version is freely available for testing the Enterprise Edition in a
 non-production environment.
 
-Check\_MK can be installed on Linux servers via DEB and RPM packages found on
+Checkmk can be installed on Linux servers via DEB and RPM packages found on
 our [downloads page](https://mathias-kettner.com/download.php). The Enterprise
 Edition is also available as a virtual or physical appliance. The following
-short installation guides show how you can easily set up Check\_MK and begin
+short installation guides show how you can easily set up Checkmk and begin
 monitoring.
 
 Please visit our [website](https://mathias-kettner.com/check_mk.html) for more
@@ -19,11 +19,11 @@ details.
 
 Please have a look at the [official
 handbook](https://mathias-kettner.com/cms_introduction.html) on how to get
-started with Check\_MK.
+started with Checkmk.
 
 ## Building on your own packages
 
-It is highly recommended to use the prebuilt Check\_MK packages we
+It is highly recommended to use the prebuilt Checkmk packages we
 [provide](https://mathias-kettner.com/download.php). But if you really want to
 build your own packages, you either need to download the source packages from
 our website or check out the [Git

@@ -124,12 +124,12 @@
       <AdditionalDependencies>../build/engine\$(Platform)\$(Configuration)\engine.lib;userenv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@if not "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 call check_service.cmd
-@:DoNotCopy
+)
 </Command>
     </PostBuildEvent>
     <PreBuildEvent>
@@ -161,12 +161,12 @@ call check_service.cmd
       <AdditionalDependencies>../build/engine\$(Platform)\$(Configuration)\engine.lib;userenv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@if not "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 call check_service.cmd
-@:DoNotCopy
+)
 </Command>
     </PostBuildEvent>
     <PreBuildEvent>
@@ -204,12 +204,12 @@ call check_service.cmd
       <Command>echo "prebuild"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@if not "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 call check_service.cmd
-@:DoNotCopy
+)
 </Command>
     </PostBuildEvent>
     <CustomBuildStep>
@@ -244,12 +244,12 @@ call check_service.cmd
       <Command>echo "prebuild"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@if not "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 call check_service.cmd
-@:DoNotCopy
+)
 </Command>
     </PostBuildEvent>
     <CustomBuildStep>

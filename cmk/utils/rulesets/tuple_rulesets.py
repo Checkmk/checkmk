@@ -67,7 +67,7 @@ class RulesetMatcher(object):
 
         self.ruleset_optimizer = RulesetOptimizier(config_cache)
 
-    def is_matching(self, match_object, ruleset):
+    def is_matching_host_ruleset(self, match_object, ruleset):
         # type: (TupleMatchObject, List[Dict]) -> bool
         """Compute outcome of a ruleset set that just says yes/no
 
@@ -75,28 +75,26 @@ class RulesetMatcher(object):
         Depending on the value the outcome is negated or not.
 
         Replaces in_binary_hostlist / in_boolean_serviceconf_list"""
-        for value in self.get_values(match_object, ruleset, is_binary=True):
+        for value in self.get_host_ruleset_values(match_object, ruleset, is_binary=True):
             return value
         return False  # no match. Do not ignore
 
-    def get_merged_dict(self, match_object, ruleset):
+    def get_host_ruleset_merged_dict(self, match_object, ruleset):
         # type: (TupleMatchObject, List[Dict]) -> Dict
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
         Replaces host_extra_conf_merged / service_extra_conf_merged"""
         merged_dict = {}  # type: Dict
-        for rule_dict in self.get_values(match_object, ruleset, is_binary=False):
+        for rule_dict in self.get_host_ruleset_values(match_object, ruleset, is_binary=False):
             for key, value in rule_dict.items():
                 merged_dict.setdefault(key, value)
         return merged_dict
 
-    def get_values(self, match_object, ruleset, is_binary):
+    def get_host_ruleset_values(self, match_object, ruleset, is_binary):
         # type: (TupleMatchObject, List, bool) -> Generator
-        """Returns a list of the values of the matched rules
-
-        Replaces host_extra_conf / service_extra_conf"""
-
+        """Returns a generator of the values of the matched rules
+        Replaces host_extra_conf"""
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = match_object.host_name not in self._config_cache.all_processed_hosts()

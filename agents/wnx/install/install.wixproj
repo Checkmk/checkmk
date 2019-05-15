@@ -45,9 +45,12 @@
     <Folder Include="resources" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="resources\check_mk.dat" />
+    <Content Include="resources\checkmk.dat" />
+    <Content Include="resources\check_mk.ini" />
+    <Content Include="resources\check_mk.marker" />
+    <Content Include="resources\check_mk.user.yml" />
     <Content Include="resources\check_mk.yml" />
-    <Content Include="resources\faq.txt" />
+    <Content Include="resources\readme.md" />
     <Content Include="resources\GPL-V2.rtf" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
@@ -57,10 +60,14 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>%40echo off
-%40if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+%40if "$(VS_DEPLOY)" == "YES" goto copy_all
+%40if "$(VS_DEPLOY_MSI)" == "YES" goto copy_msi
+%40goto end
+%40:copy_all
 %40copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
+%40:copy_msi
 %40copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-%40:DoNotCopy</PostBuildEvent>
+%40:end</PostBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

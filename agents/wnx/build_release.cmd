@@ -22,6 +22,8 @@ mkdir %arte%\providers 2> nul
 mkdir %arte%\exe 2> nul
 mkdir %arte%\pdb 2> nul
 set REMOTE_MACHINE=%arte%
+set VS_DEPLOY=No
+set VS_DEPLOY_MSI=YES
 set LOCAL_IMAGES_PDB=%arte%\pdb
 set LOCAL_IMAGES_EXE=%arte%\exe
 
@@ -60,14 +62,14 @@ if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Re
 if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-64" -Foreground Red && exit 7
 
 @rem auto install msi
-git update-index --assume-unchanged install/resources/check_mk.dat > nul
-@copy install\resources\check_mk.dat save.tmp > nul
-echo update > install\resources\check_mk.dat
+git update-index --assume-unchanged install/resources/check_mk.marker > nul
+@copy install\resources\check_mk.marker save.tmp > nul
+echo update > install\resources\check_mk.marker
 %msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x64
 set el=%errorlevel%
-@type save.tmp > install\resources\check_mk.dat
+@type save.tmp > install\resources\check_mk.marker
 @del save.tmp > nul
-git update-index --no-assume-unchanged install/resources/check_mk.dat > nul
+git update-index --no-assume-unchanged install/resources/check_mk.marker > nul
 if not %el% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit 88
 move %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent_update.msi
 

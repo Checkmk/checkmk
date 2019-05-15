@@ -91,6 +91,8 @@ METRICS_SELECTED = {
 
 AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"
 
+NOW = datetime.datetime.utcnow()
+
 
 class AsyncMapper(object):  # pylint: disable=too-few-public-methods
     '''Create an async drop-in replacement for builtin 'map'
@@ -456,19 +458,24 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
 
 class AzureResource(object):
 
-    ID_PATTERN = re.compile("/subscriptions/([^/]*)/resourceGroups/([^/]*)/providers/([^/]*)")
+    ID_PATTERN = re.compile("/subscriptions/(?P<subscription>[^/]*)"
+                            "(/resourceGroups/(?P<group>[^/]*))?"
+                            "/providers/(?P<provider>[^/]*)")
 
-    def __init__(self, resource):
+    def __init__(self, info):
         super(AzureResource, self).__init__()
-        self.info = resource.as_dict()
-        match = AzureResource.ID_PATTERN.match(resource.id)
-        self.info["subscription"] = match.group(1)
-        self.info["group"] = match.group(2)
-        self.info["provider"] = match.group(3)
+        self.info = info
+        match = AzureResource.ID_PATTERN.match(info["id"])
+        for key, value in match.groupdict().iteritems():
+            if value is not None:
+                self.info[key] = value
         self.tags = self.info.get("tags", {})
 
-        self.section = resource.type.split('/')[-1].lower()
-        self.piggytargets = [self.info["group"]]
+        self.section = info["type"].split('/')[-1].lower()
+        self.piggytargets = []
+        group = self.info.get("group")
+        if group:
+            self.piggytargets.append(group)
         self.metrics = []
 
     def dumpinfo(self):
@@ -503,12 +510,11 @@ class AzureClient(object):
         'Microsoft.Compute/virtualMachines': AzureComputeClient,
     }
 
-    def __init__(self, args):
+    def __init__(self, credentials, args):
         super(AzureClient, self).__init__()
+        self._creds = credentials
         self.args = args
 
-        self._creds = ServicePrincipalCredentials(
-            client_id=args.client, secret=args.secret, tenant=args.tenant)
         # azure-api-call
         self.monitor_client = MonitorManagementClient(self._creds, self.args.subscription)
         # azure-api-call
@@ -539,16 +545,13 @@ class AzureClient(object):
     def list_resources(self):
         if "resources" not in self._cache:
             # azure-api-call
-            raw_resources = self._resource_client.resources.list()
+            raw_resources = [r.as_dict() for r in self._resource_client.resources.list()]
             self._cache["resources"] = map(AzureResource, raw_resources)
         return self._cache["resources"]
 
 
 class MetricCache(DataCache):
-
-    NOW = datetime.datetime.utcnow()
-
-    def __init__(self, resource, metric_definition, debug=False):
+    def __init__(self, resource, metric_definition, ref_time, debug=False):
         self.metric_definition = metric_definition
         metricnames = metric_definition[0]
         super(MetricCache, self).__init__(self.get_cache_path(resource), metricnames, debug=debug)
@@ -558,6 +561,9 @@ class MetricCache(DataCache):
             "PT5M": datetime.timedelta(minutes=5),
             "PT1H": datetime.timedelta(hours=1),
         }[metric_definition[1]]
+        start = ref_time - 3 * self.timedelta
+        self._timespan = "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                    ref_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
     @staticmethod
     def get_cache_path(resource):
@@ -572,14 +578,13 @@ class MetricCache(DataCache):
     def get_validity_from_args(self, *args):
         return True
 
-    @staticmethod
-    def _metric_api_call(monitor_client, rid, timespan, interval, metric, aggregation, filter_):
+    def _metric_api_call(self, monitor_client, rid, interval, metric, aggregation, filter_):
         LOG.debug(
             "metrics.list(%r, timespan=%r, interval=%r, metric=%r, aggregation=%r,"
-            " filter=%r, raw=True)", rid, timespan, interval, metric, aggregation, filter_)
+            " filter=%r, raw=True)", rid, self._timespan, interval, metric, aggregation, filter_)
         raw = monitor_client.metrics.list(
             rid,
-            timespan=timespan,
+            timespan=self._timespan,
             interval=interval,
             metric=metric,
             aggregation=aggregation,
@@ -595,13 +600,9 @@ class MetricCache(DataCache):
     def get_live_data(self, monitor_client, resource_id, err):  # pylint: disable=arguments-differ
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
-        start = self.NOW - 3 * self.timedelta
-        timespan = "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                              self.NOW.strftime("%Y-%m-%dT%H:%M:%SZ"))
-
         try:
-            response, raw_metrics = self._metric_api_call(
-                monitor_client, resource_id, timespan, interval, metricnames, aggregation, filter_)
+            response, raw_metrics = self._metric_api_call(monitor_client, resource_id, interval,
+                                                          metricnames, aggregation, filter_)
         except () if self.debug else ErrorResponseException as exc:
             err.add("exception", resource_id, exc.message)
             LOG.exception(exc)
@@ -632,7 +633,7 @@ def gather_metrics(client, resource):
     metric_definitions = METRICS_SELECTED.get(resource.info["type"], [])
     remaining_api_reads = None
     for metric_def in metric_definitions:
-        cache = MetricCache(resource, metric_def, debug=client.args.debug)
+        cache = MetricCache(resource, metric_def, NOW, debug=client.args.debug)
         resource.metrics += cache.get_data(client.monitor_client, resource.info['id'], err)
         remaining_api_reads = (min((remaining_api_reads, cache.remaining_reads)) or
                                cache.remaining_reads or remaining_api_reads)
@@ -702,7 +703,10 @@ def main(argv=None):
     LOG.debug("%s", selector)
 
     try:
-        client = AzureClient(args)
+        credentials = ServicePrincipalCredentials(
+            client_id=args.client, secret=args.secret, tenant=args.tenant)
+
+        client = AzureClient(credentials, args)
         resources = [r for r in client.list_resources() if selector.do_monitor(r)]
         client.init_specific(resources)
 

@@ -565,329 +565,448 @@ div.togglebutton.down:not(.off) img {
     left: 1px;
 }
 
-///*-------------------------------------------------------------------------.
-//|            ____        _          _____     _     _                      |
-//|           |  _ \  __ _| |_ __ _  |_   _|_ _| |__ | | ___                 |
-//|           | | | |/ _` | __/ _` |   | |/ _` | '_ \| |/ _ \                |
-//|           | |_| | (_| | || (_| |   | | (_| | |_) | |  __/                |
-//|           |____/ \__,_|\__\__,_|   |_|\__,_|_.__/|_|\___|                |
-//|                                                                          |
-//+--------------------------------------------------------------------------+
-//| Styles for table that should rows of data. Such tables are used in the   |
-//| Status-GUI, in WATO and in custom modules that use similar tables.       |
-//'-------------------------------------------------------------------------*/
-//
-//table.data {
-//    border-spacing: 0px;
-//    margin: 0;
-//    padding: 0;
-//    empty-cells: show;
-//    width: 100%;
-//}
-//
-//table.data {
-//    color: black;
-//}
-//
-//table.data .checkbox_hover {
-//    background-image: url("images/checkbox_hover_bg.png");
-//    background-attachment: fixed;
-//}
-//
-//
-//table.data th {
-//    font-weight: normal;
-//    border-right: 1px solid #ccc;
-//    background-color: #999;
-//    padding: 2px 2px;
-//    text-align: center;
-//    color: #fff;
-//    vertical-align: middle;
-//}
-//table.data th:last-child {
-//    border-right-style: none;
-//}
-//
-//table.data td.buttons {
-//    white-space: nowrap;
-//    width: 1%;
-//}
-//
-//table.data td.count {
-//    text-align: right;
-//    font-weight: bold;
-//    font-family: sans-serif;
-//}
-//
-//table.data td.number {
-//    text-align: right;
-//    white-space: nowrap;
-//}
-//
-//table.data td.nobr {
-//    white-space: nowrap;
-//}
-//
-//table.data td.center {
-//    text-align: center;
-//}
-//
-//table.data td.unused {
-//    color: #888;
-//    text-shadow: 1px 1px 0.5px #fff;
-//}
-//
-//td.narrow {
-//    width: 10px;
-//}
-//td.wide {
-//    width: 100%;
-//}
-//
-//table.data.oddeven > tbody > tr:nth-child(odd) {
-//    background-color: #eee;
-//}
-//
-//table.data.oddeven > tbody > tr:nth-child(even) {
-//    background-color: #ddd;
-//}
-//
-//table.data.oddeven > tbody > tr.groupheader {
-//    background-color: transparent;
-//}
-//
-///* Two-lined header, for example in WATO: ChangeLog->Site Status */
-//table.data tr.dualheader th {
-//    border-bottom: 1px solid #ccc;
-//}
-//
-//
-///* Table header links (For sorting) */
-//table.data th.sort {
-//    /* text-decoration: underline; */
-//}
-//
-//table.data th.sort:hover {
-//    background-color: #B2B2B2;
-//    cursor: pointer;
-//}
-//
-//table.data th.sort:hover {
-//    color: #000;
-//}
-//
-//table.data th.asc {
-//    /* color: #CBDCF2; */
-//}
-//
-//table.data th.desc {
-//    /* color: #CBDCF2; */
-//}
-//
-//table.data th.tablegap {
-//    background-color: transparent; /* none; */
-//}
-//
-//table.data tr.data > td {
-//    border-right: 1px solid #ccc;
-//    padding: 2px 4px;
-//    height: 22px;
-//    vertical-align: middle;
-//}
-//table.data tr.data > td:last-child {
-//    border-right-style: none;
-//}
-//
-//table.data a {
-//    text-decoration: none;
-//    color: black;
-//}
-//table.data a:hover {
-//    text-decoration: underline;
-//}
-//
-//table.data tr.data td.checkbox {
-//    width: 20px;
-//    text-align: center;
-//}
-//table.data tr.data td.checkbox input {
-//    margin: 0px;
-//}
-//
-//table.data th input.checkgroup {
-//    height: 12px;
-//    width: 16px;
-//    padding: 0;
-//    margin: 0;
-//    text-align: center;
-//    vertical-align: middle;
-//    font-size: 5pt;
-//    line-height: 4pt;
-//}
-//
-//table.data td.host {
-//    border-style: none;
-//    font-weight: bold;
-//    padding-top: 1ex;
-//    padding-left: 0px;
-//    font-size: 120%;
-//}
-//
-///* Link to object in the classic nagios GUI */
-//table.data td.singleicon img {
-//    margin: 0;
-//    padding: 0;
-//}
-//table.data td.singleicon {
-//    width: 16px;
-//    text-align: center;
-//}
-//
-//table.data tr.actions td {
-//    padding: 5px;
-//}
-//table.data tr.actions div {
-//    display: inline-block;
-//}
-//table.data tr.actions td div.search input[type="text"] {
-//    margin-right: 2px;
-//}
-//table.data tr.actions.no_match td {
-//    padding: 5px;
-//}
-//table.data tr th {
-//    vertical-align: baseline;
-//}
-//
-//table.data tr div.toggle_actions {
-//    position: relative;
-//    padding-left: 14px;
-//}
-//
-//table.data tr a.toggle_actions {
-//    position: absolute;
-//    top: 0;
-//    left: 0;
-//    margin: 0;
-//    padding: 0;
-//}
-//table.data tr th a.toggle_actions img {
-//    vertical-align: top;
-//    width: 12px;
-//    height: 13px;
-//    padding: 0;
-//    position: relative;
-//    top: 2px;
-//}
-//
-///* Group header used in table, box and tiled layout */
-//table.groupheader {
-//    margin: 0px;
-//    border: 0px;
-//    padding: 6px 0px 3px 0px;
-//}
-//
-//table.data tr.groupheader,
-//table.data tr.groupheader.td {
-//    background-color: transparent;
-//}
-//
-//tr.groupheader td {
-//    border-style: none;
-//    margin: 0px;
-//    padding-top: 2px;
-//    font-weight: bold;
-//    color: #fff;
-//}
-//tr.groupheader a {
-//    color: #fff;
-//    text-decoration: none;
-//}
-//
-//tr.groupheader a:hover {
-//    text-decoration: underline;
-//}
-//
-//tr.data.grouped_row_header td {
-//    cursor: pointer;
-//}
-//
-//tr.data.grouped_row_header img.treeangle {
-//    margin-left: 0;
-//}
-//
-//tr.data.group_end {
-//    border-bottom: 2px solid #ccc;
-//}
-//
-///* state in group header must have fixed width */
-//.groupheader td.state {
-//    border: 1px solid #000000;
-//    border-radius: 5px;
-//    box-shadow: 1px 1px 2px #444444;
-//    padding: 2px 5px;
-//    width: 50px;
-//}
-//
-//img.iconbutton {
-//    width: 20px;
-//    height: 20px;
-//    padding: 0px 2px;
-//}
-//
-//
-//.wato a.checkbox img.iconbutton {
-//    width: 60px;
-//    height: 16px;
-//}
-//
-//img.iconbutton:hover {
-//    opacity: 0.5;
-//    filter: alpha(opacity=50); /* For IE8 and earlier */
-//}
-//
-///* reschedule check icon */
-//img.iconbutton.reloading,
-//img.icon.reloading {
-//    -webkit-animation:spin 1s linear infinite;
-//    -moz-animation:spin 1s linear infinite;
-//    animation:spin 1s linear infinite;
-//}
-//@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
-//@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
-//@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
-//
-//img.iconbutton.reload_failed {
-//    -webkit-filter: sepia(100%);
-//    filter: sepia(100%);
-//}
-//
-///* Table with captions on the left side. Used e.g. for man pages and werks */
-//
-//table.data.headerleft th {
-//    text-align: left;
-//    padding: 4px 5px;
-//}
-//table.data.headerleft td {
-//    padding: 4px 5px;
-//}
-//
-//table.data.headerleft > tbody > tr:nth-child(odd) > th {
-//    background-color: #73a1b4;
-//}
-//
-//table.data.headerleft > tbody > tr:nth-child(even) > th {
-//    background-color: #7fadc0;
-//}
-//
-//table.data.headerleft > tbody > tr:nth-child(odd) > td {
-//    background-color: #ddd;
-//}
-//table.data.headerleft > tbody > tr:nth-child(even) > td {
-//    background-color: #eee;
-//}
-//
-//
+/*-------------------------------------------------------------------------.
+|            ____        _          _____     _     _                      |
+|           |  _ \  __ _| |_ __ _  |_   _|_ _| |__ | | ___                 |
+|           | | | |/ _` | __/ _` |   | |/ _` | '_ \| |/ _ \                |
+|           | |_| | (_| | || (_| |   | | (_| | |_) | |  __/                |
+|           |____/ \__,_|\__\__,_|   |_|\__,_|_.__/|_|\___|                |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles for table that shows rows of data. Such tables are used in the    |
+| Status-GUI, in WATO and in custom modules that use similar tables.       |
+'-------------------------------------------------------------------------*/
+
+table.data {
+    border-spacing: 0px 4px;
+    color: $theme-color-text;
+    margin: 0;
+    padding: 0;
+    empty-cells: show;
+    width: 100%;
+}
+
+table.data .popup_menu {
+      color: $theme-color-text !important
+}
+
+table.data .checkbox_hover {
+    background-image: url("images/checkbox_hover_bg.png");
+    background-attachment: fixed;
+}
+
+table.data th {
+  padding: 0px 8px;
+  font-size: $theme-font-size-main;
+  text-transform: uppercase;
+  letter-spacing: $theme-letter-spacing-table;
+  color: $theme-color-table-text;
+  background: transparent;
+  border: 0px;
+  font-weight: $theme-font-weight-bold;
+  text-align: left;
+}
+
+/* TODO: Check whether this style is redundant due to a .last_col style in
+ *       _views.scss */
+table.data th:last-child {
+    border-right-style: none;
+}
+
+table.data td {
+  padding: 4px 8px;
+  border: none;
+  font-size: $theme-font-size-main;
+  font-weight: 500;
+  letter-spacing: $theme-letter-spacing;
+  color: $theme-color-text;
+  line-height: 1.5;
+}
+
+table.data td.buttons {
+    white-space: nowrap;
+    width: 1%;
+}
+
+/* TODO: Reproduce this html element */
+table.data td.count {
+    text-align: right;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+table.data td.number {
+    text-align: right;
+    white-space: nowrap;
+}
+
+table.data td.nobr {
+    white-space: nowrap;
+}
+
+table.data td.center {
+    text-align: center;
+}
+
+table.data td.unused {
+    color: #888;
+    text-shadow: 1px 1px 0.5px #fff;
+}
+
+/* TODO: Check whether these narrow and wide styles are deprecated */
+td.narrow {
+    width: 10px;
+}
+
+td.wide {
+    width: 100%;
+}
+
+table.data.oddeven > tbody > tr:nth-child(odd),
+table.data.oddeven > tbody > tr:nth-child(even) {
+    background-color: transparent;
+}
+
+/* Two-lined header, for example in WATO: ChangeLog->Site Status */
+/* TODO: Reproduce this html element */
+table.data tr.dualheader th {
+    border-bottom: 1px solid #ccc;
+}
+
+/* Table header links (For sorting) */
+table.data th.sort:hover {
+    background-color: inherit;
+    cursor: pointer;
+    color: #000;
+}
+
+/* TODO: Reproduce this html element */
+table.data th.tablegap {
+    background-color: transparent; /* none; */
+}
+
+table.data tr.data {
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: all .15s ease-in;
+}
+
+table.data tr.data > td {
+    background-color: $theme-color-white;
+    padding: 4px 8px;
+    border-right: 0px;
+    border-top: 1px solid $theme-color-table-border;
+    border-bottom: 1px solid $theme-color-table-border;
+    height: 26px;
+    vertical-align: middle;
+}
+
+table.data tr.data > td:first-child {
+  border-left: 1px solid $theme-color-table-border;
+  border-radius: $theme-border-radius 0px 0px 4px;
+}
+
+table.data tr.data > td:last-child,
+table.data tr.data > td.last_col {
+  border-right: 1px solid $theme-color-table-border;
+  border-radius: 0px 4px 4px 0px;
+}
+
+/* TODO: Get rid of these important styles */
+table.data tr.data > td:only-child {
+  border: 1px solid $theme-color-table-border !important;
+  border-radius: $theme-border-radius !important;
+}
+
+table.data tr td.gap {
+  background: $theme-color-background;
+  border: 1px solid $theme-color-background;
+}
+
+table.data a {
+    text-decoration: none;
+    color: $theme-color-text;
+}
+
+table.data a:hover {
+    text-decoration: underline;
+}
+
+table.data tr.data td.checkbox {
+    width: 20px;
+    text-align: center;
+}
+
+table.data tr.data td.checkbox input {
+    margin: 0px;
+}
+
+table.data th input.checkgroup {
+    height: 12px;
+    width: 16px;
+    padding: 8px;
+    margin: 0;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 5pt;
+    line-height: 4pt;
+}
+
+/* TODO: Reproduce this html element */
+table.data td.host {
+    border-style: none;
+    font-weight: bold;
+    padding-top: 1ex;
+    padding-left: 0px;
+    font-size: 120%;
+}
+
+/* Link to object in the classic nagios GUI */
+/* TODO: Reproduce these singleicon elements */
+table.data td.singleicon img {
+    margin: 0;
+    padding: 0;
+}
+
+table.data td.singleicon {
+    width: 16px;
+    text-align: center;
+}
+
+table.data tr.actions td {
+    padding: 5px;
+}
+
+table.data tr.actions div {
+    display: inline-block;
+}
+
+table.data tr.actions td div.search input[type="text"] {
+    margin-right: 2px;
+}
+
+table.data tr.actions.no_match td {
+    padding: 5px;
+}
+
+table.data tr th {
+    vertical-align: baseline;
+}
+
+table.data tr div.toggle_actions {
+    position: relative;
+    padding-left: 14px;
+}
+
+table.data tr a.toggle_actions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+}
+
+table.data tr th a.toggle_actions img {
+    vertical-align: top;
+    width: 12px;
+    height: 13px;
+    padding: 0;
+    position: relative;
+    top: 2px;
+}
+
+table.data tr th a.toggle_actions img,
+table.data tr th body.main .popup_menu span.toggle_actions img,
+body.main .popup_menu table.data tr th span.toggle_actions img {
+  filter: invert(100%);
+}
+
+/* Group header used in table, box and tiled layout */
+table.groupheader {
+    margin: 0px;
+    border: 0px;
+    padding: 6px 0px 3px 0px;
+}
+
+table.data tr.groupheader,
+table.data tr.groupheader.td {
+    background-color: transparent;
+}
+
+tr.groupheader a:hover {
+    text-decoration: underline;
+}
+
+/* TODO: Reproduce these .grouped_row_header elements */
+tr.data.grouped_row_header td {
+    cursor: pointer;
+}
+
+tr.data.grouped_row_header img.treeangle {
+    margin-left: 0;
+}
+
+tr.data.group_end {
+    border-bottom: 2px solid #ccc;
+}
+
+/* state in group header must have fixed width */
+.groupheader td.state {
+    border: 1px solid #000000;
+    border-radius: 5px;
+    box-shadow: 1px 1px 2px #444444;
+    padding: 2px 5px;
+    width: 50px;
+}
+
+tr.groupheader {
+  td {
+    padding: 0;
+    color: $theme-color-text;
+    background: transparent;
+    border-style: none;
+    margin: 0px;
+    font-weight: bold;
+
+    &.groupheader .groupheader tbody tr td {
+      display: inline-block;
+      padding: 12px 0 4px;
+      font-size: $theme-font-table-header;
+      font-weight: $theme-font-weight-global;
+      letter-spacing: $theme-letter-spacing-table;
+      color: $theme-color-text;
+      vertical-align: baseline;
+
+      &.state {
+        width: auto;
+        padding: 0 8px;
+        font-size: 14px;
+        text-transform: uppercase;
+        box-shadow: none;
+      }
+
+      a,
+      body.main .popup_menu span,
+      body.main .popup_menu & span {
+        display: inline-block;
+        font-size: $theme-font-table-header;
+        font-weight: $theme-font-weight-global;
+        letter-spacing: $theme-letter-spacing-table;
+        color: $theme-color-text;
+      }
+
+      &.state a,
+      &.state body.main .popup_menu span,
+      body.main .popup_menu &.state span {
+        font-size: 14px;
+        text-transform: uppercase;
+      }
+
+      &.state.hstate1 a,
+      &.state.hstate1 body.main .popup_menu span,
+      body.main .popup_menu &.state.hstate1 span {
+        color: $theme-color-lightgrey;
+      }
+    }
+  }
+
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
+    color: $theme-color-text;
+    text-decoration: none;
+  }
+}
+
+table.data.oddeven > tbody > tr.groupheader {
+  background-color: transparent;
+}
+
+img.iconbutton {
+    width: 20px;
+    height: 20px;
+    padding: 0px 2px;
+}
+
+/* TODO: Reproduce this html item */
+.wato a.checkbox img.iconbutton {
+    width: 60px;
+    height: 16px;
+}
+
+img.iconbutton:hover {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
+/* reschedule check icon */
+/* TODO: Reproduce these reloading/reload html elements */
+img.iconbutton.reloading,
+img.icon.reloading {
+    -webkit-animation:spin 1s linear infinite;
+    -moz-animation:spin 1s linear infinite;
+    animation:spin 1s linear infinite;
+}
+
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+
+img.iconbutton.reload_failed {
+    -webkit-filter: sepia(100%);
+    filter: sepia(100%);
+}
+
+/* Table with captions on the left side. Used e.g. for man pages and werks */
+table.data.headerleft {
+      border-spacing: 0px;
+}
+
+table.data.headerleft th {
+    text-align: left;
+}
+
+table.data.headerleft tbody tr th,
+table.data.headerleft tbody tr td,
+table.data.headerleft tbody tr th:nth-child(odd),
+table.data.headerleft tbody tr td:nth-child(odd),
+table.data.headerleft tbody tr th:nth-child(even),
+table.data.headerleft tbody tr td:nth-child(even) {
+    border-top: 1px solid $theme-color-table-border;
+    border-left: 1px solid $theme-color-table-border;
+    border-bottom: none;
+    background: $theme-color-white;
+    border-radius: 0px;
+    padding: 8px 16px;
+    vertical-align: top;
+}
+
+table.data.headerleft tbody tr th {
+    text-transform: none;
+    border-right: none;
+}
+
+table.data.headerleft tbody tr td {
+    border-right: 1px solid $theme-color-table-border;
+}
+
+table.data.headerleft tbody tr td.nowiki p {
+      margin: 0px;
+}
+
+table.data.headerleft tbody tr:last-of-type td,
+table.data.headerleft tbody tr:last-of-type th {
+    border-bottom: 1px solid $theme-color-table-border;
+}
+
+/* TODO: Reproduce this html element */
+table.data div.objectlist div {
+  border: 0px solid;
+  border-radius: $theme-border-radius;
+  padding: 2px 6px;
+  margin: 2px;
+}
+
 ///*-------------------------------------------------------------------------.
 //|                    _____                                                 |
 //|                   |  ___|__  _ __ _ __ ___  ___                          |

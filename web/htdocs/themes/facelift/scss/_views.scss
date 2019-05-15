@@ -382,65 +382,6 @@ td.fillup {
   background-color: #eee;
 }
 
-tr.groupheader {
-  td {
-    padding: 0;
-    color: $theme-color-text;
-    background: transparent;
-
-    &.groupheader .groupheader tbody tr td {
-      display: inline-block;
-      padding: 12px 0 4px;
-      font-size: $theme-font-table-header;
-      font-weight: $theme-font-weight-global;
-      letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-text;
-      vertical-align: baseline;
-
-      &.state {
-        width: auto;
-        padding: 0 8px;
-        font-size: 14px;
-        text-transform: uppercase;
-        box-shadow: none;
-      }
-
-      a,
-      body.main .popup_menu span,
-      body.main .popup_menu & span {
-        display: inline-block;
-        font-size: $theme-font-table-header;
-        font-weight: $theme-font-weight-global;
-        letter-spacing: $theme-letter-spacing-table;
-        color: $theme-color-text;
-      }
-
-      &.state a,
-      &.state body.main .popup_menu span,
-      body.main .popup_menu &.state span {
-        font-size: 14px;
-        text-transform: uppercase;
-      }
-
-      &.state.hstate1 a,
-      &.state.hstate1 body.main .popup_menu span,
-      body.main .popup_menu &.state.hstate1 span {
-        color: $theme-color-lightgrey;
-      }
-    }
-  }
-
-  a,
-  body.main .popup_menu span,
-  body.main .popup_menu & span {
-    color: $theme-color-text;
-  }
-}
-
-table.data.oddeven > tbody > tr.groupheader {
-  background-color: transparent;
-}
-
 table.data tr.data > td.gap,
 table.data tr > td.last_col,
 table.data tr > th.last_col {

@@ -111,95 +111,6 @@ body.main .popup_menu span {
 .bi_rule_tree img.treeangle, .invtree img.treeangle, .grouped_row_header img.treeangle.nform {
   filter: invert(0%) !important; }
 
-table {
-  /* NFORM */ }
-  table.data {
-    border-spacing: 0px 4px;
-    color: $theme-color-text;
-    /* HEADERLEFT */
-    /* SINGLE */ }
-    table.data .popup_menu {
-      color: $theme-color-text !important }
-    table.data .checkbox_hover {
-      background-image: url(images/checkbox_hover_bg.png);
-      background-attachment: fixed; }
-    table.data th {
-      padding: 0px 8px;
-      font-size: $theme-font-size-main;
-      text-transform: uppercase;
-      letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-table-text;
-      background: transparent;
-      border: 0px;
-      font-weight: $theme-font-weight-bold;
-      text-align: left; }
-      table.data th.sort:hover {
-        background-color: inherit;
-        cursor: pointer; }
-    table.data tr.data {
-      box-sizing: border-box;
-      overflow: hidden;
-      transition: all .15s ease-in; }
-      table.data tr.data > td {
-        background-color: $theme-color-white;
-        padding: 4px 8px;
-        border-right: 0px;
-        border-top: 1px solid $theme-color-table-border;
-        border-bottom: 1px solid $theme-color-table-border;
-        height: 26px; }
-        table.data tr.data > td:first-child {
-          border-left: 1px solid $theme-color-table-border;
-          border-radius: $theme-border-radius 0px 0px 4px; }
-        table.data tr.data > td:last-child {
-          border-right: 1px solid $theme-color-table-border;
-          border-radius: 0px 4px 4px 0px; }
-        table.data tr.data > td:only-child {
-          border: 1px solid $theme-color-table-border !important;
-          border-radius: $theme-border-radius !important; }
-        table.data tr.data > td.last_col {
-          border-right: 1px solid $theme-color-table-border;
-          border-radius: 0px 4px 4px 0px; }
-    table.data tr td.gap {
-      background: $theme-color-background;
-      border: 1px solid $theme-color-background; }
-    table.data tr th a.toggle_actions img, table.data tr th body.main .popup_menu span.toggle_actions img, body.main .popup_menu table.data tr th span.toggle_actions img {
-      filter: invert(100%); }
-    table.data td {
-      padding: 4px 8px;
-      border: none;
-      font-size: $theme-font-size-main;
-      font-weight: 500;
-      letter-spacing: $theme-letter-spacing;
-      color: $theme-color-text;
-      line-height: 1.5; }
-    table.data div.objectlist div {
-      border: 0px solid;
-      border-radius: $theme-border-radius;
-      padding: 2px 6px;
-      margin: 2px; }
-    table.data.oddeven > tbody > tr:nth-child(odd) {
-      background-color: transparent; }
-    table.data.oddeven > tbody > tr:nth-child(even) {
-      background-color: transparent; }
-    table.data.headerleft {
-      border-spacing: 0px; }
-      table.data.headerleft tbody tr td, table.data.headerleft tbody tr th, table.data.headerleft tbody tr td:nth-child(odd), table.data.headerleft tbody tr th:nth-child(odd), table.data.headerleft tbody tr td:nth-child(even), table.data.headerleft tbody tr th:nth-child(even) {
-        border-top: 1px solid $theme-color-table-border;
-        border-left: 1px solid $theme-color-table-border;
-        border-bottom: none;
-        background: $theme-color-white;
-        border-radius: 0px;
-        padding: 8px 16px;
-        vertical-align: top; }
-      table.data.headerleft tbody tr th {
-        text-transform: none;
-        border-right: none; }
-      table.data.headerleft tbody tr td {
-        border-right: 1px solid $theme-color-table-border; }
-        table.data.headerleft tbody tr td.nowiki p {
-          margin: 0px; }
-      table.data.headerleft tbody tr:last-of-type td, table.data.headerleft tbody tr:last-of-type th {
-        border-bottom: 1px solid $theme-color-table-border; }
   table.nform {
     box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.1);
     border: 1px solid $theme-color-table-border;
@@ -508,16 +419,14 @@ div.info {
 .filterform input, .filterform select, .filterform textarea, .filterform div.snapin select, div.snapin .filterform select, .filterform div.snapin textarea, div.snapin .filterform textarea, .filterform #mk_side_search_field {
   column-span: all !important; }
 
-body.main {
-  /* POPUPS */ }
-  body.main a, body.main .popup_menu span {
-    color: $theme-color-text; }
-  body.main .popup_menu {
+body.main a, body.main .popup_menu span, body.main .popup_menu a {
+    color: $theme-color-text;
+}
+body.main .popup_menu {
     background-color: $theme-color-white;
     border: 1px solid $theme-color-table-border;
-    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1); }
-    body.main .popup_menu a, body.main .popup_menu span {
-      color: $theme-color-text; }
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+}
 
 div.log_output {
   background: $theme-color-sidebar-background;

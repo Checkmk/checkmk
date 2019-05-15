@@ -60,14 +60,14 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>%40echo off
-%40if "$(VS_DEPLOY)" == "YES" goto copy_all
-%40if "$(VS_DEPLOY_MSI)" == "YES" goto copy_msi
-%40goto end
-%40:copy_all
-%40copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-%40:copy_msi
-%40copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-%40:end</PostBuildEvent>
+if "$(VS_DEPLOY)" == "YES" goto copy_all
+if "$(VS_DEPLOY_MSI)" == "YES" goto copy_msi
+goto end
+:copy_all
+copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
+:copy_msi
+copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
+:end</PostBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

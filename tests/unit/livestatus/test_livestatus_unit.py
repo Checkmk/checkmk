@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import errno
 import socket
 import ssl
 from contextlib import closing

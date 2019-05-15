@@ -61,11 +61,19 @@ def get_rule_options(entry):
 
 
 class RulesetMatcher(object):
+    """Performing matching on host / service rulesets
+
+    There is some duplicate logic for host / service rulesets. This has been
+    kept for performance reasons. Especially the service rulset matching is
+    done very often in large setups. Be careful when working here.
+    """
+
     def __init__(self, config_cache):
         super(RulesetMatcher, self).__init__()
         self._config_cache = config_cache
 
         self.ruleset_optimizer = RulesetOptimizier(config_cache)
+        self._service_match_cache = {}
 
     def is_matching_host_ruleset(self, match_object, ruleset):
         # type: (TupleMatchObject, List[Dict]) -> bool
@@ -104,6 +112,52 @@ class RulesetMatcher(object):
         for value in optimized_ruleset.get(match_object.host_name, []):
             yield value
 
+    def is_matching_service_ruleset(self, match_object, ruleset):
+        # type: (TupleMatchObject, List[Dict]) -> bool
+        """Compute outcome of a ruleset set that just says yes/no
+
+        The binary match only cares about the first matching rule of an object.
+        Depending on the value the outcome is negated or not.
+
+        Replaces in_binary_hostlist / in_boolean_serviceconf_list"""
+        for value in self.get_service_ruleset_values(match_object, ruleset, is_binary=True):
+            return value
+        return False  # no match. Do not ignore
+
+    def get_service_ruleset_merged_dict(self, match_object, ruleset):
+        # type: (TupleMatchObject, List[Dict]) -> Dict
+        """Returns a dictionary of the merged dict values of the matched rules
+        The first dict setting a key defines the final value.
+
+        Replaces host_extra_conf_merged / service_extra_conf_merged"""
+        merged_dict = {}  # type: Dict
+        for rule_dict in self.get_service_ruleset_values(match_object, ruleset, is_binary=False):
+            for key, value in rule_dict.items():
+                merged_dict.setdefault(key, value)
+        return merged_dict
+
+    def get_service_ruleset_values(self, match_object, ruleset, is_binary):
+        # type: (TupleMatchObject, List, bool) -> Generator
+        """Returns a generator of the values of the matched rules
+        Replaces service_extra_conf"""
+        with_foreign_hosts = match_object.host_name not in self._config_cache.all_processed_hosts()
+        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
+            ruleset, with_foreign_hosts, is_binary=is_binary)
+
+        for value, hosts, service_conditions in optimized_ruleset:
+            if match_object.host_name not in hosts:
+                continue
+
+            descr_cache_id = match_object.service_description, service_conditions
+            if descr_cache_id in self._service_match_cache:
+                match = self._service_match_cache[descr_cache_id]
+            else:
+                match = in_servicematcher_list(service_conditions, match_object.service_description)
+                self._service_match_cache[descr_cache_id] = match
+
+            if match:
+                yield value
+
     # TODO: Find a way to use the generic get_values
     def get_values_for_generic_agent_host(self, ruleset):
         """Compute ruleset for "generic" host
@@ -124,6 +178,14 @@ class RulesetMatcher(object):
 
             entries.append(item)
         return entries
+
+
+def in_servicematcher_list(service_conditions, item):
+    # type: (Tuple[bool, Pattern[Text]], Text) -> bool
+    negate, pattern = service_conditions
+    if pattern.match(item) is not None:
+        return not negate
+    return negate
 
 
 class RulesetOptimizier(object):

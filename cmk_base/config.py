@@ -1073,15 +1073,8 @@ hosttags_match_taglist = tuple_rulesets.hosttags_match_taglist
 # Slow variant of checking wether a service is matched by a list
 # of regexes - used e.g. by cmk --notify
 def in_extraconf_servicelist(servicelist, service):
-    return _in_servicematcher_list(tuple_rulesets.convert_pattern_list(servicelist), service)
-
-
-def _in_servicematcher_list(service_conditions, item):
-    # type: (Tuple[bool, Pattern[Text]], Text) -> bool
-    negate, pattern = service_conditions
-    if pattern.match(item) is not None:
-        return not negate
-    return negate
+    return tuple_rulesets.in_servicematcher_list(
+        tuple_rulesets.convert_pattern_list(servicelist), service)
 
 
 #.
@@ -2992,46 +2985,21 @@ class ConfigCache(object):
         match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=None)
         return self.ruleset_matcher.is_matching_host_ruleset(match_object, ruleset)
 
-    def service_extra_conf(self, hostname, service, ruleset):
+    def service_extra_conf(self, hostname, description, ruleset):
         """Compute outcome of a service rule set that has an item."""
-        return list(self._match_service_ruleset(hostname, service, ruleset, is_binary=False))
+        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=description)
+        return list(
+            self.ruleset_matcher.get_service_ruleset_values(match_object, ruleset, is_binary=False))
 
-    def service_extra_conf_merged(self, hostname, service, ruleset):
-        rule_dict = {}
-        for rule in self.service_extra_conf(hostname, service, ruleset):
-            for key, value in rule.items():
-                rule_dict.setdefault(key, value)
-        return rule_dict
+    def service_extra_conf_merged(self, hostname, description, ruleset):
+        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=description)
+        return self.ruleset_matcher.get_service_ruleset_merged_dict(match_object, ruleset)
 
     def in_boolean_serviceconf_list(self, hostname, description, ruleset):
         # type: (str, Text, List) -> bool
         """Compute outcome of a service rule set that just say yes/no"""
-        for value in self._match_service_ruleset(hostname, description, ruleset, is_binary=True):
-            return value
-        return False  # no match. Do not ignore
-
-    def _match_service_ruleset(self, hostname, description, ruleset, is_binary):
-        # type: (str, Text, List, bool) -> Generator
-
-        # When the requested host is part of the local sites configuration,
-        # then use only the sites hosts for processing the rules
-        with_foreign_hosts = hostname not in self._all_processed_hosts
-        optimized_ruleset = self.ruleset_matcher.ruleset_optimizer.get_service_ruleset(
-            ruleset, with_foreign_hosts, is_binary=is_binary)
-
-        for value, hosts, service_conditions in optimized_ruleset:
-            if hostname not in hosts:
-                continue
-
-            descr_cache_id = description, service_conditions
-            if descr_cache_id in self._service_match_cache:
-                match = self._service_match_cache[descr_cache_id]
-            else:
-                match = _in_servicematcher_list(service_conditions, description)
-                self._service_match_cache[descr_cache_id] = match
-
-            if match:
-                yield value
+        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=description)
+        return self.ruleset_matcher.is_matching_service_ruleset(match_object, ruleset)
 
     def all_processed_hosts(self):
         # type: () -> Set[str]

@@ -146,13 +146,13 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@if not "$(VS_DEPLOY)" == "YES" goto skip_copy
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 check_watest.cmd watest
-@:DoNotCopy
-      </Command>
+@:skip_copy
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -187,13 +187,13 @@ check_watest.cmd watest
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@if not "$(VS_DEPLOY)" == "YES" goto skip_copy
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 check_watest.cmd watest
-@:DoNotCopy
-      </Command>
+@:skip_copy
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -230,13 +230,13 @@ check_watest.cmd watest
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@if not "$(VS_DEPLOY)" == "YES" goto skip_copy
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 check_watest.cmd watest
-@:DoNotCopy
-      </Command>
+@:skip_copy
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -273,13 +273,13 @@ check_watest.cmd watest
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@if not "$(VS_DEPLOY)" == "YES" goto skip_copy
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 check_watest.cmd watest
-@:DoNotCopy
-      </Command>
+@:skip_copy
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

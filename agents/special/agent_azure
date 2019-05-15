@@ -36,6 +36,7 @@ Special agent for monitoring azure cloud applications with Check_MK.
 #
 
 import json
+import time
 import datetime
 import calendar
 import string
@@ -59,6 +60,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.monitor.models.error_response import ErrorResponseException
 from azure.mgmt.compute import ComputeManagementClient
+from azure.mgmt.consumption import ConsumptionManagementClient  # pylint: disable=import-error,no-name-in-module
 from azure.common.credentials import ServicePrincipalCredentials
 logging.getLogger().handlers.pop()
 
@@ -400,6 +402,14 @@ class LabelsSection(Section):
         super(LabelsSection, self).__init__("labels", [piggytarget], separator=0, options=[])
 
 
+class UsageSection(Section):
+    def __init__(self, usage_details, piggytargets, cacheinfo):
+        options = ['cached(%d,%d)' % cacheinfo]
+        super(UsageSection, self).__init__(
+            'azure_%s' % usage_details.section, piggytargets, separator=124, options=options)
+        self.add(usage_details.dumpinfo())
+
+
 class IssueCollecter(object):
     def __init__(self):
         super(IssueCollecter, self).__init__()
@@ -624,6 +634,46 @@ class MetricCache(DataCache):
         return metrics
 
 
+class UsageClient(DataCache):
+    def __init__(self, credentials, subscription, debug=False):
+        super(UsageClient, self).__init__(
+            AZURE_CACHE_FILE_PATH, "%s-usage" % subscription, debug=debug)
+        self.client = ConsumptionManagementClient(credentials, subscription)
+
+    @property
+    def cache_interval(self):
+        midnight = NOW.combine(NOW.date(), datetime.time(0))
+        return (NOW - midnight).seconds
+
+    def get_validity_from_args(self, *args):
+        return True
+
+    def get_live_data(self):  # pylint: disable=arguments-differ
+        LOG.debug("UsageClient: get live data")
+
+        # (mo) I am unable to get the filter for usage_end working :-(
+        unfiltered_usages = list(self.client.usage_details.list())
+
+        yesterday = NOW.toordinal() - 1
+        usages = [u.as_dict() for u in unfiltered_usages if u.usage_end.toordinal() == yesterday]
+
+        # add group info:
+        for usage in usages:
+            match = AzureResource.ID_PATTERN.match(usage["instance_id"])
+            group = match.group("group")
+            if group:
+                usage["group"] = group
+
+        return usages
+
+    def write_sections(self, monitored_groups):
+        cacheinfo = (self.cache_timestamp or time.time(), self.cache_interval)
+        for usage_details in self.get_data():
+            usage_resource = AzureResource(usage_details)
+            piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + ['']
+            UsageSection(usage_resource, piggytargets, cacheinfo).write()
+
+
 def gather_metrics(client, resource):
     '''
     Gather all metrics for a resource. These metrics have different time
@@ -708,6 +758,9 @@ def main(argv=None):
         client.init_specific(resources)
         monitored_groups = sorted(set(r.info['group'] for r in resources))
         write_group_info(client, monitored_groups)
+
+        usage_client = UsageClient(credentials, args.subscription, args.debug)
+        usage_client.write_sections(monitored_groups)
 
         func_args = ((resource, client) for resource in resources)
         map_ = map if args.sequential else AsyncMapper(args.timeout, args.debug)

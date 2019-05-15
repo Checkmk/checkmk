@@ -62,9 +62,6 @@ import cmk_base.piggyback as piggyback
 import cmk_base.snmp_utils
 from cmk_base.discovered_labels import DiscoveredHostLabelsStore
 
-# TODO: Cleanup call sites later
-get_rule_options = tuple_rulesets.get_rule_options
-
 # TODO: Prefix helper functions with "_".
 
 # This is mainly needed for pylint to detect all available
@@ -883,7 +880,7 @@ def service_depends_on(hostname, servicedesc):
     deps = []
     config_cache = get_config_cache()
     for entry in service_dependencies:
-        entry, rule_options = get_rule_options(entry)
+        entry, rule_options = tuple_rulesets.get_rule_options(entry)
         if rule_options.get("disabled"):
             continue
 
@@ -1070,7 +1067,6 @@ def get_http_proxy(http_proxy):
 #   | Code for calculating the host condition matching of rules            |
 #   '----------------------------------------------------------------------'
 
-in_extraconf_hostlist = tuple_rulesets.in_extraconf_hostlist
 hosttags_match_taglist = tuple_rulesets.hosttags_match_taglist
 
 
@@ -3249,7 +3245,7 @@ class CEEConfigCache(ConfigCache):
         entries = []
 
         for rule in ruleset:
-            rule, _rule_options = get_rule_options(rule)
+            rule, _rule_options = tuple_rulesets.get_rule_options(rule)
             item, tags, hostlist = self.ruleset_matcher.ruleset_optimizer.parse_host_rule(
                 rule, is_binary=False)
             if tags and not tuple_rulesets.hosttags_match_taglist([], tags):

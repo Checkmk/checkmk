@@ -116,6 +116,7 @@ import cmk.utils.paths as _paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex  # pylint: disable=unused-import
 import cmk.utils.render as render
+import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
@@ -222,12 +223,12 @@ def host_extra_conf_merged(hostname, conf):
 
 
 # TODO: Only used by logwatch check. Can we clean this up?
-get_rule_options = _config.get_rule_options
+get_rule_options = _tuple_rulesets.get_rule_options
 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
-in_extraconf_hostlist = _config.in_extraconf_hostlist
-hosttags_match_taglist = _config.hosttags_match_taglist
+in_extraconf_hostlist = _tuple_rulesets.in_extraconf_hostlist
+hosttags_match_taglist = _tuple_rulesets.hosttags_match_taglist
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to

@@ -193,24 +193,24 @@ def test_all_matching_hosts(ts):
 
 
 def test_in_extraconf_hostlist():
-    assert config.in_extraconf_hostlist(tuple_rulesets.ALL_HOSTS, "host1") is True
-    assert config.in_extraconf_hostlist([], "host1") is False
+    assert tuple_rulesets.in_extraconf_hostlist(tuple_rulesets.ALL_HOSTS, "host1") is True
+    assert tuple_rulesets.in_extraconf_hostlist([], "host1") is False
 
-    assert config.in_extraconf_hostlist(["host2", "host1"], "host1") is True
-    assert config.in_extraconf_hostlist(["host1", "host2"], "host1") is True
+    assert tuple_rulesets.in_extraconf_hostlist(["host2", "host1"], "host1") is True
+    assert tuple_rulesets.in_extraconf_hostlist(["host1", "host2"], "host1") is True
 
-    assert config.in_extraconf_hostlist(["host1"], "host1") is True
-    assert config.in_extraconf_hostlist(["!host1", "host1", "!host1"], "host1") is False
-    assert config.in_extraconf_hostlist(["!host1"], "host1") is False
-    assert config.in_extraconf_hostlist(["!host2"], "host1") is False
-    assert config.in_extraconf_hostlist(["host1", "!host2"], "host1") is True
-    assert config.in_extraconf_hostlist(["!host2", "host1"], "host1") is True
-    assert config.in_extraconf_hostlist(["~h"], "host1") is True
-    assert config.in_extraconf_hostlist(["~h"], "host1") is True
-    assert config.in_extraconf_hostlist(["~h$"], "host1") is False
-    assert config.in_extraconf_hostlist(["~1"], "host1") is False
-    assert config.in_extraconf_hostlist(["~.*1"], "host1") is True
-    assert config.in_extraconf_hostlist(["~.*1$"], "host1") is True
+    assert tuple_rulesets.in_extraconf_hostlist(["host1"], "host1") is True
+    assert tuple_rulesets.in_extraconf_hostlist(["!host1", "host1", "!host1"], "host1") is False
+    assert tuple_rulesets.in_extraconf_hostlist(["!host1"], "host1") is False
+    assert tuple_rulesets.in_extraconf_hostlist(["!host2"], "host1") is False
+    assert tuple_rulesets.in_extraconf_hostlist(["host1", "!host2"], "host1") is True
+    assert tuple_rulesets.in_extraconf_hostlist(["!host2", "host1"], "host1") is True
+    assert tuple_rulesets.in_extraconf_hostlist(["~h"], "host1") is True
+    assert tuple_rulesets.in_extraconf_hostlist(["~h"], "host1") is True
+    assert tuple_rulesets.in_extraconf_hostlist(["~h$"], "host1") is False
+    assert tuple_rulesets.in_extraconf_hostlist(["~1"], "host1") is False
+    assert tuple_rulesets.in_extraconf_hostlist(["~.*1"], "host1") is True
+    assert tuple_rulesets.in_extraconf_hostlist(["~.*1$"], "host1") is True
 
 
 # TODO: in_binary_hostlist

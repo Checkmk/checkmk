@@ -151,7 +151,8 @@
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 check_watest.cmd watest
-@:DoNotCopy</Command>
+@:DoNotCopy
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -191,7 +192,8 @@ check_watest.cmd watest
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 check_watest.cmd watest
-@:DoNotCopy</Command>
+@:DoNotCopy
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -233,7 +235,8 @@ check_watest.cmd watest
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 check_watest.cmd watest
-@:DoNotCopy</Command>
+@:DoNotCopy
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -275,7 +278,8 @@ check_watest.cmd watest
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
 check_watest.cmd watest
-@:DoNotCopy</Command>
+@:DoNotCopy
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

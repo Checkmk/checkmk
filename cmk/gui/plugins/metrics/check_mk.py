@@ -1471,6 +1471,18 @@ metric_info["fs_provisioning"] = {
     "color": "#ff8000",
 }
 
+metric_info["uncommitted"] = {
+    "title": _("Uncommitted"),
+    "unit": "bytes",
+    "color": "16/a",
+}
+
+metric_info["overprovisioned"] = {
+    "title": _("Overprovisioned"),
+    "unit": "bytes",
+    "color": "24/a",
+}
+
 metric_info["temp"] = {
     "title": _("Temperature"),
     "unit": "c",
@@ -6423,6 +6435,12 @@ df_translation = {
     "trend_hoursleft": {
         "scale": 3600,
     },
+    "uncommitted": {
+        "scale": MB,
+    },
+    "overprovisioned": {
+        "scale": MB,
+    },
 }
 
 check_metrics["check_mk-df"] = df_translation
@@ -8239,6 +8257,37 @@ perfometer_info.append({
     ],
     "total": 100,
     "label": ("fs_used(%)", "%"),
+})
+
+# Filesystem check without overcommittment
+perfometer_info.append({
+    "type": "linear",
+    "condition": "fs_used,uncommitted,+,fs_size,<",
+    "segments": [
+        "fs_used",
+        "uncommitted",
+        "fs_size,fs_used,-,uncommitted,-#e3fff9",  # free
+        "0.1#559090",  # fs_size marker
+    ],
+    "total": "fs_size",
+    "label": ("fs_used(%)", "%"),
+})
+
+# Filesystem check with overcommittment
+perfometer_info.append({
+    "type": "linear",
+    "condition": "fs_used,uncommitted,+,fs_size,>=",
+    "segments": [
+        "fs_used",
+        "fs_size,fs_used,-#e3fff9",  # free
+        "0.1#559090",  # fs_size marker
+        "overprovisioned,fs_size,-#ffa000",  # overcommittment
+    ],
+    "total": "overprovisioned",
+    "label": (
+        "fs_used,fs_used,uncommitted,+,/,100,*",  # percent used scaled
+        "%",
+    ),
 })
 
 # Filesystem without over-provisioning

@@ -1070,12 +1070,6 @@ def get_http_proxy(http_proxy):
 #   | Code for calculating the host condition matching of rules            |
 #   '----------------------------------------------------------------------'
 
-
-def all_matching_hosts(tags, hostlist, with_foreign_hosts):
-    return get_config_cache().ruleset_matcher.ruleset_optimizer.all_matching_hosts(
-        tags, hostlist, with_foreign_hosts)
-
-
 in_extraconf_hostlist = tuple_rulesets.in_extraconf_hostlist
 hosttags_match_taglist = tuple_rulesets.hosttags_match_taglist
 

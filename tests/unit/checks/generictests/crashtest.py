@@ -95,7 +95,7 @@ class CrashDataset(WritableDataset):
         init_dict['info'] = local_vars.get('info')
         self.vars = local_vars
         self.crash_id = crash_report_fn[-20:-7]
-        filepath = '/tmp/tmp_testfile_%s_%s.py' % (checkname, self.crash_id)
+        filepath = '/tmp/testfile_%s_%s.py' % (checkname, self.crash_id)
         super(CrashDataset, self).__init__(filepath, init_dict)
 
     def __repr__(self):

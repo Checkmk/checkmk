@@ -1,0 +1,13 @@
+Title: solaris_services: Fixed discovery rule matching
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0p17
+Date: 1558013039
+Class: fix
+
+The discovery rule for Solaris services was broken such that
+all these rules matched on all hosts and Solaris services were
+generated if the agent data contained the Solaris services section.
+Please rediscover the affected hosts.

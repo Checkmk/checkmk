@@ -101,8 +101,7 @@ def inventory_solaris_services(parsed):
         return "%s/%s:%s" % (svc_attrs["category"], svc_attrs["name"], svc_attrs["instance"])
 
     services = {}
-    for rule in inventory_solaris_services_rules:
-        settings = rule[0]
+    for settings in host_extra_conf(host_name(), inventory_solaris_services_rules):
         descriptions = settings.get("descriptions", [])
         categories = settings.get("categories", [])
         names = settings.get("names", [])

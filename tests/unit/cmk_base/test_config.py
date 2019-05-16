@@ -1133,6 +1133,18 @@ def test_host_config_parents(cluster_config):
     assert cluster_config.get_host_config("cluster1").parents == []
 
 
+def test_config_cache_tag_list_of_host(monkeypatch):
+    ts = Scenario()
+    ts.add_host("test-host", tags={"agent": "no-agent"})
+    ts.add_host("xyz")
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.tag_list_of_host("xyz") == set([
+        '/wato/', 'lan', 'ip-v4', 'cmk-agent', 'no-snmp', 'tcp', 'auto-piggyback', 'ip-v4-only',
+        'site:unit', 'prod'
+    ])
+
+
 def test_host_tags_default():
     assert isinstance(config.host_tags, dict)
 

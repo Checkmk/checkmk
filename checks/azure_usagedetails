@@ -30,15 +30,16 @@ factory_settings['levels_azure_usagedetails'] = {}
 def parse_azure_usagedetails(info):
     parsed = {}
     for detail in parse_azure(info).values():
-        service_name = detail['consumed_service']
+        props = detail['properties']
+        service_name = props['consumedService']
         data = parsed.setdefault(
             service_name, {
                 'costs': collections.Counter(),
                 'usage': 0.0,
-                'subscription_name': detail["subscription_name"],
+                'subscription_name': props["subscriptionName"],
             })
-        data['costs'].update({detail['currency']: detail['pretax_cost']})
-        data['usage'] += detail['usage_quantity']
+        data['costs'].update({props['currency']: props['pretaxCost']})
+        data['usage'] += props['usageQuantity']
 
     parsed[u"Summary"] = {
         'costs': sum((d['costs'] for d in parsed.values()), collections.Counter()),

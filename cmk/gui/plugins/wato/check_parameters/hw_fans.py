@@ -87,7 +87,7 @@ class RulespecCheckgroupParametersHwFans(CheckParameterRulespecWithItem):
                 ("output_metrics",
                  Checkbox(title=_("Performance data"), label=_("Enable performance data"))),
             ],
-            optional_keys=["upper"],
+            optional_keys=["upper", "output_metrics"],
         )
 
     @property

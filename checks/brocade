@@ -115,7 +115,7 @@ check_info["brocade.power"] = {
     'snmp_scan_function': brocade_scan,
 }
 
-factory_settings["brocade_temp_default_levels"] = {"levels": (55, 60)}
+factory_settings["brocade_temp_default_levels"] = {"levels": (55.0, 60.0)}
 
 
 def inventory_brocade_temp(info):

@@ -22,13 +22,13 @@ def test_transform_tuple_ruleset():
         {
             "value": "VAL1",
             "condition": {
-                "host_name": "HOSTLIST1",
+                "host_name": ["HOSTLIST1"],
             }
         },
         {
             "value": "VAL2",
             "condition": {
-                "host_name": "HOSTLIST2",
+                "host_name": ["HOSTLIST2"],
             }
         },
     ]
@@ -40,7 +40,7 @@ def test_transform_mixed_ruleset():
         {
             "value": "VAL",
             "condition": {
-                "host_name": "HOSTLIST"
+                "host_name": ["HOSTLIST"],
             },
         },
     ]
@@ -52,13 +52,13 @@ def test_transform_mixed_ruleset():
         {
             "value": "VAL1",
             "condition": {
-                "host_name": "HOSTLIST1",
+                "host_name": ["HOSTLIST1"],
             }
         },
         {
             "value": "VAL",
             "condition": {
-                "host_name": "HOSTLIST"
+                "host_name": ["HOSTLIST"],
             },
         },
     ]
@@ -97,7 +97,7 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_name": "HOSTLIST"
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -109,9 +109,7 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_name": {
-                    "$in": []
-                }
+                "host_name": [],
             },
         },
     ),
@@ -123,9 +121,7 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_name": {
-                    "$in": ["HOST1", "HOST2"]
-                }
+                "host_name": ["HOST1", "HOST2"],
             },
         },
     ),
@@ -137,9 +133,9 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_name": {
-                    "$regex": "^REGEX"
-                }
+                "host_name": [{
+                    "$regex": "REGEX"
+                },]
             },
         },
     ),
@@ -151,16 +147,12 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "$or": [
+                "host_name": [
                     {
-                        "host_name": {
-                            "$regex": "^REGEX"
-                        },
+                        "$regex": "REGEX"
                     },
                     {
-                        "host_name": {
-                            "$regex": "^2REGEX"
-                        },
+                        "$regex": "2REGEX"
                     },
                 ],
             },
@@ -175,7 +167,7 @@ NON_BINARY_HOST_RULESET = [
             "value": "VAL",
             "condition": {
                 "host_name": {
-                    "$nin": ["HOST1", "HOST2"],
+                    "$nor": ["HOST1", "HOST2"]
                 },
             },
         },
@@ -189,7 +181,7 @@ NON_BINARY_HOST_RULESET = [
             "value": "VAL",
             "condition": {
                 "host_name": {
-                    "$ne": "HOST1",
+                    "$nor": ["HOST1"]
                 },
             },
         },
@@ -203,9 +195,9 @@ NON_BINARY_HOST_RULESET = [
             "value": "VAL",
             "condition": {
                 "host_name": {
-                    "$not": {
-                        "$regex": "^HOST1"
-                    },
+                    "$nor": [{
+                        "$regex": "HOST1"
+                    },],
                 },
             },
         },
@@ -218,15 +210,12 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "$or": [{
-                    "host_name": {
-                        "$regex": "^HOST1"
+                "host_name": [
+                    {
+                        "$regex": "HOST1"
                     },
-                }, {
-                    "host_name": {
-                        "$eq": "HOST2"
-                    },
-                }],
+                    "HOST2",
+                ],
             },
         },
     ),
@@ -238,15 +227,14 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "$nor": [{
-                    "host_name": {
-                        "$regex": "^HOST1"
-                    },
-                }, {
-                    "host_name": {
-                        "$eq": "HOST2"
-                    },
-                }],
+                "host_name": {
+                    "$nor": [
+                        {
+                            "$regex": "HOST1"
+                        },
+                        "HOST2",
+                    ],
+                },
             },
         },
     ),
@@ -258,9 +246,11 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_name": "HOSTLIST",
-                "host_tags.tg_group1": "tag",
-                "host_tags.tg_group2": "specs",
+                "host_name": ["HOSTLIST"],
+                "host_tags": {
+                    "tg_group1": "tag",
+                    "tg_group2": "specs",
+                },
             }
         },
     ),
@@ -272,12 +262,12 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_name": "HOSTLIST",
-                "host_folder": {
-                    "$regex": "^/aaa/"
+                "host_name": ["HOSTLIST"],
+                "host_folder": "/aaa/",
+                "host_tags": {
+                    "tg_group1": "tag",
+                    "tg_group2": "specs",
                 },
-                "host_tags.tg_group1": "tag",
-                "host_tags.tg_group2": "specs",
             }
         },
     ),
@@ -289,8 +279,10 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_tags.tg_group1": "tag",
-                "host_tags.tg_group2": "specs",
+                "host_tags": {
+                    "tg_group1": "tag",
+                    "tg_group2": "specs",
+                },
             }
         },
     ),
@@ -305,7 +297,7 @@ BINARY_HOST_RULESET = [
         new={
             "value": True,
             "condition": {
-                "host_name": "HOSTLIST",
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -333,7 +325,7 @@ BINARY_HOST_RULESET = [
         new={
             "value": False,
             "condition": {
-                "host_name": "HOSTLIST",
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -349,8 +341,10 @@ BINARY_HOST_RULESET = [
         new={
             "value": False,
             "condition": {
-                "host_name": "HOSTLIST",
-                "host_tags.TG1": "TAG1",
+                "host_name": ["HOSTLIST"],
+                "host_tags": {
+                    "TG1": "TAG1"
+                },
             },
         },
     ),
@@ -362,11 +356,13 @@ BINARY_HOST_RULESET = [
         new={
             "value": True,
             "condition": {
-                'host_tags.TG1': {
-                    '$ne': 'TAG1'
-                },
-                'host_tags.TG2': {
-                    '$ne': 'TAG2'
+                "host_tags": {
+                    "TG1": {
+                        '$ne': 'TAG1'
+                    },
+                    'TG2': {
+                        '$ne': 'TAG2'
+                    },
                 },
             },
         },
@@ -382,10 +378,10 @@ NON_BINARY_SERVICE_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "service_description": {
-                    "$regex": "^SVC"
-                },
-                "host_name": "HOST",
+                "service_description": [{
+                    "$regex": "SVC"
+                }],
+                "host_name": ["HOST"],
             },
         },
     ),
@@ -398,11 +394,11 @@ NON_BINARY_SERVICE_RULESET = [
             "value": "VAL",
             "condition": {
                 "service_description": {
-                    "$not": {
-                        "$regex": "^SVC"
-                    }
+                    "$nor": [{
+                        "$regex": "SVC"
+                    }]
                 },
-                "host_name": "HOST",
+                "host_name": ["HOST"],
             },
         },
     ),
@@ -414,16 +410,15 @@ NON_BINARY_SERVICE_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC"
+                "service_description": [
+                    {
+                        "$regex": "SVC"
                     },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
+                    {
+                        "$regex": "LIST"
                     },
-                }],
-                "host_name": "HOSTLIST",
+                ],
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -435,10 +430,8 @@ NON_BINARY_SERVICE_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "service_description": {
-                    "$in": [],
-                },
-                "host_name": "HOSTLIST",
+                "service_description": [],
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -450,16 +443,15 @@ NON_BINARY_SERVICE_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC$"
+                "service_description": [
+                    {
+                        "$regex": "SVC$"
                     },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
+                    {
+                        "$regex": "LIST"
                     },
-                }],
-                "host_name": "HOSTLIST",
+                ],
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -471,15 +463,13 @@ NON_BINARY_SERVICE_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "$nor": [{
-                    "service_description": {
-                        "$regex": "^SVC"
-                    },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
-                    },
-                }],
+                "service_description": {
+                    "$nor": [{
+                        "$regex": "SVC"
+                    }, {
+                        "$regex": "LIST"
+                    }],
+                }
             },
         },
     ),
@@ -494,17 +484,18 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": True,
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC"
+                "service_description": [
+                    {
+                        "$regex": "SVC"
                     },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
+                    {
+                        "$regex": "LIST"
                     },
-                }],
-                "host_name": "HOSTLIST",
-                "host_tags.TG1": "TAG1",
+                ],
+                "host_name": ["HOSTLIST"],
+                "host_tags": {
+                    "TG1": "TAG1"
+                },
             },
         },
     ),
@@ -516,16 +507,15 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": True,
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC"
+                "service_description": [
+                    {
+                        "$regex": "SVC"
                     },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
+                    {
+                        "$regex": "LIST"
                     },
-                }],
-                "host_name": "HOSTLIST",
+                ],
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -537,8 +527,10 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": True,
             "condition": {
-                "host_name": "HOSTLIST",
-                "host_tags.TG1": "TAG1",
+                "host_name": ["HOSTLIST"],
+                "host_tags": {
+                    "TG1": "TAG1"
+                },
             },
         },
     ),
@@ -550,16 +542,12 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": False,
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC"
-                    },
+                "service_description": [{
+                    "$regex": "SVC"
                 }, {
-                    "service_description": {
-                        "$regex": "^LIST"
-                    },
+                    "$regex": "LIST"
                 }],
-                "host_name": "HOSTLIST",
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -571,17 +559,18 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": False,
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC"
+                "service_description": [
+                    {
+                        "$regex": "SVC"
                     },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
+                    {
+                        "$regex": "LIST"
                     },
-                }],
-                "host_name": "HOSTLIST",
-                "host_tags.TG1": "TAG1",
+                ],
+                "host_name": ["HOSTLIST"],
+                "host_tags": {
+                    "TG1": "TAG1"
+                },
             },
         },
     ),
@@ -593,18 +582,12 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": False,
             "condition": {
-                '$or': [{
-                    'service_description': {
-                        '$regex': '^SVC'
-                    }
+                'service_description': [{
+                    '$regex': 'SVC'
                 }, {
-                    'service_description': {
-                        '$regex': '^LIST'
-                    }
+                    '$regex': 'LIST'
                 }],
-                'host_name': {
-                    '$in': ['HOST', 'LIST']
-                }
+                'host_name': ['HOST', 'LIST']
             }
         },
     ),
@@ -616,28 +599,20 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": False,
             "condition": {
-                '$and': [
+                'host_name': [
                     {
-                        '$or': [{
-                            'host_name': {
-                                '$regex': '^HOST'
-                            },
-                        }, {
-                            'host_name': {
-                                '$regex': '^LIST'
-                            },
-                        }]
+                        '$regex': 'HOST'
                     },
                     {
-                        '$or': [{
-                            'service_description': {
-                                '$regex': '^SVC'
-                            }
-                        }, {
-                            'service_description': {
-                                '$regex': '^LIST'
-                            }
-                        }]
+                        '$regex': 'LIST'
+                    },
+                ],
+                'service_description': [
+                    {
+                        '$regex': 'SVC'
+                    },
+                    {
+                        '$regex': 'LIST'
                     },
                 ]
             }
@@ -652,30 +627,26 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": False,
             "condition": {
-                '$and': [
-                    {
-                        '$nor': [{
-                            'host_name': {
-                                '$regex': '^HOST'
-                            },
-                        }, {
-                            'host_name': {
-                                '$regex': '^LIST'
-                            },
-                        }]
-                    },
-                    {
-                        '$nor': [{
-                            'service_description': {
-                                '$regex': '^SVC'
-                            }
-                        }, {
-                            'service_description': {
-                                '$regex': '^LIST'
-                            }
-                        }]
-                    },
-                ]
+                'host_name': {
+                    "$nor": [
+                        {
+                            '$regex': 'HOST'
+                        },
+                        {
+                            '$regex': 'LIST'
+                        },
+                    ]
+                },
+                'service_description': {
+                    "$nor": [
+                        {
+                            '$regex': 'SVC'
+                        },
+                        {
+                            '$regex': 'LIST'
+                        },
+                    ]
+                },
             }
         },
     ),

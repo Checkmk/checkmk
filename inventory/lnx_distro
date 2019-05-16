@@ -185,6 +185,12 @@ def inv_lnx_parse_debian(node, line):
         node["code_name"] = "Wheezy"
     elif entry.startswith("8."):
         node["code_name"] = "Jessie"
+    elif entry.startswith("9."):
+        node["code_name"] = "Stretch"
+    elif entry.startswith("10."):
+        node["code_name"] = "Buster"
+    elif entry.startswith("11."):
+        node["code_name"] = "Bullseye"
 
 
 def inv_lnx_parse_cma(node, line):

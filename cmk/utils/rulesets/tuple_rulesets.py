@@ -637,29 +637,6 @@ class RulesetToDictTransformer(object):
         # Rest is host list or tag list + host list
         host_condition = self._transform_host_conditions(tuple_rule)
 
-        if "$or" in service_condition and "$or" in host_condition:
-            rule["condition"] = {
-                "$and": [
-                    {
-                        "$or": host_condition.pop("$or")
-                    },
-                    {
-                        "$or": service_condition.pop("$or")
-                    },
-                ]
-            }
-        elif "$nor" in service_condition and "$nor" in host_condition:
-            rule["condition"] = {
-                "$and": [
-                    {
-                        "$nor": host_condition.pop("$nor")
-                    },
-                    {
-                        "$nor": service_condition.pop("$nor")
-                    },
-                ]
-            }
-
         rule["condition"].update(service_condition)
         rule["condition"].update(host_condition)
 
@@ -670,7 +647,7 @@ class RulesetToDictTransformer(object):
             return {}
 
         if not item_list:
-            return {"service_description": {"$in": []}}
+            return {"service_description": []}
 
         sub_conditions = []
 
@@ -685,13 +662,20 @@ class RulesetToDictTransformer(object):
 
         # Construct list of all item conditions
         for check_item in item_list:
-            if check_item[0] == '!':  # strip negate character
-                check_item = check_item[1:]
-            check_item = "^" + check_item
-            sub_conditions.append({"service_description": {"$regex": check_item}})
+            if negate:
+                if check_item[0] == '!':  # strip negate character
+                    check_item = check_item[1:]
+                else:
+                    raise NotImplementedError(
+                        "Mixed negate / not negated rule found but not supported")
+            elif check_item[0] == '!':
+                raise NotImplementedError("Mixed negate / not negated rule found but not supported")
 
-        return self._build_sub_condition("service_description", negate, "$regex", check_item,
-                                         sub_conditions)
+            sub_conditions.append({"$regex": check_item})
+
+        if negate:
+            return {"service_description": {"$nor": sub_conditions}}
+        return {"service_description": sub_conditions}
 
     def _transform_host_conditions(self, tuple_rule):
         if len(tuple_rule) == 1:
@@ -711,7 +695,7 @@ class RulesetToDictTransformer(object):
             return {}
 
         if not host_list:
-            return {"host_name": {"$in": []}}
+            return {"host_name": []}
 
         sub_conditions = []
 
@@ -724,24 +708,14 @@ class RulesetToDictTransformer(object):
         if negate and host_list[-1] == ALL_HOSTS[0]:
             host_list = host_list[:-1]
 
-        num_conditions = len(host_list)
-        has_regex = self._host_list_has_regex(host_list)
-
-        # Simplify case where we only have full host name matches
-        if not has_regex and num_conditions > 1:
-            list_op = "$nin" if negate else "$in"
-            return {"host_name": {list_op: [h.lstrip("!") for h in host_list]}}
-
         # Construct list of all host item conditions
         for check_item in host_list:
             if check_item[0] == '!':  # strip negate character
                 check_item = check_item[1:]
 
             if check_item[0] == '~':
-                check_item = "^" + check_item[1:]
-                regex_match = True
-            else:
-                regex_match = False
+                sub_conditions.append({"$regex": check_item[1:]})
+                continue
 
             if check_item == CLUSTER_HOSTS[0]:
                 raise MKGeneralException(
@@ -756,49 +730,23 @@ class RulesetToDictTransformer(object):
                     "automatically to the new format. Please check out your configuration and "
                     "replace the rules in question.")
 
-            sub_op = "$regex" if regex_match else "$eq"
+            sub_conditions.append(check_item)
 
-            sub_conditions.append({"host_name": {sub_op: check_item}})
-
-        return self._build_sub_condition("host_name", negate, sub_op, check_item, sub_conditions)
-
-    def _host_list_has_regex(self, host_list):
-        for check_item in host_list:
-            if check_item[0] == '!':  # strip negate character
-                check_item = check_item[1:]
-
-            if check_item[0] == '~':
-                return True
-        return False
-
-    def _build_sub_condition(self, field, negate, sub_op, check_item, sub_conditions):
-        """This function simplifies the constructed conditions
-
-        - The or/nor condition is skipped where we only have a single condition
-        - "$eq" is skipped where we only have a simple field equality match
-        """
-        if len(sub_conditions) == 1:
-            if sub_op == "$eq":
-                return {field: {"$ne": check_item} if negate else check_item}
-            if sub_op == "$regex":
-                if negate:
-                    return {field: {"$not": {"$regex": check_item}}}
-                return sub_conditions[0]
-            raise NotImplementedError()
-
-        op = "$nor" if negate else "$or"
-        return {op: sub_conditions}
+        if negate:
+            return {"host_name": {"$nor": sub_conditions}}
+        return {"host_name": sub_conditions}
 
     def _transform_host_tags(self, host_tags):
         if not host_tags:
             return {}
 
         conditions = {}
+        tag_conditions = {}
         for tag_id in host_tags:
             # Folder is either not present (main folder) or in this format
             # "/abc/+" which matches on folder "abc" and all subfolders.
             if tag_id.startswith("/"):
-                conditions["host_folder"] = {"$regex": "^%s" % tag_id.rstrip("+")}
+                conditions["host_folder"] = tag_id.rstrip("+")
                 continue
 
             negate = False
@@ -809,7 +757,10 @@ class RulesetToDictTransformer(object):
             # Assume it's an aux tag in case there is a tag configured without known group
             tag_group_id = self._tag_groups.get(tag_id, tag_id)
 
-            conditions["host_tags." + tag_group_id] = {"$ne": tag_id} if negate else tag_id
+            tag_conditions[tag_group_id] = {"$ne": tag_id} if negate else tag_id
+
+        if tag_conditions:
+            conditions["host_tags"] = tag_conditions
 
         return conditions
 

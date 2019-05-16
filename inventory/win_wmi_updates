@@ -70,7 +70,7 @@ def inv_win_wmi_updates(info):
         paclist.append({
             "name"          : "Windows Update " + knowledge_base,
             "version"       : knowledge_base,
-            "vendor"        : "Micorosoft " + description,
+            "vendor"        : "Microsoft " + description,
             "install_date"  : _parse_install_date(install_date_str),
             "package_type"  : "wmi",
         })

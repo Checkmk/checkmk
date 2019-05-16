@@ -1145,6 +1145,15 @@ def test_config_cache_tag_list_of_host(monkeypatch):
     ])
 
 
+def test_config_cache_tag_list_of_host_not_existing(monkeypatch):
+    ts = Scenario()
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.tag_list_of_host("not-existing") == set([
+        '/', 'lan', 'cmk-agent', 'no-snmp', 'auto-piggyback', 'ip-v4-only', 'site:NO_SITE', 'prod'
+    ])
+
+
 def test_host_tags_default():
     assert isinstance(config.host_tags, dict)
 

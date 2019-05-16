@@ -144,6 +144,29 @@ NON_BINARY_HOST_RULESET = [
         },
     ),
     Case(
+        ident="multi_host_regex",
+        is_service=False,
+        is_binary=False,
+        old=("VAL", ["~REGEX", "~2REGEX"]),
+        new={
+            "value": "VAL",
+            "condition": {
+                "$or": [
+                    {
+                        "host_name": {
+                            "$regex": "^REGEX"
+                        },
+                    },
+                    {
+                        "host_name": {
+                            "$regex": "^2REGEX"
+                        },
+                    },
+                ],
+            },
+        },
+    ),
+    Case(
         ident="hosts_negated",
         is_service=False,
         is_binary=False,

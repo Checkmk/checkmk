@@ -36,7 +36,7 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
         '_ADDRESS_6': '',
         '_ADDRESS_FAMILY': '4',
         '_FILENAME': '/wato/hosts.mk',
-        '_TAGS': 'auto-piggyback ip-v4 ip-v4-only lan no-agent no-snmp prod site:unit',
+        '_TAGS': '/wato/ auto-piggyback ip-v4 ip-v4-only lan no-agent no-snmp prod site:unit',
         u'__TAG_address_family': u'ip-v4-only',
         u'__TAG_agent': u'no-agent',
         u'__TAG_criticality': u'prod',

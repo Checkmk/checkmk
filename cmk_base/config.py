@@ -2821,7 +2821,7 @@ class ConfigCache(object):
         self._all_active_realhosts = set()
 
         # Reference hostname -> dirname including /
-        self._host_paths = {}
+        self._host_paths = self._get_host_paths(host_paths)
         # Reference dirname -> hosts in this dir including subfolders
         self._folder_host_lookup = {}
         # All used folders used for various set intersection operations
@@ -2871,6 +2871,16 @@ class ConfigCache(object):
         # Keep HostConfig instances created with the current configuration cache
         self._host_configs = {}
 
+    def _get_host_paths(self, config_host_paths):
+        """Reference hostname -> dirname including /"""
+        host_dirs = {}
+        for hostname, filename in config_host_paths.iteritems():
+            dirname_of_host = os.path.dirname(filename)
+            if dirname_of_host[-1] != "/":
+                dirname_of_host += "/"
+            host_dirs[hostname] = dirname_of_host
+        return host_dirs
+
     def _get_tag_to_group_map(self):
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return tuple_rulesets.get_tag_to_group_map(tags)
@@ -2891,14 +2901,16 @@ class ConfigCache(object):
 
     def _collect_hosttags(self):
         for hostname, tag_groups in host_tags.iteritems():
-            self._hosttags[hostname] = self._tag_groups_to_tag_list(tag_groups)
+            self._hosttags[hostname] = self._tag_groups_to_tag_list(
+                self._host_paths.get(hostname, "/"), tag_groups)
 
-    def _tag_groups_to_tag_list(self, tag_groups):
-        # type: (Dict[str, str]) -> Set[str]
+    def _tag_groups_to_tag_list(self, host_path, tag_groups):
+        # type: (str, Dict[str, str]) -> Set[str]
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
         # was the internal "site" tag that is created by HostAttributeSite.
         tags = set(v for k, v in tag_groups.iteritems() if k != "site")
+        tags.add(host_path)
         tags.add("site:%s" % tag_groups["site"])
         return tags
 
@@ -2914,7 +2926,7 @@ class ConfigCache(object):
             return self._hosttags[hostname]
 
         # Handle not existing hosts (No need to performance optimize this)
-        return self._tag_groups_to_tag_list(self.tags_of_host(hostname))
+        return self._tag_groups_to_tag_list(self.tags_of_host("/", hostname))
 
     # TODO: check all call sites and remove this or make it private?
     def tags_of_host(self, hostname):
@@ -3112,12 +3124,6 @@ class ConfigCache(object):
             1.0 * len(self._all_processed_hosts) / len(used_groups))
 
     def _initialize_host_lookup(self):
-        for hostname in self._all_configured_hosts:
-            dirname_of_host = os.path.dirname(host_paths[hostname])
-            if dirname_of_host[-1] != "/":
-                dirname_of_host += "/"
-            self._host_paths[hostname] = dirname_of_host
-
         # Determine hosts within folders
         dirnames = [
             x[0][len(cmk.utils.paths.check_mk_config_dir):] + "/+"

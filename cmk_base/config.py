@@ -2891,12 +2891,16 @@ class ConfigCache(object):
 
     def _collect_hosttags(self):
         for hostname, tag_groups in host_tags.iteritems():
-            # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
-            # but there was a single tag group added with it's leading tag group id. This
-            # was the internal "site" tag that is created by HostAttributeSite.
-            tags = set(v for k, v in tag_groups.iteritems() if k != "site")
-            tags.add("site:%s" % tag_groups["site"])
-            self._hosttags[hostname] = tags
+            self._hosttags[hostname] = self._tag_groups_to_tag_list(tag_groups)
+
+    def _tag_groups_to_tag_list(self, tag_groups):
+        # type: (Dict[str, str]) -> Set[str]
+        # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
+        # but there was a single tag group added with it's leading tag group id. This
+        # was the internal "site" tag that is created by HostAttributeSite.
+        tags = set(v for k, v in tag_groups.iteritems() if k != "site")
+        tags.add("site:%s" % tag_groups["site"])
+        return tags
 
     # Kept for compatibility with pre 1.6 sites
     # TODO: Clean up all call sites one day (1.7?)
@@ -2906,14 +2910,33 @@ class ConfigCache(object):
         """Returns the list of all configured tags of a host. In case
         a host has no tags configured or is not known, it returns an
         empty list."""
-        return self._hosttags[hostname]
+        if hostname in host_tags:
+            return self._hosttags[hostname]
+
+        # Handle not existing hosts (No need to performance optimize this)
+        return self._tag_groups_to_tag_list(self.tags_of_host(hostname))
 
     # TODO: check all call sites and remove this or make it private?
     def tags_of_host(self, hostname):
         """Returns the dict of all configured tag groups and values of a host
 
         In case you have a HostConfig object available better use HostConfig.tag_groups"""
-        return host_tags.get(hostname, {})
+        if hostname in host_tags:
+            return host_tags[hostname]
+
+        # Handle not existing hosts (No need to performance optimize this)
+        # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
+        # is currently responsible for calculating the host tags of a host.
+        # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
+        return {
+            'piggyback': 'auto-piggyback',
+            'networking': 'lan',
+            'agent': 'cmk-agent',
+            'criticality': 'prod',
+            'snmp_ds': 'no-snmp',
+            'site': cmk.omd_site(),
+            'address_family': 'ip-v4-only',
+        }
 
     def tags_of_service(self, hostname, svc_desc):
         """Returns the dict of all configured tags of a service

@@ -2782,6 +2782,7 @@ class ConfigCache(object):
     def initialize(self):
         self._initialize_caches()
         self._collect_hosttags()
+        self._setup_clusters_nodes_cache()
 
         # Converts pre 1.6 tuple rulesets in place to 1.6+ format
         self.tuple_transformer = tuple_rulesets.RulesetToDictTransformer(
@@ -2793,8 +2794,6 @@ class ConfigCache(object):
         self._all_configured_hosts = self._get_all_configured_hosts()
         # TODO: Clean this one up?
         self._initialize_host_lookup()
-
-        self._setup_clusters_nodes_cache()
 
         self._all_active_clusters = self._get_all_active_clusters()
         self._all_active_realhosts = self._get_all_active_realhosts()
@@ -3551,16 +3550,11 @@ class ConfigCache(object):
         return hosts
 
     def _setup_clusters_nodes_cache(self):
-        existing_hosts = self.all_configured_realhosts()
-
-        for cluster, nodes in clusters.items():
+        for cluster, hosts in clusters.items():
             clustername = cluster.split('|', 1)[0]
-            for name in nodes:
-                if name not in existing_hosts:
-                    continue
+            for name in hosts:
                 self._clusters_of_cache.setdefault(name, []).append(clustername)
-
-            self._nodes_of_cache[clustername] = [n for n in nodes if n in existing_hosts]
+            self._nodes_of_cache[clustername] = hosts
 
     def clusters_of(self, hostname):
         # type: (str) -> List[str]

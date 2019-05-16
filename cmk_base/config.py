@@ -2926,7 +2926,7 @@ class ConfigCache(object):
             return self._hosttags[hostname]
 
         # Handle not existing hosts (No need to performance optimize this)
-        return self._tag_groups_to_tag_list(self.tags_of_host("/", hostname))
+        return self._tag_groups_to_tag_list("/", self.tags_of_host(hostname))
 
     # TODO: check all call sites and remove this or make it private?
     def tags_of_host(self, hostname):

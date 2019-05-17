@@ -28,7 +28,7 @@
 #  along with Check_MK. If not, email to mk@mathias-kettner.de
 #  or write to the postal address provided at www.mathias-kettner.de
 
-CLANG_VERSION ?= 7
+CLANG_VERSION ?= 8
 
 CPPCHECK ?= cppcheck
 IWYU_TOOL ?= iwyu_tool

@@ -72,7 +72,7 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
                 return false;
             }
             return !any(row, auth_user, timezone_offset,
-                        [](const std::string &) { return true; });
+                        [](const std::string & /*unused*/) { return true; });
         case RelationalOperator::not_equal:
             if (!value().empty()) {
                 Informational(_column.logger())
@@ -80,7 +80,7 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
                 return false;
             }
             return any(row, auth_user, timezone_offset,
-                       [](const std::string &) { return true; });
+                       [](const std::string & /*unused*/) { return true; });
         case RelationalOperator::matches:
         case RelationalOperator::matches_icase:
             return any(

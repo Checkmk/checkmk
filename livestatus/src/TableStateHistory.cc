@@ -56,9 +56,13 @@
 #include "Host.h"     // IWYU pragma: keep
 #include "Service.h"  // IWYU pragma: keep
 #include "Timeperiod.h"
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_OK 0
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_WARNING 1
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_CRITICAL 2
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_UNKNOWN 3
 #else
 #include <unordered_map>
@@ -68,10 +72,10 @@
 
 namespace {
 constexpr unsigned classmask_statehist =
-    (1u << static_cast<int>(LogEntry::Class::alert)) |    //
-    (1u << static_cast<int>(LogEntry::Class::program)) |  //
-    (1u << static_cast<int>(LogEntry::Class::state)) |    //
-    (1u << static_cast<int>(LogEntry::Class::text));
+    (1U << static_cast<int>(LogEntry::Class::alert)) |    //
+    (1U << static_cast<int>(LogEntry::Class::program)) |  //
+    (1U << static_cast<int>(LogEntry::Class::state)) |    //
+    (1U << static_cast<int>(LogEntry::Class::text));
 }  // namespace
 
 #ifndef CMC
@@ -251,9 +255,9 @@ public:
         to_ = std::stoi(fields[2]);
     }
 
-    std::string name() const { return name_; }
-    int from() const { return from_; }
-    int to() const { return to_; }
+    [[nodiscard]] std::string name() const { return name_; }
+    [[nodiscard]] int from() const { return from_; }
+    [[nodiscard]] int to() const { return to_; }
 
 private:
     std::string name_;

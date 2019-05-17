@@ -653,9 +653,11 @@ class UsageClient(DataCache):
 
         # (mo) I am unable to get the filter for usage_end working :-(
         unfiltered_usages = list(self.client.usage_details.list())
+        LOG.debug('unfiltered usage details: %d', len(unfiltered_usages))
 
         yesterday = NOW.toordinal() - 1
         usages = [u.as_dict() for u in unfiltered_usages if u.usage_end.toordinal() == yesterday]
+        LOG.debug('yesterdays usage details: %d', len(usages))
 
         # add group info:
         for usage in usages:

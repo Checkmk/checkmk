@@ -301,6 +301,12 @@ unit_info['bytes/op'] = {
     "render": cmk.utils.render.fmt_bytes,
 }
 
+unit_info['EUR'] = {
+    "title": _("Euro"),
+    "symbol": _(u"€"),
+    "render": lambda v: "%s %s" % (v, _(u"€")),
+}
+
 #.
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
@@ -5538,6 +5544,12 @@ metric_info['aws_elbv2_network_load_balancer_target_groups'] = {
 metric_info['aws_elbv2_load_balancer_target_groups'] = {
     'title': _('Load balancers Target Groups'),
     'unit': 'count',
+    'color': '35/a',
+}
+
+metric_info['service_costs_eur'] = {
+    'title': _('Service Costs per Day'),
+    'unit': 'EUR',
     'color': '35/a',
 }
 

@@ -11,6 +11,9 @@ description:
  The current value will always display the value corresonding
  to the last complete day (00:00 - 23:59 UTC).
 
+ Levels can be imposed on this value using the rule
+ "Azure Usage Details (Costs)".
+
 item:
  The name of the Azure service type or 'Summary'.
 

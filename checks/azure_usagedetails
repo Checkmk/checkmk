@@ -51,7 +51,7 @@ def parse_azure_usagedetails(info):
 
 
 @get_parsed_item_data
-def check_azure_usagedetails(item, params, data):
+def check_azure_usagedetails(_no_item, params, data):
 
     for currency, amount in data.get('costs', {}).items():
         levels = params.get('levels')
@@ -67,5 +67,6 @@ check_info['azure_usagedetails'] = {
     'service_description': "Costs %s",
     'includes': ['azure.include'],
     'default_levels_variable': 'levels_azure_usagedetails',
+    'group': 'azure_usagedetails',
     'has_perfdata': True,
 }

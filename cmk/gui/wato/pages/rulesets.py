@@ -362,13 +362,13 @@ class ModeRulesets(RulesetMode):
                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
                 "refer to the release notes or context help of the rulesets for details.")
 
-        elif self._search_options.keys() == ["rule_ineffective"]:
+        elif _is_ineffective_rules_page(self._search_options):
             self._title = _("Rulesets with ineffective rules")
             self._help = _(
                 "The following rulesets contain rules that do not match to any of the existing hosts."
             )
 
-        elif self._search_options.keys() == ["ruleset_used"]:
+        elif _is_used_rulesets_page(self._search_options):
             self._title = _("Used rulesets")
             self._help = _("Non-empty rulesets")
 
@@ -416,8 +416,8 @@ def rule_search_button(search_options=None, mode="rulesets"):
         search_keys = sorted(search_options.keys())
         if search_keys == ["ruleset_deprecated", "ruleset_group"] \
            or search_keys == ["ruleset_deprecated"] \
-           or search_keys == ["rule_ineffective"] \
-           or search_keys == ["ruleset_used"]:
+           or _is_ineffective_rules_page(search_options) \
+           or _is_used_rulesets_page(search_options):
             is_searching = False
 
     if is_searching:
@@ -433,6 +433,16 @@ def rule_search_button(search_options=None, mode="rulesets"):
         ], delvars=["filled_in"]),
         "search",
         hot=is_searching)
+
+
+def _is_ineffective_rules_page(search_options):
+    return search_options.get("ruleset_deprecated") is False \
+           and search_options.get("rule_ineffective") is True
+
+
+def _is_used_rulesets_page(search_options):
+    return search_options.get("ruleset_deprecated") is False \
+            and search_options.get("ruleset_used") is True
 
 
 @mode_registry.register

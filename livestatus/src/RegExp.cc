@@ -92,11 +92,11 @@ public:
                                   std::regex_constants::format_sed);
     }
 
-    bool match(const std::string &str) const {
+    [[nodiscard]] bool match(const std::string &str) const {
         return regex_match(str, regex_);
     }
 
-    bool search(const std::string &str) const {
+    [[nodiscard]] bool search(const std::string &str) const {
         return regex_search(str, regex_);
     }
 

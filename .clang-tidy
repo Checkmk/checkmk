@@ -52,6 +52,8 @@ Checks: '*,-android-cloexec-fopen,-android-cloexec-open,-cert-env33-c,-cert-err3
 CheckOptions:
   - key:             google-readability-namespace-comments.SpacesBeforeComments
     value:           '1'
+  - key:             misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value:           '1'
   - key:             readability-identifier-naming.MemberCase
     value:           'lower_case'
   - key:             readability-identifier-naming.ProtectedMemberSuffix

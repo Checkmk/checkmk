@@ -37,7 +37,7 @@ def test_service_extra_conf(ts):
         ("8", [], ["host1"], ["service1$"], {}),
         ("9", [], ["host1"], ["ser$"], {}),
         ("10", [], ["host1"], ["^serv$"], {}),
-        ("11", [], ["~host"] + tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
+        ("11", [], ["~host"], tuple_rulesets.ALL_SERVICES, {}),
         ("12", [], ["!host2"] + tuple_rulesets.ALL_HOSTS, tuple_rulesets.ALL_SERVICES, {}),
     ]
 
@@ -77,7 +77,7 @@ def host_ruleset():
         }, [], ["host1"], {}),
         ({
             "8": True
-        }, [], ["~host"] + tuple_rulesets.ALL_HOSTS, {}),
+        }, [], ["~host"], {}),
         ({
             "9": True
         }, [], ["!host2"] + tuple_rulesets.ALL_HOSTS, {}),
@@ -158,38 +158,38 @@ def test_in_boolean_serviceconf_list(ts, parameters):
 
 def test_all_matching_hosts(ts):
     config_cache = ts.config_cache
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["no-agent"], tuple_rulesets.ALL_HOSTS, with_foreign_hosts=False) == \
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}}, with_foreign_hosts=False) == \
             set(["host1", "host2"])
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["test"], tuple_rulesets.ALL_HOSTS, with_foreign_hosts=False) == \
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"criticality": "test"}}, with_foreign_hosts=False) == \
             set(["host1"])
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["!test"], tuple_rulesets.ALL_HOSTS, with_foreign_hosts=False) == \
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"criticality": {"$ne": "test"}}}, with_foreign_hosts=False) == \
             set(["host2"])
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["!test"], tuple_rulesets.ALL_HOSTS, with_foreign_hosts=True) == \
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"criticality": {"$ne": "test"}}}, with_foreign_hosts=True) == \
             set(["host2", "host3"])
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["no-agent"], [], with_foreign_hosts=True) == \
-            set([])
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": []}, with_foreign_hosts=True) == \
+    set([])
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["no-agent"], ["host1"], with_foreign_hosts=True) == \
-            set(["host1"])
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": ["host1"]}, with_foreign_hosts=True) == \
+    set(["host1"])
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["!no-agent"], ["host1"], with_foreign_hosts=False) == \
-            set([])
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": {"$ne": "no-agent"}}, "host_name": ["host1"]}, with_foreign_hosts=False) == \
+    set([])
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["no-agent"], ["~h"], with_foreign_hosts=False) == \
-            set(["host1", "host2"])
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": "h"}]}, with_foreign_hosts=False) == \
+    set(["host1", "host2"])
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["no-agent"], ["~.*2"], with_foreign_hosts=False) == \
-            set(["host2"])
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": ".*2"}]}, with_foreign_hosts=False) == \
+    set(["host2"])
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["no-agent"], ["~.*2$"], with_foreign_hosts=False) == \
-            set(["host2"])
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": ".*2$"}]}, with_foreign_hosts=False) == \
+    set(["host2"])
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(["no-agent"], ["~2"], with_foreign_hosts=False) == \
-            set([])
+    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": "2"}]}, with_foreign_hosts=False) == \
+    set([])
 
 
 def test_in_extraconf_hostlist():
@@ -214,31 +214,6 @@ def test_in_extraconf_hostlist():
 
 
 # TODO: in_binary_hostlist
-
-
-def test_parse_host_rule():
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
-    entry = ('all', [], tuple_rulesets.ALL_HOSTS)
-    assert config_cache.ruleset_matcher.ruleset_optimizer.parse_host_rule(
-        entry, is_binary=False) == ('all', [], tuple_rulesets.ALL_HOSTS)
-
-
-def test_parse_host_rule_without_tags():
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
-    entry = ('all', tuple_rulesets.ALL_HOSTS)
-    assert config_cache.ruleset_matcher.ruleset_optimizer.parse_host_rule(
-        entry, is_binary=False) == ('all', [], tuple_rulesets.ALL_HOSTS)
-
-
-def test_parse_host_rule_invalid_length():
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
-    entry = (None, None, 'all', tuple_rulesets.ALL_HOSTS)
-    with pytest.raises(MKGeneralException):
-        assert config_cache.ruleset_matcher.ruleset_optimizer.parse_host_rule(
-            entry, is_binary=False)
 
 
 def test_get_rule_options_regular_rule():

@@ -43,7 +43,7 @@ NEGATE = '@negate'  # negation in boolean lists
 # - We could remove .* from end of regexes
 # - What's about compilation of the regexes?
 
-TupleMatchObject = NamedTuple("TupleMatchObject", [
+RulesetMatchObject = NamedTuple("RulesetMatchObject", [
     ("host_name", str),
     ("service_description", Text),
 ])
@@ -72,11 +72,13 @@ class RulesetMatcher(object):
         super(RulesetMatcher, self).__init__()
         self._config_cache = config_cache
 
+        self.tuple_transformer = RulesetToDictTransformer(
+            tag_to_group_map=config_cache.get_tag_to_group_map())
         self.ruleset_optimizer = RulesetOptimizier(config_cache)
         self._service_match_cache = {}
 
     def is_matching_host_ruleset(self, match_object, ruleset):
-        # type: (TupleMatchObject, List[Dict]) -> bool
+        # type: (RulesetMatchObject, List[Dict]) -> bool
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
@@ -88,7 +90,7 @@ class RulesetMatcher(object):
         return False  # no match. Do not ignore
 
     def get_host_ruleset_merged_dict(self, match_object, ruleset):
-        # type: (TupleMatchObject, List[Dict]) -> Dict
+        # type: (RulesetMatchObject, List[Dict]) -> Dict
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
@@ -100,9 +102,11 @@ class RulesetMatcher(object):
         return merged_dict
 
     def get_host_ruleset_values(self, match_object, ruleset, is_binary):
-        # type: (TupleMatchObject, List, bool) -> Generator
+        # type: (RulesetMatchObject, List, bool) -> Generator
         """Returns a generator of the values of the matched rules
         Replaces host_extra_conf"""
+        self.tuple_transformer.transform_in_place(ruleset, is_service=False, is_binary=is_binary)
+
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = match_object.host_name not in self._config_cache.all_processed_hosts()
@@ -113,7 +117,7 @@ class RulesetMatcher(object):
             yield value
 
     def is_matching_service_ruleset(self, match_object, ruleset):
-        # type: (TupleMatchObject, List[Dict]) -> bool
+        # type: (RulesetMatchObject, List[Dict]) -> bool
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
@@ -125,7 +129,7 @@ class RulesetMatcher(object):
         return False  # no match. Do not ignore
 
     def get_service_ruleset_merged_dict(self, match_object, ruleset):
-        # type: (TupleMatchObject, List[Dict]) -> Dict
+        # type: (RulesetMatchObject, List[Dict]) -> Dict
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
@@ -137,9 +141,11 @@ class RulesetMatcher(object):
         return merged_dict
 
     def get_service_ruleset_values(self, match_object, ruleset, is_binary):
-        # type: (TupleMatchObject, List, bool) -> Generator
+        # type: (RulesetMatchObject, List, bool) -> Generator
         """Returns a generator of the values of the matched rules
         Replaces service_extra_conf"""
+        self.tuple_transformer.transform_in_place(ruleset, is_service=True, is_binary=is_binary)
+
         with_foreign_hosts = match_object.host_name not in self._config_cache.all_processed_hosts()
         optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
             ruleset, with_foreign_hosts, is_binary=is_binary)
@@ -152,11 +158,19 @@ class RulesetMatcher(object):
             if descr_cache_id in self._service_match_cache:
                 match = self._service_match_cache[descr_cache_id]
             else:
-                match = in_servicematcher_list(service_conditions, match_object.service_description)
+                match = self._matches_service_conditions(service_conditions,
+                                                         match_object.service_description)
                 self._service_match_cache[descr_cache_id] = match
 
             if match:
                 yield value
+
+    def _matches_service_conditions(self, service_conditions, service_description):
+        # type: (Tuple[bool, Pattern[Text]], Text) -> bool
+        negate, pattern = service_conditions
+        if pattern.match(service_description) is not None:
+            return not negate
+        return negate
 
     # TODO: Find a way to use the generic get_values
     def get_values_for_generic_agent_host(self, ruleset):
@@ -166,17 +180,24 @@ class RulesetMatcher(object):
         do not require specific hosts or tags. But it matches rules that e.g.
         except specific hosts or tags (is not, has not set)
         """
+        self.tuple_transformer.transform_in_place(ruleset, is_service=False, is_binary=False)
         entries = []
-
         for rule in ruleset:
-            rule, _rule_options = get_rule_options(rule)
-            item, tags, hostlist = self.ruleset_optimizer.parse_host_rule(rule, is_binary=False)
-            if tags and not hosttags_match_taglist([], tags):
-                continue
-            if not in_extraconf_hostlist(hostlist, ""):
+            if "options" in rule and "disabled" in rule["options"]:
                 continue
 
-            entries.append(item)
+            hostlist = rule["condition"].get("host_name")
+            tags = rule["condition"].get("host_tags", {})
+
+            # TODO: Fix scope
+            if tags and not self.ruleset_optimizer._matches_host_tags([], tags):
+                continue
+
+            # TODO: Fix scope
+            if not self.ruleset_optimizer._matches_host_name(hostlist, ""):
+                continue
+
+            entries.append(rule["value"])
         return entries
 
 
@@ -230,48 +251,14 @@ class RulesetOptimizier(object):
         direct map for hostname based lookups for the matching rule values
         """
         host_values = {}
-
         for rule in ruleset:
-            rule, rule_options = get_rule_options(rule)
-            if rule_options.get("disabled"):
+            if "options" in rule and "disabled" in rule["options"]:
                 continue
 
-            value, tags, hostlist = self.parse_host_rule(rule, is_binary)
-
-            for hostname in self._all_matching_hosts(tags, hostlist, with_foreign_hosts):
-                host_values.setdefault(hostname, []).append(value)
+            for hostname in self._all_matching_hosts(rule["condition"], with_foreign_hosts):
+                host_values.setdefault(hostname, []).append(rule["value"])
 
         return host_values
-
-    def parse_host_rule(self, rule, is_binary):
-        if is_binary:
-            if rule[0] == NEGATE:  # this entry is logically negated
-                value = False
-                rule = rule[1:]
-            else:
-                value = True
-
-            num_elements = len(rule)
-            if num_elements == 1:
-                hostlist = rule
-                tags = []
-            elif num_elements == 2:
-                tags, hostlist = rule
-            else:
-                raise MKGeneralException("Invalid entry '%r' in configuration: "
-                                         "must have 1 or 2 elements" % (rule,))
-        else:
-            num_elements = len(rule)
-            if num_elements == 2:
-                value, hostlist = rule
-                tags = []
-            elif num_elements == 3:
-                value, tags, hostlist = rule
-            else:
-                raise MKGeneralException("Invalid entry '%r' in host configuration list: must "
-                                         "have 2 or 3 entries" % (rule,))
-
-        return value, tags, hostlist
 
     def get_service_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         cache_id = id(ruleset), with_foreign_hosts
@@ -287,50 +274,52 @@ class RulesetOptimizier(object):
     def _convert_service_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         new_rules = []
         for rule in ruleset:
-            rule, rule_options = get_rule_options(rule)
-            if rule_options.get("disabled"):
+            if "options" in rule and "disabled" in rule["options"]:
                 continue
 
-            if is_binary:
-                if rule[0] == NEGATE:  # this entry is logically negated
-                    value = False
-                    rule = rule[1:]
-                else:
-                    value = True
-
-                num_elements = len(rule)
-                if num_elements == 2:
-                    hostlist, servlist = rule
-                    tags = []
-                elif num_elements == 3:
-                    tags, hostlist, servlist = rule
-                else:
-                    raise MKGeneralException("Invalid entry '%r' in configuration: "
-                                             "must have 2 or 3 elements" % (rule,))
-            else:
-                num_elements = len(rule)
-                if num_elements == 3:
-                    value, hostlist, servlist = rule
-                    tags = []
-                elif num_elements == 4:
-                    value, tags, hostlist, servlist = rule
-                else:
-                    raise MKGeneralException("Invalid rule '%r' in service configuration "
-                                             "list: must have 3 or 4 elements" % (rule,))
-
-            # Directly compute set of all matching hosts here, this
-            # will avoid recomputation later
-            hosts = self._all_matching_hosts(tags, hostlist, with_foreign_hosts)
+            # Directly compute set of all matching hosts here, this will avoid
+            # recomputation later
+            hosts = self._all_matching_hosts(rule["condition"], with_foreign_hosts)
 
             # And now preprocess the configured patterns in the servlist
-            new_rules.append((value, hosts, convert_pattern_list(servlist)))
+            new_rules.append(
+                (rule["value"], hosts,
+                 self._convert_pattern_list(rule["condition"].get("service_description"))))
 
         return new_rules
 
-    def _all_matching_hosts(self, tags, hostlist, with_foreign_hosts):
+    def _convert_pattern_list(self, patterns):
+        # type: (List[Text]) -> Tuple[bool, Pattern[Text]]
+        """Compiles a list of service match patterns to a to a single regex
+
+        Reducing the number of individual regex matches improves the performance dramatically.
+        This function assumes either all or no pattern is negated (like WATO creates the rules).
+        """
+        if not patterns:
+            return False, regex(u"")  # Match everything
+
+        negate = False
+        if isinstance(patterns, dict) and "$nor" in patterns:
+            negate = True
+            patterns = patterns["$nor"]
+
+        pattern_parts = []
+        for p in patterns:
+            if isinstance(p, dict):
+                pattern_parts.append(p["$regex"])
+            else:
+                pattern_parts.append(p)
+
+        return negate, regex("(?:%s)" % "|".join("(?:%s)" % p for p in pattern_parts))
+
+    def _all_matching_hosts(self, condition, with_foreign_hosts):
         """Returns a set containing the names of hosts that match the given
         tags and hostlist conditions."""
-        cache_id = tuple(tags), tuple(hostlist), with_foreign_hosts
+        hostlist = condition.get("host_name")
+        tags = condition.get("host_tags", {})
+        rule_path = condition.get("host_folder", "/")
+
+        cache_id = self._condition_cache_id(hostlist, tags, rule_path), with_foreign_hosts
 
         try:
             return self._all_matching_hosts_match_cache[cache_id]
@@ -342,72 +331,131 @@ class RulesetOptimizier(object):
         else:
             valid_hosts = self._config_cache.all_processed_hosts()
 
-        tags_set = set(tags)
-        tags_set_without_folder = tags_set
-        # TODO: Scope
-        rule_path_set = tags_set.intersection(self._folder_path_set)
-        tags_set_without_folder = tags_set - rule_path_set
-
-        if rule_path_set:
-            # More than one dynamic folder in one rule is simply wrong..
-            rule_path = list(rule_path_set)[0]
-        else:
-            rule_path = "/+"
-
         # Thin out the valid hosts further. If the rule is located in a folder
         # we only need the intersection of the folders hosts and the previously determined valid_hosts
         valid_hosts = self.get_hosts_within_folder(rule_path,
                                                    with_foreign_hosts).intersection(valid_hosts)
 
-        # Contains matched hosts
+        if tags and hostlist is None:
+            return self._match_hosts_by_tags(cache_id, valid_hosts, tags)
 
-        if tags_set_without_folder and hostlist == ALL_HOSTS:
-            return self._match_hosts_by_tags(cache_id, valid_hosts, tags_set_without_folder)
+        matching = set()
+        only_specific_hosts = hostlist is not None \
+            and not isinstance(hostlist, dict) \
+            and all(not isinstance(x, dict) for x in hostlist)
 
-        matching = set([])
-        only_specific_hosts = not bool([x for x in hostlist if x[0] in ["@", "!", "~"]])
-
-        # If no tags are specified and there are only specific hosts we already have the matches
-        if not tags_set_without_folder and only_specific_hosts:
-            matching = valid_hosts.intersection(hostlist)
-        # If no tags are specified and the hostlist only include @all (all hosts)
-        elif not tags_set_without_folder and hostlist == ALL_HOSTS:
+        if hostlist == []:
+            pass  # Empty host list -> Nothing matches
+        elif not tags and not hostlist:
+            # If no tags are specified and the hostlist only include @all (all hosts)
             matching = valid_hosts
+        elif not tags and only_specific_hosts:
+            # If no tags are specified and there are only specific hosts we already have the matches
+            matching = valid_hosts.intersection(hostlist)
         else:
             # If the rule has only exact host restrictions, we can thin out the list of hosts to check
             if only_specific_hosts:
-                hosts_to_check = valid_hosts.intersection(set(hostlist))
+                hosts_to_check = valid_hosts.intersection(hostlist)
             else:
                 hosts_to_check = valid_hosts
 
             for hostname in hosts_to_check:
                 # When no tag matching is requested, do not filter by tags. Accept all hosts
                 # and filter only by hostlist
-                if (not tags or hosttags_match_taglist(
-                        self._config_cache.tag_list_of_host(hostname), tags_set_without_folder)):
-                    if in_extraconf_hostlist(hostlist, hostname):
+                if (not tags or self._matches_host_tags(
+                        self._config_cache.tag_list_of_host(hostname), tags)):
+                    if self._matches_host_name(hostlist, hostname):
                         matching.add(hostname)
 
         self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
 
-    def _match_hosts_by_tags(self, cache_id, valid_hosts, tags_set_without_folder):
-        matching = set([])
-        has_specific_folder_tag = sum([x[0] == "/" for x in tags_set_without_folder])
+    def _matches_host_name(self, host_entries, hostname):
+        if not host_entries:
+            return True
+
+        negate = False
+        if isinstance(host_entries, dict) and "$nor" in host_entries:
+            negate = True
+            host_entries = host_entries["$nor"]
+
+        for entry in host_entries:
+            use_regex = isinstance(entry, dict)
+
+            if hostname is True:  # -> generic agent host
+                continue
+
+            if not use_regex and hostname == entry:
+                return not negate
+
+            if use_regex and regex(entry["$regex"]).match(hostname) is not None:
+                return not negate
+
+        return negate
+
+    def _matches_host_tags(self, hosttags, required_tags):
+        for tag_id in required_tags.values():
+            is_not = isinstance(tag_id, dict)
+            if is_not:
+                tag_id = tag_id["$ne"]
+
+            matches = tag_id in hosttags
+            if matches == is_not:
+                return False
+
+        return True
+
+    def _condition_cache_id(self, hostlist, tags, rule_path):
+        host_parts, tag_parts = [], []
+
+        if hostlist is None:
+            host_parts.append(None)
+        else:
+            if isinstance(hostlist, dict) and "$nor" in hostlist:
+                host_parts.append("!")
+                hostlist = hostlist["$nor"]
+
+            for h in hostlist:
+                if isinstance(h, dict):
+                    if "$regex" not in h:
+                        raise NotImplementedError()
+                    host_parts.append("~%s" % h["$regex"])
+                    continue
+
+                host_parts.append(h)
+
+        for tag_group_id, tag_id in tags.iteritems():
+            val = tag_id
+            if isinstance(tag_id, dict):
+                if "$ne" not in tag_id:
+                    raise NotImplementedError()
+                val = "!%s" % tag_id["$ne"]
+
+            tag_parts.append((tag_group_id, val))
+
+        return tuple(sorted(host_parts)), tuple(sorted(tag_parts)), rule_path
+
+    def _match_hosts_by_tags(self, cache_id, valid_hosts, tags):
+        matching = set()
         negative_match_tags = set()
         positive_match_tags = set()
-        for tag in tags_set_without_folder:
-            if tag[0] == "!":
-                negative_match_tags.add(tag[1:])
+        for tag in tags.values():
+            if isinstance(tag, dict):
+                if "$ne" in tag:
+                    negative_match_tags.add(tag["$ne"])
+                else:
+                    raise NotImplementedError()
             else:
                 positive_match_tags.add(tag)
 
-        if has_specific_folder_tag or self._config_cache.all_processed_hosts_similarity < 3:
+        # TODO:
+        #if has_specific_folder_tag or self._config_cache.all_processed_hosts_similarity < 3:
+        if self._config_cache.all_processed_hosts_similarity < 3:
             # Without shared folders
             for hostname in valid_hosts:
-                tags = self._config_cache.tag_list_of_host(hostname)
-                if not positive_match_tags - tags:
-                    if not negative_match_tags.intersection(tags):
+                host_tags = self._config_cache.tag_list_of_host(hostname)
+                if not positive_match_tags - host_tags:
+                    if not negative_match_tags.intersection(host_tags):
                         matching.add(hostname)
 
             self._all_matching_hosts_match_cache[cache_id] = matching
@@ -437,12 +485,10 @@ class RulesetOptimizier(object):
         cache_id = with_foreign_hosts, folder_path
         if cache_id not in self._folder_host_lookup:
             hosts_in_folder = set()
-            # Strip off "+"
-            folder_path_tmp = folder_path[:-1]
             relevant_hosts = self._config_cache.all_configured_hosts(
             ) if with_foreign_hosts else self._config_cache.all_processed_hosts()
             for hostname in relevant_hosts:
-                if self._config_cache.host_path(hostname).startswith(folder_path_tmp):
+                if self._config_cache.host_path(hostname).startswith(folder_path):
                     hosts_in_folder.add(hostname)
             self._folder_host_lookup[cache_id] = hosts_in_folder
             return hosts_in_folder
@@ -452,7 +498,7 @@ class RulesetOptimizier(object):
         # Determine hosts within folders
         # TODO: Cleanup this directory access for folder computation
         dirnames = [
-            x[0][len(cmk.utils.paths.check_mk_config_dir):] + "/+"
+            x[0][len(cmk.utils.paths.check_mk_config_dir):] + "/"
             for x in os.walk(cmk.utils.paths.check_mk_config_dir)
         ]
         self._folder_path_set = set(dirnames)

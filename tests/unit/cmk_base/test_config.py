@@ -101,7 +101,7 @@ def test_config_cache_tag_to_group_map(monkeypatch):
             }],
         })
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._get_tag_to_group_map() == {
+    assert config_cache.get_tag_to_group_map() == {
         'all-agents': 'agent',
         'auto-piggyback': 'piggyback',
         'cmk-agent': 'agent',
@@ -152,13 +152,13 @@ def test_host_folder_matching(monkeypatch, hostname, host_path, result):
     monkeypatch.setattr(
         config_cache.ruleset_matcher.ruleset_optimizer, "_folder_path_set",
         set([
-            '/+',
-            '/wato/+',
-            '/wato/level1/+',
-            '/wato/level1/level2/+',
-            '/wato/level1/level3/+',
-            '/wato/level11/+',
-            '/wato/level11/level22/+',
+            '/',
+            '/wato/',
+            '/wato/level1/',
+            '/wato/level1/level2/',
+            '/wato/level1/level3/',
+            '/wato/level11/',
+            '/wato/level11/level22/',
         ]))
 
     assert config_cache.get_host_config(hostname).agent_port == result

@@ -37,8 +37,6 @@ def parse_cisco_asa_conn(info):
     for line in info[1]:
         parsed[line[0]].append(line[1])
 
-    # Example:
-    # parsed = { u'4': [u'outside-adsl', u'1', u'1', u'8.8.8.8'] }
     return parsed
 
 
@@ -63,8 +61,13 @@ def check_cisco_asa_conn(item, _no_params, parsed):
         if item == key:
             yield 0, "Name: %s" % values[0]
 
-            if not values[3] == "":
-                yield 0, "IP: %s" % values[3]
+            try:
+                ip_address = values[3]
+            except IndexError:
+                ip_address = None
+
+            if ip_address:
+                yield 0, "IP: %s" % ip_address
             else:  # CRIT if no IP is assigned
                 yield 2, "IP: Not found!"
 

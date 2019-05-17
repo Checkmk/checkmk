@@ -49,7 +49,8 @@ constexpr const wchar_t* kDefaultBakeryExt = L".bakery.yml";
 constexpr const wchar_t* kDefaultUserExt = L".user.yml";
 
 // special
-constexpr const std::string_view kUpgradeProtocol = "upgrade.protocol";
+constexpr std::string_view kUpgradeProtocol = "upgrade.protocol";
+constexpr std::string_view kAgentUpdater = "cmk-update-agent.exe";
 
 // located in test_files/config
 // constexpr const wchar_t* kDefaultDevConfig = L"check_mk_dev.yml";

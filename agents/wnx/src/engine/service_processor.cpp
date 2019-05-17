@@ -215,6 +215,7 @@ void ServiceProcessor::preStart() {
 
     auto& plugins = plugins_provider_.getEngine();
     plugins.preStart();
+    plugins.detachedStart();
 
     auto& local = local_provider_.getEngine();
     local.preStart();
@@ -222,7 +223,7 @@ void ServiceProcessor::preStart() {
 }
 
 // conditions are: yml + exists(ohm) + elevated
-// true on succesful start or if OHM is already started
+// true on successful start or if OHM is already started
 bool ServiceProcessor::conditionallyStartOhm() noexcept {
     using namespace cma::tools;
 

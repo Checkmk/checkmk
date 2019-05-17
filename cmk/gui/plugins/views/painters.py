@@ -191,23 +191,6 @@ def paint_custom_var(what, key, row, choices=None):
     return key, ""
 
 
-def paint_nagios_link(row):
-    # We need to use the Nagios-URL as configured
-    # in sites.
-    baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
-    url = baseurl + "/extinfo.cgi?host=" + html.urlencode(row["host_name"])
-    svc = row.get("service_description")
-    if svc:
-        url += "&type=2&service=" + html.urlencode(svc)
-        what = "service"
-    else:
-        url += "&type=1"
-        what = "host"
-    return "singleicon", html.render_a(
-        html.render_icon('nagios',
-                         _('Show this %s in Nagios') % what), url)
-
-
 def paint_future_time(timestamp):
     if timestamp <= 0:
         return "", "-"
@@ -448,28 +431,6 @@ def paint_host_state_short(row, short=False):
         name = name[0]
 
     return "state hstate hstate%s" % state, name
-
-
-@painter_registry.register
-class PainterServiceNagiosLink(Painter):
-    @property
-    def ident(self):
-        return "service_nagios_link"
-
-    @property
-    def title(self):
-        return _("Icon with link to service in Nagios GUI")
-
-    @property
-    def short_title(self):
-        return u""
-
-    @property
-    def columns(self):
-        return ['site', 'host_name', 'service_description']
-
-    def render(self, row, cell):
-        return paint_nagios_link(row)
 
 
 @painter_registry.register
@@ -2524,60 +2485,6 @@ class PainterHostBlack(Painter):
         if state != 0:
             return "nobr", "<div class=hostdown>%s</div>" % row["host_name"]
         return "nobr", row["host_name"]
-
-
-@painter_registry.register
-class PainterHostBlackNagios(Painter):
-    @property
-    def ident(self):
-        return "host_black_nagios"
-
-    @property
-    def title(self):
-        return _("Hostname, red background if down, link to Nagios services")
-
-    @property
-    def short_title(self):
-        return _("Host")
-
-    @property
-    def columns(self):
-        return ['site', 'host_name', 'host_state']
-
-    @property
-    def sorter(self):
-        return 'site_host'
-
-    def render(self, row, cell):
-        host = row["host_name"]
-        baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
-        url = baseurl + "/status.cgi?host=" + html.urlencode(host)
-        state = row["host_state"]
-        if state != 0:
-            return None, html.render_div(html.render_a(host, url), class_="hostdown")
-        return None, html.render_a(host, url)
-
-
-@painter_registry.register
-class PainterHostNagiosLink(Painter):
-    @property
-    def ident(self):
-        return "host_nagios_link"
-
-    @property
-    def title(self):
-        return _("Icon with link to host to Nagios GUI")
-
-    @property
-    def short_title(self):
-        return u""
-
-    @property
-    def columns(self):
-        return ['site', 'host_name']
-
-    def render(self, row, cell):
-        return paint_nagios_link(row)
 
 
 @painter_registry.register

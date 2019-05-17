@@ -275,7 +275,7 @@ class Ruleset(object):
         self.search_matching_rules = []
 
     def is_empty(self):
-        return not self._rules
+        return self.num_rules() == 0
 
     def is_empty_in_folder(self, folder):
         return not bool(self.get_folder_rules(folder))
@@ -394,7 +394,7 @@ class Ruleset(object):
                 "ruleset_deprecated"] != self.is_deprecated():
             return False
 
-        if "ruleset_used" in search_options and search_options["ruleset_used"] == self.is_empty():
+        if "ruleset_used" in search_options and search_options["ruleset_used"] is self.is_empty():
             return False
 
         if "ruleset_group" in search_options \

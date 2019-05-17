@@ -455,19 +455,7 @@ grep ^/dev < /proc/mounts | grep -v " squashfs "
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-if [[ -e /proc/self/ns ]]; then
-  # Only report processes of the current process namespace
-  # in case the system supports namespaces
-  nsPID=$(stat -Lc %i /proc/self/ns/pid)
-  #shellcheck disable=SC2009
-  ps ax -o pidns,user:32,vsz,rss,cputime,etime,pid,command --columns 10000 \
-    | grep "^${nsPID}" \
-    | cut -f "2-" -d " " \
-    | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
-else
-  ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 \
-    | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
-fi
+ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
 
 # Memory usage
 section_mem

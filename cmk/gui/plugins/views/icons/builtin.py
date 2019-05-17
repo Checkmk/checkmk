@@ -154,10 +154,13 @@ class IconImageIcon(Icon):
 
     def render(self, what, row, tags, custom_vars):
         img = row[what + '_icon_image']
-        if img:
-            if img.endswith('.png'):
-                img = img[:-4]
-                return html.render_icon(img)  # TODO
+        if not img:
+            return
+
+        if img.endswith('.png'):
+            img = img[:-4]
+
+        return html.render_icon(img)
 
 
 #.

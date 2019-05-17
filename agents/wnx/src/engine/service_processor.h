@@ -267,7 +267,8 @@ private:
                         XLOG::d.i("Connected from '{}'", Ip.c_str());
                         cma::OnStartApp();
                         cma::cfg::SetupRemoteHostEnvironment(Ip);
-                        conditionallyStartOhm(); // start may happen when config changed
+                        conditionallyStartOhm();  // start may happen when
+                                                  // config changed
                         informDevice(rt_device, Ip);
 
                         // 2. processing

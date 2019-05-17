@@ -5,7 +5,7 @@
 <?define ProductId = "{C3BDE55B-4C42-48D0-8792-B1DE5174C202}"?>
 <?define ProductUpgradeCode = "83F434E9-EA96-4881-AA93-E21B27285C05"?>
 <!-- IMPORTANT NOTE: If you change architecture, please change the package code TOO -->
-<?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1D9F"?>
+<?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1DAF"?>
 <?define FolderName = "check_mk_service"?>
 <?define ServiceName = "CheckMkService"?>
 <?define ServiceDisplayName = "Check MK Service"?>
@@ -176,12 +176,12 @@
               DiskId="2" />
       </Component>
 
-      <Component Id="check_mk.user.yml" Guid="{FB530333-4B0E-4C13-BF01-4F980B1C7326}">
+      <Component Id="check_mk.user.yml" Guid="{FB530333-4B0E-4C13-BF01-4F980B1C7332}">
         <File Id="check_mk.user.yml" 
               Source="resources\check_mk.user.yml" 
               KeyPath="yes"
               Checksum="yes"
-              DiskId="2" />
+              DiskId="1" />
       </Component>
 
 

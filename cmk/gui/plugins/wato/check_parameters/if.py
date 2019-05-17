@@ -595,6 +595,19 @@ class RulespecCheckgroupParametersIf(CheckParameterRulespecWithItem):
                          minvalue=1,
                          default_value=15,
                      )),
+                    ("match_same_speed",
+                     DropdownChoice(
+                         title=_("Speed of interface groups (Netapp only)"),
+                         help=_("Choose the behaviour for different interface speeds in "
+                                "interface groups. The default is \"Check and WARN\". This "
+                                "feature is currently only supported by the check "
+                                "netapp_api_if."),
+                         choices=[
+                             ("check_and_warn", _("Check and WARN")),
+                             ("check_and_crit", _("Check and CRIT")),
+                             ("check_and_display", _("Check and display only")),
+                             ("dont_show_and_check", _("Don't show and check")),
+                         ])),
                 ],
             ),
             forth=transform_if,

@@ -2616,12 +2616,11 @@ class ConfigCache(object):
         self._collect_hosttags()
         self._setup_clusters_nodes_cache()
 
-        # Converts pre 1.6 tuple rulesets in place to 1.6+ format
-        self.ruleset_matcher = tuple_rulesets.RulesetMatcher(self)
-
         self._all_configured_clusters = self._get_all_configured_clusters()
         self._all_configured_realhosts = self._get_all_configured_realhosts()
         self._all_configured_hosts = self._get_all_configured_hosts()
+
+        self.ruleset_matcher = tuple_rulesets.RulesetMatcher(self)
 
         self._all_active_clusters = self._get_all_active_clusters()
         self._all_active_realhosts = self._get_all_active_realhosts()

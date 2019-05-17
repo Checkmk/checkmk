@@ -277,7 +277,7 @@ namespace {
 class SumAggregation : public Aggregation {
 public:
     void update(double value) override { sum_ += value; }
-    double value() const override { return sum_; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
     double sum_{0};
@@ -293,7 +293,7 @@ public:
         first_ = false;
     }
 
-    double value() const override { return sum_; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
     bool first_{true};
@@ -312,7 +312,7 @@ public:
         first_ = false;
     }
 
-    double value() const override { return sum_; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
     bool first_{true};
@@ -329,7 +329,7 @@ public:
         sum_ += value;
     }
 
-    double value() const override { return sum_ / count_; }
+    [[nodiscard]] double value() const override { return sum_ / count_; }
 
 private:
     std::uint32_t count_{0};
@@ -345,7 +345,7 @@ public:
         sum_of_squares_ += value * value;
     }
 
-    double value() const override {
+    [[nodiscard]] double value() const override {
         auto mean = sum_ / count_;
         return sqrt(sum_of_squares_ / count_ - mean * mean);
     }
@@ -360,7 +360,7 @@ private:
 class SumInvAggregation : public Aggregation {
 public:
     void update(double value) override { sum_ += 1.0 / value; }
-    double value() const override { return sum_; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
     double sum_{0};
@@ -374,7 +374,7 @@ public:
         sum_ += 1.0 / value;
     }
 
-    double value() const override { return sum_ / count_; }
+    [[nodiscard]] double value() const override { return sum_ / count_; }
 
 private:
     std::uint32_t count_{0};

@@ -42,7 +42,7 @@ public:
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
         , command_(std::move(command)) {}
-    std::string getResult() const { return result_; }
+    [[nodiscard]] std::string getResult() const { return result_; }
 
 private:
     void sendRequest(std::ostream &os) override { os << command_; }
@@ -61,7 +61,7 @@ public:
                      extra_extra_offset, offset)
         , blob_(std::move(blob)) {}
 
-    std::unique_ptr<std::vector<char>> getValue(
+    [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
         Row /* unused */) const override {
         return std::make_unique<std::vector<char>>(blob_.begin(), blob_.end());
     };

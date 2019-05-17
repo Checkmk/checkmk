@@ -2617,8 +2617,6 @@ class ConfigCache(object):
         self._setup_clusters_nodes_cache()
 
         # Converts pre 1.6 tuple rulesets in place to 1.6+ format
-        self.tuple_transformer = tuple_rulesets.RulesetToDictTransformer(
-            tag_to_group_map=self._get_tag_to_group_map())
         self.ruleset_matcher = tuple_rulesets.RulesetMatcher(self)
 
         self._all_configured_clusters = self._get_all_configured_clusters()
@@ -2674,7 +2672,7 @@ class ConfigCache(object):
         # Keep HostConfig instances created with the current configuration cache
         self._host_configs = {}
 
-    def _get_tag_to_group_map(self):
+    def get_tag_to_group_map(self):
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return tuple_rulesets.get_tag_to_group_map(tags)
 
@@ -2962,40 +2960,40 @@ class ConfigCache(object):
             return result
 
     def host_extra_conf_merged(self, hostname, ruleset):
-        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=None)
+        match_object = tuple_rulesets.RulesetMatchObject(hostname, service_description=None)
         return self.ruleset_matcher.get_host_ruleset_merged_dict(match_object, ruleset)
 
     def host_extra_conf(self, hostname, ruleset):
-        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=None)
+        match_object = tuple_rulesets.RulesetMatchObject(hostname, service_description=None)
         return list(
             self.ruleset_matcher.get_host_ruleset_values(match_object, ruleset, is_binary=False))
 
     # TODO: Cleanup external in_binary_hostlist call sites
     def in_binary_hostlist(self, hostname, ruleset):
-        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=None)
+        match_object = tuple_rulesets.RulesetMatchObject(hostname, service_description=None)
         return self.ruleset_matcher.is_matching_host_ruleset(match_object, ruleset)
 
     def service_extra_conf(self, hostname, description, ruleset):
         """Compute outcome of a service rule set that has an item."""
-        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=description)
+        match_object = tuple_rulesets.RulesetMatchObject(hostname, service_description=description)
         return list(
             self.ruleset_matcher.get_service_ruleset_values(match_object, ruleset, is_binary=False))
 
     def get_service_ruleset_value(self, hostname, description, ruleset, deflt):
         """Compute first match service ruleset outcome with fallback to a default value"""
-        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=description)
+        match_object = tuple_rulesets.RulesetMatchObject(hostname, service_description=description)
         return next(
             self.ruleset_matcher.get_service_ruleset_values(match_object, ruleset, is_binary=False),
             deflt)
 
     def service_extra_conf_merged(self, hostname, description, ruleset):
-        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=description)
+        match_object = tuple_rulesets.RulesetMatchObject(hostname, service_description=description)
         return self.ruleset_matcher.get_service_ruleset_merged_dict(match_object, ruleset)
 
     def in_boolean_serviceconf_list(self, hostname, description, ruleset):
         # type: (str, Text, List) -> bool
         """Compute outcome of a service rule set that just say yes/no"""
-        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=description)
+        match_object = tuple_rulesets.RulesetMatchObject(hostname, service_description=description)
         return self.ruleset_matcher.is_matching_service_ruleset(match_object, ruleset)
 
     def all_processed_hosts(self):

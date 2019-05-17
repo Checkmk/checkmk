@@ -26,6 +26,7 @@ set VS_DEPLOY=No
 set VS_DEPLOY_MSI=YES
 set LOCAL_IMAGES_PDB=%arte%\pdb
 set LOCAL_IMAGES_EXE=%arte%\exe
+set SKIP_MINOR_BINARIES=YES
 
 if "%1" == "SIMULATE_OK" powershell Write-Host "Successful Build" -Foreground Green && echo aaa > %arte%\check_mk_service.msi  && exit 0
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foreground Red && del %arte%\check_mk_service.msi  && exit 8
@@ -43,6 +44,7 @@ if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Re
 %msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x64
 if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-64" -Foreground Red && exit 2
 
+if "%SKIP_MINOR_BINARIES%" == "YES" powershell Write-Host "Skipping Minor Binaries!!!!" -Foreground Green goto build_watest
 set exec=plugin_player
 %msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Red && exit 2
@@ -55,6 +57,8 @@ if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Re
 %msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x64
 if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-64" -Foreground Red && exit 5
 
+
+:build_watest
 set exec=watest
 %msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Red && exit 6

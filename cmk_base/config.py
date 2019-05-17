@@ -2844,10 +2844,7 @@ class ConfigCache(object):
 
     def passive_check_period_of_service(self, hostname, description):
         # type: (str, Text) -> str
-        passive_check_period = self.service_extra_conf(hostname, description, check_periods)
-        if not passive_check_period:
-            return "24X7"
-        return passive_check_period[0]
+        return self.get_service_ruleset_value(hostname, description, check_periods, deflt="24X7")
 
     def custom_attributes_of_service(self, hostname, description):
         # type: (str, Text) -> Dict[str, str]
@@ -2857,21 +2854,14 @@ class ConfigCache(object):
 
     def service_level_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[int]
-        entries = self.service_extra_conf(hostname, description, service_service_levels)
-        if not entries:
-            return None
-        return entries[0]
+        return self.get_service_ruleset_value(
+            hostname, description, service_service_levels, deflt=None)
 
     def check_period_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[str]
-        entries = self.service_extra_conf(hostname, description, check_periods)
-        if not entries:
-            return None
-
-        entry = entries[0]
+        entry = self.get_service_ruleset_value(hostname, description, check_periods, deflt=None)
         if entry == "24X7":
             return None
-
         return entry
 
     def get_explicit_service_custom_variables(self, hostname, description):
@@ -2990,6 +2980,13 @@ class ConfigCache(object):
         match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=description)
         return list(
             self.ruleset_matcher.get_service_ruleset_values(match_object, ruleset, is_binary=False))
+
+    def get_service_ruleset_value(self, hostname, description, ruleset, deflt):
+        """Compute first match service ruleset outcome with fallback to a default value"""
+        match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=description)
+        return next(
+            self.ruleset_matcher.get_service_ruleset_values(match_object, ruleset, is_binary=False),
+            deflt)
 
     def service_extra_conf_merged(self, hostname, description, ruleset):
         match_object = tuple_rulesets.TupleMatchObject(hostname, service_description=description)
@@ -3142,11 +3139,8 @@ class CEEConfigCache(ConfigCache):
 
     def rrd_config_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[Dict]
-        rrdconf = self.service_extra_conf(hostname, description, cmc_service_rrd_config)
-        if not rrdconf:
-            return None
-
-        return rrdconf[0]
+        return self.get_service_ruleset_value(
+            hostname, description, cmc_service_rrd_config, deflt=None)
 
     def recurring_downtimes_of_service(self, hostname, description):
         # type: (str, Text) -> List[Dict[str, Union[int, str]]]
@@ -3154,19 +3148,13 @@ class CEEConfigCache(ConfigCache):
 
     def flap_settings_of_service(self, hostname, description):
         # type: (str, Text) -> Tuple[float, float, float]
-        values = self.service_extra_conf(hostname, description, cmc_service_flap_settings)
-        if not values:
-            return cmc_flap_settings
-
-        return values[0]
+        return self.get_service_ruleset_value(
+            hostname, description, cmc_service_flap_settings, deflt=cmc_flap_settings)
 
     def log_long_output_of_service(self, hostname, description):
         # type: (str, Text) -> bool
-        entries = self.service_extra_conf(hostname, description,
-                                          cmc_service_long_output_in_monitoring_history)
-        if not entries:
-            return False
-        return entries[0]
+        return self.get_service_ruleset_value(
+            hostname, description, cmc_service_long_output_in_monitoring_history, deflt=False)
 
     def state_translation_of_service(self, hostname, description):
         # type: (str, Text) -> Dict
@@ -3180,18 +3168,13 @@ class CEEConfigCache(ConfigCache):
     def check_timeout_of_service(self, hostname, description):
         # type: (str, Text) -> int
         """Returns the check timeout in seconds"""
-        entries = self.service_extra_conf(hostname, description, cmc_service_check_timeout)
-        if not entries:
-            return cmc_check_timeout
-
-        return entries[0]
+        return self.get_service_ruleset_value(
+            hostname, description, cmc_service_check_timeout, deflt=cmc_check_timeout)
 
     def graphite_metrics_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[List[str]]
-        entries = self.service_extra_conf(hostname, description, cmc_graphite_service_metrics)
-        if not entries:
-            return None
-        return entries[0]
+        return self.get_service_ruleset_value(
+            hostname, description, cmc_graphite_service_metrics, deflt=None)
 
     # TODO: Cleanup the GENERIC_AGENT duplication with cmk_base.cee.agent_bakyery.GENERIC_AGENT
     def matched_agent_config_entries(self, hostname):

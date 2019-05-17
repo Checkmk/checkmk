@@ -53,8 +53,9 @@ def parse_brocade_sfp(info):
             ("tx_power", values[4], float, 1.0),
         ]:
             if value == '-inf':
-                port[key] = None
-                continue
+                # From https://de.wikipedia.org/wiki/Leistungspegel#dBm:
+                # '-inf' means that there's no power
+                value = '0'
             try:
                 port[key] = conv(value) * scale
             except ValueError:

@@ -38,7 +38,7 @@ import pytest
 
 import generictests
 from generictests.regression import WritableDataset
-from checktestlib import CheckResult
+from checktestlib import CheckResult, DiscoveryResult
 
 pytestmark = pytest.mark.checks
 
@@ -70,6 +70,14 @@ class CrashDataset(WritableDataset):
         init_dict = {}
         self.full_checkname = crashinfo['details']['check_type']
         checkname = self.full_checkname.split('.', 1)[0]
+        if checkname == "discovery":
+            checkname = self._find_checkname_from_traceback(traceback)
+            self.is_discovery = True
+            if not checkname:
+                raise SkipReport("found no check plugin from traceback")
+        else:
+            self.is_discovery = False
+
         init_dict['checkname'] = checkname
 
         local_vars_encoded = crashinfo.get('local_vars')
@@ -97,6 +105,12 @@ class CrashDataset(WritableDataset):
         self.crash_id = crash_report_fn[-20:-7]
         filepath = '/tmp/testfile_%s_%s.py' % (checkname, self.crash_id)
         super(CrashDataset, self).__init__(filepath, init_dict)
+
+    def _find_checkname_from_traceback(self, traceback):
+        for line in traceback[::-1]:
+            if 'share/check_mk/checks/' in line[0]:
+                return line[0].split('share/check_mk/checks/')[-1]
+        return
 
     def __repr__(self):
         return 'CrashDataset(checkname=%r, id=%r)' % (self.checkname, self.crash_id)
@@ -135,10 +149,18 @@ class CrashReportList(list):
 def test_crashreport(check_manager, crashdata):
     try:
         generictests.run(check_manager, crashdata)
+        check = check_manager.get_check(crashdata.full_checkname)
+        if crashdata.is_discovery:
+            if crashdata.parsed:
+                raw_result = check.run_discovery(crashdata.parsed)
+            else:
+                raw_result = check.run_discovery(crashdata.info)
+            print(DiscoveryResult(raw_result))
+            return
+
         if 'item' in crashdata.vars:
             item = crashdata.vars['item']
             params = crashdata.vars.get('params', {})
-            check = check_manager.get_check(crashdata.full_checkname)
             if crashdata.parsed:
                 raw_result = check.run_check(item, params, crashdata.parsed)
             else:

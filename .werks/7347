@@ -1,0 +1,11 @@
+Title: Fixed creating "disabled services" rule for vanished services
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p17
+Date: 1558186536
+Class: fix
+
+It was not possible to move a service to "disabled services" on the
+service discovery page.

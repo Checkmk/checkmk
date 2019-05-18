@@ -251,6 +251,4 @@ def test_hosttags_match_taglist_negate():
 
 
 # TODO: convert_pattern
-# TODO: convert_pattern_list
 # TODO: in_extraconf_servicelist
-# TODO: in_servicematcher_list

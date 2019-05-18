@@ -29,8 +29,7 @@ import pprint
 from typing import Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
 
 import cmk.utils.store as store
-import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleMatcher
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -153,7 +152,7 @@ class RuleConditions(object):
         if object_list is None:
             return None
 
-        negate, object_list = tuple_rulesets.parse_negated_condition_list(object_list)
+        negate, object_list = ruleset_matcher.parse_negated_condition_list(object_list)
 
         pattern_list = []
         for entry in object_list:
@@ -395,8 +394,8 @@ class Ruleset(object):
         self.search_matching_rules = []
 
         # Converts pre 1.6 tuple rulesets in place to 1.6+ format
-        self.tuple_transformer = tuple_rulesets.RulesetToDictTransformer(
-            tag_to_group_map=tuple_rulesets.get_tag_to_group_map(config.tags))
+        self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
+            tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags))
 
     def is_empty(self):
         return self.num_rules() == 0
@@ -699,7 +698,7 @@ class Rule(object):
         super(Rule, self).__init__()
         self.ruleset = ruleset
         self.folder = folder
-        self._matcher = RuleMatcher()
+        #self._matcher = RuleMatcher()
 
         # Content of the rule itself
         self._initialize()
@@ -788,21 +787,23 @@ class Rule(object):
 
     def get_mismatch_reasons(self, host_folder, hostname, item):
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
-        host = host_folder.host(hostname)
-        match_object = RulesetMatchObject(
-            host_name=hostname,
-            host_folder=host_folder.path(),
-            host_tags=host.tag_groups(),
-        )
-
-        if self._matcher.match(match_object.to_dict(), self.conditions.to_config_with_folder()):
-            return
-
-        yield _("The rule does not match")
+        #host = host_folder.host(hostname)
+        #match_object = ruleset_matcher.RulesetMatchObject(
+        #    host_name=hostname,
+        #    host_folder=host_folder.path(),
+        #    host_tags=host.tag_groups(),
+        #    service_description=item,
+        #)
+        raise NotImplementedError()
+        #if self._matcher.match(match_object.to_dict(), self.conditions.to_config_with_folder()):
+        #    return
+        #
+        #yield _("The rule does not match")
 
     def matches_item(self, item):
-        match_object = RulesetMatchObject(service_description=item)
-        return self._matcher.match(match_object.to_dict(), self.conditions.to_config_with_folder())
+        #match_object = ruleset_matcher.RulesetMatchObject(service_description=item)
+        raise NotImplementedError()
+        #return self._matcher.match(match_object.to_dict(), self.conditions.to_config_with_folder())
 
     def matches_search(self, search_options):
         if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(

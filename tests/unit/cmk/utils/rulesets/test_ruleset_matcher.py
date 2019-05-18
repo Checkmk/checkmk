@@ -2,7 +2,7 @@
 # pylint: disable=redefined-outer-name
 import pytest  # type: ignore
 from testlib.base import Scenario
-from cmk.utils.rulesets.tuple_rulesets import RulesetMatcher, RulesetMatchObject
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
 
 
 def test_ruleset_match_object_invalid_attribute_in_init():

@@ -33,7 +33,7 @@ import re
 from typing import NamedTuple, List, Optional  # pylint: disable=unused-import
 
 from cmk.utils.regex import escape_regex_chars
-import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -1473,8 +1473,9 @@ class VSExplicitConditions(Transform):
     # TODO: Change all HostTagCondition to produce a tag dictionary instead of the list
     def _host_tags_from_valuespec(self, tags):
         """Transform the host tag list of the valuespec to rule tag conditions"""
-        self.tuple_transformer = tuple_rulesets.RulesetToDictTransformer(
-            tag_to_group_map=tuple_rulesets.get_tag_to_group_map(config.tags))
+        self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
+            tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags))
+
         return self.tuple_transformer.transform_host_tags(tags).get("host_tags", {})
 
     def _condition_list_from_valuespec(self, conditions, is_service):
@@ -1646,7 +1647,7 @@ class VSExplicitConditions(Transform):
 
         condition, text_list = [], []
 
-        is_negate, host_name_conditions = tuple_rulesets.parse_negated_condition_list(
+        is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(
             conditions.host_name)
 
         regex_count = len(
@@ -1709,7 +1710,7 @@ class VSExplicitConditions(Transform):
         elif self._rulespec.item_type == "item":
             condition = self._rulespec.item_name + " "
 
-        is_negate, service_conditions = tuple_rulesets.parse_negated_condition_list(
+        is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(
             conditions.service_description)
 
         exact_match_count = len(

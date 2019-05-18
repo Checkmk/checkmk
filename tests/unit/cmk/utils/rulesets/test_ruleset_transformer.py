@@ -6,6 +6,7 @@ import pytest  # type: ignore
 import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.exceptions import MKGeneralException
 
 
@@ -15,7 +16,7 @@ def test_transform_tuple_ruleset():
         ("VAL2", ["HOSTLIST2"]),
     ]
 
-    tuple_rulesets.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
+    ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
         ruleset, is_binary=False, is_service=False)
 
     assert ruleset == [
@@ -45,7 +46,7 @@ def test_transform_mixed_ruleset():
         },
     ]
 
-    tuple_rulesets.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
+    ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
         ruleset, is_binary=False, is_service=False)
 
     assert ruleset == [
@@ -66,7 +67,7 @@ def test_transform_mixed_ruleset():
 
 def test_transform_physical_hosts():
     with pytest.raises(MKGeneralException, match="PHYSICAL_HOSTS"):
-        tuple_rulesets.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
+        ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
             [
                 ("VAL1", tuple_rulesets.PHYSICAL_HOSTS),
             ], is_binary=False, is_service=False)
@@ -74,7 +75,7 @@ def test_transform_physical_hosts():
 
 def test_transform_cluster_hosts():
     with pytest.raises(MKGeneralException, match="CLUSTER_HOSTS"):
-        tuple_rulesets.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
+        ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
             [
                 ("VAL1", tuple_rulesets.CLUSTER_HOSTS),
             ], is_binary=False, is_service=False)
@@ -690,7 +691,7 @@ def test_transform(case, rule_options):
         rule_spec = rule_spec + (rule_options,)
 
     ruleset = [rule_spec]
-    tuple_rulesets.RulesetToDictTransformer(tag_to_group_map=TAG_TO_GROUP_MAP).transform_in_place(
+    ruleset_matcher.RulesetToDictTransformer(tag_to_group_map=TAG_TO_GROUP_MAP).transform_in_place(
         ruleset, is_service=case.is_service, is_binary=case.is_binary)
 
     expected = case.new.copy()
@@ -728,7 +729,7 @@ def test_get_tag_to_group_map(monkeypatch):
             },
         ],
     })
-    assert tuple_rulesets.get_tag_to_group_map(tag_config) == {
+    assert ruleset_matcher.get_tag_to_group_map(tag_config) == {
         'bla': 'bla',
         'lan': 'networking',
         'prod': 'criticality',

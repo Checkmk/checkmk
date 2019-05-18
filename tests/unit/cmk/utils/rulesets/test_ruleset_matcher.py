@@ -2,7 +2,7 @@
 # pylint: disable=redefined-outer-name
 import pytest  # type: ignore
 from testlib.base import Scenario
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 
 
 def test_ruleset_match_object_invalid_attribute_in_init():
@@ -84,7 +84,7 @@ def test_basic_get_host_ruleset_values(monkeypatch):
     ts.add_host("host1")
     ts.add_host("host2")
     config_cache = ts.apply(monkeypatch)
-    matcher = RulesetMatcher(config_cache)
+    matcher = config_cache.ruleset_matcher
 
     assert list(
         matcher.get_host_ruleset_values(
@@ -114,7 +114,7 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch):
     ts.add_host("lvl1", host_path="/level1/hosts.mk")
     ts.add_host("lvl2", host_path="/level1/level2/hosts.mk")
     config_cache = ts.apply(monkeypatch)
-    matcher = RulesetMatcher(config_cache)
+    matcher = config_cache.ruleset_matcher
 
     assert list(
         matcher.get_host_ruleset_values(
@@ -184,7 +184,7 @@ def test_basic_host_ruleset_get_merged_dict_values(monkeypatch):
     ts.add_host("host2")
     config_cache = ts.apply(monkeypatch)
 
-    matcher = RulesetMatcher(config_cache)
+    matcher = config_cache.ruleset_matcher
     assert matcher.get_host_ruleset_merged_dict(
         RulesetMatchObject(host_name="abc", service_description=None), ruleset=dict_ruleset) == {}
     assert matcher.get_host_ruleset_merged_dict(
@@ -245,7 +245,7 @@ def test_basic_host_ruleset_is_matching_host_ruleset(monkeypatch):
     ts.add_host("host2")
     config_cache = ts.apply(monkeypatch)
 
-    matcher = RulesetMatcher(config_cache)
+    matcher = config_cache.ruleset_matcher
     assert matcher.is_matching_host_ruleset(
         RulesetMatchObject(host_name="abc", service_description=None),
         ruleset=binary_ruleset) is False

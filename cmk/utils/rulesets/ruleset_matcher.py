@@ -26,7 +26,7 @@
 """This module provides generic Check_MK ruleset processing functionality"""
 
 import os
-from typing import Optional, Generator, Dict, Text, Pattern, Tuple, List  # pylint: disable=unused-import
+from typing import Set, Optional, Generator, Dict, Text, Pattern, Tuple, List  # pylint: disable=unused-import
 
 from cmk.utils.rulesets.tuple_rulesets import (
     ALL_HOSTS,
@@ -73,13 +73,20 @@ class RulesetMatcher(object):
     done very often in large setups. Be careful when working here.
     """
 
-    def __init__(self, config_cache):
+    def __init__(self, tag_to_group_map, host_tag_lists, host_paths, all_configured_hosts,
+                 clusters_of, nodes_of):
         super(RulesetMatcher, self).__init__()
-        self._config_cache = config_cache
 
-        self.tuple_transformer = RulesetToDictTransformer(
-            tag_to_group_map=config_cache.get_tag_to_group_map())
-        self.ruleset_optimizer = RulesetOptimizer(config_cache)
+        self.tuple_transformer = RulesetToDictTransformer(tag_to_group_map=tag_to_group_map)
+
+        self.ruleset_optimizer = RulesetOptimizer(
+            host_tag_lists,
+            host_paths,
+            all_configured_hosts,
+            clusters_of,
+            nodes_of,
+        )
+
         self._service_match_cache = {}
 
     def is_matching_host_ruleset(self, match_object, ruleset):
@@ -114,7 +121,8 @@ class RulesetMatcher(object):
 
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
-        with_foreign_hosts = match_object.host_name not in self._config_cache.all_processed_hosts()
+        with_foreign_hosts = match_object.host_name not in \
+                                self.ruleset_optimizer.all_processed_hosts()
         optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
             ruleset, with_foreign_hosts, is_binary=is_binary)
 
@@ -151,7 +159,8 @@ class RulesetMatcher(object):
         Replaces service_extra_conf"""
         self.tuple_transformer.transform_in_place(ruleset, is_service=True, is_binary=is_binary)
 
-        with_foreign_hosts = match_object.host_name not in self._config_cache.all_processed_hosts()
+        with_foreign_hosts = match_object.host_name not in \
+                                self.ruleset_optimizer.all_processed_hosts()
         optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
             ruleset, with_foreign_hosts, is_binary=is_binary)
 
@@ -213,9 +222,25 @@ class RulesetOptimizer(object):
     """Performs some precalculations on the configured rulesets to improve the
     processing performance"""
 
-    def __init__(self, config_cache):
+    def __init__(self, host_tag_lists, host_paths, all_configured_hosts, clusters_of, nodes_of):
         super(RulesetOptimizer, self).__init__()
-        self._config_cache = config_cache
+        self._host_tag_lists = host_tag_lists
+        self._host_paths = host_paths
+        self._clusters_of = clusters_of
+        self._nodes_of = nodes_of
+
+        self._all_configured_hosts = all_configured_hosts
+
+        # Contains all hostnames which are currently relevant for this cache
+        # Most of the time all_processed hosts is similar to all_active_hosts
+        # Howewer, in a multiprocessing environment all_processed_hosts only
+        # may contain a reduced set of hosts, since each process handles a subset
+        self._all_processed_hosts = self._all_configured_hosts
+
+        # A factor which indicates how much hosts share the same host tag configuration (excluding folders).
+        # len(all_processed_hosts) / len(different tag combinations)
+        # It is used to determine the best rule evualation method
+        self._all_processed_hosts_similarity = 1
 
         self._service_ruleset_cache = {}
         self._host_ruleset_cache = {}
@@ -236,6 +261,47 @@ class RulesetOptimizer(object):
 
         # TODO: Clean this one up?
         self._initialize_host_lookup()
+
+    def all_processed_hosts(self):
+        # type: () -> Set[str]
+        """Returns a set of all processed hosts"""
+        return self._all_processed_hosts
+
+    def set_all_processed_hosts(self, all_processed_hosts):
+        self._all_processed_hosts = set(all_processed_hosts)
+
+        nodes_and_clusters = set()
+        for hostname in self._all_processed_hosts:
+            nodes_and_clusters.update(self._nodes_of.get(hostname, []))
+            nodes_and_clusters.update(self._clusters_of.get(hostname, []))
+
+        # Only add references to configured hosts
+        nodes_and_clusters.intersection_update(self._all_configured_hosts)
+
+        self._all_processed_hosts.update(nodes_and_clusters)
+
+        # The folder host lookup includes a list of all -processed- hosts within a given
+        # folder. Any update with set_all_processed hosts invalidates this cache, because
+        # the scope of relevant hosts has changed. This is -good-, since the values in this
+        # lookup are iterated one by one later on in all_matching_hosts
+        self._folder_host_lookup = {}
+
+        self._adjust_processed_hosts_similarity()
+
+    def _adjust_processed_hosts_similarity(self):
+        """ This function computes the tag similarities between of the processed hosts
+        The result is a similarity factor, which helps finding the most perfomant operation
+        for the current hostset """
+        used_groups = set()
+        for hostname in self._all_processed_hosts:
+            used_groups.add(self._host_grouped_ref[hostname])
+
+        if not used_groups:
+            self._all_processed_hosts_similarity = 1
+            return
+
+        self._all_processed_hosts_similarity = (
+            1.0 * len(self._all_processed_hosts) / len(used_groups))
 
     def get_host_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         cache_id = id(ruleset), with_foreign_hosts
@@ -327,9 +393,9 @@ class RulesetOptimizer(object):
             pass
 
         if with_foreign_hosts:
-            valid_hosts = self._config_cache.all_configured_hosts()
+            valid_hosts = self._all_configured_hosts
         else:
-            valid_hosts = self._config_cache.all_processed_hosts()
+            valid_hosts = self._all_processed_hosts
 
         # Thin out the valid hosts further. If the rule is located in a folder
         # we only need the intersection of the folders hosts and the previously determined valid_hosts
@@ -362,8 +428,7 @@ class RulesetOptimizer(object):
             for hostname in hosts_to_check:
                 # When no tag matching is requested, do not filter by tags. Accept all hosts
                 # and filter only by hostlist
-                if (not tags or self._matches_host_tags(
-                        self._config_cache.tag_list_of_host(hostname), tags)):
+                if (not tags or self._matches_host_tags(self._host_tag_lists[hostname], tags)):
                     if self._matches_host_name(hostlist, hostname):
                         matching.add(hostname)
 
@@ -446,11 +511,11 @@ class RulesetOptimizer(object):
                 positive_match_tags.add(tag)
 
         # TODO:
-        #if has_specific_folder_tag or self._config_cache.all_processed_hosts_similarity < 3:
-        if self._config_cache.all_processed_hosts_similarity < 3:
+        #if has_specific_folder_tag or self._all_processed_hosts_similarity < 3:
+        if self._all_processed_hosts_similarity < 3:
             # Without shared folders
             for hostname in valid_hosts:
-                host_tags = self._config_cache.tag_list_of_host(hostname)
+                host_tags = self._host_tag_lists[hostname]
                 if not positive_match_tags - host_tags:
                     if not negative_match_tags.intersection(host_tags):
                         matching.add(hostname)
@@ -467,7 +532,7 @@ class RulesetOptimizer(object):
             hosts_with_same_tag = self._filter_hosts_with_same_tags_as_host(hostname, valid_hosts)
             checked_hosts.update(hosts_with_same_tag)
 
-            tags = self._config_cache.tag_list_of_host(hostname)
+            tags = self._host_tag_lists[hostname]
             if not positive_match_tags - tags:
                 if not negative_match_tags.intersection(tags):
                     matching.update(hosts_with_same_tag)
@@ -482,13 +547,16 @@ class RulesetOptimizer(object):
         cache_id = with_foreign_hosts, folder_path
         if cache_id not in self._folder_host_lookup:
             hosts_in_folder = set()
-            relevant_hosts = self._config_cache.all_configured_hosts(
-            ) if with_foreign_hosts else self._config_cache.all_processed_hosts()
+            relevant_hosts = self._all_configured_hosts if with_foreign_hosts else self._all_processed_hosts
+
             for hostname in relevant_hosts:
-                if self._config_cache.host_path(hostname).startswith(folder_path):
+                host_path = self._host_paths.get(hostname, "/")
+                if host_path.startswith(folder_path):
                     hosts_in_folder.add(hostname)
+
             self._folder_host_lookup[cache_id] = hosts_in_folder
             return hosts_in_folder
+
         return self._folder_host_lookup[cache_id]
 
     def _initialize_host_lookup(self):
@@ -501,17 +569,17 @@ class RulesetOptimizer(object):
         self._folder_path_set = set(dirnames)
 
         # Determine hosttags without folder tag
-        for hostname in self._config_cache.all_configured_hosts():
-            tags_without_folder = set(self._config_cache.tag_list_of_host(hostname))
+        for hostname in self._all_configured_hosts:
+            tags_without_folder = set(self._host_tag_lists[hostname])
             try:
-                tags_without_folder.remove(self._config_cache.host_path(hostname))
+                tags_without_folder.remove(self._host_paths.get(hostname, "/"))
             except KeyError:
                 pass
 
             self._hosttags_without_folder[hostname] = tags_without_folder
 
         # Determine hosts with same tag setup (ignoring folder tag)
-        for hostname in self._config_cache.all_configured_hosts():
+        for hostname in self._all_configured_hosts:
             group_ref = tuple(sorted(self._hosttags_without_folder[hostname]))
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref

@@ -1139,6 +1139,8 @@ def test_config_cache_tag_list_of_host(monkeypatch):
     ts.add_host("xyz")
     config_cache = ts.apply(monkeypatch)
 
+    print config_cache._hosttags["test-host"]
+    print config_cache._hosttags["xyz"]
     assert config_cache.tag_list_of_host("xyz") == set([
         '/wato/', 'lan', 'ip-v4', 'cmk-agent', 'no-snmp', 'tcp', 'auto-piggyback', 'ip-v4-only',
         'site:unit', 'prod'

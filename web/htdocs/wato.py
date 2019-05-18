@@ -3093,9 +3093,11 @@ class ModeDiscovery(WatoMode):
             elif table_source == self.SERVICE_VANISHED:
                 if table_target != self.SERVICE_REMOVED:
                     autochecks_to_save[(check_type, item)] = paramstring
-                    saved_services.add(descr)
+
                 if table_target == self.SERVICE_IGNORED:
                     add_disabled_rule.add(descr)
+                elif table_target != self.SERVICE_REMOVED:
+                    saved_services.add(descr)
 
             elif table_source == self.SERVICE_MONITORED:
                 if table_target in [self.SERVICE_MONITORED, self.SERVICE_IGNORED]:

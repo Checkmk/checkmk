@@ -30,7 +30,7 @@ import itertools
 import pprint
 import json
 import re
-from typing import NamedTuple, List, Optional  # pylint: disable=unused-import
+from typing import Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
 
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -55,9 +55,8 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import RuleConditions  # pylint: disable=unused-import
-from cmk.gui.watolib.rulespecs import (
-    rulespec_group_registry,
-    rulespec_registry,
+from cmk.gui.watolib.rulespecs import (  # pylint: disable=unused-import
+    rulespec_group_registry, rulespec_registry, Rulespec,
 )
 
 from cmk.gui.plugins.wato.utils.main_menu import (
@@ -1589,49 +1588,56 @@ class VSExplicitConditions(Transform):
             help=self._explicit_service_help_text(),
         )
 
-    def value_to_text(self, value):
+    def value_to_text(self, conditions):  # pylint: disable=arguments-differ
         # type: (RuleConditions) -> None
         html.open_ul(class_="conditions")
-        self._tag_conditions(value)
-        self._host_conditions(value)
-        self._service_conditions(value)
+        renderer = RuleConditionRenderer()
+        for condition in renderer.render(self._rulespec, conditions):
+            html.li(condition, class_="condition")
         html.close_ul()
 
+
+class RuleConditionRenderer(object):
+    def render(self, rulespec, conditions):
+        # type: (Rulespec, RuleConditions) -> List[Text]
+        rendered = []  # type: List[Text]
+        rendered += list(self._tag_conditions(conditions))
+        rendered += list(self._host_conditions(conditions))
+        rendered += list(self._service_conditions(rulespec, conditions))
+        return rendered
+
     def _tag_conditions(self, conditions):
+        # type: (RuleConditions) -> Generator
         for tag_spec in conditions.host_tags.itervalues():
             is_not = isinstance(tag_spec, dict) and "$ne" in tag_spec
             if is_not:
-                tag_id = tag_spec["$ne"]
+                # mypy had some problem with this. Need to check type annotation
+                tag_id = tag_spec["$ne"]  # type: ignore
             else:
                 tag_id = tag_spec
 
-            html.open_li(class_="condition")
-            self._single_tag_condition(tag_id, is_not)
-            html.close_li()
+            yield self._single_tag_condition(tag_id, is_not)
 
     def _single_tag_condition(self, tag_id, negate):
         tag = config.tags.get_tag_or_aux_tag(tag_id)
         if tag and tag.title:
             if not tag.is_aux_tag:
-                html.write_text(_("Host") + ": " + tag.group.title + " " + _("is") + " ")
                 if negate:
-                    html.b(_("not") + " ")
-            else:
-                if negate:
-                    html.write_text(_("Host does not have tag") + " ")
-                else:
-                    html.write_text(_("Host has tag") + " ")
-            html.b(tag.title)
-            return
+                    return HTML(
+                        _("Host: %s is <b>not</b> <b>%s</b>") % (tag.group.title, tag.title))
+                return HTML(_("Host: %s is <b>%s</b>") % (tag.group.title, tag.title))
+
+            if negate:
+                return HTML(_("Host does not have tag <b>%s</b>") % tag.title)
+            return HTML(_("Host has tag <b>%s</b>") % tag.title)
 
         if negate:
-            html.write_text(_("Host has <b>not</b> the tag") + " ")
-            html.tt(tag_id)
-        else:
-            html.write_text(_("Host has the tag") + " ")
-            html.tt(tag_id)
+            return HTML(_("Host has <b>not</b> the tag <tt>%s</tt>")) % tag_id
+
+        return HTML(_("Host has the tag <tt>%s</tt>")) % tag_id
 
     def _host_conditions(self, conditions):
+        # type: (RuleConditions) -> Generator
         if conditions.host_name is None:
             return
 
@@ -1639,7 +1645,7 @@ class VSExplicitConditions(Transform):
         # plus watolib.ALL_HOSTS.
         condition_txt = self._render_host_condition_text(conditions)
         if condition_txt:
-            html.li(condition_txt, class_="condition")
+            yield condition_txt
 
     def _render_host_condition_text(self, conditions):
         if conditions.host_name == []:
@@ -1701,14 +1707,19 @@ class VSExplicitConditions(Transform):
 
         return HTML(" ").join(condition)
 
-    def _service_conditions(self, conditions):
-        if not self._rulespec.item_type or conditions.service_description is None:
+    def _service_conditions(self, rulespec, conditions):
+        # type: (Rulespec, RuleConditions) -> Generator
+        if not rulespec.item_type or conditions.service_description is None:
             return
 
-        if self._rulespec.item_type == "service":
-            condition = _("Service name ")
-        elif self._rulespec.item_type == "item":
-            condition = self._rulespec.item_name + " "
+        if rulespec.item_type == "service":
+            condition = _("Service name")
+        elif rulespec.item_type == "item":
+            if rulespec.item_name is not None:
+                condition = rulespec.item_name
+            else:
+                condition = _("Item")
+        condition += " "
 
         is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(
             conditions.service_description)
@@ -1748,7 +1759,7 @@ class VSExplicitConditions(Transform):
             condition += _(" or ") + text_list[-1]
 
         if condition:
-            html.li(condition, class_="condition")
+            yield condition
 
 
 @mode_registry.register

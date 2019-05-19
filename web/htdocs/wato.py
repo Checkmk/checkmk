@@ -13847,7 +13847,7 @@ class ModeEditRuleset(WatoMode):
         if html.var("host"):
             vars.append(("host", self._hostname))
         if html.var("item"):
-            vars.append(("item", self._item))
+            vars.append(("item", watolib.mk_repr(self._item)))
 
         return make_action_link(vars)
 

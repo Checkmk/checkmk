@@ -573,7 +573,7 @@ class RulesetOptimizer(object):
             tags_without_folder = set(self._host_tag_lists[hostname])
             try:
                 tags_without_folder.remove(self._host_paths.get(hostname, "/"))
-            except KeyError:
+            except (KeyError, ValueError):
                 pass
 
             self._hosttags_without_folder[hostname] = tags_without_folder

@@ -425,8 +425,15 @@ void PluginEntry::restartIfRequired() {
             data_time_ =
                 std::chrono::steady_clock::now();  // update time of start
         }
+        auto filename = path().u8string();
         // execution phase
-        cma::tools::RunDetachedCommand(path().u8string());
+        XLOG::l.t("Starting '{}'", filename);
+        auto result = cma::tools::RunDetachedCommand(filename);
+        if (result)
+            XLOG::l.i("Starting '{}' OK!", filename);
+        else
+            XLOG::l("Starting '{}' FAILED with error [{}]", filename,
+                    GetLastError());
     }
 }
 
@@ -705,7 +712,7 @@ void RunDetachedPlugins(PluginMap& plugins_map, int& start_count) {
             continue;
         };
     }
-
+    XLOG::l.i("Detached started: [{}]", count);
     start_count = count;
 
     return;

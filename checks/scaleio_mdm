@@ -117,7 +117,7 @@ def check_scaleio_mdm(item, params, parsed):
 
     for role in ["Master MDM", "Slave MDMs", "Tie-Breakers", "Standby MDMs"]:
         state, nodes = 0, []
-        for node in parsed.get(role, {}):
+        for node in sorted(parsed.get(role, {})):
             nodes.append(node)
             status = parsed[role][node].get("Status", "Normal")
             if status != "Normal":

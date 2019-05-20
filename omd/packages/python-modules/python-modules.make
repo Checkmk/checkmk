@@ -319,6 +319,7 @@ python-modules-dump-Pipfile:
 	@echo 'docker = "*"'
 	@echo 'mockldap = "*"'
 	@echo 'isort = "*"'
+	@echo 'freezegun = "*"'
 	@echo '# We have to use a snapshot, a version which works for us has not been released yet. :-/'
 	@echo '# Workaround: We need to upload the Archive and cannot use it from our Git due to a Pipenv bug'
 	@echo 'compiledb = {file = "http://nexus:8081/repository/archives/compiledb-10a1da2.tar.gz"}'

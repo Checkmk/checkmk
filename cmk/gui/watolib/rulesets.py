@@ -50,7 +50,6 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.utils import (
     ALL_HOSTS,
     ALL_SERVICES,
-    NO_ITEM,
     NEGATE,
 )
 
@@ -776,7 +775,7 @@ class Rule(object):
     def is_ineffective(self):
         hosts = Host.all()
         for host_name, host in hosts.items():
-            if self.matches_host_and_item(host.folder(), host_name, NO_ITEM):
+            if self.matches_host_and_item(host.folder(), host_name, service_description=None):
                 return False
         return True
 

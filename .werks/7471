@@ -1,0 +1,12 @@
+Title: mbg_lantime_ng_refclock: Do not crash if clock type is unknown
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p17
+Date: 1558345379
+
+There might be newer clock types, eg. '92', but we did not find any up-to-date MIB.
+Thus we skip these unknown clock types at the moment.

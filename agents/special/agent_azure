@@ -60,7 +60,6 @@ from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.monitor.models.error_response import ErrorResponseException
 from azure.mgmt.compute import ComputeManagementClient
-from azure.mgmt.consumption import ConsumptionManagementClient  # pylint: disable=import-error,no-name-in-module
 from azure.common.credentials import ServicePrincipalCredentials
 logging.getLogger().handlers.pop()
 
@@ -632,6 +631,7 @@ class UsageClient(DataCache):
     def __init__(self, credentials, subscription, debug=False):
         super(UsageClient, self).__init__(
             AZURE_CACHE_FILE_PATH, "%s-usage" % subscription, debug=debug)
+        from azure.mgmt.consumption import ConsumptionManagementClient  # pylint: disable=import-error,no-name-in-module
         self.client = ConsumptionManagementClient(credentials, subscription)
 
     @property

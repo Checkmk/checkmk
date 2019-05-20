@@ -68,16 +68,17 @@ class CrashDataset(WritableDataset):
                 raise SkipReport("local check plugin")
 
         init_dict = {}
-        self.full_checkname = crashinfo['details']['check_type']
-        checkname = self.full_checkname.split('.', 1)[0]
-        if checkname == "discovery":
-            checkname = self._find_checkname_from_traceback(traceback)
-            self.is_discovery = True
-            if not checkname:
+        full_checkname = crashinfo['details']['check_type']
+        if full_checkname == 'discovery':
+            full_checkname = self._find_checkname_from_traceback(traceback)
+            if not full_checkname:
                 raise SkipReport("found no check plugin from traceback")
+            self.is_discovery = True
         else:
             self.is_discovery = False
 
+        self.full_checkname = full_checkname
+        checkname = self.full_checkname.split('.', 1)[0]
         init_dict['checkname'] = checkname
 
         local_vars_encoded = crashinfo.get('local_vars')

@@ -1,11 +1,18 @@
 missingIncludeSystem
-passedByValue
+// Too many false positives... :-/
 unusedFunction
-// cppcheck doesn't undestand uniform initialization yet.
-constStatement
-// This is nonsense, but otherwise cppcheck complains even if it shouldn't.
+useStlAlgorithm
+// The TEST/TEST_F macros from googletest do not contain "override".
+missingOverride:test_*.cc
+// We do not care about warnings in our libraries.
+*:*/include/boost/*
+*:*/include/gtest/*
+*:*/include/re2/*
+// Why on earth do we need this???
+unmatchedSuppression:test_*.cc
+unmatchedSuppression:test-*.cpp
+unmatchedSuppression:*/extlibs/*
+unmatchedSuppression:*/include/boost/*
+unmatchedSuppression:*/include/gtest/*
+unmatchedSuppression:*/include/re2/*
 unmatchedSuppression
-// cppcheck is simply too dumb about macros...
-*:*/include/boost/config.hpp
-// cppcheck doesn't like some RE2 stuff, silly and not our business...
-noExplicitConstructor:*/include/re2/*.h

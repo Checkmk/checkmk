@@ -51,10 +51,15 @@ def output_profile():
 
     _profile.dump_stats(_profile_path)
     show_profile = os.path.join(os.path.dirname(_profile_path), "show_profile.py")
-    with file(show_profile, "w") as f:
-        f.write("#!/usr/bin/python\n"
+    with open(show_profile, "w") as f:
+        f.write("#!/usr/bin/env python\n"
+                "import sys\n"
                 "import pstats\n"
-                "stats = pstats.Stats('%s')\n"
+                "try:\n"
+                "    profile_file = sys.argv[1]\n"
+                "except IndexError:\n"
+                "    profile_file = %r\n"
+                "stats = pstats.Stats(profile_file)\n"
                 "stats.sort_stats('time').print_stats()\n" % _profile_path)
     os.chmod(show_profile, 0755)
 

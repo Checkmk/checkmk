@@ -68,10 +68,10 @@
 
 namespace {
 constexpr unsigned classmask_statehist =
-    (1u << static_cast<int>(LogEntry::Class::alert)) |    //
-    (1u << static_cast<int>(LogEntry::Class::program)) |  //
-    (1u << static_cast<int>(LogEntry::Class::state)) |    //
-    (1u << static_cast<int>(LogEntry::Class::text));
+    (1U << static_cast<int>(LogEntry::Class::alert)) |    //
+    (1U << static_cast<int>(LogEntry::Class::program)) |  //
+    (1U << static_cast<int>(LogEntry::Class::state)) |    //
+    (1U << static_cast<int>(LogEntry::Class::text));
 }  // namespace
 
 #ifndef CMC

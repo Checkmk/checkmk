@@ -108,12 +108,12 @@ void Logfile::load(unsigned logclasses) {
 
         // file might have grown. Read all classes that we already
         // have read to the end of the file
-        if (_logclasses_read != 0u) {
+        if (_logclasses_read != 0U) {
             fsetpos(file, &_read_pos);  // continue at previous end
             loadRange(file, _logclasses_read, logclasses);
             fgetpos(file, &_read_pos);
         }
-        if (missing_types != 0u) {
+        if (missing_types != 0U) {
             fseek(file, 0, SEEK_SET);
             _lineno = 0;
             loadRange(file, missing_types, logclasses);
@@ -172,8 +172,8 @@ long Logfile::freeMessages(unsigned logclasses) {
     // usual post-increment idiom, see Scott Meyers' "Effective STL", item 9
     // ("Choose carefully among erasing options.").
     for (auto it = _entries.begin(); it != _entries.end();) {
-        if (((1u << static_cast<int>(it->second->_logclass)) & logclasses) !=
-            0u) {
+        if (((1U << static_cast<int>(it->second->_logclass)) & logclasses) !=
+            0U) {
             _entries.erase(it++);
             freed++;
         } else {
@@ -191,7 +191,7 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
     if (entry->_logclass == LogEntry::Class::invalid) {
         return false;
     }
-    if (((1u << static_cast<int>(entry->_logclass)) & logclasses) == 0u) {
+    if (((1U << static_cast<int>(entry->_logclass)) & logclasses) == 0U) {
         return false;
     }
     uint64_t key = makeKey(entry->_time, entry->_lineno);

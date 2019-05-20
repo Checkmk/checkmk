@@ -213,7 +213,7 @@ ui_theme = "classic"
 start_url = "dashboard.py"
 
 # Page heading for main frame set
-page_heading = "Check_MK %s"
+page_heading = "Checkmk %s"
 
 login_screen = {}
 

@@ -27,7 +27,7 @@ It is highly recommended to use the prebuilt Checkmk packages we
 [provide](https://mathias-kettner.com/download.php). But if you really want to
 build your own packages, you either need to download the source packages from
 our website or check out the [Git
-repository](https://github.com/tribe29/checkMK).
+repository](https://github.com/tribe29/checkmk).
 
 To prepare your system for building, you need to execute this command:
 

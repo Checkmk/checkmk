@@ -547,7 +547,7 @@ class CREFolder(BaseFolder):
         attributes = self._transform_tag_snmp_ds(attributes)
         return attributes
 
-    # In versions previous to 1.6 checkMK had a tag group named "snmp" and an
+    # In versions previous to 1.6 Checkmk had a tag group named "snmp" and an
     # auxiliary tag named "snmp" in the builtin tags. This name conflict had to
     # be resolved. The tag group has been changed to "snmp_ds" to fix it.
     def _transform_tag_snmp_ds(self, attributes):

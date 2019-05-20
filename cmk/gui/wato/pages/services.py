@@ -503,6 +503,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         request.setdefault("update_source", None)
         request.setdefault("update_services", [])
 
+        # Make Folder() be able to detect the current folder correctly
+        html.request.set_var("folder", request["folder_path"])
+
         folder = watolib.Folder.folder(request["folder_path"])
         self._host = folder.host(request["host_name"])
         if not self._host:

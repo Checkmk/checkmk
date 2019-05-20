@@ -698,7 +698,6 @@ class Rule(object):
         super(Rule, self).__init__()
         self.ruleset = ruleset
         self.folder = folder
-        #self._matcher = RuleMatcher()
 
         # Content of the rule itself
         self._initialize()
@@ -781,29 +780,56 @@ class Rule(object):
                 return False
         return True
 
-    def matches_host_and_item(self, host_folder, hostname, item):
+    def matches_host_and_item(self, host_folder, hostname, service_description):
         """Whether or not the given folder/host/item matches this rule"""
-        return not any(True for _r in self.get_mismatch_reasons(host_folder, hostname, item))
+        return not any(
+            True for _r in self.get_mismatch_reasons(host_folder, hostname, service_description))
 
-    def get_mismatch_reasons(self, host_folder, hostname, item):
+    def get_mismatch_reasons(self, host_folder, hostname, service_description):
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
-        #host = host_folder.host(hostname)
-        #match_object = ruleset_matcher.RulesetMatchObject(
-        #    host_name=hostname,
-        #    host_folder=host_folder.path(),
-        #    host_tags=host.tag_groups(),
-        #    service_description=item,
-        #)
-        raise NotImplementedError()
-        #if self._matcher.match(match_object.to_dict(), self.conditions.to_config_with_folder()):
-        #    return
-        #
-        #yield _("The rule does not match")
+        host = host_folder.host(hostname)
+        if host is None:
+            raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
+
+        match_object = ruleset_matcher.RulesetMatchObject(
+            host_name=hostname,
+            host_folder="/" + host_folder.path(),
+            host_tags=host.tag_groups(),
+            service_description=service_description,
+        )
+
+        for reason in self._get_mismatch_reasons_of_match_object(match_object, host.tags()):
+            yield reason
 
     def matches_item(self, item):
-        #match_object = ruleset_matcher.RulesetMatchObject(service_description=item)
-        raise NotImplementedError()
-        #return self._matcher.match(match_object.to_dict(), self.conditions.to_config_with_folder())
+        match_object = ruleset_matcher.RulesetMatchObject(
+            host_name=None,
+            host_folder="/",
+            service_description=item,
+        )
+        return any(self._get_mismatch_reasons_of_match_object(match_object, host_tags=[]))
+
+    def _get_mismatch_reasons_of_match_object(self, match_object, host_tags):
+        matcher = ruleset_matcher.RulesetMatcher(
+            tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags),
+            host_tag_lists={match_object.host_name: host_tags},
+            host_paths={match_object.host_name: match_object.host_folder},
+            all_configured_hosts=set([match_object.host_name]),
+            clusters_of={},
+            nodes_of={},
+        )
+
+        rule_dict = self.to_config()
+        rule_dict["condition"]["host_folder"] = self.folder.path()
+
+        if self.ruleset.item_type():
+            if matcher.is_matching_service_ruleset(match_object, [rule_dict]):
+                return
+        else:
+            if matcher.is_matching_host_ruleset(match_object, [rule_dict]):
+                return
+
+        yield _("The rule does not match")
 
     def matches_search(self, search_options):
         if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(

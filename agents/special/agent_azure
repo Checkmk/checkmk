@@ -688,7 +688,8 @@ def gather_metrics(client, resource):
     remaining_api_reads = None
     for metric_def in metric_definitions:
         cache = MetricCache(resource, metric_def, NOW, debug=client.args.debug)
-        resource.metrics += cache.get_data(client.monitor_client, resource.info['id'], err)
+        resource.metrics += cache.get_data(
+            client.monitor_client, resource.info['id'], err, use_cache=cache.cache_interval > 60)
         remaining_api_reads = (min((remaining_api_reads, cache.remaining_reads)) or
                                cache.remaining_reads or remaining_api_reads)
     remaining_api_reads = remaining_api_reads or "unknown (no metrics fetched)"

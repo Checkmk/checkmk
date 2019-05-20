@@ -39,7 +39,10 @@ CXX_FLAGS          := -g -O3 -Wall -Wextra
 CLANG_VERSION      := 8
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
-export RUN_CLANG_TIDY := run-clang-tidy-$(CLANG_VERSION).py
+export RUN_CLANG_TIDY := \
+    $(realpath scripts/run-clang-tidy.py) \
+        -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
+        -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen

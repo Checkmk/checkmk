@@ -37,12 +37,28 @@
 #       * modernize-use-bool-literals ("converting integer literal to bool, use bool literal instead") Incorrectly triggered by e.g. FD_ZERO
 #
 #   * temporarily disabled:
+#       * bugprone-narrowing-conversions
+#       * cert-msc32-c
+#       * cert-msc51-cpp
 #       * clang-analyzer-optin.performance.Padding
+#       * cppcoreguidelines-avoid-c-arrays
+#       * cppcoreguidelines-avoid-magic-numbers
+#       * cppcoreguidelines-macro-usage
+#       * cppcoreguidelines-narrowing-conversions
+#       * cppcoreguidelines-non-private-member-variables-in-classes
 #       * cppcoreguidelines-special-member-functions
+#       * fuchsia-statically-constructed-objects
+#       * hicpp-avoid-c-arrays
 #       * hicpp-special-member-functions
+#       * misc-non-private-member-variables-in-classes
+#       * modernize-avoid-c-arrays
 #       * modernize-use-default-member-init
+#       * performance-unnecessary-value-param
+#       * readability-isolate-declaration
+#       * readability-magic-numbers
 #
-Checks: '*,-android-cloexec-fopen,-android-cloexec-open,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-fuchsia-default-arguments,-fuchsia-overloaded-operator,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-signed-bitwise,-hicpp-vararg,-llvm-header-guard,-llvm-include-order,-modernize-use-bool-literals,-clang-analyzer-optin.performance.Padding,-cppcoreguidelines-special-member-functions,-hicpp-special-member-functions,-modernize-use-default-member-init'
+Checks: '*,-android-cloexec-fopen,-android-cloexec-open,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-fuchsia-default-arguments,-fuchsia-overloaded-operator,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-signed-bitwise,-hicpp-vararg,-llvm-header-guard,-llvm-include-order,-modernize-use-bool-literals,-bugprone-narrowing-conversions,-cert-msc32-c,-cert-msc51-cpp,-clang-analyzer-optin.performance.Padding,-cppcoreguidelines-avoid-c-arrays,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-narrowing-conversions,-cppcoreguidelines-non-private-member-variables-in-classes,-cppcoreguidelines-special-member-functions,-fuchsia-statically-constructed-objects,-hicpp-avoid-c-arrays,-hicpp-special-member-functions,-misc-non-private-member-variables-in-classes,-modernize-avoid-c-arrays,-modernize-use-default-member-init,-performance-unnecessary-value-param,-readability-isolate-declaration,-readability-magic-numbers'
+#
 CheckOptions:
   - key:             google-readability-namespace-comments.SpacesBeforeComments
     value:           '1'

@@ -459,3 +459,12 @@ img.glass {
 tr.hidden {
     display: none;
 }
+
+input.button.hot, input.button.hot:active {
+  background-color: #11bd7b;
+  border: 1px solid #11bd7b !important;
+}
+
+input.button.hot:hover {
+  background-color: #13d389;
+}

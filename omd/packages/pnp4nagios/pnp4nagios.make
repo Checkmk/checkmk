@@ -25,6 +25,7 @@ PNP4NAGIOS_CONFIGUREOPTS = \
     --docdir=$(OMD_ROOT)/share/doc/pnp4nagios \
     --datarootdir=$(OMD_ROOT)/share/pnp4nagios/htdocs \
     --localstatedir=$(OMD_ROOT)/var/pnp4nagios \
+    --mandir=$(OMD_ROOT)/share/man \
     --with-perfdata-dir=$(OMD_ROOT)/var/pnp4nagios/perfdata \
     --with-perfdata-spool-dir=$(OMD_ROOT)/tmp/pnp4nagios/spool \
     --with-perfdata-logfile=$(OMD_ROOT)/var/pnp4nagios/log/perfdata.log \

@@ -1,7 +1,7 @@
 import os
 import subprocess
 import re
-import pytest
+import pytest  # type: ignore
 
 
 @pytest.mark.parametrize("what", [
@@ -44,21 +44,32 @@ def test_package_sizes(version_path, what, min_size, max_size):
     ("deb"),
 ])
 def test_files_not_in_version_path(version_path, what):
+    # All files below the standard directories are allowed
+    version_allowed_patterns = [
+        "/opt/omd/versions/###OMD_VERSION###/bin/",
+        "/opt/omd/versions/###OMD_VERSION###/etc/",
+        "/opt/omd/versions/###OMD_VERSION###/include/",
+        "/opt/omd/versions/###OMD_VERSION###/lib/",
+        "/opt/omd/versions/###OMD_VERSION###/local/",
+        "/opt/omd/versions/###OMD_VERSION###/share/",
+        "/opt/omd/versions/###OMD_VERSION###/skel/",
+        "/opt/omd/versions/###OMD_VERSION###/tmp/",
+        "/opt/omd/versions/###OMD_VERSION###/var/",
+    ]
+
     allowed_patterns = {
         "rpm": [
             "/opt$",
             "/opt/omd$",
             "/opt/omd/apache$",
             "/opt/omd/sites$",
-            "/opt/omd/versions",
-        ],
+        ] + version_allowed_patterns,
         "deb": [
             "/$",
             "/opt/$",
             "/opt/omd/$",
             "/opt/omd/apache/$",
             "/opt/omd/sites/$",
-            "/opt/omd/versions/",  # All files below this are allowed
             "/usr/$",
             "/usr/share/$",
             "/usr/share/man/$",
@@ -73,7 +84,7 @@ def test_files_not_in_version_path(version_path, what):
             "/etc/$",
             "/etc/init.d/$",
             "/etc/init.d/check-mk-(raw|enterprise|managed)-.*$",
-        ],
+        ] + version_allowed_patterns,
     }
 
     for pkg in _get_package_paths(version_path, what):
@@ -87,9 +98,13 @@ def test_files_not_in_version_path(version_path, what):
             for line in subprocess.check_output(["dpkg", "-c", pkg]).splitlines():
                 paths.append(line.split()[5].lstrip("."))
 
+        omd_version = version_path.split("/")[-1]
+
         for path in paths:
             if not path.startswith("/opt/omd/versions/"):
-                is_allowed = any(re.match(p, path) for p in allowed_patterns[what])
+                is_allowed = any(
+                    re.match(p.replace("###OMD_VERSION###", omd_version), path)
+                    for p in allowed_patterns[what])
                 assert is_allowed, "Found unexpected global file: %s in %s" % (path, pkg)
 
 

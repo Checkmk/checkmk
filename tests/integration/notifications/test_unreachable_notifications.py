@@ -64,10 +64,7 @@ def scenario(request, web, site):
         rule_result = web.get_ruleset("extra_host_conf:notification_options")
         rule_result["ruleset"] = {
             "": [{
-                'conditions': {
-                    'host_specs': ['@all'],
-                    'host_tags': []
-                },
+                'condition': {},
                 'options': {},
                 'value': notification_options
             }]

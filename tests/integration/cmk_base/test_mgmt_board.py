@@ -269,10 +269,7 @@ def test_mgmt_config_ruleset(web, protocol, cred_attribute, credentials, ruleset
             "ruleset": {
                 "": [  # "" -> folder
                     {
-                        'conditions': {
-                            'host_specs': ['@all'],
-                            'host_tags': []
-                        },
+                        'condition': {},
                         'options': {},
                         'value': (protocol, ruleset_credentials),
                     },
@@ -316,10 +313,7 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(web, protocol, cred_a
             "ruleset": {
                 "": [  # "" -> folder
                     {
-                        'conditions': {
-                            'host_specs': ['@all'],
-                            'host_tags': []
-                        },
+                        'condition': {},
                         'options': {},
                         'value': (protocol, ruleset_credentials),
                     },
@@ -355,18 +349,12 @@ def test_mgmt_config_ruleset_order(web):
             "ruleset": {
                 "": [  # "" -> folder
                     {
-                        'conditions': {
-                            'host_specs': ['@all'],
-                            'host_tags': []
-                        },
+                        'condition': {},
                         'options': {},
                         'value': ("snmp", "RULESET1"),
                     },
                     {
-                        'conditions': {
-                            'host_specs': ['@all'],
-                            'host_tags': []
-                        },
+                        'condition': {},
                         'options': {},
                         'value': ("snmp", "RULESET2"),
                     },

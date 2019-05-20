@@ -78,7 +78,7 @@ METRICS_SELECTED = {
     # key: list of (name(s), interval, aggregation, filter)
     # NB: Azure API won't have requests with more than 20 metric names at once
     'Microsoft.Network/virtualNetworkGateways': [
-        ('AverageBandwidth,P2SBandwidth', 'PT1M', 'average', None),
+        ('AverageBandwidth,P2SBandwidth', 'PT5M', 'average', None),
         ('P2SConnectionCount', 'PT1M', 'maximum', None),
     ],
     'Microsoft.Sql/servers/databases': [
@@ -432,8 +432,9 @@ class AzureMetricParseError(ValueError):
 
 def create_metric_dict(metric, aggregation, interval_id, filter_):
 
+    name = metric.name.value
     metric_dict = {
-        'name': metric.name.value,
+        'name': name,
         'aggregation': aggregation,
         'value': None,
         'unit': metric.unit.name,
@@ -443,29 +444,28 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
         'interval': None,
     }
 
-    count = len(metric.timeseries)
-    if count == 0:
-        msg = "no timeseries found for metric %r" % metric.name.value
-        raise AzureMetricParseError('info', msg)
+    timeseries = metric.timeseries
+    if not timeseries:
+        raise AzureMetricParseError('info', "no timeseries found for metric %r" % name)
 
-    for measurement in reversed(metric.timeseries):
-        if not measurement.data:
+    for measurement in reversed(timeseries):
+        dataset = measurement.data
+        if not dataset:
             continue
 
         try:
-            metric_dict['interval'] = str(measurement.data[-1].time_stamp -
-                                          measurement.data[-2].time_stamp)
+            metric_dict['interval'] = str(dataset[-1].time_stamp - dataset[-2].time_stamp)
         except (IndexError, TypeError):
             pass
 
-        for data in reversed(measurement.data):
+        for data in reversed(dataset):
             LOG.debug("data: %s", data)
             metric_dict['value'] = getattr(data, aggregation, None)
             if metric_dict['value'] is not None:
                 metric_dict['timestamp'] = str(calendar.timegm(data.time_stamp.utctimetuple()))
                 return metric_dict
 
-    raise AzureMetricParseError('warning', "not found: %s (%s)" % (metric.name.value, aggregation))
+    raise AzureMetricParseError('warning', "not found: %s (%s)" % (name, aggregation))
 
 
 class AzureResource(object):
@@ -541,12 +541,6 @@ class AzureClient(object):
             client_class = AzureClient.SPECIFIC_CLIENTS.get(rtp)
             if client_class is not None:
                 self.specific_clients[rtp] = client_class(self._creds, self.args.subscription)
-
-    def process_specific(self, resource):
-        client = self.specific_clients.get(resource.info["type"])
-        if client is None:
-            return
-        client.process(resource, self.args)
 
     def list_groups(self):
         if "groups" not in self._cache:
@@ -661,7 +655,8 @@ class UsageClient(DataCache):
 
         # add group info:
         for usage in usages:
-            match = AzureResource.ID_PATTERN.match(usage["instance_id"])
+            iid = usage["instance_id"]
+            match = AzureResource.ID_PATTERN.match(iid)
             group = match.group("group")
             if group:
                 usage["group"] = group
@@ -699,7 +694,10 @@ def gather_metrics(client, resource):
 def process_resource(args):
     resource, client = args
 
-    client.process_specific(resource)
+    r_type = resource.info.get("type")
+    if r_type == 'Microsoft.Compute/virtualMachines':
+        # TODO: This will be a simple function call once we use requests
+        client.specific_clients[r_type].process(resource, client.args)
 
     remaining_api_reads, err = gather_metrics(client, resource)
 
@@ -716,9 +714,11 @@ def process_resource(args):
 def write_group_info(client, monitored_groups):
 
     for group in client.list_groups():
-        if group.name in monitored_groups and group.tags:
-            labels_section = LabelsSection(group.name)
-            labels_section.add((json.dumps(group.tags),))
+        name = group.name
+        tags = group.tags
+        if name in monitored_groups and tags:
+            labels_section = LabelsSection(name)
+            labels_section.add((json.dumps(tags),))
             labels_section.write()
 
     section = AzureSection('agent_info')

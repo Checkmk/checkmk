@@ -785,23 +785,25 @@ def main_fetch_ids(args):
 
     # Get the start werk_id to reserve
     try:
-        first_free = int(eval(file('first_free').read()))
-
-        # enterprise werks were between 8000 and 8749. Skip over this area for new
-        # reserved werk ids
-        if first_free >= 8000 and first_free < 8780:
-            first_free = 8780
-
-        # cmk-omd werk were between 7500 and 7680. Skip over this area for new
-        # reserved werk ids
-        if first_free >= 7500 and first_free < 7680:
-            first_free = 7680
-    except:
+        first_free = int(file('first_free').read().strip())
+    except (IOError, ValueError):
         first_free = 0
+
     new_first_free = first_free + num
+    # enterprise werks were between 8000 and 8749. Skip over this area for new
+    # reserved werk ids
+    if 8000 <= first_free < 8780 or 8000 <= new_first_free < 8780:
+        first_free = 8780
+        new_first_free = first_free + num
+
+    # cmk-omd werk were between 7500 and 7680. Skip over this area for new
+    # reserved werk ids
+    if 7500 <= first_free < 7680 or 7500 <= new_first_free < 7680:
+        first_free = 7680
+        new_first_free = first_free + num
 
     # Store the werk_ids to reserve
-    my_ids = get_werk_ids() + range(first_free, first_free + num)
+    my_ids = get_werk_ids() + range(first_free, new_first_free)
     store_werk_ids(my_ids)
 
     # Store the new reserved werk ids

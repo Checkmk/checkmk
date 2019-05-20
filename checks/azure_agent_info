@@ -34,16 +34,22 @@ factory_settings['azure_agent_info_levels'] = {
 
 
 def _update_remaining_reads(parsed, value):
+    '''parse remaining API reads
+
+    The key 'remaining-reads' can be present multiple times,
+    or not at all.
+    Three cases are considered:
+     * 'remaining-reads' not present -> not in parsed
+     * present, but never an integer -> 'unknown'
+     * at least one integer value -> minimum of all values
+    '''
+    parsed.setdefault('remaining-reads', 'unknown')
     try:
         value = int(value)
     except ValueError:
-        pass
-
-    current = parsed.get('remaining-reads', '_some_string')
-    if isinstance(current, str):
-        parsed['remaining-reads'] = value
         return
-    parsed['remaining-reads'] = min(current, value)
+    # integer wins over string!
+    parsed['remaining-reads'] = min(value, parsed['remaining-reads'])
 
 
 def parse_azure_agent_info(info):

@@ -53,7 +53,7 @@ import traceback
 from typing import NamedTuple, List  # pylint: disable=unused-import
 
 import requests
-import urllib3
+import urllib3  # type: ignore
 from pathlib2 import Path
 import six
 
@@ -258,8 +258,6 @@ from cmk.gui.watolib.utils import (
     ALL_HOSTS,
     ALL_SERVICES,
     NEGATE,
-    NO_ITEM,
-    ENTRY_NEGATE_CHAR,
     wato_root_dir,
     multisite_dir,
     rename_host_in_list,
@@ -421,51 +419,99 @@ def _create_sample_config():
     # Rules that match the upper host tag definition
     ruleset_config = {
         # Make the tag 'offline' remove hosts from the monitoring
-        'only_hosts': [(['!offline'], ['@all'], {
-            'description': u'Do not monitor hosts with the tag "offline"'
-        }),],
+        'only_hosts': [{
+            'condition': {
+                'host_tags': {
+                    'criticality': {
+                        '$ne': 'offline'
+                    }
+                }
+            },
+            'value': True,
+            'options': {
+                'description': u'Do not monitor hosts with the tag "offline"'
+            },
+        },],
 
         # Rule for WAN hosts with adapted PING levels
-        'ping_levels': [({
-            'loss': (80.0, 100.0),
-            'packets': 6,
-            'rta': (1500.0, 3000.0),
-            'timeout': 20
-        }, ['wan'], ['@all'], {
-            'description': u'Allow longer round trip times when pinging WAN hosts'
-        }),],
+        'ping_levels': [{
+            'condition': {
+                'host_tags': {
+                    'networking': 'wan',
+                }
+            },
+            'value': {
+                'loss': (80.0, 100.0),
+                'packets': 6,
+                'timeout': 20,
+                'rta': (1500.0, 3000.0)
+            },
+            'options': {
+                'description': u'Allow longer round trip times when pinging WAN hosts'
+            },
+        },],
 
         # All hosts should use SNMP v2c if not specially tagged
-        'bulkwalk_hosts': [(['snmp', '!snmp-v1'], ['@all'], {
-            'description': u'Hosts with the tag "snmp-v1" must not use bulkwalk'
-        }),],
+        'bulkwalk_hosts': [{
+            'condition': {
+                'host_tags': {
+                    'snmp': 'snmp',
+                    'snmp_ds': {
+                        '$ne': 'snmp-v1'
+                    },
+                },
+            },
+            'value': True,
+            'options': {
+                'description': u'Hosts with the tag "snmp-v1" must not use bulkwalk'
+            },
+        },],
 
         # Put all hosts and the contact group 'all'
-        'host_contactgroups': [('all', [], ALL_HOSTS, {
-            'description': u'Put all hosts into the contact group "all"'
-        }),],
+        'host_contactgroups': [{
+            'condition': {},
+            'value': 'all',
+            'options': {
+                'description': u'Put all hosts into the contact group "all"'
+            },
+        },],
 
         # Interval for HW/SW-Inventory check
         'extra_service_conf': {
-            'check_interval': [(1440, [], ALL_HOSTS, ["Check_MK HW/SW Inventory$"], {
-                'description': u'Restrict HW/SW-Inventory to once a day'
-            }),],
+            'check_interval': [{
+                'condition': {
+                    'service_description': {
+                        '$regex': 'Check_MK HW/SW Inventory$'
+                    }
+                },
+                'value': 1440,
+                'options': {
+                    'description': u'Restrict HW/SW-Inventory to once a day'
+                },
+            },],
         },
 
         # Disable unreachable notifications by default
         'extra_host_conf': {
-            'notification_options': [('d,r,f,s', [], ALL_HOSTS, {}),],
+            'notification_options': [{
+                'condition': {},
+                'value': 'd,r,f,s'
+            },],
         },
 
         # Periodic service discovery
-        'periodic_discovery': [({
-            'severity_unmonitored': 1,
-            'severity_vanished': 0,
-            'inventory_check_do_scan': True,
-            'check_interval': 120.0
-        }, [], ALL_HOSTS, {
-            'description': u'Perform every two hours a service discovery'
-        }),],
+        'periodic_discovery': [{
+            'condition': {},
+            'value': {
+                'severity_unmonitored': 1,
+                'severity_vanished': 0,
+                'check_interval': 120.0,
+                'inventory_check_do_scan': True
+            },
+            'options': {
+                'description': u'Perform every two hours a service discovery'
+            },
+        },],
     }
 
     rulesets = FolderRulesets(Folder.root_folder())

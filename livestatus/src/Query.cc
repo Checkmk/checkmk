@@ -186,7 +186,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     }
 
     if (_columns.empty() && !doStats()) {
-        table.any_column([this](std::shared_ptr<Column> c) {
+        table.any_column([this](const auto &c) {
             return _columns.push_back(c), _all_columns.insert(c), false;
         });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
@@ -194,9 +194,9 @@ Query::Query(const std::list<std::string> &lines, Table &table,
         _show_column_headers = true;
     }
 
-    _filter = AndingFilter::make(Filter::Kind::row, std::move(filters));
-    _wait_condition = AndingFilter::make(Filter::Kind ::wait_condition,
-                                         std::move(wait_conditions));
+    _filter = AndingFilter::make(Filter::Kind::row, filters);
+    _wait_condition =
+        AndingFilter::make(Filter::Kind ::wait_condition, wait_conditions);
 }
 
 void Query::invalidRequest(const std::string &message) const {
@@ -220,7 +220,7 @@ void Query::parseAndOrLine(char *line, Filter::Kind kind,
         filters.pop_back();
     }
     std::reverse(subfilters.begin(), subfilters.end());
-    filters.push_back(connective(kind, std::move(subfilters)));
+    filters.push_back(connective(kind, subfilters));
 }
 
 void Query::parseNegateLine(char *line, FilterStack &filters) {
@@ -253,7 +253,7 @@ void Query::parseStatsAndOrLine(char *line,
     }
     std::reverse(subfilters.begin(), subfilters.end());
     _stats_columns.push_back(std::make_unique<StatsColumnCount>(
-        connective(Filter::Kind::stats, std::move(subfilters))));
+        connective(Filter::Kind::stats, subfilters)));
 }
 
 void Query::parseStatsNegateLine(char *line) {
@@ -277,7 +277,7 @@ namespace {
 class SumAggregation : public Aggregation {
 public:
     void update(double value) override { sum_ += value; }
-    double value() const override { return sum_; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
     double sum_{0};
@@ -293,7 +293,7 @@ public:
         first_ = false;
     }
 
-    double value() const override { return sum_; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
     bool first_{true};
@@ -312,7 +312,7 @@ public:
         first_ = false;
     }
 
-    double value() const override { return sum_; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
     bool first_{true};
@@ -329,7 +329,7 @@ public:
         sum_ += value;
     }
 
-    double value() const override { return sum_ / count_; }
+    [[nodiscard]] double value() const override { return sum_ / count_; }
 
 private:
     std::uint32_t count_{0};
@@ -345,7 +345,7 @@ public:
         sum_of_squares_ += value * value;
     }
 
-    double value() const override {
+    [[nodiscard]] double value() const override {
         auto mean = sum_ / count_;
         return sqrt(sum_of_squares_ / count_ - mean * mean);
     }
@@ -360,7 +360,7 @@ private:
 class SumInvAggregation : public Aggregation {
 public:
     void update(double value) override { sum_ += 1.0 / value; }
-    double value() const override { return sum_; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
     double sum_{0};
@@ -374,7 +374,7 @@ public:
         sum_ += 1.0 / value;
     }
 
-    double value() const override { return sum_ / count_; }
+    [[nodiscard]] double value() const override { return sum_ / count_; }
 
 private:
     std::uint32_t count_{0};

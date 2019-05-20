@@ -44,7 +44,7 @@ class OringFilter : public Filter {
     struct Secret {};
 
 public:
-    static std::unique_ptr<Filter> make(Kind kind, Filters subfilters);
+    static std::unique_ptr<Filter> make(Kind kind, const Filters &subfilters);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     std::unique_ptr<Filter> partialFilter(

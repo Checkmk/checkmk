@@ -433,9 +433,10 @@ def individual_process_check(processes, params):
 
         state, levelstext = upperlevels(cpu_usage, warn_cpu_single, crit_cpu_single,
                                         get_percent_human_readable)
-        process_description = name + " with PID %s" % pid if pid else ""
-        infotext = "%.1f%% CPU for %s%s" % (cpu_usage, process_description, levelstext)
-        yield state, infotext
+        if state:
+            process_description = name + " with PID %s" % pid if pid else ""
+            infotext = "%.1f%% CPU for %s%s" % (cpu_usage, process_description, levelstext)
+            yield state, infotext
 
 
 def uptime_check(times, params):

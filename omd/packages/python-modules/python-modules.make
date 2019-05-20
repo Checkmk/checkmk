@@ -229,6 +229,7 @@ $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCH
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
 		    --root=$(PACKAGE_PYTHON_MODULES_DESTDIR) \
 		    --prefix='' \
+		    --install-data=/share \
 		    --install-platlib=/lib \
 		    --install-purelib=/lib ; \
 		cd .. ; \
@@ -311,14 +312,17 @@ python-modules-dump-Pipfile:
 	@echo '"beautifulsoup4" = "*"'
 	@echo 'dill = "*"'
 	@echo 'bandit = "*"'
-	@echo 'lockfile = "*"'
 	@echo 'lxml = "*"'
 	@echo 'pylint = "*"'
 	@echo 'pyenchant = "*"'
-	@echo 'yapf = "*"'
+	@echo 'yapf = "==0.26.0"  # Keep 0.26.0 for the moment because 0.27.0 needs whole code base reformatting or config change'
 	@echo 'docker = "*"'
 	@echo 'mockldap = "*"'
 	@echo 'isort = "*"'
+	@echo 'freezegun = "*"'
+	@echo '# We have to use a snapshot, a version which works for us has not been released yet. :-/'
+	@echo '# Workaround: We need to upload the Archive and cannot use it from our Git due to a Pipenv bug'
+	@echo 'compiledb = {file = "http://nexus:8081/repository/archives/compiledb-10a1da2.tar.gz"}'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

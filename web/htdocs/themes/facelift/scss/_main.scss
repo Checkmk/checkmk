@@ -35,7 +35,7 @@ div.content {
   width: 100%;
   top: 64px; }
 
-input, input[type=text], input[type=password], select, textarea, div.snapin textarea, #mk_side_search_field {
+input:not(.button), input[type=text], input[type=password], select, textarea, div.snapin textarea, #mk_side_search_field {
   border-radius: $theme-border-radius;
   background-image: none !important;
   background: $theme-color-white;
@@ -54,17 +54,19 @@ input, input[type=text], input[type=password], select, textarea, div.snapin text
     margin-top: 8px;
     margin-bottom: 8px;
     width: auto;
-    background: $theme-color-main;
-    color: $theme-color-sidebar-background;
+    background: #13d389;
+    color: #fff;
     padding: 8px 16px;
     margin-right: 8px;
     margin-left: 0px;
     box-shadow: none;
-    border: $theme-color-state-warning-border;
+    border: 1px solid #13d389;
     font-size: $theme-font-size-main;
     letter-spacing: $theme-letter-spacing-table; }
     input.button:hover, select.button:hover, textarea.button:hover, .button#mk_side_search_field:hover, input.button:active, select.button:active, textarea.button:active, .button#mk_side_search_field:active {
-      background-color: $theme-button-hover; }
+      background-color: #11bd7b;
+      border: 1px solid #11bd7b;
+}
   input[type=radio], select[type=radio], textarea[type=radio], div.snapin select[type=radio], div.snapin textarea[type=radio], [type=radio]#mk_side_search_field {
     width: auto;
     margin-bottom: 0px; }
@@ -283,7 +285,7 @@ div.timerange {
   font-size: $theme-font-size-main;
   color: $theme-color-darkgrey; }
 
-body.main input, body.main select, body.main textarea, body.main #mk_side_search_field, body.main select, body.main textarea {
+body.main input:not(.button), body.main select, body.main textarea, body.main #mk_side_search_field, body.main select, body.main textarea {
   border: 1px solid $theme-color-table-border; }
 body.main.visible div.foldable .title {
   color: $theme-color-text; }
@@ -456,4 +458,13 @@ img.glass {
 
 tr.hidden {
     display: none;
+}
+
+input.button.hot, input.button.hot:active {
+  background-color: #11bd7b;
+  border: 1px solid #11bd7b !important;
+}
+
+input.button.hot:hover {
+  background-color: #13d389;
 }

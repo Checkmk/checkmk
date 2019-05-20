@@ -1548,8 +1548,14 @@ table.data.job_table> tbody > tr > td.job_pid{
   }
 
   &[readonly] {
-    tag > div {
-      padding: $tagPad;
+    tag {
+      > div {
+        padding: $tagPad;
+      }
+
+      > div::before {
+        background: #774898;
+      }
     }
   }
 

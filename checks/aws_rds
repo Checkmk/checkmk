@@ -356,19 +356,23 @@ def check_aws_rds_disk_io(item, params, parsed):
     now = time.time()
     disks = {}
     for disk_name, metrics in parsed.iteritems():
-        disks.setdefault(
-            disk_name, {
-                "read_ios": get_rate("aws_rds_disk_io_read_ios.%s" % item, now,
-                                     metrics['ReadIOPS']),
-                "write_ios": get_rate("aws_rds_disk_io_write_ios.%s" % item, now,
-                                      metrics['WriteIOPS']),
-                "read_throughput": get_rate("aws_rds_disk_io_read_throughput.%s" % item, now,
-                                            metrics['ReadThroughput']),
-                "write_throughput": get_rate("aws_rds_disk_io_write_throughput.%s" % item, now,
-                                             metrics['WriteThroughput']),
-                "read_latency": metrics['ReadLatency'] * 1000.0,
-                "write_latency": metrics['WriteLatency'] * 1000.0,
-            })
+        disk = disks.setdefault(disk_name, {})
+        for key, metric_key, scale, comp_rate in [
+            ('read_ios', 'ReadIOPS', 1.0, True),
+            ('write_ios', 'WriteIOPS', 1.0, True),
+            ('read_throughput', 'ReadThroughput', 1.0, True),
+            ('write_throughput', 'WriteThroughput', 1.0, True),
+            ('read_latency', 'ReadLatency', 1000.0, False),
+            ('write_latency', 'WriteLatency', 1000.0, False),
+        ]:
+            metric = metrics.get(metric_key)
+            if metric is None:
+                continue
+            metric *= scale
+            if comp_rate:
+                disk[key] = get_rate("aws_rds_disk_io_%s.%s" % (item, key), now, metric)
+            else:
+                disk[key] = metric
     return check_diskstat_dict(item, params, disks)
 
 

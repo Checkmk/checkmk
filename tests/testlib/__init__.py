@@ -747,10 +747,6 @@ class Site(object):
             assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %  # nosec
                              (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
 
-    def rm_if_not_reusing(self):
-        if not self.reuse:
-            self.rm()
-
     def rm(self, site_id=None):
         if site_id is None:
             site_id = self.id
@@ -890,12 +886,8 @@ class Site(object):
                 "ruleset": {
                     "": [  # "" -> folder
                         {
-                            'conditions': {
-                                'host_specs': ['@all'],
-                                'host_tags': []
-                            },
+                            'condition': {},
                             'options': {},
-                            'path': '',
                             'value': [('TESTGROUP', ('*gwia*', ''))]
                         },
                     ],

@@ -69,13 +69,17 @@ global:
 
     # Just output certain sections
     _sections: check_mk mrpe skype spool plugins local winperf uptime systemtime df mem services msexch dotnet_clrmemory wmi_webservices wmi_cpuload ps fileinfo logwatch openhardwaremonitor 
+    # Useful example
+    # sections: ~  # <--- this line is ignored
+    # sections: []  # <--- this removes all sections(make values sections empty)
     
     # forced to not use
     _disabled_sections: _logfiles winperf_xxx badname
 
     #realtime data description
+    # to control section manually change name from _realtime to realtime.
     _realtime:
-        enabled: no
+        enabled: yes
         # specifies how long (in seconds) realtime updates are sent to
         # the last monitoring system that requested an update.
         # this should be longer than the request frequency (usually
@@ -91,8 +95,10 @@ global:
         encrypted: no
         # passphrase for encrypted communication.
         passphrase: this is my password
-        # which sections are realtime
+        # which sections are realtime, this is by default
         run: mem df winperf_processor
+        # run: [] # if you want to disable all sections in run time
+        # run: # if you want to run sections defined by bakery
 
     # by default the agent flushes the socket for each agent section.
     # this is mostly for debugging purposes in case the agent is slow

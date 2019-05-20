@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 // Needed for S_ISSOCK
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define _XOPEN_SOURCE 500
 
 // https://github.com/include-what-you-use/include-what-you-use/issues/166

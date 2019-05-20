@@ -42,6 +42,8 @@ public:
 
     void preStart() noexcept override;
 
+    void detachedStart() noexcept;
+
 protected:
     void gatherAllData(std::string& Out);
     std::string cfg_name_;

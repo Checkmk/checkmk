@@ -519,7 +519,9 @@ Pipfile.lock: Pipfile
 # mode installs the dependencies exactly as speciefied in the Pipfile.lock.
 # This is extremely fast since the dependencies do not have to be resolved.
 	$(RM) -r .venv
-	$(PIPENV) sync --dev
+# Cleanup partially created pipenv. This makes us able to automatically repair
+# broken virtual environments which may have been caused by network issues.
+	($(PIPENV) sync --dev) || ($(RM) -r .venv ; exit 1)
 	touch .venv
 
 # This dummy rule is called from subdirectories whenever one of the

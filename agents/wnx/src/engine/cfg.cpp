@@ -505,6 +505,7 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
                      dirs::kTemp,           //
                      dirs::kInstall,        // for installing data
                      dirs::kUpdate,         // for incoming MSI
+                     dirs::kMrpe,           // for incoming mrpe tests
                      dirs::kPluginConfig};  //
 
     for (auto dir : dir_list) {
@@ -752,6 +753,126 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName,
     return LoadAndCheckYamlFile(FileName, kNone, ErrorCodePtr);
 }
 
+std::vector<std::string> StringToTable(const std::string& WholeValue) {
+    auto table = cma::tools::SplitString(WholeValue, " ");
+
+    for (auto& value : table) {
+        cma::tools::AllTrim(value);
+    }
+
+    return table;
+}
+
+// gets string from the yaml and split it in table using space as divider
+std::vector<std::string> GetInternalArray(const std::string& Section,
+                                          const std::string& Name,
+                                          int* ErrorOut) noexcept {
+    auto yaml = GetLoadedConfig();
+    if (yaml.size() == 0) {
+        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        return {};
+    }
+
+    try {
+        auto section = yaml[Section];
+        return GetInternalArray(section, Name);
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml file '{}' with '{}.{}' code:{}",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
+                e.what());
+    }
+    return {};
+}
+
+// opposite operation for the GetInternalArray
+void PutInternalArray(YAML::Node Yaml, const std::string& Name,
+                      std::vector<std::string>& Arr, int* ErrorOut) noexcept {
+    try {
+        auto section = Yaml[Name];
+        if (Arr.empty()) {
+            section.remove(Name);
+            return;
+        }
+
+        auto result = cma::tools::JoinVector(Arr, " ");
+        if (result.back() == ' ') result.pop_back();
+        Yaml[Name] = result;
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml file '{}' with '{}' code:'{}'",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
+    }
+}
+
+// opposite operation for the GetInternalArray
+void PutInternalArray(const std::string& Section, const std::string& Name,
+                      std::vector<std::string>& Arr, int* ErrorOut) noexcept {
+    auto yaml = GetLoadedConfig();
+    if (yaml.size() == 0) {
+        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        return;
+    }
+    try {
+        auto section = yaml[Section];
+        PutInternalArray(section, Name, Arr, ErrorOut);
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml file '{}' with '{}.{} 'code:'{}'",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
+                e.what());
+    }
+}
+
+// gets string from the yaml and split it in table using space as divider
+std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
+                                          const std::string& name) noexcept {
+    try {
+        auto val = yaml_node[name];
+        if (!val.IsDefined() || val.IsNull()) {
+            XLOG::d.t("Absent node '{}'", name);
+            return {};
+        }
+
+        // sections: df mem
+        // this is for backward compatibility
+        if (val.IsScalar()) {
+            auto str = val.as<std::string>();
+            return StringToTable(str);
+        }
+
+        // sections: [df, mem]
+        // sections:
+        //   - [df, mem]
+        //   - ps
+        //   - check_mk logwatch
+        if (val.IsSequence()) {
+            std::vector<std::string> result;
+            for (auto node : val) {
+                if (node.IsScalar()) {
+                    auto str = node.as<std::string>();
+                    auto sub_result = StringToTable(str);
+                    cma::tools::ConcatVector(result, sub_result);
+                    continue;
+                }
+                if (node.IsSequence()) {
+                    auto sub_result = GetArray<std::string>(node);
+                    cma::tools::ConcatVector(result, sub_result);
+                    continue;
+                }
+                XLOG::d("Invalid node structure '{}'", name);
+            }
+
+            return result;
+        }
+
+        // this is OK when nothing inside
+        XLOG::d("Invalid type for node '{}' type is {}", name, val.Type());
+
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml file '{}' with '{}' code:{}",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), name, e.what());
+    }
+    return {};
+}
+
 void SetupPluginEnvironment() {
     using namespace std;
     std::pair<std::string, std::wstring> dirs[] = {
@@ -912,11 +1033,68 @@ constexpr bool IsSmartMerge(std::string_view name) {
     return name == groups::kWinPerf;
 }
 
-// #TODO simplify
-bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src,
-                            bool MergeSequences) {
+static void loadSequence(std::string_view name, YAML::Node target_value,
+                         const YAML::Node source_value,
+                         ConfigInfo::Combine combine) {
+    if (source_value.IsScalar()) {
+        XLOG::d(
+            XLOG_FLINE + " overriding seq with scalar '{}' this is temporary",
+            name);  // may happen when with empty sequence sections
+        target_value = source_value;
+        return;
+    }
+
+    if (!IsYamlSeq(source_value)) {
+        XLOG::l.t(XLOG_FLINE + " skipping section '{}' as different type",
+                  name);  // may happen when with empty sequence sections
+        return;
+    }
+
+    // SEQ-SEQ here
+    if (combine == ConfigInfo::Combine::overwrite) {
+        target_value = source_value;
+        return;
+    }
+
+    // special case when we are merging some sequences from
+    // different files
+    for (auto entry : source_value) {
+        auto s_name = GetMapNodeName(entry);
+        if (s_name.empty()) continue;
+
+        if (std::none_of(std::begin(target_value), std::end(target_value),
+                         [s_name](YAML::Node Node) -> bool {
+                             return s_name == GetMapNodeName(Node);
+                         }))
+            target_value.push_back(entry);
+    }
+}
+
+static void loadMap(std::string_view name, YAML::Node target_value,
+                    const YAML::Node source_value,
+                    ConfigInfo::Combine combine) {
+    // MAP
+    if (!IsYamlMap(source_value)) {
+        if (!source_value.IsNull())
+            XLOG::l(XLOG_FLINE + " expected map '{}', we have [{}]", name,
+                    source_value.Type());
+        return;
+    }
+
+    // MAP-MAP
+    for (YAML::const_iterator itx = source_value.begin();
+         itx != source_value.end(); ++itx) {
+        auto combine_type = IsSmartMerge(name) ? ConfigInfo::Combine::merge
+                                               : ConfigInfo::Combine::overwrite;
+        ConfigInfo::smartMerge(target_value, source_value, combine_type);
+    }
+}
+
+// #TODO simplify or better rewrite in more common form
+bool ConfigInfo::smartMerge(YAML::Node target, const YAML::Node source,
+                            Combine combine) {
     // we are scanning source
-    for (YAML::const_iterator it = Src.begin(); it != Src.end(); ++it) {
+    for (YAML::const_iterator it = source.begin(); it != source.end(); ++it) {
         auto& source_name = it->first;
         auto& source_value = it->second;
         if (!source_name.IsDefined()) {
@@ -924,67 +1102,26 @@ bool ConfigInfo::smartMerge(YAML::Node Target, const YAML::Node Src,
             continue;
         }
 
-        auto name = it->first.as<std::string>();
-        XLOG::l("Processing '{}'", name);
-        auto target_value = Target[name];
+        auto name = source_name.as<std::string>();
+        auto target_value = target[name];
 
         // cases to process
         //    target ----     source -----------
         // 1. MAP: valid is   MAP, all other skipped
-        // 2. SEQ: valid is   SEQ, all other skipped
+        // 2. SEQ: valid is   SEQ and Scalar, all other skipped
         // 3. OTHER: valid is DEFINED
 
         if (IsYamlMap(target_value)) {
-            // MAP
-            if (!IsYamlMap(source_value)) {
-                if (!source_value.IsNull())
-                    XLOG::l(XLOG_FLINE + " expected map '{}', we have [{}]",
-                            name, source_value.Type());
-                continue;
-            }
-
-            // MAP-MAP
-            for (YAML::const_iterator itx = source_value.begin();
-                 itx != source_value.end(); ++itx) {
-                auto merge_seq = IsSmartMerge(name);
-                smartMerge(target_value, source_value, merge_seq);
-            }
-
+            loadMap(name, target_value, source_value, combine);
         } else if (IsYamlSeq(target_value)) {
             // SEQ
-
-            if (!IsYamlSeq(source_value)) {
-                XLOG::l.t(
-                    XLOG_FLINE + " skipping section '{}' as different type",
-                    name);  // may happen when with empty sequence sections
-                continue;
-            }
-
-            // SEQ-SEQ here
-            if (!MergeSequences) {
-                target_value = source_value;
-                continue;
-            }
-
-            // special case when we are merging some sequences from
-            // different files
-            for (auto entry : source_value) {
-                auto s_name = GetMapNodeName(entry);
-                if (s_name.empty()) continue;
-
-                if (std::none_of(std::begin(target_value),
-                                 std::end(target_value),
-                                 [s_name](YAML::Node Node) -> bool {
-                                     return s_name == GetMapNodeName(Node);
-                                 }))
-                    target_value.push_back(entry);
-            }
+            loadSequence(name, target_value, source_value, combine);
         } else {
             // SCALAR or UNDEF
             if (source_value.IsDefined())
                 target_value = source_value;  // other just override
             else {
-                XLOG::l.bp(XLOG_FLINE + " bad src");
+                XLOG::l.bp(XLOG_FLINE + " bad source");
             }
         }
     }
@@ -1042,7 +1179,7 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node Config,
             PreMergeSections(bakery, Config);
 
             // normal cases
-            smartMerge(Config, bakery);
+            smartMerge(Config, bakery, Combine::overwrite);
             bakery_ok = true;
         }
     } catch (...) {
@@ -1055,7 +1192,7 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node Config,
             // special cases for plugins and folder
             PreMergeSections(user, Config);
             // normal cases
-            smartMerge(Config, user);
+            smartMerge(Config, user, Combine::overwrite);
             user_ok = true;
         }
     } catch (...) {

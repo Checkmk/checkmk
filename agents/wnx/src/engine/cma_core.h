@@ -9,14 +9,11 @@
 #include <filesystem>
 #include <string>
 
-#include "common/wtools.h"
-#include "tools/_misc.h"
-
-#include "fmt/format.h"
-
 #include "cfg.h"
-
+#include "common/wtools.h"
+#include "fmt/format.h"
 #include "logger.h"
+#include "tools/_misc.h"
 
 namespace cma {
 using PathVector = std::vector<std::filesystem::path>;
@@ -473,6 +470,10 @@ public:
     // if StartProcessNow then process will be started immediately
     // otherwise entry will be marked as required to start
     std::vector<char> getResultsAsync(bool StartProcessNow);
+
+    // AU:
+    void restartIfRequired();
+
     // stop with asyncing
     void breakAsync();
 
@@ -657,4 +658,6 @@ std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
                                   bool StartImmediately);
 
 constexpr std::chrono::seconds kRestartInterval{60};
+
+void RunDetachedPlugins(PluginMap& plugins_map, int& start_count);
 }  // namespace cma

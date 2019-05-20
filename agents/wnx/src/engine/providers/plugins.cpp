@@ -86,6 +86,12 @@ void PluginsProvider::preStart() noexcept {
     RunAsyncPlugins(pm_, last_count, true);
 }
 
+void PluginsProvider::detachedStart() noexcept {
+    loadConfig();
+    int last_count = 0;
+    RunDetachedPlugins(pm_, last_count);
+}
+
 // empty body empty
 void PluginsProvider::updateSectionStatus() {
     XLOG::d.t(XLOG_FUNC + " !");

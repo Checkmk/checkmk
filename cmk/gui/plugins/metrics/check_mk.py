@@ -301,6 +301,12 @@ unit_info['bytes/op'] = {
     "render": cmk.utils.render.fmt_bytes,
 }
 
+unit_info['EUR'] = {
+    "title": _("Euro"),
+    "symbol": _(u"€"),
+    "render": lambda v: "%s %s" % (v, _(u"€")),
+}
+
 #.
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
@@ -5541,6 +5547,12 @@ metric_info['aws_elbv2_load_balancer_target_groups'] = {
     'color': '35/a',
 }
 
+metric_info['service_costs_eur'] = {
+    'title': _('Service Costs per Day'),
+    'unit': 'EUR',
+    'color': '35/a',
+}
+
 metric_info["elapsed_time"] = {
     "title": _("Elapsed time"),
     "unit": "s",
@@ -5670,6 +5682,36 @@ metric_info["utcyc"] = {
 metric_info["vcsw"] = {
     "title": _("Virtual context switches"),
     "unit": "%",
+    "color": "22/a",
+}
+
+metric_info["job_total"] = {
+    "title": _("Total number of jobs"),
+    "unit": "count",
+    "color": "26/a",
+}
+
+metric_info["failed_jobs"] = {
+    "title": _("Total number of failed jobs"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["zombie_jobs"] = {
+    "title": _("Total number of zombie jobs"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["splunk_slave_usage_bytes"] = {
+    "title": _("Slave usage bytes across all pools"),
+    "unit": "bytes",
+    "color": "11/a",
+}
+
+metric_info["fired_alerts"] = {
+    "title": _("Number of fired alerts"),
+    "unit": "count",
     "color": "22/a",
 }
 

@@ -510,3 +510,45 @@ class RulespecCheckgroupParametersAzureVirtualnetworkgateways(CheckParameterRule
             title=_("Virtual network gateway name"),
             help=_("Specify virtual network gateway names that the rule should apply to"),
         )
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAzureUsageDetails(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "azure_usagedetails"
+
+    @property
+    def title(self):
+        return _("Azure Usage Details (Costs)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("To obtain the data required for this check, please configure"
+                   " the datasource program \"Microsoft Azure\"."),
+            elements=[
+                ('levels',
+                 Tuple(
+                     title=_("Upper levels on daily costs"),
+                     help=_("The levels on costs will be considered to be in the currency"
+                            " corresponding to the reported data."),
+                     elements=[
+                         Float(title=_("Warning at")),
+                         Float(title=_("Critical at")),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Service Type"))

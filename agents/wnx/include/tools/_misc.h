@@ -490,6 +490,11 @@ inline std::string JoinVector(const std::vector<std::string>& Values,
     return values_string;
 }
 
+template <typename T>
+void ConcatVector(std::vector<T>& target, const std::vector<T>& source) {
+    std::copy(source.begin(), source.end(), std::back_inserter(target));
+}
+
 // temporary and limited ersatz for the future range::find
 template <typename T>
 bool find(const std::vector<T>& Vector, const T& Value) {

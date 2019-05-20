@@ -49,7 +49,8 @@ constexpr const wchar_t* kDefaultBakeryExt = L".bakery.yml";
 constexpr const wchar_t* kDefaultUserExt = L".user.yml";
 
 // special
-constexpr const std::string_view kUpgradeProtocol = "upgrade.protocol";
+constexpr std::string_view kUpgradeProtocol = "upgrade.protocol";
+constexpr std::string_view kAgentUpdater = "cmk-update-agent.exe";
 
 // located in test_files/config
 // constexpr const wchar_t* kDefaultDevConfig = L"check_mk_dev.yml";
@@ -359,96 +360,25 @@ inline StringPairArray GetPairArray(const std::string& Section,
     return {};
 }
 
-inline std::vector<std::string> StringToTable(const std::string& WholeValue) {
-    auto table = cma::tools::SplitString(WholeValue, " ");
-
-    for (auto& value : table) {
-        cma::tools::AllTrim(value);
-    }
-
-    return table;
-}
-
 // gets string from the yaml and split it in table using space as divider
-inline std::vector<std::string> GetInternalArray(
-    const YAML::Node& Yaml, const std::string& Name,
-    int* ErrorOut = nullptr) noexcept {
-    try {
-        auto val = Yaml[Name];
-        if (val.IsDefined() && val.IsScalar()) {
-            auto str = val.as<std::string>();
-            return StringToTable(str);
-        }
-        // this is OK when nothing inside
-        XLOG::d.t("Absent/Empty node '{}' type is {}", Name, val.Type());
-
-    } catch (const std::exception& e) {
-        XLOG::l("Cannot read yml file '{}' with '{}' code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
-    }
-    return {};
-}
-
-// gets string from the yaml and split it in table using space as divider
-inline std::vector<std::string> GetInternalArray(
-    const std::string& Section, const std::string& Name,
-    int* ErrorOut = nullptr) noexcept {
-    auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) {
-        if (ErrorOut) *ErrorOut = Error::kEmpty;
-        return {};
-    }
-
-    try {
-        auto section = yaml[Section];
-        return GetInternalArray(section, Name, ErrorOut);
-    } catch (const std::exception& e) {
-        XLOG::l("Cannot read yml file '{}' with '{}.{}' code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
-                e.what());
-    }
-    return {};
-}
+std::vector<std::string> GetInternalArray(const std::string& Section,
+                                          const std::string& Name,
+                                          int* ErrorOut = nullptr) noexcept;
 
 // opposite operation for the GetInternalArray
-inline void PutInternalArray(YAML::Node Yaml, const std::string& Name,
-                             std::vector<std::string>& Arr,
-                             int* ErrorOut = nullptr) noexcept {
-    try {
-        auto section = Yaml[Name];
-        if (Arr.empty()) {
-            section.remove(Name);
-            return;
-        }
-
-        auto result = cma::tools::JoinVector(Arr, " ");
-        if (result.back() == ' ') result.pop_back();
-        Yaml[Name] = result;
-    } catch (const std::exception& e) {
-        XLOG::l("Cannot read yml file '{}' with '{}' code:'{}'",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
-    }
-}
+void PutInternalArray(YAML::Node Yaml, const std::string& Name,
+                      std::vector<std::string>& Arr,
+                      int* ErrorOut = nullptr) noexcept;
 
 // opposite operation for the GetInternalArray
-inline void PutInternalArray(const std::string& Section,
-                             const std::string& Name,
-                             std::vector<std::string>& Arr,
-                             int* ErrorOut = nullptr) noexcept {
-    auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) {
-        if (ErrorOut) *ErrorOut = Error::kEmpty;
-        return;
-    }
-    try {
-        auto section = yaml[Section];
-        PutInternalArray(section, Name, Arr, ErrorOut);
-    } catch (const std::exception& e) {
-        XLOG::l("Cannot read yml file '{}' with '{}.{} 'code:'{}'",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
-                e.what());
-    }
-}
+// used ONLY for testing
+void PutInternalArray(const std::string& Section, const std::string& Name,
+                      std::vector<std::string>& Arr,
+                      int* ErrorOut = nullptr) noexcept;
+
+// gets string from the yaml and split it in table using space as divider
+std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
+                                          const std::string& name) noexcept;
 
 template <typename T>
 std::vector<T> GetArray(const YAML::Node& Yaml, std::string Name,

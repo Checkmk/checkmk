@@ -30,9 +30,10 @@ import itertools
 import pprint
 import json
 import re
-from typing import NamedTuple, List, Optional
+from typing import Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
 
 from cmk.utils.regex import escape_regex_chars
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -53,9 +54,9 @@ from cmk.gui.valuespec import (
     DropdownChoice,
 )
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulespecs import (
-    rulespec_group_registry,
-    rulespec_registry,
+from cmk.gui.watolib.rulesets import RuleConditions  # pylint: disable=unused-import
+from cmk.gui.watolib.rulespecs import (  # pylint: disable=unused-import
+    rulespec_group_registry, rulespec_registry, Rulespec,
 )
 
 from cmk.gui.plugins.wato.utils.main_menu import (
@@ -362,13 +363,13 @@ class ModeRulesets(RulesetMode):
                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
                 "refer to the release notes or context help of the rulesets for details.")
 
-        elif self._search_options.keys() == ["rule_ineffective"]:
+        elif _is_ineffective_rules_page(self._search_options):
             self._title = _("Rulesets with ineffective rules")
             self._help = _(
                 "The following rulesets contain rules that do not match to any of the existing hosts."
             )
 
-        elif self._search_options.keys() == ["ruleset_used"]:
+        elif _is_used_rulesets_page(self._search_options):
             self._title = _("Used rulesets")
             self._help = _("Non-empty rulesets")
 
@@ -416,8 +417,8 @@ def rule_search_button(search_options=None, mode="rulesets"):
         search_keys = sorted(search_options.keys())
         if search_keys == ["ruleset_deprecated", "ruleset_group"] \
            or search_keys == ["ruleset_deprecated"] \
-           or search_keys == ["rule_ineffective"] \
-           or search_keys == ["ruleset_used"]:
+           or _is_ineffective_rules_page(search_options) \
+           or _is_used_rulesets_page(search_options):
             is_searching = False
 
     if is_searching:
@@ -433,6 +434,16 @@ def rule_search_button(search_options=None, mode="rulesets"):
         ], delvars=["filled_in"]),
         "search",
         hot=is_searching)
+
+
+def _is_ineffective_rules_page(search_options):
+    return search_options.get("ruleset_deprecated") is False \
+           and search_options.get("rule_ineffective") is True
+
+
+def _is_used_rulesets_page(search_options):
+    return search_options.get("ruleset_deprecated") is False \
+            and search_options.get("ruleset_used") is True
 
 
 @mode_registry.register
@@ -458,7 +469,7 @@ class ModeEditRuleset(WatoMode):
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
 
-        self._item = None
+        self._item = None  # type: Optional[Text]
 
         # TODO: Clean this up. In which case is it used?
         check_command = html.get_ascii_input("check_command")
@@ -484,7 +495,7 @@ class ModeEditRuleset(WatoMode):
             raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
 
         if not self._item:
-            self._item = watolib.NO_ITEM
+            self._item = None
             if html.request.has_var("item"):
                 try:
                     self._item = watolib.mk_eval(html.request.var("item"))
@@ -765,7 +776,7 @@ class ModeEditRuleset(WatoMode):
         if html.request.var("host"):
             vars_.append(("host", self._hostname))
         if html.request.var("item"):
-            vars_.append(("item", self._item))
+            vars_.append(("item", watolib.mk_repr(self._item)))
 
         return make_action_link(vars_)
 
@@ -815,14 +826,9 @@ class ModeEditRuleset(WatoMode):
 
     def _rule_conditions(self, rule):
         self._predefined_condition_info(rule)
-
-        conditions = RuleConditions(
-            folder_path=rule.folder.path(),
-            host_tags=rule.tag_specs,
-            host_list=rule.host_list,
-            item_list=rule.item_list,
-        )
-        html.write(VSExplicitConditions(rulespec=rule.ruleset.rulespec).value_to_text(conditions))
+        html.write(
+            VSExplicitConditions(rulespec=rule.ruleset.rulespec).value_to_text(
+                rule.get_rule_conditions()))
 
     def _predefined_condition_info(self, rule):
         condition_id = rule.predefined_condition_id()
@@ -844,7 +850,7 @@ class ModeEditRuleset(WatoMode):
         if self._hostname:
             label = _("Host %s") % self._hostname
             ty = _('Host')
-            if self._item != watolib.NO_ITEM and self._rulespec.item_type:
+            if self._item is not None and self._rulespec.item_type:
                 label += _(" and %s '%s'") % (self._rulespec.item_name, self._item)
                 ty = self._rulespec.item_name
 
@@ -1077,14 +1083,6 @@ class ModeRuleSearch(WatoMode):
         )
 
 
-RuleConditions = NamedTuple("RuleConditions", [
-    ("folder_path", str),
-    ("host_tags", List[str]),
-    ("host_list", List[str]),
-    ("item_list", Optional[List[str]]),
-])
-
-
 class EditRuleMode(WatoMode):
     def _from_vars(self):
         self._name = html.request.var("varname")
@@ -1154,7 +1152,7 @@ class EditRuleMode(WatoMode):
         self._update_rule_from_vars()
 
         # Check permissions on folders
-        new_rule_folder = watolib.Folder.folder(self._get_rule_conditions_from_vars().folder_path)
+        new_rule_folder = watolib.Folder.folder(self._get_rule_conditions_from_vars().host_folder)
         if not isinstance(self, ModeNewRule):
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
@@ -1355,21 +1353,14 @@ class EditRuleMode(WatoMode):
                         _("You can create predefined conditions <a href=\"%s\">here</a>.") % url))
 
     def _show_explicit_conditions(self):
-        conditions = RuleConditions(
-            folder_path=self._folder.path(),
-            host_tags=self._rule.tag_specs,
-            host_list=self._rule.host_list,
-            item_list=self._rule.item_list,
-        )
-
-        self._vs_explicit_conditions(render="form_part").render_input("explicit_conditions",
-                                                                      conditions)
+        self._vs_explicit_conditions(render="form_part").render_input(
+            "explicit_conditions", self._rule.get_rule_conditions())
 
     def _vs_explicit_conditions(self, **kwargs):
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
 
     def _show_rule_representation(self):
-        content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_dict_config()))
+        content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_config()))
 
         html.write(_("This rule representation can be used for Web API calls."))
         html.br()
@@ -1425,16 +1416,16 @@ class VSExplicitConditions(Transform):
     def _to_valuespec(self, conditions):
         # type: (RuleConditions) -> dict
         explicit = {
-            "folder_path": conditions.folder_path,
-            "host_tags": conditions.host_tags,
+            "folder_path": conditions.host_folder,
+            "host_tags": conditions.tag_list,
         }
 
-        explicit_hosts = self._get_explicit(conditions.host_list, watolib.ALL_HOSTS)
+        explicit_hosts = conditions.host_list
         if explicit_hosts is not None:
             explicit["explicit_hosts"] = explicit_hosts
 
         if self._rulespec.item_type:
-            explicit_services = self._get_explicit(conditions.item_list, watolib.ALL_SERVICES)
+            explicit_services = conditions.item_list
             if explicit_services is not None:
                 explicit["explicit_services"] = explicit_services
 
@@ -1462,65 +1453,54 @@ class VSExplicitConditions(Transform):
 
         raise MKUserError(None, "Invalid item type '%s'" % item_type)
 
-    def _get_explicit(self, object_list, all_objects):
-        if object_list == all_objects:
-            return None
-
-        negate = object_list and object_list[0].startswith(watolib.ENTRY_NEGATE_CHAR)
-
-        if negate:
-            # strip last entry (watolib.ALL_SERVICES/ALL_HOSTS)
-            object_list = [i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in object_list[:-1]]
-
-        return object_list, negate
-
     def _from_valuespec(self, explicit):
         # type: (dict) -> RuleConditions
 
-        # Host list
-        if "explicit_hosts" not in explicit:
-            host_list = watolib.ALL_HOSTS
-        else:
-            host_list, negate = explicit["explicit_hosts"]
-
-            if negate:
-                host_list = [watolib.ENTRY_NEGATE_CHAR + h for h in host_list]
-
-            # append watolib.ALL_HOSTS to negated host lists
-            if host_list and host_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
-                host_list += watolib.ALL_HOSTS
-            elif not host_list and negate:
-                host_list = watolib.ALL_HOSTS  # equivalent
-
-        # Item list
-        itemtype = self._rulespec.item_type
-        item_list = None
-        if itemtype:
-            if "explicit_services" not in explicit:
-                item_list = watolib.ALL_SERVICES
-            else:
-                item_list, negate = explicit["explicit_services"]
-
-                if item_list and negate:
-                    item_list = [watolib.ENTRY_NEGATE_CHAR + i for i in item_list]
-
-                if item_list and item_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
-                    item_list += watolib.ALL_SERVICES
-                elif not item_list and negate:
-                    item_list = watolib.ALL_SERVICES  # equivalent
-
-                if not item_list:
-                    raise MKUserError(
-                        "item_0",
-                        _("Please specify at least one %s or this rule will never match.") %
-                        self._rulespec.item_name)
+        service_description = None
+        if self._rulespec.item_type:
+            service_description = self._condition_list_from_valuespec(
+                explicit.get("explicit_services"), is_service=True)
 
         return RuleConditions(
-            folder_path=explicit["folder_path"],
-            host_tags=explicit["host_tags"],
-            host_list=host_list,
-            item_list=item_list,
+            host_folder=explicit["folder_path"],
+            host_tags=self._host_tags_from_valuespec(explicit["host_tags"]),
+            host_name=self._condition_list_from_valuespec(
+                explicit.get("explicit_hosts"), is_service=False),
+            service_description=service_description,
         )
+
+    # TODO: Change all HostTagCondition to produce a tag dictionary instead of the list
+    def _host_tags_from_valuespec(self, tags):
+        """Transform the host tag list of the valuespec to rule tag conditions"""
+        self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
+            tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags))
+
+        return self.tuple_transformer.transform_host_tags(tags).get("host_tags", {})
+
+    def _condition_list_from_valuespec(self, conditions, is_service):
+        if conditions is None:
+            return None
+
+        condition_list, negate = conditions
+
+        sub_conditions = []
+        for entry in condition_list:
+            if is_service:
+                sub_conditions.append({"$regex": entry})
+                continue
+
+            if entry[0] == '~':
+                sub_conditions.append({"$regex": entry[1:]})
+                continue
+            sub_conditions.append(entry)
+
+        if not sub_conditions:
+            raise MKUserError(
+                None, _("Please specify at least one condition or this rule will never match."))
+
+        if negate:
+            return {"$nor": sub_conditions}
+        return sub_conditions
 
     def _vs_folder(self):
         return DropdownChoice(
@@ -1608,77 +1588,80 @@ class VSExplicitConditions(Transform):
             help=self._explicit_service_help_text(),
         )
 
-    def value_to_text(self, value):
+    def value_to_text(self, conditions):  # pylint: disable=arguments-differ
         # type: (RuleConditions) -> None
         html.open_ul(class_="conditions")
-        self._tag_conditions(value)
-        self._host_conditions(value)
-        self._service_conditions(value)
+        renderer = RuleConditionRenderer()
+        for condition in renderer.render(self._rulespec, conditions):
+            html.li(condition, class_="condition")
         html.close_ul()
 
-    def _tag_conditions(self, conditions):
-        for tagspec in conditions.host_tags:
-            if tagspec[0] == '!':
-                negate = True
-                tag_id = tagspec[1:]
-            else:
-                negate = False
-                tag_id = tagspec
 
-            html.open_li(class_="condition")
-            self._single_tag_condition(tag_id, negate)
-            html.close_li()
+class RuleConditionRenderer(object):
+    def render(self, rulespec, conditions):
+        # type: (Rulespec, RuleConditions) -> List[Text]
+        rendered = []  # type: List[Text]
+        rendered += list(self._tag_conditions(conditions))
+        rendered += list(self._host_conditions(conditions))
+        rendered += list(self._service_conditions(rulespec, conditions))
+        return rendered
+
+    def _tag_conditions(self, conditions):
+        # type: (RuleConditions) -> Generator
+        for tag_spec in conditions.host_tags.itervalues():
+            is_not = isinstance(tag_spec, dict) and "$ne" in tag_spec
+            if is_not:
+                # mypy had some problem with this. Need to check type annotation
+                tag_id = tag_spec["$ne"]  # type: ignore
+            else:
+                tag_id = tag_spec
+
+            yield self._single_tag_condition(tag_id, is_not)
 
     def _single_tag_condition(self, tag_id, negate):
         tag = config.tags.get_tag_or_aux_tag(tag_id)
         if tag and tag.title:
             if not tag.is_aux_tag:
-                html.write_text(_("Host") + ": " + tag.group.title + " " + _("is") + " ")
                 if negate:
-                    html.b(_("not") + " ")
-            else:
-                if negate:
-                    html.write_text(_("Host does not have tag") + " ")
-                else:
-                    html.write_text(_("Host has tag") + " ")
-            html.b(tag.title)
-            return
+                    return HTML(
+                        _("Host: %s is <b>not</b> <b>%s</b>") % (tag.group.title, tag.title))
+                return HTML(_("Host: %s is <b>%s</b>") % (tag.group.title, tag.title))
+
+            if negate:
+                return HTML(_("Host does not have tag <b>%s</b>") % tag.title)
+            return HTML(_("Host has tag <b>%s</b>") % tag.title)
 
         if negate:
-            html.write_text(_("Host has <b>not</b> the tag") + " ")
-            html.tt(tag_id)
-        else:
-            html.write_text(_("Host has the tag") + " ")
-            html.tt(tag_id)
+            return HTML(_("Host has <b>not</b> the tag <tt>%s</tt>")) % tag_id
+
+        return HTML(_("Host has the tag <tt>%s</tt>")) % tag_id
 
     def _host_conditions(self, conditions):
-        if conditions.host_list == watolib.ALL_HOSTS:
+        # type: (RuleConditions) -> Generator
+        if conditions.host_name is None:
             return
 
         # Other cases should not occur, e.g. list of explicit hosts
         # plus watolib.ALL_HOSTS.
         condition_txt = self._render_host_condition_text(conditions)
         if condition_txt:
-            html.li(condition_txt, class_="condition")
+            yield condition_txt
 
     def _render_host_condition_text(self, conditions):
-        if conditions.host_list == []:
+        if conditions.host_name == []:
             return _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
 
         condition, text_list = [], []
 
-        if conditions.host_list[0][0] == watolib.ENTRY_NEGATE_CHAR:
-            host_list = conditions.host_list[:-1]
-            is_negate = True
-        else:
-            is_negate = False
-            host_list = conditions.host_list
+        is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(
+            conditions.host_name)
 
-        regex_count = len([x for x in host_list if "~" in x])
+        regex_count = len(
+            [x for x in host_name_conditions if isinstance(x, dict) and "$regex" in x])
 
         condition.append(_("Host name"))
 
-        if regex_count == len(host_list) or regex_count == 0:
+        if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
             is_regex = regex_count > 0
             if is_regex:
@@ -1687,19 +1670,24 @@ class VSExplicitConditions(Transform):
             else:
                 condition.append(_("is not one of") if is_negate else _("is"))
 
-            for host_spec in host_list:
+            for host_spec in host_name_conditions:
+                if isinstance(host_spec, dict) and "$regex" in host_spec:
+                    host_spec = host_spec["$regex"]
+
                 if not is_regex:
                     host = watolib.Host.host(host_spec)
                     if host:
                         host_spec = html.render_a(host_spec, host.edit_url())
 
-                text_list.append(html.render_b(host_spec.strip("!").strip("~")))
+                text_list.append(html.render_b(host_spec))
 
         else:
             # Mixed entries
-            for host_spec in host_list:
-                is_regex = "~" in host_spec
-                host_spec = host_spec.strip("!").strip("~")
+            for host_spec in host_name_conditions:
+                is_regex = isinstance(host_spec, dict) and "$regex" in host_spec
+                if is_regex:
+                    host_spec = host_spec["$regex"]
+
                 if not is_regex:
                     host = watolib.Host.host(host_spec)
                     if host:
@@ -1719,44 +1707,50 @@ class VSExplicitConditions(Transform):
 
         return HTML(" ").join(condition)
 
-    def _service_conditions(self, conditions):
-        if not self._rulespec.item_type or conditions.item_list == watolib.ALL_SERVICES:
+    def _service_conditions(self, rulespec, conditions):
+        # type: (Rulespec, RuleConditions) -> Generator
+        if not rulespec.item_type or conditions.service_description is None:
             return
 
-        if self._rulespec.item_type == "service":
-            condition = _("Service name ")
-        elif self._rulespec.item_type == "item":
-            condition = self._rulespec.item_name + " "
+        if rulespec.item_type == "service":
+            condition = _("Service name")
+        elif rulespec.item_type == "item":
+            if rulespec.item_name is not None:
+                condition = rulespec.item_name
+            else:
+                condition = _("Item")
+        condition += " "
 
-        is_negate = conditions.item_list[-1] == watolib.ALL_SERVICES[0]
-        if is_negate:
-            item_list = conditions.item_list[:-1]
-            cleaned_item_list = [
-                i.lstrip(watolib.ENTRY_NEGATE_CHAR) for i in is_negate and item_list
-            ]
-        else:
-            item_list = conditions.item_list
-            cleaned_item_list = conditions.item_list
+        is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(
+            conditions.service_description)
 
-        exact_match_count = len([x for x in item_list if x[-1] == "$"])
+        exact_match_count = len(
+            [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"])
 
         text_list = []
-        if exact_match_count == len(cleaned_item_list) or exact_match_count == 0:
+        if exact_match_count == len(service_conditions) or exact_match_count == 0:
             if is_negate:
                 condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")
             else:
                 condition += exact_match_count == 0 and _("begins with ") or ("is ")
 
-            for item in cleaned_item_list:
-                text_list.append(html.render_b(item.rstrip("$")))
+            for item_spec in service_conditions:
+                is_regex = isinstance(item_spec, dict) and "$regex" in item_spec
+                if is_regex:
+                    item_spec = item_spec["$regex"]
+                text_list.append(html.render_b(item_spec.rstrip("$")))
         else:
-            for item in cleaned_item_list:
-                is_exact = item[-1] == "$"
+            for item_spec in service_conditions:
+                is_regex = isinstance(item_spec, dict) and "$regex" in item_spec
+                if is_regex:
+                    item_spec = item_spec["$regex"]
+
+                is_exact = item_spec[-1] == "$"
                 if is_negate:
                     expression = "%s" % (is_exact and _("is not ") or _("begins not with "))
                 else:
                     expression = "%s" % (is_exact and _("is ") or _("begins with "))
-                text_list.append("%s%s" % (expression, html.render_b(item.rstrip("$"))))
+                text_list.append("%s%s" % (expression, html.render_b(item_spec.rstrip("$"))))
 
         if len(text_list) == 1:
             condition += text_list[0]
@@ -1765,7 +1759,7 @@ class VSExplicitConditions(Transform):
             condition += _(" or ") + text_list[-1]
 
         if condition:
-            html.li(condition, class_="condition")
+            yield condition
 
 
 @mode_registry.register
@@ -1839,24 +1833,31 @@ class ModeNewRule(EditRuleMode):
             self._folder = watolib.Folder.folder(self._get_folder_path_from_vars())
 
     def _get_folder_path_from_vars(self):
-        return self._get_rule_conditions_from_vars().folder_path
+        return self._get_rule_conditions_from_vars().host_folder
 
     def _set_rule(self):
-        host_list = watolib.ALL_HOSTS
-        item_list = [""]
+        host_name_conditions = None
+        service_conditions = None
 
         if html.request.has_var("_new_host_rule"):
             hostname = html.request.var("host")
             if hostname:
-                host_list = [hostname]
+                host_name_conditions = [hostname]
 
             if self._rulespec.item_type:
                 item = watolib.mk_eval(
-                    html.request.var("item")) if html.request.has_var("item") else watolib.NO_ITEM
-                if item != watolib.NO_ITEM:
-                    item_list = ["%s$" % escape_regex_chars(item)]
+                    html.request.var("item")) if html.request.has_var("item") else None
+                if item is not None:
+                    service_conditions = [{"$regex": "%s$" % escape_regex_chars(item)}]
 
-        self._rule = watolib.Rule.create(self._folder, self._ruleset, host_list, item_list)
+        self._rule = watolib.Rule.create(self._folder, self._ruleset)
+        self._rule.update_conditions(
+            RuleConditions(
+                host_folder=self._folder.path(),
+                host_tags={},
+                host_name=host_name_conditions,
+                service_description=service_conditions,
+            ))
 
     def _save_rule(self):
         self._ruleset.append_rule(self._folder, self._rule)

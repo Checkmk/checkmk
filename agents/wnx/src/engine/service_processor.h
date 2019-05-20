@@ -267,7 +267,10 @@ private:
                         XLOG::d.i("Connected from '{}'", Ip.c_str());
                         cma::OnStartApp();
                         cma::cfg::SetupRemoteHostEnvironment(Ip);
-                        conditionallyStartOhm(); // start may happen when config changed
+                        conditionallyStartOhm();  // start may happen when
+                                                  // config changed
+
+                        detachedPluginsStart();  // cmk agent update
                         informDevice(rt_device, Ip);
 
                         // 2. processing
@@ -393,6 +396,7 @@ private:
 
     // all pre operation required for normal functionality
     void preStart();
+    void detachedPluginsStart();
 
 private:
     void preLoadConfig();

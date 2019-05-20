@@ -60,6 +60,7 @@ from cmk.gui.watolib.automations import (
     check_mk_automation,
 )
 from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.gui.watolib.rulesets import RuleConditions
 
 from cmk.gui.plugins.wato import (
     host_status_button,
@@ -502,6 +503,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         request.setdefault("update_source", None)
         request.setdefault("update_services", [])
 
+        # Make Folder() be able to detect the current folder correctly
+        html.request.set_var("folder", request["folder_path"])
+
         folder = watolib.Folder.folder(request["folder_path"])
         self._host = folder.host(request["host_name"])
         if not self._host:
@@ -797,7 +801,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return
 
         def _compile_patterns(services):
-            return ["%s$" % re.escape(s) for s in services]
+            return [{"$regex": "%s$" % re.escape(s)} for s in services]
 
         rulesets = watolib.AllRulesets()
         rulesets.load()
@@ -830,11 +834,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
         other_rule = self._get_rule_of_host(ruleset, value)
-        if other_rule:
-            disable_patterns = set(other_rule.item_list).difference(service_patterns)
-            other_rule.item_list = sorted(list(disable_patterns))
+        if other_rule and isinstance(other_rule.conditions.service_description, list):
+            for service_condition in service_patterns:
+                if service_condition in other_rule.conditions.service_description:
+                    other_rule.conditions.service_description.remove(service_condition)
 
-            if not other_rule.item_list:
+            if not other_rule.conditions.service_description:
                 ruleset.delete_rule(other_rule)
 
             return [other_rule.folder]
@@ -846,13 +851,18 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         rule = self._get_rule_of_host(ruleset, value)
 
         if rule:
-            rule.item_list = sorted(list(set(service_patterns).union(rule.item_list)))
-            if not rule.item_list:
-                ruleset.delete_rule(rule)
+            for service_condition in service_patterns:
+                if service_condition not in rule.conditions.service_description:
+                    rule.conditions.service_description.append(service_condition)
 
         elif service_patterns:
-            rule = watolib.Rule.create(folder, ruleset, [self._host.name()],
-                                       sorted(service_patterns))
+            rule = watolib.Rule.create(folder, ruleset)
+
+            conditions = RuleConditions(folder.path())
+            conditions.host_name = [self._host.name()]
+            conditions.service_description = sorted(service_patterns)
+            rule.update_conditions(conditions)
+
             rule.value = value
             ruleset.prepend_rule(folder, rule)
 

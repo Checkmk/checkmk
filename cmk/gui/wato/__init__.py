@@ -281,8 +281,6 @@ syslog_facilities = cmk.gui.mkeventd.syslog_facilities
 ALL_HOSTS = watolib.ALL_HOSTS
 ALL_SERVICES = watolib.ALL_SERVICES
 NEGATE = watolib.NEGATE
-NO_ITEM = watolib.NO_ITEM
-ENTRY_NEGATE_CHAR = watolib.ENTRY_NEGATE_CHAR
 from cmk.gui.plugins.wato import (
     may_edit_ruleset,
     monitoring_macro_help,

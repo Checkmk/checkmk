@@ -26,10 +26,10 @@
 
 import re
 import pprint
-from typing import Optional  # pylint: disable=unused-import
+from typing import Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
 
-import cmk.utils.regex
 import cmk.utils.store as store
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -50,10 +50,123 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.utils import (
     ALL_HOSTS,
     ALL_SERVICES,
-    NO_ITEM,
     NEGATE,
-    ENTRY_NEGATE_CHAR,
 )
+
+# This macro is needed to make the to_config() methods be able to use native
+# pprint/repr for the ruleset data structures. Have a look at
+# to_config_with_folder_macro() for further information.
+_FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
+
+
+class RuleConditions(object):
+    def __init__(self, host_folder, host_tags=None, host_name=None, service_description=None):
+        # type: (str, Dict[str, str], Optional[Union[Dict[str, List[str]], List[str]]], Optional[List[str]]) -> None
+        self.host_folder = host_folder
+        self.host_tags = host_tags or {}
+        self.host_name = host_name
+        self.service_description = service_description
+
+    def from_config(self, conditions):
+        self.host_folder = conditions.get("host_folder", self.host_folder)
+        self.host_tags = conditions.get("host_tags", {})
+        self.host_name = conditions.get("host_name")
+        self.service_description = conditions.get("service_description")
+        return self
+
+    def to_config_with_folder_macro(self):
+        """Create serializable data structure for the conditions
+
+        In the WATO folder hierarchy each folder may have a rules.mk which
+        contains the rules of that folder.
+
+        It is an important feature that there is no path stored in the .mk
+        files of the folders. This makes the user able to move the folders around
+        without the need to update the files.
+
+        However, Checkmk still needs the information which rule has been loaded
+        from which folder. To make this possible we add the _FOLDER_PATH_MACRO here
+        and replace it with the FOLDER_PATH reference before writing the rules.mk to
+        disk.
+
+        Checkmk can then resolve the FOLDER_PATH while loading the configuration file.
+        Have a look at _load_folder_rulesets() for an example.
+        """
+        cfg = self._to_config()
+        cfg["host_folder"] = _FOLDER_PATH_MACRO
+        return cfg
+
+    def to_config_with_folder(self):
+        cfg = self._to_config()
+        cfg["host_folder"] = self.host_folder
+        return cfg
+
+    def _to_config(self):
+        cfg = {}
+
+        if self.host_tags:
+            cfg["host_tags"] = self.host_tags
+
+        if self.host_name is not None:
+            cfg["host_name"] = self.host_name
+
+        if self.service_description is not None:
+            cfg["service_description"] = self.service_description
+
+        return cfg
+
+    def has_only_explicit_service_conditions(self):
+        if self.service_description is None:
+            return
+
+        return all([
+            not isinstance(i, dict) or i["$regex"].endswith("$") for i in self.service_description
+        ])
+
+    # Compatibility code for pre 1.6 WATO code
+    @property
+    def tag_list(self):
+        tag_list = []
+        for tag_spec in self.host_tags.itervalues():
+            is_not = isinstance(tag_spec, dict) and "$ne" in tag_spec
+            if is_not:
+                tag_id = tag_spec["$ne"]
+            else:
+                tag_id = tag_spec
+
+            tag_list.append(("!%s" % tag_id) if is_not else tag_id)
+        return tag_list
+
+    # Compatibility code for pre 1.6 WATO code
+    @property
+    def host_list(self):
+        return self._condition_list(self.host_name, is_service=False)
+
+    # Compatibility code for pre 1.6 WATO code
+    @property
+    def item_list(self):
+        return self._condition_list(self.service_description, is_service=True)
+
+    def _condition_list(self, object_list, is_service):
+        if object_list is None:
+            return None
+
+        negate, object_list = ruleset_matcher.parse_negated_condition_list(object_list)
+
+        pattern_list = []
+        for entry in object_list:
+            if isinstance(entry, dict):
+                if "$regex" not in entry:
+                    raise NotImplementedError()
+
+                if is_service:
+                    pattern_list.append("%s" % entry["$regex"])
+                else:
+                    pattern_list.append("~%s" % entry["$regex"])
+            else:
+                pattern_list.append(entry)
+
+        return pattern_list, negate
 
 
 class RulesetCollection(object):
@@ -76,7 +189,7 @@ class RulesetCollection(object):
 
         config_dict = {
             "ALL_HOSTS": ALL_HOSTS,
-            "ALL_SERVICES": [""],
+            "ALL_SERVICES": ALL_SERVICES,
             "NEGATE": NEGATE,
             "FOLDER_PATH": folder.path(),
         }
@@ -126,6 +239,11 @@ class RulesetCollection(object):
                 continue  # don't save empty rule sets
 
             content += ruleset.to_config(folder)
+
+        # Adding this instead of the full path makes it easy to move config
+        # files around. The real FOLDER_PATH will be added dynamically while
+        # loading the file in cmk_base.config
+        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/' + FOLDER_PATH")
 
         store.save_mk_file(folder.rules_file_path(), content, add_header=not config.wato_use_git)
 
@@ -274,8 +392,12 @@ class Ruleset(object):
         # Temporary needed during search result processing
         self.search_matching_rules = []
 
+        # Converts pre 1.6 tuple rulesets in place to 1.6+ format
+        self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
+            tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags))
+
     def is_empty(self):
-        return not self._rules
+        return self.num_rules() == 0
 
     def is_empty_in_folder(self, folder):
         return not bool(self.get_folder_rules(folder))
@@ -326,6 +448,9 @@ class Ruleset(object):
         # Resets the rules of this ruleset for this folder!
         self._rules[folder.path()] = []
 
+        self.tuple_transformer.transform_in_place(
+            rules_config, is_service=bool(self.item_type()), is_binary=not self.valuespec())
+
         for rule_config in rules_config:
             rule = Rule(folder, self)
             rule.from_config(rule_config)
@@ -347,9 +472,13 @@ class Ruleset(object):
             if self.is_optional():
                 content += "\nif %s is None:\n    %s = []\n" % (varname, varname)
 
+        # When using pprint we get a deterministic representation of the
+        # data structures because it cares about sorting of the dict keys
+        repr_func = pprint.pformat if config.wato_use_git else repr
+
         content += "\n%s = [\n" % varname
         for rule in self._rules[folder.path()]:
-            content += rule.to_config()
+            content += "%s,\n" % repr_func(rule.to_config())
         content += "] + %s\n\n" % varname
 
         return content
@@ -394,7 +523,7 @@ class Ruleset(object):
                 "ruleset_deprecated"] != self.is_deprecated():
             return False
 
-        if "ruleset_used" in search_options and search_options["ruleset_used"] == self.is_empty():
+        if "ruleset_used" in search_options and search_options["ruleset_used"] is self.is_empty():
             return False
 
         if "ruleset_group" in search_options \
@@ -558,17 +687,10 @@ class Ruleset(object):
 
 class Rule(object):
     @classmethod
-    def create(cls, folder, ruleset, host_list, item_list):
+    def create(cls, folder, ruleset):
         rule = Rule(folder, ruleset)
-
         if rule.ruleset.valuespec():
             rule.value = rule.ruleset.valuespec().default_value()
-
-        rule.host_list = host_list
-
-        if rule.ruleset.item_type():
-            rule.item_list = item_list
-
         return rule
 
     def __init__(self, folder, ruleset):
@@ -581,15 +703,12 @@ class Rule(object):
 
     def clone(self):
         cloned = Rule(self.folder, self.ruleset)
-        cloned.from_config(self.to_dict_config())
+        cloned.from_config(self.to_config())
         return cloned
 
     def _initialize(self):
-        self.tag_specs = []
-        self.host_list = []
-        self.item_list = None
+        self.conditions = RuleConditions(self.folder.path())
         self.rule_options = {}
-
         if self.ruleset.valuespec():
             self.value = None
         else:
@@ -600,150 +719,41 @@ class Rule(object):
             self._initialize()
             self._parse_rule(rule_config)
         except Exception:
+            logger.exception()
             raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
 
     def _parse_rule(self, rule_config):
         if isinstance(rule_config, dict):
             self._parse_dict_rule(rule_config)
-        elif isinstance(rule_config, tuple):
-            self._parse_tuple_rule(rule_config)
         else:
             raise NotImplementedError()
 
-    # TODO: Would make sense to implement independent parsing for the different
-    # ruleset types
     def _parse_dict_rule(self, rule_config):
         self.rule_options = rule_config.get("options", {})
+        self.value = rule_config["value"]
 
-        # Extract value from front, if rule has a value
-        if self.ruleset.valuespec():
-            self.value = rule_config["value"]
-        else:
-            if rule_config.get("negate"):
-                self.value = False
-            else:
-                self.value = True
+        conditions = rule_config["condition"].copy()
 
-        conditions = rule_config["conditions"]
-        self.host_list = conditions.get("host_specs", [])
+        # Is known because of the folder associated with this object. Remove the
+        # rendundant information here. It will be added dynamically in to_config()
+        # for writing it back
+        conditions.pop("host_folder", None)
 
-        if self.ruleset.item_type():
-            self.item_list = conditions.get("service_specs")
-
-        # Remove folder tag from tag list
-        tag_specs = conditions.get("host_tags", [])
-        self.tag_specs = [t for t in tag_specs if not t.startswith("/")]
-
-    # Parses the pre 1.6 tuple format. Since 1.6 Check_MK writes out the dict
-    # format handled by _parse_dict_rule(). Deprecate this one day.
-    def _parse_tuple_rule(self, rule_config):
-        if isinstance(rule_config[-1], dict):
-            self.rule_options = rule_config[-1]
-            rule_config = rule_config[:-1]
-
-        # Extract value from front, if rule has a value
-        if self.ruleset.valuespec():
-            self.value = rule_config[0]
-            rule_config = rule_config[1:]
-        else:
-            if rule_config[0] == NEGATE:
-                self.value = False
-                rule_config = rule_config[1:]
-            else:
-                self.value = True
-
-        # Extract liste of items from back, if rule has items
-        if self.ruleset.item_type():
-            self.item_list = rule_config[-1]
-            rule_config = rule_config[:-1]
-
-        # Rest is host list or tag list + host list
-        if len(rule_config) == 1:
-            tag_specs = []
-            self.host_list = rule_config[0]
-        else:
-            tag_specs = rule_config[0]
-            self.host_list = rule_config[1]
-
-        # Remove folder tag from tag list
-        self.tag_specs = [t for t in tag_specs if not t.startswith("/")]
+        self.conditions = RuleConditions(self.folder.path())
+        self.conditions.from_config(conditions)
 
     def to_config(self):
-        content = "  ( "
-
-        # When using pprint we get a deterministic representation of the
-        # data structures because it cares about sorting of the dict keys
-        repr_func = pprint.pformat if config.wato_use_git else repr
-
-        if self.ruleset.valuespec():
-            content += repr_func(self.value) + ", "
-        elif not self.value:
-            content += "NEGATE, "
-
-        content += "["
-        for tag in self.tag_specs:
-            content += repr(tag)
-            content += ", "
-
-        if not self.folder.is_root():
-            content += "'/' + FOLDER_PATH + '/+'"
-
-        content += "], "
-
-        if self.host_list and self.host_list[-1] == ALL_HOSTS[0]:
-            if len(self.host_list) > 1:
-                content += repr(self.host_list[:-1])
-                content += " + ALL_HOSTS"
-            else:
-                content += "ALL_HOSTS"
-        else:
-            content += repr(self.host_list)
-
-        if self.ruleset.item_type():
-            content += ", "
-            if self.item_list == ALL_SERVICES:
-                content += "ALL_SERVICES"
-            else:
-                if self.item_list[-1] == ALL_SERVICES[0]:
-                    content += repr(self.item_list[:-1])
-                    content += " + ALL_SERVICES"
-                else:
-                    content += repr(self.item_list)
-
-        rule_options = self._rule_options_to_config()
-        if rule_options:
-            content += ", %s" % repr_func(rule_options)
-
-        content += " ),\n"
-
-        return content
-
-    def to_dict_config(self):
         result = {
-            "conditions": {},
+            "value": self.value,
+            "condition": self.conditions.to_config_with_folder_macro(),
         }
 
         rule_options = self._rule_options_to_config()
         if rule_options:
             result["options"] = rule_options
 
-        if self.ruleset.valuespec():
-            result["value"] = self.value
-        elif self.value is False:
-            result["negate"] = True
-
-        result["conditions"]["host_specs"] = self.host_list
-        if self.tag_specs:
-            result["conditions"]["host_tags"] = self.tag_specs
-
-        if self.ruleset.item_type():
-            result["conditions"]["service_specs"] = self.item_list
-
         return result
 
-    # Append rule options, but only if they are not trivial. That way we
-    # keep as close as possible to the original Check_MK in rules.mk so that
-    # command line users will feel at home...
     def _rule_options_to_config(self):
         ro = {}
         if self.rule_options.get("disabled"):
@@ -765,75 +775,60 @@ class Rule(object):
     def is_ineffective(self):
         hosts = Host.all()
         for host_name, host in hosts.items():
-            if self.matches_host_and_item(host.folder(), host_name, NO_ITEM):
+            if self.matches_host_and_item(host.folder(), host_name, service_description=None):
                 return False
         return True
 
-    def matches_host_and_item(self, host_folder, hostname, item):
+    def matches_host_and_item(self, host_folder, hostname, service_description):
         """Whether or not the given folder/host/item matches this rule"""
-        return not any(True for _r in self.get_mismatch_reasons(host_folder, hostname, item))
+        return not any(
+            True for _r in self.get_mismatch_reasons(host_folder, hostname, service_description))
 
-    def get_mismatch_reasons(self, host_folder, hostname, item):
+    def get_mismatch_reasons(self, host_folder, hostname, service_description):
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
         host = host_folder.host(hostname)
+        if host is None:
+            raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
 
-        if not self._matches_hostname(hostname):
-            yield _("The host name does not match.")
+        match_object = ruleset_matcher.RulesetMatchObject(
+            host_name=hostname,
+            host_folder="/" + host_folder.path(),
+            host_tags=host.tag_groups(),
+            service_description=service_description,
+        )
 
-        host_tags = host.tags()
-        for tag in self.tag_specs:
-            if tag[0] != '/' and tag[0] != '!' and tag not in host_tags:
-                yield _("The host is missing the tag %s") % tag
-            elif tag[0] == '!' and tag[1:] in host_tags:
-                yield _("The host has the tag %s") % tag
-
-        if not self.folder.is_transitive_parent_of(host_folder):
-            yield _("The rule does not apply to the folder of the host.")
-
-        if item != NO_ITEM and self.ruleset.item_type():
-            if not self.matches_item(item):
-                yield _("The %s \"%s\" does not match this rule.") % \
-                                      (self.ruleset.item_name(), item)
-
-    def _matches_hostname(self, hostname):
-        if not self.host_list:
-            return False  # empty list of explicit host does never match
-
-        # Assume WATO conforming rule where either *all* or *none* of the
-        # host expressions are negated.
-        negate = self.host_list[0].startswith("!")
-
-        for check_host in self.host_list:
-            if check_host == "@all":
-                return True
-
-            if check_host[0] == '!':  # strip negate character
-                check_host = check_host[1:]
-
-            if check_host[0] == '~':
-                check_host = check_host[1:]
-                regex_match = True
-            else:
-                regex_match = False
-
-            if not regex_match and hostname == check_host:
-                return not negate
-
-            elif regex_match and cmk.utils.regex.regex(check_host).match(hostname):
-                return not negate
-
-        return negate
+        for reason in self._get_mismatch_reasons_of_match_object(match_object, host.tags()):
+            yield reason
 
     def matches_item(self, item):
-        for item_spec in self.item_list:
-            do_negate = False
-            compare_item = item_spec
-            if compare_item and compare_item[0] == ENTRY_NEGATE_CHAR:
-                compare_item = compare_item[1:]
-                do_negate = True
-            if re.match(compare_item, "%s" % item):
-                return not do_negate
-        return False
+        match_object = ruleset_matcher.RulesetMatchObject(
+            host_name=None,
+            host_folder="/",
+            service_description=item,
+        )
+        return any(self._get_mismatch_reasons_of_match_object(match_object, host_tags=[]))
+
+    def _get_mismatch_reasons_of_match_object(self, match_object, host_tags):
+        matcher = ruleset_matcher.RulesetMatcher(
+            tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags),
+            host_tag_lists={match_object.host_name: host_tags},
+            host_paths={match_object.host_name: match_object.host_folder},
+            all_configured_hosts=set([match_object.host_name]),
+            clusters_of={},
+            nodes_of={},
+        )
+
+        rule_dict = self.to_config()
+        rule_dict["condition"]["host_folder"] = self.folder.path()
+
+        if self.ruleset.item_type():
+            if matcher.is_matching_service_ruleset(match_object, [rule_dict]):
+                return
+        else:
+            if matcher.is_matching_host_ruleset(match_object, [rule_dict]):
+                return
+
+        yield _("The rule does not match")
 
     def matches_search(self, search_options):
         if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(
@@ -868,25 +863,26 @@ class Rule(object):
             except Exception as e:
                 logger.exception()
                 html.show_warning(
-                    _("Failed to search rule of ruleset '%s' in folder '%s' (%s): %s") %
+                    _("Failed to search rule of ruleset '%s' in folder '%s' (%r): %s") %
                     (self.ruleset.title(), self.folder.title(), self.to_config(), e))
 
         if value_text is not None and not _match_search_expression(search_options, "rule_value",
                                                                    value_text):
             return False
 
-        if not _match_one_of_search_expression(search_options, "rule_host_list", self.host_list):
+        if self.conditions.host_list \
+            and not _match_one_of_search_expression(search_options, "rule_host_list", self.conditions.host_list[0]):
             return False
 
-        if self.item_list and not _match_one_of_search_expression(search_options, "rule_item_list",
-                                                                  self.item_list):
+        if self.conditions.item_list \
+           and not _match_one_of_search_expression(search_options, "rule_item_list", self.conditions.item_list[0]):
             return False
 
         to_search = [
             self.comment(),
             self.description(),
-        ] + self.host_list \
-          + (self.item_list or [])
+        ] + (self.conditions.host_list[0] if self.conditions.host_list else []) \
+          + (self.conditions.item_list[0] if self.conditions.item_list else [])
 
         if value_text is not None:
             to_search.append(value_text)
@@ -897,7 +893,8 @@ class Rule(object):
         searching_host_tags = search_options.get("rule_hosttags")
         if searching_host_tags:
             for host_tag in searching_host_tags:
-                if host_tag not in self.tag_specs:
+                html.debug((host_tag, self.conditions.tag_list))
+                if host_tag not in self.conditions.tag_list:
                     return False
 
         return True
@@ -936,15 +933,17 @@ class Rule(object):
         return self.rule_options.get("predefined_condition_id")
 
     def update_conditions(self, conditions):
-        self.tag_specs = conditions.host_tags
-        self.host_list = conditions.host_list
-        if self.ruleset.item_type():
-            self.item_list = conditions.item_list
+        # type: (RuleConditions) -> None
+        self.conditions = conditions
+
+    def get_rule_conditions(self):
+        # type: () -> RuleConditions
+        return self.conditions
 
     def is_discovery_rule_of(self, host):
-        return self.host_list == [host.name()] \
-               and self.tag_specs == [] \
-               and all([ i.endswith("$") for i in self.item_list ]) \
+        return self.conditions.host_name == [host.name()] \
+               and self.conditions.host_tags == {} \
+               and self.conditions.has_only_explicit_service_conditions() \
                and self.folder.is_transitive_parent_of(host.folder())
 
 

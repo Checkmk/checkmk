@@ -46,6 +46,7 @@ from cmk.utils.regex import regex
 import cmk.utils.translations
 import cmk.utils.tags
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
 import cmk.utils
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -1073,15 +1074,8 @@ hosttags_match_taglist = tuple_rulesets.hosttags_match_taglist
 # Slow variant of checking wether a service is matched by a list
 # of regexes - used e.g. by cmk --notify
 def in_extraconf_servicelist(servicelist, service):
-    return _in_servicematcher_list(tuple_rulesets.convert_pattern_list(servicelist), service)
-
-
-def _in_servicematcher_list(service_conditions, item):
-    # type: (Tuple[bool, Pattern[Text]], Text) -> bool
-    negate, pattern = service_conditions
-    if pattern.match(item) is not None:
-        return not negate
-    return negate
+    return tuple_rulesets.in_servicematcher_list(
+        tuple_rulesets.convert_pattern_list(servicelist), service)
 
 
 #.
@@ -2623,19 +2617,24 @@ class ConfigCache(object):
         self._collect_hosttags()
         self._setup_clusters_nodes_cache()
 
-        # Converts pre 1.6 tuple rulesets in place to 1.6+ format
-        self.tuple_transformer = tuple_rulesets.RulesetToDictTransformer(
-            tag_to_group_map=self._get_tag_to_group_map())
-        self.ruleset_matcher = tuple_rulesets.RulesetMatcher(self)
-
         self._all_configured_clusters = self._get_all_configured_clusters()
         self._all_configured_realhosts = self._get_all_configured_realhosts()
         self._all_configured_hosts = self._get_all_configured_hosts()
 
+        self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
+            tag_to_group_map=self.get_tag_to_group_map(),
+            host_tag_lists=self._hosttags,
+            host_paths=self._host_paths,
+            clusters_of=self._clusters_of_cache,
+            nodes_of=self._nodes_of_cache,
+            all_configured_hosts=self._all_configured_hosts,
+        )
+
         self._all_active_clusters = self._get_all_active_clusters()
         self._all_active_realhosts = self._get_all_active_realhosts()
         self._all_active_hosts = self._get_all_active_hosts()
-        self._all_processed_hosts = self._all_active_hosts
+
+        self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
 
     def _initialize_caches(self):
         self.check_table_cache = cmk_base.config_cache.get_dict("check_tables")
@@ -2646,11 +2645,6 @@ class ConfigCache(object):
 
         # Host lookup
 
-        # Contains all hostnames which are currently relevant for this cache
-        # Most of the time all_processed hosts is similar to all_active_hosts
-        # Howewer, in a multiprocessing environment all_processed_hosts only
-        # may contain a reduced set of hosts, since each process handles a subset
-        self._all_processed_hosts = set()
         self._all_configured_hosts = set()
         self._all_configured_clusters = set()
         self._all_configured_realhosts = set()
@@ -2673,17 +2667,12 @@ class ConfigCache(object):
         self._clusters_of_cache = {}
         self._nodes_of_cache = {}
 
-        # A factor which indicates how much hosts share the same host tag configuration (excluding folders).
-        # len(all_processed_hosts) / len(different tag combinations)
-        # It is used to determine the best rule evualation method
-        self._all_processed_hosts_similarity = 1
-
         # Keep HostConfig instances created with the current configuration cache
         self._host_configs = {}
 
-    def _get_tag_to_group_map(self):
+    def get_tag_to_group_map(self):
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
-        return tuple_rulesets.get_tag_to_group_map(tags)
+        return ruleset_matcher.get_tag_to_group_map(tags)
 
     def get_host_config(self, hostname):
         # type: (str) -> HostConfig
@@ -2851,10 +2840,7 @@ class ConfigCache(object):
 
     def passive_check_period_of_service(self, hostname, description):
         # type: (str, Text) -> str
-        passive_check_period = self.service_extra_conf(hostname, description, check_periods)
-        if not passive_check_period:
-            return "24X7"
-        return passive_check_period[0]
+        return self.get_service_ruleset_value(hostname, description, check_periods, deflt="24X7")
 
     def custom_attributes_of_service(self, hostname, description):
         # type: (str, Text) -> Dict[str, str]
@@ -2864,21 +2850,14 @@ class ConfigCache(object):
 
     def service_level_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[int]
-        entries = self.service_extra_conf(hostname, description, service_service_levels)
-        if not entries:
-            return None
-        return entries[0]
+        return self.get_service_ruleset_value(
+            hostname, description, service_service_levels, deflt=None)
 
     def check_period_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[str]
-        entries = self.service_extra_conf(hostname, description, check_periods)
-        if not entries:
-            return None
-
-        entry = entries[0]
+        entry = self.get_service_ruleset_value(hostname, description, check_periods, deflt=None)
         if entry == "24X7":
             return None
-
         return entry
 
     def get_explicit_service_custom_variables(self, hostname, description):
@@ -2910,39 +2889,6 @@ class ConfigCache(object):
         match_object = self.ruleset_match_object_of_host(hostname)
         match_object.service_description = svc_desc
         return match_object
-
-    def set_all_processed_hosts(self, all_processed_hosts):
-        self._all_processed_hosts = set(all_processed_hosts)
-
-        nodes_and_clusters = set()
-        for hostname in self._all_processed_hosts:
-            nodes_and_clusters.update(self._nodes_of_cache.get(hostname, []))
-            nodes_and_clusters.update(self._clusters_of_cache.get(hostname, []))
-        self._all_processed_hosts.update(nodes_and_clusters)
-
-        # The folder host lookup includes a list of all -processed- hosts within a given
-        # folder. Any update with set_all_processed hosts invalidates this cache, because
-        # the scope of relevant hosts has changed. This is -good-, since the values in this
-        # lookup are iterated one by one later on in all_matching_hosts
-        # TODO: Fix scope
-        self.ruleset_matcher.ruleset_optimizer._folder_host_lookup = {}
-
-        self._adjust_processed_hosts_similarity()
-
-    def _adjust_processed_hosts_similarity(self):
-        """ This function computes the tag similarities between of the processed hosts
-        The result is a similarity factor, which helps finding the most perfomant operation
-        for the current hostset """
-        used_groups = set()
-        for hostname in self._all_processed_hosts:
-            # TODO: Fix scope
-            used_groups.add(self.ruleset_matcher.ruleset_optimizer._host_grouped_ref[hostname])
-        self._all_processed_hosts_similarity = (
-            1.0 * len(self._all_processed_hosts) / len(used_groups))
-
-    @property
-    def all_processed_hosts_similarity(self):
-        return self._all_processed_hosts_similarity
 
     def get_autochecks_of(self, hostname):
         try:
@@ -2979,60 +2925,41 @@ class ConfigCache(object):
             return result
 
     def host_extra_conf_merged(self, hostname, ruleset):
-        return self.ruleset_matcher.get_merged_dict(hostname, ruleset)
+        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=None)
+        return self.ruleset_matcher.get_host_ruleset_merged_dict(match_object, ruleset)
 
     def host_extra_conf(self, hostname, ruleset):
-        return list(self.ruleset_matcher.get_values(hostname, ruleset, is_binary=False))
+        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=None)
+        return list(
+            self.ruleset_matcher.get_host_ruleset_values(match_object, ruleset, is_binary=False))
 
     # TODO: Cleanup external in_binary_hostlist call sites
     def in_binary_hostlist(self, hostname, ruleset):
-        return self.ruleset_matcher.is_matching(hostname, ruleset)
+        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=None)
+        return self.ruleset_matcher.is_matching_host_ruleset(match_object, ruleset)
 
-    def service_extra_conf(self, hostname, service, ruleset):
+    def service_extra_conf(self, hostname, description, ruleset):
         """Compute outcome of a service rule set that has an item."""
-        return list(self._match_service_ruleset(hostname, service, ruleset, is_binary=False))
+        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=description)
+        return list(
+            self.ruleset_matcher.get_service_ruleset_values(match_object, ruleset, is_binary=False))
 
-    def service_extra_conf_merged(self, hostname, service, ruleset):
-        rule_dict = {}
-        for rule in self.service_extra_conf(hostname, service, ruleset):
-            for key, value in rule.items():
-                rule_dict.setdefault(key, value)
-        return rule_dict
+    def get_service_ruleset_value(self, hostname, description, ruleset, deflt):
+        """Compute first match service ruleset outcome with fallback to a default value"""
+        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=description)
+        return next(
+            self.ruleset_matcher.get_service_ruleset_values(match_object, ruleset, is_binary=False),
+            deflt)
+
+    def service_extra_conf_merged(self, hostname, description, ruleset):
+        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=description)
+        return self.ruleset_matcher.get_service_ruleset_merged_dict(match_object, ruleset)
 
     def in_boolean_serviceconf_list(self, hostname, description, ruleset):
         # type: (str, Text, List) -> bool
         """Compute outcome of a service rule set that just say yes/no"""
-        for value in self._match_service_ruleset(hostname, description, ruleset, is_binary=True):
-            return value
-        return False  # no match. Do not ignore
-
-    def _match_service_ruleset(self, hostname, description, ruleset, is_binary):
-        # type: (str, Text, List, bool) -> Generator
-
-        # When the requested host is part of the local sites configuration,
-        # then use only the sites hosts for processing the rules
-        with_foreign_hosts = hostname not in self._all_processed_hosts
-        optimized_ruleset = self.ruleset_matcher.ruleset_optimizer.get_service_ruleset(
-            ruleset, with_foreign_hosts, is_binary=is_binary)
-
-        for value, hosts, service_conditions in optimized_ruleset:
-            if hostname not in hosts:
-                continue
-
-            descr_cache_id = description, service_conditions
-            if descr_cache_id in self._service_match_cache:
-                match = self._service_match_cache[descr_cache_id]
-            else:
-                match = _in_servicematcher_list(service_conditions, description)
-                self._service_match_cache[descr_cache_id] = match
-
-            if match:
-                yield value
-
-    def all_processed_hosts(self):
-        # type: () -> Set[str]
-        """Returns a set of all processed hosts"""
-        return self._all_processed_hosts
+        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=description)
+        return self.ruleset_matcher.is_matching_service_ruleset(match_object, ruleset)
 
     def all_active_hosts(self):
         # type: () -> Set[str]
@@ -3170,11 +3097,8 @@ class CEEConfigCache(ConfigCache):
 
     def rrd_config_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[Dict]
-        rrdconf = self.service_extra_conf(hostname, description, cmc_service_rrd_config)
-        if not rrdconf:
-            return None
-
-        return rrdconf[0]
+        return self.get_service_ruleset_value(
+            hostname, description, cmc_service_rrd_config, deflt=None)
 
     def recurring_downtimes_of_service(self, hostname, description):
         # type: (str, Text) -> List[Dict[str, Union[int, str]]]
@@ -3182,19 +3106,13 @@ class CEEConfigCache(ConfigCache):
 
     def flap_settings_of_service(self, hostname, description):
         # type: (str, Text) -> Tuple[float, float, float]
-        values = self.service_extra_conf(hostname, description, cmc_service_flap_settings)
-        if not values:
-            return cmc_flap_settings
-
-        return values[0]
+        return self.get_service_ruleset_value(
+            hostname, description, cmc_service_flap_settings, deflt=cmc_flap_settings)
 
     def log_long_output_of_service(self, hostname, description):
         # type: (str, Text) -> bool
-        entries = self.service_extra_conf(hostname, description,
-                                          cmc_service_long_output_in_monitoring_history)
-        if not entries:
-            return False
-        return entries[0]
+        return self.get_service_ruleset_value(
+            hostname, description, cmc_service_long_output_in_monitoring_history, deflt=False)
 
     def state_translation_of_service(self, hostname, description):
         # type: (str, Text) -> Dict
@@ -3208,18 +3126,13 @@ class CEEConfigCache(ConfigCache):
     def check_timeout_of_service(self, hostname, description):
         # type: (str, Text) -> int
         """Returns the check timeout in seconds"""
-        entries = self.service_extra_conf(hostname, description, cmc_service_check_timeout)
-        if not entries:
-            return cmc_check_timeout
-
-        return entries[0]
+        return self.get_service_ruleset_value(
+            hostname, description, cmc_service_check_timeout, deflt=cmc_check_timeout)
 
     def graphite_metrics_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[List[str]]
-        entries = self.service_extra_conf(hostname, description, cmc_graphite_service_metrics)
-        if not entries:
-            return None
-        return entries[0]
+        return self.get_service_ruleset_value(
+            hostname, description, cmc_graphite_service_metrics, deflt=None)
 
     # TODO: Cleanup the GENERIC_AGENT duplication with cmk_base.cee.agent_bakyery.GENERIC_AGENT
     def matched_agent_config_entries(self, hostname):

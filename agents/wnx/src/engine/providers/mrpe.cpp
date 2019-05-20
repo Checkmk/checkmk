@@ -162,8 +162,8 @@ void MrpeProvider::addParsedIncludes() {
     }
 }
 
-bool MrpeProvider::parseAndLoadEntry(const std::string &Entry) {
-    auto str = Entry;
+bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
+    auto str = entry;
     auto table = cma::tools::SplitString(str, "=");
     if (table.size() != 2) {
         XLOG::t("Strange entry {} in {}", str,
@@ -171,7 +171,7 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &Entry) {
         return false;
     }
 
-    // include entry determined when include word is presented in
+    // include entry determined when type is 'include'
     // the type
     auto type = table[0];
     std::transform(type.cbegin(), type.cend(), type.begin(), tolower);
@@ -182,31 +182,30 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &Entry) {
     if (pos != std::string::npos &&              // found
         (type[len] == 0 || type[len] == ' ')) {  // include has end
 
-        std::string value = str.substr(len + pos, std::string::npos);
+        auto value = str.substr(len + pos, std::string::npos);
         cma::tools::AllTrim(value);
         if (!value.empty()) {
-            includes_.push_back(value);
+            includes_.emplace_back(value);
             return true;
         }
 
-        XLOG::d("Strange include entry type {} {} in {}", type, str,
-                cma::cfg::GetPathOfLoadedConfigAsString());
+        XLOG::d("Strange include entry type '{}' '{}' ", type, str);
         return false;
     }
 
-    // check entry determined when type is check
+    // check entry determined when type is 'check'
     cma::tools::AllTrim(type);
     std::transform(type.cbegin(), type.cend(), type.begin(), tolower);
     if (type == "check") {
         // check = anything   <-- src
         //        "anything"  <-- value
         cma::tools::AllTrim(table[1]);
-        checks_.push_back(table[1]);
+        auto potential_path = cma::cfg::ReplacePredefinedMarkers(table[1]);
+        checks_.emplace_back(potential_path);
         return true;
     }
 
-    XLOG::d("Strange entry type {} {} in {}", type, str,
-            cma::cfg::GetPathOfLoadedConfigAsString());
+    XLOG::d("Strange check entry type '{}' '{}'", type, str);
     return false;
 }
 

@@ -405,6 +405,38 @@ std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
     return data_;
 }
 
+void PluginEntry::restartIfRequired() {
+    using namespace std::chrono;
+
+    // check is valid parameters
+    if (cache_age_ < cma::cfg::kMinimumCacheAge) {
+        XLOG::l(
+            "Plugin '{}' requested to be async restarted, but has no valid cache age",
+            path().u8string());
+        return;
+    }
+    // check data are ready and new enough
+    seconds allowed_age(cache_age_);
+    auto data_age = getDataAge();
+    {
+        std::lock_guard l(data_lock_);
+        {
+            if (data_age <= allowed_age) return;
+            data_time_ =
+                std::chrono::steady_clock::now();  // update time of start
+        }
+        auto filename = path().u8string();
+        // execution phase
+        XLOG::l.t("Starting '{}'", filename);
+        auto result = cma::tools::RunDetachedCommand(filename);
+        if (result)
+            XLOG::l.i("Starting '{}' OK!", filename);
+        else
+            XLOG::l("Starting '{}' FAILED with error [{}]", filename,
+                    GetLastError());
+    }
+}
+
 // after starting box
 bool PluginEntry::registerProcess(uint32_t Id) {
     if (failed()) {
@@ -651,6 +683,41 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
     return out;
 }
 
+bool IsDetachedPlugin(const std::filesystem::path& filepath) {
+    auto fname = filepath.filename();
+    auto filename = fname.u8string();
+    cma::tools::StringLower(filename);
+    return filename == cma::cfg::files::kAgentUpdater;
+}
+
+void RunDetachedPlugins(PluginMap& plugins_map, int& start_count) {
+    using namespace std;
+    using DataBlock = vector<char>;
+
+    int requested_count = 0;
+    start_count = 0;
+
+    DataBlock out;
+    // async part
+    int count = 0;
+    for (auto& entry_pair : plugins_map) {
+        auto& entry_name = entry_pair.first;
+        auto& entry = entry_pair.second;
+
+        if (!entry.async()) continue;
+
+        if (IsDetachedPlugin(entry.path())) {
+            entry.restartIfRequired();
+            ++count;
+            continue;
+        };
+    }
+    XLOG::l.i("Detached started: [{}]", count);
+    start_count = count;
+
+    return;
+}
+
 std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
                                   bool StartImmediately) {
     using namespace std;
@@ -667,6 +734,8 @@ std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
         auto& entry = entry_pair.second;
 
         if (!entry.async()) continue;
+
+        if (IsDetachedPlugin(entry.path())) continue;
 
         auto ret = entry.getResultsAsync(StartImmediately);
         if (ret.size()) ++count;

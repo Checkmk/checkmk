@@ -1,0 +1,24 @@
+title: Microsoft Azure Usage Details (Costs)
+agents: azure
+catalog: cloud/azure
+license: GPL
+distribution: check_mk
+description:
+ This check reports the daily costs of the Azure subscription,
+ in sum and per Azure service type and/or resource group.
+
+ Note that cost information has a granularity of one day.
+ The current value will always display the value corresonding
+ to the last complete day (00:00 - 23:59 UTC).
+
+ Levels can be imposed on this value using the rule
+ "Azure Usage Details (Costs)".
+
+item:
+ The name of the Azure service type or 'Summary'.
+
+inventory:
+ One service per Azure service type plus an additional summary
+ are created on both the host running the agent and every
+ host corresponding to a monitored resource group.
+

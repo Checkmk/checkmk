@@ -4371,7 +4371,10 @@ class Color(ValueSpec):
         if not value:
             value = "#FFFFFF"
 
-        html.javascript_file("js/colorpicker.js")
+        # Hack to make it only be loaded once per page. Will be solved in a cleaner way as of 1.6
+        if not html.is_cached("js_colorpicker_loaded"):
+            html.javascript_file("js/colorpicker.js")
+            html.set_cache("js_colorpicker_loaded", True)
 
         # Holds the actual value for form submission
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var = True)

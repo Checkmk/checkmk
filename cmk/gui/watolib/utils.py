@@ -46,9 +46,6 @@ ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS
 ALL_SERVICES = cmk.utils.rulesets.tuple_rulesets.ALL_SERVICES
 NEGATE = cmk.utils.rulesets.tuple_rulesets.NEGATE
 
-NO_ITEM = {}  # Just an arbitrary unique thing
-ENTRY_NEGATE_CHAR = "!"
-
 
 def wato_root_dir():
     return cmk.utils.paths.check_mk_config_dir + "/wato/"

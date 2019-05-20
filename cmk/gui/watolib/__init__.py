@@ -258,8 +258,6 @@ from cmk.gui.watolib.utils import (
     ALL_HOSTS,
     ALL_SERVICES,
     NEGATE,
-    NO_ITEM,
-    ENTRY_NEGATE_CHAR,
     wato_root_dir,
     multisite_dir,
     rename_host_in_list,

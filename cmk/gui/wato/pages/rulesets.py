@@ -470,7 +470,7 @@ class ModeEditRuleset(WatoMode):
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
 
-        self._item = None
+        self._item = None  # type: Optional[Text]
 
         # TODO: Clean this up. In which case is it used?
         check_command = html.get_ascii_input("check_command")
@@ -496,7 +496,7 @@ class ModeEditRuleset(WatoMode):
             raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
 
         if not self._item:
-            self._item = watolib.NO_ITEM
+            self._item = None
             if html.request.has_var("item"):
                 try:
                     self._item = watolib.mk_eval(html.request.var("item"))
@@ -777,7 +777,7 @@ class ModeEditRuleset(WatoMode):
         if html.request.var("host"):
             vars_.append(("host", self._hostname))
         if html.request.var("item"):
-            vars_.append(("item", self._item))
+            vars_.append(("item", watolib.mk_repr(self._item)))
 
         return make_action_link(vars_)
 
@@ -851,7 +851,7 @@ class ModeEditRuleset(WatoMode):
         if self._hostname:
             label = _("Host %s") % self._hostname
             ty = _('Host')
-            if self._item != watolib.NO_ITEM and self._rulespec.item_type:
+            if self._item is not None and self._rulespec.item_type:
                 label += _(" and %s '%s'") % (self._rulespec.item_name, self._item)
                 ty = self._rulespec.item_name
 
@@ -1835,8 +1835,8 @@ class ModeNewRule(EditRuleMode):
 
             if self._rulespec.item_type:
                 item = watolib.mk_eval(
-                    html.request.var("item")) if html.request.has_var("item") else watolib.NO_ITEM
-                if item != watolib.NO_ITEM:
+                    html.request.var("item")) if html.request.has_var("item") else None
+                if item is not None:
                     service_conditions = [{"$regex": "%s$" % escape_regex_chars(item)}]
 
         self._rule = watolib.Rule.create(self._folder, self._ruleset)

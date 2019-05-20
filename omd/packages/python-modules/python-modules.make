@@ -229,6 +229,7 @@ $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCH
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
 		    --root=$(PACKAGE_PYTHON_MODULES_DESTDIR) \
 		    --prefix='' \
+		    --install-data=/share \
 		    --install-platlib=/lib \
 		    --install-purelib=/lib ; \
 		cd .. ; \

@@ -100,7 +100,7 @@ public:
         // TODO(sp): This class sets different logclasses on match -> fix this
         invalid = 0x7fffffff  // never stored
     };
-    static constexpr uint32_t all_classes = 0xffffu;
+    static constexpr uint32_t all_classes = 0xffffU;
 
     // TODO(sp): Wrong type, caused by TableLog accessing it via
     // OffsetIntColumn, should be size_t

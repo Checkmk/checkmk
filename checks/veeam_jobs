@@ -43,6 +43,8 @@ def inventory_veeam_jobs(info):
 def check_veeam_jobs(item, _no_params, info):
     for line in info:
         if line[0] == item:
+            if len(line) < 4:
+                continue
             backup_type = line[1]
             backup_status = line[3]
             backup_current = line[2]

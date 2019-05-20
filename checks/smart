@@ -204,11 +204,14 @@ def inventory_smart_temp(info):
 
 def check_smart_temp(item, params, info):
     disks = parse_smart_raw_values(info)
+    data = disks.get(item)
+    if data is None:
+        return
 
-    if "Temperature_Celsius" in disks[item]:
-        temperature = disks[item]["Temperature_Celsius"]
-    elif "Temperature_Internal" in disks[item]:
-        temperature = disks[item]["Temperature_Internal"]
+    if "Temperature_Celsius" in data:
+        temperature = data["Temperature_Celsius"]
+    elif "Temperature_Internal" in data:
+        temperature = data["Temperature_Internal"]
     else:
         return
 

@@ -258,3 +258,88 @@ def test_basic_host_ruleset_is_matching_host_ruleset(monkeypatch):
     assert matcher.is_matching_host_ruleset(
         RulesetMatchObject(host_name="host2", service_description=None),
         ruleset=binary_ruleset) is False
+
+
+tag_ruleset = [
+    # test simple tag match
+    {
+        "value": "crit_prod",
+        "condition": {
+            "host_tags": {
+                "criticality": "prod",
+            },
+        },
+        "options": {},
+    },
+    # test implicit AND
+    {
+        "value": "prod_cmk-agent",
+        "condition": {
+            "host_tags": {
+                "criticality": "prod",
+                "agent": "cmk-agent",
+            },
+        },
+        "options": {},
+    },
+    # test negation of tag
+    {
+        "value": "not_lan",
+        "condition": {
+            "host_tags": {
+                "networking": {
+                    "$ne": "lan"
+                }
+            }
+        },
+        "options": {},
+    },
+    # test $or
+    #{
+    #    "value": "wan_or_lan",
+    #    "condition": {
+    #        "host_tags": {
+    #            "networking": {
+    #                "$or": [
+    #                    "lan",
+    #                    "wan",
+    #                ],
+    #            }
+    #        }
+    #    },
+    #    "options": {},
+    #},
+    # test unconditional match
+    {
+        "value": "BLA",
+        "condition": {},
+        "options": {},
+    },
+]
+
+
+@pytest.mark.parametrize("hostname,expected_result", [
+    ("host1", ["crit_prod", "prod_cmk-agent", "BLA"]),
+    ("host2", ["not_lan", "BLA"]),
+])
+def test_ruleset_matcher_get_host_ruleset_values_tags(monkeypatch, hostname, expected_result):
+    ts = Scenario()
+    ts.add_host(
+        "host1", tags={
+            "criticality": "prod",
+            "agent": "cmk-agent",
+            "networking": "lan",
+        })
+    ts.add_host(
+        "host2", tags={
+            "criticality": "test",
+            "networking": "wan",
+        })
+    config_cache = ts.apply(monkeypatch)
+    matcher = config_cache.ruleset_matcher
+
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=hostname, service_description=None),
+            ruleset=tag_ruleset,
+            is_binary=False)) == expected_result

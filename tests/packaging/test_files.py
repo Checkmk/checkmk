@@ -44,8 +44,10 @@ def test_package_sizes(version_path, what, min_size, max_size):
     ("deb"),
 ])
 def test_files_not_in_version_path(version_path, what):
-    # All files below the standard directories are allowed
     version_allowed_patterns = [
+        "/opt/omd/versions$"
+        "/opt/omd/versions/###OMD_VERSION###$",
+        # All files below the standard directories are allowed
         "/opt/omd/versions/###OMD_VERSION###/bin/",
         "/opt/omd/versions/###OMD_VERSION###/etc/",
         "/opt/omd/versions/###OMD_VERSION###/include/",

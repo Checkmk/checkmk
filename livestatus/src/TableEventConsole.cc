@@ -87,7 +87,7 @@ private:
             "event_contact_groups_precedence",
             // see  isAuthorizedForEventViaContactGroups
             "event_contact_groups"};
-        _table.any_column([&](const auto &col) {
+        (void)_table.any_column([&](const auto &col) {
             if (special_columns.find(col->name()) != special_columns.end()) {
                 all.insert(col);
             }

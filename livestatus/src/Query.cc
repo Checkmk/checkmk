@@ -189,7 +189,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     }
 
     if (_columns.empty() && !doStats()) {
-        table.any_column([this](std::shared_ptr<Column> c) {
+        (void)table.any_column([this](std::shared_ptr<Column> c) {
             return _columns.push_back(c), _all_columns.insert(c), false;
         });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line

@@ -53,7 +53,7 @@ void TableColumns::addTable(const Table &table) { _tables.push_back(&table); }
 
 void TableColumns::answerQuery(Query *query) {
     for (auto table : _tables) {
-        table->any_column([&](std::shared_ptr<Column> c) {
+        (void)table->any_column([&](std::shared_ptr<Column> c) {
             return !query->processDataset(Row(c.get()));
         });
     }

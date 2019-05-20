@@ -1,0 +1,12 @@
+Title: vbox_guest: Fixed handling of empty values
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p17
+Date: 1558360389
+
+Empty agent output for "/VirtualBox/GuestInfo/OS/ServicePack" resulted in
+permanent state "No guest additions installed". This has been fixed.

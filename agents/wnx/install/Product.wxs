@@ -4,8 +4,9 @@
 <?define ProductVersion = "2.0.1"?>
 <?define ProductId = "{C3BDE55B-4C42-48D0-8792-B1DE5174C202}"?>
 <?define ProductUpgradeCode = "83F434E9-EA96-4881-AA93-E21B27285C05"?>
-<!-- IMPORTANT NOTE: If you change architecture, please change the package code TOO -->
-<?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1DAF"?>
+<!-- IMPORTANT NOTE 1: If you change architecture, please change the package code TOO -->
+<!-- IMPORTANT NOTE 2: Fix msi-update after fixing this code: msi-info uses this code to patch msi itself-->
+<?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1D7E"?>
 <?define FolderName = "check_mk_service"?>
 <?define ServiceName = "CheckMkService"?>
 <?define ServiceDisplayName = "Check MK Service"?>

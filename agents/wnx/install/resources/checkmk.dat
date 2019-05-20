@@ -1,4 +1,4 @@
-# informational file about configuration and build
-# supplied by build or by bakery
-# format is yml
+# Informational file with data related to the configuration and build
+# Supplied by build or by bakery
+# Format is YML
 hash: DEFADEFADEFA

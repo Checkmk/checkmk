@@ -179,11 +179,10 @@ bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
     // msiexecs' parameters below are not fixed unfortunately
     // documentation is scarce and method of installation in MK
     // is not a special standard
-    command += L" /i " + msi_to_install.wstring() +
-               L" REINSTALL=ALL REINSTALLMODE=amus ";
+    command += L" /i " + msi_to_install.wstring();
 
     if (Update == UpdateType::exec_quiet)  // this is only normal method
-        command += L" /quiet";             // but MS doesn't care at all :)
+        command += L" /qn";                // but MS doesn't care at all :)
 
     XLOG::l.i("File '{}' exists\n Command is '{}'", msi_to_install.u8string(),
               wtools::ConvertToUTF8(command.c_str()));

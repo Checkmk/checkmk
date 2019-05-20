@@ -78,7 +78,7 @@ void Renderer::output(HexEscape value) {
         << static_cast<unsigned>(static_cast<unsigned char>(value._ch));
 }
 
-void Renderer::output(RowFragment value) { _os << value._str; }
+void Renderer::output(const RowFragment &value) { _os << value._str; }
 
 void Renderer::output(char16_t value) {
     OStreamStateSaver s(_os);

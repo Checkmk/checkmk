@@ -90,7 +90,7 @@ public:
 
 private:
     using LogicalConnective =
-        std::function<std::unique_ptr<Filter>(Filter::Kind, Filters)>;
+        std::function<std::unique_ptr<Filter>(Filter::Kind, const Filters &)>;
 
     const Encoding _data_encoding;
     const size_t _max_response_size;

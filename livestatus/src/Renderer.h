@@ -71,7 +71,7 @@ public:
     void output(double value);
     void output(PlainChar value);
     void output(HexEscape value);
-    void output(RowFragment value);
+    void output(const RowFragment &value);
     void output(char16_t value);
     void output(char32_t value);
     void output(Null value);
@@ -201,7 +201,7 @@ public:
 
     Renderer &renderer() const { return _query.renderer(); }
 
-    void output(RowFragment value) {
+    void output(const RowFragment &value) {
         separate();
         renderer().output(std::move(value));
     }

@@ -186,7 +186,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     }
 
     if (_columns.empty() && !doStats()) {
-        table.any_column([this](std::shared_ptr<Column> c) {
+        table.any_column([this](const auto &c) {
             return _columns.push_back(c), _all_columns.insert(c), false;
         });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
@@ -194,9 +194,9 @@ Query::Query(const std::list<std::string> &lines, Table &table,
         _show_column_headers = true;
     }
 
-    _filter = AndingFilter::make(Filter::Kind::row, std::move(filters));
-    _wait_condition = AndingFilter::make(Filter::Kind ::wait_condition,
-                                         std::move(wait_conditions));
+    _filter = AndingFilter::make(Filter::Kind::row, filters);
+    _wait_condition =
+        AndingFilter::make(Filter::Kind ::wait_condition, wait_conditions);
 }
 
 void Query::invalidRequest(const std::string &message) const {
@@ -220,7 +220,7 @@ void Query::parseAndOrLine(char *line, Filter::Kind kind,
         filters.pop_back();
     }
     std::reverse(subfilters.begin(), subfilters.end());
-    filters.push_back(connective(kind, std::move(subfilters)));
+    filters.push_back(connective(kind, subfilters));
 }
 
 void Query::parseNegateLine(char *line, FilterStack &filters) {
@@ -253,7 +253,7 @@ void Query::parseStatsAndOrLine(char *line,
     }
     std::reverse(subfilters.begin(), subfilters.end());
     _stats_columns.push_back(std::make_unique<StatsColumnCount>(
-        connective(Filter::Kind::stats, std::move(subfilters))));
+        connective(Filter::Kind::stats, subfilters)));
 }
 
 void Query::parseStatsNegateLine(char *line) {

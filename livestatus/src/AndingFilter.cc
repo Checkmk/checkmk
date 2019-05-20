@@ -34,11 +34,12 @@
 #include "Row.h"
 
 // static
-std::unique_ptr<Filter> AndingFilter::make(Kind kind, Filters subfilters) {
+std::unique_ptr<Filter> AndingFilter::make(Kind kind,
+                                           const Filters &subfilters) {
     Filters filters;
     for (const auto &filter : subfilters) {
         if (filter->is_contradiction()) {
-            return OringFilter::make(kind, Filters());
+            return OringFilter::make(kind, {});
         }
         auto conjuncts = filter->conjuncts();
         filters.insert(filters.end(),
@@ -64,7 +65,7 @@ std::unique_ptr<Filter> AndingFilter::partialFilter(
     std::transform(
         _subfilters.cbegin(), _subfilters.cend(), std::back_inserter(filters),
         [&](const auto &filter) { return filter->partialFilter(predicate); });
-    return make(kind(), std::move(filters));
+    return make(kind(), filters);
 }
 
 std::optional<std::string> AndingFilter::stringValueRestrictionFor(
@@ -125,7 +126,7 @@ std::unique_ptr<Filter> AndingFilter::negate() const {
     std::transform(_subfilters.cbegin(), _subfilters.cend(),
                    std::back_inserter(filters),
                    [](const auto &filter) { return filter->negate(); });
-    return OringFilter::make(kind(), std::move(filters));
+    return OringFilter::make(kind(), filters);
 }
 
 bool AndingFilter::is_tautology() const { return _subfilters.empty(); }

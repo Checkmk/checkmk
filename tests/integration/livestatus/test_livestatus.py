@@ -118,16 +118,17 @@ def test_service_table(default_cfg, site):
 
 
 @pytest.fixture()
-def configure_service_tags(site, web):
+def configure_service_tags(site, web, default_cfg):
     web.set_ruleset(
         "service_tag_rules", {
             "ruleset": {
                 "": [{
                     "value": [("criticality", "prod")],
-                    "conditions": {
-                        "host_tags": [],
-                        "host_specs": ["livestatus-test-host"],
-                        "service_specs": ["CPU load$"],
+                    "condition": {
+                        "host_name": ["livestatus-test-host"],
+                        "service_description": [{
+                            "$regex": "CPU load$",
+                        }],
                     },
                 },],
             }

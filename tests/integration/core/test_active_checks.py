@@ -3,11 +3,9 @@
 # pylint: disable=redefined-outer-name
 
 import collections
-import pytest
+import pytest  # type: ignore
 
 from testlib import web  # pylint: disable=unused-import
-
-import cmk_base.config as config
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 
@@ -47,10 +45,7 @@ def test_active_check_execution(test_cfg, site, web):
                             'service_description': u'\xc4ctive-Check',
                             'command_line': 'echo "123"'
                         },
-                        "conditions": {
-                            "host_specs": config.ALL_HOSTS,
-                            "host_tags": [],
-                        },
+                        "condition": {},
                         "options": {},
                     },],
                 }
@@ -108,10 +103,7 @@ def test_active_check_macros(test_cfg, site, web):
                 'service_description': descr(var),
                 'command_line': 'echo "Output: %s"' % var,
             },
-            "conditions": {
-                "host_specs": config.ALL_HOSTS,
-                "host_tags": [],
-            },
+            "condition": {},
         })
 
     try:

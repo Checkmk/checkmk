@@ -890,12 +890,8 @@ class Site(object):
                 "ruleset": {
                     "": [  # "" -> folder
                         {
-                            'conditions': {
-                                'host_specs': ['@all'],
-                                'host_tags': []
-                            },
+                            'condition': {},
                             'options': {},
-                            'path': '',
                             'value': [('TESTGROUP', ('*gwia*', ''))]
                         },
                     ],

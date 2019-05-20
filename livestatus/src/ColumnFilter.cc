@@ -27,7 +27,7 @@
 
 std::unique_ptr<Filter> ColumnFilter::partialFilter(
     std::function<bool(const Column &)> predicate) const {
-    return predicate(_column) ? copy() : AndingFilter::make(kind(), Filters());
+    return predicate(_column) ? copy() : AndingFilter::make(kind(), {});
 }
 
 bool ColumnFilter::is_tautology() const { return false; }

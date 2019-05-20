@@ -74,17 +74,18 @@ def check_splunk_health(no_item, params, parsed):
         ("Index processor"),
         ("Data forwarding"),
     ]:
-        #some functions may be missing, eg. Data forwarding in OK states
         try:
+            # some functions may be missing, eg. Data forwarding in OK states
             health = parsed[key]["health"]
-            yield params[health], "%s: %s" % (key, health)
+        except KeyError:
+            continue
 
-            for name in parsed[key]["feature"]:
-                if name != "Overall state":
-                    long_output += "%s - State: %s\n" % (name.replace("_", " "),
-                                                         parsed[key]["feature"][name])
-        except:
-            pass
+        yield params[health], "%s: %s" % (key, health)
+
+        for name in sorted(parsed[key]["feature"]):
+            if name != "Overall state":
+                long_output += "%s - State: %s\n" % (name.replace("_", " "),
+                                                     parsed[key]["feature"][name])
 
     yield 0, "\n%s" % long_output
 

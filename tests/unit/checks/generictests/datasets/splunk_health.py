@@ -22,6 +22,5 @@ checks = {'': [(None,
                 [(0, u'Overall state: green', []),
                  (0, u'File monitor input: green', []),
                  (0, u'Index processor: green', []),
-                 (0,
-                  u'\nTailreader-0 - State: green\nBatchreader-0 - State: green\nIndex optimization - State: green\nDisk space - State: green\nBuckets - State: green\n',
+                 (0, u'\nBatchreader-0 - State: green\nTailreader-0 - State: green\nBuckets - State: green\nDisk space - State: green\nIndex optimization - State: green\n',
                   [])])]}

@@ -316,8 +316,10 @@ def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rul
     assert rule.to_config() == rule_spec_for_config
 
 
-@pytest.mark.parametrize("wato_use_git,expected_result", [
-    (True, """
+@pytest.mark.parametrize(
+    "wato_use_git,expected_result",
+    [
+        (True, """
 checkgroup_parameters.setdefault('local', [])
 
 checkgroup_parameters['local'] = [
@@ -332,16 +334,17 @@ checkgroup_parameters['local'] = [
 ] + checkgroup_parameters['local']
 
 """),
-    (False, """
-checkgroup_parameters.setdefault('local', [])
-
-checkgroup_parameters['local'] = [
-{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL'},
-{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL2'},
-] + checkgroup_parameters['local']
-
-"""),
-])
+        # TODO: Can currently not be tested because it's PYTHONHASHSEED specific. The pprint test above is enough for the moment.
+        #    (False, """
+        #checkgroup_parameters.setdefault('local', [])
+        #
+        #checkgroup_parameters['local'] = [
+        #{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL'},
+        #{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL2'},
+        #] + checkgroup_parameters['local']
+        #
+        #"""),
+    ])
 def test_ruleset_to_config(monkeypatch, wato_use_git, expected_result):
     monkeypatch.setattr(config, "wato_use_git", wato_use_git)
 

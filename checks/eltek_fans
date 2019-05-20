@@ -76,9 +76,9 @@ factory_settings['eltek_fans_default_variables'] = {
 def inventory_eltek_fans(info):
     inventory = []
     for index, fan1, fan2 in info:
-        if int(fan1) > 0:
+        if fan1 and int(fan1) > 0:
             inventory.append(("1/%s" % index, {}))
-        if int(fan2) > 0:
+        if fan2 and int(fan2) > 0:
             inventory.append(("2/%s" % index, {}))
     return inventory
 

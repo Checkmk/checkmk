@@ -222,6 +222,12 @@ void ServiceProcessor::preStart() {
     XLOG::l.i("Pre Start actions ended");
 }
 
+void ServiceProcessor::detachedPluginsStart() {
+    XLOG::l.i("Detached Start");
+    auto& plugins = plugins_provider_.getEngine();
+    plugins.detachedStart();
+}
+
 // conditions are: yml + exists(ohm) + elevated
 // true on successful start or if OHM is already started
 bool ServiceProcessor::conditionallyStartOhm() noexcept {

@@ -160,6 +160,7 @@ constexpr const wchar_t* kPluginConfig = L"config";     // owned by plugins
 constexpr const wchar_t* kSpool = L"spool";    // owned by user/sys plugins
 constexpr const wchar_t* kTemp = L"temp";      // owned by user plugins
 constexpr const wchar_t* kUpdate = L"update";  // owned by agent
+constexpr const wchar_t* kMrpe = L"mrpe";      // owned by user(!) for mrpe
 
 };  // namespace dirs
 namespace envs {

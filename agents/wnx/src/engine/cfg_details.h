@@ -349,8 +349,8 @@ public:
     LoadCfgStatus loadAggregated(const std::wstring& config_filename,
                                  YamlCacheOp cache_op);
 
-    static bool smartMerge(YAML::Node Target, YAML::Node Src,
-                           bool MergeSequences = false);
+    enum class Combine { overwrite, merge };
+    static bool smartMerge(YAML::Node Target, YAML::Node Src, Combine combine);
 
     // THIS IS ONLY FOR TESTING
     bool loadDirect(const std::filesystem::path& FullPath);

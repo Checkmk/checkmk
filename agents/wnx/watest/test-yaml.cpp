@@ -259,6 +259,113 @@ TEST(AgentConfig, AggregateMap) {
     }
 }
 
+TEST(AgentConfig, SmartMerge) {
+    namespace fs = std::filesystem;
+    std::wstring temporary_name = L"tmp_";
+    temporary_name += files::kDefaultMainConfig;
+    fs::path cfgs[] = {details::G_ConfigInfo.getRootDir() / temporary_name,
+                       details::G_ConfigInfo.getBakeryDir() / temporary_name,
+                       details::G_ConfigInfo.getUserDir() / temporary_name};
+    cfgs[1].replace_extension("bakery.yml");
+    cfgs[2].replace_extension("user.yml");
+
+    std::error_code ec;
+    ON_OUT_OF_SCOPE(for (auto& f : cfgs) fs::remove(f, ec););
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
+
+    for (auto& f : cfgs) fs::remove(f, ec);
+    auto root_file = fs::path(details::G_ConfigInfo.getRootYamlPath());
+    auto ret =
+        G_ConfigInfo.loadAggregated(temporary_name, YamlCacheOp::nothing);
+    EXPECT_EQ(ret, LoadCfgStatus::kAllFailed);
+    // previous state must be preserved
+    EXPECT_FALSE(G_ConfigInfo.isBakeryLoaded());
+    EXPECT_TRUE(G_ConfigInfo.isUserLoaded() ==
+                fs::exists(details::G_ConfigInfo.getUserYamlPath(), ec));
+
+    fs::copy_file(root_file, cfgs[0], ec);
+    ASSERT_EQ(ec.value(), 0);
+    // testing merging
+    {
+        CreateTestFile(cfgs[1],
+                       "global:\n"
+                       "  execute: []\n"  // expected clean
+                       "  realtime:\n"
+                       "    run: a b\n"  // expected array
+                       "  sections: \n"
+                       "    - x y\n"
+                       "    - [z]\n"
+                       "  disabled_sections: ~\n");  // no changes
+
+        // prepare and check data
+        auto target_config = YAML::LoadFile(cfgs[0].u8string());
+        target_config.remove(groups::kPs);
+        target_config.remove(groups::kWinPerf);
+        target_config.remove(groups::kPlugins);
+        target_config.remove(groups::kMrpe);
+        target_config.remove(groups::kLocal);
+        target_config.remove(groups::kLogFiles);
+        target_config.remove(groups::kLogWatchEvent);
+        target_config.remove(groups::kFileInfo);
+
+        auto source_bakery = YAML::LoadFile(cfgs[1].u8string());
+
+        // merge bakery to target
+        ConfigInfo::smartMerge(target_config, source_bakery,
+                               ConfigInfo::Combine::overwrite);
+
+        // CHECK result
+        auto gl = target_config[groups::kGlobal];
+
+        auto sz = gl[vars::kExecute].size();
+        ASSERT_EQ(sz, 0);
+
+        auto run_node = gl[vars::kRealTime][vars::kRtRun];
+        sz = run_node.size();
+        ASSERT_EQ(sz, 0);
+        EXPECT_EQ(run_node.as<std::string>(), "a b");
+        auto rt = GetInternalArray(gl[vars::kRealTime], vars::kRtRun);
+        ASSERT_EQ(rt.size(), 2);
+        EXPECT_EQ(rt[0], "a");
+        EXPECT_EQ(rt[1], "b");
+
+        auto sections_enabled = GetInternalArray(gl, vars::kSectionsEnabled);
+        ASSERT_EQ(sections_enabled.size(), 3);
+        EXPECT_EQ(sections_enabled[0], "x");
+        EXPECT_EQ(sections_enabled[1], "y");
+        EXPECT_EQ(sections_enabled[2], "z");
+
+        // empty node is ignored
+        sz = gl[vars::kSectionsDisabled].size();
+        ASSERT_EQ(sz, 3);
+
+        auto sections_disabled = GetInternalArray(gl, vars::kSectionsDisabled);
+        ASSERT_EQ(sections_disabled.size(), 3);
+
+        std::swap(cfgs[1], cfgs[0]);
+        // prepare and check data
+        target_config = YAML::LoadFile(cfgs[0].u8string());
+
+        source_bakery = YAML::LoadFile(cfgs[1].u8string());
+
+        // merge and check output INTO core
+        ConfigInfo::smartMerge(target_config, source_bakery,
+                               ConfigInfo::Combine::overwrite);
+
+        // CHECK result
+        gl = target_config[groups::kGlobal];
+        ASSERT_EQ(gl[vars::kExecute].size(), 5);
+
+        run_node = gl[vars::kRealTime][vars::kRtRun];
+        ASSERT_EQ(run_node.size(), 3);
+
+        sections_enabled = GetInternalArray(gl, vars::kSectionsEnabled);
+        ASSERT_EQ(sections_enabled.size(), 20);
+
+        ASSERT_EQ(gl[vars::kSectionsDisabled].size(), 3);
+    }
+}
+
 TEST(AgentConfig, Aggregate) {
     namespace fs = std::filesystem;
     std::wstring temporary_name = L"tmp_";
@@ -313,7 +420,7 @@ TEST(AgentConfig, Aggregate) {
                        "    - Terminal Services: ts_sessions\n");
 
         // plugins
-        if (1) {
+        {
             // prepare and check data
             auto core_yaml = YAML::LoadFile(cfgs[0].u8string());
             auto core_plugin = core_yaml[groups::kPlugins];
@@ -344,7 +451,7 @@ TEST(AgentConfig, Aggregate) {
             ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(), 3);
             auto b = YAML::LoadFile(cfgs[1].u8string());
             ASSERT_EQ(b[groups::kWinPerf][vars::kWinPerfCounters].size(), 4);
-            ConfigInfo::smartMerge(r, b);
+            ConfigInfo::smartMerge(r, b, ConfigInfo::Combine::overwrite);
             ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(),
                       6);  // three new, 638, 9999 and ts
             ASSERT_EQ(r["bakery"]["status"].as<std::string>(), "loaded");
@@ -511,6 +618,80 @@ TEST(AgentConfig, YamlRead) {
     auto v = result["globalvas"];
     EXPECT_TRUE(v.size() == 0);
     EXPECT_TRUE(sz > 0);
+}
+
+TEST(AgentConfig, InternalArray) {
+    const std::string key = "sections";
+    auto create_yaml = [key](const std::string& text) -> YAML::Node {
+        return YAML::Load(key + ": " + text + "\n");
+    };
+
+    {
+        auto node = create_yaml("");
+        auto result = GetInternalArray(node, key);
+        ASSERT_TRUE(result.empty());
+    }
+
+    {
+        auto node = create_yaml("df ps");
+        auto result = GetInternalArray(node, key);
+        ASSERT_EQ(result.size(), 2);
+        EXPECT_EQ(result[0], "df");
+        EXPECT_EQ(result[1], "ps");
+    }
+
+    {
+        auto node = create_yaml("[df, ps]");
+        auto result = GetInternalArray(node, key);
+        ASSERT_EQ(result.size(), 2);
+        EXPECT_EQ(result[0], "df");
+        EXPECT_EQ(result[1], "ps");
+    }
+
+    {
+        auto node = create_yaml(" \n  - [df, ps]");
+        auto result = GetInternalArray(node, key);
+        ASSERT_EQ(result.size(), 2);
+        EXPECT_EQ(result[0], "df");
+        EXPECT_EQ(result[1], "ps");
+    }
+
+    {
+        auto node = create_yaml(
+            " \n  - [df, ps]"
+            " \n  - xx");
+        auto result = GetInternalArray(node, key);
+        ASSERT_EQ(result.size(), 3);
+        EXPECT_EQ(result[0], "df");
+        EXPECT_EQ(result[1], "ps");
+        EXPECT_EQ(result[2], "xx");
+    }
+
+    {
+        auto node = create_yaml(
+            " \n  - [df, ps]"
+            " \n  - [xx]");
+        auto result = GetInternalArray(node, key);
+        ASSERT_EQ(result.size(), 3);
+        EXPECT_EQ(result[0], "df");
+        EXPECT_EQ(result[1], "ps");
+        EXPECT_EQ(result[2], "xx");
+    }
+
+    {
+        auto node = create_yaml(
+            " \n  - [df, ps]"
+            " \n  - "
+            " \n  - [xx]"
+            " \n  - yy zz");
+        auto result = GetInternalArray(node, key);
+        ASSERT_EQ(result.size(), 5);
+        EXPECT_EQ(result[0], "df");
+        EXPECT_EQ(result[1], "ps");
+        EXPECT_EQ(result[2], "xx");
+        EXPECT_EQ(result[3], "yy");
+        EXPECT_EQ(result[4], "zz");
+    }
 }
 
 TEST(AgentConfig, WorkScenario) {

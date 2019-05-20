@@ -43,8 +43,14 @@ Boston, MA 02110-1301 USA.
   }
 
   &[readonly] {
-    tag > div {
-      padding: $tagPad;
+    tag {
+      > div {
+        padding: $tagPad;
+      }
+
+      > div::before {
+        background: #774898;
+      }
     }
   }
 

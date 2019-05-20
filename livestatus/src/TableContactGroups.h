@@ -36,10 +36,10 @@ class TableContactGroups : public Table {
 public:
     explicit TableContactGroups(MonitoringCore *mc);
 
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
-    Row findObject(const std::string &objectspec) const override;
+    [[nodiscard]] Row findObject(const std::string &objectspec) const override;
 };
 
 #endif  // TableContactGroups_h

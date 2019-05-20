@@ -45,13 +45,13 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset, offset) {}
 
-    std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
 
     int32_t getValue(Row row, const contact *auth_user) const override;
 
-    std::vector<std::string> getAttributes(Row row) const;
+    [[nodiscard]] std::vector<std::string> getAttributes(Row row) const;
 };
 
 #endif  // AttributeListAsIntColumn_h

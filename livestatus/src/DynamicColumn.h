@@ -37,7 +37,7 @@ public:
                   int indirect_offset, int extra_offset,
                   int extra_extra_offset);
     virtual ~DynamicColumn();
-    std::string name() const;
+    [[nodiscard]] std::string name() const;
     virtual std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) = 0;
 

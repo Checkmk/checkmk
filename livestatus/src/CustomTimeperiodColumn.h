@@ -47,7 +47,7 @@ public:
 private:
     std::string _varname;
 
-    customvariablesmember *getCVM(Row row) const;
+    [[nodiscard]] customvariablesmember *getCVM(Row row) const;
 };
 
 #endif  // CustomTimeperiodColumn_h

@@ -248,9 +248,9 @@ public:
         _to = std::stoi(fields[2]);
     }
 
-    std::string name() const { return _name; }
-    int from() const { return _from; }
-    int to() const { return _to; }
+    [[nodiscard]] std::string name() const { return _name; }
+    [[nodiscard]] int from() const { return _from; }
+    [[nodiscard]] int to() const { return _to; }
 
 private:
     std::string _name;

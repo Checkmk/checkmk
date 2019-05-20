@@ -41,10 +41,10 @@ public:
                        extra_extra_offset, 0)
         , _string_offset(offset) {}
 
-    std::string getValue(Row row) const override;
+    [[nodiscard]] std::string getValue(Row row) const override;
 
-    virtual const host *getHost(Row) const = 0;
-    virtual const service *getService(Row) const = 0;
+    [[nodiscard]] virtual const host *getHost(Row) const = 0;
+    [[nodiscard]] virtual const service *getService(Row) const = 0;
 
 private:
     const int _string_offset;

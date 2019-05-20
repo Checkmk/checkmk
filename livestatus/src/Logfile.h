@@ -49,13 +49,13 @@ using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
 class Logfile {
 public:
     Logfile(MonitoringCore *mc, LogCache *logcache, fs::path path, bool watch);
-    fs::path path() const { return _path; }
+    [[nodiscard]] fs::path path() const { return _path; }
 
     // for tricky protocol between LogCache::logLineHasBeenAdded and this class
     void flush();
-    time_t since() const { return _since; }
-    unsigned classesRead() const { return _logclasses_read; }
-    size_t size() const { return _entries.size(); }
+    [[nodiscard]] time_t since() const { return _since; }
+    [[nodiscard]] unsigned classesRead() const { return _logclasses_read; }
+    [[nodiscard]] size_t size() const { return _entries.size(); }
     long freeMessages(unsigned logclasses);
 
     // for TableStateHistory
@@ -84,7 +84,7 @@ private:
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
     uint64_t makeKey(time_t t, size_t lineno);
     void updateReferences();
-    Logger *logger() const;
+    [[nodiscard]] Logger *logger() const;
 };
 
 #endif  // Logfile_h

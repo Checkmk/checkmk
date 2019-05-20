@@ -41,8 +41,8 @@ public:
                                   extra_offset, extra_extra_offset, offset) {}
 
 private:
-    const host *getHost(Row row) const override;
-    const service *getService(Row row) const override;
+    [[nodiscard]] const host *getHost(Row row) const override;
+    [[nodiscard]] const service *getService(Row row) const override;
 };
 
 #endif  // OffsetStringHostMacroColumn_h

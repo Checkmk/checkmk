@@ -35,8 +35,8 @@ class TableTimeperiods : public Table {
 public:
     explicit TableTimeperiods(MonitoringCore *mc);
 
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 };
 

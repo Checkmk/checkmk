@@ -42,7 +42,7 @@ public:
                        extra_extra_offset, offset)
         , _colcol(colcol)
         , _table_columns(tablecols) {}
-    std::string getValue(Row row) const override;
+    [[nodiscard]] std::string getValue(Row row) const override;
 
 private:
     const Type _colcol;

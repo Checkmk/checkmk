@@ -50,8 +50,8 @@ public:
 private:
     MonitoringCore *_mc;
 
-    std::string getDirectory(Row row) const;
-    std::string getHostName(Row row) const;
+    [[nodiscard]] std::string getDirectory(Row row) const;
+    [[nodiscard]] std::string getHostName(Row row) const;
 };
 
 #endif  // LogwatchListColumn_h

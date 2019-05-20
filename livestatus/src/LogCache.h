@@ -58,7 +58,7 @@ private:
     std::chrono::system_clock::time_point _last_index_update;
 
     void addToIndex(std::unique_ptr<Logfile> logfile);
-    Logger *logger() const;
+    [[nodiscard]] Logger *logger() const;
 };
 
 #endif  // LogCache_h

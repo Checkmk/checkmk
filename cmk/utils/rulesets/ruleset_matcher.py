@@ -399,7 +399,9 @@ class RulesetOptimizer(object):
                                                    with_foreign_hosts).intersection(valid_hosts)
 
         if tags and hostlist is None:
-            return self._match_hosts_by_tags(cache_id, valid_hosts, tags)
+            result = self._match_hosts_by_tags(cache_id, valid_hosts, tags)
+            if result is not None:
+                return result
 
         matching = set()
         only_specific_hosts = hostlist is not None \
@@ -452,14 +454,24 @@ class RulesetOptimizer(object):
         return negate
 
     def _matches_host_tags(self, hosttags, required_tags):
-        for tag_id in required_tags.values():
-            is_not = isinstance(tag_id, dict)
-            if is_not:
-                tag_id = tag_id["$ne"]
-
-            matches = tag_id in hosttags
-            if matches == is_not:
+        for tag_spec in required_tags.values():
+            if self._matches_tag_spec(tag_spec, hosttags) is False:
                 return False
+
+        return True
+
+    def _matches_tag_spec(self, tag_spec, hosttags):
+        is_not = False
+        if isinstance(tag_spec, dict):
+            if "$ne" in tag_spec:
+                is_not = True
+                tag_spec = tag_spec["$ne"]
+            else:
+                raise NotImplementedError()
+
+        matches = tag_spec in hosttags
+        if matches == is_not:
+            return False
 
         return True
 

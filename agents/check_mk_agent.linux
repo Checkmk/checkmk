@@ -290,13 +290,13 @@ function run_cached () {
             sed -e "2s/|/ (Cached: ${AGE}\/${MAXAGE}s)|/" -e t -e "2s/$/ (Cached: ${AGE}\/${MAXAGE}s)/" < "$CACHEFILE"
         else
             CACHE_INFO="cached($MTIME,$MAXAGE)"
-	    if [[ $NAME == local_* ]]; then
-		sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"
-	    else
+            if [[ $NAME == local_* ]]; then
+                sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"
+            else
                 # insert the cache info in the section header (^= after '!'),
                 # if none is present (^= before '!')
                 sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
-	    fi
+            fi
         fi
     fi
 
@@ -455,7 +455,8 @@ grep ^/dev < /proc/mounts | grep -v " squashfs "
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 \
+    | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
 
 # Memory usage
 section_mem
@@ -512,7 +513,8 @@ if type waitmax >/dev/null; then
     if [ $? == 0 ]; then
         echo "$THIS"
     elif type ss > /dev/null; then
-        ss -ant |grep -v ^State | awk ' /:/ { c[$1]++; } END { for (x in c) { print x, c[x]; } }' | sed -e 's/^ESTAB/01/g;s/^SYN-SENT/02/g;s/^SYN-RECV/03/g;s/^FIN-WAIT-1/04/g;s/^FIN-WAIT-2/05/g;s/^TIME-WAIT/06/g;s/^CLOSED/07/g;s/^CLOSE-WAIT/08/g;s/^LAST-ACK/09/g;s/^LISTEN/0A/g;s/^CLOSING/0B/g;'
+        ss -ant |grep -v ^State | awk ' /:/ { c[$1]++; } END { for (x in c) { print x, c[x]; } }' \
+            | sed -e 's/^ESTAB/01/g;s/^SYN-SENT/02/g;s/^SYN-RECV/03/g;s/^FIN-WAIT-1/04/g;s/^FIN-WAIT-2/05/g;s/^TIME-WAIT/06/g;s/^CLOSED/07/g;s/^CLOSE-WAIT/08/g;s/^LAST-ACK/09/g;s/^LISTEN/0A/g;s/^CLOSING/0B/g;'
     fi
 fi
 
@@ -615,8 +617,10 @@ fi
 
 # RAID status of LSI controllers via cfggen
 if type cfggen > /dev/null; then
-   echo '<<<lsi>>>'
-   cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
+    echo '<<<lsi>>>'
+    cfggen 0 DISPLAY \
+        | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' \
+        | sed -e 's/ *//g' -e 's/:/ /'
 fi
 
 # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
@@ -644,7 +648,8 @@ if [ "$MegaCli_bin" != "unknown" ]; then
         echo -n " $part"
     done
     echo
-    $MegaCli_bin -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
+    $MegaCli_bin -PDList -aALL -NoLog < /dev/null \
+        | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
     echo '<<<megaraid_ldisks>>>'
     $MegaCli_bin -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
     echo '<<<megaraid_bbu>>>'
@@ -682,13 +687,14 @@ fi
 # /etc/openvpn. We might find a safer way to find the configuration later.
 if [ -e /etc/openvpn/openvpn-status.log ]; then
     echo '<<<openvpn_clients:sep(44)>>>'
-    sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < /etc/openvpn/openvpn-status.log  | sed -e 1,3d -e '$d'
+    sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < /etc/openvpn/openvpn-status.log \
+        | sed -e 1,3d -e '$d'
 fi
 
 # Time synchronization with NTP
 if type ntpq > /dev/null 2>&1; then
-   # remove heading, make first column space separated
-   run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+    # remove heading, make first column space separated
+    run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
 fi
 
 # Time synchronization with Chrony
@@ -809,8 +815,8 @@ fi
 
 # Check status of qmail mailqueue
 if type qmail-qstat >/dev/null; then
-   echo "<<<qmail_stats>>>"
-   qmail-qstat
+    echo "<<<qmail_stats>>>"
+    qmail-qstat
 fi
 
 # Nullmailer queue monitoring
@@ -826,20 +832,20 @@ if type omd >/dev/null; then
     run_cached -s omd_status 60 "omd status --bare --auto || true"
     echo '<<<mknotifyd:sep(0)>>>'
     for statefile in /omd/sites/*/var/log/mknotifyd.state ; do
-	if [ -e "$statefile" ]; then
-	    site=${statefile%/var/log*}
-	    site=${site#/omd/sites/}
-	    echo "[$site]"
-	    grep -v '^#' < "$statefile"
+    if [ -e "$statefile" ]; then
+        site=${statefile%/var/log*}
+        site=${site#/omd/sites/}
+        echo "[$site]"
+        grep -v '^#' < "$statefile"
         fi
     done
 
     echo '<<<omd_apache:sep(124)>>>'
     for statsfile in /omd/sites/*/var/log/apache/stats; do
-	if [ -e "$statsfile" ]; then
-	    site=${statsfile%/var/log*}
-	    site=${site#/omd/sites/}
-	    echo "[$site]"
+    if [ -e "$statsfile" ]; then
+        site=${statsfile%/var/log*}
+        site=${site#/omd/sites/}
+        echo "[$site]"
             cat "$statsfile"
             > "$statsfile"
             # prevent next section to fail caused by a missing newline at the end of the statsfile
@@ -1033,14 +1039,14 @@ fi
 
 # Libelle Business Shadow
 if type trd >/dev/null; then
-   echo "<<<libelle_business_shadow:sep(58)>>>"
-   trd -s
+    echo "<<<libelle_business_shadow:sep(58)>>>"
+    trd -s
 fi
 
 # HTTP Accelerator Statistics
 if type varnishstat >/dev/null; then
-   echo "<<<varnish>>>"
-   varnishstat -1
+    echo "<<<varnish>>>"
+    varnishstat -1
 fi
 
 # Proxmox Cluster

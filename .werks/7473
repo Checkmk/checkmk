@@ -1,0 +1,11 @@
+Title: veeam_jobs: Skip 'empty' backup jobs which crashed previously
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p17
+Date: 1558346683
+
+

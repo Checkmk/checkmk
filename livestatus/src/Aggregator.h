@@ -37,7 +37,7 @@ class Aggregation {
 public:
     virtual ~Aggregation() = default;
     virtual void update(double value) = 0;
-    virtual double value() const = 0;
+    [[nodiscard]] virtual double value() const = 0;
 };
 
 class Aggregator {

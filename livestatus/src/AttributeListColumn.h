@@ -47,7 +47,7 @@ public:
         , _int_view_column(name, description, indirect_offset, extra_offset,
                            extra_extra_offset, offset) {}
 
-    std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
 

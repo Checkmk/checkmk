@@ -35,8 +35,8 @@ class TableCommands : public Table {
 public:
     explicit TableCommands(MonitoringCore *mc);
 
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 
     static void addColumns(Table *table, const std::string &prefix, int offset);

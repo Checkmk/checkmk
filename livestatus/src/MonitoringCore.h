@@ -72,10 +72,10 @@ public:
                                                    const Contact *contact) = 0;
 
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
-    virtual size_t maxLinesPerLogFile() const = 0;
+    [[nodiscard]] virtual size_t maxLinesPerLogFile() const = 0;
 
-    virtual Command find_command(std::string name) const = 0;
-    virtual std::vector<Command> commands() const = 0;
+    [[nodiscard]] virtual Command find_command(std::string name) const = 0;
+    [[nodiscard]] virtual std::vector<Command> commands() const = 0;
 
     virtual std::vector<DowntimeData> downtimes_for_host(
         const Host *) const = 0;
@@ -98,9 +98,9 @@ public:
     virtual size_t maxResponseSize() = 0;
     virtual size_t maxCachedMessages() = 0;
 
-    virtual AuthorizationKind hostAuthorization() const = 0;
-    virtual AuthorizationKind serviceAuthorization() const = 0;
-    virtual AuthorizationKind groupAuthorization() const = 0;
+    [[nodiscard]] virtual AuthorizationKind hostAuthorization() const = 0;
+    [[nodiscard]] virtual AuthorizationKind serviceAuthorization() const = 0;
+    [[nodiscard]] virtual AuthorizationKind groupAuthorization() const = 0;
 
     virtual Logger *loggerLivestatus() = 0;
 
@@ -111,12 +111,12 @@ public:
 
     // Our escape hatch, this should die in the long run...
     template <typename T>
-    T *impl() const {
+    [[nodiscard]] T *impl() const {
         return static_cast<T *>(implInternal());
     }
 
 private:
-    virtual void *implInternal() const = 0;
+    [[nodiscard]] virtual void *implInternal() const = 0;
 };
 
 #endif  // MonitoringCore_h

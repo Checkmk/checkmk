@@ -596,7 +596,7 @@ public:
         return std::chrono::system_clock::from_time_t(last_log_rotation);
     }
 
-    Command find_command(std::string name) const override {
+    [[nodiscard]] Command find_command(std::string name) const override {
         // Older Nagios headers are not const-correct... :-P
         if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
             return {cmd->name, cmd->command_line};
@@ -604,11 +604,11 @@ public:
         return {"", ""};
     }
 
-    size_t maxLinesPerLogFile() const override {
+    [[nodiscard]] size_t maxLinesPerLogFile() const override {
         return fl_max_lines_per_logfile;
     }
 
-    std::vector<Command> commands() const override {
+    [[nodiscard]] std::vector<Command> commands() const override {
         extern command *command_list;
         std::vector<Command> commands;
         for (command *cmd = command_list; cmd != nullptr; cmd = cmd->next) {
@@ -663,15 +663,15 @@ public:
     size_t maxCachedMessages() override { return fl_max_cached_messages; }
 
     // TODO(sp) Unused in Livestatus NEB: Strange & ugly...
-    AuthorizationKind hostAuthorization() const override {
+    [[nodiscard]] AuthorizationKind hostAuthorization() const override {
         return AuthorizationKind::loose;
     }
 
-    AuthorizationKind serviceAuthorization() const override {
+    [[nodiscard]] AuthorizationKind serviceAuthorization() const override {
         return fl_service_authorization;
     }
 
-    AuthorizationKind groupAuthorization() const override {
+    [[nodiscard]] AuthorizationKind groupAuthorization() const override {
         return fl_group_authorization;
     }
 
@@ -683,7 +683,7 @@ public:
     size_t numQueuedAlerts() override { return 0; }
 
 private:
-    void *implInternal() const override { return fl_store; }
+    [[nodiscard]] void *implInternal() const override { return fl_store; }
 
     static const contact *toImpl(const Contact *c) {
         return reinterpret_cast<const contact *>(c);

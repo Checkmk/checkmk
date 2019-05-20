@@ -47,20 +47,20 @@ public:
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
 
-    std::optional<int32_t> greatestLowerBoundFor(
+    [[nodiscard]] std::optional<int32_t> greatestLowerBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const override;
 
-    std::optional<int32_t> leastUpperBoundFor(
+    [[nodiscard]] std::optional<int32_t> leastUpperBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const override;
 
-    std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
+    [[nodiscard]] std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
         const std::string &column_name,
         std::chrono::seconds timezone_offset) const override;
 
-    std::unique_ptr<Filter> copy() const override;
-    std::unique_ptr<Filter> negate() const override;
+    [[nodiscard]] std::unique_ptr<Filter> copy() const override;
+    [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 
 private:
     const IntColumn &_column;

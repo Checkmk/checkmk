@@ -44,10 +44,10 @@ public:
                  RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
-    std::optional<std::string> stringValueRestrictionFor(
+    [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
-    std::unique_ptr<Filter> copy() const override;
-    std::unique_ptr<Filter> negate() const override;
+    [[nodiscard]] std::unique_ptr<Filter> copy() const override;
+    [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 
 private:
     const StringColumn &_column;

@@ -42,7 +42,7 @@ public:
 private:
     const time_t *const _number;
 
-    std::chrono::system_clock::time_point getRawValue(
+    [[nodiscard]] std::chrono::system_clock::time_point getRawValue(
         Row /* row */) const override {
         return std::chrono::system_clock::from_time_t(*_number);
     }

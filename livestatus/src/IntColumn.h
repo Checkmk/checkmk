@@ -46,16 +46,16 @@ public:
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset, offset) {}
 
-    ColumnType type() const override { return ColumnType::int_; }
+    [[nodiscard]] ColumnType type() const override { return ColumnType::int_; }
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
 
-    std::unique_ptr<Filter> createFilter(
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override;
 
-    std::unique_ptr<Aggregator> createAggregator(
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override;
 
     virtual int32_t getValue(Row row, const contact *auth_user) const = 0;

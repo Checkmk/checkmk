@@ -35,8 +35,8 @@ class Row;
 class TableEventConsoleHistory : public TableEventConsole {
 public:
     explicit TableEventConsoleHistory(MonitoringCore *mc);
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     bool isAuthorized(Row row, const contact *ctc) const override;
 };
 

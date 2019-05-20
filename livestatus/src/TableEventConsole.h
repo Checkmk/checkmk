@@ -75,7 +75,7 @@ protected:
                                  const std::string &description)
             : StringColumn(name, description, -1, -1, -1, 0) {}
 
-        std::string getValue(Row row) const override {
+        [[nodiscard]] std::string getValue(Row row) const override {
             return getRaw(row, *this, "");
         }
     };
@@ -96,7 +96,7 @@ protected:
                                  const std::string &description)
             : DoubleColumn(name, description, -1, -1, -1, 0) {}
 
-        double getValue(Row row) const override {
+        [[nodiscard]] double getValue(Row row) const override {
             return atof(getRaw(row, *this, "0").c_str());
         }
     };
@@ -107,7 +107,7 @@ protected:
             : TimeColumn(name, description, -1, -1, -1, 0) {}
 
     private:
-        std::chrono::system_clock::time_point getRawValue(
+        [[nodiscard]] std::chrono::system_clock::time_point getRawValue(
             Row row) const override {
             return std::chrono::system_clock::from_time_t(
                 static_cast<std::time_t>(
@@ -129,7 +129,9 @@ protected:
                        : mk::split(result.substr(1), '\001');
         }
 
-        bool isNone(Row row) const { return getRaw(row, *this, "") == "\002"; }
+        [[nodiscard]] bool isNone(Row row) const {
+            return getRaw(row, *this, "") == "\002";
+        }
     };
 
     bool isAuthorizedForEvent(Row row, const contact *ctc) const;

@@ -39,11 +39,11 @@ public:
     static void addColumns(Table *table, const std::string &prefix,
                            int indirect_offset, bool add_hosts);
 
-    std::string name() const override;
-    std::string namePrefix() const override;
+    [[nodiscard]] std::string name() const override;
+    [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     bool isAuthorized(Row row, const contact *ctc) const override;
-    Row findObject(const std::string &objectspec) const override;
+    [[nodiscard]] Row findObject(const std::string &objectspec) const override;
 };
 
 #endif  // TableServices_h

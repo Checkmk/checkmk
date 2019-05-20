@@ -505,6 +505,7 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
                      dirs::kTemp,           //
                      dirs::kInstall,        // for installing data
                      dirs::kUpdate,         // for incoming MSI
+                     dirs::kMrpe,           // for incoming mrpe tests
                      dirs::kPluginConfig};  //
 
     for (auto dir : dir_list) {

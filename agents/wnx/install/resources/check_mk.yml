@@ -49,7 +49,7 @@ global:
     # the following suffixes (in local and plugins).
     # Per default all extensions except txt and dir
     # are being executed.
-    execute: exe bat vbs cmd ps1
+    execute: [exe, bat, vbs, cmd, ps1]
 
     # Run sync scripts in parallel (to each other). Default is "sequential",
     # which means the scripts are run asynchronously to the agent itself but
@@ -60,10 +60,15 @@ global:
     async: yes
 
     # Just output certain sections
-    sections: check_mk mrpe skype spool plugins local winperf uptime systemtime df mem services msexch dotnet_clrmemory wmi_webservices wmi_cpuload ps fileinfo logwatch openhardwaremonitor 
+    sections: 
+        - check_mk mrpe skype spool 
+        - [plugins, local]
+        - winperf uptime systemtime df mem services 
+        - [msexch, dotnet_clrmemory, wmi_webservices, wmi_cpuload]
+        - ps fileinfo logwatch openhardwaremonitor 
     
     # forced to not use
-    disabled_sections: _logfiles winperf_xxx badname
+    disabled_sections: [_logfiles, winperf_xxx, badname]
 
     #realtime data description
     realtime:
@@ -84,7 +89,7 @@ global:
         # passphrase for encrypted communication.
         passphrase: this is my password
         # which sections are realtime
-        run: mem df winperf_processor
+        run: [mem, df, winperf_processor]
 
     # by default the agent flushes the socket for each agent section.
     # this is mostly for debugging purposes in case the agent is slow

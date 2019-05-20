@@ -1,6 +1,7 @@
 import types
 import copy
 import mock
+import pytest
 from cmk_base.item_state import MKCounterWrapped
 
 
@@ -77,7 +78,8 @@ def assertPerfValuesEqual(actual, expected):
     assert isinstance(actual, PerfValue), "not a PerfValue: %r" % actual
     assert isinstance(expected, PerfValue), "not a PerfValue: %r" % expected
     assert expected.key == actual.key, "expected %r, but key is %r" % (expected, actual.key)
-    assert expected.value == actual.value, "expected %r, but value is %r" % (expected, actual.value)
+    assert expected.value == pytest.approx(
+        actual.value), "expected %r, but value is %r" % (expected, actual.value)
     assert expected.warn == actual.warn, "expected %r, but warn is %r" % (expected, actual.warn)
     assert expected.crit == actual.crit, "expected %r, but crit is %r" % (expected, actual.crit)
     assert expected.minimum == actual.minimum, "expected %r, but minimum is %r" % (expected,

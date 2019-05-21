@@ -6574,7 +6574,6 @@ register_check_parameters(
                             forth = lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024)
                        ),
                        PredictiveLevels(
-                           title = _("Predictive levels"),
                            unit = _("GB"),
                            default_difference = (0.5, 1.0)
                        )
@@ -7954,7 +7953,7 @@ def vs_interface_traffic():
                         Integer(label = _("Critical at")),
                     ]
                 )),
-                ("predictive", _("Predictive Levels"), PredictiveLevels())
+                ("predictive", _("Predictive Levels (only on CMC)"), PredictiveLevels())
             ]
         )
 

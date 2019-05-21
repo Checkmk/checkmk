@@ -14848,7 +14848,7 @@ def PredictiveLevels(**args):
         unitname += " "
 
     return Dictionary(
-        title = _("Predictive Levels"),
+        title = _("Predictive Levels (only on CMC)"),
         optional_keys = [ "weight", "levels_upper", "levels_upper_min", "levels_lower", "levels_lower_max" ],
         default_keys = [ "levels_upper" ],
         columns = 1,

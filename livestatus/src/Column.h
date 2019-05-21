@@ -42,6 +42,8 @@ class RowRenderer;
 
 template <typename T>
 const T *offset_cast(const void *ptr, size_t offset) {
+    // cppcheck is too dumb to see that this is just pointer arithmetic... :-/
+    // cppcheck-suppress invalidPointerCast
     return reinterpret_cast<const T *>(reinterpret_cast<const char *>(ptr) +
                                        offset);
 }

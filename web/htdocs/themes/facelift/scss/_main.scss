@@ -430,7 +430,7 @@ body.main .popup_menu {
     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
 }
 
-div.log_output {
+div.log_output, .crash_report pre {
   background: $theme-color-sidebar-background;
   color: $theme-color-lightgrey;
   font-family: monospace;

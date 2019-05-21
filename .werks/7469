@@ -7,5 +7,4 @@ Version: 1.5.0p17
 Date: 1558081349
 Class: fix
 
-In this case we assume that there's no power on the wire.
-Thus we set the value to zero.
+

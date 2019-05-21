@@ -22,7 +22,7 @@ mkdir %arte%\providers 2> nul
 mkdir %arte%\exe 2> nul
 mkdir %arte%\pdb 2> nul
 set REMOTE_MACHINE=%arte%
-set VS_DEPLOY=No
+set VS_DEPLOY=YES
 set VS_DEPLOY_MSI=YES
 set LOCAL_IMAGES_PDB=%arte%\pdb
 set LOCAL_IMAGES_EXE=%arte%\exe
@@ -101,9 +101,10 @@ exit 100
 :end
 pushd %REMOTE_MACHINE%
 
-copy check_mk_service.msi check_mk_agent.msi
-copy check_mk_service32.exe check_mk_agent.exe
-copy check_mk_service64.exe check_mk_agent-64.exe
+copy check_mk_service.msi check_mk_agent.msi || powershell Write-Host "Failed to create msi" -Foreground Red && exit 33
+copy check_mk_service32.exe check_mk_agent.exe || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit 34
+copy check_mk_service64.exe check_mk_agent-64.exe || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit 35
+powershell Write-Host "File Deployment succeeded" -Foreground Green
 
 rem touching update msi
 copy check_mk_agent_update.msi /B+ ,,/Y > nul

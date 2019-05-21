@@ -3336,6 +3336,9 @@ class BIStatusFilter(Filter):
             html.checkbox(var, defval=not self._filter_used(), label=text)
 
     def filter_table(self, rows):
+        if not self._filter_used():
+            return rows
+
         allowed_states = []
         for i in ['0', '1', '2', '3', '-1', 'n']:
             if html.get_checkbox(self.prefix + i):

@@ -5,7 +5,8 @@
 checkname = 'fast_lta_volumes'
 
 
-info = [[u'Archiv_Test', u'1000000000000', u'10000000000']]
+info = [[u'Archiv_Test', u'1000000000000', u'10000000000'],
+        [u'Archiv_Test_1', u'', u'']]
 
 
 discovery = {'': [(u'Archiv_Test', {})]}

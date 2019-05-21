@@ -260,7 +260,7 @@ TEST(UpgradeTest, LoadIni) {
 
     {
         auto a1 = MakeComments("[a]", true);
-        EXPECT_TRUE(a1.find("bakery", 0) != std::string::npos);
+        EXPECT_TRUE(a1.find("WATO", 0) != std::string::npos);
         EXPECT_TRUE(a1.find("[a]", 0) != std::string::npos);
         auto table = cma::tools::SplitString(a1, "\n");
         EXPECT_EQ(table.size(), 3);
@@ -269,7 +269,7 @@ TEST(UpgradeTest, LoadIni) {
     }
     {
         auto a2 = MakeComments("[b]", false);
-        EXPECT_TRUE(a2.find("bakery", 0) == std::string::npos);
+        EXPECT_TRUE(a2.find("WATO", 0) == std::string::npos);
         EXPECT_TRUE(a2.find("[b]", 0) != std::string::npos);
         auto table = cma::tools::SplitString(a2, "\n");
         EXPECT_EQ(table.size(), 3);
@@ -280,7 +280,8 @@ TEST(UpgradeTest, LoadIni) {
     {
         auto name = "nullfile";
         auto ini = CreateIniFile(lwa_dir, nullfile, name);
-        auto yaml_file = CreateYamlFromIniSmart(ini, pd_dir, name);
+        auto yaml_file =
+            CreateYamlFromIniSmart(ini, pd_dir, name, BakeryFile::normal);
         EXPECT_FALSE(IsBakeryIni(ini));
         EXPECT_TRUE(yaml_file.empty());
     }
@@ -288,7 +289,8 @@ TEST(UpgradeTest, LoadIni) {
     {
         auto name = "bakeryfile";
         auto ini = CreateIniFile(lwa_dir, bakeryfile, name);
-        auto yaml_file = CreateYamlFromIniSmart(ini, pd_dir, name);
+        auto yaml_file =
+            CreateYamlFromIniSmart(ini, pd_dir, name, BakeryFile::normal);
         EXPECT_TRUE(IsBakeryIni(ini));
         auto yaml = YAML::LoadFile(yaml_file.u8string());
         EXPECT_TRUE(yaml.IsMap());
@@ -296,7 +298,8 @@ TEST(UpgradeTest, LoadIni) {
     {
         auto name = "not_bakeryfile";
         auto ini = CreateIniFile(lwa_dir, not_bakeryfile, name);
-        auto yaml_file = CreateYamlFromIniSmart(ini, pd_dir, name);
+        auto yaml_file =
+            CreateYamlFromIniSmart(ini, pd_dir, name, BakeryFile::normal);
         EXPECT_FALSE(IsBakeryIni(ini));
         auto yaml = YAML::LoadFile(yaml_file.u8string());
         EXPECT_TRUE(yaml.IsMap());
@@ -304,7 +307,8 @@ TEST(UpgradeTest, LoadIni) {
     {
         auto name = "not_bakeryfile_strange";
         auto ini = CreateIniFile(lwa_dir, not_bakeryfile_strange, name);
-        auto yaml_file = CreateYamlFromIniSmart(ini, pd_dir, name);
+        auto yaml_file =
+            CreateYamlFromIniSmart(ini, pd_dir, name, BakeryFile::normal);
         EXPECT_FALSE(IsBakeryIni(ini));
         auto yaml = YAML::LoadFile(yaml_file.u8string());
         EXPECT_TRUE(yaml.IsMap());

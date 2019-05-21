@@ -809,8 +809,8 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
         XLOG::l.t("Converting local ini file {}", local_ini_file.u8string());
         auto user_yaml_file =
             wtools::ConvertToUTF8(std::wstring(files::kDefaultMainConfigName));
-        auto out_file =
-            CreateYamlFromIniSmart(local_ini_file, ProgramData, user_yaml_file);
+        auto out_file = CreateYamlFromIniSmart(
+            local_ini_file, ProgramData, user_yaml_file, BakeryFile::normal);
         if (!out_file.empty() && fs::exists(out_file, ec)) {
             XLOG::l.t("Local File {} was converted as user YML file {}",
                       local_ini_file.u8string(), out_file.u8string());
@@ -842,9 +842,10 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
 
     // generate
     auto out_folder = ProgramData;
-    auto yaml_file =
-        CreateYamlFromIniSmart(user_ini_file, out_folder,
-                               wtools::ConvertToUTF8(name), LocalFileExists);
+    // if local.ini file exists, then second file must be a bakery file(pure logic)
+    auto mode = LocalFileExists ? BakeryFile::force : BakeryFile::normal;
+    auto yaml_file = CreateYamlFromIniSmart(user_ini_file, out_folder,
+                                            wtools::ConvertToUTF8(name), mode);
     // check
     if (!yaml_file.empty() && fs::exists(yaml_file, ec)) {
         XLOG::l.t("User ini File {} was converted to YML file {}",
@@ -857,23 +858,23 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
 }
 
 // intermediate API, used indirectly
-bool ConvertIniFiles(const std::filesystem::path& LegacyRoot,
-                     const std::filesystem::path& ProgramData) {
+bool ConvertIniFiles(const std::filesystem::path& legacy_root,
+                     const std::filesystem::path& program_data) {
     namespace fs = std::filesystem;
     using namespace cma::cfg;
 
     {
         std::error_code ec;
         auto bakery_ini =
-            (ProgramData / dirs::kBakery / files::kDefaultMainConfig)
+            (program_data / dirs::kBakery / files::kDefaultMainConfig)
                 .replace_extension(files::kDefaultBakeryExt);
         XLOG::l.t("Removing {}", bakery_ini.u8string());
         fs::remove(bakery_ini, ec);
     }
-    bool local_file_exists = ConvertLocalIniFile(LegacyRoot, ProgramData);
+    bool local_file_exists = ConvertLocalIniFile(legacy_root, program_data);
 
     auto user_or_bakery_exists =
-        ConvertUserIniFile(LegacyRoot, ProgramData, local_file_exists);
+        ConvertUserIniFile(legacy_root, program_data, local_file_exists);
 
     return local_file_exists || user_or_bakery_exists;
 }
@@ -897,55 +898,59 @@ bool IsBakeryIni(const std::filesystem::path& Path) noexcept {
     }
 }
 
-std::string MakeComments(const std::filesystem::path& SourceFilePath,
-                         bool Bakery) noexcept {
+std::string MakeComments(const std::filesystem::path& source_file_path,
+                         bool file_from_bakery) noexcept {
     return fmt::format(
-        "# Converted from '{}'\n"
+        "# Converted to YML from the file '{}'\n"
         "{}\n",
-        SourceFilePath.u8string(),
-        Bakery ? "# original INI file was managed by WATO(from bakery)\n"
-               : "# original INI file was managed by user\n");
+        source_file_path.u8string(),
+        file_from_bakery ? "# original INI file was managed by WATO\n"
+                         : "# original INI file was managed by user\n");
 }
 
-bool StoreYaml(const std::filesystem::path& File, YAML::Node Yaml,
-               const std::string& Comment) noexcept {
-    std::ofstream ofs(File, std::ios::binary);
+bool StoreYaml(const std::filesystem::path& filename, YAML::Node yaml_node,
+               const std::string& comment) noexcept {
+    std::ofstream ofs(filename); // text mode, required to have normal carriage return
     if (ofs) {
-        ofs << Comment;
-        ofs << Yaml;
+        ofs << comment;
+        ofs << yaml_node;
     }
 
     return true;
 }
 
 std::filesystem::path CreateYamlFromIniSmart(
-    const std::filesystem::path& IniFile,  // ini file to use
-    const std::filesystem::path& Pd,       // directory to send
-    const std::string& YamlName,           // name to be used in output
-    bool ForceBakeryFile) noexcept {       // in some create bakery!
-    namespace fs = std::filesystem;
-    auto yaml = LoadIni(IniFile);
+    const std::filesystem::path& ini_file,      // ini file to use
+    const std::filesystem::path& program_data,  // directory to send
+    const std::string& yaml_name,               // name to be used in output
+    BakeryFile bakery_file_mode) noexcept {     // hard bakery or soft
 
+    namespace fs = std::filesystem;
+
+    // conversion
+    auto yaml = LoadIni(ini_file);
     if (!yaml.has_value() || !yaml.value().IsMap()) {
-        XLOG::l.w("File {} is empty, no yaml created", IniFile.u8string());
+        XLOG::l.w("File '{}' is empty, no yaml created", ini_file.u8string());
         return {};
     }
 
-    std::filesystem::path yaml_file;
-    auto bakery_file = ForceBakeryFile || IsBakeryIni(IniFile);
-    auto comments = MakeComments(IniFile, bakery_file);
-    yaml_file = Pd;
+    // storing
+    auto bakery_file =
+        bakery_file_mode == BakeryFile::force || IsBakeryIni(ini_file);
+    auto comments = MakeComments(ini_file, bakery_file);
+    auto yaml_file = program_data;
     if (bakery_file) yaml_file /= dirs::kBakery;
     std::error_code ec;
     if (!fs::exists(yaml_file, ec)) {
         fs::create_directories(yaml_file, ec);
     }
-    yaml_file /= YamlName;
+    yaml_file /= yaml_name;
     yaml_file.replace_extension(bakery_file ? files::kDefaultBakeryExt
                                             : files::kDefaultUserExt);
 
     StoreYaml(yaml_file, yaml.value(), comments);
-    XLOG::l.i("File {} is successfully converted", IniFile.u8string());
+    XLOG::l.i("File '{}' is successfully converted", ini_file.u8string());
+
     return yaml_file;
 }
 

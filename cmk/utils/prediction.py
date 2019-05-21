@@ -154,6 +154,9 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
             raise
         raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
 
+    if response is None:
+        raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
+
     return TimeSeries(response)
 
 

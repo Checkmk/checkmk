@@ -16,6 +16,8 @@ pylint = "*"
 pyenchant = "*"
 yapf = "==0.26.0"  # Keep 0.26.0 for the moment because 0.27.0 needs whole code base reformatting or config change
 docker = "*"
+astroid = "*"
+mock = "*"
 mockldap = "*"
 isort = "*"
 freezegun = "*"

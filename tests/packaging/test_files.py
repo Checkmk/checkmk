@@ -47,11 +47,10 @@ def test_files_not_in_version_path(version_path, what):
     version_allowed_patterns = [
         "/opt/omd/versions$",
         "/opt/omd/versions/###OMD_VERSION###$",
-
     ]
 
     # All files below the standard directories are allowed
-    for basedir in [ "bin", "etc", "include", "lib", "local", "share", "skel", "tmp", "var" ]:
+    for basedir in ["bin", "etc", "include", "lib", "local", "share", "skel", "tmp", "var"]:
         version_allowed_patterns += [
             "/opt/omd/versions/###OMD_VERSION###/%s$" % basedir,
             "/opt/omd/versions/###OMD_VERSION###/%s/.*" % basedir,

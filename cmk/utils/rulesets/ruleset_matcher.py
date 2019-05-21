@@ -466,6 +466,12 @@ class RulesetOptimizer(object):
             if "$ne" in tag_spec:
                 is_not = True
                 tag_spec = tag_spec["$ne"]
+
+            elif "$or" in tag_spec:
+                return any(
+                    self._matches_tag_spec(sub_tag_spec, hosttags)
+                    for sub_tag_spec in tag_spec["$or"])
+
             else:
                 raise NotImplementedError()
 
@@ -494,17 +500,27 @@ class RulesetOptimizer(object):
 
                 host_parts.append(h)
 
-        for tag_group_id, tag_id in tags.iteritems():
-            val = tag_id
-            if isinstance(tag_id, dict):
-                if "$ne" not in tag_id:
-                    raise NotImplementedError()
-                val = "!%s" % tag_id["$ne"]
-
+        for tag_group_id, tag_spec in tags.iteritems():
+            val = self._tag_spec_cache_id(tag_spec)
             tag_parts.append((tag_group_id, val))
 
         return tuple(sorted(host_parts)), tuple(sorted(tag_parts)), rule_path
 
+    def _tag_spec_cache_id(self, tag_spec):
+        if isinstance(tag_spec, dict):
+            if "$ne" in tag_spec:
+                return "!%s" % tag_spec["$ne"]
+
+            if "$or" in tag_spec:
+                return tuple(
+                    self._tag_spec_cache_id(sub_tag_spec) for sub_tag_spec in tag_spec["$or"])
+
+            raise NotImplementedError("Invalid tag spec: %r" % tag_spec)
+
+        return tag_spec
+
+    # TODO: Generalize this optimization: Build some kind of key out of the tag conditions
+    # (positive, negative, ...). Make it work with the new tag group based "$or" handling.
     def _match_hosts_by_tags(self, cache_id, valid_hosts, tags):
         matching = set()
         negative_match_tags = set()
@@ -513,10 +529,14 @@ class RulesetOptimizer(object):
             if isinstance(tag, dict):
                 if "$ne" in tag:
                     negative_match_tags.add(tag["$ne"])
-                else:
-                    raise NotImplementedError()
-            else:
-                positive_match_tags.add(tag)
+                    continue
+
+                if "$or" in tag:
+                    return None  # Can not be optimized, makes _all_matching_hosts proceed
+
+                raise NotImplementedError()
+
+            positive_match_tags.add(tag)
 
         # TODO:
         #if has_specific_folder_tag or self._all_processed_hosts_similarity < 3:

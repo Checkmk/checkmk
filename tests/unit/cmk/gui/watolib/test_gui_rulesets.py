@@ -204,6 +204,36 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
                 },
             },
         ),
+        # $or tags
+        (
+            "inventory_processes_rules",
+            {
+                "value": "ORED_TAGS",
+                "condition": {
+                    'host_tags': {
+                        'specs': {
+                            "$or": [
+                                'specs',
+                                'tag',
+                            ],
+                        }
+                    }
+                },
+            },
+            {
+                "value": "ORED_TAGS",
+                "conditions": {
+                    'host_tags': {
+                        'specs': {
+                            "$or": [
+                                'specs',
+                                'tag',
+                            ],
+                        }
+                    }
+                },
+            },
+        ),
         # binary host ruleset
         ("only_hosts", {
             "value": True,

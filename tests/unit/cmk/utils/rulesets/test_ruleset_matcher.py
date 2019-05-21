@@ -295,20 +295,20 @@ tag_ruleset = [
         "options": {},
     },
     # test $or
-    #{
-    #    "value": "wan_or_lan",
-    #    "condition": {
-    #        "host_tags": {
-    #            "networking": {
-    #                "$or": [
-    #                    "lan",
-    #                    "wan",
-    #                ],
-    #            }
-    #        }
-    #    },
-    #    "options": {},
-    #},
+    {
+        "value": "wan_or_lan",
+        "condition": {
+            "host_tags": {
+                "networking": {
+                    "$or": [
+                        "lan",
+                        "wan",
+                    ],
+                }
+            }
+        },
+        "options": {},
+    },
     # test unconditional match
     {
         "value": "BLA",
@@ -319,8 +319,8 @@ tag_ruleset = [
 
 
 @pytest.mark.parametrize("hostname,expected_result", [
-    ("host1", ["crit_prod", "prod_cmk-agent", "BLA"]),
-    ("host2", ["not_lan", "BLA"]),
+    ("host1", ["crit_prod", "prod_cmk-agent", "wan_or_lan", "BLA"]),
+    ("host2", ["not_lan", "wan_or_lan", "BLA"]),
 ])
 def test_ruleset_matcher_get_host_ruleset_values_tags(monkeypatch, hostname, expected_result):
     ts = Scenario()

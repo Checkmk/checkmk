@@ -66,6 +66,7 @@ from cmk.gui.valuespec import (
     Transform,
     FixedValue,
     ListOf,
+    ListOfMultiple,
     RegExpUnicode,
     RegExp,
     TextUnicode,
@@ -1768,6 +1769,159 @@ def register_notification_parameters(scriptname, valuespec):
         },
     )
     notification_parameter_registry.register(parameter_class)
+
+
+class DictHostTagCondition(Transform):
+    def __init__(self, title, help_txt):
+        super(DictHostTagCondition, self).__init__(
+            ListOfMultiple(
+                title=title,
+                help=help_txt,
+                choices=self._get_tag_group_choices(),
+                add_label=_("Add tag condition"),
+                del_label=_("Remove tag condition"),
+            ),
+            forth=self._to_valuespec,
+            back=self._from_valuespec,
+        )
+
+    def _get_tag_group_choices(self):
+        choices = []
+        all_topics = config.tags.get_topic_choices()
+        tag_groups_by_topic = dict(config.tags.get_tag_groups_by_topic())
+        aux_tags_by_topic = dict(config.tags.get_aux_tags_by_topic())
+        for topic_id, _topic_title in all_topics:
+            for tag_group in tag_groups_by_topic.get(topic_id, []):
+                choices.append(self._get_tag_group_choice(tag_group))
+
+            for aux_tag in aux_tags_by_topic.get(topic_id, []):
+                choices.append(self._get_aux_tag_choice(aux_tag))
+
+        return choices
+
+    def _to_valuespec(self, host_tag_conditions):
+        valuespec_value = {}
+        for tag_group_id, tag_condition in host_tag_conditions.iteritems():
+            if isinstance(tag_condition, dict) and "$or" in tag_condition:
+                value = self._ored_tags_to_valuespec(tag_condition["$or"])
+            elif isinstance(tag_condition, dict) and "$nor" in tag_condition:
+                value = self._nored_tags_to_valuespec(tag_condition["$nor"])
+            else:
+                value = self._single_tag_to_valuespec(tag_condition)
+
+            valuespec_value[tag_group_id] = value
+
+        return valuespec_value
+
+    def _ored_tags_to_valuespec(self, tag_conditions):
+        return ("or", tag_conditions)
+
+    def _nored_tags_to_valuespec(self, tag_conditions):
+        return ("nor", tag_conditions)
+
+    def _single_tag_to_valuespec(self, tag_condition):
+        if isinstance(tag_condition, dict):
+            if "$ne" in tag_condition:
+                return ("is_not", tag_condition["$ne"])
+            raise NotImplementedError()
+        return ("is", tag_condition)
+
+    def _from_valuespec(self, valuespec_value):
+        tag_conditions = {}
+        for tag_group_id, (operator, operand) in valuespec_value.iteritems():
+            if operator in ["is", "is_not"]:
+                tag_group_value = self._single_tag_from_valuespec(operator, operand)
+            elif operator in ["or", "nor"]:
+                tag_group_value = {
+                    "$%s" % operator: operand,
+                }
+            else:
+                raise NotImplementedError()
+
+            tag_conditions[tag_group_id] = tag_group_value
+        return tag_conditions
+
+    def _single_tag_from_valuespec(self, operator, tag_id):
+        if operator == "is":
+            return tag_id
+        elif operator == "is_not":
+            return {"$ne": tag_id}
+        raise NotImplementedError()
+
+    def _get_tag_group_choice(self, tag_group):
+        tag_choices = tag_group.get_tag_choices()
+        tag_id_choice = ListOf(
+            valuespec=DropdownChoice(choices=tag_choices,),
+            style=ListOf.Style.FLOATING,
+            add_label=_("Add tag"),
+            del_label=_("Remove tag"),
+            magic="@@#!#@@",
+            movable=False,
+            validate=lambda value, varprefix: \
+                self._validate_tag_list(value, varprefix, tag_choices),
+        )
+
+        return (
+            tag_group.id,
+            CascadingDropdown(
+                label=tag_group.choice_title + " ",
+                title=tag_group.choice_title,
+                choices=[
+                    ("is", _("is"), DropdownChoice(choices=tag_choices)),
+                    ("is_not", _("is not"), DropdownChoice(choices=tag_choices)),
+                    ("or", _("one of"), tag_id_choice),
+                    ("nor", _("none of"), tag_id_choice),
+                ],
+                show_titles=False,
+                orientation="horizontal",
+                default_value=("is", tag_choices[0][0]),
+            ),
+        )
+
+    def _validate_tag_list(self, value, varprefix, tag_choices):
+        seen = set()
+        for tag_id in value:
+            if tag_id in seen:
+                raise MKUserError(
+                    varprefix,
+                    _("The tag '%s' is selected multiple times. A tag may be selected only once.") %
+                    dict(tag_choices)[tag_id])
+            seen.add(tag_id)
+
+    def _get_aux_tag_choice(self, aux_tag):
+        return (aux_tag.id,
+                Tuple(
+                    title=aux_tag.choice_title,
+                    elements=[
+                        FixedValue(_u(aux_tag.choice_title)),
+                        self._is_or_is_not(),
+                        FixedValue(
+                            aux_tag.id,
+                            title=_u(aux_tag.title),
+                            totext=_u(aux_tag.title),
+                        )
+                    ],
+                    show_titles=False,
+                    orientation="horizontal",
+                ))
+
+    def _tag_choice(self, tag_group):
+        return Tuple(
+            title=_u(tag_group.choice_title),
+            elements=[
+                self._is_or_is_not(),
+                DropdownChoice(choices=tag_group.get_tag_choices()),
+            ],
+            show_titles=False,
+            orientation="horizontal",
+        )
+
+    def _is_or_is_not(self):
+        return DropdownChoice(
+            choices=[
+                ("is", _("is")),
+                ("is_not", _("is not")),
+            ],)
 
 
 class HostTagCondition(ValueSpec):

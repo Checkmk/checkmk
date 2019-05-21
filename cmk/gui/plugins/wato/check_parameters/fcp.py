@@ -31,47 +31,17 @@ from cmk.gui.valuespec import (
     OptionalDropdownChoice,
     Integer,
     ListOf,
-    Percentage,
     TextAscii,
-    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     Levels,
-    PredictiveLevels,
     RulespecGroupCheckParametersNetworking,
 )
 
-
-def vs_interface_traffic():
-    def vs_abs_perc():
-        return CascadingDropdown(
-            orientation="horizontal",
-            choices=[("perc", _("Percentual levels (in relation to port speed)"),
-                      Tuple(
-                          orientation="float",
-                          show_titles=False,
-                          elements=[
-                              Percentage(label=_("Warning at")),
-                              Percentage(label=_("Critical at")),
-                          ])),
-                     ("abs", _("Absolute levels in bits or bytes per second"),
-                      Tuple(
-                          orientation="float",
-                          show_titles=False,
-                          elements=[
-                              Integer(label=_("Warning at")),
-                              Integer(label=_("Critical at")),
-                          ])), ("predictive", _("Predictive Levels"), PredictiveLevels())])
-
-    return CascadingDropdown(
-        orientation="horizontal",
-        choices=[
-            ("upper", _("Upper"), vs_abs_perc()),
-            ("lower", _("Lower"), vs_abs_perc()),
-        ])
+from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
 @rulespec_registry.register

@@ -29,6 +29,7 @@ from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
     Alternative,
+    CascadingDropdown,
     Checkbox,
     Dictionary,
     DropdownChoice,
@@ -42,6 +43,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.plugins.wato import PredictiveLevels
 
 
 # Match and transform functions for level configurations like
@@ -326,3 +328,33 @@ def vs_filesystem(extra_elements=None):
         hidden_keys=["flex_levels"],
         ignored_keys=["patterns"],
     )
+
+
+def vs_interface_traffic():
+    def vs_abs_perc():
+        return CascadingDropdown(
+            orientation="horizontal",
+            choices=[("perc", _("Percentual levels (in relation to port speed)"),
+                      Tuple(
+                          orientation="float",
+                          show_titles=False,
+                          elements=[
+                              Percentage(label=_("Warning at")),
+                              Percentage(label=_("Critical at")),
+                          ])),
+                     ("abs", _("Absolute levels in bits or bytes per second"),
+                      Tuple(
+                          orientation="float",
+                          show_titles=False,
+                          elements=[
+                              Integer(label=_("Warning at")),
+                              Integer(label=_("Critical at")),
+                          ])),
+                     ("predictive", _("Predictive Levels (only on CMC)"), PredictiveLevels())])
+
+    return CascadingDropdown(
+        orientation="horizontal",
+        choices=[
+            ("upper", _("Upper"), vs_abs_perc()),
+            ("lower", _("Lower"), vs_abs_perc()),
+        ])

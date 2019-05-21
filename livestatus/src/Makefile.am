@@ -188,10 +188,10 @@ iwyu: compile_commands.json
 	$(IWYU_TOOL) --output-format=clang -p . -- --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
 
 cppcheck: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=cppcheck-suppressions.txt --inline-suppr --project=compile_commands.json --quiet --template=gcc
+	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc
 
 cppcheck-xml: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=cppcheck-suppressions.txt --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
+	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
 
 documentation:
 	$(DOXYGEN) doc/Doxyfile

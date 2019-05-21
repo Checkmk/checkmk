@@ -385,7 +385,7 @@ TEST(UpgradeTest, IgnoreApi) {
     EXPECT_FALSE(details::IsIgnoredFile("aasAA."));
 }
 
-TEST(UpgradeTest, TopLevelApi) {
+TEST(UpgradeTest, TopLevelApi_Long) {
     if (!cma::tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)
             .w("Program is not elevated, testing is not possible");

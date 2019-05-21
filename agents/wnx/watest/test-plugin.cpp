@@ -636,7 +636,7 @@ TEST(PluginTest, GeneratePluginEntry) {
     }
 }
 
-TEST(PluginTest, SyncStartSimulationFuture) {
+TEST(PluginTest, SyncStartSimulationFuture_Long) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
@@ -821,7 +821,7 @@ TEST(PluginTest, RemoveDuplicatedPlugins) {
     EXPECT_TRUE(x.size() == 3);
 }
 
-TEST(PluginTest, AsyncStartSimulation) {
+TEST(PluginTest, AsyncStartSimulation_Long) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
@@ -1045,7 +1045,7 @@ TEST(PluginTest, AsyncStartSimulation) {
 
 }  // namespace cma
 
-TEST(PluginTest, SyncStartSimulation) {
+TEST(PluginTest, SyncStartSimulation_Long) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;

@@ -163,7 +163,7 @@ TEST(RealtimeTest, PackData) {
     }
 }
 
-TEST(RealtimeTest, Base) {
+TEST(RealtimeTest, Base_Long) {
     // stub
 
     cma::OnStart(cma::AppType::test);

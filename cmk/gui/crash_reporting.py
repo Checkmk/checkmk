@@ -355,7 +355,16 @@ def _crash_row(title, infotext, odd=True, legend=False, pre=False):
 def show_crash_report(info):
 
     html.h2(_("Crash Report"))
-    html.open_table(class_="data")
+    html.open_table(class_=["data", "crash_report"])
+
+    _crash_row(
+        _("Exception"), "%s (%s)" % (info["exc_type"], info["exc_value"]), odd=True, pre=True)
+    _crash_row(_("Traceback"), format_traceback(info["exc_traceback"]), odd=False, pre=True)
+    _crash_row(
+        _("Local Variables"),
+        format_local_vars(info["local_vars"]) if "local_vars" in info else "",
+        odd=True,
+        pre=True)
 
     _crash_row(_("Crash Type"), info["crash_type"], odd=False, legend=True)
     _crash_row(
@@ -369,14 +378,6 @@ def show_crash_report(info):
     _crash_row(_("Edition"), info.get("edition", ""), False)
     _crash_row(_("Core"), info.get("core", ""), True)
     _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
-    _crash_row(
-        _("Exception"), "%s (%s)" % (info["exc_type"], info["exc_value"]), odd=True, pre=True)
-    _crash_row(_("Traceback"), format_traceback(info["exc_traceback"]), odd=False, pre=True)
-    _crash_row(
-        _("Local Variables"),
-        format_local_vars(info["local_vars"]) if "local_vars" in info else "",
-        odd=True,
-        pre=True)
 
     joined_paths = "<br>".join(
         [html.attrencode(p) for p in info.get("python_paths", [_("Unknown")])])
@@ -418,7 +419,7 @@ def show_crashed_check_details(info):
 
 
 def format_traceback(tb):
-    return "\n".join(traceback.format_list(tb))
+    return "".join(traceback.format_list(tb))
 
 
 def format_params(params):

@@ -8,5 +8,4 @@ State: unknown
 Version: 1.6.0i1
 Date: 1558081349
 
-In this case we assume that there's no power on the wire.
-Thus we set the value to zero.
+

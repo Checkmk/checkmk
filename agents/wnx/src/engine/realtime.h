@@ -80,7 +80,7 @@ private:
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class RealtimeTest;
-    FRIEND_TEST(RealtimeTest, Base);
+    FRIEND_TEST(RealtimeTest, Base_Long);
     FRIEND_TEST(RealtimeTest, LowLevel);
 #endif
 };

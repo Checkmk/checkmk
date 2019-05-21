@@ -6,15 +6,12 @@
 #include <optional>
 #include <string>
 
+#include "cma_core.h"
 #include "common/wtools.h"
+#include "fmt/format.h"
+#include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"
-
-#include "fmt/format.h"
-
-#include "cma_core.h"
-
-#include "logger.h"
 
 namespace cma::player {
 constexpr int kMaxPluginsToExec = 32;
@@ -361,7 +358,7 @@ private:
     friend class PlayerTest;
     FRIEND_TEST(PlayerTest, All);
     FRIEND_TEST(PlayerTest, Extensions);
-    FRIEND_TEST(PlayerTest, RealLifeInventory);
+    FRIEND_TEST(PlayerTest, RealLifeInventory_Long);
     FRIEND_TEST(v, StartStop);
 #endif
 };

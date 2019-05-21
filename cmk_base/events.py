@@ -331,9 +331,10 @@ def complete_raw_context(raw_context, with_dump, log_func):
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)
-        for what in ["HOST", "SERVICE"]:
-            key = what + "NOTIFICATIONNUMBER"
+        for key in ["HOSTNOTIFICATIONNUMBER", "SERVICENOTIFICATIONNUMBER"]:
             if key in raw_context and raw_context[key] == "0":
+                if with_dump:
+                    log_func("Setting %s for notification from '0' to '1'" % key)
                 raw_context[key] = "1"
 
         # Add the previous hard state. This is neccessary for notification rules that depend on certain transitions,

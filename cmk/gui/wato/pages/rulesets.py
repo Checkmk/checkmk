@@ -76,6 +76,7 @@ from cmk.gui.plugins.wato import (
     search_form,
     ConfigHostname,
     HostTagCondition,
+    DictHostTagCondition,
 )
 
 
@@ -1417,7 +1418,7 @@ class VSExplicitConditions(Transform):
         # type: (RuleConditions) -> dict
         explicit = {
             "folder_path": conditions.host_folder,
-            "host_tags": conditions.tag_list,
+            "host_tags": conditions.host_tags,
         }
 
         explicit_hosts = conditions.host_list
@@ -1463,19 +1464,11 @@ class VSExplicitConditions(Transform):
 
         return RuleConditions(
             host_folder=explicit["folder_path"],
-            host_tags=self._host_tags_from_valuespec(explicit["host_tags"]),
+            host_tags=explicit["host_tags"],
             host_name=self._condition_list_from_valuespec(
                 explicit.get("explicit_hosts"), is_service=False),
             service_description=service_description,
         )
-
-    # TODO: Change all HostTagCondition to produce a tag dictionary instead of the list
-    def _host_tags_from_valuespec(self, tags):
-        """Transform the host tag list of the valuespec to rule tag conditions"""
-        self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
-            tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags))
-
-        return self.tuple_transformer.transform_host_tags(tags).get("host_tags", {})
 
     def _condition_list_from_valuespec(self, conditions, is_service):
         if conditions is None:
@@ -1511,11 +1504,11 @@ class VSExplicitConditions(Transform):
         )
 
     def _vs_host_tag_condition(self):
-        return HostTagCondition(
+        return DictHostTagCondition(
             title=_("Host tags"),
-            help=_("The rule will only be applied to hosts fulfilling all "
-                   "of the host tag conditions listed here, even if they appear "
-                   "in the list of explicit host names."),
+            help_txt=_("The rule will only be applied to hosts fulfilling all "
+                       "of the host tag conditions listed here, even if they appear "
+                       "in the list of explicit host names."),
         )
 
     def _vs_explicit_hosts(self):
@@ -1609,16 +1602,29 @@ class RuleConditionRenderer(object):
     def _tag_conditions(self, conditions):
         # type: (RuleConditions) -> Generator
         for tag_spec in conditions.host_tags.itervalues():
-            is_not = isinstance(tag_spec, dict) and "$ne" in tag_spec
-            if is_not:
-                # mypy had some problem with this. Need to check type annotation
-                tag_id = tag_spec["$ne"]  # type: ignore
+            if isinstance(tag_spec, dict) and "$or" in tag_spec:
+                yield HTML(" <i>or</i> ").join(
+                    [self._single_tag_condition(sub_spec) for sub_spec in tag_spec["$or"]])
+            elif isinstance(tag_spec, dict) and "$nor" in tag_spec:
+                yield HTML(_("Neither") + " ") + HTML(" <i>nor</i> ").join(
+                    [self._single_tag_condition(sub_spec) for sub_spec in tag_spec["$nor"]])
             else:
-                tag_id = tag_spec
+                yield self._single_tag_condition(tag_spec)
 
-            yield self._single_tag_condition(tag_id, is_not)
+    def _single_tag_condition(self, tag_spec):
+        negate = False
+        if isinstance(tag_spec, dict):
+            if "$ne" in tag_spec:
+                negate = True
+            else:
+                raise NotImplementedError()
 
-    def _single_tag_condition(self, tag_id, negate):
+        if negate:
+            # mypy had some problem with this. Need to check type annotation
+            tag_id = tag_spec["$ne"]  # type: ignore
+        else:
+            tag_id = tag_spec
+
         tag = config.tags.get_tag_or_aux_tag(tag_id)
         if tag and tag.title:
             if not tag.is_aux_tag:

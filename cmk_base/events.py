@@ -332,7 +332,7 @@ def complete_raw_context(raw_context, with_dump, event_log):
         for key in ["HOSTNOTIFICATIONNUMBER", "SERVICENOTIFICATIONNUMBER"]:
             if key in raw_context and  raw_context[key] == "0":
                 if with_dump:
-                    event_log("Setting %s for custom notification from '0' to '1'" % key)
+                    event_log("Setting %s for notification from '0' to '1'" % key)
                 raw_context[key] = "1"
 
         # Add the previous hard state. This is neccessary for notification rules that depend on certain transitions,

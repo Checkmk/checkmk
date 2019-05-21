@@ -278,6 +278,7 @@ $(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
 		    --root=$(DESTDIR)$(OMD_ROOT) \
 		    --prefix='' \
+		    --install-data=/share \
 		    --install-platlib=/lib/python \
 		    --install-purelib=/lib/python ; \
 		cd .. ; \

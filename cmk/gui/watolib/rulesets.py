@@ -893,7 +893,6 @@ class Rule(object):
         searching_host_tags = search_options.get("rule_hosttags")
         if searching_host_tags:
             for host_tag in searching_host_tags:
-                html.debug((host_tag, self.conditions.tag_list))
                 if host_tag not in self.conditions.tag_list:
                     return False
 

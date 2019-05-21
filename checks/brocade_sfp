@@ -38,27 +38,19 @@ def parse_brocade_sfp(info):
             continue
 
         port_index = int(fcport_info[0])
-        port = parsed.setdefault(port_index, {
+
+        parsed[port_index] = {
             "port_name": fcport_info[4],
+            "temp": int(values[0]),  # °C
+            "phystate": int(fcport_info[1]),
+            "opstate": int(fcport_info[2]),
+            "admstate": int(fcport_info[3]),
+            "voltage": float(values[1]) / 1000,  # mV -> V
+            "current": float(values[2]) / 1000,  # mA -> A
+            "rx_power": float(values[3]),  # dBm
+            "tx_power": float(values[4]),  # dBm
             "is_isl": bool(port_index in isl_ports),
-        })
-        for key, value, conv, scale in [
-            ("temp", values[0], int, 1),
-            ("phystate", fcport_info[1], int, 1),
-            ("opstate", fcport_info[2], int, 1),
-            ("admstate", fcport_info[3], int, 1),
-            ("voltage", values[1], float, 0.001),  # mV -> V
-            ("current", values[2], float, 0.001),  # mA -> A
-            ("rx_power", values[3], float, 1.0),
-            ("tx_power", values[4], float, 1.0),
-        ]:
-            if value == '-inf':
-                port[key] = None
-                continue
-            try:
-                port[key] = conv(value) * scale
-            except ValueError:
-                pass
+        }
 
     return parsed
 
@@ -128,10 +120,7 @@ def check_brocade_sfp(item, params, parsed):
     #       not providing an infotext or perfdata when no levels
     #       are set.
     def _check_levels(value, perf_name, params, infotext_prefix, unit):
-        if value is None:
-            return 0, '%s: no value' % infotext_prefix, []
-
-        infotext = "%s: %.2f %s" % (infotext_prefix, value, unit)
+        infotext = infotext_prefix + ("%.2f %s" % (value, unit))
         if not params:
             return 0, infotext, [(perf_name, value)]
         else:
@@ -150,11 +139,11 @@ def check_brocade_sfp(item, params, parsed):
     #       for brocade.fcport.
 
     yield _check_levels(port_info["rx_power"], "input_signal_power_dbm", params.get("rx_power"),
-                        "Rx", "dBm")
+                        "Rx: ", "dBm")
     yield _check_levels(port_info["tx_power"], "output_signal_power_dbm", params.get("tx_power"),
-                        "Tx", "dBm")
-    yield _check_levels(port_info["current"], "current", params.get("current"), "Current", "A")
-    yield _check_levels(port_info["voltage"], "voltage", params.get("voltage"), "Voltage", "V")
+                        "Tx: ", "dBm")
+    yield _check_levels(port_info["current"], "current", params.get("current"), "current: ", "A")
+    yield _check_levels(port_info["voltage"], "voltage", params.get("voltage"), "voltage: ", "V")
 
 
 check_info['brocade_sfp'] = {

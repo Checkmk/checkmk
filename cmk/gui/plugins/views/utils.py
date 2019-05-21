@@ -670,6 +670,10 @@ class RowTableLivestatus(RowTable):
         super(RowTableLivestatus, self).__init__()
         self._table_name = table_name
 
+    @property
+    def table_name(self):
+        return self._table_name
+
     def query(self, view, columns, query, only_sites, limit, all_active_filters):
         # TODO: Move query_data into this class
         return query_data(
@@ -1183,7 +1187,7 @@ def query_data(datasource, columns, add_headers, only_sites=None, limit=None, ta
         only_sites = []
 
     if tablename is None:
-        tablename = datasource.table
+        tablename = datasource.table.table_name
 
     add_headers += datasource.add_headers
     merge_column = datasource.merge_by

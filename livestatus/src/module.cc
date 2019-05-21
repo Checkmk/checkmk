@@ -892,12 +892,14 @@ void check_path(const char *name, char *path) {
 void livestatus_parse_arguments(const char *args_orig) {
     fl_socket_path = default_socket_path;
 
-    // set default path to our logfile to be in the same path as nagios.log
-    std::string lf{log_file};
-    auto slash = lf.rfind('/');
-    fl_logfile_path =
-        (slash == std::string::npos ? "/tmp/" : lf.substr(0, slash + 1)) +
-        "livestatus.log";
+    {
+        // set default path to our logfile to be in the same path as nagios.log
+        std::string lf{log_file};
+        auto slash = lf.rfind('/');
+        fl_logfile_path =
+            (slash == std::string::npos ? "/tmp/" : lf.substr(0, slash + 1)) +
+            "livestatus.log";
+    }
 
     fl_mkeventd_socket_path = "";
 

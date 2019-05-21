@@ -37,12 +37,13 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
                         const std::filesystem::path& ProgramData,
                         bool LocalFileExists);
 
+enum class BakeryFile { normal, force };
 // This function will use correct extension and correct sub path
 std::filesystem::path CreateYamlFromIniSmart(
-    const std::filesystem::path& IniFile,    // ini file to use
-    const std::filesystem::path& Pd,         // directory to send
-    const std::string& YamlName,             // name to be used in output
-    bool ForceBakeryFile = false) noexcept;  // in some create bakery!
+    const std::filesystem::path& ini_file,      // ini file to use
+    const std::filesystem::path& program_data,  // directory to send
+    const std::string& yaml_name,               // name to be used in output
+    BakeryFile bakery_file_mode) noexcept;      // how create bakery yml
 
 // after upgrade we create in root our protocol
 bool CreateProtocolFile(std::filesystem::path& ProtocolFile,

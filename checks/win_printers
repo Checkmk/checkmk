@@ -38,7 +38,7 @@ factory_settings['win_printer_default_levels'] = {
 
 def inventory_win_printers(info):
     for line in info:
-        if line[-1] != '9':  # Do not discovery offline printers
+        if line[-1] != '9' and len(line) == 4:  # Do not discovery offline printers
             yield " ".join(line[:-3]), {}
 
 
@@ -80,6 +80,8 @@ def check_win_printers(item, params, info):
         warn, crit = params.get('levels', (None, None))
 
     for line in info:
+        if len(line) != 4:
+            continue
         name = " ".join(line[:-3])
         if name == item:
             state = 0

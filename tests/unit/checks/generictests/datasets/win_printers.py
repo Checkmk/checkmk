@@ -5,7 +5,16 @@
 checkname = 'win_printers'
 
 
-info = [['PrinterStockholm', '3', '4', '0'], ['WH1_BC_O3_UPS', '0', '3', '8']]
+info = [
+    ['PrinterStockholm', '3', '4', '0'],
+    ['WH1_BC_O3_UPS', '0', '3', '8'],
+    ['"printerstatus","detectederrorstate"',
+     '-Type',
+     'OnlyIfInBoth',
+     '|',
+     'format-table',
+     '-HideTableHeaders']
+]
 
 
 discovery = {'': [('PrinterStockholm', {}), ('WH1_BC_O3_UPS', {})]}

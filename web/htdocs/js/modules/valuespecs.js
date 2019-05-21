@@ -22,6 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+import $ from "jquery";
 import * as utils from "utils";
 import * as popup_menu from "popup_menu";
 import * as ajax from "ajax";
@@ -541,6 +542,10 @@ export function listofmultiple_add(varprefix) {
 
     choice.options[choice.selectedIndex].disabled = true; // disable this choice
 
+    // Update select2 to make the disabled attribute be recognized by the dropdown
+    // (See https://github.com/select2/select2/issues/3347)
+    $(choice).select2();
+
     // make the filter visible
     var row = document.getElementById(varprefix + "_" + ident + "_row");
     utils.remove_class(row, "unused");
@@ -573,6 +578,10 @@ export function listofmultiple_del(varprefix, ident) {
     for (i = 0; i < choice.children.length; i++)
         if (choice.children[i].value == ident)
             choice.children[i].disabled = false;
+
+    // Update select2 to make the disabled attribute be recognized by the dropdown
+    // (See https://github.com/select2/select2/issues/3347)
+    $(choice).select2();
 
     // Remove it from the list of active elements
     var active = document.getElementById(varprefix + "_active");

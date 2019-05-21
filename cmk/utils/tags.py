@@ -124,6 +124,12 @@ class AuxTag(ABCTag):
             response["topic"] = self.topic
         return response
 
+    @property
+    def choice_title(self):
+        if self.topic:
+            return "%s / %s" % (self.topic, self.title)
+        return self.title
+
 
 class AuxTagList(object):
     def __init__(self):

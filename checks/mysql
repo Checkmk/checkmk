@@ -64,23 +64,9 @@ def parse_mysql(info):
         return varname, value
 
     parsed = {}
-    instance = False
-    for line in info:
-        if line[0].startswith("[["):
-            instance = line[0][2:-2]
-            if instance == "":
-                instance = "mysql"
-            parsed[instance] = {}
-        elif instance:
-            varname, value = parse_line(line)
-            parsed[instance][varname] = value
-
-    # Old Agent Plugin, no Instances in output
-    if not instance:
-        parsed['mysql'] = {}
-        for line in info:
-            varname, value = parse_line(line)
-            parsed['mysql'][varname] = value
+    for instance, line in mysql_iter_instance_lines(info):
+        varname, value = parse_line(line)
+        parsed.setdefault(instance, {})[varname] = value
 
     return parsed
 
@@ -96,6 +82,7 @@ check_info['mysql'] = {
     "inventory_function": discover(lambda k, values: 'version' in values),
     "check_function": check_mysql_version,
     "service_description": "MySQL Version %s",
+    "includes": ['mysql.include'],
 }
 
 #.

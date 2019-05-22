@@ -25,16 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 
-def _mysql_iter_instance_lines(lines):
-    def _detect_instance(line):
-        if line[0].startswith("[["):
-            instance = line[0].strip('[]')
-            return instance or "mysql"
-        return None
+def _mysql_detect_instance_name(line):
+    if line[0].startswith("[["):
+        instance = line[0].strip('[]')
+        return instance or "mysql"
+    return None
+
+
+def mysql_iter_instance_lines(lines):
 
     instance = None
     for line in lines:
-        detected_instance = _detect_instance(line)
+        detected_instance = _mysql_detect_instance_name(line)
         if detected_instance:
             instance = detected_instance
         elif instance:

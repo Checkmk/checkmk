@@ -47,7 +47,7 @@ def parse_mysql_capacity(info):
         return name, line[-2], line[-1]
 
     parsed = {}
-    for instance, line in _mysql_iter_instance_lines(info):  # pylint: disable=undefined-variable
+    for instance, line in mysql_iter_instance_lines(info):  # pylint: disable=undefined-variable
         name, size, avail = _name_size_avail(line)
         parsed.setdefault(instance, {})[name] = (size, avail)
     return parsed

@@ -291,7 +291,7 @@ enum Mods : int {
     kWarning   = 0x0C00,   // suspicious: Default XLOG::d
     kTrace     = 0x1000,   // function:   Default XLOG::t
     kInfo      = 0x1400,   // detailed info about state
-    kRsrv1     = 0x1800,   // 
+    kRsrv1     = 0x1800,   //
     kRsrv2     = 0x1c00,   //
                       // clang-format on
 
@@ -685,3 +685,24 @@ bool IsEventLogEnabled();
 }  // namespace setup
 
 }  // namespace XLOG
+
+namespace cma::tools {
+// simple class to log time of execution, to be moved in separate header
+// will be extended with dtor(to dump) and other functions
+// Usage:
+// TimeLog tl(name);
+// .......
+// tl.writeLog(data_count);
+class TimeLog {
+public:
+    // time is set at the moment of creation
+    explicit TimeLog(const std::string& object_name);
+    // duration is measured here
+    void writeLog(size_t processed_bytes) const noexcept;
+
+private:
+    std::chrono::time_point<std::chrono::steady_clock> start_;
+    const std::string id_;
+};
+
+}  // namespace cma::tools

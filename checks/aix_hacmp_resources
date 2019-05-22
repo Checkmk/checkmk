@@ -64,10 +64,10 @@ def check_aix_hacmp_resources(item, params, data):
         expected_behaviour = params.get("expect_online_on", "first")
 
     resource_states = []
-    infotext = ""
+    infotext = []
     for node_name, resource_state in data:
         resource_states.append(resource_state)
-        infotext += "%s on node %s, " % (resource_state, node_name)
+        infotext.append("%s on node %s" % (resource_state, node_name))
 
     state = 0
     if expected_behaviour == "first":
@@ -77,7 +77,7 @@ def check_aix_hacmp_resources(item, params, data):
         if not any((resource_state == u"online" for resource_state in resource_states)):
             state = 2
 
-    return state, infotext[:-2]
+    return state, ", ".join(infotext)
 
 
 check_info['aix_hacmp_resources'] = {

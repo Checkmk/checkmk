@@ -391,7 +391,7 @@ HANDLE CreateDevNull() {
 }
 
 // This Function is safe
-bool TheMiniProcess::start(const std::wstring ExePath) {
+bool TheMiniProcess::start(const std::wstring& exe_name) {
     std::unique_lock lk(lock_);
     if (process_handle_ != INVALID_HANDLE_VALUE) {
         // check status and reset handle if required
@@ -415,15 +415,17 @@ bool TheMiniProcess::start(const std::wstring ExePath) {
         ON_OUT_OF_SCOPE(CloseHandle(null_handle));
 
         PROCESS_INFORMATION pi{0};
-        if (!::CreateProcess(ExePath.c_str(), nullptr, nullptr, nullptr, TRUE,
+        if (!::CreateProcess(exe_name.c_str(), nullptr, nullptr, nullptr, TRUE,
                              0, nullptr, nullptr, &si, &pi)) {
-            XLOG::l("Failed to run {}", wtools::ConvertToUTF8(ExePath));
+            XLOG::l("Failed to run {}", wtools::ConvertToUTF8(exe_name));
             return false;
         }
         process_handle_ = pi.hProcess;
         process_id_ = pi.dwProcessId;
         CloseHandle(pi.hThread);  // as in LA
-        XLOG::d.i("Started {}", wtools::ConvertToUTF8(ExePath));
+
+        process_name_ = wtools::ConvertToUTF8(exe_name);
+        XLOG::d.i("Started '{}' wih pid [{}]", process_name_, process_id_);
     }
 
     return true;
@@ -434,24 +436,35 @@ bool TheMiniProcess::stop() {
     std::unique_lock lk(lock_);
     if (process_handle_ == INVALID_HANDLE_VALUE) return false;
 
+    auto name = process_name_;
+    auto pid = process_id_;
+    auto handle = process_handle_;
+
+    process_id_ = 0;
+    process_name_.clear();
     CloseHandle(process_handle_);
     process_handle_ = INVALID_HANDLE_VALUE;
-    auto pid = process_id_;
-    process_id_ = 0;
 
     // check status and reset handle if required
     DWORD exit_code = STILL_ACTIVE;
-    if (!::GetExitCodeProcess(process_handle_, &exit_code) ||  // no access
-        exit_code == STILL_ACTIVE) {                           // running
-
-        // our proc either running or we have no access to the proc
-        // try to kill
+    if (!::GetExitCodeProcess(handle, &exit_code) ||  // no access
+        exit_code == STILL_ACTIVE) {                  // running
         lk.unlock();
-        XLOG::l("Killing process {}", process_id_);
+
+        // our process either running or we have no access to the process
+        // -> try to kill
+        if (pid == 0) {
+            XLOG::l.bp("Killing 0 process '{}' not allowed", name);
+            return false;
+        }
+
         wtools::KillProcessTree(pid);
         wtools::KillProcess(pid);
+        XLOG::l.t("Killing process [{}] '{}'", pid, name);
         return true;
     }
+
+    XLOG::l.t("Process [{}] '{}' already dead", pid, name);
     return false;
 }
 

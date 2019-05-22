@@ -56,7 +56,7 @@ public:
     TheMiniProcess& operator=(TheMiniProcess&&) = delete;
 
     ~TheMiniProcess() { stop(); }
-    bool start(std::wstring ExeName);
+    bool start(const std::wstring& exe_name );
     bool stop();
     bool running() const {
         std::lock_guard lk(lock_);
@@ -68,6 +68,7 @@ private:
     HANDLE process_handle_;
     HANDLE thread_handle_;
     uint32_t process_id_;
+    std::string process_name_;// for debug purposes
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class SectionProviderOhm;

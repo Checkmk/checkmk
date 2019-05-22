@@ -492,7 +492,8 @@ int ExecSkypeTest() {
     if (result.size())
         XLOG::l.i("{}", result);
     else {
-        auto counter_str = wtools::perf::ReadPerfCounterKeyFromRegistry(false);
+        auto counter_str = wtools::perf::ReadPerfCounterKeyFromRegistry(
+            wtools::perf::PerfCounterReg::english);
         auto data = counter_str.data();
         const auto end = counter_str.data() + counter_str.size();
         for (;;) {

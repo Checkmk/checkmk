@@ -591,8 +591,9 @@ struct CounterParam {
 };
 
 // read MULTI_SZ string from the registry
-std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(bool LocalLanguage);
-std::optional<uint32_t> FindPerfIndexInRegistry(const std::wstring& Key);
+enum class PerfCounterReg { national, english };
+std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type);
+std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view Key);
 NameMap GenerateNameMap();
 
 const CounterParam kCpuCounter = {L"Processor", L"238", 238, 15, 1, 33};

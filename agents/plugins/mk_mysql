@@ -30,33 +30,33 @@ function do_query() {
   if [ $COUNT -gt 1 ]
   then
       INSTANCE_NAME=$(echo $MYSQLDPS | sed -ne 's/.*socket=\([^.]*\).*/\1/p')
-      INSTANCE_NAME="[[${INSTANCE_NAME##*/}]]"
+      INSTANCE_NAME="${INSTANCE_NAME##*/}"
   else
-      INSTANCE_NAME="[[$(echo $MYSQLDPS | sed -ne 's/.*user=\([^ ]*\).*/\1/p')]]"
+      INSTANCE_NAME="$(echo $MYSQLDPS | sed -ne 's/.*user=\([^ ]*\).*/\1/p')"
   fi
 
 
 
   # Check if mysqld is running and root password setup
   echo "<<<mysql_ping>>>"
-  echo $INSTANCE_NAME
+  echo "[[$INSTANCE_NAME]]"
   mysqladmin --defaults-extra-file=$MK_CONFDIR/mysql.cfg --socket=$1 ping 2>&1
 
   if [ $? -eq 0 ]; then
 
     echo "<<<mysql>>>"
-    echo $INSTANCE_NAME
+    echo "[[$INSTANCE_NAME]]"
     mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg --socket=$1 -sN \
      -e "show global status ; show global variables ;"
 
     echo "<<<mysql_capacity>>>"
-    echo $INSTANCE_NAME
+    echo "[[$INSTANCE_NAME]]"
     mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg --socket=$1 -sN \
       -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
          FROM information_schema.TABLES GROUP BY table_schema"
 
     echo "<<<mysql_slave>>>"
-    echo $INSTANCE_NAME
+    echo "[[$INSTANCE_NAME]]"
     mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg --socket=$1 -s \
      -e "show slave status\G"
 

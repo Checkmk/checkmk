@@ -54,7 +54,7 @@ def main():
 
 def handle_request(user, pwd, opt_port, query_objects, opt_proto, opt_debug, elastic_host):
 
-    for host in elastic_host.split(" "):
+    for host in elastic_host:
         url_base = "%s://%s:%d" % (opt_proto, host, int(opt_port))
 
         # Sections to query
@@ -113,7 +113,6 @@ def parse_arguments(argv=None):
     parser.add_argument(
         "-m",
         "--modules",
-        #nargs="*",
         default=["cluster_health", "nodes", "stats"],
         help=
         "Comma-separated list of modules to query. Possible values: cluster_health, nodes, stats (default: all)"
@@ -123,6 +122,7 @@ def parse_arguments(argv=None):
 
     parser.add_argument(
         "HOSTNAME",
+        nargs="*",
         help=
         "You can define one or more elasticsearch instances to query. First instance where data is queried wins."
     )

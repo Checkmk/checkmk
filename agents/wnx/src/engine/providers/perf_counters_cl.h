@@ -23,8 +23,8 @@ int RunPerf(const std::wstring& PeerName,  // name assigned by starting program
 
 // internal procedure to get all data from all counters and format for CMK
 std::string AccumulateCounters(
-    const std::wstring& PrefixName,
-    const std::vector<std::wstring_view>& CounterArray);
+    const std::wstring& prefix_name,
+    const std::vector<std::wstring_view>& counter_array);
 
 }  // namespace provider
 

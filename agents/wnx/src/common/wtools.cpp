@@ -514,10 +514,11 @@ namespace perf {
 
 // read MULTI_SZ string from the registry
 // #TODO gtest
-std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(bool LocalLanguage) {
+std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type) {
     DWORD counters_size = 0;
 
-    auto key = LocalLanguage ? HKEY_PERFORMANCE_NLSTEXT : HKEY_PERFORMANCE_TEXT;
+    auto key = type == PerfCounterReg::national ? HKEY_PERFORMANCE_NLSTEXT
+                                                : HKEY_PERFORMANCE_TEXT;
 
     // preflight
     ::RegQueryValueExW(key, L"Counter", nullptr, nullptr, nullptr,
@@ -552,12 +553,12 @@ const wchar_t* GetMultiSzEntry(wchar_t*& Pos, const wchar_t* End) {
     return sz;
 }
 
-std::optional<uint32_t> FindPerfIndexInRegistry(const std::wstring& Key) {
+std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view Key) {
     if (Key.empty()) return {};
 
-    for (auto national : {true, false}) {
+    for (auto reg_type : {PerfCounterReg::national, PerfCounterReg::english}) {
         auto counter_str =
-            wtools::perf::ReadPerfCounterKeyFromRegistry(national);
+            wtools::perf::ReadPerfCounterKeyFromRegistry(reg_type);
         auto data = counter_str.data();
         const auto end = counter_str.data() + counter_str.size();
         for (;;) {
@@ -582,8 +583,9 @@ std::optional<uint32_t> FindPerfIndexInRegistry(const std::wstring& Key) {
 // read default ENGLISH registry entry and build map with
 // id - name
 NameMap GenerateNameMap() {
+    using namespace wtools::perf;
     NameMap nm;
-    auto counter_str = wtools::perf::ReadPerfCounterKeyFromRegistry(false);
+    auto counter_str = ReadPerfCounterKeyFromRegistry(PerfCounterReg::english);
     auto data = counter_str.data();
     const auto end = counter_str.data() + counter_str.size();
     for (;;) {
@@ -658,7 +660,6 @@ inline auto NextInstance(const PERF_INSTANCE_DEFINITION* Instance) {
 }
 
 // main reader from registry
-// #TODO gtest
 // DataSequence is primitive wrapper over data buffer
 // DataSequence takes ownership over buffer
 DataSequence ReadPerformanceDataFromRegistry(
@@ -667,7 +668,8 @@ DataSequence ReadPerformanceDataFromRegistry(
     BYTE* buffer = nullptr;
 
     while (1) {
-        // allocation(a bit stupid, but we do not want top have STL inside
+        // allocation(a bit stupid, but we do not want to have STL inside
+        // of very low level Windows calls
         try {
             buffer = new BYTE[buf_size];
         } catch (...) {

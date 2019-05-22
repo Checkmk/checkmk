@@ -34,7 +34,7 @@
 # FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_ping(info):
     parsed = {}
-    for instance, line in _mysql_iter_instance_lines(info):
+    for instance, line in mysql_iter_instance_lines(info):
         parsed.setdefault(instance, []).append(line)
     return parsed
 

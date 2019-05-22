@@ -36,28 +36,33 @@ function do_query() {
   fi
 
 
+  if [ -z "$1" ]; then
+    OPT=""
+  else
+    OPT="--socket=$1"
+  fi
 
   # Check if mysqld is running and root password setup
   echo "<<<mysql_ping>>>"
   echo "[[$INSTANCE_NAME]]"
-  mysqladmin --defaults-extra-file=$MK_CONFDIR/mysql.cfg --socket=$1 ping 2>&1
+  mysqladmin --defaults-extra-file=$MK_CONFDIR/mysql.cfg $OPT ping 2>&1
 
   if [ $? -eq 0 ]; then
 
     echo "<<<mysql>>>"
     echo "[[$INSTANCE_NAME]]"
-    mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg --socket=$1 -sN \
+    mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg $OPT -sN \
      -e "show global status ; show global variables ;"
 
     echo "<<<mysql_capacity>>>"
     echo "[[$INSTANCE_NAME]]"
-    mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg --socket=$1 -sN \
+    mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg $OPT -sN \
       -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
          FROM information_schema.TABLES GROUP BY table_schema"
 
     echo "<<<mysql_slave>>>"
     echo "[[$INSTANCE_NAME]]"
-    mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg --socket=$1 -s \
+    mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg $OPT -s \
      -e "show slave status\G"
 
   fi

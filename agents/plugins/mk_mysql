@@ -64,7 +64,7 @@ function do_query() {
 
 }
 
-if which mysqladmin >/dev/null
+if type mysqladmin >/dev/null
 then
   mysql_sockets=$(fgrep socket $MK_CONFDIR/mysql.cfg|sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
   if [ -z "$mysql_sockets" ] ; then

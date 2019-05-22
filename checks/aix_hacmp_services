@@ -112,28 +112,19 @@ def parse_aix_hacmp_services(info):
     return parsed
 
 
-def inventory_aix_hacmp_services(parsed):
-    return [(key, None) for key in parsed]
-
-
-def check_aix_hacmp_services(item, _no_params, parsed):
-    if item in parsed:
-        for subsytem_name, status in parsed[item]:
-
-            if status == 'active':
-                state = 0
-            else:
-                state = 2
-
-            infotext = "subsytem: %s, status: %s" \
-                       % (subsytem_name, status)
-
-            yield state, infotext
+@get_parsed_item_data
+def check_aix_hacmp_services(item, _no_params, data):
+    for subsytem_name, status in data:
+        if status == 'active':
+            state = 0
+        else:
+            state = 2
+        yield state, "Subsystem: %s, Status: %s" % (subsytem_name, status)
 
 
 check_info['aix_hacmp_services'] = {
     'parse_function': parse_aix_hacmp_services,
-    'inventory_function': inventory_aix_hacmp_services,
+    'inventory_function': discover(),
     'check_function': check_aix_hacmp_services,
     'service_description': 'HACMP Service %s',
 }

@@ -33,7 +33,7 @@ RUN yum -y --enablerepo=extras install \
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && scl enable python27 'python get-pip.py' \
     && scl enable python27 'pip install --upgrade setuptools virtualenv' \
-    && scl enable python27 'pip install git+https://github.com/pypa/pipenv.git' \
+    && scl enable python27 'pip install git+https://github.com/pypa/pipenv.git@c67a38e9203ad454a04516253ee626217b1364bc' \
     && curl -sL https://rpm.nodesource.com/setup_10.x | bash -
 RUN yum -y install \
     nodejs \

@@ -177,16 +177,18 @@ void Wmi::setupByName() {
 // #TODO Estimate as a part of official API
 // #TODO Estimate optimization: do we really need to reconnect to wrapper every
 // time?
-std::string GenerateTable(const std::wstring& NameSpace,
-                          const std::wstring& Object,
-                          const std::vector<std::wstring> Columns) {
+std::string GenerateTable(const std::wstring& wmi_namespace,
+                          const std::wstring& wmi_object,
+                          const std::vector<std::wstring> columns_table) {
     using namespace wtools;
-    if (Object.empty()) return "";
+    if (wmi_object.empty()) return "";
 
-    auto id = [ NameSpace, Object ]() -> auto {
-        return fmt::formatv(R"("{}\{}")",              //
-                            ConvertToUTF8(NameSpace),  //
-                            ConvertToUTF8(Object));
+    auto object_name = ConvertToUTF8(wmi_object);
+    cma::tools::TimeLog tl(object_name);  // start measure
+    auto id = [ wmi_namespace, object_name ]() -> auto {
+        return fmt::formatv(R"("{}\{}")",                  //
+                            ConvertToUTF8(wmi_namespace),  //
+                            object_name);
     };
 
     wtools::WmiWrapper wrapper;
@@ -195,7 +197,7 @@ std::string GenerateTable(const std::wstring& NameSpace,
         return {};
     }
 
-    if (!wrapper.connect(NameSpace)) {
+    if (!wrapper.connect(wmi_namespace)) {
         XLOG::l.e(XLOG_FUNC + "Can't connect {}", id());
         return {};
     }
@@ -203,7 +205,9 @@ std::string GenerateTable(const std::wstring& NameSpace,
     if (!wrapper.impersonate()) {
         XLOG::l.e("XLOG_FUNC + Can't impersonate {}", id());
     }
-    auto ret = wrapper.queryTable(Columns, Object);
+    auto ret = wrapper.queryTable(columns_table, wmi_object);
+
+    tl.writeLog(ret.size());  // fix measure
 
     return ConvertToUTF8(ret);
 }

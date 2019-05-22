@@ -380,3 +380,23 @@ void ReConfigure() {
 }  // namespace setup
 
 }  // namespace XLOG
+
+namespace cma::tools {
+// time is set at the moment of creation
+TimeLog::TimeLog(const std::string &object_name) : id_(object_name) {
+    start_ = std::chrono::steady_clock::now();
+}
+
+void TimeLog::writeLog(size_t processed_bytes) const noexcept {
+    using namespace std::chrono;
+    auto ended = steady_clock::now();
+    auto lost = duration_cast<milliseconds>(ended - start_);
+
+    if (processed_bytes == 0)
+        XLOG::l("Object '{}' in {}ms sends NO DATA", id_, lost.count());
+    else
+        XLOG::d.t("Object '{}' in {}ms sends [{}] bytes", id_, lost.count(),
+                  processed_bytes);
+}
+
+}  // namespace cma::tools

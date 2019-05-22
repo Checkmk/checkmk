@@ -115,7 +115,7 @@ def parse_arguments(argv):
     parser.add_argument("--parse", action="store_true", help="Add parse function")
     parser.add_argument("--decorate", action="store_true", help="Decorate check function")
     parser.add_argument("--man", action="store_true", help="Man page of check plugin")
-    parser.add_argument("name", nargs='*', help="Check plugin name")
+    parser.add_argument("name", help="Check plugin name")
     return parser.parse_args(argv)
 
 

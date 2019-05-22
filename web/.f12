@@ -38,7 +38,7 @@ fi
 
 if [ -z $ONLY_COPY ]; then
     if [ "$SITE" != - ] ; then
-        sudo omd restart $SITE apache
+        sudo omd reload $SITE apache
     fi
 fi
 

@@ -1915,7 +1915,14 @@ class html(HTMLGenerator):
             return ""
         if add_var:
             self.add_form_var(var)
-        return self.render_input(name=var, type_="hidden", id_=id_, value=value, class_=class_)
+        return self.render_input(
+            name=var,
+            type_="hidden",
+            id_=id_,
+            value=value,
+            class_=class_,
+            autocomplete="off",
+        )
 
     #
     # Form submission and variable handling

@@ -12,7 +12,10 @@ info = [[u'"Name"', u'"State"', u'"Uptime"', u'"Status"'],
         ['z4058044_snap (23.05.2014 - 09:29:29)',
          'Running',
          '18:20:34',
-         'Operating normally']]
+         'Operating normally'],
+        ['& : File C:\\Program Files (x86)\\check_mk\\plugins\\windows_os_bonding.ps1 cannot'],
+        [''],
+]
 
 
 discovery = {'': [('Q-WSUS', {'state': 'Running'}),

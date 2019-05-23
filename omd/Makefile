@@ -367,5 +367,5 @@ xzf:
 	$(APACHE_CTL) -k graceful
 
 setup:
-	echo "Please run the build in a docker container."
-	echo "Dockerfiles for all Distros can be found under 'buildscripts/infrastructure/build-nodes/'."
+	@echo "Please run the build in a docker container."
+	@echo "Dockerfiles for all Distros can be found under 'buildscripts/infrastructure/build-nodes/'."

@@ -303,6 +303,6 @@ mrpe:
     # entries and cfg are the same as in the Legacy agent
     config:
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
-        - include user_name = @data\mrpe_checks.cfg
-        - include = @data\mrpe_checks.cfg
+        # - include user_name = @data\mrpe_checks.cfg
+        # - include = @data\mrpe_checks.cfg
 

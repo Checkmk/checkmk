@@ -196,7 +196,7 @@ void LogWatchEvent::loadConfig() {
             entries_.back().init("*", "off", false);
             default_entry_ = entries_.size() - 1;
         }
-        XLOG::d("Loaded {} entries in LogWatch", count);
+        XLOG::l.t("Loaded [{}] entries in LogWatch", count);
 
     } catch (const std::exception& e) {
         XLOG::l(

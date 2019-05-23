@@ -228,7 +228,7 @@ EventLogRecordBase *EventLog::readRecord() {
     EVENTLOGRECORD *result = nullptr;
     while (result == nullptr) {
         while (buffer_offset_ < buffer_used_) {
-            EVENTLOGRECORD *temp =
+            auto temp =
                 reinterpret_cast<EVENTLOGRECORD *>(&(buffer_[buffer_offset_]));
             buffer_offset_ += temp->Length;
             // as long as seeking on this event log is possible this will
@@ -242,34 +242,13 @@ EventLogRecordBase *EventLog::readRecord() {
             }
         }
 
-        if (result == nullptr) {
-            // no fitting record in our buffer, get the next couple of
-            // records
-            try {
-                if (!fillBuffer()) {
-                    // no more events to read, break out of the loop
-                    break;
-                }
-            } catch (const std::exception &e) {
-                // win_exception is coming here
-                // generated exception in fillBuffer must be processed in any
-                // case usually we have something like FILE_TOO_LARGE(223)
-                // during reading Event Log and fpor some reason we thorw
-                // exception. Bad? Bad. In Fact, we have SERIOUS problem with
-                // monitored host. Our Log was informed. Probably we need some
-                // additional checks pointing that logs are either bad or
-                // overflown
-                XLOG::l("Error reading event log. Exception is {}", e.what());
-                break;
-            }
-        }
+        if (result == nullptr && !fillBuffer()) break;  // end or error
     }
-    if (result != nullptr) {
-        last_record_read_ = result->RecordNumber;
-        return new EventLogRecord(result, message_resolver_);
-    } else {
-        return nullptr;
-    }
+
+    if (result == nullptr) return nullptr;
+
+    last_record_read_ = result->RecordNumber;
+    return new EventLogRecord(result, message_resolver_);
 }
 
 uint64_t EventLog::getLastRecordId() {
@@ -284,17 +263,21 @@ uint64_t EventLog::getLastRecordId() {
     return 0;
 }
 
+// function is based on the legacy agent code
+// this is absolutely crazy approach
+// returns false on error or end of stream
+// #TODO REWRITE
 bool EventLog::fillBuffer() {
     buffer_offset_ = 0;
 
     // test if we're at the end of the log, as we don't get
     // a proper error message when reading beyond the last log record
-    DWORD oldestRecord = 0;
-    DWORD recordCount = 0;
+    DWORD oldest_record = 0;
+    DWORD total_records = 0;
 
-    if (::GetOldestEventLogRecord(handle_, &oldestRecord) &&
-        ::GetNumberOfEventLogRecords(handle_, &recordCount)) {
-        if (record_offset_ >= oldestRecord + recordCount) {
+    if (::GetOldestEventLogRecord(handle_, &oldest_record) &&
+        ::GetNumberOfEventLogRecords(handle_, &total_records)) {
+        if (record_offset_ >= oldest_record + total_records) {
             return false;
         }
     }
@@ -314,28 +297,36 @@ bool EventLog::fillBuffer() {
                         (DWORD)buffer_.size(), &buffer_used_,
                         &bytes_required)) {
         return true;
-    } else {
-        DWORD error = ::GetLastError();
-        if (error == ERROR_HANDLE_EOF) {
-            // end of log, all good
-            return false;
-        } else if (error == ERROR_INSUFFICIENT_BUFFER) {
-            // resize buffer and recurse
-            buffer_.resize(bytes_required);
-            return fillBuffer();
-        } else if (error == ERROR_INVALID_PARAMETER) {
-            if ((flags & EVENTLOG_SEEK_READ) == EVENTLOG_SEEK_READ) {
-                // the most likely cause for this error (since our
-                // parameters are good) is the following bug:
-                // https://support.microsoft.com/en-us/kb/177199
-                seek_possible_ = false;
-                return fillBuffer();
-            }  // otherwise treat this like any other error
-        }
+    }
 
-        XLOG::l("Can't read eventlog '{}' error {}",
-                wtools::ConvertToUTF8(name_), error);
+    auto error = ::GetLastError();
+    if (error == ERROR_HANDLE_EOF) {
+        // end of log, all good
         return false;
     }
+
+    // #TODO remove those recursion in next version
+    if (error == ERROR_INSUFFICIENT_BUFFER) {
+        // resize buffer and recurse
+        buffer_.resize(bytes_required);
+        return fillBuffer();
+    }
+
+
+    if ((error == ERROR_INVALID_PARAMETER) &&
+        0 != (flags & EVENTLOG_SEEK_READ)) {
+        // if error during "seek_read" we should retry with
+        // sequenial read
+        // the most likely cause for this error (since our
+        // parameters are good) is the following bug:
+        // https://support.microsoft.com/en-us/kb/177199
+        seek_possible_ = false;
+        return fillBuffer();
+        // otherwise treat this like any other error
+    }
+
+    XLOG::l("Can't read eventlog '{}' error {}", wtools::ConvertToUTF8(name_),
+            error);
+    return false;
 }
 }  // namespace cma::evl

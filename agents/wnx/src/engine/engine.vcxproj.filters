@@ -72,9 +72,6 @@
     <ClInclude Include="..\..\include\tools\_process.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="service_api.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cfg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -216,9 +213,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="async_answer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="service_api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="providers\p_perf_counters.cpp">

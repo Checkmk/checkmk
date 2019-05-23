@@ -276,7 +276,6 @@
     <ClInclude Include="external_port.h" />
     <ClInclude Include="realtime.h" />
     <ClInclude Include="section_header.h" />
-    <ClInclude Include="service_api.h" />
     <ClInclude Include="service_processor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="stdafx_defines.h" />
@@ -492,7 +491,6 @@
     <ClCompile Include="providers\system_time.cpp" />
     <ClCompile Include="providers\wmi.cpp" />
     <ClCompile Include="realtime.cpp" />
-    <ClCompile Include="service_api.cpp" />
     <ClCompile Include="service_processor.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

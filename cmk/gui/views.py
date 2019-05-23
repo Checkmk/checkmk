@@ -1506,7 +1506,8 @@ def _do_table_join(view, master_rows, master_filters, sorters):
         columns=list(set([join_master_column, join_slave_column] + join_columns)),
         add_headers=query,
         only_sites=view.only_sites,
-        limit=None)
+        limit=None,
+        tablename=slave_ds.table.table_name)
     per_master_entry = {}
     current_key = None
     current_entry = None

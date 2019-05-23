@@ -138,6 +138,10 @@ $(PERL_MODULES_INSTALL): $(PERL_MODULES_BUILD)
 	$(RSYNC) $(PACKAGE_PERL_MODULES_DESTDIR)/dest/bin $(DESTDIR)$(OMD_ROOT)/lib/perl5/
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/local/lib/perl5
 	install -m 755 $(PACKAGE_DIR)/$(PERL_MODULES)/bin/cpan.wrapper $(DESTDIR)$(OMD_ROOT)/bin/cpan.wrapper
+	# Fixup wrong installation path for perllocal.pod
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/perl5/5.26.1/x86_64-linux-thread-multi/
+	$(MV) $(DESTDIR)$(OMD_ROOT)/usr/lib/perl5/5.26.1/x86_64-linux-thread-multi/perllocal.pod $(DESTDIR)$(OMD_ROOT)/lib/perl5/5.26.1/x86_64-linux-thread-multi/perllocal.pod
+	$(RM) $(DESTDIR)$(OMD_ROOT)/usr/
 	$(TOUCH) $@
 
 $(PERL_MODULES_SKEL): $(PERL_MODULES_INSTALL)

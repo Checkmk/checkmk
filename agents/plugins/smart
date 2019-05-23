@@ -98,14 +98,17 @@ if which smartctl > /dev/null 2>&1 ; then
 
     echo '<<<smart>>>'
     SEEN=
-    for D in /dev/disk/by-id/{scsi,ata}-*; do
+    for D in /dev/disk/by-id/{scsi,ata,nvme}-*; do
         [ "$D" != "${D%scsi-\*}" ] && continue
         [ "$D" != "${D%ata-\*}" ] && continue
+        [ "$D" != "${D%nvme-\*}" ] && continue
         [ "$D" != "${D%-part*}" ] && continue
         N=$(readlink $D)
         N=${N##*/}
         if [ -r /sys/block/$N/device/vendor ]; then
             VEND=$(tr -d ' ' < /sys/block/$N/device/vendor)
+        elif [ -r /sys/block/$N/device/device/vendor ]; then
+            VEND=NVME
         else
             # 2012-01-25 Stefan Kaerst CDJ - in case $N does not exist
             VEND=ATA
@@ -129,6 +132,7 @@ if which smartctl > /dev/null 2>&1 ; then
         # strip device name for final output
         DNAME=${D#/dev/disk/by-id/scsi-}
         DNAME=${DNAME#/dev/disk/by-id/ata-}
+        DNAME="/dev/$N"
         # 2012-01-25 Stefan Kaerst CDJ - special option in case vendor is AMCC
         CMD=
         if [ "$VEND" == "AMCC" -a -n "$TWAC" ]; then
@@ -142,20 +146,29 @@ if which smartctl > /dev/null 2>&1 ; then
             DNAME=${DNAME#AMCC_}
             DNAME="AMCC_${MODEL}_${DNAME%000000000000}"
         elif [ "$VEND" != "ATA" ] ; then
-            TEMP=
-            # create temperature output as expected by checks/smart
-            # this is a hack, TODO: change checks/smart to support SCSI-disks
-            eval `smartctl -d scsi -i -A $D | while read a b c d e ; do
-                [ "$a" == Serial ] && echo SN=$c
-                [ "$a" == Current -a "$b" == Drive  -a "$c" == Temperature: ] && echo TEMP=$d
-            done`
-            [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP (0 0 0 0)"
-            DNAME="${VEND}_${MODEL}_${SN}"
+            if [ "$VEND" == "NVME" ] ; then
+                CMD="smartctl -d nvme -A $DNAME"
+            else
+                TEMP=
+                # create temperature output as expected by checks/smart
+                # this is a hack, TODO: change checks/smart to support SCSI-disks
+                eval `smartctl -d scsi -i -A $D | while read a b c d e ; do
+                    [ "$a" == Serial ] && echo SN=$c
+                    [ "$a" == Current -a "$b" == Drive  -a "$c" == Temperature: ] && echo TEMP=$d
+                done`
+                [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP (0 0 0 0)"
+                DNAME="${VEND}_${MODEL}_${SN}"
+            fi
         else
             CMD="smartctl -d ata -v 9,raw48 -A $D"
         fi
 
-            [ -n "$CMD" ] && $CMD | grep Always | egrep -v '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
+            if [ $VEND == "NVME" ]; then
+                echo "$DNAME $VEND $MODEL"
+                [ -n "$CMD" ] && $CMD | sed -e '1,5d; /^$/d'
+            else
+                [ -n "$CMD" ] && $CMD | grep Always | egrep -v '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
+            fi
     done 2>/dev/null
 
 

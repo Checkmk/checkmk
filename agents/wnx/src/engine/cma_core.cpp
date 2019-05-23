@@ -502,7 +502,7 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
     legacy_time_ = legacy_time;
 
     // remove trailing zero's
-    // can be createdin some cases by plugin and processing(ConvertTo)
+    // can be created in some cases by plugin and processing(ConvertTo)
     // But must be removed in output
     while (data_.size() && data_.back() == 0) data_.pop_back();
 }
@@ -629,7 +629,7 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
 std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
     using namespace std;
     using DataBlock = vector<char>;
-    XLOG::d.i("To start [{}] sync plugins", Plugins.size());
+    XLOG::l.t("To start [{}] sync plugins", Plugins.size());
 
     vector<future<DataBlock>> results;
     int requested_count = 0;
@@ -647,7 +647,7 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
 
         if (entry.async()) continue;
 
-        XLOG::d.t(XLOG_FUNC + " {}", entry.path().u8string());
+        XLOG::d.t("Executing '{}'", entry.path().u8string());
 
         // C++ async black magic
         results.emplace_back(std::async(

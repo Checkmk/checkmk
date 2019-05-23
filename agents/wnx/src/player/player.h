@@ -186,7 +186,8 @@ public:
             if (KillWhatLeft) {
                 for (auto pid : waiting_processes) {
                     wtools::KillProcess(pid, -1);
-                    XLOG::d("Process {} killed", pid);  // not normal situation
+                    XLOG::d("Process [{}] killed",
+                            pid);  // abnormal situation
                 }
             }
 
@@ -283,7 +284,8 @@ private:
                         waiting_processes.push_back(pid);
                     } else {
                         // store exit code
-                        XLOG::d("Process {} has exit code {}", pid, exit_code);
+                        XLOG::d.t("Process [{}] has exit code [{}]", pid,
+                                  exit_code);
                         storeExitCode(pid, exit_code);
                     }
                 } else {

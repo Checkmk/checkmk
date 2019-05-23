@@ -56,9 +56,9 @@ check_info['hp_fan'] = {
     'service_description': 'Fan %s',
     'snmp_info': (
         '.1.3.6.1.4.1.11.2.14.11.5.1.54.2.1.1',
-        [  # FAN-MIB - hpicfFanEntry
+        [  # FAN-MIB - hpicfFanEntry: Per fan in the switch entity.
             OID_END,  # HpicfDcFanIndex is not-accessible, so this will have to do.
-            "2",  # hpicfFanTray
+            "2",  # hpicfFanTray: Tray number in which the fan is docked.
             "4",  # hpicfFanState
         ]),
     'snmp_scan_function': lambda oid: "hp" in oid(".1.3.6.1.2.1.1.1.0").lower() and "5406rzl2" in

@@ -7,7 +7,9 @@ ifeq ($(shell uname -m),x86_64)
   MODULE_DIR=$(APACHE_MODULE_DIR_64)
 endif
 
+ifeq ($(APACHE_VERSION),)
 APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')
+endif
 APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
 APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
 APACHE_24_OR_NEWER  = $(shell [ $(APACHE_VERSION_MAIN) -ge 2 -a $(APACHE_VERSION_SUB) -ge 4 ] && echo 1 || echo 0)
@@ -73,7 +75,7 @@ $(APACHE)-install: $(APACHE_OMD_INSTALL)
 
 $(APACHE)-skel: $(APACHE_OMD_SKEL)
 
-$(APACHE_OMD_INSTALL): 
+$(APACHE_OMD_INSTALL):
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
 	install -m 644 $(PACKAGE_DIR)/$(APACHE)/apache.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf
 	# Create distribution independent alias for htpasswd command
@@ -97,7 +99,7 @@ $(APACHE_OMD_SKEL): $(APACHE_OMD_INSTALL)
 	$(MKDIR) $(SKEL)/tmp/php/session
 	$(MKDIR) $(SKEL)/tmp/php/upload
 	$(MKDIR) $(SKEL)/tmp/php/wsdl-cache
-	
+
 	# Install symlinks to apache modules for this platform
 	# Some of the modules are optional on some platforms. Link only
 	# the available ones.

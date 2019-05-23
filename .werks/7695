@@ -1,0 +1,11 @@
+Title: haproxy: Skip invalid lines which led to a crash while discovery
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p17
+Date: 1558598703
+
+

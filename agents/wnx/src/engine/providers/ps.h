@@ -5,15 +5,17 @@
 #ifndef ps_h__
 #define ps_h__
 
+#include <ctime>
 #include <string>
 
-#include "section_header.h"
-
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma {
 
 namespace provider {
+
+time_t ConvertWmiTimeToHumanTime(const std::string& creation_date) noexcept;
 
 class Ps : public Asynchronous {
 public:

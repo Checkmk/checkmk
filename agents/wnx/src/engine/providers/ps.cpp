@@ -2,22 +2,18 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/ps.h"
+
 #include <string>
 #include <tuple>
 
+#include "cfg.h"
+#include "common/wtools.h"
 #include "fmt/format.h"
-
+#include "logger.h"
+#include "providers/wmi.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
-
-#include "common/wtools.h"
-
-#include "cfg.h"
-
-#include "logger.h"
-
-#include "providers/ps.h"
-#include "providers/wmi.h"
 
 namespace cma {
 
@@ -153,50 +149,93 @@ std::wstring BuildProcessName(IWbemClassObject *Object, bool FullPath) {
     return process_name;
 }
 
-// gtest only implicit
-unsigned long long CalculateUptime(IWbemClassObject *Object) {
-    using namespace wtools;
-    using namespace std::chrono;
-
-    time_t creation_time = 0;
-    auto creation_date =
-        ConvertToUTF8(WmiStringFromObject(Object, L"CreationDate"));
-    // we need complicated procedure. get_time will not work correctly
-    if (creation_date.size() > 14) {
-        auto year = creation_date.substr(0, 4);
-        auto month = creation_date.substr(4, 2);
-        auto day = creation_date.substr(6, 2);
-
-        auto hour = creation_date.substr(8, 2);
-        auto minutes = creation_date.substr(10, 2);
-        auto seconds = creation_date.substr(12, 2);
-
-        std::tm t = {};
-        t.tm_year = std::strtoul(year.c_str(), nullptr, 0) - 1900;
-        t.tm_mon = std::strtoul(month.c_str(), nullptr, 0) - 1;
-        t.tm_mday = std::strtoul(day.c_str(), nullptr, 0);
-
-        t.tm_hour = std::strtoul(hour.c_str(), nullptr, 0);
-        t.tm_min = std::strtoul(minutes.c_str(), nullptr, 0);
-        t.tm_sec = std::strtoul(seconds.c_str(), nullptr, 0);
-
-        creation_time = mktime(&t);
+// we need string here(null terminated for C-functions)
+// returns 0 on error
+time_t ConvertWmiTimeToHumanTime(const std::string &creation_date) noexcept {
+    // check input
+    if (creation_date.size() <= 14) {
+        XLOG::l.w("Bad creation date from WMI '{}'", creation_date);
+        return 0;
     }
 
-    // Cope with possible problems with process creation time. Ensure
-    // that the result of subtraction is not negative.
-    auto current_time = cma::tools::SecondsSinceEpoch();
-    static_assert(sizeof(current_time) == 8);
+    // parse string
+    auto year = creation_date.substr(0, 4);
+    auto month = creation_date.substr(4, 2);
+    auto day = creation_date.substr(6, 2);
 
-    long long time_difference =
-        current_time - static_cast<long long>(creation_time);
+    auto hour = creation_date.substr(8, 2);
+    auto minutes = creation_date.substr(10, 2);
+    auto seconds = creation_date.substr(12, 2);
 
-    if (current_time < creation_time) {
-        XLOG::l.e("Creation time {} is ahead of current time {}", creation_time,
-                  current_time);
+    // fill default fields(time-day-saving!)
+    time_t current_time = std::time(nullptr);
+    auto creation_tm = *std::localtime(&current_time);
+
+    // fill variable fields data
+    creation_tm.tm_year = std::strtoul(year.c_str(), nullptr, 0) - 1900;
+    creation_tm.tm_mon = std::strtoul(month.c_str(), nullptr, 0) - 1;
+    creation_tm.tm_mday = std::strtoul(day.c_str(), nullptr, 0);
+
+    creation_tm.tm_hour = std::strtoul(hour.c_str(), nullptr, 0);
+    creation_tm.tm_min = std::strtoul(minutes.c_str(), nullptr, 0);
+    creation_tm.tm_sec = std::strtoul(seconds.c_str(), nullptr, 0);
+
+    // calculate with possible correction of not-so-important fields
+    return ::mktime(&creation_tm);
+}
+
+static time_t GetWmiObjectCreationTime(IWbemClassObject *wbem_object) {
+    // get string from wmi
+    auto wmi_time_wide =
+        wtools::WmiStringFromObject(wbem_object, L"CreationDate");
+    auto wmi_time = wtools::ConvertToUTF8(wmi_time_wide);
+
+    // calculate creation time
+    return ConvertWmiTimeToHumanTime(wmi_time);
+}
+
+// on error returns reasonable, but unusual data: 0 or current_time
+static unsigned long long CreationTimeToUptime(time_t creation_time,
+                                               IWbemClassObject *wbem_object) {
+    // lambda for logging
+    auto obj_name = [wbem_object]() {
+        auto process_name = BuildProcessName(wbem_object, true);
+        return wtools::ConvertToUTF8(process_name);
+    };
+
+    // check that time is not 0(not error)
+    if (0 == creation_time) {
+        XLOG::l.w("Can't determine creation time of the process '{}'",
+                  obj_name());
+
+        return std::time(nullptr);
     }
 
-    return static_cast<ULONGLONG>(std::max(time_difference, 1LL));
+    auto current_time = std::time(nullptr);
+
+    // check that time is ok
+    if (creation_time > current_time) {
+        XLOG::l.w(
+            "Creation time of process'{}' is ahead of the current time on [{}] seconds",
+            obj_name(), creation_time - current_time);
+
+        return 0;
+    }
+
+    return static_cast<unsigned long long>(current_time - creation_time);
+}
+
+// returns reasonable data ALWAYS
+unsigned long long CalculateUptime(IWbemClassObject *wbem_object) {
+    if (nullptr == wbem_object) {
+        XLOG::l.bp(XLOG_FUNC + " nullptr as parameter");
+        return 0;
+    }
+
+    // calculate creation time
+    auto creation_time = GetWmiObjectCreationTime(wbem_object);
+
+    return CreationTimeToUptime(creation_time, wbem_object);
 }
 
 // idiotic functions required for idiotic method we are using in legacy software

@@ -3731,6 +3731,48 @@ metric_info["harddrive_udma_crc_errors"] = {
     "color": "46/a",
 }
 
+metric_info["nvme_media_and_data_integrity_errors"] = {
+    "title": _("Media and data integrity errors"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["nvme_error_information_log_entries"] = {
+    "title": _("Error information log entries"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["nvme_critical_warning"] = {
+    "title": _("Critical warning"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["nvme_available_spare"] = {
+    "title": _("Available Spare"),
+    "unit": "%",
+    "color": "21/a",
+}
+
+metric_info["nvme_spare_percentage_used"] = {
+    "title": _("Percentage used"),
+    "unit": "%",
+    "color": "24/a",
+}
+
+metric_info["nvme_data_units_read"] = {
+    "title": _("Data units read"),
+    "unit": "bytes",
+    "color": "31/a",
+}
+
+metric_info["nvme_data_units_written"] = {
+    "title": _("Data units written"),
+    "unit": "bytes",
+    "color": "24/a",
+}
+
 metric_info["ap_devices_total"] = {
     "title": _("Total devices"),
     "unit": "count",
@@ -7775,6 +7817,30 @@ check_metrics["check_mk-smart.stats"] = {
     },
     "UDMA_CRC_Error_Count": {
         "name": "harddrive_udma_crc_errors"
+    },
+    "Power_Cycles": {
+        "name": "harddrive_power_cycles"
+    },
+    "Media_and_Data_Integrity_Errors": {
+        "name": "nvme_media_and_data_integrity_errors"
+    },
+    "Error_Information_Log_Entries": {
+        "name": "nvme_error_information_log_entries"
+    },
+    "Critical_Warning": {
+        "name": "nvme_critical_warning"
+    },
+    "Available_Spare": {
+        "name": "nvme_available_spare"
+    },
+    "Percentage_Used": {
+        "name": "nvme_spare_percentage_used"
+    },
+    "Data_Units_Read": {
+        "name": "nvme_data_units_read"
+    },
+    "Data_Units_Written": {
+        "name": "nvme_data_units_written"
     },
 }
 

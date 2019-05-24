@@ -102,7 +102,8 @@ if type timeout >/dev/null 2>&1; then
 fi
 
 if [ -f "$MK_CONFDIR/encryption.cfg" ]; then
-    source "$MK_CONFDIR/encryption.cfg"
+    # shellcheck source=/dev/null
+    . "$MK_CONFDIR/encryption.cfg"
 fi
 
 if [ "$ENCRYPTED" == "yes" ]; then
@@ -113,6 +114,7 @@ fi
 
 RTC_PLUGINS=""
 if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
+    # shellcheck source=/dev/null
     . "$MK_CONFDIR/real_time_checks.cfg"
 fi
 
@@ -186,20 +188,21 @@ function section_df()
         return
     fi
 
-    # The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems
-    # to be all but working.
-    local excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs"
+    # The exclusion list is getting a bit of a problem.
+    # -l should hide any remote FS but seems to be all but working.
+    local excludefs
+    excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs"
     if [ -n "$IS_LXC_CONTAINER" ]; then
         excludefs+=" -x zfs"
     fi
 
     echo '<<<df>>>'
-    df -PTlk $excludefs | sed 1d
+    df -PTlk "${excludefs}" | sed 1d
 
     # df inodes information
     echo '<<<df>>>'
     echo '[df_inodes_start]'
-    df -PTli $excludefs | sed 1d
+    df -PTli "${excludefs}" | sed 1d
     echo '[df_inodes_end]'
 }
 
@@ -295,7 +298,7 @@ function run_cached () {
             else
                 # insert the cache info in the section header (^= after '!'),
                 # if none is present (^= before '!')
-                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
+                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"$CACHE_INFO"'>>>/' "$CACHEFILE"
             fi
         fi
     fi
@@ -422,7 +425,7 @@ if type waitmax >/dev/null; then
     echo '<<<nfsmounts>>>'
     sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
         sed 's/\\040/ /g' |
-        while read MP; do
+        while read -r MP; do
         if [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
             waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
                 echo "$MP hanging 0 0 0 0"
@@ -435,7 +438,7 @@ if type waitmax >/dev/null; then
     echo '<<<cifsmounts>>>'
     sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
         sed 's/\\040/ /g' |
-        while read MP; do
+        while read -r MP; do
         if [ ! -r "$MP" ]; then
             echo "$MP Permission denied"
         elif [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
@@ -478,7 +481,7 @@ fi
 echo '<<<lnx_if:sep(58)>>>'
 sed 1,2d /proc/net/dev
 if type ethtool > /dev/null; then
-    sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read eth; do
+    sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
         echo "[$eth]"
         ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
         echo -e "\tAddress: $(cat "/sys/class/net/$eth/address")\n"
@@ -564,7 +567,7 @@ fi
 
 # Hardware sensors via IPMI (need ipmitool)
 if type ipmitool > /dev/null; then
-    run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
+    run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -E -v '^[^ ]+ na ' | grep -v ' discrete '"
     # readable discrete sensor states
     run_cached -s "ipmi_discrete:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
 fi
@@ -619,7 +622,7 @@ fi
 if type cfggen > /dev/null; then
     echo '<<<lsi>>>'
     cfggen 0 DISPLAY \
-        | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' \
+        | grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' \
         | sed -e 's/ *//g' -e 's/:/ /'
 fi
 
@@ -649,9 +652,9 @@ if [ "$MegaCli_bin" != "unknown" ]; then
     done
     echo
     $MegaCli_bin -PDList -aALL -NoLog < /dev/null \
-        | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
+        | grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
     echo '<<<megaraid_ldisks>>>'
-    $MegaCli_bin -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
+    $MegaCli_bin -LDInfo -Lall -aALL -NoLog < /dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
     echo '<<<megaraid_bbu>>>'
     $MegaCli_bin -AdpBbuCmd -GetBbuStatus -aALL -NoLog < /dev/null | grep -v Exit
 fi
@@ -660,11 +663,11 @@ fi
 if type tw_cli > /dev/null; then
     for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
         echo '<<<3ware_info>>>'
-        tw_cli "/$C" show all | egrep 'Model =|Firmware|Serial'
+        tw_cli "/$C" show all | grep -E 'Model =|Firmware|Serial'
         echo '<<<3ware_disks>>>'
-        tw_cli "/$C" show drivestatus | egrep 'p[0-9]' | sed "s/^/$C\//"
+        tw_cli "/$C" show drivestatus | grep -E 'p[0-9]' | sed "s/^/$C\//"
         echo '<<<3ware_units>>>'
-        tw_cli "/$C" show unitstatus | egrep 'u[0-9]' | sed "s/^/$C\//"
+        tw_cli "/$C" show unitstatus | grep -E 'u[0-9]' | sed "s/^/$C\//"
     done
 fi
 
@@ -749,7 +752,7 @@ function read_postfix_queue_dirs {
     postfix_queue_dir=$1
     if [ -n "$postfix_queue_dir" ]; then
         echo '<<<postfix_mailq>>>'
-        if [ ! -z "$2" ]; then
+        if [ -n "$2" ]; then
             echo "[[[${2}]]]"
         fi
         for queue in deferred active; do
@@ -773,7 +776,7 @@ if type postconf >/dev/null; then
     # Check if multi_instance_directories exists in main.cf and is not empty
     # always takes the last entry, multiple entries possible
     multi_instances_dirs=$(postconf -c /etc/postfix 2>/dev/null | grep ^multi_instance_directories | sed 's/.*=[[:space:]]*//g')
-    if [ ! -z "$multi_instances_dirs" ]; then
+    if [ -n "$multi_instances_dirs" ]; then
         for queue_dir in $multi_instances_dirs; do
             if [ -n "$queue_dir" ]; then
                 postfix_queue_dir=$(postconf -c "$queue_dir" 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
@@ -847,7 +850,7 @@ if type omd >/dev/null; then
         site=${site#/omd/sites/}
         echo "[$site]"
             cat "$statsfile"
-            > "$statsfile"
+            : > "$statsfile"
             # prevent next section to fail caused by a missing newline at the end of the statsfile
             echo
         fi
@@ -908,7 +911,7 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
     (cat "$MK_CONFDIR/fileinfo.cfg" "$MK_CONFDIR/fileinfo.d/*" 2>/dev/null) | while read -r pattern; do
         case $pattern in
             /*) pattern=$(replace_datevariable "$pattern")
-                for f in $pattern; do echo $f; done
+                for f in $pattern; do echo "${f}"; done
                 ;;
         esac
     done | perl -e  '
@@ -964,7 +967,7 @@ if cd /omd/sites; then
     for site in *; do
         if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ]; then
             echo "[\"$site\"]"
-            echo -e "GET status\nOutputFormat: json" \
+            echo -e "GET status\\nOutputFormat: json" \
                 | waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
         fi
     done
@@ -1080,7 +1083,7 @@ fi
 # MK's Remote Plugin Executor
 if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-    while read descr cmdline; do
+    while read -r descr cmdline; do
         interval=
         args="-m"
         # NOTE: Due to an escaping-related bug in some old bash versions
@@ -1115,7 +1118,7 @@ fi
 # MK's runas Executor
 if [ -e "$MK_CONFDIR/runas.cfg" ]; then
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" | \
-    while read type user include; do
+    while read -r type user include; do
         if [ -d "$include" -o \( "$type" == "mrpe" -a -f "$include" \) ]; then
             PREFIX=""
             if [ "$user" != "-" ]; then
@@ -1125,7 +1128,7 @@ if [ -e "$MK_CONFDIR/runas.cfg" ]; then
             # mrpe includes
             if [ "$type" == "mrpe" ]; then
                 grep -Ev '^[[:space:]]*($|#)' "$include" | \
-                while read descr cmdline; do
+                while read -r descr cmdline; do
                     interval=
                     # NOTE: Due to an escaping-related bug in some old bash
                     # versions (3.2.x), we have to use an intermediate variable
@@ -1138,7 +1141,7 @@ if [ -e "$MK_CONFDIR/runas.cfg" ]; then
                         # split multiple parameter assignments
                         for par in $(echo "$parameters" | tr ":" "\n"); do
                             # split each assignment
-                            IFS='=' read key value <<< $par
+                            IFS='=' read -r key value <<< "${par}"
                             if [ "$key" = "interval" ]; then
                                 interval=$value
                             # no other parameters supported currently
@@ -1163,7 +1166,7 @@ if [ -e "$MK_CONFDIR/runas.cfg" ]; then
                 fi
 
                 find "$include" -executable -type f | \
-                while read filename; do
+                while read -r filename; do
                     if [ -n "$PREFIX" ]; then
                         cmdline="$PREFIX\"$filename\""
                     else

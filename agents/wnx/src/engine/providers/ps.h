@@ -27,7 +27,7 @@ public:
     virtual void loadConfig();
 
 private:
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
     bool use_wmi_;
     bool full_path_;
 };

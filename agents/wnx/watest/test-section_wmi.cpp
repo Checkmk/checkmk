@@ -108,23 +108,49 @@ TEST(ProviderTest, WmiBadName) {  //
     }
 }
 
+TEST(ProviderTest, WmiOhm) {
+    {
+        Wmi ohm(kOhm);
+        EXPECT_EQ(ohm.object(), L"Sensor");
+        EXPECT_EQ(ohm.nameSpace(), L"Root\\OpenHardwareMonitor");
+        EXPECT_EQ(ohm.columns().size(), 5);
+        auto body = ohm.makeBody();
+        EXPECT_TRUE(ohm.isAllowedByCurrentConfig());
+        tst::EnableSectionsNode(cma::provider::kOhm);
+        EXPECT_TRUE(ohm.isAllowedByCurrentConfig());
+        ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
+        EXPECT_TRUE(ohm.isAllowedByTime());
+    }
+}
+
 TEST(ProviderTest, WmiAll) {  //
     using namespace std::chrono;
     {
-        auto r = GenerateTable(cma::provider::kWmiPathStd,
-                               L"Win32_ComputerSystem", {});
+        auto [err, r] =
+            GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystem", {});
+        EXPECT_EQ(err, WmiStatus::ok);
         EXPECT_TRUE(!r.empty());
     }
 
     {
-        auto r = GenerateTable(cma::provider::kWmiPathStd,
-                               L"Win32_ComputerSystemZ", {});
+        auto [err, r] = GenerateWmiTable(L"", L"Win32_ComputerSystemZ", {});
+        EXPECT_EQ(err, WmiStatus::bad_param)
+            << "should be ok, invalid name means NOTHING";
         EXPECT_TRUE(r.empty());
     }
 
     {
-        auto r = GenerateTable(std::wstring(cma::provider::kWmiPathStd) + L"A",
-                               L"Win32_ComputerSystem", {});
+        auto [err, r] =
+            GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystemZ", {});
+        EXPECT_EQ(err, WmiStatus::ok)
+            << "should be ok, invalid name means NOTHING";
+        EXPECT_TRUE(r.empty());
+    }
+
+    {
+        auto [err, r] = GenerateWmiTable(std::wstring(kWmiPathStd) + L"A",
+                                         L"Win32_ComputerSystem", {});
+        EXPECT_EQ(err, WmiStatus::fail_connect);
         EXPECT_TRUE(r.empty());
     }
 
@@ -176,16 +202,18 @@ TEST(ProviderTest, WmiAll) {  //
     }
 
     {
-        Wmi ohm(kOhm);
-        EXPECT_EQ(ohm.object(), L"Sensor");
-        EXPECT_EQ(ohm.nameSpace(), L"Root\\OpenHardwareMonitor");
-        EXPECT_EQ(ohm.columns().size(), 5);
-        auto body = ohm.makeBody();
-        EXPECT_TRUE(ohm.isAllowedByCurrentConfig());
-        tst::EnableSectionsNode(cma::provider::kOhm);
-        EXPECT_TRUE(ohm.isAllowedByCurrentConfig());
-        ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
-        EXPECT_TRUE(ohm.isAllowedByTime());
+        using namespace std::chrono;
+        Wmi bad_wmi(kBadWmi);
+        EXPECT_EQ(bad_wmi.object(), L"BadSensor");
+        EXPECT_EQ(bad_wmi.nameSpace(), L"Root\\BadWmiPath");
+
+        auto body = bad_wmi.makeBody();
+        auto tp_expected = steady_clock::now() + cma::cfg::G_DefaultDelayOnFail;
+        EXPECT_FALSE(bad_wmi.isAllowedByTime())
+            << "bad wmi must failed and wait";
+        auto tp_low = bad_wmi.allowed_from_time_ - 50s;
+        auto tp_high = bad_wmi.allowed_from_time_ + 50s;
+        EXPECT_TRUE(tp_expected > tp_low && tp_expected < tp_high);
     }
 
     {
@@ -304,13 +332,28 @@ TEST(ProviderTest, WmiDotnet) {
 
 TEST(ProviderTest, BasicWmi) {
     using namespace std::chrono;
-    Wmi b("a", ',');
-    auto old_time = b.allowed_from_time_;
-    b.delay_on_fail_ = 900s;
-    b.updateDelayTime();
-    auto new_time = b.allowed_from_time_;
-    auto delta = new_time - old_time;
-    EXPECT_TRUE(delta >= 900s);
+    {
+        Wmi b("a", ',');
+        auto old_time = b.allowed_from_time_;
+        b.delay_on_fail_ = 900s;
+        b.disableSectionTemporary();
+        auto new_time = b.allowed_from_time_;
+        auto delta = new_time - old_time;
+        EXPECT_TRUE(delta >= 900s);
+        b.setupDelayOnFail();
+        EXPECT_EQ(b.delay_on_fail_, 0s);
+    }
+
+    for (auto name :
+         {kOhm, kWmiCpuLoad, kWmiWebservices, kDotNetClrMemory, kMsExch}) {
+        Wmi b(name, ',');
+        EXPECT_EQ(b.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail)
+            << "bad delay for section by default " << name;
+        b.delay_on_fail_ = 1s;
+        b.setupDelayOnFail();
+        EXPECT_EQ(b.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail)
+            << "bad delay for section in func call " << name;
+    }
 }
 
 TEST(ProviderTest, WmiMsExch) {
@@ -335,9 +378,7 @@ TEST(ProviderTest, WmiMsExch) {
     std::error_code ec;
     ASSERT_TRUE(fs::exists(f, ec));
     auto table = ReadFileAsTable(f.u8string());
-    if (table.empty()) {
-        EXPECT_FALSE(e2.isAllowedByTime());
-    } else {
+    if (!table.empty()) {
         ASSERT_TRUE(table.size() > 1);  // more than 1 line should be present
         EXPECT_EQ(table[0] + "\n", cma::section::MakeHeader(wmi_name, ','));
     }

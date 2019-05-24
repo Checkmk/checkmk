@@ -10,9 +10,8 @@
 #include <string_view>
 
 #include "cma_core.h"
-#include "section_header.h"
-
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma::provider {
 
@@ -32,7 +31,7 @@ public:
     virtual std::string makeHeader(const std::string_view) const { return {}; }
 
 protected:
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class MrpeTest;

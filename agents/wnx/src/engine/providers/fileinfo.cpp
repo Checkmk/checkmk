@@ -446,7 +446,7 @@ std::optional<YAML::Node> GetPathArray() noexcept {
     }
 }
 
-std::string FileInfo::makeBody() const {
+std::string FileInfo::makeBody() {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering");
 

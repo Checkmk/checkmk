@@ -476,7 +476,7 @@ std::string GenerateOutputFromStates(bool VistaApi, StateVector& States) {
     return out;
 }
 
-std::string LogWatchEvent::makeBody() const {
+std::string LogWatchEvent::makeBody() {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
 

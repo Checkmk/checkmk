@@ -9,12 +9,10 @@
 #include <string>
 #include <string_view>
 
-#include "common/cfg_info.h"
-
 #include "cma_core.h"
-#include "section_header.h"
-
+#include "common/cfg_info.h"
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma::provider {
 
@@ -35,7 +33,7 @@ public:
 protected:
     static std::string makeFirstLine();
     static std::wstring makeSubSection(const std::wstring& RegName);
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class SkypeTest;

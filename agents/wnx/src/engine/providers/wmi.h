@@ -15,22 +15,6 @@ namespace cma {
 
 namespace provider {
 
-// Special Section
-constexpr const char* kOhm = "openhardwaremonitor";
-
-// Sections
-constexpr const char* kDotNetClrMemory = "dotnet_clrmemory";
-constexpr const char* kWmiWebservices = "wmi_webservices";
-constexpr const char* kWmiCpuLoad = "wmi_cpuload";
-constexpr const char* kMsExch = "msexch";
-
-constexpr const char* kSubSectionSystemPerf = "system_perf";
-constexpr const char* kSubSectionComputerSystem = "computer_system";
-
-// Path
-constexpr const wchar_t* kWmiPathOhm = L"Root\\OpenHardwareMonitor";
-constexpr const wchar_t* kWmiPathStd = L"Root\\Cimv2";
-
 /*
     # wmi_cpuload
     ## system_perf
@@ -55,13 +39,13 @@ public:
 
     std::string getUniqName() const { return uniq_name_; }
 
-    std::string generateContent() const;
+    std::string generateContent();
 
 protected:
     // *internal* function which correctly sets
     // all parameters
     void setupByName();
-    std::string makeBody() const;
+    std::string makeBody();
 
 private:
     std::wstring name_space_;      // WMI namespace "root\\Cimv2" for example
@@ -92,7 +76,7 @@ protected:
     // *internal* function which correctly sets
     // all parameters
     void setupByName();
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 
 private:
     std::wstring name_space_;  // WMI namespace "root\\Cimv2" for example
@@ -106,13 +90,15 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ProviderTest;
     FRIEND_TEST(ProviderTest, WmiAll);
+    FRIEND_TEST(ProviderTest, WmiOhm);
 #endif
 };
 
 // this is proposed API
-std::string GenerateTable(const std::wstring& NameSpace,
-                          const std::wstring& Object,
-                          const std::vector<std::wstring> Columns);
+enum class WmiStatus { ok, timeout, fail_open, fail_connect, bad_param };
+std::pair<WmiStatus, std::string> GenerateWmiTable(
+    const std::wstring& NameSpace, const std::wstring& Object,
+    const std::vector<std::wstring> Columns);
 
 }  // namespace provider
 

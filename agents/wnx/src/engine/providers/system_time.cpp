@@ -2,6 +2,8 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/system_time.h"
+
 #include <chrono>
 #include <string>
 
@@ -9,13 +11,11 @@
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
-#include "providers/system_time.h"
-
 namespace cma {
 
 namespace provider {
 
-std::string SystemTime::makeBody() const {
+std::string SystemTime::makeBody() {
     using namespace std::chrono;
 
     XLOG::t(XLOG_FUNC + " entering");

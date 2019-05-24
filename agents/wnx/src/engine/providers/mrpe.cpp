@@ -293,7 +293,7 @@ void MrpeProvider::updateSectionStatus() {
     }
 }
 
-std::string MrpeProvider::makeBody() const {
+std::string MrpeProvider::makeBody() {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering");
 

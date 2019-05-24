@@ -87,7 +87,7 @@ public:
     const auto &checks() const noexcept { return checks_; }
 
 protected:
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 
     // sub API
     void parseConfig();

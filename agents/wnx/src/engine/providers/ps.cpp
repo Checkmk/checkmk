@@ -345,7 +345,7 @@ void Ps::loadConfig() {
     full_path_ = GetVal(groups::kPs, vars::kPsFullPath, false);
 }
 
-std::string Ps::makeBody() const {
+std::string Ps::makeBody() {
     XLOG::t(XLOG_FUNC + " entering");
 
     if (!use_wmi_) XLOG::l.e("Native PS NOT IMPLEMENTED!");

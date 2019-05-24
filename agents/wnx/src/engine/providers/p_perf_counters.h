@@ -22,7 +22,7 @@ public:
         : Synchronous(Name, Separator) {}
 
 protected:
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 };
 
 class Uptime : public Asynchronous {
@@ -33,7 +33,7 @@ public:
         : Asynchronous(Name, Separator) {}
 
 protected:
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 };
 
 // too simple for class object!

@@ -88,7 +88,7 @@ static std::tuple<DWORD, DWORD> EnumAllServices(SC_HANDLE Handle) {
     return {bytes_needed, num_services};
 }
 
-std::string Services::makeBody() const {
+std::string Services::makeBody() {
     using namespace std::chrono;
 
     XLOG::t(XLOG_FUNC + " entering");

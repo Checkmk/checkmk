@@ -166,7 +166,7 @@ std::wstring SkypeProvider::makeSubSection(const std::wstring& RegName) {
     return columns[0].empty() ? L"" : wide;
 }
 
-std::string SkypeProvider::makeBody() const {
+std::string SkypeProvider::makeBody() {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering");
 

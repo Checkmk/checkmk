@@ -54,6 +54,9 @@ NamedWmiSources g_section_objects = {
     {kOhm,  //
      {kWmiPathOhm, L"Sensor"}},
 
+    {kBadWmi,  // used for a testing or may be used as a template for other WMI calls
+     {L"Root\\BadWmiPath", L"BadSensor"}},
+
     // WMI CPULOAD group
     {"system_perf",  //
      {kWmiPathStd, L"Win32_PerfRawData_PerfOS_System"}},
@@ -117,15 +120,6 @@ NamedStringVector g_section_subs = {
 // This is allowed.
 using namespace std::chrono;
 
-// #TODO: confirm values, now 3600 seconds
-// #TODO test it
-std::unordered_map<std::string, std::chrono::duration<int>> g_delays_on_fail = {
-    {kDotNetClrMemory, cma::cfg::G_DefaultDelayOnFail},  //
-    {kWmiWebservices, cma::cfg::G_DefaultDelayOnFail},   //
-    {kWmiCpuLoad, cma::cfg::G_DefaultDelayOnFail},       //
-    {kMsExch, cma::cfg::G_DefaultDelayOnFail}            //
-};
-
 void Wmi::setupByName() {
     // setup namespace and object
     try {
@@ -135,7 +129,7 @@ void Wmi::setupByName() {
     } catch (const std::exception& e) {
         // section not described in data
         XLOG::l(XLOG::kCritError)(
-            "Invalid Name of the section provider {}. Exception: {}",
+            "Invalid Name of the section provider '{}'. Exception: '{}'",
             uniq_name_, e.what());
         object_ = L"";
         name_space_ = L"";
@@ -162,26 +156,22 @@ void Wmi::setupByName() {
         // we do not care when object not found in the map
     }
 
-    // setup delay on fail
-    try {
-        const auto& delay_in_seconds = g_delays_on_fail[uniq_name_];
-        delay_on_fail_ = delay_in_seconds;
-    } catch (const std::exception&) {
-        // do nothing here
-    }
+    setupDelayOnFail();
 }
 
-// intermediate routine to build standard output table
-// tested internally
-// returns empty string when failed
-// #TODO Estimate as a part of official API
+// Intermediate routine to build standard output WMI table
+// returns error code and string. String is empty if failed
+// String may be empty if not failed - this is important
+// WMI Timeout is NOT Error
 // #TODO Estimate optimization: do we really need to reconnect to wrapper every
 // time?
-std::string GenerateTable(const std::wstring& wmi_namespace,
-                          const std::wstring& wmi_object,
-                          const std::vector<std::wstring> columns_table) {
+std::pair<WmiStatus, std::string> GenerateWmiTable(
+    const std::wstring& wmi_namespace, const std::wstring& wmi_object,
+    const std::vector<std::wstring> columns_table) {
     using namespace wtools;
-    if (wmi_object.empty()) return "";
+
+    if (wmi_object.empty() || wmi_namespace.empty())
+        return {WmiStatus::bad_param, ""};
 
     auto object_name = ConvertToUTF8(wmi_object);
     cma::tools::TimeLog tl(object_name);  // start measure
@@ -194,12 +184,12 @@ std::string GenerateTable(const std::wstring& wmi_namespace,
     wtools::WmiWrapper wrapper;
     if (!wrapper.open()) {
         XLOG::l.e(XLOG_FUNC + "Can't open {}", id());
-        return {};
+        return {WmiStatus::fail_open, ""};
     }
 
     if (!wrapper.connect(wmi_namespace)) {
         XLOG::l.e(XLOG_FUNC + "Can't connect {}", id());
-        return {};
+        return {WmiStatus::fail_connect, ""};
     }
 
     if (!wrapper.impersonate()) {
@@ -209,13 +199,13 @@ std::string GenerateTable(const std::wstring& wmi_namespace,
 
     tl.writeLog(ret.size());  // fix measure
 
-    return ConvertToUTF8(ret);
+    return {WmiStatus::ok, ConvertToUTF8(ret)};
 }
 
 // works in two modes
 // aggregated: object is absent, data are gathered from the subsections
 // standard: usual section, object must be present
-std::string Wmi::makeBody() const {
+std::string Wmi::makeBody() {
     if (object_.empty()) {
         // special case for aggregating subs section into one
         std::string subs_out;
@@ -226,7 +216,12 @@ std::string Wmi::makeBody() const {
         return subs_out;
     }
     XLOG::l.i("main section '{}'", getUniqName());
-    return GenerateTable(name_space_, object_, columns_);
+    auto [err, data] = GenerateWmiTable(name_space_, object_, columns_);
+
+    // check error code, on error we could stop section sending
+    if (err != WmiStatus::ok) disableSectionTemporary();
+
+    return data;
 }
 
 // [+] gtest
@@ -278,11 +273,13 @@ void SubSection::setupByName() {
     }
 }
 
-std::string SubSection::makeBody() const {
-    return GenerateTable(name_space_, object_, {});
+std::string SubSection::makeBody() {
+    auto [err, data] = GenerateWmiTable(name_space_, object_, {});
+    // subsections ignore returned error
+    return data;
 }
 
-std::string SubSection::generateContent() const {
+std::string SubSection::generateContent() {
     // print body
     auto section_body = makeBody();
     try {

@@ -16,14 +16,14 @@ namespace cma {
 
 namespace provider {
 
-std::string UptimeSync::makeBody() const {
+std::string UptimeSync::makeBody() {
     auto count = GetTickCount64();
     count /= 1000;  // time in milliseconds
     std::string s = std::to_string(count);
     return s;
 }
 
-std::string Uptime::makeBody() const {
+std::string Uptime::makeBody() {
     auto count = GetTickCount64();
     count /= 1000;  // time in milliseconds
     std::string s = std::to_string(count);

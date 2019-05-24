@@ -2,21 +2,20 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/check_mk.h"
+
 #include <chrono>
 #include <string>
 
+#include "cfg.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
-
-#include "providers/check_mk.h"
-
-#include "cfg.h"
 
 namespace cma {
 
 namespace provider {
 
-std::string CheckMk::makeBody() const {
+std::string CheckMk::makeBody() {
     using namespace std::chrono;
     using namespace std;
     using namespace cma;

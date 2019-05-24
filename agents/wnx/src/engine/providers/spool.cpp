@@ -92,7 +92,7 @@ bool IsSpoolFileValid(const std::filesystem::path &Path) {
     return true;
 }
 
-std::string SpoolProvider::makeBody() const {
+std::string SpoolProvider::makeBody() {
     namespace fs = std::filesystem;
     XLOG::t(XLOG_FUNC + " entering");
 

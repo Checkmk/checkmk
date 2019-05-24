@@ -362,20 +362,25 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
         case cma::carrier::DataType::kSegment:
             // IMPORTANT ENTRY POINT
             // Receive data for Section
-            nanoseconds duration_since_epoch(dt->answerId());
-            time_point<steady_clock> tp(duration_since_epoch);
-            auto data_source = static_cast<const uint8_t*>(dt->data());
-            auto data_end = data_source + dt->length();
-            AsyncAnswer::DataBlock vectorized_data(data_source, data_end);
+            {
+                nanoseconds duration_since_epoch(dt->answerId());
+                time_point<steady_clock> tp(duration_since_epoch);
+                auto data_source = static_cast<const uint8_t*>(dt->data());
+                auto data_end = data_source + dt->length();
+                AsyncAnswer::DataBlock vectorized_data(data_source, data_end);
 
-            if (vectorized_data.size() && vectorized_data.back() == 0) {
-                XLOG::l("Section '{}' sends null terminated strings",
-                        dt->providerId());
-                vectorized_data.pop_back();
+                if (vectorized_data.size() && vectorized_data.back() == 0) {
+                    XLOG::l("Section '{}' sends null terminated strings",
+                            dt->providerId());
+                    vectorized_data.pop_back();
+                }
+
+                processor->addSectionToAnswer(dt->providerId(), tp,
+                                              vectorized_data);
             }
-
-            processor->addSectionToAnswer(dt->providerId(), tp,
-                                          vectorized_data);
+            break;
+        case cma::carrier::DataType::kYaml:
+            XLOG::l.bp(XLOG_FUNC + " NOT SUPPORTED now");
             break;
     }
 

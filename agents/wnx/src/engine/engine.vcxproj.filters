@@ -195,6 +195,9 @@
     <ClInclude Include="section_header.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cma_core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

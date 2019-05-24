@@ -44,6 +44,8 @@ public:
 
     void detachedStart() noexcept;
 
+    void updateTimeout() noexcept;
+
 protected:
     void gatherAllData(std::string& Out);
     std::string cfg_name_;
@@ -67,6 +69,9 @@ public:
     }
     virtual void updateSectionStatus();
 };
+
+enum class PluginType { all, sync, async };
+int FindMaxTimeout(const cma::PluginMap& pm, PluginType type);
 
 }  // namespace provider
 

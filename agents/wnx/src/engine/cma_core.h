@@ -535,8 +535,8 @@ public:
         cache_age_ = Unit.cacheAge();
         timeout_ = Unit.timeout();
         if (async_ != Unit.async()) {
-            XLOG::d("Plugin {} changes this mode to {}", path().u8string(),
-                    Unit.async() ? "ASYNC" : "SYNC");
+            XLOG::d.t("Plugin '{}' changes this mode to '{}'",
+                      path().u8string(), Unit.async() ? "ASYNC" : "SYNC");
             if (async_) {
                 // clearing data from async mode
                 async_ = false;
@@ -550,7 +550,7 @@ public:
 
         // post processing
         if (!async_ && cache_age_) {
-            XLOG::d("Plugin {} forced as async", path().u8string());
+            XLOG::d.t("Plugin '{}' forced as async", path().u8string());
             async_ = true;
         }
 
@@ -584,6 +584,11 @@ public:
     }
 
     void restartAsyncThreadIfFinished(const std::wstring& Id);
+
+    // cache_age means always async, we have no guarantee that
+    // invariant is ok 100% time, because bakery delivers us sync plugins
+    // with cache age
+    bool isRealAsync() const noexcept { return async() || cacheAge(); }
 
 protected:
     auto getDataAge() const {

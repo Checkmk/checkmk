@@ -26,46 +26,85 @@ bool PluginsProvider::isAllowedByCurrentConfig() const {
     return allowed;
 }
 
+static bool IsPluginRequiredType(const PluginEntry& plugin,
+                                 PluginType need_type) {
+    switch (need_type) {
+        case PluginType::async:
+            return plugin.isRealAsync();
+
+        case PluginType::sync:
+            return !plugin.isRealAsync();
+
+        case PluginType::all:
+            return true;
+    }
+
+    // safety check: warning disabled and enum changed
+    XLOG::l.bp(XLOG_FUNC + " input is unknown [{}], return true by default");
+
+    return true;
+}
+
+// scans plugin map by criteria to  find MAX timeout
+// returns 0 on lack plugin entries
+int FindMaxTimeout(const cma::PluginMap& pm, PluginType need_type) {
+    int timeout = 0;
+    for (const auto& [path, plugin] : pm) {
+        if (IsPluginRequiredType(plugin, need_type))
+            timeout = std::max(timeout, plugin.timeout());
+    }
+
+    return timeout;
+}
+
+// scans for sync plugins max timeout and set this max
+// if timeout is too big, than set default from the max_wait
+void PluginsProvider::updateTimeout() noexcept {
+    using namespace cma::cfg;
+    timeout_ = FindMaxTimeout(pm_, PluginType::sync);
+
+    auto config_max_wait =
+        GetVal(cfg_name_, vars::kPluginMaxWait, kDefaultPluginTimeout);
+
+    if (timeout_ > config_max_wait) {
+        // too high timeout and bad plugin in config may break agent fully
+        XLOG::d("Timeout is corrected from [{}] to [{}]", timeout_,
+                config_max_wait);
+        timeout_ = config_max_wait;
+        return;
+    }
+
+    XLOG::d.t("Timeout is set to [{}]", timeout_);
+}
+
 void PluginsProvider::loadConfig() {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering");
 
+    // this is a copy...
+    auto folder_vector =
+        local_ ? groups::localGroup.folders() : groups::plugins.folders();
+
     PathVector pv;
-    if (local_) {
-        for (auto& folder : groups::localGroup.folders()) {
-            pv.emplace_back(folder);
-        }
-    } else {
-        for (auto& folder : groups::plugins.folders()) {
-            pv.emplace_back(folder);
-        }
+    for (auto& folder : folder_vector) {
+        pv.emplace_back(folder);
     }
+
+    // linking all files, execute and extensions
     auto files = cma::GatherAllFiles(pv);
-
     auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
-
     cma::FilterPathByExtension(files, execute);
 
     auto yaml_units =
         GetArray<YAML::Node>(cfg_name_, cma::cfg::vars::kPluginsExecution);
+
+    // linking exe units with all plugins in map
     std::vector<Plugins::ExeUnit> exe_units;
-    cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-
+    LoadExeUnitsFromYaml(exe_units, yaml_units);
     UpdatePluginMap(pm_, local_, files, exe_units, true);
-    timeout_ = 0;
-    for (auto& entry : pm_) {
-        auto current_timeout = entry.second.timeout();
-        if (current_timeout > timeout_) timeout_ = current_timeout;
-    }
 
-    auto configured_timeout =
-        GetVal(cfg_name_, vars::kPluginMaxWait, kDefaultPluginTimeout);
-
-    if (configured_timeout < timeout_) {
-        XLOG::d("Timeout is corrected from {} to {}", timeout_,
-                configured_timeout);
-        timeout_ = configured_timeout;
-    }
+    // calculating timeout(may change in every kick)
+    updateTimeout();
 }
 
 void PluginsProvider::gatherAllData(std::string& Out) {
@@ -94,7 +133,6 @@ void PluginsProvider::detachedStart() noexcept {
 
 // empty body empty
 void PluginsProvider::updateSectionStatus() {
-    XLOG::d.t(XLOG_FUNC + " !");
     std::string out = cma::section::MakeEmptyHeader();
     gatherAllData(out);
     out += cma::section::MakeEmptyHeader();
@@ -103,7 +141,6 @@ void PluginsProvider::updateSectionStatus() {
 
 // local body empty
 void LocalProvider::updateSectionStatus() {
-    XLOG::d.t(XLOG_FUNC + " !");
     std::string out = cma::section::MakeLocalHeader();
     gatherAllData(out);
     out += cma::section::MakeEmptyHeader();

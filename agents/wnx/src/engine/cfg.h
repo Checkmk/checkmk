@@ -837,7 +837,8 @@ std::string ReplacePredefinedMarkers(const std::string Path);
 bool ReplaceInString(std::string& InOut, const std::string Marker,
                      const std::string Replace);
 
-struct PluginInfo {
+class PluginInfo {
+public:
     PluginInfo() {}
     PluginInfo(bool Async, int Timeout, int Age, int Retry)
         : async_(Async), timeout_(Timeout), cache_age_(Age), retry_(Retry) {}

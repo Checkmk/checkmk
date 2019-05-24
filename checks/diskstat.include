@@ -144,7 +144,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     node = line[0]
     if node is not None and node != "":
         infos.append("Node %s" % node)
-    prediction_perf = []
+
     for what, ctr in [("read", line[2]), ("write", line[3])]:
         if node:
             countername = "diskstat.%s.%s.%s" % (node, item, what)
@@ -166,15 +166,14 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
             bytes_per_sec = per_sec
 
         infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
-        perfdata.append((what, bytes_per_sec, warn, crit))
         dsname = what
 
         # compute average of the rate over ___ minutes
         if average_range is not None:
-            avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range)
-            dsname = what + ".avg"
-            perfdata.append((dsname, avg))
-            bytes_per_sec = avg
+            perfdata.append((dsname, bytes_per_sec, warn, crit))
+            bytes_per_sec = get_average(countername + ".avg", this_time, bytes_per_sec,
+                                        average_range)
+            dsname += ".avg"
 
         # check levels
         state, text, extraperf = check_levels(
@@ -182,7 +181,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
         if text:
             infos.append(text)
         status = max(state, status)
-        prediction_perf += extraperf
+        perfdata += extraperf
 
     # Add performance data for averaged IO
     if average_range is not None:
@@ -268,8 +267,6 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 
             if params.get("ql_perfdata"):
                 perfdata.append((what + "_ql", ql))
-
-    perfdata += prediction_perf
 
     return (status, ", ".join(infos), perfdata)
 

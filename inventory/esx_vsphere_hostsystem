@@ -116,9 +116,13 @@ def inv_esx_vsphere_hostsystem(info):
         node = inv_tree("hardware.system.")
         node["product"] = data["hardware.systemInfo"]["model"]
         node["vendor"] = data["hardware.systemInfo"]["vendor"]
-        # We only know for HP that ServiceTag is the serial
+        # We only know for HP that ServiceTag is the serial...
         if node["vendor"] == "HP":
-            node["serial"] = data["hardware.systemInfo.otherIdentifyingInfo.ServiceTag"]["0"]
+            # ...but it is missing in some cases
+            try:
+                node["serial"] = data["hardware.systemInfo.otherIdentifyingInfo.ServiceTag"]["0"]
+            except KeyError:
+                pass
 
     hardware_systeminfo = data.get("hardware.systemInfo", {})
     if "uuid" in hardware_systeminfo:

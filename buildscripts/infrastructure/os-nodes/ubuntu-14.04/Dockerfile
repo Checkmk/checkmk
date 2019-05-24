@@ -22,13 +22,14 @@ RUN apt-get update \
     make \
     nullmailer \
     python-dev \
-    python-dev \
-    python3-pip \
+    python-pip \
     rrdtool \
     strace \
     vim \
-    && pip3 install --upgrade setuptools \
-    && pip3 install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a \
+    && pip install --upgrade setuptools \
+    && pip install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a \
+    && pip uninstall pipenv \
+    && pip install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a \
     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs \
     && apt-get install -y \

@@ -138,7 +138,7 @@ TEST(PsTest, All) {  //
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
             if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
             EXPECT_TRUE(convert(by_comma[9]) > 0);
-            EXPECT_TRUE(convert(by_comma[10]) > 0);
+            EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
         }
     }
     {
@@ -174,7 +174,7 @@ TEST(PsTest, All) {  //
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
             if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
             EXPECT_TRUE(convert(by_comma[9]) > 0);
-            EXPECT_TRUE(convert(by_comma[10]) > 0);
+            EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
         }
     }
 }

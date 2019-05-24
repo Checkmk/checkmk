@@ -381,7 +381,7 @@ std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
                                           const std::string& name) noexcept;
 
 template <typename T>
-std::vector<T> GetArray(const YAML::Node& Yaml, std::string Name,
+std::vector<T> GetArray(const YAML::Node& Yaml, const std::string& Name,
                         int* ErrorOut = nullptr) noexcept {
     if (Yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
@@ -389,10 +389,12 @@ std::vector<T> GetArray(const YAML::Node& Yaml, std::string Name,
     }
     try {
         auto val = Yaml[Name];
-        if (val.IsDefined() && val.IsSequence())
-            return ConvertNode2Sequence<T>(val);
+        if (val.IsSequence()) return ConvertNode2Sequence<T>(val);
+
+        if (!val.IsDefined() || val.IsNull())
+            XLOG::t("Node '{}' is not defined/empty,return empty array", Name);
         else
-            XLOG::d("Probably wrong something with {}", Name);
+            XLOG::d("Node '{}' has bad type [{}]", Name, val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());

@@ -54,14 +54,6 @@ def get_rule_options(entry):
     return entry, {}
 
 
-def in_servicematcher_list(service_conditions, item):
-    # type: (Tuple[bool, Pattern[Text]], Text) -> bool
-    negate, pattern = service_conditions
-    if pattern.match(item) is not None:
-        return not negate
-    return negate
-
-
 def in_extraconf_hostlist(hostlist, hostname):
     """Whether or not the given host matches the hostlist.
 
@@ -149,25 +141,28 @@ def hosttags_match_taglist(hosttags, required_tags):
 
 
 def convert_pattern_list(patterns):
-    # type: (List[Text]) -> Tuple[bool, Pattern[Text]]
+    # type: (List[Text]) -> Optional[Pattern[Text]]
     """Compiles a list of service match patterns to a single regex
 
     Reducing the number of individual regex matches improves the performance dramatically.
     This function assumes either all or no pattern is negated (like WATO creates the rules).
     """
     if not patterns:
-        return False, regex("")  # No pattern -> match everything
+        return None
 
     pattern_parts = []
-    negate = patterns[0].startswith("!")
 
     for pattern in patterns:
+        negate, pattern = _parse_negated(pattern)
         # Skip ALL_SERVICES from end of negated lists
-        if negate and pattern == ALL_SERVICES[0]:
-            continue
-        pattern_parts.append(_parse_negated(pattern)[1])
+        if negate:
+            if pattern == ALL_SERVICES[0]:
+                continue
+            pattern_parts.append("(?!%s)" % pattern)
+        else:
+            pattern_parts.append("(?:%s)" % pattern)
 
-    return negate, regex("(?:%s)" % "|".join("(?:%s)" % p for p in pattern_parts))
+    return regex("(?:%s)" % "|".join(pattern_parts))
 
 
 def _parse_negated(pattern):

@@ -112,8 +112,8 @@ TEST(SectionProviderMrpe, ConfigLoad) {
 
         ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
         auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
-        ASSERT_EQ(entries.size(), 2)
-            << "check that yml is ok";  // include and check
+        EXPECT_EQ(entries.size(), 0)
+            << "no mrpe expected";  // include and check
     }
 
     replaceYamlSeq(
@@ -158,7 +158,7 @@ TEST(SectionProviderMrpe, YmlCheck) {
     auto enabled = GetVal(groups::kMrpe, vars::kEnabled, false);
     EXPECT_TRUE(enabled);
     auto paths = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
-    EXPECT_EQ(paths.size(), 2);
+    EXPECT_EQ(paths.size(), 0) << "base YAML must have 0 mrpe entries";
 }
 
 TEST(SectionProviderMrpe, Run) {
@@ -176,7 +176,7 @@ TEST(SectionProviderMrpe, Run) {
 
         ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
         auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
-        ASSERT_EQ(entries.size(), 2)
+        ASSERT_EQ(entries.size(), 0)
             << "check that yml is ok";  // include and check
     }
 

@@ -246,6 +246,7 @@
     <ClInclude Include="carrier.h" />
     <ClInclude Include="cfg.h" />
     <ClInclude Include="cfg_details.h" />
+    <ClInclude Include="cma_core.h" />
     <ClInclude Include="cvt.h" />
     <ClInclude Include="encryption.h" />
     <ClInclude Include="eventlog\eventlogbase.h" />

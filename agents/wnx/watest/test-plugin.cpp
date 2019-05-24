@@ -61,7 +61,73 @@ static void RemoveFolder(const std::filesystem::path& Path) {
     fs::remove_all(Path);
 }
 
-#if 1
+// because PluginMap is relative complicated(PluginEntry is not trivial)
+// we will use special method to insert artificial data in map
+static void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
+                        bool async, int cache_age) {
+    namespace fs = std::filesystem;
+    fs::path p = name;
+    pm.emplace(std::make_pair(name, p));
+    auto it = pm.find(name);
+    cma::cfg::PluginInfo e = {async, timeout, cache_age, 1};
+    it->second.applyConfigUnit(e, false);
+}
+
+TEST(PluginTest, TimeoutCalc) {
+    using namespace cma::provider;
+    {
+        PluginMap pm;
+
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::all))
+            << "empty should has 0 timeout";
+    }
+
+    // test async
+    {
+        PluginMap pm;
+        InsertEntry(pm, "a1", 5, true, 0);
+        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginType::all));
+        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginType::async));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::sync));
+        InsertEntry(pm, "a2", 15, true, 0);
+        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::all));
+        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::async));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::sync));
+        InsertEntry(pm, "a3", 25, false, 100);
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::all));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::sync));
+
+        InsertEntry(pm, "a4", 7, true, 100);
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::all));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::sync));
+
+        InsertEntry(pm, "a4", 100, false, 0);  // sync
+        EXPECT_EQ(100, FindMaxTimeout(pm, provider::PluginType::all));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
+        EXPECT_EQ(100, FindMaxTimeout(pm, provider::PluginType::sync));
+    }
+
+    // test sync
+    {
+        PluginMap pm;
+        InsertEntry(pm, "a1", 5, false, 0);
+        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginType::all));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::async));
+        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginType::sync));
+        InsertEntry(pm, "a2", 15, false, 0);
+        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::all));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::async));
+        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::sync));
+
+        InsertEntry(pm, "a3", 25, false, 100);
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::all));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
+        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::sync));
+    }
+}
+
 TEST(PluginTest, JobStartSTop) {
     namespace fs = std::filesystem;
 
@@ -94,7 +160,6 @@ TEST(PluginTest, JobStartSTop) {
     cma::tools::win::KillProcess(pid);
     */
 }
-#endif
 
 TEST(PluginTest, Extensions) {
     using namespace std;

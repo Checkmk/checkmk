@@ -1073,9 +1073,11 @@ hosttags_match_taglist = tuple_rulesets.hosttags_match_taglist
 
 # Slow variant of checking wether a service is matched by a list
 # of regexes - used e.g. by cmk --notify
-def in_extraconf_servicelist(servicelist, service):
-    return tuple_rulesets.in_servicematcher_list(
-        tuple_rulesets.convert_pattern_list(servicelist), service)
+def in_extraconf_servicelist(service_patterns, service):
+    optimized_pattern = tuple_rulesets.convert_pattern_list(service_patterns)
+    if not optimized_pattern:
+        return False
+    return optimized_pattern.match(service) is not None
 
 
 #.

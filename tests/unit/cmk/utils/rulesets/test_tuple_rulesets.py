@@ -4,7 +4,6 @@ from testlib.base import Scenario
 
 import cmk_base.config as config
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
-from cmk.utils.exceptions import MKGeneralException
 
 import cmk
 
@@ -250,5 +249,41 @@ def test_hosttags_match_taglist_negate():
     assert tuple_rulesets.hosttags_match_taglist(["no-agent"], ["no-agent", "!test"])
 
 
-# TODO: convert_pattern
-# TODO: in_extraconf_servicelist
+@pytest.mark.parametrize("service_patterns,service,expected", [
+    ([], 'Disk IO SUMMARY', False),
+    ([''], '', True),
+    ([''], 'Disk IO SUMMARY', True),
+    (['!'], '', True),
+    (['!'], 'Disk IO SUMMARY', True),
+    (['!!'], '!', False),
+    (['!!'], 'a', True),
+    (['$'], '', True),
+    (['$'], 'a', False),
+    (['!$'], '', False),
+    (['!$'], 'a', True),
+    (['.'], '', False),
+    (['.'], 'a', True),
+    (['.'], 'aa', True),
+    (['.$'], 'aa', False),
+    (['.*'], '', True),
+    (['.*'], 'Filesystem /', True),
+    (['Interface 1'], 'Interface 1', True),
+    (['Interface 1'], 'interface 1', False),
+    (['!Filesystem /'], 'Filesystem /', False),
+    (['!Filesystem /'], 'Filesystem /boot', False),
+    (['!Filesystem /$'], 'Filesystem /boot', True),
+    (['Interface 1', 'Interface 2'], 'Interface 2', True),
+    (['Interface 1', 'Interface 2'], 'Interface 22', True),
+    (['Interface 1', 'Interface 2'], 'Interface 3', False),
+    (['Interface 1', '!Interface 2', 'Interface 3'], 'Interface 2', False),
+    (['Memory$'], 'Mem', False),
+    (['Memory$'], 'Memory', True),
+    (['Memory$'], 'Memory used', False),
+    (['OMD heute .*'], 'OMD heute performance', True),
+    (['OMD heute .*'], 'OMD heute ', True),
+    (['OMD heute .*'], 'OMD heute', False),
+    (['!^OMD .* performance$'], 'OMD stable performance', False),
+    ([r'OMD ([a-z]+) \1'], 'OMD stable stable', True),
+])
+def test_in_extraconf_servicelist(service_patterns, service, expected):
+    assert config.in_extraconf_servicelist(service_patterns, service) == expected

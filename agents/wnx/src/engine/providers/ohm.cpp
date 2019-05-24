@@ -46,7 +46,7 @@ void OhmProvider::updateSectionStatus() {
 }
 
 /*
-std::string OhmProvider::makeBody() const {
+std::string OhmProvider::makeBody(){
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering");
 

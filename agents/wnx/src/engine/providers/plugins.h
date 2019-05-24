@@ -51,7 +51,7 @@ protected:
     cma::PluginMap pm_;
     std::string section_last_output_;
     int last_count_;
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class FileInfoTest;

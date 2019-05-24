@@ -31,7 +31,7 @@ public:
     virtual void updateSectionStatus();
 
 protected:
-    // virtual std::string makeBody() const override;
+    // std::string makeBody() override;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class OhmTest;

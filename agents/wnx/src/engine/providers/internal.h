@@ -12,7 +12,6 @@
 #include <string_view>
 
 #include "carrier.h"
-
 #include "section_header.h"
 
 namespace cma::srv {
@@ -73,7 +72,7 @@ public:
     // itself during generation of output(like plugins)
     virtual void updateSectionStatus() {}
     std::string generateContent(const std::string_view& SectionName,
-                                bool ForceGeneration = false) const;
+                                bool ForceGeneration = false);
 
     virtual bool isAllowedByCurrentConfig() const;
     bool isAllowedByTime() const;
@@ -87,9 +86,15 @@ public:
     virtual void preStart() noexcept {}
 
 protected:
+    // conditionally(depending from the name of section) sets delay after error
+    void setupDelayOnFail() noexcept;
+
     bool headerless_;  // if true no makeHeader called during content generation
     // may change the time when next request is possible
-    void updateDelayTime();
+
+    // to stop section from rerunning during time defined in setupDelayOnFail
+    // usually related to the openhardware monitor
+    void disableSectionTemporary();
 
     bool sendGatheredData(const std::string& CommandLine);
     virtual std::string makeHeader(const std::string_view SectionName) const {
@@ -98,7 +103,7 @@ protected:
                                        : SectionName,
                                    separator_);
     }
-    virtual std::string makeBody() const = 0;
+    virtual std::string makeBody() = 0;
 
     const std::string uniq_name_;  // unique identification of section provider
     std::string ip_;

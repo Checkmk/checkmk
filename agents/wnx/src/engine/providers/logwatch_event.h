@@ -123,12 +123,14 @@ public:
 
     bool sendAll() const { return send_all_; }
 
+protected:
+    std::string makeBody() override;
+
 private:
     LogWatchEntryVector entries_;
     size_t default_entry_;
     bool send_all_;
     bool vista_api_;
-    virtual std::string makeBody() const override;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class LogWatchEventTest;
     FRIEND_TEST(LogWatchEventTest, Base);

@@ -110,7 +110,7 @@ void LocalProvider::updateSectionStatus() {
     section_last_output_ = out;
 }
 
-std::string PluginsProvider::makeBody() const {
+std::string PluginsProvider::makeBody() {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering {} processed", last_count_);
 

@@ -5,7 +5,6 @@
 // local header
 // default names
 // in the future we will add something here
-// #TODO Optimise
 
 #pragma once
 
@@ -135,5 +134,32 @@ inline std::string MakeLocalHeader() {
 }
 
 }  // namespace section
+
+// # TODO move to section namespace
+namespace provider {  // WMI Sections
+
+// #TODO replace raw ACIIZ with string_view or string
+// const char*  used to have compatibilitz with low level WMI API
+// and weak design. This is to be fixed in the future.
+
+// Special Section
+constexpr const char* kOhm = "openhardwaremonitor";
+
+// Sections
+constexpr const char* kDotNetClrMemory = "dotnet_clrmemory";
+constexpr const char* kWmiWebservices = "wmi_webservices";
+constexpr const char* kWmiCpuLoad = "wmi_cpuload";
+constexpr const char* kMsExch = "msexch";
+
+constexpr const char* kBadWmi = "bad_wmi";
+
+constexpr const char* kSubSectionSystemPerf = "system_perf";
+constexpr const char* kSubSectionComputerSystem = "computer_system";
+
+// Path
+constexpr const wchar_t* kWmiPathOhm = L"Root\\OpenHardwareMonitor";
+constexpr const wchar_t* kWmiPathStd = L"Root\\Cimv2";
+
+}  // namespace provider
 }  // namespace cma
 #endif  // section_header_h__

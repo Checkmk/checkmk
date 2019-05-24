@@ -5705,7 +5705,7 @@ ps_translation = {
 
 check_metrics["check_mk-smart.stats"] = {
     "Power_On_Hours"            : { "name" : "uptime", "scale" : 3600 },
-    "Power_Cycle_Count"         : { "name" : "harddrive_power_cycle" },
+    "Power_Cycle_Count"         : { "name" : "harddrive_power_cycles" },
     "Reallocated_Sector_Ct"     : { "name" : "harddrive_reallocated_sectors" },
     "Reallocated_Event_Count"   : { "name" : "harddrive_reallocated_events" },
     "Spin_Retry_Count"          : { "name" : "harddrive_spin_retries" },
@@ -8504,7 +8504,7 @@ for what, text in [ ("nfs",     "NFS"),
 graph_info["harddrive_health_statistic"] = {
     "title" : _("Harddrive health statistic"),
     "metrics" : [
-        ("harddrive_power_cycle",           "stack"),
+        ("harddrive_power_cycles",           "stack"),
         ("harddrive_reallocated_sectors",   "stack"),
         ("harddrive_reallocated_events",    "stack"),
         ("harddrive_spin_retries",          "stack"),

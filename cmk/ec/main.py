@@ -4142,7 +4142,7 @@ def main():
             cmk.utils.daemon.daemonize()
             logger.info("Daemonized with PID %d." % os.getpid())
 
-        cmk.utils.daemon.lock_with_pid_file(str(pid_path))
+        cmk.utils.daemon.lock_with_pid_file(pid_path)
 
         # Install signal hander
         def signal_handler(signum, stack_frame):

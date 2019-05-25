@@ -274,7 +274,6 @@ def sort_by_date(werks):
 # 1.2.4b1   -> 01020420100
 # 1.2.3i1p1 -> 01020310101
 # 1.2.3i1   -> 01020310100
-# TODO: Copied from check_mk_base.py - find location for common code.
 def parse_check_mk_version(v):
     def extract_number(s):
         number = ''

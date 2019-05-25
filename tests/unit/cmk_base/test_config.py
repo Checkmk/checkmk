@@ -146,21 +146,6 @@ def test_host_folder_matching(monkeypatch, hostname, host_path, result):
     ])
 
     config_cache = ts.apply(monkeypatch)
-
-    # TODO: ConfigCache._initialize_host_lookup() requires the directory structure
-    # to really exist. This should be improved. Quick patch it here.
-    monkeypatch.setattr(
-        config_cache.ruleset_matcher.ruleset_optimizer, "_folder_path_set",
-        set([
-            '/',
-            '/wato/',
-            '/wato/level1/',
-            '/wato/level1/level2/',
-            '/wato/level1/level3/',
-            '/wato/level11/',
-            '/wato/level11/level22/',
-        ]))
-
     assert config_cache.get_host_config(hostname).agent_port == result
 
 

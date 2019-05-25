@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-import os
 from typing import Set, Optional, Generator, Dict, Text, Pattern, Tuple, List  # pylint: disable=unused-import
 
 from cmk.utils.rulesets.tuple_rulesets import (
@@ -35,7 +34,6 @@ from cmk.utils.rulesets.tuple_rulesets import (
     PHYSICAL_HOSTS,
     NEGATE,
 )
-import cmk.utils.paths
 from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKGeneralException
 
@@ -248,8 +246,6 @@ class RulesetOptimizer(object):
 
         # Reference dirname -> hosts in this dir including subfolders
         self._folder_host_lookup = {}
-        # All used folders used for various set intersection operations
-        self._folder_path_set = set()
         # Provides a list of hosts with the same hosttags, excluding the folder
         self._hosts_grouped_by_tags = {}
         # Reference hostname -> tag group reference
@@ -560,14 +556,6 @@ class RulesetOptimizer(object):
         return self._folder_host_lookup[cache_id]
 
     def _initialize_host_lookup(self):
-        # Determine hosts within folders
-        # TODO: Cleanup this directory access for folder computation
-        dirnames = [
-            x[0][len(cmk.utils.paths.check_mk_config_dir):] + "/"
-            for x in os.walk(cmk.utils.paths.check_mk_config_dir)
-        ]
-        self._folder_path_set = set(dirnames)
-
         # Determine hosttags without folder tag
         for hostname in self._all_configured_hosts:
             tags_without_folder = set(self._host_tag_lists[hostname])

@@ -166,11 +166,17 @@ def declare_inv_column(invpath, datatype, title, short=None):
     else:
         name = "inv_" + invpath.replace(":", "_").replace(".", "_").strip("_")
 
+    is_leaf_node = invpath[-1] not in ":."
+
     # Declare column painter
     painter_spec = {
         "title": invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
         "columns": ["host_inventory", "host_structured_status"],
         "options": ["show_internal_tree_paths"],
+        # Only leaf nodes can be shown in reports. There is currently no way to render trees.
+        # The HTML code would simply be stripped by the default rendering mechanism which does
+        # not look good for the HW/SW inventory tree
+        "printable": is_leaf_node,
         "load_inv": True,
         "paint": lambda row: paint_host_inventory_tree(row, invpath),
         "sorter": name,
@@ -180,7 +186,7 @@ def declare_inv_column(invpath, datatype, title, short=None):
     register_painter(name, painter_spec)
 
     # Sorters and Filters only for leaf nodes
-    if invpath[-1] not in ":.":
+    if is_leaf_node:
         # Declare sorter. It will detect numbers automatically
         register_sorter(
             name, {

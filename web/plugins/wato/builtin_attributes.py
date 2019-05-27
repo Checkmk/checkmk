@@ -371,20 +371,27 @@ class NetworkScanAttribute(ValueSpecAttribute):
 
     def _get_criticality_choices(self):
         """Returns the current configuration of the tag_group criticality"""
+        cache_id = "criticality_choices"
+        if html.is_cached(cache_id):
+            return html.get_cached(cache_id)
+
         tags = watolib.HosttagsConfiguration()
         tags.load()
+
         criticality_group = tags.get_tag_group("criticality")
         if not criticality_group:
+            html.set_cache(cache_id, [])
             return []
-        return criticality_group.get_tag_choices()
+        choices = criticality_group.get_tag_choices()
+        html.set_cache(cache_id, choices)
+        return choices
 
 
     def _optional_tag_criticality_element(self):
         """This element is optional. The user may have deleted the tag group criticality"""
-        tags = watolib.HosttagsConfiguration()
-        tags.load()
-        criticality_group = tags.get_tag_group("criticality")
-        if not criticality_group:
+        choices = self._get_criticality_choices()
+
+        if not choices:
             return []
 
         return [
@@ -393,7 +400,7 @@ class NetworkScanAttribute(ValueSpecAttribute):
                 help = _("Added hosts will be created as \"offline\" host by default. You "
                          "can change this option to activate monitoring of new hosts after "
                          "next activation of the configuration after the scan."),
-                choices = self._get_criticality_choices,
+                choices = choices,
                 default_value = "offline",
             ))
         ]

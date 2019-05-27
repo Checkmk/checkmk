@@ -875,6 +875,15 @@ IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
                                    const std::wstring& Query) noexcept;
 IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator);
 
+// in exception column we have
+enum class StatusColumn { ok, timeout };
+std::string StatusColumnText(StatusColumn exception_column) noexcept;
+
+// "decorator" for WMI tables with OK, Timeout: WMIStatus
+// #TODO this function to be moved in other place
+std::string WmiPostProcess(const std::string& in, StatusColumn exception_column,
+                           char separator);
+
 // the class is thread safe(theoretisch)
 class WmiWrapper {
 public:

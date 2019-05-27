@@ -17,9 +17,36 @@
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
+// controls behavior, we may want in the future,  works with older servers
+// normally always true
+constexpr bool g_add_wmi_status_column = true;
+
 namespace cma {
 
 namespace provider {
+
+// use cache if body is empty(typical for new client, which returns empty on
+// timeout) post process result
+// update cache if data ok(not empty)
+static std::string WmiCachedDataHelper(std::string& cache_data,
+                                       const std::string& wmi_data) {
+    using namespace wtools;
+    // for older servers
+    if (!g_add_wmi_status_column) return wmi_data;
+
+    if (!wmi_data.empty()) {
+        // return original data with added OK in right column
+        cache_data = wmi_data;  // store
+        return WmiPostProcess(wmi_data, StatusColumn::ok, ',');
+    }
+
+    // we try to return cache with added "timeout" in last column
+    if (!cache_data.empty())
+        return WmiPostProcess(cache_data, StatusColumn::timeout, ',');
+
+    XLOG::d.t(XLOG_FUNC + " Strange situation, both options are empty");
+    return {};
+}
 
 // ["Name", [Value1,Value2,...] ]
 // ["msexch", [msexch_shit1, msexch_shit2] ] <-example
@@ -54,7 +81,8 @@ NamedWmiSources g_section_objects = {
     {kOhm,  //
      {kWmiPathOhm, L"Sensor"}},
 
-    {kBadWmi,  // used for a testing or may be used as a template for other WMI calls
+    {kBadWmi,  // used for a testing or may be used as a template for other WMI
+               // calls
      {L"Root\\BadWmiPath", L"BadSensor"}},
 
     // WMI CPULOAD group
@@ -218,10 +246,19 @@ std::string Wmi::makeBody() {
     XLOG::l.i("main section '{}'", getUniqName());
     auto [err, data] = GenerateWmiTable(name_space_, object_, columns_);
 
-    // check error code, on error we could stop section sending
-    if (err != WmiStatus::ok) disableSectionTemporary();
+    // on timeout: reuse cache and ignore data, even if partially filled
+    if (err == WmiStatus::timeout) return WmiCachedDataHelper(cache_, {});
 
-    return data;
+    // on ok: update cache and send data as usually
+    if (err == WmiStatus::ok) return WmiCachedDataHelper(cache_, data);
+
+    // all other errors means disaster and we sends NOTHING
+    XLOG::l("Error reading WMI [{}]", static_cast<int>(err));
+
+    // to decrease annoyance level on monitoring site
+    disableSectionTemporary();
+
+    return {};
 }
 
 // [+] gtest
@@ -276,7 +313,13 @@ void SubSection::setupByName() {
 std::string SubSection::makeBody() {
     auto [err, data] = GenerateWmiTable(name_space_, object_, {});
     // subsections ignore returned error
-    return data;
+    if (err == WmiStatus::timeout) return WmiCachedDataHelper(cache_, {});
+
+    if (data.empty()) {
+        // this is not normal usually
+        XLOG::d("SubSection {} cannot provide data", uniq_name_);
+    }
+    return WmiCachedDataHelper(cache_, data);
 }
 
 std::string SubSection::generateContent() {

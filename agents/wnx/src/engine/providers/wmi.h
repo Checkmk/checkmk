@@ -51,6 +51,7 @@ private:
     std::wstring name_space_;      // WMI namespace "root\\Cimv2" for example
     std::wstring object_;          // WMI Object name
     const std::string uniq_name_;  // unique id of SUB section provider
+    std::string cache_;            // used to store WMI data to later reuse
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ProviderTest;
@@ -81,6 +82,7 @@ protected:
 private:
     std::wstring name_space_;  // WMI namespace "root\\Cimv2" for example
     std::wstring object_;      // WMI Object name
+    std::string cache_;        // cached data to reuse
 
     std::vector<std::wstring> columns_;
 

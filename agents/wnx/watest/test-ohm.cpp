@@ -64,10 +64,11 @@ TEST(SectionProviderOhm, ReadData) {
 
             // table header:
             auto header = cma::tools::SplitString(table[1], ",");
-            EXPECT_EQ(header.size(), 5);
-            if (header.size() >= 5) {
-                const char* expected_strings[] = {"Index", "Name", "Parent",
-                                                  "SensorType", "Value"};
+            EXPECT_EQ(header.size(), 6);
+            if (header.size() >= 6) {
+                const char* expected_strings[] = {"Index",  "Name",
+                                                  "Parent", "SensorType",
+                                                  "Value",  "WMIStatus"};
                 int index = 0;
                 for (auto& str : expected_strings) {
                     EXPECT_EQ(str, header[index++]);
@@ -77,7 +78,7 @@ TEST(SectionProviderOhm, ReadData) {
             // table body:
             for (size_t i = 2; i < table.size(); i++) {
                 auto f_line = cma::tools::SplitString(table[i], ",");
-                EXPECT_EQ(f_line.size(), 5);
+                EXPECT_EQ(f_line.size(), 6);
             }
         }
 

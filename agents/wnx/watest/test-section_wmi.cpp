@@ -52,6 +52,111 @@ TEST(WmiWrapper, EnumeratorOnly) {
     }
 }
 
+TEST(WmiWrapper, TablePostProcess) {
+    using namespace std;
+    {
+        wtools::InitWindowsCom();
+        if (!wtools::IsWindowsComInitialized()) {
+            XLOG::l.crit("COM faaaaaaaiiled");
+            return;
+        }
+        ON_OUT_OF_SCOPE(wtools::CloseWindowsCom());
+
+        {
+            const std::string s = "name,val\nzeze,5\nzeze,5\n";
+
+            {
+                auto ok = WmiPostProcess(s, StatusColumn::ok, ',');
+                auto table = cma::tools::SplitString(ok, "\n");
+                ASSERT_TRUE(table.size() == 3);
+
+                auto hdr = cma::tools::SplitString(table[0], ",");
+                ASSERT_TRUE(hdr.size() == 3);
+                EXPECT_TRUE(hdr[2] == "WMIStatus");
+
+                auto row1 = cma::tools::SplitString(table[1], ",");
+                ASSERT_TRUE(row1.size() == 3);
+                EXPECT_TRUE(row1[2] == StatusColumnText(StatusColumn::ok));
+
+                auto row2 = cma::tools::SplitString(table[2], ",");
+                ASSERT_TRUE(row2.size() == 3);
+                EXPECT_TRUE(row2[2] == StatusColumnText(StatusColumn::ok));
+            }
+            {
+                auto timeout = WmiPostProcess(s, StatusColumn::timeout, ',');
+                auto table = cma::tools::SplitString(timeout, "\n");
+                ASSERT_TRUE(table.size() == 3);
+
+                auto hdr = cma::tools::SplitString(table[0], ",");
+                ASSERT_TRUE(hdr.size() == 3);
+                EXPECT_TRUE(hdr[2] == "WMIStatus");
+
+                auto row1 = cma::tools::SplitString(table[1], ",");
+                ASSERT_TRUE(row1.size() == 3);
+                EXPECT_TRUE(row1[2] == StatusColumnText(StatusColumn::timeout));
+
+                auto row2 = cma::tools::SplitString(table[2], ",");
+                ASSERT_TRUE(row2.size() == 3);
+                EXPECT_TRUE(row2[2] == StatusColumnText(StatusColumn::timeout));
+            }
+        }
+
+        WmiWrapper wmi;
+        wmi.open();
+        wmi.connect(L"ROOT\\CIMV2");
+        wmi.impersonate();
+        // Use the IWbemServices pointer to make requests of WMI.
+        // Make requests here:
+        auto result = wmi.queryTable({}, L"Win32_Process");
+        ASSERT_TRUE(!result.empty());
+        EXPECT_TRUE(result.back() == L'\n');
+
+        auto table = cma::tools::SplitString(result, L"\n");
+        ASSERT_TRUE(table.size() > 10);
+        auto header_array = cma::tools::SplitString(table[0], L",");
+        EXPECT_EQ(header_array[0], L"Caption");
+        EXPECT_EQ(header_array[1], L"CommandLine");
+        auto line1 = cma::tools::SplitString(table[1], L",");
+        const auto base_count = line1.size();
+        auto line2 = cma::tools::SplitString(table[2], L",");
+        EXPECT_EQ(line1.size(), line2.size());
+        EXPECT_EQ(line1.size(), header_array.size());
+        auto last_line = cma::tools::SplitString(table[table.size() - 1], L",");
+        EXPECT_EQ(line1.size(), last_line.size());
+
+        {
+            auto str =
+                WmiPostProcess(ConvertToUTF8(result), StatusColumn::ok, ',');
+            XLOG::l.i("string is {}", str);
+            EXPECT_TRUE(!str.empty());
+            auto t1 = cma::tools::SplitString(str, "\n");
+            EXPECT_EQ(table.size(), t1.size());
+            auto t1_0 = cma::tools::SplitString(t1[0], ",");
+            EXPECT_EQ(t1_0.size(), base_count + 1);
+            EXPECT_EQ(t1_0.back(), "WMIStatus");
+            auto t1_1 = cma::tools::SplitString(t1[1], ",");
+            EXPECT_EQ(t1_1.back(), "OK");
+            auto t1_last = cma::tools::SplitString(t1.back(), ",");
+            EXPECT_EQ(t1_last.back(), "OK");
+        }
+        {
+            auto str = WmiPostProcess(ConvertToUTF8(result),
+                                      StatusColumn::timeout, ',');
+            XLOG::l("{}", str);
+            EXPECT_TRUE(!str.empty());
+            auto t1 = cma::tools::SplitString(str, "\n");
+            EXPECT_EQ(table.size(), t1.size());
+            auto t1_0 = cma::tools::SplitString(t1[0], ",");
+            EXPECT_EQ(t1_0.size(), base_count + 1);
+            EXPECT_EQ(t1_0.back(), "WMIStatus");
+            auto t1_1 = cma::tools::SplitString(t1[1], ",");
+            EXPECT_EQ(t1_1.back(), "Timeout");
+            auto t1_last = cma::tools::SplitString(t1.back(), ",");
+            EXPECT_EQ(t1_last.back(), "Timeout");
+        }
+    }
+}
+
 TEST(WmiWrapper, Table) {
     using namespace std;
     {

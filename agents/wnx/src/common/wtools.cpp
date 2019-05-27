@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <numeric>
 #include <string>
 
 #include "cap.h"
@@ -1619,6 +1620,66 @@ bool KillProcess(const std::wstring& process_name, int exit_code) noexcept {
     }
 
     return true;
+}
+
+//
+std::string StatusColumnText(StatusColumn exception_column) noexcept {
+    switch (exception_column) {
+        case StatusColumn::ok:
+            return "OK";
+        case StatusColumn::timeout:
+            return "Timeout";
+    }
+
+    return "Undefined";
+}
+
+static std::string MakeWmiTailForName(char separator) noexcept {
+    std::string value;
+    value += separator;
+    return value + "WMIStatus\n";
+}
+
+static std::string MakeWmiTailForData(StatusColumn status_column,
+                                      char separator) noexcept {
+    std::string value;
+    value += separator;
+    return value + StatusColumnText(status_column) + "\n";
+}
+
+// adds to the output Table from the WMI WMIStatus column
+// column value is either Timeout or OK
+// Before
+// Name,Freq
+// Total,1500
+// AFter
+// Name,Freq,WMIStatus
+// Total,1500,OK
+// Empty or quite short strings are replaced with WMIStatus\nTimeout\n
+std::string WmiPostProcess(const std::string& in, StatusColumn status_column,
+                           char separator) {
+    if (in.size() < 5) {  // 5 is meaningless, just anything low
+        // error and cached data absent
+        return "WMIStatus\nTimeout\n";
+    }
+
+    // Tails' values
+    auto tail_for_names = MakeWmiTailForName(separator);
+    auto tail_for_data = MakeWmiTailForData(status_column, separator);
+
+    // make valid array of lines
+    auto table = cma::tools::SplitString(in, "\n");
+
+    // names(header)
+    table[0] += tail_for_names;
+
+    // data(body), first line of the table is skipped
+    std::transform(table.begin() + 1, table.end(), table.begin() + 1,
+                   [tail_for_data](const std::string& value) {
+                       return value + tail_for_data;
+                   });
+
+    return std::accumulate(table.begin(), table.end(), std::string());
 }
 
 // returns false only when something is really bad

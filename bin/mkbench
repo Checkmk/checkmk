@@ -152,13 +152,6 @@ class MKFailTestCaseHighLatency(MKFailTestCase):
     pass
 
 
-class LocalConnection(livestatus.SingleSiteConnection):
-    def __init__(self, *args, **kwargs):
-        livestatus.SingleSiteConnection.__init__(self, "unix:%s/tmp/run/live" % omd_root(), *args,
-                                                 **kwargs)
-        self.connect()
-
-
 def interrupt_handler(signum, frame):
     raise MKTerminate("Caught signal: %d" % signum)
 
@@ -1066,7 +1059,7 @@ class Measurement(object):
             return
 
         try:
-            live = LocalConnection()
+            live = livestatus.LocalConnection()
             live.set_timeout(5)
             self.site_stats = live.query_row_assoc("GET status")
             live.disconnect()
@@ -2739,7 +2732,7 @@ class TestAgentBasedStandardHosts(TestCase):
         try:
             # The execution of service checks needs to be stopped to prevent
             # races with the core.
-            LocalConnection().command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
+            livestatus.LocalConnection().command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
 
             self._test.info("  Creating RRDs (stopping core during this step)")
             first_host_name = self.host_name_template % 0
@@ -2747,7 +2740,7 @@ class TestAgentBasedStandardHosts(TestCase):
             self._copy_rrds_of(first_host_name)
             self._test.info("  Finished creating RRDs")
         finally:
-            LocalConnection().command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
+            livestatus.LocalConnection().command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
 
     def _copy_rrds_of(self, first_host_name):
         rrd_dir = "%s/var/check_mk/rrd" % omd_root()
@@ -3279,7 +3272,7 @@ def verify_site_is_running():
 
 
 def verify_site_is_empty():
-    hosts = LocalConnection().query_column("GET hosts\nColumns: host_name")
+    hosts = livestatus.LocalConnection().query_column("GET hosts\nColumns: host_name")
     # Allow sites:
     # - empty
     # - created with "omd-vonheute"

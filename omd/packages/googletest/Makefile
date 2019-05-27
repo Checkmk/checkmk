@@ -37,7 +37,7 @@ $(DIR)/Makefile: $(DIR)/Makefile.in
 #
 #basically what part of AC_PROC_CXX does
 	@CXX="" ; \
-	for PROG in g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++-6 clang++-4.0 g++-5 clang++-3.9 clang++-3.8 clang++-3.7 clang++-3.6 clang++-3.5 g++-4.9 g++ clang++; do \
+	for PROG in g++-9 clang++-8 g++-8 clang++-7 g++-7 clang++-6.0 clang++-5.0 g++ clang++; do \
 	    echo -n "checking for $$PROG... "; SAVED_IFS=$$IFS; IFS=: ; \
 	    for DIR in $$PATH; do \
 	        IFS=$$SAVED_IFS ; \

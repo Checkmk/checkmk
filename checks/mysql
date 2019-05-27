@@ -49,22 +49,17 @@
 #   '----------------------------------------------------------------------'
 
 
-# FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
+@mysql_parse_per_item
 def parse_mysql(info):
-    def parse_line(line):
+    data = {}
+    for line in info:
         try:
-            return line[0], int(line[1])
+            data[line[0]] = int(line[1])
         except IndexError:
-            return line[0], None
+            continue
         except ValueError:
-            return line[0], line[1]
-
-    parsed = {}
-    for instance, line in mysql_iter_instance_lines(info):
-        varname, value = parse_line(line)
-        parsed.setdefault(instance, {})[varname] = value
-
-    return parsed
+            data[line[0]] = line[1]
+    return data
 
 
 @get_parsed_item_data
@@ -100,7 +95,7 @@ check_info['mysql'] = {
 
 
 @get_parsed_item_data
-def check_mysql_sessions(item, params, data):
+def check_mysql_sessions(_no_item, params, data):
     total_sessions = data["Threads_connected"]
     running_sessions = data["Threads_running"]
     connects = get_rate("mysql.sessions", time.time(), data["Connections"])
@@ -145,15 +140,13 @@ check_info['mysql.sessions'] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_mysql_iostat(item, params, parsed):
-    if item in parsed:
-        values = parsed[item]
+@get_parsed_item_data
+def check_mysql_iostat(item, params, data):
+    if not ("Innodb_data_read" in data and "Innodb_data_written" in data):
+        return
 
-        if not ("Innodb_data_read" in values and "Innodb_data_written" in values):
-            return 3, "Incomplete agent output"
-
-        line = [None, None, values["Innodb_data_read"] / 512, values["Innodb_data_written"] / 512]
-        return check_diskstat_line(time.time(), 'innodb_io' + item, params, line)
+    line = [None, None, data["Innodb_data_read"] / 512, data["Innodb_data_written"] / 512]
+    return check_diskstat_line(time.time(), 'innodb_io' + item, params, line)
 
 
 check_info['mysql.innodb_io'] = {

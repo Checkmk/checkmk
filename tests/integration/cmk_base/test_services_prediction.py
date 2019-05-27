@@ -195,6 +195,10 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
 
     path = "%s/tests/integration/cmk_base/test-files/%s/%s" % (repo_path(), timezone, timegroup)
     reference = cmk.utils.prediction.retrieve_data_for_prediction(path, timegroup)
+    data_points = data_for_pred.pop('points')
+    ref_points = reference.pop('points')
+    for cal, ref in zip(data_points, ref_points):
+        assert cal == pytest.approx(ref, rel=1e-12, abs=1e-12)
     assert data_for_pred == reference
 
 

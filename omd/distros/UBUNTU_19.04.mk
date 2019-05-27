@@ -16,6 +16,7 @@ OS_PACKAGES    += apache2-utils # contains htpasswd2
 OS_PACKAGES    += libdbi1
 OS_PACKAGES    += libevent-2.1-6
 OS_PACKAGES    += libltdl7
+OS_PACKAGES    += libnl-3-200
 OS_PACKAGES    += libpango1.0-0
 OS_PACKAGES    += libperl5.28
 OS_PACKAGES    += libreadline5

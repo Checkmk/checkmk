@@ -51,7 +51,7 @@ import logging
 
 try:
     import ConfigParser as configparser
-except NameError:  # Python3
+except ImportError:  # Python3
     import configparser
 
 try:

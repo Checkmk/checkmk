@@ -1039,8 +1039,7 @@ class ModeFolder(WatoMode):
             html.icon_button(host.services_url(), msg, image)
 
         if not host.locked():
-            if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts") \
-               and host.folder().choices_for_moving_host():
+            if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
                 self._show_move_to_folder_action(host)
 
             if config.user.may("wato.manage_hosts"):

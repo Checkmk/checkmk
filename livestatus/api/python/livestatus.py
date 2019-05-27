@@ -926,7 +926,7 @@ class MultiSiteConnection(Helpers):
 #   +----------------------------------------------------------------------+
 #   |  LocalConnection is a convenciance class for connecting to the       |
 #   |  local Livestatus socket within an OMD site. It only works within    |
-#   |  OMD context. It immediately connects()                              |
+#   |  OMD context.                                                        |
 #   '----------------------------------------------------------------------'
 
 
@@ -937,4 +937,3 @@ class LocalConnection(SingleSiteConnection):
             raise MKLivestatusConfigError(
                 "OMD_ROOT is not set. You are not running in OMD context.")
         SingleSiteConnection.__init__(self, "unix:" + omd_root + "/tmp/run/live", *args, **kwargs)
-        self.connect()

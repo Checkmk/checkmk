@@ -64,18 +64,20 @@ def test_livestatus_local_connection_omd_root_not_set(monkeypatch, tmpdir):
 
 
 def test_livestatus_local_connection_no_socket(sock_path):
+    live = livestatus.LocalConnection()
     with pytest.raises(
             livestatus.MKLivestatusSocketError, match="Cannot connect to 'unix:%s'" % sock_path):
-        livestatus.LocalConnection()
+        live.connect()
 
 
 def test_livestatus_local_connection_not_listening(sock_path):
     sock = socket.socket(socket.AF_UNIX)
     sock.bind("%s" % sock_path)
 
+    live = livestatus.LocalConnection()
     with pytest.raises(
             livestatus.MKLivestatusSocketError, match="Cannot connect to 'unix:%s'" % sock_path):
-        livestatus.LocalConnection()
+        live.connect()
 
 
 def test_livestatus_local_connection(sock_path):

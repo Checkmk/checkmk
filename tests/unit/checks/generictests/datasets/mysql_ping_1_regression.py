@@ -5,7 +5,7 @@ checkname = 'mysql_ping'
 
 
 info = [
-    ['this', 'line', 'is', 'ignored'],
+    ['this', 'line', 'is', 'no', 'longer', 'ignored'],
     ['[[elephant]]'],
     ['mysqladmin:', 'connect', 'to', 'server', 'at', "'localhost'", 'failed'],
     ['[[moth]]'],
@@ -15,6 +15,7 @@ info = [
 
 discovery = {
     '': [
+        ('mysql', {}),
         ('elephant', {}),
         ('moth', {}),
     ],
@@ -23,6 +24,7 @@ discovery = {
 
 checks = {
     '': [
+        ('mysql', {}, [(2, 'this line is no longer ignored', [])]),
         ('elephant', {}, [(2, "mysqladmin: connect to server at 'localhost' failed", [])]),
         ('moth', {}, [(0, 'MySQL Deamon is alive', [])]),
     ],

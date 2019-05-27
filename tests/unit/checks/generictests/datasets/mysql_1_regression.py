@@ -260,9 +260,13 @@ checks = {
     ],
     'sessions': [
         ('mysql', {}, [
-            (0, '42 total, 23 running, 0.00 connections/s', [
+            (0, '42 total', [
                 ('total_sessions', 42, None, None, None, None),
+            ]),
+            (0, '23 running', [
                 ('running_sessions', 23, None, None, None, None),
+            ]),
+            (0, '0.00 connections/s', [
                 ('connect_rate', 0.0, None, None, None, None),
             ]),
         ]),

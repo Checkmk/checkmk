@@ -46,11 +46,6 @@ def parse_mysql_slave(info):
     return parsed
 
 
-@discover
-def inventory_mysql_slave(_key, values):
-    return len(values) > 0
-
-
 @get_parsed_item_data
 def check_mysql_slave(_no_item, params, data):
     state = 0
@@ -95,7 +90,7 @@ def check_mysql_slave(_no_item, params, data):
 
 check_info['mysql_slave'] = {
     "parse_function": parse_mysql_slave,
-    "inventory_function": inventory_mysql_slave,
+    "inventory_function": discover(lambda k, v: bool(v)),
     "check_function": check_mysql_slave,
     "service_description": "MySQL DB Slave %s",
     "has_perfdata": True,

@@ -25,9 +25,8 @@ RUN apt-get update \
     rrdtool \
     strace \
     vim \
+    && pip install --upgrade pip \
     && pip install --upgrade setuptools \
-    && pip install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a \
-    && pip uninstall pipenv \
     && pip install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a \
     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs \

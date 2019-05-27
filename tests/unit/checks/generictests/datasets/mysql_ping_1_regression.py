@@ -4,11 +4,13 @@
 checkname = 'mysql_ping'
 
 
-info = [['this', 'line', 'is', 'ignored'],
-        ['[[elephant]]'],
-        ['mysqladmin:', 'connect', 'to', 'server', 'at', "'localhost'", 'failed'],
-        ['[[moth]]'],
-        ['mysqld', 'is', 'alive']]
+info = [
+    ['this', 'line', 'is', 'ignored'],
+    ['[[elephant]]'],
+    ['mysqladmin:', 'connect', 'to', 'server', 'at', "'localhost'", 'failed'],
+    ['[[moth]]'],
+    ['mysqld', 'is', 'alive'],
+]
 
 
 discovery = {

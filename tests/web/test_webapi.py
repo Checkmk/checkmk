@@ -353,20 +353,10 @@ def test_get_graph(web, site):
         web.activate_changes()
         site.schedule_check("test-host-get-graph", "Check_MK", 0)
 
-        # Wait for RRD file creation
-        # Isn't this a bug that the graph is not instantly available?
-        timeout = 10
-        print "Checking for graph..."
-        while timeout and not site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"):
-            try:
-                data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
-            except Exception:
-                pass
-            timeout -= 1
-            time.sleep(1)
-            print "Checking for graph..."
-        assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
-                        "RRD %s is still missing" % "var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"
+        # Wait for RRD file creation. Isn't this a bug that the graph is not instantly available?
+        rrd_path = site.path("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd")
+        rrdcached_socket = site.path("tmp/run/rrdcached.sock")
+        assert site.execute(["echo 'FLUSH %s' | unixcat %s" % (rrd_path, rrdcached_socket)]).wait() == 0
 
         # Now we get a graph
         data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)

@@ -371,6 +371,10 @@ class Site(object):
         return subprocess.call(cmd)
 
 
+    def path(self, rel_path):
+        return os.path.join(self.root, rel_path)
+
+
     def read_file(self, rel_path):
         if not self._is_running_as_site_user():
             p = self.execute(["cat", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)

@@ -234,13 +234,10 @@ def get_status_filename(config):
                     LOGGER.info("matching cluster name %s", cluster_name)
                 else:
                     # Entry in cluster configuration is subnetwork in CIDR notation.
-                    try:
-                        if ip_in_subnetwork(remote_ip, ip_or_subnet):
-                            cluster_name = nt.name
-                            LOGGER.info("matching cluster ip %s", remote_ip)
-                            LOGGER.info("matching cluster name %s", cluster_name)
-                    except ValueError:
-                        continue  # valid subnetwork configuration expected
+                    if ip_in_subnetwork(remote_ip, ip_or_subnet):
+                        cluster_name = nt.name
+                        LOGGER.info("matching cluster ip %s", remote_ip)
+                        LOGGER.info("matching cluster name %s", cluster_name)
     if cluster_name:
         status_filename = "%s/logwatch.state.%s" % (mk_vardir(), cluster_name)
     elif remote_hostname != "":
@@ -800,15 +797,14 @@ def parse_sections(config):
 def ip_in_subnetwork(ip_address, subnetwork):
     """
     Accepts ip address as string e.g. "192.168.1.1" and CIDR notation as string e.g."192.168.1.0/24".
-    Raises ValueError in case of incompatible IP versions.
+    Returns False in case of incompatible IP versions.
 
-    Implementation depends on Python2 and Python3 standard lib dependencies only.
-    Do not use Python3 only ipaddress or other Python major and/or minor version specific implementations here.
+    Implementation depends on Python2 and Python3 standard lib only.
     """
     (ip_integer, version1) = _ip_to_integer(ip_address)
     (ip_lower, ip_upper, version2) = _subnetwork_to_ip_range(subnetwork)
     if version1 != version2:
-        raise ValueError("incompatible IP versions")
+        return False
     return ip_lower <= ip_integer <= ip_upper
 
 
@@ -831,15 +827,16 @@ def _subnetwork_to_ip_range(subnetwork):
     """
     Raises ValueError in case of invalid subnetwork.
     """
+    if '/' not in subnetwork:
+        ip_integer, version = _ip_to_integer(subnetwork)
+        return ip_integer, ip_integer, version
+    network_prefix, netmask_len = subnetwork.split('/', 1)
     try:
-        fragments = subnetwork.split('/')
-        network_prefix = fragments[0]
-        netmask_len = int(fragments[1])
         # try parsing the subnetwork first as IPv4, then as IPv6
         for version in (socket.AF_INET, socket.AF_INET6):
             ip_len = 32 if version == socket.AF_INET else 128
             try:
-                suffix_mask = (1 << (ip_len - netmask_len)) - 1
+                suffix_mask = (1 << (ip_len - int(netmask_len))) - 1
                 netmask = ((1 << ip_len) - 1) - suffix_mask
                 ip_hex = socket.inet_pton(version, network_prefix)
                 ip_lower = int(binascii.hexlify(ip_hex), 16) & netmask

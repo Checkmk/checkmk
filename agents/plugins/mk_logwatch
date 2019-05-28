@@ -393,13 +393,8 @@ def read_config(files):
 def parse_cont_pattern(pattern):
     try:
         return int(pattern)
-    except:
-        try:
-            return re.compile(pattern)
-        except:
-            if debug():
-                raise
-        raise Exception("Invalid regular expression in line '%s'" % pattern)
+    except (ValueError, TypeError):
+        return re.compile(pattern)
 
 
 def read_status(file_name):

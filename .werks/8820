@@ -1,0 +1,10 @@
+Title: lnx_packages: Do not crash if agent sends incomplete output
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564477262
+Class: fix
+
+

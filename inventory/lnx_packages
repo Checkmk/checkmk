@@ -55,9 +55,11 @@ def inv_lnx_packages(info):
     for line in info:
         if len(line) == 6:
             pacname, version, arch, pactype, summary, inststate = line
-            release = "-"
+            release = None
         elif len(line) == 7:
             pacname, version, arch, pactype, release, summary, inststate = line
+        else:
+            continue
 
         if pactype == "deb":
             if "installed" not in inststate:
@@ -78,7 +80,7 @@ def inv_lnx_packages(info):
             version, package_version = parts
             entry["version"] = version
             entry["package_version"] = package_version
-        if release != "-":
+        if release is not None:
             entry["package_version"] = release
         parsed_packages.append(entry)
 

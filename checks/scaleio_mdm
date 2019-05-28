@@ -42,6 +42,23 @@
 #        Status: Normal, Version: 2.0.13000
 
 
+def add_key_values(data_dict, line):
+    '''
+    Finally we can add the rest of information to a node in a
+    subsection. When splitting the lines we sometimes get lines
+    belonging to the last entry. These information is then added
+    to the last known entry.
+    '''
+    for token in (entry.split(': ') for entry in line):
+        if len(token) > 1:
+            name = token[0].strip()
+            data_dict[name] = token[1].strip()
+        else:
+            if not isinstance(data_dict[name], list):
+                data_dict[name] = [data_dict[name]]
+            data_dict[name].append(token[0].replace(" ", ""))
+
+
 def parse_scaleio_mdm(info):
     # parsing this section is horrible. But I will guide you...
     parsed, id_, node = {}, "", ""
@@ -72,20 +89,8 @@ def parse_scaleio_mdm(info):
             data[node] = {node_id[0].strip(): node_id[1].strip()}
             if len(line) == 3:
                 data[node][u'Role'] = line[2].strip()
-        # Finally we can add the rest of information to a node in a
-        # subsection. When splitting the lines we sometimes get lines
-        # belonging to the last entry. These information is then added
-        # to the last known entry.
         elif node in data:
-            nl = [entry.split(': ') for entry in line]
-            for l in nl:
-                if len(l) > 1:
-                    name = l[0].strip()
-                    data[node][name] = l[1].strip()
-                else:
-                    if not isinstance(data[node][name], list):
-                        data[node][name] = [data[node][name]]
-                    data[node][name].append(l[0].replace(" ", ""))
+            add_key_values(data[node], line)
 
     return parsed
 
@@ -95,7 +100,7 @@ def inventory_scaleio_mdm(parsed):
         yield None, {}
 
 
-def check_scaleio_mdm(item, params, parsed):
+def check_scaleio_mdm(_no_item, _no_params, parsed):
     translate_status = {
         "Normal": 0,
         "Degraded": 1,

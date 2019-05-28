@@ -225,19 +225,12 @@ def get_status_filename(config):
     if remote_ip is not None:
         for nt in cluster_configs:
             for ip_or_subnet in nt.ips_or_subnets:
-                if remote_ip == ip_or_subnet:
-                    # Entry in cluster configuration is IP address.
+                if ip_in_subnetwork(remote_ip, ip_or_subnet):
                     # Cluster name may not contain whitespaces (must be provided from
                     # the WATO config as type ID or hostname).
                     cluster_name = nt.name
                     LOGGER.info("matching cluster ip %s", remote_ip)
                     LOGGER.info("matching cluster name %s", cluster_name)
-                else:
-                    # Entry in cluster configuration is subnetwork in CIDR notation.
-                    if ip_in_subnetwork(remote_ip, ip_or_subnet):
-                        cluster_name = nt.name
-                        LOGGER.info("matching cluster ip %s", remote_ip)
-                        LOGGER.info("matching cluster name %s", cluster_name)
     if cluster_name:
         status_filename = "%s/logwatch.state.%s" % (mk_vardir(), cluster_name)
     elif remote_hostname != "":

@@ -232,96 +232,7 @@ private:
 
     // used to start OpenHardwareMonitor if conditions are ok
     bool conditionallyStartOhm() noexcept;
-
-    // this thread is HOSTING THREAD for start next services
-    // Io
-    // All providers
-    // Plugin Provider
-    // RealTime checks
-    void mainThread(world::ExternalPort* Port) {
-        // Periodically checks if the service is stopping.
-
-        // mailslot name selector "service" or "not service"
-        auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
-                                              : cma::cfg::kTestingMailSlot;
-
-        cma::MailSlot mailbox(mailslot_name, 0);
-        using namespace cma::carrier;
-        internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
-        try {
-            bool io_started = false;
-            mailbox.ConstructThread(SystemMailboxCallback, 20, this);
-            ON_OUT_OF_SCOPE(mailbox.DismantleThread());
-            cma::rt::Device rt_device;
-            preStart();
-            if (Port) {
-                // this is main part
-                rt_device.start();
-                io_started = Port->startIo(
-                    [this,
-                     &rt_device](const std::string Ip) -> std::vector<uint8_t> {
-                        // most important entry point for external port io
-                        // this is internal implementation of the io_context
-                        // called upon kicking in port, i.e. LATER. NOT NOW.
-
-                        // 1. preparation
-                        XLOG::d.i("Connected from '{}'", Ip.c_str());
-                        cma::OnStartApp();
-                        cma::cfg::SetupRemoteHostEnvironment(Ip);
-                        conditionallyStartOhm();  // start may happen when
-                                                  // config changed
-
-                        detachedPluginsStart();  // cmk agent update
-                        informDevice(rt_device, Ip);
-
-                        // 2. processing
-                        auto tp = openAnswer(Ip);
-                        if (tp) {
-                            XLOG::d.i("Id is [{}] ",
-                                      tp.value().time_since_epoch().count());
-                            auto started = startProviders(tp.value(), Ip);
-
-                            return getAnswer(started);
-
-                        } else
-                            return makeTestString("No Answer");
-                        // return getTestString();
-                    });
-
-            } else {
-                XLOG::l.i("Started without IO. Debug mode");
-                auto tp = openAnswer("127.0.0.1");
-                if (tp) {
-                    auto started = startProviders(tp.value(), "");
-                    auto block = getAnswer(started);
-                    block.emplace_back('\0');
-                    auto count = printf("%s", block.data());
-                    if (count != block.size())
-                        XLOG::l("Binary data at offset [{}]", count);
-                }
-                return;
-            }
-            // critical: we want to shutdown io even on crash
-            ON_OUT_OF_SCOPE(if (Port) Port->shutdownIo());
-
-            // no more processing
-            if (Port && !io_started) {
-                XLOG::l.bp("Ups. We cannot start main thread");
-                return;
-            }
-
-            // we wait her to the end of the External port
-            mainWaitLoop();
-
-            // the end of the fun
-            XLOG::l.i("Thread is stopped");
-        } catch (const std::exception& e) {
-            XLOG::l.crit("Not expected exception '{}'. Fix it!", e.what());
-        } catch (...) {
-            XLOG::l.bp("Not expected exception. Fix it!");
-        }
-        internal_port_ = "";
-    }
+    void mainThread(world::ExternalPort* Port) noexcept;
 
     // object data
     std::thread thread_;
@@ -342,35 +253,60 @@ private:
     AsyncAnswer& getAsyncAnswer() { return answer_; }
 
 private:
-    void mainWaitLoop() {
+    // support of mainThread
+    void prepareAnswer(const std::string& ip_from, cma::rt::Device& rt_device);
+    cma::ByteVector generateAnswer(const std::string& ip_from);
+    void sendDebugData();
+
+    bool timedWaitForStop() {
+        std::unique_lock<std::mutex> l(lock_stopper_);
+        auto stop_requested = stop_thread_.wait_until(
+            l, std::chrono::steady_clock::now() + delay_,
+            [this]() { return stop_requested_; });
+        return stop_requested;
+    }
+
+    // type of breaks in mainWaitLoop
+    enum class Signal { restart, quit };
+
+    // returns break type(what todo)
+    Signal mainWaitLoop() {
+        using namespace cma::cfg;
         XLOG::l.i("main Wait Loop");
+        // memorize vars to check for changes in loop below
+        auto ipv6 = groups::global.ipv6();
+        auto port = groups::global.port();
         while (1) {
             using namespace std::chrono;
 
             // Perform main service function here...
-            //
-            //
 
             // special case when thread is one time run
             if (!callback_(static_cast<const void*>(this))) break;
             if (delay_ == 0ms) break;
 
             // check for config update and inform external port
+            auto new_ipv6 = groups::global.ipv6();
+            auto new_port = groups::global.port();
+            if (new_ipv6 != ipv6 || new_port != port) {
+                XLOG::l.i(
+                    "Restarting server with new parameters [{}] ipv6:[{}]",
+                    new_port, new_port);
+                return Signal::restart;
+            }
 
             // wait and check
-            std::unique_lock<std::mutex> l(lock_stopper_);
-            auto stop_requested =
-                stop_thread_.wait_until(l, steady_clock::now() + delay_,
-                                        [this]() { return stop_requested_; });
-            if (stop_requested) {
+            if (timedWaitForStop()) {
                 XLOG::l.t("Stop request is set");
                 break;  // signaled stop
             }
         }
         XLOG::l.t("main Wait Loop END");
+        return Signal::quit;
     }
-    AsyncAnswer
-        answer_;  // we make queue n the future, now only one answer for all
+
+    AsyncAnswer answer_;  // queue in the future, now only one answer for all
+
     std::vector<std::future<bool>> vf_;
 
     // called from the network callbacks in ExternalPort
@@ -392,7 +328,7 @@ private:
         return tp;
     }
 
-    // #TODO gtest!
+    //
     int startProviders(AnswerId Tp, std::string Ip);
 
     // all pre operation required for normal functionality

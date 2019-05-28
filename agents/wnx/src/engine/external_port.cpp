@@ -117,9 +117,6 @@ void AsioSession::do_write(const void *Data, std::size_t Length,
                     XLOG::t.i(
                         "Send [{}] from [{}] data with code [{}] left to send [{}]",
                         length, to_send, ec.value(), Length);
-                    if (!ec && !mode_one_shot_ && length == Length) {
-                        do_read();
-                    }
                 });
         } else {
             // correct code is here
@@ -166,55 +163,141 @@ void AsioSession::do_write(const void *Data, std::size_t Length,
 
 namespace cma::world {
 
+// wake thread too
+void ExternalPort::putOnQueue(AsioSession::s_ptr asio_session) {
+    // short block
+    bool loaded = false;
+    std::unique_lock lk(queue_lock_);
+    auto size = session_queue_.size();
+    if (size < kMaxSessionQueueLength) {
+        session_queue_.push(asio_session);
+        loaded = true;
+        size = session_queue_.size();
+    }
+    lk.unlock();
+
+    if (loaded) {
+        wakeThread();
+        XLOG::d.i("Put on queue, size is [{}]", size);
+    } else {
+        XLOG::d("queue is overflown");
+    }
+}
+
+// thread safe
+// may return empty shared ptr
+AsioSession::s_ptr ExternalPort::getSession() {
+    std::unique_lock lk(queue_lock_);
+
+    if (session_queue_.empty()) return {};
+
+    auto as = session_queue_.front();
+    session_queue_.pop();
+    auto sz = session_queue_.size();
+    lk.unlock();
+
+    XLOG::d.i("Found connection on queue, in queue left[{}]", sz);
+    return as;
+}
+
+void ExternalPort::timedWaitForSession() {
+    using namespace std::chrono;
+    std::unique_lock lk(wake_lock_);
+    wake_thread_.wait_until(lk, steady_clock::now() + wake_delay_,
+                            [this]() { return !session_queue_.empty(); });
+}
+
+// singleton thread
+void ExternalPort::processQueue(cma::world::ReplyFunc reply) noexcept {
+    for (;;) {
+        // we must to catch exception in every thread, even so simple one
+        try {
+            // processing block
+            auto as = getSession();
+
+            if (as) {
+                const auto [ip, ipv6] = GetSocketInfo(as->currentSocket());
+                XLOG::d.i("Connected from '{}' ipv6:{}", ip, ipv6);
+
+                // only_from checking
+                if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
+                    as->start(reply);
+                } else {
+                    XLOG::d.i("Address '{}' is not allowed", ip);
+                }
+            }
+
+            // wake block
+            timedWaitForSession();
+
+            // stop block
+            if (isShutdown()) break;
+        } catch (const std::exception &e) {
+            XLOG::l.bp(XLOG_FUNC + " Unexpected exception '{}'", e.what());
+        }
+    }
+
+    XLOG::l.i("Exiting process queue");
+}
+
+void ExternalPort::wakeThread() {
+    std::lock_guard l(wake_lock_);
+    wake_thread_.notify_one();
+}
+
+bool sinkProc(cma::world::AsioSession::s_ptr asio_session,
+              ExternalPort *ex_port) {
+    ex_port->putOnQueue(asio_session);
+    return true;
+}
+
 // Main IO thread
+// MAY BE RESTARTED if we have new port/ipv6 mode in config
 // OneShot - true, CMK way, connect, send data back, disconnect
 //         - false, accept send data back, no disconnect
 void ExternalPort::ioThreadProc(cma::world::ReplyFunc Reply) {
+    using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " started");
     // all threads must control exceptions
     try {
-        auto ipv6 = cma::cfg::groups::global.ipv6();
+        auto ipv6 = groups::global.ipv6();
 
-        XLOG::l.t("Starting IO ipv6:{}, proposed port:{}...", ipv6,
-                  default_port_);  // important and rare, place in the log
-        for (;;) {
-            auto ipv6 = cma::cfg::groups::global.ipv6();
-            auto port = default_port_ == 0 ? cma::cfg::groups::global.port()
-                                           : default_port_;
-            // this is gtested, be sure you will get data here
+        // important diagnostic
+        XLOG::l.t("Starting IO ipv6:{}, proposed port:{}", ipv6, default_port_);
+        {
             if (owner_) owner_->preContextCall();
 
             // asio magic here
             asio::io_context context;
-            ExternalPort::server s(context, ipv6, port, Reply);
 
-            // execution of listen - accept - disconnect
-            if (mode_one_shot_) {
-                // to be able from outside thread stop the context
-                if (!registerContext(&context)) {
-                    XLOG::l.i(XLOG_FUNC + " terminated from outside 1");
-                    break;
-                }
+            ipv6 = groups::global.ipv6();
+            auto port =
+                default_port_ == 0 ? groups::global.port() : default_port_;
 
-                // tcp body
-                auto ret = context.run();  // run itself
-                XLOG::t(XLOG_FUNC + " one shot ended {}", ret);
+            // server start
+            ExternalPort::server s(context, ipv6, port);
+            s.run_accept(sinkProc, this);
 
-                // now wait for end of sending data
+            registerContext(&context);
 
-                // no more reliable context here, delete it
-                if (!registerContext(nullptr))  // no more stopping
-                {
-                    XLOG::l.i(XLOG_FUNC + " terminated from outside 2");
-                    break;
-                }
-            } else {
-                // for the future
-                context.run_one();
-                break;
+            // server thread start
+            auto processor_thread =
+                std::thread(&ExternalPort::processQueue, this, Reply);
+
+            // tcp body
+            auto ret = context.run();  // run itself
+            XLOG::t(XLOG_FUNC + " ended context with code[{}]", ret);
+
+            if (processor_thread.joinable()) processor_thread.join();
+
+            // no more reliable context here, delete it
+            if (!registerContext(nullptr))  // no more stopping
+            {
+                XLOG::l.i(XLOG_FUNC + " terminated from outside");
             }
         }
         XLOG::l.i("IO ends...");
+
     } catch (std::exception &e) {
         registerContext(nullptr);  // cleanup
         std::cerr << "Exception: " << e.what() << "\n";
@@ -224,7 +307,7 @@ void ExternalPort::ioThreadProc(cma::world::ReplyFunc Reply) {
 
 // runs thread
 // can fail when thread is already running
-bool ExternalPort::startIo(cma::world::ReplyFunc Reply) {
+bool ExternalPort::startIo(ReplyFunc Reply) {
     std::lock_guard lk(io_thread_lock_);
     if (io_thread_.joinable()) return false;  // thread is in exec state
 

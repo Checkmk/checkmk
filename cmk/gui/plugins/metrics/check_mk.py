@@ -7792,7 +7792,7 @@ check_metrics["check_mk-smart.stats"] = {
         "scale": 3600
     },
     "Power_Cycle_Count": {
-        "name": "harddrive_power_cycle"
+        "name": "harddrive_power_cycles"
     },
     "Reallocated_Sector_Ct": {
         "name": "harddrive_reallocated_sectors"
@@ -10636,7 +10636,7 @@ register_netapp_api_vs_traffic_graphs()
 graph_info["harddrive_health_statistic"] = {
     "title": _("Harddrive health statistic"),
     "metrics": [
-        ("harddrive_power_cycle", "stack"),
+        ("harddrive_power_cycles", "stack"),
         ("harddrive_reallocated_sectors", "stack"),
         ("harddrive_reallocated_events", "stack"),
         ("harddrive_spin_retries", "stack"),

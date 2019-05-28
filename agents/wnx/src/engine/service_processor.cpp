@@ -316,6 +316,111 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     return static_cast<int>(vf_.size());
 }
 
+// test function to be used when no real connection
+void ServiceProcessor::sendDebugData() {
+    XLOG::l.i("Started without IO. Debug mode");
+    auto tp = openAnswer("127.0.0.1");
+    if (tp) {
+        auto started = startProviders(tp.value(), "");
+        auto block = getAnswer(started);
+        block.emplace_back('\0');  // yes, we need this for printf
+        auto count = printf("debug data:\n %s", block.data());
+        if (count != block.size()) XLOG::l("Binary data at offset [{}]", count);
+    }
+}
+
+// called before every answer to execute routine tasks
+void ServiceProcessor::prepareAnswer(const std::string& ip_from,
+                                     cma::rt::Device& rt_device) {
+    XLOG::d.i("Connected from '{}'", ip_from.c_str());
+    cma::OnStartApp();
+    cma::cfg::SetupRemoteHostEnvironment(ip_from);
+    conditionallyStartOhm();  // start may happen when
+                              // config changed
+
+    detachedPluginsStart();  // cmk agent update
+    informDevice(rt_device, ip_from);
+}
+
+// main function of the client
+cma::ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
+    auto tp = openAnswer(ip_from);
+    if (tp) {
+        XLOG::d.i("Id is [{}] ", tp.value().time_since_epoch().count());
+        auto count_of_started = startProviders(tp.value(), ip_from);
+
+        return getAnswer(count_of_started);
+    }
+
+    XLOG::l.crit("Can't open Answer");
+    return makeTestString("No Answer");
+}
+
+// <HOSTING THREAD>
+// ex_port may be nullptr(command line test, for example)
+// makes a mail slot + starts IO on TCP
+void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
+    // Periodically checks if the service is stopping.
+    // mail slot name selector "service" or "not service"
+    auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
+                                          : cma::cfg::kTestingMailSlot;
+
+    cma::MailSlot mailbox(mailslot_name, 0);
+    using namespace cma::carrier;
+    internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
+    try {
+        // start and stop for mailbox thread
+        mailbox.ConstructThread(SystemMailboxCallback, 20, this);
+        ON_OUT_OF_SCOPE(mailbox.DismantleThread());
+
+        // preparation if any
+        preStart();
+
+        // check that we have something for testing
+        if (ex_port == nullptr) {
+            sendDebugData();
+            return;
+        }
+
+        cma::rt::Device rt_device;
+        for (;;) {
+            // this is main processing loop
+            rt_device.start();
+            auto io_started = ex_port->startIo(
+                [this,
+                 &rt_device](const std::string Ip) -> std::vector<uint8_t> {
+                    // most important entry point for external port io
+                    // this is internal implementation of the io_context
+                    // called upon kicking in port, i.e. LATER. NOT NOW.
+
+                    prepareAnswer(Ip, rt_device);
+                    return generateAnswer(Ip);
+                });
+            ON_OUT_OF_SCOPE({
+                ex_port->shutdownIo();
+                rt_device.stop();
+            });
+
+            if (!io_started) {
+                XLOG::l.bp("Ups. We cannot start main thread");
+                return;
+            }
+
+            // we wait her to the end of the External port
+            if (mainWaitLoop() == Signal::quit) break;
+            XLOG::l.i("restart main loop");
+        };
+
+        // the end of the fun
+        XLOG::l.i("Thread is stopped");
+    } catch (const std::exception& e) {
+        XLOG::l.crit("Not expected exception '{}'. Fix it!", e.what());
+    } catch (...) {
+        XLOG::l.bp("Not expected exception. Fix it!");
+    }
+    internal_port_ = "";
+}
+
 void ServiceProcessor::startTestingMainThread() {
     if (thread_.joinable()) {
         xlog::l("Attempt to start service twice, no way!").print();

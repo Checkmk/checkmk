@@ -590,12 +590,24 @@ class ModeEditTagGroup(ABCEditTagMode):
         )
 
 
-def _rename_tags_after_confirmation(tag_id, operations):
+def _rename_tags_after_confirmation(tag_group_id, operations):
     """Handle renaming and deletion of tags
 
     Find affected hosts, folders and rules. Remove or fix those rules according
     the the users' wishes. In case auf auxiliary tags the tag_id is None. In
     other cases it is the id of the tag group currently being edited.
+
+    operations is either:
+    - a list of tag_ids to be handled (e.g. all tag_ids of a tag group)
+    - a dictionary of
+      - old_tag_id: new_tag_id pairs to be replaced
+      - old_tag_id: None/False to remove old_tag_id
+
+    mode is:
+    "abort": No further action. Aborting here.
+    "check": only affected rulesets are collected, nothing is modified
+    "delete": Rules using this tag are deleted
+    "remove"/"repair": Remove tags from rules
     """
     mode = html.request.var("_repair")
     if mode == "abort":
@@ -603,16 +615,16 @@ def _rename_tags_after_confirmation(tag_id, operations):
 
     elif mode:
         # make attribute unknown to system, important for save() operations
-        if tag_id and isinstance(operations, list):
-            watolib.host_attributes.undeclare_host_tag_attribute(tag_id)
+        if tag_group_id and isinstance(operations, list):
+            watolib.host_attributes.undeclare_host_tag_attribute(tag_group_id)
         affected_folders, affected_hosts, affected_rulesets = \
-        _change_host_tags_in_folders(tag_id, operations, mode, watolib.Folder.root_folder())
+        _change_host_tags_in_folders(tag_group_id, operations, mode, watolib.Folder.root_folder())
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % \
             (len(affected_folders), len(affected_hosts), len(affected_rulesets))
 
     message = ""
     affected_folders, affected_hosts, affected_rulesets = \
-        _change_host_tags_in_folders(tag_id, operations, "check", watolib.Folder.root_folder())
+        _change_host_tags_in_folders(tag_group_id, operations, "check", watolib.Folder.root_folder())
 
     if affected_folders:
         message += _("Affected folders with an explicit reference to this tag "
@@ -707,15 +719,18 @@ def _rename_tags_after_confirmation(tag_id, operations):
     return True
 
 
-# operation is None -> tag group is deleted completely
-# tag_id is None -> Auxiliary tag has been deleted, no tag group affected
-def _change_host_tags_in_folders(tag_id, operations, mode, folder):
+def _change_host_tags_in_folders(tag_group_id, operations, mode, folder):
+    """Update host tag assignments in hosts/folders
+
+    tag_group_id is None -> Auxiliary tag has been deleted, no tag group affected
+    See _rename_tags_after_confirmation() doc string for additional information.
+    """
     need_save = False
     affected_folders = []
     affected_hosts = []
     affected_rulesets = []
-    if tag_id:
-        attrname = "tag_" + tag_id
+    if tag_group_id:
+        attrname = "tag_" + tag_group_id
         attributes = folder.attributes()
         if attrname in attributes:  # this folder has set the tag group in question
             if isinstance(operations, list):  # deletion of tag group
@@ -744,24 +759,24 @@ def _change_host_tags_in_folders(tag_id, operations, mode, folder):
 
         for subfolder in folder.all_subfolders().values():
             aff_folders, aff_hosts, aff_rulespecs = _change_host_tags_in_folders(
-                tag_id, operations, mode, subfolder)
+                tag_group_id, operations, mode, subfolder)
             affected_folders += aff_folders
             affected_hosts += aff_hosts
             affected_rulesets += aff_rulespecs
 
-        affected_hosts += _change_host_tags_in_hosts(folder, tag_id, operations, mode,
+        affected_hosts += _change_host_tags_in_hosts(folder, tag_group_id, operations, mode,
                                                      folder.hosts())
 
     affected_rulesets += _change_host_tags_in_rules(folder, operations, mode)
     return affected_folders, affected_hosts, affected_rulesets
 
 
-def _change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
+def _change_host_tags_in_hosts(folder, tag_group_id, operations, mode, hostlist):
     need_save = False
     affected_hosts = []
     for host in hostlist.itervalues():
         attributes = host.attributes()
-        attrname = "tag_" + tag_id
+        attrname = "tag_" + tag_group_id
         if attrname in attributes:
             if isinstance(operations, list):  # delete complete tag group
                 affected_hosts.append(host)
@@ -794,6 +809,8 @@ def _change_host_tags_in_rules(folder, operations, mode):
     have been removed or renamed. If tags are removed then the depending on the
     mode affected rules are either deleted ("delete") or the vanished tags are
     removed from the rule ("remove").
+
+    See _rename_tags_after_confirmation() doc string for additional information.
     """
     need_save = False
     affected_rulesets = set([])

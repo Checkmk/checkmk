@@ -5,7 +5,7 @@
 checkname = 'mcafee_webgateway'
 
 
-info = [['10', '20']]
+info = [['', '20']]
 
 
 freeze_time = '2019-05-27T05:30:07'
@@ -25,17 +25,11 @@ discovery = {'': [(None, {})]}
 checks = {
     '': [
         (None, {}, [
-            (0, 'Infections: 8.0/s', [
-                ('infections_rate', 8.0, None, None, None, None),
-            ]),
             (0, 'Connections blocked: 18.0/s', [
                 ('connections_blocked_rate', 18.0, None, None, None, None),
             ]),
         ]),
         (None, {'infections': (5, 10), 'connections_blocked': (10, 15)}, [
-            (1, 'Infections: 8.0/s (warn/crit at 5.0/s/10.0/s)', [
-                ('infections_rate', 8.0, 5, 10, None, None),
-            ]),
             (2, 'Connections blocked: 18.0/s (warn/crit at 10.0/s/15.0/s)', [
                 ('connections_blocked_rate', 18.0, 10, 15, None, None),
             ]),

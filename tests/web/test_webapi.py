@@ -355,8 +355,10 @@ def test_get_graph(web, site):
 
         # Wait for RRD file creation. Isn't this a bug that the graph is not instantly available?
         rrd_path = site.path("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd")
+        unixcat = site.path("bin/unixcat")
         rrdcached_socket = site.path("tmp/run/rrdcached.sock")
-        assert site.execute(["echo 'FLUSH %s' | unixcat %s" % (rrd_path, rrdcached_socket)]).wait() == 0
+        p = site.execute(["echo 'FLUSH %s' | %s %s" % (rrd_path, unixcat, rrdcached_socket)])
+        assert p.wait() == 0
 
         # Now we get a graph
         data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)

@@ -125,8 +125,9 @@ def check_postgres_bloat(item, params, parsed):
         # No errors. Show some general information
         for what, perc_max, abs_max in [("table", table_perc_max, table_abs_max),
                                         ("index", index_perc_max, index_abs_max)]:
-            yield 0, "Maximum %s bloat at %s: %d%%" % (what, perc_max["tablename"],
-                                                       float(perc_max["%sbloat" % what[0]]) * 100)
+            yield 0, "Maximum %s bloat at %s: %s" % (what, perc_max["tablename"],
+                                                     get_percent_human_readable(
+                                                         float(perc_max["%sbloat" % what[0]])))
             yield 0, "Maximum wasted %sspace at %s: %s" % (
                 what, abs_max["tablename"],
                 get_bytes_human_readable(

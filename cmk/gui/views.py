@@ -1503,7 +1503,7 @@ def _do_table_join(view, master_rows, master_filters, sorters):
     query = "%s%s\n" % (master_filters, "\n".join(join_filters))
     rows = query_data(
         datasource=slave_ds,
-        columns=[join_master_column, join_slave_column] + join_columns,
+        columns=list(set([join_master_column, join_slave_column] + join_columns)),
         add_headers=query,
         only_sites=view.only_sites,
         limit=None)

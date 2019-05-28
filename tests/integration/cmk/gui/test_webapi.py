@@ -678,7 +678,7 @@ def graph_test_config(web, site):
             timeout -= 1
             time.sleep(1)
             print "Checking for graph..."
-            assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
+        assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
                 "RRD %s is still missing" % "var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"
 
         yield

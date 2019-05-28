@@ -1,0 +1,11 @@
+Title: smart: Fixed unused metric definition
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p17
+Date: 1559036263
+Class: fix
+
+Because of an unused metric definition the metrics for "Power_Cycle_Count" was
+not diplayed correctly. This has been fixed.

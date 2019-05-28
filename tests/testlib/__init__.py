@@ -396,9 +396,9 @@ class Site(object):
                                                                            service_description)
             wait_obj = "%s;%s" % (hostname, service_description)
 
-        last_check, state = self.live.query_row(
+        last_check, state, plugin_output = self.live.query_row(
             "GET %s\n" \
-            "Columns: last_check state\n" \
+            "Columns: last_check state plugin_output\n" \
             "%s" \
             "WaitObject: %s\n" \
             "WaitTimeout: %d\n" \
@@ -414,7 +414,7 @@ class Site(object):
                 (wait_timeout, last_check_before, schedule_ts, last_check)
 
         assert state == expected_state, \
-            "Expected %d state, got %d state" % (expected_state, state)
+            "Expected %d state, got %d state, output %s" % (expected_state, state, plugin_output)
 
     def _get_last_check(self, hostname, service_description=None):
         if not service_description:

@@ -358,11 +358,16 @@ def test_get_graph(web, site):
         # Wait for RRD file creation. Isn't this a bug that the graph is not instantly available?
         rrd_path = site.path("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd")
         args = [site.path("bin/unixcat"), site.path("tmp/run/rrdcached.sock")]
-        sys.stdout.write("flushing %r via:: %r\n" % (rrd_path, args))
-        p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate("FLUSH %s\n" % rrd_path)
-        sys.stdout.write("stdout from rrdcached: %r\n" % out)
-        sys.stdout.write("stderr from rrdcached: %r\n" % err)
+        sys.stdout.write("flushing %r via: %r\n" % (rrd_path, args))
+        for i in xrange(10):  # HACK
+            sys.stdout.write("========== round %d\n" % i)
+            p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = p.communicate("FLUSH %s\n" % rrd_path)
+            sys.stdout.write("stdout from rrdcached: %r\n" % out)
+            sys.stdout.write("stderr from rrdcached: %r\n" % err)
+            if os.path.exists(rrd_path):
+                break
+            time.sleep(1)
         assert os.path.exists(rrd_path)
 
         # Now we get a graph

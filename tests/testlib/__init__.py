@@ -340,16 +340,16 @@ class Site(object):
 
 
     def execute(self, cmd, *args, **kwargs):
-        assert type(cmd) == list, "The command must be given as list"
-
-        sys.stdout.write("Executing: %s\n" % subprocess.list2cmdline(cmd))
-        if not self._is_running_as_site_user():
-            cmd = [ "sudo", "su", "-l", self.id,
-                    "-c", pipes.quote(" ".join([ pipes.quote(p) for p in cmd ])) ]
-            cmd_txt = " ".join(cmd)
-            return subprocess.Popen(cmd_txt, shell=True, *args, **kwargs)
+        assert isinstance(cmd, list), "The command must be given as list"
+        if self._is_running_as_site_user():
+            cmd_txt = subprocess.list2cmdline(cmd)
         else:
-            return subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
+            cmd_txt = " ".join([
+                "sudo", "su", "-l", self.id, "-c",
+                pipes.quote(" ".join([pipes.quote(p) for p in cmd]))
+            ])
+        sys.stdout.write("Executing: %s\n" % cmd_txt)
+        return subprocess.Popen(cmd_txt, shell=True, *args, **kwargs)
 
 
     def omd(self, mode, *args):

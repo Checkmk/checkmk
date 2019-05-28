@@ -729,10 +729,10 @@ class Options(object):
                     ))
             else:
                 raise ValueError("Invalid option: %r" % opt_str)
-        except ValueError as e:
+        except ValueError as exc:
             if debug():
                 raise
-            sys.stdout.write("INVALID CONFIGURATION: %s\n" % e)
+            sys.stdout.write("INVALID CONFIGURATION: %s\n" % exc)
             sys.exit(1)
 
 
@@ -789,7 +789,7 @@ def parse_sections(config):
 
 def ip_in_subnetwork(ip_address, subnetwork):
     """
-    Accepts ip address as string e.g. "192.168.1.1" and CIDR notation as string e.g."192.168.1.0/24".
+    Accepts ip address as string e.g. "10.80.1.1" and CIDR notation as string e.g."10.80.1.0/24".
     Returns False in case of incompatible IP versions.
 
     Implementation depends on Python2 and Python3 standard lib only.
@@ -809,37 +809,38 @@ def _ip_to_integer(ip_address):
     for version in (socket.AF_INET, socket.AF_INET6):
         try:
             ip_hex = socket.inet_pton(version, ip_address)
-            ip_integer = int(binascii.hexlify(ip_hex), 16)
-            return (ip_integer, 4 if version == socket.AF_INET else 6)
-        except:
-            pass
-    raise ValueError("invalid IP address")
+        except socket.error:
+            continue
+        ip_integer = int(binascii.hexlify(ip_hex), 16)
+        return (ip_integer, 4 if version == socket.AF_INET else 6)
+    raise ValueError("invalid IP address: %r" % ip_address)
 
 
 def _subnetwork_to_ip_range(subnetwork):
     """
+    Convert subnetwork to a range of IP addresses
+
     Raises ValueError in case of invalid subnetwork.
     """
     if '/' not in subnetwork:
         ip_integer, version = _ip_to_integer(subnetwork)
         return ip_integer, ip_integer, version
     network_prefix, netmask_len = subnetwork.split('/', 1)
-    try:
-        # try parsing the subnetwork first as IPv4, then as IPv6
-        for version in (socket.AF_INET, socket.AF_INET6):
-            ip_len = 32 if version == socket.AF_INET else 128
-            try:
-                suffix_mask = (1 << (ip_len - int(netmask_len))) - 1
-                netmask = ((1 << ip_len) - 1) - suffix_mask
-                ip_hex = socket.inet_pton(version, network_prefix)
-                ip_lower = int(binascii.hexlify(ip_hex), 16) & netmask
-                ip_upper = ip_lower + suffix_mask
-                return (ip_lower, ip_upper, 4 if version == socket.AF_INET else 6)
-            except:
-                pass
-    except:
-        pass
-    raise ValueError("invalid subnetwork")
+    # try parsing the subnetwork first as IPv4, then as IPv6
+    for version, ip_len in ((socket.AF_INET, 32), (socket.AF_INET6, 128)):
+        try:
+            ip_hex = socket.inet_pton(version, network_prefix)
+        except socket.error:
+            continue
+        try:
+            suffix_mask = (1 << (ip_len - int(netmask_len))) - 1
+        except ValueError:  # netmask_len is too large or invalid
+            raise ValueError("invalid subnetwork: %r" % subnetwork)
+        netmask = ((1 << ip_len) - 1) - suffix_mask
+        ip_lower = int(binascii.hexlify(ip_hex), 16) & netmask
+        ip_upper = ip_lower + suffix_mask
+        return (ip_lower, ip_upper, 4 if version == socket.AF_INET else 6)
+    raise ValueError("invalid subnetwork: %r" % subnetwork)
 
 
 def main():

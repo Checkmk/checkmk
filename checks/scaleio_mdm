@@ -75,9 +75,7 @@ def parse_scaleio_mdm(info):
         # The first subsection is different and entries can be parsed
         # directly. Hooray!
         if id_ == "Cluster":
-            nl = [entry.split(': ') for entry in line]
-            for l in nl:
-                data[l[0].strip()] = l[1].strip()
+            add_key_values(data, line)
         # The other subsections can have several nodes. Each node
         # starts with his name and has already some more information.
         # Sometimes there is information about a role inside of the

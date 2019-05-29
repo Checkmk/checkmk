@@ -348,32 +348,38 @@ def test_activate_changes(web, site):
 def test_get_graph(web, site):
     try:
         # No graph yet...
-        with pytest.raises(APIError) as e:
+        with pytest.raises(APIError) as exc_info:
             data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
-            assert "Cannot calculate graph recipes" in "%s" % e
+            assert "Cannot calculate graph recipes" in "%s" % exc_info
 
         # Now add the host
-        web.add_host("test-host-get-graph", attributes={
-            "ipaddress": "127.0.0.1",
-        })
+        web.add_host(
+            "test-host-get-graph", attributes={
+                "ipaddress": "127.0.0.1",
+            })
         web.discover_services("test-host-get-graph")
         web.activate_changes()
         site.schedule_check("test-host-get-graph", "Check_MK", 0)
 
         # Wait for RRD file creation. Isn't this a bug that the graph is not instantly available?
         rrd_path = site.path("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd")
-        args = [site.path("bin/unixcat"), site.path("tmp/run/rrdcached.sock")]
-        sys.stdout.write("flushing %r via: %r\n" % (rrd_path, args))
-        for i in xrange(10):  # HACK
-            sys.stdout.write("========== round %d\n" % i)
-            p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = p.communicate("FLUSH %s\n" % rrd_path)
-            sys.stdout.write("stdout from rrdcached: %r\n" % out)
-            sys.stdout.write("stderr from rrdcached: %r\n" % err)
+        for attempt in xrange(50):
+            time.sleep(0.1)
+            proc = subprocess.Popen([site.path("bin/unixcat"),
+                                     site.path("tmp/run/rrdcached.sock")],
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            out, err = proc.communicate("FLUSH %s\n" % rrd_path)
             if os.path.exists(rrd_path):
                 break
-            time.sleep(1)
-        assert os.path.exists(rrd_path)
+            sys.stdout.write("waiting for %s (attempt %d)%s%s\n" % (
+                rrd_path,
+                attempt + 1,  #
+                ", stdout: %s" % out if out else "",
+                ", stderr: %s" % err if err else ""))
+        else:
+            assert False, "RRD file %s missing" % rrd_path
 
         _test_get_graph_api(web)
         _test_get_graph_image(web)

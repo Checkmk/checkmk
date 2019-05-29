@@ -210,32 +210,29 @@ def get_status_filename(config):
     remote_hostname = remote.replace(":", "_")
 
     match = IPV4_REGEX.match(remote) or IPV6_REGEX.match(remote)
-    if match:
-        remote_ip = match.group()
-        # in case of IPv4 extended to IPv6 get rid of prefix for ip match lookup
-        if remote_ip.startswith("::ffff:"):
-            remote_ip = remote_ip[7:]
-    else:
-        remote_ip = None
-        LOGGER.debug("REMOTE neither IPv4 nor IPv6 address.")
+    if not match:
+        LOGGER.debug("REMOTE %r neither IPv4 nor IPv6 address.", remote)
+        return os.path.join(mk_vardir(), "logwatch.state.%s" % remote_hostname)
+
+    remote_ip = match.group()
+    # in case of IPv4 extended to IPv6 get rid of prefix for ip match lookup
+    if remote_ip.startswith("::ffff:"):
+        remote_ip = remote_ip[7:]
 
     # In case cluster configured map ip to cluster name if configured.
     # key "name" is mandatory and unique for cluster dicts
-    status_filename = None
-    cluster_name = None
+    cluster_name = remote_hostname
     cluster_configs = [nt for nt in config if isinstance(nt, ClusterConfig)]
-    LOGGER.debug("Cluster configurations:")
-    LOGGER.debug(cluster_configs)
-    if remote_ip is not None:
-        for conf in cluster_configs:
-            for ip_or_subnet in conf.ips_or_subnets:
-                if ip_in_subnetwork(remote_ip, ip_or_subnet):
-                    # Cluster name may not contain whitespaces (must be provided from
-                    # the WATO config as type ID or hostname).
-                    cluster_name = conf.name
-                    LOGGER.info("matching cluster ip %s", remote_ip)
-                    LOGGER.info("matching cluster name %s", cluster_name)
-    status_filename = "%s/logwatch.state.%s" % (mk_vardir(), cluster_name or remote_hostname)
+    LOGGER.debug("Cluster configurations: %r", cluster_configs)
+    for conf in cluster_configs:
+        for ip_or_subnet in conf.ips_or_subnets:
+            if ip_in_subnetwork(remote_ip, ip_or_subnet):
+                # Cluster name may not contain whitespaces (must be provided from
+                # the WATO config as type ID or hostname).
+                cluster_name = conf.name
+                LOGGER.info("matching cluster ip %s", remote_ip)
+                LOGGER.info("matching cluster name %s", cluster_name)
+    status_filename = os.path.join(mk_vardir(), "logwatch.state.%s" % cluster_name)
     LOGGER.info("Status filename: %s", status_filename)
     return status_filename
 

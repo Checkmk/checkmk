@@ -178,7 +178,7 @@ def test_add_group(web, group_type):
         assert group_alias == all_groups[group_id]["alias"]
 
         if cmk.is_managed_edition():
-            assert provider == all_groups[group_id]["provider"]
+            assert "provider" == all_groups[group_id]["provider"]
     finally:
         all_groups = web.get_all_groups(group_type)
         if group_id in all_groups:
@@ -228,7 +228,7 @@ def test_edit_group_missing(web, group_type):
         try:
             #web.edit_group(group_type, group_id, {"alias": group_alias2}, expect_error = True)
             web.edit_group(group_type, "%s_missing" % group_id, {"alias": group_alias2}, expect_error = True)
-        except APIError, e:
+        except APIError as e:
             assert str(e) != str(None)
             return
 

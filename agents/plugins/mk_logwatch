@@ -203,7 +203,12 @@ def get_status_filename(config):
     underscores (_) for IPv4 address or is plain $REMOTE in case it does not match
     an IPv4 or IPv6 address.
     """
-    remote = os.getenv("REMOTE", "")
+    remote = os.getenv("REMOTE")
+    if not remote:
+        status_filename = "logwatch.state" + (".local" if sys.stdout.isatty() else "")
+        return os.path.join(mk_vardir(), status_filename)
+    remote_hostname = remote.replace(":", "_")
+
     match = IPV4_REGEX.match(remote) or IPV6_REGEX.match(remote)
     if match:
         remote_ip = match.group()
@@ -214,7 +219,6 @@ def get_status_filename(config):
         remote_ip = None
         LOGGER.debug("REMOTE neither IPv4 nor IPv6 address.")
 
-    remote_hostname = remote.replace(":", "_")
     # In case cluster configured map ip to cluster name if configured.
     # key "name" is mandatory and unique for cluster dicts
     status_filename = None
@@ -235,10 +239,6 @@ def get_status_filename(config):
         status_filename = "%s/logwatch.state.%s" % (mk_vardir(), cluster_name)
     elif remote_hostname != "":
         status_filename = "%s/logwatch.state.%s" % (mk_vardir(), remote_hostname)
-    elif remote_hostname == "" and sys.stdout.isatty():  # real terminal
-        status_filename = "%s/logwatch.state.local" % mk_vardir()
-    elif remote_hostname == "" and not sys.stdout.isatty():  # piped or redirected
-        status_filename = "%s/logwatch.state" % mk_vardir()
     else:
         raise Exception("Status filename could not be determined.")
     LOGGER.info("Status filename: %s", status_filename)

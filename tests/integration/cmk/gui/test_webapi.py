@@ -7,6 +7,8 @@ import copy
 import json
 import os
 from StringIO import StringIO
+import subprocess
+import sys
 import time
 
 import pytest  # type: ignore
@@ -640,9 +642,9 @@ def test_activate_changes(web, site):
 @pytest.fixture(scope="module")
 def graph_test_config(web, site):
     # No graph yet...
-    with pytest.raises(APIError) as e:
+    with pytest.raises(APIError) as exc_info:
         web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
-        assert "Cannot calculate graph recipes" in "%s" % e
+        assert "Cannot calculate graph recipes" in "%s" % exc_info
 
     try:
         # Now add the host
@@ -666,20 +668,25 @@ def graph_test_config(web, site):
         web.activate_changes()
         site.schedule_check("test-host-get-graph", "Check_MK", 0)
 
-        # Wait for RRD file creation
-        # Isn't this a bug that the graph is not instantly available?
-        timeout = 10
-        print "Checking for graph..."
-        while timeout and not site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"):
-            try:
-                web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
-            except Exception:
-                pass
-            timeout -= 1
-            time.sleep(1)
-            print "Checking for graph..."
-        assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
-                "RRD %s is still missing" % "var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"
+        # Wait for RRD file creation. Isn't this a bug that the graph is not instantly available?
+        rrd_path = site.path("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd")
+        for attempt in xrange(50):
+            time.sleep(0.1)
+            proc = subprocess.Popen([site.path("bin/unixcat"),
+                                     site.path("tmp/run/rrdcached.sock")],
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            out, err = proc.communicate("FLUSH %s\n" % rrd_path)
+            if os.path.exists(rrd_path):
+                break
+            sys.stdout.write("waiting for %s (attempt %d)%s%s\n" % (
+                rrd_path,
+                attempt + 1,  #
+                ", stdout: %s" % out if out else "",
+                ", stderr: %s" % err if err else ""))
+        else:
+            assert False, "RRD file %s missing" % rrd_path
 
         yield
     finally:

@@ -13,12 +13,12 @@ pytestmark = pytest.mark.checks
             'virthost': ('www.test123.de', True)
         }),
         [
-            '-H',
-            'www.test123.de',
             '-u',
             '/images',
             '--onredirect=follow',
             '-L',
+            '-H',
+            'www.test123.de',
             '--sni',
             '-p',
             80,
@@ -36,14 +36,14 @@ pytestmark = pytest.mark.checks
             'virthost': ('www.test123.de', True)
         }),
         [
-            '-H',
-            'www.test123.de',
             '-u',
             '/images',
             '--ssl',
             '--extended-perfdata',
             '-j',
             'CONNECT',
+            '-H',
+            'www.test123.de',
             '--sni',
             '163.172.86.64',
             'www.test123.de:3128',
@@ -55,7 +55,7 @@ pytestmark = pytest.mark.checks
             'cert_host': 'www.test123.com',
             'port': '42',
         }),
-        ['-H', 'www.test123.com', '-C', '10,20', '--sni', '-p', '42', 'www.test123.com'],
+        ['-C', '10,20', '-H', 'www.test123.com', '--sni', '-p', '42', 'www.test123.com'],
     ),
     (
         (None, {
@@ -65,7 +65,7 @@ pytestmark = pytest.mark.checks
             'proxy': 'p.roxy',
         }),
         [
-            '-H', 'www.test123.com', '-C', '10,20', '--ssl', '-j', 'CONNECT', '--sni', 'p.roxy',
+            '-C', '10,20', '--ssl', '-j', 'CONNECT', '-H', 'www.test123.com', '--sni', 'p.roxy',
             'www.test123.com:42'
         ],
     ),
@@ -77,7 +77,7 @@ pytestmark = pytest.mark.checks
             'proxy': 'p.roxy:23',
         }),
         [
-            '-H', 'www.test123.com', '-C', '10,20', '--ssl', '-j', 'CONNECT', '--sni', '-p', '23',
+            '-C', '10,20', '--ssl', '-j', 'CONNECT', '-H', 'www.test123.com', '--sni', '-p', '23',
             'p.roxy', 'www.test123.com:42'
         ],
     ),
@@ -89,7 +89,7 @@ pytestmark = pytest.mark.checks
             'proxy': '[dead:beef::face]:23',
         }),
         [
-            '-H', 'www.test123.com', '-C', '10,20', '--ssl', '-j', 'CONNECT', '--sni', '-p', '23',
+            '-C', '10,20', '--ssl', '-j', 'CONNECT', '-H', 'www.test123.com', '--sni', '-p', '23',
             '[dead:beef::face]', 'www.test123.com:42'
         ],
     ),
@@ -110,7 +110,7 @@ pytestmark = pytest.mark.checks
             'disable_sni': True
         },
         [
-            '-H', 'www.test123.com', '-C', '10,20', '--ssl', '-j', 'CONNECT', '-6', '-p', 23,
+            '-C', '10,20', '--ssl', '-j', 'CONNECT', '-H', 'www.test123.com', '-6', '-p', 23,
             '[dead:beef::face]', 'www.test123.com:42'
         ],
     ),

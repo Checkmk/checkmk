@@ -325,7 +325,13 @@ def read_config(files):
             section_context = "no_section"
             continue  # go to next line
         if section_context == "no_section":
-            if not line.startswith("CLUSTER") and not is_comment(line):
+            if line.startswith("CLUSTER "):
+                section_context = "cluster"
+                cluster_ips_or_subnets = []
+                cluster_name = line[8:].strip()
+                cluster_configs.append(ClusterConfig(cluster_name, cluster_ips_or_subnets))
+                LOGGER.debug("new cluster: %s", cluster_name)
+            else:
                 section_context = "logfiles"
                 patterns = []
                 cont_list = []  # Clear list of continuation patterns from last file
@@ -333,14 +339,6 @@ def read_config(files):
                 filenames = parse_filenames(line)
                 logfiles_configs.append(LogfilesConfig(filenames, patterns))
                 LOGGER.debug("Filenames: %s", filenames)
-            elif line.startswith("CLUSTER"):
-                section_context = "cluster"
-                cluster_ips_or_subnets = []
-                cluster_name = line.replace("CLUSTER ", "").strip()
-                cluster_configs.append(ClusterConfig(cluster_name, cluster_ips_or_subnets))
-                LOGGER.debug("New cluster: %s", cluster_name)
-            else:
-                raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
         elif section_context == "logfiles":
             if not is_pattern_or_ip(line):
                 raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))

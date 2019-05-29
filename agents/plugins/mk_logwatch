@@ -235,12 +235,7 @@ def get_status_filename(config):
                     cluster_name = conf.name
                     LOGGER.info("matching cluster ip %s", remote_ip)
                     LOGGER.info("matching cluster name %s", cluster_name)
-    if cluster_name:
-        status_filename = "%s/logwatch.state.%s" % (mk_vardir(), cluster_name)
-    elif remote_hostname != "":
-        status_filename = "%s/logwatch.state.%s" % (mk_vardir(), remote_hostname)
-    else:
-        raise Exception("Status filename could not be determined.")
+    status_filename = "%s/logwatch.state.%s" % (mk_vardir(), cluster_name or remote_hostname)
     LOGGER.info("Status filename: %s", status_filename)
     return status_filename
 

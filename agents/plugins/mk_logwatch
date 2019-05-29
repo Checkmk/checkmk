@@ -230,8 +230,8 @@ def get_status_filename(config):
                 # Cluster name may not contain whitespaces (must be provided from
                 # the WATO config as type ID or hostname).
                 cluster_name = conf.name
-                LOGGER.info("matching cluster ip %s", remote_ip)
-                LOGGER.info("matching cluster name %s", cluster_name)
+                LOGGER.info("Matching cluster ip %s", remote_ip)
+                LOGGER.info("Matching cluster name %s", cluster_name)
     status_filename = os.path.join(mk_vardir(), "logwatch.state.%s" % cluster_name)
     LOGGER.info("Status filename: %s", status_filename)
     return status_filename
@@ -277,8 +277,7 @@ def get_config_files(directory):
     # Add config file paths from a logwatch.d folder
     for config_file in glob.glob(directory + "/logwatch.d/*.cfg"):
         config_file_paths.append(config_file)
-    LOGGER.info("Configuration file paths:")
-    LOGGER.info(config_file_paths)
+    LOGGER.info("Configuration file paths: %r", config_file_paths)
     return config_file_paths
 
 
@@ -293,8 +292,7 @@ def read_config(files):
     Or tuple describes optional cluster mapping and is ClusterConfig(name, ips_or_subnets)
     with ips as list of strings.
     """
-    LOGGER.debug("config files:")
-    LOGGER.debug(files)
+    LOGGER.debug("Config files: %r", files)
 
     config = []
     logfiles_configs = []
@@ -334,19 +332,19 @@ def read_config(files):
                 rewrite_list = []  # Same for rewrite patterns
                 filenames = parse_filenames(line)
                 logfiles_configs.append(LogfilesConfig(filenames, patterns))
-                LOGGER.debug("filenames: %s", filenames)
+                LOGGER.debug("Filenames: %s", filenames)
             elif line.startswith("CLUSTER"):
                 section_context = "cluster"
                 cluster_ips_or_subnets = []
                 cluster_name = line.replace("CLUSTER ", "").strip()
                 cluster_configs.append(ClusterConfig(cluster_name, cluster_ips_or_subnets))
-                LOGGER.debug("new cluster: %s", cluster_name)
+                LOGGER.debug("New cluster: %s", cluster_name)
             else:
                 raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
         elif section_context == "logfiles":
             if not is_pattern_or_ip(line):
                 raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
-            LOGGER.debug("pattern line: %s", line)
+            LOGGER.debug("Pattern line: %s", line)
             if patterns is None:
                 raise Exception("Missing logfile names")
             level, pattern = line.split(None, 1)
@@ -362,23 +360,21 @@ def read_config(files):
                 rewrite_list = []
                 pattern = (level, compiled, cont_list, rewrite_list)
                 patterns.append(pattern)
-                LOGGER.debug("pattern %s", pattern)
+                LOGGER.debug("Pattern %s", pattern)
         elif section_context == "cluster":
             if not is_pattern_or_ip(line):
                 raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
             ip_or_subnet = line.strip()
             cluster_ips_or_subnets.append(ip_or_subnet)
-            LOGGER.debug("cluster ip: %s", ip_or_subnet)
+            LOGGER.debug("Cluster ip: %s", ip_or_subnet)
         else:
             raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
 
     config.extend(logfiles_configs)
     config.extend(cluster_configs)
 
-    LOGGER.info("Logfiles configurations:")
-    LOGGER.info(logfiles_configs)
-    LOGGER.info("Optional cluster configurations:")
-    LOGGER.info(cluster_configs)
+    LOGGER.info("Logfiles configurations: %r", logfiles_configs)
+    LOGGER.info("Optional cluster configurations: %r", cluster_configs)
     return config
 
 
@@ -399,8 +395,7 @@ def read_status(file_name):
 
     Status file lines may not be empty but must contain | separated status meta data.
     """
-    LOGGER.debug("Status file:")
-    LOGGER.debug(file_name)
+    LOGGER.debug("Status file: %r", file_name)
     if debug():
         return {}
 
@@ -422,15 +417,14 @@ def read_status(file_name):
             raise Exception("Parsing of status file %s line \"%s\" failed: %s" \
                             % (file_name, line, e))
 
-    LOGGER.info("read status:")
-    LOGGER.info(status)
+    LOGGER.info("Read status: %r", status)
     return status
 
 
 def save_status(status, file_name):
-    LOGGER.debug("save status:")
-    LOGGER.debug("status: %s", status)
-    LOGGER.debug("filename: %s", file_name)
+    LOGGER.debug("Save status:")
+    LOGGER.debug("Status: %s", status)
+    LOGGER.debug("Filename: %s", file_name)
     with open(file_name, "w") as f:
         for filename, (offset, inode) in status.items():
             f.write("%s|%d|%d\n" % (filename, offset, inode))
@@ -889,15 +883,13 @@ def main():
         elif isinstance(process_result, None):
             sys.stdout.write('[[[%s:cannotopen]]]' % logfile)
         else:
-            LOGGER.debug("Invalid logfile processing result %s", process_result)
+            LOGGER.debug("Invalid logfile processing result: %r", process_result)
 
-        LOGGER.debug("Loglines:")
-        LOGGER.debug(loglines)
+        LOGGER.debug("Loglines: %r", loglines)
         for line in loglines:
             sys.stdout.write(line)
         if at_least_warnings:
-            LOGGER.debug("Warnings and errors:")
-            LOGGER.debug(warnings_and_errors)
+            LOGGER.debug("Warnings and errors: %r", warnings_and_errors)
             for wa_er in warnings_and_errors:
                 sys.stdout.write(wa_er)
 

@@ -103,41 +103,6 @@ Boston, MA 02110-1301 USA.
 }
 
 /* WATO configuration forms */
-/* TODO: Reproduce all table.form elements */
-.wato table.form {
-  width: 100%;
-  margin-left: 0;
-
-  td {
-    &.legend i, &.title i {
-      margin-top: 13px;
-    }
-
-    &.legend {
-      width: 300px;
-
-      h3 {
-        padding: 0;
-        margin: 0 0 5px;
-        font-size: 12px;
-        font-weight: normal;
-      }
-    }
-
-    /* Foldable sections in host properties */
-    &.title i {
-      padding-bottom: 8px;
-      font-weight: normal;
-      border-top-style: solid;
-    }
-
-    &.checkbox {
-      width: 20px;
-      text-align: center;
-    }
-  }
-}
-
 .wato form.new_rule {
   margin: 10px 0;
 }
@@ -702,13 +667,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   margin: 0;
 }
 
-/* This style destroys many other td styles since
-   it is too specific or too unspecific */
-/* .wato table.form td.content td {
-  padding: 0;
-  vertical-align: middle;
-}*/
-
 .wato table.data.ruleset tr.disabled td * {
   color: #999;
   text-shadow: 0 1px 0 #fff;
@@ -809,31 +767,6 @@ body.main .popup_menu .wato div.mainmenu span {
     left: 16px;
     width: 48px;
     height: 48px;
-  }
-}
-
-/* Special styles for roles editor (permissions) */
-/* TODO: Reproduce these table.form elements
- * It seems these are of class .nform now */
-.wato table.form table.permissions {
-  width: 100%;
-  border-collapse: collapse;
-  border-spacing: 0;
-
-  td {
-    padding-top: 2px;
-
-    &.select {
-      width: 120px;
-    }
-
-    &.descr {
-      vertical-align: middle;
-    }
-  }
-
-  select {
-    width: 110px;
   }
 }
 

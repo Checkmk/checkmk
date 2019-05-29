@@ -1127,75 +1127,6 @@ body.main #mk_side_search_field, body.main select, body.main textarea {
   border: 1px solid $theme-color-table-border;
 }
 
-/* TODO: lm: Is this table.form used anywhere? If not, remove it!
- *       ko: Remove these and other table.form styles in _wato.scss
- */
-table.form {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-collapse: collapse;
-    empty-cells: show;
-    border-spacing: 0px;
-    margin: 0px 10px 10px 0px;
-    border-width: 1px;
-    border-style: none none solid solid;
-    border-color: #2f5f74;
-}
-/* Sorry for the mess here. It is due to using foldable_containter
-   within a form table (currently only in WATO in the host and
-   folder properties) */
-
-table.form.nomargin {
-    margin: 0;
-    border-bottom-style: none;
-}
-
-table.form.nomargin td.title {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-table.form > tbody > tr > td {
-    padding: 5px 8px;
-    color: #000;
-    border-width: 1px;
-    border-color: #2f5f73;
-    border-style: solid solid none none;
-}
-
-table.form img.toggleheader {
-    width: 20px;
-    height: 20px;
-    cursor: auto;
-    padding-right: 5px;
-    vertical-align: middle;
-}
-table.form img.toggleheader.hover {
-    cursor: pointer;
-}
-
-
-/* Bottom row with action buttons, right justified */
-table.form td.buttons {
-    color: #274750;
-}
-
-/* Inter-heading row over complete width */
-table.form td.title {
-    border-right-style: solid;
-    font-weight: bold;
-}
-
-table.form td.legend.border {
-/*    border-right-style: solid; */
-}
-table.form td.hilite {
-    background-color: rgba(255, 255, 255, 0.2);
-    margin: 10px;
-}
-
-table.form td.lgend.button {
-    text-align: right;
-}
-
 /* TODO: Reproduce this html element */
 td.content hr {
     height: 1px;
@@ -1203,19 +1134,10 @@ td.content hr {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
-td.legend {
-    width: 150px;
-}
-
 /* TODO: Reproduce these html elements (also have a look at .tab and .tabactive
  *       elemenets in _logwatch.scss)
  */
 input.tab#results, input.tabactive#results { background-color: #fe6; }
-
-/* input elements in forms */
-table.form input.number {
-    text-align: right;
-}
 
 /* TODO: Reproduce these two html elements */
 input.date, input.time {

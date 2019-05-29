@@ -994,11 +994,20 @@ class RulespecActiveChecksHttp(HostRulespec):
             help=_("Usually Check_MK will nail this check to the primary IP address of the host"
                    " it is attached to. It will use corresponding IP version (IPv4/IPv6) and"
                    " the default port (80/443). With this option you can override either of these"
-                   " parameters."),
+                   " parameters. By default the host name / IP address will be used as virtual"
+                   " host as well. In some setups however, you may want to distiguish the contacted"
+                   " servers address from your virtual host name (e.g. if the virtual host name is"
+                   " not resolvable by DNS)."),
             elements=[
                 ("address", TextAscii(title=_("Hosts name / IP address"), allow_empty=False)),
                 ("port", self._portspec(443)),
                 _ip_address_family_element(),
+                ("virthost",
+                 TextAscii(
+                     title=_("Virtual host"),
+                     help=_("Set this in order to specify the name of the"
+                            " virtual host for the query."),
+                     allow_empty=False)),
             ],
         )
 
@@ -1033,12 +1042,6 @@ class RulespecActiveChecksHttp(HostRulespec):
                               Dictionary(
                                   title=_("URL Checking"),
                                   elements=[
-                                      ("virthost",
-                                       TextAscii(
-                                           title=_("Virtual host"),
-                                           help=_("Set this in order to specify the name of the"
-                                                  " virtual host for the query."),
-                                           allow_empty=False)),
                                       ("uri",
                                        TextAscii(
                                            title=_("URI to fetch (default is <tt>/</tt>)"),
@@ -1327,8 +1330,8 @@ class RulespecActiveChecksHttp(HostRulespec):
         host_settings = transformed.setdefault("host", {})
         # URL mode:
         if "virthost" in mode:
-            virthost, omit_ip = mode["virthost"]
-            mode["virthost"] = virthost
+            virthost, omit_ip = mode.pop("virthost")
+            host_settings["virthost"] = virthost
             if omit_ip or proxy_address:
                 host_settings["address"] = virthost
         # CERT mode:

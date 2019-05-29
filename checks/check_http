@@ -48,8 +48,8 @@ def _transform_check_http(params):
     host_settings = transformed.setdefault("host", {})
     # URL mode:
     if "virthost" in mode:
-        virthost, omit_ip = mode["virthost"]
-        mode["virthost"] = virthost
+        virthost, omit_ip = mode.pop("virthost")
+        host_settings["virthost"] = virthost
         if omit_ip or proxy_address:
             host_settings["address"] = virthost
     # CERT mode:
@@ -77,8 +77,8 @@ def _get_host(params):
     if address is None:
         address = "$_HOSTADDRESS_%s$" % family[-1]
 
-    HostSettings = collections.namedtuple("HostSettings", ("address", "port", "family"))
-    return HostSettings(address, host.get("port"), family)
+    HostSettings = collections.namedtuple("HostSettings", ("address", "port", "family", "virtual"))
+    return HostSettings(address, host.get("port"), family, host.get('virthost', address))
 
 
 def _get_proxy(params):
@@ -96,7 +96,7 @@ def _get_proxy(params):
 
 
 def _certificate_args(host, proxy, settings):
-    args = ['-H', host.address]
+    args = []
 
     if "cert_days" in settings:
         # legacy behavior
@@ -113,7 +113,7 @@ def _certificate_args(host, proxy, settings):
 
 
 def _url_args(host, _proxy, settings):
-    args = ["-H", settings.get("virthost", host.address)]
+    args = []
 
     if "uri" in settings:
         args += ['-u', settings["uri"]]
@@ -195,7 +195,7 @@ def _url_args(host, _proxy, settings):
 
 
 def _common_args(host, proxy, params):
-    args = []
+    args = ["-H", host.virtual]
 
     if host.family == 'ipv6':
         args += ['-6']

@@ -26,21 +26,7 @@ LOGWATCH_CONFIG_CONTENT = """
  C Oops
  W generic protection rip
  W .*Unrecovered read error - auto reallocate failed
-
-CLUSTER my_cluster
- 192.168.1.1
- 192.168.1.2
- 192.168.1.3
- 192.168.1.4
-
-CLUSTER another_cluster
- 192.168.1.5
- 192.168.1.6
- 1762:0:0:0:0:B03:1:AF18
-
-CLUSTER yet_another_cluster
- 192.168.1.0/24
- 1762:0000:0000:0000:0000:0000:0000:0000/64"""
+"""
 
 
 @pytest.fixture(scope="module")
@@ -101,7 +87,43 @@ def test_iter_config_lines(agent_plugin_as_module, tmpdir):
     assert read == ['this is a line']
 
 
-def test_read_config(agent_plugin_as_module, monkeypatch):
+@pytest.mark.parametrize("config_lines, cluster_name, cluster_data", [
+    (
+        [
+            'not a cluster line',
+            '',
+            'CLUSTER duck',
+            ' 192.168.1.1',
+            ' 192.168.1.2  ',
+        ],
+        "duck",
+        ['192.168.1.1', '192.168.1.2'],
+    ),
+    (
+        [
+            'CLUSTER empty',
+            '',
+        ],
+        "empty",
+        [],
+    ),
+])
+def test_read_config_cluster(agent_plugin_as_module, config_lines, cluster_name, cluster_data,
+                             monkeypatch):
+    """checks if the agent plugin parses the configuration appropriately."""
+    mk_logwatch = agent_plugin_as_module
+
+    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iter(config_lines))
+
+    __, c_config = mk_logwatch.read_config(None)
+    cluster = c_config[0]
+
+    assert isinstance(cluster, mk_logwatch.ClusterConfig)
+    assert cluster.name == cluster_name
+    assert cluster.ips_or_subnets == cluster_data
+
+
+def test_read_config_comprehensive(agent_plugin_as_module, monkeypatch):
     """checks if the agent plugin parses the configuration appropriately."""
     mk_logwatch = agent_plugin_as_module
     # setup
@@ -109,7 +131,7 @@ def test_read_config(agent_plugin_as_module, monkeypatch):
     monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iterlines)
 
     # execution
-    l_config, c_config = mk_logwatch.read_config(None)
+    l_config, __ = mk_logwatch.read_config(None)
 
     # expected logfiles config
     for lc in l_config:
@@ -132,26 +154,6 @@ def test_read_config(agent_plugin_as_module, monkeypatch):
                       list)  # no "A" pattern levels, empty continuation pattern list ok
     assert isinstance(logfiles_config.patterns[0][3],
                       list)  # no "R" pattern level, empty rewrite pattern list ok
-
-    # expected cluster config
-    for cc in c_config:
-        assert isinstance(cc, mk_logwatch.ClusterConfig)
-    cluster_config, another_cluster, yet_another_cluster = c_config
-
-    assert cluster_config.name == "my_cluster"
-    assert cluster_config.ips_or_subnets == [
-        '192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4'
-    ]
-
-    assert another_cluster.name == "another_cluster"
-    assert another_cluster.ips_or_subnets == [
-        '192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'
-    ]
-
-    assert yet_another_cluster.name == "yet_another_cluster"
-    assert yet_another_cluster.ips_or_subnets == [
-        '192.168.1.0/24', '1762:0000:0000:0000:0000:0000:0000:0000/64'
-    ]
 
 
 @pytest.mark.parametrize(

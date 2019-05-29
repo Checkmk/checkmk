@@ -148,12 +148,12 @@ def test_read_config(agent_plugin_as_module, tmpdir):
 
     # execution
     l_config, c_config = mk_logwatch.read_config(files)
-    actual_config = l_config + c_config  # TODO: clean this up. (comming up next)
 
     # expected logfiles config
-    for lc in actual_config[:3]:
+    for lc in l_config:
         assert isinstance(lc, mk_logwatch.LogfilesConfig)
-    logfiles_config = actual_config[0]
+
+    logfiles_config = l_config[0]
     assert logfiles_config.files == ['/var/log/messages']
     assert [l[0] for l in logfiles_config.patterns] == ['C', 'I', 'W', 'W', 'W', 'W', 'C', 'C']
     patterns_first_logfiles_config = [
@@ -162,7 +162,7 @@ def test_read_config(agent_plugin_as_module, tmpdir):
         "device-mapper: thin:.*reached low water mark", "device-mapper: thin:.*no free space",
         "Error: (.*)"
     ]
-    compiled_patterns = []
+
     for compiled, raw in zip([l[1] for l in logfiles_config.patterns],
                              patterns_first_logfiles_config):
         assert compiled.pattern == raw
@@ -172,19 +172,20 @@ def test_read_config(agent_plugin_as_module, tmpdir):
                       list)  # no "R" pattern level, empty rewrite pattern list ok
 
     # expected cluster config
-    for cc in actual_config[3:]:
+    for cc in c_config:
         assert isinstance(cc, mk_logwatch.ClusterConfig)
-    cluster_config = actual_config[3]
+    cluster_config, another_cluster, yet_another_cluster = c_config
+
     assert cluster_config.name == "my_cluster"
     assert cluster_config.ips_or_subnets == [
         '192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4'
     ]
-    another_cluster = actual_config[4]
+
     assert another_cluster.name == "another_cluster"
     assert another_cluster.ips_or_subnets == [
         '192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'
     ]
-    yet_another_cluster = actual_config[5]
+
     assert yet_another_cluster.name == "yet_another_cluster"
     assert yet_another_cluster.ips_or_subnets == [
         '192.168.1.0/24', '1762:0000:0000:0000:0000:0000:0000:0000/64'

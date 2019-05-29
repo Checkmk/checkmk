@@ -1,32 +1,7 @@
 # -*- encoding: utf-8
 import os
-import sys
 import pytest
 from testlib import cmk_path  # pylint: disable=import-error
-from re import compile
-
-# consistent to check_mk/agents/cfg_examples/logwatch.cfg
-LOGWATCH_CONFIG_CONTENT = """
-/var/log/messages
- C Fail event detected on md device
- I mdadm.*: Rebuild.*event detected
- W mdadm\[
- W ata.*hard resetting link
- W ata.*soft reset failed (.*FIS failed)
- W device-mapper: thin:.*reached low water mark
- C device-mapper: thin:.*no free space
- C Error: (.*)
-
-/var/log/auth.log
- W sshd.*Corrupted MAC on input
-
-/var/log/syslog /var/log/kern.log
- I registered panic notifier
- C panic
- C Oops
- W generic protection rip
- W .*Unrecovered read error - auto reallocate failed
-"""
 
 
 @pytest.fixture(scope="module")
@@ -123,37 +98,76 @@ def test_read_config_cluster(agent_plugin_as_module, config_lines, cluster_name,
     assert cluster.ips_or_subnets == cluster_data
 
 
-def test_read_config_comprehensive(agent_plugin_as_module, monkeypatch):
+@pytest.mark.parametrize("config_lines, logfiles_files, logfiles_patterns", [
+    (
+        [
+            '',
+            '/var/log/messages',
+            ' C Fail event detected on md device',
+            ' I mdadm.*: Rebuild.*event detected',
+            ' W mdadm\[',
+            ' W ata.*hard resetting link',
+            ' W ata.*soft reset failed (.*FIS failed)',
+            ' W device-mapper: thin:.*reached low water mark',
+            ' C device-mapper: thin:.*no free space',
+            ' C Error: (.*)',
+        ],
+        ['/var/log/messages'],
+        [
+            ('C', 'Fail event detected on md device', [], []),
+            ('I', 'mdadm.*: Rebuild.*event detected', [], []),
+            ('W', r'mdadm\[', [], []),
+            ('W', 'ata.*hard resetting link', [], []),
+            ('W', 'ata.*soft reset failed (.*FIS failed)', [], []),
+            ('W', 'device-mapper: thin:.*reached low water mark', [], []),
+            ('C', 'device-mapper: thin:.*no free space', [], []),
+            ('C', 'Error: (.*)', [], []),
+        ],
+    ),
+    (
+        [
+            '',
+            '/var/log/auth.log',
+            ' W sshd.*Corrupted MAC on input',
+        ],
+        ['/var/log/auth.log'],
+        [('W', 'sshd.*Corrupted MAC on input', [], [])],
+    ),
+    (
+        [
+            '/var/log/syslog /var/log/kern.log',
+            ' I registered panic notifier',
+            ' C panic',
+            ' C Oops',
+            ' W generic protection rip',
+            ' W .*Unrecovered read error - auto reallocate failed',
+        ],
+        ['/var/log/syslog', '/var/log/kern.log'],
+        [
+            ('I', 'registered panic notifier', [], []),
+            ('C', 'panic', [], []),
+            ('C', 'Oops', [], []),
+            ('W', 'generic protection rip', [], []),
+            ('W', '.*Unrecovered read error - auto reallocate failed', [], []),
+        ],
+    ),
+])
+def test_read_config_logfiles(agent_plugin_as_module, config_lines, logfiles_files,
+                              logfiles_patterns, monkeypatch):
     """checks if the agent plugin parses the configuration appropriately."""
     mk_logwatch = agent_plugin_as_module
-    # setup
-    iterlines = iter(LOGWATCH_CONFIG_CONTENT.splitlines())
-    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iterlines)
 
-    # execution
+    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iter(config_lines))
+
     l_config, __ = mk_logwatch.read_config(None)
+    logfiles = l_config[0]
 
-    # expected logfiles config
-    for lc in l_config:
-        assert isinstance(lc, mk_logwatch.LogfilesConfig)
-
-    logfiles_config = l_config[0]
-    assert logfiles_config.files == ['/var/log/messages']
-    assert [l[0] for l in logfiles_config.patterns] == ['C', 'I', 'W', 'W', 'W', 'W', 'C', 'C']
-    patterns_first_logfiles_config = [
-        "Fail event detected on md device", "mdadm.*: Rebuild.*event detected", "mdadm\[",
-        "ata.*hard resetting link", "ata.*soft reset failed (.*FIS failed)",
-        "device-mapper: thin:.*reached low water mark", "device-mapper: thin:.*no free space",
-        "Error: (.*)"
-    ]
-
-    for compiled, raw in zip([l[1] for l in logfiles_config.patterns],
-                             patterns_first_logfiles_config):
-        assert compiled.pattern == raw
-    assert isinstance(logfiles_config.patterns[0][2],
-                      list)  # no "A" pattern levels, empty continuation pattern list ok
-    assert isinstance(logfiles_config.patterns[0][3],
-                      list)  # no "R" pattern level, empty rewrite pattern list ok
+    assert isinstance(logfiles, mk_logwatch.LogfilesConfig)
+    assert logfiles.files == logfiles_files
+    assert len(logfiles.patterns) == len(logfiles_patterns)
+    for actual, expected_raw in zip(logfiles.patterns, logfiles_patterns):
+        actual_raw = (actual[0], actual[1].pattern, actual[2], actual[3])
+        assert actual_raw == expected_raw
 
 
 @pytest.mark.parametrize(

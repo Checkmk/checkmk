@@ -133,7 +133,7 @@ check_info['sap_hana_license'] = {
     'inventory_function': inventory_sap_hana_license,
     'check_function': check_sap_hana_license,
     'service_description': 'SAP HANA License %s',
-    'includes': ['sap_hana.include', 'backport.include'],
+    'includes': ['sap_hana.include'],
     "has_perfdata": True,
     'node_info': True,
     'default_levels_variable': 'sap_hana_license_default_levels',

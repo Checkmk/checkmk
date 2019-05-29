@@ -1013,170 +1013,245 @@ table.data div.objectlist div {
   margin: 2px;
 }
 
-///*-------------------------------------------------------------------------.
-//|                    _____                                                 |
-//|                   |  ___|__  _ __ _ __ ___  ___                          |
-//|                   | |_ / _ \| '__| '_ ` _ \/ __|                         |
-//|                   |  _| (_) | |  | | | | | \__ \                         |
-//|                   |_|  \___/|_|  |_| |_| |_|___/                         |
-//|                                                                          |
-//+--------------------------------------------------------------------------+
-//| Input forms (e.g. Filters, Commands, WATO)                               |
-//'-------------------------------------------------------------------------*/
-//
-//input[type=text], textarea {
-//    box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
-//    position: relative;
-//}
-//
-//input[type=password] {
-//    box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
-//}
-//input[type=text], input[type=password] {
-//    height: 18px;
-//    padding: 3px 3px 1px 3px;
-//    vertical-align: middle;
-//}
-//select {
-//    height: 24px;
-//    box-shadow: 0.1px 1.2px 1.8px 0 #888 inset;
-//    vertical-align: middle;
-//    padding-top: 4px;
-//
-//}
-//
-//select[multiple=multiple] {
-//    height: auto;
-//}
-//
-//input[type=radio] {
-//    margin-left: 0px;
-//}
-//input[type=checkbox] {
-//    margin-left: 0px;
-//}
-//
-//
-//h2.formcaption {
-//  font-size: 100%;
-//  margin-bottom: 0px;
-//}
-//
-///* TODO: lm: Is this table.form used anywhere? If not, remove it! */
-//
-//table.form {
-//    background-color: rgba(255, 255, 255, 0.2);
-//    border-collapse: collapse;
-//    empty-cells: show;
-//    border-spacing: 0px;
-//    margin: 0px 10px 10px 0px;
-//    border-width: 1px;
-//    border-style: none none solid solid;
-//    border-color: #2f5f74;
-//}
-///* Sorry for the mess here. It is due to using foldable_containter
-//   within a form table (currently only in WATO in the host and
-//   folder properties) */
-//
-//table.form.nomargin {
-//    margin: 0;
-//    border-bottom-style: none;
-//}
-//
-//table.form.nomargin td.title {
-//    background-color: rgba(255, 255, 255, 0.2);
-//}
-//
-//table.form > tbody > tr > td {
-//    padding: 5px 8px;
-//    color: #000;
-//    border-width: 1px;
-//    border-color: #2f5f73;
-//    border-style: solid solid none none;
-//}
-//
-//table.form img.toggleheader {
-//    width: 20px;
-//    height: 20px;
-//    cursor: auto;
-//    padding-right: 5px;
-//    vertical-align: middle;
-//}
-//table.form img.toggleheader.hover {
-//    cursor: pointer;
-//}
-//
-//
-///* Bottom row with action buttons, right justified */
-//table.form td.buttons {
-//    color: #274750;
-//}
-//
-///* Inter-heading row over complete width */
-//table.form td.title {
-//    border-right-style: solid;
-//    font-weight: bold;
-//}
-//
-//table.form td.legend.border {
-///*    border-right-style: solid; */
-//}
-//table.form td.hilite {
-//    background-color: rgba(255, 255, 255, 0.2);
-//    margin: 10px;
-//}
-//
-//table.form td.lgend.button {
-//    text-align: right;
-//}
-//
-//td.content hr {
-//    height: 1px;
-//    border-style: none;
-//    background-color: rgba(255, 255, 255, 0.2);
-//}
-//
-//td.legend {
-//    width: 150px;
-//}
-//
-//input.tab#results, input.tabactive#results { background-color: #fe6; }
-//
-///* input elements in forms */
-//
-//table.form input.number {
-//    text-align: right;
-//}
-//
-//div.textinputlegend {
-//    font-size: 80%;
-//}
-//
-//input.date, input.time {
-//    font-family: monospace;
-//}
-//
-//.inputerror input, .inputerror textarea, .inputerror span.checkbox, .inputerror > select {
-//    background-color: #f84;
-//}
-//
-//.inputerror span.checkbox {
-//    display: block;
-//    float: left;
-//    height: 17px;
-//    margin-right: 2px;
-//}
-//
-//.inputerror span.checkbox input {
-//    margin: 1px;
-//}
-//
-//span.checkbox {
-//    white-space: nowrap;
-//    line-height: 14px;
-//}
-//
-//
+/*-------------------------------------------------------------------------.
+|                    _____                                                 |
+|                   |  ___|__  _ __ _ __ ___  ___                          |
+|                   | |_ / _ \| '__| '_ ` _ \/ __|                         |
+|                   |  _| (_) | |  | | | | | \__ \                         |
+|                   |_|  \___/|_|  |_| |_| |_|___/                         |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Input forms (e.g. Filters, Commands, WATO)                               |
+'-------------------------------------------------------------------------*/
+
+input:not(.button), input[type=text], input[type=password],
+select, textarea, div.snapin textarea, #mk_side_search_field {
+  border-radius: $theme-border-radius;
+  background-image: none !important;
+  background: $theme-color-white;
+  color: $theme-color-text;
+  padding: 8px !important;
+  height: auto;
+  box-shadow: none;
+  border: 1px solid $theme-color-table-border !important;
+}
+
+input[type=text], textarea {
+    position: relative;
+}
+
+input[type=text], input[type=password] {
+    vertical-align: middle;
+}
+
+input[type=password] {
+    box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
+}
+
+select {
+    vertical-align: middle;
+}
+
+input[type=radio] {
+    margin-left: 0px;
+}
+
+input[type=checkbox] {
+    margin-left: 0px;
+}
+
+input:focus, select:focus, textarea:focus, div.snapin textarea:focus,
+#mk_side_search_field:focus {
+    border-color: $theme-color-main;
+}
+
+input.number, select.number, textarea.number, div.snapin select.number,
+div.snapin textarea.number, .number#mk_side_search_field {
+    text-align: left;
+}
+
+input.button, select.button, textarea.button, div.snapin select.button,
+div.snapin textarea.button, .button#mk_side_search_field {
+    display: inline-block;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    width: auto;
+    background: #13d389;
+    color: #fff;
+    padding: 8px 16px;
+    margin-right: 8px;
+    margin-left: 0px;
+    box-shadow: none;
+    border: 1px solid #13d389;
+    font-size: $theme-font-size-main;
+    letter-spacing: $theme-letter-spacing-table;
+}
+
+input.button:hover, select.button:hover, textarea.button:hover,
+.button#mk_side_search_field:hover, input.button:active, select.button:active,
+textarea.button:active, .button#mk_side_search_field:active {
+  background-color: #11bd7b;
+  border: 1px solid #11bd7b;
+}
+
+input[type=radio], select[type=radio], textarea[type=radio],
+div.snapin select[type=radio], div.snapin textarea[type=radio],
+[type=radio]#mk_side_search_field {
+    width: auto;
+    margin-bottom: 0px;
+}
+
+select.toggle_timespecific_parameter, textarea.toggle_timespecific_parameter,
+div.snapin select.toggle_timespecific_parameter,
+div.snapin textarea.toggle_timespecific_parameter,
+.toggle_timespecific_parameter#mk_side_search_field {
+    display: block;
+}
+
+input.toggle_timespecific_parameter {
+  margin-top: 5px;
+}
+
+select:not([multiple]) {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-position: right 50% !important;
+  background-repeat: no-repeat !important;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NDZFNDEwNjlGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NDZFNDEwNkFGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo0NkU0MTA2N0Y3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo0NkU0MTA2OEY3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PuGsgwQAAAA5SURBVHjaYvz//z8DOYCJgUxAf42MQIzTk0D/M+KzkRGPoQSdykiKJrBGpOhgJFYTWNEIiEeAAAMAzNENEOH+do8AAAAASUVORK5CYII=) !important;
+  padding: 8px 16px !important;
+  padding-right: 2.5em !important;
+}
+
+body.main input:not(.button), body.main select, body.main textarea,
+body.main #mk_side_search_field, body.main select, body.main textarea {
+  border: 1px solid $theme-color-table-border;
+}
+
+/* TODO: lm: Is this table.form used anywhere? If not, remove it!
+ *       ko: Remove these and other table.form styles in _wato.scss
+ */
+table.form {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-collapse: collapse;
+    empty-cells: show;
+    border-spacing: 0px;
+    margin: 0px 10px 10px 0px;
+    border-width: 1px;
+    border-style: none none solid solid;
+    border-color: #2f5f74;
+}
+/* Sorry for the mess here. It is due to using foldable_containter
+   within a form table (currently only in WATO in the host and
+   folder properties) */
+
+table.form.nomargin {
+    margin: 0;
+    border-bottom-style: none;
+}
+
+table.form.nomargin td.title {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+table.form > tbody > tr > td {
+    padding: 5px 8px;
+    color: #000;
+    border-width: 1px;
+    border-color: #2f5f73;
+    border-style: solid solid none none;
+}
+
+table.form img.toggleheader {
+    width: 20px;
+    height: 20px;
+    cursor: auto;
+    padding-right: 5px;
+    vertical-align: middle;
+}
+table.form img.toggleheader.hover {
+    cursor: pointer;
+}
+
+
+/* Bottom row with action buttons, right justified */
+table.form td.buttons {
+    color: #274750;
+}
+
+/* Inter-heading row over complete width */
+table.form td.title {
+    border-right-style: solid;
+    font-weight: bold;
+}
+
+table.form td.legend.border {
+/*    border-right-style: solid; */
+}
+table.form td.hilite {
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 10px;
+}
+
+table.form td.lgend.button {
+    text-align: right;
+}
+
+/* TODO: Reproduce this html element */
+td.content hr {
+    height: 1px;
+    border-style: none;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+td.legend {
+    width: 150px;
+}
+
+/* TODO: Reproduce these html elements (also have a look at .tab and .tabactive
+ *       elemenets in _logwatch.scss)
+ */
+input.tab#results, input.tabactive#results { background-color: #fe6; }
+
+/* input elements in forms */
+table.form input.number {
+    text-align: right;
+}
+
+/* TODO: Reproduce these two html elements */
+input.date, input.time {
+    font-family: monospace;
+}
+
+.inputerror input, .inputerror select, .inputerror textarea,
+.inputerror div.snapin select, div.snapin .inputerror select,
+.inputerror div.snapin textarea, div.snapin .inputerror textarea,
+.inputerror #mk_side_search_field, .inputerror textarea,
+.inputerror span.checkbox, .inputerror > select {
+  background-color: $theme-color-nuance-15 !important;
+}
+
+.inputerror span.checkbox {
+    display: block;
+    float: left;
+    height: 17px;
+    margin-right: 2px;
+}
+
+.inputerror span.checkbox input {
+    margin: 1px;
+}
+
+span.checkbox {
+    white-space: nowrap;
+    line-height: 14px;
+}
+
+.checkbox label::before {
+  box-shadow: none;
+  border: 1px solid $theme-color-table-border-dark;
+  border-radius: 2px;
+}
+
 ///* Next-Generation forms */
 //table.nform {
 //    border-spacing: 0px;

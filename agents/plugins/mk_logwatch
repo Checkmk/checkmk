@@ -178,7 +178,7 @@ def mk_confdir():
     return os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
 
 
-def get_status_filename(config):
+def get_status_filename(cluster_config):
     """
     Side effect:
     - Depend on ENV var.
@@ -222,9 +222,7 @@ def get_status_filename(config):
     # In case cluster configured map ip to cluster name if configured.
     # key "name" is mandatory and unique for cluster dicts
     cluster_name = remote_hostname
-    cluster_configs = [nt for nt in config if isinstance(nt, ClusterConfig)]
-    LOGGER.debug("Cluster configurations: %r", cluster_configs)
-    for conf in cluster_configs:
+    for conf in cluster_config:
         for ip_or_subnet in conf.ips_or_subnets:
             if ip_in_subnetwork(remote_ip, ip_or_subnet):
                 # Cluster name may not contain whitespaces (must be provided from
@@ -294,7 +292,6 @@ def read_config(files):
     """
     LOGGER.debug("Config files: %r", files)
 
-    config = []
     logfiles_configs = []
     cluster_configs = []
     config_lines = []
@@ -368,12 +365,9 @@ def read_config(files):
         else:
             raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
 
-    config.extend(logfiles_configs)
-    config.extend(cluster_configs)
-
     LOGGER.info("Logfiles configurations: %r", logfiles_configs)
     LOGGER.info("Optional cluster configurations: %r", cluster_configs)
-    return config
+    return logfiles_configs, cluster_configs
 
 
 def parse_cont_pattern(pattern):
@@ -739,15 +733,14 @@ def find_matching_logfiles(glob_pattern):
     return files
 
 
-def parse_sections(config):
+def parse_sections(logfiles_config):
     """
     Returns dict with logfile name as key and either tuple of (patterns, options)
     (or (None, None) in case the file cannot be found) as value.
     """
     logfile_patterns = {}
 
-    logfiles_configs = [c for c in config if isinstance(c, LogfilesConfig)]
-    for filenames, patterns in logfiles_configs:
+    for filenames, patterns in logfiles_config:
 
         # First read all the options like 'maxlines=100' or 'maxtime=10'
         opt = Options()
@@ -843,14 +836,14 @@ def main():
 
     try:
         files = get_config_files(mk_confdir())
-        config = read_config(files)
+        logfiles_config, cluster_config = read_config(files)
     except Exception as exc:
         if debug():
             raise
         sys.stdout.write("CANNOT READ CONFIG FILE: %s\n" % exc)
         sys.exit(1)
 
-    status_filename = get_status_filename(config)
+    status_filename = get_status_filename(cluster_config)
     # Copy the last known state from the logwatch.state when there is no status_filename yet.
     if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % mk_vardir()):
         shutil.copy("%s/logwatch.state" % mk_vardir(), status_filename)
@@ -866,7 +859,7 @@ def main():
     loglines = []
     at_least_warnings = False
     warnings_and_errors = []
-    for logfile, (patterns, options) in parse_sections(config):
+    for logfile, (patterns, options) in parse_sections(logfiles_config):
         if patterns is None:
             sys.stdout.write('[[[%s:missing]]]\n' % logfile)
             continue

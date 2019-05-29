@@ -147,7 +147,8 @@ def test_read_config(agent_plugin_as_module, tmpdir):
     files = [str(fake_config_file)]
 
     # execution
-    actual_config = mk_logwatch.read_config(files)
+    l_config, c_config = mk_logwatch.read_config(files)
+    actual_config = l_config + c_config  # TODO: clean this up. (comming up next)
 
     # expected logfiles config
     for lc in actual_config[:3]:

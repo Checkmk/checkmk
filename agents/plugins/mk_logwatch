@@ -253,7 +253,7 @@ def is_empty(line):
     return line.strip() == ""
 
 
-def is_pattern_or_ip(line):
+def is_indented(line):
     return line.startswith(" ")
 
 
@@ -340,7 +340,7 @@ def read_config(files):
                 logfiles_configs.append(LogfilesConfig(filenames, patterns))
                 LOGGER.debug("Filenames: %s", filenames)
         elif section_context == "logfiles":
-            if not is_pattern_or_ip(line):
+            if not is_indented(line):
                 raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
             LOGGER.debug("Pattern line: %s", line)
             if patterns is None:
@@ -360,7 +360,7 @@ def read_config(files):
                 patterns.append(pattern)
                 LOGGER.debug("Pattern %s", pattern)
         elif section_context == "cluster":
-            if not is_pattern_or_ip(line):
+            if not is_indented(line):
                 raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
             ip_or_subnet = line.strip()
             cluster_ips_or_subnets.append(ip_or_subnet)

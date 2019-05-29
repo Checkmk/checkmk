@@ -100,7 +100,7 @@ check_info['sap_hana_backup'] = {
     'inventory_function': inventory_sap_hana_backup,
     'check_function': check_sap_hana_backup,
     'service_description': 'SAP HANA Backup %s',
-    'includes': ['sap_hana.include', 'backport.include'],
+    'includes': ['sap_hana.include'],
     "node_info": True,
     "has_perfdata": True,
     'group': 'sap_hana_backup',

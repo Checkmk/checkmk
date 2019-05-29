@@ -35,53 +35,6 @@ div.content {
   width: 100%;
   top: 64px; }
 
-input:not(.button), input[type=text], input[type=password], select, textarea, div.snapin textarea, #mk_side_search_field {
-  border-radius: $theme-border-radius;
-  background-image: none !important;
-  background: $theme-color-white;
-  color: $theme-color-text;
-  padding: 8px !important;
-  height: auto;
-  box-shadow: none;
-  border: 1px solid $theme-color-table-border !important;
-  }
-  input:focus, select:focus, textarea:focus, div.snapin textarea:focus, #mk_side_search_field:focus {
-    border-color: $theme-color-main; }
-  input.number, select.number, textarea.number, div.snapin select.number, div.snapin textarea.number, .number#mk_side_search_field {
-    text-align: left; }
-  input.button, select.button, textarea.button, div.snapin select.button, div.snapin textarea.button, .button#mk_side_search_field {
-    display: inline-block;
-    margin-top: 8px;
-    margin-bottom: 8px;
-    width: auto;
-    background: #13d389;
-    color: #fff;
-    padding: 8px 16px;
-    margin-right: 8px;
-    margin-left: 0px;
-    box-shadow: none;
-    border: 1px solid #13d389;
-    font-size: $theme-font-size-main;
-    letter-spacing: $theme-letter-spacing-table; }
-    input.button:hover, select.button:hover, textarea.button:hover, .button#mk_side_search_field:hover, input.button:active, select.button:active, textarea.button:active, .button#mk_side_search_field:active {
-      background-color: #11bd7b;
-      border: 1px solid #11bd7b;
-}
-  input[type=radio], select[type=radio], textarea[type=radio], div.snapin select[type=radio], div.snapin textarea[type=radio], [type=radio]#mk_side_search_field {
-    width: auto;
-    margin-bottom: 0px; }
-  select.toggle_timespecific_parameter, textarea.toggle_timespecific_parameter, div.snapin select.toggle_timespecific_parameter, div.snapin textarea.toggle_timespecific_parameter, .toggle_timespecific_parameter#mk_side_search_field {
-    display: block; }
-
-select:not([multiple]) {
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  background-position: right 50% !important;
-  background-repeat: no-repeat !important;
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NDZFNDEwNjlGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NDZFNDEwNkFGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo0NkU0MTA2N0Y3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo0NkU0MTA2OEY3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PuGsgwQAAAA5SURBVHjaYvz//z8DOYCJgUxAf42MQIzTk0D/M+KzkRGPoQSdykiKJrBGpOhgJFYTWNEIiEeAAAMAzNENEOH+do8AAAAASUVORK5CYII=) !important;
-  padding: 8px 16px !important;
-  padding-right: 2.5em !important; }
-
 .cp-preview {
   box-shadow: none;
   border-radius: $theme-border-radius;
@@ -251,11 +204,6 @@ table.cmc_stats {
     letter-spacing: $theme-letter-spacing-table;
     font-weight: $theme-font-weight-global; }
 
-.checkbox label::before {
-  box-shadow: none;
-  border: 1px solid $theme-color-table-border-dark;
-  border-radius: 2px; }
-
 #form_search input, #form_search select, #form_search textarea, #form_search #mk_side_search_field {
   width: auto; }
 
@@ -285,8 +233,6 @@ div.timerange {
   font-size: $theme-font-size-main;
   color: $theme-color-darkgrey; }
 
-body.main input:not(.button), body.main select, body.main textarea, body.main #mk_side_search_field, body.main select, body.main textarea {
-  border: 1px solid $theme-color-table-border; }
 body.main.visible div.foldable .title {
   color: $theme-color-text; }
 
@@ -309,9 +255,6 @@ div.error {
   color: $theme-color-lightgrey; }
   div.error tt {
     color: inherit; }
-
-.inputerror input, .inputerror select, .inputerror textarea, .inputerror div.snapin select, div.snapin .inputerror select, .inputerror div.snapin textarea, div.snapin .inputerror textarea, .inputerror #mk_side_search_field, .inputerror textarea, .inputerror span.checkbox, .inputerror > select {
-  background-color: $theme-color-nuance-15 !important; }
 
 div.warning {
   background-color: $theme-color-main; }

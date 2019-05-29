@@ -279,6 +279,18 @@ def get_config_files(directory):
     return config_file_paths
 
 
+def iter_config_lines(files):
+    for file_ in files:
+        try:
+            with open(file_) as fid:
+                for line in fid:
+                    if not is_comment(line):
+                        yield line.rstrip()
+        except IOError:
+            if debug():
+                raise
+
+
 def read_config(files):
     """
     Read logwatch.cfg (patterns, cluster mapping, etc.).
@@ -294,13 +306,7 @@ def read_config(files):
 
     logfiles_configs = []
     cluster_configs = []
-    config_lines = []
-    for file_ in files:
-        try:
-            config_lines += [l.rstrip() for l in open(file_).readlines() if not is_comment(l)]
-        except IOError:
-            if debug():
-                raise
+    config_lines = iter_config_lines(files)
 
     patterns = None
     cont_list = []

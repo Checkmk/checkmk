@@ -7,43 +7,7 @@ from re import compile
 
 # consistent to check_mk/agents/cfg_examples/logwatch.cfg
 LOGWATCH_CONFIG_CONTENT = """
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-
-# logwatch.cfg
-# This file configures mk_logwatch. Define your logfiles
-# and patterns to be looked for here.
-
-# Name one or more logfiles
 /var/log/messages
-# Patterns are indented with one space are prefixed with:
-# C: Critical messages
-# W: Warning messages
-# I: ignore these lines (OK)
-# R: Rewrite the output previous match. You can use \1, \2 etc. for refer to groups (.*) of this match
-# The first match decided. Lines that do not match any pattern
-# are ignored
  C Fail event detected on md device
  I mdadm.*: Rebuild.*event detected
  W mdadm\[
@@ -63,20 +27,6 @@ LOGWATCH_CONFIG_CONTENT = """
  W generic protection rip
  W .*Unrecovered read error - auto reallocate failed
 
-# Globbing patterns are allowed:
-# /sapdata/*/saptrans.log
-#  C ORA-
-
-# Configuration of remote ips to a cluster name:
-# - cluster: A line containing "cluster" defines the scope of a cluster mapping.
-#   For more information refer to werk 7032.
-#   For the logwatch configuration of a host several cluster configurtions are allowed.
-#   All cluster mapping definitions in the logwatch configuration must have unique cluster names (name).
-#   Every cluster definition scope must end with at least one empty line.
-# - name: For every cluster it is only one line allowed for defining the cluster name.
-#   Whitespaces are supported and result in corresponding underscore replacements in the
-#   logwatch config file. The line defining the cluster name must begin with " name ".
-# - ips: For every cluster max. 4 ips are allowed. Lines defining an ip must begin with " - ".
 CLUSTER my_cluster
  192.168.1.1
  192.168.1.2
@@ -138,16 +88,28 @@ def test_get_config_files(agent_plugin_as_module, tmpdir):
     assert paths == ['/logwatch.cfg', '/logwatch.d/custom.cfg']
 
 
-def test_read_config(agent_plugin_as_module, tmpdir):
+def test_iter_config_lines(agent_plugin_as_module, tmpdir):
     """Fakes a single logwatch config files and checks if the agent plugin reads the configuration appropriately."""
     mk_logwatch = agent_plugin_as_module
     # setup
     fake_config_file = tmpdir.mkdir("test").join("logwatch.cfg")
-    fake_config_file.write(LOGWATCH_CONFIG_CONTENT)
+    fake_config_file.write("# this is a comment\nthis is a line   ")
     files = [str(fake_config_file)]
 
+    read = list(mk_logwatch.iter_config_lines(files))
+
+    assert read == ['this is a line']
+
+
+def test_read_config(agent_plugin_as_module, monkeypatch):
+    """checks if the agent plugin parses the configuration appropriately."""
+    mk_logwatch = agent_plugin_as_module
+    # setup
+    iterlines = iter(LOGWATCH_CONFIG_CONTENT.splitlines())
+    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iterlines)
+
     # execution
-    l_config, c_config = mk_logwatch.read_config(files)
+    l_config, c_config = mk_logwatch.read_config(None)
 
     # expected logfiles config
     for lc in l_config:

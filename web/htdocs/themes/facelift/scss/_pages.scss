@@ -46,9 +46,9 @@ h1, h2, h3, h4 {
 }
 
 h3 {
-    margin-bottom: 2px;
-    font-size: 12pt;
-    font-weight: normal;
+  margin-bottom: 2px;
+  font-size: 16px;
+  font-weight: normal;
 }
 
 /*-------------------------------------------------------------------------.
@@ -63,125 +63,152 @@ h3 {
 '-------------------------------------------------------------------------*/
 
 body.main {
-  background: $theme-color-background;
   padding: 80px 32px;
   margin: 0;
   font-family: arial, helvetica, sans-serif;
   font-size: $theme-font-size-main;
   font-weight: $theme-font-weight-global;
   color: $theme-color-text;
-}
+  background: $theme-color-background;
 
-/* Can be toggled with N/n display option */
-body.main.inline {
+  /* Can be toggled with N/n display option */
+  &.inline {
     padding: 0;
     background: none;
-}
+  }
 
-/* Special mode for creating screenshots of single elements. Omit background.
-   This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
-   on the URL */
-body.main.screenshotmode {
+  /* Special mode for creating screenshots of single elements. Omit background.
+     This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
+     on the URL */
+  &.screenshotmode {
+    background-color: #fff;
     background-image: url("");
-    background-color: white;
-}
+  }
 
-/* TODO: Reproduce this div.main element */
-body.main div.main {
+  /* TODO: Reproduce this div.main element */
+  div.main {
     padding-left: 10px;
-    border-left: 1px solid red;
-}
+    border-left: 1px solid #f00;
+  }
 
-/* The content page header containing the title, user, date */
-body.main table.header {
+  /* The content page header containing the title, user, date */
+  table.header {
     position: fixed;
     top: 0;
     left: 0;
-    height: 64px;
+    z-index: 1000;
     width: 100%;
+    height: 64px;
+    max-width: 100%;
+    padding: 8px 32px;
+    margin: 0 0 5px;
+    color: #fff;
     background: $theme-color-white;
     border-bottom: 1px solid $theme-color-table-border;
-    z-index: 1000;
-    padding: 8px 32px;
-    max-width: 100%;
-    margin: 0 0 5px 0;
-    border-spacing: 0px;
-    color: #fff;
-}
+    border-spacing: 0;
+  }
 
-body.main table.header td {
-    white-space: nowrap;
+  table.header td {
     overflow: hidden;
+    color: #fff;
     text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
     vertical-align: middle;
-    color: #fff;
-}
+    white-space: nowrap;
+  }
 
-body.main table.header td.heading {
-    font-size: 15pt;
-    padding-left: 0px;
+  table.header td.heading {
     height: 31px;
     max-width: 100px;
-}
+    padding-left: 0;
+    font-size: 21px;
+  }
 
-body.main table.header td.heading img {
-    height: 24px;
+  table.header td.heading img {
     width: 24px;
+    height: 24px;
     margin-right: 3px;
     vertical-align: middle;
-}
+  }
 
-body.main table.header td.heading a,
-body.main table.header td.heading a:hover {
+  table.header td.heading a,
+  table.header td.heading a:hover {
     text-decoration: none;
-}
+  }
 
-body.main table.header td.heading a,
-body.main table.header td.heading .popup_menu span,
-body.main .popup_menu table.header td.heading span {
+  table.header td.heading a,
+  table.header td.heading .popup_menu span,
+  .popup_menu table.header td.heading span {
     color: $theme-color-text;
-}
+  }
 
-body.main table.header td.right {
-    text-align: right;
-    font-size: 10pt;
+  table.header td.right {
     width: 1%;
+    font-size: 13px;
     color: $theme-color-text;
-}
+    text-align: right;
+  }
 
-body.main table.header td.right img {
+  table.header td.right img {
     width: 19px;
     height: 19px;
     vertical-align: middle;
-}
+  }
 
-body.main table.header td.right a.head_logo img {
+  table.header td.right a.head_logo img {
     width: 20px;
     height: 23px;
     margin: 0 0 1px 5px;
-}
+  }
 
-body.main table.header td.right a.head_logo img:hover {
+  table.header td.right a.head_logo img:hover {
     opacity: 0.5;
     filter: alpha(opacity=50);
-}
+  }
 
-body.main table.header td.right * {
+  table.header td.right * {
     color: $theme-color-text;
-}
+  }
 
-body.main hr.header {
-    background-color: #fff;
-    height: 1px;
+  hr.header {
     position: absolute;
+    top: 42px;
+    left: 0;
     width: 100%;
-    left: 0px;
+    height: 1px;
     padding: 0;
     margin: 0;
-    border: 0;
-    top: 42px;
     color: #fff;
+    background-color: #fff;
+    border: none;
+  }
+
+  /* TODO: Reproduce this html element */
+  div.urldebug {
+    position: relative;
+    top: -14px;
+    width: 100%;
+    font-family: monospace;
+    font-size: 11px;
+    color: #fff;
+  }
+
+  /* The content page footer containing optional status icons */
+  table.footer,
+  table.footer .popup_menu a,
+  table.footer .popup_menu span {
+    color: $theme-color-text;
+  }
+
+  table.footer {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  table.footer td.left   { text-align: left; }
+  table.footer td.middle { text-align: center; }
+  table.footer td.right  { text-align: right; }
+  table.footer a { color: #246; }
 }
 
 /* TODO: Check out whether this style and the respective span element within the
@@ -190,87 +217,60 @@ body.main hr.header {
   margin-right: 10px;
 }
 
-/* TODO: Reproduce this html element */
-body.main div.urldebug {
-    color: white;
-    width: 100%;
-    font-size: 8pt;
-    font-family: monospace;
-    position: relative;
-    top: -14px;
-}
-
-/* The content page footer containing optional status icons */
-body.main table.footer,
-body.main table.footer .popup_menu a,
-body.main table.footer .popup_menu span {
-  color: $theme-color-text;
-}
-
-body.main table.footer {
-    margin-top: 10px;
-    width: 100%;
-}
-
-body.main table.footer td.left   { text-align: left; }
-body.main table.footer td.middle { text-align: center; }
-body.main table.footer td.right  { text-align: right; }
-body.main table.footer a { color: #246; }
-
 div#foot_refresh, div#foot_refresh_time {
-    display: inline-block;
+  display: inline-block;
 }
 
 /* TODO: Reproduce all these pause styles */
 #reload_pause {
-    display: block;
-    position: fixed;
-    right: 20px;
-    top: 80px;
-    width: 90px;
-    height: 90px;
-    background-color: #111;
-    opacity: 0.8;
-    filter: alpha(opacity=80); /* For IE8 and earlier */
-    border-radius: 5px;
-    padding: 10px;
-    text-decoration: none;
-    z-index: 40;
-    text-align: center;
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 40;
+  display: block;
+  width: 90px;
+  height: 90px;
+  padding: 10px;
+  text-align: center;
+  text-decoration: none;
+  background-color: #111;
+  border-radius: 5px;
+  opacity: 0.8;
+  filter: alpha(opacity=80); /* For IE8 and earlier */
 }
 
 .pause_bar {
-    display: inline-block;
-    width: 20px;
-    height: 60px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    background-color: #fff;
-    opacity: 0.9;
-    filter: alpha(opacity=90); /* For IE8 and earlier */
-    border-radius: 5px;
-}
+  display: inline-block;
+  width: 20px;
+  height: 60px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  background-color: #fff;
+  border-radius: 5px;
+  opacity: 0.9;
+  filter: alpha(opacity=90); /* For IE8 and earlier */
 
-.pause_bar.p1 {
-    margin-left: 15px;
+  &.p1 {
     margin-right: 5px;
-}
+    margin-left: 15px;
+  }
 
-.pause_bar.p2 {
-    margin-left: 5px;
+  &.p2 {
     margin-right: 15px;
+    margin-left: 5px;
+  }
 }
 
 #reload_pause_counter {
-    font-weight: bold;
-    color: $theme-color-lightgrey;
-    text-align: center;
-    font-size: 120%;
-    text-decoration: none;
-}
+  font-size: 120%;
+  font-weight: bold;
+  color: $theme-color-lightgrey;
+  text-align: center;
+  text-decoration: none;
 
-#reload_pause_counter:hover {
+  &:hover {
     text-decoration: underline;
+  }
 }
 
 
@@ -287,205 +287,182 @@ div#foot_refresh, div#foot_refresh_time {
 /* TODO: Consolidate button styling with other buttons (e.g. sidebar button) */
 
 div.contextlinks {
-    margin-top: 8px;
-    margin-bottom: 0px;
-}
+  margin-top: 8px;
+  margin-bottom: 0;
 
-div.contextlinks .end {
+  .end {
     clear: left;
+  }
 }
 
 div.contextlink,
 div.togglebutton {
-    float: left;
-    position: relative;
-    overflow: hidden;
-    white-space: nowrap;
-    text-align: center;
-    vertical-align: middle;
-    width: 158px;
-    height: 36px;
-    margin-right: 12px;
-    margin-bottom: 12px;
-    border-radius: $theme-border-radius;
-    border: 0px solid $theme-color-table-border;
-    box-sizing: border-box;
-    font-size: $theme-font-size-small;
-}
+  position: relative;
+  float: left;
+  width: 158px;
+  height: 36px;
+  margin-right: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  font-size: $theme-font-size-small;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  border: none;
+  border-radius: $theme-border-radius;
+  box-sizing: border-box;
 
-div.contextlink a,
-div.togglebutton a,
-div.contextlink body.main .popup_menu span,
-div.togglebutton body.main .popup_menu span,
-body.main .popup_menu div.contextlink span,
-body.main .popup_menu div.togglebutton span {
-    background: $theme-color-white;
-    color: $theme-color-text;
-    box-shadow: none;
-    box-sizing: border-box;
-    padding: 8px;
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
     position: relative;
-    font-weight: $theme-font-weight-global;
-    font-size: $theme-font-size-global;
-    letter-spacing: $theme-letter-spacing;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
-    border: 1px solid $theme-color-table-border;
-    height: 34px;
-    text-decoration: none;
     display: block;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    line-height: 18px;
-    cursor: pointer;
-    border-radius: 5px 5px 5px 5px;
-}
-
-div.contextlink:hover a,
-div.togglebutton:hover a,
-div.contextlink:hover body.main .popup_menu span,
-div.togglebutton:hover body.main .popup_menu span,
-body.main .popup_menu div.contextlink:hover span,
-body.main .popup_menu div.togglebutton:hover span,
-div.contextlink:active a,
-div.togglebutton:active a,
-div.contextlink:active body.main .popup_menu span,
-div.togglebutton:active body.main .popup_menu span,
-body.main .popup_menu div.contextlink:active span,
-body.main .popup_menu div.togglebutton:active span,
-div.contextlink:focus a,
-div.togglebutton:focus a,
-div.contextlink:focus body.main .popup_menu span,
-div.togglebutton:focus body.main .popup_menu span,
-body.main .popup_menu div.contextlink:focus span,
-body.main .popup_menu div.togglebutton:focus span {
-    background: $theme-button-background;
-    color: $theme-color-text;
-    box-shadow: none;
+    height: 34px;
     padding: 8px;
-    position: relative;
-    font-weight: $theme-font-weight-global;
+    overflow: hidden;
     font-size: $theme-font-size-global;
+    font-weight: $theme-font-weight-global;
+    line-height: 18px;
     letter-spacing: $theme-letter-spacing;
-    border: none;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    border: 1px solid $theme-color-table-border;
+    color: $theme-color-text;
     text-decoration: none;
-    outline: none;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    background: $theme-color-white;
+    border: 1px solid $theme-color-table-border;
+    border-radius: 5px;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+
+  &:hover,
+  &:active,
+  &:focus {
+    a,
+    body.main .popup_menu span,
+    body.main .popup_menu & span {
+      position: relative;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      padding: 8px;
+      font-size: $theme-font-size-global;
+      font-weight: $theme-font-weight-global;
+      letter-spacing: $theme-letter-spacing;
+      color: $theme-color-text;
+      text-decoration: none;
+      background: $theme-button-background;
+      border: 1px solid $theme-color-table-border;
+      outline: none;
+      box-shadow: none;
+    }
+  }
 }
 
-div.contextlink.down a,
-div.down.togglebutton a,
-div.contextlink.down body.main .popup_menu span,
-div.down.togglebutton body.main .popup_menu span,
-body.main .popup_menu div.contextlink.down span,
-body.main .popup_menu div.down.togglebutton span {
+div.contextlink.down,
+div.down.togglebutton {
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
     background-color: $theme-color-text-light;
     border-color: $theme-button-border;
     box-shadow: none;
-}
 
-div.contextlink.down a:hover,
-div.down.togglebutton a:hover,
-div.contextlink.down body.main .popup_menu span:hover,
-div.down.togglebutton body.main .popup_menu span:hover,
-body.main .popup_menu div.contextlink.down span:hover,
-body.main .popup_menu div.down.togglebutton span:hover {
-  background-color: $theme-button-border;
-  border-color: #cccccc;
+    &:hover {
+      background-color: $theme-button-border;
+      border-color: #ccc;
+    }
+  }
 }
 
 /* Specific context link styles */
-div.contextlink.short {
+div.contextlink {
+  &.short {
     width: 38px;
-}
+  }
 
-div.contextlink.hot a {
-  background-color: $theme-color-state-3-background;
-  border-color: $theme-color-nuance-16;
-}
+  &.hot a {
+    background-color: $theme-color-state-3-background;
+    border-color: $theme-color-nuance-16;
+  }
 
-div.contextlink img {
-   width: 18px;
-   height: 18px;
-   margin-right: 5px;
-   position: relative;
-   top: -1px;
+  img {
+    position: relative;
+    top: -1px;
+    width: 18px;
+    height: 18px;
+    margin-right: 5px;
+  }
 }
 
 /* Specific toggle button styles */
 div.togglebutton {
-  height: 34px;
   width: 34px;
-}
-
-div.togglebutton.off {
   height: 34px;
-  width: 34px;
-  margin-right: 12px;
-  margin-bottom: 12px;
-  border-radius: $theme-border-radius;
-  border: 1px solid $theme-color-table-border;
-  box-sizing: border-box;
-  font-size: $theme-font-size-small;
-  opacity: 0.5;
-  filter: alpha(opacity=50);
-}
 
-div.togglebutton.off a,
-div.togglebutton.off body.main .popup_menu span,
-body.main .popup_menu div.togglebutton.off span,
-div.togglebutton.off a:hover,
-div.togglebutton.off body.main .popup_menu span:hover,
-body.main .popup_menu div.togglebutton.off span:hover {
-    color: $theme-color-text;
-    box-shadow: none;
-    padding: 8px;
-    position: relative;
-    font-weight: $theme-font-weight-global;
-    font-size: $theme-font-size-global;
-    letter-spacing: $theme-letter-spacing;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    border: 0px solid;
-    text-decoration: none;
-    display: block;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    line-height: 18px;
-    cursor: pointer;
-    border-radius: 5px 5px 5px 5px;
-}
+  &.off {
+    width: 34px;
+    height: 34px;
+    margin-right: 12px;
+    margin-bottom: 12px;
+    font-size: $theme-font-size-small;
+    border: 1px solid $theme-color-table-border;
+    border-radius: $theme-border-radius;
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+    box-sizing: border-box;
 
-div.togglebutton.off a,
-div.togglebutton.off body.main .popup_menu span,
-body.main .popup_menu div.togglebutton.off span {
-    background: $theme-color-white;
-    cursor: auto;
-}
+    a,
+    body.main .popup_menu span,
+    body.main .popup_menu & span {
+      &, &:hover {
+        position: relative;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: block;
+        padding: 8px;
+        overflow: hidden;
+        font-size: $theme-font-size-global;
+        font-weight: $theme-font-weight-global;
+        line-height: 18px;
+        letter-spacing: $theme-letter-spacing;
+        color: $theme-color-text;
+        text-decoration: none;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+        box-shadow: none;
+      }
 
-div.togglebutton.off a:hover,
-div.togglebutton.off body.main .popup_menu span:hover,
-body.main .popup_menu div.togglebutton.off span:hover {
-    background: $theme-button-background;
-}
+      & {
+        cursor: auto;
+        background: $theme-color-white;
+      }
 
-div.togglebutton img {
+      &:hover {
+        background: $theme-button-background;
+      }
+    }
+  }
+
+  img {
     width: 18px;
     height: 18px;
-}
+  }
 
-div.togglebutton:active:not(.off) img,
-div.togglebutton.down:not(.off) img {
+  &:active:not(.off) img,
+  &.down:not(.off) img {
     position: relative;
     left: 1px;
+  }
 }
 
 /*-------------------------------------------------------------------------.
@@ -501,295 +478,300 @@ div.togglebutton.down:not(.off) img {
 '-------------------------------------------------------------------------*/
 
 table.data {
-    border-spacing: 0px 4px;
-    color: $theme-color-text;
-    margin: 0;
-    padding: 0;
-    empty-cells: show;
-    width: 100%;
-}
-
-table.data .popup_menu {
-      color: $theme-color-text !important
-}
-
-table.data .checkbox_hover {
-    background-image: url("images/checkbox_hover_bg.png");
-    background-attachment: fixed;
-}
-
-table.data th {
-  padding: 0px 8px;
-  font-size: $theme-font-size-main;
-  text-transform: uppercase;
-  letter-spacing: $theme-letter-spacing-table;
-  color: $theme-color-table-text;
-  background: transparent;
-  border: 0px;
-  font-weight: $theme-font-weight-bold;
-  text-align: left;
-}
-
-/* TODO: Check whether this style is redundant due to a .last_col style in
- *       _views.scss */
-table.data th:last-child {
-    border-right-style: none;
-}
-
-table.data td {
-  padding: 4px 8px;
-  border: none;
-  font-size: $theme-font-size-main;
-  font-weight: 500;
-  letter-spacing: $theme-letter-spacing;
+  width: 100%;
+  padding: 0;
+  margin: 0;
   color: $theme-color-text;
-  line-height: 1.5;
-}
+  border-spacing: 0 4px;
+  empty-cells: show;
 
-table.data td.buttons {
-    white-space: nowrap;
-    width: 1%;
-}
+  .popup_menu {
+      color: $theme-color-text !important
+  }
 
-/* TODO: Reproduce this html element */
-table.data td.count {
-    text-align: right;
-    font-weight: bold;
-    font-family: sans-serif;
-}
+  .checkbox_hover {
+    background-attachment: fixed;
+    background-image: url("images/checkbox_hover_bg.png");
+  }
 
-table.data td.number {
-    text-align: right;
-    white-space: nowrap;
-}
+  th {
+    padding: 0 8px;
+    font-size: $theme-font-size-main;
+    font-weight: $theme-font-weight-bold;
+    letter-spacing: $theme-letter-spacing-table;
+    color: $theme-color-table-text;
+    text-align: left;
+    text-transform: uppercase;
+    background: transparent;
+    border: 0;
 
-table.data td.nobr {
-    white-space: nowrap;
-}
+    /* TODO: Check whether this style is redundant due to a .last_col style in
+     *       _views.scss */
+    &:last-child {
+      border-right-style: none;
+    }
 
-table.data td.center {
+    /* Table header links (For sorting) */
+    &.sort:hover {
+      color: #000;
+      cursor: pointer;
+      background-color: inherit;
+    }
+
+    /* TODO: Reproduce this html element */
+    &.tablegap {
+      background-color: transparent; /* none; */
+    }
+  }
+
+  td {
+    padding: 4px 8px;
+    font-size: $theme-font-size-main;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: $theme-letter-spacing;
+    color: $theme-color-text;
+    border: none;
+
+    &.buttons {
+      width: 1%;
+      white-space: nowrap;
+    }
+
+    /* TODO: Reproduce this html element */
+    &.count {
+      font-family: sans-serif;
+      font-weight: bold;
+      text-align: right;
+    }
+
+    &.number {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    &.nobr {
+      white-space: nowrap;
+    }
+
+    &.center {
+      text-align: center;
+    }
+
+    &.unused {
+      color: #888;
+      text-shadow: 1px 1px 0.5px #fff;
+    }
+  }
+
+  &.oddeven > tbody > tr:nth-child(odd),
+  &.oddeven > tbody > tr:nth-child(even),
+  &.oddeven > tbody > tr.groupheader {
+    background-color: transparent;
+  }
+
+  /* Two-lined header, for example in WATO: ChangeLog->Site Status */
+  /* TODO: Reproduce this html element */
+  tr.dualheader th {
+    border-bottom: 1px solid #ccc;
+  }
+
+  tr.data {
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: all .15s ease-in;
+
+    > td {
+      height: 26px;
+      padding: 4px 8px;
+      vertical-align: middle;
+      background-color: $theme-color-white;
+      border-top: 1px solid $theme-color-table-border;
+      border-right: none;
+      border-bottom: 1px solid $theme-color-table-border;
+    }
+
+    &:first-child {
+      border-left: 1px solid $theme-color-table-border;
+      border-radius: $theme-border-radius 0 0 4px;
+    }
+
+    &:last-child,
+    &.last_col {
+      border-right: 1px solid $theme-color-table-border;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* TODO: Get rid of these important styles */
+    &:only-child {
+      border: 1px solid $theme-color-table-border !important;
+      border-radius: $theme-border-radius !important;
+    }
+
+    td.checkbox {
+      width: 20px;
+      text-align: center;
+
+      input {
+        margin: 0;
+      }
+    }
+  }
+
+  tr td.gap {
+    background: $theme-color-background;
+    border: 1px solid $theme-color-background;
+  }
+
+  a {
+    color: $theme-color-text;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  th input.checkgroup {
+    width: 16px;
+    height: 12px;
+    padding: 8px;
+    margin: 0;
+    font-size: 7px;
+    line-height: 5px;
     text-align: center;
-}
+    vertical-align: middle;
+  }
 
-table.data td.unused {
-    color: #888;
-    text-shadow: 1px 1px 0.5px #fff;
+  /* TODO: Reproduce this html element */
+  td.host {
+    padding-top: 1ex;
+    padding-left: 0;
+    font-size: 120%;
+    font-weight: bold;
+    border-style: none;
+  }
+
+  td.singleicon {
+    width: 16px;
+    text-align: center;
+
+    /* Link to object in the classic nagios GUI */
+    /* TODO: Reproduce these singleicon elements */
+    img {
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  tr.actions {
+    td {
+      padding: 5px;
+    }
+
+    div {
+      display: inline-block;
+    }
+
+    td div.search input[type="text"] {
+      margin-right: 2px;
+    }
+
+    &.no_match td {
+      padding: 5px;
+    }
+  }
+
+  tr th {
+    vertical-align: baseline;
+  }
+
+  tr div.toggle_actions {
+    position: relative;
+    padding-left: 14px;
+  }
+
+  tr a.toggle_actions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0;
+    margin: 0;
+
+    img {
+      position: relative;
+      top: 2px;
+      width: 12px;
+      height: 13px;
+      padding: 0;
+      vertical-align: top;
+    }
+  }
+
+  tr th a.toggle_actions img,
+  tr th body.main .popup_menu span.toggle_actions img,
+  body.main .popup_menu & tr th span.toggle_actions img {
+    filter: invert(100%);
+  }
+
+  tr.groupheader,
+  tr.groupheader.td {
+    background-color: transparent;
+  }
 }
 
 /* TODO: Check whether these narrow and wide styles are deprecated */
 td.narrow {
-    width: 10px;
+  width: 10px;
 }
 
 td.wide {
-    width: 100%;
-}
-
-table.data.oddeven > tbody > tr:nth-child(odd),
-table.data.oddeven > tbody > tr:nth-child(even) {
-    background-color: transparent;
-}
-
-/* Two-lined header, for example in WATO: ChangeLog->Site Status */
-/* TODO: Reproduce this html element */
-table.data tr.dualheader th {
-    border-bottom: 1px solid #ccc;
-}
-
-/* Table header links (For sorting) */
-table.data th.sort:hover {
-    background-color: inherit;
-    cursor: pointer;
-    color: #000;
-}
-
-/* TODO: Reproduce this html element */
-table.data th.tablegap {
-    background-color: transparent; /* none; */
-}
-
-table.data tr.data {
-  box-sizing: border-box;
-  overflow: hidden;
-  transition: all .15s ease-in;
-}
-
-table.data tr.data > td {
-    background-color: $theme-color-white;
-    padding: 4px 8px;
-    border-right: 0px;
-    border-top: 1px solid $theme-color-table-border;
-    border-bottom: 1px solid $theme-color-table-border;
-    height: 26px;
-    vertical-align: middle;
-}
-
-table.data tr.data > td:first-child {
-  border-left: 1px solid $theme-color-table-border;
-  border-radius: $theme-border-radius 0px 0px 4px;
-}
-
-table.data tr.data > td:last-child,
-table.data tr.data > td.last_col {
-  border-right: 1px solid $theme-color-table-border;
-  border-radius: 0px 4px 4px 0px;
-}
-
-/* TODO: Get rid of these important styles */
-table.data tr.data > td:only-child {
-  border: 1px solid $theme-color-table-border !important;
-  border-radius: $theme-border-radius !important;
-}
-
-table.data tr td.gap {
-  background: $theme-color-background;
-  border: 1px solid $theme-color-background;
-}
-
-table.data a {
-    text-decoration: none;
-    color: $theme-color-text;
-}
-
-table.data a:hover {
-    text-decoration: underline;
-}
-
-table.data tr.data td.checkbox {
-    width: 20px;
-    text-align: center;
-}
-
-table.data tr.data td.checkbox input {
-    margin: 0px;
-}
-
-table.data th input.checkgroup {
-    height: 12px;
-    width: 16px;
-    padding: 8px;
-    margin: 0;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 5pt;
-    line-height: 4pt;
-}
-
-/* TODO: Reproduce this html element */
-table.data td.host {
-    border-style: none;
-    font-weight: bold;
-    padding-top: 1ex;
-    padding-left: 0px;
-    font-size: 120%;
-}
-
-/* Link to object in the classic nagios GUI */
-/* TODO: Reproduce these singleicon elements */
-table.data td.singleicon img {
-    margin: 0;
-    padding: 0;
-}
-
-table.data td.singleicon {
-    width: 16px;
-    text-align: center;
-}
-
-table.data tr.actions td {
-    padding: 5px;
-}
-
-table.data tr.actions div {
-    display: inline-block;
-}
-
-table.data tr.actions td div.search input[type="text"] {
-    margin-right: 2px;
-}
-
-table.data tr.actions.no_match td {
-    padding: 5px;
-}
-
-table.data tr th {
-    vertical-align: baseline;
-}
-
-table.data tr div.toggle_actions {
-    position: relative;
-    padding-left: 14px;
-}
-
-table.data tr a.toggle_actions {
-    position: absolute;
-    top: 0;
-    left: 0;
-    margin: 0;
-    padding: 0;
-}
-
-table.data tr th a.toggle_actions img {
-    vertical-align: top;
-    width: 12px;
-    height: 13px;
-    padding: 0;
-    position: relative;
-    top: 2px;
-}
-
-table.data tr th a.toggle_actions img,
-table.data tr th body.main .popup_menu span.toggle_actions img,
-body.main .popup_menu table.data tr th span.toggle_actions img {
-  filter: invert(100%);
+  width: 100%;
 }
 
 /* Group header used in table, box and tiled layout */
 table.groupheader {
-    margin: 0px;
-    border: 0px;
-    padding: 6px 0px 3px 0px;
-}
-
-table.data tr.groupheader,
-table.data tr.groupheader.td {
-    background-color: transparent;
+  padding: 6px 0 3px;
+  margin: 0;
+  border: none;
 }
 
 tr.groupheader a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 /* TODO: Reproduce these .grouped_row_header elements */
-tr.data.grouped_row_header td {
+tr.data.grouped_row_header {
+  td {
     cursor: pointer;
-}
+  }
 
-tr.data.grouped_row_header img.treeangle {
+  img.treeangle {
     margin-left: 0;
+  }
 }
 
 tr.data.group_end {
-    border-bottom: 2px solid #ccc;
+  border-bottom: 2px solid #ccc;
 }
 
 /* state in group header must have fixed width */
 .groupheader td.state {
-    border: 1px solid #000000;
-    border-radius: 5px;
-    box-shadow: 1px 1px 2px #444444;
-    padding: 2px 5px;
-    width: 50px;
+  width: 50px;
+  padding: 2px 5px;
+  border: 1px solid #000;
+  border-radius: 5px;
+  box-shadow: 1px 1px 2px #444;
 }
 
 tr.groupheader {
   td {
     padding: 0;
+    margin: 0;
+    font-weight: bold;
     color: $theme-color-text;
     background: transparent;
     border-style: none;
-    margin: 0px;
-    font-weight: bold;
 
     &.groupheader .groupheader tbody tr td {
       display: inline-block;
@@ -841,93 +823,88 @@ tr.groupheader {
   }
 }
 
-table.data.oddeven > tbody > tr.groupheader {
-  background-color: transparent;
-}
-
 img.iconbutton {
-    width: 20px;
-    height: 20px;
-    padding: 0px 2px;
+  width: 20px;
+  height: 20px;
+  padding: 0 2px;
+
+  &:hover {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+  }
+
+  &.reload_failed {
+    filter: sepia(100%);
+    -webkit-filter: sepia(100%);
+  }
 }
 
 /* TODO: Reproduce this html item */
 .wato a.checkbox img.iconbutton {
-    width: 60px;
-    height: 16px;
-}
-
-img.iconbutton:hover {
-    opacity: 0.5;
-    filter: alpha(opacity=50); /* For IE8 and earlier */
+  width: 60px;
+  height: 16px;
 }
 
 /* reschedule check icon */
 /* TODO: Reproduce these reloading/reload html elements */
 img.iconbutton.reloading,
 img.icon.reloading {
-    -webkit-animation:spin 1s linear infinite;
-    -moz-animation:spin 1s linear infinite;
-    animation:spin 1s linear infinite;
+  animation: spin 1s linear infinite;
+  -webkit-animation: spin 1s linear infinite;
+  -moz-animation: spin 1s linear infinite;
 }
 
 @-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
 @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
-@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
-
-img.iconbutton.reload_failed {
-    -webkit-filter: sepia(100%);
-    filter: sepia(100%);
-}
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
 
 /* Table with captions on the left side. Used e.g. for man pages and werks */
 table.data.headerleft {
-      border-spacing: 0px;
-}
+    border-spacing: 0;
 
-table.data.headerleft th {
+  th {
     text-align: left;
-}
+  }
 
-table.data.headerleft tbody tr th,
-table.data.headerleft tbody tr td,
-table.data.headerleft tbody tr th:nth-child(odd),
-table.data.headerleft tbody tr td:nth-child(odd),
-table.data.headerleft tbody tr th:nth-child(even),
-table.data.headerleft tbody tr td:nth-child(even) {
-    border-top: 1px solid $theme-color-table-border;
-    border-left: 1px solid $theme-color-table-border;
-    border-bottom: none;
-    background: $theme-color-white;
-    border-radius: 0px;
-    padding: 8px 16px;
-    vertical-align: top;
-}
+  tbody tr th,
+  tbody tr td {
+    &:nth-child(odd),
+    &:nth-child(even) {
+      padding: 8px 16px;
+      vertical-align: top;
+      background: $theme-color-white;
+      border-top: 1px solid $theme-color-table-border;
+      border-bottom: none;
+      border-left: 1px solid $theme-color-table-border;
+      border-radius: 0;
+    }
+  }
 
-table.data.headerleft tbody tr th {
+  tbody tr th {
     text-transform: none;
     border-right: none;
-}
+  }
 
-table.data.headerleft tbody tr td {
+  tbody tr td {
     border-right: 1px solid $theme-color-table-border;
-}
 
-table.data.headerleft tbody tr td.nowiki p {
-      margin: 0px;
-}
+    &.nowiki p {
+        margin: 0;
+    }
+  }
 
-table.data.headerleft tbody tr:last-of-type td,
-table.data.headerleft tbody tr:last-of-type th {
+  tbody tr:last-of-type td,
+  tbody tr:last-of-type th {
     border-bottom: 1px solid $theme-color-table-border;
+  }
 }
 
 /* TODO: Reproduce this html element */
 table.data div.objectlist div {
-  border: 0px solid;
-  border-radius: $theme-border-radius;
   padding: 2px 6px;
   margin: 2px;
+  border: none;
+  border-radius: $theme-border-radius;
 }
 
 /*-------------------------------------------------------------------------.
@@ -941,102 +918,100 @@ table.data div.objectlist div {
 | Input forms (e.g. Filters, Commands, WATO)                               |
 '-------------------------------------------------------------------------*/
 
+/* TODO: Get rid of important styles */
 input:not(.button), input[type=text], input[type=password],
 select, textarea, div.snapin textarea, #mk_side_search_field {
-  border-radius: $theme-border-radius;
-  background-image: none !important;
-  background: $theme-color-white;
-  color: $theme-color-text;
-  padding: 8px !important;
   height: auto;
-  box-shadow: none;
+  padding: 8px !important;
+  color: $theme-color-text;
+  background: $theme-color-white;
+  background-image: none !important;
   border: 1px solid $theme-color-table-border !important;
+  border-radius: $theme-border-radius;
+  box-shadow: none;
 }
 
 input[type=text], textarea {
-    position: relative;
+  position: relative;
 }
 
 input[type=text], input[type=password] {
-    vertical-align: middle;
+  vertical-align: middle;
 }
 
 input[type=password] {
-    box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
+  box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
 }
 
 select {
-    vertical-align: middle;
+  vertical-align: middle;
 }
 
-input[type=radio] {
-    margin-left: 0px;
-}
-
+input[type=radio],
 input[type=checkbox] {
-    margin-left: 0px;
+  margin-left: 0;
 }
 
 input:focus, select:focus, textarea:focus, div.snapin textarea:focus,
 #mk_side_search_field:focus {
-    border-color: $theme-color-main;
+  border-color: $theme-color-main;
 }
 
-input.number, select.number, textarea.number, div.snapin select.number,
-div.snapin textarea.number, .number#mk_side_search_field {
+input, select, textarea, div.snapin select, div.snapin textarea,
+#mk_side_search_field {
+  &.number {
     text-align: left;
-}
+  }
 
-input.button, select.button, textarea.button, div.snapin select.button,
-div.snapin textarea.button, .button#mk_side_search_field {
+  &.button {
     display: inline-block;
-    margin-top: 8px;
-    margin-bottom: 8px;
     width: auto;
-    background: #13d389;
-    color: #fff;
     padding: 8px 16px;
+    margin-top: 8px;
     margin-right: 8px;
-    margin-left: 0px;
-    box-shadow: none;
-    border: 1px solid #13d389;
+    margin-bottom: 8px;
+    margin-left: 0;
     font-size: $theme-font-size-main;
     letter-spacing: $theme-letter-spacing-table;
-}
+    color: #fff;
+    background: #13d389;
+    border: 1px solid #13d389;
+    box-shadow: none;
+  }
 
-input.button:hover, select.button:hover, textarea.button:hover,
-.button#mk_side_search_field:hover, input.button:active, select.button:active,
-textarea.button:active, .button#mk_side_search_field:active {
-  background-color: #11bd7b;
-  border: 1px solid #11bd7b;
-}
-
-input[type=radio], select[type=radio], textarea[type=radio],
-div.snapin select[type=radio], div.snapin textarea[type=radio],
-[type=radio]#mk_side_search_field {
+  &[type=radio] {
     width: auto;
-    margin-bottom: 0px;
+    margin-bottom: 0;
+  }
 }
 
-select.toggle_timespecific_parameter, textarea.toggle_timespecific_parameter,
-div.snapin select.toggle_timespecific_parameter,
-div.snapin textarea.toggle_timespecific_parameter,
-.toggle_timespecific_parameter#mk_side_search_field {
+input, select, textarea, #mk_side_search_field {
+  &.button:hover, &.button:active {
+    background-color: #11bd7b;
+    border: 1px solid #11bd7b;
+  }
+}
+
+select, textarea, div.snapin select, div.snapin textarea,
+#mk_side_search_field {
+  &.toggle_timespecific_parameter {
     display: block;
+  }
 }
 
 input.toggle_timespecific_parameter {
   margin-top: 5px;
 }
 
+/* TODO: Get rid of important styles */
 select:not([multiple]) {
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  background-position: right 50% !important;
-  background-repeat: no-repeat !important;
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NDZFNDEwNjlGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NDZFNDEwNkFGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo0NkU0MTA2N0Y3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo0NkU0MTA2OEY3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PuGsgwQAAAA5SURBVHjaYvz//z8DOYCJgUxAf42MQIzTk0D/M+KzkRGPoQSdykiKJrBGpOhgJFYTWNEIiEeAAAMAzNENEOH+do8AAAAASUVORK5CYII=) !important;
   padding: 8px 16px !important;
   padding-right: 2.5em !important;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NDZFNDEwNjlGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NDZFNDEwNkFGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo0NkU0MTA2N0Y3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo0NkU0MTA2OEY3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PuGsgwQAAAA5SURBVHjaYvz//z8DOYCJgUxAf42MQIzTk0D/M+KzkRGPoQSdykiKJrBGpOhgJFYTWNEIiEeAAAMAzNENEOH+do8AAAAASUVORK5CYII=) !important;
+  background-position: right 50% !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-repeat: no-repeat !important;
 }
 
 body.main input:not(.button), body.main select, body.main textarea,
@@ -1046,221 +1021,218 @@ body.main #mk_side_search_field, body.main select, body.main textarea {
 
 /* TODO: Reproduce this html element */
 td.content hr {
-    height: 1px;
-    border-style: none;
-    background-color: rgba(255, 255, 255, 0.2);
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-style: none;
 }
 
 /* TODO: Reproduce these html elements (also have a look at .tab and .tabactive
  *       elemenets in _logwatch.scss)
  */
 input.tab#results, input.tabactive#results { background-color: #fe6; }
-
-/* TODO: Reproduce these two html elements */
 input.date, input.time {
-    font-family: monospace;
+  font-family: monospace;
 }
 
-.inputerror input, .inputerror select, .inputerror textarea,
-.inputerror div.snapin select, div.snapin .inputerror select,
-.inputerror div.snapin textarea, div.snapin .inputerror textarea,
-.inputerror #mk_side_search_field, .inputerror textarea,
-.inputerror span.checkbox, .inputerror > select {
+/* TODO: Get rid of important style */
+.inputerror {
+  input, select, textarea, div.snapin select, div.snapin & select,
+  div.snapin textarea, div.snapin & textarea, #mk_side_search_field, textarea,
+  span.checkbox, > select {
   background-color: $theme-color-nuance-15 !important;
-}
 
-.inputerror span.checkbox {
+  span.checkbox {
     display: block;
     float: left;
     height: 17px;
     margin-right: 2px;
-}
 
-.inputerror span.checkbox input {
-    margin: 1px;
+    input {
+      margin: 1px;
+    }
+  }
 }
 
 span.checkbox {
-    white-space: nowrap;
-    line-height: 14px;
+  line-height: 14px;
+  white-space: nowrap;
 }
 
 .checkbox label::before {
-  box-shadow: none;
   border: 1px solid $theme-color-table-border-dark;
   border-radius: 2px;
+  box-shadow: none;
 }
 
 /* Next-Generation forms */
 table.nform {
-    margin: 0;
-    margin-bottom: 10px;
-    padding: 0;
-    empty-cells: show;
-    width: 100%;
-    box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.1);
-    border: 1px solid $theme-color-table-border;
-    border-radius: $theme-border-radius;
-    background: $theme-color-white;
-    border-spacing: 8px;
-}
-
-body.main.screenshotmode table.nform {
-    background-color: #ffffff;
-    background-image: none;
-}
-
-table.nform tr.closed {
-    display: none;
-}
-
-table.nform tr.heading {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 10px;
   background: $theme-color-white;
-  height: auto;
-}
+  border: 1px solid $theme-color-table-border;
+  border-spacing: 8px;
+  border-radius: $theme-border-radius;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
+  empty-cells: show;
 
-table.nform tr.heading > td {
-    border-radius: 5px 5px 0px 0px;
-    background-color: rgba(255, 255, 255, 0.2);
-    vertical-align: middle;
-    cursor: pointer;
-}
+  body.main.screenshotmode & {
+    background-color: #fff;
+    background-image: none;
+  }
 
-table.nform tr.heading td {
+  tr.closed {
+    display: none;
+  }
+
+  tr.heading {
     height: auto;
-    font-size: $theme-font-size-global;
-    text-transform: uppercase;
-    letter-spacing: $theme-letter-spacing-table;
-    color: $theme-color-table-text;
-    padding: 8px;
-}
+    background: $theme-color-white;
 
-table.nform tr.heading img.treeangle.nform {
-    margin: 0px 8px 0px 0px;
-    filter: invert(100%);
-}
+    > td {
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 5px 5px 0 0;
+    }
 
-table.nform > tbody > tr td {
-    color: black;
-}
+    td {
+      height: auto;
+      padding: 8px;
+      font-size: $theme-font-size-global;
+      letter-spacing: $theme-letter-spacing-table;
+      color: $theme-color-table-text;
+      text-transform: uppercase;
+    }
 
-table.nform > tbody > tr > td {
+    img.treeangle.nform {
+      margin: 0 8px 0 0;
+      filter: invert(100%);
+    }
+  }
+
+  > tbody > tr td {
+    color: #000;
+  }
+
+  > tbody > tr > td {
     vertical-align: middle;
-}
 
-table.nform > tbody > tr > td.simple {
-    line-height: 20px;
-}
+    &.simple {
+      line-height: 20px;
+    }
+  }
 
-table.nform tr.open td.legend {
-    text-align: left;
+  tr.open td.legend {
     width: 320px;
     padding-right: 8px;
-    vertical-align: baseline;
     padding-left: 10px;
+    overflow: hidden;
     line-height: 28px;
+    text-align: left;
     word-wrap: break-word;
-    overflow: hidden;
-}
+    vertical-align: baseline;
 
-table.nform td.legend.simple {
+    div.title {
+      float: left;
+      max-width: 284px;
+      padding: 4px 0;
+      overflow: hidden;
+      font-weight: $theme-font-weight-bold;
+      white-space: nowrap;
+
+      .dots {
+        opacity: .3;
+      }
+
+      &.withcheckbox {
+        max-width: 284px;
+        margin-right: 6px;
+      }
+    }
+
+    div.checkbox {
+      float: left;
+      margin-left: 6px;
+    }
+  }
+
+  td.legend.simple {
     padding-top: 5px;
-}
+  }
 
-table.nform tr.open td.legend div.title {
-    float: left;
-    overflow: hidden;
-    white-space: nowrap;
-    font-weight: $theme-font-weight-bold;
-    padding: 4px 0px;
-    max-width: 284px;
-}
-
-table.nform tr.open td.legend div.title .dots {
-  opacity: .3;
-}
-
-table.nform tr.open td.legend div.title.withcheckbox {
-    max-width: 284px;
-    margin-right: 6px;
-}
-
-table.nform tr.open td.legend div.checkbox {
-    float: left;
-    margin-left: 6px;
-}
-
-table.nform.narrow td.legend {
+  &.narrow td.legend {
     height: 18px;
-}
+  }
 
-table.nform .dots {
-    color: #444;
+  .dots {
     margin-left: 5px;
-}
+    color: #444;
+  }
 
-table.nform td.content {
-    padding-left: 10px;
+  td.content {
     padding-right: 10px;
-}
+    padding-left: 10px;
 
-table.nform td.content.simple {
-    padding-bottom: 0px;
-}
+    &.simple {
+      padding-bottom: 0;
+    }
+  }
 
-table.nform.narrow td.content {
+  &.narrow td.content {
     height: 18px;
     padding-bottom: 2px;
-}
+  }
 
-table.nform tr.top td {
+  tr.top td {
     height: 6px;
-}
+  }
 
-table.nform tr.bottom td {
+  tr.bottom td {
     height: 5px;
-}
+  }
 
-table.nform td.reason {
-  padding: 8px 4px;
-}
+  td.reason {
+    padding: 8px 4px;
+  }
 
-table.nform input, table.nform select, table.nform textarea,
-table.nform #mk_side_search_field {
-  margin: 4px !important;
-}
+  /* TODO: Get rid of important styles */
+  input, select, textarea, #mk_side_search_field {
+    margin: 4px !important;
 
-table.nform input.button, table.nform select.button,
-table.nform textarea.button, table.nform .button#mk_side_search_field {
-  margin: 4px !important;
-}
+    &.button {
+      margin: 4px !important;
+    }
+  }
 
-table.nform hr {
-  background-color: $theme-color-table-border;
-  margin: 12px 0px;
-}
+  hr {
+    margin: 12px 0;
+    background-color: $theme-color-table-border;
+  }
 
-table.nform .ruleset {
-  margin-bottom: 8px;
-}
+  .ruleset {
+    margin-bottom: 8px;
+  }
 
-table.nform tr.open td.content .checkbox {
-  margin-right: 8px;
-  margin-left: 4px;
-  display: inline-block;
-}
+  tr.open td.content .checkbox {
+    display: inline-block;
+    margin-right: 8px;
+    margin-left: 4px;
+  }
 
-table.nform .listchoice td {
-  height: 24px;
-  vertical-align: middle;
-}
+  .listchoice td {
+    height: 24px;
+    vertical-align: middle;
+  }
 
-table.nform .title {
-  color: $theme-color-text;
-}
+  .title {
+    color: $theme-color-text;
+  }
 
-table.nform #view_p_options_tbl {
-      border-spacing: 4px;
+  #view_p_options_tbl {
+    border-spacing: 4px;
+  }
 }
 
 /*-------------------------------------------------------------------------.
@@ -1274,33 +1246,33 @@ table.nform #view_p_options_tbl {
 | Confirmation dialogs, success and error messages when performing actions |
 '-------------------------------------------------------------------------*/
 div.really, div.success, div.error, div.message, div.warning {
-    margin: 2em 0em;
-    padding: 1em 2em;
-    box-shadow: none;
-    border-radius: $theme-border-radius;
+  padding: 1em 2em;
+  margin: 2em 0;
+  border-radius: $theme-border-radius;
+  box-shadow: none;
 }
 
 div.message {
-    color: black;
+  color: #000;
 }
 
 div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
-     font-size: 12pt;
-     font-weight: bold;
-     margin-bottom: 5px;
-     color: white;
-     margin-left: 0px;
+  margin-bottom: 5px;
+  margin-left: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
 }
 
 div.really, div.success {
-    color: black;
+  color: #000;
 }
 
 /* TODO: Reproduce this html element */
 form.confirm {
-    margin-top: 8px;
-    position: relative;
-    left: -1px;
+  position: relative;
+  left: -1px;
+  margin-top: 8px;
 }
 
 /*-------------------------------------------------------------------------.
@@ -1315,74 +1287,69 @@ form.confirm {
 '-------------------------------------------------------------------------*/
 
 body.main table.header td.right a#helpbutton img {
-    margin: 1px 5px;
+  margin: 1px 5px;
 }
 
 a#helpbutton.passive {
-    filter: grayscale(100%);
-    -webkit-filter: grayscale(100%);
-    -moz-filter: grayscale(100%);
-    -ms-filter: grayscale(100%);
-    -o-filter: grayscale(100%);
-    filter: gray;
-    -webkit-filter: grayscale(1);
+  filter: #808080;
+  -webkit-filter: grayscale(1);
 }
 
 div.help {
-    background-image: none;
-    background-color: #FFFFCC;
-    border-radius: 5px;
-    padding: 8px 16px;
-    box-shadow: none;
-    margin: 8px 0px 8px;
-    font-weight: normal;
-    font-size: 12px;
-    text-align: left;
-    color: black;
-    display: inline-block;
-    width: auto;
+  display: inline-block;
+  width: auto;
+  padding: 8px 16px;
+  margin: 8px 0;
+  font-size: 12px;
+  font-weight: normal;
+  color: #000;
+  text-align: left;
+  background-color: #ffc;
+  background-image: none;
+  border-radius: 5px;
+  box-shadow: none;
 }
 
 div.help:before {
-    content: "i";
-    font-weight: $theme-font-weight-bold;
-    margin-right: 12px;
-    font-family: serif;
-    font-size: 16px;
-    font-style: italic;
-    display: inline-block;
-    height: 100%;
+  display: inline-block;
+  height: 100%;
+  margin-right: 12px;
+  font-family: serif;
+  font-size: 16px;
+  font-style: italic;
+  font-weight: $theme-font-weight-bold;
+  content: "i";
 }
 
 div.help a {
-    color: $theme-color-text;
+  color: $theme-color-text;
 }
 
 div.help a:hover {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 table.data div.help {
-    box-shadow: 0 0 3px #000;
+  box-shadow: 0 0 3px #000;
 }
 
 div.help table.help {
-    border-collapse: collapse;
-    empty-cells: show;
+  border-collapse: collapse;
+  empty-cells: show;
 }
 
 div.help table.help td {
-    border: 1px solid black;
-    vertical-align: top;
+  vertical-align: top;
+  border: 1px solid #000;
 }
 
 div.help table.help td.tt {
-    font-family: courier, monospace;
+  font-family: courier, monospace;
 }
 
 div.help tt {
-    font-family: courier, monospace;
-    color: #000099;
+  font-family: courier, monospace;
+  color: #009;
 }
 
 /*--Popupmenu--------------------------------------------------------------.
@@ -1395,173 +1362,172 @@ div.help tt {
 '-------------------------------------------------------------------------*/
 
 body.main .popup_menu {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    z-index: 50;
-    min-width: 300px;
-    color: #fff;
-    background-color: $theme-color-white;
-    border: 1px solid $theme-color-table-border;
-    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
-    white-space: normal;
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 50;
+  min-width: 300px;
+  color: #fff;
+  white-space: normal;
+  background-color: $theme-color-white;
+  border: 1px solid $theme-color-table-border;
+  border-radius: 5px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
 body.main .popup_menu div.wrapper {
-    position: relative;
+  position: relative;
 }
 
 body.main .popup_menu div.content {
-    padding: 5px 8px;
+  padding: 5px 8px;
 }
 
 /* TODO: Reproduce these .resizable html elements */
 body.main .popup_menu.resizable div.resizer {
-    width: 15px;
-    height: 15px;
-    bottom: 0;
-    right: 0;
-    background-color: #508AA1;
-    position: absolute;
-    pointer-events: none;
-    cursor: se-resize;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 15px;
+  height: 15px;
+  pointer-events: none;
+  cursor: se-resize;
+  background-color: #508aa1;
 }
 
 body.main div.popup_menu.resizable div.content {
-    resize: both;
-    overflow: auto;
-    min-height: 150px;
-    min-width: 312px;
+  min-width: 312px;
+  min-height: 150px;
+  overflow: auto;
+  resize: both;
 }
 
 body.main .popup_menu img {
-    width: 12px;
-    height: auto;
-    vertical-align: bottom;
-    margin-right: 3px;
+  width: 12px;
+  height: auto;
+  margin-right: 3px;
+  vertical-align: bottom;
 }
 
 body.main .popup_menu ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
 
 body.main .popup_menu a,
 body.main table.footer .popup_menu a,
 body.main .popup_menu span {
-    display: block;
-    padding-top: 1px;
-    padding-bottom: 1px;
-    text-align: left;
-    text-decoration: none;
-    color: $theme-color-text;
+  display: block;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  color: $theme-color-text;
+  text-align: left;
+  text-decoration: none;
 }
 
 body.main .popup_menu span {
-    padding-left: 0;
-    font-weight: bold;
-    margin-top: 8px;
+  padding-left: 0;
+  margin-top: 8px;
+  font-weight: bold;
 }
 
 body.main .popup_menu li:first-child span {
-    margin-top: 0;
+  margin-top: 0;
 }
 
 body.main .popup_menu a:hover,
 body.main table.footer .popup_menu a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 #popup_menu .icons {
-    position: relative;
-    height: 100%;
-    width: 100%;
-    min-height: 150px;
-    min-width: 312px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 312px;
+  min-height: 150px;
 }
 
 #popup_menu .icons ul {
-    list-style: none;
-    height: 21px;
-    margin: 0;
-    padding: 0;
-    border-bottom: 1px solid #e5e5e5;
+  height: 21px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 #popup_menu .icons li {
-    float: left;
+  float: left;
 }
 
 #popup_menu .icons li a {
-    display: block;
-    height: 21px;
-    padding: 0 5px;
-    line-height: 21px;
-    border-right: 1px solid #fff;
+  display: block;
+  height: 21px;
+  padding: 0 5px;
+  line-height: 21px;
+  border-right: 1px solid #fff;
 }
 
 #popup_menu .icons li a:hover {
-    text-decoration: none;
-    background-color: #629BB1;
-    color: #fff;
+  color: #fff;
+  text-decoration: none;
+  background-color: #629bb1;
 }
 
 #popup_menu .icons li.active a {
-    border-bottom: 1px solid #508AA1;
-    color: #000;
+  color: #000;
+  border-bottom: 1px solid #508aa1;
 }
 
 #popup_menu .icons div.icon_container {
-    position: absolute;
-    overflow-y: auto;
-    padding: 5px;
-    top: 26px;
-    left: 0;
-    right: 0;
-    bottom: 38px;
+  position: absolute;
+  top: 26px;
+  right: 0;
+  bottom: 38px;
+  left: 0;
+  padding: 5px;
+  overflow-y: auto;
 }
 
 #popup_menu .icons a.icon {
-    display: inline-block;
-    cursor: pointer;
+  display: inline-block;
+  cursor: pointer;
 }
 
 #popup_menu .icons.show_names a.icon {
-    width: 100px;
+  width: 100px;
 }
 
 #popup_menu .icons a.icon span {
-    display: none;
+  display: none;
 }
 
 #popup_menu .icons.show_names a.icon span {
-    display: inline-block;
-    font-weight: normal;
-
-    text-overflow: ellipsis;
-    width: 62px;
-    overflow: hidden;
-    margin: 0;
-    white-space: nowrap;
-    line-height: 19px;
-    vertical-align: middle;
+  display: inline-block;
+  width: 62px;
+  margin: 0;
+  overflow: hidden;
+  font-weight: normal;
+  line-height: 19px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 #popup_menu .icons.show_names a.icon span:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 #popup_menu .icons img.icon {
-    width: 20px;
-    height: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 #popup_menu .icons div.buttons {
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
 }
 
 /*--Various----------------------------------------------------------------.
@@ -1575,77 +1541,76 @@ body.main table.footer .popup_menu a:hover {
 
 /* TODO: Reproduce div.keysym */
 div.keysym {
-    text-align: center;
-    color: white;
-    /* font-style: italic; */
-    border-width: 2px;
-    border-style: solid;
-    border-color: #888 #444 #000 #666;
-    border-radius: 4px;
-    box-shadow: 0.5px 0.5px 1px #000;
-    background-color: #333;
-    padding: 2px 5px;
-    margin: 0px 1px;
-    display: inline-block;
+  display: inline-block;
+  padding: 2px 5px;
+  margin: 0 1px;
+  color: #fff; /* font-style: italic; */
+  text-align: center;
+  background-color: #333;
+  border-color: #888 #444 #000 #666;
+  border-style: solid;
+  border-width: 2px;
+  border-radius: 4px;
+  box-shadow: 0.5px 0.5px 1px #000;
 }
 
 
 /* Contextlinks with embedded keyboard button */
 div.contextlink div.keysym {
-    background-color: #467;
-    border-color: #8ab #245 #134 #79a;
-    border-width: 2px;
-    padding: 1px 5px;
-    font-size: 6pt;
-    position: absolute;
-    top: 4px;
-    right: 5px;
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  padding: 1px 5px;
+  font-size: 8px;
+  background-color: #467;
+  border-color: #8ab #245 #134 #79a;
+  border-width: 2px;
 }
 
 div.contextlink.button a {
-    width: 135px;
+  width: 135px;
 }
 
 div.log_output, .crash_report pre {
-  background: $theme-color-sidebar-background;
-  color: $theme-color-lightgrey;
+  padding: 8px 16px;
+  margin: 16px;
   font-family: monospace;
+  font-weight: $theme-font-weight-global;
+  color: $theme-color-lightgrey;
+  background: $theme-color-sidebar-background;
   border: 1px solid $theme-color-table-border-dark;
   border-radius: $theme-border-radius;
   box-shadow: none;
-  padding: 8px 16px;
-  margin: 16px;
-  font-weight: $theme-font-weight-global;
 }
 
 div.log_output {
-    overflow-x: scroll;
-    vertical-align: top;
+  overflow-x: scroll;
+  vertical-align: top;
 }
 
 div.log_output pre {
-    color: $theme-color-lightgrey;
-    font-family: monospace;
-    font-size: $theme-font-size-global;
+  font-family: monospace;
+  font-size: $theme-font-size-global;
+  color: $theme-color-lightgrey;
 }
 
 a.element_dragger {
-    cursor: move;
+  cursor: move;
 }
 
 a.element_dragger:hover {
-    opacity: 0.5;
-    filter: alpha(opacity=50); /* For IE8 and earlier */
+  opacity: 0.5;
+  filter: alpha(opacity=50); /* For IE8 and earlier */
 }
 
 .dragging {
-    cursor: move;
-    box-shadow: 0px 2px 10px 0px rgba(0,0,0,0.6);
-    -webkit-transform: scale(1.005);
-    -moz-transform: scale(1.005);
-    -ms-transform: scale(1.005);
-    -o-transform: scale(1.005);
-    transform: scale(1.005);
+  cursor: move;
+  transform: scale(1.005);
+  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.6);
+  -webkit-transform: scale(1.005);
+  -moz-transform: scale(1.005);
+  -ms-transform: scale(1.005);
+  -o-transform: scale(1.005);
 }
 
 
@@ -1662,70 +1627,73 @@ a.element_dragger:hover {
 
 /* TODO: Reproduce this table.debug_vars */
 table.debug_vars {
-    border-collapse: collapse;
+  border-collapse: collapse;
 }
+
 table.debug_vars th {
-    border: 1px solid #080;
-    background-color: #8c8;
-    font-weight: bold;
+  font-weight: bold;
+  background-color: #8c8;
+  border: 1px solid #080;
 }
+
 table.debug_vars td.left {
-    background-color: #395;
-    color: white;
-    font-weight: bold;
+  font-weight: bold;
+  color: #fff;
+  background-color: #395;
 }
+
 table.debug_vars td.right {
-    background-color: #8fc;
-    color: black;
-    font-weight: bold;
+  font-weight: bold;
+  color: #000;
+  background-color: #8fc;
 }
+
 table.debug_vars td {
-    padding: 2px 6px;
-    border: 1px solid #050;
-    font-family: courier, monospace;
+  padding: 2px 6px;
+  font-family: courier, monospace;
+  border: 1px solid #050;
 }
 
 /* Popup for adding to visuals (Dashboard, Reports */
 /* TODO: Reproduce div.pnp_graph */
 div.pnp_graph, div.popup_trigger {
-    position: relative;
+  position: relative;
 }
 
 div.popup_trigger {
-    display: inline-block;
+  display: inline-block;
 }
 
 div.pnp_graph a.popup_trigger {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-
-    display: block;
-    width: 20px;
-    height: 20px;
-    background-image: url(images/icon_menu.png);
-    background-size: contain;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-image: url("images/icon_menu.png");
+  background-size: contain;
 }
 
 div.pnp_graph a.popup_trigger:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
-    border: none;
-    box-shadow: none;
-    margin: 0;
+  margin: 0;
+  border: none;
+  box-shadow: none;
 }
 
 div.popup_trigger img.iconbutton {
-    padding: 0;
+  padding: 0;
 }
 
 td.job_state{
-    color: white;
-    box-shadow: 0.5px 0.5px 2px #000 inset;
-    text-align: center;
-    font-weight: bold;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0.5px 0.5px 2px #000 inset;
 }
 
 table.data > tbody > tr > td.job_state.job_finished {
@@ -1745,34 +1713,34 @@ table.data > tbody > tr > td.job_state.job_running {
 
 table.data > tbody > tr > td.job_state.job_initialized {
   color: $theme-color-black;
-  background-color: #cccccc;
+  background-color: #ccc;
 }
 
 table.data.job_details > tbody > tr > th {
-    width: 150px;
+  width: 150px;
 }
 
 table.data.job_details div.log_output > pre{
-    margin: 0;
+  margin: 0;
 }
 
 /* Fixed job columns */
 table.data.job_table > tbody > tr > td.job_actions {
-    width: 50px;
+  width: 50px;
 }
 
 table.data.job_table> tbody > tr > td.job_state {
-    width: 50px;
+  width: 50px;
 }
 
 
 table.data.job_table> tbody > tr > td.job_started {
-    width: 160px;
+  width: 160px;
 }
 
 table.data.job_table> tbody > tr > td.job_pid{
-    width: 40px;
-    text-align: right;
+  width: 40px;
+  text-align: right;
 }
 
 /* Tags */

@@ -10,7 +10,6 @@
 
 @import "../classic/scss/_check_mk.scss";
 @import "../classic/scss/_status.scss";
-@import "../classic/scss/_mobile.scss";
 
 // CEE specific files. Would love to add some kind of conditional import here,
 // but that is simply not possible at the moment using SCSS. Hack around this
@@ -39,6 +38,6 @@
 @import "scss/_prediction.scss";
 @import "scss/_views.scss";
 @import "scss/_wato.scss";
-@import "scss/_tables.scss";
+@import "scss/_mobile.scss";
 @import "scss/_sidebar.scss";
 @import "scss/_snapins.scss";

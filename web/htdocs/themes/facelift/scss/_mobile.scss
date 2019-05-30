@@ -1,0 +1,233 @@
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+ails.  You should have  received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+
+*/
+
+/* Styles for Check_MK mobile interface */
+body.mobile {
+  div.really, div.success, div.error, div.message, div.warning {
+    width: 80%;
+    padding: 0.5ex 1em;
+    margin: 1em 0 3em 0;
+    text-align: center;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 0.5ex;
+  }
+
+  div.error {
+    color: $theme-color-text;
+    background-color: #fcc;
+  }
+
+  div.command_group a {
+    color: #000;
+  }
+
+  table.data {
+    border-collapse: collapse;
+    empty-cells: show;
+
+    td {
+      padding: 2px 3px;
+      overflow: hidden;
+      border: 1px solid #ddd;
+    }
+  }
+
+  table.dataset {
+    width: 100%;
+
+    tr.header {
+      color: #000;
+    }
+
+    > tbody > tr.data > td {
+      padding: 4px 6px;
+      font-size: 13px;
+      border: 1px solid #aaa;
+      border-radius: 5px;
+    }
+  }
+
+  td.nonstatus {
+    background-color: #fff;
+  }
+
+  /* Forms for filters and commands */
+  table.form {
+    width: 100%;
+
+    > tbody > tr > * {
+      width: 100%;
+    }
+
+    th {
+      border-style: none;
+    }
+  }
+
+  table.filtertime {
+    td {
+      vertical-align: middle;
+    }
+
+    div.ui-select {
+      width: auto;
+    }
+  }
+
+  table.alertstatefilter {
+    td {
+      vertical-align: top;
+    }
+
+    .ui-checkbox {
+      margin: 0;
+    }
+  }
+
+  /* Perfometers */
+  td.perfometer {
+    width: 70px;
+    height: 14px;
+
+    * {
+      padding: 0;
+      font-size: 9px;
+      font-weight: normal;
+      color: #333;
+    }
+
+    div.content {
+      width: 69px;
+      background-color: #ff0;
+    }
+
+    div.title {
+      top: 2px;
+      width: 70px;
+    }
+
+    div.glass {
+      width: 69px;
+      height: 14px;
+    }
+
+    table {
+      width: 70px;
+      height: 14px;
+    }
+  }
+
+  table.data td.perfometer td.inner {
+    height: 14px;
+  }
+
+  .ui-header .ui-title, .ui-footer .ui-title {
+    margin: .6em 46px .8em;
+  }
+
+  .ui-li-aside.state {
+    width: 4.5em;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: 0 0 2px #444;
+  }
+
+  td.pnpgraph img {
+    max-width: 97%;
+  }
+
+  table.dataset tr.data td.state {
+    font-size: 25px;
+  }
+
+  #loginhead, #loginfoot {
+    color: #444;
+    text-align: center;
+  }
+
+  #loginhead {
+    margin: 1em;
+  }
+
+  #loginfoot {
+    margin-top: 1em;
+
+    &.copyright {
+      margin-top: 1em;
+    }
+  }
+
+  img.logomk {
+    width: 25px;
+    height: 25px;
+    margin-bottom: 10px;
+  }
+
+  td.icons {
+    vertical-align: middle;
+
+    img {
+      width: 40px;
+      height: 40px;
+      margin-left: 5px;
+    }
+
+    a {
+      padding-left: 8px;
+    }
+  }
+
+  div.popup_trigger {
+    display: inline-block;
+
+    > div.popup_menu {
+      display: inline-block;
+
+      a {
+        display: inline-block;
+        width: 40px;
+        overflow: hidden;
+        color: #000;
+
+        img {
+          margin-left: 0;
+        }
+      }
+
+      ul {
+        padding: 0;
+        margin: 0;
+      }
+
+      li {
+        display: inline-block;
+        margin: 0;
+      }
+    }
+  }
+}

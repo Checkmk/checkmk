@@ -454,135 +454,143 @@ tr.even2       { background-color: #faa; }
 tr.odd3        { background-color: #ffe0a0; }
 tr.even3       { background-color: #ffefaf; }
 
-/* Row headers in single dataset layout */
+
+/*-------------------------------------------------------------------------.
+|                 ____       _       _                                     |
+|                |  _ \ __ _(_)_ __ | |_ ___ _ __ ___                      |
+|                | |_) / _` | | '_ \| __/ _ \ '__/ __|                     |
+|                |  __/ (_| | | | | | ||  __/ |  \__ \                     |
+|                |_|   \__,_|_|_| |_|\__\___|_|  |___/                     |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles used in painters (see plugins/views/painters.py)                  |
+'-------------------------------------------------------------------------*/
 
 
-///*-------------------------------------------------------------------------.
-//|                 ____       _       _                                     |
-//|                |  _ \ __ _(_)_ __ | |_ ___ _ __ ___                      |
-//|                | |_) / _` | | '_ \| __/ _ \ '__/ __|                     |
-//|                |  __/ (_| | | | | | ||  __/ |  \__ \                     |
-//|                |_|   \__,_|_|_| |_|\__\___|_|  |___/                     |
-//|                                                                          |
-//+--------------------------------------------------------------------------+
-//| Styles used in painters (see plugins/views/painters.py)                  |
-//'-------------------------------------------------------------------------*/
-//
-//
-///* Styles the background of host columns which have a red colored background when critical */
-//.data div.hostdown {
-//    background-color: #f22;
-//    border-radius: 4px;
-//    border: 2px solid #000;
-//    padding-left: 3px;
-//    padding-right: 3px;
-//}
-//
-//table.data td.age {
-//    text-align: right;
-//    color: #666;
-//    white-space: nowrap;
-//}
-//table.data td.age.staletime {
-//    color: red;
-//    font-weight: bold;
-//}
-//
-//table.data td.age.recent {
-//    font-weight: bold;
-//    color: #000;
-//}
-//
-//table.data td.nowrap {
-//    white-space: nowrap;
-//}
-//
-//td.badflag {
-//    font-weight: bold;
-//    background-color: #f64;
-//}
-//
-//td.goodflag {
-//    color: #080;
-//}
-//
-//table.data td.buttons.visuals {
-//    width: 75px;
-//}
-//table.data .state0 *, table.data .state2 *, table.data .state3 * {
-//    color: white;
-//}
-//
-//td.icons {
-//    white-space: nowrap;
-//    width: 1px;
-//}
-//td.icons img {
-//    height: 20px;
-//    margin-right: 0px;
-//}
-//
-//td.icon {
-//    width: 20px;
-//}
-//
-//img.tabicon {
-//    width: 16px;
-//    height: 16px;
-//    vertical-align: middle;
-//    position: relative;
-//    top: -1px;
-//    left: 0px;
-//}
-//
-///* Styles used by specific painters. These should be modularized later ... */
-//table.data div.objectlist div {
-//    float: left;
-//    padding: 1px 3px;
-//    border-style: solid;
-//    border-width: 1px;
-//    margin: 1px;
-//}
-//
-//table.data tr.data td.pnpgraph {
-//   padding: 0;
-//}
-//
-//tr.data td.pnpgraph div.pnp_graph > a > img {
-//    border: 1px solid #888;
-//    margin: 4px 4px 4px 4px;
-//    box-shadow: 1px 1px 3px #000000;
-//}
-//
-///*
-// Sites can be represented by small icons with a size of 24x24 px.
-// This is the styling for these icons.
-// */
-//img.siteicon {
-//    width: 24px;
-//    height: 24px;
-//    border: 1px solid #666;
-//}
-//
-//table.customvars {
-//    border-collapse: collapse;
-//    padding: 0px;
-//}
-//table.data tr.data td table.customvars td {
-//    /* border: 1px solid #ccc; */
-//    padding: 0px 5px 0px 0px;
-//}
-//table.data tr.data td table.customvars td:last-child {
-//    border-left: 1px solid #bbb;
-//    padding-left: 5px;
-//}
-//
-//td.matchgroups span {
-//    margin-right: 3px;
-//    background-color: #ffffff;
-//    border: 1px solid #eeeeee;
-//    border-radius: 3px;
-//    box-shadow: 0px 0px 1px #888;
-//    padding: 0px 3px;
-//    font-family: monospace;
-//}
+/* Styles the background of host columns which have a red colored background when critical */
+.data div.hostdown {
+    background-color: #f22;
+    border-radius: 4px;
+    border: 2px solid #000;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+table.data td.age {
+    text-align: right;
+    color: #666;
+    white-space: nowrap;
+}
+table.data td.age.staletime {
+    color: red;
+    font-weight: bold;
+}
+
+table.data td.age.recent {
+    font-weight: bold;
+    color: #000;
+}
+
+table.data td.nowrap {
+    white-space: nowrap;
+}
+
+td.badflag {
+    font-weight: bold;
+    background-color: #f64;
+}
+
+td.goodflag {
+    color: #080;
+}
+
+table.data td.buttons.visuals {
+    width: 75px;
+}
+
+table.data .state2 *, table.data .state3 * {
+    color: #fff;
+}
+
+table.data .state0 * {
+  color: $theme-color-text;
+}
+
+td.icons {
+    white-space: nowrap;
+    width: 1px;
+}
+
+td.icons img {
+    height: 20px;
+    margin-right: 0px;
+}
+
+td.icon {
+    width: 20px;
+}
+
+img.tabicon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    left: 0px;
+}
+
+
+/* Styles used by specific painters. These should be modularized later ... */
+/* TODO: Reproduce this html element */
+table.data div.objectlist div {
+  float: left;
+  padding: 2px 6px;
+  margin: 2px;
+  border: none;
+  border-radius: $theme-border-radius;
+}
+
+/* TODO: Reproduce these pnpgraph elements */
+table.data tr.data td.pnpgraph {
+   padding: 0;
+}
+
+tr.data td.pnpgraph div.pnp_graph > a > img {
+    border: 1px solid #888;
+    margin: 4px 4px 4px 4px;
+    box-shadow: 1px 1px 3px #000000;
+}
+
+/*
+ Sites can be represented by small icons with a size of 24x24 px.
+ This is the styling for these icons.
+ */
+img.siteicon {
+    width: 24px;
+    height: 24px;
+    border: 1px solid #666;
+}
+
+/* TODO: Reproduce table.customvars */
+table.customvars {
+    border-collapse: collapse;
+    padding: 0px;
+}
+table.data tr.data td table.customvars td {
+    /* border: 1px solid #ccc; */
+    padding: 0px 5px 0px 0px;
+}
+table.data tr.data td table.customvars td:last-child {
+    border-left: 1px solid #bbb;
+    padding-left: 5px;
+}
+
+td.matchgroups span {
+    margin-right: 3px;
+    background-color: #ffffff;
+    border: 1px solid #eeeeee;
+    border-radius: 3px;
+    box-shadow: 0px 0px 1px #888;
+    padding: 0px 3px;
+    font-family: monospace;
+}

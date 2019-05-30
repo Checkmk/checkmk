@@ -1039,7 +1039,8 @@ input.date, input.time {
   input, select, textarea, div.snapin select, div.snapin & select,
   div.snapin textarea, div.snapin & textarea, #mk_side_search_field, textarea,
   span.checkbox, > select {
-  background-color: $theme-color-nuance-15 !important;
+    background-color: $theme-color-nuance-15 !important;
+  }
 
   span.checkbox {
     display: block;
@@ -1250,18 +1251,18 @@ div.really, div.success, div.error, div.message, div.warning {
   margin: 2em 0;
   border-radius: $theme-border-radius;
   box-shadow: none;
+
+  h1 {
+    margin-bottom: 5px;
+    margin-left: 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+  }
 }
 
 div.message {
   color: #000;
-}
-
-div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
-  margin-bottom: 5px;
-  margin-left: 0;
-  font-size: 16px;
-  font-weight: bold;
-  color: #fff;
 }
 
 div.really, div.success {
@@ -1308,48 +1309,48 @@ div.help {
   background-image: none;
   border-radius: 5px;
   box-shadow: none;
-}
 
-div.help:before {
-  display: inline-block;
-  height: 100%;
-  margin-right: 12px;
-  font-family: serif;
-  font-size: 16px;
-  font-style: italic;
-  font-weight: $theme-font-weight-bold;
-  content: "i";
-}
+  &:before {
+    display: inline-block;
+    height: 100%;
+    margin-right: 12px;
+    font-family: serif;
+    font-size: 16px;
+    font-style: italic;
+    font-weight: $theme-font-weight-bold;
+    content: "i";
+  }
 
-div.help a {
-  color: $theme-color-text;
-}
+  a {
+    color: $theme-color-text;
 
-div.help a:hover {
-  text-decoration: none;
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  table.help {
+    border-collapse: collapse;
+    empty-cells: show;
+  }
+
+  table.help td {
+    vertical-align: top;
+    border: 1px solid #000;
+  }
+
+  table.help td.tt {
+    font-family: courier, monospace;
+  }
+
+  tt {
+    font-family: courier, monospace;
+    color: #009;
+  }
 }
 
 table.data div.help {
   box-shadow: 0 0 3px #000;
-}
-
-div.help table.help {
-  border-collapse: collapse;
-  empty-cells: show;
-}
-
-div.help table.help td {
-  vertical-align: top;
-  border: 1px solid #000;
-}
-
-div.help table.help td.tt {
-  font-family: courier, monospace;
-}
-
-div.help tt {
-  font-family: courier, monospace;
-  color: #009;
 }
 
 /*--Popupmenu--------------------------------------------------------------.
@@ -1373,46 +1374,58 @@ body.main .popup_menu {
   border: 1px solid $theme-color-table-border;
   border-radius: 5px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-}
 
-body.main .popup_menu div.wrapper {
-  position: relative;
-}
+  div.wrapper {
+    position: relative;
+  }
 
-body.main .popup_menu div.content {
-  padding: 5px 8px;
-}
+  div.content {
+    padding: 5px 8px;
+  }
 
-/* TODO: Reproduce these .resizable html elements */
-body.main .popup_menu.resizable div.resizer {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 15px;
-  height: 15px;
-  pointer-events: none;
-  cursor: se-resize;
-  background-color: #508aa1;
-}
+  /* TODO: Reproduce these .resizable html elements */
+  &.resizable {
+    div.resizer {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 15px;
+      height: 15px;
+      pointer-events: none;
+      cursor: se-resize;
+      background-color: #508aa1;
+    }
 
-body.main div.popup_menu.resizable div.content {
-  min-width: 312px;
-  min-height: 150px;
-  overflow: auto;
-  resize: both;
-}
+    div.content {
+      min-width: 312px;
+      min-height: 150px;
+      overflow: auto;
+      resize: both;
+    }
+  }
 
-body.main .popup_menu img {
-  width: 12px;
-  height: auto;
-  margin-right: 3px;
-  vertical-align: bottom;
-}
+  img {
+    width: 12px;
+    height: auto;
+    margin-right: 3px;
+    vertical-align: bottom;
+  }
 
-body.main .popup_menu ul {
-  padding: 0;
-  margin: 0;
-  list-style: none;
+  ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  span {
+    padding-left: 0;
+    margin-top: 8px;
+    font-weight: bold;
+  }
+
+  li:first-child span {
+    margin-top: 0;
+  }
 }
 
 body.main .popup_menu a,
@@ -1424,21 +1437,10 @@ body.main .popup_menu span {
   color: $theme-color-text;
   text-align: left;
   text-decoration: none;
-}
 
-body.main .popup_menu span {
-  padding-left: 0;
-  margin-top: 8px;
-  font-weight: bold;
-}
-
-body.main .popup_menu li:first-child span {
-  margin-top: 0;
-}
-
-body.main .popup_menu a:hover,
-body.main table.footer .popup_menu a:hover {
-  text-decoration: underline;
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 #popup_menu .icons {
@@ -1447,87 +1449,87 @@ body.main table.footer .popup_menu a:hover {
   height: 100%;
   min-width: 312px;
   min-height: 150px;
-}
 
-#popup_menu .icons ul {
-  height: 21px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-  border-bottom: 1px solid #e5e5e5;
-}
+  ul {
+    height: 21px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    border-bottom: 1px solid #e5e5e5;
+  }
 
-#popup_menu .icons li {
-  float: left;
-}
+  li {
+    float: left;
 
-#popup_menu .icons li a {
-  display: block;
-  height: 21px;
-  padding: 0 5px;
-  line-height: 21px;
-  border-right: 1px solid #fff;
-}
+    a {
+      display: block;
+      height: 21px;
+      padding: 0 5px;
+      line-height: 21px;
+      border-right: 1px solid #fff;
 
-#popup_menu .icons li a:hover {
-  color: #fff;
-  text-decoration: none;
-  background-color: #629bb1;
-}
+      &:hover {
+        color: #fff;
+        text-decoration: none;
+        background-color: #629bb1;
+      }
+    }
 
-#popup_menu .icons li.active a {
-  color: #000;
-  border-bottom: 1px solid #508aa1;
-}
+    &.active a {
+      color: #000;
+      border-bottom: 1px solid #508aa1;
+    }
+  }
 
-#popup_menu .icons div.icon_container {
-  position: absolute;
-  top: 26px;
-  right: 0;
-  bottom: 38px;
-  left: 0;
-  padding: 5px;
-  overflow-y: auto;
-}
+  div.icon_container {
+    position: absolute;
+    top: 26px;
+    right: 0;
+    bottom: 38px;
+    left: 0;
+    padding: 5px;
+    overflow-y: auto;
+  }
 
-#popup_menu .icons a.icon {
-  display: inline-block;
-  cursor: pointer;
-}
+  a.icon {
+    display: inline-block;
+    cursor: pointer;
 
-#popup_menu .icons.show_names a.icon {
-  width: 100px;
-}
+    span {
+      display: none;
+    }
+  }
 
-#popup_menu .icons a.icon span {
-  display: none;
-}
+  &.show_names a.icon {
+    width: 100px;
 
-#popup_menu .icons.show_names a.icon span {
-  display: inline-block;
-  width: 62px;
-  margin: 0;
-  overflow: hidden;
-  font-weight: normal;
-  line-height: 19px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  vertical-align: middle;
-}
+    span {
+      display: inline-block;
+      width: 62px;
+      margin: 0;
+      overflow: hidden;
+      font-weight: normal;
+      line-height: 19px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle;
 
-#popup_menu .icons.show_names a.icon span:hover {
-  text-decoration: underline;
-}
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
 
-#popup_menu .icons img.icon {
-  width: 20px;
-  height: 20px;
-}
+  img.icon {
+    width: 20px;
+    height: 20px;
+  }
 
-#popup_menu .icons div.buttons {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
+  div.buttons {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+  }
 }
 
 /*--Various----------------------------------------------------------------.
@@ -1552,19 +1554,18 @@ div.keysym {
   border-width: 2px;
   border-radius: 4px;
   box-shadow: 0.5px 0.5px 1px #000;
-}
 
-
-/* Contextlinks with embedded keyboard button */
-div.contextlink div.keysym {
-  position: absolute;
-  top: 4px;
-  right: 5px;
-  padding: 1px 5px;
-  font-size: 8px;
-  background-color: #467;
-  border-color: #8ab #245 #134 #79a;
-  border-width: 2px;
+  /* Contextlinks with embedded keyboard button */
+  div.contextlink & {
+    position: absolute;
+    top: 4px;
+    right: 5px;
+    padding: 1px 5px;
+    font-size: 8px;
+    background-color: #467;
+    border-color: #8ab #245 #134 #79a;
+    border-width: 2px;
+  }
 }
 
 div.contextlink.button a {
@@ -1586,21 +1587,21 @@ div.log_output, .crash_report pre {
 div.log_output {
   overflow-x: scroll;
   vertical-align: top;
-}
 
-div.log_output pre {
-  font-family: monospace;
-  font-size: $theme-font-size-global;
-  color: $theme-color-lightgrey;
+  pre {
+    font-family: monospace;
+    font-size: $theme-font-size-global;
+    color: $theme-color-lightgrey;
+  }
 }
 
 a.element_dragger {
   cursor: move;
-}
 
-a.element_dragger:hover {
-  opacity: 0.5;
-  filter: alpha(opacity=50); /* For IE8 and earlier */
+  &:hover {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+  }
 }
 
 .dragging {
@@ -1628,30 +1629,30 @@ a.element_dragger:hover {
 /* TODO: Reproduce this table.debug_vars */
 table.debug_vars {
   border-collapse: collapse;
-}
 
-table.debug_vars th {
-  font-weight: bold;
-  background-color: #8c8;
-  border: 1px solid #080;
-}
+  th {
+    font-weight: bold;
+    background-color: #8c8;
+    border: 1px solid #080;
+  }
 
-table.debug_vars td.left {
-  font-weight: bold;
-  color: #fff;
-  background-color: #395;
-}
+  td {
+    padding: 2px 6px;
+    font-family: courier, monospace;
+    border: 1px solid #050;
 
-table.debug_vars td.right {
-  font-weight: bold;
-  color: #000;
-  background-color: #8fc;
-}
+    &.left {
+      font-weight: bold;
+      color: #fff;
+      background-color: #395;
+    }
 
-table.debug_vars td {
-  padding: 2px 6px;
-  font-family: courier, monospace;
-  border: 1px solid #050;
+    &.right {
+      font-weight: bold;
+      color: #000;
+      background-color: #8fc;
+    }
+  }
 }
 
 /* Popup for adding to visuals (Dashboard, Reports */
@@ -1662,6 +1663,10 @@ div.pnp_graph, div.popup_trigger {
 
 div.popup_trigger {
   display: inline-block;
+
+  img.iconbutton {
+    padding: 0;
+  }
 }
 
 div.pnp_graph a.popup_trigger {
@@ -1673,10 +1678,10 @@ div.pnp_graph a.popup_trigger {
   height: 20px;
   background-image: url("images/icon_menu.png");
   background-size: contain;
-}
 
-div.pnp_graph a.popup_trigger:hover {
-  cursor: pointer;
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
@@ -1685,62 +1690,62 @@ tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
   box-shadow: none;
 }
 
-div.popup_trigger img.iconbutton {
-  padding: 0;
-}
-
-td.job_state{
+td.job_state {
   font-weight: bold;
   color: #fff;
   text-align: center;
   box-shadow: 0.5px 0.5px 2px #000 inset;
 }
 
-table.data > tbody > tr > td.job_state.job_finished {
-  background-color: $theme-color-state-success-background;
-  box-shadow: none;
-}
+table.data > tbody > tr > td.job_state {
+  &.job_finished {
+    background-color: $theme-color-state-success-background;
+    box-shadow: none;
+  }
 
-table.data > tbody > tr > td.job_state.job_exception {
-  background-color: $theme-color-state-3-background;
-  box-shadow: none;
-}
+  &.job_exception {
+    background-color: $theme-color-state-3-background;
+    box-shadow: none;
+  }
 
-table.data > tbody > tr > td.job_state.job_running {
-  background-color: $theme-color-state-9-background;
-  box-shadow: none;
-}
+  &.job_running {
+    background-color: $theme-color-state-9-background;
+    box-shadow: none;
+  }
 
-table.data > tbody > tr > td.job_state.job_initialized {
-  color: $theme-color-black;
-  background-color: #ccc;
+  &.job_initialized {
+    color: $theme-color-black;
+    background-color: #ccc;
+  }
 }
 
 table.data.job_details > tbody > tr > th {
   width: 150px;
 }
 
-table.data.job_details div.log_output > pre{
+table.data.job_details div.log_output > pre {
   margin: 0;
 }
 
 /* Fixed job columns */
-table.data.job_table > tbody > tr > td.job_actions {
-  width: 50px;
-}
+table.data.job_table > tbody > tr > td {
+  &.job_actions {
+    width: 50px;
+  }
 
-table.data.job_table> tbody > tr > td.job_state {
-  width: 50px;
-}
+  &.job_state {
+    width: 50px;
+  }
 
 
-table.data.job_table> tbody > tr > td.job_started {
-  width: 160px;
-}
+  &.job_started {
+    width: 160px;
+  }
 
-table.data.job_table> tbody > tr > td.job_pid{
-  width: 40px;
-  text-align: right;
+  &.job_pid{
+    width: 40px;
+    text-align: right;
+  }
 }
 
 /* Tags */

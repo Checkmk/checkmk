@@ -51,11 +51,6 @@ table.vs_duallist a.control, table.vs_duallist body.main .popup_menu span.contro
 body.main img.treeangle {
   filter: invert(100%); }
 
-body.main .popup_menu a,
-body.main .popup_menu span {
-  color: $theme-color-text;
-}
-
 .op {
   width: 60px !important; }
 
@@ -185,10 +180,6 @@ th.header_state {
   th.header_state:hover {
     background: transparent !important; }
 
-div.really, div.success, div.error, div.message, div.warning {
-  box-shadow: none;
-  border-radius: $theme-border-radius; }
-
 div.error {
   background-color: $theme-color-state-2-background;
   color: $theme-color-lightgrey; }
@@ -201,22 +192,6 @@ div.warning {
 div.success {
   background-color: $theme-color-state-success-background;
   border-color: $theme-color-state-success-border; }
-
-div.help {
-  background-image: none;
-  padding: 8px 16px;
-  box-shadow: none;
-  margin: 8px 0px 8px;
-  width: auto; }
-  div.help:before {
-    content: "i";
-    font-weight: $theme-font-weight-bold;
-    margin-right: 12px;
-    font-family: serif;
-    font-size: 16px;
-    font-style: italic;
-    display: inline-block;
-    height: 100%; }
 
 table.data.werks tr:nth-child(odd) td.werklevel2 {
   background-color: $theme-color-state-5-background; }
@@ -270,22 +245,6 @@ table.data.werks tr:nth-child(odd) td.werkcompincomp_ack {
 table.data.werks tr:nth-child(even) td.werkcompincomp_ack {
   background-color: $theme-color-state-8-background; }
 
-table.data > tbody > tr > td.job_state.job_finished {
-  background-color: $theme-color-state-success-background;
-  box-shadow: none; }
-
-table.data > tbody > tr > td.job_state.job_exception {
-  background-color: $theme-color-state-3-background;
-  box-shadow: none; }
-
-table.data > tbody > tr > td.job_state.job_running {
-  background-color: $theme-color-state-9-background;
-  box-shadow: none; }
-
-table.data > tbody > tr > td.job_state.job_initialized {
-  color: $theme-color-black;
-  background-color: #cccccc; }
-
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
   background-color: $theme-color-state-3-background !important;
   border-color: $theme-color-nuance-16 !important; }
@@ -306,26 +265,6 @@ div.info {
 body.main a, body.main .popup_menu span, body.main .popup_menu a {
     color: $theme-color-text;
 }
-body.main .popup_menu {
-    background-color: $theme-color-white;
-    border: 1px solid $theme-color-table-border;
-    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
-}
-
-div.log_output, .crash_report pre {
-  background: $theme-color-sidebar-background;
-  color: $theme-color-lightgrey;
-  font-family: monospace;
-  border: 1px solid $theme-color-table-border-dark;
-  border-radius: $theme-border-radius;
-  box-shadow: none;
-  padding: 8px 16px;
-  margin: 16px;
-  font-weight: $theme-font-weight-global; }
-  div.log_output pre {
-    color: $theme-color-lightgrey;
-    font-family: monospace;
-    font-size: $theme-font-size-global; }
 
 img.glass {
   display: none; }

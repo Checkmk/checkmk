@@ -9,7 +9,6 @@
 @import "~@yaireo/tagify/dist/tagify";
 
 @import "../classic/scss/_check_mk.scss";
-@import "../classic/scss/_status.scss";
 
 // CEE specific files. Would love to add some kind of conditional import here,
 // but that is simply not possible at the moment using SCSS. Hack around this

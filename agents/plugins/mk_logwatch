@@ -636,6 +636,7 @@ class Options(object):
         'regex': None,
         'overflow': 'C',
         'nocontext': None,
+        'maxoutputsize': 500000,  # same as logwatch_max_filesize in check plugin
     }
 
     def __init__(self):
@@ -688,7 +689,7 @@ class Options(object):
     def set_opt(self, opt_str):
         try:
             key, value = opt_str.split('=', 1)
-            if key in ('maxlines', 'maxlinesize', 'maxfilesize'):
+            if key in ('maxlines', 'maxlinesize', 'maxfilesize', 'maxoutputsize'):
                 self.values[key] = int(value)
             elif key in ('maxtime',):
                 self.values[key] = float(value)
@@ -836,6 +837,15 @@ def _subnetwork_to_ip_range(subnetwork):
     raise ValueError("invalid subnetwork: %r" % subnetwork)
 
 
+def write_output(lines, maxbytes):
+    bytecount = 0
+    for line in (l.encode('utf-8') for l in lines):
+        bytecount += len(line)
+        if bytecount > maxbytes:
+            break
+        sys.stdout.write(line)
+
+
 def main():
 
     parse_arguments()
@@ -874,7 +884,7 @@ def main():
 
     for logfile, (patterns, options) in parse_sections(logfiles_config):
         output = process_logfile(logfile, patterns, options, status)
-        sys.stdout.write(''.join(output).encode('utf-8'))
+        write_output(output, options.maxoutputsize)
 
     if not debug():
         save_status(status, status_filename)

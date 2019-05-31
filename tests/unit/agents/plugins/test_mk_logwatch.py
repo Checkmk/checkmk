@@ -32,7 +32,7 @@ def mk_logwatch(request):
 def test_options_defaults(mk_logwatch):
     opt = mk_logwatch.Options()
     for attribute in ('maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex', 'overflow',
-                      'nocontext'):
+                      'nocontext', 'maxoutputsize'):
         assert getattr(opt, attribute) == mk_logwatch.Options.DEFAULTS[attribute]
 
 
@@ -44,6 +44,7 @@ def test_options_defaults(mk_logwatch):
     ("overflow=I", 'overflow', 'I'),
     ("nocontext=tRuE", 'nocontext', True),
     ("nocontext=FALse", 'nocontext', False),
+    ("maxoutputsize=1024", 'maxoutputsize', 1024),
 ])
 def test_options_setter(mk_logwatch, option_string, key, expected_value):
     opt = mk_logwatch.Options()

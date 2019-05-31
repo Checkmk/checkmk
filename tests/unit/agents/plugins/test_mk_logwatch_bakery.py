@@ -1,9 +1,11 @@
-import pytest
-import sys
-import os
-from testlib import cmk_path, repo_path
-import importlib
 import imp
+import importlib
+import os
+import sys
+
+import pytest
+
+from testlib import cmk_path, repo_path
 
 
 def test_get_logfiles_config_lines():
@@ -44,9 +46,10 @@ def test_get_logfiles_config_lines():
         },
     ]
 
-    assert _get_logfiles_config_lines(config) == [
+    actual_result = _get_logfiles_config_lines(config)
+    assert actual_result == [
         '',
-        '/var/log/*.log /omd/sites/*/var/log/*.log',
+        '/var/log/*.log /omd/sites/*/var/log/*.log overflow=C',
         ' C foo',
         ' W BAR',
         ' O .*',

@@ -1,42 +1,31 @@
 # -*- encoding: utf-8
 import os
+import imp
 import pytest
 from testlib import cmk_path  # pylint: disable=import-error
 
 
 @pytest.fixture(scope="module")
-def agent_plugin_as_module(request):
+def mk_logwatch(request):
     """
-    Fixture to inject source code of agent as module. Removes <source-code-file>c during teardown.
+    Fixture to inject mk_logwatch as module
+
+    imp.load_source() has the side effect of creating mk_logwatchc, so remove it
+    before and after importing it (just to be safe).
     """
-    # - setup - start
     agent_path = os.path.abspath(os.path.join(cmk_path(), 'agents', 'plugins', 'mk_logwatch'))
-    # To make this setup fail safe and to prevent from potentially loading the module from a
-    # left-over mk_logwtachc file from previous test runs try to remove it.
-    try:
-        os.remove(agent_path + "c")
-    except OSError:
-        pass  # it's ok if the file is not there
 
-    # import the agent source file as module
-    # (imp.load_source() has the side effect of creating mk_logwatchc)
-    import imp
-    mk_logwatch = imp.load_source("mk_logwatch", agent_path)
-    import mk_logwatch  # pylint: disable=import-error,wrong-import-position
+    for action in ('setup', 'teardown'):
+        try:
+            os.remove(agent_path + "c")
+        except OSError:
+            pass
 
-    assert "get_config_files" in mk_logwatch.__dict__
-    # - setup - end
-    yield mk_logwatch  # inject module
-    # - teardown - start
-    try:
-        os.remove(agent_path + "c")
-    except OSError:
-        pass  # it's ok if the file is not there
-    # - teardown - end
+        if action == 'setup':
+            yield imp.load_source("mk_logwatch", agent_path)
 
 
-def test_get_config_files(agent_plugin_as_module, tmpdir):
-    mk_logwatch = agent_plugin_as_module
+def test_get_config_files(mk_logwatch, tmpdir):
     fake_config_dir = tmpdir.mkdir("test")
     fake_custom_config_file = fake_config_dir.mkdir("logwatch.d").join("custom.cfg")
     fake_custom_config_file.write("blub")
@@ -49,9 +38,8 @@ def test_get_config_files(agent_plugin_as_module, tmpdir):
     assert paths == ['/logwatch.cfg', '/logwatch.d/custom.cfg']
 
 
-def test_iter_config_lines(agent_plugin_as_module, tmpdir):
+def test_iter_config_lines(mk_logwatch, tmpdir):
     """Fakes a single logwatch config files and checks if the agent plugin reads the configuration appropriately."""
-    mk_logwatch = agent_plugin_as_module
     # setup
     fake_config_file = tmpdir.mkdir("test").join("logwatch.cfg")
     fake_config_file.write("# this is a comment\nthis is a line   ")
@@ -83,11 +71,8 @@ def test_iter_config_lines(agent_plugin_as_module, tmpdir):
         [],
     ),
 ])
-def test_read_config_cluster(agent_plugin_as_module, config_lines, cluster_name, cluster_data,
-                             monkeypatch):
+def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_data, monkeypatch):
     """checks if the agent plugin parses the configuration appropriately."""
-    mk_logwatch = agent_plugin_as_module
-
     monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iter(config_lines))
 
     __, c_config = mk_logwatch.read_config(None)
@@ -152,11 +137,9 @@ def test_read_config_cluster(agent_plugin_as_module, config_lines, cluster_name,
         ],
     ),
 ])
-def test_read_config_logfiles(agent_plugin_as_module, config_lines, logfiles_files,
-                              logfiles_patterns, monkeypatch):
+def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfiles_patterns,
+                              monkeypatch):
     """checks if the agent plugin parses the configuration appropriately."""
-    mk_logwatch = agent_plugin_as_module
-
     monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iter(config_lines))
 
     l_config, __ = mk_logwatch.read_config(None)
@@ -183,13 +166,11 @@ def test_read_config_logfiles(agent_plugin_as_module, config_lines, logfiles_fil
         ("", True, "/path/to/config/logwatch.state.local"),
         ("", False, "/path/to/config/logwatch.state"),
     ])
-def test_get_status_filename(agent_plugin_as_module, env_var, istty, statusfile, monkeypatch,
-                             mocker):
+def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatch, mocker):
     """
     May not be executed with pytest option -s set. pytest stdout redirection would colide
     with stdout mock.
     """
-    mk_logwatch = agent_plugin_as_module
     monkeypatch.setenv("REMOTE", env_var)
     monkeypatch.setattr(mk_logwatch, "MK_VARDIR", '/path/to/config')
     stdout_mock = mocker.patch("mk_logwatch.sys.stdout")
@@ -205,9 +186,8 @@ def test_get_status_filename(agent_plugin_as_module, env_var, istty, statusfile,
     assert status_filename == statusfile
 
 
-def test_read_status(agent_plugin_as_module, tmpdir):
+def test_read_status(mk_logwatch, tmpdir):
     # setup
-    mk_logwatch = agent_plugin_as_module
     fake_status_file = tmpdir.mkdir("test").join("logwatch.state.another_cluster")
     fake_status_file.write("""/var/log/messages|7767698|32455445
 /var/test/x12134.log|12345|32444355""")
@@ -222,8 +202,7 @@ def test_read_status(agent_plugin_as_module, tmpdir):
     }
 
 
-def test_save_status(agent_plugin_as_module, tmpdir):
-    mk_logwatch = agent_plugin_as_module
+def test_save_status(mk_logwatch, tmpdir):
     fake_status_file = tmpdir.mkdir("test").join("logwatch.state.another_cluster")
     fake_status_file.write("")
     file_path = str(fake_status_file)
@@ -245,16 +224,13 @@ def test_save_status(agent_plugin_as_module, tmpdir):
     ("/subdir/*", ["/subdir/another_symlinked_file.log"]),
     ("/symlink_to_dir/*", ["/symlink_to_dir/yet_another_file.log"]),
 ])
-def test_find_matching_logfiles(agent_plugin_as_module, fake_filesystem, pattern_suffix,
-                                file_suffixes):
-    mk_logwatch = agent_plugin_as_module
+def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, file_suffixes):
     fake_fs_path = str(fake_filesystem)
     files = mk_logwatch.find_matching_logfiles(fake_fs_path + pattern_suffix)
     assert sorted(files) == [fake_fs_path + fs for fs in file_suffixes]
 
 
-def test_ip_in_subnetwork(agent_plugin_as_module):
-    mk_logwatch = agent_plugin_as_module
+def test_ip_in_subnetwork(mk_logwatch):
     assert mk_logwatch.ip_in_subnetwork("192.168.1.1", "192.168.1.0/24") is True
     assert mk_logwatch.ip_in_subnetwork("192.160.1.1", "192.168.1.0/24") is False
     assert mk_logwatch.ip_in_subnetwork("1762:0:0:0:0:B03:1:AF18",

@@ -1,4 +1,5 @@
 # -*- encoding: utf-8
+# pylint: disable=redefined-outer-name
 import os
 import imp
 import pytest
@@ -27,19 +28,15 @@ def mk_logwatch(request):
 
 def test_get_config_files(mk_logwatch, tmpdir):
     fake_config_dir = tmpdir.mkdir("test")
-    fake_custom_config_file = fake_config_dir.mkdir("logwatch.d").join("custom.cfg")
-    fake_custom_config_file.write("blub")
-    print(fake_config_dir)
-    fake_config_dir_path = str(fake_config_dir)
-    paths = [
-        p.replace(fake_config_dir_path, "")
-        for p in mk_logwatch.get_config_files(fake_config_dir_path)
-    ]
-    assert paths == ['/logwatch.cfg', '/logwatch.d/custom.cfg']
+    fake_config_dir.mkdir("logwatch.d").join("custom.cfg").open('w')
+
+    expected = ['%s/logwatch.cfg' % fake_config_dir, '%s/logwatch.d/custom.cfg' % fake_config_dir]
+
+    assert mk_logwatch.get_config_files(str(fake_config_dir)) == expected
 
 
 def test_iter_config_lines(mk_logwatch, tmpdir):
-    """Fakes a single logwatch config files and checks if the agent plugin reads the configuration appropriately."""
+    """Fakes a logwatch config file and checks if the agent plugin reads it appropriately"""
     # setup
     fake_config_file = tmpdir.mkdir("test").join("logwatch.cfg")
     fake_config_file.write("# this is a comment\nthis is a line   ")
@@ -90,7 +87,7 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
             '/var/log/messages',
             ' C Fail event detected on md device',
             ' I mdadm.*: Rebuild.*event detected',
-            ' W mdadm\[',
+            ' W mdadm\\[',
             ' W ata.*hard resetting link',
             ' W ata.*soft reset failed (.*FIS failed)',
             ' W device-mapper: thin:.*reached low water mark',

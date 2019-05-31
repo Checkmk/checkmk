@@ -191,7 +191,7 @@ def test_get_status_filename(agent_plugin_as_module, env_var, istty, statusfile,
     """
     mk_logwatch = agent_plugin_as_module
     monkeypatch.setenv("REMOTE", env_var)
-    monkeypatch.setenv("MK_VARDIR", '/path/to/config')
+    monkeypatch.setattr(mk_logwatch, "MK_VARDIR", '/path/to/config')
     stdout_mock = mocker.patch("mk_logwatch.sys.stdout")
     stdout_mock.isatty.return_value = istty
     fake_config = [

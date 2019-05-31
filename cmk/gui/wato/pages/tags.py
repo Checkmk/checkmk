@@ -836,19 +836,20 @@ def _change_host_tags_in_rules(tag_group_id, operations, mode, folder):
 
 def _change_host_tags_in_rule(tag_group_id, operations, mode, ruleset, rule):
     affected_rulesets = set()
+    if tag_group_id not in rule.conditions.host_tags:
+        return affected_rulesets  # The tag group is not used
 
     # Handle deletion of complete tag group
     if isinstance(operations, list):
-        if tag_group_id in rule.conditions.host_tags:
-            affected_rulesets.add(ruleset)
+        affected_rulesets.add(ruleset)
 
-            if mode == TagCleanupMode.CHECK:
-                pass
+        if mode == TagCleanupMode.CHECK:
+            pass
 
-            elif mode == TagCleanupMode.DELETE:
-                ruleset.delete_rule(rule)
-            else:
-                del rule.conditions.host_tags[tag_group_id]
+        elif mode == TagCleanupMode.DELETE:
+            ruleset.delete_rule(rule)
+        else:
+            del rule.conditions.host_tags[tag_group_id]
 
         return affected_rulesets
 
@@ -859,9 +860,6 @@ def _change_host_tags_in_rule(tag_group_id, operations, mode, ruleset, rule):
         # such None-values.
         if not old_tag:
             continue
-
-        if tag_group_id not in rule.conditions.host_tags:
-            continue  # Rule does not use this tag group
 
         current_value = rule.conditions.host_tags[tag_group_id]
         if old_tag != current_value and {"$ne": old_tag} != current_value:

@@ -623,10 +623,10 @@ def process_logfile(logfile, patterns, opt, status):
         warnings = True
 
     # Handle option maxfilesize, regardless of warning or errors that have happened
-    if opt.maxfilesize is not None and (offset / opt.maxfilesize) < (new_offset / opt.maxfilesize):
+    if opt.maxfilesize and (offset // opt.maxfilesize) < (new_offset // opt.maxfilesize):
         warnings_and_errors.append(
             "%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
-            (tty_yellow, opt.maxfilesize, new_offset / opt.maxfilesize, tty_normal))
+            (tty_yellow, opt.maxfilesize, new_offset // opt.maxfilesize, tty_normal))
     return (loglines, warnings, warnings_and_errors)
 
 

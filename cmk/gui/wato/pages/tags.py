@@ -27,6 +27,7 @@
 to hosts and that is the basis of the rules."""
 
 import abc
+from enum import Enum
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -590,6 +591,14 @@ class ModeEditTagGroup(ABCEditTagMode):
         )
 
 
+class TagCleanupMode(Enum):
+    ABORT = "abort"  # No further action. Aborting here.
+    CHECK = "check"  # only affected rulesets are collected, nothing is modified
+    DELETE = "delete"  # Rules using this tag are deleted
+    REMOVE = "remove"  # Remove tags from rules
+    REPAIR = "repair"  # Remove tags from rules
+
+
 def _rename_tags_after_confirmation(tag_group_id, operations):
     """Handle renaming and deletion of tags
 
@@ -602,29 +611,31 @@ def _rename_tags_after_confirmation(tag_group_id, operations):
     - a dictionary of
       - old_tag_id: new_tag_id pairs to be replaced
       - old_tag_id: None/False to remove old_tag_id
-
-    mode is:
-    "abort": No further action. Aborting here.
-    "check": only affected rulesets are collected, nothing is modified
-    "delete": Rules using this tag are deleted
-    "remove"/"repair": Remove tags from rules
     """
-    mode = html.request.var("_repair")
-    if mode == "abort":
-        raise MKUserError("id_0", _("Aborting change."))
 
-    elif mode:
+    repair_mode = html.request.var("_repair")
+    if repair_mode is not None:
+        try:
+            mode = TagCleanupMode(repair_mode)
+        except ValueError:
+            raise MKUserError("_repair", "Invalid mode")
+
+        if mode == TagCleanupMode.ABORT:
+            raise MKUserError("id_0", _("Aborting change."))
+
         # make attribute unknown to system, important for save() operations
         if tag_group_id and isinstance(operations, list):
             watolib.host_attributes.undeclare_host_tag_attribute(tag_group_id)
+
         affected_folders, affected_hosts, affected_rulesets = \
         _change_host_tags_in_folders(tag_group_id, operations, mode, watolib.Folder.root_folder())
+
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % \
             (len(affected_folders), len(affected_hosts), len(affected_rulesets))
 
     message = ""
     affected_folders, affected_hosts, affected_rulesets = \
-        _change_host_tags_in_folders(tag_group_id, operations, "check", watolib.Folder.root_folder())
+        _change_host_tags_in_folders(tag_group_id, operations, TagCleanupMode.CHECK, watolib.Folder.root_folder())
 
     if affected_folders:
         message += _("Affected folders with an explicit reference to this tag "
@@ -732,7 +743,7 @@ def _change_host_tags_in_folders(tag_group_id, operations, mode, folder):
         aff_folders = _change_host_tags_in_host_or_folder(tag_group_id, operations, mode, folder)
         affected_folders += aff_folders
 
-        if aff_folders and mode != "check":
+        if aff_folders and mode != TagCleanupMode.CHECK:
             try:
                 folder.save()
             except MKAuthException:
@@ -758,7 +769,7 @@ def _change_host_tags_in_hosts(tag_group_id, operations, mode, folder):
         aff_hosts = _change_host_tags_in_host_or_folder(tag_group_id, operations, mode, host)
         affected_hosts += aff_hosts
 
-    if affected_hosts and mode != "check":
+    if affected_hosts and mode != TagCleanupMode.CHECK:
         try:
             folder.save_hosts()
         except MKAuthException:
@@ -779,7 +790,7 @@ def _change_host_tags_in_host_or_folder(tag_group_id, operations, mode, host_or_
     if isinstance(operations, list):
         if attrname in attributes:
             affected.append(host_or_folder)
-            if mode != "check":
+            if mode != TagCleanupMode.CHECK:
                 del attributes[attrname]
         return affected
 
@@ -787,7 +798,7 @@ def _change_host_tags_in_host_or_folder(tag_group_id, operations, mode, host_or_
     current = attributes[attrname]
     if current in operations:
         affected.append(host_or_folder)
-        if mode != "check":
+        if mode != TagCleanupMode.CHECK:
             new_tag = operations[current]
             if new_tag is False:  # tag choice has been removed -> fall back to default
                 del attributes[attrname]
@@ -807,57 +818,78 @@ def _change_host_tags_in_rules(folder, operations, mode):
 
     See _rename_tags_after_confirmation() doc string for additional information.
     """
-    affected_rulesets = set([])
+    affected_rulesets = set()
 
     rulesets = watolib.FolderRulesets(folder)
     rulesets.load()
 
     for ruleset in rulesets.get_rulesets().itervalues():
         for _folder, _rulenr, rule in ruleset.get_rules():
-            # Handle deletion of complete tag group
-            if isinstance(operations, list):  # this list of tags to remove
-                for tag in operations:
-                    if tag is not None and (tag in rule.tag_specs or "!" + tag in rule.tag_specs):
-                        affected_rulesets.add(ruleset)
+            affected_rulesets.update(_change_host_tags_in_rule(ruleset, rule, operations, mode))
 
-                        if mode != "check":
-                            if tag in rule.tag_specs and mode == "delete":
-                                ruleset.delete_rule(rule)
-                            elif tag in rule.tag_specs:
-                                rule.tag_specs.remove(tag)
-                            elif "+" + tag in rule.tag_specs:
-                                rule.tag_specs.remove("!" + tag)
-
-            # Removal or renamal of single tag choices
-            else:
-                for old_tag, new_tag in operations.items():
-                    # The case that old_tag is None (an empty tag has got a name)
-                    # cannot be handled when it comes to rules. Rules do not support
-                    # such None-values.
-                    if not old_tag:
-                        continue
-
-                    if old_tag in rule.tag_specs or ("!" + old_tag) in rule.tag_specs:
-                        affected_rulesets.add(ruleset)
-
-                        if mode != "check":
-                            if old_tag in rule.tag_specs:
-                                rule.tag_specs.remove(old_tag)
-                                if new_tag:
-                                    rule.tag_specs.append(new_tag)
-                                elif mode == "delete":
-                                    ruleset.delete_rule(rule)
-
-                            # negated tag has been renamed or removed
-                            if "!" + old_tag in rule.tag_specs:
-                                rule.tag_specs.remove("!" + old_tag)
-                                if new_tag:
-                                    rule.tag_specs.append("!" + new_tag)
-                                # the case "delete" need not be handled here. Negated
-                                # tags can always be removed without changing the rule's
-                                # behaviour.
-
-    if affected_rulesets and mode != "check":
+    if affected_rulesets and mode != TagCleanupMode.CHECK:
         rulesets.save()
 
     return sorted(affected_rulesets, key=lambda x: x.title())
+
+
+def _change_host_tags_in_rule(ruleset, rule, operations, mode):
+    affected_rulesets = set()
+
+    # Handle deletion of complete tag group
+    if isinstance(operations, list):  # this is the list of tag_ids to remove
+        for tag in operations:
+            # The case that old_tag is None (an empty tag has got a name)
+            # cannot be handled when it comes to rules. Rules do not support
+            # such None-values.
+            if not tag:
+                continue
+
+            if tag not in rule.tag_specs and "!" + tag not in rule.tag_specs:
+                continue  # tag id is not configured
+
+            affected_rulesets.add(ruleset)
+
+            if mode != TagCleanupMode.CHECK:
+                if tag in rule.tag_specs and mode == TagCleanupMode.DELETE:
+                    ruleset.delete_rule(rule)
+                elif tag in rule.tag_specs:
+                    rule.tag_specs.remove(tag)
+                elif "+" + tag in rule.tag_specs:
+                    rule.tag_specs.remove("!" + tag)
+
+        return affected_rulesets
+
+    # Removal or renaming of single tag choices
+    for old_tag, new_tag in operations.items():
+        # The case that old_tag is None (an empty tag has got a name)
+        # cannot be handled when it comes to rules. Rules do not support
+        # such None-values.
+        if not old_tag:
+            continue
+
+        if old_tag not in rule.tag_specs and ("!" + old_tag) not in rule.tag_specs:
+            continue  # old tag id is not configured
+
+        affected_rulesets.add(ruleset)
+
+        if mode == TagCleanupMode.CHECK:
+            continue  # Skip modification
+
+        if old_tag in rule.tag_specs:
+            rule.tag_specs.remove(old_tag)
+            if new_tag:
+                rule.tag_specs.append(new_tag)
+            elif mode == TagCleanupMode.DELETE:
+                ruleset.delete_rule(rule)
+
+        # negated tag has been renamed or removed
+        if "!" + old_tag in rule.tag_specs:
+            rule.tag_specs.remove("!" + old_tag)
+            if new_tag:
+                rule.tag_specs.append("!" + new_tag)
+            # the case "delete" need not be handled here. Negated
+            # tags can always be removed without changing the rule's
+            # behaviour.
+
+    return affected_rulesets

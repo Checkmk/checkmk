@@ -725,32 +725,14 @@ def _change_host_tags_in_folders(tag_group_id, operations, mode, folder):
     tag_group_id is None -> Auxiliary tag has been deleted, no tag group affected
     See _rename_tags_after_confirmation() doc string for additional information.
     """
-    need_save = False
     affected_folders = []
     affected_hosts = []
     affected_rulesets = []
     if tag_group_id:
-        attrname = "tag_" + tag_group_id
-        attributes = folder.attributes()
-        if attrname in attributes:  # this folder has set the tag group in question
-            if isinstance(operations, list):  # deletion of tag group
-                if attrname in attributes:
-                    affected_folders.append(folder)
-                    if mode != "check":
-                        del attributes[attrname]
-                        need_save = True
-            else:
-                current = attributes[attrname]
-                if current in operations:
-                    affected_folders.append(folder)
-                    if mode != "check":
-                        new_tag = operations[current]
-                        if new_tag is False:  # tag choice has been removed -> fall back to default
-                            del attributes[attrname]
-                        else:
-                            attributes[attrname] = new_tag
-                        need_save = True
-        if need_save:
+        aff_folders = _change_host_tags_in_host_or_folder(tag_group_id, operations, mode, folder)
+        affected_folders += aff_folders
+
+        if aff_folders and mode != "check":
             try:
                 folder.save()
             except MKAuthException:
@@ -764,42 +746,55 @@ def _change_host_tags_in_folders(tag_group_id, operations, mode, folder):
             affected_hosts += aff_hosts
             affected_rulesets += aff_rulespecs
 
-        affected_hosts += _change_host_tags_in_hosts(folder, tag_group_id, operations, mode,
-                                                     folder.hosts())
+        affected_hosts += _change_host_tags_in_hosts(tag_group_id, operations, mode, folder)
 
     affected_rulesets += _change_host_tags_in_rules(folder, operations, mode)
     return affected_folders, affected_hosts, affected_rulesets
 
 
-def _change_host_tags_in_hosts(folder, tag_group_id, operations, mode, hostlist):
-    need_save = False
+def _change_host_tags_in_hosts(tag_group_id, operations, mode, folder):
     affected_hosts = []
-    for host in hostlist.itervalues():
-        attributes = host.attributes()
-        attrname = "tag_" + tag_group_id
-        if attrname in attributes:
-            if isinstance(operations, list):  # delete complete tag group
-                affected_hosts.append(host)
-                if mode != "check":
-                    del attributes[attrname]
-                    need_save = True
-            else:
-                if attributes[attrname] in operations:
-                    affected_hosts.append(host)
-                    if mode != "check":
-                        new_tag = operations[attributes[attrname]]
-                        if new_tag is False:  # tag choice has been removed -> fall back to default
-                            del attributes[attrname]
-                        else:
-                            attributes[attrname] = new_tag
-                        need_save = True
-    if need_save:
+    for host in folder.hosts().itervalues():
+        aff_hosts = _change_host_tags_in_host_or_folder(tag_group_id, operations, mode, host)
+        affected_hosts += aff_hosts
+
+    if affected_hosts and mode != "check":
         try:
             folder.save_hosts()
         except MKAuthException:
             # Ignore MKAuthExceptions of locked host.mk files
             pass
     return affected_hosts
+
+
+def _change_host_tags_in_host_or_folder(tag_group_id, operations, mode, host_or_folder):
+    affected = []
+
+    attrname = "tag_" + tag_group_id
+    attributes = host_or_folder.attributes()
+    if attrname not in attributes:
+        return affected  # The attribute is not set
+
+    # Deletion of a tag group
+    if isinstance(operations, list):
+        if attrname in attributes:
+            affected.append(host_or_folder)
+            if mode != "check":
+                del attributes[attrname]
+        return affected
+
+    # Deletion or replacement of a tag choice
+    current = attributes[attrname]
+    if current in operations:
+        affected.append(host_or_folder)
+        if mode != "check":
+            new_tag = operations[current]
+            if new_tag is False:  # tag choice has been removed -> fall back to default
+                del attributes[attrname]
+            else:
+                attributes[attrname] = new_tag
+
+    return affected
 
 
 def _change_host_tags_in_rules(folder, operations, mode):
@@ -812,7 +807,6 @@ def _change_host_tags_in_rules(folder, operations, mode):
 
     See _rename_tags_after_confirmation() doc string for additional information.
     """
-    need_save = False
     affected_rulesets = set([])
 
     rulesets = watolib.FolderRulesets(folder)
@@ -827,7 +821,6 @@ def _change_host_tags_in_rules(folder, operations, mode):
                         affected_rulesets.add(ruleset)
 
                         if mode != "check":
-                            need_save = True
                             if tag in rule.tag_specs and mode == "delete":
                                 ruleset.delete_rule(rule)
                             elif tag in rule.tag_specs:
@@ -848,7 +841,6 @@ def _change_host_tags_in_rules(folder, operations, mode):
                         affected_rulesets.add(ruleset)
 
                         if mode != "check":
-                            need_save = True
                             if old_tag in rule.tag_specs:
                                 rule.tag_specs.remove(old_tag)
                                 if new_tag:
@@ -865,7 +857,7 @@ def _change_host_tags_in_rules(folder, operations, mode):
                                 # tags can always be removed without changing the rule's
                                 # behaviour.
 
-    if need_save:
+    if affected_rulesets and mode != "check":
         rulesets.save()
 
     return sorted(affected_rulesets, key=lambda x: x.title())

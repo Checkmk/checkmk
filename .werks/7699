@@ -1,0 +1,11 @@
+Title: postgres_bloat: Fixed wrong scale of 'Maximum table/index bloat' service details
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p17
+Date: 1559044891
+
+

@@ -388,22 +388,12 @@ def read_status(file_name):
         return {}
 
     status = {}
-    for line in open(file_name):
-        inode = -1
-        try:
+    with open(file_name) as stat_fh:
+        for line in stat_fh:
             parts = line.split('|')
-            filename = parts[0]
-            offset = parts[1]
-            if len(parts) >= 3:
-                inode = parts[2]
-        except Exception as e:
-            raise Exception("Parsing of status file %s line \"%s\" failed: %s" \
-                            % (file_name, line, e))
-        try:
-            status[filename] = int(offset), int(inode)
-        except Exception as e:
-            raise Exception("Parsing of status file %s line \"%s\" failed: %s" \
-                            % (file_name, line, e))
+            filename, offset = parts[0], int(parts[1])
+            inode = int(parts[2]) if len(parts) >= 3 else -1
+            status[filename] = (offset, inode)
 
     LOGGER.info("Read status: %r", status)
     return status

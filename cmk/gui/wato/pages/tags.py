@@ -860,28 +860,27 @@ def _change_host_tags_in_rule(tag_group_id, operations, mode, ruleset, rule):
         if not old_tag:
             continue
 
-        if old_tag not in rule.tag_specs and ("!" + old_tag) not in rule.tag_specs:
-            continue  # old tag id is not configured
+        if tag_group_id not in rule.conditions.host_tags:
+            continue  # Rule does not use this tag group
+
+        current_value = rule.conditions.host_tags[tag_group_id]
+        if old_tag != current_value and {"$ne": old_tag} != current_value:
+            continue  # old_tag id is not configured
 
         affected_rulesets.add(ruleset)
 
         if mode == TagCleanupMode.CHECK:
             continue  # Skip modification
 
-        if old_tag in rule.tag_specs:
-            rule.tag_specs.remove(old_tag)
-            if new_tag:
-                rule.tag_specs.append(new_tag)
-            elif mode == TagCleanupMode.DELETE:
-                ruleset.delete_rule(rule)
+        # First remove current setting
+        del rule.conditions.host_tags[tag_group_id]
 
-        # negated tag has been renamed or removed
-        if "!" + old_tag in rule.tag_specs:
-            rule.tag_specs.remove("!" + old_tag)
-            if new_tag:
-                rule.tag_specs.append("!" + new_tag)
-            # the case "delete" need not be handled here. Negated
-            # tags can always be removed without changing the rule's
-            # behaviour.
+        # In case it needs to be replaced with a new value, do it now
+        if new_tag:
+            was_negated = isinstance(dict, current_value) and "$ne" in current_value
+            new_value = {"$ne": new_tag} if was_negated else new_tag
+            rule.conditions.host_tags[tag_group_id] = new_value
+        elif mode == TagCleanupMode.DELETE:
+            ruleset.delete_rule(rule)
 
     return affected_rulesets

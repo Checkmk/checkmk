@@ -44,6 +44,10 @@ LogfilesConfig = namedtuple('LogfilesConfig', 'files, patterns')
 # types: ClusterConfig[str, List[str]]
 ClusterConfig = namedtuple('ClusterConfig', 'name, ips_or_subnets')
 
+MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
+
+MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
+
 LOGGER = logging.getLogger(__name__)
 
 IPV4_REGEX = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
@@ -162,22 +166,6 @@ def debug():
     return '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]
 
 
-# The configuration file and status file are searched
-# in the directory named by the environment variable
-# LOGWATCH_DIR. If that is not set, MK_CONFDIR is used.
-# If that is not set either, the current directory ist
-# used.
-def mk_vardir():
-    return os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
-
-
-def mk_confdir():
-    """Note: When debugging this plugin on hosts this function will always return "." cause
-    required sudo rights for execution of /usr/lib/check_mk_agent/plugins/mk_logwatch
-    doesn't provide env vars."""
-    return os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
-
-
 def get_status_filename(cluster_config):
     """
     Side effect:
@@ -206,13 +194,13 @@ def get_status_filename(cluster_config):
     remote = os.getenv("REMOTE")
     if not remote:
         status_filename = "logwatch.state" + (".local" if sys.stdout.isatty() else "")
-        return os.path.join(mk_vardir(), status_filename)
+        return os.path.join(MK_VARDIR, status_filename)
     remote_hostname = remote.replace(":", "_")
 
     match = IPV4_REGEX.match(remote) or IPV6_REGEX.match(remote)
     if not match:
         LOGGER.debug("REMOTE %r neither IPv4 nor IPv6 address.", remote)
-        return os.path.join(mk_vardir(), "logwatch.state.%s" % remote_hostname)
+        return os.path.join(MK_VARDIR, "logwatch.state.%s" % remote_hostname)
 
     remote_ip = match.group()
     # in case of IPv4 extended to IPv6 get rid of prefix for ip match lookup
@@ -230,7 +218,7 @@ def get_status_filename(cluster_config):
                 cluster_name = conf.name
                 LOGGER.info("Matching cluster ip %s", remote_ip)
                 LOGGER.info("Matching cluster name %s", cluster_name)
-    status_filename = os.path.join(mk_vardir(), "logwatch.state.%s" % cluster_name)
+    status_filename = os.path.join(MK_VARDIR, "logwatch.state.%s" % cluster_name)
     LOGGER.info("Status filename: %s", status_filename)
     return status_filename
 
@@ -843,7 +831,7 @@ def main():
         sys.exit(1)
 
     try:
-        files = get_config_files(mk_confdir())
+        files = get_config_files(MK_CONFDIR)
         logfiles_config, cluster_config = read_config(files)
     except Exception as exc:
         if debug():
@@ -853,8 +841,8 @@ def main():
 
     status_filename = get_status_filename(cluster_config)
     # Copy the last known state from the logwatch.state when there is no status_filename yet.
-    if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % mk_vardir()):
-        shutil.copy("%s/logwatch.state" % mk_vardir(), status_filename)
+    if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % MK_VARDIR):
+        shutil.copy("%s/logwatch.state" % MK_VARDIR, status_filename)
 
     # Simply ignore errors in the status file.  In case of a corrupted status file we simply begin
     # with an empty status. That keeps the monitoring up and running - even if we might lose a

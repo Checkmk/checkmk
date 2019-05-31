@@ -759,7 +759,7 @@ def _change_host_tags_in_folders(tag_group_id, operations, mode, folder):
 
         affected_hosts += _change_host_tags_in_hosts(tag_group_id, operations, mode, folder)
 
-    affected_rulesets += _change_host_tags_in_rules(folder, operations, mode)
+    affected_rulesets += _change_host_tags_in_rules(tag_group_id, operations, mode, folder)
     return affected_folders, affected_hosts, affected_rulesets
 
 
@@ -808,7 +808,7 @@ def _change_host_tags_in_host_or_folder(tag_group_id, operations, mode, host_or_
     return affected
 
 
-def _change_host_tags_in_rules(folder, operations, mode):
+def _change_host_tags_in_rules(tag_group_id, operations, mode, folder):
     """Update tags in all rules
 
     The function parses all rules in all rulesets and looks for host tags that
@@ -825,7 +825,8 @@ def _change_host_tags_in_rules(folder, operations, mode):
 
     for ruleset in rulesets.get_rulesets().itervalues():
         for _folder, _rulenr, rule in ruleset.get_rules():
-            affected_rulesets.update(_change_host_tags_in_rule(ruleset, rule, operations, mode))
+            affected_rulesets.update(
+                _change_host_tags_in_rule(tag_group_id, operations, mode, ruleset, rule))
 
     if affected_rulesets and mode != TagCleanupMode.CHECK:
         rulesets.save()
@@ -833,30 +834,21 @@ def _change_host_tags_in_rules(folder, operations, mode):
     return sorted(affected_rulesets, key=lambda x: x.title())
 
 
-def _change_host_tags_in_rule(ruleset, rule, operations, mode):
+def _change_host_tags_in_rule(tag_group_id, operations, mode, ruleset, rule):
     affected_rulesets = set()
 
     # Handle deletion of complete tag group
-    if isinstance(operations, list):  # this is the list of tag_ids to remove
-        for tag in operations:
-            # The case that old_tag is None (an empty tag has got a name)
-            # cannot be handled when it comes to rules. Rules do not support
-            # such None-values.
-            if not tag:
-                continue
-
-            if tag not in rule.tag_specs and "!" + tag not in rule.tag_specs:
-                continue  # tag id is not configured
-
+    if isinstance(operations, list):
+        if tag_group_id in rule.conditions.host_tags:
             affected_rulesets.add(ruleset)
 
-            if mode != TagCleanupMode.CHECK:
-                if tag in rule.tag_specs and mode == TagCleanupMode.DELETE:
-                    ruleset.delete_rule(rule)
-                elif tag in rule.tag_specs:
-                    rule.tag_specs.remove(tag)
-                elif "+" + tag in rule.tag_specs:
-                    rule.tag_specs.remove("!" + tag)
+            if mode == TagCleanupMode.CHECK:
+                pass
+
+            elif mode == TagCleanupMode.DELETE:
+                ruleset.delete_rule(rule)
+            else:
+                del rule.conditions.host_tags[tag_group_id]
 
         return affected_rulesets
 

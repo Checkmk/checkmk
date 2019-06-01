@@ -525,8 +525,7 @@ class Ruleset(object):
         if "ruleset_used" in search_options and search_options["ruleset_used"] is self.is_empty():
             return False
 
-        if "ruleset_group" in search_options \
-           and self.rulespec.group_name not in rulespec_group_registry.get_matching_group_names(search_options["ruleset_group"]):
+        if "ruleset_group" in search_options and not self._matches_group_search(search_options):
             return False
 
         if not _match_search_expression(search_options, "ruleset_name", self.name):
@@ -539,6 +538,22 @@ class Ruleset(object):
             return False
 
         return True
+
+    def _matches_group_search(self, search_options):
+        # All rulesets are in a single group. Only the two rulesets "agent_ports" and
+        # "agent_encryption" are in the RulespecGroupAgentCMKAgent but are also used
+        # by the agent bakery. Users often try to find the ruleset in the wrong group.
+        # For this reason we make the ruleset available in both groups.
+        # Instead of making the ruleset specification more complicated for this special
+        # case we hack it here into the ruleset search which is used to populate the
+        # group pages.
+        if search_options["ruleset_group"] == "agents" and self.rulespec.name in [
+                "agent_ports", "agent_encryption"
+        ]:
+            return True
+
+        return self.rulespec.group_name \
+            in rulespec_group_registry.get_matching_group_names(search_options["ruleset_group"])
 
     def get_rule(self, folder, rule_index):
         return self._rules[folder.path()][rule_index]

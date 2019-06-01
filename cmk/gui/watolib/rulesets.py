@@ -267,16 +267,15 @@ class RulesetCollection(object):
         grouped_dict = {}
         for ruleset in self._rulesets.itervalues():
             main_group = grouped_dict.setdefault(ruleset.rulespec.main_group_name, {})
-            group_rulesets = main_group.setdefault(ruleset.rulespec.sub_group_name, [])
+            group_rulesets = main_group.setdefault(ruleset.rulespec.group_name, [])
             group_rulesets.append(ruleset)
 
         grouped = []
         for main_group_name, sub_groups in grouped_dict.items():
             sub_group_list = []
 
-            for sub_group_title, group_rulesets in sorted(sub_groups.items(), key=lambda x: x[0]):
-                sub_group_list.append((sub_group_title,
-                                       sorted(group_rulesets, key=lambda x: x.title())))
+            for group_name, group_rulesets in sorted(sub_groups.items(), key=lambda x: x[0]):
+                sub_group_list.append((group_name, sorted(group_rulesets, key=lambda x: x.title())))
 
             grouped.append((main_group_name, sub_group_list))
 

@@ -287,8 +287,8 @@ class RulesetMode(WatoMode):
                 html.h3(watolib.get_rulegroup(main_group_name).title)
                 html.br()
 
-            for sub_group_title, group_rulesets in sub_groups:
-                forms.header(sub_group_title or watolib.get_rulegroup(main_group_name).title)
+            for group_name, group_rulesets in sub_groups:
+                forms.header(watolib.get_rulegroup(group_name).title)
                 forms.container()
 
                 for ruleset in group_rulesets:

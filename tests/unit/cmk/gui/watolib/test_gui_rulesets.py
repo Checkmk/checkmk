@@ -1,5 +1,7 @@
 import pytest  # type: ignore
 
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
 
@@ -10,7 +12,7 @@ import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 
 
 def _rule(ruleset_name):
-    ruleset = rulesets.Ruleset(ruleset_name)
+    ruleset = rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(config.tags))
     return rulesets.Rule(hosts_and_folders.Folder.root_folder(), ruleset)
 
 
@@ -135,7 +137,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
     if rule_options is not None:
         rule_spec = rule_spec + (rule_options,)
 
-    ruleset = rulesets.Ruleset(ruleset_name)
+    ruleset = rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(config.tags))
     ruleset.from_config(hosts_and_folders.Folder.root_folder(), [rule_spec])
     rule = ruleset.get_folder_rules(hosts_and_folders.Folder.root_folder())[0]
 
@@ -348,7 +350,8 @@ checkgroup_parameters['local'] = [
 def test_ruleset_to_config(monkeypatch, wato_use_git, expected_result):
     monkeypatch.setattr(config, "wato_use_git", wato_use_git)
 
-    ruleset = rulesets.Ruleset("checkgroup_parameters:local")
+    ruleset = rulesets.Ruleset("checkgroup_parameters:local",
+                               ruleset_matcher.get_tag_to_group_map(config.tags))
     ruleset.from_config(hosts_and_folders.Folder.root_folder(), [
         {
             "value": "VAL",

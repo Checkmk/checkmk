@@ -36,6 +36,8 @@ import cmk.utils.tags
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
@@ -672,8 +674,10 @@ class APICallRules(APICallCollection):
                 rule_folder = watolib.Folder.folder(folder_path)
                 rule_folder.need_permission("write")
 
+        tag_to_group_map = ruleset_matcher.get_tag_to_group_map(config.tags)
+
         # Verify all rules
-        rule_vs = watolib.Ruleset(ruleset_name).rulespec.valuespec
+        rule_vs = watolib.Ruleset(ruleset_name, tag_to_group_map).rulespec.valuespec
 
         # Binary rulesets currently don't have a valuespec attribute set.
         if rule_vs is None:
@@ -695,7 +699,7 @@ class APICallRules(APICallCollection):
         for folder_path, rules in new_ruleset.items():
             folder = watolib.Folder.folder(folder_path)
 
-            new_ruleset = watolib.Ruleset(ruleset_name)
+            new_ruleset = watolib.Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, rules)
 
             folder_rulesets = watolib.FolderRulesets(folder)
@@ -722,12 +726,12 @@ class APICallRules(APICallCollection):
             watolib.add_change(
                 "edit-ruleset",
                 _("Deleted ruleset '%s' for '%s'") % (
-                    watolib.Ruleset(ruleset_name).title(),
+                    watolib.Ruleset(ruleset_name, tag_to_group_map).title(),
                     folder.title(),
                 ),
                 sites=folder.all_site_ids())
 
-            new_ruleset = watolib.Ruleset(ruleset_name)
+            new_ruleset = watolib.Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, [])
             folder_rulesets.set(ruleset_name, new_ruleset)
             folder_rulesets.save()

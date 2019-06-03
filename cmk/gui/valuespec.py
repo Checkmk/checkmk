@@ -1974,27 +1974,28 @@ class CascadingDropdown(ValueSpec):
         for nr, (val, title, vs) in enumerate(choices):
             if vs:
                 vp = varprefix + "_%d" % nr
-                # Form already submitted once (and probably in complain state)
                 if cur_val is not None:
+                    # Form already submitted once (and probably in complain state)
                     try:
                         def_val_2 = vs.from_html_vars(vp)
                     except MKUserError:
                         def_val_2 = vs.default_value()
-                    if cur_val == str(nr):
-                        disp = ""
-                    else:
-                        disp = "none"
-                else:  # form painted the first time
-                    if value == val \
-                       or (isinstance(value, self._encoding_type) and value[0] == val):
-                        if isinstance(value, self._encoding_type):
+
+                    disp = "" if nr == int(cur_val) else "none"
+                else:
+                    # Form painted the first time
+                    if nr == int(def_val):
+                        # This choice is the one choosen by the given value
+                        if isinstance(value, self._encoding_type) and len(value) == 2:
                             def_val_2 = value[1]
                         else:
                             def_val_2 = vs.default_value()
+
                         disp = ""
                     else:
                         def_val_2 = vs.default_value()
                         disp = "none"
+
                 html.open_span(id_="%s_%s_sub" % (varprefix, nr), style="display:%s;" % disp)
                 html.help(vs.help())
                 vs.render_input(vp, def_val_2)

@@ -294,9 +294,14 @@ def _prepare_wmi_table(parsed, tablename, line, key, timestamp, frequency):
 
 
 def wmi_filter_global_only(tables, row):
-    return all(
-        table.get(row, "Name", silently_skip_timed_out=True) == "_Global_"
-        for table in tables.values())
+    for table in tables.values():
+        try:
+            value = table.get(row, "Name", silently_skip_timed_out=True)
+        except KeyError:
+            return False
+        if value != "_Global_":
+            return False
+    return True
 
 
 #.

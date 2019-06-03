@@ -52,6 +52,15 @@ constexpr const wchar_t* kServiceDependencies = L"";
 constexpr const wchar_t* kServiceAccount = L"NT AUTHORITY\\LocalService";
 constexpr const wchar_t* kServicePassword = nullptr;
 
+// service configuration
+// main call
+// sets service to restart on error.
+void SelfConfigure();
+// secondary API calls
+SC_HANDLE SelfOpen();
+bool IsServiceConfigured(SC_HANDLE handle);
+bool ConfigureServiceAsRestartable(SC_HANDLE handle);
+
 }  // namespace srv
 };  // namespace cma
 

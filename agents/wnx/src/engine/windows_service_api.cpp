@@ -635,6 +635,8 @@ int ServiceAsService(
     cma::OnStartApp();               // path from service
     ON_OUT_OF_SCOPE(cma::OnExit());  // we are sure that this is last foo
 
+    SelfConfigure();
+
     // infinite loop to protect from exception
     while (1) {
         try {
@@ -656,6 +658,116 @@ int ServiceAsService(
         }
     }
     // reachable only on service stop
+}
+
+// we are setting service as restartable using more or less suitable parameters
+// set
+// returns false if failed call
+bool ConfigureServiceAsRestartable(SC_HANDLE handle) {
+    SERVICE_FAILURE_ACTIONS service_fail_actions;
+    SC_ACTION fail_actions[3];
+
+    fail_actions[0].Type =
+        SC_ACTION_RESTART;         // Failure action: Restart Service
+    fail_actions[0].Delay = 2000;  // in milliseconds = 2minutes
+    fail_actions[1].Type = SC_ACTION_RESTART;
+    fail_actions[1].Delay = 2000;
+    fail_actions[2].Type = SC_ACTION_RESTART;
+    fail_actions[2].Delay = 2000;
+
+    service_fail_actions.dwResetPeriod =
+        3600;  // Reset Failures Counter, in Seconds
+    service_fail_actions.lpCommand = nullptr;  // on service failure, not used
+    service_fail_actions.lpRebootMsg =
+        nullptr;  // Message during rebooting computer
+                  // due to service failure, not used
+
+    service_fail_actions.cActions = 3;  // Number of failure action to manage
+    service_fail_actions.lpsaActions = fail_actions;
+
+    auto result =
+        ::ChangeServiceConfig2(handle, SERVICE_CONFIG_FAILURE_ACTIONS,
+                               &service_fail_actions);  // Apply above settings
+    if (!result) {
+        XLOG::l("Error [{}] configuring service", GetLastError());
+        return false;
+    }
+
+    return true;
+}
+
+// returns allocated data on success
+SERVICE_FAILURE_ACTIONS* GetServiceFailureActions(SC_HANDLE handle) {
+    SERVICE_FAILURE_ACTIONS* actions = nullptr;
+
+    DWORD bytes_needed = 0;
+    DWORD new_buf_size = 0;
+    if (!::QueryServiceConfig2(handle, SERVICE_CONFIG_FAILURE_ACTIONS, NULL, 0,
+                               &bytes_needed)) {
+        auto dwError = ::GetLastError();
+        if (ERROR_INSUFFICIENT_BUFFER != dwError) return nullptr;
+
+        // allocation
+        new_buf_size = bytes_needed;
+        actions = reinterpret_cast<SERVICE_FAILURE_ACTIONS*>(
+            ::LocalAlloc(LMEM_FIXED, new_buf_size));
+    }
+
+    if (::QueryServiceConfig2(handle, SERVICE_CONFIG_FAILURE_ACTIONS,
+                              reinterpret_cast<LPBYTE>(actions), new_buf_size,
+                              &bytes_needed))
+        return actions;
+
+    // we have to kill our actions data here
+    if (actions) LocalFree(actions);
+
+    return nullptr;
+}
+
+// complementary function to GetServiceFailuerActions
+void DeleteServiceFailureActions(SERVICE_FAILURE_ACTIONS* actions) {
+    if (actions) ::LocalFree(actions);
+}
+
+// returns true ALSO on error(to avoid useless attempts to configure
+// non-configurable)
+bool IsServiceConfigured(SC_HANDLE handle) {
+    auto actions = GetServiceFailureActions(handle);
+    ON_OUT_OF_SCOPE(DeleteServiceFailureActions(actions));
+
+    if (actions) return actions->cActions != 0;
+
+    XLOG::l("QueryServiceConfig2 failed [{}]", ::GetLastError());
+    return true;
+}
+
+// handle must be killed with CloseServiceHandle
+SC_HANDLE SelfOpen() {
+    auto manager_handle = ::OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
+    if (nullptr == manager_handle) {
+        XLOG::l.crit("Cannot open SC Manager {}", ::GetLastError());
+        return nullptr;
+    }
+    ON_OUT_OF_SCOPE(::CloseServiceHandle(manager_handle));
+
+    auto handle = ::OpenService(manager_handle, cma::srv::kServiceName,
+                                SERVICE_ALL_ACCESS);
+    if (nullptr == handle) {
+        XLOG::l.crit("Cannot open Service {}, error =  {}",
+                     wtools::ConvertToUTF8(cma::srv::kServiceName),
+                     ::GetLastError());
+    }
+
+    return handle;
+}
+
+void SelfConfigure() {
+    auto handle = SelfOpen();
+    ON_OUT_OF_SCOPE(CloseServiceHandle(handle));
+    if (!IsServiceConfigured(handle)) {
+        XLOG::l.i("Configure check mk service");
+        ConfigureServiceAsRestartable(handle);
+    }
 }
 
 }  // namespace srv

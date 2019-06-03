@@ -101,6 +101,9 @@ class RuleConditions(object):
         cfg["host_folder"] = self.host_folder
         return cfg
 
+    def to_config_without_folder(self):
+        return self._to_config()
+
     def _to_config(self):
         cfg = {}
 
@@ -757,9 +760,15 @@ class Rule(object):
         self.conditions.from_config(conditions)
 
     def to_config(self):
+        return self._to_config(self.conditions.to_config_with_folder_macro())
+
+    def to_web_api(self):
+        return self._to_config(self.conditions.to_config_without_folder())
+
+    def _to_config(self, conditions):
         result = {
             "value": self.value,
-            "condition": self.conditions.to_config_with_folder_macro(),
+            "condition": conditions,
         }
 
         rule_options = self._rule_options_to_config()

@@ -214,6 +214,57 @@ def test_get_all_hosts_effective_attributes(web):
         web.delete_host("test-host")
 
 
+def test_get_ruleset(web):
+    response = web.get_ruleset("extra_host_conf:notification_options")
+    assert response == {
+        'ruleset': {
+            '': [{
+                'value': 'd,r,f,s',
+                'condition': {}
+            }]
+        },
+        'configuration_hash': 'b76f205bbe674300f677a282d9ccd71f',
+    }
+
+
+def test_set_ruleset(web):
+    orig_ruleset = web.get_ruleset("bulkwalk_hosts")
+    assert orig_ruleset == {
+        'ruleset': {
+            '': [{
+                'value': True,
+                'condition': {
+                    'host_tags': {
+                        'snmp': 'snmp',
+                        'snmp_ds': {
+                            '$ne': 'snmp-v1'
+                        }
+                    }
+                },
+                'options': {
+                    'description': u'Hosts with the tag "snmp-v1" must not use bulkwalk'
+                }
+            }]
+        },
+        'configuration_hash': '0cca93426feb558f7c9f09631340c63c',
+    }
+
+    # Now modify something
+    ruleset = copy.deepcopy(orig_ruleset)
+    ruleset["ruleset"][""][0]["value"] = False
+    response = web.set_ruleset("bulkwalk_hosts", ruleset)
+    assert response is None
+
+    try:
+        changed = web.get_ruleset("bulkwalk_hosts")
+        assert changed["ruleset"][""][0]["value"] is False
+    finally:
+        # revert it back
+        del orig_ruleset["configuration_hash"]
+        response = web.set_ruleset("bulkwalk_hosts", orig_ruleset)
+        assert response is None
+
+
 def test_get_site(web, site):
     response = web.get_site(site.id)
     assert "site_config" in response

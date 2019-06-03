@@ -635,7 +635,7 @@ class APICallRules(APICallCollection):
 
         ruleset_dict = {}
         for folder, _rule_index, rule in ruleset.get_rules():
-            ruleset_dict.setdefault(folder.path(), []).append(rule.to_config())
+            ruleset_dict.setdefault(folder.path(), []).append(rule.to_web_api())
 
         return ruleset_dict
 

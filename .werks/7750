@@ -1,0 +1,11 @@
+Title: ups_generic.include: Fixed scan function for Riello UPS devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p17
+Date: 1559554821
+Class: fix
+
+UPS services were not discovered any more for Riello UPS devices. This has been
+fixed.

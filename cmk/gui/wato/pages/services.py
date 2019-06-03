@@ -39,6 +39,7 @@ from typing import NamedTuple, Text, List, Optional  # pylint: disable=unused-im
 import cmk
 import cmk.utils.store
 from cmk.utils.defines import short_service_state_name
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -809,7 +810,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         try:
             ruleset = rulesets.get("ignored_services")
         except KeyError:
-            ruleset = watolib.Ruleset("ignored_services")
+            ruleset = watolib.Ruleset("ignored_services",
+                                      ruleset_matcher.get_tag_to_group_map(config.tags))
 
         modified_folders = []
 

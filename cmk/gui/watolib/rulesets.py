@@ -181,6 +181,7 @@ class RulesetCollection(object):
         super(RulesetCollection, self).__init__()
         # A dictionary containing all ruleset objects of the collection.
         # The name of the ruleset is used as key in the dict.
+        self._tag_to_group_map = ruleset_matcher.get_tag_to_group_map(config.tags)
         self._rulesets = {}
 
     # Has to be implemented by the subclasses to load the right rulesets
@@ -214,7 +215,7 @@ class RulesetCollection(object):
             if only_varname and varname != only_varname:
                 continue  # skip unwanted options
 
-            ruleset = self._rulesets.setdefault(varname, Ruleset(varname))
+            ruleset = self._rulesets.setdefault(varname, Ruleset(varname, self._tag_to_group_map))
 
             if ':' in varname:
                 dictname, subkey = varname.split(":")
@@ -384,7 +385,7 @@ class SearchedRulesets(FilteredRulesetCollection):
 # as index accross several HTTP requests where other users may have done something with
 # the ruleset. In worst cases the user modifies a rule which should not be modified.
 class Ruleset(object):
-    def __init__(self, name):
+    def __init__(self, name, tag_to_group_map):
         super(Ruleset, self).__init__()
         self.name = name
         self.rulespec = rulespec_registry[name]()
@@ -396,7 +397,7 @@ class Ruleset(object):
 
         # Converts pre 1.6 tuple rulesets in place to 1.6+ format
         self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
-            tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags))
+            tag_to_group_map=tag_to_group_map)
 
     def is_empty(self):
         return self.num_rules() == 0

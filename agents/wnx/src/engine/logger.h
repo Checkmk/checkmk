@@ -140,6 +140,17 @@ void LogWindowsEventInfo(int Code, const char* Format, Args&&... args) {
 #if defined(FMT_FORMAT_H_)
 namespace xlog {
 
+inline void AddCr(std::string& s) noexcept {
+    if (s.empty() || s.back() != '\n') s.push_back('\n');
+}
+
+inline void RmCr(std::string& s) noexcept {
+    if (!s.empty() && s.back() == '\n') s.pop_back();
+}
+
+inline bool IsNoCrFlag(int Flag) noexcept { return (Flag & kNoCr) != 0; }
+inline bool IsAddCrFlag(int Flag) noexcept { return (Flag & kAddCr) != 0; }
+
 // Public Engine to print all
 inline std::string formatString(int Fl, const char* Prefix,
                                 const char* String) {
@@ -157,10 +168,10 @@ inline std::string formatString(int Fl, const char* Prefix,
         return {};
     }
 
-    if (Fl & kNoCr) {
-        if (s.back() == '\n') s.pop_back();
-    } else if (Fl & kAddCr) {
-        if (s.empty() || s.back() != '\n') s.push_back('\n');
+    if (IsNoCrFlag(Fl)) {
+        RmCr(s);
+    } else if (IsAddCrFlag(Fl)) {
+        AddCr(s);
     }
 
     return s;

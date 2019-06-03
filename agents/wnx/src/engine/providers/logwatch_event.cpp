@@ -65,7 +65,11 @@ static std::pair<std::string, std::string> ParseLine(
 
     auto name = name_body[0];
     cma::tools::AllTrim(name);
+    if (name.empty()) return {};
+
     if (name.back() == '\"' || name.back() == '\'') name.pop_back();
+    if (name.empty()) return {};
+
     if (name.front() == '\"' || name.front() == '\'') name.erase(name.begin());
     cma::tools::AllTrim(name);  // this is intended
     if (name.empty()) {
@@ -187,8 +191,9 @@ void LogWatchEvent::loadConfig() {
                     default_entry_ = entries_.size() - 1;
                 }
 
-            } else
-                entries_.pop_back();
+            } else {
+                if (!entries_.empty()) entries_.pop_back();
+            }
         }
         if (!default_found) {
             // making default entry

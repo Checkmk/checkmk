@@ -490,7 +490,7 @@ def process_logfile(logfile, patterns, opt, status):
     except Exception:
         if debug():
             raise
-        return None
+        return (['[[[%s:cannotopen]]]\n' % logfile], False, [])
     loglines.append("[[[%s]]]\n" % logfile)
 
     # Seek to the current end in order to determine file size
@@ -502,7 +502,7 @@ def process_logfile(logfile, patterns, opt, status):
     # a fuss about ancient log messages...
     if offset == -1:
         if not debug():
-            return loglines
+            return (loglines, False, [])
         else:
             offset = 0
 
@@ -856,33 +856,18 @@ def main():
     except Exception:
         status = {}
 
-    loglines = []
-    at_least_warnings = False
-    warnings_and_errors = []
     for logfile, (patterns, options) in parse_sections(logfiles_config):
         if patterns is None:
             sys.stdout.write('[[[%s:missing]]]\n' % logfile)
             continue
 
-        # When debugging use option -d to prevent from misleading exceptions
-        # due to side effects of process_logfiles().
-        process_result = process_logfile(logfile, patterns, options, status)
-        if isinstance(process_result, tuple):
-            loglines, at_least_warnings, warnings_and_errors = process_result
-        elif isinstance(process_result, list):
-            loglines = process_result
-        elif isinstance(process_result, None):
-            sys.stdout.write('[[[%s:cannotopen]]]' % logfile)
-        else:
-            LOGGER.debug("Invalid logfile processing result: %r", process_result)
+        loglines, warn_flag, warnings_and_errors = process_logfile(logfile, patterns, options,
+                                                                   status)
+        output = loglines + (warnings_and_errors if warn_flag else [])
 
         LOGGER.debug("Loglines: %r", loglines)
-        for line in loglines:
-            sys.stdout.write(line)
-        if at_least_warnings:
-            LOGGER.debug("Warnings and errors: %r", warnings_and_errors)
-            for wa_er in warnings_and_errors:
-                sys.stdout.write(wa_er)
+        LOGGER.debug("Warnings and errors: %r", warnings_and_errors)
+        sys.stdout.write(''.join(output))
 
     if not debug():
         save_status(status, status_filename)

@@ -1,0 +1,19 @@
+Title: Added installation verification for automatic agent updates on windows
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p17
+Date: 1559555652
+
+Previously, a broken agent update on Windows (i.e. the msiexec command
+did return properly, but the installation is broken) did not get recognized.
+Hence the agent updater recognized this situation as a successful update and
+did not start any further attempt to install the new MSI package.
+
+This is now mitigated by investigating the new installation after an update.
+If the update did not take place as expected, the agent update will exit with
+an appropriate error and retry on next agent updater run. This will also be 
+visible within the Checkmk agent check and the update status on the Checkmk server.

@@ -842,7 +842,8 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
 
     // generate
     auto out_folder = ProgramData;
-    // if local.ini file exists, then second file must be a bakery file(pure logic)
+    // if local.ini file exists, then second file must be a bakery file(pure
+    // logic)
     auto mode = LocalFileExists ? BakeryFile::force : BakeryFile::normal;
     auto yaml_file = CreateYamlFromIniSmart(user_ini_file, out_folder,
                                             wtools::ConvertToUTF8(name), mode);
@@ -910,7 +911,8 @@ std::string MakeComments(const std::filesystem::path& source_file_path,
 
 bool StoreYaml(const std::filesystem::path& filename, YAML::Node yaml_node,
                const std::string& comment) noexcept {
-    std::ofstream ofs(filename); // text mode, required to have normal carriage return
+    std::ofstream ofs(
+        filename);  // text mode, required to have normal carriage return
     if (ofs) {
         ofs << comment;
         ofs << yaml_node;

@@ -7,6 +7,7 @@
 #include "service_processor.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "windows_service_api.h"
 
 namespace wtools {  // to become friendly for wtools classes
 class TestProcessor : public wtools::BaseServiceProcessor {
@@ -136,3 +137,21 @@ TEST(Misc, All) {
         EXPECT_TRUE(b == "b/");
     }
 }
+
+namespace cma::srv {
+TEST(SelfConfigure, Checker) {
+    auto handle = SelfOpen();
+    if (handle == nullptr) {
+        xlog::sendStringToStdio(
+            "No test self configuration, agent is not installed",
+            xlog::internal::Colors::kYellow);
+        return;
+    }
+    ON_OUT_OF_SCOPE(CloseServiceHandle(handle));
+
+    EXPECT_NO_THROW(IsServiceConfigured(handle));
+    EXPECT_NO_THROW(SelfConfigure());  //
+    EXPECT_TRUE(IsServiceConfigured(handle));
+}
+
+}  // namespace cma::srv

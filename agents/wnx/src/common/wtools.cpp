@@ -133,8 +133,9 @@ bool ServiceController::registerAndRun(const wchar_t* ServiceName,  //
             XLOG::l(XLOG::kStdio)
                 .crit("Cannot Start Service '{}' error = [{}]",
                       ConvertToUTF8(ServiceName), GetLastError());
+            return false;
         }
-        return ret == 0;
+        return true;
     } catch (std::exception& e) {
         XLOG::l(XLOG::kStdio)
             .crit("Exception '{}' in Service start with error {}", e.what(),
@@ -369,7 +370,12 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
 
     // Register the handler function for the service
     status_handle_ =
-        RegisterServiceCtrlHandler(name_.get(), ServiceCtrlHandler);
+        tgt::IsDebug()
+            // we want to know what is happened with service in windows
+            ? RegisterServiceCtrlHandlerEx(name_.get(), ServiceCtrlHandlerEx,
+                                           nullptr)
+            // in release w e want to use safe method
+            : RegisterServiceCtrlHandler(name_.get(), ServiceCtrlHandler);
 
     if (!status_handle_) {
         XLOG::l(XLOG::kStdio)("I cannot register damned handlers {}",
@@ -507,6 +513,80 @@ void ServiceController::Shutdown() {
     }
 }
 
+//
+//   FUNCTION: ServiceController::ServiceCtrlHandler(DWORD)
+//
+//   PURPOSE: The function is called by the SCM whenever a control code
+//   is sent to the service.
+//
+//   PARAMETERS:
+//   * dwCtrlCode - the control code. This parameter can be one of the
+//   following values:
+//
+//     SERVICE_CONTROL_CONTINUE
+//     SERVICE_CONTROL_INTERROGATE
+//     SERVICE_CONTROL_NETBINDADD
+//     SERVICE_CONTROL_NETBINDDISABLE
+//     SERVICE_CONTROL_NETBINDREMOVE
+//     SERVICE_CONTROL_PARAMCHANGE
+//     SERVICE_CONTROL_PAUSE
+//     SERVICE_CONTROL_SHUTDOWN
+//     SERVICE_CONTROL_STOP
+//
+//   This parameter can also be a user-defined control code ranges from
+//   128 to 255.
+//
+void WINAPI ServiceController::ServiceCtrlHandler(DWORD control_code) {
+    switch (control_code) {
+        case SERVICE_CONTROL_STOP:
+            s_controller_->Stop();
+            break;
+        case SERVICE_CONTROL_PAUSE:
+            s_controller_->Pause();
+            break;
+        case SERVICE_CONTROL_CONTINUE:
+            s_controller_->Continue();
+            break;
+        case SERVICE_CONTROL_SHUTDOWN:
+            s_controller_->Shutdown();
+            break;
+
+        case SERVICE_CONTROL_INTERROGATE:
+            break;
+        default:
+            break;
+    }
+}
+
+DWORD WINAPI ServiceController::ServiceCtrlHandlerEx(DWORD control_code,
+                                                     DWORD event_type,
+                                                     void* event_data,
+                                                     void* context) {
+    XLOG::l.t("[----Control Code {:#X} Event Type {:#X}------]", control_code,
+              event_type);
+
+    switch (control_code) {
+        case SERVICE_CONTROL_STOP:
+            s_controller_->Stop();
+            break;
+        case SERVICE_CONTROL_PAUSE:
+            s_controller_->Pause();
+            break;
+        case SERVICE_CONTROL_CONTINUE:
+            s_controller_->Continue();
+            break;
+        case SERVICE_CONTROL_SHUTDOWN:
+            s_controller_->Shutdown();
+            break;
+
+        case SERVICE_CONTROL_INTERROGATE:
+            break;
+        default:
+            break;
+    }
+    return NO_ERROR;
+}
+
 // Window s specific performance counters
 // Functions are from OWA/MSDN
 // No exceptions
@@ -525,7 +605,7 @@ std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type) {
     ::RegQueryValueExW(key, L"Counter", nullptr, nullptr, nullptr,
                        &counters_size);
     if (counters_size == 0) {
-        XLOG::l("SOmething is really wrong");
+        XLOG::l("Something is really wrong");
         return {};
     }
 
@@ -731,7 +811,7 @@ std::vector<const PERF_INSTANCE_DEFINITION*> GenerateInstances(
             instance = NextInstance(instance);
         }
     } catch (const std::exception& e) {
-        xlog::l(XLOG_FLINE + " exception: %s", e.what());
+        XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
     }
     return result;
 }
@@ -751,7 +831,7 @@ std::vector<std::wstring> GenerateInstanceNames(
             instance = NextInstance(instance);
         }
     } catch (const std::exception& e) {
-        XLOG::l(XLOG_FLINE + " disaster in names: {}", e.what());
+        XLOG::l(XLOG_FLINE + " disaster in names: '{}'", e.what());
     }
     return result;
 }
@@ -777,7 +857,7 @@ std::vector<const PERF_COUNTER_DEFINITION*> GenerateCounters(
         if (Object->NumInstances <= 0)
             DataBlock = reinterpret_cast<const PERF_COUNTER_BLOCK*>(counter);
     } catch (const std::exception& e) {
-        XLOG::l(XLOG_FLINE + " disaster in instance less counters: {}",
+        XLOG::l(XLOG_FLINE + " disaster in instance less counters: '{}'",
                 e.what());
     }
     return result;
@@ -864,7 +944,7 @@ std::vector<uint64_t> GenerateValues(
             }
         }
     } catch (const std::exception& e) {
-        xlog::l(XLOG_FLINE + " exception:%s", e.what());
+        XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
         return {};
     }
 
@@ -1028,11 +1108,9 @@ bool IsWindowsComInitialized() {
 
 std::wstring WmiGetWstring(const VARIANT& Var) {
     if (Var.vt & VT_ARRAY) {
-        // XLOG::l.w("Array is not supported");
         return L"<array>";
     }
     if (Var.vt & VT_VECTOR) {
-        // XLOG::l.w("Vector is not supported");
         return L"<vector>";
     }
 
@@ -1062,7 +1140,7 @@ std::wstring WmiGetWstring(const VARIANT& Var) {
             return L"";
 
         default:
-            XLOG::l.crit("Unknown data type in Vector {}", Var.vt);
+            XLOG::l.crit("Unknown data type in Vector [{}]", Var.vt);
             return L"";
     }
 }
@@ -1181,7 +1259,7 @@ std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject* WmiObject) {
 // returns valid enumerator or nullptr
 IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
                                    const std::wstring& Query) noexcept {
-    XLOG::l.t("Query is {}", ConvertToUTF8(Query));
+    XLOG::l.t("Query is '{}'", ConvertToUTF8(Query));
     IEnumWbemClassObject* enumerator = nullptr;
     auto hres = Services->ExecQuery(
         bstr_t("WQL"),          // always the same
@@ -1313,7 +1391,7 @@ IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator) {
     auto hres = Enumerator->Next(timeout * 1000, 1, &wmi_object,
                                  &returned);  // legacy code
     if (WBEM_S_TIMEDOUT == hres) {
-        XLOG::l.e("Timeout {} seconds broken  when query WMI - RETRY:",
+        XLOG::l.e("Timeout [{}] seconds broken  when query WMI - RETRY:",
                   timeout);
         return nullptr;
     }
@@ -1451,7 +1529,7 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath) {
     DWORD r = ::RegOpenKeyExA(HKEY_LOCAL_MACHINE, RegPath, 0,
                               KEY_ENUMERATE_SUB_KEYS, &key);
     if (r != ERROR_SUCCESS) {
-        XLOG::l(" Cannot open registry key {} error {}", RegPath,
+        XLOG::l(" Cannot open registry key '{}' error [{}]", RegPath,
                 GetLastError());
         return {};
     }
@@ -1469,7 +1547,7 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath) {
         if (r == ERROR_NO_MORE_ITEMS) break;
 
         if (r != ERROR_SUCCESS) {
-            XLOG::l("Failed to enum {} error {}", key_name, r);
+            XLOG::l("Failed to enum '{}' error [{}]", key_name, r);
             break;
         }
         entries.emplace_back(key_name);

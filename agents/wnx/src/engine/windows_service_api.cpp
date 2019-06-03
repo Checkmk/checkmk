@@ -649,7 +649,7 @@ int ServiceAsService(
                                           // service will be stopped
                                           // itself or from outside
             XLOG::l.i("Service is stopped {}",
-                      ret ? "" : "due to abnormal situation");
+                      ret ? "as usually" : "due to abnormal situation");
             return ret ? 0 : -1;
         } catch (const std::exception& e) {
             XLOG::l.crit("Exception hit {} in ServiceAsService", e.what());

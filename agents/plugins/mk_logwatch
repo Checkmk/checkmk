@@ -440,8 +440,6 @@ def process_logfile(logfile, patterns, opt, status):
     In case the file has never been seen before returns a list of logfile lines
     and None in case the logfile cannot be opened.
     """
-    loglines = []
-
     if debug():
         tty_red = '\033[1;31m'
         tty_green = '\033[1;32m'
@@ -454,6 +452,9 @@ def process_logfile(logfile, patterns, opt, status):
         tty_yellow = ''
         tty_blue = ''
         tty_normal = ''
+
+    if patterns is None:
+        return ['[[[%s:missing]]]\n' % logfile]
 
     # Look at which file offset we have finished scanning
     # the logfile last time. If we have never seen this file
@@ -468,19 +469,20 @@ def process_logfile(logfile, patterns, opt, status):
     except Exception:
         if debug():
             raise
-        return (['[[[%s:cannotopen]]]\n' % logfile], False, [])
-    loglines.append("[[[%s]]]\n" % logfile)
+        return ['[[[%s:cannotopen]]]\n' % logfile]
+
+    output = ['[[[%s]]]\n' % logfile]
 
     # Seek to the current end in order to determine file size
+    # And set the current pointer to the file end
     current_end = os.lseek(file_desc, 0, 2)  # os.SEEK_END not available in Python 2.4
     status[logfile] = current_end, inode
 
-    # If we have never seen this file before, we just set the
-    # current pointer to the file end. We do not want to make
-    # a fuss about ancient log messages...
+    # If we have never seen this file before, we do not want
+    # to make a fuss about ancient log messages...
     if offset == -1:
         if not debug():
-            return (loglines, False, [])
+            return output
         else:
             offset = 0
 
@@ -494,7 +496,7 @@ def process_logfile(logfile, patterns, opt, status):
     # Our previously stored offset is the current end ->
     # no new lines in this file
     if offset == current_end:
-        return (loglines, False, [])  # loglines contain logfile name only
+        return output  # contains logfile name only
 
     # If our offset is beyond the current end, the logfile has been
     # truncated or wrapped while keeping the same inode. We assume
@@ -523,7 +525,6 @@ def process_logfile(logfile, patterns, opt, status):
         file_handle = os.fdopen(file_desc)
 
     worst = -1
-    warnings = False
     warnings_and_errors = []
     lines_parsed = 0
     start_time = time.time()
@@ -610,16 +611,17 @@ def process_logfile(logfile, patterns, opt, status):
     new_offset = os.lseek(file_desc, 0, 1)  # os.SEEK_CUR not available in Python 2.4
     status[logfile] = new_offset, inode
 
-    # output all lines if at least one warning, error or ok has been found
-    if worst > -1:
-        warnings = True
-
     # Handle option maxfilesize, regardless of warning or errors that have happened
     if opt.maxfilesize and (offset // opt.maxfilesize) < (new_offset // opt.maxfilesize):
         warnings_and_errors.append(
             "%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
             (tty_yellow, opt.maxfilesize, new_offset // opt.maxfilesize, tty_normal))
-    return (loglines, warnings, warnings_and_errors)
+
+    # output all lines if at least one warning, error or ok has been found
+    if worst > -1:
+        output.extend(warnings_and_errors)
+
+    return output
 
 
 class Options(object):
@@ -835,16 +837,7 @@ def main():
         status = {}
 
     for logfile, (patterns, options) in parse_sections(logfiles_config):
-        if patterns is None:
-            sys.stdout.write('[[[%s:missing]]]\n' % logfile)
-            continue
-
-        loglines, warn_flag, warnings_and_errors = process_logfile(logfile, patterns, options,
-                                                                   status)
-        output = loglines + (warnings_and_errors if warn_flag else [])
-
-        LOGGER.debug("Loglines: %r", loglines)
-        LOGGER.debug("Warnings and errors: %r", warnings_and_errors)
+        output = process_logfile(logfile, patterns, options, status)
         sys.stdout.write(''.join(output))
 
     if not debug():

@@ -3305,6 +3305,8 @@ def main_update(site, args, options=None):
     create_version_symlink(site, to_version)
     save_version_meta_data(site, to_version)
 
+    call_scripts(site, 'update-pre-hooks')
+
     # Let hooks do their work and update configuration.
     config_set_all(site)
     initialize_livestatus_tcp_tls_after_update(site)

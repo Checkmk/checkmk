@@ -11,6 +11,7 @@
 #include "data_encoding.h"
 #include "gtest/gtest.h"
 #include "nagios.h"
+#include "test_utilities.h"
 
 // TODO(sp) Move this to a better place.
 TEST(Store, dont_use_mc) {
@@ -24,111 +25,53 @@ extern char *macro_user[MAX_USER_MACROS];
 
 namespace {
 // First test fixture: A single host
-class OffsetStringHostMacroColumnTest : public ::testing::Test {
-protected:
+struct OffsetStringHostMacroColumnTest : public ::testing::Test {
     void SetUp() override {
         std::fill(std::begin(macro_user), std::end(macro_user), nullptr);
         macro_user[10] = cc("I drink and I know things");
-
-        // g++'s -Wmissing-field-initializers warning incorrectly fires if we
-        // use designated initializers for this. :-P
-        host_.name = cc("sesame_street");
-        host_.display_name = cc("the display name");
-        host_.alias = cc("the alias");
-        host_.address = cc("the address");
-        host_.host_check_command = cc("the host check command");
-        host_.custom_variables = &hcvm3_;
-        host_.plugin_output = cc("the plugin output");
-        host_.long_plugin_output = cc("the long plugin output");
-        host_.perf_data = cc("the perf data");
     }
 
-    // Nagios and const-correctness: A Tale of Two Worlds...
-    static char *cc(const char *str) { return const_cast<char *>(str); }
-
-    void set_host_notes(const char *notes) { host_.notes = cc(notes); }
+    void set_host_notes(const char *notes) { test_host.notes = cc(notes); }
 
     std::string expanded_host_notes() const {
-        return oshmc_.getValue(host_row_);
+        return oshmc.getValue(Row{&test_host});
     }
 
-    // Backwards the list you must build, my young padawan...
-    customvariablesmember hcvm1_{.variable_name = cc("ERNIE"),
-                                 .variable_value = cc("Bert"),
-                                 .has_been_modified = 0,
-                                 .next = nullptr};
-    customvariablesmember hcvm2_{.variable_name = cc("HARRY"),
-                                 .variable_value = cc("Hirsch"),
-                                 .has_been_modified = 0,
-                                 .next = &hcvm1_};
-    customvariablesmember hcvm3_{.variable_name = cc("_TAG_GUT"),
-                                 .variable_value = cc("Guten Tag!"),
-                                 .has_been_modified = 0,
-                                 .next = &hcvm2_};
-
-    NagiosCore core_{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
-                     Encoding::utf8};
-    host host_{};
-    Row host_row_{&host_};
-    OffsetStringHostMacroColumn oshmc_{
-        "funny_column_name",  "Cool description!", -1, -1, -1, &core_,
+    TestHost test_host{{{"ERNIE", "Bert"},  //
+                        {"HARRY", "Hirsch"},
+                        {"_TAG_GUT", "Guten Tag!"}}};
+    NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
+                    Encoding::utf8};
+    OffsetStringHostMacroColumn oshmc{
+        "funny_column_name",  "Cool description!", -1, -1, -1, &core,
         offsetof(host, notes)};
-};
+};  // namespace
 
 // Second test fixture: A single host with a single service
-class OffsetStringServiceMacroColumnTest
+struct OffsetStringServiceMacroColumnTest
     : public OffsetStringHostMacroColumnTest {
-protected:
-    void SetUp() override {
-        OffsetStringHostMacroColumnTest::SetUp();
-
-        // g++'s -Wmissing-field-initializers warning incorrectly fires if we
-        // use designated initializers for this. :-P
-        service_.description = cc("muppet_show");
-        service_.display_name = cc("The Muppet Show");
-        service_.service_check_command = cc("check_fozzie_bear");
-        service_.custom_variables = &scvm3_;
-        service_.plugin_output = cc("plug");
-        service_.long_plugin_output = cc("long plug");
-        service_.perf_data = cc("99%");
-        service_.host_ptr = &host_;
+    void set_service_notes(const char *notes) {
+        test_service.notes = cc(notes);
     }
-
-    void set_service_notes(const char *notes) { service_.notes = cc(notes); }
 
     std::string expanded_service_notes() const {
-        return ossmc_.getValue(service_row_);
+        return ossmc.getValue(Row{&test_service});
     }
 
-    customvariablesmember scvm1_{.variable_name = cc("STATLER"),
-                                 .variable_value = cc("Boo!"),
-                                 .has_been_modified = 0,
-                                 .next = nullptr};
-    customvariablesmember scvm2_{.variable_name = cc("WALDORF"),
-                                 .variable_value = cc("Terrible!"),
-                                 .has_been_modified = 0,
-                                 .next = &scvm1_};
-    customvariablesmember scvm3_{.variable_name = cc("_LABEL_LO"),
-                                 .variable_value = cc("Labello"),
-                                 .has_been_modified = 0,
-                                 .next = &scvm2_};
-
-    service service_{};
-    Row service_row_{&service_};
-    OffsetStringServiceMacroColumn ossmc_{
-        "navn", "Beskrivelse", -1, -1, -1, &core_, offsetof(service, notes)};
-
-private:
-    // Nagios and const-correctness: A Tale of Two Worlds...
-    static char *cc(const char *str) { return const_cast<char *>(str); }
+    TestService test_service{&test_host,
+                             {{"STATLER", "Boo!"},
+                              {"WALDORF", "Terrible!"},
+                              {"_LABEL_LO", "Labello"}}};
+    OffsetStringServiceMacroColumn ossmc{
+        "navn", "Beskrivelse", -1, -1, -1, &core, offsetof(service, notes)};
 };
 }  // namespace
 
 TEST_F(OffsetStringHostMacroColumnTest, misc) {
-    EXPECT_EQ("funny_column_name", oshmc_.name());
-    EXPECT_EQ("Cool description!", oshmc_.description());
-    EXPECT_EQ(ColumnType::string, oshmc_.type());
-    EXPECT_EQ(&host_, oshmc_.columnData<void>(host_row_));
+    EXPECT_EQ("funny_column_name", oshmc.name());
+    EXPECT_EQ("Cool description!", oshmc.description());
+    EXPECT_EQ(ColumnType::string, oshmc.type());
+    EXPECT_EQ(&test_host, oshmc.columnData<void>(Row{&test_host}));
 }
 
 TEST_F(OffsetStringHostMacroColumnTest, expand_host_builtin) {
@@ -205,7 +148,7 @@ TEST_F(OffsetStringHostMacroColumnTest, expand_user) {
 }
 
 TEST_F(OffsetStringHostMacroColumnTest, border_cases) {
-    host_.name = nullptr;
+    test_host.name = nullptr;
     set_host_notes("checking $HOSTNAME$...");
     EXPECT_EQ("checking $HOSTNAME$...", expanded_host_notes());
 
@@ -244,10 +187,10 @@ TEST_F(OffsetStringHostMacroColumnTest, border_cases) {
 }
 
 TEST_F(OffsetStringServiceMacroColumnTest, misc) {
-    EXPECT_EQ("navn", ossmc_.name());
-    EXPECT_EQ("Beskrivelse", ossmc_.description());
-    EXPECT_EQ(ColumnType::string, ossmc_.type());
-    EXPECT_EQ(&service_, ossmc_.columnData<void>(service_row_));
+    EXPECT_EQ("navn", ossmc.name());
+    EXPECT_EQ("Beskrivelse", ossmc.description());
+    EXPECT_EQ(ColumnType::string, ossmc.type());
+    EXPECT_EQ(&test_service, ossmc.columnData<void>(Row{&test_service}));
 }
 
 TEST_F(OffsetStringServiceMacroColumnTest, expand_host_builtin) {
@@ -325,7 +268,7 @@ TEST_F(OffsetStringServiceMacroColumnTest, expand_user) {
 }
 
 TEST_F(OffsetStringServiceMacroColumnTest, border_cases) {
-    service_.description = nullptr;
+    test_service.description = nullptr;
     set_service_notes("checking $SERVICEDESC$...");
     EXPECT_EQ("checking $SERVICEDESC$...", expanded_service_notes());
 

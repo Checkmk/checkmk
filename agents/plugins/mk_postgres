@@ -72,16 +72,13 @@ function postgres_instances() {
 
 
 function postgres_sessions() {
-    # Postgres 9.2 uses 'query' instead of 'current_query'
     local OUTPUT
+
+    # In postgresql 9.2 the column state was introduced, which has to be queried to
+    # find the state of the sessions. The column state can be NULL.
+    CONDITION="$ROW = $IDLE"
     OUTPUT="$(echo "\echo '<<<postgres_sessions>>>${INSTANCE_SECTION}'
-                    SELECT (
-                        SELECT column_name
-                        FROM information_schema.columns
-                        WHERE table_name='pg_stat_activity' AND column_name in ('query', 'current_query')
-                    ) = '<IDLE>' as query, count(*)
-                    FROM pg_stat_activity
-                    GROUP BY (query = '<IDLE>');" |\
+              SELECT $CONDITION, count(*) FROM pg_stat_activity WHERE $ROW IS NOT NULL GROUP BY ($CONDITION);" |\
               su - "$DBUSER" -c "$export_PGPASSFILE $psql -X --variable ON_ERROR_STOP=1 -d $PGDATABASE ${EXTRA_ARGS} -A -t -F' '" 2>/dev/null)"
 
     echo "$OUTPUT"
@@ -107,23 +104,18 @@ function postgres_simple_queries() {
     # We need to output the databases, too.
     # This query does not report databases without an active query
     local CONNECTIONS_QUERY
-    if compare_version_greater_equal "$POSTGRES_VERSION" "9.2" ; then
-        CONNECTIONS_QUERY="SELECT COUNT(datid) AS current,
+
+    # Here the order of the columns did not match with what the server side expects,
+    # with the result, that there was never any active connection shown in the
+    # web-gui.
+    CONDITION="$ROW <> $IDLE"
+    CONNECTIONS_QUERY="SELECT COUNT(datid) AS current,
           (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
           d.datname
         FROM pg_database d
-        LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE state <> 'idle'
-        GROUP BY 2,3
+        LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE $CONDITION
+        GROUP BY 1
         ORDER BY datname;"
-    else
-        CONNECTIONS_QUERY="SELECT COUNT(datid) AS current,
-          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
-          d.datname
-        FROM pg_database d
-        LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE current_query <> '<IDLE>'
-        GROUP BY 2,3
-        ORDER BY datname;"
-    fi
 
     echo "\pset footer off
           \echo '<<<postgres_stat_database:sep(59)>>>${INSTANCE_SECTION}'
@@ -408,13 +400,33 @@ function postgres_main() {
                  su - "$DBUSER" -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -t -A -F';'")"
     ECHO_DATABASES="$(echo "$DATABASES" | sed 's/^/\\echo /')"
 
-    POSTGRES_VERSION=$(su - "$DBUSER" -c "$psql -X -V -d $PGDATABASE ${EXTRA_ARGS} | egrep -o '[0-9]{1,}\.[0-9]{1,}'")
-
     postgres_sessions
     postgres_simple_queries
     postgres_stats
     postgres_version
     postgres_bloat
+}
+
+
+function postgres_check_server_version() {
+    # Query the server version from the server. Originally the version of the
+    # client tools was taken, but what really matters is the version of the server.
+    # Terminate the script if the server can not be queried.
+    set -- "$(su - "$DBUSER" -c "psql -A -t -c 'SHOW server_version;'" | tr '.' ' ')"
+    test $# -eq 0 && exit 0
+    POSTGRES_VERSION="$1.$2"
+    postgres_set_condition_vars
+}
+
+
+function postgres_set_condition_vars() {
+    if compare_version_greater_equal "$POSTGRES_VERSION" "9.2" ; then
+        ROW=state
+        IDLE="'idle'"
+    else
+        ROW=current_query
+        IDLE="'<IDLE>'"
+    fi
 }
 
 
@@ -424,6 +436,8 @@ if [ -e "$MK_CONFFILE" ]; then
     postgres_instances
 
     DBUSER=$(grep DBUSER "$MK_CONFFILE" | sed 's/.*=//g')
+    postgres_check_server_version
+
     cat "$MK_CONFFILE" | while read line
     do
         case $line in
@@ -474,6 +488,8 @@ else
     else
         exit 0
     fi
+    postgres_check_server_version
+
     INSTANCE_SECTION=""
 
     postgres_instances "$DBUSER"

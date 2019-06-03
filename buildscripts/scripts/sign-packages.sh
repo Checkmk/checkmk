@@ -17,7 +17,10 @@ if [ -z "$GPG_PASSPHRASE" ]; then
     exit 1
 fi
 
-export GNUPGHOME=/bauwelt/etc/.gnupg
+# /bauwelt/etc/.gnupg is mounted in RO mode, but the following gpg commands need RW access
+# to the directory. Copy the contents to the container for exclusive + RW access
+cp -a /bauwelt/etc/.gnupg /gnupg
+export GNUPGHOME=/gnupg
 
 echo "Sign RPM packages..."
 echo "$GPG_PASSPHRASE" | \

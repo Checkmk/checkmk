@@ -1080,6 +1080,10 @@ std::wstring WmiStringFromObject(IWbemClassObject* Object,
             result += wtools::WmiGetWstring(value) + L",";
         }
     }
+    if (result.empty()) {
+        XLOG::d("We have empty result for wbm_object, this is unusual");
+        return {};
+    }
 
     result.pop_back();  // remove last L","
     return result;

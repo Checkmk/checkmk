@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <string>
+
 #include "Configuration.h"
 #include "SettingsCollector.h"
 #include "stringutil.h"
@@ -176,7 +177,7 @@ public:
         }
         auto str = ss.str();
 
-        if (str.back() == ' ') str.pop_back();
+        if (!str.empty() && str.back() == ' ') str.pop_back();
         return str;
     }
 

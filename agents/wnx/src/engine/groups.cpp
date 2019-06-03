@@ -356,7 +356,8 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
         return cli;
     }
 
-    if (cli.cmd_line_.back() == L' ') cli.cmd_line_.pop_back();
+    if (!cli.cmd_line_.empty() && cli.cmd_line_.back() == L' ')
+        cli.cmd_line_.pop_back();
 
     XLOG::t.i("Expected to execute [{}] plugins '{}'", files.size(),
               wtools::ConvertToUTF8(cli.cmd_line_));

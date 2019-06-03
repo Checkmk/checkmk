@@ -161,7 +161,7 @@ namespace cma {
 bool HackPluginDataWithCacheInfo(std::vector<char>& Out,
                                  const std::vector<char>& OriginalData,
                                  time_t LegacyTime, long long CacheAge) {
-    if (!OriginalData.size()) return false;
+    if (OriginalData.empty()) return false;
     // check we have valid Data;
     std::string stringized(OriginalData.data(), OriginalData.size());
     if (!stringized.size()) return false;
@@ -235,7 +235,7 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
                                     uint32_t Code,
                                     const std::vector<char>& Data) {
             auto data = wtools::ConditionallyConvertFromUTF16(Data);
-            if (data.size() && data.back() == 0)
+            if (!data.empty() && data.back() == 0)
                 data.pop_back();  // conditional convert adds 0
             cma::tools::AddVector(accu, data);
             storeData(Pid, accu);

@@ -44,6 +44,8 @@ bin_PROGRAMS = test_neb
 
 test_neb_SOURCES = \
     DummyNagios.cc \
+    test_utilities.cc \
+    test_CustomVarsDictFilter.cc \
     test_OffsetStringMacroColumn.cc
 test_neb_CPPFLAGS = \
     -I.. \

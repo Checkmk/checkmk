@@ -436,27 +436,12 @@ private:
     //   This parameter can also be a user-defined control code ranges from
     //   128 to 255.
     //
-    static void WINAPI ServiceCtrlHandler(DWORD dwCtrl) {
-        switch (dwCtrl) {
-            case SERVICE_CONTROL_STOP:
-                s_controller_->Stop();
-                break;
-            case SERVICE_CONTROL_PAUSE:
-                s_controller_->Pause();
-                break;
-            case SERVICE_CONTROL_CONTINUE:
-                s_controller_->Continue();
-                break;
-            case SERVICE_CONTROL_SHUTDOWN:
-                s_controller_->Shutdown();
-                break;
+    static void WINAPI ServiceCtrlHandler(DWORD control_code);
 
-            case SERVICE_CONTROL_INTERROGATE:
-                break;
-            default:
-                break;
-        }
-    }
+    // used to trace calls in debug mode, not used in production
+    static DWORD WINAPI ServiceCtrlHandlerEx(DWORD control_code,
+                                             DWORD event_type, void* event_data,
+                                             void* context);
 
     // The singleton service instance.
     std::unique_ptr<BaseServiceProcessor> processor_;

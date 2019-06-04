@@ -120,7 +120,23 @@ def InterProcessLock(filename):
         finally:
             os.umask(old_umask)
 
-        fcntl.flock(fd, fcntl.LOCK_EX)
+        # Handle the case where the file has been renamed/overwritten between
+        # file creation and locking
+        while True:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+
+            try:
+                fd_new = os.open(filename, os.O_RDONLY | os.O_CREAT, 0666)
+            finally:
+                os.umask(old_umask)
+
+            if os.path.sameopenfile(fd, fd_new):
+                os.close(fd_new)
+                break
+            else:
+                os.close(fd)
+                fd = fd_new
+
         yield
         fcntl.flock(fd, fcntl.LOCK_UN)
     finally:

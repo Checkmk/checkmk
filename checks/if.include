@@ -344,6 +344,7 @@ def inventory_if_common(info, has_nodeinfo=False):
                 return True
         return False
 
+    current_host_name = host_name()
     group_patterns = _prepare_if_group_patterns_from_conf()
     for settings in settings_sets:
         global_seen_items = set()
@@ -402,10 +403,8 @@ def inventory_if_common(info, has_nodeinfo=False):
             else:
                 duplicates.add(item)
 
-            current_host_name = host_name()
-
             # Prepare grouped interfaces
-            is_only_in_group = False
+            discover_single_interface = True
             for group_name, attrs in group_patterns.items():
                 if current_host_name not in attrs["group_patterns"]:
                     continue
@@ -426,7 +425,7 @@ def inventory_if_common(info, has_nodeinfo=False):
                     continue
 
                 if attrs["group_presence"] == "instead":
-                    is_only_in_group = True
+                    discover_single_interface = False
 
                 have_groups.setdefault(group_name, {
                     "group_type": attrs["group_type"],
@@ -446,17 +445,17 @@ def inventory_if_common(info, has_nodeinfo=False):
                         "interfaces": [],
                         "group_type": "single_host",
                         "group_patterns": {
-                            host_name(): {
+                            current_host_name: {
                                 "items": [],
                                 "iftype": ifType
                             }
                         },
                     })
                 have_groups[ifGroup]["interfaces"].append((saveint(ifSpeed), ifOperStatus, ifType))
-                is_only_in_group = True
+                discover_single_interface = False
 
             # Prepare single interfaces
-            if not is_only_in_group and ifIndex not in seen_indicies and \
+            if discover_single_interface and ifIndex not in seen_indicies and \
                ifType in porttypes and ifOperStatus in portstates and \
                port_match(ifAlias, match_alias) and port_match(ifDescr, match_desc):
                 params = {}

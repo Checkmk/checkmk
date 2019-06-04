@@ -1,0 +1,11 @@
+Title: nginx_status: Discover more than one NGINX services and do not modify orig. agent data
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p17
+Date: 1559645961
+
+

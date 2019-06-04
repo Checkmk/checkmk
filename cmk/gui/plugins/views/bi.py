@@ -592,7 +592,7 @@ def paint_aggregated_tree_state(row, force_renderer_cls=None):
 
     renderer = cls(
         row,
-        omit_root=False,
+        omit_root=(treetype == "boxes-omit-root"),
         expansion_level=expansion_level,
         only_problems=only_problems,
         lazy=True,

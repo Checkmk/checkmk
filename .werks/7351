@@ -1,0 +1,18 @@
+Title: Removed "checks" configuration variable
+Level: 2
+Component: core
+Compatible: incomp
+Edition: cre
+Version: 1.6.0b1
+Date: 1559663441
+Class: fix
+
+The Checkmk configuration variable <tt>checks</tt> was removed
+
+It was used in hand configured Checkmk configurations in the early days. This
+variable was never configurable by WATO.  In case you configured Check_MK only
+via WATO you will not be affected by this issue.
+
+In case you need to migrate your configuration, you could move the
+configuration to the WATO ruleset "Classical Active and Passive Monitoring
+Checks".

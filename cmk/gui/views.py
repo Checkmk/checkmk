@@ -105,9 +105,8 @@ from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
     link_to_view, url_to_view, row_id, group_value, view_is_enabled, paint_age, declare_1to1_sorter,
     declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
     cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
-    get_custom_var, get_perfdata_nth_value, query_data, do_query_data, join_row, get_view_infos,
-    replace_action_url_macros, Cell, JoinCell, register_legacy_command, register_painter,
-    register_sorter,
+    get_custom_var, get_perfdata_nth_value, join_row, get_view_infos, replace_action_url_macros,
+    Cell, JoinCell, register_legacy_command, register_painter, register_sorter,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -1268,7 +1267,7 @@ def show_view(view, view_renderer, only_count=False):
         return cmk.gui.plugins.views.availability.render_availability_page(
             view, context, filterheaders)
 
-    query = filterheaders + view.spec.get("add_headers", "")
+    headers = filterheaders + view.spec.get("add_headers", "")
 
     # Sorting - use view sorters and URL supplied sorters
     if only_count:
@@ -1291,7 +1290,7 @@ def show_view(view, view_renderer, only_count=False):
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
-        rows = view.datasource.table.query(view, columns, query, view.only_sites, view.row_limit,
+        rows = view.datasource.table.query(view, columns, headers, view.only_sites, view.row_limit,
                                            all_active_filters)
 
         # Now add join information, if there are join columns
@@ -1500,14 +1499,14 @@ def _do_table_join(view, master_rows, master_filters, sorters):
         join_filters.append(cell.livestatus_filter(join_slave_column))
 
     join_filters.append("Or: %d" % len(join_filters))
-    query = "%s%s\n" % (master_filters, "\n".join(join_filters))
-    rows = query_data(
-        datasource=slave_ds,
+    headers = "%s%s\n" % (master_filters, "\n".join(join_filters))
+    rows = slave_ds.table.query(
+        view,
         columns=list(set([join_master_column, join_slave_column] + join_columns)),
-        add_headers=query,
+        headers=headers,
         only_sites=view.only_sites,
         limit=None,
-        tablename=slave_ds.table.table_name)
+        all_active_filters=None)
     per_master_entry = {}
     current_key = None
     current_entry = None

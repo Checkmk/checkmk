@@ -33,6 +33,7 @@ import time
 import re
 import hashlib
 import traceback
+from typing import Tuple, List, Optional, Union, Text, Dict, Callable, Type  # pylint: disable=unused-import
 import six
 
 import livestatus
@@ -661,7 +662,7 @@ class RowTable(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
         raise NotImplementedError()
 
 
@@ -674,10 +675,94 @@ class RowTableLivestatus(RowTable):
     def table_name(self):
         return self._table_name
 
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
-        # TODO: Move query_data into this class
-        return query_data(
-            view.datasource, columns, query, only_sites, view.row_limit, tablename=self._table_name)
+    def _prepare_columns(self, columns, datasource):
+        merge_column = datasource.merge_by
+        if merge_column:
+            columns = [merge_column] + columns
+
+        # Most layouts need current state of object in order to
+        # choose background color - even if no painter for state
+        # is selected. Make sure those columns are fetched. This
+        # must not be done for the table 'log' as it cannot correctly
+        # distinguish between service_state and host_state
+        if "log" not in datasource.infos:
+            state_columns = []
+            if "service" in datasource.infos:
+                state_columns += ["service_has_been_checked", "service_state"]
+            if "host" in datasource.infos:
+                state_columns += ["host_has_been_checked", "host_state"]
+            for c in state_columns:
+                if c not in columns:
+                    columns.append(c)
+
+        # Remove columns which are implicitely added by the datasource
+        return [c for c in columns if c not in datasource.add_columns]
+
+    def prepare_lql(self, columns, headers):
+        query = "GET %s\n" % self.table_name
+        query += "Columns: %s\n" % " ".join(columns)
+        query += headers
+        return query
+
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        """Retrieve data via livestatus, convert into list of dicts,
+
+        view: view object
+        columns: the list of livestatus columns to query
+        headers: query headers
+        only_sites: list of sites the query is limited to
+        limit: maximum number of data rows to query
+        all_active_filters: Momentarily unused
+        """
+
+        datasource = view.datasource
+
+        columns = self._prepare_columns(columns, datasource)
+        query = self.prepare_lql(columns, headers + datasource.add_headers)
+        data = query_livestatus(query, only_sites, limit, datasource.auth_domain)
+
+        if datasource.merge_by:
+            data = _merge_data(data, columns)
+        # convert lists-rows into dictionaries.
+        # performance, but makes live much easier later.
+        columns = ["site"] + columns + datasource.add_columns
+        rows = [dict(zip(columns, row)) for row in data]
+
+        return datasource.post_process(rows)
+
+
+def query_livestatus(query, only_sites, limit, auth_domain):
+
+    sites.live().set_prepend_site(True)
+
+    if limit is not None:
+        sites.live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
+    else:
+        sites.live().set_limit(None)
+
+    if all((
+            config.debug_livestatus_queries,
+            html.output_format == "html",
+            display_options.enabled(display_options.W),
+    )):
+        html.open_div(class_=["livestatus", "message"])
+        html.tt(query.replace('\n', '<br>\n'))
+        html.close_div()
+
+    if only_sites is None:
+        only_sites = []
+
+    if only_sites:
+        sites.live().set_only_sites(only_sites)
+
+    sites.live().set_auth_domain(auth_domain)
+    data = sites.live().query(query)
+    sites.live().set_auth_domain("read")
+    sites.live().set_only_sites(None)
+    sites.live().set_prepend_site(False)
+    sites.live().set_limit()  # removes limit
+
+    return data
 
 
 # TODO: Return value of render() could be cleaned up e.g. to a named tuple with an
@@ -896,12 +981,12 @@ def register_sorter(ident, spec):
 
 
 # TODO: Refactor to plugin_registries
-multisite_builtin_views = {}
-view_hooks = {}
-inventory_displayhints = {}
+multisite_builtin_views = {}  # type: Dict
+view_hooks = {}  # type: Dict
+inventory_displayhints = {}  # type: Dict
 # For each view a function can be registered that has to return either True
 # or False to show a view as context link
-view_is_enabled = {}
+view_is_enabled = {}  # type: Dict
 
 
 def view_title(view):
@@ -1173,86 +1258,6 @@ def get_perfdata_nth_value(row, n, remove_unit=False):
         return number
     except Exception as e:
         return str(e)
-
-
-# Retrieve data via livestatus, convert into list of dicts,
-# prepare row-function needed for painters
-# datasource: the datasource object as defined in plugins/views/datasources.py
-# columns: the list of livestatus columns to query
-# add_headers: additional livestatus headers to add
-# only_sites: list of sites the query is limited to
-# limit: maximum number of data rows to query
-def query_data(datasource, columns, add_headers, only_sites=None, limit=None, tablename=None):
-    if only_sites is None:
-        only_sites = []
-
-    if tablename is None:
-        tablename = datasource.table.table_name
-
-    add_headers += datasource.add_headers
-    merge_column = datasource.merge_by
-    if merge_column:
-        columns = [merge_column] + columns
-
-    # Most layouts need current state of object in order to
-    # choose background color - even if no painter for state
-    # is selected. Make sure those columns are fetched. This
-    # must not be done for the table 'log' as it cannot correctly
-    # distinguish between service_state and host_state
-    if "log" not in datasource.infos:
-        state_columns = []
-        if "service" in datasource.infos:
-            state_columns += ["service_has_been_checked", "service_state"]
-        if "host" in datasource.infos:
-            state_columns += ["host_has_been_checked", "host_state"]
-        for c in state_columns:
-            if c not in columns:
-                columns.append(c)
-
-    # Remove columns which are implicitely added by the datasource
-    columns = [c for c in columns if c not in datasource.add_columns]
-    query = "GET %s\n" % tablename
-    rows = do_query_data(query, columns, datasource.add_columns, merge_column, add_headers,
-                         only_sites, limit, datasource.auth_domain)
-
-    return datasource.post_process(rows)
-
-
-def do_query_data(query, columns, add_columns, merge_column, add_headers, only_sites, limit,
-                  auth_domain):
-    query += "Columns: %s\n" % " ".join(columns)
-    query += add_headers
-    sites.live().set_prepend_site(True)
-
-    if limit is not None:
-        sites.live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
-    else:
-        sites.live().set_limit(None)
-
-    if config.debug_livestatus_queries \
-            and html.output_format == "html" and display_options.enabled(display_options.W):
-        html.open_div(class_=["livestatus", "message"])
-        html.tt(query.replace('\n', '<br>\n'))
-        html.close_div()
-
-    if only_sites:
-        sites.live().set_only_sites(only_sites)
-    sites.live().set_auth_domain(auth_domain)
-    data = sites.live().query(query)
-    sites.live().set_auth_domain("read")
-    sites.live().set_only_sites(None)
-    sites.live().set_prepend_site(False)
-    sites.live().set_limit()  # removes limit
-
-    if merge_column:
-        data = _merge_data(data, columns)
-
-    # convert lists-rows into dictionaries.
-    # performance, but makes live much easier later.
-    columns = ["site"] + columns + add_columns
-    rows = [dict(zip(columns, row)) for row in data]
-
-    return rows
 
 
 # Merge all data rows with different sites but the same value

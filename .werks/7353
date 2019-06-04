@@ -1,0 +1,50 @@
+Title: Changed format of host tags in hosts.mk configuration files
+Level: 2
+Component: core
+Compatible: incomp
+Edition: cre
+Version: 1.6.0b1
+Date: 1559671869
+Class: fix
+
+The internal data format of the Checkmk host and cluster definitions,
+normally configured via WATO "Hosts" pages has been changed.
+
+If you only use WATO for configuring Checkmk this change will not be relevant
+for you, since the data format will be changed automatically during update to
+1.6x. Have a look at #7352 for further information on the update mechanism.
+
+In case you edit hosts.mk (or other .mk) files manually or via script to define
+the <tt>all_hosts</tt> or <tt>clusters</tt> configuration options, you will
+likely have to change your scripts or at least the configuration files.
+
+A host definition with it's tags in the old format looks like this:
+
+F+:hosts.mk
+all_hosts += [
+   "my-host|cmk-agent|prod|lan|piggyback|no-snmp",
+]
+F-:
+
+The first element is the host name and the tags of the host are listed in the
+same string, separated via pipe characters. There is no information about the
+tag group the configured tag is related with.
+
+The new structure looks like this:
+
+F+:hosts.mk:
+all_hosts += [
+    "my-host",
+]
+
+host_tags["heute"] = {
+    "agent": "cmk-agent",
+    "criticality": "prod",
+    "networking": "lan",
+    "piggyback": "piggyback",
+    "snmp_ds": "no-snmp",
+}
+F-:
+
+In the <tt>host_tags</tt> dictionary the keys are the tag groups (as defined in WATO)
+and the values are the tags configured for each group.

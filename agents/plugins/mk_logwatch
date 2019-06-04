@@ -399,12 +399,16 @@ def save_status(status, file_name):
             f.write("%s|%d|%d\n" % (filename, offset, inode))
 
 
-def next_line(file_handle, continuation_line):
+def next_line(file_handle, continuation_line, encoding):
     if continuation_line is not None:
         return continuation_line, None
 
     try:
-        line = file_handle.next()
+        line = file_handle.next().decode(encoding)
+    except StopIteration:
+        return None, None
+
+    try:
         # Avoid parsing of (yet) incomplete lines (when actual application
         # is just in the process of writing)
         # Just check if the line ends with a \n. This handles \n and \r\n
@@ -414,10 +418,11 @@ def next_line(file_handle, continuation_line):
             return None, None
         return line, None
     except:
+        # I'm not sure if we still need this. It no longer catches StopIteration
         return None, None
 
 
-def is_inode_cabable(path):
+def is_inode_capable(path):
     system = platform.system()
     if system == "Windows":
         volume_name = "%s:\\\\" % path.split(":", 1)[0]
@@ -426,6 +431,24 @@ def is_inode_cabable(path):
         volume_type = volume_info[-1]
         return "ntfs" in volume_type.lower()
     return system == "Linux"
+
+
+def get_file_encoding(file_desc):
+    if platform.system() != "Windows":
+        return "utf-8"
+
+    # Some windows files are encoded in utf_16
+    # Peak the first two bytes to determine the encoding...
+    save_pos = os.lseek(file_desc, 0, os.SEEK_CUR)
+    os.lseek(file_desc, 0, os.SEEK_SET)
+    first_two_bytes = file_desc.read(2)
+    os.lseek(file_desc, save_pos, os.SEEK_SET)
+
+    if first_two_bytes == "\xFF\xFE":
+        return "utf_16"
+    if first_two_bytes == "\xFE\xFF":
+        return "utf_16_be"
+    return None
 
 
 def process_logfile(logfile, patterns, opt, status):
@@ -439,7 +462,7 @@ def process_logfile(logfile, patterns, opt, status):
     and None in case the logfile cannot be opened.
     """
     if patterns is None:
-        return ['[[[%s:missing]]]\n' % logfile]
+        return [u"[[[%s:missing]]]\n" % logfile]
 
     # Look at which file offset we have finished scanning
     # the logfile last time. If we have never seen this file
@@ -447,16 +470,16 @@ def process_logfile(logfile, patterns, opt, status):
     offset, prev_inode = status.get(logfile, (-1, -1))
     try:
         file_desc = os.open(logfile, os.O_RDONLY)
-        if not is_inode_cabable(logfile):
+        if not is_inode_capable(logfile):
             inode = 1  # Create a dummy inode
         else:
             inode = os.fstat(file_desc).st_ino
     except Exception:
         if debug():
             raise
-        return ['[[[%s:cannotopen]]]\n' % logfile]
+        return [u"[[[%s:cannotopen]]]\n" % logfile]
 
-    output = ['[[[%s]]]\n' % logfile]
+    output = [u"[[[%s]]]\n" % logfile]
 
     # Seek to the current end in order to determine file size
     # And set the current pointer to the file end
@@ -490,24 +513,11 @@ def process_logfile(logfile, patterns, opt, status):
     if offset > current_end:
         offset = 0
 
+    encoding = get_file_encoding(file_desc)
+
     # now seek to offset where interesting data begins
     os.lseek(file_desc, offset, os.SEEK_SET)
-    if platform.system() == "Windows":
-        import io  # Available with python 2.6
-        # Some windows files are encoded in utf_16
-        # Peak the first two bytes to determine the encoding...
-        peak_handle = os.fdopen(file_desc, "rb")
-        first_two_bytes = peak_handle.read(2)
-        use_encoding = None
-        if first_two_bytes == "\xFF\xFE":
-            use_encoding = "utf_16"
-        elif first_two_bytes == "\xFE\xFF":
-            use_encoding = "utf_16_be"
-
-        os.lseek(file_desc, offset, os.SEEK_SET)
-        file_handle = io.open(file_desc, encoding=use_encoding)
-    else:
-        file_handle = os.fdopen(file_desc)
+    file_handle = os.fdopen(file_desc)
 
     worst = -1
     warnings_and_errors = []
@@ -516,18 +526,18 @@ def process_logfile(logfile, patterns, opt, status):
     pushed_back_line = None
 
     while True:
-        line, pushed_back_line = next_line(file_handle, pushed_back_line)
+        line, pushed_back_line = next_line(file_handle, pushed_back_line, encoding)
         if line is None:
             break  # End of file
 
         # Handle option maxlinesize
         if opt.maxlinesize is not None and len(line) > opt.maxlinesize:
-            line = line[:opt.maxlinesize] + "[TRUNCATED]\n"
+            line = line[:opt.maxlinesize] + u"[TRUNCATED]\n"
 
         lines_parsed += 1
         # Check if maximum number of new log messages is exceeded
         if opt.maxlines is not None and lines_parsed > opt.maxlines:
-            warnings_and_errors.append("%s Maximum number (%d) of new log messages exceeded.\n" % (
+            warnings_and_errors.append(u"%s Maximum number (%d) of new log messages exceeded.\n" % (
                 opt.overflow,
                 opt.maxlines,
             ))
@@ -540,7 +550,7 @@ def process_logfile(logfile, patterns, opt, status):
         if opt.maxtime is not None and lines_parsed % 100 == 10 \
             and time.time() - start_time > opt.maxtime:
             warnings_and_errors.append(
-                "%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
+                u"%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
                     opt.overflow,
                     opt.maxtime,
                 ))
@@ -560,14 +570,16 @@ def process_logfile(logfile, patterns, opt, status):
                 for cont_pattern in cont_patterns:
                     if isinstance(cont_pattern, int):  # add that many lines
                         for _unused_x in range(cont_pattern):
-                            cont_line, pushed_back_line = next_line(file_handle, pushed_back_line)
+                            cont_line, pushed_back_line = next_line(file_handle, pushed_back_line,
+                                                                    encoding)
                             if cont_line is None:  # end of file
                                 break
                             line = line[:-1] + "\1" + cont_line
 
                     else:  # pattern is regex
                         while True:
-                            cont_line, pushed_back_line = next_line(file_handle, pushed_back_line)
+                            cont_line, pushed_back_line = next_line(file_handle, pushed_back_line,
+                                                                    encoding)
                             if cont_line is None:  # end of file
                                 break
                             elif cont_pattern.search(cont_line[:-1]):
@@ -601,7 +613,7 @@ def process_logfile(logfile, patterns, opt, status):
     # Handle option maxfilesize, regardless of warning or errors that have happened
     if opt.maxfilesize and (offset // opt.maxfilesize) < (new_offset // opt.maxfilesize):
         warnings_and_errors.append(
-            "%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
+            u"%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
             (TTY_COLORS['W'] if sys.stdout.isatty() else '', opt.maxfilesize,
              new_offset // opt.maxfilesize, TTY_COLORS['normal'] if sys.stdout.isatty() else ''))
 
@@ -862,7 +874,7 @@ def main():
 
     for logfile, (patterns, options) in parse_sections(logfiles_config):
         output = process_logfile(logfile, patterns, options, status)
-        sys.stdout.write(''.join(output))
+        sys.stdout.write(''.join(output).encode('utf-8'))
 
     if not debug():
         save_status(status, status_filename)

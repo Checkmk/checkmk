@@ -40,6 +40,7 @@ import six
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.globals import current_app
 import cmk.gui.mkeventd
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -1076,7 +1077,7 @@ class CheckTypeSelection(DualListChoice):
         super(CheckTypeSelection, self).__init__(rows=25, **kwargs)
 
     def get_elements(self):
-        checks = watolib.check_mk_local_automation("get-check-information")
+        checks = get_check_information()
         elements = [(cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()]
         elements.sort()
         return elements
@@ -2096,3 +2097,11 @@ def rule_option_elements(disabling=True):
              )),
         ]
     return elements
+
+
+def get_check_information():
+    cache_id = "automation_get_check_information"
+    if cache_id not in current_app.g:
+        current_app.g[cache_id] = watolib.check_mk_local_automation("get-check-information")
+
+    return current_app.g[cache_id]

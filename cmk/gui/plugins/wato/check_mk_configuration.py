@@ -32,7 +32,6 @@ import cmk.utils.paths
 
 import cmk.gui.sites as sites
 import cmk.gui.config as config
-import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
@@ -97,6 +96,7 @@ from cmk.gui.plugins.wato import (
     CheckTypeSelection,
     TimeperiodSelection,
     HTTPProxyInput,
+    get_check_information,
 )
 
 from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
@@ -5047,7 +5047,7 @@ class RulespecServiceDescriptionTranslation(HostRulespec):
 
 
 def get_snmp_checktypes():
-    checks = watolib.check_mk_local_automation("get-check-information")
+    checks = get_check_information()
     types = [(cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
              for (cn, c) in checks.items()
              if c['snmp']]
@@ -5056,7 +5056,7 @@ def get_snmp_checktypes():
 
 
 def get_snmp_section_names():
-    checks = watolib.check_mk_local_automation("get-check-information")
+    checks = get_check_information()
     snmp_section_names = set(cn.split(".", 1)[0] for (cn, c) in checks.items() if c['snmp'])
     section_choices = [(sn, sn) for sn in snmp_section_names]
     return [(None, _('All SNMP Checks'))] + sorted(section_choices)

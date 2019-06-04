@@ -280,7 +280,7 @@ def test_ip_in_subnetwork(mk_logwatch):
         (
             __file__,
             [
-                ('W', re.compile('^[^u]*W.*I match only myself'), [], []),
+                ('W', re.compile('^[^u]*W.*I match only myself'), [], []),  # write this: ö°üßä
                 ('I', re.compile('.*'), [], []),
             ],
             {
@@ -291,7 +291,7 @@ def test_ip_in_subnetwork(mk_logwatch):
             },
             [
                 u"[[[%s]]]\n" % __file__,
-                u"W                 ('W', re.compile('^[^u]*W.*I match only myself'), [], []),\n"
+                u"W                 ('W', re.compile('^[^u]*W.*I match only myself'), [], []),  # write this: ö°üßä\n"
             ],
         ),
         (
@@ -326,7 +326,7 @@ def test_process_logfile(mk_logwatch, logfile, patterns, opt_raw, status, expect
     opt.values.update(opt_raw)
 
     output = mk_logwatch.process_logfile(logfile, patterns, opt, status)
-    # TODO: assert all(isinstance(item, unicode) for item in output)
+    assert all(isinstance(item, unicode) for item in output)
     assert output == expected_output
     if len(output) > 1:
         assert logfile in status

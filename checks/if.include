@@ -407,9 +407,6 @@ def inventory_if_common(info, has_nodeinfo=False):
             # Prepare grouped interfaces
             is_only_in_group = False
             for group_name, attrs in group_patterns.items():
-                group_type = attrs["group_type"]
-                group_presence = attrs["group_presence"]
-
                 if current_host_name not in attrs["group_patterns"]:
                     continue
 
@@ -428,18 +425,16 @@ def inventory_if_common(info, has_nodeinfo=False):
                 if not (match_item and match_type):
                     continue
 
-                if group_presence == "instead":
+                if attrs["group_presence"] == "instead":
                     is_only_in_group = True
 
-                have_groups.setdefault(
-                    group_name, {
-                        "group_presence": group_presence,
-                        "group_type": group_type,
-                        "group_patterns": attrs["group_patterns"],
-                    })
+                have_groups.setdefault(group_name, {
+                    "group_type": attrs["group_type"],
+                    "group_patterns": attrs["group_patterns"],
+                })
 
                 # If we're on a cluster, we have no chance calculating expected speed
-                if group_type == "single_host":
+                if attrs["group_type"] == "single_host":
                     have_groups[group_name].setdefault("interfaces", [])
                     have_groups[group_name]["interfaces"].append((saveint(ifSpeed), ifOperStatus,
                                                                   ifType))
@@ -450,7 +445,6 @@ def inventory_if_common(info, has_nodeinfo=False):
                     ifGroup, {
                         "interfaces": [],
                         "group_type": "single_host",
-                        "group_presence": "instead",
                         "group_patterns": {
                             host_name(): {
                                 "items": [],
@@ -773,8 +767,7 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
             group_members=group_members,
             group_name=group_name)
 
-    return check_if_common_single(
-        item, params, info, has_nodeinfo=has_nodeinfo, group_name=group_name)
+    return check_if_common_single(item, params, info, has_nodeinfo=has_nodeinfo)
 
 
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.

@@ -674,13 +674,14 @@ class APICallRules(APICallCollection):
 
         # Verify all rules
         rule_vs = watolib.Ruleset(ruleset_name).rulespec.valuespec
+
+        # Binary rulesets currently don't have a valuespec attribute set.
+        if rule_vs is None:
+            rule_vs = Checkbox()
+
         for folder_path, rules in new_ruleset.items():
             for rule in rules:
                 value = rule["value"]
-
-                # Binary rulesets currently don't have a valuespec attribute set.
-                if rule_vs is None:
-                    rule_vs = Checkbox()
 
                 try:
                     rule_vs.validate_datatype(value, "test_value")

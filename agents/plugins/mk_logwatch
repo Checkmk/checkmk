@@ -35,16 +35,6 @@ import socket
 import binascii
 import platform
 
-from collections import namedtuple  # from Python2.6, Python3.1 onwards
-
-# logical: LogfilesConfig([file, ...], (level, compiled, [continuation pattern, ...], [rewrite pattern, ...]))
-# types: LogfilesConfig[List[str], Tuple[str, sre.SRE_Pattern object, List[str], List[str]]]
-LogfilesConfig = namedtuple('LogfilesConfig', 'files, patterns')
-
-# logical: ClusterConfig(name, ips_or_subnets)
-# types: ClusterConfig[str, List[str]]
-ClusterConfig = namedtuple('ClusterConfig', 'name, ips_or_subnets')
-
 MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
 MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
@@ -412,7 +402,7 @@ def next_line(file_handle, continuation_line):
         # Just check if the line ends with a \n. This handles \n and \r\n
         if not line.endswith("\n"):
             begin_of_line_offset = file_handle.tell() - len(line)
-            os.lseek(file_handle.fileno(), begin_of_line_offset, 0)
+            os.lseek(file_handle.fileno(), begin_of_line_offset, os.SEEK_SET)
             return None, None
         return line, None
     except:
@@ -465,7 +455,7 @@ def process_logfile(logfile, patterns, opt, status):
         if not is_inode_cabable(logfile):
             inode = 1  # Create a dummy inode
         else:
-            inode = os.fstat(file_desc)[1]  # 1 = st_ino
+            inode = os.fstat(file_desc).st_ino
     except Exception:
         if debug():
             raise
@@ -475,7 +465,7 @@ def process_logfile(logfile, patterns, opt, status):
 
     # Seek to the current end in order to determine file size
     # And set the current pointer to the file end
-    current_end = os.lseek(file_desc, 0, 2)  # os.SEEK_END not available in Python 2.4
+    current_end = os.lseek(file_desc, 0, os.SEEK_END)
     status[logfile] = current_end, inode
 
     # If we have never seen this file before, we do not want
@@ -506,7 +496,7 @@ def process_logfile(logfile, patterns, opt, status):
         offset = 0
 
     # now seek to offset where interesting data begins
-    os.lseek(file_desc, offset, 0)  # os.SEEK_SET not available in Python 2.4
+    os.lseek(file_desc, offset, os.SEEK_SET)
     if platform.system() == "Windows":
         import io  # Available with python 2.6
         # Some windows files are encoded in utf_16
@@ -519,7 +509,7 @@ def process_logfile(logfile, patterns, opt, status):
         elif first_two_bytes == "\xFE\xFF":
             use_encoding = "utf_16_be"
 
-        os.lseek(file_desc, offset, 0)  # os.SEEK_SET not available in Python 2.4
+        os.lseek(file_desc, offset, os.SEEK_SET)
         file_handle = io.open(file_desc, encoding=use_encoding)
     else:
         file_handle = os.fdopen(file_desc)
@@ -608,7 +598,7 @@ def process_logfile(logfile, patterns, opt, status):
             continue
         warnings_and_errors.append("%s%s %s%s\n" % (color, level, line[:-1], tty_normal))
 
-    new_offset = os.lseek(file_desc, 0, 1)  # os.SEEK_CUR not available in Python 2.4
+    new_offset = os.lseek(file_desc, 0, os.SEEK_CUR)
     status[logfile] = new_offset, inode
 
     # Handle option maxfilesize, regardless of warning or errors that have happened
@@ -716,6 +706,20 @@ class Options(object):
             raise
 
 
+class LogfilesConfig(object):
+    def __init__(self, files, patterns):
+        super(LogfilesConfig, self).__init__()
+        self.files = files
+        self.patterns = patterns
+
+
+class ClusterConfig(object):
+    def __init__(self, name, ips_or_subnets):
+        super(ClusterConfig, self).__init__()
+        self.name = name
+        self.ips_or_subnets = ips_or_subnets
+
+
 def find_matching_logfiles(glob_pattern):
     """
     Glob matching of hard linked, unbroken soft linked/symlinked files.
@@ -742,16 +746,16 @@ def parse_sections(logfiles_config):
     """
     logfile_patterns = {}
 
-    for filenames, patterns in logfiles_config:
+    for cfg in logfiles_config:
 
         # First read all the options like 'maxlines=100' or 'maxtime=10'
         opt = Options()
-        for item in filenames:
+        for item in cfg.files:
             if '=' in item:
                 opt.set_opt(item)
 
         # Then handle the file patterns
-        for glob_pattern in (f for f in filenames if '=' not in f):
+        for glob_pattern in (f for f in cfg.files if '=' not in f):
             logfiles = find_matching_logfiles(glob_pattern)
             if opt.regex is not None:
                 logfiles = [f for f in logfiles if opt.regex.search(f)]
@@ -759,7 +763,7 @@ def parse_sections(logfiles_config):
                 logfile_patterns[glob_pattern] = (None, None)
             for logfile in logfiles:
                 present_patterns, present_options = logfile_patterns.get(logfile, ([], Options()))
-                present_patterns.extend(patterns)
+                present_patterns.extend(cfg.patterns)
                 present_options.update(opt)
                 logfile_patterns[logfile] = (present_patterns, present_options)
 

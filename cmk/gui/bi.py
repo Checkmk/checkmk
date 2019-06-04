@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import hashlib
 import re
 import pprint
@@ -2765,7 +2766,9 @@ def render_tree_json(row):
     return "", render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
-class FoldableTreeRenderer(object):
+class ABCFoldableTreeRenderer(object):
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True):
         self._row = row
         self._omit_root = omit_root
@@ -2783,6 +2786,7 @@ class FoldableTreeRenderer(object):
             html.set_tree_states('bi', self._treestate)
             html.save_tree_states()
 
+    @abc.abstractmethod
     def css_class(self):
         raise NotImplementedError()
 
@@ -2810,6 +2814,7 @@ class FoldableTreeRenderer(object):
         self._show_subtree(tree, path=[tree[2]["title"]], show_host=len(affected_hosts) > 1)
         html.close_div()
 
+    @abc.abstractmethod
     def _show_subtree(self, tree, path, show_host):
         raise NotImplementedError()
 
@@ -2857,6 +2862,7 @@ class FoldableTreeRenderer(object):
     def _get_mousecode(self, path):
         return "%s(this, %d);" % (self._toggle_js_function(), self._omit_content(path))
 
+    @abc.abstractmethod
     def _toggle_js_function(self):
         raise NotImplementedError()
 
@@ -2892,6 +2898,7 @@ class FoldableTreeRenderer(object):
             else:
                 html.a(service.replace(" ", "&nbsp;"), href=service_url)
 
+    @abc.abstractmethod
     def _show_node(self, tree, show_host, mousecode=None, img_class=None):
         raise NotImplementedError()
 
@@ -2924,7 +2931,7 @@ class FoldableTreeRenderer(object):
         }.get(state, _("??"))
 
 
-class FoldableTreeRendererTree(FoldableTreeRenderer):
+class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
     def css_class(self):
         return "aggrtree"
 
@@ -3045,7 +3052,7 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
         html.span(output, class_=["content", "output"])
 
 
-class FoldableTreeRendererBoxes(FoldableTreeRenderer):
+class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
     def css_class(self):
         return "aggrtree_box"
 
@@ -3109,7 +3116,7 @@ class FoldableTreeRendererBoxes(FoldableTreeRenderer):
         return  # No assume icon with boxes
 
 
-class FoldableTreeRendererTable(FoldableTreeRendererTree):
+class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
     _mirror = False
 
     def css_class(self):
@@ -3174,11 +3181,11 @@ class FoldableTreeRendererTable(FoldableTreeRendererTree):
         return leaves
 
 
-class FoldableTreeRendererBottomUp(FoldableTreeRendererTable):
+class FoldableTreeRendererBottomUp(ABCFoldableTreeRendererTable):
     pass
 
 
-class FoldableTreeRendererTopDown(FoldableTreeRendererTable):
+class FoldableTreeRendererTopDown(ABCFoldableTreeRendererTable):
     _mirror = True
 
 

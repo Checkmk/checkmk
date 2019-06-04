@@ -84,11 +84,12 @@ def get_cmk_download_credentials():
 
 def wait_until(condition, timeout=1, interval=0.1):
     start = time.time()
-    while not condition() and time.time() - start < timeout:
+    while time.time() - start < timeout:
+        if condition():
+            return  # Success. Stop waiting...
         time.sleep(interval)
-    if not condition():
-        raise Exception(
-            "Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
+
+    raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
 class APIError(Exception):

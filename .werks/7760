@@ -1,0 +1,21 @@
+Title: Web API: Changed format of rules in get_ruleset/set_ruleset
+Level: 2
+Component: wato
+Compatible: incomp
+Edition: cre
+Version: 1.6.0b1
+Date: 1559672459
+Class: fix
+
+The Web API calls <tt>get_ruleset</tt> and <tt>set_ruleset</tt>, that were
+added with #4699 in Checkmk 1.5 have been changed in an incompatible way.
+If you use these API calls in your scripts, you will have to change these
+script to be compatible with Checkmk 1.6 and newer.
+
+The change was caused by the change of the internal rule data structure, which
+is described in detail in #7352.
+
+The API calls now work with the internal rule format with the difference that
+the <tt>host_folder</tt> condition is removed from the rules returned by
+<tt>get_ruleset</tt> and automatically added to the rules that are written with
+<tt>set_ruleset</tt>.

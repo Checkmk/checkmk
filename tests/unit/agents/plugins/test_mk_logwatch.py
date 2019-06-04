@@ -1,8 +1,11 @@
 # -*- encoding: utf-8
 # pylint: disable=redefined-outer-name
-import os
 import imp
+import os
+import re
+
 import pytest
+
 from testlib import cmk_path  # pylint: disable=import-error
 
 
@@ -24,6 +27,41 @@ def mk_logwatch(request):
 
         if action == 'setup':
             yield imp.load_source("mk_logwatch", agent_path)
+
+
+def test_options_defaults(mk_logwatch):
+    opt = mk_logwatch.Options()
+    for attribute in ('maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex', 'overflow',
+                      'nocontext'):
+        assert getattr(opt, attribute) == mk_logwatch.Options.DEFAULTS[attribute]
+
+
+@pytest.mark.parametrize("option_string, key, expected_value", [
+    ("maxfilesize=42", 'maxfilesize', 42),
+    ("maxlines=23", 'maxlines', 23),
+    ("maxlinesize=13", 'maxlinesize', 13),
+    ("maxtime=0.25", 'maxtime', 0.25),
+    ("overflow=I", 'overflow', 'I'),
+    ("nocontext=tRuE", 'nocontext', True),
+    ("nocontext=FALse", 'nocontext', False),
+])
+def test_options_setter(mk_logwatch, option_string, key, expected_value):
+    opt = mk_logwatch.Options()
+    opt.set_opt(option_string)
+    actual_value = getattr(opt, key)
+    assert type(actual_value) == type(expected_value)
+    assert actual_value == expected_value
+
+
+@pytest.mark.parametrize("option_string, expected_pattern, expected_flags", [
+    ("regex=foobar", 'foobar', 0),
+    ("iregex=foobar", 'foobar', re.I),
+])
+def test_options_setter_regex(mk_logwatch, option_string, expected_pattern, expected_flags):
+    opt = mk_logwatch.Options()
+    opt.set_opt(option_string)
+    assert opt.regex.pattern == expected_pattern
+    assert opt.regex.flags == expected_flags
 
 
 def test_get_config_files(mk_logwatch, tmpdir):

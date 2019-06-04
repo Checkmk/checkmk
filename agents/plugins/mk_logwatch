@@ -628,70 +628,92 @@ class Options(object):
     """Options w.r.t. logfile patterns (not w.r.t. cluster mapping)."""
     MAP_OVERFLOW = {'C': 2, 'W': 1, 'I': 0, 'O': 0}
     MAP_BOOL = {'true': True, 'false': False}
+    DEFAULTS = {
+        'maxfilesize': None,
+        'maxlines': None,
+        'maxtime': None,
+        'maxlinesize': None,
+        'regex': None,
+        'overflow': 'C',
+        'nocontext': None,
+    }
 
     def __init__(self):
-        self.maxfilesize = None
-        self.maxlines = None
-        self.maxtime = None
-        self.maxlinesize = None
-        self.regex = None
-        self._overflow = None
-        self.nocontext = None
+        self.values = {}
+
+    @property
+    def maxfilesize(self):
+        return self._attr_or_default('maxfilesize')
+
+    @property
+    def maxlines(self):
+        return self._attr_or_default('maxlines')
+
+    @property
+    def maxtime(self):
+        return self._attr_or_default('maxtime')
+
+    @property
+    def maxlinesize(self):
+        return self._attr_or_default('maxlinesize')
+
+    @property
+    def regex(self):
+        return self._attr_or_default('regex')
 
     @property
     def overflow(self):
-        return 'C' if self._overflow is None else self._overflow
+        return self._attr_or_default('overflow')
+
+    @property
+    def nocontext(self):
+        return self._attr_or_default('nocontext')
+
+    @property
+    def maxoutputsize(self):
+        return self._attr_or_default('maxoutputsize')
+
+    def _attr_or_default(self, key):
+        if key in self.values:
+            return self.values[key]
+        return Options.DEFAULTS[key]
 
     @property
     def overflow_level(self):
         return self.MAP_OVERFLOW[self.overflow]
 
     def update(self, other):
-        for attr in (
-                'maxfilesize',
-                'maxlines',
-                'maxtime',
-                'maxlinesize',
-                'regex',
-                '_overflow',
-                'nocontext',
-        ):
-            new = getattr(other, attr)
-            if new is not None:
-                setattr(self, attr, new)
+        self.values.update(other.values)
 
     def set_opt(self, opt_str):
         try:
             key, value = opt_str.split('=', 1)
             if key in ('maxlines', 'maxlinesize', 'maxfilesize'):
-                setattr(self, key, int(value))
+                self.values[key] = int(value)
             elif key in ('maxtime',):
-                setattr(self, key, float(value))
+                self.values[key] = float(value)
             elif key == 'overflow':
-                if value not in self.MAP_OVERFLOW.keys():
+                if value not in Options.MAP_OVERFLOW.keys():
                     raise ValueError("Invalid overflow: %r (choose from %r)" % (
                         value,
-                        self.MAP_OVERFLOW.keys(),
+                        Options.MAP_OVERFLOW.keys(),
                     ))
-                self._overflow = value
+                self.values['overflow'] = value
             elif key in ('regex', 'iregex'):
-                self.regex = re.compile(value, re.I if key.startswith('i') else 0)
+                self.values['regex'] = re.compile(value, re.I if key.startswith('i') else 0)
             elif key in ('nocontext',):
-                try:
-                    setattr(self, key, self.MAP_BOOL[value.lower()])
-                except KeyError:
+                if value.lower() not in Options.MAP_BOOL.keys():
                     raise ValueError("Invalid %s: %r (choose from %r)" % (
                         key,
                         value,
-                        self.MAP_BOOL.keys(),
+                        Options.MAP_BOOL.keys(),
                     ))
+                self.values[key] = Options.MAP_BOOL[value.lower()]
             else:
                 raise ValueError("Invalid option: %r" % opt_str)
         except ValueError as exc:
-            if debug():
-                raise
             sys.stdout.write("INVALID CONFIGURATION: %s\n" % exc)
-            sys.exit(1)
+            raise
 
 
 def find_matching_logfiles(glob_pattern):

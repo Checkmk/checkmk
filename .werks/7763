@@ -1,0 +1,51 @@
+Title: Introduce labels as host and service properties
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1559674707
+Class: feature
+
+In addition to existing mechanisms like host tags and host custom attributes
+that can be used to define custom host properties we have now added the labels.
+
+The labels are similar to the host tags, but not work exactly in the same way.
+A major difference is, that tags are based on a predefined collection of
+tags (tag groups, tag ids) in Check_MK.  Labels are more flexible and can
+be created ad-hoc.
+
+The explicit labels attribute is inherited from folders to hosts. Each
+object may add a set of labels on it's own to the effective labels.
+
+A label has the format <tt>key:value</tt>. For example <tt>os:windows</tt>.
+
+Each host can have only one value per key. In case folders and hosts
+define a value for the same key, the value next to the host will win.
+
+The rulesets "Host labels" and "Service labels" can be used to assign labels to
+hosts and services in addition to the labels configured using the host
+attribute. Thes ruleset make it possible to assign lables to hosts and services
+based on tags and other host / service conditions.
+
+Labels can be created dynamically during runtime. Host labels can be discovered
+using the HW/SW inventory. To realize this a new HW/SW inventory plugin has been
+added that works on a generic "&lt;&lt;&lt;labels&gt;&gt;&gt;" section (see #7336).
+
+The first agents that produce this section are the Kubernetes, AWS and Azure
+special agents. They creates the label sections for all kind of objects that
+are monitored by Checkmk. This makes Checkmk automatically import the labels
+configured in the target systems.
+
+Depending on the source of a label it is now colorized in different ways to
+make the origin of the label transparent to the user.
+
+The effective labels of hosts and service sare currently visible on WATO
+"Parameters of X" page, mainly for diagnose.
+
+The labels are available on the HW/SW inventory page and can be used as painter,
+sorter and filter in the status views and reports. The painters have been added
+to the host and service detail views.
+
+The labels can currently not be used in rule conditions. This will be added in
+one of the next beta releases.

@@ -111,6 +111,7 @@ class APIError(Exception):
 def InterProcessLock(filename):
     fd = None
     try:
+        print "[%0.2f] Getting lock: %s" % (time.time(), filename)
         # Need to unset umask here to get the permissions we need because
         # os.open() mode is using the given mode not as absolute mode, but
         # respects the umask "mode & ~umask" (See "man 2 open").
@@ -137,8 +138,10 @@ def InterProcessLock(filename):
                 os.close(fd)
                 fd = fd_new
 
+        print "[%0.2f] Have lock: %s" % (time.time(), filename)
         yield
         fcntl.flock(fd, fcntl.LOCK_UN)
+        print "[%0.2f] Released lock: %s" % (time.time(), filename)
     finally:
         if fd:
             os.close(fd)
@@ -294,9 +297,7 @@ class CMKVersion(object):
             time.sleep(1)
 
         # Improve the protection against other test runs installing packages
-        print("Getting install file lock (/tmp/cmk-test-install-version.lock)...")
         with InterProcessLock("/tmp/cmk-test-install-version"):
-            print("Have install file lock")
             cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
             print(cmd)
             sys.stdout.flush()
@@ -573,11 +574,7 @@ class Site(object):
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
-            print("Getting site create lock (/tmp/cmk-test-create-site.lock)...")
             with InterProcessLock("/tmp/cmk-test-create-site"):
-                print("Have site create lock")
-
-                print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
                 p = subprocess.Popen([
                     "/usr/bin/sudo", "/usr/bin/omd", "-V",
                     self.version.version_directory(), "create", "--admin-password", "cmk",
@@ -947,17 +944,13 @@ class Site(object):
             start_again = True
             self.stop()
 
-        sys.stdout.write("Getting livestatus port lock (/tmp/cmk-test-open-livestatus-port)...\n")
         with InterProcessLock("/tmp/cmk-test-livestatus-port"):
-            sys.stdout.write("Have livestatus port lock\n")
             self.set_config("LIVESTATUS_TCP", "on")
             self._gather_livestatus_port()
             self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
 
             if start_again:
                 self.start()
-
-        sys.stdout.write("After livestatus port lock\n")
 
     def _gather_livestatus_port(self):
         if self.reuse and self.exists():

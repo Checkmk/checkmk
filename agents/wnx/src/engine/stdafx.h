@@ -15,6 +15,7 @@
 // settings for the LWA
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #define SI_SUPPORT_IOSTREAMS
+#define USE_EXPERIMENTAL_FILESYSTEM  // #TODO recheck with 2019
 
 #include "asio.h"
 #include "common/cfg_info.h"  // internal tracing and dumping

@@ -346,31 +346,31 @@ bool ValidFileInfoPathEntry(const std::string Entry) {
 }
 
 // returns UTF8
-std::string MakeFileInfoString(const std::filesystem::path &FilePath) {
+std::string MakeFileInfoString(const std::filesystem::path &file_path) {
     namespace fs = std::filesystem;
     using namespace std;
     // strange dances from legacy agent
     // const auto finalPath = correctPathCase(FilePath, winapi);
     std::error_code ec;
-    auto file_size = fs::file_size(FilePath, ec);
+    auto file_size = fs::file_size(file_path, ec);
     if (ec) {
-        XLOG::l.e("Cant get size of file {}  status {}", FilePath.u8string(),
+        XLOG::l.e("Cant get size of file {}  status {}", file_path.u8string(),
                   ec.value());
         file_size = 0;
     }
 
     int64_t seconds = 0;
-    auto file_last_touch = fs::last_write_time(FilePath, ec);
+
+    auto file_last_touch = GetFileTimeSinceEpoch(file_path);
     if (ec) {
         XLOG::l.e("Cant get las touch of file {} status {}",
-                  FilePath.u8string(), ec.value());
+                  file_path.u8string(), ec.value());
         seconds = 0;
     } else {
-        auto duration = chrono::duration_cast<chrono::seconds>(
-            file_last_touch.time_since_epoch());
+        auto duration = chrono::duration_cast<chrono::seconds>(file_last_touch);
         seconds = duration.count();
     }
-    auto file_name = GetOsPathWithCase(FilePath);
+    auto file_name = GetOsPathWithCase(file_path);
     return fmt::format("{}|{}|{}\n", file_name.u8string(), file_size, seconds);
 }
 

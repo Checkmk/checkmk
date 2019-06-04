@@ -129,8 +129,10 @@ def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, in
             invpath = invpath[:-1]
         if attribute_keys == []:
             tree_renderer.show_numeration(child, path=invpath)
-        else:
-            tree_renderer.show_attribute(child.get_child_data().get(attribute_keys),
+        elif attribute_keys:
+            # In paint_host_inventory_tree we parse invpath and get
+            # a path and attribute_keys which may be either None, [], or ["KEY"].
+            tree_renderer.show_attribute(child.get_child_data().get(attribute_keys[-1]),
                                          _inv_display_hint(invpath))
         code = html.drain()
     return "", code

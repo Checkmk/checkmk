@@ -250,7 +250,7 @@ OLRLOC=/etc/oracle/olr.loc
 
 # Source the optional configuration file for this agent plugin
 if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
-    # shellcheck disable=SC1090
+    # shellcheck source=/dev/null
     . "$MK_CONFDIR/mk_oracle.cfg"
 fi
 
@@ -402,15 +402,17 @@ set_ora_env () {
             # oratab is not supported in Grid-Infrastructure 12.2+
             # => fetch ORACLE_HOME from cluster repository for all GI/Restart Environments!
             # OLRLOC holds CRS_HOME
+            # shellcheck source=/dev/null
             . ${OLRLOC}
             export ORA_HOME_SOURCE="(GI):    "
 
             # set ORACLE_HOME = crs_home for ASM
             if [ "${ORACLE_SID:0:1}" = '+' ]; then
+                # shellcheck disable=SC2154
                 ORACLE_HOME=${crs_home}
             else
                 # get ORACLE_HOME with crsctl from Oracle Grid Infrastructure / Restart
-                ORACLE_HOME=$(${crs_home}/bin/crsctl stat res -p -w "((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))" | grep "^ORACLE_HOME=" | cut -d"=" -f2)
+                ORACLE_HOME=$("${crs_home}"/bin/crsctl stat res -p -w "((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))" | grep "^ORACLE_HOME=" | cut -d"=" -f2)
             fi
         else
             # Single Instance with oratab
@@ -872,7 +874,7 @@ sql_rman () {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
-        echo "select /*"$HINT_RMAN" check_mk rman1 */ upper(name)
+        echo "select /*$HINT_RMAN check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
                      || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
@@ -901,7 +903,7 @@ sql_rman () {
                             , bd2.INCREMENTAL_CHANGE#
                      order by name, bd2.INCREMENTAL_LEVEL);
 
-              select /*"$HINT_RMAN" check_mk rman2 */ name
+              select /*$HINT_RMAN check_mk rman2 */ name
                     || '|' || 'COMPLETED'
                     || '|'
                     || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
@@ -917,7 +919,7 @@ sql_rman () {
                     group by upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                    );
 
-              select /*"$HINT_RMAN" check_mk rman3 */ name
+              select /*$HINT_RMAN check_mk rman3 */ name
                      || '|COMPLETED'
                      || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
@@ -2085,8 +2087,8 @@ mk_ora_db_connect () {
     DBHOST=$(echo "${ORACFGLINE}" | cut -d":" -f$((4+offset)))
     DBPORT=$(echo "${ORACFGLINE}" | cut -d":" -f$((5+offset)))
 
-    if [ -f $OLRLOC -a ! -z "$crs_home" ] ; then
-        if [ -d $crs_home ] ; then
+    if [ -f $OLRLOC ] && [ ! -z "$crs_home" ] ; then
+        if [ -d "$crs_home" ] ; then
             # we found GI/Restart
             # => Use hostname instead of localhost
             DBHOST=${DBHOST:-$(hostname)}
@@ -2110,7 +2112,7 @@ mk_ora_db_connect () {
 
         # PREFIX / POSTFIX makes no sense for ASM
         # => only 1 Instance with known connection possible
-        if [ -n "$P_TNSALIAS_P" -a ! "${ORACLE_SID:0:1}" = '+'  ]; then
+        if [ -n "$P_TNSALIAS_P" ] && [ ! "${ORACLE_SID:0:1}" = '+' ]; then
             PREFIX_SID="PREFIX_$sid"
             PREFIX_SID=${!PREFIX_SID}
             if [ -n "$PREFIX_SID" ]; then

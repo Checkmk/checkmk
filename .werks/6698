@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1544530074
 
 If there are more than 10 changes in the WATO configuration the button simply states <tt>10+ changes</tt>,

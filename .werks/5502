@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1530769691
 
 When extracting a tar.gz packaged agent from the agent bakery as root (as it is normallly done), the user and group ownerships of the extracted files would be set to the Check_MK site user, if such user is available on the target host. This would lead to a wrong ownership on some folders like "/etc", "/usr" and "/var".

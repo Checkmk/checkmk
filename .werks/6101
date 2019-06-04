@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1526558604
 
 The python delivered with Check_MK was not precompiling the lib/python2.7/sitecustomize.pyc

@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1544456159
 
 Due to a bug in the packaging routine within the agent bakery, the Check_MK-Agent

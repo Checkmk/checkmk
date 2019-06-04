@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1540199339
 
 It is now possible so set the environment variable TMPDIR in the context of the execution

@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1529483996
 
 Some fields, namely the update interval and the proxy configuration (new since 1.5) are optional within the agent updater plugin configuration.

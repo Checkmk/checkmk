@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1534146010
 
 With werk #5535 we changed the tag group "Agent type" to be a builtin tag

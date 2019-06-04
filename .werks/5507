@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1532494783
 
 Since Check_MK 1.5, the Agent Updater gets packaged via the tool "PyInstaller" to ensure a better compatibility. Unfortunately, PyInstaller-packaged binaries will break when tthey get prelinked. You would experience this by getting an error message like

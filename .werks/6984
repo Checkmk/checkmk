@@ -5,7 +5,7 @@ Class: fix
 Compatible: incomp
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1545227106
 
 Due to poor performance of commands such as <tt>docker system df</tt> in some environments, the

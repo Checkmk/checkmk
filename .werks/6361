@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cme
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1532196113
 
 When a view that contains the customer column e.g. of a host, this column

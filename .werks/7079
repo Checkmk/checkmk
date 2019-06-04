@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1548769790
 
 Since werk #5224 (1.5.0i1) it was possible to configure the HTTP active check

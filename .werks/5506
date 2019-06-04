@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1531980360
 
 By default, the agent updater is supposed to ignore all configured proxies on a host. Before this werk, it missed to bypass the system-wide configured proxy on windows.

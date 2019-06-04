@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1555422905
 
 For consistency with other CPU Utilization checks now statgrab_cpu also includes the same perf-O-meter and graphs

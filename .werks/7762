@@ -1,0 +1,14 @@
+Title: Aux tag IDs and tag group IDs need to be unique now
+Level: 1
+Component: wato
+Compatible: incomp
+Edition: cre
+Version: 1.6.0b1
+Date: 1559674484
+Class: fix
+
+In previous versions it was possible to configure auxiliary tags with
+an ID that was also used as tag group ID. This resulted in name conflicts
+and subtile inconsistencies in different situations.
+
+To prevent these problems Checkmk now enforces these IDs to be unique.

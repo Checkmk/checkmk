@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1527496871
 
 When the LDAP logging of the GUI is set to debug the web.log will now get the

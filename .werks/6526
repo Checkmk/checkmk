@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1535725756
 
 This addition to werk #6424 fixes another case where ValueErrors could occur while setting up LDAP connections

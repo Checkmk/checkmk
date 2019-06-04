@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1526539081
 
 In case a host named "cmk" is being monitored, the "Check_MK" services of all hosts

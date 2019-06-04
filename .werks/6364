@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1532431051
 
 The check crashed with an "Invalid json reponse" error since 1.5.0b9.

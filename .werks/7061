@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1550756859
 
 The check now only applies levels for the number of connected satellites if the device

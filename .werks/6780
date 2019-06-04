@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1539283109
 
 The alert and notify helpers of the Microcore could crash "randomly"

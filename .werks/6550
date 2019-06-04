@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1536139894
 
 When using older ps versions like procps 3.2.7, which is used e.g. on SLES11, a warning message

@@ -2643,8 +2643,20 @@ def ajax_render_tree():
     reqhosts = [tuple(sitehost.split('#')) for sitehost in html.request.var("reqhosts").split(',')]
     aggr_title = html.get_unicode_input("title")
     omit_root = bool(html.request.var("omit_root"))
-    boxes = bool(html.request.var("boxes"))
     only_problems = bool(html.request.var("only_problems"))
+
+    # TODO: Cleanup the renderer to use a class registry for lookup
+    renderer_class_name = html.request.var("renderer")
+    if renderer_class_name == "FoldableTreeRendererTree":
+        renderer_cls = FoldableTreeRendererTree
+    elif renderer_class_name == "FoldableTreeRendererBoxes":
+        renderer_cls = FoldableTreeRendererBoxes
+    elif renderer_class_name == "FoldableTreeRendererBottomUp":
+        renderer_cls = FoldableTreeRendererBottomUp
+    elif renderer_class_name == "FoldableTreeRendererTopDown":
+        renderer_cls = FoldableTreeRendererTopDown
+    else:
+        raise NotImplementedError()
 
     # Make sure that BI aggregates are available
     if config.bi_precompile_on_demand:
@@ -2668,11 +2680,6 @@ def ajax_render_tree():
             if row["aggr_state"]["state"] is None:
                 continue  # Not yet monitored, aggregation is not displayed
             row["aggr_group"] = aggr_group
-
-            if boxes:
-                renderer_cls = FoldableTreeRendererBoxes
-            else:
-                renderer_cls = FoldableTreeRendererTree
 
             # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
             renderer = renderer_cls(

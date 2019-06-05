@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -x
-
 # $1: cmd(s) to be executed within chroot jail
 # if non-existent, enter chroot jail with 'bash -l'
 

@@ -2,7 +2,7 @@
 # This script copies a ssh key pair from ~$SUDO_USER/.ssh/ or
 # /var/lib/jenkins/.ssh/ to chroot jail.
 
-set -e
+set -ex
 
 if [[ -z $CHROOT_PATH ]] ; then
     echo "CHROOT_PATH is not set"

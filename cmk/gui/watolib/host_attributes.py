@@ -207,7 +207,10 @@ class HostAttributeTopicMetaData(HostAttributeTopic):
 class ABCHostAttribute(object):
     """Base class for all registered host attributes"""
     __metaclass__ = abc.ABCMeta
-    sort_index = 80
+
+    @classmethod
+    def sort_index(cls):
+        return 85
 
     @abc.abstractmethod
     def name(self):
@@ -405,10 +408,19 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_name(self, plugin_class):
         return plugin_class().name()
 
-    # TODO: Transition hack. Change to explicit sorting next.
     def registration_hook(self, plugin_class):
-        plugin_class.sort_index = self.__class__._index
-        self.__class__._index += 1
+        """Add missing sort indizes
+
+        Internally defined attributes have a defined sort index. Attributes defined by the users
+        configuration, like tag based attributes or custom host attributes automatically get
+        a sort index based on the last index used.
+        """
+        if plugin_class.sort_index.__code__ is ABCHostAttribute.sort_index.__code__:
+            plugin_class._sort_index = self.__class__._index
+            plugin_class.sort_index = classmethod(lambda c: c._sort_index)
+            self.__class__._index += 1
+        else:
+            self.__class__._index = max(plugin_class.sort_index(), self.__class__._index)
 
     def attributes(self):
         return [cls() for cls in self.values()]
@@ -416,7 +428,7 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def get_sorted_host_attributes(self):
         # type: () -> List[ABCHostAttribute]
         """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
-        return sorted(self.attributes(), key=lambda a: (a.sort_index, a.topic()))
+        return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()))
 
     def get_choices(self):
         return [(a.name(), a.title()) for a in self.get_sorted_host_attributes()]
@@ -455,7 +467,8 @@ def get_sorted_host_attributes_by_topic(topic_id):
     return sorted_attributes
 
 
-# TODO: Kept for comatibility with pre 1.6 plugins
+# Is used for dynamic host attribute declaration (based on host tags)
+# + Kept for comatibility with pre 1.6 plugins
 def declare_host_attribute(a,
                            show_in_table=True,
                            show_in_folder=True,

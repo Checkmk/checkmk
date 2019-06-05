@@ -390,6 +390,10 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def topic(self):
         return HostAttributeTopicBasicSettings
 
+    @classmethod
+    def sort_index(cls):
+        return 10
+
     def help(self):
         url = "wato.py?mode=rulesets&group=grouping"
         return _("Only members of the contact groups listed here have WATO permission "

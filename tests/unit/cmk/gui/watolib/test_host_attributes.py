@@ -17,7 +17,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Address'
+        'topic': u'Network Address'
     },
     'additional_ipv6addresses': {
         'class_name': 'ValueSpecAttribute',
@@ -30,7 +30,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Address'
+        'topic': u'Network Address'
     },
     'alias': {
         'class_name': 'NagiosTextAttribute',
@@ -69,7 +69,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': True,
         'show_inherited_value': True,
-        'topic': u'Address'
+        'topic': u'Network Address'
     },
     'ipv6address': {
         'class_name': 'ValueSpecAttribute',
@@ -82,7 +82,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': True,
         'show_inherited_value': True,
-        'topic': u'Address'
+        'topic': u'Network Address'
     },
     'locked_attributes': {
         'class_name': 'ValueSpecAttribute',
@@ -95,7 +95,7 @@ expected_attributes = {
         'show_in_host_search': False,
         'show_in_table': False,
         'show_inherited_value': False,
-        'topic': u'Meta data',
+        'topic': u'Creation / Locking',
     },
     'locked_by': {
         'class_name': 'ValueSpecAttribute',
@@ -108,7 +108,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': False,
-        'topic': u'Meta data',
+        'topic': u'Creation / Locking',
     },
     'management_address': {
         'class_name': 'ValueSpecAttribute',
@@ -173,7 +173,7 @@ expected_attributes = {
         'show_in_host_search': False,
         'show_in_table': False,
         'show_inherited_value': False,
-        'topic': u'Meta data'
+        'topic': u'Creation / Locking'
     },
     'network_scan': {
         'class_name': 'HostAttributeNetworkScan',
@@ -238,7 +238,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Basic settings',
+        'topic': u'Data sources',
     },
     'tag_address_family': {
         'depends_on_roles': [],
@@ -250,7 +250,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Address'
+        'topic': u'Network Address'
     },
     'tag_agent': {
         'depends_on_roles': [],
@@ -298,7 +298,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Basic settings'
+        'topic': u'Custom attributes'
     }
 }
 
@@ -314,7 +314,7 @@ def test_registered_host_attributes(load_config):
         #assert spec["class_name"] == attr_class.__name__
 
         attr_topic_class = attr.topic()
-        assert spec["topic"] == attr_topic_class().title
+        assert spec["topic"] == attr_topic_class().title, attr.name()
         assert spec["show_in_table"] == attr.show_in_table()
         assert spec["show_in_folder"] == attr.show_in_folder(), attr_class
         assert spec["show_in_host_search"] == attr.show_in_host_search()
@@ -431,10 +431,11 @@ def test_custom_host_attribute_transform(old, new):
 def test_host_attribute_topics(for_what):
     assert attrs.get_sorted_host_attribute_topics(for_what=for_what) == [
         ("basic", u"Basic settings"),
-        ("address", u'Address'),
+        ("address", u'Network Address'),
         ("data_sources", u'Data sources'),
+        ('custom_attributes', u'Custom attributes'),
         ("management_board", u'Management Board'),
-        ('meta_data', u'Meta data'),
+        ('meta_data', u'Creation / Locking'),
     ]
 
 
@@ -442,11 +443,12 @@ def test_host_attribute_topics(for_what):
 def test_host_attribute_topics_for_folders():
     assert attrs.get_sorted_host_attribute_topics("folder") == [
         ("basic", u"Basic settings"),
-        ('address', u'Address'),
+        ('address', u'Network Address'),
         ('data_sources', u'Data sources'),
+        ('custom_attributes', u'Custom attributes'),
         ('network_scan', u'Network Scan'),
         ('management_board', u'Management Board'),
-        ('meta_data', u'Meta data'),
+        ('meta_data', u'Creation / Locking'),
     ]
 
 
@@ -463,10 +465,8 @@ def test_host_attributes(for_what):
         "basic": [
             'contactgroups',
             'alias',
-            'snmp_community',
             'parents',
             'site',
-            'labels',
         ],
         "address": [
             'tag_address_family',
@@ -476,6 +476,7 @@ def test_host_attributes(for_what):
             'additional_ipv6addresses',
         ],
         "data_sources": [
+            'snmp_community',
             'tag_agent',
             'tag_piggyback',
             'tag_snmp_ds',
@@ -490,7 +491,8 @@ def test_host_attributes(for_what):
             'locked_by',
             'locked_attributes',
             'meta_data',
-        ]
+        ],
+        'custom_attributes': ['labels',],
     }
 
     if for_what == "folder":

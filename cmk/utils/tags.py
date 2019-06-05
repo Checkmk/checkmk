@@ -556,17 +556,17 @@ class BuiltinTagConfig(TagConfig):
                 'tags': [
                     {
                         'id': 'cmk-agent',
-                        'title': _('Contact either Check_MK Agent or use datasource program'),
+                        'title': _('Normal Checkmk agent, or special agent if configured'),
                         'aux_tags': ['tcp'],
                     },
                     {
                         'id': 'all-agents',
-                        'title': _('Contact Check_MK agent and all enabled datasource programs'),
+                        'title': _('Normal Checkmk agent, all configured special agents'),
                         'aux_tags': ['tcp'],
                     },
                     {
                         'id': 'special-agents',
-                        'title': _('Use all enabled datasource programs'),
+                        'title': _('No Checkmk agent, all configured special agents'),
                         'aux_tags': ['tcp'],
                     },
                     {
@@ -583,17 +583,17 @@ class BuiltinTagConfig(TagConfig):
                 'tags': [
                     {
                         "id": "auto-piggyback",
-                        "title": _("Legacy: Automatically detect piggyback usage"),
+                        "title": _("Use piggyback data from other hosts if present"),
                         "aux_tags": []
                     },
                     {
                         "id": "piggyback",
-                        "title": _("Use piggyback data"),
+                        "title": _("Always use and expect piggyback data"),
                         "aux_tags": [],
                     },
                     {
                         "id": "no-piggyback",
-                        "title": _("Do not use piggyback data"),
+                        "title": _("Never use piggyback data"),
                         "aux_tags": [],
                     },
                 ],

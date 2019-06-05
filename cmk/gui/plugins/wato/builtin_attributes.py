@@ -65,7 +65,9 @@ from cmk.gui.plugins.wato import (
     HostAttributeTopicNetworkScan,
     HostAttributeTopicAddress,
     HostAttributeTopicManagementBoard,
+    HostAttributeTopicCustomAttributes,
     HostAttributeTopicMetaData,
+    HostAttributeTopicDataSources,
     ABCHostAttributeValueSpec,
     ABCHostAttributeNagiosText,
     host_attribute_registry,
@@ -226,7 +228,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 @host_attribute_registry.register
 class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def topic(self):
-        return HostAttributeTopicBasicSettings
+        return HostAttributeTopicDataSources
 
     def name(self):
         return "snmp_community"
@@ -895,7 +897,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
                     ),
                 ),
             ],
-            title=_("Meta data"),
+            title=_("Created"),
             optional_keys=[],
         )
 
@@ -909,7 +911,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         return _("Labels")
 
     def topic(self):
-        return HostAttributeTopicBasicSettings
+        return HostAttributeTopicCustomAttributes
 
     def help(self):
         return _("With the help of labels you can flexibly group your hosts in "

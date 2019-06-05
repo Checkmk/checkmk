@@ -883,23 +883,22 @@ def extend_user_modified_tag_groups(host_tags):
         tag_group[2].insert(0, ("no-agent", _("No agent"), []))
 
     if "special-agents" not in tag_choices:
-        tag_group[2].insert(0,
-                            ("special-agents", _("Use all enabled datasource programs"), ["tcp"]))
+        tag_group[2].insert(
+            0, ("special-agents", _("No Checkmk agent, all configured special agents"), ["tcp"]))
 
     if "all-agents" not in tag_choices:
         tag_group[2].insert(
-            0, ("all-agents", _("Contact Check_MK agent and all enabled datasource programs"),
-                ["tcp"]))
+            0, ("all-agents", _("Normal Checkmk agent, all configured special agents"), ["tcp"]))
 
     if "cmk-agent" not in tag_choices:
         tag_group[2].insert(
-            0, ("cmk-agent", _("Contact either Check_MK Agent or use datasource program"), ["tcp"]))
+            0, ("cmk-agent", _("Normal Checkmk agent, or special agent if configured"), ["tcp"]))
     else:
         # Change title of cmk-agent tag choice and move to top
         for index, tag_choice in enumerate(tag_group[2]):
             if tag_choice[0] == "cmk-agent":
                 tag_choice_list = list(tag_group[2].pop(index))
-                tag_choice_list[1] = _("Contact either Check_MK Agent or use datasource program")
+                tag_choice_list[1] = _("Normal Checkmk agent, or special agent if configured")
                 tag_group[2].insert(0, tuple(tag_choice_list))
                 break
 

@@ -441,7 +441,7 @@ def get_file_encoding(file_desc):
     # Peak the first two bytes to determine the encoding...
     save_pos = os.lseek(file_desc, 0, os.SEEK_CUR)
     os.lseek(file_desc, 0, os.SEEK_SET)
-    first_two_bytes = file_desc.read(2)
+    first_two_bytes = os.read(file_desc, 2)
     os.lseek(file_desc, save_pos, os.SEEK_SET)
 
     if first_two_bytes == "\xFF\xFE":

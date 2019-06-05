@@ -464,22 +464,22 @@ def process_logfile(logfile, patterns, opt, status):
     if patterns is None:
         return [u"[[[%s:missing]]]\n" % logfile]
 
-    # Look at which file offset we have finished scanning
-    # the logfile last time. If we have never seen this file
-    # before, we set the offset to -1
-    offset, prev_inode = status.get(logfile, (-1, -1))
     try:
         file_desc = os.open(logfile, os.O_RDONLY)
-        if not is_inode_capable(logfile):
-            inode = 1  # Create a dummy inode
-        else:
-            inode = os.fstat(file_desc).st_ino
-    except Exception:
+    except OSError:
         if debug():
             raise
         return [u"[[[%s:cannotopen]]]\n" % logfile]
 
     output = [u"[[[%s]]]\n" % logfile]
+
+    stat = os.fstat(file_desc)
+    inode = stat.st_ino if is_inode_capable(logfile) else 1
+
+    # Look at which file offset we have finished scanning
+    # the logfile last time. If we have never seen this file
+    # before, we set the offset to -1
+    offset, prev_inode = status.get(logfile, (-1, -1))
 
     # Seek to the current end in order to determine file size
     # And set the current pointer to the file end

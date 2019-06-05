@@ -314,7 +314,6 @@ def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rul
 
     # test for synchronous to_dict on the way
     rule_spec_for_config = rule_spec.copy()
-    rule_spec_for_config["condition"]["host_folder"] = rulesets._FOLDER_PATH_MACRO
     assert rule.to_config() == rule_spec_for_config
 
 
@@ -325,12 +324,10 @@ def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rul
 checkgroup_parameters.setdefault('local', [])
 
 checkgroup_parameters['local'] = [
-{'condition': {'host_folder': '%#%FOLDER_PATH%#%',
-               'host_name': ['HOSTLIST'],
+{'condition': {'host_name': ['HOSTLIST'],
                'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}]},
  'value': 'VAL'},
-{'condition': {'host_folder': '%#%FOLDER_PATH%#%',
-               'host_name': ['HOSTLIST'],
+{'condition': {'host_name': ['HOSTLIST'],
                'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}]},
  'value': 'VAL2'},
 ] + checkgroup_parameters['local']
@@ -377,6 +374,60 @@ def test_ruleset_to_config(monkeypatch, wato_use_git, expected_result):
         },
     ])
     assert ruleset.to_config(hosts_and_folders.Folder.root_folder()) == expected_result
+
+
+@pytest.mark.parametrize("wato_use_git,expected_result", [
+    (True, """
+checkgroup_parameters.setdefault('local', [])
+
+checkgroup_parameters['local'] = [
+{'condition': {'host_folder': '%#%FOLDER_PATH%#%',
+               'host_name': ['HOSTLIST'],
+               'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}]},
+ 'value': 'VAL'},
+{'condition': {'host_folder': '%#%FOLDER_PATH%#%',
+               'host_name': ['HOSTLIST'],
+               'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}]},
+ 'value': 'VAL2'},
+] + checkgroup_parameters['local']
+
+"""),
+])
+def test_ruleset_to_config_sub_folder(monkeypatch, load_config, wato_use_git, expected_result):
+    monkeypatch.setattr(config, "wato_use_git", wato_use_git)
+
+    ruleset = rulesets.Ruleset("checkgroup_parameters:local",
+                               ruleset_matcher.get_tag_to_group_map(config.tags))
+
+    monkeypatch.setattr(config, "user", config.LoggedInSuperUser())
+    hosts_and_folders.Folder.create_missing_folders("abc")
+    folder = hosts_and_folders.Folder.folder("abc")
+
+    ruleset.from_config(folder, [
+        {
+            "value": "VAL",
+            "condition": {
+                'host_name': ['HOSTLIST'],
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+            },
+        },
+        {
+            "value": "VAL2",
+            "condition": {
+                'host_name': ['HOSTLIST'],
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+            },
+        },
+    ])
+    assert ruleset.to_config(folder) == expected_result
 
 
 def test_rule_clone():

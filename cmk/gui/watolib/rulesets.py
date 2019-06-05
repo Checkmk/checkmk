@@ -761,7 +761,11 @@ class Rule(object):
         self.conditions.from_config(conditions)
 
     def to_config(self):
-        return self._to_config(self.conditions.to_config_with_folder_macro())
+        # Special case: The main folder must not have a host_folder condition, because
+        # these rules should also affect non WATO hosts.
+        for_config = self.conditions.to_config_with_folder_macro() \
+            if not self.folder.is_root() else self.conditions.to_config_without_folder()
+        return self._to_config(for_config)
 
     def to_web_api(self):
         return self._to_config(self.conditions.to_config_without_folder())

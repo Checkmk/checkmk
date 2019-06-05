@@ -8,8 +8,6 @@
 @import "~select2/dist/css/select2";
 @import "~@yaireo/tagify/dist/tagify";
 
-@import "../classic/scss/_check_mk.scss";
-
 // CEE specific files. Would love to add some kind of conditional import here,
 // but that is simply not possible at the moment using SCSS. Hack around this
 // using symlinks in the git during development and replace the links with empty

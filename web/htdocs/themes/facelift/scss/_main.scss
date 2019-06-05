@@ -1,3 +1,1022 @@
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+ails.  You should have  received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+
+*/
+
+/* Global style used by all HTML pages, even by sidebar and
+   mobile interface */
+
+/*-------------------------------------------------------------------------.
+|                ____        __             _ _                            |
+|               |  _ \  ___ / _| __ _ _   _| | |_ ___                      |
+|               | | | |/ _ \ |_ / _` | | | | | __/ __|                     |
+|               | |_| |  __/  _| (_| | |_| | | |_\__ \                     |
+|               |____/ \___|_|  \__,_|\__,_|_|\__|___/                     |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Default values for general styles used in all parts of Multisite. These  |
+| styles are used in the Status-GUI, WATO and other modules based on the   |
+| basic Multisite layout. They are not used by the Mobile GUI.             |
+'-------------------------------------------------------------------------*/
+
+/* Change some general defaults of HTML that we do not like */
+td, th {
+    vertical-align: top;
+}
+
+div {
+    margin: 0;
+    padding: 0;
+}
+
+img {
+    border-style: none;
+}
+
+th {
+    white-space: nowrap;
+}
+
+body {
+    color: white;
+}
+
+body a, body a:link, body a:visited {
+    color: white;
+}
+
+body.hidden:after {
+  content: "";
+  background-color: rgba(0, 0, 0, .5);
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Default font size for the complete Multisite GUI */
+button, input, td, th, select, textarea {
+    font-size: 9pt;
+}
+
+input.number {
+    text-align: right;
+}
+
+/* Styling for input elements */
+input, select, textarea {
+    padding: 3px;
+    border: 1px #73767A solid;
+    outline-style: none;
+    outline-width: medium;
+    background-color: #fff;
+    font-family: arial, helvetica, sans-serif;
+    vertical-align: middle;
+    margin-top: 0px;
+}
+
+/* consistent dropdown field styling for all browsers */
+select:not([multiple]) {
+    -webkit-appearance: none;  /* Removes default chrome and safari style */
+    -moz-appearance: none;     /* Removes default style Firefox */
+    background: url(images/select_arrow.png) no-repeat right #fff;
+    background-size: 20px 11px;
+    padding-right: 15px;
+}
+
+select::-ms-expand {
+    display: none;
+}
+
+input[type=file] {
+    color: black;
+}
+
+form {
+    margin: 0px;
+}
+
+input:hover, select:hover, textarea:hover,
+input[type="checkbox"]:hover + label:before {
+    background-color: #EDECEB;
+}
+
+td.checkbox input[type="checkbox"] + label:before {
+    margin: 0;
+}
+
+/* checkbox styling */
+input[type="checkbox"] {
+    display: none;
+}
+
+input[type="checkbox"][disabled] + label:before {
+    display: none;
+}
+
+input[type="checkbox"] + label:before {
+    box-shadow: 0.1px 1.0px 1.2px 0 #888 inset;
+    border: 1px #73767A solid;
+    background-color: #fff;
+    content: "\00a0";
+    display: inline-block;
+    font-size: 9pt;
+    height: 9.5pt;
+    margin: 0 .6em 0 0;
+    padding: 0;
+    vertical-align: middle;
+    width: 9.5pt;
+}
+
+input[type="checkbox"]:checked + label:before {
+  color: #000;
+  content: "\2716";
+  background-color: #ddd;
+  text-align: center;
+}
+
+input[type="checkbox"]:checked + label:after {
+  font-weight: bold;
+}
+
+/* Select element with icons */
+select.icon option {
+    background-repeat: no-repeat;
+    background-position: bottom left;
+    background-size: 18px;
+    padding-left:22px;
+    height: 18px;
+}
+
+input.button,
+table.vs_duallist a.control,
+.wato div.mainmenu a {
+    border-color: #86A9B8 #22404D #22414D #86A9B8;
+    border-radius: 5px 5px 5px 5px;
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: 0 0 1.5px #000000;
+    margin-left: 5px;
+    padding: 2px 6px;
+    background-color: #497E95;
+    color: white;
+    cursor: pointer;
+}
+
+table.vs_duallist a.control,
+table.vs_duallist body.main .popup_menu span.control,
+body.main .popup_menu table.vs_duallist span.control {
+  border-style: solid;
+  border-color: $theme-color-nuance-1;
+  box-shadow: none;
+  background-color: $theme-color-table-border; }
+
+input.button:hover,
+table.vs_duallist a.control:hover,
+.wato div.mainmenu a:hover {
+    background-color: #6da1b8;
+    text-decoration: none;
+}
+input.button:active,
+table.vs_duallist a.control:active,
+.wato div.mainmenu a:active {
+    border-color:  #22414d #86a9b8 #86a9b8 #22404d;
+    background-color: #3b6678;
+    box-shadow: inset 0 0 0.5px #444444;
+}
+
+input.button[disabled="disabled"]:hover,
+input.button:disabled:hover {
+    background-color: #497E95;
+}
+
+input.button[disabled="disabled"]:active,
+input.button:disabled:active {
+    border-color: #86A9B8 #22404D #22414D #86A9B8;
+    background-color: #497E95;
+    box-shadow: 0 0 1.5px #000000;
+}
+
+input.button.hot, input.button.hot:active {
+  background-color: #11bd7b;
+  border: 1px solid #11bd7b !important;
+}
+
+input.button.hot:hover {
+  background-color: #13d389;
+}
+
+/* on/off toggle button */
+
+.toggle_switch {
+  width: 56px;
+  box-sizing: border-box;
+  border: 1px solid $theme-color-table-border;
+  background: $theme-color-white;
+  box-shadow: none;
+  height: 22px;
+  padding: 2px;
+  border-radius: 11px;
+}
+
+.toggle_switch a,
+.toggle_switch body.main .popup_menu span,
+body.main .popup_menu .toggle_switch span,
+.wato div.globalvars .toggle_switch a,
+.wato div.globalvars .toggle_switch body.main .popup_menu span,
+body.main .popup_menu .wato div.globalvars .toggle_switch span {
+    border: none;
+    box-shadow: none;
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: $theme-letter-spacing-table;
+    height: 16px;
+    border-radius: 8px;
+    line-height: 16px;
+    font-weight: $theme-font-weight-bold;
+}
+
+.toggle_switch a, .wato div.globalvars .toggle_switch a {
+    display: block;
+    width: 30px;
+    color: #fff;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+.toggle_switch.on a {
+    float: right;
+    background-color: #54a626;
+    border-width: 0 0 0 1px;
+}
+
+.toggle_switch.off a {
+    background-color: #f60000;
+    border-width: 0 1px 0 0;
+}
+
+.toggle_switch a:hover, .wato div.globalvars .toggle_switch a:hover {
+    /* TODO: create a better hover effect */
+    text-decoration: none;
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
+table.data .toggle_switch a {
+    color: #fff;
+}
+
+table.data .toggle_switch {
+    background-color: #999;
+}
+
+
+/* pattern / regex input styling */
+
+input.regexp {
+    /* font-family: monospace; */
+}
+
+a.button {
+    background-color: #cca;
+    color: #000;
+    text-decoration: none;
+    font-weight: normal;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #ddd #888 #333 #ddd;
+    padding: 0.1ex 1ex;
+    height: 24px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    border-radius: 4px;
+    margin: 2px;
+}
+
+/*for IE8 */
+input[type="submit"]:focus {
+    outline: none;
+}
+
+input:hover, select:hover, textarea:hover {
+    background-color: #EDECEB;
+}
+
+/* Images have a native size of 48x48 and are scaled down by the
+   browser. That way if you select a zoom level in the browser,
+   the quality of the images are better */
+
+img.icon, div.icon {
+   width: 20px;
+   height: 20px;
+}
+
+a.inline img.icon,
+img.icon.inline, div.icon {
+   vertical-align: middle;
+   width: 16px;
+   height: 16px;
+}
+
+h1 {
+    color: #fff;
+    font-size: 17pt;
+    margin-top: 0;
+    margin-bottom: 5px;
+    margin-left: 5px;
+}
+
+div.livestatus.message {
+    position: fixed;
+    bottom: -10px;
+    left: 10px;
+    font-size: 8pt;
+    z-index: 20;
+    color: black;
+}
+
+/*-------------------------------------------------------------------------.
+|                _____     _     _       _     _                           |
+|               |  ___|__ | | __| | __ _| |__ | | ___                      |
+|               | |_ / _ \| |/ _` |/ _` | '_ \| |/ _ \                     |
+|               |  _| (_) | | (_| | (_| | |_) | |  __/                     |
+|               |_|  \___/|_|\__,_|\__,_|_.__/|_|\___|                     |
+|                                                                          |
++--------------------------------------------------------------------------+
+| These styles are used by the {begin,end}_foldable_container() functions. |
+'-------------------------------------------------------------------------*/
+
+img.treeangle {
+    width: 13px;
+    height: 12px;
+    margin-right: 3px;
+    margin-top: 0px;
+    cursor: pointer;
+
+    -webkit-transition: -webkit-transform .2s ease-in-out;
+    -moz-transition: -moz-transform .2s ease-in-out;
+    transition: transform .2s ease-in-out;
+    vertical-align: middle;
+}
+
+img.treeangle.open {
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+
+img.treeangle.nform {
+    margin-left: -5px;
+}
+
+img.treeangle.title {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+b.treeangle.title {
+    font-weight: bold;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+table.data b.treeangle.title {
+    color: #000000;
+}
+
+img.treeangle+.treeangle.title {
+    display: inline-block;
+}
+
+ul.treeangle {
+    padding-left: 20px;
+    margin: 8px 0px;
+    position: relative; /* In order for placement of invtablelink */
+}
+ul.treeangle li {
+    margin: 0px;
+    margin-left: 16px;
+    padding-left: 20px;
+    list-style: disc;
+    display: block;
+}
+ul.closed {
+    display: none;
+}
+
+
+
+/*-------------------------------------------------------------------------.
+|             __  __                                                       |
+|            |  \/  | ___  ___ ___  __ _  __ _  ___  ___                   |
+|            | |\/| |/ _ \/ __/ __|/ _` |/ _` |/ _ \/ __|                  |
+|            | |  | |  __/\__ \__ \ (_| | (_| |  __/\__ \                  |
+|            |_|  |_|\___||___/___/\__,_|\__, |\___||___/                  |
+|                                        |___/                             |
++--------------------------------------------------------------------------+
+| Styles for messages-boxes in various situations (called by htmllib.py)   |
+'-------------------------------------------------------------------------*/
+
+div.really, div.success, div.error, div.message, div.warning {
+    margin: 0.25em;
+    border-radius: 1ex;
+    padding: 0.5em 1em;
+    box-shadow: 0 0 3px #444;
+}
+
+div.message {
+    color: black;
+}
+div.really {
+    background-color: #fdc400;
+    border-color: #800;
+}
+
+div.success {
+    background-color: #9dbecd;
+    border-color: #080;
+}
+
+div.message {
+    background-color: #9dbecd;
+    border-color: #048;
+}
+
+div.error {
+    background-color: #e70000;
+    border-color: #e40;
+    color: white;
+}
+div.error a {
+    color: white;
+}
+
+div.warning {
+    background-color: #ff4;
+    border-color: #fc0;
+    color: #000;
+}
+div.warning a {
+    color: #000;
+}
+
+/* Warnings embedded in tables without margins and padding, those are
+   just needed for body */
+
+td div.warning, td > div.error {
+    margin-top: 3px;
+    margin-bottom: 3px;
+    padding: 5px 10px;
+}
+
+td div.warning ul, td > div.error ul {
+    margin: 5px 10px;
+    padding-left: 0px;
+}
+
+/*-ValueSpec---------------------------------------------------------------.
+|          __     __    _            ____                                  |
+|          \ \   / /_ _| |_   _  ___/ ___| _ __   ___  ___                 |
+|           \ \ / / _` | | | | |/ _ \___ \| '_ \ / _ \/ __|                |
+|            \ V / (_| | | |_| |  __/___) | |_) |  __/ (__                 |
+|             \_/ \__,_|_|\__,_|\___|____/| .__/ \___|\___|                |
+|                                         |_|                              |
++--------------------------------------------------------------------------+
+| Styles needed for HTML code produced by valuespec.py.                    |
+'-------------------------------------------------------------------------*/
+
+table.dictionary {
+    width: 100%;
+}
+
+table.dictionary b.header {
+    font-size: 80%;
+    font-weight: normal;
+}
+
+table.dictionary td.dictright {
+    white-space: nowrap;
+    padding: 0px;
+    border-style: none;
+    width: 99%;
+}
+
+table.dictionary td.dictleft {
+    width: 1%;
+    white-space: nowrap;
+}
+
+table.dictionary td.dictleft div.popup_menu {
+    white-space: normal;
+}
+
+table.dictionary td.dictleft div.help {
+    white-space: normal;
+}
+
+td.dictleft div.dictelement * {
+    font-size: 8pt;
+}
+td.dictleft div.dictelement {
+    font-size: 8pt;
+    margin-bottom: 10px;
+    margin-top: 3px;
+    float: none;
+    margin-left: 0px;
+}
+td.dictleft div.dictelement.indent {
+    padding-left: 10px;
+    border-left: 2px solid #ccc;
+    margin-left: 8px;
+}
+
+table.vs_dict_text {
+    padding: 0px;
+    margin: 0px;
+    border-collapse: collapse;
+}
+table.vs_dict_text td,
+table.data tr td table.vs_dict_text > tbody > tr > td {
+    padding: 0px;
+    margin: 0px;
+    vertical-align: top;
+}
+
+table.valuespec_tuple {
+    border-spacing: 2px;
+}
+
+table.valuespec_tuple td {
+    padding: 0px;
+}
+
+table.valuespec_tuple td.tuple_left {
+    vertical-align: middle;
+}
+
+table.valuespec_tuple span.title {
+    font-size: 8pt;
+}
+
+table.vs_date {
+    border-spacing: 0px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+table.vs_date td {
+    padding-top: 0px;
+    padding-right: 3px;
+}
+table.vs_date th {
+    text-align: center;
+    font-weight: normal;
+    font-size: 7pt;
+    padding: 0px;
+}
+
+table.valuespec_listof {
+    width: 100%;
+}
+
+div.valuespec_listof.floating > table > tbody > tr > td:first-child {
+    vertical-align: top;
+}
+
+div.valuespec_listof_floating_container > table {
+    float: left;
+}
+
+table.valuespec_listof.regular > tbody > tr > td:first-child {
+    padding-bottom: 5px;
+}
+table.valuespec_listof.regular > tbody > tr > td {
+    padding: 3px 0px 5px 0px;
+    border-bottom: 1px solid #9bc;
+}
+table.valuespec_listof.regular > tbody > tr:last-child > td {
+    padding-top: 3px;
+    border-bottom-style: none;
+}
+
+table.valuespec_listof.regular td.vlof_buttons {
+    margin-right: 5px;
+    white-space: nowrap;
+    vertical-align: middle;
+    width: 1px;
+}
+table.valuespec_listof.regular td.vlof_content {
+}
+table.valuespec_listof option[selected] {
+    font-weight: bold;
+}
+
+table.valuespec_listof .unused {
+    display: none;
+}
+table.vs_duallist td {
+    width: 50%;
+}
+table.vs_duallist td select {
+    width: 100%;
+    height: 200px;
+    resize: both;
+}
+table.vs_duallist td.head {
+    text-align:center;
+}
+
+table.vs_duallist a.control {
+    display: inline-block;
+    width: 14px;
+    text-decoration: none;
+    text-align: center;
+    float: right;
+}
+
+table.vs_duallist a.control.add {
+    float: right;
+}
+
+table.vs_duallist a.control.del {
+    float: left;
+}
+
+div.vs_autocomplete {
+    display: block;
+    width: 160px;
+    background-color: #DFDFDF;
+    border: 1px solid;
+    border-color: #fff #000 #000 #fff;
+    color: #000;
+    box-shadow: 0 0 1.5px #000000;
+    position: absolute;
+    z-index: 20;
+}
+
+div.vs_autocomplete ul {
+    margin: 0;
+    list-style-type:none;
+    padding-left:0;
+    max-height: 80px;
+    overflow-y: scroll;
+}
+
+div.vs_autocomplete li {
+    padding: 1px 3px;
+}
+
+div.vs_autocomplete li:hover {
+    background-color: #2c5766;
+    color: #fff;
+    cursor: default;
+}
+
+textarea.tt {
+    font-family: monospace;
+}
+
+div.listofstrings.horizontal {
+    clear: left;
+}
+
+div.listofstrings > div {
+    margin-bottom: 2px;
+}
+
+div.listofstrings.horizontal > div {
+    float: left;
+    margin-right: 2px;
+}
+
+table.listchoice {
+    border-collapse: collapse;
+}
+table.listchoice td span.checkbox {
+    height: 10px;
+}
+table.listchoice td {
+    height: 12px;
+    padding: 0px;
+    margin: 0px;
+}
+table.listchoice td input[type=checkbox] {
+    margin: 0px;
+    height: 12px;
+}
+
+div.floatfilter.double > div.content > table.listchoice {
+    display: block;
+    height: 80px;
+    overflow: hidden;
+    overflow-y:scroll;
+}
+
+div.popup_container {
+    position: relative;
+}
+
+div.popup {
+    padding:10px;
+    background-color: #45829D;
+
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    z-index: 200;
+
+    width: -moz-max-content;
+    width: intrinsic;
+
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    border-radius: 5px;
+    border: 1px solid #fff;
+
+    color: #fff;
+}
+
+div.popup span {
+    display: block;
+    margin-bottom: 5px;
+    color: white;
+}
+
+/* TODO: Reproduce these #hover_menu elements */
+div#hover_menu {
+    position: absolute;
+    width: auto;
+    /* The hover menu needs to have a higher z-index than the highest element
+       on the pages. In this case it was the perfometer which had 30. */
+    z-index: 40;
+    color: #000;
+}
+
+div#hover_menu div.error,
+div#hover_menu div.message {
+    width:350px;
+    margin: 0;
+}
+
+#hover_menu div.message {
+  color: $theme-color-white;
+  background-color: $theme-color-black; }
+
+#hover_menu .graph_container div.title {
+  display: block; }
+#hover_menu .graph_container div.time {
+  letter-spacing: 0px; }
+
+/* Color picker styling */
+
+div.popup_trigger.colorpicker div.popup_menu {
+    min-width: auto;
+}
+
+.cp-preview {
+  width: 28px;
+  height: 18px;
+  box-shadow: none;
+  border-radius: $theme-border-radius;
+  border: 1px solid $theme-color-darkgrey;
+}
+
+table.data td .cp-preview {
+    position: relative;
+    top: 2px;
+}
+
+.picker-wrapper,
+.slide-wrapper {
+    position: relative;
+    float: left;
+}
+.picker-indicator,
+.slide-indicator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+.picker,
+.slide {
+    cursor: crosshair;
+    float: left;
+}
+
+.cp-small {
+    float: left;
+    width: 170px;
+}
+.cp-small .picker {
+    width: 150px;
+    height: 150px;
+    background-color: white;
+}
+.cp-small .slide {
+    width: 15px;
+    height: 150px;
+}
+.cp-small .slide-wrapper {
+    margin-left: 5px;
+}
+.cp-small .picker-indicator {
+    width: 1px;
+    height: 1px;
+    border: 1px solid black;
+    background-color: white;
+}
+.cp-small .slide-indicator {
+    width: 100%;
+    height: 2px;
+    left: 0px;
+    background-color: black;
+}
+
+.cp-input {
+  float: left;
+  margin-top: 2px;
+  color: $theme-color-text;
+}
+
+.cp-input input, .cp-input select, .cp-input textarea,
+.cp-input div.snapin select, div.snapin .cp-input select,
+.cp-input div.snapin textarea, div.snapin .cp-input textarea,
+.cp-input #mk_side_search_field {
+    margin: 0;
+    margin-bottom: 8px;
+}
+
+.cp-input input {
+    width: 106px;
+}
+
+div.popup_trigger.colorpicker .popup_menu {
+    top: 17px;
+    left: 26px;
+}
+
+/*--Werks------------------------------------------------------------------.
+|                    __        __        _                                 |
+|                    \ \      / /__ _ __| | _____                          |
+|                     \ \ /\ / / _ \ '__| |/ / __|                         |
+|                      \ V  V /  __/ |  |   <\__ \                         |
+|                       \_/\_/ \___|_|  |_|\_\___/                         |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Pages showing the Check_MK change log (werks.py)                         |
+'-------------------------------------------------------------------------*/
+
+tr.data td.werklevel, tr.data td.werkclass, tr.data td.werkcomp {
+    text-align: center;
+    white-space: nowrap;
+    width: 100px;
+}
+
+table.data.werks tr:nth-child(odd) td.werklevel2 {
+  background-color: $theme-color-state-5-background;
+}
+
+table.data.werks tr:nth-child(even) td.werklevel2 {
+  background-color: $theme-color-state-5-background;
+}
+
+table.data.werks td.werklevel3 {
+  font-weight: bold; }
+
+table.data.werks tr:nth-child(odd) td.werklevel3 {
+  background-color: $theme-color-state-6-background; }
+
+table.data.werks tr:nth-child(even) td.werklevel3 {
+  background-color: $theme-color-state-6-background; }
+
+table.data.werks tr:nth-child(odd) td.werkclassfeature {
+  background-color: $theme-color-state-success-background; }
+
+table.data.werks tr:nth-child(even) td.werkclassfeature {
+  background-color: $theme-color-state-success-background; }
+
+table.data.werks tr:nth-child(even) td.werkclassfix {
+  background-color: $theme-color-main; }
+
+table.data.werks tr:nth-child(odd) td.werkclassfix {
+  background-color: $theme-color-main; }
+
+table.data.werks td.werkclasssecurity {
+    color: white;
+    font-weight: bold;
+}
+
+table.data.werks tr:nth-child(odd) td.werkclasssecurity {
+  background-color: $theme-color-state-2-background; }
+
+table.data.werks tr:nth-child(even) td.werkclasssecurity {
+  background-color: $theme-color-state-2-background; }
+
+table.data.headerleft.werks td {
+    text-align: left;
+}
+
+table.werks td a, table.werks td body.main .popup_menu span,
+body.main .popup_menu table.werks td span {
+  color: $theme-color-black;
+  text-decoration: underline; }
+
+table.data.werks td.werkcompincomp_unack {
+  font-weight: bold; }
+
+table.data.werks tr:nth-child(odd) td.werkcompincomp_unack {
+  background-color: $theme-color-state-7-background; }
+
+table.data.werks tr:nth-child(even) td.werkcompincomp_unack {
+  background-color: $theme-color-state-7-background; }
+
+table.data.werks tr:nth-child(odd) td.werkcompincomp_ack {
+  background-color: $theme-color-state-8-background; }
+
+table.data.werks tr:nth-child(even) td.werkcompincomp_ack {
+  background-color: $theme-color-state-8-background; }
+
+
+/* NOWIKI formatting in Werks */
+td.nowiki h3 {
+    color: black;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+td.nowiki pre {
+    padding: 3px 8px;
+}
+
+td.nowiki pre.code {
+    background-color: white;
+}
+td.nowiki pre.file {
+    background-color: #fff0b5;
+}
+
+td.nowiki div.filename {
+    margin-bottom: -12px;
+    background-color: #E6D8A3;
+    padding: 3px 8px;
+    font-family: Hack, courier;
+    font-weight: bold;
+}
+
+
+td.nowiki table {
+    border: 1px solid black;
+    border-collapse: collapse;
+    margin: 10px 0px;
+}
+td.nowiki table td, td.nowiki table th {
+    border: 1px solid #888;
+}
+
+/* Command for modifying existing downtimes */
+table.modifydowntimes > tbody > tr > td:nth-child(1) {
+    vertical-align: middle;
+    padding-top: 10px;
+}
+table.modifydowntimes > tbody > tr:nth-child(1) > td:nth-child(1)  {
+    padding-top: 0px;
+}
+
+.select2-container--default .select2-results {
+    color: #000000;
+}
+
+/* TODO: Go through these following styles and move them to specific scss
+ *       where needed
+ */
 * {
   font-family: $theme-font;
   letter-spacing: $theme-letter-spacing;
@@ -30,23 +1049,6 @@ div.content {
   padding: 16px;
   width: 100%;
   top: 64px; }
-
-.cp-preview {
-  box-shadow: none;
-  border-radius: $theme-border-radius;
-  border: 1px solid $theme-color-darkgrey; }
-
-.cp-input {
-  color: $theme-color-text; }
-  .cp-input input, .cp-input select, .cp-input textarea, .cp-input div.snapin select, div.snapin .cp-input select, .cp-input div.snapin textarea, div.snapin .cp-input textarea, .cp-input #mk_side_search_field {
-    margin: 0;
-    margin-bottom: 8px; }
-
-table.vs_duallist a.control, table.vs_duallist body.main .popup_menu span.control, body.main .popup_menu table.vs_duallist span.control {
-  border-style: solid;
-  border-color: $theme-color-nuance-1;
-  box-shadow: none;
-  background-color: $theme-color-table-border; }
 
 body.main img.treeangle {
   filter: invert(100%); }
@@ -121,11 +1123,6 @@ div.metricchoice select, div.metricchoice input, div.metricchoice select, div.me
 td.title {
   display: table-cell; }
 
-/* TODO: Reproduce this html element */
-#hover_menu div.message {
-  color: $theme-color-white;
-  background-color: $theme-color-black; }
-
 /* Spezielle Snapins */
 table.cmc_stats {
   box-sizing: border-box;
@@ -143,25 +1140,6 @@ table.cmc_stats {
 
 select.vlof_filter {
   width: auto; }
-
-.toggle_switch {
-  box-sizing: border-box;
-  border: 1px solid $theme-color-table-border;
-  background: $theme-color-white;
-  box-shadow: none;
-  height: 22px;
-  padding: 2px;
-  border-radius: 11px; }
-  .toggle_switch a, .toggle_switch body.main .popup_menu span, body.main .popup_menu .toggle_switch span {
-    border: none;
-    box-shadow: none;
-    font-size: 8px;
-    text-transform: uppercase;
-    letter-spacing: $theme-letter-spacing-table;
-    height: 16px;
-    border-radius: 8px;
-    line-height: 16px;
-    font-weight: $theme-font-weight-bold; }
 
 div.timerange {
   font-size: $theme-font-size-main;
@@ -193,58 +1171,6 @@ div.success {
   background-color: $theme-color-state-success-background;
   border-color: $theme-color-state-success-border; }
 
-table.data.werks tr:nth-child(odd) td.werklevel2 {
-  background-color: $theme-color-state-5-background; }
-
-table.data.werks tr:nth-child(even) td.werklevel2 {
-  background-color: $theme-color-state-5-background; }
-
-table.data.werks td.werklevel3 {
-  font-weight: bold; }
-
-table.data.werks tr:nth-child(odd) td.werklevel3 {
-  background-color: $theme-color-state-6-background; }
-
-table.data.werks tr:nth-child(even) td.werklevel3 {
-  background-color: $theme-color-state-6-background; }
-
-table.data.werks tr:nth-child(odd) td.werkclassfeature {
-  background-color: $theme-color-state-success-background; }
-
-table.data.werks tr:nth-child(even) td.werkclassfeature {
-  background-color: $theme-color-state-success-background; }
-
-table.data.werks tr:nth-child(even) td.werkclassfix {
-  background-color: $theme-color-main; }
-
-table.data.werks tr:nth-child(odd) td.werkclassfix {
-  background-color: $theme-color-main; }
-
-table.data.werks tr:nth-child(odd) td.werkclasssecurity {
-  background-color: $theme-color-state-2-background; }
-
-table.data.werks tr:nth-child(even) td.werkclasssecurity {
-  background-color: $theme-color-state-2-background; }
-
-table.werks td a, table.werks td body.main .popup_menu span, body.main .popup_menu table.werks td span {
-  color: $theme-color-black;
-  text-decoration: underline; }
-
-table.data.werks td.werkcompincomp_unack {
-  font-weight: bold; }
-
-table.data.werks tr:nth-child(odd) td.werkcompincomp_unack {
-  background-color: $theme-color-state-7-background; }
-
-table.data.werks tr:nth-child(even) td.werkcompincomp_unack {
-  background-color: $theme-color-state-7-background; }
-
-table.data.werks tr:nth-child(odd) td.werkcompincomp_ack {
-  background-color: $theme-color-state-8-background; }
-
-table.data.werks tr:nth-child(even) td.werkcompincomp_ack {
-  background-color: $theme-color-state-8-background; }
-
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
   background-color: $theme-color-state-3-background !important;
   border-color: $theme-color-nuance-16 !important; }
@@ -269,20 +1195,6 @@ body.main a, body.main .popup_menu span, body.main .popup_menu a {
 img.glass {
   display: none; }
 
-#hover_menu .graph_container div.title {
-  display: block; }
-#hover_menu .graph_container div.time {
-  letter-spacing: 0px; }
-
 tr.hidden {
     display: none;
-}
-
-input.button.hot, input.button.hot:active {
-  background-color: #11bd7b;
-  border: 1px solid #11bd7b !important;
-}
-
-input.button.hot:hover {
-  background-color: #13d389;
 }

@@ -463,10 +463,10 @@ def test_host_attribute_topics_for_folders():
 def test_host_attributes(for_what):
     topics = {
         "basic": [
-            'contactgroups',
             'alias',
-            'parents',
             'site',
+            'contactgroups',
+            'parents',
         ],
         "address": [
             'tag_address_family',
@@ -488,9 +488,9 @@ def test_host_attributes(for_what):
             'management_ipmi_credentials',
         ],
         "meta_data": [
+            'meta_data',
             'locked_by',
             'locked_attributes',
-            'meta_data',
         ],
         'custom_attributes': ['labels',],
     }

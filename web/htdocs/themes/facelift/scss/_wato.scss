@@ -895,21 +895,6 @@ div.varname {
   }
 }
 
-.wato div.globalvars .toggle_switch a,
-.wato div.globalvars .toggle_switch body.main .popup_menu span,
-body.main .popup_menu .wato div.globalvars .toggle_switch span {
-  height: 16px;
-  font-size: 8px;
-  font-weight: $theme-font-weight-bold;
-  line-height: 16px;
-  letter-spacing: $theme-letter-spacing-table;
-  text-transform: uppercase;
-  border: none;
-  border-radius: 8px;
-  box-shadow: none;
-}
-
-
 /* Table in page "Global variables" */
 /* TODO: Reproduce these table.data.globalvars html elements */
 .wato table.data.globalvars {

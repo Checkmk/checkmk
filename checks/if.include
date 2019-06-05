@@ -797,10 +797,7 @@ def check_if_common_single(item,
     cluster_items = {}
 
     # error checking might be turned off
-    if params["errors"]:
-        err_warn, err_crit = params["errors"]
-    else:
-        err_warn, err_crit = None, None
+    err_warn, err_crit = params.get("errors", (None, None))
 
     # broadcast storm detection is turned off by default
     if "nucasts" in params:

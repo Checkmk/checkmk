@@ -319,6 +319,21 @@ def _uses_description_and_alias(settings):
     return False, False
 
 
+def _group_pattern_matches(host_name, item, if_type, group_attributes):
+    if host_name not in group_attributes["group_patterns"]:
+        return False
+
+    group_iftype = group_attributes["group_patterns"][host_name].get("iftype")
+    if group_iftype is not None and saveint(group_iftype) != saveint(if_type):
+        return False
+
+    group_items = group_attributes["group_patterns"][host_name].get("items")
+    if group_items is not None and tryint(item) not in map(tryint, group_items):
+        return False
+
+    return True
+
+
 def inventory_if_common(info, has_nodeinfo=False):
     if has_nodeinfo:
         length = 21
@@ -406,24 +421,7 @@ def inventory_if_common(info, has_nodeinfo=False):
             # Prepare grouped interfaces
             discover_single_interface = True
             for group_name, attrs in group_patterns.items():
-                if current_host_name not in attrs["group_patterns"]:
-                    continue
-
-                # Interfaces can be grouped by item or iftype
-                match_type = True
-                group_iftype = attrs["group_patterns"][current_host_name].get("iftype")
-                if group_iftype is not None and saveint(group_iftype) != saveint(ifType):
-                    match_type = False
-
-                if not match_type:
-                    continue
-
-                match_item = True
-                group_items = attrs["group_patterns"][current_host_name].get("items")
-                if group_items is not None and not tryint(item) in map(tryint, group_items):
-                    match_item = False
-
-                if not match_item:
+                if not _group_pattern_matches(current_host_name, item, ifType, attrs):
                     continue
 
                 if attrs["group_presence"] == "instead":

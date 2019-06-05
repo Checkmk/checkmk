@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 #include "cma_core.h"
 #include "providers/internal.h"
@@ -14,8 +15,9 @@
 
 namespace cma::provider::details {
 
-bool ValidFileInfoPathEntry(const std::string Entry);
-std::string ProcessFileInfoPathEntry(const std::string Entry);
+bool ValidFileInfoPathEntry(std::string_view entry) noexcept;
+std::string ProcessFileInfoPathEntry(std::string_view entry,
+                                     FileInfo::Mode mode);
 }  // namespace cma::provider::details
 
 namespace cma::provider::details {
@@ -38,7 +40,7 @@ void GatherMatchingFilesAndDirs(
     PathVector &DirsFound);
 
 // MAIN API C ALL
-PathVector FindFilesByMask(const std::wstring Mask);
+PathVector FindFilesByMask(const std::wstring &Mask);
 
 // ------------------------------------------------------
 // Globs:
@@ -49,7 +51,12 @@ enum class GlobType { kNone, kSimple, kRecursive };
 GlobType DetermineGlobType(const std::wstring &Input);
 
 // Build correct string for output
-std::string MakeFileInfoString(const std::filesystem::path &FilePath);
+std::string MakeFileInfoString(const std::filesystem::path &FilePath,
+                               FileInfo::Mode mode);
+std::string MakeFileInfoStringMissing(const std::filesystem::path &file_name,
+                                      FileInfo::Mode mode);
+std::string MakeFileInfoStringPresented(const std::filesystem::path &file_name,
+                                        FileInfo::Mode mode);
 
 // ------------------------------------------------------
 // Specials:

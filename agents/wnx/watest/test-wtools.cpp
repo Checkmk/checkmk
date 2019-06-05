@@ -47,9 +47,9 @@ TEST(Wtools, ScanProcess) {
         auto exe_b = temp_dir / "b.cmd";
         auto exe_c = temp_dir / "c.cmd";
 
-        tst::CreateFile(exe_a, "@echo start\n call " + exe_b.u8string());
-        tst::CreateFile(exe_b, "@echo start\n call " + exe_c.u8string());
-        tst::CreateFile(exe_c, "@echo start\n powershell Start-Sleep 10000");
+        tst::ConstructFile(exe_a, "@echo start\n call " + exe_b.u8string());
+        tst::ConstructFile(exe_b, "@echo start\n call " + exe_c.u8string());
+        tst::ConstructFile(exe_c, "@echo start\n powershell Start-Sleep 10000");
         auto proc_id = cma::tools::RunStdCommand(exe_a.wstring(), false);
         EXPECT_TRUE(proc_id != 0);
 

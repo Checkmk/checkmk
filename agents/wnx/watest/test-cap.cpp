@@ -34,7 +34,7 @@ TEST(CapTest, Reinstall) {
 
     // absent source
     {
-        tst::CreateFile(target / name, "a");
+        tst::ConstructFile(target / name, "a");
         EXPECT_FALSE(NeedReinstall(target / name, source / name));
     }
 
@@ -42,20 +42,20 @@ TEST(CapTest, Reinstall) {
     tst::CreateInOut();
     // source without target
     {
-        tst::CreateFile(source / name, "a");
+        tst::ConstructFile(source / name, "a");
         EXPECT_TRUE(NeedReinstall(target / name, source / name));
     }
 
     // target is newer than source
     {
-        tst::CreateFile(target / name, "a");
+        tst::ConstructFile(target / name, "a");
         EXPECT_FALSE(NeedReinstall(target / name, source / name));
     }
 
     // source is newer than target
     {
         cma::tools::sleep(100);
-        tst::CreateFile(source / name, "a");
+        tst::ConstructFile(source / name, "a");
         EXPECT_TRUE(NeedReinstall(target / name, source / name));
     }
     tst::SafeCleanTempDir();
@@ -90,7 +90,7 @@ TEST(CapTest, InstallFileAsCopy) {
 
     // absent source
     {
-        tst::CreateFile(target_file, "1");
+        tst::ConstructFile(target_file, "1");
         EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
                                       source.wstring()));  //
         ASSERT_FALSE(fs::exists(target_file, ec)) << "must be removed";
@@ -98,7 +98,7 @@ TEST(CapTest, InstallFileAsCopy) {
 
     // target presented
     {
-        tst::CreateFile(source_file, "2");
+        tst::ConstructFile(source_file, "2");
         EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
                                       source.wstring()));  //
         EXPECT_TRUE(fs::exists(target_file, ec)) << "must be presented";
@@ -132,8 +132,8 @@ TEST(CapTest, InstallIni) {
 
     // absent source
     {
-        tst::CreateFile(bakery_yml, "1");
-        tst::CreateFile(ini_target, "1");
+        tst::ConstructFile(bakery_yml, "1");
+        tst::ConstructFile(ini_target, "1");
         EXPECT_TRUE(ReinstallIni(ini_target, ini_source));  //
         EXPECT_FALSE(fs::exists(bakery_yml, ec)) << "must be removed";
         EXPECT_FALSE(fs::exists(ini_target, ec)) << "must be removed";
@@ -175,8 +175,8 @@ TEST(CapTest, InstallCap) {
 
     // absent source
     {
-        tst::CreateFile(plugin1, "1");
-        tst::CreateFile(plugin2, "2");
+        tst::ConstructFile(plugin1, "1");
+        tst::ConstructFile(plugin2, "2");
         fs::copy_file(cap_base, cap_out, ec);
         EXPECT_TRUE(ReinstallCaps(cap_out, cap_in));  //
         EXPECT_FALSE(fs::exists(cap_out, ec)) << "file must be deleted";

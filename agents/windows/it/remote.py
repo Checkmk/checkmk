@@ -152,7 +152,7 @@ def remotetest(expected_output,
     # Not on Windows: call given test remotely over ssh
     if platform.system() != 'Windows':
         cmd = [
-            'ssh', sshopts,
+            'ssh', '-v', '-v', '-v', sshopts,
             '%s@%s' % (remoteuser, remote_ip),
             'py.test %s%s%s' % (os.path.join(remotedir, testfile),
                                 ('::%s' % testclass)

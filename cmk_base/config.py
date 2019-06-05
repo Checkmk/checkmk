@@ -2616,15 +2616,17 @@ class ConfigCache(object):
 
     def initialize(self):
         self._initialize_caches()
-        self._collect_hosttags()
         self._setup_clusters_nodes_cache()
 
         self._all_configured_clusters = self._get_all_configured_clusters()
         self._all_configured_realhosts = self._get_all_configured_realhosts()
         self._all_configured_hosts = self._get_all_configured_hosts()
 
+        tag_to_group_map = self.get_tag_to_group_map()
+        self._collect_hosttags(tag_to_group_map)
+
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
-            tag_to_group_map=self.get_tag_to_group_map(),
+            tag_to_group_map=tag_to_group_map,
             host_tag_lists=self._hosttags,
             host_paths=self._host_paths,
             clusters_of=self._clusters_of_cache,
@@ -2704,10 +2706,28 @@ class ConfigCache(object):
         # type: (str) -> str
         return self._host_paths.get(hostname, "/")
 
-    def _collect_hosttags(self):
-        for hostname, tag_groups in host_tags.iteritems():
-            self._hosttags[hostname] = self._tag_groups_to_tag_list(
-                self._host_paths.get(hostname, "/"), tag_groups)
+    def _collect_hosttags(self, tag_to_group_map):
+        """Calculate the effective tags for all configured hosts
+
+        WATO ensures that all hosts configured with WATO have host_tags set, but there may also be hosts defined
+        by the etc/check_mk/conf.d directory that are not managed by WATO. They may use the old style pipe separated
+        all_hosts configuration. Detect it and try to be compatible.
+        """
+        # Would be better to use self._all_configured_hosts, but that is not possible as long as we need the tags
+        # from the old all_hosts / clusters.keys().
+        for tagged_host in all_hosts + clusters.keys():
+            parts = tagged_host.split("|")
+            hostname = parts[0]
+
+            if hostname in host_tags:
+                # New dict host_tags are available: only need to compute the tag list
+                self._hosttags[hostname] = self._tag_groups_to_tag_list(
+                    self._host_paths.get(hostname, "/"), host_tags[hostname])
+            else:
+                # Only tag list available. Use it and compute the tag groups.
+                self._hosttags[hostname] = set(parts[1:])
+                host_tags[hostname] = self._tag_list_to_tag_groups(tag_to_group_map,
+                                                                   self._hosttags[hostname])
 
     def _tag_groups_to_tag_list(self, host_path, tag_groups):
         # type: (str, Dict[str, str]) -> Set[str]
@@ -2719,6 +2739,30 @@ class ConfigCache(object):
         tags.add("site:%s" % tag_groups["site"])
         return tags
 
+    def _tag_list_to_tag_groups(self, tag_to_group_map, tag_list):
+        # This assumes all needed aux tags of grouped are already in the tag_list
+
+        # Ensure the internal mandatory tag groups are set for all hosts
+        # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
+        # is currently responsible for calculating the host tags of a host.
+        # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
+        tag_groups = {
+            'piggyback': 'auto-piggyback',
+            'networking': 'lan',
+            'agent': 'cmk-agent',
+            'criticality': 'prod',
+            'snmp_ds': 'no-snmp',
+            'site': cmk.omd_site(),
+            'address_family': 'ip-v4-only',
+        }
+
+        for tag_id in tag_list:
+            # Assume it's an aux tag in case there is a tag configured without known group
+            tag_group_id = tag_to_group_map.get(tag_id, tag_id)
+            tag_groups[tag_group_id] = tag_id
+
+        return tag_groups
+
     # Kept for compatibility with pre 1.6 sites
     # TODO: Clean up all call sites one day (1.7?)
     # TODO: check all call sites and remove this
@@ -2727,7 +2771,7 @@ class ConfigCache(object):
         """Returns the list of all configured tags of a host. In case
         a host has no tags configured or is not known, it returns an
         empty list."""
-        if hostname in host_tags:
+        if hostname in self._hosttags:
             return self._hosttags[hostname]
 
         # Handle not existing hosts (No need to performance optimize this)

@@ -54,6 +54,60 @@ if_default_traffic_levels = None, None
 if_default_average = None
 if_disable_if64_hosts = []  # Binary host list for disabling if64 on some broken devices
 
+Interface = collections.namedtuple("Interface", [
+    "ifIndex",
+    "ifGroup",
+    "ifDescr",
+    "ifType",
+    "ifSpeed",
+    "ifOperStatus",
+    "ifOperStatusName",
+    "ifInOctets",
+    "inucast",
+    "inmcast",
+    "inbcast",
+    "ifInDiscards",
+    "ifInErrors",
+    "ifOutOctets",
+    "outucast",
+    "outmcast",
+    "outbcast",
+    "ifOutDiscards",
+    "ifOutErrors",
+    "ifOutQLen",
+    "ifAlias",
+    "ifPhysAddress",
+])
+
+
+def interface_from(line):
+    (ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast,
+     ifInDiscards, ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards,
+     ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress) = line
+
+    # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
+    # of just the ifOperStatus
+    if isinstance(ifOperStatus, tuple):
+        ifOperStatus, ifOperStatusName = ifOperStatus
+    else:
+        ifOperStatusName = if_statename(ifOperStatus)
+
+    ifGroup = None
+    if isinstance(ifIndex, tuple):
+        ifGroup, ifIndex = ifIndex
+
+    # Fix bug in TP Link switches
+    ifSpeed = saveint(ifSpeed)
+    if ifSpeed > 9 * 1000 * 1000 * 1000 * 1000:
+        ifSpeed /= 1000000
+
+    ifDescr = cleanup_if_strings(ifDescr)
+    ifAlias = cleanup_if_strings(ifAlias)
+    return Interface(ifIndex, ifGroup, ifDescr, ifType, ifSpeed, ifOperStatus, ifOperStatusName,
+                     ifInOctets, inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets,
+                     outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias,
+                     ifPhysAddress)
+
 
 #
 #    +-----------------------------------------------------------------------------+
@@ -379,39 +433,19 @@ def inventory_if_common(info, has_nodeinfo=False):
         # Determine whether single, grouped or both
         for line in info:
             _node, line = if_extract_node(line, has_nodeinfo)
-            ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, _ifInOctets, \
-                _inucast, _inmcast, _inbcast, _ifInDiscards, _ifInErrors, _ifOutOctets, \
-                _outucast, _outmcast, _outbcast, _ifOutDiscards, _ifOutErrors, \
-                _ifOutQLen, ifAlias, _ifPhysAddress = line
-
-            # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
-            # of just the ifOperStatus
-            if isinstance(ifOperStatus, tuple):
-                ifOperStatus = ifOperStatus[0]
-
-            ifGroup = None
-            if isinstance(ifIndex, tuple):
-                ifGroup, ifIndex = ifIndex
-
-            ifDescr = cleanup_if_strings(ifDescr)
-            ifAlias = cleanup_if_strings(ifAlias)
+            interface = interface_from(line)
 
             # Fix bug in brocade switches
-            if ifIndex == '':
+            if interface.ifIndex == '':
                 continue
 
-            # Fix bug in TP Link switches
-            ifSpeed = saveint(ifSpeed)
-            if ifSpeed > 9 * 1000 * 1000 * 1000 * 1000:
-                ifSpeed /= 1000000
-
             # compute item now - also for unmonitored ports - in order to see if it is unique.
-            if uses_description and ifDescr:
-                item = ifDescr
-            elif uses_alias and ifAlias:
-                item = ifAlias
+            if uses_description and interface.ifDescr:
+                item = interface.ifDescr
+            elif uses_alias and interface.ifAlias:
+                item = interface.ifAlias
             else:
-                item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers)
+                item = if_pad_with_zeroes(info, interface.ifIndex, has_nodeinfo, pad_portnumbers)
 
             if item not in global_seen_items:
                 global_seen_items.add(item)
@@ -421,7 +455,7 @@ def inventory_if_common(info, has_nodeinfo=False):
             # Prepare grouped interfaces
             discover_single_interface = True
             for group_name, attrs in group_patterns.items():
-                if not _group_pattern_matches(current_host_name, item, ifType, attrs):
+                if not _group_pattern_matches(current_host_name, item, interface.ifType, attrs):
                     continue
 
                 if attrs["group_presence"] == "instead":
@@ -435,42 +469,43 @@ def inventory_if_common(info, has_nodeinfo=False):
                 # If we're on a cluster, we have no chance calculating expected speed
                 if attrs["group_type"] == "single_host":
                     have_groups[group_name].setdefault("interfaces", [])
-                    have_groups[group_name]["interfaces"].append((saveint(ifSpeed), ifOperStatus,
-                                                                  ifType))
+                    have_groups[group_name]["interfaces"].append(
+                        (saveint(interface.ifSpeed), interface.ifOperStatus, interface.ifType))
 
             # The agent output already set this interface to grouped
-            if ifGroup:
+            if interface.ifGroup:
                 have_groups.setdefault(
-                    ifGroup, {
+                    interface.ifGroup, {
                         "interfaces": [],
                         "group_type": "single_host",
                         "group_patterns": {
                             current_host_name: {
                                 "items": [],
-                                "iftype": ifType
+                                "iftype": interface.ifType
                             }
                         },
                     })
-                have_groups[ifGroup]["interfaces"].append((saveint(ifSpeed), ifOperStatus, ifType))
+                have_groups[interface.ifGroup]["interfaces"].append(
+                    (saveint(interface.ifSpeed), interface.ifOperStatus, interface.ifType))
                 discover_single_interface = False
 
             # Prepare single interfaces
-            if discover_single_interface and ifIndex not in seen_indicies and \
-               ifType in porttypes and ifOperStatus in portstates and \
-               port_match(ifAlias, match_alias) and port_match(ifDescr, match_desc):
+            if discover_single_interface and interface.ifIndex not in seen_indicies and \
+               interface.ifType in porttypes and interface.ifOperStatus in portstates and \
+               port_match(interface.ifAlias, match_alias) and port_match(interface.ifDescr, match_desc):
                 params = {}
                 if if_inventory_monitor_state:
-                    params["state"] = [ifOperStatus]
+                    params["state"] = [interface.ifOperStatus]
 
-                if ifSpeed != "" and if_inventory_monitor_speed:
-                    params["speed"] = int(ifSpeed)
-                seen_indicies.add(ifIndex)
+                if interface.ifSpeed != "" and if_inventory_monitor_speed:
+                    params["speed"] = int(interface.ifSpeed)
+                seen_indicies.add(interface.ifIndex)
 
                 try:
-                    index_as_item = int(item) == int(ifIndex)
+                    index_as_item = int(item) == int(interface.ifIndex)
                 except (TypeError, ValueError):
                     index_as_item = False
-                pre_inventory.append((item, "%r" % params, int(ifIndex), index_as_item))
+                pre_inventory.append((item, "%r" % params, int(interface.ifIndex), index_as_item))
 
         # Create pseudo interfaces out of groups
         # On cluster groups we have no 'interfaces' key
@@ -504,7 +539,7 @@ def inventory_if_common(info, has_nodeinfo=False):
                 if group_type == "single_host" and if_inventory_monitor_state:
                     params["state"] = [group_operStatus]
 
-                if group_type == "single_host" and ifSpeed != "" and if_inventory_monitor_speed:
+                if group_type == "single_host" and if_inventory_monitor_speed:
                     params["speed"] = total_speed
 
                 # Note: the group interface index is always set to 1
@@ -564,25 +599,19 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
 
     for element in info:
         node, line = if_extract_node(element, has_nodeinfo)
-        ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
-            inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
-            outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-            ifOutQLen, ifAlias, _ifPhysAddress = line
-
-        ifGroup = None
-        if isinstance(ifIndex, tuple):
-            ifGroup, ifIndex = ifIndex
+        interface = interface_from(line)
 
         service_name_type = params["aggregate"].get("item_type")
         if service_name_type == "description":
-            if_member_item = ifDescr
+            if_member_item = interface.ifDescr
         elif service_name_type == "alias":
-            if_member_item = ifAlias
+            if_member_item = interface.ifAlias
         else:  # index
             pad_portnumbers = item[0] == '0'
-            if_member_item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers)
+            if_member_item = if_pad_with_zeroes(info, interface.ifIndex, has_nodeinfo,
+                                                pad_portnumbers)
 
-        if ifGroup and ifGroup == item:
+        if interface.ifGroup and interface.ifGroup == item:
             matching_interfaces.append((if_member_item, element))
 
         else:
@@ -606,7 +635,7 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
                 add_interface = False
 
             if iftype is not None and \
-                not saveint(ifType) == saveint(iftype):
+                not saveint(interface.ifType) == saveint(iftype):
                 add_interface = False
 
             this_element = (if_member_item, element)
@@ -637,49 +666,35 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
     num_up = 0
     for (if_member_item, element) in matching_interfaces:
         node, line = if_extract_node(element, has_nodeinfo)
-        ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
-            inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
-            outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-            ifOutQLen, ifAlias, _ifPhysAddress = line
-
-        # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
-        # of just the ifOperStatus
-        if isinstance(ifOperStatus, tuple):
-            ifOperStatus, ifOperStatusName = ifOperStatus
-        else:
-            ifOperStatusName = if_statename(ifOperStatus)
+        interface = interface_from(line)
 
         # Append an additional entry to the info table containing the calculated group_info
-        if ifOperStatus == '1':
+        if interface.ifOperStatus == '1':
             num_up += 1
-
-        ifGroup = None
-        if isinstance(ifIndex, tuple):
-            ifGroup, ifIndex = ifIndex
 
         group_members.setdefault(node, [])
         group_members[node].append({
             "name": if_member_item,
-            "state": ifOperStatus,
-            "state_name": ifOperStatusName,
+            "state": interface.ifOperStatus,
+            "state_name": interface.ifOperStatusName,
         })
 
         # Only these values are packed into counters
         # We might need to enlarge this table
         # However, more values leads to more MKCounterWrapped...
         for name, counter in [
-            ("in", ifInOctets),
-            ("inucast", inucast),
-            ("inmcast", inmcast),
-            ("inbcast", inbcast),
-            ("indisc", ifInDiscards),
-            ("inerr", ifInErrors),
-            ("out", ifOutOctets),
-            ("outucast", outucast),
-            ("outmcast", outmcast),
-            ("outbcast", outbcast),
-            ("outdisc", ifOutDiscards),
-            ("outerr", ifOutErrors),
+            ("in", interface.ifInOctets),
+            ("inucast", interface.inucast),
+            ("inmcast", interface.inmcast),
+            ("inbcast", interface.inbcast),
+            ("indisc", interface.ifInDiscards),
+            ("inerr", interface.ifInErrors),
+            ("out", interface.ifOutOctets),
+            ("outucast", interface.outucast),
+            ("outmcast", interface.outmcast),
+            ("outbcast", interface.outbcast),
+            ("outdisc", interface.ifOutDiscards),
+            ("outerr", interface.ifOutErrors),
         ]:
             try:
                 get_rate(
@@ -692,22 +707,22 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
                 # continue, other counters might wrap as well
 
         # Add interface info to group info
-        group_info["ifSpeed"] += ifOperStatus == "1" and saveint(ifSpeed) or 0
-        group_info["ifInOctets"] += saveint(ifInOctets)
-        group_info["inucast"] += saveint(inucast)
-        group_info["inmcast"] += saveint(inmcast)
-        group_info["inbcast"] += saveint(inbcast)
-        group_info["ifInDiscards"] += saveint(ifInDiscards)
-        group_info["ifInErrors"] += saveint(ifInErrors)
-        group_info["ifOutOctets"] += saveint(ifOutOctets)
-        group_info["outucast"] += saveint(outucast)
-        group_info["outmcast"] += saveint(outmcast)
-        group_info["outbcast"] += saveint(outbcast)
-        group_info["ifOutDiscards"] += saveint(ifOutDiscards)
-        group_info["ifOutErrors"] += saveint(ifOutErrors)
-        group_info["ifOutQLen"] += saveint(ifOutQLen)
+        group_info["ifSpeed"] += interface.ifOperStatus == "1" and interface.ifSpeed or 0
+        group_info["ifInOctets"] += saveint(interface.ifInOctets)
+        group_info["inucast"] += saveint(interface.inucast)
+        group_info["inmcast"] += saveint(interface.inmcast)
+        group_info["inbcast"] += saveint(interface.inbcast)
+        group_info["ifInDiscards"] += saveint(interface.ifInDiscards)
+        group_info["ifInErrors"] += saveint(interface.ifInErrors)
+        group_info["ifOutOctets"] += saveint(interface.ifOutOctets)
+        group_info["outucast"] += saveint(interface.outucast)
+        group_info["outmcast"] += saveint(interface.outmcast)
+        group_info["outbcast"] += saveint(interface.outbcast)
+        group_info["ifOutDiscards"] += saveint(interface.ifOutDiscards)
+        group_info["ifOutErrors"] += saveint(interface.ifOutErrors)
+        group_info["ifOutQLen"] += saveint(interface.ifOutQLen)
         # This is the fallback ifType if None is set in the parameters
-        group_info["ifType"] = ifType
+        group_info["ifType"] = interface.ifType
 
     if num_up == len(matching_interfaces):
         group_operStatus = "1"  # up
@@ -815,25 +830,9 @@ def check_if_common_single(item,
 
     for line in info:
         node, line = if_extract_node(line, has_nodeinfo)
-        ifIndex, ifDescr, _ifType, ifSpeed, ifOperStatus, ifInOctets,  \
-            inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
-            outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-            ifOutQLen, ifAlias, ifPhysAddress = line
+        interface = interface_from(line)
 
-        # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
-        # of just the ifOperStatus
-        if isinstance(ifOperStatus, tuple):
-            ifOperStatus, ifOperStatusName = ifOperStatus
-        else:
-            ifOperStatusName = if_statename(ifOperStatus)
-
-        if isinstance(ifIndex, tuple):
-            _ifGroup, ifIndex = ifIndex
-
-        ifDescr = cleanup_if_strings(ifDescr)
-        ifAlias = cleanup_if_strings(ifAlias)
-
-        if if_item_matches(item, ifIndex, ifAlias, ifDescr):
+        if if_item_matches(item, interface.ifIndex, interface.ifAlias, interface.ifDescr):
             if group_members:
                 # The detailed group info is added later on
                 infotext = group_name + " Status "
@@ -841,15 +840,16 @@ def check_if_common_single(item,
                 if "infotext_format" in params:
                     bracket_info = ""
                     if params["infotext_format"] == "alias":
-                        bracket_info = ifAlias
+                        bracket_info = interface.ifAlias
                     elif params["infotext_format"] == "description":
-                        bracket_info = ifDescr
+                        bracket_info = interface.ifDescr
                     elif params["infotext_format"] == "alias_and_description":
-                        bracket_info = ", ".join([i for i in [ifAlias, ifDescr] if i])
+                        bracket_info = ", ".join(
+                            [i for i in [interface.ifAlias, interface.ifDescr] if i])
                     elif params["infotext_format"] == "alias_or_description":
-                        bracket_info = ifAlias if ifAlias else ifDescr
+                        bracket_info = interface.ifAlias if interface.ifAlias else interface.ifDescr
                     elif params["infotext_format"] == "desription_or_alias":
-                        bracket_info = ifDescr if ifDescr else ifAlias
+                        bracket_info = interface.ifDescr if interface.ifDescr else interface.ifAlias
 
                     if bracket_info:
                         infotext = "[%s]" % bracket_info
@@ -858,31 +858,33 @@ def check_if_common_single(item,
                 else:
                     # Display port number or alias in infotext if that is not part
                     # of the service description anyway
-                    if item.lstrip("0") == ifIndex \
-                        and (item == ifAlias or ifAlias == '') \
-                        and (item == ifDescr or ifDescr == ''): # description trivial
+                    if item.lstrip("0") == interface.ifIndex \
+                        and (item == interface.ifAlias or interface.ifAlias == '') \
+                        and (item == interface.ifDescr or interface.ifDescr == ''): # description trivial
                         infotext = ""
-                    elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '':  # non-unique Alias
-                        infotext = "[%s/%s]" % (ifAlias, ifDescr)
-                    elif item != ifAlias and ifAlias != '':  # alias useful
-                        infotext = "[%s] " % ifAlias
-                    elif item != ifDescr and ifDescr != '':  # description useful
-                        infotext = "[%s] " % ifDescr
+                    elif item == "%s %s" % (interface.ifAlias, interface.ifIndex
+                                           ) and interface.ifDescr != '':  # non-unique Alias
+                        infotext = "[%s/%s]" % (interface.ifAlias, interface.ifDescr)
+                    elif item != interface.ifAlias and interface.ifAlias != '':  # alias useful
+                        infotext = "[%s] " % interface.ifAlias
+                    elif item != interface.ifDescr and interface.ifDescr != '':  # description useful
+                        infotext = "[%s] " % interface.ifDescr
                     else:
-                        infotext = "[%s] " % ifIndex
+                        infotext = "[%s] " % interface.ifIndex
 
                 if node is not None:
                     infotext = "%son %s: " % (infotext, node)
 
             state = 0
-            infotext += "(%s)" % ifOperStatusName
-            if targetstates and (ifOperStatus != targetstates and
-                                 not (isinstance(targetstates,
-                                                 (list, tuple)) and ifOperStatus in targetstates)):
+            infotext += "(%s)" % interface.ifOperStatusName
+            if targetstates and (
+                    interface.ifOperStatus != targetstates and
+                    not (isinstance(targetstates,
+                                    (list, tuple)) and interface.ifOperStatus in targetstates)):
                 state = 2
 
-            if map_operstates and ifOperStatus in map_operstates:
-                state = map_operstates[ifOperStatus]
+            if map_operstates and interface.ifOperStatus in map_operstates:
+                state = map_operstates[interface.ifOperStatus]
 
             if state == 1:
                 infotext += "(!) "
@@ -906,14 +908,12 @@ def check_if_common_single(item,
                         nodeinfo = " on node %s" % group_node
                     infotext += "[%s%s] " % (", ".join(member_info), nodeinfo)
 
-            if ifPhysAddress:
-                infotext += 'MAC: %s, ' % if_render_mac_address(ifPhysAddress)
+            if interface.ifPhysAddress:
+                infotext += 'MAC: %s, ' % if_render_mac_address(interface.ifPhysAddress)
 
             # prepare reference speed for computing relative bandwidth usage
-            speed = saveint(ifSpeed)
+            speed = interface.ifSpeed
             if speed:
-                if speed > 9 * 1000 * 1000 * 1000 * 1000:
-                    speed /= (1000 * 1000)
                 ref_speed = speed / 8.0
             elif targetspeed:
                 ref_speed = targetspeed / 8.0
@@ -951,7 +951,7 @@ def check_if_common_single(item,
             # but we spotted devices, which do report error packes even for down interfaces.
             # To deal with it, we simply skip over all performance counter checks for down
             # interfaces.
-            if str(ifOperStatus) == "2":
+            if str(interface.ifOperStatus) == "2":
                 return state, infotext
 
             # Performance counters
@@ -959,20 +959,20 @@ def check_if_common_single(item,
             wrapped = False
             perfdata = []
             for name, counter, warn, crit, mmin, mmax in [
-                ("in", ifInOctets, traffic_levels[('in', 'upper', 'warn')],
+                ("in", interface.ifInOctets, traffic_levels[('in', 'upper', 'warn')],
                  traffic_levels[('in', 'upper', 'crit')], 0, speed_b_in),
-                ("inucast", inucast, None, None, None, None),
-                ("innucast", saveint(inmcast) + saveint(inbcast), nucast_warn, nucast_crit, None,
-                 None),
-                ("indisc", ifInDiscards, disc_warn, disc_crit, None, None),
-                ("inerr", ifInErrors, err_warn, err_crit, None, None),
-                ("out", ifOutOctets, traffic_levels[('out', 'upper', 'warn')],
+                ("inucast", interface.inucast, None, None, None, None),
+                ("innucast", saveint(interface.inmcast) + saveint(interface.inbcast), nucast_warn,
+                 nucast_crit, None, None),
+                ("indisc", interface.ifInDiscards, disc_warn, disc_crit, None, None),
+                ("inerr", interface.ifInErrors, err_warn, err_crit, None, None),
+                ("out", interface.ifOutOctets, traffic_levels[('out', 'upper', 'warn')],
                  traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
-                ("outucast", outucast, None, None, None, None),
-                ("outnucast", saveint(outmcast) + saveint(outbcast), nucast_warn, nucast_crit, None,
-                 None),
-                ("outdisc", ifOutDiscards, disc_warn, disc_crit, None, None),
-                ("outerr", ifOutErrors, err_warn, err_crit, None, None),
+                ("outucast", interface.outucast, None, None, None, None),
+                ("outnucast", saveint(interface.outmcast) + saveint(interface.outbcast),
+                 nucast_warn, nucast_crit, None, None),
+                ("outdisc", interface.ifOutDiscards, disc_warn, disc_crit, None, None),
+                ("outerr", interface.ifOutErrors, err_warn, err_crit, None, None),
             ]:
 
                 try:
@@ -1003,7 +1003,7 @@ def check_if_common_single(item,
                     raise MKCounterWrapped("Counter wrap, skipping checks this time")
                 perfdata = []
             else:
-                perfdata.append(("outqlen", saveint(ifOutQLen)))
+                perfdata.append(("outqlen", saveint(interface.ifOutQLen)))
 
                 def format_value(value):
                     if unit == "Bit":

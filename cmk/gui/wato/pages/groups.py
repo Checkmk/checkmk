@@ -442,7 +442,7 @@ class ModeEditHostgroup(ModeEditGroup):
         return ["groups"]
 
     def _load_groups(self):
-        return load_service_group_information()
+        return load_host_group_information()
 
     def title(self):
         if self._new:

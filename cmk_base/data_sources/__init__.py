@@ -164,13 +164,13 @@ class DataSources(object):
 
     def describe_data_sources(self):
         if self._host_config.is_all_agents_host:
-            return "Contact Check_MK Agent and use all enabled special agents"
+            return "Normal Checkmk agent, all configured special agents"
 
         elif self._host_config.is_all_special_agents_host:
-            return "Use all enabled special agents"
+            return "No Checkmk agent, all configured special agents"
 
         elif self._host_config.is_tcp_host:
-            return "Contact either Check_MK Agent or use a single special agent"
+            return "Normal Checkmk agent, or special agent if configured"
 
         return "No agent"
 

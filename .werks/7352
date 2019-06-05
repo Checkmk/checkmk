@@ -57,9 +57,7 @@ New ruleset:
 F+:rules.mk
 host_contactgroups = [
     {
-        'condition': {
-            'host_folder': '/' + FOLDER_PATH
-        },
+        'condition': {},
         'value': 'all',
         'options': {
             'description': u'Put all hosts into the contact group "all"'
@@ -85,9 +83,11 @@ you may use a condition like this:
 
 F+:rules.mk
 "condition": {
-    "host_name": ["host1", "host2"]},
+    "host_name": ["host1", "host2"],
 }
 F-:
+
+The entries in the host list are ORed.
 
 <h2>Exclude hosts</h2>
 
@@ -126,7 +126,9 @@ F+:rules.mk
 }
 F-:
 
-<h2>Combine different conditions<h2>
+The single tag conditions are ANDed.
+
+<h2>Combine different conditions</h2>
 
 Match test hosts that start with <tt>abc</tt>:
 
@@ -138,6 +140,8 @@ F+:rules.mk
     },
 }
 F-:
+
+Different types of conditions are ANDed.
 
 <h2>Service rulesets: Match on the description</h2>
 

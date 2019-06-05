@@ -67,6 +67,7 @@ from cmk.gui.pages import page_registry, Page, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.plugins.metrics import metric_info
 
 import livestatus
 
@@ -4800,3 +4801,12 @@ class LogLevelChoice(DropdownChoice):
             ],
         })
         super(LogLevelChoice, self).__init__(**kwargs)
+
+
+def MetricName():
+    """Factory of a Dropdown menu from all known metric names"""
+    return DropdownChoice(
+        title=_("Metric Name"),
+        choices=[
+            (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
+        ])

@@ -848,3 +848,11 @@ def _mix_colors(a, b):
 
 def render_color_icon(color):
     return html.render_div('', class_="color", style="background-color: %s" % color)
+
+
+def reverse_translate_metric_name(canonical_name):
+    "Return all known perf data names that are translated into canonical_name"
+    return set([
+        metric for trans in check_metrics.values()
+        for metric, change in trans.items() if change.get('name', '') == canonical_name
+    ] + [canonical_name])

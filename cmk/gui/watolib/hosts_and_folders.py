@@ -663,8 +663,8 @@ class CREFolder(BaseFolder):
         out = cStringIO.StringIO()
         out.write(wato_fileheader())
 
-        all_hosts = []  # list of [Python string for all_hosts]
-        clusters = []  # tuple list of (Python string, nodes)
+        all_hosts = []  # type: List[str]
+        clusters = {}  # type: Dict[str, List[str]]
         hostnames = self.hosts().keys()
         hostnames.sort()
         custom_macros = {}  # collect value for attributes that are to be present in Nagios
@@ -689,12 +689,6 @@ class CREFolder(BaseFolder):
             effective = host.effective_attributes()
             cleaned_hosts[hostname] = host.attributes()
 
-            tags = host.tags()
-            tagstext = "|".join(list(tags))
-            if tagstext:
-                tagstext += "|"
-            hostentry = '"%s|%swato|/" + FOLDER_PATH + "/"' % (hostname, tagstext)
-
             tag_groups = host.tag_groups()
             if tag_groups:
                 host_tags[hostname] = tag_groups
@@ -704,9 +698,9 @@ class CREFolder(BaseFolder):
                 host_labels[hostname] = labels
 
             if host.is_cluster():
-                clusters.append((hostentry, host.cluster_nodes()))
+                clusters[hostname] = host.cluster_nodes()
             else:
-                all_hosts.append(hostentry)
+                all_hosts.append(hostname)
 
             # Save the effective attributes of a host to the related attribute maps.
             # These maps are saved directly in the hosts.mk to transport the effective
@@ -748,17 +742,11 @@ class CREFolder(BaseFolder):
                                 custom_macros[custom_varname] = {}
                             custom_macros[custom_varname][hostname] = nagstring
 
-        if len(all_hosts) > 0:
-            out.write("all_hosts += [\n")
-            for entry in all_hosts:
-                out.write('  %s,\n' % entry)
-            out.write("]\n")
+        if all_hosts:
+            out.write("all_hosts += %s\n" % format_config_value(all_hosts))
 
-        if len(clusters) > 0:
-            out.write("\nclusters.update({")
-            for entry, nodes in clusters:
-                out.write('\n  %s : %s,\n' % (entry, repr(nodes)))
-            out.write("})\n")
+        if clusters:
+            out.write("\nclusters.update(%s)\n" % format_config_value(clusters))
 
         out.write("\nhost_tags.update(%s)\n" % format_config_value(host_tags))
 

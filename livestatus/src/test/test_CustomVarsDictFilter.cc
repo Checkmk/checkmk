@@ -14,20 +14,43 @@
 
 namespace {
 struct CustomVarsDictFilterTest : public ::testing::Test {
-    TestHost test_host{{{"ERNIE", "Bert"},  //
-                        {"HARRY", "Hirsch"},
-                        {"_TAG_GUT", "Guten Tag!"}}};
+    bool accepts(AttributeKind kind, const std::string& value) {
+        CustomVarsDictColumn cvdc{
+            "name", "description", -1, -1, -1, offsetof(host, custom_variables),
+            &core,  kind};
+        CustomVarsDictFilter filter{Filter::Kind::row, cvdc,
+                                    RelationalOperator::equal, value};
+        return filter.accepts(Row{&test_host}, {}, {});
+    }
+
     NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
                     Encoding::utf8};
-    CustomVarsDictColumn cvdc{"name", "description",
-                              -1,     -1,
-                              -1,     offsetof(host, custom_variables),
-                              &core,  AttributeKind::tags};
+
+    TestHost test_host{{{"ERNIE", "Bert"},
+                        {"GUT", "Mies"},
+                        {"_TAG_GUT", "Guten Tag!"},
+                        {"_LABEL_GÓÐ", "Góðan dag!"},
+                        {"_LABEL_GUT", "foo"},
+                        {"_LABELSOURCE_GUT", "bar"}}};
 };
 }  // namespace
 
-TEST_F(CustomVarsDictFilterTest, simple) {
-    CustomVarsDictFilter filter{Filter::Kind::row, cvdc,
-                                RelationalOperator::equal, "GUT Guten Tag!"};
-    EXPECT_EQ(true, filter.accepts(Row{&test_host}, {}, {}));
+TEST_F(CustomVarsDictFilterTest, unquoted_kinds) {
+    EXPECT_TRUE(accepts(AttributeKind::custom_variables, "GUT Mies"));
+    EXPECT_TRUE(accepts(AttributeKind::tags, "GUT Guten Tag!"));
+    EXPECT_TRUE(accepts(AttributeKind::labels, "GUT foo"));
+    EXPECT_TRUE(accepts(AttributeKind::label_sources, "GUT bar"));
+}
+
+TEST_F(CustomVarsDictFilterTest, unquoted_splitting) {
+    EXPECT_TRUE(accepts(AttributeKind::tags, "     GUT Guten Tag!"));
+    EXPECT_TRUE(accepts(AttributeKind::tags, "     GUT    Guten Tag!"));
+    EXPECT_FALSE(accepts(AttributeKind::tags, "    GUT    Guten Tag!    "));
+}
+
+TEST_F(CustomVarsDictFilterTest, unquoted_utf8) {
+    EXPECT_TRUE(accepts(AttributeKind::labels, "GÓÐ Góðan dag!"));
+    EXPECT_TRUE(accepts(AttributeKind::labels, "     GÓÐ Góðan dag!"));
+    EXPECT_TRUE(accepts(AttributeKind::labels, "     GÓÐ    Góðan dag!"));
+    EXPECT_FALSE(accepts(AttributeKind::labels, "    GÓÐ    Góðan dag!   "));
 }

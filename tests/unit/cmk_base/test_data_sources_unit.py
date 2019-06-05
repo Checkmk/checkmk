@@ -98,16 +98,16 @@ def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, result, 
     ("0.0.0.0 1.1.1.1/32", ["0.0.0.0", "1.1.1.1/32"]),
 ])
 def test_normalize_ip(ip_in, ips_out):
-    assert cmk_base.data_sources.tcp._normalize_ip_addresses(ip_in) == ips_out
+    assert cmk_base.data_sources.abstract._normalize_ip_addresses(ip_in) == ips_out
 
 
 @pytest.mark.parametrize("result,reported,rule", [
-    ((0, ''), "127.0.0.1", None),
-    ((0, ''), None, "127.0.0.1"),
-    ((0, ', allowed IP ranges: 1.2.3.4'), "1.2.3.4", "1.2.3.4"),
-    ((1, ', invalid access configuration:'
+    (None, "127.0.0.1", None),
+    (None, None, "127.0.0.1"),
+    ((0, 'allowed IP ranges: 1.2.3.4'), "1.2.3.4", "1.2.3.4"),
+    ((1, 'invalid access configuration:'
       ' agent allows extra: 1.2.4.6 1.2.5.6(!)'), "1.2.{3,4,5}.6", "1.2.3.6"),
-    ((1, ', invalid access configuration:'
+    ((1, 'invalid access configuration:'
       ' agent blocks: 1.2.3.4 1.2.3.5(!)'), "1.2.3.6", "1.2.3.{4,5,6}"),
 ])
 def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):

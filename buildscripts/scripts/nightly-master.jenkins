@@ -1,11 +1,9 @@
 BRANCH_NAME = scm.branches[0].name
 FOLDER_ID = BRANCH_NAME.replaceAll('\\.','')
 
-def DISTRO_LIST = "DISTRO_LIST_${BRANCH_NAME.capitalize()}
-
 properties([
   parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_LIST, description: 'List of targeted distros' ),
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
   ]),
   pipelineTriggers([

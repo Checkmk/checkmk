@@ -66,8 +66,24 @@ function enable_label_input_fields(container) {
 
         let world = element.getAttribute("data-world");
 
+        tagify.on("invalid", function() {
+            $("div.label_error").remove(); // Remove all previous errors
+
+            // Print a validation error message
+            var msg = document.createElement("div");
+            msg.classList.add("message", "error", "label_error");
+            msg.innerHTML = "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.</div>";
+            element.parentNode.insertBefore(msg, element.nextSibling);
+        });
+
+        tagify.on("add", function() {
+            $("div.label_error").remove(); // Remove all previous errors
+        });
+
         // Realize the auto completion dropdown field by using an ajax call
         tagify.on("input", function(e) {
+            $("div.label_error").remove(); // Remove all previous errors
+
             var value = e.detail;
             tagify.settings.whitelist.length = 0; // reset the whitelist
 

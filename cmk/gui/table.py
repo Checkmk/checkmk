@@ -277,7 +277,9 @@ class Table(object):
         html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
         table_id = self.id
-        num_cols = len(self.headers)
+
+        num_cols = self._get_num_cols(rows)
+
         empty_columns = self._get_empty_columns(rows, num_cols)
         num_cols -= len([v for v in empty_columns if v])
 
@@ -360,7 +362,17 @@ class Table(object):
 
         html.close_table()
 
+    def _get_num_cols(self, rows):
+        if self.headers:
+            return len(self.headers)
+        elif self.rows:
+            return len(self.rows[0])
+        return 0
+
     def _get_empty_columns(self, rows, num_cols):
+        if not num_cols:
+            return []
+
         empty_columns = [True] * num_cols
         for row_spec, _css, state, _fixed, _attrs in rows:
             if state == "header":

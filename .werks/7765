@@ -1,0 +1,23 @@
+Title: Fix parent scan when no gateway was found
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1559760294
+
+When the parent scan found not gateway, e.g. because the
+scanned host is the local host, then an exception like
+this was produced by the background job:
+
+C+:
+ERROR heute on site heute: type object argument after * must be an iterable, not NoneType
+Traceback (most recent call last):
+  File "/omd/sites/heute/lib/python/cmk/gui/wato/pages/parentscan.py", line 107, in _process_task
+    self._execute_parent_scan(task, settings))
+  File "/omd/sites/heute/lib/python/cmk/gui/wato/pages/parentscan.py", line 130, in _process_parent_scan_results
+    gateway = ParentScanResult(*gateways[0][0]) if gateways[0] is not None else None
+TypeError: type object argument after * must be an iterable, not NoneType
+C-:

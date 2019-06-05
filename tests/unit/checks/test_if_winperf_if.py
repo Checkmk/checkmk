@@ -259,3 +259,116 @@ winperf_if_section = [
 def test_winperf_if_parse_sections(check_manager, info):
     check = check_manager.get_check('winperf_if')
     check.run_parse(info)
+
+
+discovery_winperf_if_group_patterns = [
+    (
+        u'Broadcom ABC456 NetXtreme 456 GigE [Client2] 137',
+        {
+            'state': ['1'],
+            'speed': 1410065408
+        },
+    ),
+    (
+        u'Broadcom ABC123 NetXtreme 123 GigE [Client1] 138',
+        {
+            'state': ['1'],
+            'speed': 1410065408
+        },
+    ),
+    (
+        'isatap',
+        {
+            'aggregate': {
+                'item_type': 'description',
+                'group_patterns': {
+                    'test-host': {
+                        'items': [
+                            u'isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1}',
+                            u'isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1}',
+                            u'isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1}',
+                            u'isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1}',
+                            u'isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1}',
+                            u'isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1}',
+                        ]
+                    }
+                }
+            },
+            'state': ['1'],
+            'speed': 600000,
+        },
+    ),
+    (
+        'Broadcom',
+        {
+            'aggregate': {
+                'item_type': 'description',
+                'group_patterns': {
+                    'test-host': {
+                        'items': [
+                            u'Broadcom ABC123 NetXtreme 123 GigE [Client1] 138',
+                            u'Broadcom ABC456 NetXtreme 456 GigE [Client2] 137'
+                        ],
+                    },
+                },
+            },
+            'state': ['1'],
+            'speed': 2820130816,
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "settings,group_patterns,info,expected_discovery",
+    [
+        (
+            [{
+                'use_desc': True
+            }],
+            {
+                'Broadcom': {
+                    'group_patterns': {
+                        'test-host': {
+                            'items': [
+                                u'Broadcom ABC123 NetXtreme 123 GigE [Client1] 138',
+                                u'Broadcom ABC456 NetXtreme 456 GigE [Client2] 137'
+                            ],
+                        },
+                    },
+                    'group_presence': 'separate',  # discover group interfaces additionally
+                    'group_type': 'single_host',
+                },
+                'isatap': {
+                    'group_patterns': {
+                        'test-host': {
+                            'items': [
+                                u'isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1}',
+                                u'isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1}',
+                                u'isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1}',
+                                u'isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1}',
+                                u'isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1}',
+                                u'isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1}',
+                            ],
+                        },
+                    },
+                    'group_presence': 'instead',  # only discover group interfaces
+                    'group_type': 'single_host'
+                }
+            },
+            winperf_if_section,
+            discovery_winperf_if_group_patterns,
+        ),
+    ],
+)
+def test_winperf_if_inventory_group_patterns(check_manager, monkeypatch, settings, group_patterns,
+                                             info, expected_discovery):
+    check = check_manager.get_check("winperf_if")
+    monkeypatch.setitem(check.context, "host_name", lambda: "test-host")
+    monkeypatch.setitem(check.context, "host_extra_conf", lambda _, __: settings)
+    monkeypatch.setitem(check.context,
+                        "_prepare_if_group_patterns_from_conf", lambda: group_patterns)
+    parsed = check.run_parse(info)
+    actual_discovery = check.run_discovery(parsed)
+    assertDiscoveryResultsEqual(check, DiscoveryResult(sorted(expected_discovery)),
+                                DiscoveryResult(sorted(actual_discovery)))

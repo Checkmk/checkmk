@@ -23,7 +23,18 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+"""mk_logwatch
+This is the Check_MK Agent plugin. If configured it will be called by the
+agent without arguments.
 
+Options:
+    -d    Debug mode: Colored output, no saving of status.
+    -h    Show help.
+    -v    Verbose output for debugging purposes (no debug mode).
+
+You should find an example configuration file at
+'../cfg_examples/logwatch.cfg' relative to this file.
+"""
 import glob
 import logging
 import os
@@ -45,6 +56,15 @@ IPV4_REGEX = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
 
 IPV6_REGEX = re.compile(r"^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$")
 
+TTY_COLORS = {
+    'C': '\033[1;31m',  # red
+    'W': '\033[1;33m',  # yellow
+    'O': '\033[1;32m',  # green
+    'I': '\033[1;34m',  # blue
+    '.': '',  # remain same
+    'normal': '\033[0m',
+}
+
 
 def parse_arguments(argv=None):
     """
@@ -56,19 +76,7 @@ def parse_arguments(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     if "-h" in argv:
-        sys.stderr.write("""
-This is the Check_MK Agent plugin. If configured it will be called by the
-agent without arguments.
-
-Options:
-    -d    Debug mode: Colored output, no saving of status.
-    -h    Show help.
-    -v    Verbose output for debugging purposes (no debug mode).
-
-You should find an example configuration file at
-'../cfg_examples/logwatch.cfg' relative to this file.
-
-""")
+        sys.stderr.write(__doc__)
         sys.exit(0)
     if "-v" in argv:
         logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -430,19 +438,6 @@ def process_logfile(logfile, patterns, opt, status):
     In case the file has never been seen before returns a list of logfile lines
     and None in case the logfile cannot be opened.
     """
-    if debug():
-        tty_red = '\033[1;31m'
-        tty_green = '\033[1;32m'
-        tty_yellow = '\033[1;33m'
-        tty_blue = '\033[1;34m'
-        tty_normal = '\033[0m'
-    else:
-        tty_red = ''
-        tty_green = ''
-        tty_yellow = ''
-        tty_blue = ''
-        tty_normal = ''
-
     if patterns is None:
         return ['[[[%s:missing]]]\n' % logfile]
 
@@ -589,14 +584,16 @@ def process_logfile(logfile, patterns, opt, status):
 
                 break  # matching rule found and executed
 
-        color = {'C': tty_red, 'W': tty_yellow, 'O': tty_green, 'I': tty_blue, '.': ''}[level]
-        if debug():
-            line = line.replace("\1", "\nCONT:")
         if level == "I":
             level = "."
         if opt.nocontext and level == '.':
             continue
-        warnings_and_errors.append("%s%s %s%s\n" % (color, level, line[:-1], tty_normal))
+
+        out_line = "%s %s" % (level, line[:-1])
+        if sys.stdout.isatty():
+            out_line = "%s%s%s" % (TTY_COLORS[level], out_line.replace("\1", "\nCONT:"),
+                                   TTY_COLORS['normal'])
+        warnings_and_errors.append("%s\n" % out_line)
 
     new_offset = os.lseek(file_desc, 0, os.SEEK_CUR)
     status[logfile] = new_offset, inode
@@ -605,7 +602,8 @@ def process_logfile(logfile, patterns, opt, status):
     if opt.maxfilesize and (offset // opt.maxfilesize) < (new_offset // opt.maxfilesize):
         warnings_and_errors.append(
             "%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
-            (tty_yellow, opt.maxfilesize, new_offset // opt.maxfilesize, tty_normal))
+            (TTY_COLORS['W'] if sys.stdout.isatty() else '', opt.maxfilesize,
+             new_offset // opt.maxfilesize, TTY_COLORS['normal'] if sys.stdout.isatty() else ''))
 
     # output all lines if at least one warning, error or ok has been found
     if worst > -1:

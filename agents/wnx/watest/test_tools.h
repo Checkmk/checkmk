@@ -3,6 +3,7 @@
 //
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <tuple>
 
 #include "cfg.h"
@@ -23,7 +24,8 @@ public:
     ~YamlLoader() { OnStart(cma::AppType::test); }
 };
 
-inline void CreateFile(std::filesystem::path Path, std::string Content) {
+inline void ConstructFile(std::filesystem::path Path,
+                          std::string_view Content) {
     std::ofstream ofs(Path);
 
     ofs << Content;
@@ -35,7 +37,7 @@ void SafeCleanTempDir(const std::string Sub);
 inline auto CreateIniFile(std::filesystem::path Lwa, const std::string Content,
                           const std::string YamlName) {
     auto ini_file = Lwa / (YamlName + ".ini");
-    CreateFile(Lwa / ini_file, Content);
+    ConstructFile(Lwa / ini_file, Content);
     return ini_file;
 }
 

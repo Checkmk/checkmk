@@ -131,6 +131,14 @@ fi
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
+unsupported_os () {
+    logging -c "[set_os_env]" "Unsupported OS: ${OS_TYPE}"
+    echo "Unsupported OS: $OS_TYPE" >&2
+    exit 1
+}
+
+
 file_mtime () {
     /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($mtime);' "$1"
 }
@@ -140,8 +148,6 @@ set_os_env () {
     if [ "$OS_TYPE" = 'Linux' ]; then
         GREP=$(which grep)
         AWK=$(which awk)
-        STATCX='stat -c %X'
-        STATCY='stat -c %Y'
 
     elif [ "$OS_TYPE" = 'SunOS' ]; then
         # expand the PATH for inetd. Otherwise some stuff in /opt/sfw/bin is not found!
@@ -155,30 +161,43 @@ set_os_env () {
         fi
 
         AWK=$(which nawk)
-        STATCX='file_mtime'
-        STATCY='file_mtime'
 
     elif [ "$OS_TYPE" = 'AIX' ]; then
         GREP=$(which grep)
         AWK=$(which awk)
-        STATCX='file_mtime'
-        STATCY='file_mtime'
 
     elif [ "$OS_TYPE" = 'HP-UX' ]; then
         GREP=$(which grep)
         AWK=$(which awk)
-        STATCX="perl -le 'print((stat shift)[8])'"
-        STATCY="perl -le 'print((stat shift)[9])'"
 
     else
-        logging -c "[set_os_env]" "Unsupported OS: ${OS_TYPE}"
-        echo "Unsupported OS: $OS_TYPE" >&2
-        exit 1
+        unsupported_os
 
     fi
 
-    export GREP AWK STATCX STATCY
+    export GREP AWK
 }
+
+
+mk_ora_atime () {
+    case $OS_TYPE in
+        Linux) stat -c %X "$@";;
+        SunOS|AIX) file_mtime "$@";;
+        HP-UX) perl -le 'print((stat shift)[8])' "$@";;
+        *) unsupported_os;;
+    esac
+}
+
+
+mk_ora_mtime () {
+    case $OS_TYPE in
+        Linux) stat -c %Y "$@";;
+        SunOS|AIX) file_mtime "$@";;
+        HP-UX) perl -le 'print((stat shift)[9])' "$@";;
+        *) unsupported_os;;
+    esac
+}
+
 
 #.
 #   .--config--------------------------------------------------------------.
@@ -1757,7 +1776,7 @@ do_custom_sqls () {
                 "Max cache age: $max_cache_age"
 
         if [ "$MK_ORA_DEBUG_CONNECT" = "1" ]; then
-            do_testmode_custom_sql 
+            do_testmode_custom_sql
         else
             if [ -z "$max_cache_age" ]; then
                 local output=
@@ -1990,7 +2009,7 @@ run_cached () {
     # perl is needed for Solaris => no date +%s availible
     now=$(perl -le "print time()")
     if [ -e "${cache_file}.new" ]; then
-        cf_atime=$(eval "$STATCX" "${cache_file}.new")
+        cf_atime=$(mk_ora_atime "${cache_file}.new")
         if [ $((now - cf_atime)) -ge $((maxage * 2)) ]; then
             # Kill the process still accessing that file in case
             # it is still running. This avoids overlapping processes!
@@ -2003,7 +2022,7 @@ run_cached () {
 
     # Check if cache file exists and is recent enough
     if [ -s "$cache_file" ]; then
-        mtime=$(eval "$STATCY" "$cache_file")
+        mtime=$(mk_ora_mtime "$cache_file")
         if [ $((now - mtime)) -le "$maxage" ]; then
             use_cache_file=1
         fi
@@ -2389,11 +2408,7 @@ if [ "$MK_ORA_LOGGING" == "1" ]; then
 fi
 
 set_os_env
-logging "[preliminaries]" "OS: ${OS_TYPE}"\
-        "GREP: ${GREP}" "AWK: ${AWK}" "STATCX: ${STATCX}" "STATCY: ${STATCY}"
-
-
-logging "[preliminaries]" "SYNC_SECTIONS: ${SYNC_SECTIONS}"\
+logging "[preliminaries]" "OS: ${OS_TYPE}" "SYNC_SECTIONS: ${SYNC_SECTIONS}"\
         "ASYNC_SECTIONS: ${ASYNC_SECTIONS}" "SYNC_ASM_SECTIONS: ${SYNC_ASM_SECTIONS}"\
         "ASYNC_ASM_SECTIONS: ${ASYNC_ASM_SECTIONS}" "CACHE_MAXAGE: ${CACHE_MAXAGE}"\
         "ONLY_SIDS: ${ONLY_SIDS}" "SKIP_SIDS: ${SKIP_SIDS}"

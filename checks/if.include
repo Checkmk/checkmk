@@ -409,19 +409,21 @@ def inventory_if_common(info, has_nodeinfo=False):
                 if current_host_name not in attrs["group_patterns"]:
                     continue
 
-                p_node_items = attrs["group_patterns"][current_host_name].get("items")
-                p_iftype = attrs["group_patterns"][current_host_name].get("iftype")
-
                 # Interfaces can be grouped by item or iftype
                 match_type = True
-                if p_iftype is not None and saveint(p_iftype) != saveint(ifType):
+                group_iftype = attrs["group_patterns"][current_host_name].get("iftype")
+                if group_iftype is not None and saveint(group_iftype) != saveint(ifType):
                     match_type = False
 
+                if not match_type:
+                    continue
+
                 match_item = True
-                if p_node_items is not None and not tryint(item) in map(tryint, p_node_items):
+                group_items = attrs["group_patterns"][current_host_name].get("items")
+                if group_items is not None and not tryint(item) in map(tryint, group_items):
                     match_item = False
 
-                if not (match_item and match_type):
+                if not match_item:
                     continue
 
                 if attrs["group_presence"] == "instead":

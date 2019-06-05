@@ -107,7 +107,7 @@ class HostAttributeTopicAddress(HostAttributeTopic):
 
     @property
     def title(self):
-        return _("Address")
+        return _("Network Address")
 
     @property
     def sort_index(self):
@@ -197,7 +197,7 @@ class HostAttributeTopicMetaData(HostAttributeTopic):
 
     @property
     def title(self):
-        return _("Meta data")
+        return _("Creation / Locking")
 
     @property
     def sort_index(self):
@@ -645,14 +645,16 @@ def _transform_attribute_topic_title_to_id(topic_title):
         u"Management Board": "management_board",
         u"Network Scan": "network_scan",
         u"Custom attributes": "custom_attributes",
-        u"Host tags": "host_tags",
+        u"Host tags": "custom_attributes",
+        u"Tags": "custom_attributes",
         u"Grundeinstellungen": "basic",
         u"Adresse": "address",
         u"Datenquellen": "data_sources",
         u"Management-Board": "management_board",
         u"Netzwerk-Scan": "network_scan",
         u"Eigene Attribute": "custom_attributes",
-        u"Hostmerkmale": "host_tags",
+        u"Hostmerkmale": "custom_attributes",
+        u"Merkmale": "custom_attributes",
     }
 
     try:

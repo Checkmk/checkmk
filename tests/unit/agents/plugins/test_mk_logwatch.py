@@ -274,6 +274,64 @@ def test_ip_in_subnetwork(mk_logwatch):
                                         "1762:0000:0000:0000:0000:0000:0000:0000/64") is False
 
 
+@pytest.mark.parametrize(
+    "logfile, patterns, opt_raw, status, expected_output",
+    [
+        (
+            __file__,
+            [
+                ('W', re.compile('^[^u]*W.*I match only myself'), [], []),
+                ('I', re.compile('.*'), [], []),
+            ],
+            {
+                'nocontext': True
+            },
+            {
+                __file__: (0, -1)
+            },
+            [
+                u"[[[%s]]]\n" % __file__,
+                u"W                 ('W', re.compile('^[^u]*W.*I match only myself'), [], []),\n"
+            ],
+        ),
+        (
+            __file__,
+            [
+                ('W', re.compile('I don\'t match anything at all!'), [], []),
+            ],
+            {},
+            {
+                __file__: (0, -1)
+            },
+            [
+                u"[[[%s]]]\n" % __file__,
+            ],
+        ),
+        (
+            __file__,
+            [
+                ('W', re.compile('.*'), [], []),
+            ],
+            {},
+            {},
+            [  # nothing for new files
+                u"[[[%s]]]\n" % __file__,
+            ],
+        ),
+        ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),
+        ('Private Ryan', None, {}, {}, [u"[[[Private Ryan:missing]]]\n"]),
+    ])
+def test_process_logfile(mk_logwatch, logfile, patterns, opt_raw, status, expected_output):
+    opt = mk_logwatch.Options()
+    opt.values.update(opt_raw)
+
+    output = mk_logwatch.process_logfile(logfile, patterns, opt, status)
+    # TODO: assert all(isinstance(item, unicode) for item in output)
+    assert output == expected_output
+    if len(output) > 1:
+        assert logfile in status
+
+
 @pytest.fixture
 def fake_filesystem(tmp_path):
     """

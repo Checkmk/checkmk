@@ -481,10 +481,8 @@ def process_logfile(logfile, patterns, opt, status):
     # before, we set the offset to -1
     offset, prev_inode = status.get(logfile, (-1, -1))
 
-    # Seek to the current end in order to determine file size
-    # And set the current pointer to the file end
-    current_end = os.lseek(file_desc, 0, os.SEEK_END)
-    status[logfile] = current_end, inode
+    # Set the current pointer to the file end
+    status[logfile] = stat.st_size, inode
 
     # If we have never seen this file before, we do not want
     # to make a fuss about ancient log messages...
@@ -503,14 +501,14 @@ def process_logfile(logfile, patterns, opt, status):
 
     # Our previously stored offset is the current end ->
     # no new lines in this file
-    if offset == current_end:
+    if offset == stat.st_size:
         return output  # contains logfile name only
 
     # If our offset is beyond the current end, the logfile has been
     # truncated or wrapped while keeping the same inode. We assume
     # that it contains all new data in that case and restart from
     # offset 0.
-    if offset > current_end:
+    if offset > stat.st_size:
         offset = 0
 
     encoding = get_file_encoding(file_desc)

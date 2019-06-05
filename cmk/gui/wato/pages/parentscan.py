@@ -127,7 +127,7 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
         return watolib.check_mk_automation(task.site_id, "scan-parents", params + [task.host_name])
 
     def _process_parent_scan_results(self, task, settings, gateways):
-        gateway = ParentScanResult(*gateways[0][0])
+        gateway = ParentScanResult(*gateways[0][0]) if gateways[0][0] else None
         state, skipped_gateways, error = gateways[0][1:]
 
         if state in ["direct", "root", "gateway"]:

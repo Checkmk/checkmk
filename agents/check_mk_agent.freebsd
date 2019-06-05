@@ -114,7 +114,7 @@ function run_cached() {
 }
 
 echo "<<<check_mk>>>"
-echo "Version: 1.6.0b1"
+echo "Version: 1.7.0i1"
 echo "AgentOS: freebsd"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

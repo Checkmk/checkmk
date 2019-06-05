@@ -263,7 +263,6 @@ void ExternalPort::ioThreadProc(cma::world::ReplyFunc Reply) {
         auto ipv6 = groups::global.ipv6();
 
         // important diagnostic
-        XLOG::l.t("Starting IO ipv6:{}, proposed port:{}", ipv6, default_port_);
         {
             if (owner_) owner_->preContextCall();
 
@@ -276,6 +275,7 @@ void ExternalPort::ioThreadProc(cma::world::ReplyFunc Reply) {
 
             // server start
             ExternalPort::server s(context, ipv6, port);
+            XLOG::l.t("Starting IO ipv6:{}, used port:{}", ipv6, port);
             s.run_accept(sinkProc, this);
 
             registerContext(&context);

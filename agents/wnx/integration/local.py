@@ -12,39 +12,93 @@ import sys
 import shutil
 import telnetlib  # nosec
 
+
+def get_main_exe_name(base_dir):
+    return os.path.join(base_dir, 'check_mk_agent.exe')
+
+
+def get_main_yaml_name(base_dir):
+    return os.path.join(base_dir, 'check_mk.yml')
+
+
+def get_main_plugins_name(base_dir):
+    return os.path.join(base_dir, 'plugins')
+
+
+def create_protocol_file(base_dir):
+    protocol_file = os.path.join(base_dir, 'upgrade.protocol')
+    # block  upgrading
+    with open(protocol_file, 'w') as f:
+        f.write("Upgraded:\n   time: '2019-05-20 18:21:53.164")
+
+
+def make_clean_dir(root_dir):
+    try:
+        shutil.rmtree(root_dir)
+    except OSError:
+        print("Folder doesn't exist")
+
+    if not os.path.exists(root_dir):
+        os.mkdir(root_dir)
+
+    if not os.path.exists(root_dir):
+        print('Cannot create path %s' % root_dir)
+        sys.exit(13)
+
+
+def create_and_fill_root_dir(root_dir, artefacts_dir):
+    make_clean_dir(root_dir)
+
+    # filling
+    for foo in [get_main_exe_name, get_main_yaml_name]:
+        src = foo(artefacts_dir)
+        shutil.copy(src, root_dir)
+
+    shutil.copytree(get_main_plugins_name(artefacts_dir), get_main_plugins_name(root_dir))
+    create_protocol_file(root_dir)
+    # checking
+    tgt_agent_exe = get_main_exe_name(root_dir)
+    if not os.path.exists(tgt_agent_exe):
+        print('File %s doesnt exist' % src_agent_exe)
+        sys.exit(11)
+
+
+def make_user_dir(base_dir):
+    u_dir = os.path.join(base_dir, 'ProgramData', 'CheckMK', 'Agent')
+    try:
+        os.makedirs(u_dir)
+    except OSError:
+        print('Probably folders exist')
+    if not os.path.exists(u_dir):
+        print('Directory %s doesnt exist' % u_dir)
+        sys.exit(11)
+    return u_dir
+
+
 port = 59999
 host = 'localhost'
 
 src_exec_dir = os.path.abspath(os.path.join(os.getcwd(), '..', '..', '..', 'artefacts'))
-src_agent_exe = os.path.join(src_exec_dir, 'check_mk_agent.exe')
+src_agent_exe = get_main_exe_name(src_exec_dir)
 if not os.path.exists(src_agent_exe):
     print('File %s doesnt exist' % src_agent_exe)
     sys.exit(11)
 
-src_main_yaml_config = os.path.join(src_exec_dir, 'check_mk.yml')
+src_main_yaml_config = get_main_yaml_name(src_exec_dir)
 if not os.path.exists(src_main_yaml_config):
     print('Directory %s doesnt exist' % src_main_yaml_config)
     sys.exit(11)
 
-tgt_exec_dir = os.path.join(src_exec_dir, 'tests')
-shutil.rmtree(tgt_exec_dir)
-shutil.copy(src_agent_exe, tgt_exec_dir)
-shutil.copy(src_main_yaml_config, tgt_exec_dir)
-protocol_file = os.path.join(tgt_exec_dir, "upgrade.protocol")
-# block  upgrading
-with open(protocol_file, 'w') as f:
-    f.write("Upgraded:\n   time: '2019-05-20 18:21:53.164")
+# root dir
+root_dir = os.path.join(src_exec_dir, 'tests')
+create_and_fill_root_dir(root_dir, src_exec_dir)
 
-tgt_agent_exe = os.path.join(tgt_exec_dir, 'check_mk_agent.exe')
-if not os.path.exists(tgt_agent_exe):
-    print('File %s doesnt exist' % src_agent_exe)
-    sys.exit(11)
+# user dir
+user_dir = make_user_dir(root_dir)
 
-user_dir = os.path.join(src_exec_dir, 'ProgramData', 'CheckMk', 'Agent')
-yaml_config = os.path.join(user_dir, 'check_mk.yml')
-if not os.path.exists(user_dir):
-    print('Directory %s doesnt exist' % user_dir)
-    sys.exit(11)
+# names
+yaml_config = get_main_yaml_name(user_dir)
+main_exe = get_main_exe_name(root_dir)
 
 
 @contextmanager
@@ -56,7 +110,7 @@ def env_var(key, value):
 
 # environment variaable set
 def run_subprocess(cmd):
-    with env_var('CMA_TEST_DIR', tgt_exec_dir):
+    with env_var('CMA_TEST_DIR', root_dir):
         sys.stderr.write(' '.join(cmd) + '\n')
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
@@ -119,7 +173,7 @@ def actual_output(write_config, wait_agent):
     try:
         save_cwd = os.getcwd()
         os.chdir(src_exec_dir)
-        p = subprocess.Popen([src_agent_exe, '-exec'])
+        p = run_subprocess(main_exe + ' -exec')
 
         # Override wait_agent in tests to wait for async processes to start.
         wait_agent()

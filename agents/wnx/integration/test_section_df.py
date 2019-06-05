@@ -3,7 +3,7 @@
 import os
 import pytest
 import re
-from local import (actual_output, make_yaml_config, localtest, exec_dir, wait_agent, write_config)
+from local import (actual_output, make_yaml_config, localtest, wait_agent, write_config)
 
 
 class Globals(object):

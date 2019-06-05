@@ -1,0 +1,10 @@
+Title: Fixed checking Checkmk version if agent is connected via programs like ssh
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p17
+Date: 1559731069
+Class: fix
+
+

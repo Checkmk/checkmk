@@ -688,9 +688,13 @@ class CheckMKAgentDataSource(DataSource):
 
 
     # TODO: refactor
+    # TODO: add state markers to sub results
     def _summary_result(self, for_checking):
-        agent_info = self._get_agent_info()
+        cmk_section = self._host_sections.sections.get("check_mk")
+        agent_info = self._get_agent_info(cmk_section)
         agent_version = agent_info["version"]
+
+        status = 0
         output = []
 
         if not config.is_cluster(self._hostname) and agent_version != None:
@@ -699,25 +703,94 @@ class CheckMKAgentDataSource(DataSource):
         if not config.is_cluster(self._hostname) and agent_info["agentos"] != None:
             output.append("OS: %s" % agent_info["agentos"])
 
-        return 0, ", ".join(output), []
+        if for_checking and cmk_section:
+            for cmk_section_status, cmk_section_output in self._get_checked_cmk_section_result(agent_version):
+                status = max(status, cmk_section_status)
+                output.append(cmk_section_output)
+        return status, ", ".join(output), []
 
 
-    def _get_agent_info(self):
+    def _get_agent_info(self, cmk_section):
         agent_info = {
             "version" : "unknown",
             "agentos" : "unknown",
         }
 
-        if self._host_sections is None:
+        if self._host_sections is None or not cmk_section:
             return agent_info
 
-        cmk_section = self._host_sections.sections.get("check_mk")
-        if cmk_section:
-            for line in cmk_section:
-                value = " ".join(line[1:]) if len(line) > 1 else None
-                agent_info[line[0][:-1].lower()] = value
-
+        for line in cmk_section:
+            value = " ".join(line[1:]) if len(line) > 1 else None
+            agent_info[line[0][:-1].lower()] = value
         return agent_info
+
+
+    def _get_checked_cmk_section_result(self, agent_version):
+        expected_version = config.agent_target_version(self._hostname)
+        exit_spec = config.exit_code_spec(self._hostname)
+        if expected_version and agent_version \
+             and not self._is_expected_agent_version(agent_version, expected_version):
+            # expected version can either be:
+            # a) a single version string
+            # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
+            #    (the dict keys are optional)
+            if type(expected_version) == tuple and expected_version[0] == 'at_least':
+                expected = 'at least'
+                if 'daily_build' in expected_version[1]:
+                    expected += ' build %s' % expected_version[1]['daily_build']
+                if 'release' in expected_version[1]:
+                    if 'daily_build' in expected_version[1]:
+                        expected += ' or'
+                    expected += ' release %s' % expected_version[1]['release']
+            else:
+                expected = expected_version
+            yield (exit_spec.get("wrong_version", 1),
+                   "unexpected agent version %s (should be %s)" % (agent_version, expected))
+
+        elif config.agent_min_version and agent_version < config.agent_min_version:
+            yield (exit_spec.get("wrong_version", 1),
+                   "old plugin version %s (should be at least %s)" % (agent_version, config.agent_min_version))
+
+
+    def _is_expected_agent_version(self, agent_version, expected_version):
+        #TODO minimize try-except block
+        try:
+            # FIXME: is "(unknown)" still used?
+            if agent_version in [ 'unknown', '(unknown)', None, 'None' ]:
+                return False
+
+            if type(expected_version) == str and expected_version != agent_version:
+                return False
+
+            elif type(expected_version) == tuple and expected_version[0] == 'at_least':
+                spec = expected_version[1]
+                if cmk_base.utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
+                    expected = int(spec['daily_build'].replace('.', ''))
+
+                    branch = cmk_base.utils.branch_of_daily_build(agent_version)
+                    if branch == "master":
+                        agent = int(agent_version.replace('.', ''))
+
+                    else: # branch build (e.g. 1.2.4-2014.06.01)
+                        agent = int(agent_version.split('-')[1].replace('.', ''))
+
+                    if agent < expected:
+                        return False
+
+                elif 'release' in spec:
+                    if cmk_base.utils.is_daily_build_version(agent_version):
+                        return False
+
+                    if cmk_base.utils.parse_check_mk_version(agent_version) \
+                        < cmk_base.utils.parse_check_mk_version(spec['release']):
+                        return False
+
+            return True
+        except Exception, e:
+            if cmk.debug.enabled():
+                raise
+            raise MKGeneralException("Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
+                    (agent_version, expected_version, e))
 
 
 

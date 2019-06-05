@@ -88,3 +88,12 @@ def test_perfvar_translation(perf_name, check_command, result):
 ])
 def test_normalize_perf_data(perf_data, check_command, result):
     assert utils.normalize_perf_data(perf_data, check_command) == result
+
+
+@pytest.mark.parametrize("canonical_name, perf_data_names", [
+    ('user', {'user'}),
+    ('io_wait', {'wait', 'io_wait'}),
+    ('mem_used', {'mem_used', 'memory', 'memory_used', 'memused', 'ramused', 'usage'}),
+])
+def test_reverse_translation_metric_name(canonical_name, perf_data_names):
+    assert utils.reverse_translate_metric_name, (canonical_name) == perf_data_names

@@ -1,6 +1,6 @@
 import pytest
 
-from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
+from checktestlib import CheckResult, DiscoveryResult, assertCheckResultsEqual, assertDiscoveryResultsEqual
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
@@ -318,9 +318,32 @@ discovery_winperf_if_group_patterns = [
     ),
 ]
 
+check_results_winperf_if_group_patterns = [
+    CheckResult([(
+        0,
+        "[2] (Connected) 1.41 Gbit/s",
+        [],
+    )]),
+    CheckResult([(
+        0,
+        "[1] (Connected) 1.41 Gbit/s",
+        [],
+    )]),
+    CheckResult([(
+        0,
+        "Teaming Status (up), Members: [isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1} (Connected), isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1} (Connected), isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1} (Connected), isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1} (Connected), isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1} (Connected), isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1} (Connected)] 600.0 Kbit/s",
+        [],
+    )]),
+    CheckResult([(
+        0,
+        "Teaming Status (up), Members: [Broadcom ABC456 NetXtreme 456 GigE [Client2] 137 (Connected), Broadcom ABC123 NetXtreme 123 GigE [Client1] 138 (Connected)] 2.82 Gbit/s",
+        [],
+    )]),
+]
+
 
 @pytest.mark.parametrize(
-    "settings,group_patterns,info,expected_discovery",
+    "settings,group_patterns,info,expected_discovery,expected_check_results",
     [
         (
             [{
@@ -358,17 +381,24 @@ discovery_winperf_if_group_patterns = [
             },
             winperf_if_section,
             discovery_winperf_if_group_patterns,
+            check_results_winperf_if_group_patterns,
         ),
     ],
 )
 def test_winperf_if_inventory_group_patterns(check_manager, monkeypatch, settings, group_patterns,
-                                             info, expected_discovery):
+                                             info, expected_discovery, expected_check_results):
     check = check_manager.get_check("winperf_if")
     monkeypatch.setitem(check.context, "host_name", lambda: "test-host")
     monkeypatch.setitem(check.context, "host_extra_conf", lambda _, __: settings)
     monkeypatch.setitem(check.context,
                         "_prepare_if_group_patterns_from_conf", lambda: group_patterns)
     parsed = check.run_parse(info)
+
     actual_discovery = check.run_discovery(parsed)
     assertDiscoveryResultsEqual(check, DiscoveryResult(sorted(expected_discovery)),
                                 DiscoveryResult(sorted(actual_discovery)))
+
+    # check if grouped interfaces return the "Teaming Status" and "Members" of the group
+    for (item, params), expected_result in zip(expected_discovery, expected_check_results):
+        actual_result = CheckResult(check.run_check(item, params, parsed))
+        assertCheckResultsEqual(actual_result, expected_result)

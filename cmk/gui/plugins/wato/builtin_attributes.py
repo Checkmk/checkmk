@@ -85,7 +85,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
 
     @classmethod
     def sort_index(cls):
-        return 20
+        return 10
 
     def name(self):
         return "alias"
@@ -770,7 +770,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
 
     @classmethod
     def sort_index(cls):
-        return 150
+        return 20
 
     def show_in_table(self):
         return True
@@ -907,7 +907,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
 
     @classmethod
     def sort_index(cls):
-        return 180
+        return 155
 
     def show_in_table(self):
         return False

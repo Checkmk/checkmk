@@ -392,7 +392,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     @classmethod
     def sort_index(cls):
-        return 10
+        return 25
 
     def help(self):
         url = "wato.py?mode=rulesets&group=grouping"

@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsDictFilter.h"
+#include <algorithm>
+#include <cstddef>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
@@ -30,18 +32,63 @@
 #include "Filter.h"
 #include "RegExp.h"
 #include "Row.h"
-#include "StringUtils.h"
+
+namespace {
+constexpr const char *whitespace = " \t\n\v\f\r";
+constexpr char quote = '\'';
+
+bool is_quote_at(const std::string &str, size_t pos) {
+    return pos < str.size() && str[pos] == quote;
+}
+
+std::pair<bool, size_t> skip_whitespace(const std::string &str) {
+    auto pos = std::min(str.find_first_not_of(whitespace), str.size());
+    return {is_quote_at(str, pos), pos};
+}
+
+// the parsed entity plus the rest of the string following it
+using parse_result = std::pair<std::string, std::string>;
+
+parse_result parse_quoted(const std::string &str, size_t start) {
+    std::string result;
+    result.reserve(str.size() - start);
+    while (true) {
+        auto pos = str.find(quote, start);
+        if (pos == std::string::npos) {
+            // missing terminating quote: just take the rest
+            return {result + str.substr(start), ""};
+        }
+        if (!is_quote_at(str, pos + 1)) {
+            // a quote without another quote directly following it: stop
+            return {result + str.substr(start, pos - start),
+                    str.substr(pos + 1)};
+        }
+        // two consecutive quotes mean a single quote
+        result += str.substr(start, pos + 1 - start);
+        start = pos + 2;
+    }
+    return {{}, {}};  // unreachable
+}
+
+parse_result parse_unquoted(const std::string &str, size_t start) {
+    auto pos = std::min(str.find_first_of(whitespace, start), str.size());
+    return {str.substr(start, pos - start), str.substr(pos)};
+}
+}  // namespace
 
 CustomVarsDictFilter::CustomVarsDictFilter(Kind kind,
                                            const CustomVarsDictColumn &column,
                                            RelationalOperator relOp,
                                            const std::string &value)
     : ColumnFilter(kind, column, relOp, value), _column(column) {
-    // Filter for custom_variables:
-    //    Filter: custom_variables = PATH /hirni.mk
-    // The variable name is part of the value and separated with spaces
-    std::tie(_ref_varname, _ref_string) = mk::nextField(value);
-    _ref_string = mk::lstrip(_ref_string);
+    std::string rest;
+    auto [starts_with_quote1, pos1] = skip_whitespace(value);
+    std::tie(_ref_varname, rest) = starts_with_quote1
+                                       ? parse_quoted(value, pos1 + 1)
+                                       : parse_unquoted(value, pos1);
+    auto [starts_with_quote2, pos2] = skip_whitespace(rest);
+    _ref_string = starts_with_quote2 ? parse_quoted(rest, pos2 + 1).first
+                                     : rest.substr(pos2);
     _regExp = makeRegExpFor(oper(), _ref_string);
 }
 

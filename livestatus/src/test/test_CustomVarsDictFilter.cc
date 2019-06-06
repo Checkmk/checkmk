@@ -28,6 +28,8 @@ struct CustomVarsDictFilterTest : public ::testing::Test {
 
     TestHost test_host{{{"ERNIE", "Bert"},
                         {"GUT", "Mies"},
+                        {"_TAG_Rock'n", "Rock'n Roll"},
+                        {"_TAG_Rollin", "Rock'n Rollin'"},
                         {"_TAG_GUT", "Guten Tag!"},
                         {"_LABEL_GÓÐ", "Góðan dag!"},
                         {"_LABEL_GUT", "foo"},
@@ -35,11 +37,19 @@ struct CustomVarsDictFilterTest : public ::testing::Test {
 };
 }  // namespace
 
+TEST_F(CustomVarsDictFilterTest, empty) {
+    EXPECT_TRUE(accepts(AttributeKind::tags, ""));
+    EXPECT_TRUE(accepts(AttributeKind::tags, " "));
+    EXPECT_FALSE(accepts(AttributeKind::tags, "GUT"));
+    EXPECT_FALSE(accepts(AttributeKind::tags, "GUT '' "));
+}
+
 TEST_F(CustomVarsDictFilterTest, unquoted_kinds) {
     EXPECT_TRUE(accepts(AttributeKind::custom_variables, "GUT Mies"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "GUT Guten Tag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "GUT foo"));
     EXPECT_TRUE(accepts(AttributeKind::label_sources, "GUT bar"));
+    EXPECT_FALSE(accepts(AttributeKind::label_sources, "GUT bart"));
 }
 
 TEST_F(CustomVarsDictFilterTest, unquoted_splitting) {
@@ -53,4 +63,18 @@ TEST_F(CustomVarsDictFilterTest, unquoted_utf8) {
     EXPECT_TRUE(accepts(AttributeKind::labels, "     GÓÐ Góðan dag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "     GÓÐ    Góðan dag!"));
     EXPECT_FALSE(accepts(AttributeKind::labels, "    GÓÐ    Góðan dag!   "));
+}
+
+TEST_F(CustomVarsDictFilterTest, quoted_splitting) {
+    EXPECT_TRUE(accepts(AttributeKind::tags, "'GUT' 'Guten Tag!'"));
+    EXPECT_TRUE(accepts(AttributeKind::tags, "     'GUT' 'Guten Tag!'"));
+    EXPECT_TRUE(accepts(AttributeKind::tags, "     'GUT'    'Guten Tag!'"));
+    EXPECT_TRUE(accepts(AttributeKind::tags, "    'GUT'    'Guten Tag!'    "));
+}
+
+TEST_F(CustomVarsDictFilterTest, quoted_escape) {
+    EXPECT_TRUE(accepts(AttributeKind::tags, "'Rock''n' 'Rock''n Roll'"));
+    EXPECT_TRUE(accepts(AttributeKind::tags, "'Rock''n' 'Rock''n Roll"));
+    EXPECT_TRUE(accepts(AttributeKind::tags, "'Rollin' 'Rock''n Rollin'''"));
+    EXPECT_TRUE(accepts(AttributeKind::labels, "'GUT'foo"));
 }

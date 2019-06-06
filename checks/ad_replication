@@ -34,17 +34,18 @@
 # showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Schema,CN=Configuration,DC=corp,\
 #DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:46:28,0
 
-ad_replication_default_params = (15, 20)
+# Changelog
+# 2019-06-0 Christian Wirtz doc@snowheaven.de doctore74 - added long output and multiline output
 
+ad_replication_default_params = (15,20)
 
 def parse_ad_replication_dates(s):
     if s == '0' or s == '(never)':
         return None, "unknown"
-
-    s_val = time.mktime(time.strptime(s, '%Y-%m-%d %H:%M:%S'))
-    s_txt = get_relative_date_human_readable(s_val)
-    return s_val, s_txt
-
+    else:
+        s_val = time.mktime(time.strptime(s, '%Y-%m-%d %H:%M:%S'))
+        s_txt = get_relative_date_human_readable(s_val)
+        return s_val, s_txt
 
 def parse_ad_replication_info(info):
     lines = []
@@ -52,10 +53,9 @@ def parse_ad_replication_info(info):
         # Make lines split by , instead of spaces
         line_txt = ' '.join(line_parts).replace(',CN=', ';CN=').replace(',DC=', ';DC=')
         line_parts = line_txt.split(',')
-        if len(line_parts) in [11, 10]:
+        if len(line_parts) in [ 11, 10 ]:
             lines.append(line_parts)
     return lines
-
 
 def inventory_ad_replication(info):
     inv = []
@@ -65,31 +65,34 @@ def inventory_ad_replication(info):
             source_dc = line[5]
         elif len(line) == 10:
             source_site = line[3]
-            source_dc = line[4]
+            source_dc =  line[4]
         else:
-            break  # unhandled data
+            break # unhandled data
         entry = ('%s/%s' % (source_site, source_dc), 'ad_replication_default_params')
         if line[0] == 'showrepl_INFO' and entry not in inv:
             inv.append(entry)
     return inv
 
-
 def check_ad_replication(item, params, info):
-    status = 0
-    output = ''
-    foundLine = False
+    status            = 0
+    output            = ''
+    foundLine         = False
+    count_failures    = 0
+    count_failed_repl = 0
 
     for l in parse_ad_replication_info(info):
         if len(l) == 11:
-            (lineType, _destSite, _destDC, naming_context, source_site, source_dc, _transport,
-             num_failures, time_last_failure, time_last_success, statusLastFailure) = l
+            (lineType, destSite, destDC, naming_context, source_site, source_dc,
+             transport, num_failures, time_last_failure, time_last_success,
+             statusLastFailure ) = l
         elif len(l) == 10:
-            (lineType, _destSite, naming_context, source_site, source_dc, _transport, num_failures,
-             time_last_failure, time_last_success, statusLastFailure) = l
+            (lineType, destSite, naming_context, source_site, source_dc,
+             transport, num_failures, time_last_failure, time_last_success,
+             statusLastFailure ) = l
         else:
-            break  # unhandled data
+            break # unhandled data
 
-        if lineType == 'showrepl_INFO' and source_site + '/' + source_dc == item:
+        if lineType == 'showrepl_INFO' and source_site+'/'+source_dc == item:
             foundLine = True
             time_last_failure, time_last_failure_txt = parse_ad_replication_dates(time_last_failure)
             time_last_success, time_last_success_txt = parse_ad_replication_dates(time_last_success)
@@ -99,25 +102,31 @@ def check_ad_replication(item, params, info):
 
             if int(num_failures) > max_failures_warn:
                 status = 1
+                count_failures = count_failures + num_failures
+                count_failed_repl = count_failed_repl + 1
                 output += '(!) %s/%s replication of context %s reached ' \
                           ' the threshold of maximum failures (%s) (Last success: %s, ' \
-                          'Last failure: %s, Num failures: %s, Status: %s), ' % \
+                          'Last failure: %s, Num failures: %s, Status: %s)\n' % \
                          (source_site, source_dc, naming_context, max_failures_warn,
                           time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure)
 
             if int(num_failures) > max_failures_crit:
                 status = 2
+                count_failures = count_failures + num_failures
+                count_failed_repl = count_failed_repl + 1
                 output += '(!!) %s/%s replication of context %s reached ' \
                           ' the threshold of maximum failures (%s) (Last success: %s, ' \
-                          'Last failure: %s, Num failures: %s, Status: %s), ' % \
+                          'Last failure: %s, Num failures: %s, Status: %s)\n' % \
                          (source_site, source_dc, naming_context, max_failures_crit,
                           time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure)
 
-            if time_last_failure is not None and time_last_success is not None \
+            if time_last_failure != None and time_last_success != None \
                and time_last_failure > time_last_success:
                 status = 2
+                count_failures = count_failures + 1
+                count_failed_repl = count_failed_repl + 1
                 output += '(!!) %s/%s replication of context %s failed ' \
-                         '(Last success: %s, Last failure: %s, Num failures: %s, Status: %s), ' % \
+                         '(Last success: %s, Last failure: %s, Num failures: %s, Status: %s)\n' % \
                          (source_site, source_dc, naming_context,
                           time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure)
 
@@ -125,13 +134,15 @@ def check_ad_replication(item, params, info):
         return (3, 'Replication information for %s not found' % item)
 
     if status != 0:
+        output = "%s replications had failures. Replication failures summary: %s\n%s" % (count_failed_repl, count_failures, output)
         return (status, output.rstrip(', '))
-    return (status, 'All replications are OK.')
+    else:
+        return (status, 'All replications are OK.')
 
 
 check_info["ad_replication"] = {
-    'check_function': check_ad_replication,
-    'inventory_function': inventory_ad_replication,
-    'service_description': 'AD Replication %s',
-    'group': 'ad_replication',
+    'check_function':          check_ad_replication,
+    'inventory_function':      inventory_ad_replication,
+    'service_description':     'AD Replication %s',
+    'group':                   'ad_replication',
 }

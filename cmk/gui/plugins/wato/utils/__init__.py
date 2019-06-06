@@ -192,6 +192,8 @@ from cmk.gui.plugins.watolib.utils import (
     config_variable_registry,
     ConfigVariable,
     register_configvar,
+    SampleConfigGenerator,
+    sample_config_generator_registry,
 )
 import cmk.gui.forms as forms
 from cmk.gui.permissions import (

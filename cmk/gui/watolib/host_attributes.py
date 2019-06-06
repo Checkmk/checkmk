@@ -289,6 +289,12 @@ class ABCHostAttribute(object):
         the host search form"""
         return True
 
+    def show_in_host_cleanup(self):
+        # type: () -> bool
+        """Whether or not to make this attribute selectable in
+        the host cleanup form"""
+        return self.editable()
+
     def editable(self):
         # type: () -> bool
         """Whether or not this attribute can be edited using the GUI.

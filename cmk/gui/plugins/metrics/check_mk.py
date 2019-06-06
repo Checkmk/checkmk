@@ -303,8 +303,8 @@ unit_info['bytes/op'] = {
 
 unit_info['EUR'] = {
     "title": _("Euro"),
-    "symbol": _(u"€"),
-    "render": lambda v: "%s %s" % (v, _(u"€")),
+    "symbol": u"€",
+    "render": lambda v: u"%s €" % v,
 }
 
 #.

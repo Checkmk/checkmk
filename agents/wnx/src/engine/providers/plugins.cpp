@@ -74,7 +74,8 @@ void PluginsProvider::updateTimeout() noexcept {
         return;
     }
 
-    XLOG::d.t("Timeout is set to [{}]", timeout_);
+    if (timeout_)
+        XLOG::t("Timeout for '{}' is updated to [{}]", cfg_name_, timeout_);
 }
 
 void PluginsProvider::loadConfig() {

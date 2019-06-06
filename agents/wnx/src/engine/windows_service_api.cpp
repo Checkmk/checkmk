@@ -221,7 +221,7 @@ int TestMainServiceSelf(int Interval) {
         XLOG::l.i("Leaving testing thread");
     });
 
-    ExecMainService();  // blocking call waiting for keypress
+    ExecMainService(StdioLog::no);  // blocking call waiting for keypress
     stop = true;
     if (kick_and_print.joinable()) {
         XLOG::l.i("Waiting for testing thread");
@@ -369,20 +369,21 @@ int ExecSection(const std::wstring& SecName, int RepeatPause,
 // this is testing routine probably eliminated from the production build
 // THIS ROUTINE DOESN'T USE wtools::ServiceController and Windows Service API
 // Just internal to debug logic
-int ExecMainService(bool DuplicateOn) {
+int ExecMainService(StdioLog stdio_log) {
     using namespace std::chrono;
     using namespace cma::install;
-
-    milliseconds Delay = 1000ms;
+    XLOG::setup::ColoredOutputOnStdio(true);
+    xlog::sendStringToStdio("Ad hoc/Exec Mode, press any key to stop",
+                            xlog::internal::kCyan);
+    auto delay = 1000ms;  // #TODO create const
     auto processor =
-        std::make_unique<ServiceProcessor>(Delay, [](const void* Processor) {
+        std::make_unique<ServiceProcessor>(delay, [](const void* Processor) {
     // default embedded callback for exec
-    // atm does nothing
-    // optional commands listed here
+    // At the moment does nothing
+    // optional commands should be placed here
     // ********
-    // 1. Auto Update when  msi file is located by specified address
 #if 0
-        // #TODO planned test
+        // Auto Update when  MSI file is located by specified address
         CheckForUpdateFile(kDefaultMsiFileName, cma::cfg::GetUpdateDir(),
                            UpdateType::kMsiExecQuiet, true);
 #endif
@@ -393,8 +394,7 @@ int ExecMainService(bool DuplicateOn) {
 
     try {
         // setup output
-        if (DuplicateOn) XLOG::setup::DuplicateOnStdio(true);
-        XLOG::setup::ColoredOutputOnStdio(true);
+        if (stdio_log != StdioLog::no) XLOG::setup::DuplicateOnStdio(true);
 
         XLOG::l.i("Press any key to stop");
 
@@ -406,7 +406,7 @@ int ExecMainService(bool DuplicateOn) {
     XLOG::l.i("Server is going to stop");
     processor->stopService();
 
-    if (DuplicateOn) XLOG::setup::DuplicateOnStdio(false);
+    if (stdio_log != StdioLog::no) XLOG::setup::DuplicateOnStdio(false);
 
     return 0;
 }

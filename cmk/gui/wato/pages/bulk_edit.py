@@ -186,6 +186,9 @@ class ModeBulkCleanup(WatoMode):
         for attr in host_attribute_registry.get_sorted_host_attributes():
             attrname = attr.name()
 
+            if not attr.show_in_host_cleanup():
+                continue
+
             # only show attributes that at least on host have set
             num_haveit = 0
             for host in hosts:

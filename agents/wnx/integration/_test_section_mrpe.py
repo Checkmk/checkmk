@@ -4,7 +4,7 @@ import os
 import platform
 import pytest
 import re
-from local import (actual_output, assert_subprocess, make_ini_config, src_exec_dir, localtest,
+from local import (actual_output, assert_subprocess, make_ini_config, src_exec_dir, local_test,
                    wait_agent, write_config)
 
 
@@ -97,4 +97,4 @@ def manage_plugin(request):
 
 def test_section_mrpe(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output, actual_output, testfile, request.node.name)
+    local_test(expected_output, actual_output, testfile, request.node.name)

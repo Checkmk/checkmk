@@ -2,7 +2,7 @@
 # -*- coding: utf-8; py-indent-offset: 4 -*-
 import os
 import pytest
-from local import actual_output, make_ini_config, localtest, wait_agent, write_config
+from local import actual_output, make_ini_config, local_test, wait_agent, write_config
 
 
 @pytest.fixture
@@ -24,4 +24,4 @@ def expected_output():
 
 
 def test_section_systemtime(testconfig, expected_output, actual_output, testfile):
-    localtest(expected_output, actual_output, testfile)
+    local_test(expected_output, actual_output, testfile)

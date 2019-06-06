@@ -7,7 +7,7 @@ import re
 import sys
 
 import pytest
-from local import (actual_output, make_ini_config, src_exec_dir, localtest, run_subprocess,
+from local import (actual_output, make_ini_config, src_exec_dir, local_test, run_subprocess,
                    wait_agent, write_config)
 
 
@@ -195,11 +195,11 @@ def manage_logfiles(request):
 def test_section_logfiles__new_file(request, testconfig_glob, expected_output_no_statefile,
                                     actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output_no_statefile, actual_output, testfile, request.node.name)
+    local_test(expected_output_no_statefile, actual_output, testfile, request.node.name)
 
 
 @pytest.mark.usefixtures('with_statefile')
 def test_section_logfiles__new_entries_in_log(
         request, testconfig_glob, expected_output_with_statefile, actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output_with_statefile, actual_output, testfile, request.node.name)
+    local_test(expected_output_with_statefile, actual_output, testfile, request.node.name)

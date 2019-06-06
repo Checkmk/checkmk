@@ -7,7 +7,7 @@ import pytest
 import re
 import sys
 import time
-from local import (actual_output, assert_subprocess, make_ini_config, src_exec_dir, localtest,
+from local import (actual_output, assert_subprocess, make_ini_config, src_exec_dir, local_test,
                    wait_agent, write_config)
 
 
@@ -170,4 +170,4 @@ def manage_plugins(request, plugindir):
 
 def test_section_plugin_group(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output, actual_output, testfile, request.node.name)
+    local_test(expected_output, actual_output, testfile, request.node.name)

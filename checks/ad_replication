@@ -76,8 +76,10 @@ def inventory_ad_replication(info):
 
 def check_ad_replication(item, params, info):
     status = 0
-    output = ''
+    long_output = []
     foundLine = False
+    count_failures = 0
+    count_failed_repl = 0
 
     for l in parse_ad_replication_info(info):
         if len(l) == 11:
@@ -99,34 +101,50 @@ def check_ad_replication(item, params, info):
 
             if int(num_failures) > max_failures_warn:
                 status = 1
-                output += '(!) %s/%s replication of context %s reached ' \
+                count_failures += int(num_failures)
+                count_failed_repl += 1
+                long_output.append('(!) %s/%s replication of context %s reached ' \
                           ' the threshold of maximum failures (%s) (Last success: %s, ' \
-                          'Last failure: %s, Num failures: %s, Status: %s), ' % \
+                          'Last failure: %s, Num failures: %s, Status: %s)\n' % \
                          (source_site, source_dc, naming_context, max_failures_warn,
-                          time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure)
+                          time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure))
+                "\n".join(long_output)
 
             if int(num_failures) > max_failures_crit:
                 status = 2
-                output += '(!!) %s/%s replication of context %s reached ' \
+                count_failures += int(num_failures)
+                count_failed_repl += 1
+                long_output.append('(!!) %s/%s replication of context %s reached ' \
                           ' the threshold of maximum failures (%s) (Last success: %s, ' \
-                          'Last failure: %s, Num failures: %s, Status: %s), ' % \
+                          'Last failure: %s, Num failures: %s, Status: %s)\n' % \
                          (source_site, source_dc, naming_context, max_failures_crit,
-                          time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure)
+                          time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure))
+                "\n".join(long_output)
 
             if time_last_failure is not None and time_last_success is not None \
                and time_last_failure > time_last_success:
                 status = 2
-                output += '(!!) %s/%s replication of context %s failed ' \
-                         '(Last success: %s, Last failure: %s, Num failures: %s, Status: %s), ' % \
+                count_failures += 1
+                count_failed_repl += 1
+                long_output.append('(!!) %s/%s replication of context %s failed ' \
+                         '(Last success: %s, Last failure: %s, Num failures: %s, Status: %s)\n' % \
                          (source_site, source_dc, naming_context,
-                          time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure)
+                          time_last_success_txt, time_last_failure_txt, num_failures, statusLastFailure))
+                "\n".join(long_output)
 
     if not foundLine:
-        return (3, 'Replication information for %s not found' % item)
+        yield 3, 'Replication information for %s not found' % item
+        return
 
     if status != 0:
-        return (status, output.rstrip(', '))
-    return (status, 'All replications are OK.')
+        yield status, ("Replications with failures: %s, Total failures: %s" %
+                       (count_failed_repl, count_failures))
+        if long_output:
+            yield 0, '\n%s' % '\n'.join(long_output)
+        return
+
+    yield 0, 'All replications are OK.'
+    return
 
 
 check_info["ad_replication"] = {

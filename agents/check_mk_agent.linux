@@ -91,11 +91,17 @@ else
     unset IS_LXC_CONTAINER
 fi
 
+# Function to replace "if type [somecmd]" idiom
+# 'command -v' tends to be more robust vs 'which' and 'type' based tests
+inpath() {
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
 # our shipped waitmax. waitmax is statically linked and crashes on
 # some Ubuntu versions recently.
-if type timeout >/dev/null 2>&1; then
-    function waitmax () {
+if inpath timeout; then
+    waitmax () {
         timeout "$@"
     }
     export -f waitmax
@@ -123,8 +129,7 @@ fi
 # CHECK SECTIONS
 #
 
-function section_mem()
-{
+section_mem() {
     if [ -z "$IS_DOCKERIZED" ]; then
         echo '<<<mem>>>'
         grep -E -v '^Swap:|^Mem:|total:' < /proc/meminfo
@@ -139,8 +144,7 @@ function section_mem()
     fi
 }
 
-function section_cpu()
-{
+section_cpu() {
     if [ "$(uname -m)" = "armv7l" ]; then
         CPU_REGEX='^processor'
     else
@@ -166,8 +170,7 @@ function section_cpu()
     fi
 }
 
-function section_uptime()
-{
+section_uptime() {
     echo '<<<uptime>>>'
     if [ -z "$IS_DOCKERIZED" ]; then
         cat /proc/uptime
@@ -182,8 +185,7 @@ function section_uptime()
 # settings, accessing those mounts from the agent would leave you with
 # thousands of agent processes and, ultimately, a dead monitored system.
 # These should generally be monitored on the NFS server, not on the clients.
-function section_df()
-{
+section_df() {
     if [ -n "$IS_DOCKERIZED" ]; then
         return
     fi
@@ -206,15 +208,14 @@ function section_df()
     echo '[df_inodes_end]'
 }
 
-function sections_systemd()
-{
-    if type systemctl >/dev/null 2>&1; then
+sections_systemd() {
+    if inpath systemctl; then
         echo '<<<systemd_units>>>'
         systemctl --all --no-pager
     fi
 }
 
-function run_mrpe() {
+run_mrpe() {
     local descr=$1
     shift
     local cmdline=$*
@@ -237,7 +238,7 @@ export -f run_mrpe
 #   -ma mrpe-mode with age: stores exit code with the cache and adds the cache age
 #   NAME is the name of the section (also used as cache file name)
 #   MAXAGE is the maximum cache livetime in seconds
-function run_cached () {
+run_cached () {
     local NOW
     NOW=$(date +%s)
     local section=
@@ -298,7 +299,7 @@ function run_cached () {
             else
                 # insert the cache info in the section header (^= after '!'),
                 # if none is present (^= before '!')
-                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"$CACHE_INFO"'>>>/' "$CACHEFILE"
+                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
             fi
         fi
     fi
@@ -320,8 +321,7 @@ export -f run_cached
 # Implements Real-Time Check feature of the Check_MK agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
-function run_real_time_checks()
-{
+run_real_time_checks() {
     PIDFILE=$MK_VARDIR/real_time_checks.pid
     echo $$ > "$PIDFILE"
 
@@ -408,7 +408,7 @@ section_df
 sections_systemd
 
 # Filesystem usage for ZFS
-if type zfs > /dev/null 2>&1; then
+if inpath zfs; then
     echo '<<<zfsget>>>'
     zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null
     echo '[df]'
@@ -418,7 +418,7 @@ fi
 # Check NFS mounts by accessing them with stat -f (System
 # call statfs()). If this lasts more then 2 seconds we
 # consider it as hanging. We need waitmax.
-if type waitmax >/dev/null; then
+if inpath waitmax; then
     STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
     STAT_BROKE="5.3.0"
 
@@ -471,7 +471,7 @@ section_cpu
 section_uptime
 
 # New variant: Information about speed and state in one section
-if type ip > /dev/null; then
+if inpath ip; then
     echo '<<<lnx_if>>>'
     echo "[start_iplink]"
     ip address
@@ -480,7 +480,7 @@ fi
 
 echo '<<<lnx_if:sep(58)>>>'
 sed 1,2d /proc/net/dev
-if type ethtool > /dev/null; then
+if inpath ethtool; then
     sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
         echo "[$eth]"
         ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
@@ -498,7 +498,7 @@ if [ -e /proc/net/bonding ]; then
 fi
 
 # Same for Open vSwitch bonding
-if type ovs-appctl > /dev/null; then
+if inpath ovs-appctl; then
     BONDS=$(ovs-appctl bond/list)
     COL=$(echo "$BONDS" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
     echo '<<<ovs_bonding:sep(58)>>>'
@@ -510,19 +510,19 @@ fi
 
 
 # Number of TCP connections in the various states
-if type waitmax >/dev/null; then
+if inpath waitmax; then
     echo '<<<tcp_conn_stats>>>'
     THIS=$(waitmax 5 cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }')
     if [ $? == 0 ]; then
         echo "$THIS"
-    elif type ss > /dev/null; then
+    elif inpath ss; then
         ss -ant |grep -v ^State | awk ' /:/ { c[$1]++; } END { for (x in c) { print x, c[x]; } }' \
             | sed -e 's/^ESTAB/01/g;s/^SYN-SENT/02/g;s/^SYN-RECV/03/g;s/^FIN-WAIT-1/04/g;s/^FIN-WAIT-2/05/g;s/^TIME-WAIT/06/g;s/^CLOSED/07/g;s/^CLOSE-WAIT/08/g;s/^LAST-ACK/09/g;s/^LISTEN/0A/g;s/^CLOSING/0B/g;'
     fi
 fi
 
 # Linux Multipathing
-if type multipath >/dev/null; then
+if inpath multipath; then
     if [ -f /etc/multipath.conf ]; then
         echo '<<<multipath>>>'
         multipath -l
@@ -534,7 +534,7 @@ if [ -z "$IS_DOCKERIZED" ]; then
     echo '<<<diskstat>>>'
     date +%s
     grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' < /proc/diskstats
-    if type dmsetup >/dev/null; then
+    if inpath dmsetup; then
         echo '[dmsetup_info]'
         dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
     fi
@@ -566,7 +566,7 @@ if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
 fi
 
 # Hardware sensors via IPMI (need ipmitool)
-if type ipmitool > /dev/null; then
+if inpath ipmitool; then
     run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -E -v '^[^ ]+ na ' | grep -v ' discrete '"
     # readable discrete sensor states
     run_cached -s "ipmi_discrete:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
@@ -602,7 +602,7 @@ echo '<<<md>>>'
 cat /proc/mdstat
 
 # RAID status of Linux RAID via device mapper
-if type dmraid >/dev/null && DMSTATUS=$(waitmax 3 dmraid -r); then
+if inpath dmraid && DMSTATUS=$(waitmax 3 dmraid -r); then
     echo '<<<dmraid>>>'
 
     # Output name and status
@@ -619,7 +619,7 @@ if type dmraid >/dev/null && DMSTATUS=$(waitmax 3 dmraid -r); then
 fi
 
 # RAID status of LSI controllers via cfggen
-if type cfggen > /dev/null; then
+if inpath cfggen; then
     echo '<<<lsi>>>'
     cfggen 0 DISPLAY \
         | grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' \
@@ -628,15 +628,15 @@ fi
 
 # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
 # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
-if type MegaCli >/dev/null; then
+if inpath MegaCli; then
     MegaCli_bin="MegaCli"
-elif type MegaCli64 >/dev/null; then
+elif inpath MegaCli64; then
     MegaCli_bin="MegaCli64"
-elif type megacli >/dev/null; then
+elif inpath megacli; then
     MegaCli_bin="megacli"
-elif type storcli >/dev/null; then
+elif inpath storcli; then
     MegaCli_bin="storcli"
-elif type storcli64 >/dev/null; then
+elif inpath storcli64; then
     MegaCli_bin="storcli64"
 else
     MegaCli_bin="unknown"
@@ -660,7 +660,7 @@ if [ "$MegaCli_bin" != "unknown" ]; then
 fi
 
 # RAID status of 3WARE disk controller (by Radoslaw Bak)
-if type tw_cli > /dev/null; then
+if inpath tw_cli; then
     for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
         echo '<<<3ware_info>>>'
         tw_cli "/$C" show all | grep -E 'Model =|Firmware|Serial'
@@ -673,7 +673,7 @@ fi
 
 # RAID controllers from areca (Taiwan)
 # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-if type cli64 >/dev/null; then
+if inpath cli64; then
     run_cached -s arc_raid_status 300 "cli64 rsf info | tail -n +3 | head -n -2"
 fi
 
@@ -681,7 +681,7 @@ fi
 # check would not be executed in case no guest additions are installed.
 # And that is something the check wants to detect
 echo '<<<vbox_guest>>>'
-if type VBoxControl >/dev/null 2>&1 && lsmod | grep vboxguest >/dev/null 2>&1; then
+if inpath VBoxControl && lsmod | grep vboxguest >/dev/null 2>&1; then
     VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
     [ "${PIPESTATUS[0]}" = 0 ] || echo "ERROR"
 fi
@@ -695,13 +695,13 @@ if [ -e /etc/openvpn/openvpn-status.log ]; then
 fi
 
 # Time synchronization with NTP
-if type ntpq > /dev/null 2>&1; then
+if inpath ntpq; then
     # remove heading, make first column space separated
     run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
 fi
 
 # Time synchronization with Chrony
-if type chronyc > /dev/null 2>&1; then
+if inpath chronyc; then
     # Force successful exit code. Otherwise section will be missing if daemon not running
     #
     # The "| cat" has been added for some kind of regression in RedHat 7.5. The
@@ -710,7 +710,7 @@ if type chronyc > /dev/null 2>&1; then
     run_cached -s chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
 fi
 
-if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]; then
+if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
     echo '<<<nvidia>>>'
     for var in GPUErrors GPUCoreTemp; do
         DISPLAY=:0 waitmax 2 nvidia-settings -t -q $var | sed "s/^/$var: /"
@@ -729,7 +729,7 @@ if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd 
   echo '<<<heartbeat_crm>>>'
   TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
 fi
-if type cl_status > /dev/null 2>&1; then
+if inpath cl_status; then
   echo '<<<heartbeat_rscstatus>>>'
   cl_status rscstatus
 
@@ -748,7 +748,7 @@ fi
 
 # Postfix mailqueue monitoring
 # Determine the number of mails and their size in several postfix mail queues
-function read_postfix_queue_dirs {
+read_postfix_queue_dirs() {
     postfix_queue_dir=$1
     if [ -n "$postfix_queue_dir" ]; then
         echo '<<<postfix_mailq>>>'
@@ -772,7 +772,7 @@ function read_postfix_queue_dirs {
 
 # Postfix mailqueue monitoring
 # Determine the number of mails and their size in several postfix mail queues
-if type postconf >/dev/null; then
+if inpath postconf; then
     # Check if multi_instance_directories exists in main.cf and is not empty
     # always takes the last entry, multiple entries possible
     multi_instances_dirs=$(postconf -c /etc/postfix 2>/dev/null | grep ^multi_instance_directories | sed 's/.*=[[:space:]]*//g')
@@ -796,7 +796,7 @@ elif [ -x /usr/sbin/ssmtp ]; then
 fi
 
 # Postfix status monitoring. Can handle multiple instances.
-if type postfix >/dev/null; then
+if inpath postfix; then
     echo "<<<postfix_mailq_status:sep(58)>>>"
     for i in /var/spool/postfix*/; do
         if [ -e "$i/pid/master.pid" ]; then
@@ -817,13 +817,13 @@ if type postfix >/dev/null; then
 fi
 
 # Check status of qmail mailqueue
-if type qmail-qstat >/dev/null; then
+if inpath qmail-qstat; then
     echo "<<<qmail_stats>>>"
     qmail-qstat
 fi
 
 # Nullmailer queue monitoring
-if type nullmailer-send >/dev/null && [ -d /var/spool/nullmailer/queue ]; then
+if inpath nullmailer-send && [ -d /var/spool/nullmailer/queue ]; then
     echo '<<<nullmailer_mailq>>>'
     COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
     SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
@@ -831,7 +831,7 @@ if type nullmailer-send >/dev/null && [ -d /var/spool/nullmailer/queue ]; then
 fi
 
 # Check status of OMD sites and Check_MK Notification spooler
-if type omd >/dev/null; then
+if inpath omd; then
     run_cached -s omd_status 60 "omd status --bare --auto || true"
     echo '<<<mknotifyd:sep(0)>>>'
     for statefile in /omd/sites/*/var/log/mknotifyd.state ; do
@@ -861,7 +861,7 @@ fi
 # Welcome the ZFS check on Linux
 # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
 # check zpool status
-if type zpool >/dev/null; then
+if inpath zpool; then
     echo "<<<zpool_status>>>"
     zpool status -x
     echo "<<<zpool>>>"
@@ -884,8 +884,7 @@ fi
 
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-function replace_datevariable()
-{
+replace_datevariable() {
     # Replace the date variable of the input, e.g. $DATE:%Y%m%d$, by
     # the current date. If there's no match just return the input.
     local file_name="$1"
@@ -967,7 +966,7 @@ if cd /omd/sites; then
     for site in *; do
         if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ]; then
             echo "[\"$site\"]"
-            echo -e "GET status\\nOutputFormat: json" \
+            echo -e "GET status\nOutputFormat: json" \
                 | waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
         fi
     done
@@ -992,7 +991,7 @@ if ls /omd/sites/*/var/check_mk/backup/*.state >/dev/null 2>&1; then
 fi
 
 # Collect states of configured CMA backup jobs
-if type mkbackup >/dev/null && ls /var/lib/mkbackup/*.state >/dev/null 2>&1; then
+if inpath mkbackup && ls /var/lib/mkbackup/*.state >/dev/null 2>&1; then
     echo "<<<mkbackup>>>"
     for F in /var/lib/mkbackup/*.state; do
         JOB_IDENT=${F%.state}
@@ -1041,19 +1040,19 @@ if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && ls /sys/class/therma
 fi
 
 # Libelle Business Shadow
-if type trd >/dev/null; then
+if inpath trd; then
     echo "<<<libelle_business_shadow:sep(58)>>>"
     trd -s
 fi
 
 # HTTP Accelerator Statistics
-if type varnishstat >/dev/null; then
+if inpath varnishstat; then
     echo "<<<varnish>>>"
     varnishstat -1
 fi
 
 # Proxmox Cluster
-if type pvecm > /dev/null 2>&1; then
+if inpath pvecm; then
     echo "<<<pvecm_status:sep(58)>>>"
     pvecm status
     echo "<<<pvecm_nodes>>>"
@@ -1061,7 +1060,7 @@ if type pvecm > /dev/null 2>&1; then
 fi
 
 for HAPROXY_SOCK in /run/haproxy/admin.sock /var/lib/haproxy/stats; do
-    if [ -r "$HAPROXY_SOCK" ] && type socat >/dev/null 2>&1; then
+    if [ -r "$HAPROXY_SOCK" ] && inpath socat; then
         echo "<<<haproxy:sep(44)>>>"
         echo "show stat" | socat - "UNIX-CONNECT:$HAPROXY_SOCK"
     fi
@@ -1073,7 +1072,7 @@ done
 if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
     if [ -z "$REMOTE" ]; then
         echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
-    elif ! type openssl >/dev/null; then
+    elif ! inpath openssl; then
         echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
     else
         run_real_time_checks >/dev/null &
@@ -1180,7 +1179,7 @@ if [ -e "$MK_CONFDIR/runas.cfg" ]; then
     done
 fi
 
-function is_valid_plugin () {
+is_valid_plugin () {
     # NOTE: Due to an escaping-related bug in some old bash versions
     # (3.2.x), we have to use an intermediate variable for the pattern.
     pattern='\.dpkg-(new|old|temp)$'

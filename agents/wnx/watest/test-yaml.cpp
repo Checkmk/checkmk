@@ -67,6 +67,15 @@ TEST(AgentConfig, MemoryLeaks) {
 }
 #endif
 
+TEST(AgentConfig, Folders) {
+    ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
+    cma::tools::win::SetEnv(std::wstring(kTemporaryRoot), std::wstring(L"."));
+    cma::OnStart(AppType::exe);
+    EXPECT_EQ(cma::cfg::details::G_ConfigInfo.getRootDir().u8string(), ".");
+    EXPECT_EQ(cma::cfg::details::G_ConfigInfo.getUserDir().u8string(),
+              "ProgramData\\CheckMK\\Agent");
+}
+
 TEST(AgentConfig, MainYaml) {
     auto root_dir = details::G_ConfigInfo.getRootDir();
     root_dir /= files::kDefaultMainConfig;

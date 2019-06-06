@@ -133,8 +133,7 @@ fi
 
 
 unsupported_os () {
-    logging -c "[set_os_env]" "Unsupported OS: ${OS_TYPE}"
-    echo "Unsupported OS: $OS_TYPE" >&2
+    logging -c -e "[set_os_env]" "Unsupported OS: ${OS_TYPE}"
     exit 1
 }
 
@@ -154,9 +153,7 @@ set_os_env () {
         export PATH=$PATH:/usr/ucb:/usr/proc/bin:opt/sfw/bin:/opt/sfw/sbin:/usr/sfw/bin:/usr/sfw/sbin:/opt/csw/bin
         GREP="/usr/xpg4/bin/grep"
         if [ ! -x "$GREP" ]; then
-            logging -c "[set_os_env]" "Please make sure that ${GREP} is existing on Solaris. Aborting mk_oracle plugin."
-            echo "Please make sure that $GREP is existing on Solaris!" >&2
-            echo "Aborting mk_oracle plugin." >&2
+            logging -c -e "[set_os_env]" "Please make sure that ${GREP} is existing on Solaris. Aborting mk_oracle plugin."
             exit 127
         fi
 
@@ -310,6 +307,7 @@ fi
 #   '-w'        1 (WARNING)         error but plugin goes on
 #   '-c'        2 (CRITICAL)        error and plugin exits
 #   '-u'        3 (UNKNOWN)         ?
+#   '-e'                            Writes message to stderr, too
 #
 # Add some useful messages:
 #   logging "" "Set OS environment" "OS: ${OS_TYPE}" "GREP: ${GREP}"
@@ -343,6 +341,7 @@ logging () {
             local criticality=
             local args=
             local header=
+            local to_stderr=false
 
             let i=0
             while test -n "$1"; do
@@ -367,6 +366,11 @@ logging () {
                         shift
                         ;;
 
+                    -e)
+                        to_stderr=true
+                        shift
+                        ;;
+
                     *)
                         args[$i]="$1"
                         i=$((i+1))
@@ -383,9 +387,15 @@ logging () {
 
             if [ "${#args[@]}" -le 1 ]; then
                 echo "$header" >> "$log_file"
+                if [ $to_stderr = true ]; then
+                    echo "$header" >&2
+                fi
             else
                 for arg in "${args[@]:1}"; do
                     echo "${header} $arg" >> "$log_file"
+                    if [ $to_stderr = true ]; then
+                        echo "${header} $arg" >&2
+                    fi
                 done
             fi
 
@@ -439,8 +449,7 @@ set_ora_env () {
             # /var/opt/oracle/oratab is needed for Oracle Solaris
             test -f /var/opt/oracle/oratab && ORATAB=/var/opt/oracle/oratab
             if ! test -f ${ORATAB:-""}; then
-                logging -c "[${sid}] [set_ora_env]" "ORA-99999 oratab not found in local mode"
-                echo "ORA-99999 oratab not found" >&2
+                logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 oratab not found in local mode"
                 exit 1
             fi
             ORACLE_HOME=$("${GREP}" "^${ORACLE_SID}:" <"${ORATAB}" | cut -d":" -f2)
@@ -455,15 +464,13 @@ set_ora_env () {
 
     LD_LIBRARY_PATH=$ORACLE_HOME/lib
     if [ ! -d "${ORACLE_HOME:-'not_found'}" ]; then
-        logging -c "[${sid}] [set_ora_env]" "ORA-99999 ORACLE_HOME for ORACLE_SID=${ORACLE_SID} not found or not existing!"
-        echo "ORA-99999 ORACLE_HOME for ORACLE_SID=${ORACLE_SID} not found or not existing!" >&2
+        logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 ORACLE_HOME for ORACLE_SID=${ORACLE_SID} not found or not existing!"
         return 2
     fi
 
     TNS_ADMIN=${TNS_ADMIN:-$MK_CONFDIR}
     if ! test -f "${TNS_ADMIN}/sqlnet.ora"; then
-        logging -c "[${sid}] [set_ora_env]" "TNS_ADMIN/sqlnet.ora: ${TNS_ADMIN}/sqlnet.ora"
-        echo "ORA-99998 Couldn't find ${TNS_ADMIN}/sqlnet.ora" >&2
+        logging -c -e "[${sid}] [set_ora_env]" "TNS_ADMIN/sqlnet.ora: ${TNS_ADMIN}/sqlnet.ora"
         exit 1
     fi
     export ORACLE_HOME TNS_ADMIN ORACLE_SID LD_LIBRARY_PATH
@@ -2221,9 +2228,7 @@ mk_ora_sqlplus () {
 
     SQLPLUS=${ORACLE_HOME}/bin/sqlplus
     if [ ! -x "${SQLPLUS}" ]; then
-        logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "SQLplus '${SQLPLUS}' not found or ORACLE_HOME '${ORACLE_HOME}' wrong."
-        echo "sqlplus not found or ORACLE_HOME wrong!"
-        echo "SQLPLUS=${SQLPLUS}"
+        logging -w -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "SQLplus '${SQLPLUS}' not found or ORACLE_HOME '${ORACLE_HOME}' wrong."
         return 1
     fi
 
@@ -2449,8 +2454,7 @@ fi
 # In the later case we ouput empty agent sections so that Check_MK will be
 # happy and execute the actual check functions.
 if [ -z "$SIDS" ] && [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
-    logging -c "[preliminaries]" "No SIDs and \$MK_VARDIR/mk_oracle.found not found"
-    echo "No SIDs and \$MK_VARDIR/mk_oracle.found not found" >&2
+    logging -c -e "[preliminaries]" "No SIDs and \$MK_VARDIR/mk_oracle.found not found"
     exit 1
 fi
 

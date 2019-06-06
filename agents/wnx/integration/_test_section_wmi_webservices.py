@@ -4,7 +4,7 @@ from itertools import chain, repeat
 import os
 import pytest
 import re
-from local import actual_output, make_ini_config, localtest, wait_agent, write_config
+from local import actual_output, make_ini_config, local_test, wait_agent, write_config
 
 
 class Globals(object):
@@ -93,4 +93,4 @@ def expected_output():
 
 def test_section_wmi_webservices(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output, actual_output, testfile, request.node.name)
+    local_test(expected_output, actual_output, testfile, request.node.name)

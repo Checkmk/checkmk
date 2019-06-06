@@ -5,7 +5,7 @@ import platform
 import pytest
 import re
 import subprocess
-from local import (actual_output, src_agent_exe, make_ini_config, localtest, src_exec_dir,
+from local import (actual_output, src_agent_exe, make_ini_config, local_test, src_exec_dir,
                    wait_agent, write_config)
 import sys
 
@@ -135,10 +135,10 @@ def expected_output():
 
 def test_section_check_mk(request, testconfig_only_from, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output, actual_output, testfile, request.node.name)
+    local_test(expected_output, actual_output, testfile, request.node.name)
 
 
 def test_section_check_mk__no_tcp(request, testconfig_only_from, expected_output,
                                   actual_output_no_tcp, testfile):
     # request.node.name gives test name
-    localtest(expected_output, actual_output_no_tcp, testfile, request.node.name)
+    local_test(expected_output, actual_output_no_tcp, testfile, request.node.name)

@@ -4,7 +4,7 @@ import os
 import platform
 import pytest
 import re
-from local import (actual_output, make_ini_config, localtest, src_exec_dir, wait_agent,
+from local import (actual_output, make_ini_config, local_test, src_exec_dir, wait_agent,
                    write_config)
 
 
@@ -67,4 +67,4 @@ def manage_spoolfile(request):
 
 def test_section_spool(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output, actual_output, testfile, request.node.name)
+    local_test(expected_output, actual_output, testfile, request.node.name)

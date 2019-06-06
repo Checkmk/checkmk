@@ -4,7 +4,7 @@ import os
 import platform
 import pytest
 import re
-from local import (actual_output, make_ini_config, src_exec_dir, localtest, wait_agent,
+from local import (actual_output, make_ini_config, src_exec_dir, local_test, wait_agent,
                    write_config)
 import shutil
 
@@ -117,4 +117,4 @@ def use_testfiles():
 @pytest.mark.usefixtures('use_testfiles')
 def test_section_fileinfo(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output, actual_output, testfile, request.node.name)
+    local_test(expected_output, actual_output, testfile, request.node.name)

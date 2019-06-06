@@ -13,7 +13,7 @@ import re
 import shutil
 import subprocess
 from local import (actual_output, src_agent_exe, assert_subprocess, make_ini_config, port,
-                   src_exec_dir, localtest, run_subprocess, write_config)
+                   src_exec_dir, local_test, run_subprocess, write_config)
 import sys
 
 
@@ -259,7 +259,7 @@ def verify_uninstall_batch(script):
     ]
     with open(os.path.join(src_exec_dir, 'uninstall_plugins.bat')) as fhandle:
         actual_uninstall = fhandle.read().splitlines()
-        localtest(expected_uninstall, actual_uninstall, None)
+        local_test(expected_uninstall, actual_uninstall, None)
 
 
 @pytest.fixture(autouse=True)
@@ -302,4 +302,4 @@ def post_test():
 
 def test_agent_start_parameters(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output, actual_output, testfile, request.node.name)
+    local_test(expected_output, actual_output, testfile, request.node.name)

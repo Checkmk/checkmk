@@ -4,7 +4,7 @@ from itertools import chain, repeat
 import os
 import pytest
 import re
-from local import (actual_output, make_ini_config, localtest, src_exec_dir, wait_agent,
+from local import (actual_output, make_ini_config, local_test, src_exec_dir, wait_agent,
                    write_config)
 
 
@@ -54,4 +54,4 @@ def expected_output():
 
 def test_section_ps(request, full_path_config, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output, actual_output, testfile, request.node.name)
+    local_test(expected_output, actual_output, testfile, request.node.name)

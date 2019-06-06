@@ -6,7 +6,7 @@ import math
 import os
 import platform
 import re
-from local import (actual_output, assert_subprocess, make_ini_config, src_exec_dir, localtest,
+from local import (actual_output, assert_subprocess, make_ini_config, src_exec_dir, local_test,
                    wait_agent, write_config)
 import sys
 
@@ -203,11 +203,11 @@ def verify_eventstate():
 def test_section_eventlog__no_statefile__no_events(request, testconfig, expected_output_no_events,
                                                    actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output_no_events, actual_output, testfile, request.node.name)
+    local_test(expected_output_no_events, actual_output, testfile, request.node.name)
 
 
 @pytest.mark.usefixtures('with_statefile', 'create_events')
 def test_section_eventlog__application_warnings(
         request, testconfig, expected_output_application_events, actual_output, testfile):
     # request.node.name gives test name
-    localtest(expected_output_application_events, actual_output, testfile, request.node.name)
+    local_test(expected_output_application_events, actual_output, testfile, request.node.name)

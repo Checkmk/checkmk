@@ -277,7 +277,7 @@ def inv_dmidecode_parse_generic(node, lines, keyinfo):
 
 
 def dmidecode_parse_size(v): # into Bytes (int)
-    if v == "Unknown":
+    if not v or v == "Unknown":
         return None
 
     parts = v.split()
@@ -293,7 +293,7 @@ def dmidecode_parse_size(v): # into Bytes (int)
         return int(parts[0])
 
 def dmidecode_parse_speed(v): # into Hz (float)
-    if v == "Unknown":
+    if not v or v == "Unknown":
         return None
 
     parts = v.split()
@@ -307,7 +307,7 @@ def dmidecode_parse_speed(v): # into Hz (float)
         return float(parts[0])
 
 def dmidecode_parse_voltage(v):
-    if v == "Unknown":
+    if not v or v == "Unknown":
         return None
     return float(v.split()[0])
 

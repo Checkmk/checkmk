@@ -117,8 +117,8 @@ def parse_ceph_df(info):
             size_mb = parse_byte_values(data["SIZE"])
             avail_mb = parse_byte_values(data["AVAIL"])
         else:
-            size_mb = parse_byte_values(data["MAX AVAIL"])
-            avail_mb = size_mb - parse_byte_values(data["USED"])
+            avail_mb = parse_byte_values(data["MAX AVAIL"])
+            size_mb = avail_mb + parse_byte_values(data["USED"])
         mps.append((mp, size_mb, avail_mb, 0))
     return mps
 

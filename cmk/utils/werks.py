@@ -206,13 +206,17 @@ def write_precompiled_werks(path, werks):
         json.dump(werks, fp, check_circular=False)
 
 
-# Writhe the given werks to a file object. This is used for creating a textual
-# change log for the released versions and the announcement mails
-def write_as_text(werks, f):
+def write_as_text(werks, f, write_version=True):
+    """Write the given werks to a file object
+
+    This is used for creating a textual hange log for the released versions and the announcement mails.
+    """
     translator = WerkTranslator()
     werklist = sort_by_version_and_component(werks.values())
     for version, version_group in itertools.groupby(werklist, key=lambda w: w["version"]):
-        f.write("%s:\n" % version)
+        # write_version=False is used by the announcement mails
+        if write_version:
+            f.write("%s:\n" % version)
         for component, component_group in itertools.groupby(
                 version_group, key=translator.component_of):
             f.write("    %s:\n" % component.encode("utf-8"))

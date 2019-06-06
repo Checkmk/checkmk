@@ -130,6 +130,8 @@ from cmk.gui.plugins.wato.utils import (
     wato_confirm,
     search_form,
     site_neutral_path,
+    SampleConfigGenerator,
+    sample_config_generator_registry,
 )
 
 from cmk.gui.plugins.wato.check_mk_configuration import (
@@ -995,8 +997,18 @@ def export_mkp_rule_pack(rule_pack):
     ec.export_rule_pack(rule_pack, config.mkeventd_pprint_rules)
 
 
-def save_mkeventd_sample_config():
-    save_mkeventd_rules([cmk.ec.defaults.default_rule_pack([])])
+@sample_config_generator_registry.register
+class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
+    @classmethod
+    def ident(cls):
+        return "ec_sample_rule_pack"
+
+    @classmethod
+    def sort_index(cls):
+        return 50
+
+    def generate(self):
+        save_mkeventd_rules([cmk.ec.defaults.default_rule_pack([])])
 
 
 #.

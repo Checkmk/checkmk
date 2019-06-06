@@ -313,7 +313,7 @@ function virtual_host_tree_enter(path)
 
         state, have_svc_problems = self._calculate_state(state, num_crit, num_unknown, num_warn)
 
-        tags = custom_variables.get("TAGS", []).split()
+        tags = set(custom_variables.get("TAGS", []).split())
 
         # Now go through the levels of the tree. Each level may either be
         # - a tag group id, or
@@ -415,7 +415,7 @@ function virtual_host_tree_enter(path)
                 topics.setdefault(tag_group.topic, []).append(tag_group)
             tag_groups[tag_group.id] = tag_group
 
-        return tag_groups, config
+        return tag_groups, topics
 
     def _get_all_hosts(self):
         try:

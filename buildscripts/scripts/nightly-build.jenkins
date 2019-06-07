@@ -27,15 +27,20 @@ currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LI
 def DOCKER_BUILDS = [:]
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
-def CMK_VERS = dateFormat.format(date)
-def DAILY_DATA = ''
+def BRANCH = scm.branches[0].name.replaceAll("/","-")
+def CMK_VERSION
+if(BRANCH == 'master') {
+    CMK_VERSION = dateFormat.format(date)
+} else {
+    CMK_VERSION = BRANCH + '-' + dateFormat.format(date)
+}
 
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
 
 def ARCHIVE_DIR = ''
-if (scm.branches[0].name == 'master' && JOB_BASE_NAME == 'nightly_build_containerized') {
+if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
     DAILY_DATA = '/var/jenkins_home/daily-data/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
     ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS
 } else {
@@ -264,8 +269,8 @@ try {
                     }
                 }
                 stage('Archive Artifacts') {
-                    // Only master builds should end up on the Website
-                    if (scm.branches[0].name == 'master' && JOB_BASE_NAME == 'nightly_build_containerized') {
+                    // Only 'official' builds should end up on the Website
+                    if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
                         sh """
                             cd ${ARCHIVE_DIR}
                             rsync -av -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \

@@ -52,7 +52,7 @@ def parse_dell_powerconnect_temp(info):
     }.get(dev_status, "unknown[%s]" % dev_status)
 
 
-def inventory_dell_powerconnect_temp(checkname, parsed):
+def inventory_dell_powerconnect_temp(parsed):
     if parsed:
         return [("Ambient", {})]
 

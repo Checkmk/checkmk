@@ -78,7 +78,7 @@ dell_powerconnect_psu_status2nagios_map = {
 }
 
 
-def inventory_dell_powerconnect_psu(checkname, info):
+def inventory_dell_powerconnect_psu(info):
     inventory = []
     if not info or not info[0]:
         return

@@ -1,0 +1,11 @@
+Title: Removed remaining, deprecated 'check{name,type}' argument in discovery functions which led to crashes during discovery
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b2
+Date: 1559890969
+
+

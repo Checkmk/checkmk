@@ -329,6 +329,8 @@ def check_discovery(hostname, ipaddress):
     host_config = config_cache.get_host_config(hostname)
 
     params = host_config.discovery_check_parameters
+    if params is None:
+        params = host_config.default_discovery_check_parameters()
 
     status = 0
     infotexts = []

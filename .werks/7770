@@ -1,0 +1,52 @@
+Title: Fix "Periodic service discovery" disabling rules breaking config
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1559914784
+
+In 1.6.0b1 a rule in the ruleset "Periodic service discovery" that is
+configured with the option "Do not perform service discovery check" resulted
+in the following exception when updating the core config (e.g. with cmk -U):
+
+C+:
+OMD[testsite]:~$ cmk --debug -Uv
+Generating configuration for core (type cmc)...
+time period '24X7': 2 time points
+Configuration Error: 'NoneType' object has no attribute '__getitem__'
+Traceback (most recent call last):
+File "/omd/sites/testsite/bin/cmk", line 94, in
+exit_status = modes.call(mode_name, mode_args, opts, args)
+File "/omd/sites/testsite/lib/python/cmk_base/modes/__init__.py", line 72, in call
+return mode.handler_function(*handler_args)
+File "/omd/sites/testsite/lib/python/cmk_base/modes/check_mk.py", line 1106, in mode_update
+do_update(create_core(options), with_precompile=True)
+File "/omd/sites/testsite/lib/python/cmk_base/core_config.py", line 266, in do_update
+do_create_config(core, with_agents=with_precompile)
+File "/omd/sites/testsite/lib/python/cmk_base/core_config.py", line 219, in do_create_config
+create_core_config(core)
+File "/omd/sites/testsite/lib/python/cmk_base/core_config.py", line 235, in create_core_config
+core.create_config()
+File "/omd/sites/testsite/lib/python/cmk_base/cee/core_cmc.py", line 63, in create_config
+_create_config_hook(self._cmc_file)
+File "/omd/sites/testsite/lib/python/cmk_base/cee/core_cmc.py", line 123, in _create_config_hook
+hosts_config = _measure_time(cmc_all_hosts)
+File "/omd/sites/testsite/lib/python/cmk_base/cee/core_cmc.py", line 156, in _measure_time
+result = func(*args, **kwargs)
+File "/omd/sites/testsite/lib/python/cmk_base/cee/core_cmc.py", line 457, in cmc_all_hosts
+cmc_hosts = CMCHosts(config_cache.all_active_hosts(), CMCHostConfig)
+File "/omd/sites/testsite/lib/python/cmk_base/cee/core_cmc.py", line 501, in __init__
+self._compute(hostnames, host_class)
+File "/omd/sites/testsite/lib/python/cmk_base/cee/core_cmc.py", line 513, in _compute
+host_config = host_class(hostname)
+File "/omd/sites/testsite/lib/python/cmk_base/cee/core_cmc.py", line 966, in __init__
+self._compute()
+File "/omd/sites/testsite/lib/python/cmk_base/cee/core_cmc.py", line 984, in _compute
+self._cmc_services()
+File "/omd/sites/testsite/lib/python/cmk_base/cee/core_cmc.py", line 1259, in _cmc_services
+if disc_check_params["check_interval"] \
+TypeError: 'NoneType' object has no attribute '__getitem__'
+C-:

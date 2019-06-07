@@ -941,6 +941,38 @@ export function set_snapin_site(event, ident, select_field) {
 }
 
 /************************************************
+ * Render the nagvis snapin contents
+ *************************************************/
+
+export function fetch_nagvis_snapin_contents() {
+    // Needs to be fetched via JS from NagVis because it needs to
+    // be done in the user context.
+    var nagvis_url = "../nagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps";
+    ajax.call_ajax(nagvis_url, {
+        add_ajax_id: false,
+        response_handler: function (_unused_handler_data, ajax_response) {
+            // Then hand over the data to the python code which is responsible
+            // to render the data.
+            ajax.call_ajax("ajax_nagvis_maps_snapin.py", {
+                method: "POST",
+                add_ajax_id: false,
+                post_data: "request=" + encodeURIComponent(ajax_response),
+                response_handler: function (_unused_handler_data, snapin_content_response) {
+                    utils.update_contents("snapin_nagvis_maps", snapin_content_response);
+                },
+            });
+        },
+        error_handler: function (_unused, status_code) {
+            var msg = document.createElement("div");
+            msg.classList.add("message", "error");
+            msg.innerHTML = "Failed to update NagVis maps: " + status_code;
+            utils.update_contents("snapin_nagvis_maps", msg.outerHTML);
+        },
+        method: "GET"
+    });
+}
+
+/************************************************
  * Popup Message Handling
  *************************************************/
 

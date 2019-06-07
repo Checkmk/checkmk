@@ -18,6 +18,7 @@ def test_registered_pages():
         'ajax_graph_hover',
         'ajax_inv_render_tree',
         'ajax_metric_choice',
+        'ajax_nagvis_maps_snapin',
         'ajax_pagetype_add_element',
         'ajax_popup_action_menu',
         'ajax_popup_add_metric_to_custom_graph',

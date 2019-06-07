@@ -1008,7 +1008,7 @@ class ApiData(object):
         g.join('k8s_resources', self.pods.pods_per_node())
         g.join('k8s_stats', self.nodes.stats())
         g.join('k8s_conditions', self.nodes.conditions())
-        return '\n'.join(g.output(piggyback_prefix="node_"))
+        return '\n'.join(g.output())
 
     def custom_metrics_section(self):
         # type: () -> str

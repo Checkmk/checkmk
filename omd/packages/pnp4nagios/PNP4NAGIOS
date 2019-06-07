@@ -20,6 +20,12 @@ case "$1" in
        echo "off: disable"
    ;;
    set)
+       # NOTE: Although we don't ship Icinga anymore, we leave this to make
+       # sure there is file left over from previous installations.
+       if [ -e $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg ] ; then
+           rm -f $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg
+       fi
+
        if [ "$2" == "on" ]
        then
            #mkdir -p $OMD_ROOT/etc/nagios/nagios.d

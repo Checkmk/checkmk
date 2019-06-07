@@ -1,0 +1,15 @@
+Title: ucs_bladecenter_if, winperf_if: discover single interfaces of interface groups
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1559917382
+Class: feature
+
+Individual interfaces for portchannels of ucs_bladecenter_if
+and teamed interfaces of winperf_if are now discovered additionally
+to the grouped interfaces. This makes troubleshooting for grouped
+interfaces easier since the metrics of the individual interfaces
+are present as well. The new services of the individual interfaces
+have to be added to the monitoring.

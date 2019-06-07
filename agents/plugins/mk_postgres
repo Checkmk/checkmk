@@ -109,9 +109,8 @@ function postgres_simple_queries() {
     # with the result, that there was never any active connection shown in the
     # web-gui.
     CONDITION="$ROW <> $IDLE"
-    CONNECTIONS_QUERY="SELECT COUNT(datid) AS current,
-          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
-          d.datname
+    CONNECTIONS_QUERY="SELECT d.datname, COUNT(datid) AS current,
+          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc
         FROM pg_database d
         LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE $CONDITION
         GROUP BY 1
@@ -196,12 +195,12 @@ function postgres_bloat() {
     if compare_version_greater_equal "$POSTGRES_VERSION" "9.0" ; then
         BLOAT_QUERY="SELECT
           current_database() AS db, schemaname, tablename, reltuples::bigint AS tups, relpages::bigint AS pages, otta,
-          ROUND(CASE WHEN otta=0 OR sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE sml.relpages/otta::numeric END,1) AS tbloat,
+          ROUND(CASE WHEN sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE (sml.relpages-otta::numeric)/sml.relpages END,3) AS tbloat,
           CASE WHEN relpages < otta THEN 0 ELSE relpages::bigint - otta END AS wastedpages,
           CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::bigint END AS wastedbytes,
           CASE WHEN relpages < otta THEN 0 ELSE (bs*(relpages-otta))::bigint END AS wastedsize,
           iname, ituples::bigint AS itups, ipages::bigint AS ipages, iotta,
-          ROUND(CASE WHEN iotta=0 OR ipages=0 OR ipages=iotta THEN 0.0 ELSE ipages/iotta::numeric END,1) AS ibloat,
+          ROUND(CASE WHEN ipages=0 OR ipages<=iotta THEN 0.0 ELSE (ipages-iotta::numeric)/ipages END,3) AS ibloat,
           CASE WHEN ipages < iotta THEN 0 ELSE ipages::bigint - iotta END AS wastedipages,
           CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta) END AS wastedibytes,
           CASE WHEN ipages < iotta THEN 0 ELSE (bs*(ipages-iotta))::bigint END AS wastedisize,
@@ -267,12 +266,12 @@ function postgres_bloat() {
     else
         BLOAT_QUERY="SELECT
           current_database() AS db, schemaname, tablename, reltuples::bigint AS tups, relpages::bigint AS pages, otta,
-          ROUND(CASE WHEN otta=0 OR sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE sml.relpages/otta::numeric END,1) AS tbloat,
+          ROUND(CASE WHEN sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE (sml.relpages-otta::numeric)/sml.relpages END,3) AS tbloat,
           CASE WHEN relpages < otta THEN 0 ELSE relpages::bigint - otta END AS wastedpages,
           CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::bigint END AS wastedbytes,
           CASE WHEN relpages < otta THEN '0 bytes'::text ELSE (bs*(relpages-otta))::bigint || ' bytes' END AS wastedsize,
           iname, ituples::bigint AS itups, ipages::bigint AS ipages, iotta,
-          ROUND(CASE WHEN iotta=0 OR ipages=0 OR ipages=iotta THEN 0.0 ELSE ipages/iotta::numeric END,1) AS ibloat,
+          ROUND(CASE WHEN ipages=0 OR ipages<=iotta THEN 0.0 ELSE (ipages-iotta::numeric)/ipages END,3) AS ibloat,
           CASE WHEN ipages < iotta THEN 0 ELSE ipages::bigint - iotta END AS wastedipages,
           CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta) END AS wastedibytes,
           CASE WHEN ipages < iotta THEN '0 bytes' ELSE (bs*(ipages-iotta))::bigint || ' bytes' END AS wastedisize,
@@ -398,7 +397,7 @@ function postgres_main() {
 
     DATABASES="$(echo "SELECT datname FROM pg_database WHERE datistemplate = false;" |\
                  su - "$DBUSER" -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -t -A -F';'")"
-    ECHO_DATABASES="$(echo "$DATABASES" | sed 's/^/\\echo /')"
+    ECHO_DATABASES=${DATABASES/#/\\echo }
 
     postgres_sessions
     postgres_simple_queries
@@ -412,7 +411,9 @@ function postgres_check_server_version() {
     # Query the server version from the server. Originally the version of the
     # client tools was taken, but what really matters is the version of the server.
     # Terminate the script if the server can not be queried.
-    set -- "$(su - "$DBUSER" -c "psql -A -t -c 'SHOW server_version;'" | tr '.' ' ')"
+    # We want $(su ...) to be
+    # shellcheck disable=SC2046
+    set -- $(su - "$DBUSER" -c "psql -A -t -c 'SHOW server_version;'" | tr '.' ' ')
     test $# -eq 0 && exit 0
     POSTGRES_VERSION="$1.$2"
     postgres_set_condition_vars
@@ -438,8 +439,8 @@ if [ -e "$MK_CONFFILE" ]; then
     DBUSER=$(grep DBUSER "$MK_CONFFILE" | sed 's/.*=//g')
     postgres_check_server_version
 
-    cat "$MK_CONFFILE" | while read line
-    do
+    # read -r: we do not want to interpret backslashes before spaces and line feeds
+    while read -r line; do
         case $line in
             INSTANCE*)
                 instance=$line
@@ -450,6 +451,8 @@ if [ -e "$MK_CONFFILE" ]; then
         esac
 
         if [ ! -z "$instance" ]; then
+            # Too complicated for ${variable//search/replace}
+            # shellcheck disable=SC2001
             instance_path=$(echo "$instance" | sed 's/.*=\(.*\):.*:.*$/\1/g')
             instance_name=$(echo "$instance_path" | sed -e 's/.*\/\(.*\)/\1/g' -e 's/\.env$//g')
             if [ ! -z "$instance_name" ]; then
@@ -461,7 +464,11 @@ if [ -e "$MK_CONFFILE" ]; then
             psql="/$DBUSER/$(grep "^export PGVERSION=" "$instance_path" |
                  sed -e 's/.*=//g' -e 's/\s*#.*$//g')/bin/psql"
 
+            # Too complicated for ${variable//search/replace}
+            # shellcheck disable=SC2001
             PGUSER=$(echo "$instance" | sed 's/.*=.*:\(.*\):.*$/\1/g')
+            # Too complicated for ${variable//search/replace}
+            # shellcheck disable=SC2001
             PGPASSFILE="$(echo "$instance" | sed 's/.*=.*:.*:\(.*\)$/\1/g')"
             PGDATABASE=$(grep "^export PGDATABASE=" "$instance_path" |
                          sed -e 's/.*=//g' -e 's/\s*#.*$//g')
@@ -470,14 +477,14 @@ if [ -e "$MK_CONFFILE" ]; then
 
             # Fallback
             if [ ! -f "$psql" ]; then
-                psql="$(cat $instance_path | grep "^export PGHOME=" |
+                psql="$(grep "^export PGHOME=" "$instance_path" |
                      sed -e 's/.*=//g' -e 's/\s*#.*$//g')/psql"
             fi
 
             postgres_main
 
         fi
-    done
+    done < "$MK_CONFFILE"
 
 else
 

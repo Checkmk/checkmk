@@ -199,12 +199,12 @@ section_df() {
     fi
 
     echo '<<<df>>>'
-    df -PTlk "${excludefs}" | sed 1d
+    df -PTlk ${excludefs} | sed 1d
 
     # df inodes information
     echo '<<<df>>>'
     echo '[df_inodes_start]'
-    df -PTli "${excludefs}" | sed 1d
+    df -PTli ${excludefs} | sed 1d
     echo '[df_inodes_end]'
 }
 

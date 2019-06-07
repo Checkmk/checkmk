@@ -712,11 +712,18 @@ class CREFolder(BaseFolder):
                 if value:
                     dictionary[hostname] = value
 
-            # Create contact group rule entries for hosts with explicitely set values
-            # Note: since the type if this entry is a list, not a single contact group, all other list
-            # entries coming after this one will be ignored. That way the host-entries have
-            # precedence over the folder entries.
-
+            # Create contact group rule entries for hosts with explicitely set
+            # values Note: since the type if this entry is a list, not a single
+            # contact group, all other list entries coming after this one will
+            # be ignored. That way the host-entries have precedence over the
+            # folder entries.
+            #
+            # LM: This comment is wrong. The folders create list entries,
+            # but the hosts create string entries. This makes the hosts add
+            # their contact groups in addition to the effective folder contact
+            # groups I went back to ~2015 and it seems it was always working
+            # this way. I won't change it now and leave the comment here for
+            # reference.
             if host.has_explicit_attribute("contactgroups"):
                 cgconfig = convert_cgroups_from_tuple(host.attribute("contactgroups"))
                 cgs = cgconfig["groups"]
@@ -770,18 +777,18 @@ class CREFolder(BaseFolder):
                 out.write("extra_host_conf.setdefault(%r, []).extend(\n" % custom_varname)
                 out.write("  %s)\n" % format_config_value(macrolist))
 
-        # If the contact groups of the host are set to be used for the monitoring,
-        # we create an according rule for the folder and an according rule for
-        # each host that has an explicit setting for that attribute.
+        # If the contact groups of the folder are set to be used for the monitoring,
+        # we create an according rule for the folder here and an according rule for
+        # each host that has an explicit setting for that attribute (see above).
         _permitted_groups, contact_groups, use_for_services = self.groups()
         if contact_groups:
-            out.write("\nhost_contactgroups.append(\n"
+            out.write("\nhost_contactgroups.insert(0, \n"
                       "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % list(contact_groups))
             if use_for_services:
                 # Currently service_contactgroups requires single values. Lists are not supported
                 for cg in contact_groups:
                     out.write(
-                        "\nservice_contactgroups.append(\n"
+                        "\nservice_contactgroups.insert(0, \n"
                         "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS, ALL_SERVICES ))\n" % cg)
 
         # Write information about all host attributes into special variable - even

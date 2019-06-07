@@ -934,13 +934,19 @@ def test_host_config_hostgroups(monkeypatch, hostname, result):
 
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", []),
-    ("testhost2", ["dingdong"]),
+    ("testhost2", ["abc", "dingdong"]),
 ])
 def test_host_config_contactgroups(monkeypatch, hostname, result):
     ts = Scenario().add_host(hostname)
-    ts.set_ruleset("host_contactgroups", [
-        ("dingdong", [], ["testhost2"], {}),
-    ])
+    ts.set_ruleset(
+        "host_contactgroups",
+        [
+            # Seems both, a list of groups and a group name is allowed. We should clean
+            # this up to be always a list of groups in the future...
+            ("dingdong", [], ["testhost2"], {}),
+            (["abc"], [], ["testhost2"], {}),
+            (["xyz"], [], ["testhost2"], {}),
+        ])
     config_cache = ts.apply(monkeypatch)
     assert sorted(config_cache.get_host_config(hostname).contactgroups) == sorted(result)
 

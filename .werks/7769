@@ -1,0 +1,33 @@
+Title: Fix broken computation of host contact groups in some cases
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1559912216
+
+The core config creation was broken in 1.6.0b1 when using the WATO
+folder hierarchy for assigning contact groups to hosts.
+
+An exception like this was displayed after the update or later, e.g.
+when executing <tt>cmk -U</tt> to update the core configuration:
+
+C+:
+File "/omd/sites/produktiv/lib/python/cmk_base/cee/core_cmc.py", line 457, in cmc_all_hosts
+cmc_hosts = CMCHosts(config_cache.all_active_hosts(), CMCHostConfig)
+File "/omd/sites/produktiv/lib/python/cmk_base/cee/core_cmc.py", line 501, in __init__
+self._compute(hostnames, host_class)
+File "/omd/sites/produktiv/lib/python/cmk_base/cee/core_cmc.py", line 513, in _compute
+host_config = host_class(hostname)
+File "/omd/sites/produktiv/lib/python/cmk_base/cee/core_cmc.py", line 962, in __init__
+super(CMCHostConfig, self).__init__(hostname)
+File "/omd/sites/produktiv/lib/python/cmk_base/cee/core_cmc.py", line 753, in __init__
+self._host_contact_groups = self._host_config.contactgroups
+File "/omd/sites/produktiv/lib/python/cmk_base/config.py", line 2471,
+in contactgroups
+return list(set(cgrs))
+TypeError: unhashable type: 'list'
+C-:
+

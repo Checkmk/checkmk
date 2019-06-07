@@ -48,6 +48,7 @@ VERSION            := 1.7.0i1
 # Will be set to ".demo" by cmk build system when building a demo package
 DEMO_SUFFIX        :=
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
+PKG_VERSION := $(VERSION)$(DEMO_SUFFIX)
 
 SHELL              := /bin/bash
 # TODO: Be more strict - Add this:

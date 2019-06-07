@@ -48,6 +48,18 @@ pytestmark = pytest.mark.checks
         }],
         ['Ethernet1-XYZ'],
     ),
+    ([[u'1559837585.63', u'510', u'2929686'], [u'1', u'instances:', u'vmxnet3_Ethernet_Adapter'],
+      [u'-122', u'38840302775', u'bulk_count'], [u'-110', u'206904763', u'bulk_count'],
+      [u'-244', u'173589803', u'bulk_count'], [u'-58', u'33314960', u'bulk_count'],
+      [u'10', u'10000000000', u'large_rawcount'], [u'-246', u'21145988302', u'bulk_count'],
+      [u'14', u'36886547', u'bulk_count'], [u'16', u'136703256', u'bulk_count'],
+      [u'18', u'0', u'large_rawcount'], [u'20', u'0', u'large_rawcount'],
+      [u'22', u'0', u'large_rawcount'], [u'-4', u'17694314473', u'bulk_count'],
+      [u'26', u'33127032', u'bulk_count'], [u'28', u'187928', u'bulk_count'],
+      [u'30', u'0', u'large_rawcount'], [u'32', u'0', u'large_rawcount'],
+      [u'34', u'0', u'large_rawcount'], [u'1086', u'0', u'large_rawcount'],
+      [u'1088', u'0', u'large_rawcount'], [u'1090', u'0', u'bulk_count'],
+      [u'1092', u'0', u'bulk_count'], [u'1094', u'0', u'large_rawcount']], [{}], ['1']),
 ])
 def test_winperf_if_netconnection_id(check_manager, monkeypatch, info, settings, items):
     check = check_manager.get_check("winperf_if")

@@ -150,7 +150,7 @@ def _parse_winperf_if_teaming_section_line(line, headers):
 
 
 def _parse_winperf_if_agent_section_timestamp_and_instance_names(line, lines):
-    # The lines containg timestamp and nic names are consecutive:
+    # The lines containing timestamp and nic names are consecutive:
     # [u'1418225545.73', u'510']
     # [u'8', u'instances:', 'NAME', ...]
     try:
@@ -196,7 +196,10 @@ def _parse_winperf_if_section(info):
             plugin_section_header = line
             continue
 
-        if len(line) in (2, 3):
+        if len(line) in (2, 3) and not line[-1].endswith("count"):
+            # Do not consider lines containing counters:
+            # ['-122', '38840302775', 'bulk_count']
+            # ['10', '10000000000', 'large_rawcount']
             agent_timestamp, raw_nic_names = _parse_winperf_if_agent_section_timestamp_and_instance_names(
                 line, lines)
             plugin_section_header = None

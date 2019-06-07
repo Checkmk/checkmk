@@ -911,7 +911,7 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
     set +f
 
     # let the shell do all the expansion, and pipe all files to perl
-    (cat "$MK_CONFDIR/fileinfo.cfg" "$MK_CONFDIR/fileinfo.d/*" 2>/dev/null) | while read -r pattern; do
+    (cat "$MK_CONFDIR"/fileinfo.cfg "$MK_CONFDIR"/fileinfo.d/* 2>/dev/null) | while read -r pattern; do
         case $pattern in
             /*) pattern=$(replace_datevariable "$pattern")
                 for f in $pattern; do echo "${f}"; done

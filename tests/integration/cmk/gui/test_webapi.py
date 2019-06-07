@@ -380,19 +380,14 @@ def test_write_host_tags(web, site):
 
         exec (site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
-        tags_by_host = {}
-        for entry in cfg["all_hosts"]:
-            hostname, tag_txt = entry.split("|", 1)
-            tags_by_host[hostname] = tag_txt.split("|")
+        assert "dmz" in cfg["host_tags"]["test-host-dmz"]["networking"]
+        assert "lan" not in cfg["host_tags"]["test-host-dmz"]["networking"]
 
-        assert "dmz" in tags_by_host["test-host-dmz"]
-        assert "lan" not in tags_by_host["test-host-dmz"]
+        assert "dmz" not in cfg["host_tags"]["test-host-lan"]["networking"]
+        assert "lan" in cfg["host_tags"]["test-host-lan"]["networking"]
 
-        assert "dmz" not in tags_by_host["test-host-lan"]
-        assert "lan" in tags_by_host["test-host-lan"]
-
-        assert "dmz" not in tags_by_host["test-host-lan2"]
-        assert "lan" in tags_by_host["test-host-lan2"]
+        assert "dmz" not in cfg["host_tags"]["test-host-lan2"]["networking"]
+        assert "lan" in cfg["host_tags"]["test-host-lan2"]["networking"]
 
     finally:
         web.delete_hosts(["test-host-lan2", "test-host-lan", "test-host-dmz"])

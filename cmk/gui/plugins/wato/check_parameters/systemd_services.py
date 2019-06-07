@@ -106,13 +106,15 @@ class RulespecCheckgroupParametersSystemdServices(CheckParameterRulespecWithItem
             elements=[
                 ("states",
                  Dictionary(
+                     title=_("Map systemd states to monitoring states"),
                      elements=[
                          ("active",
                           MonitoringState(
                               title=_("Monitoring state if service is active"),
                               default_value=0,
                           )),
-                     ],)),
+                     ],
+                 )),
                 ("states_default",
                  MonitoringState(
                      title=_("Monitoring state for any other service state"),

@@ -276,6 +276,40 @@ def test_ip_in_subnetwork(mk_logwatch):
                                         "1762:0000:0000:0000:0000:0000:0000:0000/64") is False
 
 
+@pytest.mark.parametrize("buff,encoding,position", [
+    ('\xFE\xFF', 'utf_16_be', 2),
+    ('\xFF\xFE', 'utf_16', 2),
+    ('no encoding in this file!', 'utf_8', 0),
+])
+def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, position):
+    monkeypatch.setattr(os, 'open', lambda *_args: None)
+    monkeypatch.setattr(os, 'read', lambda *_args: buff)
+    monkeypatch.setattr(os, 'lseek', lambda *_args: len(buff))
+    log_iter = mk_logwatch.LogLinesIter('void')
+    assert log_iter._enc == encoding
+    assert log_iter.get_position() == position
+
+
+def test_log_lines_iter(mk_logwatch):
+    log_iter = mk_logwatch.LogLinesIter(mk_logwatch.__file__)
+
+    log_iter.set_position(710)
+    assert log_iter.get_position() == 710
+
+    line = log_iter.next_line()
+    assert type(line) == unicode
+    assert line == u"# This file is part of Check_MK.\n"
+    assert log_iter.get_position() == 743
+
+    log_iter.push_back_line(u'Täke this!')
+    assert log_iter.get_position() == 732
+    assert log_iter.next_line() == u'Täke this!'
+
+    log_iter.skip_remaining()
+    assert log_iter.next_line() is None
+    assert log_iter.get_position() == os.stat(mk_logwatch.__file__).st_size
+
+
 class MockStdout(object):
     def isatty(self):
         return False

@@ -139,13 +139,6 @@ def assert_subprocess(cmd):
     assert exit_code == 0, "'%s' failed" % ' '.join(cmd)
 
 
-def make_ini_config():
-    ini = IniWriter()
-    ini.add_section('global')
-    ini.set('global', 'port', port)
-    return ini
-
-
 @pytest.fixture
 def make_yaml_config():
     yml = yaml.safe_load("""

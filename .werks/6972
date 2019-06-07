@@ -1,0 +1,58 @@
+Title: Support SQL-style quoting for filtering dict-valued columns
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1559898561
+Class: feature
+
+Some Livestatus columns do not contain a simple value or a list of such values,
+they contain a dictionary of key/value pairs. More concretely, the
+
+<ul>
+<li><tt>custom_variables</tt></li>
+<li><tt>label_sources</tt></li>
+<li><tt>labels</tt></li>
+<li><tt>tags</tt></li>
+</ul>
+
+columns in the
+
+<ul>
+<li><tt>contacts</tt></li>
+<li><tt>hosts</tt></li>
+<li><tt>hostsbygroup</tt></li>
+<li><tt>services</tt></li>
+<li><tt>servicesbygroup</tt></li>
+<li><tt>servicesbyhostgroup</tt></li>
+</ul>
+
+tables contain dictionary values. Livestatus filter for such columns have a
+special syntax:
+
+C+:
+Filter: COLUMN OPERATOR KEY VALUE
+C-:
+
+As an example, the query:
+
+C+:
+GET hosts
+Filter: tag = agent cmk-agent
+C-:
+
+returns all hosts where the tag "agent" has the value "cmk-agent". Note that the
+key and the value are separated by whitespace. But this makes it impossible to
+query for a tag name with spaces. To support more general keys and values in
+such filters, Livestatus now additionally supports SQL-style quoting for such
+column filters:
+
+C+:
+Filter: labels = 'It''s so' 'cool, man!'
+C-:
+
+This filter matches a label with key "It's so" and value "cool, man!". Note the
+use of 2 consecutive single quotes to represent 1 single quote. The previous
+syntax still works, the new syntax is triggered by a leading single quote in the
+key and/or value.

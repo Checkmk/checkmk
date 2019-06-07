@@ -324,7 +324,7 @@ void ServiceProcessor::sendDebugData() {
         auto started = startProviders(tp.value(), "");
         auto block = getAnswer(started);
         block.emplace_back('\0');  // yes, we need this for printf
-        auto count = printf("debug data:\n %s", block.data());
+        auto count = printf("debug data:\n%s", block.data());
         if (count != block.size()) XLOG::l("Binary data at offset [{}]", count);
     }
 }

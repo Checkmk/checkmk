@@ -40,4 +40,13 @@ def expected_output():
 
 def test_section_df(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
+    actual_output_len = len(actual_output)
+    expected_output_len = len(expected_output)
+
+    # if we have length mismatch we have to extend expected output
+    # we will replicate expected strings depeding from length mismatching
+    # the method is not elegant, but absolutelly correct
+    for _ in range(expected_output_len, actual_output_len):
+        expected_output.insert(1, expected_output[1])  # [h][1][f] ->[h][1][1][f] -> ...
+
     local_test(expected_output, actual_output, testfile, request.node.name)

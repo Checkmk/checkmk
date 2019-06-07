@@ -2348,11 +2348,14 @@ class HostConfig(object):
 
     @property
     def discovery_check_parameters(self):
-        # type: () -> Dict
+        # type: () -> Optional[Dict]
         """Compute the parameters for the discovery check for a host
 
-        Note: if the discovery check is disabled for that host, default parameters
-        will be returned. A "check_interval" of None means the check should not be added.
+        Note:
+        - If a rule is configured to disable the check, this function returns None.
+        - If there is no rule configured, a value is constructed from the legacy global
+          settings and will be returned. In this structure a "check_interval" of None
+          means the check should not be added.
         """
         entries = self._config_cache.host_extra_conf(self.hostname, periodic_discovery)
         if not entries:

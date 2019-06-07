@@ -948,7 +948,7 @@ def test_host_config_contactgroups(monkeypatch, hostname, result):
             (["xyz"], [], ["testhost2"], {}),
         ])
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).contactgroups == result
+    assert sorted(config_cache.get_host_config(hostname).contactgroups) == sorted(result)
 
 
 @pytest.mark.parametrize("hostname,result", [

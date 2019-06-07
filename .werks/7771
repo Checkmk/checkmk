@@ -1,0 +1,13 @@
+Title: Prevent question about removed "etc/icinga/icinga.d" directory
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1559922434
+
+We removed the deprecated Icinga 1 from our packages. This lead to a question
+about removing the etc/icinga/icinga.d directory during updates to 1.6.0b1.
+The question for removal of this directory has now been removed for most users.

@@ -1,0 +1,10 @@
+Title: winperf_if: Fixed crash while parsing counters section
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1559900704
+Class: fix
+
+

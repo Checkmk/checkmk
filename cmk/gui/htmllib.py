@@ -2490,6 +2490,7 @@ class html(HTMLGenerator):
                                  icon=None,
                                  fetch_url=None,
                                  title_url=None,
+                                 title_target=None,
                                  tree_img="tree"):
         self.folding_indent = indent
 
@@ -2543,7 +2544,7 @@ class html(HTMLGenerator):
                         class_=["treeangle", "title"],
                         src="themes/%s/images/icon_%s.png" % (self._theme, icon))
                 if title_url:
-                    self.a(title, href=title_url)
+                    self.a(title, href=title_url, target=title_target)
                 else:
                     self.write_text(title)
                 self.close_b()

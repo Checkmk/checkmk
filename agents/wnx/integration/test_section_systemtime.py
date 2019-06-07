@@ -2,7 +2,7 @@
 # -*- coding: utf-8; py-indent-offset: 4 -*-
 import os
 import pytest
-from local import actual_output, make_ini_config, local_test, wait_agent, write_config
+from local import actual_output, make_yaml_config, local_test, wait_agent, write_config
 
 
 @pytest.fixture
@@ -11,11 +11,10 @@ def testfile():
 
 
 @pytest.fixture
-def testconfig(make_ini_config):
+def testconfig(make_yaml_config):
     section = 'systemtime'
-    make_ini_config.set('global', 'sections', section)
-    make_ini_config.set('global', 'crash_debug', 'yes')
-    return make_ini_config
+    make_yaml_config['global']['sections'] = "systemtime"
+    return make_yaml_config
 
 
 @pytest.fixture

@@ -50,18 +50,18 @@ def make_clean_dir(dir_to_create_and_clean):
         sys.exit(13)
 
 
-def create_and_fill_root_dir(root_dir, artefacts_dir):
-    make_clean_dir(root_dir)
+def create_and_fill_root_dir(root_work_dir, artefacts_dir):
+    make_clean_dir(root_work_dir)
 
     # filling
     for foo in [get_main_exe_name, get_main_yaml_name]:
         src = foo(artefacts_dir)
-        shutil.copy(src, root_dir)
+        shutil.copy(src, root_work_dir)
 
-    shutil.copytree(get_main_plugins_name(artefacts_dir), get_main_plugins_name(root_dir))
-    create_protocol_file(root_dir)
+    shutil.copytree(get_main_plugins_name(artefacts_dir), get_main_plugins_name(root_work_dir))
+    create_protocol_file(root_work_dir)
     # checking
-    tgt_agent_exe = get_main_exe_name(root_dir)
+    tgt_agent_exe = get_main_exe_name(root_work_dir)
     if not os.path.exists(tgt_agent_exe):
         print('File %s doesnt exist' % src_agent_exe)
         sys.exit(11)

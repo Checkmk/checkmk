@@ -14,6 +14,13 @@ namespace cma {
 
 namespace provider {
 
+// Converts address entry from config file into
+// expected by check_mk check(only_from) representation.
+// Carefully tested to be maximally compatible with legacy
+// integrations tests
+// on error returns empty string
+std::string AddressToCheckMkString(std::string_view entry) noexcept;
+
 class CheckMk : public Synchronous {
 public:
     CheckMk() : Synchronous(cma::section::kCheckMk) {}

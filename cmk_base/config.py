@@ -2359,11 +2359,11 @@ class HostConfig(object):
         """
         entries = self._config_cache.host_extra_conf(self.hostname, periodic_discovery)
         if not entries:
-            return self._default_discovery_check_parameters()
+            return self.default_discovery_check_parameters()
 
         return entries[0]
 
-    def _default_discovery_check_parameters(self):
+    def default_discovery_check_parameters(self):
         """Support legacy single value global configurations. Otherwise return the defaults"""
         return {
             "check_interval": inventory_check_interval,

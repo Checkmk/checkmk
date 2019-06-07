@@ -3843,6 +3843,8 @@ msgid ""
 "All hosts configured via this ruleset will try to find new host labels during "
 "every check cycle."
 msgstr ""
+"Alle Hosts, die über diesen Regelsatz konfiguriert sind, werden versuchen, "
+"bei jedem Prüfzyklus neue Host-Labels zu finden."
 
 msgid ""
 "All hosts created by this connection will be placed in this folder. You are "
@@ -6703,6 +6705,7 @@ msgstr "Kann Änderungen nicht starten: %s"
 
 msgid "Can not use an empty tag ID with a single choice."
 msgstr ""
+"Eine leere Tag-ID kann nicht mit einer einzigen Auswahl verwendet werden."
 
 msgid "Can still edit"
 msgstr "Schreibschutz ignorieren"
@@ -10063,7 +10066,7 @@ msgid "Currently in downtime"
 msgstr "Zur Zeit in Wartung"
 
 msgid "Currently not supported with this Check_MK Edition"
-msgstr ""
+msgstr "Wird derzeit von dieser Checkmk Edition nicht unterstützt."
 
 msgid "Currently open events of a host that is monitored"
 msgstr "Offene Events von einem überwachten Host"
@@ -10462,7 +10465,7 @@ msgid "DNS name or IP address of update server"
 msgstr "DNS-Name oder IP-Adresse des Updateservers"
 
 msgid "DNS policy"
-msgstr ""
+msgstr "DNS-Policy"
 
 msgid "DNS queries received for non-existent domain"
 msgstr "DNS-Anfragen für unbekannte Domänen"
@@ -12191,6 +12194,8 @@ msgstr "Legende für die Zeitleiste anzeigen"
 #, python-format
 msgid "Display long output in timeline (<a href=\"%s\">Enable via WATO</a>)"
 msgstr ""
+"Lange Ausgabe in der Zeitleiste anzeigen (<a href=\"%s\" >Über WATO "
+"aktivieren</a>)"
 
 msgid "Display mode of entries"
 msgstr "Anzeigemodus"
@@ -15035,7 +15040,7 @@ msgid "Explicit vertical range"
 msgstr "Expliziter vertikaler Bereich"
 
 msgid "Explicit, ruleset, discovered"
-msgstr ""
+msgstr "Explizit, Regelsatz, entdeckt"
 
 msgid "Explicitly specify resources"
 msgstr "Ressourcen explizit auflisten"
@@ -18089,6 +18094,10 @@ msgid ""
 "configuration synchronization. Have a look at the <a href=\"wato.py?"
 "folder=&mode=changelog\">activate changes page</a> for further information."
 msgstr ""
+"Host %s existiert nicht in der entfernten Instanz %s. Dies kann durch eine "
+"fehlgeschlagene Konfigurationssynchronisation verursacht werden. Werfen Sie "
+"einen Blick auf die <a href=\"wato.py?folder=&mode=changelog\" >Änderungen "
+"aktivieren Seite</a> für weitere Informationen."
 
 #, python-format
 msgid "Host %s not found"
@@ -20570,7 +20579,7 @@ msgid "Image ID"
 msgstr "Bild"
 
 msgid "Image pull policy"
-msgstr ""
+msgstr "Image-Pull-Richtlinie"
 
 msgid "Image size"
 msgstr "Bildgröße"
@@ -21959,6 +21968,10 @@ msgid ""
 "job has no last running state as this is obtained from the log. The last run "
 "state is ignored when no log information is found."
 msgstr ""
+"Es ist möglich, dass ein Auftrag keine Protokollinformationen enthält. Dies "
+"bedeutet auch, dass der Job keinen letzten Betriebszustand hat, da dieser aus "
+"dem Protokoll entnommen wird. Der letzte Laufzustand wird ignoriert, wenn "
+"keine Protokollinformationen gefunden werden."
 
 msgid ""
 "It is possible to automatically delete messages when the configured time is "
@@ -22368,18 +22381,20 @@ msgid "LVM, Logical Volume Groups (Linux)"
 msgstr "LVM, Logical Volume Groups (Linux)"
 
 msgid "Label"
-msgstr ""
+msgstr "Label"
 
 msgid "Labelling Options"
 msgstr "Beschriftungsoptionen"
 
 msgid "Labels"
-msgstr ""
+msgstr "Labels"
 
 msgid ""
 "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:"
 "windows</tt>."
 msgstr ""
+"Die Labels müssen im Format <tt>[KEY]:[VALUE]</tt> vorliegen. Zum Beispiel "
+"<tt>os:windows</tt>."
 
 msgid "Lanes"
 msgstr "Lanes"
@@ -24941,9 +24956,8 @@ msgstr "Maximale erwartete Laufzeit des Lebenszeichens"
 msgid "Maximum image size: %dx%dpx"
 msgstr "Maximale Bildgröße: %dx%dpx"
 
-#, fuzzy
 msgid "Maximum inodes"
-msgstr "Maximale Größe"
+msgstr "Maximale Inodes"
 
 msgid "Maximum levels if using magic factor"
 msgstr "Maximale Schwellwerte bei Verwendung von Magiefaktor"
@@ -25336,9 +25350,8 @@ msgstr "Metrik-System"
 msgid "Metrics with all zero values"
 msgstr "Metriken, die überall den Wert 0 haben"
 
-#, fuzzy
 msgid "MiB"
-msgstr "MB"
+msgstr "MiB"
 
 msgid "Micro Core Statistics"
 msgstr "Micro Core Statistik"
@@ -28091,9 +28104,8 @@ msgstr "ORACLE DB Zeitstatistik"
 msgid "ORACLE Databases (Linux, Solaris, AIX)"
 msgstr "ORACLE Datenbanken (Linux, Solaris, AIX)"
 
-#, fuzzy
 msgid "ORACLE SGA Information"
-msgstr "SNMP-Information"
+msgstr "ORACLE SGA Informationen"
 
 msgid "ORACLE SID of the remote database"
 msgstr "ORACLE-SID der Remote-Datenbank"
@@ -30493,7 +30505,7 @@ msgid "Pod"
 msgstr "Pods"
 
 msgid "Pod IP"
-msgstr ""
+msgstr "Pod-IP"
 
 #, fuzzy
 msgid "Pod request"
@@ -35460,6 +35472,9 @@ msgid ""
 "anymore. Instead of this, the errors are logged in <tt>var/log/web.log</tt>. "
 "In addition to this, the errors are displayed here."
 msgstr ""
+"Seit 1.6.0i1 blockieren defekte GUI-Erweiterungen nicht mehr die gesamte GUI-"
+"Initialisierung. Stattdessen werden die Fehler in <tt>var/log/web.log</tt> "
+"protokolliert. Darüber hinaus werden hier die Fehler angezeigt."
 
 msgid ""
 "Since Check_MK 1.6 it is possible to encrypt the TCP Livestatus connections "
@@ -35827,6 +35842,8 @@ msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
 "incompatible extension packages."
 msgstr ""
+"Einige GUI-Erweiterungen konnten nicht geladen werden. Dies kann durch einige "
+"inkompatible Erweiterungspakete verursacht werden."
 
 msgid ""
 "Some Printers (eg. Konica for Drum Cartdiges) returning the available fuel "
@@ -35950,10 +35967,10 @@ msgstr ""
 "sollen wir mit diesen Regeln machen?"
 
 msgid "Someone before 1.6"
-msgstr ""
+msgstr "Jemand vor 1.6"
 
 msgid "Sometime before 1.6"
-msgstr ""
+msgstr "Irgendwann vor 1.6"
 
 msgid "Sorry"
 msgstr "Es tut uns leid"
@@ -36520,9 +36537,8 @@ msgstr "Bearbeitete Anfragen"
 msgid "Sproc Latency"
 msgstr "Verarbeitungsdauer"
 
-#, fuzzy
 msgid "Sqlnet Send timeout"
-msgstr "Verbindungstimeout"
+msgstr "Sqlnet Sendetimeout"
 
 msgid "Stack"
 msgstr "Stapel"
@@ -38487,6 +38503,13 @@ msgid ""
 "custom service attributes are available to notification scripts as "
 "environment variable named <tt>SERVICE_[ID]</tt>."
 msgstr ""
+"Die ID wird als interner Identifikator verwendet und das benutzerdefinierte "
+"Dienstattribut wird anhand der ID berechnet. Das benutzerdefinierte "
+"Dienstattribut wird in der Core-Konfiguration <tt>_[ID]</tt> genannt und kann "
+"über die Livestatus-Spalte <tt>custom_variables</tt> mit der <tt>[ID]</tt> "
+"abgerufen werden. Die benutzerdefinierten Dienstattribute stehen den "
+"Benachrichtigungsskripten als Umgebungsvariable namens <tt>SERVICE_[ID]</tt> "
+"zur Verfügung."
 
 #, python-format
 msgid ""
@@ -41375,7 +41398,7 @@ msgstr ""
 
 #, python-format
 msgid "The tag ID %s is used twice."
-msgstr ""
+msgstr "Die Tag-ID %s wird zweimal verwendet."
 
 #, fuzzy, python-format
 msgid "The tag group %s is reserved for internal use."
@@ -41819,6 +41842,8 @@ msgid ""
 "These custom service attributes can be assigned to services using the ruleset "
 "<a href=\"%s\">%s</a>."
 msgstr ""
+"Diese benutzerdefinierten Dienstattribute können den Diensten über den "
+"Regelsatz <a href=\"%s\">%s</a> zugewiesen werden."
 
 msgid ""
 "These host have correctly registered for updates but, never downloaded an "
@@ -42924,6 +42949,11 @@ msgid ""
 "these predefined conditions may save you a lot of redundant conditions when "
 "you need them in multiple rulesets."
 msgstr ""
+"Mit diesem Modul können an zentraler Stelle Bedingungen für Checkmk-Regeln "
+"definiert werden. Sie können sich dann aus verschiedenen Regelsätzen auf "
+"diese Bedingungen beziehen. Die Verwendung dieser vordefinierten Bedingungen "
+"kann Ihnen viele redundante Bedingungen ersparen, wenn Sie sie in mehreren "
+"Regelsätzen benötigen."
 
 msgid "This module has not yet been implemented."
 msgstr "Dieses Modul wurde noch nicht implementiert."
@@ -47604,14 +47634,12 @@ msgstr ""
 "Benutze den Hostname der VM, falls dieser gesetzt ist, ansonsten den ESX "
 "Namen."
 
-#, fuzzy
 msgid ""
 "Use the WATO BI module, create, modify and delete BI rules and aggregations "
 "in packs that you are a contact of."
 msgstr ""
-"Benutzen Sie das WATO-BI-Modul, erstellen, modifizieren und löschen Sie BI-"
-"Regeln und Aggregationen in Regelpaketen, von denen Sie als Kontakt "
-"eingetragen sind."
+"Das WATO-BI-Modul nutzen um BI-Aggregationen in den berechtigten BI-Packs zu "
+"erstellen, zu modifizieren und zu löschen."
 
 msgid "Use the alias as DNS name / IP address"
 msgstr "Den Alias als DNS-Name / IP-Adresse verwenden"
@@ -47789,12 +47817,15 @@ msgstr ""
 #, python-format
 msgid "Use this ruleset to assign <a href=\"%s\">%s</a> to services."
 msgstr ""
+"Verwenden Sie diese Regelkette, um <a href=\"%s\">%s</a> den Services "
+"zuzuweisen."
 
 msgid "Use this ruleset to assign labels to hosts of your choice."
-msgstr ""
+msgstr "Verwenden Sie diese Regelkette, um Hosts Ihrer Wahl Labels zuzuweisen."
 
 msgid "Use this ruleset to assign labels to service of your choice."
 msgstr ""
+"Verwenden Sie diese Regelkette, um dem Service Ihrer Wahl Labels zuzuweisen."
 
 msgid ""
 "Use this ruleset to make the long output available in the monitoring history "

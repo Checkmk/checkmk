@@ -8,7 +8,6 @@ GNU patch,2.7.6,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/pat
 googletest,1.8.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/googletest/googletest-release-1.8.0.tar.gz,,,,
 Heirloom Packaging Tools,070227,CDDL-1.0,https://opensource.org/licenses/CDDL-1.0,omd/packages/heirloom-pkgtools/heirloom-pkgtools-070227.tar.bz2,"Unless otherwise noted, all files in this distribution are released under the Common Development and Distribution License (CDDL), Version 1.0 only.  Exceptions are noted within the associated source files. BSD-4-Clause also partially applies",,,
 Heirloom-mailx,12.5,MPL-1.1,https://opensource.org/licenses/MPL-1.1,omd/packages/nail/heirloom-mailx-12.5.tar.gz,,,,
-icinga,1.13.3,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/icinga/icinga-1.13.3.tar.gz,,,,
 jmx4perl,1.11,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/jmx4perl/jmx4perl-1.11.tar.gz,,,,
 lcab,1.0b12,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/msitools/lcab-1.0b12.tar.gz,,,,
 libgsf,1.14.44,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/libgsf/libgsf-1.14.44.tar.xz,,,,

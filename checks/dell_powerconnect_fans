@@ -68,7 +68,7 @@ dell_powerconnect_fans_state_performance_map = {'1': 1, '2': 0, '3': 0, '4': 0, 
 
 
 # Inventory of all fan related elements
-def inventory_dell_powerconnect_fans(checkname, info):
+def inventory_dell_powerconnect_fans(info):
     inventory = []
     for _device_id, name, state in info:
         if dell_powerconnect_fans_status_map[state] != 'notPresent':

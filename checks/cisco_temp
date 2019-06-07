@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_cisco_temp(checktyp, info):
+def inventory_cisco_temp(info):
     for name, state in info:
         if state != '5':
             yield name, None

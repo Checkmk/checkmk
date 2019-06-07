@@ -101,7 +101,6 @@ SKEL := $(DESTDIR)$(OMD_ROOT)/skel
 # filenames and sed arguments should not contain '/'
 NEW_VERSION_STRING := $(subst /,-,$(NEW_VERSION))
 CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2" ; fi )
-PKG_VERSION := $(basename $(OMD_VERSION))
 ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 

@@ -728,16 +728,20 @@ class CREFolder(BaseFolder):
                 cgconfig = convert_cgroups_from_tuple(host.attribute("contactgroups"))
                 cgs = cgconfig["groups"]
                 if cgs and cgconfig["use"]:
-                    out.write("\nhost_contactgroups += [\n")
+                    group_rules = []
                     for cg in cgs:
-                        out.write('    ( %r, [%r] ),\n' % (cg, hostname))
-                    out.write(']\n\n')
+                        group_rules.append({
+                            "value": cg,
+                            "condition": {
+                                "host_name": [hostname]
+                            },
+                        })
+
+                    out.write("\nhost_contactgroups += %s\n\n" % format_config_value(group_rules))
 
                     if cgconfig.get("use_for_services"):
-                        out.write("\nservice_contactgroups += [\n")
-                        for cg in cgs:
-                            out.write('    ( %r, [%r], ALL_SERVICES ),\n' % (cg, hostname))
-                        out.write(']\n\n')
+                        out.write(
+                            "\nservice_contactgroups += %s\n\n" % format_config_value(group_rules))
 
             for attr in host_attribute_registry.attributes():
                 attrname = attr.name()
@@ -783,13 +787,14 @@ class CREFolder(BaseFolder):
         _permitted_groups, contact_groups, use_for_services = self.groups()
         if contact_groups:
             out.write("\nhost_contactgroups.insert(0, \n"
-                      "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % list(contact_groups))
+                      "  {'value': %r, 'condition': {'host_folder': '/' + FOLDER_PATH}})\n" %
+                      list(contact_groups))
             if use_for_services:
                 # Currently service_contactgroups requires single values. Lists are not supported
                 for cg in contact_groups:
                     out.write(
                         "\nservice_contactgroups.insert(0, \n"
-                        "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS, ALL_SERVICES ))\n" % cg)
+                        "  {'value' %r, 'condition': {'host_folder': '/' + FOLDER_PATH}})\n" % cg)
 
         # Write information about all host attributes into special variable - even
         # values stored for check_mk as well.

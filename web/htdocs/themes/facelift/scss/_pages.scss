@@ -485,6 +485,7 @@ table.data {
   border-spacing: 0 4px;
   empty-cells: show;
 
+  /* TODO: Get rid of important styles */
   .popup_menu {
       color: $theme-color-text !important
   }
@@ -910,15 +911,14 @@ table.data.headerleft {
 | Input forms (e.g. Filters, Commands, WATO)                               |
 '-------------------------------------------------------------------------*/
 
-/* TODO: Get rid of important styles */
 input:not(.button), input[type=text], input[type=password],
 select, textarea, div.snapin textarea, #mk_side_search_field {
   height: auto;
-  padding: 8px !important;
+  padding: 8px;
   color: $theme-color-text;
   background: $theme-color-white;
-  background-image: none !important;
-  border: 1px solid $theme-color-table-border !important;
+  background-image: none;
+  border: 1px solid $theme-color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
 }
@@ -944,11 +944,6 @@ input[type=checkbox] {
   margin-left: 0;
 }
 
-input:focus, select:focus, textarea:focus, div.snapin textarea:focus,
-#mk_side_search_field:focus {
-  border-color: $theme-color-main;
-}
-
 input, select, textarea, div.snapin select, div.snapin textarea,
 #mk_side_search_field {
   &.number {
@@ -958,7 +953,6 @@ input, select, textarea, div.snapin select, div.snapin textarea,
   &.button {
     display: inline-block;
     width: auto;
-    padding: 8px 16px;
     margin-top: 8px;
     margin-right: 8px;
     margin-bottom: 8px;
@@ -966,8 +960,7 @@ input, select, textarea, div.snapin select, div.snapin textarea,
     font-size: $theme-font-size-main;
     letter-spacing: $theme-letter-spacing-table;
     color: #fff;
-    background: #13d389;
-    border: 1px solid #13d389;
+    background-color: #13d389;
     box-shadow: none;
   }
 
@@ -977,10 +970,24 @@ input, select, textarea, div.snapin select, div.snapin textarea,
   }
 }
 
+input.button {
+  &:not([type=text]), &:not([type=password]) {
+    padding: 8px 16px;
+    border: 1px solid #13d389;
+
+    &:hover, &:active {
+      border: 1px solid #11bd7b;
+    }
+
+    &:focus {
+      border-color: $theme-color-main;
+    }
+  }
+}
+
 input, select, textarea, #mk_side_search_field {
   &.button:hover, &.button:active {
     background-color: #11bd7b;
-    border: 1px solid #11bd7b;
   }
 }
 
@@ -993,22 +1000,6 @@ select, textarea, div.snapin select, div.snapin textarea,
 
 input.toggle_timespecific_parameter {
   margin-top: 5px;
-}
-
-/* TODO: Get rid of important styles */
-select:not([multiple]) {
-  padding: 8px 16px !important;
-  padding-right: 2.5em !important;
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NDZFNDEwNjlGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NDZFNDEwNkFGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo0NkU0MTA2N0Y3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo0NkU0MTA2OEY3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PuGsgwQAAAA5SURBVHjaYvz//z8DOYCJgUxAf42MQIzTk0D/M+KzkRGPoQSdykiKJrBGpOhgJFYTWNEIiEeAAAMAzNENEOH+do8AAAAASUVORK5CYII=) !important;
-  background-position: right 50% !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  background-repeat: no-repeat !important;
-}
-
-body.main input:not(.button), body.main select, body.main textarea,
-body.main #mk_side_search_field, body.main select, body.main textarea {
-  border: 1px solid $theme-color-table-border;
 }
 
 /* TODO: Reproduce this html element */
@@ -1026,12 +1017,12 @@ input.date, input.time {
   font-family: monospace;
 }
 
-/* TODO: Get rid of important style */
+/* TODO: Reproduce .inputerror elements */
 .inputerror {
   input, select, textarea, div.snapin select, div.snapin & select,
-  div.snapin textarea, div.snapin & textarea, #mk_side_search_field, textarea,
+  div.snapin textarea, div.snapin & textarea, #mk_side_search_field,
   span.checkbox, > select {
-    background-color: $theme-color-nuance-15 !important;
+    background-color: $theme-color-nuance-15;
   }
 
   span.checkbox {
@@ -1190,12 +1181,9 @@ table.nform {
     padding: 8px 4px;
   }
 
-  /* TODO: Get rid of important styles */
   input, select, textarea, #mk_side_search_field {
-    margin: 4px !important;
-
-    &.button {
-      margin: 4px !important;
+    &, &.button {
+      margin: 4px;
     }
   }
 

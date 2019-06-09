@@ -1782,7 +1782,9 @@ table.data.job_table > tbody > tr > td {
       opacity: 0.5;
       box-shadow: none;
     }
+  }
 
+  tag, &[readonly] tag {
     > div::before {
       top: 0;
       right: 0;

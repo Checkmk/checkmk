@@ -351,13 +351,11 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       right: -6px;
       z-index: 200;
       height: auto;
-      padding: 2px 0 2px 4px;
       margin: 0;
       font-size: 12px;
       font-weight: normal;
       color: #fff;
-      background: $theme-color-white;
-      border: 1px solid $theme-color-table-border;
+      background-color: $theme-color-white;
       box-shadow: none;
     }
 
@@ -367,7 +365,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       }
 
       select {
-        background: $theme-color-table-background;
+        background-color: $theme-color-table-background;
       }
     }
 

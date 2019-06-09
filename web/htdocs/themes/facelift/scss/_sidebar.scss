@@ -313,16 +313,14 @@ div.snapin {
     box-sizing: border-box;
   }
 
-  /* TODO: No important styles */
   select {
     width: 100%;
     height: 100%;
-    padding: 8px !important;
+    padding: 8px;
     font-size: 11px;
     color: $theme-color-text;
-    background: $theme-color-white;
-    background-image: none !important;
-    border: 1px solid $theme-color-table-border;
+    background-color: $theme-color-white;
+    background-image: none;
     border-radius: $theme-border-radius;
     box-shadow: none;
   }
@@ -379,7 +377,7 @@ div.snapin {
 
   /* TODO: Reproduce this html element */
   textarea {
-    width: 100% !important;
+    width: 100%;
   }
 
   /* TODO: Reproduce this html element */

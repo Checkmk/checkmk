@@ -1184,10 +1184,10 @@ div.timelinerange.sla {
   width: auto;
 }
 
-/* TODO: No important styles */
 table.data.headerleft.sla {
   tbody tr {
     td {
+      /* TODO: No important styles */
       &, &.sla {
         padding: 4px 8px !important;
       }
@@ -1273,7 +1273,7 @@ td.agent_config table.rulesets table,
 table.data tr.ac_test_details table,
 table.data tr.notification_context table {
    border-collapse: collapse;
-   border: 0.5px solid black;
+   border: 0.5px solid #000;
    box-shadow: 0.5px 0.5px 1px #ccc;
    margin-top: 3px;
 }

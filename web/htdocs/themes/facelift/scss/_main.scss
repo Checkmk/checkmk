@@ -101,9 +101,9 @@ input, select, textarea {
 
 /* consistent dropdown field styling for all browsers */
 select:not([multiple]) {
-  padding-right: 15px;
-  background: url("images/select_arrow.png") no-repeat right #fff;
-  background-size: 20px 11px;
+  padding: 8px 16px;
+  padding-right: 2.5em;
+  background: #fff url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
   -webkit-appearance: none;  /* Removes default chrome and safari style */
   -moz-appearance: none;     /* Removes default style Firefox */
 }
@@ -229,7 +229,7 @@ input.button:disabled {
 input.button.hot {
   &, &:active {
     background-color: #11bd7b;
-    border: 1px solid #11bd7b !important;
+    border: 1px solid #11bd7b;
   }
 
   &:hover {
@@ -1121,6 +1121,7 @@ a.iconlink img, body.main .popup_menu span.iconlink img {
   float: left;
 }
 
+/* TODO: Get rid of important styles */
 div.graph {
   padding: 4px !important;
   background: $theme-color-nuance-4 !important;
@@ -1141,10 +1142,12 @@ body.main img.treeangle {
   filter: invert(100%);
 }
 
+/* TODO: Get rid of important styles */
 .op {
   width: 60px !important;
 }
 
+/* TODO: Get rid of important styles */
 .bi_rule_tree img.treeangle, .invtree img.treeangle, .grouped_row_header img.treeangle.nform {
   filter: invert(0%) !important;
 }
@@ -1162,6 +1165,7 @@ table td {
 div.graph_with_timeranges {
   margin-bottom: 32px;
 
+  /* TODO: Get rid of important styles */
   div.graph {
     border: 1px solid $theme-color-table-border !important;
     box-shadow: none !important;
@@ -1222,6 +1226,7 @@ td.agent_config table.rulesets td {
     border: none solid;
     box-shadow: none;
 
+    /* TODO: Get rid of important styles */
     td {
       padding: 4px 8px 4px 0 !important;
       vertical-align: top;
@@ -1251,6 +1256,7 @@ td.title {
 }
 
 /* Spezielle Snapins */
+/* TODO: Get rid of important styles */
 table.cmc_stats {
   width: 100%;
   padding: 8px;
@@ -1288,6 +1294,7 @@ div.color {
   box-shadow: none;
 }
 
+/* TODO: Get rid of important styles */
 th.header_state {
   color: $theme-color-text !important;
   background: transparent !important;
@@ -1315,6 +1322,7 @@ div.success {
   border-color: $theme-color-state-success-border;
 }
 
+/* TODO: Get rid of important styles */
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
   background-color: $theme-color-state-3-background !important;
   border-color: $theme-color-nuance-16 !important;
@@ -1331,14 +1339,14 @@ div.info {
 .age {
   input, select, textarea, div.snapin select, div.snapin & select,
   div.snapin textarea, div.snapin & textarea, #mk_side_search_field {
-    box-sizing: content-box !important;
+    box-sizing: content-box;
   }
 }
 
 .filterform {
   input, select, textarea, div.snapin select, div.snapin & select,
   div.snapin textarea, div.snapin & textarea, #mk_side_search_field {
-    column-span: all !important;
+    column-span: all;
   }
 }
 

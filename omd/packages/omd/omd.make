@@ -18,11 +18,8 @@ $(OMD):
 $(OMD)-install: $(OMD_INSTALL)
 $(OMD)-skel: $(OMD_SKEL)
 
-$(OMD_INSTALL):
+$(OMD_INSTALL): omdlib-install
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/omd.bin $(DESTDIR)$(OMD_ROOT)/bin/omd
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
-	install -m 644 $(PACKAGE_DIR)/$(OMD)/omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/
-	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/bin/omd $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/__init__.py
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/logout.php $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man8
@@ -41,6 +38,15 @@ $(OMD_INSTALL):
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/hooks/* $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
+
+omdlib-install: $(PYTHON_BUILD)
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
+	install -m 644 $(PACKAGE_DIR)/$(OMD)/omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/
+	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/bin/omd $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/__init__.py
+	export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_MODULES_PYTHONPATH):$(PACKAGE_PYTHON_PYTHONPATH):$(REPO_PATH)" ; \
+	export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
+	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	$(PACKAGE_PYTHON_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
 
 $(OMD_SKEL): $(OMD_INSTALL)
 	$(MKDIR) $(SKEL)/etc/bash_completion.d

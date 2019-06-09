@@ -1,0 +1,14 @@
+Title: Fix left over omdlib pyc files after uninstall
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560115622
+
+When uninstalling the 1.6.0b1 packages, they left over some .pyc files in the
+/omd/versions/1.6.0b1.cre/lib/python/omdlib directory. If you have removed the
+package, you can delete the directory /omd/versions/1.6.0b1.cre by hand to
+clean up.

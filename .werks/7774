@@ -1,0 +1,16 @@
+Title: Fix installation issue on older debian based distros
+Level: 2
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0b2
+Date: 1560157400
+Class: fix
+
+The werk #7344 introduced compatibility issues with Linux setups that don't
+support linux capabilities (for different reasons). One reason may be a kernel
+that does not support the capabilities.
+
+We have added a fallback to the Checkmk debian packages that tries to use the
+linux capabilities (as described in #7344). Once that fails it falls back to
+setting the SETUID bit on the binaries, just like Checkmk did it before.

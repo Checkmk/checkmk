@@ -9,7 +9,8 @@ YAPF     := $(PIPENV) run yapf
 
 .PHONY: help pipenv-check test-bandit test-docker test-format-python \
         test-gui-crawl test-integration test-packaging test-pylint \
-        test-shellcheck test-unit test-unit-coverage-html
+        test-shellcheck test-format-shell \
+	test-unit test-unit-coverage-html
 
 help:
 	echo $(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
@@ -22,6 +23,7 @@ help:
 	@echo "test-packaging            - Run packaging tests"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
+	@echo "test-format-shell         - Run the shell formatting"
 	@echo "test-unit                 - Run unit tests"
 	@echo "test-unit-coverage-html   - Create HTML coverage report for unit tests"
 
@@ -82,6 +84,9 @@ test-shellcheck:
 		$(SHELLCHECK_OUTPUT_ARGS) \
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
+
+test-format-shell:
+	sudo docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
 test-unit: $(VENV)
 	$(PYTEST) -T unit git unit

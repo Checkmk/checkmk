@@ -4,8 +4,14 @@ currentBuild.description = '\nBuilding the CMK docker container\n'
 
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
-def CMK_VERS = dateFormat.format(date)
-def DAILY_DATA = '/var/jenkins_home/daily-data/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
+def BRANCH = scm.branches[0].name.replaceAll("/","-")
+def CMK_VERS
+if(BRANCH == 'master') {
+    CMK_VERS = dateFormat.format(date)
+} else {
+    CMK_VERS = BRANCH + '-' + dateFormat.format(date)
+}
+DAILY_DATA = '/var/jenkins_home/daily-data/' + BRANCH + '/' + CMK_VERS
 
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'

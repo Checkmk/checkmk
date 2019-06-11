@@ -4,8 +4,7 @@ import os
 import platform
 import pytest
 import re
-from local import (actual_output, make_ini_config, src_exec_dir, local_test, wait_agent,
-                   write_config)
+from local import (actual_output, make_yaml_config, local_test, wait_agent, write_config, user_dir)
 import shutil
 
 
@@ -13,7 +12,7 @@ class TestPaths(object):
     drive = os.getcwd()[:2]
 
     def tempdir1(self):
-        return os.path.join(self.drive, src_exec_dir, 'Testdir1')
+        return os.path.join(self.drive, user_dir, 'Testdir1')
 
     def tempdir2(self):
         return os.path.join(self.tempdir1(), 'Testdir2')
@@ -49,12 +48,12 @@ def testfile(request):
 
 
 @pytest.fixture(params=['uppercase_drive', 'lowercase_drive'])
-def testconfig_drive(request, make_ini_config):
+def testconfig_drive(request, make_yaml_config):
     if request.param == 'uppercase_drive':
         Globals.paths.drive_upper()
     else:
         Globals.paths.drive_lower()
-    return make_ini_config
+    return make_yaml_config
 
 
 @pytest.fixture(
@@ -64,21 +63,22 @@ def testconfig_drive(request, make_ini_config):
 def testconfig(request, testconfig_drive):
     if platform.system() == 'Windows':
         Globals.alone = request.param[2]
+        Globals.alone = request.param == 'alone'
         if Globals.alone:
-            testconfig_drive.set('global', 'sections', Globals.section)
+            testconfig_drive['global']['sections'] = Globals.section
         else:
-            testconfig_drive.set('global', 'sections', '%s systemtime' % Globals.section)
-        testconfig_drive.set('global', 'crash_debug', 'yes')
-        testconfig_drive.add_section(Globals.section)
+            testconfig_drive['global']['sections'] = [Globals.section, "systemtime"]
+
+        path_array = []
         if request.param[0] != Globals.paths.tempdir1:
-            testconfig_drive.set(Globals.section, 'path', Globals.paths.tempfile1())
-            testconfig_drive.set(
-                Globals.section, 'path',
+            path_array.append(Globals.paths.tempfile1())
+            path_array.append(
                 os.path.join(Globals.paths.tempdir1(),
                              '?' + os.path.basename(Globals.paths.tempfile2())[1:]))
-        testconfig_drive.set(Globals.section, 'path',
-                             os.path.join(request.param[0](), request.param[1]))
-        testconfig_drive.set(Globals.section, 'path', Globals.paths.missingfile())
+
+        path_array.append(os.path.join(request.param[0](), request.param[1]))
+        path_array.append(Globals.paths.missingfile())
+        testconfig_drive[Globals.section] = {'path': path_array}
 
         return testconfig_drive
 
@@ -88,10 +88,13 @@ def expected_output():
     if platform.system() == 'Windows':
         expected = [
             re.escape(r'<<<%s:sep(124)>>>' % Globals.section), r'\d+',
-            re.escape(r'%s|' % Globals.paths.tempfile1()) + r'\d+\|\d+',
-            re.escape(r'%s|' % Globals.paths.tempfile2()) + r'\d+\|\d+',
-            re.escape(r'%s|' % Globals.paths.tempfile3()) + r'\d+\|\d+',
-            re.escape(r'%s|missing|' % Globals.paths.missingfile()) + r'\d+'
+            re.escape(r'[[[header]]]'),
+            re.escape(r'name|status|size|time'),
+            re.escape(r'[[[content]]]'),
+            re.escape(r'%s|' % Globals.paths.tempfile1()) + r'ok\|' + r'\d+\|\d+',
+            re.escape(r'%s|' % Globals.paths.tempfile2()) + r'ok\|' + r'\d+\|\d+',
+            re.escape(r'%s|' % Globals.paths.tempfile3()) + r'ok\|' + r'\d+\|\d+',
+            re.escape(r'%s|' % Globals.paths.missingfile()) + r'missing'
         ]
         if not Globals.alone:
             expected += [re.escape(r'<<<systemtime>>>'), r'\d+']

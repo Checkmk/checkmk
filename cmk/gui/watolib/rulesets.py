@@ -215,7 +215,10 @@ class RulesetCollection(object):
             if only_varname and varname != only_varname:
                 continue  # skip unwanted options
 
-            ruleset = self._rulesets.setdefault(varname, Ruleset(varname, self._tag_to_group_map))
+            if varname in self._rulesets:
+                ruleset = self._rulesets[varname]
+            else:
+                ruleset = self._rulesets[varname] = Ruleset(varname, self._tag_to_group_map)
 
             if ':' in varname:
                 dictname, subkey = varname.split(":")

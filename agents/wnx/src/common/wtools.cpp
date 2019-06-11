@@ -1124,7 +1124,8 @@ std::wstring WmiGetWstring(const VARIANT& Var) {
         case VT_I1:
         case VT_I2:
         case VT_I4:
-            return std::to_wstring(WmiGetInt32(Var));
+            // extremely dumb method to get always positive
+            return std::to_wstring(WmiGetInt64_KillNegatives(Var));
         case VT_UI1:
         case VT_UI2:
         case VT_UI4:
@@ -1155,7 +1156,12 @@ std::wstring WmiStringFromObject(IWbemClassObject* Object,
         auto hres = Object->Get(name.c_str(), 0, &value, nullptr, nullptr);
         if (SUCCEEDED(hres)) {
             ON_OUT_OF_SCOPE(VariantClear(&value));
-            result += wtools::WmiGetWstring(value) + L",";
+            auto str = wtools::WmiGetWstring(value);
+            if (str[0] == '-') {
+                XLOG::t("WMI Negative value '{}' [{}], type [{}]",
+                        ConvertToUTF8(name), ConvertToUTF8(str), value.vt);
+            }
+            result += str + L",";
         }
     }
     if (result.empty()) {

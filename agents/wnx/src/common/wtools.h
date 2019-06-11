@@ -780,6 +780,40 @@ inline uint32_t WmiGetUint32(const VARIANT& Var) noexcept {
 }
 
 // Low Level Utilities to access and convert VARIANT
+// Tries to get positive numbers instead of negative
+inline int64_t WmiGetInt64_KillNegatives(const VARIANT& Var) noexcept {
+    switch (Var.vt) {
+        // dumb method to make negative values sometimes positive
+        // source: LWA
+        // #TODO FIX THIS AS IN MSDN. This is annoying and cumbersome task
+        // Microsoft provides us invalid info about data fields
+        case VT_I1:
+            return Var.iVal;
+        case VT_I2:
+            return Var.intVal;
+        case VT_I4:
+            return Var.llVal;
+
+            // 8 bits values
+        case VT_UI1:
+            return static_cast<int64_t>(Var.bVal);
+            // 16 bits values
+        case VT_UI2:
+            return static_cast<int64_t>(Var.uiVal);
+            // 64 bits values
+        case VT_UI4:
+            return static_cast<int64_t>(Var.uintVal);
+        case VT_UI8:
+            return static_cast<int64_t>(Var.ullVal);
+        case VT_I8:
+            return Var.llVal;  // no conversion here, we expect good type here
+        default:
+            return 0;
+    }
+}
+
+
+// Low Level Utilities to access and convert VARIANT
 inline int64_t WmiGetInt64(const VARIANT& Var) noexcept {
     switch (Var.vt) {
             // 8 bits values

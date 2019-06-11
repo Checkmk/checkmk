@@ -4058,6 +4058,7 @@ def test_legacy_register_painter(monkeypatch):
             "options": ["opt1"],
             "printable": False,
             "paint": rendr,
+            "groupby": lambda row: "xyz",
         })
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
@@ -4070,6 +4071,7 @@ def test_legacy_register_painter(monkeypatch):
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
     assert painter.render(row={}, cell=None) == "xyz"
+    assert painter.group_by(row={}) == "xyz"
 
 
 # These tests make adding new elements needlessly painful.

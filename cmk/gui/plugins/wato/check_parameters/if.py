@@ -234,7 +234,7 @@ class RulespecInventoryIfRules(HostRulespec):
                      )),
                 ],
                 help=_('This rule can be used to control the inventory for network ports. '
-                       'You can configure the port types and port states for inventory'
+                       'You can configure the port types and port states for inventory '
                        'and the use of alias or description as service name.'),
             ),
             forth=_transform_discovery_if_rules,

@@ -320,12 +320,13 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
 void ServiceProcessor::sendDebugData() {
     XLOG::l.i("Started without IO. Debug mode");
     auto tp = openAnswer("127.0.0.1");
-    if (tp) {
-        auto started = startProviders(tp.value(), "");
-        auto block = getAnswer(started);
-        block.emplace_back('\0');  // yes, we need this for printf
-        auto count = printf("debug data:\n%s", block.data());
-        if (count != block.size()) XLOG::l("Binary data at offset [{}]", count);
+    if (!tp) return;
+    auto started = startProviders(tp.value(), "");
+    auto block = getAnswer(started);
+    block.emplace_back('\0');  // yes, we need this for printf
+    auto count = printf("%s", block.data());
+    if (count != block.size() - 1) {
+        XLOG::l("Binary data at offset [{}]", count);
     }
 }
 

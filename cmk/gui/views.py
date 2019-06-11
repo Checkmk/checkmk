@@ -30,7 +30,6 @@ import os
 import pprint
 import traceback
 import json
-from collections import namedtuple
 from typing import Dict, Optional, List  # pylint: disable=unused-import
 
 import livestatus
@@ -95,6 +94,8 @@ from cmk.gui.plugins.views.utils import (
     painter_exists,
     PainterOptions,
     get_tag_groups,
+    _parse_url_sorters,
+    SorterEntry,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -264,14 +265,18 @@ class View(object):
     def _get_sorter_entries(self, sorter_list):
         sorters = []
         for entry in sorter_list:
-            if entry[0] not in sorter_registry:
+            if not isinstance(entry, SorterEntry):
+                entry = SorterEntry(*entry)
+
+            sorter_name = entry.sorter
+            sorter = sorter_registry.get(sorter_name, None)
+
+            if sorter is None:
                 continue  # Skip removed sorters
 
-            # e.g. service description
-            join_key = entry[2] if len(entry) > 2 else None
+            sorter = sorter()
 
-            sorters.append(
-                SorterEntry(sorter=sorter_registry[entry[0]](), negate=entry[1], join_key=join_key))
+            sorters.append(SorterEntry(sorter=sorter, negate=entry.negate, join_key=entry.join_key))
         return sorters
 
     @property
@@ -1373,9 +1378,6 @@ def show_view(view, view_renderer, only_count=False):
                          show_filters)
 
 
-SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
-
-
 def _get_all_active_filters(view):
     # Always allow the users to specify all allowed filters using the URL
     use_filters = visuals.filters_allowed_for_infos(view.datasource.infos).values()
@@ -1571,19 +1573,6 @@ def play_alarm_sounds():
 def get_user_sorters():
     """Returns a list of optionally set sort parameters from HTTP request"""
     return _parse_url_sorters(html.request.var("sort"))
-
-
-def _parse_url_sorters(sort):
-    sorters = []
-    if not sort:
-        return sorters
-    for s in sort.split(','):
-        if '~' not in s:
-            sorters.append((s.replace('-', ''), s.startswith('-')))
-        else:
-            sorter, join_index = s.split('~', 1)
-            sorters.append((sorter.replace('-', ''), sorter.startswith('-'), join_index))
-    return sorters
 
 
 def get_only_sites():

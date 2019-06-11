@@ -28,6 +28,7 @@
 # TODO: More feature related splitting up would be better
 
 import abc
+from collections import namedtuple
 import os
 import time
 import re
@@ -1828,13 +1829,9 @@ class Cell(object):
         # - Move to the first position when already in sorters
         # - Add in the front of the user sorters when not set
         sorter_name = _get_sorter_name_of_painter(self.painter_name())
-        if self.is_joined():
-            # TODO: Clean this up and then remove Cell.join_service()
-            this_asc_sorter = (sorter_name, False, self.join_service())
-            this_desc_sorter = (sorter_name, True, self.join_service())
-        else:
-            this_asc_sorter = (sorter_name, False)
-            this_desc_sorter = (sorter_name, True)
+
+        this_asc_sorter = SorterEntry(sorter_name, False, self.join_service())
+        this_desc_sorter = SorterEntry(sorter_name, True, self.join_service())
 
         if user_sort and this_asc_sorter == user_sort[0]:
             # Second click: Change from asc to desc order
@@ -1855,14 +1852,9 @@ class Cell(object):
             # Now add the sorter as primary user sorter
             sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 
-        p = []
-        for s in sorter:
-            if len(s) == 2:
-                p.append((s[1] and '-' or '') + s[0])
-            else:
-                p.append((s[1] and '-' or '') + s[0] + '~' + s[2])
+        sorters = [SorterEntry(*s) for s in sorter]
 
-        return ','.join(p)
+        return _encode_sorter_url(sorters)
 
     def render(self, row):
         row = join_row(row, self)
@@ -1967,6 +1959,34 @@ class Cell(object):
         return has_content
 
 
+SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
+SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)
+
+
+def _encode_sorter_url(sorters):
+    p = []
+    for s in sorters:
+        url = ('-' if s.negate else '') + s.sorter
+        if s.join_key:
+            url += '~' + s.join_key
+        p.append(url)
+
+    return ','.join(p)
+
+
+def _parse_url_sorters(sort):
+    sorters = []
+    if not sort:
+        return sorters
+    for s in sort.split(','):
+        if "~" in s:
+            sorter, join_index = s.split('~', 1)
+        else:
+            sorter, join_index = s, None
+        sorters.append(SorterEntry(sorter.replace('-', ''), sorter.startswith('-'), join_index))
+    return sorters
+
+
 class JoinCell(Cell):
     def __init__(self, view, painter_spec):
         self._join_service_descr = None
@@ -2030,10 +2050,12 @@ def _get_sorter_name_of_painter(painter_name_or_spec):
 
 
 def _get_separated_sorters(view):
-    group_sort = [(_get_sorter_name_of_painter(p), False)
-                  for p in view.spec['group_painters']
-                  if painter_exists(p) and _get_sorter_name_of_painter(p) is not None]
-    view_sort = [s for s in view.spec['sorters'] if not s[0] in group_sort]
+    group_sort = [
+        SorterEntry(_get_sorter_name_of_painter(p), False)
+        for p in view.spec['group_painters']
+        if painter_exists(p) and _get_sorter_name_of_painter(p) is not None
+    ]
+    view_sort = [SorterEntry(*s) for s in view.spec['sorters'] if not s[0] in group_sort]
 
     user_sort = view.user_sorters
 

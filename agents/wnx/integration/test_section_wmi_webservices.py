@@ -4,7 +4,7 @@ from itertools import chain, repeat
 import os
 import pytest
 import re
-from local import actual_output, make_ini_config, local_test, wait_agent, write_config
+from local import actual_output, make_yaml_config, local_test, wait_agent, write_config
 
 
 class Globals(object):
@@ -17,20 +17,15 @@ def testfile():
 
 
 @pytest.fixture(
-    params=[('webservices', True), ('wmi_webservices', True), ('webservices', False),
-            ('wmi_webservices', False)],
-    ids=[
-        'sections=webservices', 'sections=wmi_webservices', 'sections=webservices_systemtime',
-        'sections=wmi_webservices_systemtime'
-    ])
-def testconfig(request, make_ini_config):
+    params=[('wmi_webservices', True), ('wmi_webservices', False)],
+    ids=['sections=wmi_webservices', 'sections=wmi_webservices_systemtime'])
+def testconfig(request, make_yaml_config):
     Globals.alone = request.param[1]
     if Globals.alone:
-        make_ini_config.set('global', 'sections', request.param[0])
+        make_yaml_config['global']['sections'] = request.param[0]
     else:
-        make_ini_config.set('global', 'sections', '%s systemtime' % request.param[0])
-    make_ini_config.set('global', 'crash_debug', 'yes')
-    return make_ini_config
+        make_yaml_config['global']['sections'] = [request.param[0], '%s systemtime']
+    return make_yaml_config
 
 
 @pytest.fixture

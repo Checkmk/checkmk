@@ -441,6 +441,7 @@ class JobWorker(multiprocessing.Process):
             raise MKConfigError("Aggregation groups mismatch")
 
         aggr_options, aggr = aggr[0], aggr[1:]
+        use_layout_id = aggr_options.get("use_layout_id")
         use_hard_states = aggr_options.get("hard_states")
         downtime_aggr_warn = aggr_options.get("downtime_aggr_warn")
 
@@ -453,6 +454,7 @@ class JobWorker(multiprocessing.Process):
 
         for this_entry in new_entries:
             remove_empty_nodes(this_entry)
+            this_entry["use_layout_id"] = use_layout_id
             this_entry["use_hard_states"] = use_hard_states
             this_entry["downtime_aggr_warn"] = downtime_aggr_warn
 
@@ -1551,12 +1553,13 @@ def compile_rule_node(aggr_type, calllist, lvl):
         for (hostname, hostalias), matchgroups in matches:
             args = substitute_matches(arglist, hostname, hostalias, matchgroups)
             if tuple(args) not in handled_args:
-                new_elements += compile_aggregation_rule(aggr_type, rule, args, lvl)
+                new_elements += compile_aggregation_rule(
+                    aggr_type, rule, args, lvl, rulename=rulename)
                 handled_args.add(tuple(args))
 
         return new_elements
 
-    return compile_aggregation_rule(aggr_type, rule, arglist, lvl)
+    return compile_aggregation_rule(aggr_type, rule, arglist, lvl, rulename=rulename)
 
 
 def find_matching_services(aggr_type, what, calllist):
@@ -1778,7 +1781,7 @@ def node_is_empty(node):
 
 # Precompile one aggregation rule. This outputs a list of trees.
 # The length of this list is current either 0 or 1
-def compile_aggregation_rule(aggr_type, rule, args, lvl):
+def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
     # When compiling root nodes we essentially create
     # complete top-level aggregations. In that case we
     # need to deal with REMAINING-entries
@@ -1914,6 +1917,8 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
 
     if icon:
         aggregation["icon"] = icon
+
+    aggregation["rule_id"] = [_rule_to_pack_lookup[rulename], rulename, funcname]
 
     # Handle REMAINING references, if we are a root node
     if lvl == 0:
@@ -2138,6 +2143,7 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
 # the states of all nodes
 def execute_tree(tree, status_info=None):
     aggregation_options = {
+        "use_layout_id": tree["use_layout_id"],
         "use_hard_states": tree["use_hard_states"],
         "downtime_aggr_warn": tree["downtime_aggr_warn"],
     }
@@ -3544,12 +3550,19 @@ def get_state_name(node):
     return _service_state_names()[node[0]['state']]
 
 
+_rule_to_pack_lookup = {}
+
+
 def migrate_bi_configuration():
     converted_host_aggregations = []
     converted_aggregations = []
     converted_aggregation_rules = {}
     if config.bi_packs:
-        for pack in config.bi_packs.values():
+        global _rule_to_pack_lookup
+        _rule_to_pack_lookup = {}
+        for packname, pack in config.bi_packs.iteritems():
+            for rule_id in pack["rules"]:
+                _rule_to_pack_lookup[rule_id] = packname
             converted_host_aggregations += map(_convert_aggregation, pack["host_aggregations"])
             converted_aggregations += map(_convert_aggregation, pack["aggregations"])
             converted_aggregation_rules.update(pack["rules"])

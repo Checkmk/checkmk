@@ -110,6 +110,7 @@ def test_registered_configvars():
         'debug_livestatus_queries',
         'debug_rules',
         'default_user_profile',
+        'default_bi_layout',
         'delay_precompile',
         'diskspace_cleanup',
         'enable_rulebased_notifications',

@@ -3,7 +3,7 @@
 import os
 import pytest
 import re
-from local import actual_output, make_ini_config, local_test, wait_agent, write_config
+from local import actual_output, make_yaml_config, local_test, wait_agent, write_config
 
 
 class Globals(object):
@@ -17,14 +17,13 @@ def testfile():
 
 
 @pytest.fixture(params=['alone', 'with_systemtime'])
-def testconfig(request, make_ini_config):
+def testconfig(request, make_yaml_config):
     Globals.alone = request.param == 'alone'
     if Globals.alone:
-        make_ini_config.set('global', 'sections', Globals.section)
+        make_yaml_config['global']['sections'] = Globals.section
     else:
-        make_ini_config.set('global', 'sections', '%s systemtime' % Globals.section)
-    make_ini_config.set('global', 'crash_debug', 'yes')
-    return make_ini_config
+        make_yaml_config['global']['sections'] = [Globals.section, "systemtime"]
+    return make_yaml_config
 
 
 @pytest.fixture
@@ -62,10 +61,10 @@ def expected_output():
          r'SystemSKUNumber,SystemStartupDelay,SystemStartupOptions,'
          r'SystemStartupSetting,SystemType,ThermalState,TotalPhysicalMemory,'
          r'UserName,WakeUpType,Workgroup,WMIStatus'),
-        (r'\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,,\w+,\d+,\d+,'
+        (r'\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,[^,]*,\w+,\d+,\d+,'
          r'[^,]+,[\w-]+,[^,]+,\d+,\d+,\d+,\d+,\d+,,,\d+,,[^,]+(, [^,]+)?,[^,]+,'
          r'[\w-]+,,\d+,\d+,\d+,,[^,]+,\d+,\-?\d+,\d+,\d+,,,\d+,\d+,\d+,,[\w-]+,'
-         r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*,\b(?:OK|Timeout)\b')
+         r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,[^,]*,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*,\b(?:OK|Timeout)\b')
     ]
     if not Globals.alone:
         expected += [re.escape(r'<<<systemtime>>>'), r'\d+']

@@ -4,8 +4,8 @@ import os
 import platform
 import pytest
 import re
-from local import (actual_output, make_ini_config, local_test, src_exec_dir, wait_agent,
-                   write_config)
+from local import (actual_output, make_yaml_config, local_test, src_exec_dir, wait_agent,
+                   write_config, user_dir, root_dir)
 
 
 class Globals(object):
@@ -21,14 +21,13 @@ def testfile():
 
 
 @pytest.fixture(params=['alone', 'with_systemtime'])
-def testconfig(request, make_ini_config):
+def testconfig(request, make_yaml_config):
     Globals.alone = request.param == 'alone'
     if Globals.alone:
-        make_ini_config.set('global', 'sections', Globals.section)
+        make_yaml_config['global']['sections'] = Globals.section
     else:
-        make_ini_config.set('global', 'sections', '%s systemtime' % Globals.section)
-    make_ini_config.set('global', 'crash_debug', 'yes')
-    return make_ini_config
+        make_yaml_config['global']['sections'] = [Globals.section, "systemtime"]
+    return make_yaml_config
 
 
 @pytest.fixture
@@ -45,9 +44,9 @@ def expected_output():
 def manage_spoolfile(request):
     Globals.outdated = request.param == 'yes'
     testfile = '0testfile' if request.param == 'yes' else 'testfile'
-    filename = os.path.join(src_exec_dir, Globals.section, testfile)
+    filename = os.path.join(user_dir, "spool", testfile)
     if platform.system() == 'Windows':
-        spooldir = os.path.join(src_exec_dir, Globals.section)
+        spooldir = os.path.join(user_dir, "spool")
         try:
             os.mkdir(spooldir)
         except OSError:

@@ -269,12 +269,18 @@ class View(object):
                 entry = SorterEntry(*entry)
 
             sorter_name = entry.sorter
+            hash_id = None
+            if ":" in entry.sorter:
+                sorter_name, hash_id = entry.sorter.split(':', 1)
+
             sorter = sorter_registry.get(sorter_name, None)
 
             if sorter is None:
                 continue  # Skip removed sorters
 
             sorter = sorter()
+            if hasattr(sorter, 'derived_columns'):
+                sorter.derived_columns(self, hash_id)
 
             sorters.append(SorterEntry(sorter=sorter, negate=entry.negate, join_key=entry.join_key))
         return sorters
@@ -1851,7 +1857,7 @@ def sort_data(data, sorters):
         return
 
     # Handle case where join columns are not present for all rows
-    def save_compare(compfunc, row1, row2):
+    def safe_compare(compfunc, row1, row2):
         if row1 is None and row2 is None:
             return 0
         elif row1 is None:
@@ -1866,7 +1872,7 @@ def sort_data(data, sorters):
             neg = -1 if entry.negate else 1
 
             if entry.join_key:  # Sorter for join column, use JOIN info
-                c = neg * save_compare(entry.sorter.cmp, e1["JOIN"].get(entry.join_key),
+                c = neg * safe_compare(entry.sorter.cmp, e1["JOIN"].get(entry.join_key),
                                        e2["JOIN"].get(entry.join_key))
             else:
                 c = neg * entry.sorter.cmp(e1, e2)

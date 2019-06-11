@@ -43,7 +43,7 @@ def test_package_sizes(version_path, what, min_size, max_size):
     ("rpm"),
     ("deb"),
 ])
-def test_files_not_in_version_path(version_path, what):
+def test_files_not_in_version_path(version_path, omd_version, what):
     version_allowed_patterns = [
         "/opt/omd/versions/?$",
         "/opt/omd/versions/###OMD_VERSION###/?$",
@@ -97,7 +97,7 @@ def test_files_not_in_version_path(version_path, what):
             for line in subprocess.check_output(["dpkg", "-c", pkg]).splitlines():
                 paths.append(line.split()[5].lstrip("."))
 
-        omd_version = version_path.split("/")[-1] + "." + os.environ["EDITION"]
+        print "Checking OMD version: %s" % omd_version
 
         for path in paths:
             is_allowed = any(
@@ -106,23 +106,21 @@ def test_files_not_in_version_path(version_path, what):
             assert is_allowed, "Found unexpected global file: %s in %s" % (path, pkg)
 
 
-def test_cma_only_contains_version_paths(version_path):
+def test_cma_only_contains_version_paths(version_path, omd_version):
     for pkg in _get_package_paths(version_path, "cma"):
-        version = os.path.basename(pkg).split("-")[3]
         for line in subprocess.check_output(["tar", "tvf", pkg]).splitlines():
             path = line.split()[5]
-            assert not path.startswith(version + "/")
+            assert not path.startswith(omd_version + "/")
 
 
-def test_cma_specific_files(version_path):
+def test_cma_specific_files(version_path, omd_version):
     for pkg in _get_package_paths(version_path, "cma"):
-        version = os.path.basename(pkg).split("-")[3]
         files = [
             line.split()[5] for line in subprocess.check_output(["tar", "tvf", pkg]).splitlines()
         ]
-        assert "%s/cma.info" % version in files
-        assert "%s/skel/etc/apache/conf.d/cma.conf" % version in files
-        assert "%s/lib/cma/post-install" % version in files
+        assert "%s/cma.info" % omd_version in files
+        assert "%s/skel/etc/apache/conf.d/cma.conf" % omd_version in files
+        assert "%s/lib/cma/post-install" % omd_version in files
 
 
 def test_src_only_contains_relative_version_paths(version_path):

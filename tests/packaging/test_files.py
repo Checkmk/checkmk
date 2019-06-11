@@ -108,9 +108,12 @@ def test_files_not_in_version_path(version_path, omd_version, what):
 
 def test_cma_only_contains_version_paths(version_path, omd_version):
     for pkg in _get_package_paths(version_path, "cma"):
-        for line in subprocess.check_output(["tar", "tvf", pkg]).splitlines():
-            path = line.split()[5]
-            assert not path.startswith(omd_version + "/")
+        files = [
+            line.split()[5] for line in subprocess.check_output(["tar", "tvf", pkg]).splitlines()
+        ]
+        assert len(files) > 1000
+        for file_path in files:
+            assert file_path.startswith(omd_version + "/")
 
 
 def test_cma_specific_files(version_path, omd_version):

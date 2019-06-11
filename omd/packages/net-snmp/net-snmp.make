@@ -67,6 +67,7 @@ $(NET_SNMP_INSTALL_PERL): $(NET_SNMP_BUILD)
 		DESTDIR=$(DESTDIR)$(OMD_ROOT) \
 		INSTALLSITEARCH=/lib/perl5/lib/perl5 \
 		INSTALLSITEMAN3DIR=/share/man/man3 \
+		INSTALLARCHLIB=/lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi \
 		install
 	$(TOUCH) $@
 

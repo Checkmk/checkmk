@@ -35,45 +35,38 @@ def check_bi_aggr_arguments(params):
         converted_params["optional"] = params[4]
         params = converted_params
 
-    args = [
-        '-b',
-        params["base_url"],
-        '-a',
-        params["aggregation_name"],
-    ]
+    args = ["-b", params["base_url"], "-a", params["aggregation_name"]]
 
     if params["credentials"] == "automation":
-        args += ["--use-automation-user"]
+        args.append("--use-automation-user")
     else:
         # configured
         args += [
-            '-u',
-            params["credentials"][1][0],
-            '-s',
-            passwordstore_get_cmdline("%s", params["credentials"][1][1]),
+            "-u", params["credentials"][1][0], "-s",
+            passwordstore_get_cmdline("%s", params["credentials"][1][1])
         ]
 
     opt_params = params["optional"]
     if "auth_mode" in opt_params:
-        args += ['-m', opt_params['auth_mode']]
+        args += ["-m", opt_params["auth_mode"]]
 
     if "timeout" in opt_params:
-        args += ['-t', opt_params['timeout']]
+        args += ["-t", opt_params["timeout"]]
 
     if opt_params.get("in_downtime"):
-        args += ['--in-downtime', opt_params['in_downtime']]
+        args += ["--in-downtime", opt_params["in_downtime"]]
 
     if opt_params.get("acknowledged"):
-        args += ['--acknowledged', opt_params['acknowledged']]
+        args += ["--acknowledged", opt_params["acknowledged"]]
 
     if opt_params.get("track_downtimes"):
-        args += ['-r', '-n', 'HOSTNAME$']
+        args += ["-r", "-n", "HOSTNAME$"]
 
     return args
 
 
-active_check_info['bi_aggr'] = {
-    "command_line": '$USER1$/check_bi_aggr $ARG1$',
+active_check_info["bi_aggr"] = {
+    "command_line": "$USER1$/check_bi_aggr $ARG1$",
     "argument_function": check_bi_aggr_arguments,
     "service_description": lambda params: "Aggr %s" % params[1]
                            if isinstance(params, tuple) else params["aggregation_name"],

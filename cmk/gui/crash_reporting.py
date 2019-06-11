@@ -288,7 +288,7 @@ def handle_report_form(tardata, what):
 # TODO: Would be cleaner to override if we used OOP
 def get_crash_report_target(what):
     if what == "cma":
-        return "feedback@check-mk.org"
+        return "feedback@checkmk.com"
     return config.crash_report_target
 
 

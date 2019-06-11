@@ -269,7 +269,7 @@ virtual_host_trees = []
 force_pnp_graphing = False
 
 # Target email address for "Crashed Check" page
-crash_report_target = "feedback@check-mk.org"
+crash_report_target = "feedback@checkmk.com"
 
 # GUI Tests (see cmk-guitest)
 guitests_enabled = False

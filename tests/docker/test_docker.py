@@ -93,13 +93,13 @@ def _build(request, client, version, add_args=None):
     config = attrs["Config"]
 
     assert config["Labels"] == {
-        u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+        u'org.opencontainers.image.vendor': u'tribe29 GmbH',
         u'org.opencontainers.image.version': version.version,
-        u'maintainer': u'feedback@check-mk.org',
-        u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-        u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-        u'org.opencontainers.image.title': u'Check_MK',
-        u'org.opencontainers.image.url': u'https://mathias-kettner.com/'
+        u'maintainer': u'feedback@checkmk.com',
+        u'org.opencontainers.image.description': u'Checkmk is a leading tool for Infrastructure & Application Monitoring',
+        u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+        u'org.opencontainers.image.title': u'Checkmk',
+        u'org.opencontainers.image.url': u'https://checkmk.com/'
     }
 
     assert config["Env"] == [

@@ -1828,7 +1828,11 @@ class Cell(object):
         # - Negate/Disable when at first position
         # - Move to the first position when already in sorters
         # - Add in the front of the user sorters when not set
-        sorter_name = _get_sorter_name_of_painter(self.painter_name())
+        painter_name = self.painter_name()
+        sorter_name = _get_sorter_name_of_painter(painter_name)
+        if painter_name == 'svc_metrics_hist':
+            hash_id = ':%s' % hash(str(self.painter_parameters()))
+            sorter_name += hash_id
 
         this_asc_sorter = SorterEntry(sorter_name, False, self.join_service())
         this_desc_sorter = SorterEntry(sorter_name, True, self.join_service())
@@ -1983,7 +1987,13 @@ def _parse_url_sorters(sort):
             sorter, join_index = s.split('~', 1)
         else:
             sorter, join_index = s, None
-        sorters.append(SorterEntry(sorter.replace('-', ''), sorter.startswith('-'), join_index))
+
+        negate = False
+        if sorter.startswith('-'):
+            negate = True
+            sorter = sorter[1:]
+
+        sorters.append(SorterEntry(sorter, negate, join_index))
     return sorters
 
 

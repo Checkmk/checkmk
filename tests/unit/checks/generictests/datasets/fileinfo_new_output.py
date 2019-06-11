@@ -3,7 +3,7 @@ checkname = 'fileinfo'
 
 info = [['1536557964'], ['[[[header]]]'], ['name', 'status', 'size', 'time'], ['[[[content]]]'],
         ['regular.txt', 'ok', '4242', '1536421281'], ['missing_file.txt', 'missing'],
-        ['not_readable.txt', 'ok', '2323', '1536421281'], ['stat_failes.txt', 'stat failed']]
+        ['not_readable.txt', 'ok', '2323', '1536421281'], ['stat_failes.txt', 'stat failed: Permission denied']]
 
 discovery = {
     '': [('not_readable.txt', {}), ('regular.txt', {}), ('stat_failes.txt', {})],

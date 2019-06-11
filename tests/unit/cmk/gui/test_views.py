@@ -691,7 +691,7 @@ def test_registered_datasources():
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixture("load_plugins")
+@pytest.mark.usefixtures("load_plugins")
 def test_registered_painters():
     expected = {
         'aggr_acknowledged': {
@@ -4077,7 +4077,7 @@ def test_legacy_register_painter(monkeypatch):
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixture("load_plugins")
+@pytest.mark.usefixtures("load_plugins")
 def test_registered_sorters():
     expected = {
         'aggr_group': {
@@ -5775,7 +5775,7 @@ def test_get_needed_join_columns(view):
         'service_description',
     ])
 
-@pytest.mark.usefixture("load_plugins")
+@pytest.mark.usefixtures("load_plugins")
 def test_create_view_basics():
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]

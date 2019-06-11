@@ -43,7 +43,6 @@ def test_package_sizes(version_path, what, min_size, max_size):
     ("rpm"),
     ("deb"),
 ])
-@pytest.mark.skip(reason="This test is failing, we first need to fix our packages")
 def test_files_not_in_version_path(version_path, what):
     version_allowed_patterns = [
         "/opt/omd/versions$",

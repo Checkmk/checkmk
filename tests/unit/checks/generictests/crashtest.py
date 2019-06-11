@@ -38,7 +38,7 @@ import pytest
 
 import generictests
 from generictests.regression import WritableDataset
-from checktestlib import CheckResult, DiscoveryResult
+from checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks
 
@@ -64,7 +64,7 @@ class CrashDataset(WritableDataset):
 
         traceback = crashinfo.get('exc_traceback', [])
         for line in traceback:
-            if '/local/share/check_mk/checks/' in line[0]:
+            if '/local/share/check_mk/' in line[0]:
                 raise SkipReport("local check plugin")
 
         init_dict = {}
@@ -135,7 +135,7 @@ class CrashReportList(list):
             try:
                 yield CrashDataset(crash_report_fn)
             except SkipReport as exc:
-                item[1] = 'SKIP (%s)' % exc
+                item[1] = 'SKIP %s (%s)' % (item[2], exc)
 
     def load(self):
         try:
@@ -151,13 +151,14 @@ def test_crashreport(check_manager, crashdata):
     try:
         generictests.run(check_manager, crashdata)
         check = check_manager.get_check(crashdata.full_checkname)
-        if crashdata.is_discovery:
-            if crashdata.parsed:
-                raw_result = check.run_discovery(crashdata.parsed)
-            else:
-                raw_result = check.run_discovery(crashdata.info)
-            print(DiscoveryResult(raw_result))
-            return
+        #FIXME
+        #if crashdata.is_discovery:
+        #    if crashdata.parsed:
+        #        raw_result = check.run_discovery(crashdata.parsed)
+        #    else:
+        #        raw_result = check.run_discovery(crashdata.info)
+        #    print(DiscoveryResult(raw_result))
+        #    return
 
         if 'item' in crashdata.vars:
             item = crashdata.vars['item']

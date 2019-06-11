@@ -4,7 +4,7 @@ from itertools import chain, repeat
 import os
 import pytest
 import re
-from local import (actual_output, make_ini_config, local_test, src_exec_dir, wait_agent,
+from local import (actual_output, make_yaml_config, local_test, src_exec_dir, wait_agent,
                    write_config)
 
 
@@ -19,19 +19,18 @@ def testfile():
 
 
 @pytest.fixture(params=['alone', 'with_systemtime'])
-def testconfig(request, make_ini_config):
+def testconfig(request, make_yaml_config):
     Globals.alone = request.param == 'alone'
     if Globals.alone:
-        make_ini_config.set('global', 'sections', Globals.section)
+        make_yaml_config['global']['sections'] = Globals.section
     else:
-        make_ini_config.set('global', 'sections', '%s systemtime' % Globals.section)
-    make_ini_config.set('global', 'crash_debug', 'yes')
-    return make_ini_config
+        make_yaml_config['global']['sections'] = [Globals.section, "systemtime"]
+    return make_yaml_config
 
 
 @pytest.fixture
 def expected_output():
-    re_str = (r'[\w\.-]+ (unknown|continuing|pausing|paused|running|starting'
+    re_str = (r'[\(\)\w\.-]+ (unknown|continuing|pausing|paused|running|starting'
               r'|stopping|stopped)/(invalid1|invalid2|invalid3|invalid4|auto'
               r'|boot|demand|disabled|system|other) .+')
     if not Globals.alone:

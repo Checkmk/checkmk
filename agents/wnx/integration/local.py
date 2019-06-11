@@ -228,7 +228,7 @@ def local_test(expected_output, actual_output, testfile, test_name=None, test_cl
         #     print 'DEBUG: expected output\r\n', '\r\n'.join(expected_output)
 
         assert re.match(expected,
-                        actual) is not None, "expected '%s', actual '%s'" % (expected, actual)
+                        actual) is not None, "\nExpected '%s'\nActual   '%s'" % (expected, actual)
     try:
         assert len(actual_output) >= len(expected_output), (
             'actual output is shorter than expected:\n'

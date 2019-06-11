@@ -58,6 +58,17 @@ def test_lqencode(query_part):
     assert result == u"xyzabc"
 
 
+@pytest.mark.parametrize("inp,expected_result", [
+    ("ab c", u"'ab c'"),
+    ("ab'c", u"'ab''c'"),
+    (u"ä \nabc", u"'ä \nabc'"),
+])
+def test_quote_dict(inp, expected_result):
+    result = livestatus.quote_dict(inp)
+    assert isinstance(result, unicode)
+    assert result == expected_result
+
+
 def test_livestatus_local_connection_omd_root_not_set(monkeypatch, tmpdir):
     with pytest.raises(livestatus.MKLivestatusConfigError, match="OMD_ROOT is not set"):
         livestatus.LocalConnection()

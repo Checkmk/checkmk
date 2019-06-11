@@ -116,6 +116,11 @@ def lqencode(s):
     return ensure_unicode(s).replace(u"\n", u"")
 
 
+def quote_dict(s):
+    """Apply the quoting used for dict-valued columns (See #6972)"""
+    return "'%s'" % s.replace(u"'", u"''")
+
+
 def site_local_ca_path():
     """Path to the site local CA bundle"""
     omd_root = os.getenv("OMD_ROOT")

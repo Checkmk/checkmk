@@ -14,3 +14,4 @@ $(APPLIANCE_INSTALL_CMA):
 	install -m 644 $(PACKAGE_DIR)/appliance/webconf_snapin.py $(DESTDIR)$(OMD_ROOT)/share/check_mk/web/plugins/sidebar
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/cma
 	install -m 755 $(PACKAGE_DIR)/appliance/post-install $(DESTDIR)$(OMD_ROOT)/lib/cma
+	$(TOUCH) $@

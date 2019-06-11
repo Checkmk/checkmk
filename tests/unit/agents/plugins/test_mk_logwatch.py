@@ -3,6 +3,7 @@
 import imp
 import os
 import re
+import sys
 
 import pytest
 
@@ -275,6 +276,11 @@ def test_ip_in_subnetwork(mk_logwatch):
                                         "1762:0000:0000:0000:0000:0000:0000:0000/64") is False
 
 
+class MockStdout(object):
+    def isatty(self):
+        return False
+
+
 @pytest.mark.parametrize(
     "logfile, patterns, opt_raw, status, expected_output",
     [
@@ -322,10 +328,12 @@ def test_ip_in_subnetwork(mk_logwatch):
         ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),
         ('Private Ryan', None, {}, {}, [u"[[[Private Ryan:missing]]]\n"]),
     ])
-def test_process_logfile(mk_logwatch, logfile, patterns, opt_raw, status, expected_output):
+def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, status,
+                         expected_output):
     opt = mk_logwatch.Options()
     opt.values.update(opt_raw)
 
+    monkeypatch.setattr(sys, 'stdout', MockStdout())
     output = mk_logwatch.process_logfile(logfile, patterns, opt, status)
     assert all(isinstance(item, unicode) for item in output)
     assert output == expected_output

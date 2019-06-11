@@ -192,10 +192,11 @@ def declare_inv_column(invpath, datatype, title, short=None):
         # Declare sorter. It will detect numbers automatically
         register_sorter(
             name, {
+                "_inv_path": invpath,
                 "title": _("Inventory") + ": " + title,
                 "columns": ["host_inventory", "host_structured_status"],
                 "load_inv": True,
-                "cmp": lambda a, b: cmp_inventory_node(a, b, invpath),
+                "cmp": lambda self, a, b: cmp_inventory_node(a, b, self._spec["_inv_path"]),
             })
 
         filter_info = _inv_filter_info().get(datatype, {})

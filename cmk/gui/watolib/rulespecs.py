@@ -348,7 +348,8 @@ def get_rulegroup(group_name):
     except KeyError:
         group_class = _get_legacy_rulespec_group_class(group_name, group_title=None, help_text=None)
         rulespec_group_registry.register(group_class)
-    return group_class()
+    # Pylint does not detect the subclassing in LegacyRulespecSubGroup correctly. Disable the check here :(
+    return group_class()  # pylint: disable=abstract-class-instantiated
 
 
 def _get_legacy_rulespec_group_class(group_name, group_title, help_text):

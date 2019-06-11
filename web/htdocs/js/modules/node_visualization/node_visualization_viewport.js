@@ -164,13 +164,10 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
     _load_layers() {
         this._add_layer(new node_visualization_viewport_layers.LayeredRuleIconOverlay(this))
         this._add_layer(new node_visualization_viewport_layers.LayeredTranslationInfoLayer(this))
-        this._add_layer(new node_visualization_viewport_layers.LayeredCustomOverlay(this))
-        this._add_layer(new node_visualization_viewport_layers.LayeredExternalDataOverlay(this))
 
         this.layout_manager = new node_visualization_layouting.LayoutManagerLayer(this)
         this._add_layer(this.layout_manager)
         this._add_layer(new node_visualization_viewport_layers.LayeredNodesLayer(this))
-//        this._add_layer(new node_visualization_viewport_layers.LayeredNodesCanvasLayer(this))
     }
 
     _add_layer(layer) {

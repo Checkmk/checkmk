@@ -794,8 +794,22 @@ class Site(object):
                 time.sleep(0.2)
 
     def stop(self):
-        if self.is_running():
-            assert self.omd("stop") == 0
+        if not self.is_running():
+            return  # Nothing to do
+
+        print "= BEGIN PROCESSES BEFORE ======================================="
+        os.system("ps -fu %s" % self.id)
+        print "= END PROCESSES BEFORE ======================================="
+
+        stop_exit_code = self.omd("stop")
+        if stop_exit_code != 0:
+            print "omd stop exit code: %d" % stop_exit_code
+
+        print "= BEGIN PROCESSES AFTER STOP ======================================="
+        os.system("ps -fu %s" % self.id)
+        print "= END PROCESSES AFTER STOP ======================================="
+
+        try:
             i = 0
             while self.is_running():
                 i += 1
@@ -804,6 +818,11 @@ class Site(object):
                 print "The site %s is still running, sleeping... (round %d)" % (self.id, i)
                 sys.stdout.flush()
                 time.sleep(0.2)
+        except:
+            print "= BEGIN PROCESSES AFTER WAIT ======================================="
+            os.system("ps -fu %s" % self.id)
+            print "= END PROCESSES AFTER WAIT ======================================="
+            raise
 
     def exists(self):
         return os.path.exists("/omd/sites/%s" % self.id)

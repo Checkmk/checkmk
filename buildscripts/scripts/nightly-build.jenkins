@@ -213,7 +213,7 @@ try {
                                             make -C omd cma
                                             ;;
                                         *)
-                                            DEBFULLNAME='Check_MK Team' DEBEMAIL='feedback@check-mk.org' make -C omd deb
+                                            DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make -C omd deb
                                             ;;
                                     esac
                                 """

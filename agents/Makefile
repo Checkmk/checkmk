@@ -61,7 +61,7 @@ setversion:
 	    fi ; \
 	done
 	package="Check_MK Windows Agent" ; \
-	mail=feedback@check-mk.org ; \
+	mail=feedback@checkmk.com; \
 	sed -i "s/^AC_INIT.*/AC_INIT([$$package], [$(NEW_VERSION)], [$$mail])/" \
 	    windows/configure.ac
 
@@ -123,7 +123,7 @@ $(DEB_PACKAGE): $(RPM_PACKAGE)
 	tar xf control.tar.* -C ctrl && \
 	sed -i -e '/^Depends:/d' \
 	       -e 's/^Version:.*/Version: $(VERSION)-1/' \
-	       -e 's/^Maintainer:.*/Maintainer: feedback@check-mk.org/' ctrl/control && \
+	       -e 's/^Maintainer:.*/Maintainer: feedback@checkmk.com/' ctrl/control && \
 	tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
 	xz --decompress data.tar.xz && \
 	gzip data.tar && \

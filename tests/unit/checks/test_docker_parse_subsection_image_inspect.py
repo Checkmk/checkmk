@@ -77,14 +77,16 @@ regex = re.compile
         ['            ],'],
         ['            "OnBuild": null,'],
         ['            "Labels": {'],
-        ['                "maintainer": "feedback@check-mk.org",'],
+        ['                "maintainer": "feedback@checkmk.com",'],
         [
             '                "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",'
         ],
-        ['                "org.opencontainers.image.source": "https://git.mathias-kettner.de/",'],
-        ['                "org.opencontainers.image.title": "Check_MK",'],
-        ['                "org.opencontainers.image.url": "https://mathias-kettner.com/",'],
-        ['                "org.opencontainers.image.vendor": "Mathias Kettner GmbH",'],
+        [
+            '                "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",'
+        ],
+        ['                "org.opencontainers.image.title": "Checkmk",'],
+        ['                "org.opencontainers.image.url": "https://checkmk.com/",'],
+        ['                "org.opencontainers.image.vendor": "tribe29 GmbH",'],
         ['                "org.opencontainers.image.version": "1.5.0p5"'],
         ['            }'],
         ['        },'],
@@ -131,14 +133,16 @@ regex = re.compile
         ['            ],'],
         ['            "OnBuild": null,'],
         ['            "Labels": {'],
-        ['                "maintainer": "feedback@check-mk.org",'],
+        ['                "maintainer": "feedback@checkmk.com",'],
         [
             '                "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",'
         ],
-        ['                "org.opencontainers.image.source": "https://git.mathias-kettner.de/",'],
-        ['                "org.opencontainers.image.title": "Check_MK",'],
-        ['                "org.opencontainers.image.url": "https://mathias-kettner.com/",'],
-        ['                "org.opencontainers.image.vendor": "Mathias Kettner GmbH",'],
+        [
+            '                "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",'
+        ],
+        ['                "org.opencontainers.image.title": "Checkmk",'],
+        ['                "org.opencontainers.image.url": "https://checkmk.com/",'],
+        ['                "org.opencontainers.image.vendor": "tribe29 GmbH",'],
         ['                "org.opencontainers.image.version": "1.5.0p5"'],
         ['            }'],
         ['        },'],
@@ -252,14 +256,16 @@ regex = re.compile
         ['            ],'],
         ['            "OnBuild": null,'],
         ['            "Labels": {'],
-        ['                "maintainer": "feedback@check-mk.org",'],
+        ['                "maintainer": "feedback@checkmk.com",'],
         [
             '                "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",'
         ],
-        ['                "org.opencontainers.image.source": "https://git.mathias-kettner.de/",'],
-        ['                "org.opencontainers.image.title": "Check_MK",'],
-        ['                "org.opencontainers.image.url": "https://mathias-kettner.com/",'],
-        ['                "org.opencontainers.image.vendor": "Mathias Kettner GmbH",'],
+        [
+            '                "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",'
+        ],
+        ['                "org.opencontainers.image.title": "Checkmk",'],
+        ['                "org.opencontainers.image.url": "https://checkmk.com/",'],
+        ['                "org.opencontainers.image.vendor": "tribe29 GmbH",'],
         ['                "org.opencontainers.image.version": "1.5.0p3"'],
         ['            }'],
         ['        },'],
@@ -306,14 +312,16 @@ regex = re.compile
         ['            ],'],
         ['            "OnBuild": null,'],
         ['            "Labels": {'],
-        ['                "maintainer": "feedback@check-mk.org",'],
+        ['                "maintainer": "feedback@checkmk.com",'],
         [
             '                "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",'
         ],
-        ['                "org.opencontainers.image.source": "https://git.mathias-kettner.de/",'],
-        ['                "org.opencontainers.image.title": "Check_MK",'],
-        ['                "org.opencontainers.image.url": "https://mathias-kettner.com/",'],
-        ['                "org.opencontainers.image.vendor": "Mathias Kettner GmbH",'],
+        [
+            '                "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",'
+        ],
+        ['                "org.opencontainers.image.title": "Checkmk",'],
+        ['                "org.opencontainers.image.url": "https://checkmk.com/",'],
+        ['                "org.opencontainers.image.vendor": "tribe29 GmbH",'],
         ['                "org.opencontainers.image.version": "1.5.0p3"'],
         ['            }'],
         ['        },'],
@@ -408,12 +416,12 @@ regex = re.compile
                 "Entrypoint": ["/docker-entrypoint.sh"],
                 "OnBuild": None,
                 "Labels": {
-                    "maintainer": "feedback@check-mk.org",
+                    "maintainer": "feedback@checkmk.com",
                     "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-                    "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-                    "org.opencontainers.image.title": "Check_MK",
-                    "org.opencontainers.image.url": "https://mathias-kettner.com/",
-                    "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+                    "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+                    "org.opencontainers.image.title": "Checkmk",
+                    "org.opencontainers.image.url": "https://checkmk.com/",
+                    "org.opencontainers.image.vendor": "tribe29 GmbH",
                     "org.opencontainers.image.version": "1.5.0p5"
                 }
             },
@@ -450,12 +458,12 @@ regex = re.compile
                 "Entrypoint": ["/docker-entrypoint.sh"],
                 "OnBuild": None,
                 "Labels": {
-                    "maintainer": "feedback@check-mk.org",
+                    "maintainer": "feedback@checkmk.com",
                     "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-                    "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-                    "org.opencontainers.image.title": "Check_MK",
-                    "org.opencontainers.image.url": "https://mathias-kettner.com/",
-                    "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+                    "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+                    "org.opencontainers.image.title": "Checkmk",
+                    "org.opencontainers.image.url": "https://checkmk.com/",
+                    "org.opencontainers.image.vendor": "tribe29 GmbH",
                     "org.opencontainers.image.version": "1.5.0p5"
                 }
             },
@@ -526,12 +534,12 @@ regex = re.compile
                 "Entrypoint": ["/docker-entrypoint.sh"],
                 "OnBuild": None,
                 "Labels": {
-                    "maintainer": "feedback@check-mk.org",
+                    "maintainer": "feedback@checkmk.com",
                     "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-                    "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-                    "org.opencontainers.image.title": "Check_MK",
-                    "org.opencontainers.image.url": "https://mathias-kettner.com/",
-                    "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+                    "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+                    "org.opencontainers.image.title": "Checkmk",
+                    "org.opencontainers.image.url": "https://checkmk.com/",
+                    "org.opencontainers.image.vendor": "tribe29 GmbH",
                     "org.opencontainers.image.version": "1.5.0p3"
                 }
             },
@@ -568,12 +576,12 @@ regex = re.compile
                 "Entrypoint": ["/docker-entrypoint.sh"],
                 "OnBuild": None,
                 "Labels": {
-                    "maintainer": "feedback@check-mk.org",
+                    "maintainer": "feedback@checkmk.com",
                     "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-                    "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-                    "org.opencontainers.image.title": "Check_MK",
-                    "org.opencontainers.image.url": "https://mathias-kettner.com/",
-                    "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+                    "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+                    "org.opencontainers.image.title": "Checkmk",
+                    "org.opencontainers.image.url": "https://checkmk.com/",
+                    "org.opencontainers.image.vendor": "tribe29 GmbH",
                     "org.opencontainers.image.version": "1.5.0p3"
                 }
             },

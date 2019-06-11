@@ -1,7 +1,7 @@
 Source: check-mk-###EDITION###-###PKG_VERSION###
 Section: admin
 Priority: optional
-Maintainer: Check_MK Team <feedback@check-mk.org>
+Maintainer: Checkmk Team <feedback@checkmk.com>
 Build-Depends:@dpatch,@debhelper@(>=@7)
 Standards-Version: 3.8.3
 Homepage: http://mathias-kettner.de
@@ -9,8 +9,4 @@ Homepage: http://mathias-kettner.de
 Package: check-mk-###EDITION###-###PKG_VERSION###
 Architecture: any
 Depends:@${misc:Depends},@###OS_PACKAGES###
-Description:  Check_MK is a full featured system monitoring
- solution. This package ships with Check_MK, Nagios,
- the Nagios plugins, Livestatus, Multisite,
- PNP4Nagios, NagVis, and other addons. Please visit
- http://mathias-kettner.de/.
+Description:  Checkmk - Best-in-class infrastructure & application monitoring

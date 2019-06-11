@@ -260,7 +260,7 @@ try {
                 stage('Packaging Tests') {
                     try {
                         dir("${DAILY_DATA}/git/tests") {
-                            withEnv(["VERSION_PATH=${ARCHIVE_DIR}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit.xml'", "EDITION=cee"]) {
+                            withEnv(["VERSION_PATH=${ARCHIVE_DIR}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit.xml'", "OMD_VERSION=${CMK_VERSION}.cee"]) {
                                 sh "make test-packaging"
                             }
                         }

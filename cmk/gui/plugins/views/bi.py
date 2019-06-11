@@ -216,7 +216,12 @@ class PainterAggrIcons(Painter):
                                                        ("aggr_name", row["aggr_name"])])
         avail_url = single_url + "&mode=availability"
 
+        bi_map_url = "bi_map.py?" + html.urlencode_vars([
+            ("aggr_name", row["aggr_name"]),
+        ])
+
         with html.plugged():
+            html.icon_button(bi_map_url, _("Visualize this aggregation"), "aggr")
             html.icon_button(single_url, _("Show only this aggregation"), "showbi")
             html.icon_button(avail_url, _("Analyse availability of this aggregation"),
                              "availability")

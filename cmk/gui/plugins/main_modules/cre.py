@@ -53,3 +53,5 @@ import cmk.gui.crash_reporting
 import cmk.gui.werks
 import cmk.gui.notifications
 import cmk.gui.valuespec
+
+import cmk.gui.node_visualization

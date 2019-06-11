@@ -114,6 +114,17 @@ def test_cma_only_contains_version_paths(version_path):
             assert not path.startswith(version + "/")
 
 
+def test_cma_specific_files(version_path):
+    for pkg in _get_package_paths(version_path, "cma"):
+        version = os.path.basename(pkg).split("-")[3]
+        files = [
+            line.split()[5] for line in subprocess.check_output(["tar", "tvf", pkg]).splitlines()
+        ]
+        assert "%s/cma.info" % version in files
+        assert "%s/skel/etc/apache/conf.d/cma.conf" % version in files
+        assert "%s/lib/cma/post-install" % version in files
+
+
 def test_src_only_contains_relative_version_paths(version_path):
     for pkg in _get_package_paths(version_path, "tar.gz"):
         prefix = pkg.replace(".tar.gz", "")

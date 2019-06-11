@@ -147,6 +147,10 @@ def InterProcessLock(filename):
             os.close(fd)
 
 
+def SiteActionLock():
+    return InterProcessLock("/tmp/cmk-test-create-site")
+
+
 # It's ok to make it currently only work on debian based distros
 class CMKVersion(object):
     DEFAULT = "default"
@@ -574,7 +578,8 @@ class Site(object):
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
-            with InterProcessLock("/tmp/cmk-test-create-site"):
+            with SiteActionLock():
+                print "[%0.2f] Creating site '%s'" % (time.time(), self.id)
                 p = subprocess.Popen([
                     "/usr/bin/sudo", "/usr/bin/omd", "-V",
                     self.version.version_directory(), "create", "--admin-password", "cmk",
@@ -746,11 +751,13 @@ class Site(object):
     def rm(self, site_id=None):
         if site_id == None:
             site_id = self.id
-        # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
-        #assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
-        subprocess.Popen(
-            ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill",
-             site_id]).wait()
+
+        with SiteActionLock():
+            # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
+            #assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
+            subprocess.Popen(
+                ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill",
+                 site_id]).wait()
 
     def cleanup_old_sites(self, cleanup_pattern):
         if not os.path.exists("/omd/sites"):

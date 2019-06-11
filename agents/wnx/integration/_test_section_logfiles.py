@@ -7,7 +7,7 @@ import re
 import sys
 
 import pytest
-from local import (actual_output, make_ini_config, src_exec_dir, local_test, run_subprocess,
+from local import (actual_output, make_yaml_config, src_exec_dir, local_test, run_subprocess,
                    wait_agent, write_config)
 
 

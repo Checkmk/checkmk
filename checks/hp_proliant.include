@@ -312,8 +312,11 @@ def inventory_hp_proliant_mem(info):
 def check_hp_proliant_mem(item, params, info):
     for line in info:
         if line[1] == item:
+            # Note: mgmt_hp_proliant_mem provides exact 6 values;
+            # hp_proliant provides 10 values because related inventory plugin
+            # needs the last 4.
             board_index, module_index, module_size, module_type, \
-            module_status, module_condition = line
+            module_status, module_condition = line[:6]
 
             module_size_mb = int(module_size) / 1024
 

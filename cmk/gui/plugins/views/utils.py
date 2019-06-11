@@ -1798,7 +1798,7 @@ class Cell(object):
             if display_options.title_options:
                 params.append(('display_options', display_options.title_options))
 
-            classes += ["sort", _get_primary_sorter_order(self._view, self.painter_name())]
+            classes += ["sort"]
             onclick = "location.href=\'%s\'" % html.makeuri(params, 'sort')
             title = _('Sort by %s') % self.title()
 
@@ -2063,18 +2063,6 @@ def _get_separated_sorters(view):
     _substract_sorters(view_sort, user_sort)
 
     return group_sort, user_sort, view_sort
-
-
-def _get_primary_sorter_order(view, painter_name):
-    sorter_name = _get_sorter_name_of_painter(painter_name)
-    this_asc_sorter = (sorter_name, False)
-    this_desc_sorter = (sorter_name, True)
-    _group_sort, user_sort, _view_sort = _get_separated_sorters(view)
-    if user_sort and this_asc_sorter == user_sort[0]:
-        return 'asc'
-    elif user_sort and this_desc_sorter == user_sort[0]:
-        return 'desc'
-    return ''
 
 
 def _substract_sorters(base, remove):

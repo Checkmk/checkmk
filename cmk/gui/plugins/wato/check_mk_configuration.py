@@ -547,6 +547,30 @@ class ConfigVariablePageHeading(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableBIDefaultLayout(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserInterface
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "default_bi_layout"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("BI Visualization Default Layout"),
+            help=_("Specifies the default layout to be used when an aggregation "
+                   "has no explict layout assinged"),
+            choices=[
+                ("force", _("Free floating layout")),
+                ("hierarchy", _("Hierarchical layout")),
+                ('radial', _("Radial layout")),
+            ],
+        )
+
+
+@config_variable_registry.register
 class ConfigVariablePagetitleDateFormat(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface

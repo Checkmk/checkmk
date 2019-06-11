@@ -484,3 +484,5 @@ bi_use_legacy_compilation = False
 
 # Deprecated. Kept for compatibility.
 bi_compile_log = None
+default_bi_layout = "hierarchy"
+bi_layouts = {"templates": {}, "aggregations": {}}

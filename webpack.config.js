@@ -4,6 +4,7 @@ const webpack = require("webpack");
 
 module.exports = {
     mode: "production",
+    devtool: "source-map",
     entry: {
         main: "./web/htdocs/js/index.js",
         mobile: "./web/htdocs/js/mobile.js",
@@ -27,7 +28,8 @@ module.exports = {
         modules: [
             "node_modules",
             path.resolve(__dirname, "web/htdocs/js/modules"),
-            path.resolve(__dirname, "enterprise/web/htdocs/js/modules")
+            path.resolve(__dirname, "web/htdocs/js/modules/node_visualization"),
+            path.resolve(__dirname, "enterprise/web/htdocs/js/modules"),
         ]
     },
     module: {
@@ -38,7 +40,7 @@ module.exports = {
                 use: {
                     loader: "babel-loader",
                     options: {
-                        presets: ["@babel/preset-env"]
+                        presets: ["@babel/preset-env"],
                     }
                 }
             },

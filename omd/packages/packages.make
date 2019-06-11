@@ -97,7 +97,7 @@ include     packages/apache-omd/apache-omd.make \
     packages/rrdtool/rrdtool.make \
     packages/snap7/snap7.make \
     packages/Webinject/Webinject.make \
-    packages/cma/cma.make
+    packages/appliance/appliance.make
 
 ifeq ($(EDITION),enterprise)
 include $(REPO_PATH)/enterprise/enterprise.make

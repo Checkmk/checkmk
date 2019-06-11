@@ -1,4 +1,4 @@
-Title: Fix 1.6 compatibility with CMA <1.4.7
+Title: Fix 1.6 compatibility with Checkmk Appliance
 Level: 1
 Component: distros
 Class: fix
@@ -8,5 +8,4 @@ State: unknown
 Version: 1.7.0i1
 Date: 1560157261
 
-The Checkmk 1.6 version can now be installed on Checkmk Appliance
-firmwares older than 1.4.7.
+The Checkmk 1.6.0b1 package could not be installed on Checkmk Appliances.

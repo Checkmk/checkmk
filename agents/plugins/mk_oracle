@@ -2064,15 +2064,17 @@ run_cached () {
 
 mk_ora_db_connect () {
     local sid="$1"
+    local CFGTNSALIAS=""
 
     ORADBUSER=""
     DBPASSWORD=""
+    offset=${offset:-0}
 
     if [[ "$sid" =~ ^REMOTE_INSTANCE_.* ]]; then
         # working on REMOTE_-Mode!
         ORACFGLINE=$(eval "echo \${$1}")
         ORACLE_SID=$(echo "${ORACFGLINE}" | cut -d":" -f7)
-        TNSALIAS=$(echo "${REMOTE_VARNAME}" | cut -d"_" -f3-)
+        CFGTNSALIAS=$(echo "${ORACFGLINE}" | cut -d":" -f9)
 
     else
         # working with locally running instances
@@ -2099,9 +2101,10 @@ mk_ora_db_connect () {
             # mk_oracle_dbuser has ORACLE_SID as 1. parameter. we need an offset for all values
             offset=1
         fi
+
+        CFGTNSALIAS=$(echo "${ORACFGLINE}" | cut -d":" -f$((6+offset)))
     fi
 
-    offset=${offset:-0}
     if [ -n "$SQLS_DBUSER" ]; then
         ORADBUSER=${SQLS_DBUSER}
         DBPASSWORD=${SQLS_DBPASSWORD}
@@ -2129,12 +2132,17 @@ mk_ora_db_connect () {
         logging "[${sid}] [mk_ora_db_connect]" "Single Instance"
     fi
 
+    if [ ! -z "$CFGTNSALIAS" ] ; then
+        logging "[${sid}] [mk_ora_db_connect]" "TNS CFGTNSALIAS: $CFGTNSALIAS"
+    fi
+
     TNSPINGOK=no
     if [ -f "${TNS_ADMIN}/tnsnames.ora" ]; then
         if [ "${ORADBUSER:0:2}" = '/@' ]; then
             P_TNSALIAS_P=$(eval echo "${ORADBUSER:2}")
         else
-            P_TNSALIAS_P=$ORACLE_SID
+            # use TNSALIAS from ORACFGLINE or ORACLE_SID when empty
+            P_TNSALIAS_P=${CFGTNSALIAS:-${ORACLE_SID}}
         fi
 
         # PREFIX / POSTFIX makes no sense for ASM
@@ -2162,13 +2170,20 @@ mk_ora_db_connect () {
         fi
 
         TNSALIAS=${SQLS_TNSALIAS:-${P_TNSALIAS_P}}
+
+        logging "[${sid}] [mk_ora_db_connect]" "TNS Alias PING: $TNSALIAS"
+
         if "${ORACLE_HOME}"/bin/tnsping "$TNSALIAS" >/dev/null 2>&1; then
             TNSPINGOK=yes
         else
             unset TNSALIAS
         fi
     else
-        unset TNSALIAS
+        if [ -z "$CFGTNSALIAS" ] ; then
+            unset TNSALIAS
+        else
+            TNSALIAS=${SQLS_TNSALIAS:-${CFGTNSALIAS}}
+        fi
     fi
 
     logging "[${sid}] [mk_ora_db_connect]" "ORA DB user: $ORADBUSER"\
@@ -2191,8 +2206,9 @@ mk_ora_db_connect () {
             # connect with / and wallet
             ORADBUSER=""
             DBPASSWORD=""
-            if [ "$TNSPINGOK" = 'no' ]; then
+            if [ -z "$CFGTNSALIAS" ] && [ "$TNSPINGOK" = 'no' ]; then
                 # create an EZCONNECT string when no tnsnames.ora is usable
+                # or no alias is configured in CFGTNSALIAS
                 # defaults to localhost:1521/<ORACLE_SID>
                 TNSALIAS="${DBHOST}:${DBPORT:-1521}/${ORACLE_SID}"
             fi

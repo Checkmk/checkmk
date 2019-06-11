@@ -1,0 +1,17 @@
+Title: mk_oracle: Support for tnsalias in DBUSER and REMOTE_INSTANCE_
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1562056744
+Class: feature
+
+The configuration for DBUSER and REMOTE_INSTANCE_ has been enhanced for setups
+with a specified tns-string to connect to an instance. This is needed in
+environemts with OID/LDAP or special setups with a wallet.
+
+Examples:
+
+DBUSER=<username>:<password>:<sysdba|sysoper>:<hostname>:<port>:<tns alias>
+REMOTE_INSTANCE_1_orcl=<username>:<password>:<sysdba|sysoper>:<hostname>:<port>:<piggybackhost>:<ORACLE_SID>:<DB version>:<tns alias> 

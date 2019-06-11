@@ -83,12 +83,18 @@ export class AbstractLayoutStyle {
         if (!this.options_selection)
             return
 
-        let table = this.options_selection.selectAll("table").data([null])
-        table = table.enter().append("table").merge(table)
-
         let style_options = this.get_style_options()
         if (style_options.length == 0)
             return
+
+        this.options_selection.selectAll("#styleoptions_headline").data([null]).enter()
+                .append("h4")
+                    .attr("id", "styleoptions_headline")
+                    .text("Options")
+
+        let table = this.options_selection.selectAll("table").data([null])
+        table = table.enter().append("table").merge(table)
+
         let rows = table.selectAll("tr").data(style_options)
 
         let rows_enter = rows.enter().append("tr")
@@ -123,7 +129,10 @@ export class AbstractLayoutStyle {
                                .on("click", d=>{
                                     this.reset_default_options()
                                 })
-
+        this.options_selection.selectAll("div.clear_float").data([null]).enter()
+                            .append("div")
+                            .classed("clear_float", true)
+                            .style("clear", "right")
     }
 
     reset_default_options() {
@@ -243,6 +252,7 @@ export class AbstractLayoutStyle {
         let force = this.get_default_node_force(node)
         force.fx = node.x
         force.fy = node.y
+        force.use_transition = true
     }
 
     get_default_node_force(node) {
@@ -371,19 +381,19 @@ export class LayoutStyleForce extends AbstractLayoutStyle {
                 {id: "maxdistance", values: {default: 800, min: 10, max: 2000},
                  text: "Max force distance", value: this.style_config.options.maxdistance},
                 {id: "force_node", values: {default: -300, min: -1000, max: 50},
-                 text: "Repulsion end node", value: this.style_config.options.force_node},
+                 text: "Repulsion force leaf", value: this.style_config.options.force_node},
                 {id: "force_aggregator", values: {default: -300, min: -1000, max: 50},
-                 text: "Repulsion aggregator", value: this.style_config.options.force_aggregator},
+                 text: "Repulsion force branch", value: this.style_config.options.force_aggregator},
                 {id: "link_force_node", values: {default: 30, min: -10, max: 300},
-                 text: "Link distance end nodes", value: this.style_config.options.link_force_node},
+                 text: "Link distance leaf", value: this.style_config.options.link_force_node},
                 {id: "link_force_aggregator", values: {default: 30, min: -10, max: 300},
-                 text: "Link distance aggregator", value: this.style_config.options.link_force_aggregator},
+                 text: "Link distance branches", value: this.style_config.options.link_force_aggregator},
                 {id: "link_strength", values: {default: 30, min: 0, max: 300},
                  text: "Link strength", value: this.style_config.options.link_strength},
-                {id: "collision_force_node", values: {default: 0, min: 0, max: 150},
-                 text: "Collision box end node", value: this.style_config.options.collision_force_node},
-                {id: "collision_force_aggregator", values: {default: 0, min:0, max:150},
-                 text: "Collision box aggregator", value: this.style_config.options.collision_force_aggregator}]
+                {id: "collision_force_node", values: {default: 15, min: 0, max: 150},
+                 text: "Collision box leaf", value: this.style_config.options.collision_force_node},
+                {id: "collision_force_aggregator", values: {default: 15, min:0, max:150},
+                 text: "Collision box branch", value: this.style_config.options.collision_force_aggregator}]
     }
 
     // TODO: remove with base functionality
@@ -456,17 +466,17 @@ export class LayoutStyleForce extends AbstractLayoutStyle {
             partition.nodes.slice(1).forEach(node=>{
                 if (node.data.invisible)
                     return
-                    // TODO: check value
-                all_links.push({"source": node.data.id, "target": node.parent.data.id, "value": 1})
             })
         })
         this.simulation.nodes(all_nodes)
+
+        all_links = this._layout_manager.viewport.get_all_links()
 
         // Links
         let link_force = d3.forceLink(all_links)
                             .id(function (d) {return d.data.id})
                             .distance(d=>{
-                                if (d.target._children)
+                                if (d.source._children)
                                     return this.style_config.options.link_force_aggregator
                                 else
                                     return this.style_config.options.link_force_node})
@@ -604,7 +614,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this.drag_start_info = {}
         this.drag_start_info.start_coords = d3.mouse(this.selection.node())
         this.drag_start_info.options = JSON.parse(JSON.stringify(this.style_config.options))
-        this._layout_manager.toolbar_plugin.layout_modification_element.update_current_style(this)
+        this._layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(this)
         this._layout_manager.dragging = true
     }
 
@@ -652,12 +662,13 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
     get_style_options() {
         return [{id: "rotation", values: {default: 270, min: 0, max: 359}, text: "Rotation", value: this.style_config.options.rotation},
                 {id: "layer_height", values: {default: 80, min: 20, max: 500}, text: "Layer height", value: this.style_config.options.layer_height},
-                {id: "element_width", values: {default: 30, min: 20, max: 80}, text: "Element width", value: this.style_config.options.element_width}]
+                {id: "node_size", values: {default: 25, min: 15, max: 100}, text: "Node size", value: this.style_config.options.node_size}]
     }
 
     _compute_node_offsets() {
         let coords = this.get_hierarchy_size()
-        d3.tree().size([coords.width, coords.height])(this.style_root_node)
+        d3.tree().nodeSize([this.style_config.options.node_size,
+                                                                this.style_config.options.layer_height])(this.style_root_node)
 
         this._node_positions = []
         for (let idx in this.filtered_descendants) {
@@ -733,7 +744,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 
         let left_side = rad > boundary && rad < Math.PI - boundary
 
-        let distance = 16
+        let distance = 20
         let x = Math.cos(-rad * 2) * distance
         let y = Math.sin(-rad * 2) * distance
 
@@ -763,10 +774,10 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         let dx_scale = (100+(Math.cos(-rotation_rad) * offset_x - Math.sin(-rotation_rad) * offset_y))/100
         let dy_scale = (100-(Math.cos(-rotation_rad) * offset_y + Math.sin(-rotation_rad) * offset_x))/100
 
-        let element_width = this.drag_start_info.options.element_width * dx_scale
+        let node_size = this.drag_start_info.options.node_size * dx_scale
         let layer_height  = this.drag_start_info.options.layer_height * dy_scale
 
-        this.style_config.options.element_width = parseInt(Math.max(this._default_options.element_width/2, Math.min(this._default_options.element_width * 8, element_width)))
+        this.style_config.options.node_size = parseInt(Math.max(this._default_options.node_size/2, Math.min(this._default_options.node_size * 8, node_size)))
         this.style_config.options.layer_height = parseInt(Math.max(this._default_options.layer_height/2, Math.min(this._default_options.layer_height * 8, layer_height)))
     }
 
@@ -788,7 +799,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         for (let idx in max_elements_per_layer)
             highest_density = Math.max(highest_density, max_elements_per_layer[idx])
 
-        let width = highest_density * this.style_config.options.element_width
+        let width = highest_density * this.style_config.options.node_size
         let height = this.layer_count * this.style_config.options.layer_height
 
         let coords = {}
@@ -969,7 +980,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
     }
 
     change_radius() {
-        this._layout_manager.toolbar_plugin.layout_modification_element.update_current_style(this)
+        this._layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(this)
         let coords = d3.mouse(this.selection.node())
         let offset_x = (this.drag_start_info.start_coords[1] - coords[1]) * this._layout_manager.viewport.last_zoom.k
         this.style_config.options.radius = parseInt(Math.min(500, Math.max(10, this.drag_start_info.options.radius + offset_x)))
@@ -979,7 +990,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
     }
 
     change_degree() {
-        this._layout_manager.toolbar_plugin.layout_modification_element.update_current_style(this)
+        this._layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(this)
         let coords = d3.mouse(this.selection.node())
 
         let offset_x = (this.drag_start_info.start_coords[1] - coords[1]) * 2 * this._layout_manager.viewport.last_zoom.k
@@ -1082,7 +1093,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
             this._vertices.push([force.fx, force.fy])
 
             force.use_transition = this.use_transition
-            force.text_positioning = (selection, radius)=>selection.attr("transform", "translate(3,10) rotate(45)")
+            force.text_positioning = (selection, radius)=>selection.attr("transform", "translate("+(radius)+","+(radius+4)+") rotate(45)")
             force.hide_node_link = true
             node.force = -500
         }

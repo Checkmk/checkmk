@@ -32,6 +32,7 @@ import cmk
 import cmk.utils.store as store
 from cmk.gui import sites
 from cmk.gui.globals import html
+from cmk.gui.i18n import _
 import cmk.gui.watolib as watolib
 import cmk.gui.bi as bi
 import cmk.gui.config as config
@@ -47,9 +48,10 @@ def _bi_map():
     html.div("", id=div_id)
     html.javascript(
         "node_instance = new cmk.node_visualization.BIVisualization(%s);" % json.dumps(div_id))
+
+    html.javascript("node_instance.set_theme(%s)" % html.get_theme())
     html.javascript("node_instance.show_aggregations(%s, %s)" % (json.dumps([aggr_name]),
                                                                  json.dumps(layout_id)))
-    html.bottom_footer()
 
 
 @page_registry.register_page("ajax_fetch_aggregation_data")
@@ -82,13 +84,18 @@ class AjaxFetchAggregationData(AjaxPage):
                 if aggr_name in aggregation_layouts:
                     data["use_layout_id"] = aggr_name
                     data["use_layout"] = aggregation_layouts[aggr_name]
+                    data["layout_origin"] = _("Explicit set")
                 else:
                     template_layout_id = row["tree"]["aggr_tree"]["use_layout_id"]
-                    if template_layout_id:
+                    if template_layout_id and template_layout_id in BILayoutManagement.get_all_bi_template_layouts(
+                    ):
                         data["use_layout"] = BILayoutManagement.load_bi_template_layout(
                             template_layout_id)
+                        data["layout_origin"] = _("Template: %s" % template_layout_id)
                     else:
                         data["use_default_layout"] = config.default_bi_layout
+                        data["layout_origin"] = _(
+                            "Default layout: %s" % config.default_bi_layout.title())
 
             aggregation_info["aggregations"][row["tree"]["aggr_name"]] = data
 
@@ -108,18 +115,13 @@ class NodeVisualizationBIDataMapper(object):
         if len(treestate) == 4:
             node_data["node_type"] = "bi_aggregator"
             state_info, _assumed_state, node, subtrees = treestate
-            if "rule_id" in node:
-                node_data["rule_id"] = {
-                    "pack": node["rule_id"][0],
-                    "rule": node["rule_id"][1],
-                    "function": node["rule_id"][2]
-                }
-            else:
-                node_data["rule_id"] = {
-                    "pack": "pack_missing",
-                    "rule": "rule_id_missing",
-                    "function": "worst"
-                }
+            node_data["rule_id"] = {
+                "pack": node["rule_id"][0],
+                "rule": node["rule_id"][1],
+                "function": node["rule_id"][2]
+            }
+            if "aggregation_id" in node:
+                node_data["aggregation_id"] = node["aggregation_id"]
         else:
             state_info, _assumed_state, node = treestate
             node_data["node_type"] = "bi_leaf"

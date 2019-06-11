@@ -140,6 +140,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
                                                     .style("top", "0px")
                                                     .style("left", "0px")
                                                     .style("pointer-events", "none")
+                                                    .style("overflow", "hidden")
                                                     .attr("id", "div_content")
 
         this.svg_layers_selection = this.svg_content_selection.append("g").attr("id", "svg_layers")
@@ -163,7 +164,8 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
 
     _load_layers() {
         this._add_layer(new node_visualization_viewport_layers.LayeredRuleIconOverlay(this))
-        this._add_layer(new node_visualization_viewport_layers.LayeredTranslationInfoLayer(this))
+
+        this._add_layer(new node_visualization_viewport_layers.LayeredDebugLayer(this))
 
         this.layout_manager = new node_visualization_layouting.LayoutManagerLayer(this)
         this._add_layer(this.layout_manager)
@@ -293,8 +295,6 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
 
         if (this._chunks_changed)
             this.layout_manager.layout_applier.apply_all_layouts(this.data_to_show.use_layout)
-
-        this.layout_manager.toolbar_plugin.fetch_all_layouts()
     }
 
     _consume_chunk_rawdata(chunk_rawdata) {
@@ -308,6 +308,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         //                       automatically computed out of the hierarchy layout
         //   layout:             active_layout
         //   use_default_layout: fallback layout to use in case no specific layout is set
+        //   layout_origin:      explicit set, based on template, generic
         // }
         let chunk = {}
 
@@ -331,6 +332,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
             chunk.use_layout = chunk_rawdata.use_layout
         else if (chunk_rawdata.use_default_layout)
             chunk.use_default_layout = chunk_rawdata.use_default_layout
+        chunk.layout_origin = chunk_rawdata.layout_origin
 
         chunk.id = chunk.nodes[0].data.id
 
@@ -404,10 +406,10 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         if (this._node_chunk_list.length == 0)
             return
 
-        console.log("number of chunks", this._node_chunk_list.length)
+//        console.log("number of chunks", this._node_chunk_list.length)
         let partition_hierarchy = {name: "root", children: []}
         this._node_chunk_list.forEach(chunk=>{
-            console.log("chunk size ", chunk.nodes.length)
+//            console.log("chunk size ", chunk.nodes.length)
             partition_hierarchy.children.push({name: chunk.nodes[0].data.id,
                                                value: chunk.nodes.length})
         })
@@ -434,7 +436,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
                     spawn_coords.x = node.parent.x
                     spawn_coords.y = node.parent.y
                 } else
-                    spawn_coords = coords
+                    spawn_coords = {x: coords.width/2, y: coords.height/2}
 
                 node.x = spawn_coords.x + Math.cos(rad) * (30+rad*4)
                 node.y = spawn_coords.y + Math.sin(rad) * (30+rad*4)
@@ -488,7 +490,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
                     old_node_coords[node.data.id] = {x: node.x, y: node.y}
                 })
 
-                if (this.layout_manager.edit_layout)
+                if (!this.layout_manager.allow_layout_updates)
                     new_chunk.layout = existing_chunk.layout
 
                 new_chunk.coords = existing_chunk.coords

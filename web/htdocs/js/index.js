@@ -102,5 +102,6 @@ export default {
         graphs: graphs,
         dashboard: dashboard,
         node_visualization: node_visualization,
+        d3: d3,
     }
 };

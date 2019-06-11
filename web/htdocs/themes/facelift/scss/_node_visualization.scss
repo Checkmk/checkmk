@@ -12,11 +12,11 @@
     bottom: 0px;
     left: 0px;
     right: 0px;
+    background: ghostwhite;
 }
 
 div.node_vis #viewport {
     position: absolute;
-    background: ghostwhite;
     width: 100%;
     height: 100%;
 }
@@ -95,44 +95,38 @@ div.node_vis #available_layouts {
     width: 180px;
 }
 
-div.node_vis div#toolbar_layouting {
+div.node_vis div#layouting_toolbar {
     position: absolute;
-    padding: 12px;
     top: 12px;
     right: 12px;
-    width: 300px;
+    width: 340px;
     overflow: hidden;
 }
 
-div.node_vis div.toolbar_layout_options {
-    position: absolute;
-    top: 334px;
-    right: 12px;
-    width: 300px;
+div.node_vis div#layout_management{
+    margin: 3px;
+    padding: 12px;
+    padding-top: 0px;
+}
+
+div.node_vis div#overlay_management{
+    margin: 3px;
+    margin-top: 12px;
+    padding: 12px;
+    padding-top: 0px;
+}
+
+div.node_vis div#style_management{
+    margin: 3px;
+    margin-top: 12px;
+    padding: 12px;
+    padding-top: 0px;
     overflow: hidden;
-}
-
-
-div.node_vis div#toolbar_layouting .layouts {
-    float: right;
-}
-
-div.node_vis #layout_chooser {
-    margin: auto;
 }
 
 div.node_vis #matcher_config {
     margin-top: 12px;
     margin-left: 6px;
-}
-
-div.node_vis #toolbar_modify_layout {
-    padding: 12px;
-}
-
-div.node_vis #toolbar_modify_layout .button {
-    margin-top: unset;
-    margin-bottom: unset;
 }
 
 div.node_vis input[type="checkbox"] {
@@ -151,14 +145,8 @@ div.node_vis .delete_icon {
 }
 
 
-/* details */
-div.node_vis div#detailsbox{
-    position: absolute;
-    z-index: 10000;
-    top: -70px;
-    left: 300px;
-    right: -6px;
-    bottom: -6px;
+div.node_vis .node_element {
+    cursor: pointer;
 }
 
 div.node_vis g.edit .node_element circle.style_root_node,
@@ -218,7 +206,7 @@ line.dashed, path.dashed{
 }
 
 .zoom {
-  cursor: move2
+  cursor: move2;
   fill: none;
   pointer-events: all;
 }
@@ -236,7 +224,7 @@ line.dashed, path.dashed{
 
 #togglebox_choices {
   position: absolute;
-  left: 675px;
+  left: 380px;
   top: 12px;
 }
 
@@ -249,7 +237,7 @@ div.node_vis .togglebox {
 }
 
 div.node_vis .togglebox.enabled{
-  background: cornsilk;
+  background: gold;
 }
 
 
@@ -264,7 +252,6 @@ div.node_vis li div:hover {
 
 /* Style indicators */
 text.style_indicator {
-    x: 20;
     font-size: 20px;
     font-weight: bold;
 }
@@ -287,7 +274,7 @@ div.node_vis input.range {
 
 
 div.node_vis div.quickinfo {
-    min-width: 400px;
+    min-width: 600px;
 }
 
 div.node_vis input.reset_options {
@@ -296,12 +283,13 @@ div.node_vis input.reset_options {
 
 div.node_vis #reset_pan_and_zoom{
     position: absolute;
-    right: 342px;
+    right: 356px;
     top: 12px;
 }
 
 div.node_vis #translation_infobox{
     position: absolute;
+    width: 200px;
     right: 342px;
     top: 50px;
 }

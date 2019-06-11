@@ -41,7 +41,6 @@ custom notification       manueller Alarm
 custom notification table Benutzer-Alarmtabelle
 custom variable           Benutzervariable
 daily build               Tagesversion
-daily build               Tagesversion
 dashboard                 Dashboard - Übersicht
 dashlet                   (Übersichts-) Element, Element in der Übersicht
 deploy                    ausrollen
@@ -63,7 +62,7 @@ local check               lokaler Check
 log file                  Logdatei
 lower level               Untergrenze
 Master Control            Hauptsteuerung
-match (rule)              greifen, zulassen
+match (rule)              matchen, greifen, zulassen
 match foobar              Foobar matchen
 match group               Matchgruppe (bei Regex match)
 match option              Regelbedingung
@@ -98,7 +97,7 @@ soft state                weicher Zustand (hat hier einer eine bessere Idee?)
 stale                     veraltet
 suspend                   anhalten
 system uptime             Systemlaufzeit
-tablesspace               Tablesspace
+tablespace                Tablesspace
 tag                       Merkmal (host tag)
 timeperiod                Zeitperiode
 topic                     Thema

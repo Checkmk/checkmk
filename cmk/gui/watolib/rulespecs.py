@@ -357,7 +357,7 @@ def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
         sub_group_title = group_title or sub_group_name
 
         # group_name could contain non alphanumeric characters
-        internal_sub_group_name = re.sub('[^a-zA-Z]', '', sub_group_name)
+        internal_sub_group_name = str(re.sub('[^a-zA-Z]', '', sub_group_name))
 
         main_group_class = get_rulegroup(main_group_name).__class__
         return type(

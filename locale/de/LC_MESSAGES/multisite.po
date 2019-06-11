@@ -776,7 +776,7 @@ msgstr "10+ Änderungen"
 
 #, python-format
 msgid "100% is all cores at full load"
-msgstr ""
+msgstr "100% heißt: alle Kerne bei Volllast"
 
 msgid "10x14"
 msgstr "10x14"
@@ -1964,38 +1964,36 @@ msgid "AWS/CE Costs and Usage"
 msgstr "% benutzt"
 
 msgid "AWS/Cloudwatch Alarms Limits"
-msgstr ""
+msgstr "Grenzwerte von AWS/Cloudwatch Alarme"
 
 msgid "AWS/EBS Burst Balance"
-msgstr ""
+msgstr "AWS/EBS Burst-Balance"
 
-#, fuzzy
 msgid "AWS/EBS Limits"
-msgstr "MSSQL Statistiken"
+msgstr "AWS/EBS GrenzwerteELB"
 
 msgid "AWS/EC2 CPU Credits"
-msgstr ""
+msgstr "AWS/EC2 CPU Guthaben"
 
 msgid "AWS/EC2 Limits"
-msgstr ""
+msgstr "AWS/EC2-Grenzwerte"
 
 #, fuzzy
 msgid "AWS/ELB Backend Connection Errors"
 msgstr "Varnish Backend Verbindungen"
 
 msgid "AWS/ELB HTTP Errors"
-msgstr ""
+msgstr "AWS/ELB HTTP Fehler"
 
 msgid "AWS/ELB Healthy Hosts"
-msgstr ""
+msgstr "Gesunde AWS/ELB Hosts"
 
 #, fuzzy
 msgid "AWS/ELB Latency"
 msgstr "Verarbeitungsdauer"
 
-#, fuzzy
 msgid "AWS/ELB Limits"
-msgstr "Verarbeitungsdauer"
+msgstr "AWS/ELB Grenzwerte"
 
 #, fuzzy
 msgid "AWS/ELB Statistics"
@@ -2005,23 +2003,20 @@ msgstr "MSSQL Statistiken"
 msgid "AWS/ELBv2 LCU"
 msgstr "Verarbeitungsdauer"
 
-#, fuzzy
 msgid "AWS/ELBv2 Limits"
-msgstr "Verarbeitungsdauer"
+msgstr "AWS/ELBv2 Grenzwerte"
 
 msgid "AWS/RDS CPU Credits"
 msgstr "AWS/RDS CPU Credits"
 
-#, fuzzy
 msgid "AWS/RDS Connections"
-msgstr "MSSQL Verbindungen"
+msgstr "AWS/RDS-Verbindungen"
 
 msgid "AWS/RDS Disk Usage"
 msgstr "AWS/RDS Festplattennutzung"
 
-#, fuzzy
 msgid "AWS/RDS Limits"
-msgstr "AWS/RDS CPU Credits"
+msgstr "AWS/RDS Grenzwerte"
 
 msgid "AWS/RDS Replica lag"
 msgstr "AWS/RDS Replica lag"
@@ -2035,13 +2030,11 @@ msgstr "AWS/S3 Bucket-Anforderungen"
 msgid "AWS/S3 Buckets"
 msgstr "AWS/S3 Buckets"
 
-#, fuzzy
 msgid "AWS/S3 Latency"
-msgstr "Verarbeitungsdauer"
+msgstr "AWS/S3 Latenzzeit"
 
-#, fuzzy
 msgid "AWS/S3 Limits"
-msgstr "Verarbeitungsdauer"
+msgstr "AWS/S3 Grenzwerte"
 
 msgid "Abort"
 msgstr "Abbruch"
@@ -2509,9 +2502,8 @@ msgstr "Aktive SSL-Proxy-Sitzungen"
 msgid "Active Sessions"
 msgstr "Aktive Sitzungen"
 
-#, fuzzy
 msgid "Active Spot Fleet Requests"
-msgstr "Fehlgeschlagene Dateianfragen"
+msgstr "Aktive Spot-Fleet-Anfragen"
 
 msgid "Active TCP Sessions"
 msgstr "Aktive TCP-Sitzungen"
@@ -2815,9 +2807,8 @@ msgstr "Aktion hinzufügen"
 msgid "Add new scalar"
 msgstr "Neue Konstante hinzufügen"
 
-#, fuzzy
 msgid "Add new tag"
-msgstr "Neue Zeit hinzufügen"
+msgstr "Neuen Tag hinzufügen"
 
 msgid "Add new time"
 msgstr "Neue Zeit hinzufügen"
@@ -4013,9 +4004,8 @@ msgstr "Überschreitung des Port Limits bei Allokationsanfragen"
 msgid "Allocated space"
 msgstr "Belegter Platz"
 
-#, fuzzy
 msgid "Allocated storage"
-msgstr "Belegter Platz"
+msgstr "Zugewiesener Speicher"
 
 msgid "Allow access via TCP"
 msgstr "Zugriff über TCP erlauben"
@@ -4549,27 +4539,23 @@ msgstr "Anwendung (regulärer Ausdruck)"
 msgid "Application / Syslog-Tag"
 msgstr "Anwendung/Syslog Tag"
 
-#, fuzzy
 msgid "Application Load Balancer Listeners"
-msgstr "F5 Loadbalancer-Pools"
+msgstr "Application Load Balancer Listener"
 
-#, fuzzy
 msgid "Application Load Balancer Rules"
-msgstr "Anwendungslogs"
+msgstr "Application Load Balancer Regeln"
 
 msgid "Application Load Balancer Target Groups"
-msgstr ""
+msgstr "Application Load Balancer Zielgruppen"
 
-#, fuzzy
 msgid "Application Load balancer Certificates"
-msgstr "Anwendungen, Prozesse & Services"
+msgstr "Application Load Balancer Zertifikate"
 
-#, fuzzy
 msgid "Application Load balancers"
-msgstr "Anwendungslogs"
+msgstr "Application Load Balancer"
 
 msgid "Application and Network Load Balancing (ELBv2)"
-msgstr ""
+msgstr "Anwendungs- und Netzwerklastausgleich (ELBv2)"
 
 msgid "Application name"
 msgstr "Name der Anwendung"
@@ -4987,9 +4973,8 @@ msgstr "Authentifizierungsfehler. Unzureichende Berechtigung für '%s'"
 msgid "Authorization settings"
 msgstr "Einstellungen zur Berechtigung"
 
-#, fuzzy
 msgid "Authorizations per DB security group"
-msgstr "Einstellungen zur Berechtigung"
+msgstr "Berechtigungen pro DB-Sicherheitsgruppe"
 
 msgid "Authorized sites"
 msgstr "Berechtigte Instanzen"
@@ -5446,9 +5431,8 @@ msgstr "Zurück zur Ansicht und Checkboxen zurücksetzen"
 msgid "Backend Conn. %s"
 msgstr "Backend-Verbindung %s"
 
-#, fuzzy
 msgid "Backend connection errors"
-msgstr "Geblockte Verbindungen"
+msgstr "Fehler bei der Backend-Verbindung"
 
 msgid "Background Job"
 msgstr "Hintergrund-Prozess"
@@ -5666,9 +5650,8 @@ msgstr "Bester Status"
 msgid "Bike"
 msgstr "Rad"
 
-#, fuzzy
 msgid "Bin Log Disk Usage"
-msgstr "Logmeldungen"
+msgstr "Verwendung der Bin-Log-Festplatte"
 
 msgid "Binaries"
 msgstr "Ausführbare Programme"
@@ -5712,9 +5695,8 @@ msgstr "Blockgeräte"
 msgid "Block storage name"
 msgstr "Paketname:"
 
-#, fuzzy
 msgid "Block store snapshots"
-msgstr "Sicherung %s wiederhergestellt"
+msgstr "Schnappschüsse aus dem Blockspeicher"
 
 msgid "Blocked Packages/s"
 msgstr "Geblockte Pakete/s"

@@ -132,8 +132,8 @@ def InterProcessLock(filename):
         print "[%0.2f] Have lock: %s" % (time.time(), filename)
         yield
         fcntl.flock(fd, fcntl.LOCK_UN)
-        print "[%0.2f] Released lock: %s" % (time.time(), filename)
     finally:
+        print "[%0.2f] Released lock: %s" % (time.time(), filename)
         if fd:
             os.close(fd)
 

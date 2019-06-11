@@ -44,7 +44,6 @@ module.exports = {
                     }
                 }
             },
-
             // needed for theme CSS files
             {
                 test: /\.scss$/,

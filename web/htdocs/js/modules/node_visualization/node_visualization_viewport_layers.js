@@ -3,26 +3,24 @@ import * as node_visualization_viewport_utils from "node_visualization_viewport_
 import * as node_visualization_utils from "node_visualization_utils"
 import * as node_visualization_layout_styles from "node_visualization_layout_styles"
 
-export class LayeredTranslationInfoLayer extends node_visualization_viewport_utils.LayeredLayerBase {
+export class LayeredDebugLayer extends node_visualization_viewport_utils.LayeredLayerBase {
     id() {
-        return "translation_info"
+        return "debug_layer"
     }
 
     name() {
-        return "Translation Info"
+        return "Debug Layer"
     }
 
     setup() {
         this.overlay_active = false
-        this.translation_info = this.div_selection.append("div").attr("id", "translation_infobox")
     }
 
     update_gui() {
-        this.translation_info.selectAll("td#Simulation").text("Alpha: " + this.viewport.layout_manager.force_style.simulation.alpha().toFixed(3) +
-                                        " Tick("+node_visualization_layout_styles.tick_count+"): " + node_visualization_layout_styles.tick_duration)
+//        this.translation_info.selectAll("td#Simulation").text("Alpha: " + this.viewport.layout_manager.force_style.simulation.alpha().toFixed(3) +
+//                                        " Tick("+node_visualization_layout_styles.tick_count+"): " + node_visualization_layout_styles.tick_duration)
 
-
-        this._update_chunk_boundaries()
+//        this._update_chunk_boundaries()
         if (this.overlay_active == this.viewport.layout_manager.edit_layout)
             return
 
@@ -35,6 +33,7 @@ export class LayeredTranslationInfoLayer extends node_visualization_viewport_uti
     _update_chunk_boundaries() {
         if (!this.viewport.layout_manager.edit_layout) {
             this.selection.selectAll("rect.boundary").remove()
+            return
         }
 
         let boundary_list = []
@@ -63,28 +62,28 @@ export class LayeredTranslationInfoLayer extends node_visualization_viewport_uti
 
 
     enable_overlay() {
-
+        this.overlay_active = true
         this.anchor_info = this.selection.append("g").attr("transform", "translate(-50,-50)")
-        this.anchor_info.append("rect")
-            .attr("id", "horizontal")
-            .attr("x", -50)
-            .attr("height", 2)
-            .attr("fill", "black")
-        this.anchor_info.append("rect")
-            .attr("id", "vertical")
-            .attr("y", -50)
-            .attr("width", 2)
-            .attr("fill", "black")
-
-        this.anchor_info.append("text")
-            .attr("id", "horizontal_text")
-            .attr("x", -50)
-            .attr("y", -2)
-
-        this.anchor_info.append("text")
-            .attr("id", "vertical_text")
-            .attr("x", 2)
-            .attr("y", -42)
+//        this.anchor_info.append("rect")
+//            .attr("id", "horizontal")
+//            .attr("x", -50)
+//            .attr("height", 2)
+//            .attr("fill", "black")
+//        this.anchor_info.append("rect")
+//            .attr("id", "vertical")
+//            .attr("y", -50)
+//            .attr("width", 2)
+//            .attr("fill", "black")
+//
+//        this.anchor_info.append("text")
+//            .attr("id", "horizontal_text")
+//            .attr("x", -50)
+//            .attr("y", -2)
+//
+//        this.anchor_info.append("text")
+//            .attr("id", "vertical_text")
+//            .attr("x", 2)
+//            .attr("y", -42)
 
         this.div_selection.append("input")
             .style("pointer-events", "all")
@@ -98,47 +97,47 @@ export class LayeredTranslationInfoLayer extends node_visualization_viewport_uti
             .duration(node_visualization_utils.DefaultTransition.duration())
             .style("opacity", 1)
 
-        this.div_selection.append("input")
-            .style("pointer-events", "all")
-            .attr("id", "reset_pan_and_zoom")
-            .attr("type", "button")
-            .classed("button", true)
-            .attr("value", "Stop simulation")
-            .on("click", ()=>{
-                this.viewport.layout_manager.force_style.simulation.alpha(0)
-            })
-            .style("opacity", 0)
-            .transition()
-            .duration(node_visualization_utils.DefaultTransition.duration())
-            .style("opacity", 1)
+//        this.div_selection.append("input")
+//            .style("pointer-events", "all")
+//            .attr("id", "reset_pan_and_zoom")
+//            .attr("type", "button")
+//            .classed("button", true)
+//            .attr("value", "Stop simulation")
+//            .on("click", ()=>{
+//                this.viewport.layout_manager.force_style.simulation.alpha(0)
+//            })
+//            .style("opacity", 0)
+//            .transition()
+//            .duration(node_visualization_utils.DefaultTransition.duration())
+//            .style("opacity", 1)
 
 
 
         this.viewport.selection.on("mousemove.translation_info", ()=>this.mousemove())
-        let rows = this.translation_info.append("table").selectAll("tr").data(["Zoom", "Mouse", "Simulation", "Transform"])
+        let rows = this.div_selection.append("table")
+                    .attr("id", "translation_infobox")
+                    .selectAll("tr").data(["Zoom", "Panning", "Mouse"])
         let rows_enter = rows.enter().append("tr")
         rows_enter.append("td").text(d=>d).classed("noselect", true)
         rows_enter.append("td").attr("id", d=>d).classed("noselect", true)
-
-        this.overlay_active = true
         this.size_changed()
         this.zoomed()
     }
 
     disable_overlay() {
+        this.overlay_active = false
         this.selection.selectAll("*").transition().duration(node_visualization_utils.DefaultTransition.duration()).attr("opacity", 0).remove()
         this.div_selection.selectAll("*").transition().duration(node_visualization_utils.DefaultTransition.duration()).style("opacity", 0).remove()
         this.viewport.selection.on("mousemove.translation_info", null)
-        this.overlay_active = false
     }
 
     size_changed() {
         if (!this.overlay_active)
             return
-        this.anchor_info.select("#horizontal").attr("width", this.viewport.width + 50)
-        this.anchor_info.select("#vertical").attr("height", this.viewport.height + 50)
-        this.anchor_info.select("#horizontal_text").text(parseInt(this.viewport.width) + "px")
-        this.anchor_info.select("#vertical_text").text(parseInt(this.viewport.height) + "px")
+//        this.anchor_info.select("#horizontal").attr("width", this.viewport.width + 50)
+//        this.anchor_info.select("#vertical").attr("height", this.viewport.height + 50)
+//        this.anchor_info.select("#horizontal_text").text(parseInt(this.viewport.width) + "px")
+//        this.anchor_info.select("#vertical_text").text(parseInt(this.viewport.height) + "px")
     }
 
     reset_pan_and_zoom() {
@@ -154,16 +153,16 @@ export class LayeredTranslationInfoLayer extends node_visualization_viewport_uti
         if (!this.overlay_active)
             return
         this.anchor_info.attr("transform", this.viewport.last_zoom)
-        this.translation_info.selectAll("td#Zoom").text(this.viewport.last_zoom.k.toFixed(3))
-        this.translation_info.selectAll("td#Transform").text(this.viewport.last_zoom)
+        this.div_selection.selectAll("td#Zoom").text(this.viewport.last_zoom.k.toFixed(2))
+        this.div_selection.selectAll("td#Panning").text("X: "+parseInt(this.viewport.last_zoom.x) +
+                                                        " / Y:"+parseInt(this.viewport.last_zoom.y))
     }
 
     mousemove() {
         let coords = d3.mouse(this.anchor_info.node())
-        this.translation_info.selectAll("td#Mouse").text("X("+parseInt(coords[0])+ ") Y("+parseInt(coords[1])+")")
+        this.div_selection.selectAll("td#Mouse").text("X:"+parseInt(coords[0])+ " / Y:"+parseInt(coords[1]))
     }
 }
-
 
 export class LayeredRuleIconOverlay extends node_visualization_viewport_utils.LayeredOverlayBase {
     id() {
@@ -514,10 +513,10 @@ class AbstractGUINode {
         let ack = []
         if (this.node.data.acknowledged)
             ack.push(null)
-        let ack_selection = this.selection.selectAll("svg.acknowledged").data(ack)
+        let ack_selection = this.selection.selectAll("image.acknowledged").data(ack)
         ack_selection.enter().append("svg:image")
                 .classed("acknowledged", true)
-                .attr("xlink:href", "themes/facelift/images/icon_ack.png")
+                .attr("xlink:href", this.viewport.main_instance.get_theme_prefix() + "/images/icon_ack.png")
                 .attr("x", -24)
                 .attr("y", this.radius - 8)
                 .attr("width", 24)
@@ -527,9 +526,10 @@ class AbstractGUINode {
         let in_dt = []
         if (this.node.data.in_downtime)
             in_dt.push(null)
-        let dt_selection = this.selection.selectAll("svg.in_downtime").data(in_dt)
+        let dt_selection = this.selection.selectAll("image.in_downtime").data(in_dt)
         dt_selection.enter().append("svg:image")
-                .attr("xlink:href", "themes/facelift/images/icon_downtime.png")
+                .classed("in_downtime", true)
+                .attr("xlink:href", this.viewport.main_instance.get_theme_prefix() + "/images/icon_downtime.png")
                 .attr("x", 0)
                 .attr("y", this.radius - 8)
                 .attr("width", 24)
@@ -567,8 +567,15 @@ class AbstractGUINode {
 
         let text_positioning = this.node.data.current_positioning.text_positioning
         if (text_positioning) {
-            this.text_selection.call(text_positioning)
+            this.text_selection.call(text_positioning, this.radius)
+        } else {
+            this.text_selection.call((selection)=>this._default_text_positioning(selection,this.radius))
         }
+    }
+
+    _default_text_positioning(selection, radius) {
+        selection.attr("transform", "translate(" + (radius+3) + "," + (radius+3) + ")")
+        selection.attr("text-anchor", "start")
     }
 
     _render_into_transform(selection) {
@@ -604,13 +611,13 @@ class AbstractGUINode {
         elements.push({text: "Details of Host", href:
                 "view.py?host=" + this.node.data.hostname +
                "&view_name=host&display_options=HLBTM",
-                img: "themes/facelift/images/icon_status.png"
+                img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.png"
         })
         if (this.node.data.service && this.node.data.service != "") {
             elements.push({text: "Details of Service", href:
                 "view.py?host=" + this.node.data.hostname + "&service=" + this.node.data.service +
                 "&view_name=service&display_options=HLBTM",
-                img: "themes/facelift/images/icon_status.png"
+                img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.png"
             })
         }
         return elements
@@ -731,7 +738,7 @@ class AbstractGUINode {
                 .append("img")
                 .classed("icon", true)
                 .classed("reloading", true)
-                .attr("src", "themes/facelift/images/load_graph.png")
+                .attr("src", this.viewport.main_instance.get_theme_prefix() + "/images/load_graph.png")
         else
             this._quickinfo_selection.selectAll(".icon.reloading").remove()
 
@@ -866,9 +873,10 @@ class BILeafNode extends AbstractGUINode {
         let view_url = null
         if ("service" in this.node.data)
             // TODO: add site to url
-            view_url = "view.py?view_name=bi_service_quickinfo&display_options=I&host=" + this.node.data.hostname + "&service=" + this.node.data.service
+            view_url = "view.py?view_name=bi_map_hover_service&display_options=I&host=" +
+                        encodeURIComponent(this.node.data.hostname) + "&service=" + encodeURIComponent(this.node.data.service)
         else
-            view_url = "view.py?view_name=bi_host_quickinfo&display_options=I&host=" + this.node.data.hostname
+            view_url = "view.py?view_name=bi_map_hover_host&display_options=I&host=" + encodeURIComponent(this.node.data.hostname)
 
         d3.html(view_url ,{credentials: "include"}).then(html=>this._got_quickinfo(html))
     }
@@ -918,18 +926,19 @@ class BIAggregatorNode extends AbstractGUINode {
 
         // Local actions
         if (!this.node.parent)
+            // This is the aggregation root node
 // TODO: provide aggregation ID (if available)
 //            elements.push({text: "Edit aggregation (Missing: You need to configure an ID for this aggregation)", href: "wato.py?mode=bi_edit_rule&id=" + this.node.data.rule_id.rule +
 //               "&pack=" + this.node.data.rule_id.pack,
-//               img: "themes/facelift/images/icon_edit.png"})
+//               img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_edit.png"})
 
             elements.push({text: "Edit aggregation", href: "wato.py?mode=bi_edit_rule&id=" + this.node.data.rule_id.rule +
                "&pack=" + this.node.data.rule_id.pack,
-               img: "themes/facelift/images/icon_edit.png"})
+               img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_edit.png"})
 
         elements.push({text: "Edit rule", href: "wato.py?mode=bi_edit_rule&id=" + this.node.data.rule_id.rule +
            "&pack=" + this.node.data.rule_id.pack,
-           img: "themes/facelift/images/icon_edit.png"})
+           img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_edit.png"})
 
         if (this.node.children != this.node._children)
             elements.push({text: "Below this node, expand all nodes", on: ()=>{d3.event.stopPropagation(); this.expand_node()}, href: "",
@@ -939,7 +948,7 @@ class BIAggregatorNode extends AbstractGUINode {
                             img: "images/icons/icons8-collapse-48.png"})
 
         elements.push({text: "Expand all nodes", on: ()=>{d3.event.stopPropagation();
-                                                                this.expand_node_including_children(this.node)
+                                                                this.expand_node_including_children(this.node.data.chunk.tree)
                                                                 this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk)
                                                                 this.viewport.update_layers()
                                                             }, href: "",
@@ -1202,9 +1211,12 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         let coords = {}
         if (node_instance) {
             node = node_instance.node
-            coords = this.viewport.translate_to_zoom({x: node.x, y: node.y})
+            coords = node
         } else {
-            coords = {x: d3.event.layerX, y: d3.event.layerY}
+            let last_zoom = this.viewport.last_zoom
+            coords = {x: (d3.event.layerX - last_zoom.x) / last_zoom.k, y: (d3.event.layerY - last_zoom.y) / last_zoom.k}
+            console.log("coords", d3.event)
+            console.log("coords", coords)
         }
 
         d3.event.preventDefault()
@@ -1214,13 +1226,11 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         this.div_selection.selectAll("#popup_menu").remove()
 
         // Create menu
-        this.popup_menu_selection = this.div_selection.selectAll("#popup_menu").data([node])
+        this.popup_menu_selection = this.div_selection.selectAll("#popup_menu").data([coords])
         this.popup_menu_selection = this.popup_menu_selection.enter().append("div")
                             .attr("id", "popup_menu")
                             .style("pointer-events", "all")
                             .style("position", "absolute")
-                            .style("left", coords.x + "px")
-                            .style("top", coords.y + "px")
                               .classed("popup_menu", true)
                             .merge(this.popup_menu_selection)
 
@@ -1293,13 +1303,12 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             return
 
         // Set position
-        let data = popup_menu.datum()
-        if (!data)
-            return
+        let old_coords = popup_menu.datum()
 
-        let coords = this.viewport.translate_to_zoom({x: data.x, y: data.y})
-        popup_menu.style("left", coords.x + "px")
-                  .style("top", coords.y + "px")
+        let new_coords = this.viewport.translate_to_zoom(old_coords)
+
+        popup_menu.style("left", new_coords.x + "px")
+                  .style("top", new_coords.y + "px")
     }
 
     remove_context_menu() {

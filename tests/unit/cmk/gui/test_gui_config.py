@@ -294,6 +294,8 @@ def test_registered_permissions():
         'view.allhosts',
         'view.allhosts_deploy',
         'view.allhosts_mini',
+        'view.bi_map_hover_host',
+        'view.bi_map_hover_service',
         'view.allservices',
         'view.api_downtimes',
         'view.comments',

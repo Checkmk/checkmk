@@ -39,13 +39,13 @@ export class DatasourceManager {
         this.datasources[datasource_class.id()] = new datasource_class()
     }
 
-    schedule() {
+    schedule(enforce) {
         let now = Math.floor(new Date().getTime()/1000);
         for (let idx in this.datasources) {
             let datasource = this.datasources[idx]
             if (datasource._enabled != true || datasource._supports_regular_updates != true)
                 continue
-            if (now - datasource._last_update > datasource.get_update_interval()) {
+            if (enforce == true || now - datasource._last_update > datasource.get_update_interval()) {
                 datasource.update_fetched_data()
             }
         }

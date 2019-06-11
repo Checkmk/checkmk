@@ -86,13 +86,15 @@ class InfoboxNodeFormatter extends AbstractInfoboxFormatter {
         let entries = data.entries
 
         let heading_info = "Matching nodes"
-        // TODO: improve formula to determine max vertical space
-        let max_entries = parseInt(this.main_instance.viewport.current_viewport.height / 28 / 10) * 10
-
-        if (entries.length > max_entries) {
-            heading_info += " (Truncated to " + max_entries + " of " + entries.length + " matches)"
-        }
         selection.append("label").text(heading_info)
+
+        // TODO: improve formula to determine max vertical space
+        let max_entries = parseInt(this.main_instance.viewport.current_viewport.height / 24 / 10) * 10
+        max_entries = Math.max(max_entries, 10)
+        if (entries.length > max_entries) {
+            selection.append("br")
+            selection.append("label").text("("+max_entries + " of " + entries.length + " matches shown)")
+        }
 
         entries = entries.slice(0,max_entries)
         let table = selection.append("table").attr("id", "rows");

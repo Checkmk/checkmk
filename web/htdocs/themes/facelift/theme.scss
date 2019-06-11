@@ -15,6 +15,7 @@
 @import "scss/_mobile.scss";
 @import "scss/_sidebar.scss";
 @import "scss/_snapins.scss";
+@import "scss/_node_visualization.scss";
 
 // CEE specific files. Would love to add some kind of conditional import here,
 // but that is simply not possible at the moment using SCSS. Hack around this

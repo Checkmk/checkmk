@@ -24,7 +24,9 @@ export class Toolbar {
                                                     .attr("id", "togglebuttons")
 
         this._setup_toolbar_plugins()
-        this._update_toolbar_plugins()
+        this.update_toolbar_plugins()
+
+        setTimeout(()=>this._toolbar_plugins["layouting_toolbar"].toggle_active(), 1000)
     }
 
     _setup_toolbar_plugins() {
@@ -39,10 +41,9 @@ export class Toolbar {
 
     add_toolbar_plugin_instance(toolbar_plugin_instance) {
         this._toolbar_plugins[toolbar_plugin_instance.id()] = toolbar_plugin_instance
-        this._update_toolbar_plugins()
     }
 
-    _update_toolbar_plugins() {
+    update_toolbar_plugins() {
         let plugin_ids = Object.keys(this._toolbar_plugins)
         plugin_ids.sort((a, b) => {
             return this._toolbar_plugins[a].sort_index < this._toolbar_plugins[b].sort_index
@@ -54,7 +55,7 @@ export class Toolbar {
             let togglebutton_selection = null
             if (plugin.has_toggle_button()) {
                 togglebutton_selection = this.plugins_togglebutton_selection.append("div")
-                                                    .attr("id", plugin_id).classed("togglebutton on up", true)
+                                                    .classed("togglebutton on up", true)
                                                         .classed("noselect", true)
                                                         .classed("box", true)
                                                         .classed("off", true)

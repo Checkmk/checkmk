@@ -37,17 +37,19 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
     constructor(viewport) {
         super(viewport)
-        this._mouse_events_overlay = new MouseEventsOverlay(this)
+        this._mouse_events_overlay = new LayoutingMouseEventsOverlay(this)
 
         // Setup layout applier and instantiate default style_force
         this.layout_applier = new LayoutApplier(this)
         this.force_style = this.layout_applier.layout_style_factory.instantiate_style_class(node_visualization_layout_styles.LayoutStyleForce)
 
         // Edit tools
-        this.edit_layout = false
+        this.edit_layout = false // Indicates whether the layout manager is active
+        this.allow_layout_updates = true // Indicates if layout updates are allowed
 
         // Instantiated styles
         this._active_styles = {}
+
     }
 
     add_active_style(style) {
@@ -75,12 +77,14 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
     show_layout_options() {
         this.edit_layout = true
+        this.allow_layout_updates = false
         this._mouse_events_overlay.update_data()
         this.viewport.selection.select("#svg_layers #nodes").classed("edit", true)
     }
 
     hide_layout_options() {
         this.edit_layout = false
+        this.allow_layout_updates = true
         this.viewport.selection.select("#svg_layers #nodes").classed("edit", false)
         this.styles_selection.selectAll(".layout_style").selectAll("*").remove()
         this.div_selection.selectAll("img").remove()
@@ -90,6 +94,7 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
     register_toolbar_plugin() {
         this.toolbar_plugin = new LayoutingToolbarPlugin(this)
         this.viewport.main_instance.toolbar.add_toolbar_plugin_instance(this.toolbar_plugin)
+        this.viewport.main_instance.toolbar.update_toolbar_plugins()
     }
 
 
@@ -98,8 +103,9 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
     }
 
     update_data() {
-        if (!this.toolbar_plugin)
+        if (!this.toolbar_plugin) {
             this.register_toolbar_plugin()
+        }
 
         this.toolbar_plugin.update_content()
         this.force_style.update_data()
@@ -111,6 +117,7 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         this.translate_layout()
         this.compute_node_positions()
         this._mouse_events_overlay.update_data()
+
     }
 
     update_gui() {
@@ -190,8 +197,8 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
     compute_node_position(node) {
         var current_positioning = {
-                "weight": 0,
-                "free": true,
+                weight: 0,
+                free: true,
         }
 
         for (var force_id in node.data.node_positioning) {
@@ -221,104 +228,117 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
             node.selection.selectAll("circle").classed("free_floating_node", current_positioning.free == true)
         }
     }
+
+    save_layout(layout) {
+        this.save_layout_template(layout)
+    }
+
+    delete_layout_id(layout_id) {
+        ajax.post_url("ajax_delete_bi_template_layout.py", "layout_id=" + encodeURIComponent(layout_id), ()=>this.toolbar_plugin.fetch_all_layouts())
+    }
+
+    save_layout_template(layout_config) {
+        ajax.post_url("ajax_save_bi_template_layout.py",
+            "layout=" + encodeURIComponent(JSON.stringify(layout_config)), ()=>this.toolbar_plugin.fetch_all_layouts())
+    }
+
+    // TODO: check parameters
+    save_layout_for_aggregation(layout_config, aggregation_name) {
+        ajax.post_url("ajax_save_bi_aggregation_layout.py",
+            "layout=" + encodeURIComponent(JSON.stringify(layout_config))+
+            "&aggregation_name=" + encodeURIComponent(aggregation_name),
+            ()=>{
+                this.viewport.main_instance.datasource_manager.schedule(true)
+                this.toolbar_plugin.fetch_all_layouts()
+            }
+        )
+    }
+
+    delete_layout_for_aggregation(aggregation_name) {
+        ajax.post_url("ajax_delete_bi_aggregation_layout.py",
+            "aggregation_name=" + encodeURIComponent(aggregation_name),
+            ()=>{
+                this.allow_layout_updates = true
+                this.viewport.main_instance.datasource_manager.schedule(true)
+                this.toolbar_plugin.fetch_all_layouts()
+            }
+        )
+    }
 }
 
 
-//#.
-//#   .-Modify Element-----------------------------------------------------.
-//#   |                   __  __           _ _  __                         |
-//#   |                  |  \/  | ___   __| (_)/ _|_   _                   |
-//#   |                  | |\/| |/ _ \ / _` | | |_| | | |                  |
-//#   |                  | |  | | (_) | (_| | |  _| |_| |                  |
-//#   |                  |_|  |_|\___/ \__,_|_|_|  \__, |                  |
-//#   |                                            |___/                   |
-//#   |                _____ _                           _                 |
-//#   |               | ____| | ___ _ __ ___   ___ _ __ | |_               |
-//#   |               |  _| | |/ _ \ '_ ` _ \ / _ \ '_ \| __|              |
-//#   |               | |___| |  __/ | | | | |  __/ | | | |_               |
-//#   |               |_____|_|\___|_| |_| |_|\___|_| |_|\__|              |
-//#   |                                                                    |
-//#   +--------------------------------------------------------------------+
-export class LayoutModificationElement {
+export class LayoutStyleConfiguration {
     constructor(toolbar_plugin) {
         this.toolbar_plugin = toolbar_plugin
         this.layout_manager = toolbar_plugin.layout_manager
-
-        this.hide_from_mathias = false
     }
 
-    show() {
-        this.selection = this.toolbar_plugin.content_selection
-                .append("div")
-                    .classed("box", true)
-                    .classed("toolbar_layout_options", true)
-                    .style("pointer-events", "all")
-                    .style("display", "none")
-                    .attr("id", "toolbar_modify_layout")
+    render_style_config(style_div_box) {
+        this.selection = style_div_box
+        let style_div = this.selection.selectAll("div#style_div").data([null])
+        style_div = style_div.enter().append("div").attr("id", "style_div").merge(style_div)
 
-        this.setup_gui_components()
-    }
+        style_div.selectAll("#styleconfig_headline").data([null]).enter().append("h2")
+                        .attr("id", "styleconfig_headline").text("Style configuration")
 
-    hide() {
-        this.toolbar_plugin.content_selection.select(".toolbar_layout_options")
-                    .transition().duration(node_visualization_utils.DefaultTransition.duration())
-                    .style("height", "0px")
-                    .remove()
 
-        this.layout_manager.viewport.selection.select("#togglebox_choices")
-                .transition()
-                .duration(node_visualization_utils.DefaultTransition.duration())
-                .style("top", null)
-    }
+        style_div.selectAll("#style_options").data([null]).enter().append("div")
+                                               .attr("id", "style_options")
+                                               .classed("noselect", true)
 
-    setup_gui_components() {
-        this.setup_style_config()
-    }
+        style_div.selectAll("#matcher_headline").data([null]).enter().append("h4")
+                        .attr("id", "matcher_headline").text("Matcher")
 
-    setup_style_config(style_config_selection) {
-        this.style_config_selection = this.selection.append("div").attr("id", "style_config")
+        style_div.selectAll("#matcher_config").data([null]).enter().append("div")
+                        .attr("id", "matcher_config")
 
-        if (!this.hide_from_mathias) {
-            this.style_config_selection.append("div").attr("id", "matcher_config")
-            this.style_config_selection.append("hr")
-        }
-
-        let current_style_group = this.style_config_selection.append("div")
-                                                 .attr("id", "current_style_group")
-                                                 .classed("noselect", true)
-        current_style_group.append("div").attr("id", "current_style")
-        current_style_group.append("div").attr("id", "style_options")
+        if (!this.current_style)
+            this.selection.style("display", "none")
     }
 
     update_current_style(style) {
         this.current_style = style
         if (!this.current_style) {
-            this.selection.style("display", "none")
+            this.selection.transition().duration(node_visualization_utils.DefaultTransition.duration())
+                .style("height", "0px")
+                .style("display", "none")
             return
         }
 
         let matcher = this.current_style.get_matcher()
         let style_options = this.current_style.get_style_options()
-        if ((this.hide_from_mathias || matcher == null) && style_options.length == 0)
+        if (matcher == null && style_options.length == 0) {
+            this.selection
+                .transition().duration(node_visualization_utils.DefaultTransition.duration())
+                .style("height", "0px")
+                .style("display", "none")
             return
+        }
 
-        this.selection.style("display", null)
-        this.update_current_style_matcher(style)
-        this.style_config_selection.select("#current_style").text(style.description() + " options")
-        this.update_current_style_options()
+        if (this.selection.style("display") == "none"){
+            this.selection.style("display", null)
+            this.selection.style("height", "0px")
+                .transition().duration(node_visualization_utils.DefaultTransition.duration())
+                .style("height", null)
+        }
+
+        this._update_current_style_options()
+        this._update_current_style_matcher(style)
     }
 
-    update_current_style_matcher() {
+    _update_current_style_matcher() {
         let matcher = this.current_style.get_matcher()
-        if (matcher == null)
+        if (!matcher) {
+            this.selection.select("#matcher_config").style("display", "none")
+            this.selection.select("#matcher_headline").style("display", "none")
             return
+        }
+        this.selection.select("#matcher_config").style("display", null)
+        this.selection.select("#matcher_headline").style("display", null)
 
-        this.selection.style("display", null)
-        let matcher_config = this.style_config_selection.select("#matcher_config")
+        let matcher_config = this.selection.select("#matcher_config")
         matcher_config.selectAll("label#matcher_headline").data([null]).enter()
-        //                        .append("label").attr("id", "matcher_headline").text("Matcher configuration (how to find the node)")
                         .append("label").attr("id", "matcher_headline").text("Assign this style to nodes matching")
-
 
 
         let matcher_table = matcher_config.selectAll("table").data([matcher])
@@ -368,14 +388,14 @@ export class LayoutModificationElement {
 
     update_matcher_condition_text(condition_id) {
         let matcher = this.current_style.get_matcher()
-        let value = this.style_config_selection.select("#matcher_text_" + condition_id).property("value")
+        let value = this.selection.select("#matcher_text_" + condition_id).property("value")
         matcher[condition_id].value = value
         this.current_style.set_matcher(matcher)
         this.layout_manager.layout_applier.apply_all_layouts()
     }
 
-    update_current_style_options() {
-        let options_selection = this.style_config_selection.select("#style_options")
+    _update_current_style_options() {
+        let options_selection = this.selection.select("#style_options")
         options_selection.selectAll("*").remove()
         this.current_style.render_options(options_selection)
     }
@@ -392,46 +412,48 @@ export class LayoutModificationElement {
 //#   +--------------------------------------------------------------------+
 export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.ToolbarPluginBase {
     id() {
-        return "layouting"
+        return "layouting_toolbar"
     }
 
     constructor(layout_manager) {
         super("Modify Layout")
         this.layout_manager = layout_manager
         this.sort_index = 0
-        this.layout_modification_element = new LayoutModificationElement(this)
+        this.layout_style_configuration = new LayoutStyleConfiguration(this)
     }
 
     render_togglebutton(selection) {
         this.togglebutton_selection.append("img")
-                        .attr("src", "themes/facelift/images/icon_aggr.png")
+                        .attr("src", this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png")
                         .attr("title", "Layout Designer")
     }
 
     enable_actions() {
         this.layout_manager.show_layout_options()
-        this.layout_modification_element.show()
 
         // TODO: update_gui instead of update_data
         this.layout_manager.update_data()
 
         this.content_selection.selectAll(".edit_mode_only").style("display", null)
-        this.content_selection.select("#toolbar_layouting")
+        this.content_selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
-                .style("height", "284px")
-                .style("left", null)
+                .style("height", null)
+
+        this.fetch_all_layouts()
     }
 
     disable_actions() {
         this.layout_manager.hide_layout_options()
-        this.layout_modification_element.hide()
         this.layout_manager.viewport.update_gui_of_layers()
         this.content_selection.selectAll(".edit_mode_only").style("display", "none")
-        this.content_selection.select("#toolbar_layouting")
+
+        this.content_selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
-                .style("height", "30px")
-                .style("left", "332px")
-        this.content_selection.select("#toolbar_layouting")
+                .style("height", "0px")
+
+//        this.content_selection.selectAll("div.box")
+//                .transition().duration(node_visualization_utils.DefaultTransition.duration())
+//                .style("height", "0px")
     }
 
     remove() {
@@ -443,28 +465,158 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     update_content() {
-        let layouting_div = this.content_selection.selectAll("div#toolbar_layouting").data([null])
-                                .classed("noselect", true)
-        if (layouting_div.empty()) {
-            layouting_div = layouting_div.enter().append("div")
-                            .attr("id", "toolbar_layouting")
-                            .classed("box", true)
-            let height = layouting_div.style("height")
-            let right = layouting_div.style("right")
-            layouting_div.style("height", "0px").transition().duration(node_visualization_utils.DefaultTransition.duration()).style("height", height)
+        if (!this.layout_manager.edit_layout)
+            return
+
+        let layouting_div = this.content_selection.selectAll("div#layout_management").data([null])
+
+        // Layout management box
+        layouting_div = layouting_div.enter().append("div").attr("id", "layout_management")
+                                    .classed("noselect", true)
+                                    .classed("box", true)
+                                .merge(layouting_div)
+        let aggr_div = layouting_div.selectAll("div#aggr_div").data([null])
+        aggr_div = aggr_div.enter().append("div").attr("id", "aggr_div").merge(aggr_div)
+        let template_div = layouting_div.selectAll("div#template_div").data([null])
+        template_div = template_div.enter().append("div").attr("id", "template_div").merge(template_div)
+
+        // Overlay management box
+        let overlay_div_box = this.content_selection.selectAll("div#overlay_management").data([null])
+        overlay_div_box = overlay_div_box.enter().append("div").attr("id", "overlay_management")
+                                    .classed("noselect", true)
+                                    .classed("box", true)
+                                .merge(overlay_div_box)
+
+
+        let overlay_div = overlay_div_box.selectAll("div#overlay_div").data([null])
+        overlay_div = overlay_div.enter().append("div").attr("id", "overlay_div").merge(overlay_div)
+
+        // Style management box
+        let style_div_box = this.content_selection.selectAll("div#style_management").data([null])
+        style_div_box = style_div_box.enter().append("div").attr("id", "style_management")
+                                    .classed("noselect", true)
+                                    .classed("box", true)
+                                .merge(style_div_box)
+
+
+
+        this._render_aggregation_configuration(aggr_div)
+        this._render_layout_management(template_div)
+        this._render_layout_overlays_configuration(overlay_div)
+        this.layout_style_configuration.render_style_config(style_div_box)
+    }
+
+    _render_aggregation_configuration(into_selection) {
+        let chunk = this.layout_manager.viewport.get_hierarchy_list()[0]
+        let aggr_name = chunk.tree.data.name
+
+        into_selection.selectAll("#aggregation_headline").data([null]).enter().append("h2")
+                        .attr("id", "aggregation_headline").text("Aggregation layout")
+
+        let table_selection = into_selection.selectAll("table#layout_settings").data([null])
+        let table_enter = table_selection.enter().append("table").attr("id", "layout_settings")
+
+        let row_enter = table_enter.append("tr")
+        row_enter.append("td").text("Name")
+        row_enter.append("td").text(aggr_name)
+
+        row_enter = table_enter.append("tr")
+        row_enter.append("td").text("Layout origin")
+        row_enter.append("td").attr("id", "layout_origin")
+
+        row_enter = table_enter.append("tr")
+        row_enter.append("td").append("input").attr("type", "button")
+            .classed("button", true)
+            .attr("value", "Use this layout")
+            .style("margin-top", null)
+            .style("margin-bottom", null)
+            .style("width", "100%")
+//            .style("padding", "12px")
+            .on("click", d=>{
+                this._save_explicit_layout_clicked()
+            })
+
+        row_enter.append("td").append("input").attr("type", "button")
+            .classed("button", true)
+            .attr("value", "Use configured template")
+            .attr("id", "remove_explicit_layout")
+            .style("margin-top", null)
+            .style("margin-bottom", null)
+            .style("width", "100%")
+            // TODO: fix this css
+            .style("margin-right", "-4px")
+            .on("click", d=>{
+                this._delete_explicit_layout_clicked()
+            })
+
+        let table = table_enter.merge(table_selection)
+        table.select("#layout_origin").text(chunk.layout_origin)
+
+        let explicit_set = chunk.layout_origin == "Explicit set"
+        table.select("input#remove_explicit_layout")
+            .classed("disabled", !explicit_set)
+            .attr("disabled", explicit_set ? null : true)
+
+    }
+
+
+    _render_layout_overlays_configuration(into_selection) {
+        into_selection.selectAll("#overlays_headline").data([null]).enter().append("h2")
+                        .attr("id", "overlays_headline").text("Layout Overlays")
+
+        let layers = this.layout_manager.viewport.get_layers()
+        let configurable_layers = []
+        for (let idx in layers) {
+            if (layers[idx].is_toggleable())
+                configurable_layers.push(layers[idx])
         }
-        layouting_div = layouting_div.merge(layouting_div)
-        this.render_layout_management(layouting_div)
-        this.render_layout_overlay_configuration(layouting_div)
+
+
+        let table_selection = into_selection.selectAll("table#overlay_configuration").data([null]).style("width", "100%")
+        let table_enter = table_selection.enter().append("table").attr("id", "overlay_configuration")
+                                                    .style("width", "100%")
+                                                    .on("change", ()=>this.overlay_options_changed())
+
+        let row_enter = table_enter.append("tr").classed("header", true)
+        row_enter.append("th").text("")
+        row_enter.append("th").text("Active")
+        row_enter.append("th").text("Configurable")
+
+        let table = table_enter.merge(table_selection)
+
+        // TODO: fixme
+        table.selectAll(".configurable_overlay").remove()
+        let current_overlay_config = this.layout_manager.layout_applier.current_layout_group.overlay_config
+        let rows = table.selectAll("tr.configurable_overlay").data(configurable_layers)
+        let rows_enter = rows.enter().append("tr").classed("configurable_overlay", true)
+
+        rows_enter.append("td").text(d=>d.name()).classed("noselect", true)
+        let elements = ["active", "configurable"]
+        for (let idx in elements) {
+            let element = elements[idx]
+            rows_enter.append("td")
+                .style("text-align", "center")
+              .append("input")
+                .attr("option_id", d=>element)
+                .attr("overlay_id", d=>d.id())
+                .attr("type", "checkbox")
+              .merge(rows_enter)
+                .property("checked", d=>{
+                    if (!current_overlay_config[d.id()])
+                        return false
+                    return current_overlay_config[d.id()][element]
+                })
+        }
     }
 
     fetch_all_layouts() {
-        d3.json("ajax_get_all_bi_templates.py", {credentials: "include"}).then((json_data) => this.update_available_layouts(json_data.result))
+        d3.json("ajax_get_all_bi_template_layouts.py", {credentials: "include"}).then((json_data)=>this.update_available_layouts(json_data.result))
     }
 
     update_available_layouts(layouts) {
         this.layout_manager.layout_applier.layouts = layouts
         let choices = Object.keys(layouts)
+//        console.log("update layouts " + choices)
 
         choices.sort()
         let choice_selection = this.content_selection.select("#available_layouts")
@@ -485,57 +637,11 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     layout_changed_callback() {
         let selected_id = d3.event.target.value
         this.layout_manager.layout_applier.apply_layout_id(selected_id)
+        this.layout_style_configuration.update_current_style()
         this.layout_manager.viewport.update_active_overlays()
         this.content_selection.select("#layout_name").property("value", selected_id)
         this.update_content()
-
         this.update_save_layout_button()
-    }
-
-    render_layout_overlay_configuration(into_selection) {
-        let layers = this.layout_manager.viewport.get_layers()
-        let configurable_layers = []
-        for (let idx in layers) {
-            if (layers[idx].is_toggleable())
-                configurable_layers.push(layers[idx])
-        }
-
-        let table = into_selection.selectAll("div#overlay_configuration table").data([null])
-        table = table.enter().append("div")
-                        .classed("edit_mode_only", true)
-                        .attr("id", "overlay_configuration")
-                        .on("change", ()=>this.overlay_options_changed())
-                      .append("table").merge(table)
-
-        let tr_header = table.selectAll("tr.header").data([null])
-        let th_enter = tr_header.enter().append("tr").classed("header", true)
-        th_enter.append("th").text("Name")
-        th_enter.append("th").text("Active")
-        th_enter.append("th").text("Configurable")
-
-
-        // TODO: fixme
-        table.selectAll(".configurable_overlay").remove()
-        let current_overlay_config = this.layout_manager.layout_applier.current_layout_group.overlay_config
-        let rows = table.selectAll("tr.configurable_overlay").data(configurable_layers)
-        let rows_enter = rows.enter().append("tr").classed("configurable_overlay", true)
-
-        rows_enter.append("td").text(d=>d.name()).classed("noselect", true)
-        let elements = ["active", "configurable"]
-        for (let idx in elements) {
-            let element = elements[idx]
-            rows_enter.append("td").append("input")
-                .attr("option_id", d=>element)
-                .attr("overlay_id", d=>d.id())
-                .attr("type", "checkbox")
-              .merge(rows_enter)
-                .property("checked", d=>{
-                    if (!current_overlay_config[d.id()])
-                        return false
-                    return current_overlay_config[d.id()][element]
-                })
-        }
-//        rows_enter.append("td").text("Work in progress")
     }
 
     overlay_options_changed() {
@@ -550,96 +656,56 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         this.layout_manager.viewport.update_active_overlays()
     }
 
-    render_layout_management(into_selection) {
+    _render_layout_management(into_selection) {
         let table = into_selection.selectAll("table#layout_management").data([null])
 
-        if (table.empty()) {
-            table = table.enter().append("table").attr("id", "layout_management")
-            let row = table.append("tr")
-//            row.append("td").text("Current")
+        into_selection.selectAll("#template_headline").data([null]).enter().append("h2")
+                        .attr("id", "template_headline").text("Layout templates")
 
-            let td = row.append("td").attr("id", "available_layouts")
-            this.add_dropdown_choice(td, [], null, () => this.layout_changed_callback())
-            row.append("td").classed("edit_mode_only", true).append("input").attr("type", "button")
-                               .classed("button", true)
-                               .style("width", "100%")
-                               .attr("value", "Delete template")
-                               .on("click", d=>{
-                                    let selected_layout = this.content_selection.select("#available_layouts").select("select").property("value")
-                                    if (!selected_layout)
-                                       return
-                                    this.layout_manager.layout_applier.delete_layout_id(selected_layout)
-                                    setTimeout(()=>this.fetch_all_layouts(), 500)
-                                })
+        let table_selection = into_selection.selectAll("table#template_configuration").data([null])
+        let table_enter = table_selection.enter().append("table").attr("id", "template_configuration")
 
-            table.append("tr").classed("edit_mode_only", true).append("td").attr("colspan", 2).append("hr")
+        // Dropdown choice and delete button
+        let row_enter = table_enter.append("tr")
+        let td_enter = row_enter.append("td").attr("id", "available_layouts")
+        this.add_dropdown_choice(td_enter, [], null, () => this.layout_changed_callback())
+        row_enter.append("td").append("input")
+                            .attr("type", "button")
+                            .classed("button", true)
+                            .style("width", "100%")
+                            .attr("value", "Delete template")
+                            .on("click", d=>{
+                                let selected_layout = this.content_selection.select("#available_layouts").select("select").property("value")
+                                if (!selected_layout)
+                                   return
+                                this.layout_manager.delete_layout_id(selected_layout)
+                            })
 
-            row = table.append("tr").classed("edit_mode_only", true)
-//            row.append("td").text("Save")
-            row.append("td").append("input")
-                .attr("value", "demo_layout")
-                .attr("id", "layout_name")
-                .style("width", "100%")
-                .style("box-sizing", "border-box")
-                .on("input", ()=>this.update_save_layout_button())
-                .on("keydown", ()=>{
-                    let save_button = this.content_selection.select("#save_button")
-                    if (save_button.attr("disabled"))
-                        return
-                    if (d3.event.keyCode == 13) {
-                      this.save_layout_clicked()
-                      // TODO: fixme, callback handler
-                      setTimeout(()=>this.fetch_all_layouts(), 500)
-                    } // Enter key
-                })
 
-            // Save template
-            row.append("td").append("input").attr("type", "button")
-                               .classed("button", true)
-                               .style("width", "100%")
-                               .attr("id", "save_button")
-                               .attr("value", "Save template")
-                               .on("click", d=>{
-                                    this.save_layout_clicked()
-                                   // TODO: fixme, callback handler
-                                    setTimeout(()=>this.fetch_all_layouts(), 500)
+        // Text input and save button
+        row_enter = table_enter.append("tr")
+        row_enter.append("td").append("input")
+            .attr("value", "custom_layout")
+            .attr("id", "layout_name")
+            .style("width", "100%")
+            .style("box-sizing", "border-box")
+            .on("input", ()=>this.update_save_layout_button())
+            .on("keydown", ()=>{
+                let save_button = this.content_selection.select("#save_button")
+                if (save_button.attr("disabled"))
+                    return
+                if (d3.event.keyCode == 13) {
+                  this._save_layout_clicked()
+                }
             })
 
-            // Save aggregation
-            table.append("tr")
-                .classed("edit_mode_only", true)
-                .classed("single_aggregation", true)
-                .append("td").attr("colspan", 2).append("hr")
-            row = table.append("tr")
-                .classed("edit_mode_only", true)
-                .classed("single_aggregation", true)
-//            row.append("td")
-            row.append("td")
-                .attr("id", "single_aggregation_name")
-            row.append("td").append("input").attr("type", "button")
-                               .classed("button", true)
-                               .style("width", "100%")
-                               .attr("id", "save_aggregation")
-                              .attr("value", "Save aggr")
-                               .on("click", d=>{
-                                    this.save_aggregation_clicked()
-                                   // TODO: fixme, callback handler
-                                    setTimeout(()=>this.fetch_all_layouts(), 500)
-            })
-
-            row = table.append("tr")
-            row.append("td")
-            row.append("td").attr("id", "infotext").text("")
-            table.append("tr").classed("edit_mode_only", true).append("td").attr("colspan", 2).append("hr")
-        }
-
-        let hierarchy_list = this.layout_manager.viewport.get_hierarchy_list()
-        if (hierarchy_list.length == 1) {
-            into_selection.select("#single_aggregation_name").text(hierarchy_list[0].tree.data.name)
-            into_selection.selectAll(".single_aggregation").style("display", null)
-        } else {
-            into_selection.selectAll(".single_aggregation").style("display", "none")
-        }
+        row_enter.append("td").append("input").attr("type", "button")
+                           .classed("button", true)
+                           .style("width", "100%")
+                           .attr("id", "save_button")
+                           .attr("value", "Save template")
+                           .on("click", d=>this._save_layout_clicked())
+        table_enter.append("tr").append("td").attr("colspan", "2").attr("id", "infotext").text("")
     }
 
     update_save_layout_button() {
@@ -668,20 +734,25 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         }
     }
 
-    save_layout_clicked() {
+    _save_layout_clicked() {
        let new_id = this.content_selection.select("#layout_name").property("value");
        let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
        let new_layout = {}
        new_layout[new_id] = current_layout_group
-       this.layout_manager.layout_applier.save_layout_template(new_layout)
+       this.layout_manager.save_layout_template(new_layout)
     }
 
-    save_aggregation_clicked() {
+    _save_explicit_layout_clicked(){
        let aggr_name = this.layout_manager.viewport.get_hierarchy_list()[0].tree.data.name
        let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
        let new_layout = {}
        new_layout[aggr_name] = current_layout_group
-       this.layout_manager.layout_applier.save_layout_for_aggregation(new_layout, aggr_name)
+       this.layout_manager.save_layout_for_aggregation(new_layout, aggr_name)
+    }
+
+    _delete_explicit_layout_clicked(){
+       let aggr_name = this.layout_manager.viewport.get_hierarchy_list()[0].tree.data.name
+       this.layout_manager.delete_layout_for_aggregation(aggr_name)
     }
 
     add_text_input(into_selection, value) {
@@ -732,7 +803,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 }
 
-class MouseEventsOverlay {
+class LayoutingMouseEventsOverlay {
     constructor(layout_manager) {
         this.layout_manager = layout_manager
         this.drag = d3.drag()
@@ -743,23 +814,14 @@ class MouseEventsOverlay {
         this.dragged_node = null
     }
 
-
     update_data() {
+        // TODO: check this
         let nodes_layer = this.layout_manager.viewport.get_layer("nodes")
-       if (!nodes_layer)
-            return
-       let nodes_selection = nodes_layer.nodes_selection
-       nodes_selection.selectAll(".node_element").call(this.drag)
-//            .on("click", () => this.clicked())
+        if (!nodes_layer)
+             return
+        let nodes_selection = nodes_layer.nodes_selection
+        nodes_selection.selectAll(".node_element").call(this.drag)
     }
-
-//    clicked() {
-//        if (!this.layout_manager.edit_layout)
-//            return
-//        let node = d3.select(d3.event.target).datum()
-//        if (node.data.use_style.type() != node_visualization_layout_styles.LayoutStyleForce.prototype.type())
-//            this.layout_manager.toolbar_plugin.layout_modification_element.update_current_style(node.data.use_style)
-//    }
 
     _dragstarted() {
         if (!this.layout_manager.edit_layout)
@@ -771,15 +833,14 @@ class MouseEventsOverlay {
         this.drag_start_y = d3.event.y
 
         if (this._dragged_node.data.use_style)
-            this.layout_manager.toolbar_plugin.layout_modification_element.update_current_style(this._dragged_node.data.use_style)
+            this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(this._dragged_node.data.use_style)
 
         this.layout_manager.dragging = true
     }
 
     _apply_drag_force(node, x, y) {
         node.data.node_positioning["drag"] = {}
-
-        var force = node.data.node_positioning["drag"]
+        let force = node.data.node_positioning["drag"]
         force.use_transition = false
         if (node.data.use_style)
             force.weight = 1000
@@ -792,11 +853,11 @@ class MouseEventsOverlay {
     _dragging() {
         if (!this.layout_manager.edit_layout)
             return
-        var scale = 1.0
-        var delta_x = d3.event.x - this.drag_start_x
-        var delta_y = d3.event.y - this.drag_start_y
+        let scale = 1.0
+        let delta_x = d3.event.x - this.drag_start_x
+        let delta_y = d3.event.y - this.drag_start_y
 
-        var last_zoom = this.layout_manager.viewport.last_zoom
+        let last_zoom = this.layout_manager.viewport.last_zoom
         scale = 1/last_zoom.k
 
         this._apply_drag_force(this._dragged_node, this.drag_start_x + (delta_x * scale),
@@ -824,9 +885,9 @@ class MouseEventsOverlay {
 
         if (this._dragged_node.data.use_style && this._dragged_node.data.use_style.type() == "fixed") {
             this._dragged_node.data.use_style.fix_node(this._dragged_node)
-        } else {
-            delete this._dragged_node.data.node_positioning["drag"]
-        }
+        } 
+
+        delete this._dragged_node.data.node_positioning["drag"]
         this.layout_manager.compute_node_position(this._dragged_node)
     }
 }
@@ -855,19 +916,19 @@ class LayoutApplier{
                 elements.push({text: "Convert to " + style.prototype.description(),
                                on: ()=> this._convert_node(node, style),
                                href: "",
-                               img: "themes/facelift/images/icon_aggr.png"})
+                               img: this.layout_manager.viewport.main_instance.get_theme_previx() + "/images/icon_aggr.png"})
             } else {
                 elements.push({text: "Convert all nodes to " + style.prototype.description(),
                            on: ()=> this._convert_all(style),
                            href: "",
-                           img: "themes/facelift/images/icon_aggr.png"})
+                           img: this.layout_manager.viewport.main_instance.get_theme_previx() + "/images/icon_aggr.png"})
             }
         }
-        let modification_element = this.layout_manager.toolbar_plugin.layout_modification_element
+        let modification_element = this.layout_manager.toolbar_plugin.layout_style_configuration
         elements.push({text: "Show " + node_visualization_layout_styles.LayoutStyleForce.prototype.description() + " options",
                        on: ()=>modification_element.update_current_style(this.layout_manager.force_style),
                        href: "",
-                       img: "themes/facelift/images/icon_aggr.png"})
+                       img: this.layout_manager.viewport.main_instance.get_theme_previx() + "/images/icon_aggr.png"})
         return elements
     }
 
@@ -884,15 +945,17 @@ class LayoutApplier{
             chunk_layout.remove_style(current_style)
         }
 
+        let new_style = null
         if (style_class != node_visualization_layout_styles.LayoutStyleForce) {
-            let new_style = this.layout_style_factory.instantiate_style_class(style_class, node)
+            new_style = this.layout_style_factory.instantiate_style_class(style_class, node)
             chunk_layout.save_style(new_style.style_config)
-            this.layout_manager.toolbar_plugin.layout_modification_element.update_current_style(node.data.use_style)
         }
         this.layout_manager.layout_applier.apply_all_layouts()
+        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(new_style)
     }
 
     _convert_all(style_class) {
+        let current_style = null
         this.layout_manager.viewport.get_hierarchy_list().forEach(node_chunk=>{
             node_chunk.layout.clear_styles()
             if (style_class == node_visualization_layout_styles.LayoutStyleFixed) {
@@ -901,10 +964,13 @@ class LayoutApplier{
                 })
             }
             else if (style_class != node_visualization_layout_styles.LayoutStyleForce) {
-                node_chunk.layout.save_style(this.layout_style_factory.instantiate_style_class(style_class, node_chunk.nodes[0]).style_config)
+                current_style = this.layout_style_factory.instantiate_style_class(style_class, node_chunk.nodes[0])
+                node_chunk.layout.save_style(current_style.style_config)
             }
         })
+
         this.apply_all_layouts()
+        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(current_style)
     }
 
     apply_layout_id(layout_id) {
@@ -914,7 +980,7 @@ class LayoutApplier{
     }
 
     apply(new_layout) {
-        console.log("apply layout", new_layout.id)
+//        console.log("apply layout", new_layout.id)
         this._apply_force_style_options(new_layout)
 
         let node_matcher = new node_visualization_utils.NodeMatcher(this.layout_manager.viewport.get_hierarchy_list())
@@ -922,8 +988,6 @@ class LayoutApplier{
         this._update_node_specific_styles(nodes_with_style)
 
         this.current_layout_group = new_layout
-
-
         this.viewport.update_active_overlays()
     }
 
@@ -936,6 +1000,7 @@ class LayoutApplier{
         let skip_layout_alignment = false
         node_chunk_list.forEach(node_chunk=>{
             let node_matcher = new node_visualization_utils.NodeMatcher([node_chunk])
+            // TODO: When removing an explicit layout, the new layout should replace the explict one
             if (!node_chunk.layout) {
                 node_chunk.layout = new node_visualization_layout.NodeVisualizationLayout(this)
 
@@ -960,6 +1025,12 @@ class LayoutApplier{
             nodes_with_style = nodes_with_style.concat(this.find_nodes_for_layout(node_chunk.layout, node_matcher))
         })
         this._update_node_specific_styles(nodes_with_style, skip_layout_alignment)
+
+        this.current_layout_group = this.get_current_layout_group()
+        this.viewport.update_active_overlays()
+
+        if (this.layout_manager.edit_layout)
+            this.layout_manager.allow_layout_updates = false
     }
 
     align_layouts(nodes_with_style) {
@@ -998,14 +1069,14 @@ class LayoutApplier{
     }
 
     _update_node_specific_styles(nodes_with_style, skip_align=false) {
-        console.log("update node styles")
+//        console.log("update node styles")
         let filtered_nodes_with_style = []
         let used_nodes = []
         for (let idx in nodes_with_style) {
             let config = nodes_with_style[idx]
             if (used_nodes.indexOf(config.node) >= 0) {
-                console.log("filtered duplicate style assignment",
-                    this.layout_style_factory.get_style_class(config.style).prototype.compute_id(config.node))
+//                console.log("filtered duplicate style assignment",
+//                    this.layout_style_factory.get_style_class(config.style).prototype.compute_id(config.node))
                 continue
             }
             used_nodes.push(config.node)
@@ -1019,18 +1090,17 @@ class LayoutApplier{
                     })
 
         node_styles.exit().each(d=>{
-                console.log("removing style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
+//                console.log("removing style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
             this.layout_manager.remove_active_style(d.node.data.use_style)
-            d.node.data.use_style = null
+            this.layout_manager.compute_node_position(d.node)
         }).remove()
 
         node_styles.enter().append("g")
             .classed("layout_style", true)
             .each((d, idx, nodes)=> {
-                console.log("create style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
+//                console.log("create style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
                 if (d.node.data.use_style) {
                     this.layout_manager.remove_active_style(d.node.data.use_style)
-                    d.node.data.use_style = null
                 }
                 let new_style = this.layout_style_factory.instantiate_style(
                     d.style,
@@ -1039,14 +1109,16 @@ class LayoutApplier{
                 )
                 this.layout_manager.add_active_style(new_style)
             }).merge(node_styles).each(d=>{
-                console.log("updating style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
+//                console.log("updating style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
                 let style_id = this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node)
-                d.node.data.use_style = this.layout_manager.get_active_style(style_id)
+
+                let style = this.layout_manager.get_active_style(style_id)
+                d.node.data.use_style = style
                 d.node.data.use_style.style_config.options = d.style.options
                 d.node.data.use_style.style_root_node = d.node
                 d.node.data.use_style.force_style_translation()
 
-                let abs_coords = this.layout_manager.get_absolute_node_coords({x: d.style.position.x, y: d.style.position.y}, d.node)
+                let abs_coords = this.layout_manager.get_absolute_node_coords({x: style.style_config.position.x, y: style.style_config.position.y}, d.node)
                 d.node.fx = abs_coords.x
                 d.node.fy = abs_coords.y
                 d.node.x  = abs_coords.x
@@ -1086,32 +1158,13 @@ class LayoutApplier{
         this.viewport.get_hierarchy_list().forEach(node_chunk=>{
             chunk_layout = node_chunk.layout.serialize()
             for (let idx in chunk_layout.style_configs)
-                style_configs.push(chunk_layout.style_configs[idx])
+                if (chunk_layout.style_configs[idx].type != "force")
+                    style_configs.push(chunk_layout.style_configs[idx])
         })
         chunk_layout.style_configs = style_configs
+        chunk_layout.style_configs.push(this.layout_manager.force_style.get_config())
         chunk_layout.reference_size = {width: this.viewport.width, height: this.viewport.height}
         return chunk_layout
-    }
-
-    save_layout(layout) {
-        this.save_layout_template(layout)
-    }
-
-    delete_layout_id(layout_id) {
-        ajax.post_url("ajax_delete_bi_template_layout.py?layout_id=" + encodeURIComponent(layout_id))
-    }
-
-    save_layout_template(layout_config) {
-        ajax.post_url("ajax_save_bi_template_layout.py",
-            "layout=" + encodeURIComponent(JSON.stringify(layout_config)))
-    }
-
-    // TODO: check parameters
-    save_layout_for_aggregation(layout_config, aggregation_name) {
-        ajax.post_url("save_bi_aggregation_layout.py",
-            "layout=" + encodeURIComponent(JSON.stringify(layout_config))+
-            "&aggregation_name=" + encodeURIComponent(aggregation_name)
-        )
     }
 }
 

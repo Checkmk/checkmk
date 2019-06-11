@@ -2501,8 +2501,8 @@ class ABCTagFilter(Filter):
         return "Filter: %s_tags %s %s %s" % (
             livestatus.lqencode(self.object_type),
             '!=' if negate else '=',
-            livestatus.lqencode(tag_group),
-            livestatus.lqencode(tag),
+            livestatus.lqencode(livestatus.quote_dict(tag_group)),
+            livestatus.lqencode(livestatus.quote_dict(tag)),
         )
 
     def double_height(self):
@@ -2589,8 +2589,9 @@ class FilterHostAuxTags(Filter):
         return ''
 
     def _host_auxtags_filter(self, tag, negate):
-        return "Filter: host_tags %s %s %s" % ("!=" if negate else "=", livestatus.lqencode(tag),
-                                               livestatus.lqencode(tag))
+        return "Filter: host_tags %s %s %s" % ("!=" if negate else "=",
+                                               livestatus.lqencode(livestatus.quote_dict(tag)),
+                                               livestatus.lqencode(livestatus.quote_dict(tag)))
 
     def double_height(self):
         return True
@@ -2646,8 +2647,8 @@ class ABCLabelFilter(Filter):
     def _label_filter(self, label_id, label_value):
         return "Filter: %s = %s %s\n" % (
             livestatus.lqencode(self._column),
-            livestatus.lqencode(label_id),
-            livestatus.lqencode(label_value),
+            livestatus.lqencode(livestatus.quote_dict(label_id)),
+            livestatus.lqencode(livestatus.quote_dict(label_value)),
         )
 
 

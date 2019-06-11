@@ -142,6 +142,8 @@ info_winperf_if_teaming = [
 ]
 
 discovery_winperf_if_teaming = [
+    ('HPE Ethernet 1Gb 4-port 331i Adapter', "{'state': ['1'], 'speed': 1000000000}"),
+    ('HPE Ethernet 1Gb 4-port 331i Adapter 2', "{'state': ['1'], 'speed': 1000000000}"),
     ('HPE Ethernet 1Gb 4-port 331i Adapter 3', "{'state': ['1'], 'speed': 1000000000}"),
     ('HPE Ethernet 1Gb 4-port 331i Adapter 4', "{'state': ['1'], 'speed': 1000000000}"),
     (u'LAN',

@@ -459,7 +459,6 @@ def inventory_if_common(info, has_nodeinfo=False):
                         },
                     })
                 have_groups[ifGroup]["interfaces"].append((saveint(ifSpeed), ifOperStatus, ifType))
-                is_only_in_group = True
 
             # Prepare single interfaces
             if not is_only_in_group and ifIndex not in seen_indicies and \

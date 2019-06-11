@@ -53,19 +53,4 @@ def inv_perle_psmu(parsed):
 
 inv_info['perle_psmu'] = {
     'inv_function': inv_perle_psmu,
-    # If you change snmp info please adapt the related check plugin
-    'snmp_info': (
-        '.1.3.6.1.4.1.1966.21.1.1.1.1.2.1',
-        [
-            '2',  # PERLE-MCR-MGT-MIB::mcrPsmuIndex
-            '3',  # PERLE-MCR-MGT-MIB::mcrPsmuModelName
-            '4',  # PERLE-MCR-MGT-MIB::mcrPsmuModelDesc
-            '5',  # PERLE-MCR-MGT-MIB::mcrPsmuPsuSerialNumber
-            '9',  # PERLE-MCR-MGT-MIB::mcrPsmuPsuStatus
-            '10',  # PERLE-MCR-MGT-MIB::mcrPsmuPsuVoltageUsage
-            '11',  # PERLE-MCR-MGT-MIB::mcrPsmuPsuPowerUsage
-            '12',  # PERLE-MCR-MGT-MIB::mcrPsmuFanStatus
-        ]),
-    'snmp_scan_function': perle_scan_function,
-    'includes': ['perle.include'],
 }

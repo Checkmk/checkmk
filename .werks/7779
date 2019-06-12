@@ -1,0 +1,14 @@
+Title: LDAP sync: Fix exception when syncing only password changes for users
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560325557
+
+The LDAP sync failed with an exception like this in 1.6.0b1 when only the password
+for users was changed in a distributed Checkmk setup:
+
+<tt>TypeError: _sychronize_profile_worker() takes exactly 1 argument (4 given)</tt>

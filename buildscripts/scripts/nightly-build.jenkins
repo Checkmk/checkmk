@@ -35,7 +35,7 @@ if(BRANCH == 'master' && VERSION == 'daily') {
     CMK_VERS = dateFormat.format(date)
 } else if (VERS == 'daily') {
     CMK_VERS = BRANCH + '-' + dateFormat.format(date)
-} else if {
+} else {
     CMK_VERS = VERSION
 }
 

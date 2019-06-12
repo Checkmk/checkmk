@@ -35,6 +35,6 @@ check_info['msexch_autodiscovery'] = {
     'check_function': check_msexch_autodiscovery,
     'parse_function': parse_wmi_table,
     'has_perfdata': True,
-    'service_description': "Exchange Autodiscovery",
+    'service_description': "Exchange Autodiscovery %s",
     'includes': ["wmi.include"]
 }

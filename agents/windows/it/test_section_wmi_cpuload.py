@@ -22,7 +22,7 @@ def testconfig(config):
 @pytest.fixture
 def expected_output():
     return [
-        re.escape(r'<<<wmi_cpuload:sep(44)>>>'),
+        re.escape(r'<<<wmi_cpuload:sep(9)>>>'),
         re.escape(r'[system_perf]'),
         (r'AlignmentFixupsPersec,Caption,ContextSwitchesPersec,Description,'
          r'ExceptionDispatchesPersec,FileControlBytesPersec,'
@@ -32,9 +32,9 @@ def expected_output():
          r'Frequency_PerfTime,Frequency_Sys100NS,Name,'
          r'PercentRegistryQuotaInUse,PercentRegistryQuotaInUse_Base,Processes,'
          r'ProcessorQueueLength,SystemCallsPersec,SystemUpTime,Threads,'
-         r'Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS'),
+         r'Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS,WMIStatus').replace(',', '\t'),
         (r'\d+,,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,,\d+,'
-         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+'),
+         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b').replace(',', '\t'),
         re.escape(r'[computer_system]'),
         (r'AdminPasswordStatus,AutomaticManagedPagefile,'
          r'AutomaticResetBootOption,AutomaticResetCapability,BootOptionOnLimit,'
@@ -53,11 +53,12 @@ def expected_output():
          r'ResetLimit,Roles,Status,SupportContactDescription,SystemFamily,'
          r'SystemSKUNumber,SystemStartupDelay,SystemStartupOptions,'
          r'SystemStartupSetting,SystemType,ThermalState,TotalPhysicalMemory,'
-         r'UserName,WakeUpType,Workgroup'),
-        (r'\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,,\w+,\d+,\d+,'
+         r'UserName,WakeUpType,Workgroup,WMIStatus').replace(',', '\t'),
+        (r'\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,[^,]*,\w+,\d+,\d+,'
          r'[^,]+,[\w-]+,[^,]+,\d+,\d+,\d+,\d+,\d+,,,\d+,,[^,]+(, [^,]+)?,[^,]+,'
          r'[\w-]+,,\d+,\d+,\d+,,[^,]+,\d+,\-?\d+,\d+,\d+,,,\d+,\d+,\d+,,[\w-]+,'
-         r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*')
+         r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,[^,]*,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*,\b(?:OK|Timeout)\b'
+         ).replace(',', '\t')
     ]
 
 

@@ -27,6 +27,7 @@ static AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
 class AsyncAnswer {
 public:
     using DataBlock = std::vector<uint8_t>;
+    enum class Order { random, plugins_last };
     AsyncAnswer()
         : timeout_(5), awaiting_segments_(0), tp_id_(GenerateAnswerId()) {}
 
@@ -118,6 +119,15 @@ private:
 
     // awaiting_sections_ used for predicate
     std::condition_variable cv_ready_;
+
+    DataBlock plugins_;
+    DataBlock local_;
+
+    const Order order_ = Order::plugins_last;
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+    friend class AsyncAnswerTest;
+    FRIEND_TEST(AsyncAnswerTest, Base);
+#endif
 };
 }  // namespace cma::srv
 

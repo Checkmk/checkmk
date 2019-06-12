@@ -44,7 +44,9 @@ def parse_mssql_instance(info):
     parsed = {}
 
     for line in info:
-        if line[0].startswith("ERROR:"):
+        if line[0].startswith("ERROR:") or len(line) < 2 or line[1] not in [
+                "config", "state", "details"
+        ]:
             continue
         elif line[0][:6] == "MSSQL_":
             # Remove the MSSQL_ prefix from the ID for this check

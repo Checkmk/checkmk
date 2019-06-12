@@ -24,6 +24,7 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <string_view>
 
 #include "datablock.h"
 #include "tools/_misc.h"
@@ -812,7 +813,6 @@ inline int64_t WmiGetInt64_KillNegatives(const VARIANT& Var) noexcept {
     }
 }
 
-
 // Low Level Utilities to access and convert VARIANT
 inline int64_t WmiGetInt64(const VARIANT& Var) noexcept {
     switch (Var.vt) {
@@ -881,8 +881,9 @@ inline bool WmiObjectContains(IWbemClassObject* Object,
 std::wstring WmiGetWstring(const VARIANT& Var);
 std::optional<std::wstring> WmiTryGetString(IWbemClassObject* Object,
                                             const std::wstring& Name);
-std::wstring WmiStringFromObject(IWbemClassObject* Object,
-                                 const std::vector<std::wstring>& Names);
+std::wstring WmiStringFromObject(IWbemClassObject* object,
+                                 const std::vector<std::wstring>& names,
+                                 std::wstring_view separator);
 std::wstring WmiStringFromObject(IWbemClassObject* Object,
                                  const std::wstring& Name);
 std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject* WmiObject);
@@ -923,20 +924,22 @@ public:
     // This is OPTIONAL feature, LWA doesn't use it
     bool impersonate() noexcept;
 
-    std::wstring produceTable(IEnumWbemClassObject* Enumerator,
-                              const std::vector<std::wstring>& Names) noexcept;
+    std::wstring produceTable(IEnumWbemClassObject* enumerator,
+                              const std::vector<std::wstring>& names,
+                              std::wstring_view separator) noexcept;
 
     // work horse to ask certain names from the target
     // on error returns empty string
-    std::wstring queryTable(const std::vector<std::wstring>& Names,
-                            const std::wstring& Target) noexcept;
+    std::wstring queryTable(const std::vector<std::wstring>& names,
+                            const std::wstring& target,
+                            std::wstring_view separator) noexcept;
 
     // special purposes: formatting for PS for example
     // on error returns nullptr
     // You have to call Release for returned object!!!
     IEnumWbemClassObject* queryEnumerator(
-        const std::vector<std::wstring>& Names,
-        const std::wstring& Target) noexcept;
+        const std::vector<std::wstring>& names,
+        const std::wstring& target) noexcept;
 
 private:
     void close() noexcept;

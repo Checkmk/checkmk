@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include <string>
+#include <string_view>
 
 #include "providers/internal.h"
 #include "section_header.h"
@@ -15,6 +16,13 @@ namespace cma {
 
 namespace provider {
 
+namespace wmi {
+constexpr char kSepChar = '\t';
+constexpr std::wstring_view kSepString = L"\t";
+}  // namespace wmi
+namespace ohm {
+constexpr char kSepChar = ',';
+}
 /*
     # wmi_cpuload
     ## system_perf
@@ -61,7 +69,7 @@ private:
 
 class Wmi : public Asynchronous {
 public:
-    Wmi(const std::string& Name, char Separator = ',')
+    Wmi(const std::string& Name, char Separator)
         : Asynchronous(Name, Separator) {
         setupByName();
     }
@@ -100,7 +108,7 @@ private:
 enum class WmiStatus { ok, timeout, fail_open, fail_connect, bad_param };
 std::pair<WmiStatus, std::string> GenerateWmiTable(
     const std::wstring& NameSpace, const std::wstring& Object,
-    const std::vector<std::wstring> Columns);
+    const std::vector<std::wstring> Columns, std::wstring_view separator);
 
 }  // namespace provider
 

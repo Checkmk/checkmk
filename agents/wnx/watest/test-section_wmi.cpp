@@ -107,7 +107,7 @@ TEST(WmiWrapper, TablePostProcess) {
         wmi.impersonate();
         // Use the IWbemServices pointer to make requests of WMI.
         // Make requests here:
-        auto result = wmi.queryTable({}, L"Win32_Process");
+        auto result = wmi.queryTable({}, L"Win32_Process", L",");
         ASSERT_TRUE(!result.empty());
         EXPECT_TRUE(result.back() == L'\n');
 
@@ -173,7 +173,7 @@ TEST(WmiWrapper, Table) {
         wmi.impersonate();
         // Use the IWbemServices pointer to make requests of WMI.
         // Make requests here:
-        auto result = wmi.queryTable({}, L"Win32_Process");
+        auto result = wmi.queryTable({}, L"Win32_Process", L",");
         ASSERT_TRUE(!result.empty());
         EXPECT_TRUE(result.back() == L'\n');
 
@@ -200,7 +200,7 @@ TEST(ProviderTest, WmiBadName) {  //
 
     cma::OnStart(cma::AppType::test);
     {
-        Wmi badname("badname");
+        Wmi badname("badname", wmi::kSepChar);
         EXPECT_EQ(badname.object(), L"");
         EXPECT_EQ(badname.nameSpace(), L"");
         EXPECT_FALSE(badname.isAllowedByCurrentConfig());
@@ -215,7 +215,7 @@ TEST(ProviderTest, WmiBadName) {  //
 
 TEST(ProviderTest, WmiOhm) {
     {
-        Wmi ohm(kOhm);
+        Wmi ohm(kOhm, ohm::kSepChar);
         EXPECT_EQ(ohm.object(), L"Sensor");
         EXPECT_EQ(ohm.nameSpace(), L"Root\\OpenHardwareMonitor");
         EXPECT_EQ(ohm.columns().size(), 5);
@@ -230,15 +230,18 @@ TEST(ProviderTest, WmiOhm) {
 
 TEST(ProviderTest, WmiAll) {  //
     using namespace std::chrono;
+    std::wstring sep(wmi::kSepString);
+    std::string sep_ascii = wtools::ConvertToUTF8(sep);
     {
         auto [err, r] =
-            GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystem", {});
+            GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystem", {}, sep);
         EXPECT_EQ(err, WmiStatus::ok);
         EXPECT_TRUE(!r.empty());
     }
 
     {
-        auto [err, r] = GenerateWmiTable(L"", L"Win32_ComputerSystemZ", {});
+        auto [err, r] =
+            GenerateWmiTable(L"", L"Win32_ComputerSystemZ", {}, sep);
         EXPECT_EQ(err, WmiStatus::bad_param)
             << "should be ok, invalid name means NOTHING";
         EXPECT_TRUE(r.empty());
@@ -246,7 +249,7 @@ TEST(ProviderTest, WmiAll) {  //
 
     {
         auto [err, r] =
-            GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystemZ", {});
+            GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystemZ", {}, sep);
         EXPECT_EQ(err, WmiStatus::ok)
             << "should be ok, invalid name means NOTHING";
         EXPECT_TRUE(r.empty());
@@ -254,13 +257,13 @@ TEST(ProviderTest, WmiAll) {  //
 
     {
         auto [err, r] = GenerateWmiTable(std::wstring(kWmiPathStd) + L"A",
-                                         L"Win32_ComputerSystem", {});
+                                         L"Win32_ComputerSystem", {}, sep);
         EXPECT_EQ(err, WmiStatus::fail_connect);
         EXPECT_TRUE(r.empty());
     }
 
     {
-        Wmi dotnet_clr(kDotNetClrMemory);
+        Wmi dotnet_clr(kDotNetClrMemory, wmi::kSepChar);
         EXPECT_EQ(dotnet_clr.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
         EXPECT_EQ(dotnet_clr.object(),
                   L"Win32_PerfRawData_NETFramework_NETCLRMemory");
@@ -286,16 +289,17 @@ TEST(ProviderTest, WmiAll) {  //
             << "2 bad output from wmi:\n"
             << body << "\n";  // more than 1 line should be present
 
-        auto header = cma::tools::SplitString(table[0], ",");
+        auto header = cma::tools::SplitString(table[0], sep_ascii);
+        ASSERT_GT(header.size(), static_cast<size_t>(5));
         EXPECT_EQ(header[0], "AllocatedBytesPersec");
         EXPECT_EQ(header[13], "Name");
 
-        auto line1 = cma::tools::SplitString(table[1], ",");
+        auto line1 = cma::tools::SplitString(table[1], sep_ascii);
         EXPECT_EQ(line1.size(), header.size());
     }
 
     {
-        Wmi wmi_web(kWmiWebservices);
+        Wmi wmi_web(kWmiWebservices, wmi::kSepChar);
         EXPECT_EQ(wmi_web.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
 
         EXPECT_EQ(wmi_web.object(), L"Win32_PerfRawData_W3SVC_WebService");
@@ -308,7 +312,7 @@ TEST(ProviderTest, WmiAll) {  //
 
     {
         using namespace std::chrono;
-        Wmi bad_wmi(kBadWmi);
+        Wmi bad_wmi(kBadWmi, wmi::kSepChar);
         EXPECT_EQ(bad_wmi.object(), L"BadSensor");
         EXPECT_EQ(bad_wmi.nameSpace(), L"Root\\BadWmiPath");
 
@@ -322,7 +326,7 @@ TEST(ProviderTest, WmiAll) {  //
     }
 
     {
-        Wmi cpu(kWmiCpuLoad);
+        Wmi cpu(kWmiCpuLoad, wmi::kSepChar);
         EXPECT_EQ(cpu.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
 
         // this is empty section
@@ -346,7 +350,7 @@ TEST(ProviderTest, WmiAll) {  //
         EXPECT_EQ(cpu.delay_on_fail_, 3600s);
     }
     {
-        Wmi msexch(kMsExch);
+        Wmi msexch(kMsExch, wmi::kSepChar);
         EXPECT_EQ(msexch.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
         // this is empty section
         EXPECT_EQ(msexch.object(), L"");
@@ -470,7 +474,7 @@ TEST(ProviderTest, WmiMsExch) {
     fs::path f(FNAME_USE);
     fs::remove(f);
 
-    cma::srv::SectionProvider<Wmi> wmi_provider(wmi_name, ',');
+    cma::srv::SectionProvider<Wmi> wmi_provider(wmi_name, wmi::kSepChar);
     EXPECT_EQ(wmi_provider.getEngine().getUniqName(), wmi_name);
 
     auto& e2 = wmi_provider.getEngine();
@@ -485,7 +489,8 @@ TEST(ProviderTest, WmiMsExch) {
     auto table = ReadFileAsTable(f.u8string());
     if (!table.empty()) {
         ASSERT_TRUE(table.size() > 1);  // more than 1 line should be present
-        EXPECT_EQ(table[0] + "\n", cma::section::MakeHeader(wmi_name, ','));
+        EXPECT_EQ(table[0] + "\n",
+                  cma::section::MakeHeader(wmi_name, wmi::kSepChar));
     }
     fs::remove(f);
 }
@@ -499,7 +504,7 @@ TEST(ProviderTest, WmiWeb) {
     fs::path f(FNAME_USE);
     fs::remove(f);
 
-    cma::srv::SectionProvider<Wmi> wmi_provider(wmi_name, ',');
+    cma::srv::SectionProvider<Wmi> wmi_provider(wmi_name, wmi::kSepChar);
     EXPECT_EQ(wmi_provider.getEngine().getUniqName(), wmi_name);
 
     auto& e2 = wmi_provider.getEngine();
@@ -516,7 +521,8 @@ TEST(ProviderTest, WmiWeb) {
         EXPECT_FALSE(e2.isAllowedByTime());
     } else {
         ASSERT_TRUE(table.size() > 1);  // more than 1 line should be present
-        EXPECT_EQ(table[0] + "\n", cma::section::MakeHeader(wmi_name, ','));
+        EXPECT_EQ(table[0] + "\n",
+                  cma::section::MakeHeader(wmi_name, wmi::kSepChar));
     }
     fs::remove(f);
 }
@@ -529,7 +535,7 @@ TEST(ProviderTest, WmiCpu) {
     fs::path f(FNAME_USE);
     fs::remove(f);
 
-    cma::srv::SectionProvider<Wmi> wmi_provider(wmi_name, ',');
+    cma::srv::SectionProvider<Wmi> wmi_provider(wmi_name, wmi::kSepChar);
     EXPECT_EQ(wmi_provider.getEngine().getUniqName(), wmi_name);
 
     auto& e2 = wmi_provider.getEngine();
@@ -545,7 +551,8 @@ TEST(ProviderTest, WmiCpu) {
     ASSERT_TRUE(fs::exists(f, ec));
     auto table = ReadFileAsTable(f.u8string());
     ASSERT_TRUE(table.size() >= 5);  // header, two subheaders and two lines
-    EXPECT_EQ(table[0] + "\n", cma::section::MakeHeader(wmi_name, ','));
+    EXPECT_EQ(table[0] + "\n",
+              cma::section::MakeHeader(wmi_name, wmi::kSepChar));
 
     int system_perf_found = 0;
     int computer_system_found = 0;

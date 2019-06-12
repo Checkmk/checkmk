@@ -1146,14 +1146,15 @@ std::wstring WmiGetWstring(const VARIANT& Var) {
     }
 }
 
-std::wstring WmiStringFromObject(IWbemClassObject* Object,
-                                 const std::vector<std::wstring>& Names) {
+std::wstring WmiStringFromObject(IWbemClassObject* object,
+                                 const std::vector<std::wstring>& names,
+                                 std::wstring_view separator) {
     std::wstring result;
-    for (auto& name : Names) {
+    for (auto& name : names) {
         // data
         VARIANT value;
         // Get the value of the Name property
-        auto hres = Object->Get(name.c_str(), 0, &value, nullptr, nullptr);
+        auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
         if (SUCCEEDED(hres)) {
             ON_OUT_OF_SCOPE(VariantClear(&value));
             auto str = wtools::WmiGetWstring(value);
@@ -1161,7 +1162,8 @@ std::wstring WmiStringFromObject(IWbemClassObject* Object,
                 XLOG::t("WMI Negative value '{}' [{}], type [{}]",
                         ConvertToUTF8(name), ConvertToUTF8(str), value.vt);
             }
-            result += str + L",";
+            result += str;
+            result += separator;
         }
     }
     if (result.empty()) {
@@ -1414,28 +1416,29 @@ IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator) {
 }
 
 std::wstring WmiWrapper::produceTable(
-    IEnumWbemClassObject* Enumerator,
-    const std::vector<std::wstring>& Names) noexcept {
+    IEnumWbemClassObject* enumerator,
+    const std::vector<std::wstring>& existing_names,
+    std::wstring_view separator) noexcept {
     std::wstring result;
     ULONG returned = 0;
     IWbemClassObject* wmi_object = nullptr;
     bool print_names_please = true;
     // setup default names vector
-    auto names = Names;
+    auto names = existing_names;
 
-    while (nullptr != Enumerator) {
-        wmi_object = WmiGetNextObject(Enumerator);
+    while (nullptr != enumerator) {
+        wmi_object = WmiGetNextObject(enumerator);
         if (nullptr == wmi_object) break;
         ON_OUT_OF_SCOPE(wmi_object->Release());
 
         // names
         if (print_names_please) {
-            if (Names.empty()) {
+            if (names.empty()) {
                 // we have asking for everything, ergo we have to use
                 // get name list from WMI
                 names = std::move(wtools::WmiGetNamesFromObject(wmi_object));
             }
-            result = cma::tools::JoinVector(names, L",");
+            result = cma::tools::JoinVector(names, separator);
             if (result.empty()) {
                 XLOG::l.e("Failed to get names");
             } else
@@ -1443,7 +1446,7 @@ std::wstring WmiWrapper::produceTable(
             print_names_please = false;
         }
 
-        auto raw = wtools::WmiStringFromObject(wmi_object, names);
+        auto raw = wtools::WmiStringFromObject(wmi_object, names, separator);
         if (!raw.empty()) result += raw + L"\n";
     }
     return result;
@@ -1465,9 +1468,10 @@ std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring>& Names,
 
 // work horse to ask certain names from the target
 // on error returns empty string
-std::wstring WmiWrapper::queryTable(const std::vector<std::wstring>& Names,
-                                    const std::wstring& Target) noexcept {
-    auto query_text = makeQuery(Names, Target);
+std::wstring WmiWrapper::queryTable(const std::vector<std::wstring>& names,
+                                    const std::wstring& target,
+                                    std::wstring_view separator) noexcept {
+    auto query_text = makeQuery(names, target);
 
     // Send a query to system
     std::lock_guard lk(lock_);
@@ -1479,7 +1483,7 @@ std::wstring WmiWrapper::queryTable(const std::vector<std::wstring>& Names,
     }
     ON_OUT_OF_SCOPE(enumerator->Release());
 
-    return produceTable(enumerator, Names);
+    return produceTable(enumerator, names, separator);
 }
 
 // special purposes: formatting for PS for example

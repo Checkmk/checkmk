@@ -1,0 +1,11 @@
+Title: rds_licenses: Skip check plugin if no data available
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p18
+Date: 1560326506
+
+

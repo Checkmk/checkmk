@@ -33,7 +33,7 @@ def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = ''
 if(BRANCH == 'master' && VERSION == 'daily') {
     CMK_VERS = dateFormat.format(date)
-} else if (VERS == 'daily') {
+} else if (VERSION == 'daily') {
     CMK_VERS = BRANCH + '-' + dateFormat.format(date)
 } else {
     CMK_VERS = VERSION

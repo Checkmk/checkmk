@@ -11,6 +11,8 @@ properties([
   parameters([
     string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
+    string(name: 'DEMO', defaultValue: 'no', description: 'Demo: yes or no' )
+    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' )
   ])
 ])
 
@@ -27,15 +29,22 @@ currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LI
 def DOCKER_BUILDS = [:]
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
-def CMK_VERS = dateFormat.format(date)
-def DAILY_DATA = ''
+def BRANCH = scm.branches[0].name.replaceAll("/","-")
+def CMK_VERSION
+if(BRANCH == 'master' && VERSION == 'daily') {
+    CMK_VERSION = dateFormat.format(date)
+} else if (VERSION == 'daily') {
+    CMK_VERSION = BRANCH + '-' + dateFormat.format(date)
+} else if {
+    CMK_VERSION = VERSION
+}
 
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
 
 def ARCHIVE_DIR = ''
-if (scm.branches[0].name == 'master' && JOB_BASE_NAME == 'nightly_build_containerized') {
+if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
     DAILY_DATA = '/var/jenkins_home/daily-data/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
     ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS
 } else {
@@ -65,7 +74,13 @@ node {
                 sh "rm -rf ${DAILY_DATA}"
                 sh 'rm -rf *'
                 dir("${DAILY_DATA}/git") {
-                    checkout(scm)
+                    if (VERSION == 'daily') {
+                        checkout(scm)
+                    } else {
+                        checkout(scm)
+                    } else {
+                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: scm.userRemoteConfigs[0].url, credentialsId: scm.userRemoteConfigs[0].credentialsId]], branches: [[name: 'v'VERSION]]],poll: false
+                    }
 
                     switch(EDITION) {
                         case 'raw':
@@ -89,6 +104,11 @@ node {
                                 echo '@mixin managed {}' > web/htdocs/themes/classic/scss/cme/_managed.scss
                             '''
                             break
+                    }
+                    if (DEMO == 'yes;') {
+                        sh '''sed -ri 's/^(DEMO_SUFFIX[[:space:]]*:?= *).*/\\1'".demo/" defines.make'''
+                        sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
+                        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{Core,State}.cc'''
                     }
                     sh "make NEW_VERSION=${CMK_VERS} setversion"
                     
@@ -264,8 +284,8 @@ try {
                     }
                 }
                 stage('Archive Artifacts') {
-                    // Only master builds should end up on the Website
-                    if (scm.branches[0].name == 'master' && JOB_BASE_NAME == 'nightly_build_containerized') {
+                    // Only 'official' builds should end up on the Website
+                    if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
                         sh """
                             cd ${ARCHIVE_DIR}
                             rsync -av -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \

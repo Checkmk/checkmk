@@ -30,13 +30,13 @@ def DOCKER_BUILDS = [:]
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
-def CMK_VERSION = ''
+def CMK_VERS = ''
 if(BRANCH == 'master' && VERSION == 'daily') {
-    CMK_VERSION = dateFormat.format(date)
+    CMK_VERS = dateFormat.format(date)
 } else if (VERSION == 'daily') {
-    CMK_VERSION = BRANCH + '-' + dateFormat.format(date)
+    CMK_VERS = BRANCH + '-' + dateFormat.format(date)
 } else {
-    CMK_VERSION = VERSION
+    CMK_VERS = VERSION
 }
 
 def PACKAGE_DIR = '/bauwelt/download'

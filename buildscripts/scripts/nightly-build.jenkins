@@ -11,6 +11,8 @@ properties([
   parameters([
     string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
+    string(name: 'DEMO', defaultValue: 'no', description: 'Demo: yes or no' )
+    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' )
   ])
 ])
 
@@ -29,10 +31,12 @@ def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS
-if(BRANCH == 'master') {
+if(BRANCH == 'master' && VERSION == 'daily') {
     CMK_VERS = dateFormat.format(date)
-} else {
+} else if (VERS == 'daily') {
     CMK_VERS = BRANCH + '-' + dateFormat.format(date)
+} else if {
+    CMK_VERS = VERSION
 }
 
 def PACKAGE_DIR = '/bauwelt/download'
@@ -70,7 +74,13 @@ node {
                 sh "rm -rf ${DAILY_DATA}"
                 sh 'rm -rf *'
                 dir("${DAILY_DATA}/git") {
-                    checkout(scm)
+                    if (VERSION == 'daily') {
+                        checkout(scm)
+                    } else {
+                        checkout(scm)
+                    } else {
+                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: scm.userRemoteConfigs[0].url, credentialsId: scm.userRemoteConfigs[0].credentialsId]], branches: [[name: 'v'VERSION]]],poll: false
+                    }
 
                     switch(EDITION) {
                         case 'raw':
@@ -94,6 +104,11 @@ node {
                                 echo '@mixin managed {}' > web/htdocs/themes/classic/scss/cme/_managed.scss
                             '''
                             break
+                    }
+                    if (DEMO == 'yes;') {
+                        sh '''sed -ri 's/^(DEMO_SUFFIX[[:space:]]*:?= *).*/\\1'".demo/" defines.make'''
+                        sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
+                        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{Core,State}.cc'''
                     }
                     sh "make NEW_VERSION=${CMK_VERS} setversion"
                     

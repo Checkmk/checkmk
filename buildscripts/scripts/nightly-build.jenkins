@@ -77,7 +77,7 @@ node {
                     if (VERSION == 'daily') {
                         checkout(scm)
                     } else {
-                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: scm.userRemoteConfigs[0].url], [credentialsId: scm.userRemoteConfigs[0].credentialsId]], branches: [[name: 'v'VERSION]]],poll: false
+                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[url: scm.userRemoteConfigs[0].url], [credentialsId: scm.userRemoteConfigs[0].credentialsId]], branches: [[name: 'v'VERSION]]]
                     }
 
                     switch(EDITION) {

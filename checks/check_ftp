@@ -32,41 +32,42 @@ def check_ftp_arguments(params):
         host = "$HOSTADDRESS$"
         settings = params
 
-    args = ' -H %s' % quote_shell_string(host)
+    args = ["-H", host]
 
     if "port" in settings:
-        args += ' -p %d' % settings['port']
+        args += ["-p", settings["port"]]
 
     if "response_time" in settings:
-        args += ' -w %f -c %f' % (settings["response_time"][0] / 1000.0,
-                                  settings["response_time"][1] / 1000.0)
+        warn, crit = settings["response_time"]
+        args += ["-w", "%f" % warn / 1000.0]
+        args += ["-c", "%f" % crit / 1000.0]
 
     if "timeout" in settings:
-        args += ' -t %d' % settings["timeout"]
+        args += ["-t", settings["timeout"]]
 
     if "refuse_state" in settings:
-        args += ' -r %s' % settings["refuse_state"]
+        args += ["-r", settings["refuse_state"]]
 
     if settings.get("escape_send_string"):
-        args += ' --escape'
+        args.append("--escape")
 
     if "send_string" in settings:
-        args += ' -s %s' % quote_shell_string(settings["send_string"])
+        args += ["-s", settings["send_string"]]
 
     if "expect" in settings:
         for s in settings["expect"]:
-            args += ' -e %s' % quote_shell_string(s)
+            args += ["-e", s]
 
     if settings.get("ssl"):
-        args += ' --ssl'
+        args.append("--ssl")
 
     if "cert_days" in settings:
         # legacy behavior
         if isinstance(settings["cert_days"], int):
-            args += ' -D %d' % settings["cert_days"]
+            args += ["-D", settings["cert_days"]]
         else:
             warn, crit = settings["cert_days"]
-            args += ' -D %d,%d' % (warn, crit)
+            args += ["-D", warn, crit]
 
     return args
 
@@ -80,8 +81,8 @@ def check_ftp_get_item(params):
         return "FTP"
 
 
-active_check_info['ftp'] = {
-    "command_line": '$USER1$/check_ftp $ARG1$',
+active_check_info["ftp"] = {
+    "command_line": "$USER1$/check_ftp $ARG1$",
     "argument_function": check_ftp_arguments,
     "service_description": check_ftp_get_item,
     "has_perfdata": True,

@@ -63,6 +63,9 @@ def parse_watchdog_sensors(info):
     parsed = {}
 
     general, data = info
+    if not general:
+        return parsed
+
     # sometimes there is an empty string in
     # the output. We need to handle this...
     if not general[0][1] == "":

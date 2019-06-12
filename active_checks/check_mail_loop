@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import email
+import email.utils
+import email.mime.text
 import getopt
 import imaplib
 import os

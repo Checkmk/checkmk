@@ -26,28 +26,34 @@
 
 
 def check_disk_smb_arguments(params):
-    args = ' -a $HOSTADDRESS$ -s %s' % quote_shell_string(params["share"])
-    args += ' -w%d%% -c%d%%' % params["levels"]
+    args = []
+    args += ["-a", "$HOSTADDRESS$"]
+    args += ["-s", params["share"]]
+
+    warn, crit = params["levels"]
+    args += ["-w%d%%" % warn]
+    args += ["-c%d%%" % crit]
 
     if "workgroup" in params:
-        args += ' -W %s' % quote_shell_string(params["workgroup"])
+        args += ["-W", params["workgroup"]]
 
     if "port" in params:
-        args += ' -p %d' % params["port"]
+        args += ["-p", params["port"]]
 
     if "auth" in params:
-        args += ' -u %s -p %s' % tuple(map(quote_shell_string, params["auth"]))
+        username, password = params["auth"]
+        args += ["-u", username, "-p", password]
 
     if "host" in params:
-        args += ' -H %s' % quote_shell_string(params["host"])
+        args += ["-H", params["host"]]
     else:
-        args += ' -H $HOSTADDRESS$'
+        args += ["-H", "$HOSTADDRESS$"]
 
     return args
 
 
-active_check_info['disk_smb'] = {
-    "command_line": '$USER1$/check_disk_smb $ARG1$',
+active_check_info["disk_smb"] = {
+    "command_line": "$USER1$/check_disk_smb $ARG1$",
     "argument_function": check_disk_smb_arguments,
     "service_description": lambda params: "SMB Share " + params["share"].replace("$", ""),
     "has_perfdata": True,

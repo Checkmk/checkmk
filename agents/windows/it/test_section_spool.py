@@ -4,8 +4,7 @@ import os
 import platform
 import pytest
 import re
-from remote import (actual_output, config, remotetest, remotedir, wait_agent,
-                    write_config)
+from remote import (actual_output, config, remotetest, remotedir, wait_agent, write_config)
 
 
 class Globals(object):
@@ -31,8 +30,7 @@ def expected_output():
     return [] if Globals.outdated else [r'%s' % Globals.test_message]
 
 
-@pytest.fixture(
-    params=['yes', 'no'], ids=['outdated', 'not_outdated'], autouse=True)
+@pytest.fixture(params=['yes', 'no'], ids=['outdated', 'not_outdated'], autouse=True)
 def manage_spoolfile(request):
     Globals.outdated = request.param == 'yes'
     testfile = '0testfile' if request.param == 'yes' else 'testfile'
@@ -56,8 +54,6 @@ def manage_spoolfile(request):
         os.unlink(filename)
 
 
-def test_section_spool(request, testconfig, expected_output, actual_output,
-                       testfile):
+def test_section_spool(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    remotetest(expected_output, actual_output, testfile,
-               request.node.name)
+    remotetest(expected_output, actual_output, testfile, request.node.name)

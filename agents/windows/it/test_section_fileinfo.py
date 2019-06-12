@@ -4,8 +4,7 @@ import os
 import platform
 import pytest
 import re
-from remote import (actual_output, config, remotedir, remotetest, wait_agent,
-                    write_config)
+from remote import (actual_output, config, remotedir, remotetest, wait_agent, write_config)
 import shutil
 
 
@@ -58,8 +57,7 @@ def testconfig_drive(request, config):
 
 
 @pytest.fixture(
-    params=[(Globals.paths.tempdir1, '**', True),
-            (Globals.paths.tempdir2, 'Te*', True),
+    params=[(Globals.paths.tempdir1, '**', True), (Globals.paths.tempdir2, 'Te*', True),
             (Globals.paths.tempdir2, 'Te*', False)],
     ids=['recursive_glob', 'simple_glob_alone', 'simple_glob_with_systemtime'])
 def testconfig(request, testconfig_drive):
@@ -68,23 +66,18 @@ def testconfig(request, testconfig_drive):
         if Globals.alone:
             testconfig_drive.set('global', 'sections', Globals.section)
         else:
-            testconfig_drive.set('global', 'sections',
-                                 '%s systemtime' % Globals.section)
+            testconfig_drive.set('global', 'sections', '%s systemtime' % Globals.section)
         testconfig_drive.set('global', 'crash_debug', 'yes')
         testconfig_drive.add_section(Globals.section)
         if request.param[0] != Globals.paths.tempdir1:
-            testconfig_drive.set(Globals.section, 'path',
-                                 Globals.paths.tempfile1())
+            testconfig_drive.set(Globals.section, 'path', Globals.paths.tempfile1())
             testconfig_drive.set(
                 Globals.section, 'path',
-                os.path.join(
-                    Globals.paths.tempdir1(),
-                    '?' + os.path.basename(Globals.paths.tempfile2())[1:]))
+                os.path.join(Globals.paths.tempdir1(),
+                             '?' + os.path.basename(Globals.paths.tempfile2())[1:]))
         testconfig_drive.set(Globals.section, 'path',
-                             os.path.join(request.param[0](),
-                                          request.param[1]))
-        testconfig_drive.set(Globals.section, 'path',
-                             Globals.paths.missingfile())
+                             os.path.join(request.param[0](), request.param[1]))
+        testconfig_drive.set(Globals.section, 'path', Globals.paths.missingfile())
 
         return testconfig_drive
 
@@ -109,11 +102,7 @@ def use_testfiles():
     if platform.system() == 'Windows':
         for d in [Globals.paths.tempdir1(), Globals.paths.tempdir2()]:
             os.mkdir(d)
-        for f in [
-                Globals.paths.tempfile1(),
-                Globals.paths.tempfile2(),
-                Globals.paths.tempfile3()
-        ]:
+        for f in [Globals.paths.tempfile1(), Globals.paths.tempfile2(), Globals.paths.tempfile3()]:
             with open(f, 'w') as handle:
                 handle.write(f)
 
@@ -125,7 +114,6 @@ def use_testfiles():
 
 
 @pytest.mark.usefixtures('use_testfiles')
-def test_section_fileinfo(request, testconfig, expected_output, actual_output,
-                          testfile):
+def test_section_fileinfo(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
     remotetest(expected_output, actual_output, testfile, request.node.name)

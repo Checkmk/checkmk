@@ -3,8 +3,7 @@
 import os
 import pytest
 import re
-from remote import (actual_output, config, remotetest, remotedir, wait_agent,
-                    write_config)
+from remote import (actual_output, config, remotetest, remotedir, wait_agent, write_config)
 
 
 @pytest.fixture
@@ -25,8 +24,7 @@ def expected_output():
     drive = r'[A-Z]:%s' % re.escape(os.sep)
     return [
         re.escape(r'<<<df:sep(9)>>>'),
-        r'%s\s+\w+\s+\d+\s+\d+\s+\d+\s+\d{1,3}%s\s+%s' %
-        (drive, re.escape('%'), drive)
+        r'%s\s+\w+\s+\d+\s+\d+\s+\d+\s+\d{1,3}%s\s+%s' % (drive, re.escape('%'), drive)
     ]
 
 

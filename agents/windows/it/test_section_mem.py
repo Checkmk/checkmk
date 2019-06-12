@@ -21,15 +21,9 @@ def testconfig(config):
 @pytest.fixture
 def expected_output():
     return [
-        r'<<<mem>>>',
-        r'MemTotal:\s+\d+\skB',
-        r'MemFree:\s+\d+\skB',
-        r'SwapTotal:\s+\d+\skB',
-        r'SwapFree:\s+\d+\skB',
-        r'PageTotal:\s+\d+\skB',
-        r'PageFree:\s+\d+\skB',
-        r'VirtualTotal:\s+\d+\skB',
-        r'VirtualFree:\s+\d+\skB'
+        r'<<<mem>>>', r'MemTotal:\s+\d+\skB', r'MemFree:\s+\d+\skB', r'SwapTotal:\s+\d+\skB',
+        r'SwapFree:\s+\d+\skB', r'PageTotal:\s+\d+\skB', r'PageFree:\s+\d+\skB',
+        r'VirtualTotal:\s+\d+\skB', r'VirtualFree:\s+\d+\skB'
     ]
 
 

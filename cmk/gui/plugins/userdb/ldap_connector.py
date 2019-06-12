@@ -2766,7 +2766,7 @@ def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     for site_id, site in remote_sites:
         jobs.append(
             pool.apply_async(_sychronize_profile_worker,
-                             ((states, site_id, site, profiles_to_synchronize))))
+                             (states, site_id, site, profiles_to_synchronize)))
 
     results = []
     start_time = time.time()
@@ -2808,9 +2808,8 @@ def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
         '  Disabled: %d, Succeeded: %d, Failed: %d' % (num_disabled, num_succeeded, num_failed))
 
 
-def _sychronize_profile_worker(site_configuration):
+def _sychronize_profile_worker(states, site_id, site, profiles_to_synchronize):
     import cmk.gui.watolib.user_profile as user_profile
-    states, site_id, site, profiles_to_synchronize = site_configuration
 
     if not site.get("replication"):
         return SynchronizationResult(site_id, disabled=True)

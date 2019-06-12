@@ -35,6 +35,7 @@ import json
 import os
 import tarfile
 import pytest
+import pprint
 
 import generictests
 from generictests.regression import WritableDataset
@@ -169,5 +170,6 @@ def test_crashreport(check_manager, crashdata):
                 raw_result = check.run_check(item, params, crashdata.info)
             print(CheckResult(raw_result))
     except:
+        pprint.pprint(crashdata.__dict__)
         crashdata.write()
         raise

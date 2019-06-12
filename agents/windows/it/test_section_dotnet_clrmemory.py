@@ -23,7 +23,7 @@ def testconfig(config):
 @pytest.fixture
 def expected_output():
     return chain([
-        re.escape(r'<<<dotnet_clrmemory:sep(44)>>>'),
+        re.escape(r'<<<dotnet_clrmemory:sep(9)>>>'),
         (r'AllocatedBytesPersec,Caption,Description,FinalizationSurvivors,'
          r'Frequency_Object,Frequency_PerfTime,Frequency_Sys100NS,Gen0heapsize,'
          r'Gen0PromotedBytesPerSec,Gen1heapsize,Gen1PromotedBytesPerSec,'
@@ -34,11 +34,11 @@ def expected_output():
          r'NumberTotalreservedBytes,PercentTimeinGC,PercentTimeinGC_Base,'
          r'ProcessID,PromotedFinalizationMemoryfromGen0,PromotedMemoryfromGen0,'
          r'PromotedMemoryfromGen1,Timestamp_Object,Timestamp_PerfTime,'
-         r'Timestamp_Sys100NS')
+         r'Timestamp_Sys100NS').replace(',', '\t')
     ],
-                 repeat(r'\d+,,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'[\w\#\.]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+'))
+                 repeat((r'\d+,,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+                         r'[\w\#\.]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+                         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+').replace(',', '\t')))
 
 
 def test_section_dotnet_clrmemory(testconfig, expected_output, actual_output, testfile):

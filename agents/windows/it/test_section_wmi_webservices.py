@@ -24,7 +24,7 @@ def testconfig(request, config):
 @pytest.fixture
 def expected_output():
     return chain([
-        re.escape(r'<<<wmi_webservices:sep(44)>>>'),
+        re.escape(r'<<<wmi_webservices:sep(9)>>>'),
         (r'AnonymousUsersPersec,BytesReceivedPersec,BytesSentPersec,'
          r'BytesTotalPersec,Caption,CGIRequestsPersec,'
          r'ConnectionAttemptsPersec,CopyRequestsPersec,'
@@ -66,14 +66,15 @@ def expected_output():
          r'TotalPropfindRequests,TotalProppatchRequests,TotalPutRequests,'
          r'TotalRejectedAsyncIORequests,TotalSearchRequests,'
          r'TotalTraceRequests,TotalUnlockRequests,TraceRequestsPersec,'
-         r'UnlockRequestsPersec')
+         r'UnlockRequestsPersec').replace(',', '\t')
     ],
-                 repeat(r'\d+,\d+,\d+,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,[^,]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-                        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+'))
+        repeat((r'\d+,\d+,\d+,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+                r'\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+                r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,[^,]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+                r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+                r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+                r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+').replace(
+            ',', '\t')))
 
 
 def test_section_wmi_webservices(request, testconfig, expected_output, actual_output, testfile):

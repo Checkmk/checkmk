@@ -802,7 +802,7 @@ class Site(object):
             return  # Nothing to do
 
         print "= BEGIN PROCESSES BEFORE ======================================="
-        os.system("ps -fu %s" % self.id)
+        os.system("ps -fwwu %s" % self.id)
         print "= END PROCESSES BEFORE ======================================="
 
         stop_exit_code = self.omd("stop")
@@ -810,7 +810,7 @@ class Site(object):
             print "omd stop exit code: %d" % stop_exit_code
 
         print "= BEGIN PROCESSES AFTER STOP ======================================="
-        os.system("ps -fu %s" % self.id)
+        os.system("ps -fwwu %s" % self.id)
         print "= END PROCESSES AFTER STOP ======================================="
 
         try:
@@ -824,7 +824,7 @@ class Site(object):
                 time.sleep(0.2)
         except:
             print "= BEGIN PROCESSES AFTER WAIT ======================================="
-            os.system("ps -fu %s" % self.id)
+            os.system("ps -fwwu %s" % self.id)
             print "= END PROCESSES AFTER WAIT ======================================="
             raise
 

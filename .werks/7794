@@ -1,0 +1,10 @@
+Title: oracle_sessions: Fixed parsing invalid lines containg 'FAILURE' instead of amount of current sessions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560344334
+Class: fix
+
+

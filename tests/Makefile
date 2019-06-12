@@ -7,6 +7,8 @@ COVERAGE := $(PIPENV) run coverage
 PYTEST   := $(PIPENV) run py.test -vv
 YAPF     := $(PIPENV) run yapf
 
+include ../defines.make
+
 .PHONY: help pipenv-check test-bandit test-docker test-format-python \
         test-gui-crawl test-integration test-packaging test-pylint \
         test-shellcheck test-format-shell \

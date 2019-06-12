@@ -30,7 +30,7 @@ def DOCKER_BUILDS = [:]
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
-def CMK_VERSION
+def CMK_VERSION = ''
 if(BRANCH == 'master' && VERSION == 'daily') {
     CMK_VERSION = dateFormat.format(date)
 } else if (VERSION == 'daily') {

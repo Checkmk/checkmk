@@ -586,7 +586,8 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
         this_time = timestamp
 
     if not params.get("aggregate"):
-        return check_if_common_single(item, params, info, has_nodeinfo=has_nodeinfo)
+        return check_if_common_single(
+            item, params, info, has_nodeinfo=has_nodeinfo, timestamp=this_time)
 
     # If this item is in an ifgroup create a pseudo interface and
     # pass its data to the common instance.
@@ -780,7 +781,8 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
         wrapped,
         has_nodeinfo=has_nodeinfo,
         group_members=group_members,
-        group_name=group_name)
+        group_name=group_name,
+        timestamp=this_time)
 
 
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.

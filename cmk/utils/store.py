@@ -280,7 +280,7 @@ def aquire_lock(path, blocking=True):
     if have_lock(path):
         return True  # No recursive locking
 
-    logger.debug("Try aquire lock on %s", path)
+    logger.debug("Try aquire lock on %s", path.decode("utf-8"))
 
     # Create file (and base dir) for locking if not existant yet
     if not os.path.exists(os.path.dirname(path)):
@@ -304,7 +304,7 @@ def aquire_lock(path, blocking=True):
             fd = fd_new
 
     _acquired_locks[path] = fd
-    logger.debug("Got lock on %s", path)
+    logger.debug("Got lock on %s", path.decode("utf-8"))
 
 
 def try_aquire_lock(path):
@@ -320,7 +320,7 @@ def try_aquire_lock(path):
 def release_lock(path):
     if not have_lock(path):
         return  # no unlocking needed
-    logger.debug("Releasing lock on %s", path)
+    logger.debug("Releasing lock on %s", path.decode("utf-8"))
     fd = _acquired_locks.get(path)
     if fd is None:
         return
@@ -330,7 +330,7 @@ def release_lock(path):
         if e.errno != errno.EBADF:  # Bad file number
             raise
     _acquired_locks.pop(path, None)
-    logger.debug("Released lock on %s", path)
+    logger.debug("Released lock on %s", path.decode("utf-8"))
 
 
 def have_lock(path):

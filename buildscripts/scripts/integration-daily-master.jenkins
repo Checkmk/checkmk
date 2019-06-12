@@ -21,8 +21,15 @@ currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LI
 def DOCKER_BUILDS = [:]
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
-def CMK_VERSION = dateFormat.format(date)
-def TEST_DATA = '/var/jenkins_home/test-data/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERSION
+
+def BRANCH = scm.branches[0].name.replaceAll("/","-")
+def CMK_VERSION
+if(BRANCH == 'master') {
+    CMK_VERSION = dateFormat.format(date)
+} else {
+    CMK_VERSION = BRANCH + '-' + dateFormat.format(date)
+}
+def TEST_DATA = '/var/jenkins_home/test-data/' + '-' + '/' + CMK_VERSION
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -34,8 +41,7 @@ node {
             stage('checkout sources') {
                 cleanWs()
                 dir(TEST_DATA + '/git') {
-                    git branch: 'master', changelog: false, credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6', poll: false, url: 'ssh://jenkins@review.lan.mathias-kettner.de:29418/check_mk.git'
-                    //checkout(scm)
+                    checkout(scm)
                 }
             }
         }

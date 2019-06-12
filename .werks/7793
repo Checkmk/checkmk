@@ -1,0 +1,11 @@
+Title: watchdog_sensors: Do not proceed parsing sensor data if no version information is available
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b2
+Date: 1560343062
+
+

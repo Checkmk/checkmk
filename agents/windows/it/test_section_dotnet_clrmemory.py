@@ -41,6 +41,5 @@ def expected_output():
                         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+'))
 
 
-def test_section_dotnet_clrmemory(testconfig, expected_output, actual_output,
-                                  testfile):
+def test_section_dotnet_clrmemory(testconfig, expected_output, actual_output, testfile):
     remotetest(expected_output, actual_output, testfile)

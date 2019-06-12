@@ -6,9 +6,8 @@ import math
 import os
 import platform
 import re
-from remote import (actual_output, assert_subprocess, config, host, remote_ip,
-                    remotedir, remotetest, remoteuser, wait_agent,
-                    write_config)
+from remote import (actual_output, assert_subprocess, config, host, remote_ip, remotedir,
+                    remotetest, remoteuser, wait_agent, write_config)
 import sys
 
 import pytest
@@ -37,9 +36,8 @@ class Globals:
 
 def generate_logs():
     if platform.system() == 'Windows':
-        with _winreg.OpenKey(
-                _winreg.HKEY_LOCAL_MACHINE,
-                'SYSTEM\\CurrentControlSet\\Services\\Eventlog') as key:
+        with _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
+                             'SYSTEM\\CurrentControlSet\\Services\\Eventlog') as key:
             index = 0
             while True:
                 try:
@@ -86,8 +84,8 @@ def logtitle(log):
 def create_event(eventid):
     if platform.system() == 'Windows':
         cmd = [
-            'eventcreate.exe', '/l', Globals.testlog, '/t',
-            Globals.testeventtype, '/so', Globals.testsource, '/id',
+            'eventcreate.exe', '/l', Globals.testlog, '/t', Globals.testeventtype, '/so',
+            Globals.testsource, '/id',
             '%d' % eventid, '/d', Globals.testdescription
         ]
         assert_subprocess(cmd)
@@ -122,24 +120,21 @@ def testconfig(request, config):
 @pytest.fixture
 def expected_output_no_events():
     if platform.system() == 'Windows':
-        return [re.escape(r'<<<%s>>>' % Globals.section)
-                ] + [logtitle(l) for l in logs]
+        return [re.escape(r'<<<%s>>>' % Globals.section)] + [logtitle(l) for l in logs]
 
 
 @pytest.fixture
 def expected_output_application_events():
     if platform.system() == 'Windows':
         split_index = logs.index('Application') + 1
-        return chain(
-            [re.escape(r'<<<%s>>>' % Globals.section)],
-            [logtitle(l) for l in logs[:split_index]], [
-                r'W \w{3} \d{2} \d{2}\:\d{2}:\d{2} 0\.%d %s %s' %
-                (i, Globals.testsource.replace(' ', '_'),
-                 Globals.testdescription) for i in Globals.testids
-            ],
-            repeat(r'|'.join(
-                [logtitle(l) for l in logs[split_index:]] +
-                [r'[CWOu\.] \w{3} \d{2} \d{2}\:\d{2}:\d{2} \d+\.\d+ .+ .+'])))
+        return chain([re.escape(r'<<<%s>>>' % Globals.section)],
+                     [logtitle(l) for l in logs[:split_index]], [
+                         r'W \w{3} \d{2} \d{2}\:\d{2}:\d{2} 0\.%d %s %s' %
+                         (i, Globals.testsource.replace(' ', '_'), Globals.testdescription)
+                         for i in Globals.testids
+                     ],
+                     repeat(r'|'.join([logtitle(l) for l in logs[split_index:]] +
+                                      [r'[CWOu\.] \w{3} \d{2} \d{2}\:\d{2}:\d{2} \d+\.\d+ .+ .+'])))
 
 
 def last_records():
@@ -165,12 +160,8 @@ def with_statefile(request):
             os.mkdir(Globals.statedir)
         except OSError:
             pass  # Directory may already exist.
-        with open(os.path.join(Globals.statedir, request.param),
-                  'w') as statefile:
-            eventstate = {
-                logtype: get_last_record(logtype)
-                for logtype in logs
-            }
+        with open(os.path.join(Globals.statedir, request.param), 'w') as statefile:
+            eventstate = {logtype: get_last_record(logtype) for logtype in logs}
             for logtype, state in eventstate.items():
                 statefile.write('%s|%s\r\n' % (logtype, state))
     yield
@@ -181,34 +172,27 @@ def verify_eventstate():
     yield
     if platform.system() == 'Windows':
         expected_eventstate = last_records()
-        with open(os.path.join(Globals.statedir,
-                               Globals.statefile)) as statefile:
+        with open(os.path.join(Globals.statedir, Globals.statefile)) as statefile:
             actual_eventstate = dict(get_log_state(line) for line in statefile)
         for (expected_log, expected_state), (actual_log, actual_state) in zip(
-                sorted(expected_eventstate.items()),
-                sorted(actual_eventstate.items())):
+                sorted(expected_eventstate.items()), sorted(actual_eventstate.items())):
             assert expected_log == actual_log
             state_tolerance = 0 if expected_log == Globals.testlog else Globals.tolerance
-            assert math.fabs(
-                expected_state - actual_state) <= state_tolerance, (
-                    "expected state for log '%s' is %d, actual state %d, "
-                    'state_tolerance %d' % (expected_log, expected_state,
-                                            actual_state, state_tolerance))
+            assert math.fabs(expected_state - actual_state) <= state_tolerance, (
+                "expected state for log '%s' is %d, actual state %d, "
+                'state_tolerance %d' % (expected_log, expected_state, actual_state,
+                                        state_tolerance))
 
 
 @pytest.mark.usefixtures('no_statefile')
-def test_section_eventlog__no_statefile__no_events(request, testconfig,
-                                                   expected_output_no_events,
+def test_section_eventlog__no_statefile__no_events(request, testconfig, expected_output_no_events,
                                                    actual_output, testfile):
     # request.node.name gives test name
-    remotetest(expected_output_no_events, actual_output, testfile,
-               request.node.name)
+    remotetest(expected_output_no_events, actual_output, testfile, request.node.name)
 
 
 @pytest.mark.usefixtures('with_statefile', 'create_events')
 def test_section_eventlog__application_warnings(
-        request, testconfig, expected_output_application_events, actual_output,
-        testfile):
+        request, testconfig, expected_output_application_events, actual_output, testfile):
     # request.node.name gives test name
-    remotetest(expected_output_application_events, actual_output, testfile,
-               request.node.name)
+    remotetest(expected_output_application_events, actual_output, testfile, request.node.name)

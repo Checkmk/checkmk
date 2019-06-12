@@ -17,13 +17,13 @@ lockname = os.path.join(remotedir, 'test.lock')
 mutexname = '__test_lock__'
 retry_count = 20
 
+
 @contextmanager
 def synchronized():
     try:
         mutex = CreateMutex(None, True, mutexname)
         if GetLastError() == ERROR_ALREADY_EXISTS:
-            sys.stderr.write(
-                'Could not acquire mutex. Is another test process running?')
+            sys.stderr.write('Could not acquire mutex. Is another test process running?')
             sys.exit(1)
         yield
     finally:

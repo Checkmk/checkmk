@@ -1,6 +1,13 @@
 import pytest
 
-from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
+from checktestlib import (
+    BasicCheckResult,
+    CheckResult,
+    DiscoveryResult,
+    PerfValue,
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
+)
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
@@ -273,3 +280,257 @@ winperf_if_section = [
 def test_winperf_if_parse_sections(check_manager, info):
     check = check_manager.get_check('winperf_if')
     check.run_parse(info)
+
+
+discovery_winperf_if_group_patterns = [
+    (
+        u'Broadcom ABC456 NetXtreme 456 GigE [Client2] 137',
+        {
+            'state': ['1'],
+            'speed': 1410065408
+        },
+    ),
+    (
+        u'Broadcom ABC123 NetXtreme 123 GigE [Client1] 138',
+        {
+            'state': ['1'],
+            'speed': 1410065408
+        },
+    ),
+    (
+        'isatap',
+        {
+            'aggregate': {
+                'item_type': 'description',
+                'group_patterns': {
+                    'test-host': {
+                        'items': [
+                            u'isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1}',
+                            u'isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1}',
+                            u'isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1}',
+                            u'isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1}',
+                            u'isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1}',
+                            u'isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1}',
+                        ]
+                    }
+                }
+            },
+            'state': ['1'],
+            'speed': 600000,
+        },
+    ),
+    (
+        'Broadcom',
+        {
+            'aggregate': {
+                'item_type': 'description',
+                'group_patterns': {
+                    'test-host': {
+                        'items': [
+                            u'Broadcom ABC123 NetXtreme 123 GigE [Client1] 138',
+                            u'Broadcom ABC456 NetXtreme 456 GigE [Client2] 137'
+                        ],
+                    },
+                },
+            },
+            'state': ['1'],
+            'speed': 2820130816,
+        },
+    ),
+]
+
+check_results_winperf_if_group_patterns = [
+    CheckResult([(
+        0,
+        "[2] (Connected) 1.41 Gbit/s",
+        [],
+    )]),
+    CheckResult([(
+        0,
+        "[1] (Connected) 1.41 Gbit/s",
+        [],
+    )]),
+    CheckResult([(
+        0,
+        "Teaming Status (up), Members: [isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1} (Connected), isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1} (Connected), isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1} (Connected), isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1} (Connected), isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1} (Connected), isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1} (Connected)] 600.0 Kbit/s",
+        [],
+    )]),
+    CheckResult([(
+        0,
+        "Teaming Status (up), Members: [Broadcom ABC456 NetXtreme 456 GigE [Client2] 137 (Connected), Broadcom ABC123 NetXtreme 123 GigE [Client1] 138 (Connected)] 2.82 Gbit/s",
+        [],
+    )]),
+]
+
+
+@pytest.mark.parametrize(
+    "settings,group_patterns,info,expected_discovery,expected_check_results",
+    [
+        (
+            [{
+                'use_desc': True
+            }],
+            {
+                'Broadcom': {
+                    'group_patterns': {
+                        'test-host': {
+                            'items': [
+                                u'Broadcom ABC123 NetXtreme 123 GigE [Client1] 138',
+                                u'Broadcom ABC456 NetXtreme 456 GigE [Client2] 137'
+                            ],
+                        },
+                    },
+                    'group_presence': 'separate',  # discover group interfaces additionally
+                    'group_type': 'single_host',
+                },
+                'isatap': {
+                    'group_patterns': {
+                        'test-host': {
+                            'items': [
+                                u'isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1}',
+                                u'isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1}',
+                                u'isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1}',
+                                u'isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1}',
+                                u'isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1}',
+                                u'isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1}',
+                            ],
+                        },
+                    },
+                    'group_presence': 'instead',  # only discover group interfaces
+                    'group_type': 'single_host'
+                }
+            },
+            winperf_if_section,
+            discovery_winperf_if_group_patterns,
+            check_results_winperf_if_group_patterns,
+        ),
+    ],
+)
+def test_winperf_if_inventory_group_patterns(check_manager, monkeypatch, settings, group_patterns,
+                                             info, expected_discovery, expected_check_results):
+    check = check_manager.get_check("winperf_if")
+    monkeypatch.setitem(check.context, "host_name", lambda: "test-host")
+    monkeypatch.setitem(check.context, "host_extra_conf", lambda _, __: settings)
+    monkeypatch.setitem(check.context,
+                        "_prepare_if_group_patterns_from_conf", lambda: group_patterns)
+    parsed = check.run_parse(info)
+
+    actual_discovery = check.run_discovery(parsed)
+    assertDiscoveryResultsEqual(check, DiscoveryResult(sorted(expected_discovery)),
+                                DiscoveryResult(sorted(actual_discovery)))
+
+    # check if grouped interfaces return the "Teaming Status" and "Members" of the group
+    for (item, params), expected_result in zip(expected_discovery, expected_check_results):
+        actual_result = CheckResult(check.run_check(item, params, parsed))
+        assertCheckResultsEqual(actual_result, expected_result)
+
+
+def winperf_if_teaming_parsed(time, out_octets):
+    return (
+        time,
+        [
+            ((u'DAG-NET', '8'), u'Intel[R] Ethernet 10G 2P X520 Adapter 4', '6', 10000000000,
+             ('1', 'Connected'), 145209040, 0, 0, 2099072, 0, 0, out_octets, 0, 0, 0, 0, 0, 0,
+             u'SLOT 4 Port 2 DAG', '\xa06\x9f\xb0\xb3f'),
+            ((u'DAG-NET', '3'), u'Intel[R] Ethernet 10G 2P X520 Adapter 2', '6', 10000000000,
+             ('1',
+              'Connected'), 410232131549, 376555354, 0, 225288, 0, 0, 1171662236873 + out_octets,
+             833538016, 0, 63489, 0, 0, 0, u'SLOT 6 Port 1 DAG', '\xa06\x9f\xb0\xa3`'),
+        ],
+        {},
+    )
+
+
+def test_winperf_if_teaming_performance_data(check_manager, monkeypatch):
+    check = check_manager.get_check("winperf_if")
+    monkeypatch.setitem(check.context, "host_extra_conf", lambda _, __: [{}])
+    monkeypatch.setitem(check.context, "_prepare_if_group_patterns_from_conf", lambda: {})
+
+    params_single = {'state': ['1'], 'speed': 10000000000}
+    params_teamed = {
+        'aggregate': {
+            'item_type': 'index',
+            'group_patterns': {
+                'non-existent-testhost': {
+                    'items': [],
+                    'iftype': '6'
+                }
+            }
+        },
+        'state': ['1'],
+        'speed': 20000000000
+    }
+
+    # Initalize counters
+    monkeypatch.setattr('time.time', lambda: 0)
+    parsed = winperf_if_teaming_parsed(time=0, out_octets=0)
+    CheckResult(check.run_check(u'3', params_single, parsed))
+    CheckResult(check.run_check(u'8', params_single, parsed))
+    CheckResult(check.run_check(u'DAG-NET', params_teamed, parsed))
+
+    monkeypatch.setattr('time.time', lambda: 10)
+    parsed = winperf_if_teaming_parsed(time=10, out_octets=1024 * 1024 * 1024 * 10)
+    result_3 = CheckResult(check.run_check(u'3', params_single, parsed))
+    result_8 = CheckResult(check.run_check(u'8', params_single, parsed))
+    result_dag_net = CheckResult(check.run_check(u'DAG-NET', params_teamed, parsed))
+
+    assert result_3 == CheckResult([
+        BasicCheckResult(
+            0,
+            u'[SLOT 6 Port 1 DAG] (Connected) MAC: A0:36:9F:B0:A3:60, 10.00 Gbit/s, In: 0.00 B/s (0.0%), Out: 1.00 GB/s (85.9%)',
+            [
+                PerfValue('in', 0.0, None, None, 0, 1250000000.0),
+                PerfValue('inucast', 0.0, None, None, None, None),
+                PerfValue('innucast', 0.0, None, None, None, None),
+                PerfValue('indisc', 0.0, None, None, None, None),
+                PerfValue('inerr', 0.0, None, None, None, None),
+                PerfValue('out', 1073741824.0, None, None, 0, 1250000000.0),
+                PerfValue('outucast', 0.0, None, None, None, None),
+                PerfValue('outnucast', 0.0, None, None, None, None),
+                PerfValue('outdisc', 0.0, None, None, None, None),
+                PerfValue('outerr', 0.0, None, None, None, None),
+                PerfValue('outqlen', 0, None, None, None, None),
+                PerfValue('in', 0.0, None, None, None, None),
+                PerfValue('out', 1073741824.0, None, None, None, None)
+            ])
+    ])
+    assert result_8 == CheckResult([
+        BasicCheckResult(
+            0,
+            u'[SLOT 4 Port 2 DAG] (Connected) MAC: A0:36:9F:B0:B3:66, 10.00 Gbit/s, In: 0.00 B/s (0.0%), Out: 1.00 GB/s (85.9%)',
+            [
+                PerfValue('in', 0.0, None, None, 0, 1250000000.0),
+                PerfValue('inucast', 0.0, None, None, None, None),
+                PerfValue('innucast', 0.0, None, None, None, None),
+                PerfValue('indisc', 0.0, None, None, None, None),
+                PerfValue('inerr', 0.0, None, None, None, None),
+                PerfValue('out', 1073741824.0, None, None, 0, 1250000000.0),
+                PerfValue('outucast', 0.0, None, None, None, None),
+                PerfValue('outnucast', 0.0, None, None, None, None),
+                PerfValue('outdisc', 0.0, None, None, None, None),
+                PerfValue('outerr', 0.0, None, None, None, None),
+                PerfValue('outqlen', 0, None, None, None, None),
+                PerfValue('in', 0.0, None, None, None, None),
+                PerfValue('out', 1073741824.0, None, None, None, None)
+            ])
+    ])
+    assert result_dag_net == CheckResult([
+        BasicCheckResult(
+            0,
+            'Teaming Status (up), Members: [8 (Connected), 3 (Connected)] 20.00 Gbit/s, In: 0.00 B/s (0.0%), Out: 2.00 GB/s (85.9%)',
+            [
+                PerfValue('in', 0.0, None, None, 0, 2500000000.0),
+                PerfValue('inucast', 0.0, None, None, None, None),
+                PerfValue('innucast', 0.0, None, None, None, None),
+                PerfValue('indisc', 0.0, None, None, None, None),
+                PerfValue('inerr', 0.0, None, None, None, None),
+                PerfValue('out', 2147483648.0, None, None, 0, 2500000000.0),
+                PerfValue('outucast', 0.0, None, None, None, None),
+                PerfValue('outnucast', 0.0, None, None, None, None),
+                PerfValue('outdisc', 0.0, None, None, None, None),
+                PerfValue('outerr', 0.0, None, None, None, None),
+                PerfValue('outqlen', 0, None, None, None, None),
+                PerfValue('in', 0.0, None, None, None, None),
+                PerfValue('out', 2147483648.0, None, None, None, None)
+            ])
+    ])

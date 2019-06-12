@@ -101,7 +101,7 @@ inpath() {
 # our shipped waitmax. waitmax is statically linked and crashes on
 # some Ubuntu versions recently.
 if inpath timeout; then
-    waitmax () {
+    waitmax() {
         timeout "$@"
     }
     export -f waitmax
@@ -117,13 +117,11 @@ if [ "$ENCRYPTED" == "yes" ]; then
     exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
 fi
 
-
 RTC_PLUGINS=""
 if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
     # shellcheck source=/dev/null
     . "$MK_CONFDIR/real_time_checks.cfg"
 fi
-
 
 #
 # CHECK SECTIONS
@@ -132,7 +130,7 @@ fi
 section_mem() {
     if [ -z "$IS_DOCKERIZED" ]; then
         echo '<<<mem>>>'
-        grep -E -v '^Swap:|^Mem:|total:' < /proc/meminfo
+        grep -E -v '^Swap:|^Mem:|total:' </proc/meminfo
     else
         echo '<<<docker_container_mem>>>'
         cat /sys/fs/cgroup/memory/memory.stat
@@ -150,7 +148,7 @@ section_cpu() {
     else
         CPU_REGEX='^CPU|^processor'
     fi
-    NUM_CPUS=$(grep -c -E $CPU_REGEX < /proc/cpuinfo)
+    NUM_CPUS=$(grep -c -E $CPU_REGEX </proc/cpuinfo)
 
     if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
         echo '<<<cpu>>>'
@@ -242,7 +240,7 @@ export -f run_mrpe
 #   -ma mrpe-mode with age: stores exit code with the cache and adds the cache age
 #   NAME is the name of the section (also used as cache file name)
 #   MAXAGE is the maximum cache livetime in seconds
-run_cached () {
+run_cached() {
     local NOW
     NOW=$(date +%s)
     local section=
@@ -250,15 +248,25 @@ run_cached () {
     local append_age=0
     # TODO: this function is unable to handle mulitple args at once
     #       for example: -s -m won't work, it is read as single token "-s -m"
-    if [ "$1" = -s ]; then local section="echo '<<<$2:cached($NOW,$3)>>>' ; " ; shift ; fi
-    if [ "$1" = -m ]; then local mrpe=1 ; shift ; fi
-    if [ "$1" = "-ma" ]; then local mrpe=1 ; local append_age=1 ; shift ; fi
+    if [ "$1" = -s ]; then
+        local section="echo '<<<$2:cached($NOW,$3)>>>' ; "
+        shift
+    fi
+    if [ "$1" = -m ]; then
+        local mrpe=1
+        shift
+    fi
+    if [ "$1" = "-ma" ]; then
+        local mrpe=1
+        local append_age=1
+        shift
+    fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
     local CMDLINE=$section$*
 
-    if [ ! -d "$MK_VARDIR/cache" ]; then mkdir -p "$MK_VARDIR/cache" ; fi
+    if [ ! -d "$MK_VARDIR/cache" ]; then mkdir -p "$MK_VARDIR/cache"; fi
     if [ "$mrpe" = 1 ]; then
         CACHEFILE="$MK_VARDIR/cache/mrpe_$NAME.cache"
     else
@@ -280,14 +288,13 @@ run_cached () {
         fi
     fi
 
-
     # Check if cache file exists and is recent enough
     if [ -s "$CACHEFILE" ]; then
         local MTIME
         MTIME=$(stat -c %Y "$CACHEFILE")
         local AGE
         AGE=$((NOW - MTIME))
-        if [ "$AGE" -le "$MAXAGE" ]; then local USE_CACHEFILE=1 ; fi
+        if [ "$AGE" -le "$MAXAGE" ]; then local USE_CACHEFILE=1; fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
         if [ $append_age -eq 1 ]; then
@@ -295,7 +302,7 @@ run_cached () {
             # or, if no pipe found (-e t) append it (third -e),
             # but only once and on the second line (2!b) (first line is section header,
             # all further lines are long output)
-            sed -e "2s/|/ (Cached: ${AGE}\/${MAXAGE}s)|/" -e t -e "2s/$/ (Cached: ${AGE}\/${MAXAGE}s)/" < "$CACHEFILE"
+            sed -e "2s/|/ (Cached: ${AGE}\/${MAXAGE}s)|/" -e t -e "2s/$/ (Cached: ${AGE}\/${MAXAGE}s)/" <"$CACHEFILE"
         else
             CACHE_INFO="cached($MTIME,$MAXAGE)"
             if [[ $NAME == local_* ]]; then
@@ -327,8 +334,7 @@ export -f run_cached
 # detailed graphing (if you configure your RRDs to this resolution).
 run_real_time_checks() {
     PIDFILE=$MK_VARDIR/real_time_checks.pid
-    echo $$ > "$PIDFILE"
-
+    echo $$ >"$PIDFILE"
 
     if [ "$PASSPHRASE" != "" ]; then
         # new mechanism to set the passphrase has priority
@@ -341,7 +347,6 @@ run_real_time_checks() {
         PROTOCOL=99
     fi
 
-
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
         if [ ! -e "$PIDFILE" ] || [ "$(<"$PIDFILE")" -ne $$ ] || [ "$RTC_TIMEOUT" -eq 0 ]; then
@@ -353,16 +358,17 @@ run_real_time_checks() {
             # output and do some kind of nicer error handling.
             # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
             # dd is used to concatenate the output of all commands to a single write/block => udp packet
-            { echo -n $PROTOCOL ;
-              date +%s | tr -d '\n' ;
-              if [ "$ENCRYPTED_RT" != "no" ]; then
-                  export RTC_SECRET=$RTC_SECRET ; section_"$SECTION" | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt ;
-              else
-                  section_"$SECTION" ;
-              fi
+            {
+                echo -n $PROTOCOL
+                date +%s | tr -d '\n'
+                if [ "$ENCRYPTED_RT" != "no" ]; then
+                    export RTC_SECRET=$RTC_SECRET
+                    section_"$SECTION" | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                else
+                    section_"$SECTION"
+                fi
             } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
         done
-
 
         # Plugins
         if cd "$PLUGINSDIR"; then
@@ -375,19 +381,21 @@ run_real_time_checks() {
                 # output and do some kind of nicer error handling.
                 # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
                 # dd is used to concatenate the output of all commands to a single write/block => udp packet
-                { echo -n $PROTOCOL ;
-                  date +%s | tr -d '\n' ;
-                  if [ "$ENCRYPTED_RT" != "no" ]; then
-                      export RTC_SECRET=$RTC_SECRET ; ./$PLUGIN | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt ;
-                  else
-                      ./"$PLUGIN";
-                  fi
+                {
+                    echo -n $PROTOCOL
+                    date +%s | tr -d '\n'
+                    if [ "$ENCRYPTED_RT" != "no" ]; then
+                        export RTC_SECRET=$RTC_SECRET
+                        ./$PLUGIN | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                    else
+                        ./"$PLUGIN"
+                    fi
                 } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
             done
         fi
 
         sleep 1
-        RTC_TIMEOUT=$((RTC_TIMEOUT-1))
+        RTC_TIMEOUT=$((RTC_TIMEOUT - 1))
     done
 }
 
@@ -404,7 +412,8 @@ echo "LocalDirectory: $LOCALDIR"
 # If we are called via xinetd, try to find only_from configuration
 if [ -n "$REMOTE_HOST" ]; then
     echo -n 'OnlyFrom: '
-    sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1; echo
+    sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
+    echo
 fi
 
 section_df
@@ -427,43 +436,43 @@ if inpath waitmax; then
     STAT_BROKE="5.3.0"
 
     echo '<<<nfsmounts>>>'
-    sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
+    sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
         sed 's/\\040/ /g' |
         while read -r MP; do
-        if [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
-            waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
-                echo "$MP hanging 0 0 0 0"
-        else
-            waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
-                printf '\n'|| echo "$MP hanging 0 0 0 0"
-        fi
-    done
+            if [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
+                waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
+                    echo "$MP hanging 0 0 0 0"
+            else
+                waitmax -s 9 5 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
+                    printf '\n' || echo "$MP hanging 0 0 0 0"
+            fi
+        done
 
     echo '<<<cifsmounts>>>'
-    sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
+    sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
         sed 's/\\040/ /g' |
         while read -r MP; do
-        if [ ! -r "$MP" ]; then
-            echo "$MP Permission denied"
-        elif [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
-            waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
-                echo "$MP hanging 0 0 0 0"
-        else
-            waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
-                printf '\n'|| echo "$MP hanging 0 0 0 0"
-        fi
-    done
+            if [ ! -r "$MP" ]; then
+                echo "$MP Permission denied"
+            elif [ "$STAT_VERSION" != "$STAT_BROKE" ]; then
+                waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" ||
+                    echo "$MP hanging 0 0 0 0"
+            else
+                waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" &&
+                    printf '\n' || echo "$MP hanging 0 0 0 0"
+            fi
+        done
 fi
 
 # Check mount options. Filesystems may switch to 'ro' in case
 # of a read error.
 echo '<<<mounts>>>'
-grep ^/dev < /proc/mounts | grep -v " squashfs "
+grep ^/dev </proc/mounts | grep -v " squashfs "
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 \
-    | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 |
+    sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
 
 # Memory usage
 section_mem
@@ -492,13 +501,12 @@ if inpath ethtool; then
     done
 fi
 
-
 # Current state of bonding interfaces
 if [ -e /proc/net/bonding ]; then
     echo '<<<lnx_bonding:sep(58)>>>'
-    pushd /proc/net/bonding > /dev/null
+    pushd /proc/net/bonding >/dev/null
     head -v -n 1000 ./*
-    popd > /dev/null
+    popd >/dev/null
 fi
 
 # Same for Open vSwitch bonding
@@ -506,12 +514,11 @@ if inpath ovs-appctl; then
     BONDS=$(ovs-appctl bond/list)
     COL=$(echo "$BONDS" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
     echo '<<<ovs_bonding:sep(58)>>>'
-    for bond in $(echo "$BONDS" | sed -e 1d | cut -f"${COL}") ; do
+    for bond in $(echo "$BONDS" | sed -e 1d | cut -f"${COL}"); do
         echo "[$bond]"
         ovs-appctl bond/show "$bond"
     done
 fi
-
 
 # Number of TCP connections in the various states
 if inpath waitmax; then
@@ -520,8 +527,8 @@ if inpath waitmax; then
     if [ $? == 0 ]; then
         echo "$THIS"
     elif inpath ss; then
-        ss -ant |grep -v ^State | awk ' /:/ { c[$1]++; } END { for (x in c) { print x, c[x]; } }' \
-            | sed -e 's/^ESTAB/01/g;s/^SYN-SENT/02/g;s/^SYN-RECV/03/g;s/^FIN-WAIT-1/04/g;s/^FIN-WAIT-2/05/g;s/^TIME-WAIT/06/g;s/^CLOSED/07/g;s/^CLOSE-WAIT/08/g;s/^LAST-ACK/09/g;s/^LISTEN/0A/g;s/^CLOSING/0B/g;'
+        ss -ant | grep -v ^State | awk ' /:/ { c[$1]++; } END { for (x in c) { print x, c[x]; } }' |
+            sed -e 's/^ESTAB/01/g;s/^SYN-SENT/02/g;s/^SYN-RECV/03/g;s/^FIN-WAIT-1/04/g;s/^FIN-WAIT-2/05/g;s/^TIME-WAIT/06/g;s/^CLOSED/07/g;s/^CLOSE-WAIT/08/g;s/^LAST-ACK/09/g;s/^LISTEN/0A/g;s/^CLOSING/0B/g;'
     fi
 fi
 
@@ -537,7 +544,7 @@ fi
 if [ -z "$IS_DOCKERIZED" ]; then
     echo '<<<diskstat>>>'
     date +%s
-    grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' < /proc/diskstats
+    grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
     if inpath dmsetup; then
         echo '[dmsetup_info]'
         dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
@@ -556,11 +563,10 @@ else
     done
     echo "[names]"
     for F in /sys/block/*; do
-        echo -n "${F##*/} " ;
-        cat "$F/dev";
+        echo -n "${F##*/} "
+        cat "$F/dev"
     done
 fi
-
 
 # Performancecounter Kernel
 if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
@@ -575,7 +581,6 @@ if inpath ipmitool; then
     # readable discrete sensor states
     run_cached -s "ipmi_discrete:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
 fi
-
 
 # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
 # have installed freeipmi that IPMI is really support by your hardware.
@@ -615,8 +620,8 @@ if inpath dmraid && DMSTATUS=$(waitmax 3 dmraid -r); then
     # Output disk names of the RAID disks
     DISKS=$(echo "$DMSTATUS" | cut -f1 -d":")
 
-    for disk in $DISKS ; do
-        device=$(cat /sys/block/"$(basename "$disk")"/device/model )
+    for disk in $DISKS; do
+        device=$(cat /sys/block/"$(basename "$disk")"/device/model)
         status=$(echo "$DMSTATUS" | grep "^${disk}")
         echo "${status} Model: ${device}"
     done
@@ -625,9 +630,9 @@ fi
 # RAID status of LSI controllers via cfggen
 if inpath cfggen; then
     echo '<<<lsi>>>'
-    cfggen 0 DISPLAY \
-        | grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' \
-        | sed -e 's/ *//g' -e 's/:/ /'
+    cfggen 0 DISPLAY |
+        grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' |
+        sed -e 's/ *//g' -e 's/:/ /'
 fi
 
 # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
@@ -648,19 +653,19 @@ fi
 
 if [ "$MegaCli_bin" != "unknown" ]; then
     echo '<<<megaraid_pdisks>>>'
-    for part in $($MegaCli_bin -EncInfo -aALL -NoLog < /dev/null \
-        | sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
+    for part in $($MegaCli_bin -EncInfo -aALL -NoLog </dev/null |
+        sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
         [ "$part" = adapter ] && echo ""
         [ "$part" = 'Enclosure' ] && echo -ne "\ndev2enc"
         echo -n " $part"
     done
     echo
-    $MegaCli_bin -PDList -aALL -NoLog < /dev/null \
-        | grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
+    $MegaCli_bin -PDList -aALL -NoLog </dev/null |
+        grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
     echo '<<<megaraid_ldisks>>>'
-    $MegaCli_bin -LDInfo -Lall -aALL -NoLog < /dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
+    $MegaCli_bin -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
     echo '<<<megaraid_bbu>>>'
-    $MegaCli_bin -AdpBbuCmd -GetBbuStatus -aALL -NoLog < /dev/null | grep -v Exit
+    $MegaCli_bin -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
 fi
 
 # RAID status of 3WARE disk controller (by Radoslaw Bak)
@@ -694,8 +699,8 @@ fi
 # /etc/openvpn. We might find a safer way to find the configuration later.
 if [ -e /etc/openvpn/openvpn-status.log ]; then
     echo '<<<openvpn_clients:sep(44)>>>'
-    sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < /etc/openvpn/openvpn-status.log \
-        | sed -e 1,3d -e '$d'
+    sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' </etc/openvpn/openvpn-status.log |
+        sed -e 1,3d -e '$d'
 fi
 
 # Time synchronization with NTP
@@ -722,32 +727,32 @@ if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
 fi
 
 if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && [ -e /proc/drbd ]; then
-  echo '<<<drbd>>>'
-  cat /proc/drbd
+    echo '<<<drbd>>>'
+    cat /proc/drbd
 fi
 
 # Heartbeat monitoring
 # Different handling for heartbeat clusters with and without CRM
 # for the resource state
-if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd > /dev/null 2>&1; then
-  echo '<<<heartbeat_crm>>>'
-  TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
+if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd >/dev/null 2>&1; then
+    echo '<<<heartbeat_crm>>>'
+    TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
 fi
 if inpath cl_status; then
-  echo '<<<heartbeat_rscstatus>>>'
-  cl_status rscstatus
+    echo '<<<heartbeat_rscstatus>>>'
+    cl_status rscstatus
 
-  echo '<<<heartbeat_nodes>>>'
-  for NODE in $(cl_status listnodes); do
-    if [ "$NODE" != "$(echo "$HOSTNAME" | tr '[:upper:]' '[:lower:]')" ]; then
-      STATUS=$(cl_status nodestatus "$NODE")
-      echo -n "$NODE $STATUS"
-      for LINK in $(cl_status listhblinks "$NODE" 2>/dev/null); do
-        echo -n " $LINK $(cl_status hblinkstatus "$NODE" "$LINK")"
-      done
-      echo
-    fi
-  done
+    echo '<<<heartbeat_nodes>>>'
+    for NODE in $(cl_status listnodes); do
+        if [ "$NODE" != "$(echo "$HOSTNAME" | tr '[:upper:]' '[:lower:]')" ]; then
+            STATUS=$(cl_status nodestatus "$NODE")
+            echo -n "$NODE $STATUS"
+            for LINK in $(cl_status listhblinks "$NODE" 2>/dev/null); do
+                echo -n " $LINK $(cl_status hblinkstatus "$NODE" "$LINK")"
+            done
+            echo
+        fi
+    done
 fi
 
 # Postfix mailqueue monitoring
@@ -805,7 +810,7 @@ if inpath postfix; then
     for i in /var/spool/postfix*/; do
         if [ -e "$i/pid/master.pid" ]; then
             if [ -r "$i/pid/master.pid" ]; then
-                postfix_pid=$(sed 's/ //g' < "$i/pid/master.pid") # handle possible spaces in output
+                postfix_pid=$(sed 's/ //g' <"$i/pid/master.pid") # handle possible spaces in output
                 if readlink -- "/proc/${postfix_pid}/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
                     echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
                 else
@@ -838,29 +843,28 @@ fi
 if inpath omd; then
     run_cached -s omd_status 60 "omd status --bare --auto || true"
     echo '<<<mknotifyd:sep(0)>>>'
-    for statefile in /omd/sites/*/var/log/mknotifyd.state ; do
-    if [ -e "$statefile" ]; then
-        site=${statefile%/var/log*}
-        site=${site#/omd/sites/}
-        echo "[$site]"
-        grep -v '^#' < "$statefile"
+    for statefile in /omd/sites/*/var/log/mknotifyd.state; do
+        if [ -e "$statefile" ]; then
+            site=${statefile%/var/log*}
+            site=${site#/omd/sites/}
+            echo "[$site]"
+            grep -v '^#' <"$statefile"
         fi
     done
 
     echo '<<<omd_apache:sep(124)>>>'
     for statsfile in /omd/sites/*/var/log/apache/stats; do
-    if [ -e "$statsfile" ]; then
-        site=${statsfile%/var/log*}
-        site=${site#/omd/sites/}
-        echo "[$site]"
+        if [ -e "$statsfile" ]; then
+            site=${statsfile%/var/log*}
+            site=${site#/omd/sites/}
+            echo "[$site]"
             cat "$statsfile"
-            : > "$statsfile"
+            : >"$statsfile"
             # prevent next section to fail caused by a missing newline at the end of the statsfile
             echo
         fi
     done
 fi
-
 
 # Welcome the ZFS check on Linux
 # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
@@ -871,7 +875,6 @@ if inpath zpool; then
     echo "<<<zpool>>>"
     zpool list
 fi
-
 
 # Veritas Cluster Server
 # Software is always installed in /opt/VRTSvcs.
@@ -885,7 +888,6 @@ if [ -x /opt/VRTSvcs/bin/haclus ]; then
     waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys "$vcshost" -attribute State -localclus
     waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -attribute TFrozen -attribute Frozen
 fi
-
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
 replace_datevariable() {
@@ -913,11 +915,12 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
     # let the shell do all the expansion, and pipe all files to perl
     (cat "$MK_CONFDIR"/fileinfo.cfg "$MK_CONFDIR"/fileinfo.d/* 2>/dev/null) | while read -r pattern; do
         case $pattern in
-            /*) pattern=$(replace_datevariable "$pattern")
+            /*)
+                pattern=$(replace_datevariable "$pattern")
                 for f in $pattern; do echo "${f}"; done
                 ;;
         esac
-    done | perl -e  '
+    done | perl -e '
            print time."\n";
            print "[[[header]]]\n";
            print "name|status|size|time\n";
@@ -937,9 +940,9 @@ if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
                    print "$_|ok|$size|$mtime\n";
                }
            }'
-    set +vx; eval "$old_state"
+    set +vx
+    eval "$old_state"
 fi
-
 
 # Get stats about OMD monitoring cores running on this machine.
 # Since cd is a shell builtin the check does not affect the performance
@@ -949,7 +952,7 @@ if cd /omd/sites; then
     for site in *; do
         if [ -S "/omd/sites/$site/tmp/run/live" ]; then
             echo "[$site]"
-            echo -e "GET status" | \
+            echo -e "GET status" |
                 waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live"
         fi
     done
@@ -970,8 +973,8 @@ if cd /omd/sites; then
     for site in *; do
         if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ]; then
             echo "[\"$site\"]"
-            echo -e "GET status\nOutputFormat: json" \
-                | waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
+            echo -e "GET status\nOutputFormat: json" |
+                waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
         fi
     done
 fi
@@ -1025,7 +1028,7 @@ if pushd "$MK_VARDIR/job" >/dev/null; then
             cd ..
         fi
     done
-    popd > /dev/null
+    popd >/dev/null
 fi
 
 # Gather thermal information provided e.g. by acpi
@@ -1034,10 +1037,10 @@ if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && ls /sys/class/therma
     echo '<<<lnx_thermal:sep(124)>>>'
     for F in /sys/class/thermal/thermal_zone*; do
         line="${F##*/}"
-        if [ ! -e "$F/mode" ]; then line="${line}|-" ; else line="${line}|$(cat "$F"/mode)"; fi
+        if [ ! -e "$F/mode" ]; then line="${line}|-"; else line="${line}|$(cat "$F"/mode)"; fi
         line="${line}|$(cat "$F"/{type,temp} | tr \\n "|")"
         for G in $(ls "$F"/trip_point_*_{temp,type}); do
-            line="${line}$(< "$G" tr \\n "|")"
+            line="${line}$(tr <"$G" \\n "|")"
         done
         echo "${line%?}"
     done
@@ -1085,105 +1088,105 @@ fi
 
 # MK's Remote Plugin Executor
 if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
-    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-    while read -r descr cmdline; do
-        interval=
-        args="-m"
-        # NOTE: Due to an escaping-related bug in some old bash versions
-        # (3.2.x), we have to use an intermediate variable for the pattern.
-        pattern='\(([^\)]*)\)[[:space:]](.*)'
-        if [[ $cmdline =~ $pattern ]]; then
-            parameters=${BASH_REMATCH[1]}
-            cmdline=${BASH_REMATCH[2]}
+    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
+        while read -r descr cmdline; do
+            interval=
+            args="-m"
+            # NOTE: Due to an escaping-related bug in some old bash versions
+            # (3.2.x), we have to use an intermediate variable for the pattern.
+            pattern='\(([^\)]*)\)[[:space:]](.*)'
+            if [[ $cmdline =~ $pattern ]]; then
+                parameters=${BASH_REMATCH[1]}
+                cmdline=${BASH_REMATCH[2]}
 
-            # split multiple parameter assignments
-            for par in $(echo "$parameters" | tr ":" "\n"); do
-                # split each assignment
-                key=$(echo "$par" | cut -d= -f1)
-                value=$(echo "$par" | cut -d= -f2)
+                # split multiple parameter assignments
+                for par in $(echo "$parameters" | tr ":" "\n"); do
+                    # split each assignment
+                    key=$(echo "$par" | cut -d= -f1)
+                    value=$(echo "$par" | cut -d= -f2)
 
-                if [ "$key" = "interval" ]; then
-                    interval=$value
-                elif [ "$key" = "appendage" ]; then
-                    args="-ma"
-                fi
-            done
-        fi
+                    if [ "$key" = "interval" ]; then
+                        interval=$value
+                    elif [ "$key" = "appendage" ]; then
+                        args="-ma"
+                    fi
+                done
+            fi
 
-        if [ -z "$interval" ]; then
-            run_mrpe "$descr" "$cmdline"
-        else
-            run_cached "$args" "$descr" "$interval" "$cmdline"
-        fi
-    done
+            if [ -z "$interval" ]; then
+                run_mrpe "$descr" "$cmdline"
+            else
+                run_cached "$args" "$descr" "$interval" "$cmdline"
+            fi
+        done
 fi
 
 # MK's runas Executor
 if [ -e "$MK_CONFDIR/runas.cfg" ]; then
-    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" | \
-    while read -r type user include; do
-        if [ -d "$include" -o \( "$type" == "mrpe" -a -f "$include" \) ]; then
-            PREFIX=""
-            if [ "$user" != "-" ]; then
-                PREFIX="su $user -c "
-            fi
-
-            # mrpe includes
-            if [ "$type" == "mrpe" ]; then
-                grep -Ev '^[[:space:]]*($|#)' "$include" | \
-                while read -r descr cmdline; do
-                    interval=
-                    # NOTE: Due to an escaping-related bug in some old bash
-                    # versions (3.2.x), we have to use an intermediate variable
-                    # for the pattern.
-                    pattern='\(([^\)]*)\)[[:space:]](.*)'
-                    if [[ $cmdline =~ $pattern ]]; then
-                        parameters=${BASH_REMATCH[1]}
-                        cmdline=${BASH_REMATCH[2]}
-
-                        # split multiple parameter assignments
-                        for par in $(echo "$parameters" | tr ":" "\n"); do
-                            # split each assignment
-                            IFS='=' read -r key value <<< "${par}"
-                            if [ "$key" = "interval" ]; then
-                                interval=$value
-                            # no other parameters supported currently
-                            fi
-                        done
-                    fi
-
-                    if [ -n "$PREFIX" ]; then
-                        cmdline="$PREFIX\'$cmdline\'"
-                    fi
-                    if [ -z "$interval" ]; then
-                        run_mrpe "$descr" "$cmdline"
-                    else
-                        run_cached -m "$descr" "$interval" "$cmdline"
-                    fi
-                done
-
-            # local and plugin includes
-            elif [ "$type" == "local" -o "$type" == "plugin" ]; then
-                if [ "$type" == "local" ]; then
-                    echo "<<<local>>>"
+    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
+        while read -r type user include; do
+            if [ -d "$include" -o \( "$type" == "mrpe" -a -f "$include" \) ]; then
+                PREFIX=""
+                if [ "$user" != "-" ]; then
+                    PREFIX="su $user -c "
                 fi
 
-                find "$include" -executable -type f | \
-                while read -r filename; do
-                    if [ -n "$PREFIX" ]; then
-                        cmdline="$PREFIX\"$filename\""
-                    else
-                        cmdline=$filename
+                # mrpe includes
+                if [ "$type" == "mrpe" ]; then
+                    grep -Ev '^[[:space:]]*($|#)' "$include" |
+                        while read -r descr cmdline; do
+                            interval=
+                            # NOTE: Due to an escaping-related bug in some old bash
+                            # versions (3.2.x), we have to use an intermediate variable
+                            # for the pattern.
+                            pattern='\(([^\)]*)\)[[:space:]](.*)'
+                            if [[ $cmdline =~ $pattern ]]; then
+                                parameters=${BASH_REMATCH[1]}
+                                cmdline=${BASH_REMATCH[2]}
+
+                                # split multiple parameter assignments
+                                for par in $(echo "$parameters" | tr ":" "\n"); do
+                                    # split each assignment
+                                    IFS='=' read -r key value <<<"${par}"
+                                    if [ "$key" = "interval" ]; then
+                                        interval=$value
+                                    # no other parameters supported currently
+                                    fi
+                                done
+                            fi
+
+                            if [ -n "$PREFIX" ]; then
+                                cmdline="$PREFIX\'$cmdline\'"
+                            fi
+                            if [ -z "$interval" ]; then
+                                run_mrpe "$descr" "$cmdline"
+                            else
+                                run_cached -m "$descr" "$interval" "$cmdline"
+                            fi
+                        done
+
+                # local and plugin includes
+                elif [ "$type" == "local" -o "$type" == "plugin" ]; then
+                    if [ "$type" == "local" ]; then
+                        echo "<<<local>>>"
                     fi
 
-                    $cmdline
-                done
+                    find "$include" -executable -type f |
+                        while read -r filename; do
+                            if [ -n "$PREFIX" ]; then
+                                cmdline="$PREFIX\"$filename\""
+                            else
+                                cmdline=$filename
+                            fi
+
+                            $cmdline
+                        done
+                fi
             fi
-        fi
-    done
+        done
 fi
 
-is_valid_plugin () {
+is_valid_plugin() {
     # NOTE: Due to an escaping-related bug in some old bash versions
     # (3.2.x), we have to use an intermediate variable for the pattern.
     pattern='\.dpkg-(new|old|temp)$'
@@ -1201,7 +1204,7 @@ if cd "$LOCALDIR"; then
         fi
     done
     # Call some plugins only every X'th second
-    for skript in [1-9]*/* ; do
+    for skript in [1-9]*/*; do
         if is_valid_plugin "$skript"; then
             run_cached "local_${skript//\//\\}" "${skript%/*}" "$skript"
         fi
@@ -1216,7 +1219,7 @@ if cd "$PLUGINSDIR"; then
         fi
     done
     # Call some plugins only every Xth second
-    for skript in [1-9]*/* ; do
+    for skript in [1-9]*/*; do
         if is_valid_plugin "$skript"; then
             run_cached "plugins_${skript//\//\\}" "${skript%/*}" "$skript"
         fi
@@ -1225,7 +1228,7 @@ fi
 
 # Agent output snippets created by cronjobs, etc.
 if [ -d "$SPOOLDIR" ]; then
-    pushd "$SPOOLDIR" > /dev/null
+    pushd "$SPOOLDIR" >/dev/null
     now=$(date +%s)
 
     for file in *; do
@@ -1254,5 +1257,5 @@ if [ -d "$SPOOLDIR" ]; then
         # Output the file
         cat "$file"
     done
-    popd > /dev/null
+    popd >/dev/null
 fi

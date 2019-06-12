@@ -481,7 +481,12 @@ class BackgroundJob(object):
             # from the parent process. The job_initialization.lock is such a
             # thing we had a problem with when background jobs were initialized
             # while the apache tried to stop / restart.
-            daemon.closefrom(3)
+            #
+            # Had problems with closefrom() during the tests. Explicitly
+            # closing the locks here instead of closing all fds to keep logging
+            # related fds open.
+            #daemon.closefrom(3)
+            store.release_all_locks()
 
             p = self._background_process_class(job_parameters)
             p.start()

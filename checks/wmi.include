@@ -377,6 +377,8 @@ def inventory_wmi_table(tables, required_tables=None, filt=None, levels=None):
 def get_wmi_time(table, row):
     timestamp = table.timestamp() or table.get(row, "Timestamp_PerfTime")
     frequency = table.frequency() or table.get(row, "Frequency_PerfTime")
+    if not frequency:
+        frequency = 1
     return float(timestamp) / float(frequency)
 
 

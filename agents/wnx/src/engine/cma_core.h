@@ -282,7 +282,10 @@ public:
                     lk, stop_time, [this]() -> bool { return stop_set_; });
 
                 if (stopped || stop_set_) {
-                    XLOG::d("Plugin signaled to be stopped!");
+                    XLOG::d(
+                        "Plugin '{}' signaled to be stopped [{}] [{}] left timeout [{}ms]!",
+                        wtools::ConvertToUTF8(exec_), stopped, stop_set_,
+                        Timeout.count());
                 } else {
                     Timeout -= kGrane;
                     continue;
@@ -292,7 +295,8 @@ public:
             if (KillWhatLeft) {
                 process_->kill(true);
                 // cma::tools::win::KillProcess(waiting_processes, -1);
-                XLOG::d("Process {} killed",
+                XLOG::d("Process '{}' [{}] killed",
+                        wtools::ConvertToUTF8(exec_),
                         waiting_processes);  // not normal situation
             }
 
@@ -657,8 +661,7 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
                      bool CheckExists = true);
 
 // API call to exec all plugins and get back data and count
-std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count,
-                                 const int Timeout);
+std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout);
 std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
                                   bool StartImmediately);
 

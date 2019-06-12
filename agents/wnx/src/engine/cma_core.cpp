@@ -157,6 +157,27 @@ const PathVector FilterPathVector(
 
 namespace cma {
 
+// hacks a string
+// '<<<plugin_super>>>' -> '<<<plugin_super:cached(11204124124:3600)>>>'
+void TryToHackStringWithCachedInfo(std::string& in_string,
+                                   const std::string& value_to_insert) {
+    if (in_string.find(cma::section::kFooter4) != std::string::npos) {
+        // no patch for the case
+        XLOG::t("Footer 4 in input");
+        return;
+    }
+
+    // probably regex better or even simple memcmp/strcmp
+    auto pos_start = in_string.find(cma::section::kLeftBracket);
+    auto pos_end = in_string.find(cma::section::kRightBracket);
+    if (pos_start == 0 &&                // starting from <<<
+        pos_end != std::string::npos &&  // >>> presented too
+        pos_end > pos_start &&           //
+        (pos_end - pos_start) < 100) {   // not very far away
+        in_string.insert(pos_end, value_to_insert);
+    }
+}
+
 // see header about description
 bool HackPluginDataWithCacheInfo(std::vector<char>& Out,
                                  const std::vector<char>& OriginalData,
@@ -177,18 +198,9 @@ bool HackPluginDataWithCacheInfo(std::vector<char>& Out,
         else
             t.push_back('\n');
 
-        // 2. optionally hack header
-        if (LegacyTime && CacheAge) {
-            // find a header
-            auto pos_start = t.find(cma::section::kLeftBracket);
-            auto pos_end = t.find(cma::section::kRightBracket);
-            if (pos_start == 0 &&                // starting from <<<
-                pos_end != std::string::npos &&  // >>> presented too
-                pos_end > pos_start &&           //
-                (pos_end - pos_start) < 100) {   // not very far away
-                t.insert(pos_end, to_insert);
-            }
-        }
+        // 2. try hack header if required
+        if (LegacyTime && CacheAge) TryToHackStringWithCachedInfo(t, to_insert);
+
         data_count += t.size();
     }
 
@@ -201,7 +213,7 @@ bool HackPluginDataWithCacheInfo(std::vector<char>& Out,
     if (OriginalData.back() != '\n') Out.pop_back();
 
     return true;
-}
+}  // namespace cma
 
 // LOOP:
 // register

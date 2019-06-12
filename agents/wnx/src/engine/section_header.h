@@ -28,6 +28,10 @@ constexpr std::string_view kRightBracket{">>>"};
 constexpr std::string_view kLeftSeparator{":sep("};
 constexpr std::string_view kRightSeparator{")"};
 
+// special markers
+constexpr std::string_view kFooter4{"<<<<>>>>"};
+constexpr std::string_view kFooterStd{"<<<>>>"};
+
 // Sub Section(as for WMI)
 constexpr std::string_view kLeftSubSectionBracket{"["};
 constexpr std::string_view kRightSubSectionBracket{"]"};

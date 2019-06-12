@@ -16,5 +16,5 @@ else
 fi
 
 git add nagvis-$VERSION.tar.gz
-sed -i "s/^VERSION = .*$/VERSION = $VERSION/g" Makefile
+sed -i "s/^VERSION = .*$/VERSION = $VERSION/g" nagvis.make
 exit 0

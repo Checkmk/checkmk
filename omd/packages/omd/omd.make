@@ -25,7 +25,7 @@ $(OMD_INSTALL): omdlib-install
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/logout.php $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omd.8 $(DESTDIR)$(OMD_ROOT)/share/man/man8
-	gzip $(DESTDIR)$(OMD_ROOT)/share/man/man8/omd.8
+	gzip -f $(DESTDIR)$(OMD_ROOT)/share/man/man8/omd.8
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/omd.init $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
 	sed -i 's|###DEFAULT_RUNLEVELS###|$(DEFAULT_RUNLEVELS)|g' $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/omd.service $(DESTDIR)$(OMD_ROOT)/share/omd/omd.service

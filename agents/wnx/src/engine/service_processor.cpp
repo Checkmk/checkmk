@@ -333,7 +333,6 @@ void ServiceProcessor::sendDebugData() {
 // called before every answer to execute routine tasks
 void ServiceProcessor::prepareAnswer(const std::string& ip_from,
                                      cma::rt::Device& rt_device) {
-    XLOG::d.i("Connected from '{}'", ip_from.c_str());
     cma::OnStartApp();
     cma::cfg::SetupRemoteHostEnvironment(ip_from);
     conditionallyStartOhm();  // start may happen when

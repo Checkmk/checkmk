@@ -19,6 +19,10 @@ namespace cma {
 
 namespace provider {
 
+namespace ps {
+constexpr std::wstring_view kSepString = L",";
+}
+
 // Process Line Formatter
 // not static to be fully tested by unit tests
 std::string OutputProcessLine(ULONGLONG virtual_size,
@@ -70,7 +74,7 @@ std::wstring GetProcessListFromWmi() {
     wmi.impersonate();
     // Use the IWbemServices pointer to make requests of WMI.
     // Make requests here:
-    return wmi.queryTable({}, L"Win32_Process");
+    return wmi.queryTable({}, L"Win32_Process", ps::kSepString);
 }
 
 // code from legacy client:

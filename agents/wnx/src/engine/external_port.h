@@ -123,7 +123,10 @@ inline std::pair<std::string, bool> GetSocketInfo(
     const asio::ip::tcp::socket& sock) noexcept {
     std::error_code ec;
     auto remote_ep = sock.remote_endpoint(ec);
-    if (ec.value() != 0) return {};  // empty socket
+    if (ec.value() != 0) {
+        XLOG::l("Error on socket [{}] with '{}'", ec.value(), ec.message());
+        return {};  // empty socket
+    }
     try {
         auto addr = remote_ep.address();
         auto ip = addr.to_string();
@@ -212,7 +215,8 @@ private:
                 } else {
                     try {
                         auto [ip, ipv6] = GetSocketInfo(socket_);
-                        XLOG::d.i("Connected from '{}' ipv6 :{}", ip, ipv6);
+                        XLOG::d.i("Connected from '{}' ipv6 :{} -> queue", ip,
+                                  ipv6);
 
                         auto x =
                             std::make_shared<AsioSession>(std::move(socket_));
@@ -220,7 +224,7 @@ private:
                         // only_from checking
                         // we are doping it always
                         if (!cma::cfg::groups::global.isIpAddressAllowed(ip)) {
-                            XLOG::d.i("Address '{}' is not allowed", ip);
+                            XLOG::d("Address '{}' is not allowed", ip);
                             return;
                         }
 

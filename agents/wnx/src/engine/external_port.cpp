@@ -217,7 +217,7 @@ void ExternalPort::processQueue(cma::world::ReplyFunc reply) noexcept {
 
             if (as) {
                 const auto [ip, ipv6] = GetSocketInfo(as->currentSocket());
-                XLOG::d.i("Connected from '{}' ipv6:{}", ip, ipv6);
+                XLOG::d.i("Connected from '{}' ipv6:{} <- queue", ip, ipv6);
 
                 // only_from checking
                 if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {

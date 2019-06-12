@@ -29,7 +29,8 @@ namespace provider {
 // timeout) post process result
 // update cache if data ok(not empty)
 static std::string WmiCachedDataHelper(std::string& cache_data,
-                                       const std::string& wmi_data) {
+                                       const std::string& wmi_data,
+                                       char separator) {
     using namespace wtools;
     // for older servers
     if (!g_add_wmi_status_column) return wmi_data;
@@ -37,12 +38,12 @@ static std::string WmiCachedDataHelper(std::string& cache_data,
     if (!wmi_data.empty()) {
         // return original data with added OK in right column
         cache_data = wmi_data;  // store
-        return WmiPostProcess(wmi_data, StatusColumn::ok, ',');
+        return WmiPostProcess(wmi_data, StatusColumn::ok, separator);
     }
 
     // we try to return cache with added "timeout" in last column
     if (!cache_data.empty())
-        return WmiPostProcess(cache_data, StatusColumn::timeout, ',');
+        return WmiPostProcess(cache_data, StatusColumn::timeout, separator);
 
     XLOG::d.t(XLOG_FUNC + " Strange situation, both options are empty");
     return {};
@@ -195,7 +196,8 @@ void Wmi::setupByName() {
 // time?
 std::pair<WmiStatus, std::string> GenerateWmiTable(
     const std::wstring& wmi_namespace, const std::wstring& wmi_object,
-    const std::vector<std::wstring> columns_table) {
+    const std::vector<std::wstring> columns_table,
+    std::wstring_view separator) {
     using namespace wtools;
 
     if (wmi_object.empty() || wmi_namespace.empty())
@@ -223,7 +225,7 @@ std::pair<WmiStatus, std::string> GenerateWmiTable(
     if (!wrapper.impersonate()) {
         XLOG::l.e("XLOG_FUNC + Can't impersonate {}", id());
     }
-    auto ret = wrapper.queryTable(columns_table, wmi_object);
+    auto ret = wrapper.queryTable(columns_table, wmi_object, separator);
 
     tl.writeLog(ret.size());  // fix measure
 
@@ -244,13 +246,19 @@ std::string Wmi::makeBody() {
         return subs_out;
     }
     XLOG::l.i("main section '{}'", getUniqName());
-    auto [err, data] = GenerateWmiTable(name_space_, object_, columns_);
+
+    std::wstring sep;
+    sep += static_cast<wchar_t>(separator_);
+
+    auto [err, data] = GenerateWmiTable(name_space_, object_, columns_, sep);
 
     // on timeout: reuse cache and ignore data, even if partially filled
-    if (err == WmiStatus::timeout) return WmiCachedDataHelper(cache_, {});
+    if (err == WmiStatus::timeout)
+        return WmiCachedDataHelper(cache_, {}, separator_);
 
     // on ok: update cache and send data as usually
-    if (err == WmiStatus::ok) return WmiCachedDataHelper(cache_, data);
+    if (err == WmiStatus::ok)
+        return WmiCachedDataHelper(cache_, data, separator_);
 
     // all other errors means disaster and we sends NOTHING
     XLOG::l("Error reading WMI [{}]", static_cast<int>(err));
@@ -311,15 +319,17 @@ void SubSection::setupByName() {
 }
 
 std::string SubSection::makeBody() {
-    auto [err, data] = GenerateWmiTable(name_space_, object_, {});
+    auto [err, data] =
+        GenerateWmiTable(name_space_, object_, {}, wmi::kSepString);
     // subsections ignore returned error
-    if (err == WmiStatus::timeout) return WmiCachedDataHelper(cache_, {});
+    if (err == WmiStatus::timeout)
+        return WmiCachedDataHelper(cache_, {}, wmi::kSepChar);
 
     if (data.empty()) {
         // this is not normal usually
         XLOG::d("SubSection {} cannot provide data", uniq_name_);
     }
-    return WmiCachedDataHelper(cache_, data);
+    return WmiCachedDataHelper(cache_, data, wmi::kSepChar);
 }
 
 std::string SubSection::generateContent() {

@@ -585,15 +585,16 @@ private:
     SectionProvider<provider::SpoolProvider> spool_provider_;
 
     SectionProvider<provider::Wmi> dotnet_clrmemory_provider_{
-        provider::kDotNetClrMemory, ','};
+        provider::kDotNetClrMemory, cma::provider::wmi::kSepChar};
 
     SectionProvider<provider::Wmi> wmi_webservices_provider_{
-        provider::kWmiWebservices, ','};
+        provider::kWmiWebservices, cma::provider::wmi::kSepChar};
 
-    SectionProvider<provider::Wmi> msexch_provider_{provider::kMsExch, ','};
+    SectionProvider<provider::Wmi> msexch_provider_{
+        provider::kMsExch, cma::provider::wmi::kSepChar};
 
-    SectionProvider<provider::Wmi> wmi_cpuload_provider_{provider::kWmiCpuLoad,
-                                                         ','};
+    SectionProvider<provider::Wmi> wmi_cpuload_provider_{
+        provider::kWmiCpuLoad, cma::provider::wmi::kSepChar};
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ServiceControllerTest;

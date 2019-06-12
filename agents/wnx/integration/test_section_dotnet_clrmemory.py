@@ -30,7 +30,7 @@ def testconfig(request, make_yaml_config):
 @pytest.fixture
 def expected_output():
     base = [
-        re.escape(r'<<<%s:sep(44)>>>' % Globals.section),
+        re.escape(r'<<<%s:sep(9)>>>' % Globals.section),
         (r'AllocatedBytesPersec,Caption,Description,FinalizationSurvivors,'
          r'Frequency_Object,Frequency_PerfTime,Frequency_Sys100NS,Gen0heapsize,'
          r'Gen0PromotedBytesPerSec,Gen1heapsize,Gen1PromotedBytesPerSec,'
@@ -41,11 +41,11 @@ def expected_output():
          r'NumberTotalreservedBytes,PercentTimeinGC,PercentTimeinGC_Base,'
          r'ProcessID,PromotedFinalizationMemoryfromGen0,PromotedMemoryfromGen0,'
          r'PromotedMemoryfromGen1,Timestamp_Object,Timestamp_PerfTime,'
-         r'Timestamp_Sys100NS')
+         r'Timestamp_Sys100NS').replace(',', '\t')
     ]
     re_str = (r'\d+,,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
               r'[\w\#\.]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+')
+              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+').replace(',', '\t')
     if not Globals.alone:
         re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
     return chain(base, repeat(re_str))

@@ -468,7 +468,11 @@ def test_winperf_if_teaming_performance_data(check_manager, monkeypatch):
     CheckResult(check.run_check(u'8', params_single, parsed))
     CheckResult(check.run_check(u'DAG-NET', params_teamed, parsed))
 
-    monkeypatch.setattr('time.time', lambda: 10)
+    # winperf_if should use the timestamp of the parsed data. To check
+    # that it does not use time.time by accident we set it to 20s instead
+    # of 10s. If winperf_if would now use time.time the Out value would only
+    # be 512 MB/s instead of 1 GB/s.
+    monkeypatch.setattr('time.time', lambda: 20)
     parsed = winperf_if_teaming_parsed(time=10, out_octets=1024 * 1024 * 1024 * 10)
     result_3 = CheckResult(check.run_check(u'3', params_single, parsed))
     result_8 = CheckResult(check.run_check(u'8', params_single, parsed))

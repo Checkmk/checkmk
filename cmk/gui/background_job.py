@@ -475,6 +475,14 @@ class BackgroundJob(object):
 
     def _start_background_subprocess(self, job_parameters):
         try:
+            # Even the "short living" intermediate process here needs to close
+            # the inherited file descriptors as soon as possible to prevent
+            # race conditions with inherited locks that have been inherited
+            # from the parent process. The job_initialization.lock is such a
+            # thing we had a problem with when background jobs were initialized
+            # while the apache tried to stop / restart.
+            daemon.closefrom(3)
+
             p = self._background_process_class(job_parameters)
             p.start()
         except Exception as e:

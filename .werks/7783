@@ -1,0 +1,10 @@
+Title: db2_bp_hitratios: Fixed parsing instances in DPF mode: 'KeyError: None'; only gather real instances
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560320495
+Class: fix
+
+

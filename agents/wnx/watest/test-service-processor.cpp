@@ -3,14 +3,35 @@
 //
 #include "pch.h"
 
+#include "cfg.h"
 #include "common/wtools.h"
+#include "service_processor.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
-#include "cfg.h"
-#include "service_processor.h"
-
 namespace cma::srv {
+
+TEST(AsyncAnswerTest, Base) {
+    AsyncAnswer aa;
+    EXPECT_EQ(aa.order_, AsyncAnswer::Order::plugins_last);
+    aa.prepareAnswer("aaa");
+
+    EXPECT_EQ(aa.external_ip_, "aaa");
+    EXPECT_EQ(aa.awaiting_segments_, 0);
+    EXPECT_EQ(aa.received_segments_, 0);
+    EXPECT_TRUE(aa.data_.empty());
+    EXPECT_TRUE(aa.segments_.empty());
+    EXPECT_TRUE(aa.plugins_.empty());
+    EXPECT_TRUE(aa.local_.empty());
+    EXPECT_FALSE(aa.prepareAnswer("aaa"));
+    aa.external_ip_ = "";
+    aa.awaiting_segments_ = 1;
+    EXPECT_FALSE(aa.prepareAnswer("aaa"));
+    aa.external_ip_ = "";
+    aa.awaiting_segments_ = 0;
+    aa.received_segments_ = 1;
+    EXPECT_FALSE(aa.prepareAnswer("aaa"));
+}
 
 TEST(ServiceControllerTest, StartStopExe) {
     using namespace cma::srv;

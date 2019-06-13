@@ -195,7 +195,7 @@ def get_status_filename(cluster_config):
     underscores (_) for IPv4 address or is plain $REMOTE in case it does not match
     an IPv4 or IPv6 address.
     """
-    remote = os.getenv("REMOTE")
+    remote = os.getenv("REMOTE", os.getenv("REMOTE_ADDR"))
     if not remote:
         status_filename = "logwatch.state" + (".local" if sys.stdout.isatty() else "")
         return os.path.join(MK_VARDIR, status_filename)

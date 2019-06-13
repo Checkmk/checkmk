@@ -56,8 +56,9 @@ def parse_db2_bp_hitratios(info):
                 if line[0] == "IBMDEFAULTBP":
                     current_node_offset += 1
                     current_instance = "%s DPF %s" % (instance, node_names[current_node_offset])
-                    databases.setdefault(current_instance, [ node_headers ])
-                databases[current_instance].append(line)
+                    databases.setdefault(current_instance, [node_headers])
+                if current_instance in databases:
+                    databases[current_instance].append(line)
         else:
             databases[instance] = lines
 

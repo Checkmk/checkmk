@@ -111,6 +111,17 @@ TEST(RealtimeTest, LowLevel) {
     EXPECT_FALSE(dev.working_period_);
 }
 
+TEST(RealtimeTest, StaticCheck) {
+    // prtects again occasional consats change
+    EXPECT_EQ(kEncryptedHeader, "00");
+    EXPECT_EQ(kPlainHeader, "99");
+    EXPECT_EQ(kHeaderSize, 2);
+    EXPECT_EQ(kTimeStampSize, 10);
+    EXPECT_EQ(kDataOffset, 12);
+    EXPECT_EQ(cma::cfg::kDefaultRealtimeTimeout, 90);
+    EXPECT_EQ(cma::cfg::kDefaultRealtimePort, 6559);
+}
+
 TEST(RealtimeTest, PackData) {
     // stub
     std::string_view output = "123456789";

@@ -274,9 +274,9 @@ void ExternalPort::ioThreadProc(cma::world::ReplyFunc Reply) {
                 default_port_ == 0 ? groups::global.port() : default_port_;
 
             // server start
-            ExternalPort::server s(context, ipv6, port);
-            XLOG::l.t("Starting IO ipv6:{}, used port:{}", ipv6, port);
-            s.run_accept(sinkProc, this);
+            ExternalPort::server sock(context, ipv6, port);
+            XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, port);
+            sock.run_accept(sinkProc, this);
 
             registerContext(&context);
 

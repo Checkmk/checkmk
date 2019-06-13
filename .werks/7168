@@ -1,0 +1,28 @@
+Title: cmk-update-agent.exe: Fix erroneous update validation
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p18
+Date: 1560431551
+
+Regression since 1.5.0p17 and Werk #7167:
+
+The installation validation introduced in Werk #7167 fails to read
+the agent hash correctly from a newly performed update.
+
+As a result, the update gets invalidated, which you will observe within
+the "Check_MK Agent" check that shows
+
+<pre> WARN - error: MSI Installation failed. </pre>
+
+Contrary to this warning, the msi is not broken.
+
+With this Werk, the installation validation gets fixed.
+
+However, due to inconsistencies between the saved update state and the
+actually installed Windows Agent, to restore all to normal behavior,
+it might be necessary to update the agent (bake new agents for the affected
+windows hosts, wait for an automatic update or trigger it manually) twice.

@@ -240,12 +240,12 @@ std::string Wmi::makeBody() {
         // special case for aggregating subs section into one
         std::string subs_out;
         for (auto& sub : sub_objects_) {
-            XLOG::l.t("sub section '{}'", sub.getUniqName());
+            XLOG::t("Sub section '{}'", sub.getUniqName());
             subs_out += sub.generateContent();
         }
         return subs_out;
     }
-    XLOG::l.i("main section '{}'", getUniqName());
+    XLOG::t.i("WMI main section '{}'", getUniqName());
 
     std::wstring sep;
     sep += static_cast<wchar_t>(separator_);
@@ -326,8 +326,7 @@ std::string SubSection::makeBody() {
         return WmiCachedDataHelper(cache_, {}, wmi::kSepChar);
 
     if (data.empty()) {
-        // this is not normal usually
-        XLOG::d("SubSection {} cannot provide data", uniq_name_);
+        // this is ok if no wmi in the registry
     }
     return WmiCachedDataHelper(cache_, data, wmi::kSepChar);
 }

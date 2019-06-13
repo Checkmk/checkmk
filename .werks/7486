@@ -1,0 +1,12 @@
+Title: mk_logwatch: also consider environment variable REMOTE_ADDR
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b2
+Date: 1560411220
+Class: fix
+
+When mk_logwatch is started via systemd instead of xinetd, the environment
+variable holding the remote address is called <tt>REMOTE_ADDR</tt>.
+This is now cosidered as well.

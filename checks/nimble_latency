@@ -103,6 +103,7 @@ check_info['nimble_latency'] = {
             "31",  # NIMBLE-MIB::volIoReadLatency100mTo200m
             "32",  # NIMBLE-MIB::volIoReadLatency200mTo500m
             "33",  # NIMBLE-MIB::volIoReadLatency500mTomax
+            "34",  # NIMBLE-MIB::volIoWrites
             "39",  # NIMBLE-MIB::volIoWriteLatency0uTo100u
             "40",  # NIMBLE-MIB::volIoWriteLatency100uTo200u
             "41",  # NIMBLE-MIB::volIoWriteLatency200uTo500u
@@ -130,21 +131,21 @@ def check_nimble_write_latency(item, params, info):
         if line[0] == item:
             counter_base = "nimble_write_latency.%s." % item
             names = {
-                "0-0.1 ms": ("0.1", int(line[3])),
-                "0.1-0.2 ms": ("0.2", int(line[4])),
-                "0.2-0.5 ms": ("0.5", int(line[5])),
-                "0.5-1.0 ms": ("1", int(line[6])),
-                "1-2 ms": ("2", int(line[7])),
-                "2-5 ms": ("5", int(line[8])),
-                "5-10 ms": ("10", int(line[9])),
-                "10-20 ms": ("20", int(line[10])),
-                "20-50 ms": ("50", int(line[11])),
-                "50-100 ms": ("100", int(line[12])),
-                "100-200 ms": ("200", int(line[13])),
-                "200-500 ms": ("500", int(line[14])),
-                "500+ ms": ("1000", int(line[15])),
+                "0-0.1 ms": ("0.1", int(line[17])),
+                "0.1-0.2 ms": ("0.2", int(line[18])),
+                "0.2-0.5 ms": ("0.5", int(line[19])),
+                "0.5-1.0 ms": ("1", int(line[20])),
+                "1-2 ms": ("2", int(line[21])),
+                "2-5 ms": ("5", int(line[22])),
+                "5-10 ms": ("10", int(line[23])),
+                "10-20 ms": ("20", int(line[24])),
+                "20-50 ms": ("50", int(line[25])),
+                "50-100 ms": ("100", int(line[26])),
+                "100-200 ms": ("200", int(line[27])),
+                "200-500 ms": ("500", int(line[28])),
+                "500+ ms": ("1000", int(line[29])),
             }
-            total_writes = get_rate(counter_base + "total", timestamp, int(line[2]))
+            total_writes = get_rate(counter_base + "total", timestamp, int(line[16]))
             yield 0, "Total Writes: %d" % total_writes
             for key, value in names.iteritems():
                 counter = get_rate(counter_base + value[0], timestamp, value[1])

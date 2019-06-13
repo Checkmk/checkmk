@@ -171,7 +171,7 @@ PYTHON_MODULES_LIST += msrestazure-0.4.34.tar.gz
 PYTHON_MODULES_LIST += azure-mgmt-monitor-0.4.0.zip
 PYTHON_MODULES_LIST += azure-mgmt-resource-2.0.0.zip
 PYTHON_MODULES_LIST += azure-mgmt-compute-4.3.1.zip
-PYTHON_MODULES_LIST += configparser-3.5.0.tar.gz
+PYTHON_MODULES_LIST += configparser-3.5.1.tar.gz
 PYTHON_MODULES_LIST += entrypoints-0.2.3.tar.gz
 PYTHON_MODULES_LIST += keyring-15.1.0.tar.gz
 # Added for the GUI

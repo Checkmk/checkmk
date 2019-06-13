@@ -40,7 +40,7 @@ def expected_output():
          r'Frequency_PerfTime,Frequency_Sys100NS,Name,'
          r'PercentRegistryQuotaInUse,PercentRegistryQuotaInUse_Base,Processes,'
          r'ProcessorQueueLength,SystemCallsPersec,SystemUpTime,Threads,'
-         r'Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS,WMIStatus'),
+         r'Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS,WMIStatus').replace(',', '\t'),
         (r'\d+,,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,,\d+,'
          r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b').replace(',', '\t'),
         re.escape(r'[computer_system]'),
@@ -61,7 +61,7 @@ def expected_output():
          r'ResetLimit,Roles,Status,SupportContactDescription,SystemFamily,'
          r'SystemSKUNumber,SystemStartupDelay,SystemStartupOptions,'
          r'SystemStartupSetting,SystemType,ThermalState,TotalPhysicalMemory,'
-         r'UserName,WakeUpType,Workgroup,WMIStatus'),
+         r'UserName,WakeUpType,Workgroup,WMIStatus').replace(',', '\t'),
         (r'\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,[^,]*,\w+,\d+,\d+,'
          r'[^,]+,[\w-]+,[^,]+,\d+,\d+,\d+,\d+,\d+,,,\d+,,[^,]+(, [^,]+)?,[^,]+,'
          r'[\w-]+,,\d+,\d+,\d+,,[^,]+,\d+,\-?\d+,\d+,\d+,,,\d+,\d+,\d+,,[\w-]+,'

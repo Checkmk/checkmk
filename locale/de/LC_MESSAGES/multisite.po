@@ -8351,9 +8351,8 @@ msgstr "Vollständige Variablenliste (für Tests)"
 msgid "Completely ignore connection via proxy. This is the default."
 msgstr "Ignoriere alle Proxy-Konfigurationen. Dies ist die Standardeinstellung."
 
-#, fuzzy
 msgid "Completion"
-msgstr "Komprimierung"
+msgstr "Fertigstellung"
 
 msgid "Completion time over treshold occured"
 msgstr "Ausführungszeit über dem Schwellenwert ist aufgetreten"
@@ -15635,9 +15634,8 @@ msgstr "Dateiname für das angehänge PDF"
 msgid "Filer Disk Levels (NetApp, IBM SVC)"
 msgstr "Schwellwerte für Filer-Platten (NetApp, IBM SVC)"
 
-#, fuzzy
 msgid "Files"
-msgstr "Datei"
+msgstr "Dateien"
 
 msgid "Filesystem Node"
 msgstr "Dateisystemknoten"
@@ -17925,9 +17923,8 @@ msgstr "Hilfetexte von Regeln in der Listenansicht verbergen"
 msgid "Hide hosttags in WATO folder view"
 msgstr "Hostmerkmale in WATO-Ordneransicht verstecken"
 
-#, fuzzy
 msgid "Hide in report"
-msgstr "Eingebetteter Bericht"
+msgstr "Im Report verbergen"
 
 msgid "Hide infotext"
 msgstr "Infotext verstecken"
@@ -21744,9 +21741,9 @@ msgstr "Ungültiger regulärer Ausdruck: %s"
 msgid "Invalid report element type '%s'"
 msgstr "Es gibt kein Berichtselement vom Typ '%s'"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid request: %r"
-msgstr "Ungültige Adresse: %s"
+msgstr "Ungültige Anfrage: %r"
 
 #, python-format
 msgid "Invalid response from event daemon: <pre>%s</pre>"
@@ -37149,9 +37146,8 @@ msgstr "Steal"
 msgid "Steelhead connections"
 msgstr "Verbindungen bei Steelheadgeräten"
 
-#, fuzzy
 msgid "Step"
-msgstr "Schritt %d"
+msgstr "Schritt"
 
 #, python-format
 msgid "Step %d"

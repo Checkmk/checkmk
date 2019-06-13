@@ -1,0 +1,11 @@
+Title: oracle_crs_res: Fixed parsing old agent output where node name as first column is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p18
+Date: 1560321835
+
+

@@ -472,6 +472,11 @@ class RulesetOptimizer(object):
                     self._matches_tag_spec(sub_tag_spec, hosttags)
                     for sub_tag_spec in tag_spec["$or"])
 
+            elif "$nor" in tag_spec:
+                return not any(
+                    self._matches_tag_spec(sub_tag_spec, hosttags)
+                    for sub_tag_spec in tag_spec["$nor"])
+
             else:
                 raise NotImplementedError()
 
@@ -512,8 +517,16 @@ class RulesetOptimizer(object):
                 return "!%s" % tag_spec["$ne"]
 
             if "$or" in tag_spec:
-                return tuple(
-                    self._tag_spec_cache_id(sub_tag_spec) for sub_tag_spec in tag_spec["$or"])
+                return (
+                    "$or",
+                    tuple(
+                        self._tag_spec_cache_id(sub_tag_spec) for sub_tag_spec in tag_spec["$or"]))
+
+            if "$nor" in tag_spec:
+                return (
+                    "$nor",
+                    tuple(
+                        self._tag_spec_cache_id(sub_tag_spec) for sub_tag_spec in tag_spec["$nor"]))
 
             raise NotImplementedError("Invalid tag spec: %r" % tag_spec)
 
@@ -532,6 +545,9 @@ class RulesetOptimizer(object):
                     continue
 
                 if "$or" in tag:
+                    return None  # Can not be optimized, makes _all_matching_hosts proceed
+
+                if "$nor" in tag:
                     return None  # Can not be optimized, makes _all_matching_hosts proceed
 
                 raise NotImplementedError()

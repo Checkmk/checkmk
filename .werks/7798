@@ -1,0 +1,10 @@
+Title: citrix_licenses: Fixed crash if agent plugin sends errors because it could not be executed
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560416147
+Class: fix
+
+

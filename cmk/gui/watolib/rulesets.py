@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
 import re
 import pprint
 from typing import Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
@@ -209,37 +208,25 @@ class RulesetCollection(object):
             else:
                 config_dict[varname] = []
 
-        # Initialize rulesets once
-        self._initialize_rulesets(only_varname=only_varname)
-
-        if os.path.exists(path):
-            self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
-
-    def _initialize_rulesets(self, only_varname=None):
-        if only_varname:
-            varnames = [only_varname]
-        else:
-            varnames = rulespec_registry.keys()
-
-        for varname in varnames:
-            if varname in self._rulesets:
-                continue
-            self._rulesets[varname] = Ruleset(varname, self._tag_to_group_map)
+        self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
 
     def from_config(self, folder, rulesets_config, only_varname=None):
-        if only_varname:
-            varnames = [only_varname]
-        else:
-            varnames = rulespec_registry.keys()
+        for varname in rulespec_registry.keys():
+            if only_varname and varname != only_varname:
+                continue  # skip unwanted options
 
-        for varname in varnames:
+            if varname in self._rulesets:
+                ruleset = self._rulesets[varname]
+            else:
+                ruleset = self._rulesets[varname] = Ruleset(varname, self._tag_to_group_map)
+
             if ':' in varname:
                 dictname, subkey = varname.split(":")
                 ruleset_config = rulesets_config.get(dictname, {})
                 if subkey in ruleset_config:
-                    self._rulesets[varname].from_config(folder, ruleset_config[subkey])
+                    ruleset.from_config(folder, ruleset_config[subkey])
             else:
-                self._rulesets[varname].from_config(folder, rulesets_config.get(varname, []))
+                ruleset.from_config(folder, rulesets_config.get(varname, []))
 
     def save(self):
         raise NotImplementedError()
@@ -250,7 +237,6 @@ class RulesetCollection(object):
     def _save_folder(self, folder):
         store.mkdir(folder.get_root_dir())
 
-        has_content = False
         content = ""
         for varname, ruleset in sorted(self._rulesets.items(), key=lambda x: x[0]):
             if varname not in rulespec_registry:
@@ -259,7 +245,6 @@ class RulesetCollection(object):
             if ruleset.is_empty_in_folder(folder):
                 continue  # don't save empty rule sets
 
-            has_content = True
             content += ruleset.to_config(folder)
 
         # Adding this instead of the full path makes it easy to move config
@@ -267,13 +252,7 @@ class RulesetCollection(object):
         # loading the file in cmk_base.config
         content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/' + FOLDER_PATH")
 
-        rules_file_path = folder.rules_file_path()
-        # Remove rules files if it has no content. This prevents needless reads
-        if not has_content and os.path.exists(rules_file_path):
-            os.unlink(rules_file_path)
-            return
-
-        store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
+        store.save_mk_file(folder.rules_file_path(), content, add_header=not config.wato_use_git)
 
     def exists(self, name):
         return name in self._rulesets

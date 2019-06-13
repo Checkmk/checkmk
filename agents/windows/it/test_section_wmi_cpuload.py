@@ -30,7 +30,7 @@ def testconfig(request, config):
 @pytest.fixture
 def expected_output():
     expected = [
-        re.escape(r'<<<%s:sep(44)>>>' % Globals.section),
+        re.escape(r'<<<%s:sep(9)>>>' % Globals.section),
         re.escape(r'[system_perf]'),
         (r'AlignmentFixupsPersec,Caption,ContextSwitchesPersec,Description,'
          r'ExceptionDispatchesPersec,FileControlBytesPersec,'
@@ -42,7 +42,7 @@ def expected_output():
          r'ProcessorQueueLength,SystemCallsPersec,SystemUpTime,Threads,'
          r'Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS,WMIStatus'),
         (r'\d+,,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,,\d+,'
-         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b'),
+         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b').replace(',', '\t'),
         re.escape(r'[computer_system]'),
         (r'AdminPasswordStatus,AutomaticManagedPagefile,'
          r'AutomaticResetBootOption,AutomaticResetCapability,BootOptionOnLimit,'
@@ -62,10 +62,11 @@ def expected_output():
          r'SystemSKUNumber,SystemStartupDelay,SystemStartupOptions,'
          r'SystemStartupSetting,SystemType,ThermalState,TotalPhysicalMemory,'
          r'UserName,WakeUpType,Workgroup,WMIStatus'),
-        (r'\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,,\w+,\d+,\d+,'
+        (r'\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,[^,]*,\w+,\d+,\d+,'
          r'[^,]+,[\w-]+,[^,]+,\d+,\d+,\d+,\d+,\d+,,,\d+,,[^,]+(, [^,]+)?,[^,]+,'
          r'[\w-]+,,\d+,\d+,\d+,,[^,]+,\d+,\-?\d+,\d+,\d+,,,\d+,\d+,\d+,,[\w-]+,'
-         r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*,\b(?:OK|Timeout)\b')
+         r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,[^,]*,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*,\b(?:OK|Timeout)\b'
+        ).replace(',', '\t')
     ]
     if not Globals.alone:
         expected += [re.escape(r'<<<systemtime>>>'), r'\d+']

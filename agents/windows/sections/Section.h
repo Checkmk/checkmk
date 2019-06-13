@@ -90,4 +90,7 @@ private:
     std::unique_ptr<SectionHeaderBase> _header;
 };
 
+constexpr const char kTabSeparator = '\t';
+constexpr const wchar_t *kWideTabSeparator = L"\t";
+
 #endif  // Section_h

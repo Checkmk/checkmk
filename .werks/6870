@@ -1,0 +1,12 @@
+Title: Tab is used as separator for Windows WMI
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0p17
+Date: 1559132789
+Class: fix
+
+Previously Windows Agent used comma as a separator in output of WMI Sections.
+As a result it may produce check crash, because a data field may contain comma too.
+Now this problem is solved.

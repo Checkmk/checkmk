@@ -1,0 +1,13 @@
+Title: oracle_asm_diskgroup: Fixed calculation of voting files
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1560421592
+Class: fix
+
+Previously the calculation of voting files for failgroups if more than one
+disk is in such a fail group with a voting disk.
+
+You will need to replace the agent plugin to make this fix work.

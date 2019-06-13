@@ -211,47 +211,36 @@ Function get_dbversion_software {
      # Get the database version
      # variable res contains the banner including the version number
      $res= (sqlplus -v)
-     # we not replace all non-numeric characters with NULL, resulting in e.g. 121010 as the version
-     $res=($res -replace '\D+','')
-     $res=[string]$res
-     $res=$res.trim()
-     $res=[int]$res
-     $res
+     # Example: SQL*Plus: Release 12.1.0.2.0 Production
+     $res= [string]$res
+     $verarr= $res.split(' ')
+     $version = $verarr[3]
+     # remove all '.' from string
+     $version = ($version -replace '\D+','')
+
+     $version
 }
 
 
-Function get_dbversion_database {
-     # Get the database version from the database itself.
-$THE_SQL=@'
-whenever sqlerror exit failure rollback;
-whenever oserror exit failure rollback;
-SET TRIMOUT ON
-SET TRIMSPOOL ON
-set linesize 1024
-set heading off
-set echo off
-set termout off
-set pagesize 0
-set feedback off
-select replace(version,'.','') from v$instance;
-exit;
-'@
-     $ERROR_FOUND=0
-     $res = (sqlcall -sql_message "SQL_Version" -sqltext "$THE_SQL" -delayed 0 -sqlsid $inst_name)
-     # debug_echo "output from get_dbversion_database ${res}"
-     # avoid further errors if the instance is not available
-     # as a workaround we silently continue for this section of code
-     $ErrorActionPreference = "SilentlyContinue"
-     if ($ERROR_FOUND -eq 0) {
-          $res=[string]$res
-          $res=$res.trim()
-          $res=[int]$res
-          $res
+Function get_dbversion_database ($ORACLE_HOME){
+     # Get the database version
+     # variable res contains the banner including the version number
+	 $SQLPLUS=$ORACLE_HOME+'\bin\sqlplus.exe -v'
+     $result=(iex $ORACLE_HOME'\bin\sqlplus.exe -v')
+	 # Example: SQL*Plus: Release 12.1.0.2.0 Production
+	 $res= [string]$result
+	 $verarr= $res.split(' ')
+	 #$verpos=$verarr.indexof('Release')
+	 $version = $verarr
+	 $verpos=2
+	 if($verpos -gt 0){
+          $version = $verarr[$verpos+1]
+		  # remove all '.' from string
+		  $version = ($version -replace '\D+','')
      }
-     # now we set our action on error back to our normal value
-     $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
-}
 
+     $version
+}
 
 
 
@@ -1380,11 +1369,21 @@ if ($the_count -gt 0) {
           $inst.name=$inst.name.replace("OracleService","")
           $inst_name=$inst.name.replace("OracleASMService","")
           $ORACLE_SID=$inst_name
+		  $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
+		  $val=(Get-ItemProperty -Path $key).ImagePath
+		  $ORACLE_HOME=$val.SubString(0, $val.LastIndexOf('\')-4)
+
           # reset errors found for this instance to zero
           $ERROR_FOUND=0
-          $DBVERSION=get_dbversion_database
-          debug_echo "value of inst_name= xxx${inst_name}xx"
-          debug_echo "value of DBVERSION database= xxx${DBVERSION}xx"
+
+ $SQLPLUS=$ORACLE_HOME+'\bin\sqlplus.exe -v'
+ $res= ($SQLPLUS)
+ debug_echo "xx $res xx"
+
+          $DBVERSION=get_dbversion_database($ORACLE_HOME)
+          debug_echo "value of inst_name= ${inst_name}"
+		  debug_echo "value of ORACLE_HOME= ${ORACLE_HOME}"
+          debug_echo "value of DBVERSION database= ${DBVERSION}"
           # if this is an ASM instance, then switch sections to ASM
           $ASM_FIRST_CHAR="+"
           $CHECK_FIRST_CHAR=$inst_name.Substring(0,1)

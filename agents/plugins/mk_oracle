@@ -1549,7 +1549,7 @@ sql_asm_diskgroup () {
            || '|' || sum(d.total_mb)
            || '|' || sum(d.free_mb)
            || '|' || d.failgroup
-           || '|' || d.VOTING_FILE
+           || '|' || max(d.VOTING_FILE)
            || '|' || d.FAILGROUP_TYPE
            || '|' || g.offline_disks
            || '|' || min(decode(d.REPAIR_TIMER, 0, 8640000, d.REPAIR_TIMER))

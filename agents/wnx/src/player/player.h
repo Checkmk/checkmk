@@ -280,12 +280,15 @@ private:
                 auto success = GetExitCodeProcess(h, &exit_code);
                 if (success) {
                     if (exit_code == STILL_ACTIVE) {
-                        XLOG::t("Process {} is active", pid);
+#if (0)
+                        // disabled due to high noise
+                        XLOG::t("Process [{}] is active", pid);
+#endif  // endif
                         waiting_processes.push_back(pid);
                     } else {
                         // store exit code
-                        XLOG::d.t("Process [{}] has exit code [{}]", pid,
-                                  exit_code);
+                        XLOG::t("Process [{}] has exit code [{}]", pid,
+                                exit_code);
                         storeExitCode(pid, exit_code);
                     }
                 } else {
@@ -305,7 +308,7 @@ private:
 
         if (exec_array_.size() > kMaxPluginsToExec) return false;  // !
 
-        auto execute_string = BuildCommand(FileExec);
+        auto execute_string = ConstructCommandToExec(FileExec);
         if (execute_string.empty()) {
             XLOG::l("Can\'t create exe string for the {}", FileExec.u8string());
             return false;
@@ -319,7 +322,7 @@ private:
         using namespace std;
 
         // now check for duplicates:
-        auto stringToSearch = BuildCommand(FileExec);
+        auto stringToSearch = ConstructCommandToExec(FileExec);
         auto found = find_if(
             exec_array_.begin(), exec_array_.end(),
             [stringToSearch](const wstring FromExec) {
@@ -342,7 +345,7 @@ private:
         if (!isExecValid(FileExec)) return false;
         if (!isExecIn(FileExec)) return false;
 
-        auto execute_string = BuildCommand(FileExec);
+        auto execute_string = ConstructCommandToExec(FileExec);
 
         exec_array_.emplace_back(execute_string);
         return true;

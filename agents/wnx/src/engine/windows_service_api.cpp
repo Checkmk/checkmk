@@ -373,6 +373,10 @@ int ExecMainService(StdioLog stdio_log) {
     using namespace std::chrono;
     using namespace cma::install;
     XLOG::setup::ColoredOutputOnStdio(true);
+    if (stdio_log == StdioLog::yes)
+        XLOG::setup::EnableTraceLog(false);
+    else
+        XLOG::setup::EnableTraceLog(true);
     xlog::sendStringToStdio("Ad hoc/Exec Mode, press any key to stop",
                             xlog::internal::kCyan);
     auto delay = 1000ms;  // #TODO create const

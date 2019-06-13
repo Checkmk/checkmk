@@ -102,36 +102,36 @@ TEST(PlayerTest, Extensions) {
     auto pshell = MakePowershellWrapper();
     EXPECT_TRUE(pshell.find(L"powershell.exe") != std::wstring::npos);
 
-    auto p = BuildCommand(L"a.exe");
+    auto p = ConstructCommandToExec(L"a.exe");
     auto p_expected = L"\"a.exe\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.cmd");
+    p = ConstructCommandToExec(L"a.cmd");
     p_expected = L"\"a.cmd\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.bat");
+    p = ConstructCommandToExec(L"a.bat");
     p_expected = L"\"a.bat\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.e");
+    p = ConstructCommandToExec(L"a.e");
     EXPECT_EQ(p.empty(), true);
-    p = BuildCommand(L"xxxxxxxxx");
+    p = ConstructCommandToExec(L"xxxxxxxxx");
     EXPECT_EQ(p.empty(), true);
 
-    p = BuildCommand(L"a.pl");
+    p = ConstructCommandToExec(L"a.pl");
     p_expected = L"perl.exe \"a.pl\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.py");
+    p = ConstructCommandToExec(L"a.py");
     p_expected = L"python.exe \"a.py\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.vbs");
+    p = ConstructCommandToExec(L"a.vbs");
     p_expected = L"cscript.exe //Nologo \"a.vbs\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.ps1");
+    p = ConstructCommandToExec(L"a.ps1");
     p_expected =
         L"powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File \"a.ps1\"";
     EXPECT_EQ(p, p_expected);

@@ -83,7 +83,9 @@ std::string ExtractProcessOwner(HANDLE Process) {
     HANDLE raw_handle = INVALID_HANDLE_VALUE;
 
     if (!::OpenProcessToken(Process, TOKEN_READ, &raw_handle)) {
-        XLOG::t.w("Failed to open process  to get a token {} ", GetLastError());
+        if (GetLastError() != 5)
+            XLOG::t.w("Failed to open process  to get a token {} ",
+                      GetLastError());
         return {};
     }
     ON_OUT_OF_SCOPE(CloseHandle(raw_handle));
@@ -263,7 +265,7 @@ std::string GetProcessOwner(int64_t ProcessId) {
     auto process_handle = ::OpenProcess(
         PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, process_id);
     if (!process_handle) {
-        XLOG::t("Can't to open process {} status is {}. Check access rights.",
+        XLOG::t("Can't open process [{}] status is [{}]. Check access rights.",
                 process_id, ::GetLastError());
         return "SYSTEM";
     }
@@ -271,7 +273,8 @@ std::string GetProcessOwner(int64_t ProcessId) {
 
     auto owner = ExtractProcessOwner(process_handle);
     if (owner.empty()) {
-        XLOG::t.t("Owner of {} is empty, assuming system", process_id);
+        // disabled noisy log
+        XLOG::t("Owner of [{}] is empty, assuming system", process_id);
         return "SYSTEM";
     }
 

@@ -827,7 +827,7 @@ std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
     try {
         auto val = yaml_node[name];
         if (!val.IsDefined() || val.IsNull()) {
-            XLOG::d.t("Absent node '{}'", name);
+            XLOG::t("Absent yml node '{}'", name);
             return {};
         }
 

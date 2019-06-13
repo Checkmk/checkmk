@@ -86,7 +86,8 @@ def testconfig(request, testconfig_drive):
 @pytest.fixture
 def expected_output():
     if platform.system() == 'Windows':
-        expected = [
+        # this variable is for a future release
+        expected_modern = [
             re.escape(r'<<<%s:sep(124)>>>' % Globals.section), r'\d+',
             re.escape(r'[[[header]]]'),
             re.escape(r'name|status|size|time'),
@@ -96,9 +97,16 @@ def expected_output():
             re.escape(r'%s|' % Globals.paths.tempfile3()) + r'ok\|' + r'\d+\|\d+',
             re.escape(r'%s|' % Globals.paths.missingfile()) + r'missing'
         ]
+        expected_legacy = [
+            re.escape(r'<<<%s:sep(124)>>>' % Globals.section), r'\d+',
+            re.escape(r'%s|' % Globals.paths.tempfile1()) + r'\d+\|\d+',
+            re.escape(r'%s|' % Globals.paths.tempfile2()) + r'\d+\|\d+',
+            re.escape(r'%s|' % Globals.paths.tempfile3()) + r'\d+\|\d+',
+            re.escape(r'%s|missing|' % Globals.paths.missingfile()) + r'\d+'
+        ]
         if not Globals.alone:
-            expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
-        return expected
+            expected_legacy += [re.escape(r'<<<systemtime>>>'), r'\d+']
+        return expected_legacy
 
 
 @pytest.fixture

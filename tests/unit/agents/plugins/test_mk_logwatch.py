@@ -360,7 +360,6 @@ class MockStdout(object):
             ],
         ),
         ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),
-        ('Private Ryan', None, {}, {}, [u"[[[Private Ryan:missing]]]\n"]),
     ])
 def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, status,
                          expected_output):

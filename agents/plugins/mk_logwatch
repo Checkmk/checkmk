@@ -479,16 +479,24 @@ def process_logfile(logfile, patterns, opt, status):
     # Look at which file offset we have finished scanning
     # the logfile last time. If we have never seen this file
     # before, we set the offset to -1
-    offset, prev_inode = status.get(logfile, (0 if debug() else stat.st_size, None))
+    offset, prev_inode = status.get(logfile, (-1, -1))
 
     # Set the current pointer to the file end
     status[logfile] = stat.st_size, inode
+
+    # If we have never seen this file before, we do not want
+    # to make a fuss about ancient log messages...
+    if offset == -1:
+        if not debug():
+            return output
+        else:
+            offset = 0
 
     # If the inode of the logfile has changed it has appearently
     # been started from new (logfile rotation). At least we must
     # assume that. In some rare cases (restore of a backup, etc)
     # we are wrong and resend old log messages
-    if prev_inode is not None and inode != prev_inode:
+    if prev_inode >= 0 and inode != prev_inode:
         offset = 0
 
     # Our previously stored offset is the current end ->

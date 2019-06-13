@@ -20,7 +20,7 @@ $(HEIRLOOM_MAILX_INSTALL): $(HEIRLOOM_MAILX_BUILD)
 	install -m 755 $(HEIRLOOM_MAILX_DIR)/mailx $(DESTDIR)$(OMD_ROOT)/bin/heirloom-mailx
 	ln -sfn heirloom-mailx $(DESTDIR)$(OMD_ROOT)/bin/mail
 	install -m 644 $(HEIRLOOM_MAILX_DIR)/mailx.1 $(DESTDIR)$(OMD_ROOT)/share/man/man1/heirloom-mailx.1
-	gzip $(DESTDIR)$(OMD_ROOT)/share/man/man1/heirloom-mailx.1
+	gzip -f $(DESTDIR)$(OMD_ROOT)/share/man/man1/heirloom-mailx.1
 	$(TOUCH) $@
 
 $(HEIRLOOM_MAILX)-skel:

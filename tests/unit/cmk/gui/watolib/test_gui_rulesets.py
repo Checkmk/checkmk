@@ -234,6 +234,36 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
                 },
             },
         ),
+        # $nor tags
+        (
+            "inventory_processes_rules",
+            {
+                "value": "NORED_TAGS",
+                "condition": {
+                    'host_tags': {
+                        'specs': {
+                            "$nor": [
+                                'specs',
+                                'tag',
+                            ],
+                        }
+                    }
+                },
+            },
+            {
+                "value": "NORED_TAGS",
+                "conditions": {
+                    'host_tags': {
+                        'specs': {
+                            "$nor": [
+                                'specs',
+                                'tag',
+                            ],
+                        }
+                    }
+                },
+            },
+        ),
         # binary host ruleset
         ("only_hosts", {
             "value": True,

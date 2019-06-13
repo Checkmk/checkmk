@@ -30,6 +30,7 @@ if(BRANCH == 'master') {
     CMK_VERSION = BRANCH + '-' + dateFormat.format(date)
 }
 def TEST_DATA = '/var/jenkins_home/test-data/' + CMK_VERSION
+OMD_SITE = 'int_' + BRANCH.replaceAll(i"\\.","")
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -132,7 +133,7 @@ try {
                                 sh "mount -t overlay overlay -o lowerdir=${TEST_DATA}/git,upperdir=${WORKSPACE}/$DISTRO-dest,workdir=${WORKSPACE}/$DISTRO-work ${WORKSPACE}/$DISTRO-dest"
                                 sh 'ls -lah'
                                 dir (DISTRO + '-dest') {
-                                    sh "PYTEST_ADDOPTS='--junitxml=/omd/sites/int_master/junit.xml -o junit_suite_name=$DISTRO --maxfail 300' make -C tests VERSION=${CMK_VERSION} test-integration"
+                                    sh "PYTEST_ADDOPTS='--junitxml=/omd/sites/${OMD_SITE}/junit.xml -o junit_suite_name=$DISTRO --maxfail 300' make -C tests VERSION=${CMK_VERSION} OMD_SITE=${OMD_SITE} test-integration"
                                 }
                             }
                         }
@@ -140,8 +141,8 @@ try {
                             sh """
                                 rm -rf $DISTRO
                                 mkdir -p $DISTRO
-                                cp /omd/sites/int_master/junit.xml $DISTRO/
-                                cp -r /omd/sites/int_master/var/log $DISTRO/
+                                cp /omd/sites/${OMD_SITE}/junit.xml $DISTRO/
+                                cp -r /omd/sites/${OMD_SITE}/var/log $DISTRO/
                                 chown -R 112:120 $DISTRO
                             """
                             stash name: "$DISTRO-results", includes: "$DISTRO/**/*"

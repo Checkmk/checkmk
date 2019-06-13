@@ -1,0 +1,20 @@
+Title: Rulesets: Multiple tags of a tag group can be ORed
+Level: 2
+Component: wato
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560451480
+
+It's now possible to configure a list of alternative matching tag IDs of a
+single tag group in one rule. The selected tag IDs are ORed.  This reduces some
+situations where users had to configure multiple rules when a rule should
+affect multiple choices of a tag group.
+
+The inverse operation "match all excluding the configured tag IDs" is also possible.
+
+In this step the tag condition input has been changed to be more
+compact by default. This should improve the condition dialog usability,
+especially for users with a larger number of tag groups.

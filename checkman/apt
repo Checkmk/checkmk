@@ -11,9 +11,20 @@ description:
  this plugin with asynchronous execution and at an interval with at
  least one hour.
 
- The check gets critical if there are security updates available.
- It gets warning, if there are other updates available. These two
+ The check gets {CRIT} if there are security updates available.
+ It gets {WARN}, if there are other updates available. These two
  states can be overriden via a WATO rule.
+
+ If updates are performed on a host the {WARN} and {CRIT} state will
+ remain until the next check interval. To invalidate the cached data
+ and to trigger the check execution immediately, you can run the
+ command:
+
+ {touch -t 197012081200 /var/lib/check_mk_agent/cache/*mk_apt.cache}
+
+ If you don't want to invalidate the cache manually you can copy the
+ apt hook under {~/share/doc/check_mk/treasures/mk_apt_hook} to
+ {/etc/apt/apt.conf.d/98mk-apt}.
 
 inventory:
  One service will be created for each system where the {mk_apt}

@@ -74,7 +74,7 @@ $(DOKUWIKI_SKEL): $(DOKUWIKI_INSTALL)
 
 	cd $(SKEL)/var/dokuwiki/lib/plugins/ ; \
 	for i in `ls -1 $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/` ; do \
-	    $(LN) -s ../../../../share/dokuwiki/htdocs/lib/plugins/$$i . ; \
+	    $(LN) -sf ../../../../share/dokuwiki/htdocs/lib/plugins/$$i . ; \
 	done
 	$(TOUCH) $@
 

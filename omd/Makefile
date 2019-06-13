@@ -200,7 +200,7 @@ $(FIX_SKEL): $(SKEL_TARGETS)
 # and files not owned by a specific package.
 $(INSTALL_GLOBAL): $(INSTALL)
 	# Create link to default version
-	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
+	ln -sf $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 
 	# Create global symbolic links. Those links are share between
 	# all installed versions and refer to the default version.
@@ -224,7 +224,7 @@ $(INSTALL_GLOBAL): $(INSTALL)
 
 	# Install ChangeLog created from all werks
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
-	ln -s check_mk/ChangeLog $(DESTDIR)$(OMD_ROOT)/share/doc/ChangeLog
+	ln -sfn check_mk/ChangeLog $(DESTDIR)$(OMD_ROOT)/share/doc/ChangeLog
 	install -m 644 Licenses.csv $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.csv
 
 	if [ -f COMMIT ]; then \

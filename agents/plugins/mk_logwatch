@@ -493,6 +493,10 @@ def is_inode_capable(path):
     return system == "Linux"
 
 
+def decode_filename(byte_str_filename):
+    return byte_str_filename.decode('utf-8')
+
+
 def process_logfile(logfile, patterns, opt, status):
     """
     Returns tuple of (
@@ -503,17 +507,14 @@ def process_logfile(logfile, patterns, opt, status):
     In case the file has never been seen before returns a list of logfile lines
     and None in case the logfile cannot be opened.
     """
-    if patterns is None:
-        return [u"[[[%s:missing]]]\n" % logfile]
-
     try:
         log_iter = LogLinesIter(logfile)
     except OSError:
         if debug():
             raise
-        return [u"[[[%s:cannotopen]]]\n" % logfile]
+        return [u"[[[%s:cannotopen]]]\n" % decode_filename(logfile)]
 
-    output = [u"[[[%s]]]\n" % logfile]
+    output = [u"[[[%s]]]\n" % decode_filename(logfile)]
 
     stat = os.stat(logfile)
     inode = stat.st_ino if is_inode_capable(logfile) else 1
@@ -787,10 +788,11 @@ def find_matching_logfiles(glob_pattern):
 
 def parse_sections(logfiles_config):
     """
-    Returns dict with logfile name as key and either tuple of (patterns, options)
-    (or (None, None) in case the file cannot be found) as value.
+    Returns s list of (logfile name, (patterns, options)) tuples and
+    and a list of non-matching patterns.
     """
-    logfile_patterns = {}
+    found_sections = {}
+    non_matching_patterns = []
 
     for cfg in logfiles_config:
 
@@ -806,14 +808,14 @@ def parse_sections(logfiles_config):
             if opt.regex is not None:
                 logfiles = [f for f in logfiles if opt.regex.search(f)]
             if not logfiles:
-                logfile_patterns[glob_pattern] = (None, None)
+                non_matching_patterns.append(glob_pattern)
             for logfile in logfiles:
-                present_patterns, present_options = logfile_patterns.get(logfile, ([], Options()))
+                present_patterns, present_options = found_sections.get(logfile, ([], Options()))
                 present_patterns.extend(cfg.patterns)
                 present_options.update(opt)
-                logfile_patterns[logfile] = (present_patterns, present_options)
+                found_sections[logfile] = (present_patterns, present_options)
 
-    return logfile_patterns.items()
+    return found_sections.items(), non_matching_patterns
 
 
 def ip_in_subnetwork(ip_address, subnetwork):
@@ -917,7 +919,12 @@ def main():
     except Exception:
         status = {}
 
-    for logfile, (patterns, options) in parse_sections(logfiles_config):
+    found_sections, non_matching_patterns = parse_sections(logfiles_config)
+
+    for pattern in non_matching_patterns:
+        sys.stdout.write((u"[[[%s:missing]]]\n" % decode_filename(pattern)).encode('utf-8'))
+
+    for logfile, (patterns, options) in found_sections:
         output = process_logfile(logfile, patterns, options, status)
         write_output(output, options.maxoutputsize)
 

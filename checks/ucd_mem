@@ -24,6 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# FIXME
+# The WATO group 'memory_simple' needs an item and the service_description should
+# have a '%s'.  At the moment the current empty item '' and 'Memory' without '%s'
+# works but is not consistent.  This will be fixed in the future.
+# If we change this we loose history and parameter sets have to be adapted.
+
 # .1.3.6.1.4.1.2021.4.5.0 4003584 --> UCD-SNMP-MIB::memTotalReal.0
 # .1.3.6.1.4.1.2021.4.6.0 188296  --> UCD-SNMP-MIB::memAvailReal.0
 
@@ -39,7 +45,7 @@ def inventory_ucd_mem(info):
         return [("", {})]
 
 
-def check_ucd_mem(_no_item, params, info):
+def check_ucd_mem(item, params, info):
     mem_total_bytes, mem_avail_bytes = \
         [int(x.replace("kB", "").strip()) * 1024 for x in info[0]]
     mem_used_bytes = mem_total_bytes - mem_avail_bytes

@@ -1326,7 +1326,8 @@ class ListOf(ValueSpec):
             html.close_table()
 
         elif self._style == ListOf.Style.FLOATING:
-            html.open_div(id_="%s_prototype" % varprefix, style="display:none;")
+            html.open_div(
+                id_="%s_prototype" % varprefix, class_="vlof_prototype", style="display:none;")
 
             self._show_entry(varprefix, index, value)
 

@@ -41,7 +41,7 @@ function enable_select2_dropdowns(container) {
     if (!container)
         container = $(document);
 
-    elements = $(container).find(".select2-enable").not("tbody.vlof_prototype .select2-enable");
+    elements = $(container).find(".select2-enable").not(".vlof_prototype .select2-enable");
     elements.select2({
         dropdownAutoWidth : true,
         minimumResultsForSearch: 5
@@ -55,7 +55,7 @@ function enable_label_input_fields(container) {
     let elements = container.querySelectorAll("input.labels");
     elements.forEach(element => {
         // Do not tagify objects that are part of a ListOf valuespec template
-        if (element.closest("tbody.vlof_prototype") !== null) {
+        if (element.closest(".vlof_prototype") !== null) {
             return;
         }
 

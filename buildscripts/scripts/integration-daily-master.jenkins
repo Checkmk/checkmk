@@ -30,7 +30,7 @@ if(BRANCH == 'master') {
     CMK_VERSION = BRANCH + '-' + dateFormat.format(date)
 }
 def TEST_DATA = '/var/jenkins_home/test-data/' + CMK_VERSION
-OMD_SITE = 'int_' + BRANCH.replaceAll(i"\\.","")
+OMD_SITE = 'int_' + BRANCH.replaceAll("\\.","")
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {

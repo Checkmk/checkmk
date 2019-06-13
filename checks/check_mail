@@ -28,59 +28,60 @@
 def check_mail_arguments(params):
     args = []
 
-    fetch_proto, fetch_params = params['fetch']
-    args += ['--protocol=%s' % fetch_proto]
+    fetch_proto, fetch_params = params["fetch"]
+    args.append("--protocol=%s" % fetch_proto)
 
-    if 'server' in fetch_params:
-        args += ['--server=%s' % fetch_params['server']]
+    if "server" in fetch_params:
+        args.append("--server=%s" % fetch_params["server"])
     else:
-        args += ['--server=$HOSTADDRESS$']
+        args.append("--server=$HOSTADDRESS$")
 
-    fetch_use_ssl, fetch_port = fetch_params['ssl']
+    fetch_use_ssl, fetch_port = fetch_params["ssl"]
     if fetch_use_ssl:
-        args += ['--ssl']
+        args.append("--ssl")
     if fetch_port is not None:
-        args += ['--port=%d' % fetch_port]
+        args.append("--port=%d" % fetch_port)
 
-    args += ['--username=%s' % fetch_params['auth'][0]]
-    args += [passwordstore_get_cmdline("--password=%s", fetch_params['auth'][1])]
+    username, password = fetch_params["auth"]
+    args.append("--username=%s" % username)
+    args.append(passwordstore_get_cmdline("--password=%s", password))
 
-    if 'connect_timeout' in params:
-        args += ['--connect-timeout=%d' % params['connect_timeout']]
+    if "connect_timeout" in params:
+        args.append("--connect-timeout=%d" % params["connect_timeout"])
 
-    if 'forward' in params:
-        forward = params['forward']
-        args += ['--forward-ec']
-        if 'method' in forward:
-            args += ['--forward-method=%s' % forward['method']]
+    if "forward" in params:
+        forward = params["forward"]
+        args += ["--forward-ec"]
+        if "method" in forward:
+            args.append("--forward-method=%s" % forward["method"])
 
-        if 'match_subject' in forward:
-            args += ['--match-subject=%s' % forward['match_subject']]
+        if "match_subject" in forward:
+            args.append("--match-subject=%s" % forward["match_subject"])
 
-        if 'facility' in forward:
-            args += ['--forward-facility=%d' % forward['facility']]
+        if "facility" in forward:
+            args.append("--forward-facility=%d" % forward["facility"])
 
-        if 'host' in forward:
-            args += ['--forward-host=%s' % forward['host']]
+        if "host" in forward:
+            args.append("--forward-host=%s" % forward["host"])
 
-        if forward.get('application'):
-            args += ['--forward-app=%s' % forward['application']]
+        if "application" in forward:
+            args.append("--forward-app=%s" % forward["application"])
 
-        if 'body_limit' in forward:
-            args += ['--body-limit=%d' % forward['body_limit']]
+        if "body_limit" in forward:
+            args.append("--body-limit=%d" % forward["body_limit"])
 
-        if 'cleanup' in forward:
-            if forward['cleanup'] is True:
-                args += ['--cleanup=delete']
+        if "cleanup" in forward:
+            if forward["cleanup"] is True:
+                args.append("--cleanup=delete")
             else:
-                args += ['--cleanup=%s' % forward['cleanup']]
+                args.append("--cleanup=%s" % forward["cleanup"])
 
     return args
 
 
-active_check_info['mail'] = {
-    "command_line": '$USER1$/check_mail $ARG1$',
+active_check_info["mail"] = {
+    "command_line": "$USER1$/check_mail $ARG1$",
     "argument_function": check_mail_arguments,
-    "service_description": lambda params: params['service_description'],
+    "service_description": lambda params: params["service_description"],
     "has_perfdata": True,
 }

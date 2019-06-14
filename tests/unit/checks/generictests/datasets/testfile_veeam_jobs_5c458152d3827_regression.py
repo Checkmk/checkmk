@@ -32,19 +32,19 @@ discovery = {'': [(u'Lehrer Rechner', None),
                   (u'Windows_Admin_PC', None)]}
 
 
-checks = {'': [(u'Lehrer Rechner', {}, [(3, 'No such job found', [])]),
+checks = {'': [(u'Lehrer Rechner', {}, []),
                (u'Lehrer_Rechner',
                 {},
                 [(0,
-                  u'Result: Success, Backup, Stopped, 23.07.2018 13:08:37, 23.07.2018 13:27:44',
+                    u'State: Stopped, Result: Success, Creation time: 23.07.2018 13:08:37, End time: 23.07.2018 13:27:44, Type: Backup',
                   [])]),
                (u'VMware_Server',
                 {},
                 [(0,
-                  u'Result: Success, Backup, Stopped, 21.01.2019 00:10:22, 21.01.2019 00:29:12',
+                    u'State: Stopped, Result: Success, Creation time: 21.01.2019 00:10:22, End time: 21.01.2019 00:29:12, Type: Backup',
                   [])]),
                (u'Windows_Admin_PC',
                 {},
                 [(0,
-                  u'Result: Success, Backup, Stopped, 20.01.2019 22:00:06, 20.01.2019 22:02:42',
+                    u'State: Stopped, Result: Success, Creation time: 20.01.2019 22:00:06, End time: 20.01.2019 22:02:42, Type: Backup',
                   [])])]}

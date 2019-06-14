@@ -250,7 +250,7 @@ checks = {
     ],
     'innodb_io': [
         ('mysql', {}, [
-            (0, '0.00 B/sec read, 0.00 MB/s, 0.00 B/sec write, 0.00 MB/s', [
+            (0, 'read: 0.00 B/s, write: 0.00 B/s', [
                 ('read', 0.0, None, None, None, None),
                 ('write', 0.0, None, None, None, None),
             ]),

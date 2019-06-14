@@ -269,7 +269,7 @@ class ModeTags(WatoMode):
         used_tags = set()
         for tag_group in self._effective_config.tag_groups:
             for tag in tag_group.tags:
-                if aux_tag in tag.aux_tag_ids:
+                if aux_tag.id in tag.aux_tag_ids:
                     used_tags.add(aux_tag.id)
         return sorted(used_tags)
 

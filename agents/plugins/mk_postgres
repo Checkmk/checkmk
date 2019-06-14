@@ -67,7 +67,14 @@ function postgres_instances() {
     if [ ! -z "${1}" ]; then
         echo "[[[${1}]]]"
     fi
-    pgrep -laf bin/postgres
+
+    # shellcheck disable=SC2009
+    # The pgrep command would be different for older distros. Newer distros
+    # need the -a option, but older ones need the -f option. The first idea
+    # was to use:
+    #   pgrep -af bin/postgres 2>/dev/null || pgrep -lf bin/postgres
+    # but SLES 11 returns the exit code 0 for a wrong command line.
+    ps -eo pid,command | grep bin/postgres | grep -vE '^[ ]*[0-9]+ grep '
 }
 
 

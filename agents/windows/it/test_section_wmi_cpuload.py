@@ -58,9 +58,22 @@ def expected_output():
          r'[^,]+,[\w-]+,[^,]+,\d+,\d+,\d+,\d+,\d+,,,\d+,,[^,]+(, [^,]+)?,[^,]+,'
          r'[\w-]+,,\d+,\d+,\d+,,[^,]+,\d+,\-?\d+,\d+,\d+,,,\d+,\d+,\d+,,[\w-]+,'
          r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,[^,]*,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*,\b(?:OK|Timeout)\b'
-         ).replace(',', '\t')
+        ).replace(',', '\t')
     ]
 
 
 def test_section_wmi_cpuload(testconfig, expected_output, actual_output, testfile):
+    # protection against WMI timeout
+    ac = actual_output
+    required_lines = 7
+    name = 'cpu_load'
+
+    if ac is None:
+        pytest.skip('"%s" Data is absent' % name)
+        return
+
+    if len(ac) < required_lines:
+        pytest.skip('"%s" Data is TOO short:\n %s' % (name, '\n'.join(ac)))
+        return
+
     remotetest(expected_output, actual_output, testfile)

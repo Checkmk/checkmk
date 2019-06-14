@@ -19,12 +19,12 @@ def _get_package_paths(version_path, what):
     for filename in os.listdir(version_path):
         if filename.startswith("check-mk-") and \
            filename.endswith(".%s" % what) and \
-           not "-dbgsym_" in filename:
+           "-dbgsym_" not in filename and \
+           "docker" not in filename:
             yield os.path.join(version_path, filename)
 
 
 # In case packages grow/shrink this check has to be changed.
-# TODO: Handle Docker tar.gz differently?
 @pytest.mark.parametrize("what,min_size,max_size", [
     ("rpm", 168 * 1024 * 1024, 203 * 1024 * 1024),
     ("deb", 133 * 1024 * 1024, 144 * 1024 * 1024),

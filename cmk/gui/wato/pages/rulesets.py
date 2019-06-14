@@ -1515,7 +1515,9 @@ class VSExplicitConditions(Transform):
         return Tuple(
             title=_("Explicit hosts"),
             elements=[
-                ListOfStrings(orientation="horizontal", valuespec=ConfigHostname(size=30,)),
+                ListOfStrings(
+                    orientation="horizontal",
+                    valuespec=ConfigHostname(size=30, validate=self._validate_list_entry)),
                 Checkbox(
                     label=_("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"),),
             ],
@@ -1577,9 +1579,14 @@ class VSExplicitConditions(Transform):
 
         return ListOfStrings(
             orientation="horizontal",
-            valuespec=RegExpUnicode(size=30, mode=RegExpUnicode.prefix),
+            valuespec=RegExpUnicode(
+                size=30, mode=RegExpUnicode.prefix, validate=self._validate_list_entry),
             help=self._explicit_service_help_text(),
         )
+
+    def _validate_list_entry(self, value, varprefix):
+        if value.startswith("!"):
+            raise MKUserError(varprefix, _("It's not allowed to use a leading \"!\" here."))
 
     def value_to_text(self, conditions):  # pylint: disable=arguments-differ
         # type: (RuleConditions) -> None

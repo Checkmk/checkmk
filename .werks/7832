@@ -1,0 +1,11 @@
+Title: storeonce_clusterinfo: Do not crash if deduplication ratio is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b2
+Date: 1560499392
+
+

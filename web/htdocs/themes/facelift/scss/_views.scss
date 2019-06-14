@@ -506,7 +506,7 @@ table.data.single {
   tr.data {
     > td {
       height: 16px;
-      padding: 4px 5px 2px 5px;
+      padding: 4px 5px 2px;
       padding-bottom: 4px;
       line-height: 14px;
       text-align: left;
@@ -1187,9 +1187,8 @@ div.timelinerange.sla {
 table.data.headerleft.sla {
   tbody tr {
     td {
-      /* TODO: No important styles */
       &, &.sla {
-        padding: 4px 8px !important;
+        padding: 4px 8px;
       }
 
       table.timeline.standalone,
@@ -1209,9 +1208,8 @@ table.data.headerleft.sla {
         border-spacing: 0;
         box-shadow: none;
 
-        /* TODO: No important styles */
         tbody tr td {
-          padding-left: 0 !important;
+          padding-left: 0;
           margin: 0;
           vertical-align: baseline;
           border: none;
@@ -1231,27 +1229,23 @@ table.data.headerleft.sla {
             border-spacing: 0;
             box-shadow: none;
 
-            /* TODO: No important styles */
             tbody tr td {
-              padding: 0 !important;
-              padding-right: 16px;
+              padding: 0;
             }
           }
         }
       }
     }
 
-    /* TODO: No important styles */
     th {
-      width: 240px !important;
+      width: 240px;
     }
   }
 
-  /* TODO: No important styles */
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    color: $theme-color-text !important;
+    color: $theme-color-text;
   }
 }
 

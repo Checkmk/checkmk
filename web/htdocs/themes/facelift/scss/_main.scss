@@ -1121,11 +1121,7 @@ a.iconlink img, body.main .popup_menu span.iconlink img {
   float: left;
 }
 
-/* TODO: Get rid of important styles */
 div.graph {
-  padding: 4px !important;
-  background: $theme-color-nuance-4 !important;
-  background-color: transparent !important;
   border: 1px solid $theme-color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
@@ -1142,14 +1138,15 @@ body.main img.treeangle {
   filter: invert(100%);
 }
 
-/* TODO: Get rid of important styles */
+/* TODO: Reproduce this element then get rid of important styles */
 .op {
   width: 60px !important;
 }
 
-/* TODO: Get rid of important styles */
 .bi_rule_tree img.treeangle, .invtree img.treeangle, .grouped_row_header img.treeangle.nform {
-  filter: invert(0%) !important;
+  &, body.main & {
+    filter: invert(0%);
+  }
 }
 
 table.report_contents td.preview img {
@@ -1165,21 +1162,20 @@ table td {
 div.graph_with_timeranges {
   margin-bottom: 32px;
 
-  /* TODO: Get rid of important styles */
   div.graph {
-    border: 1px solid $theme-color-table-border !important;
-    box-shadow: none !important;
+    border: 1px solid $theme-color-table-border;
+    box-shadow: none;
 
     div.title {
-        display: block;
+      display: block;
     }
 
     canvas {
-        margin-bottom: 8px;
+      margin-bottom: 8px;
     }
 
     &.preview canvas {
-        margin-bottom: 0px;
+      margin-bottom: 0px;
     }
 
     &.preview .title {
@@ -1226,11 +1222,9 @@ td.agent_config table.rulesets td {
     border: none solid;
     box-shadow: none;
 
-    /* TODO: Get rid of important styles */
     td {
-      padding: 4px 8px 4px 0 !important;
+      padding: 4px 8px 4px 0;
       vertical-align: top;
-      border: none solid !important;
 
       td.title {
         height: auto;
@@ -1256,12 +1250,11 @@ td.title {
 }
 
 /* Spezielle Snapins */
-/* TODO: Get rid of important styles */
 table.cmc_stats {
   width: 100%;
   padding: 8px;
-  background-color: $theme-color-table-background-dark !important;
-  border: 1px solid $theme-color-table-border-dark !important;
+  background-color: $theme-color-table-background-dark;
+  border: 1px solid $theme-color-table-border-dark;
   border-spacing: 4px;
   box-sizing: border-box;
 
@@ -1294,7 +1287,7 @@ div.color {
   box-shadow: none;
 }
 
-/* TODO: Get rid of important styles */
+/* TODO: Reproduce this element then get rid of important styles */
 th.header_state {
   color: $theme-color-text !important;
   background: transparent !important;
@@ -1322,10 +1315,9 @@ div.success {
   border-color: $theme-color-state-success-border;
 }
 
-/* TODO: Get rid of important styles */
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
-  background-color: $theme-color-state-3-background !important;
-  border-color: $theme-color-nuance-16 !important;
+  background-color: $theme-color-state-3-background;
+  border-color: $theme-color-nuance-16;
 }
 
 div.info {

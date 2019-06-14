@@ -19,10 +19,6 @@ namespace cma {
 
 namespace provider {
 
-namespace ps {
-constexpr std::wstring_view kSepString = L",";
-}
-
 // Process Line Formatter
 // not static to be fully tested by unit tests
 std::string OutputProcessLine(ULONGLONG virtual_size,
@@ -63,8 +59,9 @@ std::string OutputProcessLine(ULONGLONG virtual_size,
     return out_string;
 }
 
-// not static - to be tested in gtest
-std::wstring GetProcessListFromWmi() {
+// not static: tested
+// returns FORMATTED table of the processes
+std::wstring GetProcessListFromWmi(std::wstring_view separator) {
     wtools::WmiWrapper wmi;
 
     if (!wmi.open() || !wmi.connect(cma::provider::kWmiPathStd)) {
@@ -72,9 +69,11 @@ std::wstring GetProcessListFromWmi() {
         return {};
     }
     wmi.impersonate();
-    // Use the IWbemServices pointer to make requests of WMI.
-    // Make requests here:
-    return wmi.queryTable({}, L"Win32_Process", ps::kSepString);
+
+    // status will be ignored, ps doesn't support correct error processing
+    // like other wmi sections
+    auto [table, ignored] = wmi.queryTable({}, L"Win32_Process", separator);
+    return table;
 }
 
 // code from legacy client:
@@ -316,7 +315,7 @@ std::string ProducePsWmi(bool FullPath) {
 
     std::string out;
     while (1) {
-        auto object = wtools::WmiGetNextObject(processes);
+        auto [object, status] = wtools::WmiGetNextObject(processes);
         if (!object) break;
         ON_OUT_OF_SCOPE(object->Release());
 

@@ -20,9 +20,6 @@ std::string OutputProcessLine(ULONGLONG virtual_size,
                               long long thread_count, const std::string &user,
                               const std::string &exe_file);
 
-std::wstring GetProcessListFromWmi();
-std::string ProducePsWmi(bool FullPath);
-
 static long long convert(std::string Val) {
     try {
         return std::stoll(Val);
@@ -101,7 +98,7 @@ TEST(PsTest, All) {  //
     EXPECT_EQ(convert(by_comma[9]), thread_count);
     EXPECT_EQ(convert(by_comma[10]), uptime);
 
-    auto processes = GetProcessListFromWmi();
+    auto processes = GetProcessListFromWmi(ps::kSepString);
     auto table = cma::tools::SplitString(processes, L"\n");
     EXPECT_TRUE(!processes.empty());
 

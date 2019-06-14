@@ -1267,7 +1267,7 @@ std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject* WmiObject) {
 // returns valid enumerator or nullptr
 IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
                                    const std::wstring& Query) noexcept {
-    XLOG::l.t("Query is '{}'", ConvertToUTF8(Query));
+    XLOG::t("Query is '{}'", ConvertToUTF8(Query));
     IEnumWbemClassObject* enumerator = nullptr;
     auto hres = Services->ExecQuery(
         bstr_t("WQL"),          // always the same
@@ -1384,13 +1384,13 @@ bool WmiWrapper::impersonate() noexcept {
     return false;  // Program has failed.
 }
 
-// tested implicitly
 // RETURNS RAW OBJECT
-// returns nullptr on any error
-IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator) {
+// returns nullptr, WmiStatus
+std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
+    IEnumWbemClassObject* Enumerator) {
     if (nullptr == Enumerator) {
         XLOG::l.e("nullptr in Enumerator");
-        return nullptr;
+        return {nullptr, WmiStatus::error};
     }
     ULONG returned = 0;
     IWbemClassObject* wmi_object = nullptr;
@@ -1399,57 +1399,70 @@ IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator) {
     auto hres = Enumerator->Next(timeout * 1000, 1, &wmi_object,
                                  &returned);  // legacy code
     if (WBEM_S_TIMEDOUT == hres) {
-        XLOG::l.e("Timeout [{}] seconds broken  when query WMI - RETRY:",
-                  timeout);
-        return nullptr;
+        XLOG::l.e("Timeout [{}] seconds broken  when query WMI", timeout);
+        return {nullptr, WmiStatus::timeout};
     }
 
-    if (WBEM_S_FALSE == hres) return nullptr;  // no more data
+    if (WBEM_S_FALSE == hres) return {nullptr, WmiStatus::ok};  // no more data
     if (WBEM_NO_ERROR != hres) {
         XLOG::l.t("Return {:#X} probably object doesn't exist",
                   static_cast<unsigned int>(hres));
-        return nullptr;
+        return {nullptr, WmiStatus::error};
     }
-    if (0 == returned) return nullptr;  // eof
 
-    return wmi_object;
+    if (0 == returned) return {nullptr, WmiStatus::ok};  // eof
+
+    return {wmi_object, WmiStatus::ok};
 }
 
-std::wstring WmiWrapper::produceTable(
+static void FillAccuAndNames(std::wstring& accu,
+                             std::vector<std::wstring>& names,
+                             IWbemClassObject* wmi_object,
+                             std::wstring_view separator) {
+    if (names.empty()) {
+        // we have asking for everything, ergo we have to use
+        // get name list from WMI
+        names = std::move(wtools::WmiGetNamesFromObject(wmi_object));
+    }
+    accu = cma::tools::JoinVector(names, separator);
+    if (accu.empty()) {
+        XLOG::l("Failed to get names");
+    } else
+        accu += L'\n';
+}
+
+// returns nullptr, WmiStatus
+std::tuple<std::wstring, WmiStatus> WmiWrapper::produceTable(
     IEnumWbemClassObject* enumerator,
     const std::vector<std::wstring>& existing_names,
     std::wstring_view separator) noexcept {
-    std::wstring result;
-    ULONG returned = 0;
-    IWbemClassObject* wmi_object = nullptr;
-    bool print_names_please = true;
+    // preparation
+    std::wstring accu;
+    auto status_to_return = WmiStatus::ok;
+
+    bool accu_is_empty = true;
     // setup default names vector
     auto names = existing_names;
 
+    // processing loop
     while (nullptr != enumerator) {
-        wmi_object = WmiGetNextObject(enumerator);
+        auto [wmi_object, status] = WmiGetNextObject(enumerator);
+        status_to_return = status;  // last status is most important
+
         if (nullptr == wmi_object) break;
         ON_OUT_OF_SCOPE(wmi_object->Release());
 
-        // names
-        if (print_names_please) {
-            if (names.empty()) {
-                // we have asking for everything, ergo we have to use
-                // get name list from WMI
-                names = std::move(wtools::WmiGetNamesFromObject(wmi_object));
-            }
-            result = cma::tools::JoinVector(names, separator);
-            if (result.empty()) {
-                XLOG::l.e("Failed to get names");
-            } else
-                result += L'\n';
-            print_names_please = false;
+        // init accu with names
+        if (accu_is_empty) {
+            FillAccuAndNames(accu, names, wmi_object, separator);
+            accu_is_empty = false;
         }
 
         auto raw = wtools::WmiStringFromObject(wmi_object, names, separator);
-        if (!raw.empty()) result += raw + L"\n";
+        if (!raw.empty()) accu += raw + L"\n";
     }
-    return result;
+
+    return {accu, status_to_return};
 }
 
 std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring>& Names,
@@ -1467,10 +1480,10 @@ std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring>& Names,
 }
 
 // work horse to ask certain names from the target
-// on error returns empty string
-std::wstring WmiWrapper::queryTable(const std::vector<std::wstring>& names,
-                                    const std::wstring& target,
-                                    std::wstring_view separator) noexcept {
+// returns "", Status
+std::tuple<std::wstring, WmiStatus> WmiWrapper::queryTable(
+    const std::vector<std::wstring>& names, const std::wstring& target,
+    std::wstring_view separator) noexcept {
     auto query_text = makeQuery(names, target);
 
     // Send a query to system
@@ -1479,7 +1492,8 @@ std::wstring WmiWrapper::queryTable(const std::vector<std::wstring>& names,
 
     // make a table using enumerator and supplied Names vector
     if (nullptr == enumerator) {
-        return {};
+        XLOG::d("WMI enumerator is null for '{}'", ConvertToUTF8(target));
+        return {std::wstring(), WmiStatus::error};
     }
     ON_OUT_OF_SCOPE(enumerator->Release());
 

@@ -7,6 +7,7 @@
 
 #include <ctime>
 #include <string>
+#include <string_view>
 
 #include "providers/internal.h"
 #include "section_header.h"
@@ -14,6 +15,10 @@
 namespace cma {
 
 namespace provider {
+
+namespace ps {
+constexpr std::wstring_view kSepString = L",";
+}
 
 time_t ConvertWmiTimeToHumanTime(const std::string& creation_date) noexcept;
 
@@ -31,7 +36,8 @@ private:
     bool use_wmi_;
     bool full_path_;
 };
-
+std::string ProducePsWmi(bool FullPath);
+std::wstring GetProcessListFromWmi(std::wstring_view separator);
 }  // namespace provider
 
 };  // namespace cma

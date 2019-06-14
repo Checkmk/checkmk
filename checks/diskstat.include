@@ -165,7 +165,6 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
         elif mode == 'bytes':
             bytes_per_sec = per_sec
 
-        infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
         dsname = what
 
         # compute average of the rate over ___ minutes
@@ -177,7 +176,14 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 
         # check levels
         state, text, extraperf = check_levels(
-            bytes_per_sec, dsname, levels, unit="MB/s", scale=1048576, statemarkers=True)
+            bytes_per_sec,
+            dsname,
+            levels,
+            scale=1048576,
+            statemarkers=True,
+            unit='/s',
+            human_readable_func=get_bytes_human_readable,
+            infoname=what)
         if text:
             infos.append(text)
         status = max(state, status)

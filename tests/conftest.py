@@ -1,4 +1,5 @@
 # This file initializes the py.test environment
+# pylint: disable=redefined-outer-name
 
 import pytest
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
@@ -277,4 +278,8 @@ fake_version_and_paths()
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(scope="session", autouse=True)
 def site(request):
-    return _get_site_object()
+    site_obj = _get_site_object()
+    yield site_obj
+    print ""
+    print "Cleanup site processes after test execution..."
+    site_obj.stop()

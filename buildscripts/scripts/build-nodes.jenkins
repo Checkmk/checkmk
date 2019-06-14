@@ -10,7 +10,7 @@ currentBuild.description = 'Building for the following Distros:\n' + DISTRO_LIST
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker.image('ubuntu-18.04-common').pull()
-        docker.image('ubuntu-18.04-common').inside('-u 0:0 --cap-add=SYS_ADMIN --network ci_local-infra') {
+        docker.image('ubuntu-18.04-common').inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
             stage('checkout sources') {
                 checkout(scm)
                 dir('buildscripts/infrastructure/build-nodes/gnu-toolchain/') {
@@ -30,7 +30,7 @@ DISTRO_LIST.each { DISTRO ->
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image('ubuntu-18.04-common').pull()
-                docker.image('ubuntu-18.04-common').inside('-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN --network ci_local-infra') {
+                docker.image('ubuntu-18.04-common').inside('-u 0:0 --ulimit nofile=1024:1024  -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN --network ci_local-infra') {
                     stage('build' + DISTRO + ' image') {
                         unstash name: 'dockerfiles'
                         dir('buildscripts/infrastructure/build-nodes/' + DISTRO) {

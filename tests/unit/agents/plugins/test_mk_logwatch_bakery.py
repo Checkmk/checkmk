@@ -1,23 +1,46 @@
+# pylint: disable=redefined-outer-name,protected-access
 import imp
-import importlib
 import os
-import sys
 
 import pytest
 
-from testlib import cmk_path, repo_path
+from testlib import cmk_path
+
+DICT1 = {'id': 1}
+
+DICT2 = {'id': 1}
 
 
-def test_get_logfiles_config_lines():
-    # Workaround to make bakelet available in the test, needs to be executed in the test scope.
-    bakelet = 'mk_logwatch'
-    path = os.path.join(cmk_path(), 'enterprise', 'agents', 'bakery', bakelet)
-    with open(path, "r") as f:
-        source = f.read()
+@pytest.fixture(scope="module")
+def bakelet(request):
+    """
+      Fixture to inject bakelet as module
+      """
+    path = os.path.join(cmk_path(), 'enterprise', 'agents', 'bakery', 'mk_logwatch')
+    with open(path, "r") as handle:
+        source = handle.read()
     extended_source = 'from cmk_base.cee.agent_bakery_plugins import bakery_info' + '\n' + source
-    exec (extended_source)
 
-    config = [
+    bakelet = imp.new_module('bakelet')
+    exec extended_source in bakelet.__dict__
+    yield bakelet
+
+
+@pytest.mark.parametrize('configs, applicable', [
+    ([], (False, [])),
+    ([True, DICT1], (True, [])),
+    ([None, DICT1], (False, [])),
+    ([DICT1, True], (True, [DICT1])),
+    ([DICT1, None, DICT2], (True, [DICT1])),
+    ([DICT1, True, DICT2], (True, [DICT1])),
+    ([DICT1, DICT2], (True, [DICT1, DICT2])),
+])
+def test_get_applicable_configs(bakelet, configs, applicable):
+    assert applicable == bakelet._get_applicable_rule_values(configs)
+
+
+@pytest.mark.parametrize('config, expected', [
+    ([
         {
             'context': True,
             'logfiles': ['/var/log/*.log', '/omd/sites/*/var/log/*.log'],
@@ -44,10 +67,7 @@ def test_get_logfiles_config_lines():
                 },
             ]
         },
-    ]
-
-    actual_result = _get_logfiles_config_lines(config)
-    assert actual_result == [
+    ], [
         '',
         '/var/log/*.log /omd/sites/*/var/log/*.log overflow=C',
         ' C foo',
@@ -66,4 +86,7 @@ def test_get_logfiles_config_lines():
         ' 192.168.1.2',
         ' 192.168.1.3',
         ' 192.168.1.4',
-    ]
+    ]),
+])
+def test_get_logfiles_config_lines(bakelet, config, expected):
+    assert bakelet._get_logfiles_config_lines(config) == expected

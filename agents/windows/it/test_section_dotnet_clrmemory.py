@@ -42,4 +42,17 @@ def expected_output():
 
 
 def test_section_dotnet_clrmemory(testconfig, expected_output, actual_output, testfile):
-    remotetest(expected_output, actual_output, testfile)
+    # protection against WMI timeout
+    ac = actual_output
+    required_lines = 5
+    name = 'dotnet'
+
+    if ac is None:
+        pytest.skip('"%s" Data is absent' % name)
+        return
+
+    if len(ac) < required_lines:
+        pytest.skip('"%s" Data is TOO short:\n %s' % (name, '\n'.join(ac)))
+        return
+
+    remotetest(expected_output, ac, testfile)

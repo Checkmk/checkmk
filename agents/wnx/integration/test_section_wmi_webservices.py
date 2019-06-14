@@ -5,6 +5,7 @@ import os
 import pytest
 import re
 from local import actual_output, make_yaml_config, local_test, wait_agent, write_config
+import it_utils
 
 
 class Globals(object):
@@ -90,18 +91,10 @@ def expected_output():
 
 def test_section_wmi_webservices(request, testconfig, expected_output, actual_output, testfile):
     # special case wmi may timeout
-    ac = actual_output
     required_lines = 3
-    if not Globals.alone:
-        required_lines += 2
     name = 'webservices'
 
-    if ac is None:
-        pytest.skip('"%s" Data is absent' % name)
+    if not it_utils.check_actual_input(name, required_lines, Globals.alone, actual_output):
         return
 
-    if len(ac) < required_lines:
-        pytest.skip('"%s" Data is TOO short:\n %s' % (name, '\n'.join(ac)))
-        return
-
-    local_test(expected_output, ac, testfile, request.node.name)
+    local_test(expected_output, actual_output, testfile, request.node.name)

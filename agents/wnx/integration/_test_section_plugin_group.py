@@ -7,7 +7,7 @@ import pytest
 import re
 import sys
 import time
-from local import (actual_output, assert_subprocess, make_ini_config, src_exec_dir, local_test,
+from local import (actual_output, assert_subprocess, make_yaml_config, src_exec_dir, local_test,
                    wait_agent, write_config)
 
 
@@ -26,21 +26,21 @@ def testfile():
 
 
 @pytest.fixture(params=['default', 'bat ps1'], ids=['default_suffixes', 'bat_ps1'])
-def testconfig_suffixes(request, make_ini_config):
+def testconfig_suffixes(request, make_yaml_config):
     Globals.suffixes = request.param
     if request.param != 'default':
-        make_ini_config.set('global', 'execute', request.param)
-    return make_ini_config
+        make_yaml_config.set('global', 'execute', request.param)
+    return make_yaml_config
 
 
 @pytest.fixture(params=['alone', 'with_systemtime'])
 def testconfig_sections(request, testconfig_suffixes):
     Globals.alone = request.param == 'alone'
     if Globals.alone:
-        testconfig_suffixes.set('global', 'sections', Globals.plugintype)
+        make_yaml_config['global']['sections'] = Globals.section
     else:
-        testconfig_suffixes.set('global', 'sections', '%s systemtime' % Globals.plugintype)
-    return testconfig_suffixes
+        make_yaml_config['global']['sections'] = [Globals.section, "systemtime"]
+    return make_yaml_config
 
 
 @pytest.fixture(params=['sync', 'async', 'async+cached'])

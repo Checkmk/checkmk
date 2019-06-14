@@ -25,6 +25,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <tuple>
 
 #include "datablock.h"
 #include "tools/_misc.h"
@@ -893,7 +894,12 @@ uint64_t WmiUint64FromObject(IWbemClassObject* Object,
 
 IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
                                    const std::wstring& Query) noexcept;
-IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator);
+
+// returned codes from the wmi
+enum class WmiStatus { ok, timeout, error, fail_open, fail_connect, bad_param };
+
+std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
+    IEnumWbemClassObject* enumerator);
 
 // in exception column we have
 enum class StatusColumn { ok, timeout };
@@ -924,15 +930,17 @@ public:
     // This is OPTIONAL feature, LWA doesn't use it
     bool impersonate() noexcept;
 
-    std::wstring produceTable(IEnumWbemClassObject* enumerator,
-                              const std::vector<std::wstring>& names,
-                              std::wstring_view separator) noexcept;
+    // on error returns empty string and timeout status
+    std::tuple<std::wstring, WmiStatus> produceTable(
+        IEnumWbemClassObject* enumerator,
+        const std::vector<std::wstring>& names,
+        std::wstring_view separator) noexcept;
 
     // work horse to ask certain names from the target
-    // on error returns empty string
-    std::wstring queryTable(const std::vector<std::wstring>& names,
-                            const std::wstring& target,
-                            std::wstring_view separator) noexcept;
+    // on error returns empty string and timeout status
+    std::tuple<std::wstring, WmiStatus> queryTable(
+        const std::vector<std::wstring>& names, const std::wstring& target,
+        std::wstring_view separator) noexcept;
 
     // special purposes: formatting for PS for example
     // on error returns nullptr

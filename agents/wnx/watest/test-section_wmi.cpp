@@ -107,8 +107,9 @@ TEST(WmiWrapper, TablePostProcess) {
         wmi.impersonate();
         // Use the IWbemServices pointer to make requests of WMI.
         // Make requests here:
-        auto result = wmi.queryTable({}, L"Win32_Process", L",");
+        auto [result, status] = wmi.queryTable({}, L"Win32_Process", L",");
         ASSERT_TRUE(!result.empty());
+        EXPECT_EQ(status, WmiStatus::ok);
         EXPECT_TRUE(result.back() == L'\n');
 
         auto table = cma::tools::SplitString(result, L"\n");
@@ -173,8 +174,9 @@ TEST(WmiWrapper, Table) {
         wmi.impersonate();
         // Use the IWbemServices pointer to make requests of WMI.
         // Make requests here:
-        auto result = wmi.queryTable({}, L"Win32_Process", L",");
+        auto [result, status] = wmi.queryTable({}, L"Win32_Process", L",");
         ASSERT_TRUE(!result.empty());
+        EXPECT_EQ(status, WmiStatus::ok);
         EXPECT_TRUE(result.back() == L'\n');
 
         auto table = cma::tools::SplitString(result, L"\n");
@@ -233,32 +235,32 @@ TEST(ProviderTest, WmiAll) {  //
     std::wstring sep(wmi::kSepString);
     std::string sep_ascii = wtools::ConvertToUTF8(sep);
     {
-        auto [err, r] =
+        auto [r, status] =
             GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystem", {}, sep);
-        EXPECT_EQ(err, WmiStatus::ok);
+        EXPECT_EQ(status, wtools::WmiStatus::ok);
         EXPECT_TRUE(!r.empty());
     }
 
     {
-        auto [err, r] =
+        auto [r, status] =
             GenerateWmiTable(L"", L"Win32_ComputerSystemZ", {}, sep);
-        EXPECT_EQ(err, WmiStatus::bad_param)
+        EXPECT_EQ(status, wtools::WmiStatus::bad_param)
             << "should be ok, invalid name means NOTHING";
         EXPECT_TRUE(r.empty());
     }
 
     {
-        auto [err, r] =
+        auto [r, status] =
             GenerateWmiTable(kWmiPathStd, L"Win32_ComputerSystemZ", {}, sep);
-        EXPECT_EQ(err, WmiStatus::ok)
+        EXPECT_EQ(status, wtools::WmiStatus::error)
             << "should be ok, invalid name means NOTHING";
         EXPECT_TRUE(r.empty());
     }
 
     {
-        auto [err, r] = GenerateWmiTable(std::wstring(kWmiPathStd) + L"A",
-                                         L"Win32_ComputerSystem", {}, sep);
-        EXPECT_EQ(err, WmiStatus::fail_connect);
+        auto [r, status] = GenerateWmiTable(std::wstring(kWmiPathStd) + L"A",
+                                            L"Win32_ComputerSystem", {}, sep);
+        EXPECT_EQ(status, wtools::WmiStatus::fail_connect);
         EXPECT_TRUE(r.empty());
     }
 

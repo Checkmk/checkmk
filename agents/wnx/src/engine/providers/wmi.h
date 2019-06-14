@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 
+#include "common/wtools.h"
 #include "providers/internal.h"
 #include "section_header.h"
 
@@ -105,11 +106,12 @@ private:
 };
 
 // this is proposed API
-enum class WmiStatus { ok, timeout, fail_open, fail_connect, bad_param };
-std::pair<WmiStatus, std::string> GenerateWmiTable(
+std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     const std::wstring& NameSpace, const std::wstring& Object,
     const std::vector<std::wstring> Columns, std::wstring_view separator);
 
+std::string WmiCachedDataHelper(std::string& cache_data,
+                                const std::string& wmi_data, char separator);
 }  // namespace provider
 
 };  // namespace cma

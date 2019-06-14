@@ -204,7 +204,7 @@ try:
                        "msi_file": msi_file,
                        "property": entry
                    }
-        if os.system(command) != 0:
+        if os.system(command) != 0:  # nosec
             bail_out('Failed to unpack msi table %s from %s' % (entry, msi_file))
 
     verbose("Modify extracted files..")

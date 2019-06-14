@@ -19,7 +19,7 @@ SEARCH+=" livestatus"
 SEARCH+=" managed"
 SEARCH+=" notifications"
 # Do not search whole omd/ because it may contain unpacked sub-packages
-SEARCH+=" omd/packages/cma"
+SEARCH+=" omd/packages/appliance"
 SEARCH+=" omd/packages/maintenance"
 SEARCH+=" omd/packages/omd"
 SEARCH+=" scripts"

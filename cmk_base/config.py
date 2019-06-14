@@ -37,6 +37,7 @@ import sys
 import itertools
 from typing import Generator, Pattern, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
+from pathlib2 import Path
 import six
 
 import cmk
@@ -213,7 +214,8 @@ def _load_config(with_conf_d, exclude_parents_mk):
     global_dict = globals()
     global_dict.update(helper_vars)
 
-    for _f in _get_config_file_paths(with_conf_d):
+    for path in _get_config_file_paths(with_conf_d):
+        _f = str(path)
         # During parent scan mode we must not read in old version of parents.mk!
         if exclude_parents_mk and _f.endswith("/parents.mk"):
             continue
@@ -269,22 +271,14 @@ def _transform_mgmt_config_vars_from_140_to_150():
 
 # Create list of all files to be included during configuration loading
 def _get_config_file_paths(with_conf_d):
+    list_of_files = [Path(cmk.utils.paths.main_config_file)]
     if with_conf_d:
-        list_of_files = sorted(
-            reduce(lambda a, b: a + b,
-                   [["%s/%s" % (d, f)
-                     for f in fs
-                     if f.endswith(".mk")]
-                    for d, _unused_sb, fs in os.walk(cmk.utils.paths.check_mk_config_dir)], []),
+        list_of_files += sorted(
+            Path(cmk.utils.paths.check_mk_config_dir).glob("**/*.mk"),
             cmp=cmk.utils.cmp_config_paths)
-        list_of_files = [cmk.utils.paths.main_config_file] + list_of_files
-    else:
-        list_of_files = [cmk.utils.paths.main_config_file]
-
-    for path in [cmk.utils.paths.final_config_file, cmk.utils.paths.local_config_file]:
-        if os.path.exists(path):
+    for path in [Path(cmk.utils.paths.final_config_file), Path(cmk.utils.paths.local_config_file)]:
+        if path.exists():
             list_of_files.append(path)
-
     return list_of_files
 
 

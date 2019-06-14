@@ -485,11 +485,6 @@ table.data {
   border-spacing: 0 4px;
   empty-cells: show;
 
-  /* TODO: Get rid of important styles */
-  .popup_menu {
-      color: $theme-color-text !important
-  }
-
   .checkbox_hover {
     background-attachment: fixed;
     background-image: url("images/checkbox_hover_bg.png");
@@ -603,10 +598,9 @@ table.data {
       border-radius: 0 4px 4px 0;
     }
 
-    /* TODO: Get rid of these important styles */
     &:only-child {
-      border: 1px solid $theme-color-table-border !important;
-      border-radius: $theme-border-radius !important;
+      border: 1px solid $theme-color-table-border;
+      border-radius: $theme-border-radius;
     }
 
     td.checkbox {
@@ -720,6 +714,11 @@ table.data {
     background-color: transparent;
   }
 }
+
+table.data .popup_menu, body.main table.data .popup_menu {
+  color: $theme-color-text;
+}
+
 
 /* TODO: Check whether these narrow and wide styles are deprecated */
 td.narrow {

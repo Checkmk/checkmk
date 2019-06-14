@@ -397,7 +397,11 @@ function postgres_main() {
 
     DATABASES="$(echo "SELECT datname FROM pg_database WHERE datistemplate = false;" |\
                  su - "$DBUSER" -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -t -A -F';'")"
-    ECHO_DATABASES=${DATABASES/#/\\echo }
+    # shellcheck disable=SC2001
+    # DATABASES contains one database per line. To print each database in the psql terminal
+    # we have to prefix each line with '\echo '. ${varialbe//search/replace} is not
+    # sufficient in this case.
+    ECHO_DATABASES="$(echo "$DATABASES" | sed 's/^/\\echo /')"
 
     postgres_sessions
     postgres_simple_queries

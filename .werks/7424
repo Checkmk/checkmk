@@ -1,0 +1,20 @@
+Title: mk_postgres: add missing database parameter
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560506660
+
+The mk_postgres plugin was missing a database parameter in
+the queries for the checks postgres_bloat and postgres_stats.
+Therefore, the name of the database user was used as a
+fallback. As a result no output for postgres_stats and
+postgres_bloat was returned if a database with the username
+did not exist. If a database with the username exists
+the checks give the correct output.
+
+To resolve the issue the fixed version of the mk_postgres
+plugin has to be deployed on the affected hosts.

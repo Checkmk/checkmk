@@ -2,7 +2,9 @@ import java.text.SimpleDateFormat
 
 properties([
   parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
+    string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
+    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
+    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' )
   ])
 ])
 
@@ -26,9 +28,13 @@ def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERSION
 if(BRANCH == 'master') {
     CMK_VERSION = dateFormat.format(date)
-} else {
+} else if (VERSION == 'daily') {
     CMK_VERSION = BRANCH + '-' + dateFormat.format(date)
 }
+} else {
+    CMK_VERSION = VERSION
+}
+
 def TEST_DATA = '/var/jenkins_home/test-data/' + CMK_VERSION
 OMD_SITE = 'int_' + BRANCH.replaceAll("\\.","")
 

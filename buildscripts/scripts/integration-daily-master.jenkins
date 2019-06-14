@@ -155,7 +155,9 @@ try {
             }
         }
     }
-    parallel DOCKER_BUILDS
+    throttle(['IntegrationTest']) {
+        parallel DOCKER_BUILDS
+    }
 } finally {
     node {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {

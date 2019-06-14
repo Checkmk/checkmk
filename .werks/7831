@@ -1,0 +1,10 @@
+Title: fileinfo: Warn if timestamp of file stat is missing
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560499335
+Class: fix
+
+

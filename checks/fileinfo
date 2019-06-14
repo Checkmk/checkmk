@@ -245,6 +245,8 @@ def check_fileinfo(item, params, parsed):
     if file_stat is not None and not file_stat.missing:
         if file_stat.failed:
             return 1, "File stat failed"
+        if file_stat.time is None:
+            return 1, 'File stat time failed'
         age = reftime - file_stat.time
         check_definition = [
             ("Size", "size", file_stat.size, get_filesize_human_readable),

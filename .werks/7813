@@ -1,0 +1,11 @@
+Title: veeam_jobs: Clarify output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b2
+Date: 1560459225
+Class: fix
+
+The output of the check was not very clear in some situations, e.g. while the
+job was running.

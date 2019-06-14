@@ -748,8 +748,7 @@ class AutomationDeleteHosts(Automation):
                 "%s/inventory/%s.gz" % (cmk.utils.paths.var_dir, hostname),
                 "%s/agent_deployment/%s" % (cmk.utils.paths.var_dir, hostname),
         ]:
-            if os.path.exists(path):
-                os.unlink(path)
+            self._delete_if_exists(path)
 
         try:
             ds_directories = os.listdir(cmk.utils.paths.data_source_cache_dir)
@@ -762,31 +761,35 @@ class AutomationDeleteHosts(Automation):
         for data_source_name in ds_directories:
             filename = "%s/%s/%s" % (cmk.utils.paths.data_source_cache_dir, data_source_name,
                                      hostname)
-            try:
-                os.unlink(filename)
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    pass
-                else:
-                    raise
+            self._delete_if_exists(filename)
 
         # softlinks for baked agents. obsolete packages are removed upon next bake action
         # TODO: Move to bakery code
         baked_agents_dir = cmk.utils.paths.var_dir + "/agents/"
         if os.path.exists(baked_agents_dir):
             for folder in os.listdir(baked_agents_dir):
-                if os.path.exists("%s/%s" % (folder, hostname)):
-                    os.unlink("%s/%s" % (folder, hostname))
+                self._delete_if_exists("%s/%s" % (folder, hostname))
 
         # logwatch and piggyback folders
         for what_dir in [
                 "%s/%s" % (cmk.utils.paths.logwatch_dir, hostname),
                 "%s/piggyback/%s" % (cmk.utils.paths.tmp_dir, hostname),
         ]:
-            if os.path.exists(what_dir):
+            try:
                 shutil.rmtree(what_dir)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
 
         return None
+
+    def _delete_if_exists(self, path):
+        """Delete the given file in case it exists"""
+        try:
+            os.unlink(path)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
 
 
 automations.register(AutomationDeleteHosts())

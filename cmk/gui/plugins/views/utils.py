@@ -1655,6 +1655,7 @@ class Cell(object):
         self._painter_params = None
         self._link_view_name = None
         self._tooltip_painter_name = None
+        self._custom_title = None
 
         if painter_spec:
             self._from_view(painter_spec)
@@ -1680,6 +1681,7 @@ class Cell(object):
         self._painter_name = extract_painter_name(painter_spec)
         if isinstance(painter_spec[0], tuple):
             self._painter_params = painter_spec[0][1]
+            self._custom_title = self._painter_params.get('column_title', None)
 
         if painter_spec[1] is not None:
             self._link_view_name = painter_spec[1]
@@ -1747,6 +1749,9 @@ class Cell(object):
         return self._painter_params
 
     def title(self, use_short=True):
+        if self._custom_title:
+            return self._custom_title
+
         painter = self.painter()
         if use_short:
             return self._get_short_title(painter)
@@ -2000,7 +2005,6 @@ def _parse_url_sorters(sort):
 class JoinCell(Cell):
     def __init__(self, view, painter_spec):
         self._join_service_descr = None
-        self._custom_title = None
         super(JoinCell, self).__init__(view, painter_spec)
 
     def _from_view(self, painter_spec):
@@ -2009,7 +2013,7 @@ class JoinCell(Cell):
         if len(painter_spec) >= 4:
             self._join_service_descr = painter_spec[3]
 
-        if len(painter_spec) == 5:
+        if len(painter_spec) == 5 and self._custom_title is None:
             self._custom_title = painter_spec[4]
 
     def is_joined(self):
@@ -2023,9 +2027,7 @@ class JoinCell(Cell):
             (livestatus.lqencode(join_column_name), livestatus.lqencode(self._join_service_descr))
 
     def title(self, use_short=True):
-        if self._custom_title:
-            return self._custom_title
-        return self._join_service_descr
+        return self._custom_title or self._join_service_descr
 
     def export_title(self):
         return "%s.%s" % (self._painter_name, self.join_service())

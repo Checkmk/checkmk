@@ -41,7 +41,7 @@ def inventory_kentix_co(info):
 def check_kentix_co(item, params, info):
     warn, crit = params["levels_ppm"]
     value = info[0][0].split('.', 3)[-1]
-    infotext = 'Co value at %s ppm (parts per million)' % value
+    infotext = 'CO value at %s ppm (parts per million)' % value
     value = int(value)
     perfdata = [('parts_per_million', value, warn, crit)]
     if value >= crit:

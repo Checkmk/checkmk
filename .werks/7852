@@ -1,0 +1,16 @@
+Title: df: Filesystems of type devtmpfs are now ignored completely
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1560519317
+
+Previously only the mountpoint /dev has been ignored explicitly by the check
+plugin. Now all mountpoints are ignored, that has the type devtmpfs. There
+is no reason to monitor these types anyway.
+
+Previously discovered filesystems like /dev/tty need to removed manually
+after the agent has been updated.

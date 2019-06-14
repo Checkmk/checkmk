@@ -16,7 +16,7 @@ node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         IMAGE = 'ubuntu-18.04-common'
         docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside('-u 0:0 --cap-add=SYS_ADMIN --network ci_local-infra') {
+        docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
             stage('checkout sources') {
                 cleanWs()
                 checkout(scm)
@@ -32,7 +32,7 @@ DISTRO_LIST.each { DISTRO ->
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 IMAGE = 'ubuntu-18.04-common'
-                docker.image(IMAGE).inside('-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN --network ci_local-infra') {
+                docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN --network ci_local-infra') {
                     stage('build ' + DISTRO + ' os-image') {
                         unstash name: 'dockerfiles'
                         unstash name: 'distroinfos'

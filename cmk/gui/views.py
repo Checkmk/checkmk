@@ -1393,7 +1393,13 @@ def _get_all_active_filters(view):
         # Remove the original host name filter
         use_filters = [f for f in use_filters if f.ident != "host"]
 
-    return [f for f in use_filters if f.available()]
+    use_filters = [f for f in use_filters if f.available()]
+
+    for filt in use_filters:
+        if hasattr(filt, 'derived_columns'):
+            filt.derived_columns(view)
+
+    return use_filters
 
 
 def _is_ec_unrelated_host_view(view):

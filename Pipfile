@@ -75,7 +75,7 @@ scandir = "==1.9.0"
 pathlib2 = "==2.3.2"
 python-dateutil = "==2.7.5"
 python-snap7 = "==0.10"
-rrdtool = "==0.1.14"  # Actually we ship the binding which comes with rrdtool itself...
+rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
 PyJWT = "==1.6.4"
 SecretStorage = {version = "==2.3.1", markers = "sys_platform == 'linux2' and python_version < '3.5'"}
 adal = "==1.2.0"

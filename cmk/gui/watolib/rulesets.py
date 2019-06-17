@@ -233,6 +233,8 @@ class RulesetCollection(object):
             varnames = rulespec_registry.keys()
 
         for varname in varnames:
+            if varname not in self._rulesets:
+                self._rulesets[varname] = Ruleset(varname, self._tag_to_group_map)
             if ':' in varname:
                 dictname, subkey = varname.split(":")
                 ruleset_config = rulesets_config.get(dictname, {})

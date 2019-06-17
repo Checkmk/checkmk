@@ -28,53 +28,55 @@
 def check_mailboxes_arguments(params):
     args = []
 
-    fetch_params = params['imap_parameters']
+    fetch_params = params["imap_parameters"]
 
-    if 'server' in fetch_params:
-        args.append('--server=%s' % fetch_params['server'])
+    if "server" in fetch_params:
+        args.append("--server=%s" % fetch_params["server"])
     else:
-        args.append('--server=$HOSTADDRESS$')
+        args.append("--server=$HOSTADDRESS$")
 
-    fetch_use_ssl, fetch_port = fetch_params['ssl']
+    fetch_use_ssl, fetch_port = fetch_params["ssl"]
     if fetch_use_ssl:
-        args.append('--ssl')
+        args.append("--ssl")
 
     if fetch_port is not None:
-        args.append('--port=%d' % fetch_port)
+        args.append("--port=%d" % fetch_port)
 
-    username, password = fetch_params['auth']
-
-    args.append('--username=%s' % username)
+    username, password = fetch_params["auth"]
+    args.append("--username=%s" % username)
     args.append(passwordstore_get_cmdline("--password=%s", password))
 
-    if 'connect_timeout' in params:
-        args.append('--timeout=%d' % params['connect_timeout'])
+    if "connect_timeout" in params:
+        args.append("--timeout=%d" % params["connect_timeout"])
 
-    if 'retrieve_max' in params:
-        args.append('--retrieve-max=%d' % params['retrieve_max'])
+    if "retrieve_max" in params:
+        args.append("--retrieve-max=%d" % params["retrieve_max"])
 
-    if 'age' in params:
-        args.append('--warn-age=%d' % params['age'][0])
-        args.append('--crit-age=%d' % params['age'][1])
+    if "age" in params:
+        warn, crit = params["age"]
+        args.append("--warn-age=%d" % warn)
+        args.append("--crit-age=%d" % crit)
 
-    if 'new' in params:
-        args.append('--warn-new=%d' % params['new'][0])
-        args.append('--crit-new=%d' % params['new'][1])
+    if "new" in params:
+        warn, crit = params["new"]
+        args.append("--warn-new=%d" % warn)
+        args.append("--crit-new=%d" % crit)
 
-    if 'count' in params:
-        args.append('--warn-count=%d' % params['count'][0])
-        args.append('--crit-count=%d' % params['count'][1])
+    if "count" in params:
+        warn, crit = params["count"]
+        args.append("--warn-count=%d" % warn)
+        args.append("--crit-count=%d" % crit)
 
-    if 'mailboxes' in params:
-        for mb in params['mailboxes']:
-            args.append('--mailbox=%s' % mb)
+    if "mailboxes" in params:
+        for mb in params["mailboxes"]:
+            args.append("--mailbox=%s" % mb)
 
     return args
 
 
-active_check_info['mailboxes'] = {
-    "command_line": '$USER1$/check_mailboxes $ARG1$',
+active_check_info["mailboxes"] = {
+    "command_line": "$USER1$/check_mailboxes $ARG1$",
     "argument_function": check_mailboxes_arguments,
-    "service_description": lambda params: params['service_description'],
+    "service_description": lambda params: params["service_description"],
     "has_perfdata": True,
 }

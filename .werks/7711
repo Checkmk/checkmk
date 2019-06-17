@@ -1,0 +1,21 @@
+Title: New Windows Agent
+Level: 2
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560757571
+
+This release introduces New Windows Agent
+
+Important Notes:
+The Location of the New Agent is "Program Files(x86)\check_mk_service"
+The Name of Service is "checkmkservice"
+The Log files is located in the "/Users/Public"
+New Agent doesn't support Windows XP or Windows 2003
+User Data for New Agent, like plugins and configurations are in the /ProgramData/CheckMK/Agent
+Configuration file is check_mk.user.yml, located in /ProgramData/CheckMK/Agent 
+New Agent can re-use configuration and plugins of the Legacy Windows Agent
+

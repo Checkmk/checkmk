@@ -26,7 +26,6 @@
 
 
 def check_elasticsearch_query_arguments(params):
-
     args = []
 
     if "protocol" in params:
@@ -39,28 +38,29 @@ def check_elasticsearch_query_arguments(params):
         args += ["-p", params["port"]]
 
     if "index" in params:
-        args += ["-i", ' '.join(params["index"])]
+        args += ["-i", " ".join(params["index"])]
     if "pattern" in params:
         args += ["-q", params["pattern"]]
     if "fieldname" in params:
-        args += ["-f", ' '.join(params["fieldname"])]
+        args += ["-f", " ".join(params["fieldname"])]
     if "timerange" in params:
         args += ["-t", params["timerange"]]
-    if 'count' in params:
-        args.append('--warn=%d' % params['count'][0])
-        args.append('--crit=%d' % params['count'][1])
+    if "count" in params:
+        warn, crit = params["count"]
+        args.append("--warn=%d" % warn)
+        args.append("--crit=%d" % crit)
 
-    if 'hostname' in params:
-        args += ["-H", quote_shell_string(params["hostname"])]
+    if "hostname" in params:
+        args += ["-H", params["hostname"]]
     else:
         args += ["-H", "$HOSTADDRESS$"]
 
     return args
 
 
-active_check_info['elasticsearch_query'] = {
-    "command_line": '$USER1$/check_elasticsearch_query $ARG1$',
+active_check_info["elasticsearch_query"] = {
+    "command_line": "$USER1$/check_elasticsearch_query $ARG1$",
     "argument_function": check_elasticsearch_query_arguments,
-    "service_description": lambda params: "Elasticsearch Query %s" % params['svc_item'],
+    "service_description": lambda params: "Elasticsearch Query %s" % params["svc_item"],
     "has_perfdata": True,
 }

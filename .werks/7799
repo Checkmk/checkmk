@@ -1,0 +1,11 @@
+Title: mcafee_webgateway_misc: Fixed crash if SNMP agent sends an empty string for clients or sockets
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p19
+Date: 1560430870
+
+

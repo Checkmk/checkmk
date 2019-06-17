@@ -1,0 +1,14 @@
+Title: mk_postgres: fix the version detection when using an MK_CONFFILE
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560777378
+
+Since version 1.5.0p17 the version detection fails if an MK_CONFFILE
+is used and the psql binary cannot be found in the PATH. To resolve
+the issue the fixed version of the mk_postgres plugin has to be
+deployed on the affected hosts.

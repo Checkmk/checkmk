@@ -497,8 +497,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
         changed = False
         for varname, ruleset in rulesets.get_rulesets().items():
             for _rule_folder, _rulenr, rule in ruleset.get_rules():
-                # TODO: Move to rule?
-                if watolib.rename_host_in_list(rule.host_list, oldname, newname):
+                if rule.replace_explicit_host_condition(oldname, newname):
                     changed_rulesets.append(varname)
                     changed = True
 

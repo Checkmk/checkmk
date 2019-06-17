@@ -27,7 +27,7 @@ def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
 
 def ARCHIVE_DIR = ''
 def DAILY_DATA = ''
-if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
+if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_cmk_container') {
     DAILY_DATA = '/var/jenkins_home/daily-data/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
     ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS
 } else {

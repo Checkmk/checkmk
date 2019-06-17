@@ -5,6 +5,9 @@
 checkname = 'splunk_license_state'
 
 
+freeze_time = '2019-05-05T12:00:00'
+
+
 info = [[u'license_state'],
         [u'Splunk_Enterprise_Splunk_Analytics_for_Hadoop_Download_Trial',
          u'5',

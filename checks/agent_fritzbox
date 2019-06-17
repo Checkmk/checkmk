@@ -30,12 +30,12 @@
 
 
 def agent_fritzbox_arguments(params, hostname, ipaddress):
-    args = ''
+    args = []
 
     if "timeout" in params:
-        args += ' --timeout %d' % params["timeout"]
+        args += ['--timeout', "%d" % params["timeout"]]
 
-    args += " " + quote_shell_string(ipaddress)
+    args.append(ipaddress)
     return args
 
 

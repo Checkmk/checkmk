@@ -579,8 +579,10 @@ class RulespecSpecialAgentsActivemq(HostRulespec):
     def valuespec(self):
         return Transform(
             Dictionary(
-                elements=[("servername", TextAscii(title=_("Server Name"))),
-                          ("port", Integer(title=_("Port Number"), default_value=8161)),
+                elements=[("servername", TextAscii(
+                    title=_("Server Name"),
+                    allow_empty=False,
+                )), ("port", Integer(title=_("Port Number"), default_value=8161)),
                           ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
                           ("basicauth",
                            Tuple(

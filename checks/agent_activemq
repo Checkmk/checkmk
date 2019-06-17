@@ -37,14 +37,15 @@ def agent_activemq_arguments(params, hostname, ipaddress):
             new_params["use_piggyback"] = params[1]
         params = new_params
 
-    args = "--servername %s" % quote_shell_string(params["servername"])
-    args += " --port %s" % quote_shell_string(str(params["port"]))
+    args = ["--servername", params["servername"]]
+
+    args += ["--port", "%s" % params["port"]]
     if params.get("use_piggyback"):
-        args += " --piggyback"
+        args += ["--piggyback"]
 
     if "basicauth" in params:
-        args += " --username %s" % quote_shell_string(params["basicauth"][0])
-        args += " --password %s" % quote_shell_string(params["basicauth"][1])
+        args += ["--username", params["basicauth"][0]]
+        args += ["--password", params["basicauth"][1]]
 
     return args
 

@@ -27,7 +27,7 @@
 
 def agent_hivemanager_arguments(params, hostname, ipaddress):
     # User, Password
-    return "'%s' %s %s" % (ipaddress, quote_shell_string(params[0]), quote_shell_string(params[1]))
+    return [ipaddress, params[0], params[1]]
 
 
 special_agent_info['hivemanager'] = agent_hivemanager_arguments

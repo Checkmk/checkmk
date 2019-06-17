@@ -33,22 +33,23 @@ def check_ssh_desc(params):
 
 def check_ssh_arguments(params):
     args = []
-    if 'timeout' in params:
-        args.append("-t " + str(params['timeout']))
-    if 'port' in params:
-        args.append("-p " + str(params['port']))
-    if 'remote_version' in params:
-        args.append("-r " + quote_shell_string(params['remote_version']))
-    if 'remote_protocol' in params:
-        args.append("-P " + quote_shell_string(params['remote_protocol']))
+
+    if "timeout" in params:
+        args += ["-t", params["timeout"]]
+    if "port" in params:
+        args += ["-p", params["port"]]
+    if "remote_version" in params:
+        args += ["-r", params["remote_version"]]
+    if "remote_protocol" in params:
+        args += ["-P", params["remote_protocol"]]
 
     args.append("$HOSTADDRESS$")
 
-    return " ".join(args)
+    return args
 
 
-active_check_info['ssh'] = {
-    "command_line": '$USER1$/check_ssh $ARG1$',
+active_check_info["ssh"] = {
+    "command_line": "$USER1$/check_ssh $ARG1$",
     "argument_function": check_ssh_arguments,
     "service_description": check_ssh_desc,
     "has_perfdata": True,

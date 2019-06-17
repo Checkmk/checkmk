@@ -35,7 +35,7 @@ def check_by_ssh_arguments(params):
 
     args += ["-C", "\"%s\"" % params[0]]
     if "port" in settings:
-        args += ["-p", "%d" % settings["port"]]
+        args += ["-p", settings["port"]]
     if "ip_version" in settings:
         if settings["ip_version"] == "ipv4":
             args.append("-4")
@@ -43,7 +43,7 @@ def check_by_ssh_arguments(params):
             args.append("-6")
 
     if "timeout" in settings:
-        args += ["-t", "%d" % settings["timeout"]]
+        args += ["-t", settings["timeout"]]
     if "logname" in settings:
         args += ["-l", settings["logname"]]
     if "identity" in settings:

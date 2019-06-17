@@ -69,7 +69,7 @@ class ModeBulkEdit(WatoMode):
 
         config.user.need_permission("wato.edit_hosts")
 
-        changed_attributes = watolib.collect_attributes("bulk")
+        changed_attributes = watolib.collect_attributes("bulk", new=False)
         host_names = get_hostnames_from_checkboxes()
         for host_name in host_names:
             host = watolib.Folder.current().host(host_name)

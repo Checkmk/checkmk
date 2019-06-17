@@ -1421,7 +1421,7 @@ def configure_attributes(new,
 
     volatile_topics = []
     hide_attributes = []
-    for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what):
+    for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
 
         forms.header(
@@ -1436,7 +1436,7 @@ def configure_attributes(new,
                 continue  # e.g. needed to skip ipaddress in CSV-Import
 
             # Determine visibility information if this attribute is not always hidden
-            if attr.is_visible(for_what):
+            if attr.is_visible(for_what, new):
                 depends_on_tags = attr.depends_on_tags()
                 depends_on_roles = attr.depends_on_roles()
                 # Add host tag dependencies, but only in host mode. In other

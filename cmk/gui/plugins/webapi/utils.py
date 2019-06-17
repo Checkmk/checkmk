@@ -114,15 +114,15 @@ def compute_config_hash(entity):
     return entity_hash
 
 
-def validate_host_attributes(attributes):
+def validate_host_attributes(attributes, new=False):
     _validate_general_host_attributes(
-        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")))
+        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")), new)
     _validate_host_tags(
         dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_")))
 
 
 # Check if the given attribute name exists, no type check
-def _validate_general_host_attributes(host_attributes):
+def _validate_general_host_attributes(host_attributes, new):
     # inventory_failed and site are no "real" host_attributes (TODO: Clean this up!)
     all_host_attribute_names = host_attribute_registry.keys() + ["inventory_failed", "site"]
     for name, value in host_attributes.items():
@@ -136,7 +136,7 @@ def _validate_general_host_attributes(host_attributes):
             attr = None
 
         if attr is not None:
-            if attr.needs_validation("host"):
+            if attr.needs_validation("host", new):
                 attr.validate_input(value, "")
 
         # The site attribute gets an extra check

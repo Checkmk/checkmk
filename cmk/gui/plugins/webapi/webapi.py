@@ -133,7 +133,7 @@ class APICallFolders(APICallCollection):
             folder_alias = os.path.basename(folder_path)
 
         # Validates host and folder attributes, since there are no real folder attributes, at all...
-        validate_host_attributes(folder_attributes)
+        validate_host_attributes(folder_attributes, new=True)
 
         # Check existance of parent folder, create it when configured
         create_parent_folders = bool(int(request.get("create_parent_folders", "1")))
@@ -159,7 +159,7 @@ class APICallFolders(APICallCollection):
             folder_alias = os.path.basename(folder_path)
 
         # Validates host and folder attributes, since there are no real folder attributes, at all...
-        validate_host_attributes(folder_attributes)
+        validate_host_attributes(folder_attributes, new=False)
 
         folder.edit(folder_alias, folder_attributes)
 
@@ -270,7 +270,7 @@ class APICallHosts(APICallCollection):
         if ".nodes" in attributes:
             cluster_nodes = attributes[".nodes"]
             del attributes[".nodes"]
-        validate_host_attributes(attributes)
+        validate_host_attributes(attributes, new=True)
 
         # Create folder(s)
         if not watolib.Folder.folder_exists(folder_path):
@@ -302,7 +302,7 @@ class APICallHosts(APICallCollection):
         if ".nodes" in attributes:
             cluster_nodes = attributes[".nodes"]
             del attributes[".nodes"]
-        validate_host_attributes(attributes)
+        validate_host_attributes(attributes, new=False)
 
         # Update existing attributes. Add new, remove unset_attributes
         current_attributes = host.attributes().copy()

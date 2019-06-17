@@ -42,7 +42,7 @@ def check_mcafee_webgateway_misc(_no_item, params, info):
             continue
         state = 0
         infotext = '%s: %d' % (what, value)
-r       warn, crit = params.get(paramskey, (None, None))
+        warn, crit = params.get(paramskey, (None, None))
         if paramskey and paramskey in params:
             if value >= crit:
                 state = 2

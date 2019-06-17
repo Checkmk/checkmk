@@ -76,7 +76,13 @@ node {
                     if (VERSION == 'daily') {
                         checkout(scm)
                     } else {
-                        git branch: 'refs/tags/v' + VERSION, credentialsId: scm.userRemoteConfigs[0].credentialsId, poll: false, url: scm.userRemoteConfigs[0].url
+                        checkout([
+                            $class: 'GitSCM',
+                            userRemoteConfigs: scm.userRemoteConfigs,
+                            branches: [
+                                [name: 'refs/tags/v' + VERSION]
+                            ]
+                        ])
                     }
 
                     switch(EDITION) {

@@ -1,0 +1,12 @@
+Title: Fix broken agent output download link
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560765463
+
+Downloading the agent output did not work in 1.6.0b1. It was always finished
+with an error: "The parameter "back_url" is missing.".

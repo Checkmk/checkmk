@@ -309,7 +309,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             orientation="horizontal",
         )
 
-    def is_visible(self, for_what):
+    def is_visible(self, for_what, new):
         return for_what != "cluster"
 
     def to_nagios(self, value):
@@ -818,6 +818,9 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
     def show_in_form(self):
         return True
 
+    def show_on_create(self):
+        return False
+
     def show_in_folder(self):
         return False
 
@@ -877,6 +880,9 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
     def show_in_form(self):
         return True
 
+    def show_on_create(self):
+        return False
+
     def show_in_folder(self):
         return False
 
@@ -914,6 +920,9 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
 
     def show_in_form(self):
         return True
+
+    def show_on_create(self):
+        return False
 
     def show_in_folder(self):
         return True

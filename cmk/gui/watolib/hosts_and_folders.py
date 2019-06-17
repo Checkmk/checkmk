@@ -1653,7 +1653,7 @@ class SearchFolder(BaseFolder):
         crit = {".name": html.request.var("host_search_host")}
         crit.update(
             cmk.gui.watolib.host_attributes.collect_attributes(
-                "host_search", do_validate=False, varprefix="host_search_"))
+                "host_search", new=False, do_validate=False, varprefix="host_search_"))
         return crit
 
     # This method is allowed to return None when no search is currently performed.

@@ -280,6 +280,11 @@ class ABCHostAttribute(object):
         This value is set by declare_host_attribute"""
         return True
 
+    def show_on_create(self):
+        # type: () -> bool
+        """Whether or not to show this attribute during object creation."""
+        return True
+
     def show_in_folder(self):
         # type: () -> bool
         """Whether or not to make this attribute configurable in
@@ -341,19 +346,22 @@ class ABCHostAttribute(object):
         _from_config is set by declare_host_attribute()."""
         return False
 
-    def needs_validation(self, for_what):
-        # type: (str) -> bool
+    def needs_validation(self, for_what, new):
+        # type: (str, bool) -> bool
         """Check whether this attribute needs to be validated at all
         Attributes might be permanently hidden (show_in_form = False)
         or dynamically hidden by the depends_on_tags, editable features"""
-        if not self.is_visible(for_what):
+        if not self.is_visible(for_what, new):
             return False
         return html.request.var('attr_display_%s' % self.name(), "1") == "1"
 
-    def is_visible(self, for_what):
+    def is_visible(self, for_what, new):
         # type: (str, bool) -> bool
         """Gets the type of current view as argument and returns whether or not
         this attribute is shown in this type of view"""
+
+        if new and not self.show_on_create():
+            return False
 
         if for_what in ["host", "cluster", "bulk"] and not self.show_in_form():
             return False
@@ -437,14 +445,14 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
 host_attribute_registry = HostAttributeRegistry()
 
 
-def get_sorted_host_attribute_topics(for_what):
-    # type: (str) -> List[Tuple[str, Text]]
+def get_sorted_host_attribute_topics(for_what, new):
+    # type: (str, bool) -> List[Tuple[str, Text]]
     """Return a list of needed topics for the given "what".
     Only returns the topics that are used by a visible attribute"""
     needed_topics = set()  # type: Set[Type[HostAttributeTopic]]
     for attr_class in host_attribute_registry.values():
         attr = attr_class()
-        if attr.topic() not in needed_topics and attr.is_visible(for_what):
+        if attr.topic() not in needed_topics and attr.is_visible(for_what, new):
             needed_topics.add(attr.topic())
 
     return [(t.ident, t.title)
@@ -699,8 +707,8 @@ def host_attribute(name):
     return host_attribute_registry[name]()
 
 
-# Read attributes from HTML variables
-def collect_attributes(for_what, do_validate=True, varprefix=""):
+def collect_attributes(for_what, new, do_validate=True, varprefix=""):
+    """Read attributes from HTML variables"""
     host = {}
     for attr in host_attribute_registry.attributes():
         attrname = attr.name()
@@ -709,7 +717,7 @@ def collect_attributes(for_what, do_validate=True, varprefix=""):
 
         value = attr.from_html_vars(varprefix)
 
-        if do_validate and attr.needs_validation(for_what):
+        if do_validate and attr.needs_validation(for_what, new):
             attr.validate_input(value, varprefix)
 
         host[attrname] = value

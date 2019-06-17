@@ -877,7 +877,7 @@ class FolderMode(WatoMode):
         title = TextUnicode().from_html_vars("title")
         TextUnicode(allow_empty=False).validate_value(title, "title")
 
-        attributes = watolib.collect_attributes("folder")
+        attributes = watolib.collect_attributes("folder", new=self._folder.name() is None)
         self._save(title, attributes)
 
         # Edit icon on subfolder preview should bring user back to parent folder

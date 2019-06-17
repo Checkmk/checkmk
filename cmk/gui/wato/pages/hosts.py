@@ -259,7 +259,8 @@ class ModeEditHost(HostMode):
             return delete_host_after_confirm(self._host.name())
 
         if html.check_transaction():
-            attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster")
+            attributes = watolib.collect_attributes(
+                "host" if not self._is_cluster() else "cluster", new=False)
             watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
             self._host = watolib.Folder.current().host(self._host.name())
 
@@ -316,7 +317,7 @@ class CreateHostMode(HostMode):
         if not html.transaction_valid():
             return "folder"
 
-        attributes = watolib.collect_attributes(self._host_type_name())
+        attributes = watolib.collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
         hostname = html.request.var("host")

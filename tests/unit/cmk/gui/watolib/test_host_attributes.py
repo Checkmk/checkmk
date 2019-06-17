@@ -476,10 +476,10 @@ def test_host_attributes(for_what):
             'additional_ipv6addresses',
         ],
         "data_sources": [
-            'snmp_community',
             'tag_agent',
-            'tag_piggyback',
             'tag_snmp_ds',
+            'snmp_community',
+            'tag_piggyback',
         ],
         "management_board": [
             'management_address',

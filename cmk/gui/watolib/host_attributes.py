@@ -474,6 +474,7 @@ def declare_host_attribute(a,
                            show_in_folder=True,
                            show_in_host_search=True,
                            topic=None,
+                           sort_index=None,
                            show_in_form=True,
                            depends_on_tags=None,
                            depends_on_roles=None,
@@ -507,6 +508,10 @@ def declare_host_attribute(a,
     if may_edit is not None:
         attrs["_may_edit_func"] = (may_edit,)
         attrs["may_edit"] = lambda self: self._may_edit_func[0]()
+
+    if sort_index is not None:
+        attrs["_sort_index"] = sort_index
+        attrs["sort_index"] = classmethod(lambda c: c._sort_index)
 
     attrs.update({
         "_show_in_table": show_in_table,
@@ -589,8 +594,22 @@ def _declare_host_tag_attributes():
                 show_in_folder=True,
                 # TODO: We need to adapt the tag data structure to contain topic IDs
                 topic=_transform_attribute_topic_title_to_id(topic),
+                sort_index=_tag_attribute_sort_index(tag_group),
                 from_config=True,
             )
+
+
+def _tag_attribute_sort_index(tag_group):
+    """Return the host attribute sort index of tag group attributes
+
+    The sort index is not configurable for tag groups, but we want some
+    specific sorting at least for attributes that are related to other
+    attributes (like the snmp tag group + snmp_community)"""
+    if tag_group.id == "agent":
+        return 63  # show above snmp_ds
+    if tag_group.id == "snmp_ds":
+        return 65  # show above snmp_community
+    return None
 
 
 def _create_tag_group_attribute(tag_group):

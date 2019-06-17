@@ -56,16 +56,6 @@ def test_get_applicable_configs(bakelet, configs, applicable):
             'maxtime': 20,
             'overflow': 'W',
             'patterns': [('I', u'.*')],
-            'cluster': [
-                {
-                    'name': 'my_cluster',
-                    'ips': ['192.168.1.1', '192.168.1.2']
-                },
-                {
-                    'name': 'another_cluster',
-                    'ips': ['192.168.2.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']
-                },
-            ]
         },
     ], [
         '',
@@ -76,6 +66,24 @@ def test_get_applicable_configs(bakelet, configs, applicable):
         '',
         '/etc/* maxlines=5000 maxtime=20 overflow=W maxfilesize=1024 maxlinesize=100',
         ' I .*',
+    ]),
+])
+def test_get_file_section_lines(bakelet, config, expected):
+    section_lines = bakelet._get_file_section_lines(config)
+    assert section_lines == expected
+
+
+@pytest.mark.parametrize('config, expected', [
+    ([
+        {
+            'name': 'my_cluster',
+            'ips': ['192.168.1.1', '192.168.1.2']
+        },
+        {
+            'name': 'another_cluster',
+            'ips': ['192.168.2.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']
+        },
+    ], [
         '',
         'CLUSTER my_cluster',
         ' 192.168.1.1',
@@ -88,5 +96,6 @@ def test_get_applicable_configs(bakelet, configs, applicable):
         ' 192.168.1.4',
     ]),
 ])
-def test_get_logfiles_config_lines(bakelet, config, expected):
-    assert bakelet._get_logfiles_config_lines(config) == expected
+def test_get_cluster_section_lines(bakelet, config, expected):
+    cluster_lines = bakelet._get_cluster_section_lines(config)
+    assert cluster_lines == expected

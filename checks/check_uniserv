@@ -26,38 +26,37 @@
 
 
 def check_uniserv_arguments(params):
-    args = " $HOSTADDRESS$"
-    args += " " + str(params['port'])
-    args += " " + quote_shell_string(params['service'])
-    if isinstance(params['job'], tuple):
-        job = params['job'][0]
+    args = ["$HOSTADDRESS$", params["port"], params["service"]]
+
+    if isinstance(params["job"], tuple):
+        job = params["job"][0]
     else:
-        job = params['job']
+        job = params["job"]
     if job == "version":
-        args += " VERSION"
+        args.append("VERSION")
     else:
-        address = params['job'][1]
-        args += " ADDRESS"
-        args += " " + quote_shell_string(address['street'])
-        args += " " + str(address['street_no'])
-        args += " " + quote_shell_string(address['city'])
-        args += " " + quote_shell_string(address['search_regex'])
+        address = params["job"][1]
+        args.append("ADDRESS")
+        args.append(address["street"])
+        args.append(address["street_no"])
+        args.append(address["city"])
+        args.append(address["search_regex"])
 
     return args
 
 
 def check_uniserv_desc(params):
-    job = params['job']
+    job = params["job"]
     if isinstance(job, tuple):
         job = job[0]
 
     if job == "version":
-        return "Uniserv %s Version" % params['service']
-    return "Uniserv %s Address %s " % (params['service'], params['job'][1]['city'])
+        return "Uniserv %s Version" % params["service"]
+    return "Uniserv %s Address %s " % (params["service"], params["job"][1]["city"])
 
 
-active_check_info['uniserv'] = {
-    "command_line": '$USER1$/check_uniserv $ARG1$',
+active_check_info["uniserv"] = {
+    "command_line": "$USER1$/check_uniserv $ARG1$",
     "argument_function": check_uniserv_arguments,
     "service_description": check_uniserv_desc,
 }

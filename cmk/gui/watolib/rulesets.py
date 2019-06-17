@@ -976,6 +976,22 @@ class Rule(object):
                and self.conditions.has_only_explicit_service_conditions() \
                and self.folder.is_transitive_parent_of(host.folder())
 
+    def replace_explicit_host_condition(self, old_name, new_name):
+        """Does an in-place(!) replacement of explicit (non regex) hostnames in rules"""
+        if self.conditions.host_name is None:
+            return False
+
+        did_rename = False
+        _negate, host_conditions = ruleset_matcher.parse_negated_condition_list(
+            self.conditions.host_name)
+
+        for index, condition in enumerate(host_conditions):
+            if condition == old_name:
+                host_conditions[index] = new_name
+                did_rename = True
+
+        return did_rename
+
 
 def _match_search_expression(search_options, attr_name, search_in):
     if attr_name not in search_options:

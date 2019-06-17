@@ -1,0 +1,12 @@
+Title: Fix host renaming in WATO
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b2
+Date: 1560763229
+Class: fix
+
+The host renaming feature was broken for the WATO rules in 1.6.0b1. The function should
+rename all explicit host names in the rule conditions, but always resulted in an exception
+like this <tt>Exception: 'Rule' object has no attribute 'host_list'</tt>.

@@ -28,9 +28,20 @@ bool G_SkypeTesting = false;
 namespace cma {
 
 namespace srv {
+static std::string_view kYouHaveToBeElevatedMessage =
+    "You have to be elevated to use this function.\nPlease, run as Administrator\n";
 // on -install
 // Doesn't create artifacts in program. Changes registry.
 int InstallMainService() {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    xlog::sendStringToStdio("Service to be installed...\n",
+                            xlog::internal::Colors::kGreen);
+    if (!cma::tools::win::IsElevated()) {
+        xlog::sendStringToStdio(kYouHaveToBeElevatedMessage.data(),
+                                xlog::internal::Colors::kRed);
+        return 1;
+    }
+
     auto result = wtools::InstallService(
         cma::srv::kServiceName,         // Name of service
         cma::srv::kServiceDisplayName,  // Name to display
@@ -45,6 +56,15 @@ int InstallMainService() {
 // on -remove
 // Doesn't create artifacts in program. Changes registry.
 int RemoveMainService() {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    xlog::sendStringToStdio("Service to be removed...\n",
+                            xlog::internal::Colors::kGreen);
+    if (!cma::tools::win::IsElevated()) {
+        xlog::sendStringToStdio(kYouHaveToBeElevatedMessage.data(),
+                                xlog::internal::Colors::kRed);
+        return 1;
+    }
+
     auto result = wtools::UninstallService(cma::srv::kServiceName);
     return result ? 0 : 1;
 }
@@ -293,9 +313,9 @@ int TestMainService(const std::wstring& What, int Interval) {
 // may be used as internal API function to convert ini to yaml
 // GTESTED internally
 int ExecCvtIniYaml(std::filesystem::path IniFile,
-                   std::filesystem::path YamlFile, bool DiagnosticMessage) {
+                   std::filesystem::path YamlFile, StdioLog stdio_log) {
     //
-    auto flag = DiagnosticMessage ? XLOG::kStdio : 0;
+    auto flag = stdio_log == StdioLog::no ? 0 : XLOG::kStdio;
     namespace fs = std::filesystem;
     fs::path file = IniFile;
     std::error_code ec;
@@ -338,14 +358,15 @@ std::vector<std::wstring> SupportedSections{
 // on -section
 // NOT GTESTED
 int ExecSection(const std::wstring& SecName, int RepeatPause,
-                bool DianosticMessages) {
+                StdioLog stdio_log) {
     //
     XLOG::setup::ColoredOutputOnStdio(true);
-    if (DianosticMessages) {
-        XLOG::setup::DuplicateOnStdio(true);
-        XLOG::setup::EnableDebugLog(true);
+    if (stdio_log == StdioLog::yes)
+        XLOG::setup::EnableTraceLog(false);
+    else
         XLOG::setup::EnableTraceLog(true);
-    }
+
+    if (stdio_log != StdioLog::no) XLOG::setup::DuplicateOnStdio(true);
 
     while (1) {
         if (SecName == wtools::ConvertToUTF16(cma::section::kDfName)) {

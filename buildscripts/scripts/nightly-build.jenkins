@@ -22,8 +22,7 @@ def AGENT_BUILDS= [:]
 
 DISTRO_LIST = DISTROS.split(' ');
 
-println("Building for the following Distros:")
-println(DISTRO_LIST)
+println("Building for the following Distros:" + DISTRO_LIST)
 currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST
 
 def DOCKER_BUILDS = [:]
@@ -77,7 +76,7 @@ node {
                     if (VERSION == 'daily') {
                         checkout(scm)
                     } else {
-                        git branch: 'refs/tag/v' + VERSION, credentialsId: scm.userRemoteConfigs[0].credentialsId, poll: false, url: scm.userRemoteConfigs[0].url
+                        git branch: 'refs/tags/v' + VERSION, credentialsId: scm.userRemoteConfigs[0].credentialsId, poll: false, url: scm.userRemoteConfigs[0].url
                     }
 
                     switch(EDITION) {
@@ -111,7 +110,6 @@ node {
                     sh "make NEW_VERSION=${CMK_VERS} setversion"
                     
                     stash name: 'WinDep', include: 'agents/wnx/**/*, agents/windows/dependencies/**/*, agents/windows/plugins/**/*, omd/packages/googletest/*, omd/packages/simpleini/*'
-                  
                 }
             }
         }

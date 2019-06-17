@@ -115,7 +115,7 @@ class ModeBackgroundJobDetails(WatoMode):
             html.context_button(_("Back"), self._back_url(), "back")
 
     def _back_url(self):
-        return html.get_url_input("back_url")
+        return html.get_url_input("back_url", deflt="")
 
     def page(self):
         job_id = html.request.var("job_id")

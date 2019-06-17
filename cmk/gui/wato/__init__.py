@@ -609,7 +609,7 @@ class AgentOutputPage(Page):
             raise MKGeneralException(_("Invalid type specified."))
         self._ty = ty
 
-        self._back_url = html.get_url_input("back_url")
+        self._back_url = html.get_url_input("back_url", deflt="") or None
 
         init_wato_datastructures(with_wato_lock=True)
 

@@ -99,6 +99,7 @@ powershell Write-Host "Killing msi in artefacts" -Foreground Red
 call %cur_dir%\clean_artefacts.cmd 
 exit 100
 :end
+copy install\resources\check_mk.user.yml %REMOTE_MACHINE%
 pushd %REMOTE_MACHINE%
 
 copy check_mk_service.msi check_mk_agent.msi || powershell Write-Host "Failed to create msi" -Foreground Red && exit 33

@@ -3,6 +3,8 @@
 
 #include "stdafx.h"
 
+#include "async_answer.h"
+
 #include <chrono>
 #include <cstdint>
 #include <mutex>
@@ -11,8 +13,6 @@
 
 #include "common/cfg_info.h"
 #include "tools/_xlog.h"
-
-#include "async_answer.h"
 
 namespace cma::srv {
 
@@ -42,11 +42,41 @@ bool AsyncAnswer::waitAnswer(std::chrono::milliseconds WaitInterval) {
         [this]() -> bool { return awaiting_segments_ <= received_segments_; });
 }
 
+// combines two vectors together
+// in case of exception returns false
+// Caller MUST Fix section size!
+static bool AddVectorGracefully(std::vector<uint8_t>& Out,
+                                const std::vector<uint8_t>& In) noexcept {
+    auto old_size = Out.size();
+    // we have theoretical possibility of exception here
+    try {
+        // a bit of optimization
+        Out.reserve(Out.size() + In.size());
+        Out.insert(Out.end(), In.begin(), In.end());
+
+        // divider after every section with data
+        Out.push_back(static_cast<uint8_t>('\n'));
+    } catch (const std::exception& e) {
+        // return to invariant...
+        XLOG::l(XLOG_FLINE + "- disaster '{}'", e.what());
+        Out.resize(old_size);
+        return false;
+    }
+    return true;
+}
+
 // kills data in any case
 // return gathered data back
 AsyncAnswer::DataBlock AsyncAnswer::getDataAndClear() {
     std::lock_guard lk(lock_);
     try {
+        if (order_ == Order::plugins_last) {
+            if (!plugins_.empty()) AddVectorGracefully(data_, plugins_);
+            if (!local_.empty()) AddVectorGracefully(data_, local_);
+            plugins_.clear();
+            local_.clear();
+        }
+
         auto v = std::move(data_);
         dropDataNoLock();
         return v;
@@ -67,29 +97,8 @@ bool AsyncAnswer::prepareAnswer(std::string Ip) {
     external_ip_ = Ip;
     awaiting_segments_ = 0;
     received_segments_ = 0;
-    return true;
-}
-
-// combines two vectors together
-// in case of exception returns false
-// Caller MUST Fix section size!
-static bool AddVectorGracefully(std::vector<uint8_t>& Out,
-                                const std::vector<uint8_t>& In) noexcept {
-    auto old_size = Out.size();
-    // we have theoretical possibility of exception here
-    try {
-        // a bit of optimization
-        Out.reserve(Out.size() + In.size());
-        Out.insert(Out.end(), In.begin(), In.end());
-
-        // divider after every section with data
-        Out.push_back((uint8_t)'\n');
-    } catch (const std::exception& e) {
-        // return invariant...
-        XLOG::l(XLOG_FLINE + "- catastrophe {}", e.what());
-        Out.resize(old_size);
-        return false;
-    }
+    plugins_.clear();
+    local_.clear();
     return true;
 }
 
@@ -116,7 +125,11 @@ bool AsyncAnswer::addSegment(
     try {
         segments_.push_back({SectionName, Data.size()});
         // reserve + array math
-        if (Data.size()) {
+        if (order_ == Order::plugins_last && SectionName == "plugins") {
+            plugins_ = Data;
+        } else if (order_ == Order::plugins_last && SectionName == "local") {
+            local_ = Data;
+        } else if (Data.size()) {
             if (!AddVectorGracefully(data_, Data)) segments_.back().length_ = 0;
         }
     } catch (const std::exception& e) {

@@ -278,8 +278,13 @@ void SaveEventlogOffsets(const std::string& FileName,
         }
 
         for (const auto& state : States) {
-            if (state.name_ != std::string("*"))
-                ofs << state.name_ << "|" << state.pos_ << std::endl;
+            if (state.name_ == std::string("*")) continue;
+
+            auto pos = state.pos_;
+
+            if (pos == cma::cfg::kInitialPos) pos = 0;
+
+            ofs << state.name_ << "|" << pos << std::endl;
         }
     }
 }
@@ -453,9 +458,19 @@ std::vector<std::filesystem::path> LogWatchEvent::makeStateFilesTable() const {
 std::string GenerateOutputFromStates(bool VistaApi, StateVector& States) {
     std::string out;
     for (auto& state : States) {
-        if (state.level_ == cma::cfg::EventLevels::kOff) continue;
+        if (state.level_ == cma::cfg::EventLevels::kOff) {
+            // if (state.pos_ == cma::cfg::kInitialPos) {
+            // update pos to last one
+            bool unused = false;
+
+            // updates position in state file for every(!) log presented
+            // even if the log is disabled
+            ReadDataFromLog(VistaApi, state, unused);
+            continue;
+        }
 #if 0
         // This Legacy Agent mode AB says this is NOT valid approach
+        // left te,porary as a reference
         if (state.presented_) {
             out += "[[[" + state.name_ + "]]]\n";
             out += ReadDataFromLog(state);

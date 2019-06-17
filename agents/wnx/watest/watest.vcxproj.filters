@@ -122,6 +122,9 @@
     <ClCompile Include="test_tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_check_mk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\test_files\config\check_mk.old.example.yml">

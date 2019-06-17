@@ -249,7 +249,10 @@ TEST(FileInfoTest, CheckOutput) {
 
     {
         FileInfo fi;
-        ASSERT_TRUE(fi.mode_ == FileInfo::Mode::modern);
+        ASSERT_TRUE(fi.mode_ == FileInfo::Mode::legacy)
+            << "this value should be set by default";
+
+        fi.mode_ = FileInfo::Mode::modern;
         auto out = fi.makeBody();
 
         ASSERT_TRUE(!out.empty());

@@ -86,7 +86,7 @@ inline std::wstring MakePowershellWrapper() {
 
 // add to scripts interpreter
 // #TODO this is BAD PLACE
-inline std::wstring BuildCommand(const std::filesystem::path& Path) {
+inline std::wstring ConstructCommandToExec(const std::filesystem::path& Path) {
     const auto extension = Path.extension().wstring();
 
     std::wstring wrapper;
@@ -114,7 +114,7 @@ inline std::wstring BuildCommand(const std::filesystem::path& Path) {
     try {
         return fmt::format(wrapper, Path.wstring());
     } catch (std::exception& e) {
-        XLOG::l("impossible to format Data for file {} exception: {}",
+        XLOG::l("impossible to format Data for file '{}' exception: '{}'",
                 Path.u8string(), e.what());
     }
     return {};
@@ -179,7 +179,7 @@ public:
         try {
             // now exec
             auto ar = new wtools::AppRunner;
-            auto exec = cma::BuildCommand(exec_);
+            auto exec = cma::ConstructCommandToExec(exec_);
             proc_id_ = ar->goExec(exec, false, true, true);
             if (proc_id_) {
                 process_ = ar;
@@ -237,7 +237,7 @@ public:
         try {
             Buf.resize(buf_size + Count);
         } catch (const std::exception& e) {
-            xlog::l(XLOG_FLINE + " exception: %s", e.what());
+            XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
             return false;
         }
 
@@ -282,7 +282,10 @@ public:
                     lk, stop_time, [this]() -> bool { return stop_set_; });
 
                 if (stopped || stop_set_) {
-                    XLOG::d("Plugin signaled to be stopped!");
+                    XLOG::d(
+                        "Plugin '{}' signaled to be stopped [{}] [{}] left timeout [{}ms]!",
+                        wtools::ConvertToUTF8(exec_), stopped, stop_set_,
+                        Timeout.count());
                 } else {
                     Timeout -= kGrane;
                     continue;
@@ -292,7 +295,8 @@ public:
             if (KillWhatLeft) {
                 process_->kill(true);
                 // cma::tools::win::KillProcess(waiting_processes, -1);
-                XLOG::d("Process {} killed",
+                XLOG::d("Process '{}' [{}] killed",
+                        wtools::ConvertToUTF8(exec_),
                         waiting_processes);  // not normal situation
             }
 
@@ -366,43 +370,50 @@ private:
         return buf;
     }
 
+    static std::string formatProcessInLog(uint32_t pid, std::wstring name) {
+        return fmt::format("Process '{}' pid [{}]", wtools::ConvertToUTF8(name),
+                           pid);
+    }
+
     // check processes for exit
-    // updates object
-    // returns list of active processes
-    bool checkProcessExit(const uint32_t Process) {
-        auto h = OpenProcess(
+    // updates object with exic code
+    // returns true if process  exists or not accessible
+    bool checkProcessExit(const uint32_t pid) {
+        auto proc_string = formatProcessInLog(pid, exec_);
+
+        auto h = ::OpenProcess(
             PROCESS_QUERY_LIMITED_INFORMATION,  // not supported on XP
-            FALSE, Process);
-        if (h) {
-            ON_OUT_OF_SCOPE(CloseHandle(h));
-            DWORD exit_code = 0;
-            auto success = GetExitCodeProcess(h, &exit_code);
-            if (success) {
-                if (exit_code == STILL_ACTIVE) {
-                    XLOG::t("Process {} is active", Process);
-                    return false;
-                } else {
-                    // store exit code
-                    XLOG::t("Process {} has exit code {}", Process, exit_code);
-                    storeExitCode(Process, exit_code);
-                }
-            } else {
-                XLOG::l(XLOG_FLINE + " Ups error {}", GetLastError());
-            }
-        } else {
-            storeExitCode(Process, 0);  // process died
-            XLOG::d("Process {} is failed to open, err = {}", Process,
-                    GetLastError());
+            FALSE, pid);
+        if (!h) {
+            storeExitCode(pid, 0);  // process died
+            XLOG::d("{} is failed to open, error is [{}]", proc_string,
+                    ::GetLastError());
+            return true;
         }
+        ON_OUT_OF_SCOPE(::CloseHandle(h));
+        DWORD exit_code = 0;
+        auto success = ::GetExitCodeProcess(h, &exit_code);
+        if (!success) {
+            XLOG::l("Error  [{}] accessing {}", ::GetLastError(), proc_string);
+            return true;
+        }
+
+        // no logging for the case due to high noise
+        if (exit_code == STILL_ACTIVE) return false;
+
+        // success and valid exit code store exit code
+        XLOG::t("{} exits, code is [{}]", proc_string, exit_code);
+        storeExitCode(pid, exit_code);
         return true;
     }
 
     bool isExecValid(const std::filesystem::path& FileExec) const {
         if (!IsValidFile(FileExec)) return false;  // sanity
 
-        auto execute_string = BuildCommand(FileExec);
+        auto execute_string = ConstructCommandToExec(FileExec);
         if (execute_string.empty()) {
-            XLOG::l("Can\'t create exe string for the {}", FileExec.u8string());
+            XLOG::l("Can't create exe string for the '{}'",
+                    FileExec.u8string());
             return false;
         }
 
@@ -411,7 +422,7 @@ private:
 
     bool isExecIn(const std::filesystem::path& FileExec) {
         // now check for duplicates:
-        auto cmd_line = BuildCommand(FileExec);
+        auto cmd_line = ConstructCommandToExec(FileExec);
         return exec_ == cmd_line;
     }
 
@@ -657,8 +668,7 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
                      bool CheckExists = true);
 
 // API call to exec all plugins and get back data and count
-std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count,
-                                 const int Timeout);
+std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout);
 std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
                                   bool StartImmediately);
 

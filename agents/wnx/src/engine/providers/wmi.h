@@ -7,7 +7,9 @@
 
 #include <chrono>
 #include <string>
+#include <string_view>
 
+#include "common/wtools.h"
 #include "providers/internal.h"
 #include "section_header.h"
 
@@ -15,6 +17,13 @@ namespace cma {
 
 namespace provider {
 
+namespace wmi {
+constexpr char kSepChar = '\t';
+constexpr std::wstring_view kSepString = L"\t";
+}  // namespace wmi
+namespace ohm {
+constexpr char kSepChar = ',';
+}
 /*
     # wmi_cpuload
     ## system_perf
@@ -61,7 +70,7 @@ private:
 
 class Wmi : public Asynchronous {
 public:
-    Wmi(const std::string& Name, char Separator = ',')
+    Wmi(const std::string& Name, char Separator)
         : Asynchronous(Name, Separator) {
         setupByName();
     }
@@ -97,11 +106,12 @@ private:
 };
 
 // this is proposed API
-enum class WmiStatus { ok, timeout, fail_open, fail_connect, bad_param };
-std::pair<WmiStatus, std::string> GenerateWmiTable(
+std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     const std::wstring& NameSpace, const std::wstring& Object,
-    const std::vector<std::wstring> Columns);
+    const std::vector<std::wstring> Columns, std::wstring_view separator);
 
+std::string WmiCachedDataHelper(std::string& cache_data,
+                                const std::string& wmi_data, char separator);
 }  // namespace provider
 
 };  // namespace cma

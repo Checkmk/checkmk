@@ -449,43 +449,47 @@ inline std::vector<std::wstring> SplitStringExact(const std::wstring& In,
 // C++ is not happy with templating of this function
 // we have to make call like JoinVector<wchar_t>
 // so we have to implementations
-inline std::wstring JoinVector(const std::vector<std::wstring> Values,
-                               const std::wstring& Separator) {
-    std::wstring values_string;
-    size_t sz = 0;
-    if (Values.empty()) {
+inline std::wstring JoinVector(const std::vector<std::wstring> values,
+                               std::wstring_view separator) {
+    if (values.empty()) {
         return {};
     }
 
-    for_each(Values.begin(), Values.end(),
+    size_t sz = 0;
+    for_each(values.begin(), values.end(),
              [&sz](std::wstring Entry) { sz += Entry.size() + 1; });
+
+    std::wstring values_string;
     values_string.reserve(sz);
 
-    values_string = *Values.begin();
-    for_each(Values.begin() + 1, Values.end(),
-             [&values_string, Separator](std::wstring Entry) {
-                 values_string += Separator + Entry;
+    values_string = *values.begin();
+    for_each(values.begin() + 1, values.end(),
+             [&values_string, separator](std::wstring_view entry) {
+                 values_string += separator;
+                 values_string += entry;
              });
     return values_string;
 }
 
 // version for string
-inline std::string JoinVector(const std::vector<std::string>& Values,
-                              const std::string& Separator) {
-    std::string values_string;
-    size_t sz = 0;
-    if (Values.empty()) {
+inline std::string JoinVector(const std::vector<std::string>& values,
+                              std::string_view separator) {
+    if (values.empty()) {
         return {};
     }
 
-    for_each(Values.begin(), Values.end(),
+    size_t sz = 0;
+    for_each(values.begin(), values.end(),
              [&sz](std::string Entry) { sz += Entry.size() + 1; });
+
+    std::string values_string;
     values_string.reserve(sz);
 
-    values_string = *Values.begin();
-    for_each(Values.begin() + 1, Values.end(),
-             [&values_string, Separator](std::string Entry) {
-                 values_string += Separator + Entry;
+    values_string = *values.begin();
+    for_each(values.begin() + 1, values.end(),
+             [&values_string, separator](std::string_view entry) {
+                 values_string += separator;
+                 values_string += entry;
              });
     return values_string;
 }

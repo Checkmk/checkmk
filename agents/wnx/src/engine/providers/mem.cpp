@@ -15,7 +15,9 @@ namespace cma {
 namespace provider {
 
 std::string Mem::makeBody() {
-    XLOG::t(XLOG_FUNC + " entering");
+    // the log output disabled because it
+    // may be quite annoying during realtime monitoring
+    // XLOG::t(XLOG_FUNC + " entering");
 
     // windows
     MEMORYSTATUSEX stat;

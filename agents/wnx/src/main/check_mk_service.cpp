@@ -47,15 +47,19 @@ static void ServiceUsage(const std::wstring &Comment) {
 
     xlog::sendStringToStdio("Common Testing:\n", Colors::kCyan);
     printf(
-        "\t%s.exe <%ls|%ls [self seconds]|%ls>\n"
+        "\t%s.exe <%ls|%ls [self seconds]|<%ls|%ls> [%ls|%ls]>\n"
         "\t%-10ls - legacy test\n"
         "\t%-10ls - short test. If self added, then agent simulates connection from monitoring site with seconds period\n"
-        "\t%-10ls - exec as app(adhoc)\n",
+        "\t%-10ls|%-10ls - executes as app(adhoc mode)\n"
+        "\t\t%-10ls - send important messages on stdio\n"
+        "\t\t%-10ls - send ALL messages on stdio\n",
         kServiceExeName,  // service name from th project definitions
         // first Row
-        kLegacyTestParam, kTestParam, kExecParam,
+        kLegacyTestParam, kTestParam, kExecParam, kAdhocParam,
+        kExecParamLogWarn, kExecParamLogAll,
         // second row
-        kLegacyTestParam, kTestParam, kExecParam);
+        kLegacyTestParam, kTestParam, kExecParam, kAdhocParam,
+        kExecParamLogWarn, kExecParamLogAll);
 
     xlog::sendStringToStdio("Realtime Testing:\n", Colors::kCyan);
     printf(
@@ -281,7 +285,15 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     }
 
     if (param == kExecParam) {
-        return cma::srv::ExecMainService();
+        std::wstring second_param = argc > 2 ? Argv[2] : L"";
+
+        auto log_on_screen = cma::srv::StdioLog::no;
+        if (second_param == kExecParamLogAll)
+            log_on_screen = cma::srv::StdioLog::extended;
+        else if (second_param == kExecParamLogWarn)
+            log_on_screen = cma::srv::StdioLog::yes;
+
+        return cma::srv::ExecMainService(log_on_screen);
     }
     if (param == kRealtimeParam) {
         return cma::srv::ExecRealtimeTest(true);

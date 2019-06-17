@@ -24,6 +24,8 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <tuple>
 
 #include "datablock.h"
 #include "tools/_misc.h"
@@ -780,6 +782,39 @@ inline uint32_t WmiGetUint32(const VARIANT& Var) noexcept {
 }
 
 // Low Level Utilities to access and convert VARIANT
+// Tries to get positive numbers instead of negative
+inline int64_t WmiGetInt64_KillNegatives(const VARIANT& Var) noexcept {
+    switch (Var.vt) {
+        // dumb method to make negative values sometimes positive
+        // source: LWA
+        // #TODO FIX THIS AS IN MSDN. This is annoying and cumbersome task
+        // Microsoft provides us invalid info about data fields
+        case VT_I1:
+            return Var.iVal;
+        case VT_I2:
+            return Var.intVal;
+        case VT_I4:
+            return Var.llVal;
+
+            // 8 bits values
+        case VT_UI1:
+            return static_cast<int64_t>(Var.bVal);
+            // 16 bits values
+        case VT_UI2:
+            return static_cast<int64_t>(Var.uiVal);
+            // 64 bits values
+        case VT_UI4:
+            return static_cast<int64_t>(Var.uintVal);
+        case VT_UI8:
+            return static_cast<int64_t>(Var.ullVal);
+        case VT_I8:
+            return Var.llVal;  // no conversion here, we expect good type here
+        default:
+            return 0;
+    }
+}
+
+// Low Level Utilities to access and convert VARIANT
 inline int64_t WmiGetInt64(const VARIANT& Var) noexcept {
     switch (Var.vt) {
             // 8 bits values
@@ -847,8 +882,9 @@ inline bool WmiObjectContains(IWbemClassObject* Object,
 std::wstring WmiGetWstring(const VARIANT& Var);
 std::optional<std::wstring> WmiTryGetString(IWbemClassObject* Object,
                                             const std::wstring& Name);
-std::wstring WmiStringFromObject(IWbemClassObject* Object,
-                                 const std::vector<std::wstring>& Names);
+std::wstring WmiStringFromObject(IWbemClassObject* object,
+                                 const std::vector<std::wstring>& names,
+                                 std::wstring_view separator);
 std::wstring WmiStringFromObject(IWbemClassObject* Object,
                                  const std::wstring& Name);
 std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject* WmiObject);
@@ -858,7 +894,12 @@ uint64_t WmiUint64FromObject(IWbemClassObject* Object,
 
 IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
                                    const std::wstring& Query) noexcept;
-IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator);
+
+// returned codes from the wmi
+enum class WmiStatus { ok, timeout, error, fail_open, fail_connect, bad_param };
+
+std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
+    IEnumWbemClassObject* enumerator);
 
 // in exception column we have
 enum class StatusColumn { ok, timeout };
@@ -889,20 +930,24 @@ public:
     // This is OPTIONAL feature, LWA doesn't use it
     bool impersonate() noexcept;
 
-    std::wstring produceTable(IEnumWbemClassObject* Enumerator,
-                              const std::vector<std::wstring>& Names) noexcept;
+    // on error returns empty string and timeout status
+    std::tuple<std::wstring, WmiStatus> produceTable(
+        IEnumWbemClassObject* enumerator,
+        const std::vector<std::wstring>& names,
+        std::wstring_view separator) noexcept;
 
     // work horse to ask certain names from the target
-    // on error returns empty string
-    std::wstring queryTable(const std::vector<std::wstring>& Names,
-                            const std::wstring& Target) noexcept;
+    // on error returns empty string and timeout status
+    std::tuple<std::wstring, WmiStatus> queryTable(
+        const std::vector<std::wstring>& names, const std::wstring& target,
+        std::wstring_view separator) noexcept;
 
     // special purposes: formatting for PS for example
     // on error returns nullptr
     // You have to call Release for returned object!!!
     IEnumWbemClassObject* queryEnumerator(
-        const std::vector<std::wstring>& Names,
-        const std::wstring& Target) noexcept;
+        const std::vector<std::wstring>& names,
+        const std::wstring& target) noexcept;
 
 private:
     void close() noexcept;

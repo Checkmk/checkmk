@@ -59,8 +59,9 @@ std::string OutputProcessLine(ULONGLONG virtual_size,
     return out_string;
 }
 
-// not static - to be tested in gtest
-std::wstring GetProcessListFromWmi() {
+// not static: tested
+// returns FORMATTED table of the processes
+std::wstring GetProcessListFromWmi(std::wstring_view separator) {
     wtools::WmiWrapper wmi;
 
     if (!wmi.open() || !wmi.connect(cma::provider::kWmiPathStd)) {
@@ -68,9 +69,11 @@ std::wstring GetProcessListFromWmi() {
         return {};
     }
     wmi.impersonate();
-    // Use the IWbemServices pointer to make requests of WMI.
-    // Make requests here:
-    return wmi.queryTable({}, L"Win32_Process");
+
+    // status will be ignored, ps doesn't support correct error processing
+    // like other wmi sections
+    auto [table, ignored] = wmi.queryTable({}, L"Win32_Process", separator);
+    return table;
 }
 
 // code from legacy client:
@@ -79,7 +82,9 @@ std::string ExtractProcessOwner(HANDLE Process) {
     HANDLE raw_handle = INVALID_HANDLE_VALUE;
 
     if (!::OpenProcessToken(Process, TOKEN_READ, &raw_handle)) {
-        XLOG::t.w("Failed to open process  to get a token {} ", GetLastError());
+        if (GetLastError() != 5)
+            XLOG::t.w("Failed to open process  to get a token {} ",
+                      GetLastError());
         return {};
     }
     ON_OUT_OF_SCOPE(CloseHandle(raw_handle));
@@ -259,7 +264,7 @@ std::string GetProcessOwner(int64_t ProcessId) {
     auto process_handle = ::OpenProcess(
         PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, process_id);
     if (!process_handle) {
-        XLOG::t("Can't to open process {} status is {}. Check access rights.",
+        XLOG::t("Can't open process [{}] status is [{}]. Check access rights.",
                 process_id, ::GetLastError());
         return "SYSTEM";
     }
@@ -267,7 +272,8 @@ std::string GetProcessOwner(int64_t ProcessId) {
 
     auto owner = ExtractProcessOwner(process_handle);
     if (owner.empty()) {
-        XLOG::t.t("Owner of {} is empty, assuming system", process_id);
+        // disabled noisy log
+        XLOG::t("Owner of [{}] is empty, assuming system", process_id);
         return "SYSTEM";
     }
 
@@ -309,7 +315,7 @@ std::string ProducePsWmi(bool FullPath) {
 
     std::string out;
     while (1) {
-        auto object = wtools::WmiGetNextObject(processes);
+        auto [object, status] = wtools::WmiGetNextObject(processes);
         if (!object) break;
         ON_OUT_OF_SCOPE(object->Release());
 

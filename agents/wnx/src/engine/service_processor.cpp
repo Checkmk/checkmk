@@ -320,19 +320,19 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
 void ServiceProcessor::sendDebugData() {
     XLOG::l.i("Started without IO. Debug mode");
     auto tp = openAnswer("127.0.0.1");
-    if (tp) {
-        auto started = startProviders(tp.value(), "");
-        auto block = getAnswer(started);
-        block.emplace_back('\0');  // yes, we need this for printf
-        auto count = printf("debug data:\n %s", block.data());
-        if (count != block.size()) XLOG::l("Binary data at offset [{}]", count);
+    if (!tp) return;
+    auto started = startProviders(tp.value(), "");
+    auto block = getAnswer(started);
+    block.emplace_back('\0');  // yes, we need this for printf
+    auto count = printf("%s", block.data());
+    if (count != block.size() - 1) {
+        XLOG::l("Binary data at offset [{}]", count);
     }
 }
 
 // called before every answer to execute routine tasks
 void ServiceProcessor::prepareAnswer(const std::string& ip_from,
                                      cma::rt::Device& rt_device) {
-    XLOG::d.i("Connected from '{}'", ip_from.c_str());
     cma::OnStartApp();
     cma::cfg::SetupRemoteHostEnvironment(ip_from);
     conditionallyStartOhm();  // start may happen when
@@ -447,7 +447,7 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
     auto fname = cma::cfg::GetCurrentLogFileName();
 
     auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(Data);
-    XLOG::d.t("Received [{}] bytes from '{}'\n", Len, dt->providerId());
+    XLOG::d.i("Received [{}] bytes from '{}'\n", Len, dt->providerId());
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT

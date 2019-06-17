@@ -20,7 +20,7 @@ std::vector<std::wstring> MessageResolver::getMessageFiles(
     DWORD ret =
         RegOpenKeyExW(HKEY_LOCAL_MACHINE, regpath.c_str(), 0, KEY_READ, &key);
     if (ret != ERROR_SUCCESS) {
-        XLOG::t("Can't to open HKLM: '{}'", wtools::ConvertToUTF8(regpath));
+        XLOG::t("Can't open HKLM: '{}'", wtools::ConvertToUTF8(regpath));
         return {};
     }
     ON_OUT_OF_SCOPE(RegCloseKey(key));
@@ -38,7 +38,7 @@ std::vector<std::wstring> MessageResolver::getMessageFiles(
     }
 
     if (res != ERROR_SUCCESS) {
-        XLOG::t("Can't to read EventMessageFile in registry '{}' : {:X}",
+        XLOG::t("Can't read EventMessageFile in registry '{}' : {:X}",
                 wtools::ConvertToUTF8(regpath), (unsigned int)res);
         return {};
     }

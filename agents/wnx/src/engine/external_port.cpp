@@ -217,7 +217,7 @@ void ExternalPort::processQueue(cma::world::ReplyFunc reply) noexcept {
 
             if (as) {
                 const auto [ip, ipv6] = GetSocketInfo(as->currentSocket());
-                XLOG::d.i("Connected from '{}' ipv6:{}", ip, ipv6);
+                XLOG::d.i("Connected from '{}' ipv6:{} <- queue", ip, ipv6);
 
                 // only_from checking
                 if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
@@ -263,7 +263,6 @@ void ExternalPort::ioThreadProc(cma::world::ReplyFunc Reply) {
         auto ipv6 = groups::global.ipv6();
 
         // important diagnostic
-        XLOG::l.t("Starting IO ipv6:{}, proposed port:{}", ipv6, default_port_);
         {
             if (owner_) owner_->preContextCall();
 
@@ -275,8 +274,9 @@ void ExternalPort::ioThreadProc(cma::world::ReplyFunc Reply) {
                 default_port_ == 0 ? groups::global.port() : default_port_;
 
             // server start
-            ExternalPort::server s(context, ipv6, port);
-            s.run_accept(sinkProc, this);
+            ExternalPort::server sock(context, ipv6, port);
+            XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, port);
+            sock.run_accept(sinkProc, this);
 
             registerContext(&context);
 

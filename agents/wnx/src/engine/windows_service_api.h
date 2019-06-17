@@ -19,11 +19,12 @@ namespace cma {
 
 // Related to Service Agent Logic
 namespace srv {
+enum class StdioLog { no, yes, extended };
 class ServiceProcessor;
 int InstallMainService();                                     // on -install
 int RemoveMainService();                                      // on -remove
 int TestMainService(const std::wstring& What, int Interval);  // on -test
-int ExecMainService(bool DuplicateOn = false);                // on -exec
+int ExecMainService(StdioLog stdio_log);                      // on -exec
 int ExecStartLegacy();             // on -start_legacy
 int ExecStopLegacy();              // on -stop_legacy
 int ExecCap();                     // on -cap

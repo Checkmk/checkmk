@@ -5907,6 +5907,24 @@ metric_info["mem_total_virtual_in_bytes"] = {
     "color": "53/a",
 }
 
+metric_info["flush_time"] = {
+    "title": _("Flush time"),
+    "unit": "s",
+    "color": "11/a",
+}
+
+metric_info["flushed"] = {
+    "title": _("Flushes"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["avg_flush_time"] = {
+    "title": _("Average flush time"),
+    "unit": "s",
+    "color": "31/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

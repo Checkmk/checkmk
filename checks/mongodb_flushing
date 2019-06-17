@@ -40,7 +40,7 @@ def check_mongodb_flushing(_no_item, params, info):
     info_dict = dict(info)
 
     last_ms = float(info_dict["last_ms"])
-    avg_ms_plugin = float(info_dict["average_ms"])
+    avg_flush_time = float(info_dict["average_ms"]) / 1000.0
     flushed = int(info_dict["flushed"])
 
     if "average_time" in params:
@@ -64,8 +64,8 @@ def check_mongodb_flushing(_no_item, params, info):
     yield state, "Last flush time: %s ms" % last_ms, [("flush_time", last_ms / 1000.0, warn, crit)]
 
     yield 0, "Flushes since restart: %s" % flushed, [("flushed", flushed)]
-    yield 0, "Average flush time since restart: %.2f ms" % avg_ms_plugin, [("avg_flush_time",
-                                                                            avg_ms_plugin)]
+    yield 0, "Average flush time since restart: %s" % get_age_human_readable(avg_flush_time),\
+          [("avg_flush_time", avg_flush_time)]
 
 
 check_info['mongodb_flushing'] = {

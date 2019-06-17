@@ -33,6 +33,7 @@ set)
     cat <<EOF >$OMD_ROOT/etc/apache/listen-port.conf
 # This file is created by 'omd config set APACHE_TCP_PORT'.
 # Better do not edit manually
+ServerName $CONFIG_APACHE_TCP_ADDR:$PORT
 Listen $CONFIG_APACHE_TCP_ADDR:$PORT
 EOF
     cat <<EOF >$OMD_ROOT/etc/apache/proxy-port.conf

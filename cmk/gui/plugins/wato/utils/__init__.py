@@ -1893,8 +1893,7 @@ class DictHostTagCondition(Transform):
                 Tuple(
                     title=aux_tag.choice_title,
                     elements=[
-                        FixedValue(_u(aux_tag.choice_title)),
-                        self._is_or_is_not(),
+                        self._is_or_is_not(label=aux_tag.choice_title + " ",),
                         FixedValue(
                             aux_tag.id,
                             title=_u(aux_tag.title),
@@ -1916,12 +1915,12 @@ class DictHostTagCondition(Transform):
             orientation="horizontal",
         )
 
-    def _is_or_is_not(self):
+    def _is_or_is_not(self, **kwargs):
         return DropdownChoice(
             choices=[
                 ("is", _("is")),
                 ("is_not", _("is not")),
-            ],)
+            ], **kwargs)
 
 
 class HostTagCondition(ValueSpec):

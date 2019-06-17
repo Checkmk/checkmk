@@ -1,17 +1,28 @@
 BRANCH_NAME = scm.branches[0].name
 FOLDER_ID = BRANCH_NAME.replaceAll('\\.','')
 
-def DISTRO_LIST = 'DISTRO_LIST_' + BRANCH_NAME.capitalize()
+def DISTRO_STR = ''
+if(JOB_BASE_NAME == 'trigger' && BRANCH_NAME == 'master') {
+    DISTRO_STR = DISTRO_LIST_MASTER
+} else if(JOB_BASE_NAME == 'trigger' && BRANCH_NAME == '1.6.0') {
+    DISTRO_STR = DISTRO_LIST_160
+} else {
+    DISTRO_STR = DISTRO_LIST_TESTBUILD
+}
 
 properties([
   parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_LIST, description: 'List of targeted distros' ),
+    string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
   ]),
   pipelineTriggers([
     cron('H 0 * * *')
   ])
 ])
+
+println("Building for the following Distros:")
+println(DISTROS)
+currentBuild.description = '\nBuilding for the following Distros:\n' + DISTROS
 
 node: {
     stage('Build Packages') {

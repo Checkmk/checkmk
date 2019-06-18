@@ -19,8 +19,8 @@ def version_path():
 
 
 @pytest.fixture(scope="module")
-def omd_version():
-    path = os.environ.get("OMD_VERSION")
-    if not path:
-        raise Exception("OMD_VERSION environment variable, e.g. 2016.12.22.cee, is missing")
-    return path
+def cmk_version():
+    version = os.environ.get("VERSION")
+    if not version:
+        raise Exception("VERSION environment variable, e.g. 2016.12.22, is missing")
+    return version

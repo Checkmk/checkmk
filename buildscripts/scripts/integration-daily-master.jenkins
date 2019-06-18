@@ -16,8 +16,7 @@ DISTRO_LIST = DISTRO_LIST - ['sles-15']
 // Testing CMA is not needed
 DISTRO_LIST = DISTRO_LIST - ['cma']
 
-println("Building for the following Distros:")
-println(DISTRO_LIST)
+println("Building for the following Distros: " + DISTRO_LIST)
 currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST
 
 def DOCKER_BUILDS = [:]

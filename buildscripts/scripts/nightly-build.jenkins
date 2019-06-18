@@ -281,7 +281,7 @@ try {
                     try {
                         dir("${DAILY_DATA}/git/tests") {
                             withEnv(["VERSION_PATH=${ARCHIVE_DIR}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit.xml'"]) {
-                                sh "make VERSION="${CMK_VERS}" test-packaging"
+                                sh "make VERSION=${CMK_VERS} test-packaging"
                             }
                         }
                     } finally {

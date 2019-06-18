@@ -94,8 +94,12 @@ def inventory_citrix_controller_registered(info):
 def check_citrix_controller_registered(_no_item, _no_params, info):
     for line in info:
         if line[0] == "DesktopsRegistered":
-            desktops = int(line[1])
-            return 0, "%d" % desktops, [("registered_desktops", desktops)]
+            try:
+                count_desktops = int(line[1])
+            except (IndexError, ValueError):
+                # Is UNKNOWN right behaviour?
+                return 3, 'No desktops registered'
+            return 0, "%d" % count_desktops, [("registered_desktops", count_desktops)]
 
 
 check_info["citrix_controller.registered"] = {
@@ -211,7 +215,11 @@ def check_citrix_controller_licensing(_no_item, _no_params, info):
         if line[0].lower() in statedict and line[0] not in detected_states:
             detected_states.append(line[0])
             title, states = statedict[line[0].lower()]
-            state, state_readable = states[line[1]]
+            try:
+                raw_state = line[1]
+            except IndexError:
+                continue
+            state, state_readable = states[raw_state]
             yield state, "%s: %s" % (title, state_readable)
 
 
@@ -248,9 +256,13 @@ def check_citrix_controller(_no_item, _no_params, info):
     for line in info:
         if line[0] == "ControllerState":
             state = 0
-            if line[1] != "Active":
+            try:
+                raw_state = line[1]
+            except IndexError:
+                return 3, 'unknown'
+            if raw_state != "Active":
                 state = 2
-            return state, line[1]
+            return state, raw_state
 
 
 check_info["citrix_controller"] = {

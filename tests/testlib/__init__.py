@@ -149,20 +149,37 @@ class CMKVersion(object):
     GIT = "git"
 
     CEE = "cee"
-    CME = "cme"
     CRE = "cre"
     CME = "cme"
 
     def __init__(self, version, edition, branch):
         self._version = version
-        self._edition = edition
         self._branch = branch
 
-        if len(edition) != 3:
-            raise Exception("Invalid edition: %s. Must be short notation (cee, cre, ...)" % edition)
-        self.edition_short = edition
-
+        self._set_edition(edition)
         self.set_version(version, branch)
+
+    def _set_edition(self, edition):
+        # Allow short (cre) and long (raw) notation as input
+        if edition not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME]:
+            edition_short = self._get_short_edition(edition)
+        else:
+            edition_short = edition
+
+        if edition_short not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME]:
+            raise NotImplementedError("Unknown short edition: %s" % edition_short)
+
+        self.edition_short = edition_short
+
+    def _get_short_edition(self, edition):
+        if edition == "raw":
+            return "cre"
+        elif edition == "enterprise":
+            return "cee"
+        elif edition == "managed":
+            return "cme"
+        else:
+            raise NotImplementedError("Unknown edition: %s" % edition)
 
     def get_default_version(self):
         if os.path.exists("/etc/alternatives/omd"):
@@ -631,7 +648,7 @@ class Site(object):
 
         src_version, src_path = self.version.version, self.version.version_path()
         new_version_name = "%s-%s" % (src_version, os.environ["BUILD_NUMBER"])
-        self.version = CMKVersion(new_version_name, self.version._edition, self.version._branch)
+        self.version = CMKVersion(new_version_name, self.version.edition(), self.version._branch)
 
         print "Copy CMK '%s' to '%s'" % (src_path, self.version.version_path())
         assert not os.path.exists(self.version.version_path()), \

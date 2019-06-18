@@ -5,9 +5,9 @@ unset LANG
 log() { echo "[$(date '+%F %T')] ==============================" "$@"; }
 die() { log "$@"; exit 1; }
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ]; then
-    echo "Aufrufen: bw-docker-bauen [BRANCH] [EDITION] [VERSION]"
-    echo "          bw-docker-bauen 1.5.0 enterprise 1.5.0p4"
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$S" = "" ]; then
+    echo "Aufrufen: bw-docker-bauen [BRANCH] [EDITION] [VERSION] [SET_LATEST_TAG]"
+    echo "          bw-docker-bauen 1.5.0 enterprise 1.5.0p4 no"
     echo
     exit 0
 fi
@@ -15,6 +15,7 @@ fi
 BRANCH=$1
 EDITION=$2
 VERSION=$3
+SET_LATEST_TAG=$4
 
 if [ $EDITION = raw ]; then
     SUFFIX=.cre
@@ -57,7 +58,9 @@ if [ $EDITION = raw ]; then
     log "Lade zu Docker-Hub hoch..."
     DOCKERCLOUD_NAMESPACE=checkmk docker push "checkmk/check-mk-${EDITION}:${VERSION}"
     DOCKERCLOUD_NAMESPACE=checkmk docker push "checkmk/check-mk-${EDITION}:${BRANCH}-latest"
-    DOCKERCLOUD_NAMESPACE=checkmk docker push "checkmk/check-mk-${EDITION}:latest"
+    if [ "$SET_LATEST_TAG" = "yes" ]; then
+        DOCKERCLOUD_NAMESPACE=checkmk docker push "checkmk/check-mk-${EDITION}:latest"
+    fi
 fi
 
 log "Räume temporäres Verzeichnis $TMP_PATH weg"

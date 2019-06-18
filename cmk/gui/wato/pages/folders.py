@@ -54,7 +54,10 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import TextUnicode
+from cmk.gui.valuespec import (
+    TextUnicode,
+    TextAscii,
+)
 
 
 @mode_registry.register
@@ -898,22 +901,22 @@ class FolderMode(WatoMode):
         html.begin_form("edit_host", method="POST")
 
         # title
-        forms.header(_("Title"))
-        forms.section(_("Title"))
-        TextUnicode().render_input("title", self._folder.title())
+        basic_attributes = [
+            ("title", TextUnicode(title=_("Title")), self._folder.title()),
+        ]
         html.set_focus("title")
 
         # folder name (omit this for root folder)
         if new or not watolib.Folder.current().is_root():
             if not config.wato_hide_filenames:
-                forms.section(_("Internal directory name"))
-                if new:
-                    html.text_input("name")
-                else:
-                    html.write_text(self._folder.name())
-                html.help(
-                    _("This is the name of subdirectory where the files and "
-                      "other folders will be created. You cannot change this later."))
+                basic_attributes += [
+                    ("name",
+                     TextAscii(
+                         title=_("Internal directory name"),
+                         help=_("This is the name of subdirectory where the files and "
+                                "other folders will be created. You cannot change this later."),
+                     ), self._folder.name()),
+                ]
 
         # Attributes inherited to hosts
         if new:
@@ -923,7 +926,13 @@ class FolderMode(WatoMode):
             parent = watolib.Folder.current().parent()
             myself = watolib.Folder.current()
 
-        configure_attributes(new, {"folder": myself}, "folder", parent, myself)
+        configure_attributes(
+            new=new,
+            hosts={"folder": myself},
+            for_what="folder",
+            parent=parent,
+            myself=myself,
+            basic_attributes=basic_attributes)
 
         forms.end()
         if new or not watolib.Folder.current().locked():

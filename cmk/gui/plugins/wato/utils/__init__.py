@@ -1409,9 +1409,12 @@ def configure_attributes(new,
                          parent,
                          myself=None,
                          without_attributes=None,
-                         varprefix=""):
+                         varprefix="",
+                         basic_attributes=None):
     if without_attributes is None:
         without_attributes = []
+    if basic_attributes is None:
+        basic_attributes = []
 
     # Collect dependency mapping for attributes (attributes that are only
     # visible, if certain host tags are set).
@@ -1429,6 +1432,11 @@ def configure_attributes(new,
             isopen=topic_id in ["basic", "address", "data_sources"],
             table_id=topic_id,
         )
+
+        if topic_id == "basic":
+            for attr_varprefix, vs, default_value in basic_attributes:
+                forms.section(_u(vs.title()))
+                vs.render_input(attr_varprefix, default_value)
 
         for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
             attrname = attr.name()

@@ -1,0 +1,14 @@
+Title: Pagerduty notification host identifier to hostname when IP address is uknown
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560864676
+Class: fix
+
+Pagerduty requires a host identifier to assign an event to the troubled
+host. This was the IP address of the host, but in some cases like cloud
+Services, there are no IP addresses assigned to a host. Thus the hostname
+declared in Checkmk will be used when no IP address is found to declare
+which host is under trouble.

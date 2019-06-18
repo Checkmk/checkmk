@@ -1,0 +1,11 @@
+Title: msexch_autodiscovery: Fixed configuration error: Found '%s' in service description
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b3
+Date: 1560850907
+
+

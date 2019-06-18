@@ -367,8 +367,13 @@ class FilterInvText(Filter):
     def __init__(self):
         Filter.__init__(self, "host", [self.ident], [])
 
+    @property
+    def filtertext(self):
+        "Returns the string to filter"
+        return html.request.var(self.htmlvars[0], "").strip().lower()
+
     def need_inventory(self):
-        return True
+        return bool(self.filtertext)
 
     def display(self):
         htmlvar = self.htmlvars[0]
@@ -376,8 +381,7 @@ class FilterInvText(Filter):
         html.text_input(htmlvar, current_value)
 
     def filter_table(self, rows):
-        htmlvar = self.htmlvars[0]
-        filtertext = html.request.var(htmlvar, "").strip().lower()
+        filtertext = self.filtertext
         if not filtertext:
             return rows
 
@@ -385,7 +389,7 @@ class FilterInvText(Filter):
             regex = re.compile(filtertext, re.IGNORECASE)
         except re.error:
             raise MKUserError(
-                htmlvar,
+                self.htmlvars[0],
                 _('You search statement is not valid. You need to provide a regular '
                   'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                   'if you like to search for a single backslash.'))
@@ -418,9 +422,6 @@ class FilterInvFloat(Filter):
     def __init__(self):
         Filter.__init__(self, "host", [self.ident + "_from", self.ident + "_to"], [])
 
-    def need_inventory(self):
-        return True
-
     def display(self):
         html.write_text(_("From: "))
         htmlvar = self.htmlvars[0]
@@ -436,26 +437,23 @@ class FilterInvFloat(Filter):
         if self._unit:
             html.write(self._unit)
 
+    def filter_configs(self):
+        "Returns scaled lower and upper bounds"
+
+        def _scaled_bound(value):
+            try:
+                return float(html.request.var(value)) * self._scale
+            except (TypeError, ValueError):
+                return None
+
+        return [_scaled_bound(val) for val in self.htmlvars[:2]]
+
+    def need_inventory(self):
+        return any(self.filter_configs())
+
     def filter_table(self, rows):
-        fromvar = self.htmlvars[0]
-        fromtext = html.request.var(fromvar)
-        lower = None
-        if fromtext:
-            try:
-                lower = float(fromtext) * self._scale
-            except:
-                pass
-
-        tovar = self.htmlvars[1]
-        totext = html.request.var(tovar)
-        upper = None
-        if totext:
-            try:
-                upper = float(totext) * self._scale
-            except:
-                pass
-
-        if lower is None and upper is None:
+        lower, upper = self.filter_configs()
+        if not any((lower, upper)):
             return rows
 
         newrows = []
@@ -480,7 +478,7 @@ class FilterInvBool(FilterTristate):
         FilterTristate.__init__(self, "host", self.ident)
 
     def need_inventory(self):
-        return True
+        return self.tristate_value() != -1
 
     def filter(self, infoname):
         return ""  # No Livestatus filtering right now
@@ -517,7 +515,7 @@ class FilterHasInv(FilterTristate):
         FilterTristate.__init__(self, "host", "host_inventory")
 
     def need_inventory(self):
-        return True
+        return self.tristate_value() != -1
 
     def filter(self, infoname):
         return ""  # No Livestatus filtering right now
@@ -559,8 +557,12 @@ class FilterInvHasSoftwarePackage(Filter):
     def double_height(self):
         return True
 
+    @property
+    def filtername(self):
+        return html.get_unicode_input(self._varprefix + "name")
+
     def need_inventory(self):
-        return True
+        return bool(self.filtername)
 
     def display(self):
         html.text_input(self._varprefix + "name")
@@ -586,7 +588,7 @@ class FilterInvHasSoftwarePackage(Filter):
             label=_("Negate: find hosts <b>not</b> having this package"))
 
     def filter_table(self, rows):
-        name = html.get_unicode_input(self._varprefix + "name")
+        name = self.filtername
         if not name:
             return rows
 

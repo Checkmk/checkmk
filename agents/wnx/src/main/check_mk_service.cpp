@@ -19,115 +19,189 @@
 // Personal
 #include "cfg.h"
 #include "check_mk_service.h"
+#include "cma_core.h"
 #include "logger.h"
 #include "providers/perf_counters_cl.h"
 
 std::filesystem::path G_ProjectPath = PROJECT_DIR_CMK_SERVICE;
 
+namespace cma::cmdline {
+
+void PrintBlock(std::string_view title, xlog::internal::Colors title_color,
+                std::function<std::string()> formatter) {
+    xlog::sendStringToStdio(title.data(), title_color);
+    auto out = formatter();
+    printf(out.data());
+}
+
+void PrintMain() {
+    using namespace xlog::internal;
+    PrintBlock("Normal Usage:\n", Colors::kGreen, []() {
+        return fmt::format(
+            "\t{1} <{2}|{3}|{4}>\n"
+            "\t{2:<{0}} - install as a service, Administrative Rights are required\n"
+            "\t{3:<{0}} - remove service, Administrative Rights are required\n"
+            "\t{4:<{0}} - usage\n",
+            kParamShift,
+            kServiceExeName,  // service name from th project definitions
+            // first Row
+            kInstallParam, kRemoveParam, kHelpParam);
+    });
+}
+
+void PrintSelfCheck() {
+    using namespace xlog::internal;
+    PrintBlock("Self Checking:\n", Colors::kCyan, []() {
+        return fmt::format(
+            "\t{1} <{2} [{3}|{4}|{5}] <seconds>]>\n"
+            "\t{2:<{0}} - check test\n"
+            "\t\t{3:<{0}} - main thread test\n"
+            "\t\t{4:<{0}} - internal port test \n"
+            "\t\t{5:<{0}} - simulates connection after expiring 'seconds' interval\n",
+            kParamShift, kServiceExeName, kCheckParam, kCheckParamMt,
+            kCheckParamPort, kCheckParamSelf);
+    });
+}
+
+void PrintAdHoc() {
+    using namespace xlog::internal;
+    PrintBlock("Ad Hoc Testing:\n", Colors::kCyan, []() {
+        return fmt::format(
+            "\t{1} <{2} [{3}|{4}]>\n"
+            "\t{2:{0}} - run as application (adhoc mode)\n"
+            "\t\t{3:{0}} - send important messages on stdio\n"
+            "\t\t{4:{0}} - send ALL messages on stdio\n",
+            kParamShift,  //
+            kServiceExeName,
+            std::string(kExecParam) + "|" + std::string(kAdhocParam),  //
+            kExecParamShowWarn, kExecParamShowAll);
+    });
+}
+
+void PrintLegacyTesting() {
+    using namespace xlog::internal;
+    PrintBlock("Classic/Legacy Testing:\n", Colors::kCyan, []() {
+        return fmt::format(
+            "\t{1} <{2}>\n"
+            "\t{2:{0}} - legacy(standard) test\n",
+            kParamShift,
+            kServiceExeName,  // service name from th project definitions
+            kLegacyTestParam);
+    });
+}
+
+void PrintRealtimeTesting() {
+    using namespace xlog::internal;
+    PrintBlock("Realtime Testing:\n", Colors::kCyan, []() {
+        return fmt::format(
+            "\t{1} <{2}>\n"
+            "\t{2:{0}} - test realtime data with all sections and encryption\n",
+            kParamShift,
+            kServiceExeName,  // service name from th project definitions
+            kRealtimeParam);
+    });
+}
+
+void PrintCvt() {
+    using namespace xlog::internal;
+    PrintBlock(
+        "To Convert Legacy Agent Ini File into Agent Yml file:\n",
+        Colors::kPink, []() {
+            return fmt::format(
+                "\t{0} <{1}> <inifile> [yamlfile]\n"
+                "\tinifile - from Legacy Agent\n"
+                "\tyamlfile - name of an output file\n",
+                kServiceExeName,  // service name from th project definitions
+                kCvtParam);
+        });
+}
+
+void PrintLwaActivate() {
+    using namespace xlog::internal;
+
+    PrintBlock("To Activate/Deactivate Legacy Agent:\n", Colors::kPink, []() {
+        return fmt::format(
+            "\t{1} <{2}|{3}>\n"
+            "\t{2:{0}} - stop and deactivate legacy agent\n"
+            "\t{3:{0}} - activate and start legacy agent(only for testing)\n",
+            kParamShift,
+            kServiceExeName,  // service name from th project definitions
+            kStopLegacyParam, kStartLegacyParam);
+    });
+}
+
+void PrintUpgrade() {
+    using namespace xlog::internal;
+    PrintBlock("To Upgrade Legacy Agent(migration):\n", Colors::kPink, []() {
+        return fmt::format(
+            "\t{1} {2} [{3}]\n"
+            "\t{2:{0}} - upgrading/migration\n"
+            "\t\t{3:{0}} - upgrading/migration is forced( file '{2}' is ignored)\n",
+            kParamShift,
+            kServiceExeName,  // service name from th project definitions
+            kUpgradeParam, kUpgradeParamForce,
+            cma::cfg::files::kUpgradeProtocol);
+    });
+}
+
+void PrintCap() {
+    using namespace xlog::internal;
+
+    PrintBlock(
+        "To Install Bakery Files, plugins.cap and check_mk.ini, in install folder:\n",
+        Colors::kPink, []() {
+            return fmt::format(
+                "\t{0} {1}\n",
+                kServiceExeName,  // service name from th project definitions
+                kCapParam);
+        });
+}
+
+void PrintSectionTesting() {
+    using namespace xlog::internal;
+
+    PrintBlock("To test Sections individually:\n", Colors::kPink, []() {
+        return fmt::format(
+            "\t{1} {2} <{3}> [{4} [{5}]] \n"
+            "\t\t{3:{0}} - any section name(df, fileinfo and so on)\n"
+            "\t\t{4:{0}} - pause between tests in seconds, count of tests are infinite. 0 - test once\n"
+            "\t\t{5:{0}} - log output on the stdio\n"
+            "\t\t\t example '{1} - {2} df 5 {5}'\n"
+            "\t\t\t test section df infinitely long with pause 5 seconds and log output on stdio\n",
+            kParamShift,
+            kServiceExeName,  // service name from th project definitions
+            kSectionParam, "any section", "number", kSectionParamShow);
+    });
+}
+
+}  // namespace cma::cmdline
+
 // print short info about usage plus potential comment about error
-static void ServiceUsage(const std::wstring &Comment) {
+static void ServiceUsage(std::wstring_view comment) {
+    using namespace wtools;
     using namespace cma::cmdline;
     using namespace xlog::internal;
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::DuplicateOnStdio(true);
-    if (Comment != L"") {
-        printf("Error: %ls\n", Comment.c_str());
+    if (!comment.empty()) {
+        xlog::sendStringToStdio(wtools::ConvertToUTF8(comment).data(),
+                                Colors::kRed);
     }
-    xlog::sendStringToStdio("Normal Usage:\n", Colors::kGreen);
-    printf(
-        "\t%s.exe <%ls|%ls|%ls>\n"
-        "\t%-10ls - install as a service\n"
-        "\t%-10ls - remove service\n"
-        "\t%-10ls - usage\n",
-        kServiceExeName,  // service name from th project definitions
-        // first Row
-        kInstallParam, kRemoveParam, kHelpParam,
-        // second row
-        kInstallParam, kRemoveParam, kHelpParam);
 
-    xlog::sendStringToStdio("Common Testing:\n", Colors::kCyan);
-    printf(
-        "\t%s.exe <%ls|%ls [self seconds]|<%ls|%ls> [%ls|%ls]>\n"
-        "\t%-10ls - legacy test\n"
-        "\t%-10ls - short test. If self added, then agent simulates connection from monitoring site with seconds period\n"
-        "\t%-10ls|%-10ls - executes as app(adhoc mode)\n"
-        "\t\t%-10ls - send important messages on stdio\n"
-        "\t\t%-10ls - send ALL messages on stdio\n",
-        kServiceExeName,  // service name from th project definitions
-        // first Row
-        kLegacyTestParam, kTestParam, kExecParam, kAdhocParam,
-        kExecParamLogWarn, kExecParamLogAll,
-        // second row
-        kLegacyTestParam, kTestParam, kExecParam, kAdhocParam,
-        kExecParamLogWarn, kExecParamLogAll);
-
-    xlog::sendStringToStdio("Realtime Testing:\n", Colors::kCyan);
-    printf(
-        "\t%s.exe <%ls>\n"
-        "\t%-10ls - test realtime data with all sections and encryption\n",
-        kServiceExeName,  // service name from th project definitions
-        // first Row
-        kRealtimeParam,
-        // second row
-        kRealtimeParam);
-
-    xlog::sendStringToStdio(
-        "To Convert Legacy Agent Ini File into Agent Yml file:\n",
-        Colors::kPink);
-    printf(
-        "\t%s.exe %ls <inifile> [yamlfile]\n"
-        "\tinifile - from Legacy Agent\n"
-        "\tyamlfile - name of an output file(optional)\n",
-        kServiceExeName,  // service name from th project definitions
-                          // first Row
-        kCvtParam);
-
-    xlog::sendStringToStdio("To Activate/Deactivate Legacy Agent:\n",
-                            Colors::kPink);
-    printf(
-        "\t%s.exe <%ls|%ls>\n"
-        "\t%-10ls - stop and deactivate legacy agent\n"
-        "\t%-10ls - activate and start legacy agent(only for testing)\n",
-        kServiceExeName,  // service name from th project definitions
-
-        // first Row
-        kStopLegacyParam, kStartLegacyParam,
-        // second row
-        kStopLegacyParam, kStartLegacyParam);
-
-    xlog::sendStringToStdio("To Upgrade Legacy Agent(migration):\n",
-                            Colors::kPink);
-    printf(
-        "\t%s.exe %ls [force]\n"
-        "\tforce - upgrading(migration) is forced\n",
-        kServiceExeName,  // service name from th project definitions
-
-        // first Row
-        kUpgradeParam);
-
-    xlog::sendStringToStdio(
-        "To Install Bakery Files, plugins.cap and check_mk.ini, in install folder:\n",
-        Colors::kPink);
-    printf("\t%s.exe %ls\n",
-           kServiceExeName,  // service name from th project definitions
-
-           // first Row
-           kCapParam);
-
-    xlog::sendStringToStdio("To test Sections individually:\n", Colors::kCyan);
-    printf(
-        "\t%s.exe %ls <name> [number [trace]] \n"
-        "\t\tname - allowed only df\n"
-        "\t\tnumber - not 0: pause between tests in seconds, count of tests are infinite. 0 - test once\n"
-        "\t\ttrace - log output on the stdio\n"
-        "\t\t\t example '%s -section df 5 trace'\n"
-        "\t\t\t test section df infinitely long with pause 5 seconds and log output on stdio\n",
-        kServiceExeName,  // service name from th project definitions
-
-        // first Row
-        kSectionParam,
-        // example row
-        kServiceExeName);
+    try {
+        cma::cmdline::PrintMain();
+        cma::cmdline::PrintSelfCheck();
+        cma::cmdline::PrintAdHoc();
+        cma::cmdline::PrintLegacyTesting();
+        cma::cmdline::PrintRealtimeTesting();
+        cma::cmdline::PrintCvt();
+        cma::cmdline::PrintLwaActivate();
+        cma::cmdline::PrintUpgrade();
+        cma::cmdline::PrintCap();
+        cma::cmdline::PrintSectionTesting();
+    } catch (const std::exception &e) {
+        XLOG::l("Exception is '{}'", e.what());  //
+    }
 
     // undocummneted
     // -winnperf ....... command line for runperf
@@ -258,81 +332,83 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     using namespace cma::cmdline;
     cma::OnStartApp();  // path from EXE
 
-    // #TODO, estimate mapping
-    std::unordered_map<std::wstring, std::function<void()>> mapping = {
-        {kInstallParam, []() {
-             XLOG::l(XLOG::kStdio | XLOG::kInfo)("service to INSTALL");
-             return srv::InstallMainService();
-         }}};
-
-    if (param == kInstallParam) {
-        XLOG::l(XLOG::kStdio | XLOG::kInfo)("service to INSTALL");
+    if (param == wtools::ConvertToUTF16(kInstallParam)) {
         return cma::srv::InstallMainService();
     }
-    if (param == kRemoveParam && argc > 2) {
+    if (param == wtools::ConvertToUTF16(kRemoveParam)) {
         XLOG::l(XLOG::kStdio | XLOG::kInfo)("service to REMOVE");
         return cma::srv::RemoveMainService();
     }
 
-    if (param == kTestParam) {
+    if (param == wtools::ConvertToUTF16(kCheckParam)) {
         std::wstring param = argc > 2 ? Argv[2] : L"";
         auto interval = argc > 3 ? ToInt(Argv[3]) : 0;
         return cma::srv::TestMainService(param, interval);
     }
 
-    if (param == kLegacyTestParam) {
+    if (param == wtools::ConvertToUTF16(kLegacyTestParam)) {
         return cma::srv::TestMainService(L"legacy", 0);
     }
 
-    if (param == kExecParam) {
+    if (param == wtools::ConvertToUTF16(kExecParam)) {
         std::wstring second_param = argc > 2 ? Argv[2] : L"";
 
         auto log_on_screen = cma::srv::StdioLog::no;
-        if (second_param == kExecParamLogAll)
+        if (second_param == wtools::ConvertToUTF16(kExecParamShowAll))
             log_on_screen = cma::srv::StdioLog::extended;
-        else if (second_param == kExecParamLogWarn)
+        else if (second_param == wtools::ConvertToUTF16(kExecParamShowWarn))
             log_on_screen = cma::srv::StdioLog::yes;
 
         return cma::srv::ExecMainService(log_on_screen);
     }
-    if (param == kRealtimeParam) {
+    if (param == wtools::ConvertToUTF16(kRealtimeParam)) {
         return cma::srv::ExecRealtimeTest(true);
     }
     if (param == kSkypeParam) {
         return cma::srv::ExecSkypeTest();
     }
-    if (param == kStopLegacyParam) {
+    if (param == wtools::ConvertToUTF16(kStopLegacyParam)) {
         return cma::srv::ExecStopLegacy();
     }
-    if (param == kStartLegacyParam) {
+    if (param == wtools::ConvertToUTF16(kStartLegacyParam)) {
         return cma::srv::ExecStartLegacy();
     }
-    if (param == kCapParam) {
+    if (param == wtools::ConvertToUTF16(kCapParam)) {
         return cma::srv::ExecCap();
     }
-    if (param == kUpgradeParam) {
+    if (param == wtools::ConvertToUTF16(kUpgradeParam)) {
         std::wstring second_param = argc > 2 ? Argv[2] : L"";
-        return cma::srv::ExecUpgradeParam(second_param == L"force");
+        return cma::srv::ExecUpgradeParam(
+            second_param == wtools::ConvertToUTF16(kUpgradeParamForce));
     }
-    if (param == kCvtParam && argc > 2) {
+    if (param == wtools::ConvertToUTF16(kCvtParam) && argc > 2) {
         std::wstring ini = argc > 2 ? Argv[2] : L"";
         std::wstring yml = argc > 3 ? Argv[3] : L"";
-        return cma::srv::ExecCvtIniYaml(ini, yml, true);
+
+        auto diag = cma::tools::CheckArgvForValue(argc, Argv, 4, kCvtParamShow)
+                        ? cma::srv::StdioLog::yes
+                        : cma::srv::StdioLog::no;
+        return cma::srv::ExecCvtIniYaml(ini, yml, diag);
     }
-    if (param == kSectionParam && argc > 2) {
+    if (param == wtools::ConvertToUTF16(kSectionParam) && argc > 2) {
         std::wstring section = Argv[2];
         int delay = argc > 3 ? ToInt(Argv[3]) : 0;
-        bool diag = argc > 4 ? std::wstring(Argv[4]) == L"trace" : false;
+        auto diag =
+            cma::tools::CheckArgvForValue(argc, Argv, 4, kSectionParamShow)
+                ? cma::srv::StdioLog::yes
+                : cma::srv::StdioLog::no;
         return cma::srv::ExecSection(section, delay, diag);
     }
 
-    if (param == kHelpParam) {
-        ServiceUsage(std::wstring(L""));
+    if (param == wtools::ConvertToUTF16(kHelpParam)) {
+        ServiceUsage(L"");
         return 0;
     }
 
-    ServiceUsage(std::wstring(L"Provided Parameter \"") + param +
-                 L"\" is not allowed");
+    auto text =
+        std::wstring(L"Provided Parameter \"") + param + L"\" is not allowed\n";
+
+    ServiceUsage(text);
     return 2;
 }
 }  // namespace cma

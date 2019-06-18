@@ -9,13 +9,25 @@
 #include <chrono>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <vector>
 
+#include "common/wtools.h"
 #include "glob_match.h"
 #include "section_header.h"  // we have logging here
 
 namespace cma {
+
+namespace tools {
+
+bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
+                       std::string_view value) noexcept {
+    return argv && argc > pos && pos > 0 && argv[pos] &&
+           std::wstring(argv[pos]) == wtools::ConvertToUTF16(value);
+}
+
+}  // namespace tools
 bool MatchNameOrAbsolutePath(const std::string& Pattern,
                              const std::filesystem::path FullPath) {
     auto name = FullPath.filename();

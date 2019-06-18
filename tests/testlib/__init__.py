@@ -159,7 +159,7 @@ class CMKVersion(object):
         self._branch = branch
 
         if len(edition) != 3:
-            raise Exception("Invalid edition: %s. Must be short notation (cee, cre, ...)")
+            raise Exception("Invalid edition: %s. Must be short notation (cee, cre, ...)" % edition)
         self.edition_short = edition
 
         self.set_version(version, branch)

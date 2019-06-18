@@ -336,8 +336,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::InstallMainService();
     }
     if (param == wtools::ConvertToUTF16(kRemoveParam)) {
-        XLOG::l(XLOG::kStdio | XLOG::kInfo)("service to REMOVE");
-        return cma::srv::RemoveMainService();
+         return cma::srv::RemoveMainService();
     }
 
     if (param == wtools::ConvertToUTF16(kCheckParam)) {

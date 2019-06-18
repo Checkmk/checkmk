@@ -8,6 +8,7 @@
 #include <chrono>
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 #include "cfg.h"
 #include "common/wtools.h"
@@ -16,6 +17,12 @@
 #include "tools/_misc.h"
 
 namespace cma {
+namespace tools {
+
+// primitive command line checker
+bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
+                       std::string_view value) noexcept;
+}  // namespace tools
 using PathVector = std::vector<std::filesystem::path>;
 PathVector GatherAllFiles(const PathVector& Folders);
 // Scan one folder and add contents to the dirs and files

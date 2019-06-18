@@ -26,13 +26,13 @@
 
 
 def agent_ibmsvc_arguments(params, hostname, ipaddress):
-    args = ''
-    args += " -u " + quote_shell_string(params["user"])
+    args = []
+    args += ["-u", params["user"]]
     if params["accept-any-hostkey"] is True:
-        args += " --accept-any-hostkey"
-    args += " -i " + ",".join(params["infos"])
+        args.append("--accept-any-hostkey")
+        args += ["-i", ",".join(params["infos"])]
 
-    args += " " + quote_shell_string(ipaddress)
+    args.append(ipaddress)
     return args
 
 

@@ -740,7 +740,7 @@ $LONGSERVICEOUTPUT$
                          ("medium", _("Medium")),
                          ("high", _("High")),
                      ],
-                     default_value="minor",
+                     default_value="low",
                  )),
                 ("ack_state",
                  Dictionary(

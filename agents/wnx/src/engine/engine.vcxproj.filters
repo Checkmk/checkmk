@@ -198,6 +198,9 @@
     <ClInclude Include="cma_core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\wnx_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

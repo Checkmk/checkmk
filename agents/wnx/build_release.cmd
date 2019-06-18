@@ -11,6 +11,12 @@ rem LOCAL_IMAGES_EXE - exe
 rem LOCAL_IMAGE_PDB - pdb
 rem WNX_BUILD - in the future this is name of subfloder to build out
 rem creates # artefacts in the output folder
+SETLOCAL EnableDelayedExpansion
+
+rem read version from the C++ agent
+set /p wnx_version_raw=<src\common\wnx_version.h
+rem parse version
+set wnx_version=%wnx_version_raw:~30,40%
 
 set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts
@@ -81,6 +87,17 @@ move %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent_updat
 %msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x64
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit 8
 
+rem set version:
+rem remove quotes
+echo %wnx_version:~1,-1%
+rem info
+powershell Write-Host "Setting Version in MSI: %wnx_version%" -Foreground Green
+rem command
+echo cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
+cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
+rem check result
+if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red && exit 34
+
 goto end
 @rem ignored:
 powershell Write-Host "starting unit tests" -Foreground Cyan 
@@ -90,7 +107,6 @@ watest
 if not %errorlevel% == 0 goto error
 popd
 powershell Write-Host "Unit test SUCCESS" -Foreground Green
-
 
 :error
 popd

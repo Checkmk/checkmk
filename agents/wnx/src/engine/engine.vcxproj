@@ -235,6 +235,7 @@
     <ClInclude Include="..\common\cfg_info.h" />
     <ClInclude Include="..\common\mailslot_transport.h" />
     <ClInclude Include="..\common\version.h" />
+    <ClInclude Include="..\common\wnx_version.h" />
     <ClInclude Include="..\common\wtools.h" />
     <ClInclude Include="..\lwa\Configurable.h" />
     <ClInclude Include="..\lwa\Configuration.h" />

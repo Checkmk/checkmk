@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?ifdef $(env.wnx_version) = Enterprise ?>
+<!-- IMPORTANT: Build script must correctly set wnx_version -->
+<?define ProductVersion = $(env.wnx_version)?>
+<?else?>
+<!-- IMPORTANT: Code below is executed ONLY during manual compilation
+just to signal that real build script was not called -->
+<?define ProductVersion = "2.0.0.0"?>
+<?endif ?>
+
 <?define CompanyName = "Mathias Kettner GmbH"?>
 <?define ProductName = "Check MK Service"?>
-<?define ProductVersion = "2.0.1"?>
 <?define ProductId = "{C3BDE55B-4C42-48D0-8792-B1DE5174C202}"?>
 <?define ProductUpgradeCode = "83F434E9-EA96-4881-AA93-E21B27285C05"?>
 <!-- IMPORTANT NOTE 1: If you change architecture, please change the package code TOO -->

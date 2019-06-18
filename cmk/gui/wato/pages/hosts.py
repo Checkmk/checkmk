@@ -42,7 +42,11 @@ from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException, HTTPRedirect
-from cmk.gui.valuespec import ListOfStrings, Hostname
+from cmk.gui.valuespec import (
+    ListOfStrings,
+    Hostname,
+    FixedValue,
+)
 from cmk.gui.wato.pages.folders import delete_host_after_confirm
 
 
@@ -133,23 +137,28 @@ class HostMode(WatoMode):
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
 
-        forms.header(_("General Properties"))
-        self._show_host_name()
+        basic_attributes = [
+            # attribute name, valuepec, default value
+            ("host", self._vs_host_name(), self._host.name()),
+        ]
 
-        # Cluster: nodes
         if self._is_cluster():
-            forms.section(_("Nodes"))
-            self._vs_cluster_nodes().render_input("nodes",
-                                                  self._host.cluster_nodes() if self._host else [])
-            html.help(
-                _('Enter the host names of the cluster nodes. These '
-                  'hosts must be present in WATO. '))
+            basic_attributes += [
+                # attribute name, valuepec, default value
+                ("nodes", self._vs_cluster_nodes(),
+                 self._host.cluster_nodes() if self._host else []),
+            ]
 
         configure_attributes(
             new=self._mode != "edit",
             hosts={self._host.name(): self._host} if self._mode != "new" else {},
             for_what="host" if not self._is_cluster() else "cluster",
-            parent=watolib.Folder.current())
+            parent=watolib.Folder.current(),
+            basic_attributes=basic_attributes,
+        )
+
+        if self._mode != "edit":
+            html.set_focus("host")
 
         forms.end()
         if not watolib.Folder.current().locked_hosts():
@@ -162,12 +171,15 @@ class HostMode(WatoMode):
 
     def _vs_cluster_nodes(self):
         return ListOfStrings(
+            title=_("Nodes"),
             valuespec=ConfigHostname(),
             orientation="horizontal",
+            help=_(
+                'Enter the host names of the cluster nodes. These hosts must be present in WATO.'),
         )
 
     @abc.abstractmethod
-    def _show_host_name(self):
+    def _vs_host_name(self):
         raise NotImplementedError()
 
 
@@ -271,9 +283,11 @@ class ModeEditHost(HostMode):
             return "diag_host"
         return "folder"
 
-    def _show_host_name(self):
-        forms.section(_("Hostname"), simple=True)
-        html.write_text(self._host.name())
+    def _vs_host_name(self):
+        return FixedValue(
+            self._host.name(),
+            title=_("Hostname"),
+        )
 
 
 class CreateHostMode(HostMode):
@@ -350,10 +364,8 @@ class CreateHostMode(HostMode):
 
         return "folder", create_msg
 
-    def _show_host_name(self):
-        forms.section(_("Hostname"))
-        Hostname().render_input("host", "")
-        html.set_focus("host")
+    def _vs_host_name(self):
+        return Hostname(title=_("Hostname"),)
 
 
 @mode_registry.register

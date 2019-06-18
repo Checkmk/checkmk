@@ -6,6 +6,7 @@ properties([
   parameters([
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' )
+    string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' )
   ])
 ])
 
@@ -44,7 +45,7 @@ node {
             stage('Build Container') {
                sh """
                    cd ${DAILY_DATA}/git/
-                   ./buildscripts/scripts/build-cmk-container.sh master ${EDITION} ${CMK_VERS}
+                   ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG}
                 """
                 withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
                     sh """

@@ -21,23 +21,24 @@ namespace cma {
 namespace srv {
 enum class StdioLog { no, yes, extended };
 class ServiceProcessor;
-int InstallMainService();                                     // on -install
-int RemoveMainService();                                      // on -remove
-int TestMainService(const std::wstring& What, int Interval);  // on -test
-int ExecMainService(StdioLog stdio_log);                      // on -exec
-int ExecStartLegacy();             // on -start_legacy
-int ExecStopLegacy();              // on -stop_legacy
-int ExecCap();                     // on -cap
-int ExecUpgradeParam(bool Force);  // om -upgrade
+int InstallMainService();                                     // on install
+int RemoveMainService();                                      // on remove
+int TestMainService(const std::wstring& What, int Interval);  // on test
+int ExecMainService(StdioLog stdio_log);                      // on exec
+int ExecStartLegacy();                                        // on start_legacy
+int ExecStopLegacy();                                         // on stop_legacy
+int ExecCap();                                                // on cap
+int ExecShowConfig();                                         // on showconfig
+int ExecUpgradeParam(bool Force);                             // om upgrade
 
-int ExecSkypeTest();               // on -skype :hidden
-int ExecRealtimeTest(bool Print);  // on -rt
+int ExecSkypeTest();               // on skype :hidden
+int ExecRealtimeTest(bool Print);  // on rt
 int ExecCvtIniYaml(std::filesystem::path IniFile,
                    std::filesystem::path YamlFile,
-                   StdioLog stdio_log);  // on -cvt
+                   StdioLog stdio_log);  // on cvt
 int ExecSection(const std::wstring& SecName,
                 int RepeatPause,      // if 0 no repeat
-                StdioLog stdio_log);  // on -section
+                StdioLog stdio_log);  // on section
 int ServiceAsService(std::chrono::milliseconds Delay,
                      std::function<bool(const void* Processor)>
                          InternalCallback) noexcept;  // service execution

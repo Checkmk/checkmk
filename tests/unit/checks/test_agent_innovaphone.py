@@ -1,0 +1,13 @@
+import pytest
+
+pytestmark = pytest.mark.checks
+
+
+@pytest.mark.parametrize('params,expected_args', [
+    (('user', 'password'), ["address", "user", "password"]),
+])
+def test_innovaphone_argument_parsing(check_manager, params, expected_args):
+    """Tests if all required arguments are present."""
+    agent = check_manager.get_special_agent('agent_innovaphone')
+    arguments = agent.argument_func(params, "host", "address")
+    assert arguments == expected_args

@@ -27,7 +27,8 @@
 
 def agent_innovaphone_arguments(params, hostname, ipaddress):
     # IP, User, Password
-    return "%s %s %s" % (ipaddress, params[0], params[1])
+    username, password = params
+    return [ipaddress, username, password]
 
 
 special_agent_info['innovaphone'] = agent_innovaphone_arguments

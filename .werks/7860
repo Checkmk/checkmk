@@ -1,0 +1,14 @@
+Title: pse_poe: check for PoE-capable PSE devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560862560
+Class: feature
+
+New check for power consumption of ethernet ports of PoE-capable devices. Taken from exchange package cisco_poe:
+https://checkmk.com/check_mk-exchange-file.php?&file=cisco_poe-1.0.mkp
+
+CMK-2228
+

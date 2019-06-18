@@ -8,6 +8,15 @@ def check_manager():
     return testlib.CheckManager()
 
 
+# patch cmk.utils.paths
+@pytest.fixture(autouse=True, scope="function")
+def patch_cmk_utils_paths(monkeypatch, tmpdir):
+    import cmk.utils.paths
+    var_dir_path = tmpdir / 'var/check_mk'
+    # don't mkdir, check should be able to handle that.
+    monkeypatch.setattr(cmk.utils.paths, "var_dir", str(var_dir_path))
+
+
 # Automatically refresh caches for each test
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches(monkeypatch):

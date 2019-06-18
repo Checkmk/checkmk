@@ -81,7 +81,8 @@ def pagerduty_msg(context):
         "dedup_key": incident_key,
         "payload": {
             "summary": incident,
-            "source": context.get('HOSTADDRESS'),
+            "source": context.get('HOSTADDRESS',
+                                  context.get('HOSTNAME', 'Undeclared Host identifier')),
             "severity": pagerduty_severity(state),
             "custom_details": {
                 "info": output,

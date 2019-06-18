@@ -426,6 +426,12 @@ TEST(UpgradeTest, StopStartStopOhm) {
     ohm /= "bin";
     ohm /= "OpenHardwareMonitorCLI.exe";
     std::error_code ec;
+    if (!fs::exists(ohm)) {
+        xlog::sendStringToStdio(
+            "OHM is not installed with LWA, further testing of OHM is skipped\n",
+            xlog::internal::Colors::kYellow);
+        return;
+    }
     ASSERT_TRUE(fs::exists(ohm))
         << "OpenHardwareMonitor not installed, please, add it to the Legacy Agent folder";
     auto ret = RunDetachedProcess(ohm.wstring());
@@ -469,6 +475,37 @@ TEST(UpgradeTest, FindLwa) {
     ohm /= "bin";
     ohm /= "OpenHardwareMonitorCLI.exe";
     std::error_code ec;
+    if (!fs::exists(ohm, ec)) {
+        xlog::sendStringToStdio(
+            "OHM is not installed with LWA, testing is limited\n",
+            xlog::internal::Colors::kYellow);
+        StartWindowsService(L"check_mk_agent");
+        // wait for service status
+        for (int i = 0; i < 5; ++i) {
+            auto status = GetServiceStatusByName(L"check_mk_agent");
+            if (status == SERVICE_RUNNING) break;
+            XLOG::l.i("RETRY wait for 'running' status, current is [{}]",
+                      status);
+            cma::tools::sleep(1000);
+        }
+
+        // stop service
+        StopWindowsService(L"check_mk_agent");
+        // wait few seconds
+        auto status = GetServiceStatusByName(L"check_mk_agent");
+        if (status != SERVICE_STOPPED) {
+            xlog::sendStringToStdio("Service Killed with a hammer\n",
+                                    xlog::internal::Colors::kYellow);
+            wtools::KillProcessFully(L"check_mk_agent.exe", 9);
+
+            status = SERVICE_STOPPED;
+        }
+
+        EXPECT_EQ(status, SERVICE_STOPPED);
+        EXPECT_TRUE(DeactivateLegacyAgent());
+        EXPECT_FALSE(IsLegacyAgentActive());
+        return;
+    }
     ASSERT_TRUE(fs::exists(ohm, ec))
         << "OpenHardwareMonitor not installed, please, add it to the Legacy Agent folder";
 

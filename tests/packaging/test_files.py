@@ -24,6 +24,23 @@ def _get_package_paths(version_path, what):
             yield os.path.join(version_path, filename)
 
 
+def _get_omd_version(cmk_version, pkg_path):
+    # Extract the files edition
+    edition_short = _edition_short_from_pkg_path(pkg_path)
+    return "%s.%s" % (cmk_version, edition_short)
+
+
+def _edition_short_from_pkg_path(pkg_path):
+    file_name = os.path.basename(pkg_path)
+    if file_name.startswith("check-mk-raw-"):
+        return "cre"
+    elif file_name.startswith("check-mk-enterprise-"):
+        return "cee"
+    elif file_name.startswith("check-mk-managed-"):
+        return "cme"
+    raise NotImplementedError("Could not get edition from package path: %s" % pkg_path)
+
+
 # In case packages grow/shrink this check has to be changed.
 @pytest.mark.parametrize("what,min_size,max_size", [
     ("rpm", 168 * 1024 * 1024, 203 * 1024 * 1024),
@@ -48,7 +65,7 @@ def test_package_sizes(version_path, what, min_size, max_size):
     ("rpm"),
     ("deb"),
 ])
-def test_files_not_in_version_path(version_path, omd_version, what):
+def test_files_not_in_version_path(version_path, cmk_version, what):
     version_allowed_patterns = [
         "/opt/omd/versions/?$",
         "/opt/omd/versions/###OMD_VERSION###/?$",
@@ -102,6 +119,7 @@ def test_files_not_in_version_path(version_path, omd_version, what):
             for line in subprocess.check_output(["dpkg", "-c", pkg]).splitlines():
                 paths.append(line.split()[5].lstrip("."))
 
+        omd_version = _get_omd_version(cmk_version, pkg)
         print "Checking OMD version: %s" % omd_version
 
         for path in paths:
@@ -111,8 +129,9 @@ def test_files_not_in_version_path(version_path, omd_version, what):
             assert is_allowed, "Found unexpected global file: %s in %s" % (path, pkg)
 
 
-def test_cma_only_contains_version_paths(version_path, omd_version):
+def test_cma_only_contains_version_paths(version_path, cmk_version):
     for pkg in _get_package_paths(version_path, "cma"):
+        omd_version = _get_omd_version(cmk_version, pkg)
         files = [
             line.split()[5] for line in subprocess.check_output(["tar", "tvf", pkg]).splitlines()
         ]
@@ -121,8 +140,9 @@ def test_cma_only_contains_version_paths(version_path, omd_version):
             assert file_path.startswith(omd_version + "/")
 
 
-def test_cma_specific_files(version_path, omd_version):
+def test_cma_specific_files(version_path, cmk_version):
     for pkg in _get_package_paths(version_path, "cma"):
+        omd_version = _get_omd_version(cmk_version, pkg)
         files = [
             line.split()[5] for line in subprocess.check_output(["tar", "tvf", pkg]).splitlines()
         ]

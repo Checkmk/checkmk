@@ -586,7 +586,7 @@ table.data {
 
     > td {
       height: 26px;
-      padding: 0 8px; /* spacing in every row */
+      padding: 2px 8px; /* spacing in every row */
       vertical-align: middle;
       background-color: $theme-color-white;
       border-top: 1px solid $theme-color-table-border;
@@ -920,7 +920,7 @@ table.data.headerleft {
 input:not(.button), input[type=text], input[type=password],
 select, textarea, div.snapin textarea, #mk_side_search_field {
   height: auto;
-  padding: 5px 8px;
+  padding: 3px 6px;
   color: $theme-color-text;
   background: $theme-color-white;
   background-image: none;
@@ -978,7 +978,7 @@ input, select, textarea, div.snapin select, div.snapin textarea,
 
 input.button {
   &:not([type=text]), &:not([type=password]) {
-    padding: 8px 16px;
+    padding: 4px 8px;
     border: 1px solid #13d389;
 
     &:hover, &:active {

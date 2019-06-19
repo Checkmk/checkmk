@@ -23,11 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionGroup.h"
+
 #include "Logger.h"
 #include "SectionHeader.h"
 
 namespace section_group {
-constexpr const char kSeparator = kTabSeparator;
+constexpr const char kSeparator = kPipeSeparator;
 
 std::unique_ptr<SectionHeaderBase> makeHeader(bool show_header,
                                               const std::string &outputName,

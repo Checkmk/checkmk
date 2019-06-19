@@ -37,8 +37,8 @@
 // http://johansenreidar.blogspot.de/2014/01/windows-server-rebuild-all-performance.html
 
 namespace wmi {
-constexpr const char kSeparator = kTabSeparator;
-constexpr const wchar_t *kWideSeparator = kWideTabSeparator;
+constexpr const char kSeparator = kPipeSeparator;
+constexpr const wchar_t *kWideSeparator = kWidePipeSeparator;
 
 std::unique_ptr<SectionHeaderBase> makeHeader(bool subSection,
                                               const std::string &outputName,

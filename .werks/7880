@@ -1,0 +1,12 @@
+Title: mrpe: Create mrpe config also for AIX systems when configured
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.7.0i1
+Date: 1560949213
+
+Despite the mrpe being included in the AIX agent, no mrpe.cfg would
+be included by the agent bakery. This has been fixed.

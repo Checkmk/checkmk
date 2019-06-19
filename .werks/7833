@@ -1,0 +1,11 @@
+Title: mongodb_flushing: Fixed scaling and missing titles for performance values 'Flush time', '#Flushes' and 'Average flush time'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b3
+Date: 1560773220
+
+

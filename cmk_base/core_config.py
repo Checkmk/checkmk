@@ -145,10 +145,8 @@ def host_check_command(config_cache,
         return "check-mk-host-tcp!" + str(value[1])
 
     if value[0] == "custom":
-        try:
+        if custom_commands_to_define is not None:
             custom_commands_to_define.add("check-mk-custom")
-        except:
-            pass  # not needed and not available with CMC
         return "check-mk-custom!" + autodetect_plugin(value[1])
 
     raise MKGeneralException(
@@ -158,14 +156,11 @@ def host_check_command(config_cache,
 def autodetect_plugin(command_line):
     plugin_name = command_line.split()[0]
     if command_line[0] not in ['$', '/']:
-        try:
-            for directory in ["/local", ""]:
-                path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
-                if os.path.exists(path + plugin_name):
-                    command_line = path + command_line
-                    break
-        except:
-            pass
+        for directory in ["/local", ""]:
+            path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
+            if os.path.exists(path + plugin_name):
+                command_line = path + command_line
+                break
     return command_line
 
 
@@ -580,10 +575,10 @@ def replace_macros(s, macros):
         # TODO: Clean this up
         try:
             s = s.replace(key, value)
-        except:  # Might have failed due to binary UTF-8 encoding in value
+        except Exception:  # Might have failed due to binary UTF-8 encoding in value
             try:
                 s = s.replace(key, value.decode("utf-8"))
-            except:
+            except Exception:
                 # If this does not help, do not replace
                 if cmk.utils.debug.enabled():
                     raise

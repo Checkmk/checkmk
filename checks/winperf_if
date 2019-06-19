@@ -164,8 +164,13 @@ def _parse_winperf_if_agent_section_timestamp_and_instance_names(line, lines):
     except ValueError:
         agent_timestamp = None
 
-    line = lines.next()
-    return agent_timestamp, line[2:]
+    try:
+        line = lines.next()
+    except StopIteration:
+        instances = []
+    else:
+        instances = line[2:]
+    return agent_timestamp, instances
 
 
 def _parse_winperf_if_section(info):

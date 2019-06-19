@@ -276,6 +276,13 @@ void ColoredOutputOnStdio(bool On);
 
 }  // namespace setup
 
+using Colors = xlog::internal::Colors;
+
+inline void SendStringToStdio(std::string_view string,
+                              Colors Color = Colors::kDefault) {
+    return xlog::sendStringToStdio(string.data(), Color);
+}
+
 enum Mods : int {
     kCopy = 0,           // no changes in param`
     kDrop = 1,           // no output at all

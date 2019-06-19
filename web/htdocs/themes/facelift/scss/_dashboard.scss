@@ -140,6 +140,7 @@ div.dashlet {
     margin-top: 0;
     border-collapse: collapse;
     border-spacing: 0;
+    top: -1px;
 
     &.narrow {
       /* TODO: Remove this style after decoupling from classic theme */
@@ -193,6 +194,8 @@ body.main .popup_menu div.dashlet > div.title span span {
 
 div.dashlet > div.title span {
   padding-left: 0; /* left align with titles of contained views */
+  position: relative;
+  top: 4px;
 }
 
 /* Overview dashlet is not selectable TODO: Check if this style can be dropped */
@@ -687,4 +690,31 @@ div#dashboard.grid {
   bottom: 0;
   left: 0;
   cursor: sw-resize;
+}
+
+/* Adapted styling of views in dashlets */
+body.main.dashlet {
+  tr.data {
+    > td {
+      border-bottom: none;
+      padding-top: 2px;
+      padding-bottom: 2px;
+
+      &.state {
+	border-top-color: white !important;
+      }
+    }
+
+    &:nth-child(2) > td.state {
+      border-top-color: #cccfdb !important;
+    }
+  }
+
+  table.data {
+    border-spacing: 0;
+th:nth-child(1) {
+     padding-bottom: 2px;
+     padding-left: 1px;
+   }
+  }
 }

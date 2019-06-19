@@ -15,6 +15,7 @@ pytestmark = pytest.mark.checks
 
 @pytest.mark.parametrize("info,settings,items", [
     ([], [{}], []),
+    ([[u'1527487554.76', u'510']], [{}], []),
     (
         [
             ['123', '456', '789'],

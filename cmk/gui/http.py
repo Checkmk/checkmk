@@ -125,7 +125,18 @@ class Request(object):
         return 110
 
     def get_request_header(self, key, deflt=None):
-        return self._wsgi_environ.get(key, deflt)
+        """Returns the value of a HTTP request header
+
+        Applies the CGI variable name mangling to the requested variable name
+        which is used by Apache 2.4+ and mod_wsgi to finally produce the
+        wsgi_environ.
+
+        a) mod_wsgi/Apache only make the variables available that consist of alpha numeric
+           and minus characters. Other variables are skipped.
+        b) e.g. X-Remote-User is available as HTTP_X_REMOTE_USER
+        """
+        env_key = "HTTP_%s" % key.upper().replace("-", "_")
+        return self._wsgi_environ.get(env_key, deflt)
 
     def has_cookie(self, varname):
         """Whether or not the client provides a cookie with the given name"""

@@ -201,25 +201,35 @@ function fix_popup_menu_position(event, menu) {
 // converted to pagetypes.py
 export function add_to_visual(visual_type, visual_name)
 {
+    var element_type = popup_data[0];
+    var create_info = {
+        "context": popup_data[1],
+        "params": popup_data[2],
+    };
+    var create_info_json = JSON.stringify(create_info);
+
     close_popup();
 
-    var AJAX = ajax.call_ajax("ajax_add_visual.py?visual_type=" + visual_type
-                         + "&visual_name=" + visual_name
-                         + "&type=" + popup_data[0]
-                         + "&context=" + encodeURIComponent(JSON.stringify(popup_data[1]))
-                         + "&params=" + encodeURIComponent(JSON.stringify(popup_data[2])), {
-        sync: true,
-        plain_error : true
-    });
-    var response = AJAX.responseText;
     popup_data = null;
 
-    // After adding a dashlet, go to the choosen dashboard
-    if (response.substr(0, 2) == "OK") {
-        window.location.href = response.substr(3);
-    } else {
-        alert("Failed to add element: "+response);
-    }
+    var url = "ajax_add_visual.py"
+        + "?visual_type=" + visual_type
+        + "&visual_name=" + visual_name
+        + "&type=" + element_type;
+
+    ajax.call_ajax(url, {
+        method : "POST",
+        post_data: "create_info=" + encodeURIComponent(create_info_json),
+        plain_error : true,
+        response_handler: function(handler_data, response_body) {
+            // After adding a dashlet, go to the choosen dashboard
+            if (response_body.substr(0, 2) == "OK") {
+                window.location.href = response_body.substr(3);
+            } else {
+                alert("Failed to add element: "+response_body);
+            }
+        }
+    });
 }
 
 // FIXME: Adapt error handling which has been addded to add_to_visual() in the meantime

@@ -257,62 +257,74 @@ int TestMainServiceSelf(int Interval) {
     return 0;
 }
 
-// on check
-int TestMainService(const std::wstring& What, int Interval) {
+int TestIo() {
     using namespace std::chrono;
-    if (What == L"io") {
-        // simple test for ExternalPort. will be disabled in production.
-        try {
-            cma::world::ExternalPort port(nullptr);
-            port.startIo([](const std::string Ip) -> std::vector<uint8_t> {
-                return std::vector<uint8_t>();
-            });  //
-            std::this_thread::sleep_until(steady_clock::now() + 10000ms);
-            port.shutdownIo();  //
 
-        } catch (const std::exception& e) {
-            xlog::l("Exception is not allowed here %s", e.what());
-        }
-    } else if (What == L"mt") {
+    // simple test for ExternalPort. will be disabled in production.
+    try {
+        XLOG::setup::DuplicateOnStdio(true);
+        XLOG::setup::ColoredOutputOnStdio(true);
+        cma::world::ExternalPort port(nullptr);
+        port.startIo([](const std::string Ip) -> std::vector<uint8_t> {
+            return std::vector<uint8_t>();
+        });  //
+        XLOG::l.i("testing 10 seconds");
+        std::this_thread::sleep_until(steady_clock::now() + 10000ms);
+        port.shutdownIo();  //
+
+    } catch (const std::exception& e) {
+        xlog::l("Exception is not allowed here %s", e.what());
+    }
+    return 0;
+}
+
+int TestMt() {
+    using namespace std::chrono;
+
+    // test for main thread. will be disabled in production
+    // to find file, read and start update POC.
+    try {
+        // XLOG::setup::DuplicateOnStdio(true);
+        XLOG::setup::ColoredOutputOnStdio(true);
+        using namespace std::chrono;
+        std::string command = "";
+        cma::srv::ServiceProcessor sp(2000ms, [&command](const void* Sp) {
+            CheckForCommand(command);
+            if (command[0]) {
+                cma::tools::RunDetachedCommand(command);
+                command = "";
+            }
+            return true;
+        });
+        XLOG::SendStringToStdio("Testing...\n\n", XLOG::Colors::kGreen);
+        sp.startTestingMainThread();
+        XLOG::SendStringToStdio("\nPress any key\n", XLOG::Colors::kGreen);
+        cma::tools::GetKeyPress();
+        sp.stopTestingMainThread();
+
+    } catch (const std::exception& e) {
+        xlog::l("Exception is not allowed here %s", e.what());
+    }
+    return 0;
+}
+
+int TestLegacy() {
+    using namespace std::chrono;
+
+    try {
         // test for main thread. will be disabled in production
         // to find file, read and start update POC.
-        try {
-            using namespace std::chrono;
-            std::string command = "";
-            cma::srv::ServiceProcessor sp(2000ms, [&command](const void* Sp) {
-                CheckForCommand(command);
-                if (command[0]) {
-                    cma::tools::RunDetachedCommand(command);
-                    command = "";
-                }
-                return true;
-            });
-            sp.startTestingMainThread();
-            std::cout << "Press any key to stop testing";
-            cma::tools::GetKeyPress();
-            sp.stopTestingMainThread();
-
-        } catch (const std::exception& e) {
-            xlog::l("Exception is not allowed here %s", e.what());
-        }
-    } else if (What == L"legacy") {
         using namespace std::chrono;
         std::string command = "";
         cma::srv::ServiceProcessor sp(
             2000ms, [&command](const void* Sp) { return true; });
         sp.startServiceAsLegacyTest();
         sp.stopService();
-    } else if (What == L"self") {
-        TestMainServiceSelf(Interval);
-    } else {
-        XLOG::setup::DuplicateOnStdio(true);
-        XLOG::setup::ColoredOutputOnStdio(true);
-        XLOG::l(
-            "Unsupported second parameter\n\tAllowed: port, mt, legacy, self");
+    } catch (const std::exception& e) {
+        xlog::l("Exception is not allowed here %s", e.what());
     }
-
     return 0;
-}  // namespace srv
+}
 
 // on -cvt
 // may be used as internal API function to convert ini to yaml
@@ -373,16 +385,16 @@ int ExecSection(const std::wstring& SecName, int RepeatPause,
 
     if (stdio_log != StdioLog::no) XLOG::setup::DuplicateOnStdio(true);
 
-    while (1) {
-        if (SecName == wtools::ConvertToUTF16(cma::section::kDfName)) {
-            provider::Df df;
-            auto x = df.generateContent(cma::section::kUseEmbeddedName, true);
-            XLOG::stdio("{}", x);
-        } else {
-            XLOG::l("Section {} not supported", wtools::ConvertToUTF8(SecName));
-            break;
-        }
+    auto y = cma::cfg::GetLoadedConfig();
+    std::vector<std::string> sections;
+    sections.emplace_back(wtools::ConvertToUTF8(SecName));
+    cma::cfg::PutInternalArray(cma::cfg::groups::kGlobal,
+                               cma::cfg::vars::kSectionsEnabled, sections);
+    cma::cfg::ProcessKnownConfigGroups();
+    cma::cfg::SetupEnvironmentFromGroups();
 
+    while (1) {
+        TestLegacy();
         if (RepeatPause <= 0) break;
         cma::tools::sleep(RepeatPause * 1000);
     }

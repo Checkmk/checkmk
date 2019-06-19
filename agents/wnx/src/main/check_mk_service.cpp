@@ -39,8 +39,8 @@ void PrintMain() {
     PrintBlock("Normal Usage:\n", Colors::kGreen, []() {
         return fmt::format(
             "\t{1} <{2}|{3}>\n"
-            "\t{2:<{0}} - usage\n"
-            "\t{3:<{0}} - test\n",
+            "\t{2:<{0}} - test\n"
+            "\t{3:<{0}} - usage\n",
             kParamShift,
             kServiceExeName,  // service name from th project definitions
             // first Row
@@ -283,6 +283,26 @@ auto ToUint(const T W, uint32_t Dflt = 0) noexcept {
     }
 }
 
+// on check
+int CheckMainService(const std::wstring &What, int Interval) {
+    using namespace std::chrono;
+
+    auto what = wtools::ConvertToUTF8(What);
+
+    if (what == cma::cmdline::kCheckParamMt) return cma::srv::TestMt();
+    if (what == cma::cmdline::kCheckParamIo) return cma::srv::TestIo();
+    if (what == cma::cmdline::kCheckParamSelf)
+        return cma::srv::TestMainServiceSelf(Interval);
+
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::l("Unsupported second parameter '{}'\n\t Allowed {}, {} or {}", what,
+            cma::cmdline::kCheckParamIo, cma::cmdline::kCheckParamMt,
+            cma::cmdline::kCheckParamSelf);
+
+    return 0;
+}  // namespace srv
+
 // Command Lines
 // -cvt watest/CheckMK/Agent/check_mk.test.ini
 //
@@ -376,11 +396,11 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     if (param == wtools::ConvertToUTF16(kCheckParam)) {
         std::wstring param = argc > 2 ? Argv[2] : L"";
         auto interval = argc > 3 ? ToInt(Argv[3]) : 0;
-        return cma::srv::TestMainService(param, interval);
+        return CheckMainService(param, interval);
     }
 
     if (param == wtools::ConvertToUTF16(kLegacyTestParam)) {
-        return cma::srv::TestMainService(L"legacy", 0);
+        return cma::srv::TestLegacy();
     }
 
     if (param == wtools::ConvertToUTF16(kExecParam)) {

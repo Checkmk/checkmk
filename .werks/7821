@@ -1,0 +1,12 @@
+Title: Fix adding graphs with many metrics to reports / dashboards
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.5.0p19
+Date: 1560938929
+Class: fix
+
+When trying to add graphs with a larger number of metrics to a report or dashboard using
+the graph context menu, this resulted in an error "Request-URI Too Long" which is now
+fixed.

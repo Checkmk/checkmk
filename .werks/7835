@@ -1,0 +1,11 @@
+Title: apc_symmetra: Treat unknown battery status as UNKNOWN instead of crashing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p19
+Date: 1560778204
+
+

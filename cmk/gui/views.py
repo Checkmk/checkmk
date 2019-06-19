@@ -434,9 +434,9 @@ class GUIViewRenderer(ViewRenderer):
             html.open_div(id_="data_container")
 
         if not has_done_actions:
-            # Limit exceeded? Show warning
             if display_options.enabled(display_options.W):
-                cmk.gui.view_utils.check_limit(rows, self.view.row_limit, config.user)
+                if cmk.gui.view_utils.row_limit_exceeded(rows, self.view.row_limit):
+                    del rows[self.view.row_limit:]
             layout.render(rows, view_spec, group_cells, cells, num_columns, show_checkboxes and
                           not html.do_actions())
             headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
@@ -1329,6 +1329,9 @@ def show_view(view, view_renderer, only_count=False):
         sort_data(rows, sorters)
     else:
         rows = []
+
+    if display_options.enabled(display_options.W):
+        cmk.gui.view_utils.query_limit_exceeded_with_warn(rows, view.row_limit, config.user)
 
     # Apply non-Livestatus filters
     for filter_ in all_active_filters:

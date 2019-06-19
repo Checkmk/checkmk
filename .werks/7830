@@ -1,0 +1,11 @@
+Title: nimble_latency, nimble_latency.write: Fixed interpretation of read values as write values
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p19
+Date: 1560439234
+
+

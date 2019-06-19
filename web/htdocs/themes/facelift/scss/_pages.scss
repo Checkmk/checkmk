@@ -1772,6 +1772,17 @@ table.data.job_table > tbody > tr > td {
     }
   }
 
+  // Display input always non-colored
+  &:not([readonly]) tag {
+    > div::before {
+      background: #cccfdb;
+    }
+
+    > div {
+      color: #000;
+    }
+  }
+
   tag, &[readonly] tag {
     > div::before {
       top: 0;

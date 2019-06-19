@@ -191,6 +191,10 @@ int TestMainServiceSelf(int Interval) {
         asio::ip::tcp::socket socket(ios);
         std::error_code ec;
 
+        // give some time to start main thread
+        // this is tesing routine ergo so primitive method is ok
+        cma::tools::sleep(1000);
+
         while (!stop) {
             auto enc = cma::cfg::groups::global.globalEncrypt();
             auto password = enc ? cma::cfg::groups::global.password() : "";
@@ -239,6 +243,7 @@ int TestMainServiceSelf(int Interval) {
             if (Interval == 0) break;
         }
         XLOG::l.i("Leaving testing thread");
+        if (Interval == 0) XLOG::l.i("\n\nPress any key to end program\n\n");
     });
 
     ExecMainService(StdioLog::no);  // blocking call waiting for keypress
@@ -252,10 +257,10 @@ int TestMainServiceSelf(int Interval) {
     return 0;
 }
 
-// on -test
+// on check
 int TestMainService(const std::wstring& What, int Interval) {
     using namespace std::chrono;
-    if (What == L"port") {
+    if (What == L"io") {
         // simple test for ExternalPort. will be disabled in production.
         try {
             cma::world::ExternalPort port(nullptr);
@@ -690,9 +695,18 @@ int ServiceAsService(
                 cma::srv::kServiceName);  // we will stay here till
                                           // service will be stopped
                                           // itself or from outside
-            XLOG::l.i("Service is stopped {}",
-                      ret ? "as usually" : "due to abnormal situation");
-            return ret ? 0 : -1;
+            switch (ret) {
+                case wtools::ServiceController::StopType::normal:
+                    XLOG::l.i("Service is stopped normally");
+                    return 0;
+
+                case wtools::ServiceController::StopType::fail:
+                    XLOG::l.i("Service is stopped due to abnormal situation");
+                    return -1;
+                case wtools::ServiceController::StopType::no_connect:
+                    // may happen when we try to call usual exe
+                    return 0;
+            }
         } catch (const std::exception& e) {
             XLOG::l.crit("Exception hit {} in ServiceAsService", e.what());
         } catch (...) {

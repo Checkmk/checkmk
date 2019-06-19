@@ -4,6 +4,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <WinSock2.h>
 
+#include <WinError.h>
 #include <stdio.h>
 #include <windows.h>
 
@@ -96,17 +97,18 @@ void WINAPI ServiceController::ServiceMain(DWORD Argc, wchar_t** Argv) {
 
 // no return from here
 // can print on screen
-bool ServiceController::registerAndRun(const wchar_t* ServiceName,  //
-                                       bool CanStop,                // t
-                                       bool CanShutdown,            // t
-                                       bool CanPauseContinue) {     // t
+ServiceController::StopType ServiceController::registerAndRun(
+    const wchar_t* ServiceName,  //
+    bool CanStop,                // t
+    bool CanShutdown,            // t
+    bool CanPauseContinue) {     // t
     if (!processor_) {
         XLOG::l.bp("No processor");
-        return false;
+        return StopType::fail;
     }
     if (!ServiceName) {
         XLOG::l.bp("No Service name");
-        return false;
+        return StopType::fail;
     }
 
     // strange code below
@@ -128,23 +130,30 @@ bool ServiceController::registerAndRun(const wchar_t* ServiceName,  //
     // returns when the service has stopped. The process should simply
     // terminate when the call returns. Two words: Blocks Here
     try {
-        auto ret = StartServiceCtrlDispatcher(serviceTable);
+        auto ret = ::StartServiceCtrlDispatcher(serviceTable);
         if (!ret) {
+            auto error = GetLastError();
+
+            // this normal situation when we are starting service from command
+            // line without parameters
+            if (error == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
+                return StopType::no_connect;
+
             XLOG::l(XLOG::kStdio)
                 .crit("Cannot Start Service '{}' error = [{}]",
-                      ConvertToUTF8(ServiceName), GetLastError());
-            return false;
+                      ConvertToUTF8(ServiceName), error);
+            return StopType::fail;
         }
-        return true;
+        return StopType::normal;
     } catch (std::exception& e) {
         XLOG::l(XLOG::kStdio)
-            .crit("Exception '{}' in Service start with error {}", e.what(),
+            .crit("Exception '{}' in Service start with error [{}]", e.what(),
                   GetLastError());
     } catch (...) {
         XLOG::l(XLOG::kStdio)
-            .crit("Exception in Service start with error {}", GetLastError());
+            .crit("Exception in Service start with error [{}]", GetLastError());
     }
-    return false;
+    return StopType::fail;
 }
 
 //
@@ -209,13 +218,20 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
                                    Password       // Password of the account
     );
     if (!service) {
-        XLOG::l(XLOG::kStdio)
-            .crit("CreateService failed w/err {}", GetLastError());
-        return false;
+        auto error = GetLastError();
+        if (error == ERROR_SERVICE_EXISTS) {
+            XLOG::l(XLOG::kStdio)
+                .crit("The Service '{}' already exists",
+                      wtools::ConvertToUTF8(ServiceName));
+            return false;
+        }
+        XLOG::l(XLOG::kStdio).crit("CreateService failed w/err {}", error);
     }
     ON_OUT_OF_SCOPE(CloseServiceHandle(service););
 
-    XLOG::l(XLOG::kStdio).i("'{}' is installed.", ConvertToUTF8(ServiceName));
+    XLOG::l(XLOG::kStdio)
+        .i("The Service '{}' is installed.", ConvertToUTF8(ServiceName));
+
     return true;
 }
 
@@ -232,33 +248,43 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
 //   error in the standard output stream for users to diagnose the problem.
 //
 // StopService by default is true, use false only during testing
-bool UninstallService(const wchar_t* ServiceName, UninstallServiceMode Mode) {
+bool UninstallService(const wchar_t* service_name,
+                      UninstallServiceMode uninstall_mode) {
     XLOG::setup::ColoredOutputOnStdio(true);
+    if (service_name == nullptr) {
+        XLOG::l(XLOG::kStdio).crit("Parameter is null");
+        return false;
+    }
+    auto name = wtools::ConvertToUTF8(service_name);
     // Open the local default service control manager database
     auto service_manager = ::OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (!service_manager) {
         XLOG::l(XLOG::kStdio)
-            .crit("OpenSCManager failed w/err {:#X}", GetLastError());
+            .crit("OpenSCManager failed, [{}]", GetLastError());
         return false;
     }
     ON_OUT_OF_SCOPE(::CloseServiceHandle(service_manager););
 
     // Open the service with delete, stop, and query status permissions
-    auto service = ::OpenService(service_manager, ServiceName,
+    auto service = ::OpenService(service_manager, service_name,
                                  SERVICE_STOP | SERVICE_QUERY_STATUS | DELETE);
     if (!service) {
-        XLOG::l(XLOG::kStdio)
-            .crit("OpenService failed w/err {:#X}", GetLastError());
+        auto error = GetLastError();
+        if (error == ERROR_SERVICE_DOES_NOT_EXIST) {
+            XLOG::l(XLOG::kStdio).crit("The Service '{}' doesn't exist", name);
+            return false;
+        }
+
+        XLOG::l(XLOG::kStdio).crit("OpenService '{}' failed, [{}]", name);
         return false;
     }
     ON_OUT_OF_SCOPE(::CloseServiceHandle(service););
 
-    if (Mode == UninstallServiceMode::normal) {
+    if (uninstall_mode == UninstallServiceMode::normal) {
         // Try to stop the service
         SERVICE_STATUS ssSvcStatus = {};
-        auto service_name = wtools::ConvertToUTF8(ServiceName);
         if (::ControlService(service, SERVICE_CONTROL_STOP, &ssSvcStatus)) {
-            XLOG::l(XLOG::kStdio).i("Stopping '{}'.", service_name);
+            XLOG::l(XLOG::kStdio).i("Stopping '{}'.", name);
             Sleep(1000);
 
             while (::QueryServiceStatus(service, &ssSvcStatus)) {
@@ -270,9 +296,9 @@ bool UninstallService(const wchar_t* ServiceName, UninstallServiceMode Mode) {
             }
 
             if (ssSvcStatus.dwCurrentState == SERVICE_STOPPED) {
-                XLOG::l(XLOG::kStdio).i("\n{} is stopped.", service_name);
+                XLOG::l(XLOG::kStdio).i("\n{} is stopped.", name);
             } else {
-                XLOG::l(XLOG::kStdio).i("\n{} failed to stop.", service_name);
+                XLOG::l(XLOG::kStdio).i("\n{} failed to stop.", name);
             }
         }
     }
@@ -280,12 +306,12 @@ bool UninstallService(const wchar_t* ServiceName, UninstallServiceMode Mode) {
     // Now remove the service by calling DeleteService.
     if (!::DeleteService(service)) {
         XLOG::l(XLOG::kStdio)
-            .i("DeleteService failed w/err {:#X}\n", GetLastError());
+            .i("DeleteService for '{}' failed [{}]\n", name, GetLastError());
         return false;
     }
 
     XLOG::l(XLOG::kStdio)
-        .i("%s is removed.\n", wtools::ConvertToUTF8(ServiceName));
+        .i("The Service '{}' is successfully removed.\n", name);
     return true;
 }
 

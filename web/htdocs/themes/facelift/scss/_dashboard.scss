@@ -116,7 +116,7 @@ div.dashlet {
   canvas.pie {
     position: absolute;
     top: 7px;
-    left: 10px;
+    left: 7px;
     z-index: 10;
     transform: scale(0.8, 0.8);
     transform-origin: center;
@@ -125,7 +125,7 @@ div.dashlet {
   img.globe {
     position: absolute;
     top: 5px;
-    left: 10px;
+    left: 7px;
     z-index: 20;
     filter: grayscale(100%);
     transform: scale(0.8, 0.8);
@@ -134,7 +134,7 @@ div.dashlet {
 
   table.hoststats {
     position: absolute;
-    right: 0;
+    right: 10px;
     width: 135px;
     height: 142px;
     margin-top: 0;

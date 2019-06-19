@@ -984,10 +984,6 @@ input.button {
     &:hover, &:active {
       border: 1px solid #11bd7b;
     }
-
-    &:focus {
-      border-color: $theme-color-main;
-    }
   }
 }
 

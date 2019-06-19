@@ -458,6 +458,10 @@ table.boxlayout {
   td.boxcolumn {
     padding-right: 20px;
   }
+
+  tr > td {
+    vertical-align: top;
+  }
 }
 
 /* tiled layout */

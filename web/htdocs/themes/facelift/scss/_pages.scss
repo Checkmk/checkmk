@@ -1110,6 +1110,7 @@ table.nform {
   }
 
   tr.open td.legend {
+    width: 320px;
     min-width: 320px;
     padding-right: 8px;
     padding-left: 10px;
@@ -1139,6 +1140,7 @@ table.nform {
 
     div.checkbox {
       float: left;
+      margin-top: 3px;
       margin-left: 6px;
     }
   }

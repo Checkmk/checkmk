@@ -1,0 +1,11 @@
+Title: citrix_controller: Fixed several problems if some values are missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p19
+Date: 1560851775
+
+

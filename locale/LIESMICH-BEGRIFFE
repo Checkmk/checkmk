@@ -46,7 +46,7 @@ dashboard                 Dashboard - Übersicht
 dashlet                   (Übersichts-) Element, Element in der Übersicht
 deploy                    ausrollen
 downtime, scheduled       Wartungszeit
-event                     Ereigniss
+event                     Ereignis
 flapping                  unstetig
 folder                    Ordner
 freshness                 Aktualität

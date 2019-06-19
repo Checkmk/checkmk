@@ -2880,8 +2880,16 @@ msgstr "Sortierer hinzufügen"
 msgid "Add state configuration"
 msgstr "Neue Statuskonfiguriation hinzufügen"
 
+#, fuzzy
+msgid "Add tag"
+msgstr "Neuen Tag hinzufügen"
+
 msgid "Add tag choice"
 msgstr "Merkmalauswahl ergänzen"
+
+#, fuzzy
+msgid "Add tag condition"
+msgstr "Bedingung hinzufügen"
 
 msgid "Add these contact groups to the host"
 msgstr "Diese Kontaktgruppen zum Host hinzufügen"
@@ -8167,6 +8175,10 @@ msgstr "Spalte"
 msgid "Column Headers"
 msgstr "Spaltenüberschriften"
 
+#, fuzzy
+msgid "Column Title"
+msgstr "Angepasster Titel"
+
 msgid "Column headers"
 msgstr "Spaltentitel"
 
@@ -8975,6 +8987,9 @@ msgstr "Den Zustand des Jobs berücksichtigen"
 
 msgid "Consider times where the host is down"
 msgstr "Zeiten berücksichtigen wo der Host unten ist"
+
+msgid "Consolidated rrd data column"
+msgstr ""
 
 msgid "Consolidation functions"
 msgstr "Konsolidierungsfunktionen"
@@ -18012,6 +18027,10 @@ msgstr "Historie der Alarme"
 msgid "History of scheduled downtimes"
 msgstr "Historie der Wartungszeiten"
 
+#, fuzzy
+msgid "History time range"
+msgstr "Zeitspanne"
+
 msgid "Hits"
 msgstr "Zugriffe"
 
@@ -18153,6 +18172,10 @@ msgstr "Hostgruppen (Raster)"
 
 msgid "Host Groups (Summary)"
 msgstr "Hostgruppen (Zusammenfassung)"
+
+#, fuzzy
+msgid "Host Historic Metrics"
+msgstr "Hostmetriken"
 
 #, fuzzy
 msgid "Host IP"
@@ -20208,17 +20231,17 @@ msgstr ""
 "mehr relevant. Verwenden Sie stattdessen das Alarmierungsplugin <i>Forward "
 "Notification to Event Console</i>."
 
-#, fuzzy
 msgid ""
 "If you set a lifetime of an event, then it will automatically be deleted "
 "after that time if, even if no action has taken by the user. You can decide "
 "whether to expire open, acknowledged or both types of events. The lifetime "
 "always starts when the event is entering the open state."
 msgstr ""
-"Wenn Sie die Lebenszeit eines Ereignisses festlegen, dann wird es nach Ablauf "
-"dieser Zeit automatisch gelöscht (selbst wenn keine Aktion durch den Benutzer "
-"erfolgt). Sie können bestimmen welche Ereignisse ablaufen: offen/quittiert/"
-"beides. Die Lebenszeit beginnt wenn das Ereignis in den Status offen eintritt."
+"Wenn Sie die Lebensdauer eines Ereignisses festlegen, dann wird es nach "
+"Ablauf dieser Zeit automatisch gelöscht (selbst wenn keine Aktion durch den "
+"Benutzer erfolgt). Sie können bestimmen welche Ereignisse ablaufen: offen/"
+"quittiert/beides. Die Lebensdauer beginnt wenn das Ereignis in den Status "
+"offen eintritt."
 
 msgid ""
 "If you set a limit here then there will never be fetched and rendered more "
@@ -21997,6 +22020,10 @@ msgstr ""
 msgid "It is still in use by"
 msgstr "Noch in Verwendung von"
 
+#, fuzzy
+msgid "It's not allowed to use a leading \"!\" here."
+msgstr "Die ID einer bestehenden Regel darf nicht verändert werden."
+
 msgid ""
 "It's possible to have clusters that share nodes. You could say that such "
 "clusters &quot;overlap&quot;. In such a case using the ruleset <i>Clustered "
@@ -23046,9 +23073,8 @@ msgstr "Begrenze die Pfadlänge in Service-Namen"
 msgid "Limit amount of current events"
 msgstr "Anzahl aktueller Ereignisse begrenzen"
 
-#, fuzzy
 msgid "Limit event lifetime"
-msgstr "Limit für Ereignislebenszeit"
+msgstr "Ereignislebensdauer begrenzen"
 
 msgid "Limit for upper bound dynamic levels"
 msgstr "Obergrenzen für dynamische Schwellen"
@@ -23059,9 +23085,8 @@ msgstr "Länge der Email-Inhalts begrenzen"
 msgid "Limit login to single session at a time"
 msgstr "Nur eine Loginsitzung zur Zeit zulassen"
 
-#, fuzzy
 msgid "Limit maximum number used cpus"
-msgstr "Maximale Anzahl von Threads"
+msgstr "Maximale Anzahl genutzter CPUs begrenzen"
 
 msgid "Limit of meta data"
 msgstr "Limitierung von Metadaten"
@@ -23075,9 +23100,8 @@ msgstr "PING-Rate begrenzen"
 msgid "Limit script types to execute"
 msgstr "Auszuführende Skripttypen begrenzen"
 
-#, fuzzy
 msgid "Limit the amount of data sent to the monitoring server"
-msgstr "Gesamtleistung aller Monitoring Server live beobachten"
+msgstr "Datenmenge, die zum Monitoringserver gesendet wird, begrenzen"
 
 msgid "Limit the execution of the scan to this time range."
 msgstr "Begrenzen Sie die Ausführungszeit des Scans"
@@ -23276,11 +23300,8 @@ msgstr ""
 "Liste aller Aggregationen, einschließlich des Namens der Aggregation und "
 "deren Zustand"
 
-msgid ""
-"List of available NagVis maps. This only works with NagVis 1.5 and above. "
-msgstr ""
-"List der verfügbaren NagVis-Karten. Dies funktioniert nur mit NagVis 1.5 oder "
-"neuer."
+msgid "List of available NagVis maps"
+msgstr "Tabelle der verfügbaren NagVis-Karten"
 
 msgid "List of expected logfiles"
 msgstr "Liste der erwarteten Logdateien"
@@ -24549,6 +24570,10 @@ msgstr "Standbystatus abbilden"
 msgid "Map states"
 msgstr "Zustände übersetzen"
 
+#, fuzzy
+msgid "Map systemd states to monitoring states"
+msgstr "Benutzer anlegen, ändern und löschen, Ändern von Passworten"
+
 msgid "Mapped data"
 msgstr "Gemappte Daten"
 
@@ -25316,6 +25341,10 @@ msgstr "Methode"
 
 msgid "Method of probing"
 msgstr "Messmethode"
+
+#, fuzzy
+msgid "Metric Name"
+msgstr "Metrikname"
 
 msgid "Metrics"
 msgstr "Metriken"
@@ -26392,6 +26421,10 @@ msgstr "Negation: Host, die das Paket <b>nicht</b> haben"
 
 msgid "Negotiate SSL"
 msgstr "SSL-Verbindungsaufbau"
+
+#, fuzzy
+msgid "Neither"
+msgstr "Andere"
 
 msgid "Nested group memberships are resolved"
 msgstr "Verschachtelte Gruppenmitgliedschaften werden aufgelöst"
@@ -29587,6 +29620,10 @@ msgstr "Prozentsatz vom gesamten RAM"
 msgid "Percentage used"
 msgstr "Prozentwert %s"
 
+#, fuzzy
+msgid "Percentile"
+msgstr "Prozentwert"
+
 msgid "Percentual levels"
 msgstr "Prozentuale Schwellen"
 
@@ -30982,6 +31019,10 @@ msgstr "Prozesse"
 msgid "Processes performance data"
 msgstr "Prozess Leistungsdaten"
 
+#, fuzzy
+msgid "Processing of Data "
+msgstr "Verarbeitung von Leistungsdaten ein"
+
 msgid "Processing of incoming events"
 msgstr "Verarbeitung von eingehenden Ereignissen"
 
@@ -31302,6 +31343,9 @@ msgstr ""
 "RRA-Eintrag nummer %d: Die Anzahl der Schritte muss größer sein, als die vom "
 "vorhergehenden Eintrag."
 
+msgid "RRD data aggregated"
+msgstr ""
+
 msgid "RRD databases with performance data"
 msgstr "RRD-Datenbank mit Performancedaten"
 
@@ -31406,9 +31450,8 @@ msgstr "Lesezugriff auf alle Module"
 msgid "Read and written blocks"
 msgstr "Gelesene und geschriebene Blöcke"
 
-#, fuzzy
 msgid "Read average exe"
-msgstr "Durchschnittliche Leselatenz"
+msgstr "Durchschnittliche Leseausführungszeit (EXE)"
 
 msgid "Read average rtt"
 msgstr "Durchschnittliche Leseumlaufzeit (RTT)"
@@ -32005,6 +32048,14 @@ msgstr "Aus den Favoriten streichen"
 
 msgid "Remove service"
 msgstr "Entfernter Service"
+
+#, fuzzy
+msgid "Remove tag"
+msgstr "Entferne alles"
+
+#, fuzzy
+msgid "Remove tag condition"
+msgstr "Alle Wartungszeiten löschen"
 
 msgid "Remove this graph from the collection"
 msgstr "Diesen Graph aus der Sammlung entfernen"
@@ -34193,6 +34244,10 @@ msgstr "Servicegruppen (Raster)"
 
 msgid "Service Groups (Summary)"
 msgstr "Servicegruppen (Zusammenfassung)"
+
+#, fuzzy
+msgid "Service Historic Metrics"
+msgstr "Servicemetriken"
 
 msgid "Service Level"
 msgstr "Servicelevel"
@@ -41375,6 +41430,11 @@ msgstr ""
 "Alarmierungen im konfigurierten Zeitbereich."
 
 #, python-format
+msgid ""
+"The tag '%s' is selected multiple times. A tag may be selected only once."
+msgstr ""
+
+#, python-format
 msgid "The tag ID %s is used twice."
 msgstr "Die Tag-ID %s wird zweimal verwendet."
 
@@ -45695,6 +45755,9 @@ msgstr "Titel"
 msgid "Title format"
 msgstr "Titelformat"
 
+msgid "Title of Column. This field is mandatory"
+msgstr ""
+
 msgid "Title of the tree"
 msgstr "Titel des Baumes"
 
@@ -48131,6 +48194,10 @@ msgid "Using predefined condition"
 msgstr "Die Information für die Vorhersage fehlt."
 
 #, python-format
+msgid "Using the maximum of the column as 100% color the cells"
+msgstr ""
+
+#, python-format
 msgid ""
 "Using this option you can configure the community which should be used when "
 "contacting this host via SNMP v1/v2 or v3. It is possible to configure the "
@@ -48641,6 +48708,10 @@ msgstr "Vista API"
 
 msgid "Visual levels for the availability (OK percentage)"
 msgstr "Optische Schwellen (OK-Prozentwert)"
+
+#, fuzzy
+msgid "Visualization Levels"
+msgstr "Virtualisierung"
 
 msgid "VoIP"
 msgstr "VoIP"
@@ -50604,9 +50675,8 @@ msgstr "Schreibzugriff auf alle Passworte"
 msgid "Write access to all predefined conditions"
 msgstr "Schreibzugriff auf alle Passworte"
 
-#, fuzzy
 msgid "Write average exe"
-msgstr "Durchschnittliche Schreiblatenz"
+msgstr "Durchschnittliche Schreibausführungszeit (EXE)"
 
 msgid "Write average rtt"
 msgstr "Durchschnittliche Schreibeumlaufzeit (RTT)"
@@ -53176,6 +53246,10 @@ msgstr "Knoten"
 msgid "none"
 msgstr "kein"
 
+#, fuzzy
+msgid "none of"
+msgstr "kein"
+
 msgid "normal connection"
 msgstr "Normale Verbindung"
 
@@ -53237,6 +53311,10 @@ msgstr "auf nicht spezifiziertem Host"
 
 msgid "once per group"
 msgstr "Einmal pro Gruppe"
+
+#, fuzzy
+msgid "one of"
+msgstr "eine Stunde"
 
 msgid "online"
 msgstr "online"
@@ -53333,6 +53411,10 @@ msgstr "Prozent Fehlerrate"
 
 msgid "percentage left"
 msgstr "Prozent übrig"
+
+#, fuzzy
+msgid "percentile"
+msgstr "Prozent"
 
 msgid "period"
 msgstr "Periode"
@@ -53852,6 +53934,12 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid ""
+#~ "List of available NagVis maps. This only works with NagVis 1.5 and above. "
+#~ msgstr ""
+#~ "List der verfügbaren NagVis-Karten. Dies funktioniert nur mit NagVis 1.5 "
+#~ "oder neuer."
 
 #~ msgid "Alias as service name for network interface checks"
 #~ msgstr "Alias als Service-Namen für Netzwerkschnittstellen-Checks verwenden"
@@ -54512,9 +54600,6 @@ msgstr "z/OS"
 #~ msgid "Metric filters"
 #~ msgstr "Metrikfilter"
 
-#~ msgid "Metric names"
-#~ msgstr "Metrikname"
-
 #~ msgid "Metric time grain"
 #~ msgstr "Metrik Zeitauflösung"
 
@@ -54568,9 +54653,6 @@ msgstr "z/OS"
 
 #~ msgid "manually configure <tt>/etc/check_mk/logwatch.cfg</tt>"
 #~ msgstr "<tt>/etc/check_mk/logwatch.cfg</tt> manuell konfigurieren"
-
-#~ msgid "one hour"
-#~ msgstr "eine Stunde"
 
 #~ msgid "one minute"
 #~ msgstr "eine Minute"

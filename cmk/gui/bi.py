@@ -3330,7 +3330,8 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
 
             row["aggr_group"] = group
             rows.append(row)
-            if not cmk.gui.view_utils.check_limit(rows, limit, config.user):
+            if cmk.gui.view_utils.query_limit_exceeded_with_warn(rows, limit, config.user):
+                del rows[limit:]
                 return rows
     return rows
 
@@ -3489,7 +3490,8 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
             row.update(new_row)
             row["aggr_group"] = group
             rows.append(row)
-            if not cmk.gui.view_utils.check_limit(rows, limit, config.user):
+            if cmk.gui.view_utils.query_limit_exceeded_with_warn(rows, limit, config.user):
+                del rows[limit:]
                 return rows
 
     log("* Assembled %d rows." % len(rows))

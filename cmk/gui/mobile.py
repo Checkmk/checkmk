@@ -362,7 +362,9 @@ class MobileViewRenderer(views.ViewRenderer):
                 html.write(_("No hosts/services found."))
             else:
                 try:
-                    cmk.gui.view_utils.check_limit(rows, self.view.row_limit, config.user)
+                    if cmk.gui.view_utils.query_limit_exceeded_with_warn(
+                            rows, self.view.row_limit, config.user):
+                        del rows[self.view.row_limit:]
                     layout.render(rows, view_spec, group_cells, cells, num_columns,
                                   show_checkboxes and not html.do_actions())
                 except Exception as e:

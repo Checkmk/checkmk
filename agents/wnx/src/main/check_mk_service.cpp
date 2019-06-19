@@ -53,7 +53,7 @@ void PrintSelfCheck() {
     using namespace xlog::internal;
     PrintBlock("Self Checking:\n", Colors::kCyan, []() {
         return fmt::format(
-            "\t{1} <{2} [{3}|{4}|{5}] <seconds>]>\n"
+            "\t{1} {2} <{3}|{4}|{5} [number of seconds]>\n"
             "\t{2:<{0}} - check test\n"
             "\t\t{3:<{0}} - main thread test\n"
             "\t\t{4:<{0}} - internal port test \n"
@@ -67,7 +67,7 @@ void PrintAdHoc() {
     using namespace xlog::internal;
     PrintBlock("Ad Hoc Testing:\n", Colors::kCyan, []() {
         return fmt::format(
-            "\t{1} <{2} [{3}|{4}]>\n"
+            "\t{1} <{2}> [{3}|{4}]\n"
             "\t{2:{0}} - run as application (adhoc mode)\n"
             "\t\t{3:{0}} - send important messages on stdio\n"
             "\t\t{4:{0}} - send ALL messages on stdio\n",
@@ -82,7 +82,7 @@ void PrintLegacyTesting() {
     using namespace xlog::internal;
     PrintBlock("Classic/Legacy Testing:\n", Colors::kCyan, []() {
         return fmt::format(
-            "\t{1} <{2}>\n"
+            "\t{1} {2}\n"
             "\t{2:{0}} - legacy(standard) test\n",
             kParamShift,
             kServiceExeName,  // service name from th project definitions
@@ -90,11 +90,24 @@ void PrintLegacyTesting() {
     });
 }
 
+void PrintShowConfig() {
+    using namespace xlog::internal;
+    PrintBlock(
+        "Display Config and Environment Variables:\n", Colors::kCyan, []() {
+            return fmt::format(
+                "\t{1} {2}\n"
+                "\t{2:<{0}} - show configuration parameters\n",
+                kParamShift,
+                kServiceExeName,  // service name from th project definitions
+                kShowConfigParam);
+        });
+}
+
 void PrintRealtimeTesting() {
     using namespace xlog::internal;
     PrintBlock("Realtime Testing:\n", Colors::kCyan, []() {
         return fmt::format(
-            "\t{1} <{2}>\n"
+            "\t{1} {2}\n"
             "\t{2:{0}} - test realtime data with all sections and encryption\n",
             kParamShift,
             kServiceExeName,  // service name from th project definitions
@@ -108,7 +121,7 @@ void PrintCvt() {
         "To Convert Legacy Agent Ini File into Agent Yml file:\n",
         Colors::kPink, []() {
             return fmt::format(
-                "\t{0} <{1}> <inifile> [yamlfile]\n"
+                "\t{0} {1} <inifile> [yamlfile]\n"
                 "\tinifile - from Legacy Agent\n"
                 "\tyamlfile - name of an output file\n",
                 kServiceExeName,  // service name from th project definitions
@@ -162,15 +175,16 @@ void PrintSectionTesting() {
 
     PrintBlock("To test Sections individually:\n", Colors::kPink, []() {
         return fmt::format(
-            "\t{1} {2} <{3}> [{4} [{5}]] \n"
+            "\t{1} {2} {3} [{4} [{5}]] \n"
             "\t\t{3:{0}} - any section name(df, fileinfo and so on)\n"
             "\t\t{4:{0}} - pause between tests in seconds, count of tests are infinite. 0 - test once\n"
             "\t\t{5:{0}} - log output on the stdio\n"
-            "\t\t\t example '{1} - {2} df 5 {5}'\n"
+            "\t\t\t example: '{1} {2} df 5 {5}'\n"
             "\t\t\t test section df infinitely long with pause 5 seconds and log output on stdio\n",
             kParamShift,
             kServiceExeName,  // service name from th project definitions
-            kSectionParam, "any section", "number", kSectionParamShow);
+            kSectionParam, "any_section", "number_of_seconds",
+            kSectionParamShow);
     });
 }
 
@@ -189,16 +203,17 @@ static void ServiceUsage(std::wstring_view comment) {
     }
 
     try {
-        cma::cmdline::PrintMain();
-        cma::cmdline::PrintSelfCheck();
-        cma::cmdline::PrintAdHoc();
-        cma::cmdline::PrintLegacyTesting();
-        cma::cmdline::PrintRealtimeTesting();
-        cma::cmdline::PrintCvt();
-        cma::cmdline::PrintLwaActivate();
-        cma::cmdline::PrintUpgrade();
-        cma::cmdline::PrintCap();
-        cma::cmdline::PrintSectionTesting();
+        PrintMain();
+        PrintSelfCheck();
+        PrintAdHoc();
+        PrintLegacyTesting();
+        PrintRealtimeTesting();
+        PrintShowConfig();
+        PrintCvt();
+        PrintLwaActivate();
+        PrintUpgrade();
+        PrintCap();
+        PrintSectionTesting();
     } catch (const std::exception &e) {
         XLOG::l("Exception is '{}'", e.what());  //
     }
@@ -336,7 +351,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::InstallMainService();
     }
     if (param == wtools::ConvertToUTF16(kRemoveParam)) {
-         return cma::srv::RemoveMainService();
+        return cma::srv::RemoveMainService();
     }
 
     if (param == wtools::ConvertToUTF16(kCheckParam)) {
@@ -375,6 +390,11 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     if (param == wtools::ConvertToUTF16(kCapParam)) {
         return cma::srv::ExecCap();
     }
+
+    if (param == wtools::ConvertToUTF16(kShowConfigParam)) {
+        return cma::srv::ExecShowConfig();
+    }
+
     if (param == wtools::ConvertToUTF16(kUpgradeParam)) {
         std::wstring second_param = argc > 2 ? Argv[2] : L"";
         return cma::srv::ExecUpgradeParam(

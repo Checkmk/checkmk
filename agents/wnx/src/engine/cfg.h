@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include <string_view>
 
@@ -960,6 +961,9 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
 
 // used to setup on start and forever. These environment variables are stable
 void SetupPluginEnvironment();
+
+void ProcessPluginEnvironment(
+    std::function<void(std::string_view name, std::string_view value)>);
 
 // called on every connect from monitoring site.
 void SetupRemoteHostEnvironment(const std::string& IpAddress);

@@ -448,6 +448,23 @@ int ExecCap() {
     return 0;
 }
 
+int ExecShowConfig() {
+    using namespace cma::cfg;
+    auto y = GetLoadedConfig();
+    YAML::Emitter emit;
+    emit << y;
+    XLOG::stdio("# Environment Variables:\n");
+    ProcessPluginEnvironment([](std::string_view name, std::string_view value) {
+        XLOG::stdio("# {}=\"{}\"\n", name, value);
+    });
+
+    XLOG::stdio("# Loaded Config Files: {}\n",
+                wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
+    XLOG::stdio("{}\n", emit.c_str());
+
+    return 0;
+}
+
 // on -start_legacy
 int ExecStartLegacy() {
     using namespace cma::cfg::upgrade;

@@ -194,16 +194,19 @@ table.vs_duallist a.control,
   }
 }
 
-input.button[disabled="disabled"],
-input.button:disabled {
-  &:hover {
-    background-color: #497e95;
-  }
+input.button,
+input.button:not([type=text]),
+input.button:not([type=password]) {
+  &[disabled="disabled"], &:disabled {
+    &, &:hover, &:active {
+      background-color: #497e95;
+      border-color: #497e95;
+    }
 
-  &:active {
-    background-color: #497e95;
-    border-color: #86a9b8 #22404d #22414d #86a9b8;
-    box-shadow: 0 0 1.5px #000;
+    &:active {
+      border-color: #86a9b8 #22404d #22414d #86a9b8;
+      box-shadow: 0 0 1.5px #000;
+    }
   }
 }
 

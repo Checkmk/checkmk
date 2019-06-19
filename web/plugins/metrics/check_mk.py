@@ -4677,6 +4677,24 @@ metric_info['aws_rds_connections'] = {
     'color': '21/a',
 }
 
+metric_info["flush_time"] = {
+    "title": _("Flush time"),
+    "unit": "s",
+    "color": "11/a",
+}
+
+metric_info["flushed"] = {
+    "title": _("Flushes"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["avg_flush_time"] = {
+    "title": _("Average flush time"),
+    "unit": "s",
+    "color": "31/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

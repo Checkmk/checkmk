@@ -27,6 +27,7 @@
 hosts. Examples are the IP address and the host tags."""
 
 import abc
+import re
 from typing import Dict, Optional, Any, Set, List, Tuple, Type, Text  # pylint: disable=unused-import
 import six
 
@@ -594,14 +595,27 @@ def _clear_config_based_host_attributes():
 
 
 def _declare_host_tag_attributes():
-    for topic, tag_groups in config.tags.get_tag_groups_by_topic():
+    for topic_spec, tag_groups in config.tags.get_tag_groups_by_topic():
         for tag_group in tag_groups:
+            # Try to translate the title to a builtin topic ID. In case this is not possible mangle the given
+            # custom topic to an internal ID and create the topic on demand.
+            # TODO: We need to adapt the tag data structure to contain topic IDs
+            topic_id = _transform_attribute_topic_title_to_id(topic_spec)
+
+            # Build an internal ID from the given topic
+            if topic_id is None:
+                topic_id = str(re.sub(r"[^A-Za-z0-9_]+", "_", topic_spec)).lower()
+
+            if topic_id not in host_attribute_topic_registry:
+                topic = _declare_host_attribute_topic(topic_id, topic_spec)
+            else:
+                topic = host_attribute_topic_registry[topic_id]
+
             declare_host_attribute(
                 _create_tag_group_attribute(tag_group),
                 show_in_table=False,
                 show_in_folder=True,
-                # TODO: We need to adapt the tag data structure to contain topic IDs
-                topic=_transform_attribute_topic_title_to_id(topic),
+                topic=topic,
                 sort_index=_tag_attribute_sort_index(tag_group),
                 from_config=True,
             )
@@ -672,7 +686,8 @@ def transform_pre_16_host_topics(custom_attributes):
         if custom_attr["topic"] in host_attribute_topic_registry:
             continue
 
-        custom_attr["topic"] = _transform_attribute_topic_title_to_id(custom_attr["topic"])
+        custom_attr["topic"] = _transform_attribute_topic_title_to_id(
+            custom_attr["topic"]) or "custom_attributes"
 
     return custom_attributes
 
@@ -700,7 +715,7 @@ def _transform_attribute_topic_title_to_id(topic_title):
     try:
         return _topic_title_to_id_map[topic_title]
     except KeyError:
-        return "custom_attributes"
+        return None
 
 
 def host_attribute(name):

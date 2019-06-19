@@ -73,8 +73,9 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
 //   error in the standard output stream for users to diagnose the problem.
 //
 enum class UninstallServiceMode { normal, test };
-bool UninstallService(const wchar_t* ServiceName,
-                      UninstallServiceMode Mode = UninstallServiceMode::normal);
+bool UninstallService(
+    const wchar_t* service_name,
+    UninstallServiceMode uninstall_mode = UninstallServiceMode::normal);
 
 // Abstract Interface template for SERVICE PROCESSOR:
 // WE ARE NOT GOING TO USE AT ALL.
@@ -363,9 +364,10 @@ public:
     }
 
     // no return from here till service ends
-    bool registerAndRun(const wchar_t* ServiceName,  //
-                        bool CanStop = true, bool CanShutdown = true,
-                        bool CanPauseContinue = true);
+    enum class StopType { normal, no_connect, fail };
+    StopType registerAndRun(const wchar_t* ServiceName,  //
+                            bool CanStop = true, bool CanShutdown = true,
+                            bool CanPauseContinue = true);
 
 protected:
     //

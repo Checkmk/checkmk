@@ -38,14 +38,13 @@ void PrintMain() {
     using namespace xlog::internal;
     PrintBlock("Normal Usage:\n", Colors::kGreen, []() {
         return fmt::format(
-            "\t{1} <{2}|{3}|{4}>\n"
-            "\t{2:<{0}} - install as a service, Administrative Rights are required\n"
-            "\t{3:<{0}} - remove service, Administrative Rights are required\n"
-            "\t{4:<{0}} - usage\n",
+            "\t{1} <{2}|{3}>\n"
+            "\t{2:<{0}} - usage\n"
+            "\t{3:<{0}} - test\n",
             kParamShift,
             kServiceExeName,  // service name from th project definitions
             // first Row
-            kInstallParam, kRemoveParam, kHelpParam);
+            kLegacyTestParam, kHelpParam);
     });
 }
 
@@ -56,10 +55,10 @@ void PrintSelfCheck() {
             "\t{1} {2} <{3}|{4}|{5} [number of seconds]>\n"
             "\t{2:<{0}} - check test\n"
             "\t\t{3:<{0}} - main thread test\n"
-            "\t\t{4:<{0}} - internal port test \n"
-            "\t\t{5:<{0}} - simulates connection after expiring 'seconds' interval\n",
+            "\t\t{4:<{0}} - simple self test of internal and external transport\n"
+            "\t\t{5:<{0}} - simulates periodical connection from Check MK Site, for example '{1} {2} {5} 13'\n",
             kParamShift, kServiceExeName, kCheckParam, kCheckParamMt,
-            kCheckParamPort, kCheckParamSelf);
+            kCheckParamIo, kCheckParamSelf);
     });
 }
 
@@ -78,6 +77,7 @@ void PrintAdHoc() {
     });
 }
 
+// obsolete
 void PrintLegacyTesting() {
     using namespace xlog::internal;
     PrintBlock("Classic/Legacy Testing:\n", Colors::kCyan, []() {
@@ -88,6 +88,22 @@ void PrintLegacyTesting() {
             kServiceExeName,  // service name from th project definitions
             kLegacyTestParam);
     });
+}
+
+void PrintInstallUninstall() {
+    using namespace xlog::internal;
+    PrintBlock(
+        "To install or remove service: for Experienced Users only:\n",
+        Colors::kPink, []() {
+            return fmt::format(
+                "\t{1} <{2}|{3}>\n"
+                "\t{2:<{0}} - install as a service, Administrative Rights are required\n"
+                "\t{3:<{0}} - remove service, Administrative Rights are required\n",
+                kParamShift,
+                kServiceExeName,  // service name from th project definitions
+                // first Row
+                kInstallParam, kRemoveParam);
+        });
 }
 
 void PrintShowConfig() {
@@ -206,7 +222,6 @@ static void ServiceUsage(std::wstring_view comment) {
         PrintMain();
         PrintSelfCheck();
         PrintAdHoc();
-        PrintLegacyTesting();
         PrintRealtimeTesting();
         PrintShowConfig();
         PrintCvt();
@@ -214,6 +229,7 @@ static void ServiceUsage(std::wstring_view comment) {
         PrintUpgrade();
         PrintCap();
         PrintSectionTesting();
+        PrintInstallUninstall();
     } catch (const std::exception &e) {
         XLOG::l("Exception is '{}'", e.what());  //
     }
@@ -284,7 +300,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
 
         cma::details::G_Service = true;  // we know that we are service
 
-        return cma::srv::ServiceAsService(1000ms, [](const void *) {
+        auto ret = cma::srv::ServiceAsService(1000ms, [](const void *) {
             // optional commands listed here
             // ********
             // 1. Auto Update when  MSI file is located by specified address
@@ -298,6 +314,9 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
                 GetUserInstallDir());    // dir where file to backup
             return true;
         });
+        if (ret == 0) ServiceUsage(L"");
+
+        return ret == 0 ? 0 : 1;
     }
 
     std::wstring param(Argv[1]);

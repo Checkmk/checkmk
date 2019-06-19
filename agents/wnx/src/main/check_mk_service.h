@@ -19,7 +19,7 @@ constexpr std::string_view kLegacyTestParam = "test";
 constexpr std::string_view kCheckParam = "check";
 constexpr std::string_view kCheckParamSelf = "-self";
 constexpr std::string_view kCheckParamMt = "-mt";
-constexpr std::string_view kCheckParamPort = "-port";
+constexpr std::string_view kCheckParamIo = "-io";
 
 constexpr std::string_view kRealtimeParam = "rt";
 constexpr std::string_view kHelpParam = "help";

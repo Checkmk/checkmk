@@ -91,7 +91,9 @@ TEST(ServiceControllerTest, StartStop) {
     EXPECT_EQ(controller.can_shutdown_, false);
     EXPECT_EQ(controller.can_pause_continue_, false);
     EXPECT_NE(controller.processor_, nullptr);
-    if (0) {
+
+    // special case with "no connect" case
+    {
         auto ret =
             wtools::InstallService(test_service_name,  // name of service
                                    L"Test Name",  // service name to display
@@ -101,19 +103,18 @@ TEST(ServiceControllerTest, StartStop) {
                                    nullptr                // no password
             );
         EXPECT_TRUE(ret);
+
         if (ret) {
-            bool success = false;
+            ON_OUT_OF_SCOPE(wtools::UninstallService(test_service_name));
+            auto success = wtools::ServiceController::StopType::fail;
             std::thread t([&]() {
                 success = controller.registerAndRun(test_service_name, true,
                                                     true, true);
             });
-            EXPECT_TRUE(success);
-            std::this_thread::sleep_until(steady_clock::now() +
-                                          500ms);  // wait for thread
-            EXPECT_TRUE(counter > 3);
+            if (t.joinable()) t.join();
 
-            EXPECT_TRUE(ret);
-            if (ret) wtools::UninstallService(test_service_name);
+            EXPECT_EQ(success, wtools::ServiceController::StopType::no_connect);
+            EXPECT_EQ(counter, 0);
         }
     }
 }

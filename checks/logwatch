@@ -56,6 +56,26 @@ logwatch_spool_dir = cmk.utils.paths.var_dir + '/logwatch_spool'
 #   |  General functions, for normal and forwarding logwatch check         |
 #   '----------------------------------------------------------------------'
 
+_CACHE_IS_CACHE_NEW = {}
+
+
+def _logwatch_cachefile_path(node):
+    return "%s/%s" % (cmk.utils.paths.tcp_cache_dir, node)
+
+
+def _logwatch_is_cache_new(last_run, node):
+    if node is None:
+        return True
+
+    if node in _CACHE_IS_CACHE_NEW:
+        return _CACHE_IS_CACHE_NEW[node]
+
+    path = _logwatch_cachefile_path(node)
+    if not os.path.exists(path):
+        raise MKGeneralException("cache not found: %s" % path)
+
+    return _CACHE_IS_CACHE_NEW.setdefault(node, os.stat(path).st_mtime > last_run)
+
 
 def logwatch_ec_forwarding_enabled(params, item):
     if 'restrict_logfiles' not in params:
@@ -255,24 +275,9 @@ def inventory_logwatch(info):
 # without precompiled checks, the params must be None an will be
 # ignored.
 def check_logwatch(item, params, info):
-    def cachefile_path(node):
-        return "%s/%s" % (cmk.utils.paths.tcp_cache_dir, node)
-
     now = time.time()
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)
     set_item_state("logwatch_last_run_%s" % item, now)
-    cache_new = {}
-
-    def is_cache_new(node):
-        if node is None:
-            return True
-        if node not in cache_new:
-            path = cachefile_path(node)
-            if not os.path.exists(path):
-                raise MKGeneralException("cache not found: %s" % path)
-            else:
-                cache_new[node] = os.stat(path).st_mtime > last_run
-        return cache_new[node]
 
     if len(info) == 1:
         line = " ".join(info[0][1:])
@@ -289,7 +294,7 @@ def check_logwatch(item, params, info):
             found = right_block = True
         elif len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]":
             right_block = False
-        elif right_block and is_cache_new(node):
+        elif right_block and _logwatch_is_cache_new(last_run, node):
             loglines.append(line)
 
     return check_logwatch_generic(item, params, loglines, found)

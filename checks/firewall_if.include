@@ -33,6 +33,10 @@ def check_firewall_if(item, params, parsed):
 
     this_time = time.time()
 
+    if not item in parsed:
+        yield 3, "interface %s not found" % item
+        return
+
     for what in parsed[item]:
 
         counter = parsed[item][what]

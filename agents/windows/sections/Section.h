@@ -33,6 +33,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+
 #include "WinApiInterface.h"
 
 class Environment;
@@ -91,6 +92,8 @@ private:
 };
 
 constexpr const char kTabSeparator = '\t';
+constexpr const char kPipeSeparator = '|';
+constexpr const wchar_t *kWidePipeSeparator = L"|";
 constexpr const wchar_t *kWideTabSeparator = L"\t";
 
 #endif  // Section_h

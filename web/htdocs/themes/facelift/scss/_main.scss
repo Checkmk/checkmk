@@ -542,6 +542,10 @@ td.dictleft div.dictelement {
     padding-left: 10px;
     margin-left: 8px;
     border-left: 2px solid #ccc;
+
+    ul {
+      margin-top: 1px;
+    }
   }
 }
 
@@ -1076,6 +1080,21 @@ table.modifydowntimes > tbody > tr {
 .select2-container--default .select2-results {
   color: #000;
 }
+
+.select2-container--default .select2-selection--single
+.select2-selection__rendered {
+  line-height: 23px;
+}
+
+.select2-container .select2-selection--single {
+  height: 23px;
+}
+
+.select2-container--default .select2-selection--single
+.select2-selection__arrow b {
+  margin-top: -4px;
+}
+
 
 /* TODO: Go through these following styles and move them to specific scss
  *       where needed

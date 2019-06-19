@@ -873,9 +873,11 @@ std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
     return {};
 }
 
+// #TODO refactor this trash
 void SetupPluginEnvironment() {
     using namespace std;
-    std::pair<std::string, std::wstring> dirs[] = {
+
+    const std::pair<const std::string, const std::wstring> env_pairs[] = {
         // string conversion  is required because of string used in interfaces
         // of SetEnv and ConvertToUTF8
         {string(envs::kMkLocalDirName), cma::cfg::GetLocalDir()},
@@ -890,8 +892,35 @@ void SetupPluginEnvironment() {
         //
     };
 
-    for (auto& d : dirs)
+    for (auto& d : env_pairs)
         cma::tools::win::SetEnv(d.first, wtools::ConvertToUTF8(d.second));
+}
+
+void ProcessPluginEnvironment(
+    std::function<void(std::string_view name, std::string_view value)> foo)
+
+{
+    const std::pair<const std::string_view,
+                    const std::function<std::wstring(void)>>
+        env_pairs[] = {
+            // string conversion  is required because of string used in
+            // interfaces
+            // of SetEnv and ConvertToUTF8
+            {envs::kMkLocalDirName, &cma::cfg::GetLocalDir},
+            {envs::kMkStateDirName, &cma::cfg::GetStateDir},
+            {envs::kMkPluginsDirName, &cma::cfg::GetUserPluginsDir},
+            {envs::kMkTempDirName, &cma::cfg::GetTempDir},
+            {envs::kMkLogDirName, &cma::cfg::GetLogDir},
+            {envs::kMkConfDirName, &cma::cfg::GetPluginConfigDir},
+            {envs::kMkSpoolDirName, &cma::cfg::GetSpoolDir},
+            {envs::kMkInstallDirName, &cma::cfg::GetUserInstallDir},
+            {envs::kMkMsiPathName, &cma::cfg::GetUpdateDir},
+            //
+        };
+
+    for (auto [value, func] : env_pairs) {
+        foo(value, wtools::ConvertToUTF8(func()));
+    }
 }
 
 // called upon every connection

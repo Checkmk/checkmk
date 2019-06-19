@@ -29,7 +29,7 @@ constexpr std::string_view kAdhocParam = "adhoc";           // runs as app
 constexpr std::string_view kExecParamShowWarn = "-show";    // logging sub param
 constexpr std::string_view kExecParamShowAll = "-showall";  // logging sub param
 
-constexpr std::string_view kCvtParam = "cvt";        // install cap file
+constexpr std::string_view kCvtParam = "convert";    // convert ini to yaml
 constexpr std::string_view kCvtParamShow = "-show";  // logging sub param
 constexpr const wchar_t* kSkypeParam = L"skype";     // hidden
 constexpr std::string_view kStopLegacyParam = "stop_legacy";    //
@@ -41,6 +41,8 @@ constexpr std::string_view kUpgradeParamForce = "-force";  // upgrade LWA always
 constexpr std::string_view kCapParam = "cap";            // install files
 constexpr std::string_view kSectionParam = "section";    // dump section
 constexpr std::string_view kSectionParamShow = "-show";  // logging sub param
+
+constexpr std::string_view kShowConfigParam = "showconfig";  // show config
 
 // Service name and Targeting
 #if defined(CMK_SERVICE_NAME)

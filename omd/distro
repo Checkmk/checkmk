@@ -22,6 +22,9 @@ then
     if [ "${VERSION:1:1}" = . ] ; then
         VERSION=${VERSION:0:1}
     fi
+    if [ "${VERSION:2:1}" = . ] ; then
+        VERSION=${VERSION:0:2}
+    fi
     if [ "${VERSION:0:6}" = "wheezy" ] ; then
         VERSION="7"
     fi

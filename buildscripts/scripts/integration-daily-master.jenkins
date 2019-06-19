@@ -72,6 +72,9 @@ try {
                                     'debian-9')
                                         DISTRO_CODE='_0.stretch_amd64.deb'
                                         ;;
+                                    'debian-10')
+                                        DISTRO_CODE='_0.buster_amd64.deb'
+                                        ;;
                                     'ubuntu-14.04')
                                         DISTRO_CODE='_0.trusty_amd64.deb'
                                         ;;

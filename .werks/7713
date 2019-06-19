@@ -1,0 +1,13 @@
+Title: Pipe-char is used as separator for Windows WMI
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p4
+Date: 1560945924
+
+Previously Windows Agent used tab-char or comma as a separator in of WMI Sections. As a result it may 
+produce complications, because data may contain comma too or tab-char may be removed during processing.
+Using pipe-char solves those problems.

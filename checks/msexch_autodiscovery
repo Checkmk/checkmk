@@ -24,6 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# FIXME
+# The service_description should have a '%s'.  At the moment it works but is
+# not consistent.  This will be fixed in the future.
+# If we change this we loose history and parameter sets have to be adapted.
+
 
 def check_msexch_autodiscovery(item, params, parsed):
     yield wmi_yield_raw_persec(parsed[""], item, "RequestsPersec",
@@ -32,10 +37,10 @@ def check_msexch_autodiscovery(item, params, parsed):
 
 
 check_info['msexch_autodiscovery'] = {
-    'inventory_function'  : inventory_wmi_table,
-    'check_function'      : check_msexch_autodiscovery,
-    'parse_function'      : parse_wmi_table,
-    'has_perfdata'        : True,
-    'service_description' : "Exchange Autodiscovery %s",
-    'includes'            : ["wmi.include"]
+    'inventory_function': inventory_wmi_table,
+    'check_function': check_msexch_autodiscovery,
+    'parse_function': parse_wmi_table,
+    'has_perfdata': True,
+    'service_description': "Exchange Autodiscovery",
+    'includes': ["wmi.include"]
 }

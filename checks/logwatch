@@ -101,20 +101,22 @@ def logwatch_select_forwarded(info):
     for l in info:
         # node info ignored (only used in regular logwatch check)
         line = " ".join(l[1:])
-        if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]" \
-           and ':missing' not in line and ':cannotopen' not in line:
-            logfile_name = line[3:-3]
+        if line[:3] != "[[[" or line[-3:] != "]]]":
+            continue
+        logfile_name = line[3:-3]
+        if logfile_name.endswith(':missing') or logfile_name.endswith(':cannotopen'):
+            continue
 
-            # Is forwarding enabled in general?
-            if forward_settings and forward_settings[0]:
-                if logwatch_ec_forwarding_enabled(forward_settings[0], logfile_name):
-                    forwarded_logs.append(logfile_name)
-                else:
-                    not_forwarded_logs.append(logfile_name)
-
-            # No forwarding rule configured
+        # Is forwarding enabled in general?
+        if forward_settings and forward_settings[0]:
+            if logwatch_ec_forwarding_enabled(forward_settings[0], logfile_name):
+                forwarded_logs.append(logfile_name)
             else:
                 not_forwarded_logs.append(logfile_name)
+
+        # No forwarding rule configured
+        else:
+            not_forwarded_logs.append(logfile_name)
 
     return forwarded_logs, not_forwarded_logs
 

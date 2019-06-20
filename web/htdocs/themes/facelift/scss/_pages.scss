@@ -592,22 +592,22 @@ table.data {
       border-top: 1px solid $theme-color-table-border;
       border-right: none;
       border-bottom: 1px solid $theme-color-table-border;
-    }
 
-    &:first-child {
-      border-left: 1px solid $theme-color-table-border;
-      border-radius: $theme-border-radius 0 0 4px;
-    }
+      &:first-child {
+        border-left: 1px solid $theme-color-table-border;
+        border-radius: $theme-border-radius 0 0 4px;
+      }
 
-    &:last-child,
-    &.last_col {
-      border-right: 1px solid $theme-color-table-border;
-      border-radius: 0 4px 4px 0;
-    }
+      &:last-child,
+      &.last_col {
+        border-right: 1px solid $theme-color-table-border;
+        border-radius: 0 4px 4px 0;
+      }
 
-    &:only-child {
-      border: 1px solid $theme-color-table-border;
-      border-radius: $theme-border-radius;
+      &:only-child {
+        border: 1px solid $theme-color-table-border;
+        border-radius: $theme-border-radius;
+      }
     }
 
     td.checkbox {

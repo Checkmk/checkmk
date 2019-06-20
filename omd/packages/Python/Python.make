@@ -16,10 +16,11 @@ Python-install: $(PYTHON_INSTALL)
 
 # Environment variables
 PATH_VAR := PATH="$(abspath bin):$$PATH"
+
 ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
-	OPTI := --enable-optimizations
+	PYTHON_ENABLE_OPTIMIZATIONS := --enable-optimizations
 else
-	OPTI :=
+	PYTHON_ENABLE_OPTIMIZATIONS :=
 endif
 
 CC_COMPILERS = gcc-9 clang-8 gcc-8 gcc-7 clang-6.0 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang
@@ -41,7 +42,7 @@ $(PYTHON_COMPILE): $(PYTHON_PATCHING) bin/gcc bin/g++
 	    --prefix="" \
 	    --enable-shared \
 	    --enable-unicode=ucs4 \
-	    $(OPTI) \
+	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
 	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
 	cd $(PYTHON_DIR) ; $(PATH_VAR) ; $(MAKE) -j2
 # Install python files (needed by dependent packages like mod_python,

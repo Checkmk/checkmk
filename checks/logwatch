@@ -83,6 +83,40 @@ def _extract_item_attribute(line):
     return logfile_name, 'ok'
 
 
+def parse_logwatch(info):
+
+    parsed = {'errors': [], 'logfiles': {}}
+    item_data = {}  # should never be used
+
+    for line in info:
+        node = line[0]
+        line = " ".join(line[1:])
+
+        is_error, error_msg = _extract_error_message(node, line)
+        if is_error:
+            parsed['errors'].append(error_msg)
+            continue
+
+        item, attribute = _extract_item_attribute(line)
+        if item is not None:
+            if item not in parsed['logfiles']:
+                parsed['logfiles'][item] = {
+                    node: {
+                        'attr': attribute,
+                        'lines': []
+                    },
+                }
+            item_data = parsed['logfiles'][item]
+            continue
+
+        if node not in item_data:
+            item_data[node] = {'attr': attribute, 'lines': []}
+
+        item_data[node]['lines'].append(line)
+
+    return parsed
+
+
 _CACHE_IS_CACHE_NEW = {}
 
 
@@ -116,31 +150,27 @@ def logwatch_ec_forwarding_enabled(params, item):
     return False
 
 
+def _logwatch_discoverable_items(parsed):
+    '''only consider files which are 'ok' on at least one node'''
+    return sorted(item for item, item_data in parsed['logfiles'].iteritems()
+                  if any(node_data['attr'] == 'ok' for node_data in item_data.itervalues()))
+
+
 # Splits the number of existing logfiles into
 # forwarded (to ec) and not forwarded. Returns a
 # pair of forwarded and not forwarded logs.
-def logwatch_select_forwarded(info):
-    forwarded_logs = []
-    not_forwarded_logs = []
-
+def _logwatch_select_forwarded(discoverable_items):
     forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
+    # Is forwarding enabled in general?
+    if not (forward_settings and forward_settings[0]):
+        return [], discoverable_items
 
-    for l in info:
-        # node info ignored (only used in regular logwatch check)
-        line = " ".join(l[1:])
-        logfile_name, attr = _extract_item_attribute(line)
-        if logfile_name is None or attr != 'ok':
-            continue
-
-        # Is forwarding enabled in general?
-        if not (forward_settings and forward_settings[0]):
-            not_forwarded_logs.append(logfile_name)
-            continue
-
-        if logwatch_ec_forwarding_enabled(forward_settings[0], logfile_name):
-            forwarded_logs.append(logfile_name)
+    forwarded_logs, not_forwarded_logs = [], []
+    for item in discoverable_items:
+        if logwatch_ec_forwarding_enabled(forward_settings[0], item):
+            forwarded_logs.append(item)
         else:
-            not_forwarded_logs.append(logfile_name)
+            not_forwarded_logs.append(item)
 
     return forwarded_logs, not_forwarded_logs
 
@@ -259,8 +289,9 @@ def logwatch_parse_line(line):
     return level, text
 
 
-def inventory_logwatch(info, use_mode):
-    _forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
+def inventory_logwatch(parsed, use_mode):
+    discoverable_items = _logwatch_discoverable_items(parsed)
+    _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
     inventory = []
 
@@ -296,36 +327,29 @@ def inventory_logwatch(info, use_mode):
 # logwatch patterns for the logfile we deal with. If using check_mk
 # without precompiled checks, the params must be None an will be
 # ignored.
-def check_logwatch(item, params, info):
-    if info:
-        is_error, error_msg = _extract_error_message(info[0][0], " ".join(info[0][1:]))
-        if is_error:
-            return 3, error_msg
+def check_logwatch(item, params, parsed):
+    for error_msg in parsed['errors']:
+        yield 3, error_msg
 
     now = time.time()
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)
     set_item_state("logwatch_last_run_%s" % item, now)
 
-    found = False
-    right_block = False
-    loglines = []
-    for l in info:
-        node = l[0]
-        line = " ".join(l[1:])
-        logfile, _attr = _extract_item_attribute(line)
-        if logfile == item:
-            found = right_block = True
-        elif logfile is not None:
-            right_block = False
-        elif right_block and _logwatch_is_cache_new(last_run, node):
-            loglines.append(line)
+    item_data = parsed['logfiles'].get(item, {})
 
-    return check_logwatch_generic(item, params, loglines, found)
+    loglines = []
+    for node, node_data in item_data.iteritems():
+        if _logwatch_is_cache_new(last_run, node):
+            loglines.extend(node_data['lines'])
+
+    found = item in _logwatch_discoverable_items(parsed)
+    yield check_logwatch_generic(item, params, loglines, found)
 
 
 check_info['logwatch'] = {
+    'parse_function': parse_logwatch,
+    'inventory_function': lambda parsed: inventory_logwatch(parsed, "single"),
     'check_function': check_logwatch,
-    'inventory_function': lambda info: inventory_logwatch(info, "single"),
     'service_description': "Log %s",
     'node_info': True,
     'group': 'logwatch',
@@ -427,34 +451,29 @@ def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
     return not excl_match
 
 
-def check_logwatch_groups(item, params, info):
-    if info:
-        is_error, error_msg = _extract_error_message(info[0][0], " ".join(info[0][1:]))
-        if is_error:
-            return 3, error_msg
+def check_logwatch_groups(item, params, parsed):
+    for error_msg in parsed['errors']:
+        yield 3, error_msg
 
     group_patterns = set(params.get("pre_comp_group_patterns", []))
     for entry in params.get('group_patterns', []):
         group_patterns.add(entry)
 
     loglines = []
-    for l in info:
-        # node info ignored (only used in regular logwatch check)
-        line = " ".join(l[1:])
-        logfile_name, _attr = _extract_item_attribute(line)
+    for logfile_name, item_data in parsed['logfiles'].iteritems():
+        for inclusion, exclusion in group_patterns:
+            if _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
+                # node info ignored (only used in regular logwatch check)
+                for node_data in item_data.itervalues():
+                    loglines.extend(node_data['lines'])
+                break
 
-        if logfile_name is not None:
-            for inclusion, exclusion in group_patterns:
-                if _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
-                    loglines.append(line)
-                    break
-
-    return check_logwatch_generic(item, params, loglines, True, True)
+    yield check_logwatch_generic(item, params, loglines, True, True)
 
 
 check_info['logwatch.groups'] = {
     'check_function': check_logwatch_groups,
-    'inventory_function': lambda info: inventory_logwatch(info, "groups"),
+    'inventory_function': lambda parsed: inventory_logwatch(parsed, "groups"),
     'service_description': "Log %s",
     'node_info': True,
     'group': 'logwatch',
@@ -728,8 +747,9 @@ def _logwatch_inventory_mode_rules():
     return mode, merged_rules
 
 
-def inventory_logwatch_ec(info, use_mode):
-    forwarded_logs, _not_forwarded_logs = logwatch_select_forwarded(info)
+def inventory_logwatch_ec(parsed, use_mode):
+    discoverable_items = _logwatch_discoverable_items(parsed)
+    forwarded_logs, _not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
     if not forwarded_logs:
         return
 
@@ -750,39 +770,29 @@ def inventory_logwatch_ec(info, use_mode):
         yield log, single_log_params.copy()
 
 
-def check_logwatch_ec(item, params, info):
-    if info:
-        is_error, error_msg = _extract_error_message(info[0][0], " ".join(info[0][1:]))
-        if is_error:
-            yield 3, error_msg
-            return
+def _logwatch_filter_accumulated_lines(item_data):
+    # node info ignored (only used in regular logwatch check)
+    for node_data in item_data.itervalues():
+        for line in node_data['lines']:
+            # skip context lines and ignore lines
+            if line[0] not in ('.', 'I'):
+                yield line
 
-    # Parse lines in info and separate by logfile
-    logs = {}
-    for l in info:
-        # node info ignored (only used in regular logwatch check)
-        line = " ".join(l[1:])
-        logfile, _attr = _extract_item_attribute(line)
-        if logfile is not None:
-            logs.setdefault(logfile, [])
 
-        elif logfile and line:
-            # new regular line, skip context lines and ignore lines
-            if line[0] not in ['.', 'I']:
-                logs[logfile].append(line)
+def check_logwatch_ec(item, params, parsed):
+    for error_msg in parsed['errors']:
+        yield 3, error_msg
 
     if item:
         # If this check has an item (logwatch.ec_single), only forward the information from this log
-        if item not in logs or not logwatch_ec_forwarding_enabled(params, item):
+        if item not in parsed['logfiles'] or not logwatch_ec_forwarding_enabled(params, item):
             return
-        logs = {item: logs[item]}
+        used_logfiles = [item]
     else:
         # Filter logfiles if some should be excluded
-        logs = {
-            logfile: lines
-            for logfile, lines in logs.iteritems()
-            if logwatch_ec_forwarding_enabled(params, logfile)
-        }
+        used_logfiles = [
+            name for name in parsed['logfiles'] if logwatch_ec_forwarding_enabled(params, name)
+        ]
 
     # Check if the number of expected files matches the actual one
     if params.get('monitor_logfilelist'):
@@ -791,11 +801,11 @@ def check_logwatch_ec(item, params, info):
                      "You need to redo service discovery."
         else:
             expected = params['expected_logfiles']
-            missing = [f for f in expected if f not in logs]
+            missing = [f for f in expected if f not in used_logfiles]
             if missing:
                 yield 1, "Missing logfiles: %s" % (", ".join(missing))
 
-            exceeding = [f for f in logs if f not in expected]
+            exceeding = [f for f in used_logfiles if f not in expected]
             if exceeding:
                 yield 1, "Newly appeared logfiles: %s" % (", ".join(exceeding))
 
@@ -824,7 +834,9 @@ def check_logwatch_ec(item, params, info):
         else:  # legacy configuration
             logfile_reclassify_settings["reclassify_patterns"].extend(x for x in settings)
 
-    for logfile, lines in logs.items():
+    for logfile in used_logfiles:
+        lines = _logwatch_filter_accumulated_lines(parsed['logfiles'][logfile])
+
         logfile_reclassify_settings["reclassify_patterns"] = []
         logfile_reclassify_settings["reclassify_states"] = {}
 
@@ -1136,8 +1148,8 @@ def logwatch_spool_path():
 
 
 check_info['logwatch.ec'] = {
+    'inventory_function': lambda parsed: inventory_logwatch_ec(parsed, "groups"),
     'check_function': check_logwatch_ec,
-    'inventory_function': lambda info: inventory_logwatch_ec(info, "groups"),
     'service_description': "Log Forwarding",
     'group': 'logwatch_ec',
     'node_info': True,
@@ -1145,8 +1157,8 @@ check_info['logwatch.ec'] = {
 }
 
 check_info['logwatch.ec_single'] = {
+    'inventory_function': lambda parsed: inventory_logwatch_ec(parsed, "single"),
     'check_function': check_logwatch_ec,
-    'inventory_function': lambda info: inventory_logwatch_ec(info, "single"),
     'service_description': "Log %s",
     'node_info': True,
     'has_perfdata': True,

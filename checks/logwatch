@@ -235,7 +235,7 @@ def logwatch_parse_line(line):
     return level, text
 
 
-def inventory_logwatch_common(info, case):
+def inventory_logwatch(info, use_mode):
     _forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
     inventory = []
@@ -245,10 +245,10 @@ def inventory_logwatch_common(info, case):
         for group_patterns in inventory_groups:
             found_groups.update(logwatch_groups_of_logfile(group_patterns, logfile))
 
-        if not found_groups and case == "single":
+        if not found_groups and use_mode == "single":
             inventory.append((logfile, None))
 
-        elif found_groups and case == "group":
+        elif found_groups and use_mode == "groups":
             for group_name, patterns in found_groups.items():
                 inventory.append((group_name, {"group_patterns": patterns}))
 
@@ -266,10 +266,6 @@ def inventory_logwatch_common(info, case):
 #   +----------------------------------------------------------------------+
 #   |  Normal logwatch check                                               |
 #   '----------------------------------------------------------------------'
-
-
-def inventory_logwatch(info):
-    return inventory_logwatch_common(info, "single")
 
 
 # In case of a precompiled check, params contains the precompiled
@@ -304,7 +300,7 @@ def check_logwatch(item, params, info):
 
 check_info['logwatch'] = {
     'check_function': check_logwatch,
-    'inventory_function': inventory_logwatch,
+    'inventory_function': lambda info: inventory_logwatch(info, "single"),
     'service_description': "Log %s",
     'node_info': True,
     'group': 'logwatch',
@@ -388,10 +384,6 @@ def logwatch_groups_of_logfile(group_patterns, filename):
     return {k: sorted(v) for k, v in found_these_groups.items()}
 
 
-def inventory_logwatch_groups(info):
-    return inventory_logwatch_common(info, "group")
-
-
 def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
 
     inclusion_is_regex = inclusion.startswith("~")
@@ -439,7 +431,7 @@ def check_logwatch_groups(item, params, info):
 
 check_info['logwatch.groups'] = {
     'check_function': check_logwatch_groups,
-    'inventory_function': inventory_logwatch_groups,
+    'inventory_function': lambda info: inventory_logwatch(info, "groups"),
     'service_description': "Log %s",
     'node_info': True,
     'group': 'logwatch',
@@ -698,11 +690,7 @@ def logwatch_to_prio(level):
     return 4
 
 
-def inventory_logwatch_ec(info, one_svc_per_log):
-    forwarded_logs, _not_forwarded_logs = logwatch_select_forwarded(info)
-    if not forwarded_logs:
-        return
-
+def _logwatch_inventory_mode_rules():
     forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
 
     merged_rules = {}
@@ -711,22 +699,32 @@ def inventory_logwatch_ec(info, one_svc_per_log):
             for key, value in rule.items():
                 merged_rules[key] = value
         elif isinstance(rule, str):
-            return  # Configured "no forwarding"
+            return "no", {}  # Configured "no forwarding"
 
-    separate_checks = merged_rules.get("separate_checks", False)
-    if separate_checks != one_svc_per_log:
+    mode = "single" if merged_rules.get("separate_checks", False) else "groups"
+    return mode, merged_rules
+
+
+def inventory_logwatch_ec(info, use_mode):
+    forwarded_logs, _not_forwarded_logs = logwatch_select_forwarded(info)
+    if not forwarded_logs:
         return
 
-    if separate_checks:
-        single_log_params = {}
-        for key in ["method", "facility", "monitor_logfilelist", "logwatch_reclassify"]:
-            if key in merged_rules:
-                single_log_params[key] = merged_rules[key]
-        for log in forwarded_logs:
-            single_log_params["expected_logfiles"] = [log]
-            yield log, single_log_params.copy()
-    else:
+    mode, merged_rules = _logwatch_inventory_mode_rules()
+    if mode != use_mode:
+        return
+
+    if mode == "groups":
         yield None, {"expected_logfiles": forwarded_logs}
+        return
+
+    single_log_params = {}
+    for key in ["method", "facility", "monitor_logfilelist", "logwatch_reclassify"]:
+        if key in merged_rules:
+            single_log_params[key] = merged_rules[key]
+    for log in forwarded_logs:
+        single_log_params["expected_logfiles"] = [log]
+        yield log, single_log_params.copy()
 
 
 def check_logwatch_ec(item, params, info):
@@ -1121,7 +1119,7 @@ def logwatch_spool_path():
 
 check_info['logwatch.ec'] = {
     'check_function': check_logwatch_ec,
-    'inventory_function': lambda info: inventory_logwatch_ec(info, False),
+    'inventory_function': lambda info: inventory_logwatch_ec(info, "groups"),
     'service_description': "Log Forwarding",
     'group': 'logwatch_ec',
     'node_info': True,
@@ -1130,7 +1128,7 @@ check_info['logwatch.ec'] = {
 
 check_info['logwatch.ec_single'] = {
     'check_function': check_logwatch_ec,
-    'inventory_function': lambda info: inventory_logwatch_ec(info, True),
+    'inventory_function': lambda info: inventory_logwatch_ec(info, "single"),
     'service_description': "Log %s",
     'node_info': True,
     'has_perfdata': True,

@@ -711,32 +711,33 @@ def logwatch_to_prio(level):
 def inventory_logwatch_ec(info, one_svc_per_log):
     forwarded_logs, _not_forwarded_logs = logwatch_select_forwarded(info)
 
-    if forwarded_logs:
-        forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters(
-            'logwatch_ec', []))
+    if not forwarded_logs:
+        return
 
-        merged_rules = {}
-        for rule in forward_settings[-1::-1]:
-            if isinstance(rule, dict):
-                for key, value in rule.items():
-                    merged_rules[key] = value
-            elif isinstance(rule, str):
-                return  # Configured "no forwarding"
+    forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
 
-        separate_checks = merged_rules.get("separate_checks", False)
-        if separate_checks != one_svc_per_log:
-            return
+    merged_rules = {}
+    for rule in forward_settings[-1::-1]:
+        if isinstance(rule, dict):
+            for key, value in rule.items():
+                merged_rules[key] = value
+        elif isinstance(rule, str):
+            return  # Configured "no forwarding"
 
-        if separate_checks:
-            single_log_params = {}
-            for key in ["method", "facility", "monitor_logfilelist", "logwatch_reclassify"]:
-                if key in merged_rules:
-                    single_log_params[key] = merged_rules[key]
-            for log in forwarded_logs:
-                single_log_params["expected_logfiles"] = [log]
-                yield log, single_log_params.copy()
-        else:
-            yield None, {"expected_logfiles": forwarded_logs}
+    separate_checks = merged_rules.get("separate_checks", False)
+    if separate_checks != one_svc_per_log:
+        return
+
+    if separate_checks:
+        single_log_params = {}
+        for key in ["method", "facility", "monitor_logfilelist", "logwatch_reclassify"]:
+            if key in merged_rules:
+                single_log_params[key] = merged_rules[key]
+        for log in forwarded_logs:
+            single_log_params["expected_logfiles"] = [log]
+            yield log, single_log_params.copy()
+    else:
+        yield None, {"expected_logfiles": forwarded_logs}
 
 
 def check_logwatch_ec(item, params, info):
@@ -785,17 +786,11 @@ def check_logwatch_ec(item, params, info):
                      "You need to redo service discovery."
         else:
             expected = params['expected_logfiles']
-            missing = []
-            for f in expected:
-                if f not in logs:
-                    missing.append(f)
+            missing = [f for f in expected if f not in logs]
             if missing:
                 yield 1, "Missing logfiles: %s" % (", ".join(missing))
 
-            exceeding = []
-            for f in logs:
-                if f not in expected:
-                    exceeding.append(f)
+            exceeding = [f for f in logs if f not in expected]
             if exceeding:
                 yield 1, "Newly appeared logfiles: %s" % (", ".join(exceeding))
 

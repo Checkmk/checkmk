@@ -187,7 +187,7 @@ def _store_status_file_of(status_file_path, piggyback_file_paths):
             prefix=".%s.new" % os.path.basename(status_file_path),
             delete=False) as tmp:
         tmp_path = tmp.name
-        os.chmod(tmp_path, 0660)
+        os.chmod(tmp_path, 0o660)
         tmp.write("")
 
         tmp_stats = os.stat(tmp_path)

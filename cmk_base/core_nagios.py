@@ -64,7 +64,7 @@ class NagiosCore(core_config.MonitoringCore):
                     prefix=".%s.new" % os.path.basename(cmk.utils.paths.nagios_objects_file),
                     delete=False) as tmp:
                 tmp_path = tmp.name
-                os.chmod(tmp.name, 0660)
+                os.chmod(tmp.name, 0o660)
                 create_config(tmp, hostnames=None)
                 os.rename(tmp.name, cmk.utils.paths.nagios_objects_file)
 
@@ -1069,7 +1069,7 @@ if '-d' in sys.argv:
     os.rename(source_filename + ".new", source_filename)
     if not config.delay_precompile:
         py_compile.compile(source_filename, compiled_filename, compiled_filename, True)
-        os.chmod(compiled_filename, 0755)
+        os.chmod(compiled_filename, 0o755)
     else:
         if os.path.exists(compiled_filename) or os.path.islink(compiled_filename):
             os.remove(compiled_filename)

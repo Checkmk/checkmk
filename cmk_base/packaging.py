@@ -67,31 +67,31 @@ except:
 
 # order matters! See function _get_permissions
 PERM_MAP = (
-    (cmk.utils.paths.checks_dir, 0644),
-    (cmk.utils.paths.local_checks_dir, 0644),
-    (cmk.utils.paths.notifications_dir, 0755),
-    (cmk.utils.paths.local_notifications_dir, 0755),
-    (cmk.utils.paths.inventory_dir, 0644),
-    (cmk.utils.paths.local_inventory_dir, 0644),
-    (cmk.utils.paths.check_manpages_dir, 0644),
-    (cmk.utils.paths.local_check_manpages_dir, 0644),
-    (cmk.utils.paths.agents_dir, 0755),
-    (cmk.utils.paths.local_agents_dir, 0755),
-    (cmk.utils.paths.web_dir, 0644),
-    (cmk.utils.paths.local_web_dir, 0644),
-    (cmk.utils.paths.pnp_templates_dir, 0644),
-    (cmk.utils.paths.local_pnp_templates_dir, 0644),
-    (cmk.utils.paths.doc_dir, 0644),
-    (cmk.utils.paths.local_doc_dir, 0644),
-    (cmk.utils.paths.locale_dir, 0644),
-    (cmk.utils.paths.local_locale_dir, 0644),
-    (cmk.utils.paths.local_bin_dir, 0755),
-    (os.path.join(cmk.utils.paths.local_lib_dir, "nagios", "plugins"), 0755),
-    (cmk.utils.paths.local_lib_dir, 0644),
-    (cmk.utils.paths.local_mib_dir, 0644),
-    (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0755),
-    (os.path.join(cmk.utils.paths.local_share_dir, "alert_handlers"), 0755),
-    (str(cmk.ec.export.mkp_rule_pack_dir()), 0644),
+    (cmk.utils.paths.checks_dir, 0o644),
+    (cmk.utils.paths.local_checks_dir, 0o644),
+    (cmk.utils.paths.notifications_dir, 0o755),
+    (cmk.utils.paths.local_notifications_dir, 0o755),
+    (cmk.utils.paths.inventory_dir, 0o644),
+    (cmk.utils.paths.local_inventory_dir, 0o644),
+    (cmk.utils.paths.check_manpages_dir, 0o644),
+    (cmk.utils.paths.local_check_manpages_dir, 0o644),
+    (cmk.utils.paths.agents_dir, 0o755),
+    (cmk.utils.paths.local_agents_dir, 0o755),
+    (cmk.utils.paths.web_dir, 0o644),
+    (cmk.utils.paths.local_web_dir, 0o644),
+    (cmk.utils.paths.pnp_templates_dir, 0o644),
+    (cmk.utils.paths.local_pnp_templates_dir, 0o644),
+    (cmk.utils.paths.doc_dir, 0o644),
+    (cmk.utils.paths.local_doc_dir, 0o644),
+    (cmk.utils.paths.locale_dir, 0o644),
+    (cmk.utils.paths.local_locale_dir, 0o644),
+    (cmk.utils.paths.local_bin_dir, 0o755),
+    (os.path.join(cmk.utils.paths.local_lib_dir, "nagios", "plugins"), 0o755),
+    (cmk.utils.paths.local_lib_dir, 0o644),
+    (cmk.utils.paths.local_mib_dir, 0o644),
+    (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
+    (os.path.join(cmk.utils.paths.local_share_dir, "alert_handlers"), 0o755),
+    (str(cmk.ec.export.mkp_rule_pack_dir()), 0o644),
 )
 
 
@@ -387,7 +387,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
         info.uid = 0
         info.gid = 0
         info.size = size
-        info.mode = 0644
+        info.mode = 0o644
         info.type = tarfile.REGTYPE
         info.name = filename
         return info
@@ -578,7 +578,7 @@ def install_package(file_name=None, file_object=None):
             for filename in filenames:
                 path = os.path.join(part.path, filename)
                 desired_perm = _get_permissions(path)
-                has_perm = os.stat(path).st_mode & 07777
+                has_perm = os.stat(path).st_mode & 0o7777
                 if has_perm != desired_perm:
                     logger.verbose("    Fixing permissions of %s: %04o -> %04o", path, has_perm,
                                    desired_perm)

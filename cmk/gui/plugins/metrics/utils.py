@@ -37,6 +37,7 @@ from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, current_app
 from cmk.gui.exceptions import MKGeneralException
+from cmk.utils.memoize import MemoizeCache
 
 
 class AutomaticDict(OrderedDict):
@@ -850,9 +851,10 @@ def render_color_icon(color):
     return html.render_div('', class_="color", style="background-color: %s" % color)
 
 
+@MemoizeCache
 def reverse_translate_metric_name(canonical_name):
     "Return all known perf data names that are translated into canonical_name"
     return set([
         metric for trans in check_metrics.values()
-        for metric, change in trans.items() if change.get('name', '') == canonical_name
+        for metric, options in trans.items() if options.get('name', '') == canonical_name
     ] + [canonical_name])

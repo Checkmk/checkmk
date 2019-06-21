@@ -606,17 +606,17 @@ class Site(object):
         return os.path.split(os.readlink("/omd/sites/%s/version" % self.id))[-1]
 
     def create(self):
-        if not self.version.is_installed():
-            self.version.install()
+        with SiteActionLock():
+            if not self.version.is_installed():
+                self.version.install()
 
-        if self.update_with_git:
-            self._copy_omd_version_for_test()
+            if self.update_with_git:
+                self._copy_omd_version_for_test()
 
-        if not self.reuse and self.exists():
-            raise Exception("The site %s already exists." % self.id)
+            if not self.reuse and self.exists():
+                raise Exception("The site %s already exists." % self.id)
 
-        if not self.exists():
-            with SiteActionLock():
+            if not self.exists():
                 print "[%0.2f] Creating site '%s'" % (time.time(), self.id)
                 p = subprocess.Popen([
                     "/usr/bin/sudo", "/usr/bin/omd", "-V",
@@ -628,14 +628,14 @@ class Site(object):
                 assert exit_code == 0
                 assert os.path.exists("/omd/sites/%s" % self.id)
 
-            self._enable_mod_python_debug()
-            self._enabled_liveproxyd_debug_logging()
-            self._enable_mkeventd_debug_logging()
+                self._enable_mod_python_debug()
+                self._enabled_liveproxyd_debug_logging()
+                self._enable_mkeventd_debug_logging()
 
-        self._install_test_python_modules()
+            self._install_test_python_modules()
 
-        if self.update_with_git:
-            self._update_with_f12_files()
+            if self.update_with_git:
+                self._update_with_f12_files()
 
     # When using the Git version, the original version files will be
     # replaced by the .f12 scripts. When tests are running in parallel

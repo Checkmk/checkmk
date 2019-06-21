@@ -26,14 +26,14 @@
 
 
 def agent_storeonce_arguments(params, hostname, ipaddress):
-    args = ''
-
-    args += "--address=%s " % hostname
-    args += "--user=%s " % params["user"]
-    args += "--password=%s " % params["password"]
+    args = [
+        "--address=%s" % hostname,
+        "--user=%s" % params["user"],
+        "--password=%s" % params["password"]
+    ]
 
     if "cert" in params and params["cert"] is False:
-        args += "--no-cert-check "
+        args.append("--no-cert-check")
 
     return args
 

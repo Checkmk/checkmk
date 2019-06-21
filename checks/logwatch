@@ -341,22 +341,14 @@ def logwatch_group_precompile(hostname, item, params):
 
 def logwatch_groups_of_logfile(group_patterns, filename):
     found_these_groups = {}
-    for group_name, pattern in group_patterns:
-        inclusion, exclusion = pattern
-        inclusion_is_regex = False
-        exclusion_is_regex = False
-
-        if inclusion.startswith("~"):
-            inclusion_is_regex = True
-            inclusion = inclusion[1:]
-        if exclusion.startswith("~"):
-            exclusion_is_regex = True
-            exclusion = exclusion[1:]
+    for group_name, (inclusion, exclusion) in group_patterns:
+        inclusion_is_regex = inclusion.startswith("~")
+        exclusion_is_regex = exclusion.startswith("~")
 
         matches = []
         num_perc_s = 0
         if inclusion_is_regex:
-            reg = regex(inclusion)
+            reg = regex(inclusion[1:])
             incl_match = reg.match(filename)
             if incl_match:
                 num_perc_s = group_name.count("%s")
@@ -365,7 +357,7 @@ def logwatch_groups_of_logfile(group_patterns, filename):
             incl_match = fnmatch.fnmatch(filename, inclusion)
 
         if exclusion_is_regex:
-            reg = regex(exclusion)
+            reg = regex(exclusion[1:])
             excl_match = reg.match(filename)
         else:
             excl_match = fnmatch.fnmatch(filename, exclusion)
@@ -384,18 +376,16 @@ def logwatch_groups_of_logfile(group_patterns, filename):
                     group_name = group_name.replace("%%%d" % (nr + 1), group)
 
                 this_group_name = group_name % tuple(matches[:num_perc_s])
-                this_pattern = ("~%s" % inclusion, exclusion)
-
             else:
                 this_group_name = group_name
-                this_pattern = pattern
+            this_pattern = (inclusion, exclusion)
 
         if this_group_name is not None:
             found_these_groups.setdefault(this_group_name, set())
             found_these_groups[this_group_name].add(this_pattern)
 
     # Convert pattern containers to lists (sets are not possible in autochecks)
-    return dict([(k, list(v)) for k, v in found_these_groups.items()])
+    return {k: sorted(v) for k, v in found_these_groups.items()}
 
 
 def inventory_logwatch_groups(info):
@@ -710,7 +700,6 @@ def logwatch_to_prio(level):
 
 def inventory_logwatch_ec(info, one_svc_per_log):
     forwarded_logs, _not_forwarded_logs = logwatch_select_forwarded(info)
-
     if not forwarded_logs:
         return
 

@@ -165,7 +165,7 @@ def _parse_winperf_if_agent_section_timestamp_and_instance_names(line, lines):
         agent_timestamp = None
 
     try:
-        line = lines.next()
+        line = next(lines)
     except StopIteration:
         instances = []
     else:
@@ -185,13 +185,13 @@ def _parse_winperf_if_section(info):
     lines = iter(info)
     for line in lines:
         if line[0] == "[dhcp_start]":
-            dhcp_section_headers = lines.next()
+            dhcp_section_headers = next(lines)
             dhcp_section.extend(
                 _parse_winperf_if_sub_section(lines, '[dhcp_end]', dhcp_section_headers))
             continue
 
         if line[0].startswith("[teaming_start]"):
-            teaming_section_headers = lines.next()
+            teaming_section_headers = next(lines)
             teaming_section.extend(
                 _parse_winperf_if_sub_section(lines, '[teaming_end]', teaming_section_headers))
             continue

@@ -69,7 +69,7 @@ linux_nic_check = "lnx_if"
 
 
 def _parse_lnx_if_node_info(lines):
-    line = lines.next()
+    line = next(lines)
     return line[0], line[1:]
 
 

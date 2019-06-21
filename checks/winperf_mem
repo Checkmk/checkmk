@@ -71,7 +71,7 @@ def check_winperf_mem(_unused, params, info):
     lines = iter(info)
     try:
         while True:
-            line = lines.next()
+            line = next(lines)
             if line[0] == "36":
                 page_counter = int(line[1])
                 break

@@ -2508,9 +2508,8 @@ msgstr "Aktive Spot-Fleet-Anfragen"
 msgid "Active TCP Sessions"
 msgstr "Aktive TCP-Sitzungen"
 
-#, fuzzy
 msgid "Active TLS Connections"
-msgstr "Aktive Verbindungen"
+msgstr "Aktive TLS-Verbindungen"
 
 msgid "Active UDP sessions"
 msgstr "Aktive UDP-Sitzungen"
@@ -4264,6 +4263,10 @@ msgstr "Immer alle Zeilen anzeigen"
 msgid "Always show the checkboxes"
 msgstr "Checkboxen immer anzeigen"
 
+#, fuzzy
+msgid "Always use and expect piggyback data"
+msgstr "Huckepackdaten"
+
 msgid "Always use service level from rule"
 msgstr "Immer Service Level der Regel verwenden"
 
@@ -5816,9 +5819,8 @@ msgstr "GUI-Erweiterungen"
 msgid "Browse the catalog of all check plugins, create static checks"
 msgstr "Den Katalog aller Checkplugins durchsuchen, statische Checks erstellen"
 
-#, fuzzy
 msgid "Bucket size"
-msgstr "Paketgröße"
+msgstr "Bucketgröße"
 
 #, fuzzy
 msgid "Buckets"
@@ -6406,7 +6408,7 @@ msgid "CPU Averaging"
 msgstr "Durchschnittsbildung über CPU-Auslastung"
 
 msgid "CPU Credit Balance"
-msgstr ""
+msgstr "CPU Credit Balance"
 
 #, fuzzy
 msgid "CPU Entitlement"
@@ -7944,9 +7946,8 @@ msgstr "Client-ID / Anwendungs-ID"
 msgid "Client Secret"
 msgstr "Kundenpasswort"
 
-#, fuzzy
 msgid "Client TLS errors"
-msgstr "TLS-Fehler ignorieren"
+msgstr "TLS-Fehler auf Clientseite"
 
 msgid "Client connections accepted"
 msgstr "Client-Verbindung akzeptiert"
@@ -8465,6 +8466,10 @@ msgstr "Konfiguration des Updateplugins"
 msgid "Configuration variable:"
 msgstr "Konfigurationsvariable:"
 
+#, fuzzy
+msgid "Configure a logfile section"
+msgstr "Konfigurationsverbindung"
+
 msgid "Configure access permissions to NagVis maps."
 msgstr "Zugangsberechtigungen für NagVis-Karten konfigurieren."
 
@@ -8572,9 +8577,10 @@ msgstr ""
 "übertragen werden. Standartmäßig ist diese Grenze identisch mit der maximalen "
 "Größe der Datei, die Log Zeilen serverseitig speichert (500 KB)."
 
+#, fuzzy
 msgid ""
-"Configure the name of the environment variable to read from the incoming HTTP "
-"requests"
+"Configure the name of the HTTP request header variable to read from the "
+"incoming HTTP requests"
 msgstr ""
 "Name der Umgebungsvariable die aus den eingehenden HTTP-Anfragen gelesen "
 "werden soll"
@@ -8963,9 +8969,8 @@ msgstr "Maximale Dauer der Verbindungen"
 msgid "Connections duration min"
 msgstr "Minimale Dauer der Verbindungen"
 
-#, fuzzy
 msgid "Connections in use"
-msgstr "Verbindungsname"
+msgstr "Verwendete Verbindungen"
 
 msgid "Connections per second"
 msgstr "Verbindungen pro Sekunde"
@@ -8998,9 +9003,8 @@ msgstr "Konsolidierungsfunktionen"
 msgid "Constant value %.2f"
 msgstr "Konstanter Wert: %.2f"
 
-#, fuzzy
 msgid "Consumed Load Balancer Capacity Units"
-msgstr "Verbrauchte Kapazität"
+msgstr "Verbrauchte Load Balancer Kapazitätseinheiten"
 
 msgid "Consumed capacity"
 msgstr "Verbrauchte Kapazität"
@@ -9016,11 +9020,6 @@ msgstr ""
 msgid "Contact"
 msgstr "Kontakt"
 
-msgid "Contact Check_MK agent and all enabled datasource programs"
-msgstr ""
-"Den Check_MK-Agenten kontaktieren und alle aktiven Datenquellen-Programme "
-"ausführen"
-
 msgid "Contact Groups"
 msgstr "Kontaktgruppen"
 
@@ -9032,9 +9031,6 @@ msgstr "Kontaktperson"
 
 msgid "Contact Selection"
 msgstr "Kontaktauswahl"
-
-msgid "Contact either Check_MK Agent or use datasource program"
-msgstr "Den Check_MK-Agenten kontaktieren oder Datenquellen-Programme ausführen"
 
 msgid "Contact group (effective)"
 msgstr "Kontakgruppe (effektiv)"
@@ -9788,6 +9784,10 @@ msgstr "Graphensammlung erstellen"
 #, python-format
 msgid "Creating scheduled report '%s'..."
 msgstr "Geplanten Bericht '%s' erzeugen..."
+
+#, fuzzy
+msgid "Creation / Locking"
+msgstr "Erstellungszeit"
 
 msgid "Creation of gateway hosts"
 msgstr "Erstellung von Gatewayhosts"
@@ -11975,9 +11975,8 @@ msgstr "Deaktivierte Agent Sektionen"
 msgid "Disabled agent updates"
 msgstr "Agentenupdates deaktiviert"
 
-#, fuzzy
 msgid "Disabled alerts"
-msgstr "Deaktivierte Pfade"
+msgstr "Deaktivierte Warnmeldungen"
 
 msgid "Disabled checks"
 msgstr "Deaktivierte Checks"
@@ -12699,10 +12698,6 @@ msgstr "Verwenden Sie für die Werte kein 'aws:'-Präfix."
 
 msgid "Do not use absolute levels"
 msgstr "Keine absolute Schwellen benutzen"
-
-#, fuzzy
-msgid "Do not use piggyback data"
-msgstr "Huckepackdaten"
 
 msgid "Do now show reserved space"
 msgstr "Reservierten Platz nicht anzeigen"
@@ -13814,9 +13809,8 @@ msgstr ""
 msgid "Elastic Compute Cloud (EC2)"
 msgstr ""
 
-#, fuzzy
 msgid "Elastic IP Addresses"
-msgstr "IP-Adressen"
+msgstr "Elastic IP-Adressen"
 
 msgid "Elasticsearch Cluster Health"
 msgstr "Elasticsearch Cluster Health"
@@ -14305,9 +14299,10 @@ msgstr ""
 msgid "Enter address"
 msgstr "Adresse eingeben"
 
+#, fuzzy
 msgid ""
 "Enter the host names of the cluster nodes. These hosts must be present in "
-"WATO. "
+"WATO."
 msgstr ""
 "Hostnamen der Cluster-Nodes eingeben. Die Hosts müssen in WATO vorhanden sein"
 
@@ -15909,6 +15904,14 @@ msgstr "Verbindungen unter Flusskontrolle"
 msgid "Fluid flow"
 msgstr "Flüssigkeitsfluss"
 
+#, fuzzy
+msgid "Flush time"
+msgstr "Zeitpunkt des letzten Flush"
+
+#, fuzzy
+msgid "Flushes"
+msgstr "MongoDB Flushes"
+
 msgid "Foldable tree"
 msgstr "Klappbarer Baum"
 
@@ -16963,9 +16966,8 @@ msgstr "HTTP"
 msgid "HTTP 400 errors"
 msgstr "HTTP 400-Fehler"
 
-#, fuzzy
 msgid "HTTP 500 errors"
-msgstr "HTTP 5xx Antworten"
+msgstr "HTTP 5xx Fehler"
 
 msgid "HTTP 5xx Responses"
 msgstr "HTTP 5xx Antworten"
@@ -16987,12 +16989,8 @@ msgstr "HTTP Fehler - %d: %s"
 msgid "HTTP Errors"
 msgstr "HTTP Fehler - %d: %s"
 
-#, fuzzy
 msgid "HTTP Fixed Responses"
-msgstr "HTTP 5xx Antworten"
-
-msgid "HTTP Header Variable"
-msgstr "HTTP-Header Variable"
+msgstr "Festgelegte HTTP-Antworten"
 
 msgid "HTTP Method"
 msgstr "HTTP Methode"
@@ -17003,12 +17001,11 @@ msgstr "HTTP POST Daten"
 msgid "HTTP Parameters"
 msgstr "HTTP-Parameter"
 
-#, fuzzy
 msgid "HTTP Redirects"
-msgstr "HTTP Digest"
+msgstr "HTTP-Umleitungen"
 
 msgid "HTTP Redirects URL Limit Exceeded"
-msgstr ""
+msgstr "Überschrittenes URL-Limit von HTTP-Umleitungen"
 
 msgid "HTTP Timings"
 msgstr "HTTP Zeiten"
@@ -17018,6 +17015,10 @@ msgstr "HTTP-Proxies"
 
 msgid "HTTP proxy"
 msgstr "HTTP-Proxy"
+
+#, fuzzy
+msgid "HTTP request header variable"
+msgstr "HTTP-Header Variable"
 
 msgid "HTTP requests per second"
 msgstr "HTTP-Anfragen pro Sekunde"
@@ -17969,9 +17970,8 @@ msgstr "Benutzerregeln zu"
 msgid "High"
 msgstr "Hoch"
 
-#, fuzzy
 msgid "High alerts"
-msgstr "RX Alarm"
+msgstr "Hohe Warnmeldungen"
 
 msgid "High utilization at "
 msgstr "Schwelle für hohe Auslastung bei"
@@ -19245,13 +19245,11 @@ msgstr "IPv6"
 msgid "IPv6 Address"
 msgstr "IPv6-Adresse"
 
-#, fuzzy
 msgid "IPv6 Processed Bytes"
-msgstr "Prozesse"
+msgstr "Verarbeitete Bytes via IPv6"
 
-#, fuzzy
 msgid "IPv6 Requests"
-msgstr "Anfragen"
+msgstr "IPv6-Anfragen"
 
 msgid "IPv6 Subnet"
 msgstr "IPv6-Subnetz"
@@ -19718,14 +19716,16 @@ msgstr ""
 "Informationen über die Kompilierung von BI-Aggregationen. Diese enthält "
 "statistische und Detailinformationen für jeden Kompiliervorgang."
 
+#, fuzzy
 msgid ""
-"If this option is enabled, multisite reads the configured HTTP header "
-"variable from the incoming HTTP request and simply takes the string in this "
-"variable as name of the authenticated user. Be warned: Only allow access from "
-"trusted ip addresses (Apache <tt>Allow from</tt>), like proxy servers, to "
-"this webpage. A user with access to this page could simply fake the "
-"authentication information. This option can be useful to  realize "
-"authentication in reverse proxy environments."
+"If this option is enabled, the GUI reads the configured HTTP header variable "
+"from the incoming HTTP request and simply takes the string in this variable "
+"as name of the authenticated user. Be warned: Only allow access from trusted "
+"ip addresses (Apache <tt>Allow from</tt>), like proxy servers, to this "
+"webpage. A user with access to this page could simply fake the authentication "
+"information. This option can be useful to realize authentication in reverse "
+"proxy environments. As of version 1.6 and on all platforms using Apache 2.4+ "
+"only A-Z, a-z, 0-9 and minus (-) are to be used for the variable name."
 msgstr ""
 "Wenn diese Option aktiviert ist, wertet Multisite die konfigurierte Variable "
 "aus dem eingehenden HTTP-Header aus und nimmt diesen Text einfach als "
@@ -22414,9 +22414,8 @@ msgstr "Umfangreiche Poolgröße"
 msgid "Largest Free VMalloc Chunk"
 msgstr "Größter freier VMalloc-Bereich"
 
-#, fuzzy
 msgid "Largest bucket size"
-msgstr "Größte Datei"
+msgstr "Größte Bucketgröße"
 
 msgid "Largest file"
 msgstr "Größte Datei"
@@ -22593,10 +22592,6 @@ msgstr "Veralteter Lauf"
 
 msgid "Legacy services (defined in main.mk)"
 msgstr "Legacy Services (aus main.mk)"
-
-#, fuzzy
-msgid "Legacy: Automatically detect piggyback usage"
-msgstr "Automatisches Löschen von Hosts ohne Huckepackdaten"
 
 msgid "Legal"
 msgstr "Legal"
@@ -23047,7 +23042,6 @@ msgstr "Lizenzmerkmal"
 msgid "License Usage"
 msgstr "Lizenznutzung"
 
-#, fuzzy
 msgid "License usage"
 msgstr "Lizenznutzung"
 
@@ -23428,9 +23422,8 @@ msgstr "Fehlerindex für Leseaufrufe"
 msgid "Load as new page (hide sidebar)"
 msgstr "Als neue Seite laden (Seitenleiste verbergen)"
 
-#, fuzzy
 msgid "Load balancer latency"
-msgstr "F5 Loadbalancer-Pools"
+msgstr "Latenzzeit des Load Balancers"
 
 #, fuzzy
 msgid "Load balancer listeners"
@@ -25332,10 +25325,6 @@ msgstr ""
 "Zustand an. Falls Nachrichten aufgrund der unten stehenden Regeln verworfen "
 "werden, nimmt der Service einen CRITICAL-Zustand für eine Check-Ausführung an."
 
-#, fuzzy
-msgid "Meta data"
-msgstr "ZFS Metadaten"
-
 msgid "Method"
 msgstr "Methode"
 
@@ -26588,6 +26577,10 @@ msgstr "Noch nie angemeldet."
 msgid "Never remove files newer than"
 msgstr "Entferne niemals Dateien neuer als"
 
+#, fuzzy
+msgid "Never use piggyback data"
+msgstr "Huckepackdaten"
+
 msgid "New"
 msgstr "Neu"
 
@@ -26607,9 +26600,8 @@ msgstr "Neues BI-Paket"
 msgid "New Collection"
 msgstr "Neue Sammlung"
 
-#, fuzzy
 msgid "New Connections"
-msgstr "Neue Verbindung"
+msgstr "Neue Verbindungen"
 
 msgid "New Graph"
 msgstr "Neuer Graph"
@@ -26629,9 +26621,8 @@ msgstr "Neues Regelpaket"
 msgid "New SLA"
 msgstr "Neue SLA"
 
-#, fuzzy
 msgid "New TLS Connections"
-msgstr "Neue Verbindung"
+msgstr "Neue TLS-Verbindungen"
 
 msgid "New Timeperiod"
 msgstr "Neue Zeitperiode"
@@ -26771,6 +26762,9 @@ msgstr "Nein"
 #, python-format
 msgid "No (Error: %s, Code: %d, Depth: %d)"
 msgstr "Nein (Fehler: %s, Code: %d, Tiefe: %d)"
+
+msgid "No Checkmk agent, all configured special agents"
+msgstr ""
 
 msgid "No Context"
 msgstr "Kein Kontext"
@@ -27120,6 +27114,12 @@ msgstr "Nichts ausgewählt"
 
 msgid "Nonheap Memory Levels"
 msgstr "Nonheap Speicherlevel"
+
+msgid "Normal Checkmk agent, all configured special agents"
+msgstr ""
+
+msgid "Normal Checkmk agent, or special agent if configured"
+msgstr ""
 
 msgid "Normal check interval"
 msgstr "Normales Checkintervall"
@@ -28038,9 +28038,8 @@ msgstr "Nummer/ID der Festplatte"
 msgid "Number to create"
 msgstr "Zahl erstellen"
 
-#, fuzzy
 msgid "Numer of objects"
-msgstr "Anzahl der Knoten"
+msgstr "Anzahl der Objekte"
 
 msgid "Numeric value"
 msgstr "Numerischer Wert"
@@ -28182,9 +28181,8 @@ msgstr "Alte Nagios GUI"
 msgid "Older events"
 msgstr "Ältere Ereignisse"
 
-#, fuzzy
 msgid "Oldest Replication Slot Lag Size"
-msgstr "Zustand der Replikation"
+msgstr "Älteste Replikation Slot Lag Größe"
 
 msgid "Oldest file"
 msgstr "Älteste Datei"
@@ -28284,6 +28282,9 @@ msgstr "online"
 #, python-format
 msgid "Online (Version: %s, Edition: %s)"
 msgstr "Online (Version: %s, Edition: %s)"
+
+msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
+msgstr ""
 
 msgid ""
 "Only accepting HTTPS connections with a server which certificate is signed "
@@ -29591,13 +29592,11 @@ msgstr "Prozentuale Schwellen für Anzahl der Treads im Pool"
 msgid "Percentage levels of used space"
 msgstr "Prozentuale Schwellen für verbrauchten Speicherplatz"
 
-#, fuzzy
 msgid "Percentage of HTTP 400 errors"
-msgstr "Prozent frei"
+msgstr "HTTP 400 Fehler in Prozent"
 
-#, fuzzy
 msgid "Percentage of HTTP 500 errors"
-msgstr "Prozent frei"
+msgstr "HTTP 500 Fehler in Prozent"
 
 msgid "Percentage of current threads busy in threadpool"
 msgstr "Prozentsatz von beschäftigten Threads im Threadpool"
@@ -31009,9 +31008,8 @@ msgstr "Prozessname zur Verwendung in der Nagios Servicebeschreibung"
 msgid "Process stored SNMP walks with agent simulator"
 msgstr "Verarbeite gespeicherte SNMP Walks mit dem Agent-Simulator"
 
-#, fuzzy
 msgid "Processed Bytes"
-msgstr "Prozesse"
+msgstr "Verarbeitete Bytes"
 
 msgid "Processes"
 msgstr "Prozesse"
@@ -31074,9 +31072,8 @@ msgstr "Eigenschaften von %s"
 msgid "Properties of host"
 msgstr "Eigenschaften von Host"
 
-#, fuzzy
 msgid "Proportion of healthy host"
-msgstr "Eigenschaften von Host"
+msgstr "Anteil von gesunden Hosts"
 
 msgid "Protocol"
 msgstr "Protokoll"
@@ -31872,9 +31869,8 @@ msgstr ""
 msgid "Regular heartbeat"
 msgstr "Regelmäßiges Lebenszeichen"
 
-#, fuzzy
 msgid "Rejected Connections"
-msgstr "Aktive Verbindungen"
+msgstr "Abgelehnte Verbindungen"
 
 msgid "Rejected sessions"
 msgstr "Zurückgewiesene Sitzungen"
@@ -32330,9 +32326,8 @@ msgstr "Neues Benutzerprofil replizieren"
 msgid "Replication Partner"
 msgstr "Replikations Partner"
 
-#, fuzzy
 msgid "Replication Slot Disk Usage"
-msgstr "Replikation ist abgeschaltet"
+msgstr "Verwendung des Replikations-Slots für die Festplatte"
 
 msgid "Replication States"
 msgstr "Zustand der Replikation"
@@ -32437,9 +32432,8 @@ msgstr "Anfragen"
 msgid "Request Method"
 msgstr "Requestmethode"
 
-#, fuzzy
 msgid "Request latency"
-msgstr "Anfragerate"
+msgstr "Latenzzeit von Anfragen"
 
 #, fuzzy
 msgid "Request metrics"
@@ -35694,9 +35688,8 @@ msgstr "Größe der Deferred-Mailqueue"
 msgid "Size of extensions"
 msgstr "Größe von Erweiterungen"
 
-#, fuzzy
 msgid "Size of license"
-msgstr "Größe von Prozessen"
+msgstr "Size of license"
 
 msgid "Size of mails in queues"
 msgstr "Größe der Mails in den Mailqueues"
@@ -36562,11 +36555,10 @@ msgstr ""
 "Spooling: Ereignisse an lokale Eventkonsole in ein Spool-Verzeichnis senden"
 
 msgid "Spot Fleet Requests Total Target Capacity"
-msgstr ""
+msgstr "Gesamtzielkapazität der Spot-Fleetanfragen"
 
-#, fuzzy
 msgid "Spot Instance Requests"
-msgstr "Bearbeitete Anfragen"
+msgstr "Spot-Instanzanfragen"
 
 msgid "Sproc Latency"
 msgstr "Verarbeitungsdauer"
@@ -37530,9 +37522,8 @@ msgstr ""
 msgid "Suppress not available sensors"
 msgstr "Unterdrücke nicht verfügbare Sensoren"
 
-#, fuzzy
 msgid "Surge queue length"
-msgstr "Länge der Druckerschlange"
+msgstr "Anstieg der Warteschlangenlänge"
 
 msgid "Suspended"
 msgstr "Angehalten"
@@ -37833,9 +37824,8 @@ msgstr "TCP-Port des Listeners"
 msgid "TIME_WAIT"
 msgstr "TIME_WAIT"
 
-#, fuzzy
 msgid "TLS Processed Bytes"
-msgstr "ASM - Prozesse"
+msgstr "Verarbeitete Bytes via TLS"
 
 msgid "TS Quotas"
 msgstr "TS Quotas"
@@ -40696,7 +40686,7 @@ msgid "The number of replication failures"
 msgstr "Anzahl von Replikations-Fehlern"
 
 msgid "The number of requests that were rejected (spillover)"
-msgstr ""
+msgstr "Die Anzahl der abgelehnten Anträge (Überlauf)"
 
 msgid ""
 "The number of seconds a cache file may be old if check_mk should use it "
@@ -45920,10 +45910,10 @@ msgstr "Gesamter installierter RAM"
 
 #, python-format
 msgid "Total Running On-Demand %s Instances"
-msgstr ""
+msgstr "Instgesamt laufende On-Demand-%s-Instanzen"
 
 msgid "Total Running On-Demand Instances"
-msgstr ""
+msgstr "Insgesamt laufende On-Demand-Instanzen"
 
 msgid "Total Traffic Maximum"
 msgstr "Absolute Bandbreite Maximum"
@@ -45987,9 +45977,8 @@ msgstr "Gesamtlatenz aller VDisks"
 msgid "Total latency for all drives"
 msgstr "Gesamtlatenz aller Laufwerke"
 
-#, fuzzy
 msgid "Total licenses"
-msgstr "Geräte insgesamt"
+msgstr "Gesamtzahl der Lizenzen"
 
 #, fuzzy
 msgid "Total log file size: Absolute upper levels"
@@ -46081,9 +46070,8 @@ msgstr "Downtimes verfolgen"
 msgid "Traffic"
 msgstr "Verkehr"
 
-#, fuzzy
 msgid "Transaction Logs Disk Usage"
-msgstr "Transaktionslog"
+msgstr "Transaktionsprotokolle der Festplattennutzung"
 
 #, fuzzy
 msgid "Transaction count"
@@ -46645,9 +46633,8 @@ msgstr "Unzugewiesener Platz"
 msgid "Unassigned shards"
 msgstr "Nicht zugeordnete Shards"
 
-#, fuzzy
 msgid "Unblended costs"
-msgstr "Degraded Hosts"
+msgstr "Ungemischte Kosten"
 
 msgid "Unclassified"
 msgstr "Nicht klassifiziert"
@@ -47464,9 +47451,6 @@ msgstr "Absolute Breite verwenden:"
 msgid "Use alias"
 msgstr "Alias verwenden"
 
-msgid "Use all enabled datasource programs"
-msgstr "Alle aktiven Datenquellenprogramme nutzen"
-
 msgid "Use all map rotations"
 msgstr "Alle Kartenrotationen verwenden"
 
@@ -47618,8 +47602,8 @@ msgid "Use persistent connections"
 msgstr "Verwende bestehende Verbindungen"
 
 #, fuzzy
-msgid "Use piggyback data"
-msgstr "Huckepackdaten"
+msgid "Use piggyback data from other hosts if present"
+msgstr "Huckepage-Informationen von einem anderen Host"
 
 msgid "Use plain text, unencrypted transport"
 msgstr "Klartext verwenden, unverschlüsselter Transport"
@@ -48377,9 +48361,8 @@ msgstr "VMware-Tools sind installiert, aber die Version ist nicht aktuell"
 msgid "VNX quotas and filesystems discovery"
 msgstr "VNX-Quoten und Erkennung von Dateisystemen"
 
-#, fuzzy
 msgid "VPC Elastic IP Addresses"
-msgstr "IP-Adressen"
+msgstr "VPC Elastic IP-Adressen"
 
 msgid "VPN Tunnel"
 msgstr "VPN Tunnel"
@@ -53934,6 +53917,30 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid "Contact Check_MK agent and all enabled datasource programs"
+#~ msgstr ""
+#~ "Den Check_MK-Agenten kontaktieren und alle aktiven Datenquellen-Programme "
+#~ "ausführen"
+
+#~ msgid "Contact either Check_MK Agent or use datasource program"
+#~ msgstr ""
+#~ "Den Check_MK-Agenten kontaktieren oder Datenquellen-Programme ausführen"
+
+#, fuzzy
+#~ msgid "Do not use piggyback data"
+#~ msgstr "Huckepackdaten"
+
+#, fuzzy
+#~ msgid "Legacy: Automatically detect piggyback usage"
+#~ msgstr "Automatisches Löschen von Hosts ohne Huckepackdaten"
+
+#, fuzzy
+#~ msgid "Meta data"
+#~ msgstr "ZFS Metadaten"
+
+#~ msgid "Use all enabled datasource programs"
+#~ msgstr "Alle aktiven Datenquellenprogramme nutzen"
 
 #~ msgid ""
 #~ "List of available NagVis maps. This only works with NagVis 1.5 and above. "

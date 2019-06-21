@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from cmk.gui.plugins.metrics.check_mk import metric_number_with_precision
 # If the size_trend function is not provided via size_trend.include raise
 # an exception to provide an error message to the user. If dependencies
 # between include files are possible this will not be necessary anymore.
@@ -350,7 +351,6 @@ def df_check_filesystem_single(mountpoint,
     # Get warning and critical levels already with 'magic factor' applied
     levels = get_filesystem_levels(mountpoint, size_mb / 1024., params)
     warn_mb, crit_mb = levels["levels_mb"]
-    warn_inode, crit_inode = levels["inodes_levels"]
 
     used_hr = get_bytes_human_readable(used_mb * 1024 * 1024)
     used_max_hr = get_bytes_human_readable(used_max * 1024 * 1024)
@@ -405,53 +405,48 @@ def df_check_filesystem_single(mountpoint,
         infotext += trend_infotext
         perfdata.extend(trend_perfdata)
 
-    # Check inode levels
-    inode_status, problems = 0, []
-    if inodes_total:
-        inodes_avail_perc = 100.0 * inodes_avail / inodes_total
-        inodes_warn, inodes_crit = levels["inodes_levels"]
-        if inodes_warn is not None:
-            # Levels in absolute numbers
-            if isinstance(inodes_warn, int):
-                if inodes_crit > inodes_avail:
-                    inode_status = 2
-                    problems.append("less than %dk inodes available(!!)" % (crit_inode / 1000))
-                elif inodes_warn > inodes_avail:
-                    inode_status = 1
-                    problems.append("less than %dk inodes available(!)" % (warn_inode / 1000))
-                inodes_warn_abs = inodes_warn
-                inodes_crit_abs = inodes_crit
+    ista, ii, ip = check_inodes(levels, inodes_total, inodes_avail)
 
-            # Levels in percent
-            else:
-                if inodes_crit > inodes_avail_perc:
-                    inode_status = 2
-                    problems.append("less than %s inodes available(!!)" %
-                                    get_percent_human_readable(inodes_crit))
-                elif inodes_warn > inodes_avail_perc:
-                    inode_status = 1
-                    problems.append("less than %s inodes available(!)" %
-                                    get_percent_human_readable(inodes_warn))
-                inodes_warn_abs = (100 - inodes_warn) / 100.0 * inodes_total
-                inodes_crit_abs = (100 - inodes_crit) / 100.0 * inodes_total
+    return max(status, ista), infotext + ii, perfdata + ip
 
-        else:
-            inodes_warn_abs = None
-            inodes_crit_abs = None
 
-        # Only show inodes if they are at less then 50%
-        status = max(status, inode_status)
-        show_inodes = levels["show_inodes"]
-        if show_inodes == "always" or \
-            (show_inodes == "onlow" and (inode_status or inodes_avail_perc < 50)) or \
-            (show_inodes == "onproblem" and inode_status):
-            infotext += ", inodes available: %dk/%s" % (
-                inodes_avail / 1000, get_percent_human_readable(inodes_avail_perc))
+def check_inodes(levels, inodes_total, inodes_avail):
 
-        perfdata += [("inodes_used", inodes_total - inodes_avail, inodes_warn_abs, inodes_crit_abs,
-                      0, inodes_total)]
+    if not inodes_total:
+        return 0, "", []
 
-    if problems:
-        infotext += " - %s" % ", ".join(problems)
+    inodes_warn, inodes_crit = levels["inodes_levels"]
+    human_readable_func = metric_number_with_precision
 
-    return status, infotext, perfdata
+    # Levels in absolute numbers
+    if isinstance(inodes_warn, int):
+        inodes_warn = inodes_total - inodes_warn
+        inodes_crit = inodes_total - inodes_crit
+
+    # Levels in percent
+    elif isinstance(inodes_warn, float):
+        inodes_warn = (100 - inodes_warn) / 100.0 * inodes_total
+        inodes_crit = (100 - inodes_crit) / 100.0 * inodes_total
+        human_readable_func = lambda x: get_percent_human_readable(100.0 * x / inodes_total)
+
+    inode_status, infotext, i_perf = check_levels(
+        inodes_total - inodes_avail,
+        'inodes_used', (inodes_warn, inodes_crit),
+        human_readable_func=human_readable_func,
+        infoname="Inodes Used")
+
+    i_perf[0] += (0, inodes_total)  # because check_levels does not include min, max
+
+    # Only show inodes if they are at less then 50%
+    show_inodes = levels["show_inodes"]
+    inodes_avail_perc = 100.0 * inodes_avail / inodes_total
+    if show_inodes == "always" or \
+        (show_inodes == "onlow" and (inode_status or inodes_avail_perc < 50)) or \
+        (show_inodes == "onproblem" and inode_status):
+        infotext = ", %s, inodes available: %s/%s" % (infotext,
+                                                      metric_number_with_precision(inodes_avail),
+                                                      get_percent_human_readable(inodes_avail_perc))
+    else:
+        infotext = ""
+
+    return inode_status, infotext, i_perf

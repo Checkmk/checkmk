@@ -295,7 +295,10 @@ try {
                     if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
                         sh """
                             cd ${ARCHIVE_DIR}
-                            rsync -av -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
+                            rsync -av \
+                                --exclude '*dbgsym*.deb' \
+                                -e "ssh -o StrictHostKeyChecking=no \
+                                -i ${RELEASE_KEY_DIR}" \
     	                        ${PACKAGE_DIR}/${CMK_VERS} \
     	                        bauwelt@mathias-kettner.de:${PACKAGE_DIR}
                         """

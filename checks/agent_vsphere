@@ -33,13 +33,13 @@
 
 
 def agent_vsphere_arguments(params, hostname, ipaddress):
-    args = ''
+    args = []
     if "tcp_port" in params:
-        args += " -p %d" % params["tcp_port"]
+        args += ["-p", "%d" % params["tcp_port"]]
 
-    args += " -u " + quote_shell_string(params["user"])
-    args += " -s " + quote_shell_string(params["secret"])
-    args += " -i " + ",".join(params["infos"])
+    args += ["-u", params["user"]]
+    args += ["-s", params["secret"]]
+    args += ["-i " + ",".join(params["infos"])]
 
     # Available options. Don't ask...
     #  True,               _("Queried host is a host system" ) ),
@@ -48,45 +48,45 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     #  "agent",            _("Queried host is the vCenter with Check_MK Agent installed") ),
     direct = params.get("direct", False)
     if direct == "agent":
-        args += ' --agent'
+        args.append('--agent')
     elif direct == "hostsystem_agent":
-        args += ' --agent --direct --hostname ' + quote_shell_string(hostname)
+        args += ['--agent', '--direct', '--hostname', hostname]
     elif direct:
-        args += ' --direct --hostname ' + quote_shell_string(hostname)
+        args += ['--direct', '--hostname', hostname]
 
     if params.get("skip_placeholder_vms", True):
-        args += " -P"
+        args.append("-P")
 
     if "spaces" in params:
-        args += ' --spaces %s' % params["spaces"]
+        args += ['--spaces', params["spaces"]]
 
     if "timeout" in params:
-        args += ' --timeout %d' % params["timeout"]
+        args += ['--timeout', params["timeout"]]
 
     if params.get("use_pysphere"):
-        args += ' --pysphere'
+        args.append(' --pysphere')
 
     if params.get("vm_pwr_display"):
-        args += ' --vm_pwr_display %s' % params.get("vm_pwr_display")
+        args += ['--vm_pwr_display', params.get("vm_pwr_display")]
 
     if params.get("vm_piggyname"):
-        args += ' --vm_piggyname %s' % params.get("vm_piggyname")
+        args += ['--vm_piggyname', params.get("vm_piggyname")]
 
     if params.get("host_pwr_display"):
-        args += ' --host_pwr_display %s' % params.get("host_pwr_display")
+        args += ['--host_pwr_display', params.get("host_pwr_display")]
 
     if params.get("snapshot_display", False):
-        args += ' --snapshot_display %s' % params.get("snapshot_display")
+        args += ['--snapshot_display', params.get("snapshot_display")]
 
     if "ssl" in params:
         if params["ssl"] is False:
-            args += ' --no-cert-check ' + quote_shell_string(ipaddress)
+            args += ['--no-cert-check', ipaddress]
         elif params["ssl"] is True:
-            args += " " + quote_shell_string(hostname)
+            args.append(hostname)
         else:
-            args += " " + quote_shell_string(params["ssl"])
+            args.append(params["ssl"])
     else:  # legacy mode
-        args += " " + quote_shell_string(ipaddress)
+        args.append(ipaddress)
 
     return args
 

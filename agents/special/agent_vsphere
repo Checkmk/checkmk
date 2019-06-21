@@ -1777,7 +1777,7 @@ if __name__ == "__main__":
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-    except getopt.GetoptError, get_opt_exc:
+    except getopt.GetoptError as get_opt_exc:
         sys.stderr.write("%s\n" % get_opt_exc)
         sys.exit(1)
 

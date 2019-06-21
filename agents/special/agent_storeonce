@@ -53,7 +53,7 @@ long_options = ["help", "username=", "password=", "address=", "demo", "no-cert-c
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -177,7 +177,7 @@ def main():
         process_stores_info()
 
         sys.stdout.write("\n".join(output_lines) + "\n")
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Connection error: %s" % e)
         sys.exit(1)
 

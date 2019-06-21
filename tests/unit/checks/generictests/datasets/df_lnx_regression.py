@@ -78,5 +78,29 @@ checks = {
          (u'/home', {'trend_range': 24, 'show_levels': 'onmagic', 'inodes_levels': (10.0, 5.0), 'magic_normsize': 20, 'show_inodes': 'onlow', 'levels': (80.0, 90.0), 'show_reserved': False, 'levels_low': (50.0, 60.0), 'trend_perfdata': True},
              [(3, 'filesystem not found', [])]
          ),
+         (u'/', {'inodes_levels': (90.0, 5.0), 'show_inodes': 'onlow'},
+             [(1, '75.8% used (103.92 of 137.13 GB), trend: 0.00 B / 24 hours, ' \
+                  'Inodes Used: 18.1% (warn/crit at 10.0%/95.0%), inodes available: 7.49 M/81.9%',
+                 [(u'/', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
+                  ('fs_size', 140416.6953125, None, None, None, None),
+                  ('growth', 0.0, None, None, None, None),
+                  ('trend', 0, None, None, 0, 5850.695638020833),
+                  ('inodes_used', 1654272, 914227.2000000001, 8685158.4, 0, 9142272),
+                 ]
+              ),
+             ]
+         ),
+         (u'/', {'inodes_levels': (8542272, 8142272), 'show_inodes': 'onlow'},
+             [(2, '75.8% used (103.92 of 137.13 GB), trend: 0.00 B / 24 hours, ' \
+                  'Inodes Used: 1.65 M (warn/crit at 600.00 k/1.00 M), inodes available: 7.49 M/81.9%',
+                 [(u'/', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
+                  ('fs_size', 140416.6953125, None, None, None, None),
+                  ('growth', 0.0, None, None, None, None),
+                  ('trend', 0, None, None, 0, 5850.695638020833),
+                  ('inodes_used', 1654272, 600000.0, 1000000.0, 0, 9142272),
+                 ]
+              ),
+             ]
+         ),
         ]
 }

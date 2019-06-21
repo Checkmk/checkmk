@@ -112,6 +112,6 @@ elif spool_dir:
     fd, path = tempfile.mkstemp(prefix='cmk_sms_')
     os.write(fd, 'To: %s\n\n%s' % (recipient, quote_message(message)))
     os.close(fd)
-    os.chmod(path, 0660)
+    os.chmod(path, 0o660)
     filename = path.split('/')[-1]
     shutil.move(path, spool_dir + '/' + filename)

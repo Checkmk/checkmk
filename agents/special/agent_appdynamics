@@ -72,7 +72,7 @@ opt_filename = None
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write('%s\n' % err)
     sys.exit(1)
 
@@ -115,7 +115,7 @@ else:
 if opt_filename:
     try:
         data = json.loads(file(opt_filename).read())
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Cannot read JSON data from file %s: %s\n" % (opt_filename, e))
         if opt_debug:
             raise
@@ -155,7 +155,7 @@ else:
 
             data += json.loads(response.read())
 
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write('Cannot connect to AppDynamics server. %s\n' % e)
         if opt_debug:
             raise

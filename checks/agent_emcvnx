@@ -26,14 +26,14 @@
 
 
 def agent_emcvnx_arguments(params, hostname, ipaddress):
-    args = ''
+    args = []
     if params["user"] != "":
-        args += " -u " + quote_shell_string(params["user"])
+        args += ["-u", params["user"]]
     if params["password"] != "":
-        args += " -p " + quote_shell_string(params["password"])
-    args += " -i " + ",".join(params["infos"])
+        args += ["-p", params["password"]]
+    args += ["-i", ",".join(params["infos"])]
 
-    args += " " + quote_shell_string(ipaddress)
+    args.append(ipaddress)
     return args
 
 

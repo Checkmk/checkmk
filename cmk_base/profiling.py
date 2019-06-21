@@ -61,7 +61,7 @@ def output_profile():
                 "    profile_file = %r\n"
                 "stats = pstats.Stats(profile_file)\n"
                 "stats.sort_stats('time').print_stats()\n" % _profile_path)
-    os.chmod(show_profile, 0755)
+    os.chmod(show_profile, 0o755)
 
     console.output(
         "Profile '%s' written. Please run %s.\n" % (_profile_path, show_profile), stream=sys.stderr)

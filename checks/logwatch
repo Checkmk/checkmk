@@ -402,6 +402,24 @@ def inventory_logwatch_groups(info):
     return inventory_logwatch_common(info, "group")
 
 
+def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
+
+    inclusion_is_regex = inclusion.startswith("~")
+    if inclusion_is_regex:
+        incl_match = regex(inclusion[1:]).match(logfile_name)
+    else:
+        incl_match = fnmatch.fnmatch(logfile_name, inclusion)
+    if not incl_match:
+        return False
+
+    exclusion_is_regex = exclusion.startswith("~")
+    if exclusion_is_regex:
+        excl_match = regex(exclusion[1:]).match(logfile_name)
+    else:
+        excl_match = fnmatch.fnmatch(logfile_name, exclusion)
+    return not excl_match
+
+
 def check_logwatch_groups(item, params, info):
     if len(info) == 1:
         line = " ".join(info[0][1:])
@@ -412,41 +430,20 @@ def check_logwatch_groups(item, params, info):
     for entry in params.get('group_patterns', []):
         group_patterns.add(entry)
 
-    logfile = None
-    logfiles = []
+    logfile_name = None
+    loglines = []
     for l in info:
         # node info ignored (only used in regular logwatch check)
         line = " ".join(l[1:])
         if line.startswith('[[['):
-            logfile = line[3:-3]
+            logfile_name = line[3:-3]
 
-        elif logfile is not None:
-            for pattern in group_patterns:
-                inclusion, exclusion = pattern
-                inclusion_is_regex = False
-                exclusion_is_regex = False
+        elif logfile_name is not None:
+            for inclusion, exclusion in group_patterns:
+                if _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
+                    loglines.append(line)
 
-                if inclusion.startswith("~"):
-                    inclusion_is_regex = True
-                    inclusion = inclusion[1:]
-                if exclusion.startswith("~"):
-                    exclusion_is_regex = True
-                    exclusion = exclusion[1:]
-
-                if inclusion_is_regex:
-                    incl_match = regex(inclusion).match(logfile)
-                else:
-                    incl_match = fnmatch.fnmatch(logfile, inclusion)
-
-                if exclusion_is_regex:
-                    excl_match = regex(exclusion).match(logfile)
-                else:
-                    excl_match = fnmatch.fnmatch(logfile, exclusion)
-
-                if incl_match and not excl_match:
-                    logfiles.append(line)
-
-    return check_logwatch_generic(item, params, logfiles, True, True)
+    return check_logwatch_generic(item, params, loglines, True, True)
 
 
 check_info['logwatch.groups'] = {

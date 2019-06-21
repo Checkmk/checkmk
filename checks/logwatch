@@ -56,6 +56,20 @@ logwatch_spool_dir = cmk.utils.paths.var_dir + '/logwatch_spool'
 #   |  General functions, for normal and forwarding logwatch check         |
 #   '----------------------------------------------------------------------'
 
+
+def _extract_error_message(node, line):
+    '''Check line for error message
+    Return (False, None) if no error message is found,
+    (True, error_message) otherwise
+    '''
+    if not line.startswith("CANNOT READ CONFIG FILE: "):
+        return False, None
+    error_msg = line[25:]
+    if node is None:
+        return True, "Error in agent configuration: %s" % error_msg
+    return True, "Error in agent configuration on node %s: %s" % (node, error_msg)
+
+
 _CACHE_IS_CACHE_NEW = {}
 
 
@@ -273,14 +287,14 @@ def inventory_logwatch(info, use_mode):
 # without precompiled checks, the params must be None an will be
 # ignored.
 def check_logwatch(item, params, info):
+    if info:
+        is_error, error_msg = _extract_error_message(info[0][0], " ".join(info[0][1:]))
+        if is_error:
+            return 3, error_msg
+
     now = time.time()
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)
     set_item_state("logwatch_last_run_%s" % item, now)
-
-    if len(info) == 1:
-        line = " ".join(info[0][1:])
-        if line.startswith("CANNOT READ CONFIG FILE"):
-            return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
 
     found = False
     right_block = False
@@ -403,10 +417,10 @@ def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
 
 
 def check_logwatch_groups(item, params, info):
-    if len(info) == 1:
-        line = " ".join(info[0][1:])
-        if line.startswith("CANNOT READ CONFIG FILE"):
-            return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
+    if info:
+        is_error, error_msg = _extract_error_message(info[0][0], " ".join(info[0][1:]))
+        if is_error:
+            return 3, error_msg
 
     group_patterns = set(params.get("pre_comp_group_patterns", []))
     for entry in params.get('group_patterns', []):
@@ -728,10 +742,10 @@ def inventory_logwatch_ec(info, use_mode):
 
 
 def check_logwatch_ec(item, params, info):
-    if len(info) == 1:
-        line = " ".join(info[0][1:])
-        if line.startswith("CANNOT READ CONFIG FILE"):
-            yield 3, "Error in agent configuration: %s" % " ".join(info[0][5:])
+    if info:
+        is_error, error_msg = _extract_error_message(info[0][0], " ".join(info[0][1:]))
+        if is_error:
+            yield 3, error_msg
             return
 
     # 1. Parse lines in info and separate by logfile

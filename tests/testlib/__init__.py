@@ -628,7 +628,6 @@ class Site(object):
                 assert exit_code == 0
                 assert os.path.exists("/omd/sites/%s" % self.id)
 
-                self._enable_mod_python_debug()
                 self._enabled_liveproxyd_debug_logging()
                 self._enable_mkeventd_debug_logging()
 
@@ -751,14 +750,6 @@ class Site(object):
                 'cmk.mkeventd.StatusServer': 10,
                 'cmk.mkeventd.lock': 20
             })
-
-    def _enable_mod_python_debug(self):
-        path = "etc/check_mk/apache.conf"
-        content = self.read_file(path)
-
-        self.write_file(
-            path,
-            content.replace("PythonHandler index", "PythonHandler index\n        PythonDebug On"))
 
     def _install_test_python_modules(self):
         venv = virtualenv_path()

@@ -15173,10 +15173,10 @@ msgid "Failed Notifications"
 msgstr "Fehlgeschlagene Alarmierungen"
 
 msgid "Failed TLS Client Handshake"
-msgstr ""
+msgstr "Fehlgeschlagener TLS-Client Handshake"
 
 msgid "Failed TLS Target Handshake"
-msgstr ""
+msgstr "Fehlgeschlagener TLS-Ziel-Handshake"
 
 msgid "Failed calls caused by unexpected interaction from gateway"
 msgstr "Fehlgeschlagene Anrufe durch unerwartete Interaktion des Gateway"
@@ -15904,13 +15904,11 @@ msgstr "Verbindungen unter Flusskontrolle"
 msgid "Fluid flow"
 msgstr "Flüssigkeitsfluss"
 
-#, fuzzy
 msgid "Flush time"
-msgstr "Zeitpunkt des letzten Flush"
+msgstr "Flushzeit"
 
-#, fuzzy
 msgid "Flushes"
-msgstr "MongoDB Flushes"
+msgstr "Flushes"
 
 msgid "Foldable tree"
 msgstr "Klappbarer Baum"
@@ -32847,9 +32845,8 @@ msgstr "Regel %d in %s"
 msgid "Rule %d in Folder %s is affected"
 msgstr "Regel %d im Ordner %s ist betroffen"
 
-#, fuzzy
 msgid "Rule Evaluations"
-msgstr "Regeloptionen"
+msgstr "Regelauswertungen"
 
 msgid "Rule ID"
 msgstr "Regel ID"

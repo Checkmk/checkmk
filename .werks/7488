@@ -1,0 +1,11 @@
+Title: logwatch.groups: Deduplicate lines if more that one pattern matches
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1561101149
+Class: fix
+
+The logwatch.groups check plugin now no longer processes lines multiple times
+if more than one group pattern matches the log files name.

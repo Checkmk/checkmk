@@ -76,7 +76,7 @@ def inv_win_wmi_updates(info):
         })
 
     paclist = inv_tree_list("software.packages:")
-    paclist.extend(sorted(parsed_packages, key=lambda r: r['name']))
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
 
 
 inv_info['win_wmi_updates'] = {

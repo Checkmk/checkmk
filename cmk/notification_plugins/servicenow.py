@@ -127,10 +127,14 @@ Comment: $NOTIFICATIONCOMMENT$
 """
         desc = utils.substitute_context(desc, context)
         handle_downtime(problem_id, url, user, pwd, desc, "start", dtstart_state, caller, timeout)
-    elif context['NOTIFICATIONTYPE'] == 'DOWNTIMECANCELLED':
-        desc = """Downtime expired.
+    elif context['NOTIFICATIONTYPE'] == 'DOWNTIMEEND':
+        desc = """Downtime ended.
 """
         handle_downtime(problem_id, url, user, pwd, desc, "end", dtend_state, caller, timeout)
+    elif context['NOTIFICATIONTYPE'] == 'DOWNTIMECANCELLED':
+        desc = """Downtime cancelled.
+"""
+        handle_downtime(problem_id, url, user, pwd, desc, "cancel", dtend_state, caller, timeout)
     else:
         sys.stdout.write("Noticication type %s not supported\n" % (context['NOTIFICATIONTYPE']))
         return 0
@@ -241,7 +245,9 @@ def handle_downtime(problem_id, url, user, pwd, desc, which, dt_state, caller, t
     if which == "start":
         sys.stdout.write('Ticket %s: successfully added downtime.\n' % incident[0])
     if which == "end":
-        sys.stdout.write('Ticket %s: successfully removed downtime.\n' % incident[0])
+        sys.stdout.write('Ticket %s: successfully ended downtime.\n' % incident[0])
+    if which == "cancel":
+        sys.stdout.write('Ticket %s: successfully cancelled downtime.\n' % incident[0])
     return 0
 
 

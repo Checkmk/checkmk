@@ -123,9 +123,12 @@ class ConfigDomainLiveproxy(ConfigDomain):
                 pid = int(file(pidfile).read().strip())
                 os.kill(pid, signal.SIGUSR1)
             except IOError as e:
-                if e.errno == errno.ENOENT:
-                    pass
-                else:
+                # No liveproxyd running: No reload needed.
+                if e.errno != errno.ENOENT:
+                    raise
+            except OSError as e:
+                # PID in pidfiles does not exist: No reload needed.
+                if e.errno != errno.ESRCH:  # [Errno 3] No such process
                     raise
             except ValueError:
                 # ignore empty pid file (may happen during locking in

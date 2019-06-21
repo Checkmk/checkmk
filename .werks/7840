@@ -1,0 +1,10 @@
+Title: aix_packages lnx_packages win_exefiles win_reg_uninstall win_wmi_software win_wmi_updates, solaris_pkginfo: Do not crash if package has no 'name' information
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1561100261
+Class: fix
+
+

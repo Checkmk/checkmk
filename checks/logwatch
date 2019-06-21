@@ -442,6 +442,7 @@ def check_logwatch_groups(item, params, info):
             for inclusion, exclusion in group_patterns:
                 if _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
                     loglines.append(line)
+                    break
 
     return check_logwatch_generic(item, params, loglines, True, True)
 

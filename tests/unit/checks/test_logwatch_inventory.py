@@ -28,13 +28,15 @@ def test_logwatch_inventory_single(check_manager, info, fwd_rule, inventory_grou
                                    expected_result):
     check = check_manager.get_check('logwatch')
 
+    parsed = check.run_parse(info)
+
     mock_cfgs = [fwd_rule, inventory_groups]
 
     def mock_cfg(_hostname, _ruleset):
         return mock_cfgs.pop(0)
 
     with MockHostExtraConf(check, mock_cfg):
-        actual_result = DiscoveryResult(check.run_discovery(info))
+        actual_result = DiscoveryResult(check.run_discovery(parsed))
         assertDiscoveryResultsEqual(check, actual_result, DiscoveryResult(expected_result))
 
 
@@ -60,6 +62,8 @@ def test_logwatch_inventory_single(check_manager, info, fwd_rule, inventory_grou
         (INFO1, [{}], [[('my_group', ('~.*sing', '~.*1'))]], []),  # don't match :missing!
     ])
 def test_logwatch_inventory_group(check_manager, info, fwd_rule, inventory_groups, expected_result):
+    parsed = check_manager.get_check('logwatch').run_parse(info)
+
     check = check_manager.get_check('logwatch.groups')
 
     mock_cfgs = [fwd_rule, inventory_groups]
@@ -68,7 +72,7 @@ def test_logwatch_inventory_group(check_manager, info, fwd_rule, inventory_group
         return mock_cfgs.pop(0)
 
     with MockHostExtraConf(check, mock_cfg):
-        actual_result = DiscoveryResult(check.run_discovery(info))
+        actual_result = DiscoveryResult(check.run_discovery(parsed))
         assertDiscoveryResultsEqual(check, actual_result, DiscoveryResult(expected_result))
 
 
@@ -134,6 +138,8 @@ def test_logwatch_inventory_group(check_manager, info, fwd_rule, inventory_group
 ])
 def test_logwatch_ec_inventory_single(check_manager, info, fwd_rule, inventory_groups,
                                       expected_result):
+    parsed = check_manager.get_check('logwatch').run_parse(info)
+
     check = check_manager.get_check('logwatch.ec_single')
 
     mock_cfgs = [fwd_rule, inventory_groups]
@@ -142,7 +148,7 @@ def test_logwatch_ec_inventory_single(check_manager, info, fwd_rule, inventory_g
         return mock_cfgs.pop(0)
 
     with MockHostExtraConf(check, mock_cfg):
-        actual_result = DiscoveryResult(check.run_discovery(info))
+        actual_result = DiscoveryResult(check.run_discovery(parsed))
         assertDiscoveryResultsEqual(check, actual_result, DiscoveryResult(expected_result))
 
 
@@ -174,6 +180,8 @@ def test_logwatch_ec_inventory_single(check_manager, info, fwd_rule, inventory_g
 ])
 def test_logwatch_ec_inventory_groups(check_manager, info, fwd_rule, inventory_groups,
                                       expected_result):
+    parsed = check_manager.get_check('logwatch').run_parse(info)
+
     check = check_manager.get_check('logwatch.ec')
 
     mock_cfgs = [fwd_rule, inventory_groups]
@@ -182,5 +190,5 @@ def test_logwatch_ec_inventory_groups(check_manager, info, fwd_rule, inventory_g
         return mock_cfgs.pop(0)
 
     with MockHostExtraConf(check, mock_cfg):
-        actual_result = DiscoveryResult(check.run_discovery(info))
+        actual_result = DiscoveryResult(check.run_discovery(parsed))
         assertDiscoveryResultsEqual(check, actual_result, DiscoveryResult(expected_result))

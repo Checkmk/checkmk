@@ -628,6 +628,7 @@ class Site(object):
                 assert exit_code == 0
                 assert os.path.exists("/omd/sites/%s" % self.id)
 
+                self._set_number_of_helpers()
                 self._enabled_liveproxyd_debug_logging()
                 self._enable_mkeventd_debug_logging()
 
@@ -733,6 +734,10 @@ class Site(object):
                     "bash -x .f12" % (path, self.id)) >> 8 == 0
                 print "Executing .f12 in \"%s\" DONE" % path
                 sys.stdout.flush()
+
+    def _set_number_of_helpers(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file("etc/check_mk/conf.d/cmc-helpers.mk", "cmc_cmk_helpers = 5\n")
 
     def _enabled_liveproxyd_debug_logging(self):
         self.makedirs("etc/check_mk/liveproxyd.d")

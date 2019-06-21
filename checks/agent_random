@@ -33,7 +33,7 @@
 
 
 def agent_random_arguments(params, hostname, ipaddress):
-    return hostname
+    return [hostname]
 
 
 special_agent_info['random'] = agent_random_arguments

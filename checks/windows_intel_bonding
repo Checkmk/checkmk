@@ -56,10 +56,10 @@ def parse_windows_intel_bonding(info):
 
     try:
         # Get bond info
-        line = lines.next()
+        line = next(lines)
         if line[0] != "###":
             while True:
-                line = lines.next()
+                line = next(lines)
                 if line[0] == "###":
                     break
                 bond_caption = " ".join(line[:-2])
@@ -67,10 +67,10 @@ def parse_windows_intel_bonding(info):
                 bonds[bond_name] = {"caption": bond_caption, "mode": bond_mode}
 
         # Get adapter info
-        line = lines.next()
+        line = next(lines)
         if line[0] != "###":
             while True:
-                line = lines.next()
+                line = next(lines)
                 if line[0] == "###":
                     break
                 adapter_function, adapter_status = line[0], line[1]
@@ -83,9 +83,9 @@ def parse_windows_intel_bonding(info):
                 }
 
         # Get adapter names
-        line = lines.next()  # Skip header
+        line = next(lines)  # Skip header
         while True:
-            line = lines.next()
+            line = next(lines)
             adapter_names[line[-1]] = " ".join(line[1:-1])
 
     except StopIteration:

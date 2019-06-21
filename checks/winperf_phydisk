@@ -97,7 +97,7 @@ def winperf_phydisk_convert(info):
     current_node = ""
     try:
         while True:
-            line = lines.next()
+            line = next(lines)
             if line[2] == "instances:":
                 if current_node != "":
                     entries.extend(finalize_block(current_node))

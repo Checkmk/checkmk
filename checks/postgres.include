@@ -31,13 +31,13 @@ def parse_postgres_dbs(info):
     lines = iter(info)
     try:
         while True:
-            line = lines.next()
+            line = next(lines)
             if line[0].startswith("[[[") and line[0].endswith("]]]"):
                 inst_name = "%s/" % line[0][3:-3].upper()
 
             elif line[0] == "[databases_start]":
                 while True:
-                    line = lines.next()
+                    line = next(lines)
                     if line[0] == "[databases_end]":
                         headers = lines.next()[1:]
                         break

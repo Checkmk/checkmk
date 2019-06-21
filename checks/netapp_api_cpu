@@ -91,7 +91,7 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
     elif used_perc > 100:
         used_perc = 100
 
-    state, infotext, perfdata = check_cpu_util(used_perc, params, now).next()
+    state, infotext, perfdata = next(check_cpu_util(used_perc, params, now))
     if num_cpus_str is not None:
         num_cpus = int(num_cpus_str)
         perfdata[0] = perfdata[0][:5] + (num_cpus,)

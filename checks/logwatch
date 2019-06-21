@@ -464,7 +464,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     # Create directories, if neccessary
     try:
         os.makedirs(logdir)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EEXIST:
             pass  # Exists
         else:
@@ -556,7 +556,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
             logwatch_file = open(logfile, 'r+')
         else:
             logwatch_file = open(logfile, 'w')
-    except Exception, e:
+    except Exception as e:
         raise MKGeneralException(
             "User %s cannot open file for writing: %s" % (logwatch_username(), e))
 
@@ -855,7 +855,7 @@ def check_logwatch_ec(item, params, info):
         if result.num_dropped:
             yield 2, "Dropped %d messages%s" % (result.num_dropped, exc_txt)
 
-    except Exception, e:
+    except Exception as e:
         if cmk.utils.debug.enabled():
             raise
         yield (2, 'Failed to forward messages (%s). Lost %d messages.' % (e, len(messages)))
@@ -949,7 +949,7 @@ def logwatch_forward_tcp(method, new_messages):
 
     try:
         logwatch_forward_send_tcp(method, message_chunks, result)
-    except Exception, e:
+    except Exception as e:
         result.exception = e
 
     if logwatch_shall_spool_messages(method):
@@ -988,7 +988,7 @@ def logwatch_forward_send_tcp(method, message_chunks, result):
                 sock.send(message.encode("utf-8") + "\n")
                 message_chunk.pop(0)  # remove sent message
                 result.num_forwarded += 1
-    except Exception, e:
+    except Exception as e:
         result.exception = e
     finally:
         sock.close()
@@ -1001,7 +1001,7 @@ def logwatch_spool_messages(message_chunks, result):
 
     try:
         os.makedirs(path)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EEXIST:
             pass  # Exists
         else:
@@ -1016,7 +1016,7 @@ def logwatch_spool_messages(message_chunks, result):
             try:
                 os.unlink(spool_file_path)
                 continue
-            except OSError, e:
+            except OSError as e:
                 if e.errno == errno.ENOENT:
                     continue
                 else:
@@ -1043,7 +1043,7 @@ def logwatch_load_spooled_messages(method, result):
 
     try:
         spool_files = sorted(os.listdir(logwatch_spool_path()))
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.ENOENT:
             return []
         else:
@@ -1092,7 +1092,7 @@ def logwatch_load_spooled_messages(method, result):
 
         try:
             messages = ast.literal_eval(open(path).read())
-        except IOError, e:
+        except IOError as e:
             if e.errno == errno.ENOENT:
                 continue
             else:

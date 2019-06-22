@@ -506,18 +506,18 @@ def logwatch_username():
     return getpass.getuser()
 
 
+def _makedirs_exist_ok(directory):
+    try:
+        os.makedirs(directory)
+    except OSError as exc:
+        if exc.errno != errno.EEXIST:
+            raise
+
 def check_logwatch_generic(item, params, loglines, found):
     import hashlib
     logdir = logwatch_dir + "/" + host_name()
 
-    # Create directories, if neccessary
-    try:
-        os.makedirs(logdir)
-    except OSError as e:
-        if e.errno == errno.EEXIST:
-            pass  # Exists
-        else:
-            raise
+    _makedirs_exist_ok(logdir)
 
     logfile = logdir + "/" + item.replace("/", "\\")
 
@@ -951,8 +951,8 @@ def logwatch_forward_spool_directory(method, item, messages):
     spool_path = method[6:]
     file_name = '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or '',
                               time.time())
-    if not os.path.exists(spool_path):
-        os.makedirs(spool_path)
+    _makedirs_exist_ok(spool_path)
+
     file('%s/%s' % (spool_path, file_name), 'w').write(('\n'.join(messages)).encode("utf-8") + '\n')
     os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
 
@@ -1030,13 +1030,7 @@ def logwatch_forward_send_tcp(method, message_chunks, result):
 def logwatch_spool_messages(message_chunks, result):
     path = logwatch_spool_path()
 
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno == errno.EEXIST:
-            pass  # Exists
-        else:
-            raise
+    _makedirs_exist_ok(path)
 
     # Now write updated/new and delete emtpy spool files
     for time_spooled, num_already_spooled, message_chunk in message_chunks:

@@ -5822,9 +5822,8 @@ msgstr "Den Katalog aller Checkplugins durchsuchen, statische Checks erstellen"
 msgid "Bucket size"
 msgstr "Bucketgröße"
 
-#, fuzzy
 msgid "Buckets"
-msgstr "Paketgröße"
+msgstr "Buckets"
 
 msgid "Buffer cache size"
 msgstr "Größe des Puffercache"
@@ -8121,9 +8120,8 @@ msgstr "Cluster: Bevorzugtes Checkergebnis von Local-Checks"
 msgid "Cnt."
 msgstr "Zln."
 
-#, fuzzy
 msgid "Cold HDD space"
-msgstr "Gesamter Auslagerungsspeicher"
+msgstr "Unvorbereiteter Festplattenspeicher"
 
 msgid "Collect RMON statistics data"
 msgstr "RMON-Statistikdaten sammeln"
@@ -10310,31 +10308,25 @@ msgid "DB Number"
 msgstr "DB-Nummer"
 
 msgid "DB cluster parameter groups"
-msgstr ""
+msgstr "DB-Cluster-Parametergruppen"
 
-#, fuzzy
 msgid "DB cluster roles"
-msgstr "Ist Cluster-Host"
+msgstr "DB-Clusterrollen"
 
-#, fuzzy
 msgid "DB clusters"
-msgstr "Neuer Cluster"
+msgstr "DB-Cluster"
 
-#, fuzzy
 msgid "DB instances"
-msgstr "Instanzen"
+msgstr "DB-Instanzen"
 
-#, fuzzy
 msgid "DB parameter groups"
-msgstr "Mustergruppe hinzufügen"
+msgstr "DB-Parametergruppen"
 
-#, fuzzy
 msgid "DB security groups"
-msgstr "Service-Gruppen"
+msgstr "DB-Sicherheitsgruppen"
 
-#, fuzzy
 msgid "DB subnet groups"
-msgstr "Nicht gruppieren"
+msgstr "DB-Subnetzgruppen"
 
 msgid "DB username"
 msgstr "Datenbank-Benutzername"
@@ -10372,9 +10364,8 @@ msgstr "DDN S2A"
 msgid "DEB packaging"
 msgstr "DEB-Paketierung"
 
-#, fuzzy
 msgid "DELETE Requests"
-msgstr "Anfragen"
+msgstr "DELETE-Anfragen"
 
 msgid "DES"
 msgstr "DES"
@@ -13799,9 +13790,8 @@ msgstr ""
 "akzeptieren Sie jedes vom Server angebotene Zertifikat. Es wird dringend "
 "empfohlen, diese Option aktiviert zu lassen."
 
-#, fuzzy
 msgid "Elapsed time"
-msgstr "Ablaufzeit"
+msgstr "Verstrichene Zeit"
 
 msgid "Elastic Block Storage (EBS)"
 msgstr ""
@@ -14596,9 +14586,8 @@ msgstr ""
 msgid "Event processing time"
 msgstr "Ereignissverarbeitungszeit"
 
-#, fuzzy
 msgid "Event subscriptions"
-msgstr "Ereignisserzeugung"
+msgstr "Ereignis-Subskriptionen"
 
 msgid ""
 "Event was archived because no rule matched and archiving is activated in "
@@ -16511,9 +16500,8 @@ msgstr "GB"
 msgid "GByte/s"
 msgstr "GB/Sek."
 
-#, fuzzy
 msgid "GET Requests"
-msgstr "Anfragen"
+msgstr "GET-Anfragen"
 
 msgid "GET/POST variables of this page"
 msgstr "GET/POST-Variablen auf dieser Seite"
@@ -16566,9 +16554,8 @@ msgstr "Globale Berechtigungen"
 msgid "General Properties"
 msgstr "Generelle Eigenschaften"
 
-#, fuzzy
 msgid "General Purpose SSD space"
-msgstr "Generelle Eigenschaften"
+msgstr "Allzweck-SSD-Speicherplatz"
 
 msgid "General Settings"
 msgstr "Globale Einstellungen"
@@ -16942,9 +16929,8 @@ msgstr "H.Unten"
 msgid "HARD"
 msgstr "HART"
 
-#, fuzzy
 msgid "HEAD Requests"
-msgstr "Anfragen"
+msgstr "HEAD-Anfragen"
 
 msgid "HH:MM:SS"
 msgstr "HH:MM:SS"
@@ -16983,9 +16969,8 @@ msgstr "HTTP Digest"
 msgid "HTTP Error - %d: %s"
 msgstr "HTTP Fehler - %d: %s"
 
-#, fuzzy
 msgid "HTTP Errors"
-msgstr "HTTP Fehler - %d: %s"
+msgstr "HTTP Fehler"
 
 msgid "HTTP Fixed Responses"
 msgstr "Festgelegte HTTP-Antworten"
@@ -22341,9 +22326,8 @@ msgstr ""
 "werden, z.B. um die Anfragezeiten zu verkürzen. Diese Optionen aktiviert "
 "dieses Verhalten und legt die Größe der Blöcke fest."
 
-#, fuzzy
 msgid "LIST Requests"
-msgstr "Anfragen"
+msgstr "LIST-Anfragen"
 
 msgid "LISTEN"
 msgstr "LISTEN"
@@ -23043,9 +23027,8 @@ msgstr "Lizenznutzung"
 msgid "License usage"
 msgstr "Lizenznutzung"
 
-#, fuzzy
 msgid "Licenses"
-msgstr "Lizenznutzung"
+msgstr "Lizenzen"
 
 msgid "Licensing Status"
 msgstr "Lizenzierungsstatus"
@@ -23423,21 +23406,17 @@ msgstr "Als neue Seite laden (Seitenleiste verbergen)"
 msgid "Load balancer latency"
 msgstr "Latenzzeit des Load Balancers"
 
-#, fuzzy
 msgid "Load balancer listeners"
-msgstr "F5 Loadbalancer-Pools"
+msgstr "Loadbalancer-Listener"
 
-#, fuzzy
 msgid "Load balancer registered instances"
-msgstr "F5 Loadbalancer-Pools"
+msgstr "Registrierte Instanzen des Loadbalancers"
 
-#, fuzzy
 msgid "Load balancers"
-msgstr "F5 Loadbalancer-Pools"
+msgstr "Loadbalancer"
 
-#, fuzzy
 msgid "Load balancers Target Groups"
-msgstr "F5 Loadbalancer-Pools"
+msgstr "Zielgruppen von Loadbalancers"
 
 msgid "Load in a new window / tab"
 msgstr "In einem neuen Fenster/Tab laden"
@@ -23937,13 +23916,11 @@ msgstr "Untergrenzen"
 msgid "Lower levels for %s"
 msgstr "Untere Schwellen für %s"
 
-#, fuzzy
 msgid "Lower levels for CPU balance"
-msgstr "Untere Schwellen für Spannung"
+msgstr "Untere Schwellen für CPU-Bilanz"
 
-#, fuzzy
 msgid "Lower levels for burst balance"
-msgstr "Untere Schwellen für Spannung"
+msgstr "Untere Schwellen für Burst-Balance"
 
 msgid "Lower levels for certificate age"
 msgstr "Untere Schwellen für das Alter des Zertifikats"
@@ -24179,9 +24156,8 @@ msgid "Magic factor (automatic level adaptation for large volumes)"
 msgstr ""
 "Magischer Faktor (automatische Schwellwert-Anpassung für große Dateisysteme)"
 
-#, fuzzy
 msgid "Magnetic volumes space"
-msgstr "Verwendeten Speicherplatz ignorieren"
+msgstr "Magnetischer Datenträgerplatz"
 
 msgid "Mail Latency"
 msgstr "Emaillatenz"
@@ -24462,9 +24438,8 @@ msgstr "Manuelle Checks"
 msgid "Manual page for this check type"
 msgstr "Dokumentation für diesen Checktyp"
 
-#, fuzzy
 msgid "Manual snapshots"
-msgstr "Snapshots verwalten"
+msgstr "Manuelle Schnappschüsse"
 
 #, python-format
 msgid "Manually execute this %s"
@@ -26480,17 +26455,14 @@ msgstr "Netzwerk-ID"
 msgid "Network Interface and Switch Port Discovery"
 msgstr "Serviceerkennung für Netzwerkschnittstellen und Ports"
 
-#, fuzzy
 msgid "Network Load Balancer Listeners"
-msgstr "F5 Loadbalancer-Pools"
+msgstr "Listener von Netzwork-Loadbalancer"
 
-#, fuzzy
 msgid "Network Load Balancer Target Groups"
-msgstr "Netzwerkschnittstellen-Gruppen"
+msgstr "Zielgruppen von Netzwerk-Loadbalancer"
 
-#, fuzzy
 msgid "Network Load balancers"
-msgstr "F5 Loadbalancer-Pools"
+msgstr "Netzwerk-Loadbalancers"
 
 msgid "Network Scan"
 msgstr "Netzwerk-Scan"
@@ -28567,9 +28539,8 @@ msgstr "Optimierung"
 msgid "Optimize rule execution"
 msgstr "Regelausführung optimieren"
 
-#, fuzzy
 msgid "Option groups"
-msgstr "Optionen"
+msgstr "Optionsgruppen"
 
 msgid "Optional DNS server you want to use for the lookup"
 msgstr "Optionaler DNS Server für Abfragen"
@@ -29033,9 +29004,8 @@ msgstr "POP3-Server"
 msgid "POST / GET Variables"
 msgstr "POST- / GET-Variablen"
 
-#, fuzzy
 msgid "POST Requests"
-msgstr "Anfragen"
+msgstr "POST-Anfragen"
 
 msgid "PROB"
 msgstr "PROB"
@@ -29049,9 +29019,8 @@ msgstr "Netzteil (Chassis/Schacht)"
 msgid "PSU Capacity Levels"
 msgstr "Netzteil Kapazität Schwellwerte"
 
-#, fuzzy
 msgid "PUT Requests"
-msgstr "Anfragen"
+msgstr "PUT-Anfragen"
 
 msgid "Pa"
 msgstr "Pa"
@@ -31092,13 +31061,11 @@ msgstr ""
 msgid "Provide proxy settings"
 msgstr "Proxy-Einstellungen angeben"
 
-#, fuzzy
 msgid "Provisioned IOPS SSD IO operations per second"
-msgstr "Schreibende IO-Operationen pro Sekunde"
+msgstr "Vorgesehene IOPS-SSD-IO-Operationen pro Sekunde"
 
-#, fuzzy
 msgid "Provisioned IOPS SSD space"
-msgstr "Provisionierter Dateisystemplatz"
+msgstr "Vorgesehener IOPS-SSD-Speicherplatz"
 
 msgid "Provisioned filesystem space"
 msgstr "Provisionierter Dateisystemplatz"
@@ -31479,9 +31446,8 @@ msgstr "Lese-Prefetchingtreffer für DDN S2A-Geräte"
 msgid "Read recovery latency"
 msgstr "Recovery-Leselatenz"
 
-#, fuzzy
 msgid "Read replica per master"
-msgstr "Replikation von einem Master ein"
+msgstr "Replikat pro Master lesen"
 
 msgid "Read retransmission"
 msgstr "Leseretransmission"
@@ -32492,9 +32458,8 @@ msgstr "Checks neu ansetzen"
 msgid "Reschedule host and service checks"
 msgstr "Hosts und Service Checks neu ansetzen"
 
-#, fuzzy
 msgid "Reserved DB instances"
-msgstr "Reservierter Platz"
+msgstr "Reservierte DB-Instanzen"
 
 #, fuzzy
 msgid "Reserved filesystem space"
@@ -33116,9 +33081,8 @@ msgstr "SELECT Objekt zurückgegeben"
 msgid "SELECT Object Scanned"
 msgstr "SELECT Objekt gescannt"
 
-#, fuzzy
 msgid "SELECT Requests"
-msgstr "Anfragen"
+msgstr "SELECT-Anfragen"
 
 msgid "SGA Info"
 msgstr "SGA-Information"
@@ -34781,9 +34745,9 @@ msgstr "Höhe setzen"
 msgid "Set levels"
 msgstr "Level einstellen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Set limit and levels for %s"
-msgstr "Untere Schwellen für %s"
+msgstr "Grenzwert und Pegel für %s festlegen"
 
 #, fuzzy
 msgid "Set limits and levels for running on-demand instances"
@@ -36285,17 +36249,19 @@ msgstr ""
 msgid "Specify levels"
 msgstr "Level einstellen"
 
-#, fuzzy
 msgid ""
 "Specify levels for HTTP 400 errors in percentage which refer to the total "
 "number of requests"
-msgstr "Prozentuale Schwellwerte für die gesamte Speicherbelegung"
+msgstr ""
+"Geben Sie die Stufen für HTTP 400-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
 
-#, fuzzy
 msgid ""
 "Specify levels for HTTP 500 errors in percentage which refer to the total "
 "number of requests"
-msgstr "Prozentuale Schwellwerte für die gesamte Speicherbelegung"
+msgstr ""
+"Geben Sie die Stufen für HTTP 500-Fehler in Prozent an, die sich auf die "
+"Gesamtzahl der Anfragen beziehen."
 
 msgid ""
 "Specify levels for datafiles of a database. Please note that relative levels "
@@ -37403,7 +37369,7 @@ msgid "Submitting crash report..."
 msgstr "Fehlerbericht wird eingesendet..."
 
 msgid "Subnet per DB subnet groups"
-msgstr ""
+msgstr "Subnetz pro DB-Subnetzgruppen"
 
 msgid "Subscription"
 msgstr "Subskription"
@@ -37736,9 +37702,8 @@ msgstr "Systemd Services"
 msgid "TCP"
 msgstr "TCP"
 
-#, fuzzy
 msgid "TCP Client Resets"
-msgstr "Kundenpasswort"
+msgstr "TCP-Client-Resets"
 
 msgid "TCP Connect"
 msgstr "TCP Verbindung"
@@ -37751,7 +37716,7 @@ msgid "TCP Connection Timeout (<a href=\"%s\">Rules</a>)"
 msgstr "TCP-Verbindungs-Timeout (<a href=\"%s\">Rules</a>)"
 
 msgid "TCP ELB Resets"
-msgstr ""
+msgstr "TCP-ELB-Resets"
 
 msgid "TCP Port"
 msgstr "TCP Port"
@@ -37777,9 +37742,8 @@ msgstr "verbinden zu TCP Port"
 msgid "TCP SYN"
 msgstr "TCP SYN"
 
-#, fuzzy
 msgid "TCP Target Resets"
-msgstr "Ziel Status"
+msgstr "TCP-Ziel-Resets"
 
 msgid "TCP address to connect to"
 msgstr "TCP-Adresse zum Verbinden"
@@ -39121,9 +39085,8 @@ msgstr "Die beiden neuen Passworte stimmen nicht überein."
 msgid "The both passwords do not match."
 msgstr "Die beiden Passwörter stimmen nicht überein."
 
-#, fuzzy
 msgid "The bucket name"
-msgstr "Der Sensorname"
+msgstr "Der Bucketname"
 
 msgid "The cell padding is only applied when rules are being rendered."
 msgstr ""
@@ -45419,7 +45382,7 @@ msgid "Throughput"
 msgstr "Durchsatz"
 
 msgid "Throughput Optimized HDD space"
-msgstr ""
+msgstr "Optimierter Durchsatz-Festplattenspeicher"
 
 msgid "Throughput for DDN S2A devices"
 msgstr "Durchsatz für DDN S2A-Geräte"
@@ -47136,9 +47099,8 @@ msgstr "Obere Schwellen für %s"
 msgid "Upper levels for infections"
 msgstr "Obere Schwellen für Infizierungen"
 
-#, fuzzy
 msgid "Upper levels for latency"
-msgstr "Obere Schwellen für Mailverzögerung"
+msgstr "Obere Schwellen für Latenzzeit"
 
 #, fuzzy
 msgid "Upper levels for license usage"
@@ -47194,9 +47156,8 @@ msgstr "Obere Schwellen für das Alter"
 msgid "Upper levels for the backup age"
 msgstr "Obere Schwellen für das Alter"
 
-#, fuzzy
 msgid "Upper levels for the bucket size"
-msgstr "Obere Schwellen für %s"
+msgstr "Obere Schwellen für Bucketgröße"
 
 msgid "Upper levels for the fan speed of a hardware device"
 msgstr "Obergrenzen für die Lüftergeschwindigkeit von Geräten"
@@ -47216,9 +47177,9 @@ msgstr "Obere Grenzen für aktive Datenbank Verbindungen"
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr "Schwellwerte für Anzahl von aktuell laufenden Sitzungen"
 
-#, fuzzy
 msgid "Upper levels for unblended costs"
-msgstr "Obere Schwellen für Clients"
+msgstr ""
+"Obere Schwellen für ClientsObere, prozentuale Schwellen für DELETE-Anfragen"
 
 #, fuzzy
 msgid "Upper levels for unused space"
@@ -47251,41 +47212,33 @@ msgstr "Obere Schwellen für Infizierungen"
 msgid "Upper percentage levels"
 msgstr "Prozentuale Schwellen für Index-Bloat"
 
-#, fuzzy
 msgid "Upper percentual levels for DELETE requests"
-msgstr "Prozentuale Schwellen für freien %s"
+msgstr "Obere, prozentuale Schwellen für DELETE-Anfragen"
 
-#, fuzzy
 msgid "Upper percentual levels for GET requests"
-msgstr "Prozentuale Schwellen für freien %s"
+msgstr "Obere, prozentuale Schwellen für GET-Anfragen"
 
-#, fuzzy
 msgid "Upper percentual levels for HEAD requests"
-msgstr "Prozentuale Schwellen für freien %s"
+msgstr "Obere, prozentuale Schwellen für HEAD-Anfragen"
 
 #, fuzzy
 msgid "Upper percentual levels for HTTP 400 errors"
 msgstr "Prozentuale Schwellen für Fehlerraten"
 
-#, fuzzy
 msgid "Upper percentual levels for HTTP 500 errors"
-msgstr "Prozentuale Schwellen für Fehlerraten"
+msgstr "Obere, prozentuale Schwellen für HTTP 500-Fehler"
 
-#, fuzzy
 msgid "Upper percentual levels for LIST requests"
-msgstr "Prozentuale Schwellen für freien %s"
+msgstr ""
 
-#, fuzzy
 msgid "Upper percentual levels for POST requests"
-msgstr "Prozentuale Schwellen für freien %s"
+msgstr "Obere, prozentuale Schwellen für POST-Anfragen"
 
-#, fuzzy
 msgid "Upper percentual levels for PUT requests"
-msgstr "Prozentuale Schwellen für freien %s"
+msgstr "Obere, prozentuale Schwellen für PUT-Anfragen"
 
-#, fuzzy
 msgid "Upper percentual levels for SELECT requests"
-msgstr "Prozentuale Schwellen für freien %s"
+msgstr "Obere, prozentuale Schwellen für DELETE-Anfragen"
 
 #, fuzzy
 msgid "Upper percentual levels for healthy hosts"

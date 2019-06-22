@@ -70,6 +70,19 @@ def _extract_error_message(node, line):
     return True, "Error in agent configuration on node %s: %s" % (node, error_msg)
 
 
+def _extract_item_attribute(line):
+    '''Check line for next item subsection
+    Return (None, None) if no item subsection is found,
+    (item, attribute) otherwise
+    '''
+    if line[:3] != "[[[" or line[-3:] != "]]]":
+        return None, None
+    logfile_name = line[3:-3]
+    if logfile_name.endswith(':missing') or logfile_name.endswith(':cannotopen'):
+        return logfile_name.rsplit(':', 1)
+    return logfile_name, 'ok'
+
+
 _CACHE_IS_CACHE_NEW = {}
 
 
@@ -115,10 +128,8 @@ def logwatch_select_forwarded(info):
     for l in info:
         # node info ignored (only used in regular logwatch check)
         line = " ".join(l[1:])
-        if line[:3] != "[[[" or line[-3:] != "]]]":
-            continue
-        logfile_name = line[3:-3]
-        if logfile_name.endswith(':missing') or logfile_name.endswith(':cannotopen'):
+        logfile_name, attr = _extract_item_attribute(line)
+        if logfile_name is None or attr != 'ok':
             continue
 
         # Is forwarding enabled in general?
@@ -302,9 +313,10 @@ def check_logwatch(item, params, info):
     for l in info:
         node = l[0]
         line = " ".join(l[1:])
-        if line == "[[[%s]]]" % item:
+        logfile, _attr = _extract_item_attribute(line)
+        if logfile == item:
             found = right_block = True
-        elif len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]":
+        elif logfile is not None:
             right_block = False
         elif right_block and _logwatch_is_cache_new(last_run, node):
             loglines.append(line)
@@ -426,15 +438,13 @@ def check_logwatch_groups(item, params, info):
     for entry in params.get('group_patterns', []):
         group_patterns.add(entry)
 
-    logfile_name = None
     loglines = []
     for l in info:
         # node info ignored (only used in regular logwatch check)
         line = " ".join(l[1:])
-        if line.startswith('[[['):
-            logfile_name = line[3:-3]
+        logfile_name, _attr = _extract_item_attribute(line)
 
-        elif logfile_name is not None:
+        if logfile_name is not None:
             for inclusion, exclusion in group_patterns:
                 if _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
                     loglines.append(line)
@@ -750,13 +760,11 @@ def check_logwatch_ec(item, params, info):
 
     # 1. Parse lines in info and separate by logfile
     logs = {}
-    logfile = None
     for l in info:
         # node info ignored (only used in regular logwatch check)
         line = " ".join(l[1:])
-        if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]":
-            # new logfile, extract name
-            logfile = line[3:-3]
+        logfile, _attr = _extract_item_attribute(line)
+        if logfile is not None:
             logs.setdefault(logfile, [])
 
         elif logfile and line:

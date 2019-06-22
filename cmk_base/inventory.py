@@ -38,6 +38,7 @@ import cmk.utils.store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.labels import DiscoveredHostLabelsStore
 import cmk.utils.debug
 
 import cmk_base.utils
@@ -50,7 +51,7 @@ import cmk_base.data_sources as data_sources
 import cmk_base.cleanup
 import cmk_base.decorator
 import cmk_base.check_api as check_api
-from cmk_base.discovered_labels import DiscoveredHostLabels, DiscoveredHostLabelsStore
+from cmk_base.discovered_labels import DiscoveredHostLabels
 
 #.
 #   .--Inventory-----------------------------------------------------------.

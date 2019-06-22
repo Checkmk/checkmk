@@ -50,6 +50,7 @@ import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
 import cmk.utils
+from cmk.utils.labels import LabelManager
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 
@@ -62,7 +63,6 @@ import cmk_base.check_api_utils as check_api_utils
 import cmk_base.cleanup
 import cmk_base.piggyback as piggyback
 import cmk_base.snmp_utils
-from cmk_base.discovered_labels import DiscoveredHostLabelsStore
 
 # TODO: Prefix helper functions with "_".
 
@@ -1982,8 +1982,11 @@ class HostConfig(object):
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
         self.tags = self._config_cache.tag_list_of_host(hostname)
         self.tag_groups = self._config_cache.tags_of_host(hostname)
-        self.labels = self._get_host_labels()
-        self.label_sources = self._get_host_label_sources()
+
+        self.labels = self._config_cache.labels.labels_of_host(self._config_cache.ruleset_matcher,
+                                                               hostname)
+        self.label_sources = self._config_cache.labels.label_sources_of_host(
+            self._config_cache.ruleset_matcher, hostname)
 
         # Basic types
         self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
@@ -2064,35 +2067,6 @@ class HostConfig(object):
                     used_parents.append(parent_name)
 
         return used_parents
-
-    def _get_host_labels(self):
-        """Returns the effective set of host labels from all available sources
-
-        1. Discovered labels
-        2. Ruleset "Host labels"
-        3. Explicit labels (via host/folder config)
-
-        Last one wins.
-        """
-        labels = {}
-        labels.update(self._discovered_labels_of_host())
-        labels.update(self._config_cache.host_extra_conf_merged(self.hostname, host_label_rules))
-        labels.update(host_labels.get(self.hostname, {}))
-        return labels
-
-    def _get_host_label_sources(self):
-        """Returns the effective set of host label keys with their source identifier instead of the value
-        Order and merging logic is equal to _get_host_labels()"""
-        labels = {}
-        labels.update({k: "discovered" for k in self._discovered_labels_of_host().keys()})
-        labels.update({k : "ruleset" \
-            for k in self._config_cache.host_extra_conf_merged(self.hostname, host_label_rules)})
-        labels.update({k: "explicit" for k in host_labels.get(self.hostname, {}).keys()})
-        return labels
-
-    def _discovered_labels_of_host(self):
-        # type: () -> Dict
-        return DiscoveredHostLabelsStore(self.hostname).load()
 
     def snmp_config(self, ipaddress):
         # type: (str) -> cmk_base.snmp_utils.SNMPHostConfig
@@ -2621,6 +2595,8 @@ class ConfigCache(object):
 
         tag_to_group_map = self.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)
+
+        self.labels = LabelManager(host_labels, host_label_rules)
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             tag_to_group_map=tag_to_group_map,

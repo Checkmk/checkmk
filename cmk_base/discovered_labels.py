@@ -26,61 +26,6 @@
 
 import abc
 import collections
-from typing import Dict, Text  # pylint: disable=unused-import
-from pathlib2 import Path  # pylint: disable=unused-import
-
-import cmk.utils.paths
-import cmk.utils.store
-
-
-class ABCDiscoveredLabelsStore(object):
-    """Managing persistance of discovered labels"""
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractproperty
-    def file_path(self):
-        # type () -> Path
-        raise NotImplementedError()
-
-    def load(self):
-        # type: () -> Dict
-        return cmk.utils.store.load_data_from_file(str(self.file_path), default={})
-
-    def save(self, labels):
-        # type: (Dict) -> None
-        if not labels:
-            if self.file_path.exists():
-                self.file_path.unlink()
-            return
-
-        self.file_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-        cmk.utils.store.save_data_to_file(str(self.file_path), labels)
-
-
-class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
-    def __init__(self, hostname):
-        # type: (str) -> None
-        super(DiscoveredHostLabelsStore, self).__init__()
-        self._hostname = hostname
-
-    @property
-    def file_path(self):
-        # type () -> Path
-        return (cmk.utils.paths.discovered_host_labels_dir / self._hostname).with_suffix(".mk")
-
-
-class DiscoveredServiceLabelsStore(ABCDiscoveredLabelsStore):
-    def __init__(self, hostname, service_desc):
-        # type: (str, Text) -> None
-        super(DiscoveredServiceLabelsStore, self).__init__()
-        self._hostname = hostname
-        self._service_desc = service_desc
-
-    @property
-    def file_path(self):
-        # type () -> Path
-        return (cmk.utils.paths.discovered_service_labels_dir / self._hostname /
-                self._service_desc).with_suffix(".mk")
 
 
 class ABCDiscoveredLabels(collections.MutableMapping, object):

@@ -384,20 +384,38 @@ def logwatch_group_precompile(hostname, item, params):
     return precomped
 
 
+def _logwatch_instantiate_matched(match, group_name, inclusion):
+    num_perc_s = group_name.count("%s")
+    matches = [g or "" for g in match.groups()]
+
+    if len(matches) < num_perc_s:
+        raise MKGeneralException(
+            "Invalid entry in inventory_logwatch_groups: "
+            "group name '%s' contains %d times '%%s', but regular expression "
+            "'%s' contains only %d subexpression(s)." % \
+            (group_name, num_perc_s, inclusion, len(matches)))
+
+    if not matches:
+        return group_name, inclusion
+
+    for num, group in enumerate(matches):
+        inclusion = instantiate_regex_pattern_once(inclusion, group)
+        group_name = group_name.replace("%%%d" % (num + 1), group)
+    return group_name % tuple(matches[:num_perc_s]), inclusion
+
+
 def logwatch_groups_of_logfile(group_patterns, filename):
     found_these_groups = {}
     for group_name, (inclusion, exclusion) in group_patterns:
         inclusion_is_regex = inclusion.startswith("~")
         exclusion_is_regex = exclusion.startswith("~")
 
-        matches = []
-        num_perc_s = 0
         if inclusion_is_regex:
             reg = regex(inclusion[1:])
             incl_match = reg.match(filename)
             if incl_match:
-                num_perc_s = group_name.count("%s")
-                matches = [g and g or "" for g in incl_match.groups()]
+                group_name, inclusion = _logwatch_instantiate_matched(incl_match, group_name,
+                                                                      inclusion)
         else:
             incl_match = fnmatch.fnmatch(filename, inclusion)
 
@@ -407,27 +425,9 @@ def logwatch_groups_of_logfile(group_patterns, filename):
         else:
             excl_match = fnmatch.fnmatch(filename, exclusion)
 
-        if len(matches) < num_perc_s:
-            raise MKGeneralException("Invalid entry in inventory_logwatch_groups: "
-                  "group name '%s' contains %d times '%%s', but regular expression "
-                  "'%s' contains only %d subexpression(s)." % \
-                  (group_name, num_perc_s, inclusion, len(matches)))
-
-        this_group_name = None
         if incl_match and not excl_match:
-            if matches:
-                for nr, group in enumerate(matches):
-                    inclusion = instantiate_regex_pattern_once(inclusion, group)
-                    group_name = group_name.replace("%%%d" % (nr + 1), group)
-
-                this_group_name = group_name % tuple(matches[:num_perc_s])
-            else:
-                this_group_name = group_name
-            this_pattern = (inclusion, exclusion)
-
-        if this_group_name is not None:
-            found_these_groups.setdefault(this_group_name, set())
-            found_these_groups[this_group_name].add(this_pattern)
+            found_these_groups.setdefault(group_name, set())
+            found_these_groups[group_name].add((inclusion, exclusion))
 
     # Convert pattern containers to lists (sets are not possible in autochecks)
     return {k: sorted(v) for k, v in found_these_groups.items()}

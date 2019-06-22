@@ -72,6 +72,9 @@ def check_icmp_arguments(params):
 
 
 def check_icmp_description(params):
+    if "description" in params:
+        return params["description"]
+
     description = "PING"
     target = params.get("address", "address")
     if target[0] == "indexed_ipv4address":

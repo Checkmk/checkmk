@@ -31,6 +31,7 @@ from typing import Dict, Union, NamedTuple, List, Optional  # pylint: disable=un
 
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.labels import LabelManager
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -848,6 +849,7 @@ class Rule(object):
             host_name=hostname,
             host_folder="/" + host_folder.path(),
             host_tags=host.tag_groups(),
+            host_labels=host.labels(),
             service_description=service_description,
         )
 
@@ -866,6 +868,7 @@ class Rule(object):
         matcher = ruleset_matcher.RulesetMatcher(
             tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags),
             host_tag_lists={match_object.host_name: host_tags},
+            labels=LabelManager({match_object.host_name: match_object.host_labels}, []),
             host_paths={match_object.host_name: match_object.host_folder},
             all_configured_hosts=set([match_object.host_name]),
             clusters_of={},

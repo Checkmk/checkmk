@@ -18,18 +18,24 @@ class Scenario(object):
             "all_hosts": [],
             "host_paths": {},
             "host_tags": {},
+            "host_labels": {},
             "clusters": {},
         }
         self.config_cache = config.get_config_cache()
 
-    def add_host(self, hostname, tags=None, host_path="/wato/hosts.mk"):
+    def add_host(self, hostname, tags=None, host_path="/wato/hosts.mk", labels=None):
         if tags is None:
             tags = {}
         assert isinstance(tags, dict)
 
+        if labels is None:
+            labels = {}
+        assert isinstance(labels, dict)
+
         self.config["all_hosts"].append(hostname)
         self.config["host_paths"][hostname] = host_path
         self.config["host_tags"][hostname] = self._get_effective_tag_config(tags)
+        self.config["host_labels"][hostname] = labels
         return self
 
     def add_cluster(self, hostname, tags=None, host_path="/wato/hosts.mk", nodes=None):

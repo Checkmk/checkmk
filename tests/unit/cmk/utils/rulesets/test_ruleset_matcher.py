@@ -77,6 +77,66 @@ ruleset = [
     },
 ]
 
+label_ruleset = [
+    # test simple label match
+    {
+        "value": "os_linux",
+        "condition": {
+            "host_labels": {
+                "os": "linux",
+            },
+        },
+        "options": {},
+    },
+    # test implicit AND and unicode value match
+    {
+        "value": "abc",
+        "condition": {
+            "host_labels": {
+                "os": "linux",
+                "abc": "xä",
+            },
+        },
+        "options": {},
+    },
+    # test negation of label
+    {
+        "value": "hu",
+        "condition": {
+            "host_labels": {
+                "hu": {
+                    "$ne": "ha"
+                }
+            }
+        },
+        "options": {},
+    },
+    # test unconditional match
+    {
+        "value": "BLA",
+        "condition": {},
+        "options": {},
+    },
+]
+
+
+@pytest.mark.parametrize("hostname,expected_result", [
+    ("host1", ["os_linux", "abc", "BLA"]),
+    ("host2", ["hu", "BLA"]),
+])
+def test_ruleset_matcher_get_host_ruleset_values_labels(monkeypatch, hostname, expected_result):
+    ts = Scenario()
+    ts.add_host("host1", labels={"os": "linux", "abc": "xä", "hu": "ha"})
+    ts.add_host("host2")
+    config_cache = ts.apply(monkeypatch)
+    matcher = config_cache.ruleset_matcher
+
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=hostname, service_description=None),
+            ruleset=label_ruleset,
+            is_binary=False)) == expected_result
+
 
 def test_basic_get_host_ruleset_values(monkeypatch):
     ts = Scenario().add_host("abc")

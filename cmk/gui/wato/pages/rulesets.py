@@ -1403,12 +1403,7 @@ class VSExplicitConditions(Transform):
         self._rulespec = rulespec
         super(VSExplicitConditions, self).__init__(
             Dictionary(
-                elements=[
-                    ("folder_path", self._vs_folder()),
-                    ("host_tags", self._vs_host_tag_condition()),
-                    ("host_labels", self._vs_host_label_condition()),
-                    ("explicit_hosts", self._vs_explicit_hosts()),
-                ] + self._service_elements(),
+                elements=self._condition_elements(),
                 headers=[
                     (_("Folder"), "condition explicit", ["folder_path"]),
                     (_("Host tags"), "condition explicit", ["host_tags"]),
@@ -1422,13 +1417,29 @@ class VSExplicitConditions(Transform):
             back=self._from_valuespec,
         )
 
+    def _condition_elements(self):
+        elements = [
+            ("folder_path", self._vs_folder()),
+            ("host_tags", self._vs_host_tag_condition()),
+        ]
+
+        if self._allow_label_conditions():
+            elements.append(("host_labels", self._vs_host_label_condition()))
+
+        elements.append(("explicit_hosts", self._vs_explicit_hosts()))
+        elements += self._service_elements()
+
+        return elements
+
     def _to_valuespec(self, conditions):
         # type: (RuleConditions) -> dict
         explicit = {
             "folder_path": conditions.host_folder,
             "host_tags": conditions.host_tags,
-            "host_labels": conditions.host_labels,
         }
+
+        if self._allow_label_conditions():
+            explicit["host_labels"] = conditions.host_labels
 
         explicit_hosts = conditions.host_list
         if explicit_hosts is not None:
@@ -1440,6 +1451,13 @@ class VSExplicitConditions(Transform):
                 explicit["explicit_services"] = explicit_services
 
         return explicit
+
+    def _allow_label_conditions(self):
+        return self._rulespec.name not in [
+            "host_label_rules",
+            "service_label_rules",
+            "active_checks:cmk_inv",
+        ]
 
     def _service_elements(self):
         if not self._rulespec.item_type:
@@ -1474,7 +1492,7 @@ class VSExplicitConditions(Transform):
         return RuleConditions(
             host_folder=explicit["folder_path"],
             host_tags=explicit["host_tags"],
-            host_labels=explicit["host_labels"],
+            host_labels=explicit["host_labels"] if self._allow_label_conditions() else {},
             host_name=self._condition_list_from_valuespec(
                 explicit.get("explicit_hosts"), is_service=False),
             service_description=service_description,

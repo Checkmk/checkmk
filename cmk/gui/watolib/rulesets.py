@@ -61,16 +61,23 @@ _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
 
 
 class RuleConditions(object):
-    def __init__(self, host_folder, host_tags=None, host_name=None, service_description=None):
-        # type: (str, Dict[str, str], Optional[Union[Dict[str, List[str]], List[str]]], Optional[List[str]]) -> None
+    def __init__(self,
+                 host_folder,
+                 host_tags=None,
+                 host_labels=None,
+                 host_name=None,
+                 service_description=None):
+        # type: (str, Dict[str, str], Dict[str, str], Optional[Union[Dict[str, List[str]], List[str]]], Optional[List[str]]) -> None
         self.host_folder = host_folder
         self.host_tags = host_tags or {}
+        self.host_labels = host_labels or {}
         self.host_name = host_name
         self.service_description = service_description
 
     def from_config(self, conditions):
         self.host_folder = conditions.get("host_folder", self.host_folder)
         self.host_tags = conditions.get("host_tags", {})
+        self.host_labels = conditions.get("host_labels", {})
         self.host_name = conditions.get("host_name")
         self.service_description = conditions.get("service_description")
         return self
@@ -110,6 +117,9 @@ class RuleConditions(object):
 
         if self.host_tags:
             cfg["host_tags"] = self.host_tags
+
+        if self.host_labels:
+            cfg["host_labels"] = self.host_labels
 
         if self.host_name is not None:
             cfg["host_name"] = self.host_name
@@ -845,8 +855,9 @@ class Rule(object):
         matcher = ruleset_matcher.RulesetMatcher(
             tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags),
             host_tag_lists={match_object.host_name: host_tags},
-            labels=LabelManager({match_object.host_name: match_object.host_labels}, []),
             host_paths={match_object.host_name: match_object.host_folder},
+            # TODO: What about the host_label_rules?
+            labels=LabelManager({match_object.host_name: match_object.host_labels}, []),
             all_configured_hosts=set([match_object.host_name]),
             clusters_of={},
             nodes_of={},

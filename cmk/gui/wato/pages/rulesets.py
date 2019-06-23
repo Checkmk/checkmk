@@ -37,6 +37,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
+import cmk.gui.view_utils
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
@@ -44,6 +45,7 @@ from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
+    Labels,
     Transform,
     Checkbox,
     ListChoice,
@@ -78,6 +80,11 @@ from cmk.gui.plugins.wato import (
     HostTagCondition,
     DictHostTagCondition,
 )
+
+if watolib.has_agent_bakery():
+    import cmk.gui.cee.plugins.wato.agent_bakery as agent_bakery
+else:
+    agent_bakery = None  # type: ignore
 
 
 @mode_registry.register
@@ -569,9 +576,8 @@ class ModeEditRuleset(WatoMode):
                                                     ("host", self._hostname),
                                                     ("service", self._item)]), "rulesets")
 
-        if watolib.has_agent_bakery():
-            import cmk.gui.cee.plugins.wato.agent_bakery
-            cmk.gui.cee.plugins.wato.agent_bakery.agent_bakery_context_button(self._name)
+        if agent_bakery:
+            agent_bakery.agent_bakery_context_button(self._name)
 
     def action(self):
         rule_folder = watolib.Folder.folder(html.request.var("_folder", html.request.var("folder")))
@@ -1400,11 +1406,13 @@ class VSExplicitConditions(Transform):
                 elements=[
                     ("folder_path", self._vs_folder()),
                     ("host_tags", self._vs_host_tag_condition()),
+                    ("host_labels", self._vs_host_label_condition()),
                     ("explicit_hosts", self._vs_explicit_hosts()),
                 ] + self._service_elements(),
                 headers=[
                     (_("Folder"), "condition explicit", ["folder_path"]),
                     (_("Host tags"), "condition explicit", ["host_tags"]),
+                    (_("Host labels"), "condition explicit", ["host_labels"]),
                     (_("Explicit hosts"), "condition explicit", ["explicit_hosts"]),
                     (self._service_title(), "condition explicit", ["explicit_services"]),
                 ],
@@ -1419,6 +1427,7 @@ class VSExplicitConditions(Transform):
         explicit = {
             "folder_path": conditions.host_folder,
             "host_tags": conditions.host_tags,
+            "host_labels": conditions.host_labels,
         }
 
         explicit_hosts = conditions.host_list
@@ -1465,6 +1474,7 @@ class VSExplicitConditions(Transform):
         return RuleConditions(
             host_folder=explicit["folder_path"],
             host_tags=explicit["host_tags"],
+            host_labels=explicit["host_labels"],
             host_name=self._condition_list_from_valuespec(
                 explicit.get("explicit_hosts"), is_service=False),
             service_description=service_description,
@@ -1501,6 +1511,13 @@ class VSExplicitConditions(Transform):
             help=_("The rule is only applied to hosts directly in or below this folder."),
             choices=watolib.Folder.folder_choices(),
             encode_value=False,
+        )
+
+    def _vs_host_label_condition(self):
+        return Labels(
+            world=Labels.World.CONFIG,
+            title=_("Host labels"),
+            help=_("Use this condition to select hosts based on the configured host labels."),
         )
 
     def _vs_host_tag_condition(self):
@@ -1603,6 +1620,7 @@ class RuleConditionRenderer(object):
         # type: (Rulespec, RuleConditions) -> List[Text]
         rendered = []  # type: List[Text]
         rendered += list(self._tag_conditions(conditions))
+        rendered += list(self._label_conditions(conditions))
         rendered += list(self._host_conditions(conditions))
         rendered += list(self._service_conditions(rulespec, conditions))
         return rendered
@@ -1649,6 +1667,15 @@ class RuleConditionRenderer(object):
             return HTML(_("Host has <b>not</b> the tag <tt>%s</tt>")) % tag_id
 
         return HTML(_("Host has the tag <tt>%s</tt>")) % tag_id
+
+    def _label_conditions(self, conditions):
+        # type: (RuleConditions) -> Generator
+        if not conditions.host_labels:
+            return
+
+        labels_txt = cmk.gui.view_utils.render_labels(
+            conditions.host_labels, "host", with_links=False, label_sources={})
+        yield HTML(_("Host has the following labels: %s") % labels_txt)
 
     def _host_conditions(self, conditions):
         # type: (RuleConditions) -> Generator
@@ -1869,6 +1896,7 @@ class ModeNewRule(EditRuleMode):
             RuleConditions(
                 host_folder=self._folder.path(),
                 host_tags={},
+                host_labels={},
                 host_name=host_name_conditions,
                 service_description=service_conditions,
             ))

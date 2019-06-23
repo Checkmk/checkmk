@@ -201,5 +201,7 @@ def test_create_socket_no_cert(tmpdir):
     open("%s/z.pem" % tmpdir, "wb")
     live = livestatus.SingleSiteConnection(
         "unix:/tmp/xyz", tls=True, verify=True, ca_file_path="%s/z.pem" % tmpdir)
-    with pytest.raises(livestatus.MKLivestatusConfigError, match="unknown error"):
+    with pytest.raises(
+            livestatus.MKLivestatusConfigError,
+            match="(unknown error|no certificate or crl found)"):
         live._create_socket(socket.AF_INET)

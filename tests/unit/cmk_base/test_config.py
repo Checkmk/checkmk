@@ -1233,12 +1233,6 @@ def test_host_label_rules_default():
 
 def test_host_config_labels(monkeypatch):
     ts = Scenario()
-    ts.set_option("host_labels", {
-        "test-host": {
-            "explicit": "ding",
-        },
-    })
-
     ts.set_ruleset("host_label_rules", [
         ({
             "from-rule": "rule1"
@@ -1248,7 +1242,7 @@ def test_host_config_labels(monkeypatch):
         }, ["no-agent"], config.ALL_HOSTS, {}),
     ])
 
-    ts.add_host("test-host", tags={"agent": "no-agent"})
+    ts.add_host("test-host", tags={"agent": "no-agent"}, labels={"explicit": "ding"})
     ts.add_host("xyz")
     config_cache = ts.apply(monkeypatch)
 

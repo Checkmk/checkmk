@@ -87,8 +87,7 @@ class MainModuleTags(MainModule):
 
     @property
     def description(self):
-        return _("Tags classify hosts and services and are the fundament of configuration of hosts "
-                 "and services.")
+        return _("Tags can be used to classify hosts and services in a flexible way.")
 
     @property
     def sort_index(self):

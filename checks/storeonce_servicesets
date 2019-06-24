@@ -118,7 +118,7 @@ def check_storeonce_servicesets_capacity(item, params, parsed):
     for key, values in parsed.iteritems():
         if not item == values["ServiceSet ID"]:
             continue
-        yield check_storeonce_space(item, params, values)
+        return check_storeonce_space(item, params, values)
 
 
 check_info['storeonce_servicesets.capacity'] = {

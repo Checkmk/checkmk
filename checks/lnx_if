@@ -99,14 +99,14 @@ def if_lnx_extract_nic_info(info):
             except StopIteration:
                 break
 
-        nic_info.setdefault(node, {})
+        node_inst = nic_info.setdefault(node, {})
         # Be careful! On clustered hosts we have more than one perf-counters section
         # and ethtool section. This needs to be handled. Sadly we have no section
         # headers. Try to detect it by data format.
         if line[0].startswith('['):
             current_nic = line[0][1:-1]
             index += 1
-            nic_info[node][current_nic]['index'] = index
+            node_inst.setdefault(current_nic, {}).update({'index': index})
             # The iplink_stats are only used within the perf-counters
             # The (optional) ethtool section invalidates this info, otherwise it would
             # be incorrectly reused in a followup section of another cluster node
@@ -115,12 +115,14 @@ def if_lnx_extract_nic_info(info):
         elif len(line) == 2 and len(line[1].split()) >= 16:
             # This looks like a perf-counter line
             nic = line[0]
-            nic_info[node][nic] = { "counters": map(int, line[1].split()) }
+            nic_inst = node_inst.setdefault(nic, {})
+            nic_inst["counters"] = map(int, line[1].split())
             if nic in iplink_stats[node]:
-                nic_info[node][nic]['iplink_stats'] = iplink_stats[node][nic]
+                nic_inst['iplink_stats'] = iplink_stats[node][nic]
         elif current_nic:
             # ethtool data line
-            nic_info[node][current_nic][line[0].strip()] = ":".join(line[1:]).strip()
+            nic_inst = node_inst.setdefault(current_nic, {})
+            nic_inst[line[0].strip()] = ":".join(line[1:]).strip()
 
     return nic_info
 
@@ -200,11 +202,10 @@ def parse_lnx_if(info):
                     else:
                         ifOperStatus = 4 # unknown (NIC has never been used)
 
-            if attr.get("Address"):
+            try:
                 ifPhysAddress = "".join([chr(int(x, 16)) for x in attr.get("Address", "").split(":")])
-            else:
+            except ValueError:
                 ifPhysAddress = ''
-
 
             row = [ node_info ] + map(str, [
               ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,

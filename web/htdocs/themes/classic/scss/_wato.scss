@@ -620,7 +620,20 @@ a.service_button.disabled {
   }
 
   tags {
+    padding: 0 2px;
+
+    &.tagify.display[readonly] tag {
+      padding: 0;
+
+      div {
+        margin: 0;
+      }
+    }
+  }
+
+  .label_operator {
     display: inline-block;
+    padding: 0 2px;
   }
 }
 

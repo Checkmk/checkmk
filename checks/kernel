@@ -85,6 +85,7 @@ check_info["kernel"] = {
     'group': 'vm_counter',
 }
 
+#.
 #   .--kernel.util--CPU Utilization----------------------------------------.
 #   |             _   _ _   _ _ _          _   _                           |
 #   |            | | | | |_(_) (_)______ _| |_(_) ___  _ __                |
@@ -141,4 +142,72 @@ check_info["kernel.util"] = {
     'has_perfdata': True,
     'group': 'cpu_iowait',
     'includes': ['cpu_util.include', 'transforms.include'],
+}
+
+#.
+#   .--kernel.page--Page---------------------------------------------------.
+#   |                        ____                                          |
+#   |                       |  _ \ __ _  __ _  ___                         |
+#   |                       | |_) / _` |/ _` |/ _ \                        |
+#   |                       |  __/ (_| | (_| |  __/                        |
+#   |                       |_|   \__,_|\__, |\___|                        |
+#   |                                   |___/                              |
+#   +----------------------------------------------------------------------+
+#   | Check page swap in/out                                               |
+#   '----------------------------------------------------------------------'
+
+
+def _parse_kernel_page(info):
+    kernel_page_map = {
+        "pswpin": "page_swap_in",
+        "pswpout": "page_swap_out",
+    }
+
+    parsed = {}
+    for line in info:
+        if line[0] in kernel_page_map:
+            # input is kilobytes, but we want bytes
+            parsed[kernel_page_map[line[0]]] = int(line[1]) * 1024
+    return parsed
+
+
+def inventory_kernel_page(info):
+    return [(None, {})]
+
+
+def check_kernel_page(item, params, info):
+    # pswpin/pswpout defines the amount of pages in bytes
+    # that where swapped since the last boot of the system
+    # we want to monitor the rate of swapped page
+
+    this_time = time.time()
+    parsed = _parse_kernel_page(info)
+
+    levels_in = params.get("page_swap_in_levels", (None, None))\
+                + params.get("page_swap_in_levels_lower", (None, None))
+
+    yield check_levels(
+        get_rate("kernel.page.page_swap_in", this_time, parsed["page_swap_in"]),
+        "page_swap_in",
+        levels_in,
+        unit="/s",
+        human_readable_func=get_bytes_human_readable)
+
+    levels_out = params.get("page_swap_out_levels", (None, None))\
+                 + params.get("page_swap_out_levels_lower", (None, None))
+
+    yield check_levels(
+        get_rate("kernel.page.page_swap_out", this_time, parsed["page_swap_out"]),
+        "page_swap_out",
+        levels_out,
+        unit="/s",
+        human_readable_func=get_bytes_human_readable)
+
+
+check_info["kernel.page"] = {
+    "inventory_function": inventory_kernel_page,
+    'check_function': check_kernel_page,
+    'service_description': "Kernel Page",
+    "group": "kernel_page",
+    "has_perfdata": True,
 }

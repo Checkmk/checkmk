@@ -1,0 +1,11 @@
+Title: winperf_processor.util: Fixed 'ValueError' while gathering statistics about processor util
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b3
+Date: 1561363212
+
+

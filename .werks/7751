@@ -1,0 +1,12 @@
+Title: storeonce_servicesets: Do not crash on capacity checking
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b3
+Date: 1561370051
+
+Wrong yield leads to "TypeError (object of type 'generator' has no len())".
+This has been fixed.

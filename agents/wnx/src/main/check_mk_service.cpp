@@ -137,11 +137,12 @@ void PrintCvt() {
         "To Convert Legacy Agent Ini File into Agent Yml file:\n",
         Colors::kPink, []() {
             return fmt::format(
-                "\t{0} {1} <inifile> [yamlfile]\n"
+                "\t{0} {1} [{2}] <inifile> [yamlfile]\n"
                 "\tinifile - from Legacy Agent\n"
-                "\tyamlfile - name of an output file\n",
+                "\tyamlfile - name of an output file\n"
+                "\t{2} - display output\n",
                 kServiceExeName,  // service name from th project definitions
-                kCvtParam);
+                kCvtParam, kCvtParamShow);
         });
 }
 
@@ -439,14 +440,30 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::ExecUpgradeParam(
             second_param == wtools::ConvertToUTF16(kUpgradeParamForce));
     }
-    if (param == wtools::ConvertToUTF16(kCvtParam) && argc > 2) {
-        std::wstring ini = argc > 2 ? Argv[2] : L"";
-        std::wstring yml = argc > 3 ? Argv[3] : L"";
+    // #TODO make a function
+    if (param == wtools::ConvertToUTF16(kCvtParam)) {
+        if (argc > 2) {
+            auto diag =
+                cma::tools::CheckArgvForValue(argc, Argv, 2, kCvtParamShow)
+                    ? cma::srv::StdioLog::yes
+                    : cma::srv::StdioLog::no;
 
-        auto diag = cma::tools::CheckArgvForValue(argc, Argv, 4, kCvtParamShow)
-                        ? cma::srv::StdioLog::yes
-                        : cma::srv::StdioLog::no;
-        return cma::srv::ExecCvtIniYaml(ini, yml, diag);
+            auto pos = diag == cma::srv::StdioLog::yes ? 3 : 2;
+            if (argc <= pos) {
+                ServiceUsage(std::wstring(L"inifile is mandatory to call ") +
+                             wtools::ConvertToUTF16(kCvtParam) + L"\n");
+                return 2;
+            }
+
+            std::wstring ini = argc > pos ? Argv[pos] : L"";
+            std::wstring yml = argc > pos + 1 ? Argv[pos + 1] : L"";
+
+            return cma::srv::ExecCvtIniYaml(ini, yml, diag);
+        } else {
+            ServiceUsage(std::wstring(L"Invalid count of parameters for ") +
+                         wtools::ConvertToUTF16(kCvtParam) + L"\n");
+            return 2;
+        }
     }
     if (param == wtools::ConvertToUTF16(kSectionParam) && argc > 2) {
         std::wstring section = Argv[2];

@@ -1141,7 +1141,6 @@ class ListOfStrings(ValueSpec):
             html.close_div()
         html.close_div()
         html.div('', style="clear:left;")
-        html.help(self.help())
         html.javascript("cmk.valuespecs.list_of_strings_init(%s, %s, %s);" %
                         (json.dumps(varprefix), json.dumps(self._split_on_paste),
                          json.dumps(self._split_separators)))
@@ -3414,14 +3413,12 @@ class Tuple(ValueSpec):
                     html.open_td(class_="tuple_left")
                     html.write(title)
 
-                    html.help(element.help())
                     html.close_td()
                 elif self._orientation == "horizontal":
                     html.open_td(class_="tuple_td")
                     html.open_span(class_=["title"])
                     html.write(title)
 
-                    html.help(element.help())
                     html.close_span()
                     if self._title_br:
                         html.br()
@@ -3429,7 +3426,6 @@ class Tuple(ValueSpec):
                         html.write_text(" ")
                 else:
                     html.write_text(" ")
-                    html.help(element.help())
 
             else:
                 if self._orientation == "horizontal":
@@ -3438,6 +3434,7 @@ class Tuple(ValueSpec):
             if self._orientation == "vertical":
                 html.open_td(class_="tuple_right")
 
+            html.help(element.help())
             element.render_input(vp, val)
             if self._orientation != "float":
                 html.close_td()

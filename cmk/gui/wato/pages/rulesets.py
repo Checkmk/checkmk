@@ -1517,18 +1517,19 @@ class VSExplicitConditions(Transform):
             elements=[
                 ListOfStrings(
                     orientation="horizontal",
-                    valuespec=ConfigHostname(size=30, validate=self._validate_list_entry)),
+                    valuespec=ConfigHostname(size=30, validate=self._validate_list_entry),
+                    help=
+                    _("Here you can enter a list of explicit host names that the rule should or should "
+                      "not apply to. Leave this option disabled if you want the rule to "
+                      "apply for all hosts specified by the given tags. The names that you "
+                      "enter here are compared with case sensitive exact matching. Alternatively "
+                      "you can use regular expressions if you enter a tilde (<tt>~</tt>) as the first "
+                      "character. That regular expression must match the <i>beginning</i> of "
+                      "the host names in question."),
+                ),
                 Checkbox(
                     label=_("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"),),
             ],
-            help=_(
-                "Here you can enter a list of explicit host names that the rule should or should "
-                "not apply to. Leave this option disabled if you want the rule to "
-                "apply for all hosts specified by the given tags. The names that you "
-                "enter here are compared with case sensitive exact matching. Alternatively "
-                "you can use regular expressions if you enter a tilde (<tt>~</tt>) as the first "
-                "character. That regular expression must match the <i>beginning</i> of "
-                "the host names in question."),
         )
 
     def _vs_explicit_services(self):

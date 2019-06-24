@@ -1,0 +1,10 @@
+Title: Fix duplicate explicit host/service condition help text
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561371551
+Class: fix
+
+

@@ -4699,9 +4699,8 @@ class CAorCAChain(UploadOrPasteTextFile):
     def validate_value(self, value, varprefix):
         try:
             self.analyse_cert(value)
-        except Exception:
-            # FIXME TODO: Cleanup this general exception catcher
-            raise MKUserError(varprefix, _("Invalid certificate file"))
+        except Exception as e:
+            raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
 
     def analyse_cert(self, value):
         from OpenSSL import crypto

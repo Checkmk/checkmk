@@ -34,6 +34,7 @@ import cmk.utils.store as store
 import cmk.gui.view_utils
 import cmk.gui.wato.user_profile
 import cmk.gui.userdb as userdb
+import cmk.gui.permissions as permissions
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -266,8 +267,10 @@ class NotificationsMode(EventsMode):
                     else:
                         listmode = "notifications"
 
-                    actions_allowed = config.user.may(
-                        "notification_plugin.%s" % rule['notify_plugin'][0])
+                    # In case a notification plugin does not exist anymore the permission is completely missing.
+                    permission_name = "notification_plugin.%s" % rule['notify_plugin'][0]
+                    actions_allowed = permission_name not in permissions.permission_registry \
+                        or config.user.may(permission_name)
 
                     if show_buttons and actions_allowed:
                         anavar = html.request.var("analyse", "")
@@ -744,7 +747,7 @@ class UserNotificationsMode(NotificationsMode):
         raise NotImplementedError()
 
     def title(self):
-        return _("Custom notification table for user ") + self._user_id()
+        return _("Custom notification table for user %s") % self._user_id()
 
     def buttons(self):
         html.context_button(
@@ -799,9 +802,10 @@ class UserNotificationsMode(NotificationsMode):
             html.h3(_('Notification Rules'))
 
         self._render_notification_rules(
-            self._rules,
-            self._user_id(),
-            profilemode=isinstance(self, ModePersonalUserNotifications))
+            rules=self._rules,
+            userid=self._user_id(),
+            profilemode=isinstance(self, ModePersonalUserNotifications),
+        )
 
 
 def _get_notification_sync_sites():

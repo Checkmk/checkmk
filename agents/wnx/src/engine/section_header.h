@@ -62,6 +62,15 @@ constexpr std::string_view kLogWatchEventName{"logwatch"};
 constexpr std::string_view kPsName{"ps"};
 constexpr std::string_view kFileInfoName{"fileinfo"};
 
+constexpr char kTabSeparator = '\t';
+constexpr std::wstring_view kTabSeparatorString = L"\t";
+
+constexpr char kPipeSeparator = '|';
+constexpr std::wstring_view kPipeSeparatorString = L"|";
+
+constexpr char kCommaSeparator = ',';
+constexpr std::wstring_view kCommaSeparatorString = L",";
+
 // gtest[+]
 // Build standard header with optional Separator
 // <<<sectionname>>>\n or

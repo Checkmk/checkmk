@@ -18,8 +18,8 @@ namespace cma {
 namespace provider {
 
 namespace wmi {
-constexpr char kSepChar = '\t';
-constexpr std::wstring_view kSepString = L"\t";
+constexpr char kSepChar = cma::section::kPipeSeparator;
+constexpr std::wstring_view kSepString = cma::section::kPipeSeparatorString;
 }  // namespace wmi
 namespace ohm {
 constexpr char kSepChar = ',';

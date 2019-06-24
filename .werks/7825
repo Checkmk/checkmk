@@ -1,0 +1,12 @@
+Title: NagVis: Fix missing worldmap background
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1561363479
+Class: fix
+
+Rendering of the Openstreetmap tiles used by the NagVis worldmap was prevented
+by the new Content security policy. Access to https://*.tile.openstreetmap.org/ is
+now allowed by the policy.

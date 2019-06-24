@@ -289,7 +289,30 @@ def logwatch_parse_line(line):
     return level, text
 
 
-def inventory_logwatch(parsed, use_mode):
+def inventory_logwatch_single(parsed):
+    use_mode = "single"
+    discoverable_items = _logwatch_discoverable_items(parsed)
+    _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
+    inventory_groups = host_extra_conf(host_name(), logwatch_groups)
+    inventory = []
+
+    for logfile in not_forwarded_logs:
+        found_groups = {}
+        for group_patterns in inventory_groups:
+            found_groups.update(logwatch_groups_of_logfile(group_patterns, logfile))
+
+        if not found_groups and use_mode == "single":
+            inventory.append((logfile, None))
+
+        elif found_groups and use_mode == "groups":
+            for group_name, patterns in found_groups.items():
+                inventory.append((group_name, {"group_patterns": patterns}))
+
+    return inventory
+
+
+def inventory_logwatch_groups(parsed):
+    use_mode = "groups"
     discoverable_items = _logwatch_discoverable_items(parsed)
     _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
@@ -348,7 +371,7 @@ def check_logwatch(item, params, parsed):
 
 check_info['logwatch'] = {
     'parse_function': parse_logwatch,
-    'inventory_function': lambda parsed: inventory_logwatch(parsed, "single"),
+    'inventory_function': inventory_logwatch_single,
     'check_function': check_logwatch,
     'service_description': "Log %s",
     'node_info': True,
@@ -473,7 +496,7 @@ def check_logwatch_groups(item, params, parsed):
 
 check_info['logwatch.groups'] = {
     'check_function': check_logwatch_groups,
-    'inventory_function': lambda parsed: inventory_logwatch(parsed, "groups"),
+    'inventory_function': inventory_logwatch_groups,
     'service_description': "Log %s",
     'node_info': True,
     'group': 'logwatch',

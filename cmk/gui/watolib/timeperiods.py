@@ -78,7 +78,7 @@ class TimeperiodSelection(DropdownChoice):
         elements = [(name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items()]
 
         always = ("24X7", _("Always"))
-        if always not in elements:
+        if always[0] not in dict(elements):
             elements.insert(0, always)
 
         return sorted(elements, key=lambda x: x[1].lower())

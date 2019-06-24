@@ -181,8 +181,23 @@ bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
     // is not a special standard
     command += L" /i " + msi_to_install.wstring();
 
+    std::wstring log_file_name = cma::cfg::GetLogDir();
+    log_file_name += L"\\agent_msi.log";
+    if (fs::exists(log_file_name, ec)) {
+        XLOG::l.i("File '{0}' exists, backing up to '{0}.bak'",
+                  wtools::ConvertToUTF8(log_file_name));
+
+        auto success = MvFile(log_file_name, log_file_name + L".bak");
+
+        if (!success) XLOG::d("Backing up failed");
+    }
+
     if (Update == UpdateType::exec_quiet)  // this is only normal method
-        command += L" /qn";                // but MS doesn't care at all :)
+    {
+        command += L" /qn";  // but MS doesn't care at all :)
+        command += L" /L*V ";
+        command += log_file_name;
+    }
 
     XLOG::l.i("File '{}' exists\n Command is '{}'", msi_to_install.u8string(),
               wtools::ConvertToUTF8(command.c_str()));

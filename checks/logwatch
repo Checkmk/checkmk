@@ -475,7 +475,7 @@ def check_logwatch_groups(item, params, parsed):
                     loglines.extend(node_data['lines'])
                 break
 
-    yield check_logwatch_generic(item, params, loglines, True, True)
+    yield check_logwatch_generic(item, params, loglines, True)
 
 
 check_info['logwatch.groups'] = {
@@ -506,7 +506,7 @@ def logwatch_username():
     return getpass.getuser()
 
 
-def check_logwatch_generic(item, params, loglines, found, groups=False):
+def check_logwatch_generic(item, params, loglines, found):
     import hashlib
     logdir = logwatch_dir + "/" + host_name()
 
@@ -535,13 +535,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     # list when no ruless/patterns are defined. In case of the logwatch.groups
     # checks, params are a tuple with the normal logwatch parameters on the first
     # and the grouping patterns on the second position
-    if params not in ('', None):
-        if groups:
-            patterns = params
-        else:
-            patterns = params  # patterns already precompiled
-    else:
-        patterns = logwatch_precompile(host_name(), item, None)
+    patterns = logwatch_precompile(host_name(), item, None) if params in ('', None) else params
 
     state_counts = {}  # for counting number of blocks with a certain state
 

@@ -290,47 +290,32 @@ def logwatch_parse_line(line):
 
 
 def inventory_logwatch_single(parsed):
-    use_mode = "single"
     discoverable_items = _logwatch_discoverable_items(parsed)
     _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
-    inventory = []
 
     for logfile in not_forwarded_logs:
-        found_groups = {}
-        for group_patterns in inventory_groups:
-            found_groups.update(logwatch_groups_of_logfile(group_patterns, logfile))
-
-        if not found_groups and use_mode == "single":
-            inventory.append((logfile, None))
-
-        elif found_groups and use_mode == "groups":
-            for group_name, patterns in found_groups.items():
-                inventory.append((group_name, {"group_patterns": patterns}))
-
-    return inventory
+        if not any(
+                logwatch_groups_of_logfile(group_patterns, logfile)
+                for group_patterns in inventory_groups):
+            yield logfile, None  # file was in no group
 
 
 def inventory_logwatch_groups(parsed):
-    use_mode = "groups"
     discoverable_items = _logwatch_discoverable_items(parsed)
     _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
-    inventory = []
+    inventory = {}
 
     for logfile in not_forwarded_logs:
-        found_groups = {}
         for group_patterns in inventory_groups:
-            found_groups.update(logwatch_groups_of_logfile(group_patterns, logfile))
+            newly_found = logwatch_groups_of_logfile(group_patterns, logfile)
+            for group_name, pattern_set in newly_found.iteritems():
+                inventory.setdefault(group_name, set()).update(pattern_set)
 
-        if not found_groups and use_mode == "single":
-            inventory.append((logfile, None))
-
-        elif found_groups and use_mode == "groups":
-            for group_name, patterns in found_groups.items():
-                inventory.append((group_name, {"group_patterns": patterns}))
-
-    return inventory
+    for group_name, patterns in inventory.iteritems():
+        # Convert pattern containers to lists (sets are not possible in autochecks)
+        yield group_name, {"group_patterns": sorted(patterns)}
 
 
 #.
@@ -452,8 +437,7 @@ def logwatch_groups_of_logfile(group_patterns, filename):
             found_these_groups.setdefault(group_name, set())
             found_these_groups[group_name].add((inclusion, exclusion))
 
-    # Convert pattern containers to lists (sets are not possible in autochecks)
-    return {k: sorted(v) for k, v in found_these_groups.items()}
+    return found_these_groups
 
 
 def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):

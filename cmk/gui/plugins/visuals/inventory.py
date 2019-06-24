@@ -90,7 +90,10 @@ class FilterInvtableTimestampAsAge(Filter):
         raise NotImplementedError()
 
     def __init__(self):
-        Filter.__init__(self, self._invinfo, [self.ident + "_from", self.ident + "_to"], [])
+        self._from_varprefix = self.ident + "_from"
+        self._to_varprefix = self.ident + "_to"
+        Filter.__init__(self, self._invinfo,
+                        [self._from_varprefix + "_days", self._to_varprefix + "_days"], [])
 
     def display(self):
         html.open_table()
@@ -98,26 +101,28 @@ class FilterInvtableTimestampAsAge(Filter):
         html.open_tr()
         html.td("%s:" % _("from"), style="vertical-align: middle;")
         html.open_td()
-        Age(display=["days"]).render_input(self.ident + "_from", 0)
+        self._valuespec().render_input(self._from_varprefix, 0)
         html.close_td()
         html.close_tr()
 
         html.open_tr()
         html.td("%s:" % _("to"), style="vertical-align: middle;")
         html.open_td()
-        Age(display=["days"]).render_input(self.ident + "_to", 0)
+        self._valuespec().render_input(self._to_varprefix, 0)
         html.close_td()
         html.close_tr()
 
         html.close_table()
 
+    def _valuespec(self):
+        return Age(display=["days"])
+
     def double_height(self):
         return True
 
     def filter_table_with_conversion(self, rows, conv):
-        from_value = Age().from_html_vars(self.ident + "_from")
-        to_value = Age().from_html_vars(self.ident + "_to")
-
+        from_value = self._valuespec().from_html_vars(self._from_varprefix)
+        to_value = self._valuespec().from_html_vars(self._to_varprefix)
         if not from_value and not to_value:
             return rows
 

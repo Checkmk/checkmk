@@ -1028,6 +1028,11 @@ td.invtree {
     margin-bottom: 3px;
   }
 
+  table {
+    margin-top: 3px;
+    border-collapse: collapse;
+  }
+
   table td, table th {
     height: 14px;
     padding: 1px 5px;
@@ -1050,15 +1055,6 @@ td.invtree span.invold, span.invold table.data {
 /* TODO: Reproduce this html element */
 td.invtree span.invnew, span.invnew table.data {
   color: #00bf00;
-}
-
-td.sla_spec table,
-td.invtree table,
-td.agent_config table {
-  margin-top: 3px;
-  border: 0.5px solid #000;
-  border-collapse: collapse;
-  box-shadow: 0.5px 0.5px 1px #ccc;
 }
 
 table.data.single {
@@ -1326,7 +1322,7 @@ td.agent_config table.rulesets table,
 table.data tr.ac_test_details table,
 table.data tr.notification_context table {
    border-collapse: collapse;
-   border: 0.5px solid #000;
+   border: 0.5px solid $theme-color-table-border;
    box-shadow: 0.5px 0.5px 1px #ccc;
    margin-top: 3px;
 }
@@ -1338,7 +1334,7 @@ table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
 table.data tr.notification_context table th,
 td.rule_conditions table td {
-    border: 1px solid #888;
+    border: 1px solid $theme-color-table-border;
     padding: 1px 5px;
     height: 14px;
 }
@@ -1361,8 +1357,7 @@ td.sla_spec table td.title,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th,
 td.rule_conditions table td.title {
-    background-color: #999;
-    color: #fff;
+    background-color: $theme-color-table-background;
 }
 
 table.agents tbody > tr.data > td {

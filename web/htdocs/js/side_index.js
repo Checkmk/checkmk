@@ -30,6 +30,7 @@ import * as foldable_container from "foldable_container";
 import * as sidebar from "sidebar";
 import * as quicksearch from "quicksearch";
 import * as visibility_detection from "visibility_detection";
+import * as valuespecs from "valuespecs";
 
 export default {
     get_url: ajax.get_url,
@@ -41,6 +42,7 @@ export default {
         utils: utils,
         foldable_container: foldable_container,
         quicksearch: quicksearch,
-        visibility_detection: visibility_detection
+        visibility_detection: visibility_detection,
+        valuespecs: valuespecs
     }
 };

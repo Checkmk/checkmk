@@ -45,12 +45,13 @@ from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
-    Labels,
+    TextUnicode,
     Transform,
     Checkbox,
     ListChoice,
     Tuple,
     ListOfStrings,
+    ListOf,
     Dictionary,
     RegExpUnicode,
     DropdownChoice,
@@ -1065,6 +1066,7 @@ class ModeRuleSearch(WatoMode):
                 ("rule_folder",
                  Tuple(
                      title=_("Folder"),
+                     orientation="horizontal",
                      elements=[
                          DropdownChoice(
                              title=_("Selection"),
@@ -1532,10 +1534,9 @@ class VSExplicitConditions(Transform):
         )
 
     def _vs_host_label_condition(self):
-        return Labels(
-            world=Labels.World.CONFIG,
+        return LabelCondition(
             title=_("Host labels"),
-            help=_("Use this condition to select hosts based on the configured host labels."),
+            help_txt=_("Use this condition to select hosts based on the configured host labels."),
         )
 
     def _vs_host_tag_condition(self):
@@ -1633,6 +1634,65 @@ class VSExplicitConditions(Transform):
         html.close_ul()
 
 
+class LabelCondition(Transform):
+    def __init__(self, title, help_txt):
+        super(LabelCondition, self).__init__(
+            ListOf(
+                Tuple(
+                    orientation="horizontal",
+                    elements=[
+                        DropdownChoice(choices=[
+                            ("is", _("has")),
+                            ("is_not", _("has not")),
+                        ],),
+                        TextUnicode(
+                            regex=r"^[^:]+:[^:]+$",
+                            regex_error=
+                            _("Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>."
+                             ),
+                        ),
+                    ],
+                    show_titles=False,
+                ),
+                add_label=_("Add label condition"),
+                del_label=_("Remove label condition"),
+                style=ListOf.Style.FLOATING,
+                movable=False,
+            ),
+            forth=self._to_valuespec,
+            back=self._from_valuespec,
+            title=title,
+            help=help_txt,
+        )
+
+    def _to_valuespec(self, label_conditions):
+        valuespec_value = []
+        for label_id, label_value in label_conditions.iteritems():
+            valuespec_value.append(self._single_label_to_valuespec(label_id, label_value))
+        return valuespec_value
+
+    def _single_label_to_valuespec(self, label_id, label_value):
+        if isinstance(label_value, dict):
+            if "$ne" in label_value:
+                return ("is_not", "%s:%s" % (label_id, label_value["$ne"]))
+            raise NotImplementedError()
+        return ("is", "%s:%s" % (label_id, label_value))
+
+    def _from_valuespec(self, valuespec_value):
+        label_conditions = {}
+        for operator, label in valuespec_value:
+            label_id, label_value = label.split(":", 1)
+            label_conditions[label_id] = self._single_label_from_valuespec(operator, label_value)
+        return label_conditions
+
+    def _single_label_from_valuespec(self, operator, label_value):
+        if operator == "is":
+            return label_value
+        elif operator == "is_not":
+            return {"$ne": label_value}
+        raise NotImplementedError()
+
+
 class RuleConditionRenderer(object):
     def render(self, rulespec, conditions):
         # type: (Rulespec, RuleConditions) -> List[Text]
@@ -1691,9 +1751,30 @@ class RuleConditionRenderer(object):
         if not conditions.host_labels:
             return
 
-        labels_txt = cmk.gui.view_utils.render_labels(
-            conditions.host_labels, "host", with_links=False, label_sources={})
-        yield HTML(_("Host has the following labels: %s") % labels_txt)
+        labels_html = (self._single_label_condition(label_id, label_spec)
+                       for label_id, label_spec in conditions.host_labels.iteritems())
+        yield HTML(
+            _("Host matching labels: %s") % html.render_i(
+                _("and"), class_="label_operator").join(labels_html))
+
+    def _single_label_condition(self, label_id, label_spec):
+        negate = False
+        label_value = label_spec
+        if isinstance(label_spec, dict):
+            if "$ne" in label_spec:
+                negate = True
+                label_value = label_spec["$ne"]  # type: ignore
+            else:
+                raise NotImplementedError()
+
+        labels_html = cmk.gui.view_utils.render_labels({label_id: label_value},
+                                                       "host",
+                                                       with_links=False,
+                                                       label_sources={})
+        if not negate:
+            return labels_html
+
+        return HTML("%s%s" % (html.render_i(_("not"), class_="label_operator"), labels_html))
 
     def _host_conditions(self, conditions):
         # type: (RuleConditions) -> Generator

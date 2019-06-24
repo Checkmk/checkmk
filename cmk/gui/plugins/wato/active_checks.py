@@ -2576,6 +2576,16 @@ class RulespecActiveChecksBySsh(HostRulespec):
                         ("identity",
                          TextAscii(
                              title=_("Keyfile"), help=_("Identity of an authorized key"), size=30)),
+                        ("accept_new_host_keys",
+                         FixedValue(
+                             True,
+                             title=_('Enable automatic host key acceptance'),
+                             help=_("This will automatically accept hitherto-unseen keys"
+                                    "but will refuse connections for changed or invalid hostkeys"),
+                             totext=_(
+                                 'Automatically stores the host key with no manual input requirement'
+                             ),
+                         )),
                     ])
             ],
         )

@@ -4,7 +4,7 @@
 from __future__ import print_function
 
 import os
-import sys
+import getpass
 import glob
 import multiprocessing
 import shutil
@@ -81,6 +81,14 @@ def num_jobs_to_use():
     # with HT report 8 CPUs (=> 6 jobs), our server 24-core CPU reports 48 CPUs
     # (=> 11 jobs). Just using 0 (meaning: use all reported CPUs) might just
     # work, too, but it's probably a bit too much.
+    #
+    # On our CI server there are currently up to 5 parallel Gerrit jobs allowed
+    # which trigger pylint + 1 explicit pylint job per Checkmk branch. This
+    # means that there may be up to 8 pylint running in parallel. Currently
+    # these processes consume about 400 MB of rss memory.  To prevent swapping
+    # we need to reduce the parallelization of pylint for the moment.
+    if getpass.getuser() == "jenkins":
+        return multiprocessing.cpu_count() / 8
     return multiprocessing.cpu_count() / 8 + 5
 
 

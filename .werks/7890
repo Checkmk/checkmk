@@ -1,0 +1,11 @@
+Title: check_by_ssh: Option to automatically accept new host keys
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b3
+Date: 1561367598
+
+The check_by_ssh check pluging now allows the user to optionally enable automatic acceptance of new host keys while refusing connection of changed or non-trusted host keys.

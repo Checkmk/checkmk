@@ -41,6 +41,8 @@ def check_by_ssh_arguments(params):
         else:
             args += ' -6'
 
+    if settings.get("accept_new_host_keys", False):
+        args += ["-o", "StrictHostKeyChecking=accept-new"]
     if "timeout" in settings:
         args += ' -t %d' % settings["timeout"]
     if "logname" in settings:

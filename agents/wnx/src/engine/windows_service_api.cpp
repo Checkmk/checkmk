@@ -333,6 +333,9 @@ int ExecCvtIniYaml(std::filesystem::path IniFile,
                    std::filesystem::path YamlFile, StdioLog stdio_log) {
     //
     auto flag = stdio_log == StdioLog::no ? 0 : XLOG::kStdio;
+    if (stdio_log != StdioLog::no) {
+        XLOG::setup::ColoredOutputOnStdio(true);
+    }
     namespace fs = std::filesystem;
     fs::path file = IniFile;
     std::error_code ec;

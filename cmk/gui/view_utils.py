@@ -32,7 +32,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
 
-# There is common code with modules/events.py:format_plugin_output(). Please check
+# There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.
 def format_plugin_output(output, row=None, shall_escape=True):

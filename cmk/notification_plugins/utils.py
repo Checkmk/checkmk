@@ -94,6 +94,23 @@ def cmk_links(context):
     return None, None
 
 
+# There is common code with cmk/gui/view_utils:format_plugin_output(). Please check
+# whether or not that function needs to be changed too
+# TODO(lm): Find a common place to unify this functionality.
+def format_plugin_output(output):
+    ok_marker = '<b class="stmarkOK">OK</b>'
+    warn_marker = '<b class="stmarkWARNING">WARN</b>'
+    crit_marker = '<b class="stmarkCRITICAL">CRIT</b>'
+    unknown_marker = '<b class="stmarkUNKNOWN">UNKN</b>'
+
+    output = output.replace("(!)", warn_marker) \
+              .replace("(!!)", crit_marker) \
+              .replace("(?)", unknown_marker) \
+              .replace("(.)", ok_marker)
+
+    return output
+
+
 def html_escape_context(context):
     unescaped_variables = {'PARAMETER_INSERT_HTML_SECTION'}
     for variable, value in context.iteritems():

@@ -6,10 +6,10 @@
 # global must be presented
 # IMPORTANT notes
 
-# @user -> is ProgramData/CheckMk/Agent/plugins
+# @user -> is ProgramData/CheckMK/Agent/plugins
 # @core -> is Program Files(x86)/check_mk_service/plugins
-# @data -> is ProgramData/CheckMk/Agent/
-# @local -> is ProgramData/CheckMk/Agent/local
+# @data -> is ProgramData/CheckMK/Agent/
+# @local -> is ProgramData/CheckMK/Agent/local
 
 # 1. use http://www.yamllint.com/ for example to validate your yamllint
 # 2. Windows filenames contains backslash \, ergo you have to write either "c:\\windows" or 'c:\windows' 
@@ -239,7 +239,7 @@ plugins:
 
     # folders are scanned top -> down
     # duplicated files will be removed
-    # folders: ['@core', '@user' ]       # folder in ProgramData/CheckMk/agent/plugins
+    # folders: ['@core', '@user' ]       # folder in ProgramData/CheckMK/agent/plugins
 
     # example: mk_inventory.vbs
     # plugin is executed asynchronous

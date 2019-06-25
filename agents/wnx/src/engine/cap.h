@@ -15,6 +15,8 @@
 #include "logger.h"
 
 namespace cma::cfg::cap {
+constexpr std::string_view kIniFromInstallMarker =
+    "# Created by Check_MK Agent Installer";
 
 // main API
 void Install();
@@ -33,6 +35,8 @@ bool ReinstallCaps(const std::filesystem::path TargetCap,
 
 bool ReinstallIni(const std::filesystem::path TargetIni,
                   const std::filesystem::path SrcIni);
+
+bool IsIniFileFromInstaller(const std::filesystem::path &filename);
 
 // data structures to use
 enum class ProcMode { install, remove, list };

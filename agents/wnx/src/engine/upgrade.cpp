@@ -24,31 +24,86 @@ enum class ServiceStartType {
 
 };
 
-int CopyAllFolders(const std::filesystem::path& LegacyRoot,
-                   const std::filesystem::path& ProgramData) {
+// returns false if folder cannot be created
+[[nodiscard]] bool CreateFolderSmart(
+    const std::filesystem::path& tgt) noexcept {
     namespace fs = std::filesystem;
-    if (ProgramData.u8string().find("CheckMK\\Agent") == std::string::npos) {
-        XLOG::l.crit("{} is bad folder", ProgramData.u8string());
+    std::error_code ec;
+    if (cma::tools::IsValidRegularFile(tgt)) fs::remove(tgt, ec);
+    if (fs::exists(tgt, ec)) return true;
+
+    auto ret = fs::create_directories(tgt, ec);
+    // check created or already exists
+    if (ret || ec.value() == 0) return true;
+
+    XLOG::l("Can't create '{}' error = [{}]", tgt.u8string(), ec.value());
+    return false;
+}
+
+bool IsPathProgramData(const std::filesystem::path& program_data) {
+    std::filesystem::path mask = kAppDataCompanyName;
+    mask /= kAppDataAppName;
+    std::wstring mask_str = mask.wstring();
+    cma::tools::WideLower(mask_str);
+
+    auto test_path = program_data.lexically_normal().native();
+    cma::tools::WideLower(test_path);
+
+    return test_path.find(mask_str) != std::wstring::npos;
+}
+
+[[nodiscard]] bool IsFileNonCompatible(
+    const std::filesystem::path& fname) noexcept {
+    constexpr std::string_view forbidden_files[] = {"cmk-agent-update.exe"};
+
+    auto name = fname.filename();
+
+    auto text = name.u8string();
+    cma::tools::StringLower(text);
+
+    return std::any_of(std::begin(forbidden_files), std::end(forbidden_files),
+                       // predicate:
+                       [text](std::string_view file) { return file == text; }
+
+    );
+}
+
+int CopyAllFolders(const std::filesystem::path& legacy_root,
+                   const std::filesystem::path& program_data,
+                   CopyFolderMode copy_mode) {
+    namespace fs = std::filesystem;
+    if (!IsPathProgramData(program_data)) {
+        XLOG::d(XLOG_FUNC + " '{}' is bad folder, copy is not possible",
+                program_data.u8string());
         return 0;
     }
 
-    const std::wstring folders[] = {L"config", L"plugins", L"local",
-                                    L"mrpe",   L"state",   L"bin"};
+    const std::wstring_view folders[] = {L"config", L"plugins", L"local",
+                                         L"mrpe",   L"state",   L"bin"};
     auto count = 0;
     for_each(folders, std::end(folders),
 
-             [LegacyRoot, ProgramData, &count](const std::wstring Folder) {
-                 auto src = LegacyRoot / Folder;
-                 auto tgt = ProgramData / Folder;
+             [legacy_root, program_data, &count,
+              copy_mode](std::wstring_view sub_folder) {
+                 auto src = legacy_root / sub_folder;
+                 auto tgt = program_data / sub_folder;
                  XLOG::l.t("Processing '{}':", src.u8string());  //
-                 fs::remove_all(tgt);
-                 fs::create_directories(tgt);
-                 count++;
-                 auto c = CopyFolderRecursive(src, tgt, [](fs::path P) {
-                     XLOG::l.i("\tCopy '{}'", P.u8string(),
-                               wtools::ConvertToUTF8(cma::cfg::GetTempDir()));
-                     return true;
-                 });
+                 if (copy_mode == CopyFolderMode::remove_old)
+                     fs::remove_all(tgt);
+                 auto folder_exists = CreateFolderSmart(tgt);
+                 if (!folder_exists) return;
+
+                 if (IsFileNonCompatible(src)) {
+                     XLOG::l.i("File '{}' is skipped as not compatible",
+                               src.string());
+                     return;
+                 }
+
+                 auto c = CopyFolderRecursive(
+                     src, tgt, fs::copy_options::skip_existing, [](fs::path P) {
+                         XLOG::l.i("\tCopy '{}'", P.u8string());
+                         return true;
+                     });
                  count += c;
              });
     return count;
@@ -111,7 +166,7 @@ int CopyRootFolder(const std::filesystem::path& LegacyRoot,
         }
 
         // Copy to the targetParentPath which we just created.
-        fs::copy(p, ProgramData, fs::copy_options::overwrite_existing, ec);
+        fs::copy(p, ProgramData, fs::copy_options::skip_existing, ec);
 
         if (ec.value() == 0) {
             count++;
@@ -128,24 +183,23 @@ int CopyRootFolder(const std::filesystem::path& LegacyRoot,
 // Recursively copies those files and folders from src to target which matches
 // predicate, and overwrites existing files in target.
 int CopyFolderRecursive(
-    const std::filesystem::path& Source, const std::filesystem::path& Target,
-    const std::function<bool(std::filesystem::path)>& Predicate) noexcept {
+    const std::filesystem::path& source, const std::filesystem::path& target,
+    std::filesystem::copy_options copy_mode,
+    const std::function<bool(std::filesystem::path)>& predicate) noexcept {
     namespace fs = std::filesystem;
     int count = 0;
-    XLOG::l.t("Copy from '{}' to '{}'", Source.u8string(), Target.u8string());
+    XLOG::l.t("Copy from '{}' to '{}'", source.u8string(), target.u8string());
 
     try {
         std::error_code ec;
         for (const auto& dir_entry :
-             fs::recursive_directory_iterator(Source, ec)) {
+             fs::recursive_directory_iterator(source, ec)) {
             const auto& p = dir_entry.path();
-            if (Predicate(p)) {
+            if (predicate(p)) {
                 // Create path in target, if not existing.
-                const auto relative_src = fs::relative(p, Source);
-                const auto target_parent_path = Target / relative_src;
-                if (fs::is_directory(p))
-
-                {
+                const auto relative_src = fs::relative(p, source);
+                const auto target_parent_path = target / relative_src;
+                if (fs::is_directory(p)) {
                     fs::create_directories(target_parent_path, ec);
                     if (ec.value() != 0) {
                         XLOG::l("Failed create folder '{} error {}",
@@ -154,10 +208,10 @@ int CopyFolderRecursive(
                     }
                 } else {
                     // Copy to the targetParentPath which we just created.
-                    fs::copy(p, target_parent_path,
-                             fs::copy_options::overwrite_existing, ec);
+                    auto ret =
+                        fs::copy_file(p, target_parent_path, copy_mode, ec);
                     if (ec.value() == 0) {
-                        count++;
+                        if (ret) count++;
                         continue;
                     }
                     XLOG::l("during copy from '{}' to '{}' error {}",
@@ -733,10 +787,11 @@ bool UpgradeLegacy(Force force_upgrade) {
     bool force = Force::yes == force_upgrade;
 
     if (force) {
-        xlog::sendStringToStdio(
+        XLOG::SendStringToStdio(
             "Upgrade(migration) is forced by command line\n",
-            xlog::internal::kYellow);
+            XLOG::Colors::kYellow);
     }
+
     namespace fs = std::filesystem;
     fs::path protocol_file = cma::cfg::GetRootDir();
     protocol_file /= cma::cfg::files::kUpgradeProtocol;
@@ -760,7 +815,8 @@ bool UpgradeLegacy(Force force_upgrade) {
         XLOG::l("Legacy Agent is not possible to stop");
     }
 
-    auto count = CopyAllFolders(path, cma::cfg::GetUserDir());
+    auto count =
+        CopyAllFolders(path, cma::cfg::GetUserDir(), CopyFolderMode::keep_old);
 
     count += CopyRootFolder(path, cma::cfg::GetUserDir());
 
@@ -806,13 +862,14 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
     auto local_ini_file = LegacyRoot / local_ini;
     std::error_code ec;
     if (fs::exists(local_ini_file, ec)) {
-        XLOG::l.t("Converting local ini file {}", local_ini_file.u8string());
+        XLOG::l.i("Converting local ini file '{}'", local_ini_file.u8string());
         auto user_yaml_file =
-            wtools::ConvertToUTF8(std::wstring(files::kDefaultMainConfigName));
+            wtools::ConvertToUTF8(files::kDefaultMainConfigName);
+
         auto out_file = CreateYamlFromIniSmart(
-            local_ini_file, ProgramData, user_yaml_file, BakeryFile::normal);
+            local_ini_file, ProgramData, user_yaml_file, CfgFileType::user);
         if (!out_file.empty() && fs::exists(out_file, ec)) {
-            XLOG::l.t("Local File {} was converted as user YML file {}",
+            XLOG::l.i("Local File '{}' was converted as user YML file '{}'",
                       local_ini_file.u8string(), out_file.u8string());
             return true;
         }
@@ -842,9 +899,10 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
 
     // generate
     auto out_folder = ProgramData;
+
     // if local.ini file exists, then second file must be a bakery file(pure
     // logic)
-    auto mode = LocalFileExists ? BakeryFile::force : BakeryFile::normal;
+    auto mode = LocalFileExists ? CfgFileType::bakery : CfgFileType::automatic;
     auto yaml_file = CreateYamlFromIniSmart(user_ini_file, out_folder,
                                             wtools::ConvertToUTF8(name), mode);
     // check
@@ -869,9 +927,10 @@ bool ConvertIniFiles(const std::filesystem::path& legacy_root,
         auto bakery_ini =
             (program_data / dirs::kBakery / files::kDefaultMainConfig)
                 .replace_extension(files::kDefaultBakeryExt);
-        XLOG::l.t("Removing {}", bakery_ini.u8string());
+        XLOG::l.t("Removing '{}'", bakery_ini.u8string());
         fs::remove(bakery_ini, ec);
     }
+
     bool local_file_exists = ConvertLocalIniFile(legacy_root, program_data);
 
     auto user_or_bakery_exists =
@@ -925,7 +984,7 @@ std::filesystem::path CreateYamlFromIniSmart(
     const std::filesystem::path& ini_file,      // ini file to use
     const std::filesystem::path& program_data,  // directory to send
     const std::string& yaml_name,               // name to be used in output
-    BakeryFile bakery_file_mode) noexcept {     // hard bakery or soft
+    CfgFileType cfg_file_type) noexcept {       // hard bakery or soft
 
     namespace fs = std::filesystem;
 
@@ -938,14 +997,18 @@ std::filesystem::path CreateYamlFromIniSmart(
 
     // storing
     auto bakery_file =
-        bakery_file_mode == BakeryFile::force || IsBakeryIni(ini_file);
+        (cfg_file_type != CfgFileType::user) &&
+        (cfg_file_type == CfgFileType::bakery || IsBakeryIni(ini_file));
+
     auto comments = MakeComments(ini_file, bakery_file);
     auto yaml_file = program_data;
     if (bakery_file) yaml_file /= dirs::kBakery;
+
     std::error_code ec;
     if (!fs::exists(yaml_file, ec)) {
         fs::create_directories(yaml_file, ec);
     }
+
     yaml_file /= yaml_name;
     yaml_file.replace_extension(bakery_file ? files::kDefaultBakeryExt
                                             : files::kDefaultUserExt);

@@ -1,15 +1,16 @@
 #include "stdafx.h"
 
+#include "types.h"
+
 #include <algorithm>
 #include <cstring>
 #include <sstream>
 #include <string>
-#include "stringutil.h"
-
-#include "types.h"
 
 #include "cfg.h"
 #include "logger.h"
+#include "stringutil.h"
+namespace fs = std::experimental::filesystem;
 
 template <>
 bool from_string<bool>(const std::string &value) {

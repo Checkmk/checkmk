@@ -1,0 +1,16 @@
+Title: mk_logwatch: enforce utf-8 encoding of config files
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1561457353
+
+Previously it was merely assumed that the config files are utf-8 encoded.
+To properly address issues with matching of non-ASCII characters we now
+require that the config files are utf-8 encoded.
+
+Configuration files that cannot be decoded will be skipped, and the corresponding
+service will go to {{UNKNOWN}}, displaying an appropriate message.

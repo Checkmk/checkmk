@@ -70,6 +70,8 @@ TTY_COLORS = {
     'normal': '\033[0m',
 }
 
+CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plugin
+
 
 def parse_arguments(argv=None):
     """
@@ -257,9 +259,14 @@ def iter_config_lines(files):
     for file_ in files:
         try:
             with open(file_) as fid:
-                for line in fid:
-                    if not is_comment(line):
-                        yield line.rstrip()
+                try:
+                    decoded = (line.decode('utf-8') for line in fid)
+                    for line in decoded:
+                        if not is_comment(line):
+                            yield line.rstrip()
+                except UnicodeDecodeError:
+                    msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
+                    sys.stdout.write(CONFIG_ERROR_PREFIX + msg)
         except IOError:
             if debug():
                 raise
@@ -724,7 +731,8 @@ class Options(object):
                     ))
                 self.values['overflow'] = value
             elif key in ('regex', 'iregex'):
-                self.values['regex'] = re.compile(value, re.I if key.startswith('i') else 0)
+                flags = (re.IGNORECASE if key.startswith('i') else 0) | re.UNICODE
+                self.values['regex'] = re.compile(value, flags)
             elif key in ('nocontext',):
                 if value.lower() not in Options.MAP_BOOL.keys():
                     raise ValueError("Invalid %s: %r (choose from %r)" % (
@@ -788,7 +796,7 @@ def _compile_continuation_pattern(raw_pattern):
     try:
         return int(raw_pattern)
     except (ValueError, TypeError):
-        return re.compile(_search_optimize_raw_pattern(raw_pattern))
+        return re.compile(_search_optimize_raw_pattern(raw_pattern), re.UNICODE)
 
 
 def _compile_all_expressions(patterns):
@@ -797,7 +805,7 @@ def _compile_all_expressions(patterns):
         if not rewrite_list:
             # it does not matter what the matched group is in this case
             raw_pattern = _search_optimize_raw_pattern(raw_pattern)
-        compiled = re.compile(raw_pattern)
+        compiled = re.compile(raw_pattern, re.UNICODE)
         cont_list = [_compile_continuation_pattern(cp) for cp in cont_list]
         compiled_patterns.append((level, compiled, cont_list, rewrite_list))
 
@@ -924,7 +932,7 @@ def main():
     except Exception as exc:
         if debug():
             raise
-        sys.stdout.write("CANNOT READ CONFIG FILE: %s\n" % exc)
+        sys.stdout.write(CONFIG_ERROR_PREFIX + "%s\n" % exc)
         sys.exit(1)
 
     status_filename = get_status_filename(cluster_config)

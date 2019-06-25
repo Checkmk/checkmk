@@ -56,8 +56,8 @@ def test_options_setter(mk_logwatch, option_string, key, expected_value):
 
 
 @pytest.mark.parametrize("option_string, expected_pattern, expected_flags", [
-    ("regex=foobar", 'foobar', 0),
-    ("iregex=foobar", 'foobar', re.I),
+    ("regex=foobar", 'foobar', re.UNICODE),
+    ("iregex=foobar", 'foobar', re.IGNORECASE | re.UNICODE),
 ])
 def test_options_setter_regex(mk_logwatch, option_string, expected_pattern, expected_flags):
     opt = mk_logwatch.Options()
@@ -123,54 +123,54 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
 @pytest.mark.parametrize("config_lines, logfiles_files, logfiles_patterns", [
     (
         [
-            '',
-            '/var/log/messages',
-            ' C Fail event detected on md device',
-            ' I mdadm.*: Rebuild.*event detected',
-            ' W mdadm\\[',
-            ' W ata.*hard resetting link',
-            ' W ata.*soft reset failed (.*FIS failed)',
-            ' W device-mapper: thin:.*reached low water mark',
-            ' C device-mapper: thin:.*no free space',
-            ' C Error: (.*)',
+            u'',
+            u'/var/log/messages',
+            u' C Fail event detected on md device',
+            u' I mdadm.*: Rebuild.*event detected',
+            u' W mdadm\\[',
+            u' W ata.*hard resetting link',
+            u' W ata.*soft reset failed (.*FIS failed)',
+            u' W device-mapper: thin:.*reached low water mark',
+            u' C device-mapper: thin:.*no free space',
+            u' C Error: (.*)',
         ],
-        ['/var/log/messages'],
+        [u'/var/log/messages'],
         [
-            ('C', 'Fail event detected on md device', [], []),
-            ('I', 'mdadm.*: Rebuild.*event detected', [], []),
-            ('W', r'mdadm\[', [], []),
-            ('W', 'ata.*hard resetting link', [], []),
-            ('W', 'ata.*soft reset failed (.*FIS failed)', [], []),
-            ('W', 'device-mapper: thin:.*reached low water mark', [], []),
-            ('C', 'device-mapper: thin:.*no free space', [], []),
-            ('C', 'Error: (.*)', [], []),
+            (u'C', u'Fail event detected on md device', [], []),
+            (u'I', u'mdadm.*: Rebuild.*event detected', [], []),
+            (u'W', u'mdadm\\[', [], []),
+            (u'W', u'ata.*hard resetting link', [], []),
+            (u'W', u'ata.*soft reset failed (.*FIS failed)', [], []),
+            (u'W', u'device-mapper: thin:.*reached low water mark', [], []),
+            (u'C', u'device-mapper: thin:.*no free space', [], []),
+            (u'C', u'Error: (.*)', [], []),
         ],
     ),
     (
         [
-            '',
-            '/var/log/auth.log',
-            ' W sshd.*Corrupted MAC on input',
+            u'',
+            u'/var/log/auth.log',
+            u' W sshd.*Corrupted MAC on input',
         ],
-        ['/var/log/auth.log'],
-        [('W', 'sshd.*Corrupted MAC on input', [], [])],
+        [u'/var/log/auth.log'],
+        [(u'W', u'sshd.*Corrupted MAC on input', [], [])],
     ),
     (
         [
-            '/var/log/syslog /var/log/kern.log',
-            ' I registered panic notifier',
-            ' C panic',
-            ' C Oops',
-            ' W generic protection rip',
-            ' W .*Unrecovered read error - auto reallocate failed',
+            u'/var/log/syslog /var/log/kern.log',
+            u' I registered panic notifier',
+            u' C panic',
+            u' C Oops',
+            u' W generic protection rip',
+            u' W .*Unrecovered read error - auto reallocate failed',
         ],
-        ['/var/log/syslog', '/var/log/kern.log'],
+        [u'/var/log/syslog', u'/var/log/kern.log'],
         [
-            ('I', 'registered panic notifier', [], []),
-            ('C', 'panic', [], []),
-            ('C', 'Oops', [], []),
-            ('W', 'generic protection rip', [], []),
-            ('W', '.*Unrecovered read error - auto reallocate failed', [], []),
+            (u'I', u'registered panic notifier', [], []),
+            (u'C', u'panic', [], []),
+            (u'C', u'Oops', [], []),
+            (u'W', u'generic protection rip', [], []),
+            (u'W', u'.*Unrecovered read error - auto reallocate failed', [], []),
         ],
     ),
 ])
@@ -186,6 +186,7 @@ def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfile
     assert logfiles.files == logfiles_files
     assert len(logfiles.patterns) == len(logfiles_patterns)
     for actual, expected in zip(logfiles.patterns, logfiles_patterns):
+        assert type(actual) == type(expected)
         assert actual == expected
 
 
@@ -320,8 +321,8 @@ class MockStdout(object):
         (
             __file__,
             [
-                ('W', re.compile('^[^u]*W.*I match only myself'), [], []),  # write this: ö°üßä
-                ('I', re.compile('.*'), [], []),
+                ('W', re.compile(u'^[^u]*W.*I match only myself', re.UNICODE), [], []),
+                ('I', re.compile(u'.*', re.UNICODE), [], []),
             ],
             {
                 'nocontext': True
@@ -331,13 +332,13 @@ class MockStdout(object):
             },
             [
                 u"[[[%s]]]\n" % __file__,
-                u"W                 ('W', re.compile('^[^u]*W.*I match only myself'), [], []),  # write this: ö°üßä\n"
+                u"W                 ('W', re.compile(u'^[^u]*W.*I match only myself', re.UNICODE), [], []),\n"
             ],
         ),
         (
             __file__,
             [
-                ('W', re.compile('I don\'t match anything at all!'), [], []),
+                ('W', re.compile(u'I don\'t match anything at all!', re.UNICODE), [], []),
             ],
             {},
             {
@@ -350,12 +351,29 @@ class MockStdout(object):
         (
             __file__,
             [
-                ('W', re.compile('.*'), [], []),
+                ('W', re.compile(u'.*', re.UNICODE), [], []),
             ],
             {},
             {},
             [  # nothing for new files
                 u"[[[%s]]]\n" % __file__,
+            ],
+        ),
+        (
+            __file__,
+            [
+                ('C', re.compile(u'äöü', re.UNICODE), [], []),
+                ('I', re.compile(u'.*', re.UNICODE), [], []),
+            ],
+            {
+                'nocontext': True
+            },
+            {
+                __file__: (0, -1)
+            },
+            [  # match umlauts
+                u"[[[%s]]]\n" % __file__,
+                u"C                 ('C', re.compile(u'\xe4\xf6\xfc', re.UNICODE), [], []),\n",
             ],
         ),
         ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),

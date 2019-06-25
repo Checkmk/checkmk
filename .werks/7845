@@ -1,0 +1,11 @@
+Title: winperf_processor: Changed default levels back to 101, 101 percent in order avoid a lot of false alarms
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0b3
+Date: 1561463985
+
+

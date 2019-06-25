@@ -54,7 +54,7 @@ bool IsPathProgramData(const std::filesystem::path& program_data) {
 
 [[nodiscard]] bool IsFileNonCompatible(
     const std::filesystem::path& fname) noexcept {
-    constexpr std::string_view forbidden_files[] = {"cmk-agent-update.exe"};
+    constexpr std::string_view forbidden_files[] = {"cmk-update-agent.exe"};
 
     auto name = fname.filename();
 

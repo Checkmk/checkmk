@@ -39,7 +39,7 @@ except ImportError:
     # Default to python2
     from cgi import escape as html_escape
 
-from cmk_base.notify import find_wato_folder
+from cmk.utils.notify import find_wato_folder
 import cmk.utils.password_store
 
 

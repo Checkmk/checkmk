@@ -47,7 +47,7 @@ import time
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
 import cmk.utils.debug
-from cmk.utils.notify import notification_message
+from cmk.utils.notify import find_wato_folder, notification_message
 from cmk.utils.regex import regex
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
@@ -1536,13 +1536,6 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
     file(filename + ".new", "w").write("%r\n" % ((params, plugin_context),))
     os.rename(filename + ".new", filename)  # We need an atomic creation!
     notify_log("        - stored in %s" % filename)
-
-
-def find_wato_folder(context):
-    for tag in context.get("HOSTTAGS", "").split():
-        if tag.startswith("/wato/"):
-            return tag[6:].rstrip("/")
-    return ""
 
 
 def create_bulk_dirname(bulk_path):

@@ -38,12 +38,12 @@ def expected_output():
         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b').replace(
-            ',', '\t')
+            ',', '\\|')
     if not Globals.alone:
         re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
     re_str += r'$'
     return chain([
-        re.escape(r'<<<wmi_webservices:sep(9)>>>'),
+        re.escape(r'<<<wmi_webservices:sep(124)>>>'),
         (r'AnonymousUsersPersec,BytesReceivedPersec,BytesSentPersec,'
          r'BytesTotalPersec,Caption,CGIRequestsPersec,'
          r'ConnectionAttemptsPersec,CopyRequestsPersec,'
@@ -85,7 +85,7 @@ def expected_output():
          r'TotalPropfindRequests,TotalProppatchRequests,TotalPutRequests,'
          r'TotalRejectedAsyncIORequests,TotalSearchRequests,'
          r'TotalTraceRequests,TotalUnlockRequests,TraceRequestsPersec,'
-         r'UnlockRequestsPersec,WMIStatus').replace(',', '\t')
+         r'UnlockRequestsPersec,WMIStatus').replace(',', '\\|')
     ], repeat(re_str))
 
 

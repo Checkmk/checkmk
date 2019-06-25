@@ -634,7 +634,7 @@ class ManPageRenderer(object):
             self._print_textbody(header['item'])
 
         self._print_subheader("Discovery")
-        if header.has_key('inventory'):
+        if 'inventory' in header:
             self._print_textbody(header['inventory'])
         else:
             self._print_textbody("No discovery supported.")

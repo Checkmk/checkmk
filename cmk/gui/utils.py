@@ -120,7 +120,7 @@ def cmp_version(a, b):
 def savefloat(f):
     try:
         return float(f)
-    except:
+    except (TypeError, ValueError):
         return 0.0
 
 
@@ -129,7 +129,7 @@ def savefloat(f):
 def saveint(x):
     try:
         return int(x)
-    except:
+    except (TypeError, ValueError):
         return 0
 
 

@@ -64,7 +64,7 @@ def dump_host(hostname):
                 secondary = _ip_address_for_dump_host(host_config, 4)
             else:
                 secondary = _ip_address_for_dump_host(host_config, 6)
-        except:
+        except Exception:
             secondary = "X.X.X.X"
 
         addresses = "%s, %s" % (ipaddress, secondary)
@@ -139,10 +139,10 @@ def _ip_address_for_dump_host(host_config, family=None):
     if host_config.is_cluster:
         try:
             return ip_lookup.lookup_ip_address(host_config.hostname, family)
-        except:
+        except Exception:
             return ""
 
     try:
         return ip_lookup.lookup_ip_address(host_config.hostname, family)
-    except:
+    except Exception:
         return core_config.fallback_ip_for(host_config, family)

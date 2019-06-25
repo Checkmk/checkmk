@@ -6,7 +6,7 @@ import os
 import socket
 
 
-class EventConsoleConnection:
+class EventConsoleConnection(object):
     def __init__(self, path, timeout=3):
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._socket.settimeout(timeout)

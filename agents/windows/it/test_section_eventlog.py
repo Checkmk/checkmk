@@ -20,7 +20,7 @@ except ImportError:
         raise
 
 
-class Globals:
+class Globals(object):
     local_statefile = 'eventstate.txt'
     state_pattern = re.compile(r'^(?P<logtype>[^\|]+)\|(?P<record>\d+)$')
     section = 'logwatch'

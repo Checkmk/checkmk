@@ -168,7 +168,7 @@ class ModeBulkImport(WatoMode):
     def _import(self):
         if self._params.get("has_title_line"):
             try:
-                self._csv_reader.next()  # skip header
+                next(self._csv_reader)  # skip header
             except StopIteration:
                 pass
 
@@ -316,7 +316,7 @@ class ModeBulkImport(WatoMode):
         # erneut importieren kann.
         if self._params.get("has_title_line"):
             try:
-                headers = list(self._csv_reader.next())
+                headers = list(next(self._csv_reader))
             except StopIteration:
                 headers = []  # nope, there is no header
         else:

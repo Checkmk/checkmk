@@ -233,7 +233,7 @@ def get_site_and_version_from_backup(tar):
     # type: (tarfile.TarFile) -> Tuple[str, str]
     """Get the first file of the tar archive. Expecting <site>/version symlink
     for validation reasons."""
-    site_tarinfo = tar.next()
+    site_tarinfo = next(tar)
     if site_tarinfo is None:
         raise Exception("Failed to detect version of backed up site.")
 

@@ -1050,7 +1050,7 @@ class CommandScheduleDowntimes(Command):
                     (title_start, self._get_duration_human_readable(duration))
 
         try:
-            rangebtn = rangebtns.next()
+            rangebtn = next(rangebtns)
         except StopIteration:
             rangebtn = None
 

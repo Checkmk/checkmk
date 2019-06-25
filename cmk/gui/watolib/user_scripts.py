@@ -75,7 +75,7 @@ def _load_user_scripts_from(adir):
                 info = {"title": entry, "bulk": False}
                 try:
                     lines = file(path)
-                    lines.next()
+                    next(lines)
                     line = lines.next().decode("utf-8").strip()
                     if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):
                         line = lines.next().strip()

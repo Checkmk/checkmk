@@ -588,6 +588,23 @@ def _show_read_only_warning():
 #       to better location.
 
 
+class FetchAgentOutputRequest(object):
+    def __init__(self, host, agent_type):
+        # type: (watolib.Host, str) -> None
+        self.host = host
+        self.agent_type = agent_type
+
+    @classmethod
+    def deserialize(cls, serialized):
+        return cls(serialized["host_name"], serialized["agent_type"])
+
+    def serialize(self):
+        return {
+            "host_name": self.host.name(),
+            "agent_type": self.agent_type,
+        }
+
+
 # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
 class AgentOutputPage(Page):
@@ -607,7 +624,6 @@ class AgentOutputPage(Page):
         ty = html.request.var("type")
         if ty not in ["walk", "agent"]:
             raise MKGeneralException(_("Invalid type specified."))
-        self._ty = ty
 
         self._back_url = html.get_url_input("back_url", deflt="") or None
 
@@ -620,17 +636,19 @@ class AgentOutputPage(Page):
                   "Click <a href=\"%s\">here</a> to go back.") % html.escaper.escape_attribute(
                       self._back_url))
         host.need_permission("read")
-        self._host = host
+
+        self._request = FetchAgentOutputRequest(host=host, agent_type=ty)
 
     @staticmethod
-    def file_name(site_id, host_name, ty):
-        return "%s-%s-%s.txt" % (site_id, host_name, ty)
+    def file_name(request):
+        # type: (FetchAgentOutputRequest) -> str
+        return "%s-%s-%s.txt" % (request.host.site_id(), request.host.name(), request.agent_type)
 
 
 @page_registry.register_page("fetch_agent_output")
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self):
-        html.header(_("%s: Download agent output") % self._host.name())
+        html.header(_("%s: Download agent output") % self._request.host.name())
 
         html.begin_context_buttons()
         if self._back_url:
@@ -639,7 +657,7 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         self._action()
 
-        job = FetchAgentOutputBackgroundJob(self._host.site_id(), self._host.name(), self._ty)
+        job = FetchAgentOutputBackgroundJob(self._request)
         if html.request.has_var("_start"):
             self._start_fetch(job)
         self._show_status(job)
@@ -655,8 +673,8 @@ class PageFetchAgentOutput(AgentOutputPage):
         if action_handler.handle_actions() and action_handler.did_delete_job():
             raise HTTPRedirect(
                 html.makeuri_contextless([
-                    ("host", self._host.name()),
-                    ("type", self._ty),
+                    ("host", self._request.host.name()),
+                    ("type", self._request.agent_type),
                     ("back_url", self._back_url),
                 ]))
 
@@ -691,32 +709,35 @@ class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob
     def gui_title(cls):
         return _("Fetch agent output")
 
-    def __init__(self, site_id, host_name, ty):
-        self._site_id = site_id
-        self._host_name = host_name
-        self._ty = ty
+    def __init__(self, request):
+        # type: (FetchAgentOutputRequest) -> None
+        self._request = request
 
-        job_id = "%s%s-%s-%s" % (self.job_prefix, site_id, host_name, ty)
-        title = _("Fetching %s of %s / %s") % (ty, site_id, host_name)
+        host = self._request.host
+        job_id = "%s%s-%s-%s" % (self.job_prefix, host.site_id(), host.name(),
+                                 self._request.agent_type)
+        title = _("Fetching %s of %s / %s") % (self._request.agent_type, host.site_id(),
+                                               host.name())
         super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title)
 
         self.set_function(self._fetch_agent_output)
 
     def _fetch_agent_output(self, job_interface):
-        job_interface.send_progress_update(_("Fetching '%s'...") % self._ty)
+        job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)
 
-        success, output, agent_data = watolib.check_mk_automation(self._site_id, "get-agent-output",
-                                                                  [self._host_name, self._ty])
+        success, output, agent_data = watolib.check_mk_automation(
+            self._request.host.site_id(), "get-agent-output",
+            [self._request.host.name(), self._request.agent_type])
 
         if not success:
             job_interface.send_progress_update(_("Failed: %s") % output)
 
-        preview_filepath = os.path.join(
-            job_interface.get_work_dir(),
-            AgentOutputPage.file_name(self._site_id, self._host_name, self._ty))
+        preview_filepath = os.path.join(job_interface.get_work_dir(),
+                                        AgentOutputPage.file_name(self._request))
         store.save_file(preview_filepath, agent_data)
 
-        download_url = html.makeuri_contextless([("host", self._host_name), ("type", self._ty)],
+        download_url = html.makeuri_contextless([("host", self._request.host.name()),
+                                                 ("type", self._request.agent_type)],
                                                 filename="download_agent_output.py")
 
         button = html.render_icon_button(download_url, _("Download"), "agent_output")
@@ -727,13 +748,13 @@ class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob
 @page_registry.register_page("download_agent_output")
 class PageDownloadAgentOutput(AgentOutputPage):
     def page(self):
-        file_name = self.file_name(self._host.site_id(), self._host.name(), self._ty)
+        file_name = self.file_name(self._request)
 
         html.set_output_format("text")
         html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % file_name
 
         # TODO: This needs to be transported via job result (to support distributed setups)
-        job = FetchAgentOutputBackgroundJob(self._host.site_id(), self._host.name(), self._ty)
+        job = FetchAgentOutputBackgroundJob(self._request)
         preview_filepath = os.path.join(job.get_work_dir(), file_name)
         html.write(file(preview_filepath).read())
 

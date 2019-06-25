@@ -161,7 +161,7 @@ def cleanup_if_strings(s):
 def tryint(x):
     try:
         return int(x)
-    except:
+    except (TypeError, ValueError):
         return x
 
 

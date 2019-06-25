@@ -1722,7 +1722,7 @@ class NodeRenderer(object):
         elif isinstance(value, str):
             try:
                 text = value.decode("utf-8")
-            except:
+            except UnicodeDecodeError:
                 text = value
             html.write_text(text)
         elif isinstance(value, unicode):

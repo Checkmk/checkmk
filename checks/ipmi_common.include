@@ -182,7 +182,7 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
             try:
                 ambient_count += 1
                 ambient_sum += float(val)
-            except:
+            except (TypeError, ValueError):
                 pass
 
     if ambient_count > 0:

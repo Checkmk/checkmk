@@ -627,20 +627,12 @@ def send_mail(message, target, from_address, context):
 
 
 def fetch_pnp_data(context, params):
-    try:
-        # Autodetect the path in OMD environments
-        path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT'].encode('utf-8')
-        php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT'].encode(
-            'utf-8')
-        env = {
-            'REMOTE_USER': "check-mk",
-            "SKIP_AUTHORIZATION": "1",
-        }
-    except:
-        # Non-omd environment - use plugin argument 1
-        path = context.get('PARAMETER_1', '')
-        php_save_path = ""  # Using default path
-        env = {'REMOTE_USER': context['CONTACTNAME'].encode('utf-8')}
+    path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT'].encode('utf-8')
+    php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT'].encode('utf-8')
+    env = {
+        'REMOTE_USER': "check-mk",
+        "SKIP_AUTHORIZATION": "1",
+    }
 
     if not os.path.exists(path):
         raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)

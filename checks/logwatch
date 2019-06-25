@@ -1031,7 +1031,7 @@ def logwatch_spool_messages(message_chunks, result):
                 handle.write(repr(message_chunk))
 
             result.num_spooled += len(message_chunk)
-        except IOError:
+        except Exception:
             if cmk.utils.debug.enabled():
                 raise
 

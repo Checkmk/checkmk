@@ -97,7 +97,7 @@ def check_tinkerforge_master(item, params, parsed):
             yield 0, "%.1f mV" % float(voltage)
             yield 0, "%.1f mA" % float(current)
             yield check_temperature(float(chip_temp) / 10.0, params, "tinkerforge_%s" % item)
-        except:
+        except Exception:
             yield 2, parsed['master'][item][0], []
 
 

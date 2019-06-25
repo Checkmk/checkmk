@@ -319,7 +319,7 @@ def declare_custom_permissions(what):
                 visuals = store.load_data_from_file(path, {})
                 for name, visual in visuals.items():
                     declare_visual_permission(what, name, visual)
-        except:
+        except Exception:
             if config.debug:
                 raise
 

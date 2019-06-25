@@ -492,7 +492,7 @@ class ModeEditRuleset(WatoMode):
                 if matcher:
                     try:
                         self._item = matcher.group(1)
-                    except:
+                    except Exception:
                         pass
             elif check_command.startswith("check_mk_active-"):
                 check_command = check_command[16:].split(" ")[0][:-1]
@@ -508,7 +508,7 @@ class ModeEditRuleset(WatoMode):
             if html.request.has_var("item"):
                 try:
                     self._item = watolib.mk_eval(html.request.var("item"))
-                except:
+                except Exception:
                     pass
 
         hostname = html.get_ascii_input("host")

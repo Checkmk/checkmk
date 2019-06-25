@@ -37,7 +37,7 @@ def check_vbox_guest(_no_item, _no_params, info):
         return (3, "Error running VBoxControl guestproperty enumerate")
     try:
         d = vbox_guest_make_dict(info)
-    except:
+    except Exception:
         d = {}
 
     if len(d) == 0:

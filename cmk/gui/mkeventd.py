@@ -141,10 +141,7 @@ class PermissionSectionEventConsole(PermissionSection):
 
 
 def service_levels():
-    try:
-        return config.mkeventd_service_levels
-    except:
-        return [(0, "(no service level)")]
+    return config.mkeventd_service_levels
 
 
 def action_choices(omit_hidden=False):
@@ -212,12 +209,7 @@ def replication_mode():
 def query_ec_directly(query):
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        try:
-            timeout = config.mkeventd_connect_timeout
-        except:
-            timeout = 10
-
-        sock.settimeout(timeout)
+        sock.settimeout(config.mkeventd_connect_timeout)
         sock.connect(socket_path)
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)
@@ -439,7 +431,7 @@ def match_ipv4_network(pattern, ipaddress_text):
         return True  # event if ipaddress is empty
     try:
         ipaddress = parse_ipv4_address(ipaddress_text)
-    except:
+    except Exception:
         return False  # invalid address never matches
 
     # first network_bits of network and ipaddress must be

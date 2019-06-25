@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+import errno
 import hashlib
 import re
 import pprint
@@ -742,8 +743,9 @@ class BISitedataManager(object):
             except (IndexError, IOError):
                 try:
                     os.unlink(filepath)
-                except:
-                    pass
+                except OSError as e:
+                    if e.errno != errno.ENOENT:
+                        raise
 
     def _query_data(self, only_sites):
         try:

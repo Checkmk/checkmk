@@ -110,7 +110,7 @@ def check_adva_fsp_if(item, params, info):
                     infotext += ", %s Power: %.1f%s" % (name.title(), fpower, sym)
                     perfdata.append(("%s_power" % name, "%.1fdBm" % fpower, "", climits))
 
-                except:
+                except Exception:
                     if not re.match("S", item):  # if no service interface and no power parameter
                         infotext += ", %s Power: n.a. (!)" % name.title()
                         state = max(1, state)

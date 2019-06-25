@@ -724,7 +724,7 @@ class ActivateChangesManager(ActivateChanges):
             site_activation.load()
             site_activation.start()
             os._exit(0)
-        except:
+        except Exception:
             logger.exception()
 
     def _log_activation(self):
@@ -868,7 +868,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         try:
             self._do_run()
-        except:
+        except Exception:
             logger.exception()
 
     def _do_run(self):

@@ -30,7 +30,7 @@ def parse_snmp_uptime(ticks):
         if len(ticks) < 3:
             return 0
         return int(ticks[:-2])
-    except:
+    except Exception:
         days, h, m, s = ticks.split(":")
         return (int(days) * 86400) + (int(h) * 3600) + (int(m) * 60) + int(float(s))
 

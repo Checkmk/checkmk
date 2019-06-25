@@ -259,7 +259,7 @@ def inv_dmidecode_parse_mem_device(lines):
     if node:
         try:
             array = node[int(index) - 1]
-        except:
+        except Exception:
             array = node[-1]
     else:
         array = {"devices": []}

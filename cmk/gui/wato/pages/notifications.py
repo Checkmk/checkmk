@@ -665,10 +665,10 @@ class ModeNotifications(NotificationsMode):
             if isinstance(value, str):
                 try:
                     value_unicode = value.decode("utf-8")
-                except:
+                except UnicodeDecodeError:
                     try:
                         value_unicode = value.decode("latin-1")
-                    except:
+                    except UnicodeDecodeError:
                         value_unicode = u"(Invalid byte sequence)"
                 context[key] = value_unicode
 

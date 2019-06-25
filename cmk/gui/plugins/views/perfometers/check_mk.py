@@ -551,7 +551,7 @@ def perfometer_ps_perf(row, check_command, perf_data):
     try:
         perc = perf_dict["pcpu"]
         return "%.1f%%" % perc, perfometer_linear(perc, "#30ff80")
-    except:
+    except Exception:
         return "", ""
 
 

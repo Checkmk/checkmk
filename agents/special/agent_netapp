@@ -49,7 +49,7 @@ try:
     # Unfortunaly, it is not a builtin module and need to be installed manually with
     # pip install lxml
     import lxml.etree as ET  # type: ignore
-except:
+except ImportError:
     import xml.etree.ElementTree as ET  # type: ignore
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

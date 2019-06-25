@@ -37,7 +37,7 @@ def inventory_citrix_serverload(info):
 def check_citrix_serverload(_no_item, params, info):
     try:
         load = int(info[0][0])
-    except:
+    except Exception:
         yield 3, "Load information not found"
         return
 

@@ -150,7 +150,7 @@ class Request(object):
         """Return either the value of the cookie provided by the client, the given deflt value or None"""
         try:
             return self.cookies[varname]
-        except:
+        except KeyError:
             return deflt
 
     #

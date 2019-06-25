@@ -703,7 +703,7 @@ def ajax_message_read():
     try:
         notify.delete_gui_message(html.request.var('id'))
         html.write("OK")
-    except:
+    except Exception:
         if config.debug:
             raise
         html.write("ERROR")

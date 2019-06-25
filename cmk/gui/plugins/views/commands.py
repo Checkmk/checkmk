@@ -1059,8 +1059,8 @@ class CommandScheduleDowntimes(Command):
             down_to, title = resolve_end(end)
         elif html.request.var("_down_from_now"):
             try:
-                minutes = int(html.request.var("_down_minutes"))
-            except:
+                minutes = int(html.request.var("_down_minutes", ""))
+            except ValueError:
                 minutes = 0
 
             if minutes <= 0:

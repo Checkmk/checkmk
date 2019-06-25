@@ -568,7 +568,7 @@ def mode_backup(local_job_id, opts):
         if opt_debug:
             raise
 
-    except:
+    except Exception:
         if not opt_debug:
             sys.stderr.write("An exception occured:\n")
             sys.stderr.write(traceback.format_exc())
@@ -1443,7 +1443,7 @@ def mode_restore(target_id, backup_id, opts):
         if opt_debug:
             raise
 
-    except:
+    except Exception:
         if not opt_debug:
             sys.stderr.write("An exception occured:\n")
             sys.stderr.write(traceback.format_exc())

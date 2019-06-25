@@ -199,7 +199,7 @@ def main():
         sftp = client.open_sftp()
         messages.append("Login successful")
         states.append(0)
-    except:
+    except Exception:
         if opt_verbose:
             raise
         write_out(2, "Connection failed!")
@@ -219,7 +219,7 @@ def main():
             put_file(paths)
             states.append(0)
             messages.append("Successfully put file to SFTP server")
-    except:
+    except Exception:
         if opt_verbose:
             raise
         states.append(2)
@@ -230,7 +230,7 @@ def main():
             get_file(paths)
             states.append(0)
             messages.append("Successfully got file from SFTP server")
-    except:
+    except Exception:
         if opt_verbose:
             raise
         states.append(2)
@@ -243,7 +243,7 @@ def main():
             messages.append("Timestamp of %s is: %s" % \
                             (paths["timestamp_filename"], \
                              time.ctime(file_stats.st_mtime)))
-    except:
+    except Exception:
         if opt_verbose:
             raise
         states.append(2)

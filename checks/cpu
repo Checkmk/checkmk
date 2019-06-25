@@ -106,7 +106,7 @@ def check_cpu_threads(item, params, info):
 
     try:
         num_threads = int(info[0][3].split('/')[1])
-    except:
+    except Exception:
         yield (3, "invalid output from plugin")
         return
 

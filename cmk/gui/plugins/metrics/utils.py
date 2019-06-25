@@ -501,7 +501,7 @@ def get_graph_range(graph_template, translated_metrics):
     try:
         return evaluate(graph_template["range"][0], translated_metrics)[0], \
                evaluate(graph_template["range"][1], translated_metrics)[0]
-    except:
+    except Exception:
         return None, None
 
 
@@ -635,7 +635,7 @@ def _graph_without_missing_optional_metrics(graph_template, translated_metrics):
         try:
             evaluate(metric_definition[0], translated_metrics)
             working_metrics.append(metric_definition)
-        except:
+        except Exception:
             pass
 
     reduced_graph_template = graph_template.copy()

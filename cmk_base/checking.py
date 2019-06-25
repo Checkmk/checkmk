@@ -400,7 +400,7 @@ def _evaluate_timespecific_entry(entry):
     for timeperiod_name, tp_entry in entry["tp_values"][::-1]:
         try:
             tp_active = cmk_base.core.timeperiod_active(timeperiod_name)
-        except:
+        except Exception:
             # Connection error
             if cmk.utils.debug.enabled():
                 raise

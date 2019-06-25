@@ -65,7 +65,7 @@ def inv_hp_proliant_mem(info):
             for entry in node[cpu_num].get("devices", []):
                 if entry["set"] == module_index:
                     entry.update(module_info)
-    except:
+    except Exception:
         array = {"devices": []}
         for _board_index, module_index, module_size_str, module_type, \
             _module_status, _module_condition, module_serial, cpu_num in info:

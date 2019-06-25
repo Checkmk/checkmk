@@ -1,0 +1,10 @@
+Title: Fix displaying of HTML codes in background job progress info
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561451772
+Class: fix
+
+

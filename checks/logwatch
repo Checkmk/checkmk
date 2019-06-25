@@ -26,8 +26,11 @@
 
 import errno
 import os
-import cmk.utils.paths
+
+from pathlib2 import Path
+
 import cmk.utils.debug
+import cmk.utils.paths
 
 # Configuration variables in main.mk needed during the actual check
 logwatch_dir = cmk.utils.paths.var_dir + '/logwatch'
@@ -493,8 +496,8 @@ precompile_params['logwatch.groups'] = logwatch_group_precompile
 
 
 # truncate a file near the specified offset while keeping lines intact
-def truncate_by_line(filename, offset):
-    with open(filename, 'r+') as handle:
+def truncate_by_line(file_path, offset):
+    with file_path.open('r+') as handle:
         handle.seek(offset)
         handle.readline()  # ensures we don't cut inside a line
         handle.truncate()
@@ -515,18 +518,15 @@ def _makedirs_exist_ok(directory):
 
 def check_logwatch_generic(item, params, loglines, found):
     import hashlib
-    logdir = logwatch_dir + "/" + host_name()
+    logmsg_dir = Path(logwatch_dir, host_name())
 
-    _makedirs_exist_ok(logdir)
+    logmsg_dir.mkdir(parents=True, exist_ok=True)
 
-    logfile = logdir + "/" + item.replace("/", "\\")
+    logmsg_file_path = logmsg_dir / item.replace("/", "\\")
 
     # Logfile (=item) section not found and no local file found. This usually
     # means, that the corresponding logfile also vanished on the target host.
-    if isinstance(logfile, unicode):
-        logfile = logfile.encode("utf-8")
-
-    if not found and not os.path.exists(logfile):
+    if not found and not logmsg_file_path.exists():
         return (3, "log not present anymore")
 
     # Get the patterns (either compile or reuse the precompiled ones)
@@ -593,12 +593,13 @@ def check_logwatch_generic(item, params, loglines, found):
 
     current_block = None
 
-    log_exists = os.path.exists(logfile)
+    logmsg_file_exists = logmsg_file_path.exists()
+    mode = 'r+' if logmsg_file_exists else 'w'
     try:
-        if log_exists:
-            logwatch_file = open(logfile, 'r+')
-        else:
-            logwatch_file = open(logfile, 'w')
+        # TODO: change this to
+        # logmsg_file_handle = logmsg_file_path.open(mode, encoding='utf-8')
+        # once we are dealing with unicode
+        logmsg_file_handle = open(str(logmsg_file_path), mode)
     except IOError as exc:
         raise MKGeneralException(
             "User %s cannot open file for writing: %s" % (logwatch_username(), exc))
@@ -606,28 +607,28 @@ def check_logwatch_generic(item, params, loglines, found):
     pattern_hash = hashlib.sha256(repr(patterns)).hexdigest()
     net_lines = 0
     # parse cached log lines
-    if log_exists:
+    if logmsg_file_exists:
         # new format contains hash of patterns on the first line so we only reclassify if they
         # changed
-        initline = logwatch_file.readline().rstrip('\n')
+        initline = logmsg_file_handle.readline().rstrip('\n')
         if initline.startswith('[[[') and initline.endswith(']]]'):
             old_pattern_hash = initline[3:-3]
             skip_reclassification = old_pattern_hash == pattern_hash
         else:
-            logwatch_file.seek(0)
+            logmsg_file_handle.seek(0)
             skip_reclassification = False
 
-        logfile_size = os.path.getsize(logfile)
+        logfile_size = logmsg_file_path.stat().st_size
         if skip_reclassification and logfile_size > logwatch_max_filesize:
             # early out: without reclassification the file wont shrink and if it is already at
             # the maximum size, all input is dropped anyway
             if logfile_size > logwatch_max_filesize * 2:
                 # if the file is far too large, truncate it
-                truncate_by_line(logfile, logwatch_max_filesize)
+                truncate_by_line(logmsg_file_path, logwatch_max_filesize)
             return (2, "unacknowledged messages have exceeded max size, "
                     "new messages are dropped (limit %d Bytes)" % logwatch_max_filesize)
 
-        for line in logwatch_file:
+        for line in logmsg_file_handle:
             line = line.rstrip('\n')
             # Skip empty lines
             if not line:
@@ -646,7 +647,7 @@ def check_logwatch_generic(item, params, loglines, found):
         collect_block(current_block)
 
         if skip_reclassification:
-            output_size = logwatch_file.tell()
+            output_size = logmsg_file_handle.tell()
             # when skipping reclassification, output lines contains only headers anyway
             collect_block.output_lines = []
         else:
@@ -671,19 +672,19 @@ def check_logwatch_generic(item, params, loglines, found):
 
     # when reclassifying, rewrite the whole file, outherwise append
     if not skip_reclassification and collect_block.output_lines:
-        logwatch_file.seek(0)
-        logwatch_file.truncate()
-        logwatch_file.write("[[[%s]]]\n" % pattern_hash)
+        logmsg_file_handle.seek(0)
+        logmsg_file_handle.truncate()
+        logmsg_file_handle.write("[[[%s]]]\n" % pattern_hash)
 
     if collect_block.output_lines:
-        logwatch_file.writelines(collect_block.output_lines)
+        logmsg_file_handle.writelines(collect_block.output_lines)
     # correct output size
-    logwatch_file.close()
-    if net_lines == 0 and log_exists:
-        os.unlink(logfile)
+    logmsg_file_handle.close()
+    if net_lines == 0 and logmsg_file_exists:
+        logmsg_file_path.unlink()
 
     # if logfile has reached maximum size, abort with critical state
-    if os.path.exists(logfile) and os.path.getsize(logfile) > logwatch_max_filesize:
+    if logmsg_file_path.exists() and logmsg_file_path.stat().st_size > logwatch_max_filesize:
         return (2, "unacknowledged messages have exceeded max size, "
                 "new messages are lost (limit %d Bytes)" % logwatch_max_filesize)
 

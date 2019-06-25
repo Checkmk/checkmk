@@ -198,7 +198,7 @@ def do_notify(options, args):
             elif notify_mode == 'replay':
                 try:
                     replay_nr = int(args[1])
-                except:
+                except (IndexError, ValueError):
                     replay_nr = 0
 
         # If the notify_mode is set to 'spoolfile' we try to parse the given spoolfile
@@ -702,7 +702,7 @@ def rbn_get_bulk_params(rule):
     elif method == "timeperiod":
         try:
             active = cmk_base.core.timeperiod_active(params["timeperiod"])
-        except:
+        except Exception:
             if cmk.utils.debug.enabled():
                 raise
             # If a livestatus connection error appears we will bulk the
@@ -1542,7 +1542,7 @@ def create_bulk_dirname(bulk_path):
     # Remove non-Ascii-characters by special %02x-syntax
     try:
         str(dirname)
-    except:
+    except Exception:
         new_dirname = ""
         for char in dirname:
             if ord(char) <= 0 or ord(char) > 127:
@@ -1651,7 +1651,7 @@ def find_bulks(only_ripe):
                 else:
                     try:
                         active = cmk_base.core.timeperiod_active(timeperiod)
-                    except:
+                    except Exception:
                         # This prevents sending bulk notifications if a
                         # livestatus connection error appears. It also implies
                         # that an ongoing connection error will hold back bulk

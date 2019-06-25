@@ -173,7 +173,7 @@ def _initialize_ip_lookup_cache():
 
         # be compatible to old caches which were created by Check_MK without IPv6 support
         _convert_legacy_ip_lookup_cache(ip_lookup_cache)
-    except:
+    except Exception:
         if cmk.utils.debug.enabled():
             raise
         # TODO: Would be better to log it somewhere to make the failure transparent

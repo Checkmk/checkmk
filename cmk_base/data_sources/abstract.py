@@ -627,7 +627,7 @@ class CheckMKAgentDataSource(DataSource):
                     sections[section_name] = section_content
                 try:
                     separator = chr(int(section_options["sep"]))
-                except:
+                except Exception:
                     separator = None
 
                 # Split of persisted section for server-side caching

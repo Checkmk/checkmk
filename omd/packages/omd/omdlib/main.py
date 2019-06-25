@@ -407,7 +407,7 @@ def find_processes_of_user(username):
                                 stdin=open(os.devnull, "r"),
                                 stdout=subprocess.PIPE,
                                 close_fds=True).stdout.read().split()
-    except:
+    except Exception:
         return []
 
 
@@ -490,14 +490,14 @@ def userdel(name):
 def user_by_id(id_):
     try:
         return pwd.getpwuid(id_)
-    except:
+    except Exception:
         return None
 
 
 def user_id(name):
     try:
         return pwd.getpwnam(name).pw_uid
-    except:
+    except Exception:
         return False
 
 
@@ -505,7 +505,7 @@ def user_exists(name):
     try:
         pwd.getpwnam(name)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -518,7 +518,7 @@ def user_has_group(user, group):
         g = group_by_id(group_id(group))
         if user in g.gr_mem:
             return True
-    except:
+    except Exception:
         return False
 
 
@@ -526,14 +526,14 @@ def group_exists(name):
     try:
         grp.getgrnam(name)
         return True
-    except:
+    except Exception:
         return False
 
 
 def group_by_id(id_):
     try:
         return grp.getgrgid(id_)
-    except:
+    except Exception:
         return None
 
 
@@ -541,7 +541,7 @@ def group_id(name):
     try:
         g = grp.getgrnam(name)
         return g.gr_gid
-    except:
+    except Exception:
         return None
 
 
@@ -701,14 +701,14 @@ def get_skel_permissions(skel_path, perms, relpath):
 def get_file_permissions(path):
     try:
         return os.stat(path).st_mode & 07777
-    except:
+    except Exception:
         return 0
 
 
 def get_file_owner(path):
     try:
         return pwd.getpwuid(os.stat(path).st_uid)[0]
-    except:
+    except Exception:
         return None
 
 
@@ -734,7 +734,7 @@ def file_owner_verify(path, uid, gid):
         s = os.stat(path)
         if s.st_uid != uid or s.st_gid != gid:
             return False
-    except:
+    except Exception:
         return False
     return True
 
@@ -842,7 +842,7 @@ def instantiate_skel(site, path):
     try:
         t = file(path).read()
         return replace_tags(t, site.replacements)
-    except:
+    except Exception:
         return ""  # e.g. due to permission error
 
 
@@ -1059,7 +1059,7 @@ def patch_template_file(src, dst, old_site, new_site):
         os.remove(dst + ".skel." + new_site.name)
         os.remove(dst + ".orig")
         os.remove(dst + ".rej")
-    except:
+    except Exception:
         pass
 
 
@@ -1176,7 +1176,7 @@ def merge_update_file(site, relpath, old_version, new_version):
     ]:
         try:
             os.remove(p)
-        except:
+        except Exception:
             pass
 
 
@@ -1190,7 +1190,7 @@ def _try_merge(site, relpath, old_version, new_version):
             try:
                 skel_content = file(p).read()
                 break
-            except:
+            except Exception:
                 # Do not ask the user in non-interactive mode.
                 if opt_conflict in ["abort", "install"]:
                     bail_out("Skeleton file '%s' of version %s not readable." % (p, version))
@@ -1592,7 +1592,7 @@ def tmpfs_mounted(sitename):
             _device, mp, fstype, _options, _dump, _fsck = line.split()
             if mp.endswith(path_suffix) and fstype == 'tmpfs':
                 return True
-        except:
+        except Exception:
             continue
     return False
 
@@ -1783,7 +1783,7 @@ def init_scripts(sitename):
         scripts = os.listdir(rc_dir)
         scripts.sort()
         return rc_dir, scripts
-    except:
+    except Exception:
         return rc_dir, []
 
 
@@ -1952,7 +1952,7 @@ def load_config_hooks(site):
                 # only load configuration hooks
                 if hook.get("choices", None) is not None:
                     config_hooks[hook_name] = hook
-        except:
+        except Exception:
             pass
     config_hooks = load_hook_dependencies(site, config_hooks)
     return config_hooks
@@ -2004,7 +2004,7 @@ def config_load_hook(site, hook_name):
                 val = val.strip()
                 descr = descr.strip()
                 choices.append((val, descr))
-        except:
+        except Exception:
             bail_out("Invalid output of hook: %s" % choicestxt)
 
     hook["choices"] = choices
@@ -2422,7 +2422,7 @@ def set_environment(site):
 def hostname():
     try:
         return os.popen("hostname").read().strip()
-    except:
+    except Exception:
         return "localhost"
 
 
@@ -4093,7 +4093,7 @@ class SiteContext(AbstractSiteContext):
         version_link = self.dir + "/version"
         try:
             return os.readlink(version_link).split("/")[-1]
-        except:
+        except Exception:
             return None
 
     @property

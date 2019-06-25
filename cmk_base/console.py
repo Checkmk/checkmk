@@ -51,7 +51,7 @@ def output(text, *args, **kwargs):
     try:
         stream.write(text)
         stream.flush()
-    except:
+    except Exception:
         # TODO: Way to generic!
         pass  # avoid exception on broken pipe (e.g. due to | head)
 

@@ -70,6 +70,11 @@ from cmk.gui.plugins.wato import (
     wato_confirm,
 )
 
+try:
+    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
+except ImportError:
+    alert_handling = None  # type: ignore
+
 
 @gui_background_job.job_registry.register
 class RenameHostsBackgroundJob(WatoBackgroundJob):
@@ -227,7 +232,7 @@ class ModeBulkRenameHost(WatoMode):
             try:
                 reverse_dns = socket.gethostbyaddr(hostname)[0]
                 return reverse_dns
-            except:
+            except Exception:
                 return hostname
 
         elif operation == ('case', 'upper'):
@@ -550,11 +555,6 @@ def rename_host_in_event_rules(oldname, newname):
     if num_changed:
         actions += ["notify_global"] * num_changed
         save_notification_rules(rules)
-
-    try:
-        import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
-    except:
-        alert_handling = None
 
     if alert_handling:
         rules = alert_handling.load_alert_handler_rules()

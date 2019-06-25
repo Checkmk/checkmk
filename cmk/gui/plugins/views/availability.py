@@ -633,7 +633,7 @@ def render_bi_availability(title, aggr_rows):
 
         try:
             timewarp = int(html.request.var("timewarp"))
-        except:
+        except (ValueError, TypeError):
             timewarp = None
 
         has_reached_logrow_limit = False

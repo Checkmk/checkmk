@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from . import (
+from cmk.gui.plugins.views.perfometers import (
     perfometers,
     perfometer_logarithmic,
 )
@@ -44,7 +44,7 @@ perfometers["check_mk_active-tcp"] = perfometer_check_tcp
 def perfometer_check_http(row, check_command, perfdata):
     try:
         time_ms = float(perfdata[0][1]) * 1000.0
-    except:
+    except (IndexError, ValueError):
         time_ms = 0
     return "%.1f ms" % time_ms, \
         perfometer_logarithmic(time_ms, 1000, 10, "#66ccff")

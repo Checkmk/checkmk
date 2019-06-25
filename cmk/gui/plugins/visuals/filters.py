@@ -1750,7 +1750,7 @@ class FilterNumberRange(Filter):  # type is int
                 txt = html.request.var(self.htmlvars[i])
                 int(txt.strip())
                 lql += "Filter: %s %s %s\n" % (self.column, op, txt.strip())
-            except:
+            except Exception:
                 pass
         return lql
 

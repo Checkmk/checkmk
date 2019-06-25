@@ -75,11 +75,7 @@ class Table(object):
         table_id = table_id if table_id is not None else html.myfile
 
         # determine row limit
-        try:
-            limit = config.table_row_limit
-        except:
-            limit = None
-        limit = kwargs.get('limit', limit)
+        limit = kwargs.get('limit', config.table_row_limit)
         if html.request.var('limit') == 'none' or kwargs.get("output_format", "html") != "html":
             limit = None
 

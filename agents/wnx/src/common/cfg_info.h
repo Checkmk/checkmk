@@ -2,6 +2,7 @@
 // Engine independent parameters
 // No C++ file
 #pragma once
+#define NOMINMAX     // must before every windows include
 #include <shlobj.h>  // known path
 
 #include <chrono>

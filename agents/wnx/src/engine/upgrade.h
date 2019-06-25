@@ -21,14 +21,19 @@ constexpr std::string_view kBakeryMarker =
 enum class Force { no, yes };
 bool UpgradeLegacy(Force force_upgrade = Force::no);
 
-// Intermediate API used in testing
+// Intermediate API
+// accepts only "CheckMK\\Agent" ending path as program data
+// return count of files copied
+enum class CopyFolderMode { keep_old, remove_old };
 int CopyAllFolders(const std::filesystem::path& LegacyRoot,
-                   const std::filesystem::path& ProgramData);
+                   const std::filesystem::path& ProgramData,
+                   CopyFolderMode mode);
+
 int CopyRootFolder(const std::filesystem::path& LegacyRoot,
                    const std::filesystem::path& ProgramData);
 
 // INI --------------------------------------------
-// Intermediate API used in testing and indirectly in production
+// Intermediate API used in indirectly in production
 bool ConvertIniFiles(const std::filesystem::path& LegacyRoot,
                      const std::filesystem::path& ProgramData);
 bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
@@ -37,13 +42,13 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
                         const std::filesystem::path& ProgramData,
                         bool LocalFileExists);
 
-enum class BakeryFile { normal, force };
+enum class CfgFileType { user, bakery, automatic };
 // This function will use correct extension and correct sub path
 std::filesystem::path CreateYamlFromIniSmart(
     const std::filesystem::path& ini_file,      // ini file to use
     const std::filesystem::path& program_data,  // directory to send
     const std::string& yaml_name,               // name to be used in output
-    BakeryFile bakery_file_mode) noexcept;      // how create bakery yml
+    CfgFileType cfg_file_type) noexcept;        // how create bakery yml
 
 // after upgrade we create in root our protocol
 bool CreateProtocolFile(std::filesystem::path& ProtocolFile,
@@ -59,6 +64,11 @@ bool IsBakeryIni(const std::filesystem::path& Path) noexcept;
 // gtest [+]
 std::string MakeComments(const std::filesystem::path& SourceFilePath,
                          bool Bakery) noexcept;
+
+[[nodiscard]] bool CreateFolderSmart(const std::filesystem::path& tgt) noexcept;
+bool IsPathProgramData(const std::filesystem::path& program_data);
+[[nodiscard]] bool IsFileNonCompatible(
+    const std::filesystem::path& fname) noexcept;
 // --------------------------------------------
 
 // Intermediate API used in testing
@@ -93,8 +103,9 @@ int WaitForStatus(std::function<int(const std::wstring&)> StatusChecker,
 
 // used to copy folders from legacy agent to programdata
 int CopyFolderRecursive(
-    const std::filesystem::path& Source, const std::filesystem::path& Target,
-    const std::function<bool(std::filesystem::path)>& Predicate) noexcept;
+    const std::filesystem::path& source, const std::filesystem::path& target,
+    std::filesystem::copy_options copy_mode,
+    const std::function<bool(std::filesystem::path)>& predicate) noexcept;
 
 bool RunDetachedProcess(const std::wstring& Name);
 namespace details {

@@ -25,5 +25,5 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings['winperf_cpu_default_levels'] = {
-    'levels': (90, 95),
+    'levels': (101, 101),
 }

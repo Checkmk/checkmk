@@ -238,15 +238,11 @@ def logwatch_precompile(hostname, item, _unused):
 
     for rule in rules:
         if isinstance(rule, dict):
-            params["reclassify_patterns"].extend(x for x in rule.get("reclassify_patterns"))
+            params["reclassify_patterns"].extend(rule["reclassify_patterns"])
             if "reclassify_states" in rule:
-                # This key cannot be set unless it contains a valid entry.
-                # The check does not care either way, but the GUI's validation fails
-                # if it is passed to it with an empty dict.
-                params.setdefault("reclassify_states", {})
                 params["reclassify_states"] = rule["reclassify_states"]
         else:
-            params["reclassify_patterns"].extend(x for x in rule)
+            params["reclassify_patterns"].extend(rule)
 
     return params
 

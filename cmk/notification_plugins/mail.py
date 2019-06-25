@@ -845,10 +845,16 @@ def construct_content(context):
         html_info = txt_info
 
     txt_info = utils.substitute_context(txt_info.replace("@", context["WHAT"]), context)
-    html_info = utils.substitute_context(html_info.replace("@", context["WHAT"]), context)
-
     context["EVENT_TXT"] = txt_info
+
+    # Add HTML formated plugin output
+    html_info = utils.substitute_context(html_info.replace("@", context["WHAT"]), context)
     context["EVENT_HTML"] = html_info
+    if "HOSTOUTPUT" in context:
+        context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
+    if context["WHAT"] == "SERVICE":
+        context["SERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["SERVICEOUTPUT"])
+        context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["LONGSERVICEOUTPUT"])
 
     attachments = []
 

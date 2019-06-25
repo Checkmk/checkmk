@@ -12,8 +12,6 @@ def mock_context():
         'CONTACTPAGER': u'',
         'CONTACTS': u'cmkadmin',
         'DATE': u'2019-03-20',
-        'EVENT_HTML': u'<span class="stateOK">OK</span> &rarr; <span class="stateWARNING">WARNING</span>',
-        'EVENT_TXT': u'OK -> WARN',
         'HOSTACKAUTHOR': u'',
         'HOSTACKCOMMENT': u'',
         'HOSTADDRESS': u'127.0.0.1',
@@ -28,8 +26,7 @@ def mock_context():
         'HOSTNOTES': u'',
         'HOSTNOTESURL': u'',
         'HOSTNOTIFICATIONNUMBER': u'1',
-        'HOSTOUTPUT': u'Packet received via smart PING',
-        'HOSTOUTPUT_HTML': u'Packet received via smart PING',
+        'HOSTOUTPUT': u'<script>console.log("evil");</script>Packet received via smart PING (!)',
         'HOSTPERFDATA': u'',
         'HOSTPROBLEMID': u'0',
         'HOSTSHORTSTATE': u'UP',
@@ -65,8 +62,7 @@ def mock_context():
         'LOGDIR': u'/omd/sites/heute/var/check_mk/notify',
         'LONGDATETIME': u'Wed Mar 20 16:51:46 CET 2019',
         'LONGHOSTOUTPUT': u'',
-        'LONGSERVICEOUTPUT': u'',
-        'LONGSERVICEOUTPUT_HTML': u'',
+        'LONGSERVICEOUTPUT': u'<script>console.log("evil");</script>(!)',
         'MAIL_COMMAND': u"mail -s '$SUBJECT$' '$CONTACTEMAIL$'",
         'MAXHOSTATTEMPTS': u'1',
         'MAXSERVICEATTEMPTS': u'1',
@@ -99,8 +95,7 @@ def mock_context():
         'SERVICENOTES': u'',
         'SERVICENOTESURL': u'',
         'SERVICENOTIFICATIONNUMBER': u'1',
-        'SERVICEOUTPUT': u'Manually set to Warning by cmkadmin',
-        'SERVICEOUTPUT_HTML': u'Manually set to Warning by cmkadmin',
+        'SERVICEOUTPUT': u'<script>console.log("evil");</script> Ok (!)',
         'SERVICEPERFDATA': u'',
         'SERVICEPROBLEMID': u'171',
         'SERVICESHORTSTATE': u'WARN',
@@ -124,8 +119,8 @@ Service:             CPU utilization
 Event:               OK -> WARN
 Address:             127.0.0.1
 Date / Time:         Wed Mar 20 16:51:46 CET 2019
-Plugin Output:       Manually set to Warning by cmkadmin
-Additional Output:   \n\
+Plugin Output:       &lt;script&gt;console.log("evil");&lt;/script&gt; Ok (!)
+Additional Output:   &lt;script&gt;console.log("evil");&lt;/script&gt;(!)
 Host Metrics:        \n\
 Service Metrics:     \n\
 """
@@ -135,9 +130,33 @@ Service Metrics:     \n\
 def test_mail_content_from_context(mocker):
     mocker.patch("cmk.notification_plugins.mail.render_pnp_graphs", lambda context: [])
 
-    c = mocker.patch("cmk.notification_plugins.utils.html_escape_context")
+    # The items below are added by the mail plugin
+    context = mock_context()
+    assert "EVENT_TXT" not in context
+    assert "EVENT_HTML" not in context
+    assert "HOSTOUTPUT_HTML" not in context
+    assert "SERVICEOUTPUT_HTML" not in context
+    assert "LONGSERVICEOUTPUT_HTML" not in context
+
     content = SingleEmailContent(mock_context)
-    c.assert_called_once()
+
+    # The state markers (!) and (!!) as well as the states in EVENT_TXT have to be
+    # replaced with HTML, but raw input from plugins has to be escaped.
+    assert content.context["EVENT_TXT"] == "OK -> WARN"
+    assert content.context[
+        "EVENT_HTML"] == '<span class="stateOK">OK</span> &rarr; <span class="stateWARNING">WARNING</span>'
+    assert content.context[
+        "HOSTOUTPUT"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;Packet received via smart PING (!)'
+    assert content.context[
+        "HOSTOUTPUT_HTML"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;Packet received via smart PING <b class="stmarkWARNING">WARN</b>'
+    assert content.context[
+        "SERVICEOUTPUT"] == '&lt;script&gt;console.log("evil");&lt;/script&gt; Ok (!)'
+    assert content.context[
+        "SERVICEOUTPUT_HTML"] == '&lt;script&gt;console.log("evil");&lt;/script&gt; Ok <b class="stmarkWARNING">WARN</b>'
+    assert content.context[
+        "LONGSERVICEOUTPUT"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;(!)'
+    assert content.context[
+        "LONGSERVICEOUTPUT_HTML"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;<b class="stmarkWARNING">WARN</b>'
 
     assert content.mailto == 'test@abc.de'
     assert content.subject == 'Check_MK: heute/CPU utilization OK -> WARN'

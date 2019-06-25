@@ -509,7 +509,7 @@ class PackedConfig(object):
         try:
             eval(repr(val))
             return True
-        except:
+        except SyntaxError:
             return False
 
     def _write(self, helper_config):
@@ -896,7 +896,7 @@ def service_depends_on(hostname, servicedesc):
                     try:
                         item = matchobject.groups()[-1]
                         deps.append(depname % item)
-                    except:
+                    except Exception:
                         deps.append(depname)
     return deps
 
@@ -922,7 +922,7 @@ def is_cmc():
 def decode_incoming_string(s, encoding="utf-8"):
     try:
         return s.decode(encoding)
-    except:
+    except UnicodeDecodeError:
         return s.decode(fallback_agent_output_encoding)
 
 

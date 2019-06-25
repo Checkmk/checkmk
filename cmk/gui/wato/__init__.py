@@ -622,8 +622,6 @@ class AgentOutputPage(Page):
         host.need_permission("read")
         self._host = host
 
-        self._job = FetchAgentOutputBackgroundJob(self._host.site_id(), self._host.name(), self._ty)
-
     @staticmethod
     def file_name(site_id, host_name, ty):
         return "%s-%s-%s.txt" % (site_id, host_name, ty)
@@ -641,13 +639,10 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         self._action()
 
+        job = FetchAgentOutputBackgroundJob(self._host.site_id(), self._host.name(), self._ty)
         if html.request.has_var("_start"):
-            try:
-                self._job.start()
-            except background_job.BackgroundJobAlreadyRunning:
-                pass
-
-        self._show_status(self._job)
+            self._start_fetch(job)
+        self._show_status(job)
 
         html.footer()
 
@@ -666,20 +661,30 @@ class PageFetchAgentOutput(AgentOutputPage):
                 ]))
 
     def _show_status(self, job):
-        job_snapshot = job.get_status_snapshot()
+        job_status = self._get_job_status(job)
 
-        if job_snapshot.is_running():
+        if job_status.is_running():
             html.h3(_("Current status of process"))
             html.immediate_browser_redirect(0.8, html.makeuri([]))
         elif job.exists():
             html.h3(_("Result of last process"))
 
         job_manager = gui_background_job.GUIBackgroundJobManager()
-        job_manager.show_job_details_from_snapshot(job_snapshot=job_snapshot)
+        job_manager.show_job_details_from_snapshot(job_snapshot=job_status)
+
+    def _start_fetch(self, job):
+        try:
+            job.start()
+        except background_job.BackgroundJobAlreadyRunning:
+            pass
+
+    def _get_job_status(self, job):
+        return job.get_status_snapshot()
 
 
 @gui_background_job.job_registry.register
 class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob):
+    """The background job is always executed on the site where the host is located on"""
     job_prefix = "agent-output-"
 
     @classmethod
@@ -727,7 +732,9 @@ class PageDownloadAgentOutput(AgentOutputPage):
         html.set_output_format("text")
         html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % file_name
 
-        preview_filepath = os.path.join(self._job.get_work_dir(), file_name)
+        # TODO: This needs to be transported via job result (to support distributed setups)
+        job = FetchAgentOutputBackgroundJob(self._host.site_id(), self._host.name(), self._ty)
+        preview_filepath = os.path.join(job.get_work_dir(), file_name)
         html.write(file(preview_filepath).read())
 
 

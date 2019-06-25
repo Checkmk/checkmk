@@ -529,7 +529,7 @@ class JobRenderer(object):
         html.th(_("Progress Info"))
         html.open_td()
         html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
-        html.pre("\n".join(loginfo["JobProgressUpdate"]))
+        html.pre(HTML("\n").join(loginfo["JobProgressUpdate"]))
         html.close_div()
         html.close_td()
         html.close_tr()

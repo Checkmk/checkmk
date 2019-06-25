@@ -337,8 +337,10 @@ TEST(UpgradeTest, LoadIni) {
 TEST(UpgradeTest, CopyFoldersApi) {
     namespace fs = std::filesystem;
 
-    EXPECT_TRUE(IsFileNonCompatible("Cmk-agent-updatE.exe"));
-    EXPECT_FALSE(IsFileNonCompatible("cmk_agent_update.exe"));
+    EXPECT_TRUE(IsFileNonCompatible("Cmk-updatE-Agent.exe"));
+    EXPECT_TRUE(IsFileNonCompatible("c:\\Cmk-updatE-Agent.exe"));
+    EXPECT_FALSE(IsFileNonCompatible("cmk_update_agent.exe"));
+    EXPECT_FALSE(IsFileNonCompatible("c:\\cmk_update_agent.exe"));
 
     EXPECT_TRUE(IsPathProgramData("Checkmk/Agent"));
     EXPECT_TRUE(IsPathProgramData("c:\\Checkmk/Agent"));

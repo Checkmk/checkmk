@@ -36,7 +36,6 @@ disable=
     #---------------------------------------------------------------------------
     # Enabling these warnings would be nice, they are mostly a sign of sloppy
     # programming practice. In some cases, they can even hide bugs.
-    bare-except,
     broad-except,
     #---------------------------------------------------------------------------
     # Enabling this would enhance readability quite a bit and it might even

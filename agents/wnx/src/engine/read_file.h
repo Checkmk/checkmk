@@ -7,9 +7,8 @@
 #include <string>
 #include <vector>
 
-#include "tools/_xlog.h"
-
 #include "logger.h"
+#include "tools/_xlog.h"
 
 namespace cma::tools {
 
@@ -72,9 +71,10 @@ std::optional<std::vector<uint8_t>> ReadFileInVector(
 
 inline std::optional<std::vector<uint8_t>> ReadFileInVector(
     const std::filesystem::path& File) noexcept {
-    if (File.u8string().empty()) return {};
+    auto path = File.u8string();
+    if (path.empty()) return {};
 
-    return ReadFileInVector(File.u8string().c_str());
+    return ReadFileInVector(path.c_str());
 }
 
 }  // namespace cma::tools

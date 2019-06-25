@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 
 #include "cfg.h"
@@ -358,6 +359,19 @@ static void InstallIniFile() {
     } else
         XLOG::l.t(
             "Installing of INI file is not required, the file is already installed");
+}
+
+bool IsIniFileFromInstaller(const std::filesystem::path &filename) {
+    namespace fs = std::filesystem;
+
+    auto data = cma::tools::ReadFileInVector(filename);
+    if (!data.has_value()) return false;
+
+    constexpr std::string_view base = kIniFromInstallMarker;
+    if (data->size() < base.length()) return false;
+
+    auto content = data->data();
+    return !memcmp(content, base.data(), base.length());
 }
 
 static void PrintInstallCopyLog(std::string_view info_on_error,

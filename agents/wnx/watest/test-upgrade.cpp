@@ -248,6 +248,9 @@ TEST(UpgradeTest, LoadIni) {
     tst::SafeCleanTempDir();
     namespace fs = std::filesystem;
     fs::path temp_dir = cma::cfg::GetTempDir();
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
     auto normal_dir =
         temp_dir.wstring().find(L"\\temp", 0) != std::wstring::npos;
     ASSERT_TRUE(normal_dir) << "temp dir invalid " << temp_dir;
@@ -281,7 +284,7 @@ TEST(UpgradeTest, LoadIni) {
         auto name = "nullfile";
         auto ini = CreateIniFile(lwa_dir, nullfile, name);
         auto yaml_file =
-            CreateYamlFromIniSmart(ini, pd_dir, name, BakeryFile::normal);
+            CreateYamlFromIniSmart(ini, pd_dir, name, CfgFileType::automatic);
         EXPECT_FALSE(IsBakeryIni(ini));
         EXPECT_TRUE(yaml_file.empty());
     }
@@ -290,16 +293,32 @@ TEST(UpgradeTest, LoadIni) {
         auto name = "bakeryfile";
         auto ini = CreateIniFile(lwa_dir, bakeryfile, name);
         auto yaml_file =
-            CreateYamlFromIniSmart(ini, pd_dir, name, BakeryFile::normal);
+            CreateYamlFromIniSmart(ini, pd_dir, name, CfgFileType::automatic);
         EXPECT_TRUE(IsBakeryIni(ini));
+        EXPECT_EQ(yaml_file.filename().wstring(),
+                  wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
         auto yaml = YAML::LoadFile(yaml_file.u8string());
         EXPECT_TRUE(yaml.IsMap());
     }
+
+    {
+        // check that any file we couuld load as klocal
+        auto name = "bakeryfile";
+        auto ini = CreateIniFile(lwa_dir, bakeryfile, name);
+        auto yaml_file =
+            CreateYamlFromIniSmart(ini, pd_dir, name, CfgFileType::user);
+        EXPECT_TRUE(IsBakeryIni(ini));
+        EXPECT_EQ(yaml_file.filename().wstring(),
+                  wtools::ConvertToUTF16(name) + files::kDefaultUserExt);
+        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        EXPECT_TRUE(yaml.IsMap());
+    }
+
     {
         auto name = "not_bakeryfile";
         auto ini = CreateIniFile(lwa_dir, not_bakeryfile, name);
         auto yaml_file =
-            CreateYamlFromIniSmart(ini, pd_dir, name, BakeryFile::normal);
+            CreateYamlFromIniSmart(ini, pd_dir, name, CfgFileType::automatic);
         EXPECT_FALSE(IsBakeryIni(ini));
         auto yaml = YAML::LoadFile(yaml_file.u8string());
         EXPECT_TRUE(yaml.IsMap());
@@ -308,14 +327,65 @@ TEST(UpgradeTest, LoadIni) {
         auto name = "not_bakeryfile_strange";
         auto ini = CreateIniFile(lwa_dir, not_bakeryfile_strange, name);
         auto yaml_file =
-            CreateYamlFromIniSmart(ini, pd_dir, name, BakeryFile::normal);
+            CreateYamlFromIniSmart(ini, pd_dir, name, CfgFileType::automatic);
         EXPECT_FALSE(IsBakeryIni(ini));
         auto yaml = YAML::LoadFile(yaml_file.u8string());
         EXPECT_TRUE(yaml.IsMap());
     }
+}
 
+TEST(UpgradeTest, CopyFoldersApi) {
+    namespace fs = std::filesystem;
+
+    EXPECT_TRUE(IsFileNonCompatible("Cmk-agent-updatE.exe"));
+    EXPECT_FALSE(IsFileNonCompatible("cmk_agent_update.exe"));
+
+    EXPECT_TRUE(IsPathProgramData("Checkmk/Agent"));
+    EXPECT_TRUE(IsPathProgramData("c:\\Checkmk/Agent"));
+    EXPECT_TRUE(IsPathProgramData("c:\\Checkmk\\Agent"));
+
+    EXPECT_FALSE(IsPathProgramData("Checkmk_Agent"));
+    EXPECT_FALSE(IsPathProgramData("Check\\mkAgent"));
+    EXPECT_FALSE(IsPathProgramData("c:\\Check\\mkAgent"));
+
+    fs::path base = cma::cfg::GetTempDir();
     tst::SafeCleanTempDir();
-}  // namespace cma::cfg::upgrade
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    fs::path file_path = base / "marker.tmpx";
+    {
+        std::ofstream ofs(file_path);
+
+        ASSERT_TRUE(ofs) << "Can't open file " << file_path.u8string()
+                         << "error " << GetLastError() << "\n";
+        ofs << "@marker\n";
+    }
+
+    std::error_code ec;
+    {
+        EXPECT_FALSE(fs::is_directory(file_path, ec));
+        auto ret = CreateFolderSmart(file_path);
+        EXPECT_TRUE(ret);
+        EXPECT_TRUE(fs::is_directory(file_path, ec));
+    }
+
+    {
+        auto test_path = base / "plugin";
+        EXPECT_FALSE(fs::exists(test_path, ec));
+        auto ret = CreateFolderSmart(test_path);
+        EXPECT_TRUE(ret);
+        EXPECT_TRUE(fs::is_directory(base / "plugin", ec));
+    }
+
+    {
+        auto test_path = base / "mrpe";
+        EXPECT_FALSE(fs::exists(test_path, ec));
+        fs::create_directories(test_path);
+        auto ret = CreateFolderSmart(test_path);
+        EXPECT_TRUE(ret);
+        EXPECT_TRUE(fs::is_directory(test_path, ec));
+    }
+}
 
 TEST(UpgradeTest, CopyFolders) {
     namespace fs = std::filesystem;
@@ -324,6 +394,9 @@ TEST(UpgradeTest, CopyFolders) {
             .w("The Program is not elevated, testing is not possible");
         return;
     }
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
     fs::path path = FindLegacyAgent();
     ASSERT_TRUE(!path.empty())
         << "Legacy Agent is absent. Either install it or simulate it";
@@ -339,18 +412,29 @@ TEST(UpgradeTest, CopyFolders) {
     auto count_root = CopyRootFolder(path, cma::cfg::GetTempDir());
     EXPECT_GE(count_root, 1);
 
+    count_root = CopyRootFolder(path, cma::cfg::GetTempDir());
+    EXPECT_GE(count_root, 0);
+
     fs::path target_file = cma::cfg::GetTempDir();
     target_file /= "marker.tmpx";
     std::error_code ec;
     EXPECT_TRUE(fs::exists(target_file, ec));
 
-    auto count = CopyAllFolders(path, cma::cfg::GetTempDir());
+    auto count =
+        CopyAllFolders(path, L"c:\\Users\\Public", CopyFolderMode::keep_old);
+    ASSERT_TRUE(count == 0)
+        << "CopyAllFolders works only for ProgramData due to safety reasons";
+
+    count = CopyAllFolders(path, cma::cfg::GetTempDir(),
+                           CopyFolderMode::remove_old);
     EXPECT_GE(count, 5);
+
+    count =
+        CopyAllFolders(path, cma::cfg::GetTempDir(), CopyFolderMode::keep_old);
+    EXPECT_EQ(count, 0);
 
     ON_OUT_OF_SCOPE(fs::remove(target_file, ec));
     ON_OUT_OF_SCOPE(fs::remove(source_file, ec));
-
-    tst::SafeCleanTempDir();
 }
 
 TEST(UpgradeTest, CopyFiles) {
@@ -359,13 +443,23 @@ TEST(UpgradeTest, CopyFiles) {
     ASSERT_TRUE(!path.empty())
         << "Legacy Agent is absent. Either install it or simulate it";
 
-    auto count =
-        CopyFolderRecursive(path, cma::cfg::GetTempDir(), [path](fs::path P) {
+    auto count = CopyFolderRecursive(
+        path, cma::cfg::GetTempDir(), fs::copy_options::overwrite_existing,
+        [path](fs::path P) {
             XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, path).u8string(),
                       wtools::ConvertToUTF8(cma::cfg::GetTempDir()));
             return true;
         });
     EXPECT_TRUE(count > 4);
+
+    count = CopyFolderRecursive(
+        path, cma::cfg::GetTempDir(), fs::copy_options::skip_existing,
+        [path](fs::path P) {
+            XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, path).u8string(),
+                      wtools::ConvertToUTF8(cma::cfg::GetTempDir()));
+            return true;
+        });
+    EXPECT_TRUE(count == 0);
 
     tst::SafeCleanTempDir();
 }

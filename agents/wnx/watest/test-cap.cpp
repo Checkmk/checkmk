@@ -105,6 +105,53 @@ TEST(CapTest, InstallFileAsCopy) {
     }
 }
 
+TEST(CapTest, PackagedAgent) {
+    namespace fs = std::filesystem;
+
+    // check we have code compatible with instlalation
+    auto ini_path = fs::current_path();
+    ini_path /= "check_mk.ini";
+    std::error_code ec;
+    if (fs::exists(ini_path, ec))
+        EXPECT_TRUE(IsIniFileFromInstaller(ini_path));
+    else
+        XLOG::SendStringToStdio(
+            fmt::format(
+                "Skipping Cap packagedAgen internal TEST, no file '{}'\n",
+                ini_path.string()),
+            XLOG::Colors::kYellow);
+
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    EXPECT_FALSE(IsIniFileFromInstaller(""));
+    fs::path base = cma::cfg::GetTempDir();
+    fs::path from_bakery = base / "from_bakery.ini";
+    {
+        std::ofstream ofs(from_bakery);
+
+        ASSERT_TRUE(ofs) << "Can't open file " << from_bakery.u8string()
+                         << "error " << GetLastError() << "\n";
+        ofs << "# Created by Check_MK Agent Bakery.\n"
+               "# This file is managed via WATO, do not edit manually or you\n"
+               "# lose your changes next time when you update the agent.\n"
+               "[global] \n";
+    }
+
+    EXPECT_FALSE(IsIniFileFromInstaller(from_bakery));
+
+    fs::path valid_file = base / "valid_file.ini";
+    {
+        std::ofstream ofs(valid_file);
+
+        ASSERT_TRUE(ofs) << "Can't open file " << valid_file.u8string()
+                         << "error " << GetLastError() << "\n";
+        ofs << kIniFromInstallMarker << "\n";
+    }
+
+    EXPECT_TRUE(IsIniFileFromInstaller(valid_file));
+}
+
 TEST(CapTest, InstallIni) {
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();

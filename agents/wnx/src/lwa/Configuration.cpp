@@ -45,6 +45,7 @@
 #include "types.h"
 
 #define __STDC_FORMAT_MACROS
+namespace fs = std::experimental::filesystem;
 
 namespace {
 
@@ -751,7 +752,7 @@ public:
 };
 
 // Used in testing
-bool CheckIniFile(const std::filesystem::path& Path) {
+bool CheckIniFile(const std::filesystem::path &Path) {
     auto p = std::make_unique<Configuration>();
     Configuration &parser(*p);
     Configurable<int> port(parser, "global", "port", 6556);

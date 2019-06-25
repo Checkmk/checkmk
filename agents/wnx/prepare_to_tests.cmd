@@ -22,6 +22,7 @@ powershell Write-Host "Installation simulation Root Folder: plugins, ohm, yml"  
 copy ..\windows\plugins\*.*         	%root%\plugins\ > nul || powershell Write-Host "Failed plugins copy" -Foreground Red	&& exit 3
 copy .\test_files\ohm\cli\*.*       	%user_dir%\bin\ > nul || powershell Write-Host "Failed ohm copy. Try to kill Open Hardware Monitor: taskkill /F /IM OpenhardwareMonitorCLI.exe" -Foreground Red		&& exit 4
 copy .\install\resources\check_mk.yml  	%root%\ > nul         || powershell Write-Host "Failed check_mk.yml copy" -Foreground Red	&& exit 5
+copy .\install\resources\check_mk.ini  	%root%\ > nul         || powershell Write-Host "Failed check_mk.ini copy" -Foreground Red	&& exit 5
 
 powershell Write-Host "1. Test machine preparation: Shared Folder"  -Foreground Green
 set shared_fldr=c:\dev\shared_public

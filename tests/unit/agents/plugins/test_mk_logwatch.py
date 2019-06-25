@@ -185,9 +185,8 @@ def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfile
     assert isinstance(logfiles, mk_logwatch.LogfilesConfig)
     assert logfiles.files == logfiles_files
     assert len(logfiles.patterns) == len(logfiles_patterns)
-    for actual, expected_raw in zip(logfiles.patterns, logfiles_patterns):
-        actual_raw = (actual[0], actual[1].pattern, actual[2], actual[3])
-        assert actual_raw == expected_raw
+    for actual, expected in zip(logfiles.patterns, logfiles_patterns):
+        assert actual == expected
 
 
 @pytest.mark.parametrize(

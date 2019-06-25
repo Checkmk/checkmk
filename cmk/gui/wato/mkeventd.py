@@ -53,7 +53,7 @@ import cmk.ec.defaults
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 else:
-    managed = None
+    managed = None  # type: ignore
 
 import cmk.gui.forms as forms
 import cmk.gui.config as config
@@ -2421,7 +2421,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
         # handling of file contents uses a uniformly encoded representation
         try:
             content = content.decode("utf-8")
-        except:
+        except UnicodeDecodeError:
             content = content.decode("latin-1")
 
         # Provides the just uploaded MIB module
@@ -4020,16 +4020,8 @@ class RulespecExtraServiceConfEcContact(ServiceRulespec):
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
 def mkeventd_update_notifiation_configuration(hosts):
-    # Setup notification into the Event Console. Note: If
-    # the event console is not activated then also the global
-    # default settings are missing and we must skip this code.
-    # This can happen in a D-WATO setup where the master has
-    # enabled the EC and the slave not.
-    try:
-        contactgroup = config.mkeventd_notify_contactgroup
-        remote_console = config.mkeventd_notify_remotehost
-    except:
-        return
+    contactgroup = config.mkeventd_notify_contactgroup
+    remote_console = config.mkeventd_notify_remotehost
 
     if not remote_console:
         remote_console = ""

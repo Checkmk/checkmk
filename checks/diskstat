@@ -330,7 +330,7 @@ def diskstat_extract_name_info(info):
                     else:
                         name = "DM %s" % line[1]
                     name_info[node, major, minor] = name
-                except:
+                except Exception:
                     pass  # ignore such crap as "No Devices Found"
             elif phase == 'vx_dsk':
                 major = int(line[1], 16)

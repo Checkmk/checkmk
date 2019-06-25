@@ -30,7 +30,7 @@ def inventory_win_cpuusage(info):
         try:
             if line[0] == '238:6':
                 return [(None, {})]
-        except:
+        except Exception:
             pass
 
 
@@ -85,7 +85,7 @@ def inventory_win_diskstat(info):
         try:
             if line[0] == '2:16' or line[0] == '2:18':
                 return [(None, None, None)]
-        except:
+        except Exception:
             pass
     return []
 

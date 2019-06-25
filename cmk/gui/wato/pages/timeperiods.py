@@ -63,6 +63,11 @@ from cmk.gui.plugins.wato import (
     make_action_link,
 )
 
+try:
+    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
+except ImportError:
+    alert_handling = None  # type: ignore
+
 
 @mode_registry.register
 class ModeTimeperiods(WatoMode):
@@ -219,11 +224,6 @@ class ModeTimeperiods(WatoMode):
 
         if cmk.is_raw_edition():
             return used_in
-
-        try:
-            import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
-        except:
-            alert_handling = None
 
         for index, rule in enumerate(alert_handling.load_alert_handler_rules()):
             if rule.get("match_timeperiod") == tpname:

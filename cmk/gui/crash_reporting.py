@@ -456,7 +456,7 @@ def show_old_dump_trace(tardata):
     for line in trace.splitlines():
         try:
             tracelines.append(line.decode('utf-8'))
-        except:
+        except UnicodeDecodeError:
             tracelines.append(repr(line))
     trace = "\r\n".join(tracelines)
     output_box(_("Crash Report"), trace)

@@ -59,7 +59,7 @@ def parse_oracle_sql(info):
                     conversion = int
                 try:
                     perf_entry.append(conversion(data_entry))
-                except:
+                except Exception:
                     perf_entry.append(None)
             perfdata.append(tuple(perf_entry))
         return perfdata
@@ -95,7 +95,7 @@ def parse_oracle_sql(info):
         elif key == "perfdata":
             try:
                 instance[key] += parse_perfdata(line[1])
-            except:
+            except Exception:
                 instance["parsing_error"].setdefault(("perfdata", "Perfdata error", 3), [])\
                                          .append(infotext)
 

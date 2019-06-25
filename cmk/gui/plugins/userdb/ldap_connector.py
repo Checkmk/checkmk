@@ -1089,7 +1089,7 @@ class LDAPUserConnector(UserConnector):
         try:
             self._bind(user_dn, password)
             result = user_id
-        except:
+        except Exception:
             self._logger.exception("  Exception during authentication (User: %s)", user_id)
             result = False
 
@@ -1314,7 +1314,7 @@ class LDAPUserConnector(UserConnector):
     def _get_last_sync_time(self):
         try:
             return float(file(self._sync_time_file).read().strip())
-        except:
+        except Exception:
             return 0
 
     def _get_cache_livetime(self):

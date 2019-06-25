@@ -230,7 +230,7 @@ class ACTestTmpfs(ACTest):
                 _device, mp, fstype, _options, _dump, _fsck = line.split()
                 if mp.endswith(path_suffix) and fstype == 'tmpfs':
                     return True
-            except:
+            except Exception:
                 continue
         return False
 

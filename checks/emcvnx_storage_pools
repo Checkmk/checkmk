@@ -176,7 +176,7 @@ def parse_emcvnx_time_to_complete(time_to_complete):
                 unit = unit[:-1]
             seconds += int(value) * map_units[unit]
         return seconds
-    except:
+    except Exception:
         return
 
 

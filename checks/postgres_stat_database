@@ -39,7 +39,7 @@ def parse_postgres_stat_database(info):
     def s(x):
         try:
             return int(x)
-        except:
+        except ValueError:
             return x
 
     parsed = {}

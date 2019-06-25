@@ -55,5 +55,5 @@ def cisco_sensor_item(trial_string, fall_back):
             item += " " + fall_back
         # Replace unwanted chars and return
         return item.replace('#', ' ')
-    except:
+    except Exception:
         return fall_back

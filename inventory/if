@@ -68,7 +68,7 @@ def inv_if(info, params):
         # a human readable time stamp (yurks)
         try:
             last_change = float(if_last_change) / 100.0
-        except:
+        except Exception:
             # Example: 0:0:01:09.96
             parts = if_last_change.split(":")
             days = int(parts[0])

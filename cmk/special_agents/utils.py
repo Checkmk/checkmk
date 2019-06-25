@@ -97,7 +97,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
             for line in content:
                 try:
                     pprint.pprint(json.loads(line))
-                except:
+                except Exception:
                     print line
         else:
             return content

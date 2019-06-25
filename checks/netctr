@@ -72,7 +72,7 @@ def inventory_netctr_combined(info):
 def check_netctr_combined(nic, params, info):
     try:
         warn, crit = params
-    except:
+    except ValueError:
         warn, crit = (0.01, 0.1)
 
     this_time = int(info[0][0])

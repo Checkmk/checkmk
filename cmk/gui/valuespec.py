@@ -75,7 +75,7 @@ import livestatus
 def _type_name(v):
     try:
         return type(v).__name__
-    except:
+    except Exception:
         return html.attrencode(type(v))
 
 
@@ -132,7 +132,7 @@ class ValueSpec(object):
             if isinstance(self._default_value, (types.FunctionType, types.MethodType)):
                 return self._default_value()
             return self._default_value
-        except:
+        except Exception:
             return self.canonical_value()
 
     # Creates a text-representation of the value that can be
@@ -951,7 +951,7 @@ class Url(TextAscii):
                 text = parts.netloc
             else:
                 text = parts.netloc + parts.path
-        except:
+        except Exception:
             text = value[7:]
 
         # Remove trailing / if the url does not contain any path component
@@ -1929,7 +1929,7 @@ class CascadingDropdown(ValueSpec):
     def default_value(self):
         try:
             return self._default_value
-        except:
+        except Exception:
             choices = self.choices()
             if not choices:
                 return None
@@ -2041,8 +2041,8 @@ class CascadingDropdown(ValueSpec):
             return self.default_value()
 
         try:
-            sel = int(html.request.var(varprefix + "_sel"))
-        except:
+            sel = int(html.request.var(varprefix + "_sel", ""))
+        except ValueError:
             sel = 0
         val, _title, vs = choices[sel]
         if vs:
@@ -2665,8 +2665,8 @@ class AbsoluteDate(ValueSpec):
         for what, title, mmin, mmax in entries:
             try:
                 varname = varprefix + "_" + what
-                part = int(html.request.var(varname))
-            except:
+                part = int(html.request.var(varname, ""))
+            except ValueError:
                 if self._allow_empty:
                     return None
                 else:
@@ -3241,7 +3241,7 @@ class Alternative(ValueSpec):
             try:
                 vs.validate_datatype(value, "")
                 return vs, value
-            except:
+            except Exception:
                 pass
 
         return None, value
@@ -3331,7 +3331,7 @@ class Alternative(ValueSpec):
             if isinstance(self._default_value, type(lambda: True)):
                 return self._default_value()
             return self._default_value
-        except:
+        except Exception:
             return self._elements[0].default_value()
 
     def value_to_text(self, value):
@@ -3354,7 +3354,7 @@ class Alternative(ValueSpec):
             try:
                 vs.validate_datatype(value, "")
                 return
-            except:
+            except Exception:
                 pass
         raise MKUserError(
             varprefix,
@@ -3395,7 +3395,7 @@ class Tuple(ValueSpec):
         for no, element in enumerate(self._elements):
             try:
                 val = value[no]
-            except:
+            except IndexError:
                 val = element.default_value()
             vp = varprefix + "_" + str(no)
             if self._orientation == "vertical":
@@ -3877,10 +3877,10 @@ class Foldable(ValueSpec):
             if html.form_submitted():
                 try:
                     title_value = self._valuespec.from_html_vars(varprefix)
-                except:
+                except Exception:
                     pass
             title = self._title_function(title_value)
-        except:
+        except Exception:
             title = self._valuespec.title()
             if not title:
                 title = _("(no title)")

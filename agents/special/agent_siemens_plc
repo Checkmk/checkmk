@@ -237,7 +237,7 @@ for device in devices:
 
             value = parse_func(fetched_data, byte - start, size, bit)
             sys.stdout.write("%s %s %s %s\n" % (device['host_name'], valuetype, ident, value))
-    except:
+    except Exception:
         sys.stderr.write('%s: Unhandled error: %s' % (device['host_name'], traceback.format_exc()))
         if opt_debug:
             raise

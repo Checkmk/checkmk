@@ -440,7 +440,7 @@ def page_handler():
 def _wato_page_handler(current_mode, mode_permissions, mode_class):
     try:
         init_wato_datastructures(with_wato_lock=not html.is_transaction())
-    except:
+    except Exception:
         # Snapshot must work in any case
         if current_mode == 'snapshot':
             pass

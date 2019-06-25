@@ -189,7 +189,7 @@ def parse_ipmi(info):
                 for what in ["value", "crit_low", "warn_low", "warn_high", "crit_high"]:
                     try:
                         parsed[name][what] = float(parsed[name][what])
-                    except:
+                    except Exception:
                         parsed[name][what] = None
 
                 if parsed[name]["unit"] in ["unspecified", ""]:

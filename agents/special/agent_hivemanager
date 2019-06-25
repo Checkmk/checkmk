@@ -33,7 +33,7 @@ try:
     ip = sys.argv[1]
     user = sys.argv[2]
     password = sys.argv[3]
-except:
+except IndexError:
     print "Usage: agent_hivemanager <IP> <USERNAME> <PASSWORD>"
     sys.exit(2)
 

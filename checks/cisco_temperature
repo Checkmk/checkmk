@@ -234,7 +234,7 @@ def parse_cisco_temperature(info):
                 temp_sensor_attrs['dev_levels'] = (int(max_temp), int(max_temp))
             else:
                 temp_sensor_attrs['dev_levels'] = None
-        except:
+        except Exception:
             temp_sensor_attrs['dev_state'] = (3, 'sensor defect')
 
         temp_sensors.setdefault(item, temp_sensor_attrs)

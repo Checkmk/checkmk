@@ -23,9 +23,8 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
-# This module contains some helper functions dealing with the creation
-# of multi-tier tar files (tar files containing tar files)
+"""This module contains some helper functions dealing with the creation
+of multi-tier tar files (tar files containing tar files)"""
 
 import errno
 import hashlib
@@ -618,7 +617,7 @@ def extract(tar, components):
         try:
             try:
                 subtarstream = tar.extractfile(name + ".tar")
-            except:
+            except Exception:
                 continue  # may be missing, e.g. sites.tar is only present
                 # if some sites have been created.
 

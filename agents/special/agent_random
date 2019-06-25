@@ -31,11 +31,12 @@
 import os
 import sys
 import time
+import ast
 import random
 
 try:
     hostname = sys.argv[1]
-except:
+except IndexError:
     hostname = "unknown"
 
 state_dir = os.getenv("OMD_ROOT", "") + "/tmp/check_mk/ds_random/"
@@ -43,8 +44,8 @@ if not os.path.exists(state_dir):
     os.makedirs(state_dir)
 state_file = state_dir + hostname
 try:
-    history = eval(file(state_file).read())
-except:
+    history = ast.literal_eval(file(state_file).read())
+except (OSError, SyntaxError):
     history = {}
 
 services = [

@@ -344,7 +344,7 @@ class BIManagement(object):
         def tryint(x):
             try:
                 return int(x)
-            except:
+            except ValueError:
                 return x
 
         if isinstance(rule, tuple):

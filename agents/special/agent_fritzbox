@@ -206,7 +206,7 @@ try:
     ]:
         try:
             status.update(get_upnp_info(_control, _namespace, _action))
-        except:
+        except Exception:
             if opt_debug:
                 raise
 
@@ -216,7 +216,7 @@ try:
     for pair in status.items():
         sys.stdout.write('%s %s\n' % pair)
 
-except:
+except Exception:
     if opt_debug:
         raise
     sys.stderr.write('Unhandled error: %s' % traceback.format_exc())

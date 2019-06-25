@@ -200,7 +200,7 @@ def check_mtr_pid(pid):
         try:
             return os.path.exists(pid_cmdline) and \
                    file(pid_cmdline).read().startswith("mtr\x00--report\x00--report-wide")
-        except:
+        except Exception:
             return False  # any error
 
 

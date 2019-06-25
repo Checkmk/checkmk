@@ -2933,7 +2933,7 @@ class html(HTMLGenerator):
     def datetime_input(self, varname, default_value, submit=None):
         try:
             t = self.get_datetime_input(varname)
-        except:
+        except Exception:
             t = default_value
 
         if varname in self.user_errors:

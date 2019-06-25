@@ -108,7 +108,7 @@ def inventory_fc_port(info):
                 admstate = int(line[2])
                 opstate = int(line[3])
                 phystate = int(line[6])
-            except:  # missing vital data. Skipping this port
+            except Exception:  # missing vital data. Skipping this port
                 continue
             portname = line[5]
 

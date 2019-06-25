@@ -423,7 +423,7 @@ class GUIViewRenderer(ViewRenderer):
 
             try:
                 do_actions(view_spec, self.view.datasource.infos[0], rows, '')
-            except:
+            except Exception:
                 pass  # currently no feed back on webservice
 
         painter_options = PainterOptions.get_instance()
@@ -1648,7 +1648,7 @@ def ajax_set_viewoption():
     if isinstance(value, str) and value[0].isdigit():
         try:
             value = int(value)
-        except:
+        except ValueError:
             pass
 
     painter_options = PainterOptions.get_instance()
@@ -2241,7 +2241,7 @@ def execute_hooks(hook):
     for hook_func in view_hooks.get(hook, []):
         try:
             hook_func()
-        except:
+        except Exception:
             if config.debug:
                 raise MKGeneralException(
                     _('Problem while executing hook function %s in hook %s: %s') %

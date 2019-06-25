@@ -293,7 +293,7 @@ class Perfometers(object):
         for req in perfometer["_required"]:
             try:
                 evaluate(req, translated_metrics)
-            except:
+            except Exception:
                 return False
 
         if "condition" in perfometer:
@@ -301,7 +301,7 @@ class Perfometers(object):
                 value, _color, _unit = evaluate(perfometer["condition"], translated_metrics)
                 if value == 0.0:
                     return False
-            except:
+            except Exception:
                 return False
 
         return True
@@ -859,7 +859,7 @@ def cmk_graphs_possible(site_id=None):
         return not config.force_pnp_graphing \
            and browser_supports_canvas() \
            and site_is_running_cmc(site_id)
-    except:
+    except Exception:
         return False
 
 

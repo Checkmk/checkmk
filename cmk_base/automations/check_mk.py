@@ -814,15 +814,9 @@ class AutomationRestart(Automation):
         # HTTP connections. Really.
         if config.monitoring_core == "nagios":
             objects_file = cmk.utils.paths.nagios_objects_file
-            for fd in range(3, 256):
-                try:
-                    os.close(fd)
-                except:
-                    pass
+            cmk.utils.daemon.closefrom(3)
         else:
             objects_file = cmk.utils.paths.var_dir + "/core/config"
-
-        # os.closerange(3, 256) --> not available in older Python versions
 
         class null_file(object):
             def write(self, stuff):
@@ -1335,7 +1329,7 @@ class AutomationActiveCheck(Automation):
                     continue
                 varname, value = line.split('=', 1)
                 macros[varname] = value
-        except:
+        except Exception:
             if cmk.utils.debug.enabled():
                 raise
 

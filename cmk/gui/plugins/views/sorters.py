@@ -450,7 +450,7 @@ class SorterHostIpv4Address(Sorter):
         def split_ip(ip):
             try:
                 return tuple(int(part) for part in ip.split('.'))
-            except:
+            except ValueError:
                 return ip
 
         v1, v2 = split_ip(get_address(r1)), split_ip(get_address(r2))

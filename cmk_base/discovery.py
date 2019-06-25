@@ -1301,7 +1301,7 @@ def parse_autochecks_file(hostname):
                 try:
                     part, line = split_python_tuple(line)
                     parts.append(part)
-                except:
+                except Exception:
                     break
             if len(parts) == 4:
                 parts = parts[1:]  # drop hostname, legacy format with host in first column

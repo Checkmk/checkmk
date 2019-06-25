@@ -291,7 +291,7 @@ def reporting_available():
         # reporting module
         _dummy = reporting_filename
         return True
-    except:
+    except NameError:
         return False
 
 
@@ -299,7 +299,7 @@ def combined_graphs_available():
     try:
         _dummy = have_combined_graphs
         return True
-    except:
+    except NameError:
         return False
 
 

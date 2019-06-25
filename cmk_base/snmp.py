@@ -299,7 +299,7 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
 
             if value is not None:
                 break  # Use first received answer in case of multiple contextes
-        except:
+        except Exception:
             if cmk.utils.debug.enabled():
                 raise
             value = None
@@ -426,10 +426,7 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
-                    try:
-                        value = cmk_base.agent_simulator.process(parts[1])
-                    except:
-                        value = parts[1]  # agent simulator missing in precompiled mode
+                    value = cmk_base.agent_simulator.process(parts[1])
                 else:
                     value = ""
                 # Fix for missing starting oids
@@ -618,7 +615,7 @@ def _snmp_decode_string(snmp_config, text):
     # Try to determine the current string encoding. In case a UTF-8 decoding fails, we decode latin1.
     try:
         return text.decode('utf-8')
-    except:
+    except UnicodeDecodeError:
         return text.decode('latin1')
 
 
@@ -704,7 +701,7 @@ def _get_cached_snmpwalk(hostname, fetchoid):
     try:
         console.vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
         return store.load_data_from_file(path)
-    except:
+    except Exception:
         if cmk.utils.debug.enabled():
             raise
         console.verbose("  Failed loading walk cache. Continue without it.\n" % path)

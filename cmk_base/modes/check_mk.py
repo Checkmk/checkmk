@@ -932,7 +932,7 @@ def mode_flush(hosts):
             os.remove(cmk.utils.paths.counters_dir + "/" + host)
             console.output(tty.bold + tty.blue + " counters")
             flushed = True
-        except:
+        except OSError:
             pass
 
         # cache files
@@ -945,7 +945,7 @@ def mode_flush(hosts):
                         os.remove(cache_dir + "/" + f)
                         d += 1
                         flushed = True
-                    except:
+                    except OSError:
                         pass
             if d == 1:
                 console.output(tty.bold + tty.green + " cache")
@@ -967,7 +967,7 @@ def mode_flush(hosts):
                         os.remove(log_dir + "/" + f)
                         d += 1
                         flushed = True
-                    except:
+                    except OSError:
                         pass
             if d > 0:
                 console.output(tty.bold + tty.magenta + " logfiles(%d)" % d)

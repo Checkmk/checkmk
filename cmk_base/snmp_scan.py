@@ -146,7 +146,7 @@ def _snmp_scan(host_config,
                 # some error messages which we explicitly want to show to the user
                 # should be raised through this
                 raise
-            except:
+            except Exception:
                 if on_error == "warn":
                     console.warning("   Exception in SNMP scan function of %s" % check_plugin_name)
                 elif on_error == "raise":

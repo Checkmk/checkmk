@@ -49,6 +49,7 @@ import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
 import cmk.gui.utils
 import cmk.gui.view_utils
+from cmk.gui.permissions import Permission  # pylint: disable=unused-import
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
@@ -465,7 +466,7 @@ class Command(object):
         return None
 
     def executor(self, command, site):
-        # type: (str, str) -> Callable
+        # type: (str, str) -> None
         """Function that is called to execute this action"""
         sites.live().command("[%d] %s" % (int(time.time()), command), site)
 
@@ -1276,7 +1277,7 @@ def cmp_ip_address(column, r1, r2):
     def split_ip(ip):
         try:
             return tuple(int(part) for part in ip.split('.'))
-        except:
+        except Exception:
             return ip
 
     v1, v2 = split_ip(r1.get(column, '')), split_ip(r2.get(column, ''))
@@ -1507,7 +1508,7 @@ def _transform_old_views(all_views):
                     # For all other context types assume the view is showing multiple objects
                     # and the datasource can simply be gathered from the datasource
                     view['single_infos'] = []
-            except:  # Exceptions can happen for views saved with certain GIT versions
+            except Exception:  # Exceptions can happen for views saved with certain GIT versions
                 if config.debug:
                     raise
 
@@ -1530,7 +1531,7 @@ def _transform_old_views(all_views):
                 context.setdefault(filter_name, {})
                 try:
                     f = visuals.get_filter(filter_name)
-                except:
+                except Exception:
                     # The exact match filters have been removed. They where used only as
                     # link filters anyway - at least by the builtin views.
                     continue

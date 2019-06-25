@@ -177,20 +177,20 @@ class LazyFileStats(object):
         path = self.path.encode('utf8')
         try:
             stat = os.stat(path)
-        except OSError, exc:
+        except OSError as exc:
             self.stat_status = "file vanished" if exc.errno == errno.ENOENT else str(exc)
             return
 
         try:
             self._size = int(stat.st_size)
-        except ValueError, exc:
+        except ValueError as exc:
             self.stat_status = str(exc)
             return
 
         try:
             self._m_time = int(stat.st_mtime)
             self._age = int(time.time()) - self._m_time
-        except ValueError, exc:
+        except ValueError as exc:
             self.stat_status = str(exc)
             return
 

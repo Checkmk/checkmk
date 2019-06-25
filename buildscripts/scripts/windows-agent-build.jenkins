@@ -1,0 +1,15 @@
+properties([
+    pipelineTriggers([pollSCM('H/2 * * * *')])
+])
+
+node ('windows') {
+    stage('git checkout') {
+        checkout(scm)
+    }
+    stage('windows agent build') {
+        bat 'cd agents\\wnx && call build_release.cmd'
+        dir('artefacts') {
+            archiveArtifacts "*"
+        }
+    }
+}

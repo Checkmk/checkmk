@@ -1,0 +1,67 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<prism_storage_pools:sep(9)>>>
+# name    usage   capacity
+# foobar    2518694292480   38575532134515
+
+
+def inventory_prism_storage_pools(parsed):
+    for row in parsed:
+        yield row["name"], {}
+
+
+def _convert_byte_to_mbyte(value):
+    return int(value) / (1024 * 1024)
+
+
+def check_prism_storage_pools(item, params, parsed):
+    for row in parsed:
+        if row["name"] == item:
+            # input values are in bytes, convert to mb
+            capacity = _convert_byte_to_mbyte(row["capacity"])
+            available = capacity - _convert_byte_to_mbyte(row["usage"])
+            return df_check_filesystem_single(
+                item,
+                capacity,
+                available,
+                0,
+                None,
+                None,
+                params,
+            )
+
+
+check_info["prism_storage_pools"] = {
+    "check_function": check_prism_storage_pools,
+    "inventory_function": inventory_prism_storage_pools,
+    "parse_function": parse_prism,
+    "group": "filesystem",
+    "has_perfdata": True,
+    "service_description": "Storage Pool %s",
+    "includes": ["prism.include", "size_trend.include", "df.include"],
+    "default_levels_variable": "filesystem_default_levels",
+}

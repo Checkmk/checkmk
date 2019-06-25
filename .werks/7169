@@ -1,0 +1,25 @@
+Title: Improve stability of agent updates on windows
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p19
+Date: 1561474891
+
+This is once again a regression since 1.5.0p17 and Werk #7167
+and addresses two issues:
+
+By invoking cmk-update-agent.exe with --reinstall or --force
+flag, the reinstallation will almost certainly get invalidated
+with "MSI Installation failed", because the agent hash would not
+change. This is now mitigated by tolerating an unchanged hash
+in that situation.
+
+After an installation gets invalidated with "MSI Installation failed",
+there is a chance that a still working agent installation gets broken,
+because some important consistency checks do get canceled by this invalidation.
+This is now mitigated by changing the order of post-agent-update-checks on windows.
+
+

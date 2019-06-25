@@ -1,0 +1,15 @@
+Title: mk_logwatch: optimize regex search
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561447860
+Class: feature
+
+For regular expressions in a logwatch section leading or trailing '.*' portions can be
+a performance desaster. With long log lines, it can virtually render your system paralyzed.
+If you are not using any rewrite patterns though, you can omit leading and trailing '.*'
+expressions without changing the set of matched lines.
+
+mk_logwatch now detects those cases, and will optimize the patterns accordingly.

@@ -13,7 +13,6 @@ import sys
 import pytest
 
 try:
-    import win32evtlog
     import winreg
 except ImportError:
     if platform.system() == 'Windows':

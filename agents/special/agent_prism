@@ -184,6 +184,21 @@ def output_cluster(opener, headers):
     writer.writerow([obj['name'], obj['version']])
 
 
+def output_storage_pools(opener, headers):
+    write_title("storage_pools")
+    obj = send_request(opener, "storage_pools", headers)
+
+    writer = gen_csv_writer()
+    writer.writerow(["name", "usage", "capacity"])
+
+    for entity in obj["entities"]:
+        writer.writerow([
+            entity["name"],
+            entity["usageStats"]["storage.usage_bytes"],
+            entity["usageStats"]["storage.capacity_bytes"],
+        ])
+
+
 def main():
     if os.path.basename(__file__) == "mk_prism.py":
         settings = {'port': 9440}
@@ -216,6 +231,7 @@ def main():
     output_containers(opener, req_headers)
     output_alerts(opener, req_headers)
     output_cluster(opener, req_headers)
+    output_storage_pools(opener, req_headers)
 
 
 if __name__ == "__main__":

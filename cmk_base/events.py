@@ -39,6 +39,7 @@ import urllib
 
 import livestatus
 import cmk
+from cmk.notification_plugins.utils import format_plugin_output
 from cmk.regex import regex
 import cmk.daemon
 
@@ -380,6 +381,10 @@ def complete_raw_context(raw_context, with_dump, event_log):
         raw_context['HOSTFORURL'] = urllib.quote(raw_context['HOSTNAME'])
 
         # Add HTML formated plugin output
+        # This code is removed in version 1.7 since the formatting is now done by the mail plugin.
+        # In version 1.5 it is left here for compatibility with custom notification scripts. Use
+        # of these variables in custom notification scripts is deprecated from version 1.6.
+        # The mail script will override the values set here.
         if "HOSTOUTPUT" in raw_context:
             raw_context["HOSTOUTPUT_HTML"] = format_plugin_output(raw_context["HOSTOUTPUT"])
         if raw_context["WHAT"] == "SERVICE":
@@ -394,23 +399,6 @@ def complete_raw_context(raw_context, with_dump, event_log):
     if with_dump:
         event_log("Computed variables:\n"
                    + "\n".join(sorted(["                    %s=%s" % (k, raw_context[k]) for k in raw_context if k not in raw_keys])))
-
-
-# There is common code with web/htdocs/lib.py:format_plugin_output(). Please check
-# whether or not that function needs to be changed too
-# TODO(lm): Find a common place to unify this functionality.
-def format_plugin_output(output):
-    ok_marker      = '<b class="stmarkOK">OK</b>'
-    warn_marker    = '<b class="stmarkWARNING">WARN</b>'
-    crit_marker    = '<b class="stmarkCRITICAL">CRIT</b>'
-    unknown_marker = '<b class="stmarkUNKNOWN">UNKN</b>'
-
-    output = output.replace("(!)", warn_marker) \
-              .replace("(!!)", crit_marker) \
-              .replace("(?)", unknown_marker) \
-              .replace("(.)", ok_marker)
-
-    return output
 
 
 # TODO: Use cmk.render.*?

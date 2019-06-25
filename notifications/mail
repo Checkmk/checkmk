@@ -60,6 +60,8 @@ try:
 except ImportError:
     import json
 
+from cmk.notification_plugins.utils import format_plugin_output, html_escape_context, add_debug_output
+
 def tmpl_head_html(html_section):
     return '''
 <html>
@@ -426,30 +428,6 @@ def substitute_context(template, context):
     # Remove the rest of the variables and make them empty
     template = re.sub("\$[A-Z_][A-Z_0-9]*\$", "", template)
     return template
-
-
-def html_escape_context(context):
-    unescaped_variables = {'PARAMETER_INSERT_HTML_SECTION'}
-    for variable, value in context.iteritems():
-        if variable not in unescaped_variables:
-            context[variable] = cgi.escape(value)
-
-
-def add_debug_output(template, context):
-    ascii_output = ""
-    html_output = "<table class=context>\n"
-    elements = context.items()
-    elements.sort()
-    for varname, value in elements:
-        ascii_output += "%s=%s\n" % (varname, value)
-        html_output += "<tr><td class=varname>%s</td><td class=value>%s</td></tr>\n" % (
-            varname, encode_entities(value))
-    html_output += "</table>\n"
-    return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)
-
-
-def encode_entities(text):
-    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def multipart_mail(target, subject, from_address, reply_to, content_txt, content_html, attach=None):
@@ -880,10 +858,17 @@ def construct_content(context):
         html_info = txt_info
 
     txt_info = substitute_context(txt_info.replace("@", context["WHAT"]), context)
-    html_info = substitute_context(html_info.replace("@", context["WHAT"]), context)
-
     context["EVENT_TXT"] = txt_info
+
+    # Add HTML formated plugin output
+    html_info = substitute_context(html_info.replace("@", context["WHAT"]), context)
     context["EVENT_HTML"] = html_info
+    if "HOSTOUTPUT" in context:
+        context["HOSTOUTPUT_HTML"] = format_plugin_output(context["HOSTOUTPUT"])
+    if context["WHAT"] == "SERVICE":
+        context["SERVICEOUTPUT_HTML"] = format_plugin_output(context["SERVICEOUTPUT"])
+        context["LONGSERVICEOUTPUT_HTML"] = format_plugin_output(
+            context["LONGSERVICEOUTPUT"])
 
     attachments = []
 

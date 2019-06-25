@@ -368,17 +368,22 @@ class UserSelection(DropdownChoice):
 
     def __init__(self, **kwargs):
         only_contacts = kwargs.get("only_contacts", False)
+        only_automation = kwargs.get("only_automation", False)
         kwargs["choices"] = self._generate_wato_users_elements_function(
-            kwargs.get("none"), only_contacts=only_contacts)
+            kwargs.get("none"), only_contacts=only_contacts, only_automation=only_automation)
         kwargs["invalid_choice"] = "complain"  # handle vanished users correctly!
         DropdownChoice.__init__(self, **kwargs)
 
-    def _generate_wato_users_elements_function(self, none_value, only_contacts=False):
+    def _generate_wato_users_elements_function(self,
+                                               none_value,
+                                               only_contacts=False,
+                                               only_automation=False):
         def get_wato_users(nv):
             users = load_users()
             elements = [(name, "%s - %s" % (name, us.get("alias", name)))
                         for (name, us) in users.items()
-                        if (not only_contacts or us.get("contactgroups"))]
+                        if (not only_contacts or us.get("contactgroups")) and
+                        (not only_automation or us.get("automation_secret"))]
             elements.sort()
             if nv is not None:
                 elements = [(None, none_value)] + elements

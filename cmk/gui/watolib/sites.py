@@ -695,6 +695,7 @@ class AutomationPushSnapshot(AutomationCommand):
     def get_request(self):
         # type: () -> PushSnapshotRequest
         site_id = html.request.var("siteid")
+
         self._verify_slave_site_config(site_id)
 
         snapshot = html.request.uploaded_file("snapshot")

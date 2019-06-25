@@ -99,7 +99,7 @@ def main():
 
     try:
         custom_field_exists = jira.search_issues("cf[%d]=%d" % (custom_field, custom_field_value))
-    except JIRAError, err:
+    except JIRAError as err:
         sys.stderr.write('Unable to query custom field search, JIRA response code %s, %s' %
                          (err.status_code, err.text))
         return 2
@@ -110,7 +110,7 @@ def main():
     if context['NOTIFICATIONTYPE'] == 'PROBLEM':
         try:
             issue = jira.create_issue(fields=newissue)
-        except JIRAError, err:
+        except JIRAError as err:
             sys.stderr.write(
                 'Unable to create issue, JIRA response code %s, %s' % (err.status_code, err.text))
             return 2
@@ -125,7 +125,7 @@ def main():
                 url = context['PARAMETER_MONITORING'] + context['HOSTURL']
             try:
                 rl = jira.add_simple_link(issue, {'url': url, 'title': 'Monitoring'})
-            except JIRAError, err:
+            except JIRAError as err:
                 sys.stderr.write('Unable to create link in issue, JIRA response code %s, %s\n' %
                                  (err.status_code, err.text))
                 return 2
@@ -149,7 +149,7 @@ def main():
             try:
                 jira.transition_issue(issue, resolution, comment=newissue['description'])
                 sys.stdout.write('Resolved %s' % issue.permalink())
-            except JIRAError, err:
+            except JIRAError as err:
                 sys.stderr.write('Unable to resolve %s, JIRA response code %s, %s' %
                                  (issue.permalink(), err.status_code, err.text))
                 return 2

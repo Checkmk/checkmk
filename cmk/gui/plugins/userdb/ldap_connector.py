@@ -2832,5 +2832,5 @@ def _sychronize_profile_worker(states, site_id, site, profiles_to_synchronize):
         # This function is currently only used by the background job
         # which does not have any request timeout set, just in case...
         raise
-    except Exception, e:
+    except Exception as e:
         return SynchronizationResult(site_id, error_text="%s" % e, failed=True)

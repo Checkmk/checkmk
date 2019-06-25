@@ -60,6 +60,7 @@ def test_registered_configvars():
         'adhoc_downtime',
         'agent_deployment_enabled',
         'agent_deployment_host_selection',
+        'agent_deployment_proxy',
         'agent_simulator',
         'alert_handler_event_types',
         'alert_handler_timeout',

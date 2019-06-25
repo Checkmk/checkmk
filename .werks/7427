@@ -1,0 +1,27 @@
+Title: mail: don't escape state markers in emails
+Level: 1
+Component: notifications
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1561453142
+Class: fix
+
+Since version 1.5.0p14 state markers in HTML emails were escaped
+and not interpreted as HTML but shown as text. The state marker
+for CRIT was e.g. shown as:
+
+&lt;b class="stmarkCRITICAL"&gt;CRIT&lt;/b&gt;
+
+This werk restores the old behaviour and state markers are shown
+in HTML emails as usual.
+
+If you use the macros HOSTOUTPUT_HTML, SERVICEOUTPUT_HTML, or
+LONGSERVICEOUTPUT_HTML in custom notification scripts please
+switch to the macros HOSTOUTPUT, SERVICEOUTPUT, and
+LONGSERVICEOUTPUT which contain the textual state markers
+'(!)' and '(!!)' for WARN and CRIT, respectively. The *_HTML
+variables will be deprecated in 1.6 and removed in 1.7.
+If you want to replace the textual state markers by HTML code
+you can use the utility function
+cmk.notification_plugins.utils.format_plugin_output.

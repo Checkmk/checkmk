@@ -146,13 +146,10 @@ class AuxTagList(object):
         return self._tags
 
     def append(self, aux_tag):
-        # TODO: Reenable this!
-        #if is_builtin_aux_tag(aux_tag.id):
-        #    raise MKUserError("tag_id", _("You can not override a builtin auxiliary tag."))
         self._append(aux_tag)
 
     def _append(self, aux_tag):
-        if self.has_aux_tag(aux_tag):
+        if self.exists(aux_tag.id):
             raise MKUserError("tag_id",
                               _("This tag id does already exist in the list "
                                 "of auxiliary tags."))
@@ -174,15 +171,18 @@ class AuxTagList(object):
         seen = set()
         for aux_tag in self._tags:
             aux_tag.validate()
+
+            builtin_config = BuiltinTagConfig()
+            if builtin_config.aux_tag_list.exists(aux_tag.id):
+                raise MKUserError("tag_id", _("You can not override a builtin auxiliary tag."))
+
             if aux_tag.id in seen:
                 raise MKUserError("tag_id", _("Duplicate tag id in auxilary tags: %s") % aux_tag.id)
+
             seen.add(aux_tag.id)
 
-    def has_aux_tag(self, aux_tag):
-        for tmp_aux_tag in self._tags:
-            if aux_tag.id == tmp_aux_tag.id:
-                return True
-        return False
+    def exists(self, aux_tag_id):
+        return self.get_aux_tag(aux_tag_id) is not None
 
     def get_aux_tag(self, aux_tag_id):
         for aux_tag in self._tags:
@@ -440,9 +440,6 @@ class TagConfig(object):
 
     # TODO: Change API to use __add__/__setitem__?
     def insert_tag_group(self, tag_group):
-        # TODO: re-enable this!
-        #if is_builtin_host_tag_group(tag_group.id):
-        #    raise MKUserError("tag_id", _("You can not override a builtin tag group."))
         self._insert_tag_group(tag_group)
 
     def _insert_tag_group(self, tag_group):
@@ -488,6 +485,10 @@ class TagConfig(object):
         if tag_group.id == "site":
             raise MKUserError("tag_id",
                               _("The tag group %s is reserved for internal use.") % tag_group.id)
+
+        builtin_config = BuiltinTagConfig()
+        if builtin_config.tag_group_exists(tag_group.id):
+            raise MKUserError("tag_id", _("You can not override a builtin tag group."))
 
         if not tag_group.title:
             raise MKUserError("title", _("Please specify a title for your tag group."))

@@ -175,7 +175,7 @@ class Helpers(object):
         result = self.query(query, "ColumnHeaders: off\n")
         try:
             return result[0][0]
-        except:
+        except IndexError:
             if deflt == NO_DEFAULT:
                 raise MKLivestatusNotFoundError(query)
             else:
@@ -638,13 +638,15 @@ class MultiSiteConnection(Helpers):
         # to fetch the status information
         extra_status_sites = {}
         if len(disabled_sites) > 0:
-            status_sitenames = set([])
+            status_sitenames = set()
             for sitename, site in sites.items():
                 try:
-                    s, h = site.get("status_host")
-                    status_sitenames.add(s)
-                except:
+                    s, h = site.get("status_host", [])
+                except ValueError:
                     continue
+
+                status_sitenames.add(s)
+
             for sitename in status_sitenames:
                 site = disabled_sites.get(sitename)
                 if site:

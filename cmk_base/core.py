@@ -29,6 +29,7 @@ import fcntl
 import os
 import subprocess
 import sys
+import errno
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -120,11 +121,12 @@ def do_restart(core, only_reload=False):
             sys.exit(1)
 
     except Exception as e:
-        try:
-            if backup_path and os.path.exists(backup_path):
+        if backup_path:
+            try:
                 os.remove(backup_path)
-        except:
-            pass
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
         if cmk.utils.debug.enabled():
             raise
         # TODO: Replace by MKBailOut()/MKTerminate()?
@@ -144,7 +146,7 @@ def try_get_activation_lock():
             console.verbose("Waiting for exclusive lock on %s.\n" % lock_file, stream=sys.stderr)
             fcntl.flock(_restart_lock_fd,
                         fcntl.LOCK_EX | (config.restart_locking == "abort" and fcntl.LOCK_NB or 0))
-        except:
+        except Exception:
             return True
     return False
 
@@ -195,7 +197,7 @@ def check_timeperiod(timeperiod):
     except MKTimeout:
         raise
 
-    except:
+    except Exception:
         if cmk.utils.debug.enabled():
             raise
 

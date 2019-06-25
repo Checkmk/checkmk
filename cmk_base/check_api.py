@@ -185,7 +185,7 @@ def saveint(i):
     you can not know whether it is really 0 or something went wrong."""
     try:
         return int(i)
-    except:
+    except (TypeError, ValueError):
         return 0
 
 
@@ -198,7 +198,7 @@ def savefloat(f):
     you can not know whether it is really 0.0 or something went wrong."""
     try:
         return float(f)
-    except:
+    except (TypeError, ValueError):
         return 0.0
 
 
@@ -283,23 +283,23 @@ def get_nic_speed_human_readable(speed):
     """Format network speed (bit/s) for humans."""
     try:
         speedi = int(speed)
-        if speedi == 10000000:
-            speed = "10 Mbit/s"
-        elif speedi == 100000000:
-            speed = "100 Mbit/s"
-        elif speedi == 1000000000:
-            speed = "1 Gbit/s"
-        elif speedi < 1500:
-            speed = "%d bit/s" % speedi
-        elif speedi < 1000000:
-            speed = "%.1f Kbit/s" % (speedi / 1000.0)
-        elif speedi < 1000000000:
-            speed = "%.2f Mbit/s" % (speedi / 1000000.0)
-        else:
-            speed = "%.2f Gbit/s" % (speedi / 1000000000.0)
-    except:
-        pass
-    return speed
+    except ValueError:
+        return speed
+
+    if speedi == 10000000:
+        return "10 Mbit/s"
+    elif speedi == 100000000:
+        return "100 Mbit/s"
+    elif speedi == 1000000000:
+        return "1 Gbit/s"
+    elif speedi < 1500:
+        return "%d bit/s" % speedi
+    elif speedi < 1000000:
+        return "%.1f Kbit/s" % (speedi / 1000.0)
+    elif speedi < 1000000000:
+        return "%.2f Mbit/s" % (speedi / 1000000.0)
+
+    return "%.2f Gbit/s" % (speedi / 1000000000.0)
 
 
 # TODO: Replace by some render.* function / move to render module?

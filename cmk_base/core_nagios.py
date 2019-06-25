@@ -586,7 +586,7 @@ def _create_nagios_config_hostgroups(cfg):
         for hg in hgs:
             try:
                 alias = config.define_hostgroups[hg]
-            except:
+            except KeyError:
                 alias = hg
 
             outfile.write(
@@ -616,7 +616,7 @@ def _create_nagios_config_servicegroups(cfg):
         for sg in sgs:
             try:
                 alias = config.define_servicegroups[sg]
-            except:
+            except KeyError:
                 alias = sg
 
             outfile.write(
@@ -923,8 +923,9 @@ def _precompile_hostcheck(config_cache, hostname):
     for fname in [compiled_filename, source_filename]:
         try:
             os.remove(fname)
-        except:
-            pass
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
 
     needed_check_plugin_names = _get_needed_check_plugin_names(host_config)
     if not needed_check_plugin_names:
@@ -1014,13 +1015,13 @@ if '-d' in sys.argv:
         try:
             if host_config.is_ipv4_host:
                 needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(hostname)
-        except:
+        except Exception:
             pass
 
         try:
             if host_config.is_ipv6_host:
                 needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(hostname)
-        except:
+        except Exception:
             pass
     else:
         if host_config.is_ipv4_host:

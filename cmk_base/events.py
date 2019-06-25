@@ -154,7 +154,7 @@ def config_timestamp():
     ]:
         try:
             mtime = max(mtime, os.stat(path).st_mtime)
-        except:
+        except Exception:
             pass
     return mtime
 
@@ -198,10 +198,10 @@ def convert_context_to_unicode(context):
         if isinstance(value, str):
             try:
                 value_unicode = value.decode("utf-8")
-            except:
+            except UnicodeDecodeError:
                 try:
                     value_unicode = value.decode("latin-1")
-                except:
+                except UnicodeDecodeError:
                     value_unicode = u"(Invalid byte sequence)"
             context[key] = value_unicode
 
@@ -399,7 +399,7 @@ def complete_raw_context(raw_context, with_dump, log_func):
 def get_readable_rel_date(timestamp):
     try:
         change = int(timestamp)
-    except:
+    except ValueError:
         change = 0
     rel_time = time.time() - change
     seconds = rel_time % 60
@@ -764,5 +764,5 @@ def plugin_param_to_string(value):
 def saveint(i):
     try:
         return int(i)
-    except:
+    except (TypeError, ValueError):
         return 0

@@ -323,7 +323,7 @@ def _ip_to_hostname(config_cache, ip):
         for host in config_cache.all_active_realhosts():
             try:
                 cache[ip_lookup.lookup_ipv4_address(host)] = host
-            except:
+            except Exception:
                 pass
     else:
         cache = cmk_base.config_cache.get_dict("ip_to_hostname")
@@ -334,5 +334,5 @@ def _ip_to_hostname(config_cache, ip):
 def _ip_to_dnsname(ip):
     try:
         return socket.gethostbyaddr(ip)[0]
-    except:
+    except Exception:
         return None

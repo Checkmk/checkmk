@@ -44,7 +44,7 @@ import cmk.utils.debug
 import cmk_base.utils
 
 logger = cmk.utils.log.get_logger(__name__)
-pac_ext = ".mkp"
+_pac_ext = ".mkp"
 
 
 # TODO: Subclass MKGeneralException()?
@@ -56,14 +56,6 @@ class PackageException(Exception):
     def __str__(self):
         return self.reason
 
-
-pac_dir = cmk.utils.paths.omd_root + "/var/check_mk/packages/"
-
-# TODO: OMD: Pack this path and remote this makedirs call
-try:
-    os.makedirs(pac_dir)
-except:
-    pass
 
 # order matters! See function _get_permissions
 PERM_MAP = (
@@ -136,6 +128,10 @@ package_ignored_files = {
 }
 
 
+def _pac_dir():
+    return cmk.utils.paths.omd_root + "/var/check_mk/packages/"
+
+
 def get_package_parts():
     return _package_parts
 
@@ -159,7 +155,7 @@ Available commands are:
    -v  enables verbose output
 
 Package files are located in %s.
-""" % pac_dir)
+""" % _pac_dir())
 
 
 def do_packaging(args):
@@ -228,7 +224,7 @@ def show_package_info(name):
 
 def show_package(name, show_info=False):
     try:
-        if name.endswith(pac_ext):
+        if name.endswith(_pac_ext):
             tar = tarfile.open(name, "r:gz")
             info = tar.extractfile("info")
             package = parse_package_info(info.read())
@@ -237,7 +233,7 @@ def show_package(name, show_info=False):
             if not package:
                 raise PackageException("No such package %s." % name)
             if show_info:
-                sys.stdout.write("Package file:                  %s%s\n" % (pac_dir, name))
+                sys.stdout.write("Package file:                  %s%s\n" % (_pac_dir(), name))
     except PackageException:
         raise
     except Exception as e:
@@ -302,7 +298,8 @@ def package_create(args):
 
     write_package_info(package)
     logger.verbose("New package %s created with %d files.", pacname, num_files)
-    logger.verbose("Please edit package details in %s%s%s", tty.bold, pac_dir + pacname, tty.normal)
+    logger.verbose("Please edit package details in %s%s%s", tty.bold,
+                   _pac_dir() + pacname, tty.normal)
 
 
 def package_find(_no_args):
@@ -350,7 +347,7 @@ def package_release(args):
 
 
 def package_exists(pacname):
-    pacpath = pac_dir + pacname
+    pacpath = _pac_dir() + pacname
     return os.path.exists(pacpath)
 
 
@@ -372,7 +369,7 @@ def package_pack(args):
     package = read_package_info(pacname)
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
-    tarfilename = "%s-%s%s" % (pacname, package["version"], pac_ext)
+    tarfilename = "%s-%s%s" % (pacname, package["version"], _pac_ext)
     logger.verbose("Packing %s into %s...", pacname, tarfilename)
     create_mkp_file(package, file_name=tarfilename)
     logger.verbose("Successfully created %s", tarfilename)
@@ -450,7 +447,7 @@ def remove_package(package):
                         raise
                     raise Exception("Cannot remove %s: %s\n" % (path, e))
 
-    os.remove(pac_dir + package["name"])
+    os.remove(_pac_dir() + package["name"])
 
 
 def create_package(pkg_info):
@@ -637,7 +634,7 @@ def verify_check_mk_version(package):
     try:
         compatible = cmk.utils.werks.parse_check_mk_version(min_version) \
                         <= cmk.utils.werks.parse_check_mk_version(cmk_version)
-    except:
+    except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         if cmk.utils.debug.enabled():
             raise
@@ -716,7 +713,7 @@ def packaged_files_in_dir(part):
 
 def read_package_info(pacname):
     try:
-        package = parse_package_info(file(pac_dir + pacname).read())
+        package = parse_package_info(file(_pac_dir() + pacname).read())
         package["name"] = pacname  # do not trust package content
         num_files = sum([len(fl) for fl in package["files"].values()])
         package["num_files"] = num_files
@@ -724,21 +721,21 @@ def read_package_info(pacname):
     except IOError:
         return None
     except Exception:
-        logger.verbose("Ignoring invalid package file '%s%s'. Please remove it from %s!", pac_dir,
-                       pacname, pac_dir)
+        logger.verbose("Ignoring invalid package file '%s%s'. Please remove it from %s!",
+                       _pac_dir(), pacname, _pac_dir())
         return None
 
 
 def write_package_info(package):
-    file(pac_dir + package["name"], "w").write(pprint.pformat(package) + "\n")
+    file(_pac_dir() + package["name"], "w").write(pprint.pformat(package) + "\n")
 
 
 def remove_package_info(pacname):
-    os.remove(pac_dir + pacname)
+    os.remove(_pac_dir() + pacname)
 
 
 def all_package_names():
-    return sorted([p for p in os.listdir(pac_dir) if p not in ['.', '..']])
+    return sorted([p for p in os.listdir(_pac_dir()) if p not in ['.', '..']])
 
 
 def parse_package_info(python_string):

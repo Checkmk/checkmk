@@ -20,7 +20,7 @@ from bs4 import NavigableString
 from cmk.gui.htmllib import HTML
 
 
-class bcolors:
+class bcolors(object):
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'

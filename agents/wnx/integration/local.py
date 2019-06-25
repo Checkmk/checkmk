@@ -144,7 +144,7 @@ def make_yaml_config():
     yml = yaml.safe_load("""
 global:
   enabled: true
-  port: %d        
+  port: %d
 """ % port)
     return yml
 
@@ -209,7 +209,7 @@ class NoSectionError(Exception):
         super(NoSectionError, self).__init__(self, 'No section: %r' % section)
 
 
-class YamlWriter:
+class YamlWriter(object):
     def __init__(self):
         self._doc = None
 

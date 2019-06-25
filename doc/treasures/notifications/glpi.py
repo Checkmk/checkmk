@@ -31,13 +31,13 @@ class Incident(object):
     EC_ID, EC_PHASE, EC_HOST, EC_CONTACT, EC_TEXT, EC_STATE, EC_COMMENT
     """
 
-    class Source:
+    class Source(object):
         Notification, EventConsole = range(2)
 
-    class What:
+    class What(object):
         Host, Service = range(2)
 
-    class Type:
+    class Type(object):
         Problem, Recovery, Flapping, FlappingStop, Acknowledgement, Other = range(6)
 
     def __init__(self, live_status):
@@ -368,7 +368,7 @@ class TicketInterface(object):
     """
     interfaces = {}
 
-    class Urgency:
+    class Urgency(object):
         Low, Medium, High, Ultra = range(4)
 
     def __init__(self, settings):

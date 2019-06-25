@@ -243,16 +243,6 @@ def parse_filenames(line):
     return line.split()
 
 
-def parse_pattern(level, pattern, line):
-    if level not in ['C', 'W', 'I', 'O']:
-        raise Exception("Invalid pattern line '%s'" % line)
-    try:
-        compiled = re.compile(pattern)
-    except:
-        raise Exception("Invalid regular expression in line '%s'" % line)
-    return (level, compiled)
-
-
 def get_config_files(directory):
     config_file_paths = []
     config_file_paths.append(directory + "/logwatch.cfg")
@@ -300,20 +290,24 @@ def consume_logfile_definition(iterator, header_line):
         if is_empty(line) or not is_indented(line):
             break
 
-        level, pattern = line.split(None, 1)
+        level, raw_pattern = line.split(None, 1)
 
         if level == 'A':
-            cont_list.append(parse_cont_pattern(pattern))
+            cont_list.append(raw_pattern)
+
         elif level == 'R':
-            rewrite_list.append(pattern)
-        else:
-            level, compiled = parse_pattern(level, pattern, line)
+            rewrite_list.append(raw_pattern)
+
+        elif level in ('C', 'W', 'I', 'O'):
             # New pattern for line matching => clear continuation and rewrite patterns
             cont_list = []
             rewrite_list = []
-            pattern = (level, compiled, cont_list, rewrite_list)
+            pattern = (level, raw_pattern, cont_list, rewrite_list)
             logfiles.patterns.append(pattern)
             LOGGER.debug("pattern %s", pattern)
+
+        else:
+            raise ValueError("Invalid level in pattern line %r" % line)
 
     return logfiles
 
@@ -360,13 +354,6 @@ def read_config(files):
     LOGGER.info("Logfiles configurations: %r", logfiles_configs)
     LOGGER.info("Optional cluster configurations: %r", cluster_configs)
     return logfiles_configs, cluster_configs
-
-
-def parse_cont_pattern(pattern):
-    try:
-        return int(pattern)
-    except (ValueError, TypeError):
-        return re.compile(pattern)
 
 
 def read_status(file_name):
@@ -786,6 +773,37 @@ def find_matching_logfiles(glob_pattern):
     return files
 
 
+def _search_optimize_raw_pattern(raw_pattern):
+    """return potentially stripped pattern for use with *search*
+
+    Stripping leading and trailing '.*' avoids catastrophic backtracking
+    when long log lines are being processed
+    """
+    start_idx = 2 if raw_pattern.startswith('.*') else 0
+    end_idx = -2 if raw_pattern.endswith('.*') else None
+    return raw_pattern[start_idx:end_idx] or raw_pattern
+
+
+def _compile_continuation_pattern(raw_pattern):
+    try:
+        return int(raw_pattern)
+    except (ValueError, TypeError):
+        return re.compile(_search_optimize_raw_pattern(raw_pattern))
+
+
+def _compile_all_expressions(patterns):
+    compiled_patterns = []
+    for level, raw_pattern, cont_list, rewrite_list in patterns:
+        if not rewrite_list:
+            # it does not matter what the matched group is in this case
+            raw_pattern = _search_optimize_raw_pattern(raw_pattern)
+        compiled = re.compile(raw_pattern)
+        cont_list = [_compile_continuation_pattern(cp) for cp in cont_list]
+        compiled_patterns.append((level, compiled, cont_list, rewrite_list))
+
+    return compiled_patterns
+
+
 def parse_sections(logfiles_config):
     """
     Returns s list of (logfile name, (patterns, options)) tuples and
@@ -815,7 +833,10 @@ def parse_sections(logfiles_config):
                 present_options.update(opt)
                 found_sections[logfile] = (present_patterns, present_options)
 
-    return found_sections.items(), non_matching_patterns
+    matching_patterns = [(logfile, (_compile_all_expressions(patterns), options))
+                         for logfile, (patterns, options) in found_sections.iteritems()]
+
+    return matching_patterns, non_matching_patterns
 
 
 def ip_in_subnetwork(ip_address, subnetwork):

@@ -174,10 +174,26 @@ def discovery_systemd_units_services_summary(parsed):
         yield 'Summary', {}
 
 
+def services_split(services, blacklist):
+    excluded = []
+    included = []
+    compiled_patterns = [regex(p) for p in blacklist]
+    for service in services:
+        if any(expr.match(service.name) for expr in compiled_patterns):
+            excluded.append(service)
+        else:
+            included.append(service)
+    return included, excluded
+
+
 def check_systemd_units_services_summary(_no_item, params, parsed):
     services = parsed.get('service', {}).values()
-
+    blacklist = params.get('ignored', [])
     yield 0, "%d services in total" % len(services)
+
+    services, excluded = services_split(services, blacklist)
+    if excluded:
+        yield 0, "%d ignored services" % len(excluded)
 
     all_states = sorted(set(s.active for s in services))
 

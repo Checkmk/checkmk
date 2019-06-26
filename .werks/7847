@@ -1,0 +1,11 @@
+Title: win_printers: Fixed discovery of printers which include spaces in the printer name; This also fixes 'Printer not found' while checking
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p19
+Date: 1561535877
+
+

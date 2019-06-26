@@ -794,7 +794,7 @@ class CREFolder(BaseFolder):
                 for cg in contact_groups:
                     out.write(
                         "\nservice_contactgroups.insert(0, \n"
-                        "  {'value' %r, 'condition': {'host_folder': '/' + FOLDER_PATH}})\n" % cg)
+                        "  {'value': %r, 'condition': {'host_folder': '/' + FOLDER_PATH}})\n" % cg)
 
         # Write information about all host attributes into special variable - even
         # values stored for check_mk as well.

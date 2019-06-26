@@ -512,6 +512,7 @@ def _makedirs_exist_ok(directory):
         if exc.errno != errno.EEXIST:
             raise
 
+
 def check_logwatch_generic(item, params, loglines, found):
     import hashlib
     logdir = logwatch_dir + "/" + host_name()

@@ -239,7 +239,7 @@ def logwatch_reclassify(counts, patterns, text, old_level):
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
     for level, pattern, _ in patterns.get("reclassify_patterns", []):
-        reg = regex(pattern)
+        reg = regex(pattern, re.UNICODE)
         if reg.search(text):
             # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
             # then we count how many times this pattern has already matched and
@@ -498,7 +498,7 @@ class LogwatchBlock(object):
 
     def finalize(self):
         state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
-        header = "<<<%s %s>>>\n" % (self._timestamp, state_str)
+        header = u"<<<%s %s>>>\n" % (self._timestamp, state_str)
         return [header] + self.lines
 
     def add_line(self, line, skip_reclassification):
@@ -523,7 +523,7 @@ class LogwatchBlock(object):
             self._states_counter[level] = self._states_counter.get(level, 0) + 1
 
         if not skip_reclassification and level != "I":
-            self.lines.append(level + " " + text + "\n")
+            self.lines.append(u"%s %s\n" % (level, text))
 
 
 class LogwatchBlockCollector(object):
@@ -534,7 +534,7 @@ class LogwatchBlockCollector(object):
 
     @property
     def size(self):
-        return sum(len(line) for line in self._output_lines)
+        return sum(len(line.encode('utf-8')) for line in self._output_lines)
 
     def __call__(self, block):
         if not block or block.worst <= -1:
@@ -581,10 +581,7 @@ def check_logwatch_generic(item, params, loglines, found):
     logmsg_file_exists = logmsg_file_path.exists()
     mode = 'r+' if logmsg_file_exists else 'w'
     try:
-        # TODO: change this to
-        # logmsg_file_handle = logmsg_file_path.open(mode, encoding='utf-8')
-        # once we are dealing with unicode
-        logmsg_file_handle = open(str(logmsg_file_path), mode)
+        logmsg_file_handle = logmsg_file_path.open(mode, encoding='utf-8')
     except IOError as exc:
         raise MKGeneralException(
             "User %s cannot open file for writing: %s" % (logwatch_username(), exc))
@@ -643,14 +640,15 @@ def check_logwatch_generic(item, params, loglines, found):
 
     header = time.strftime("<<<%Y-%m-%d %H:%M:%S UNKNOWN>>>\n")
     output_size += len(header)
+    header = header.decode('utf-8')
 
     # process new input lines - but only when there is some room left in the file
     if output_size < logwatch_max_filesize:
         current_block = LogwatchBlock(header, patterns, states_counter)
         for line in loglines:
-            current_block.add_line(line.encode("utf-8"), False)
+            current_block.add_line(line, False)
             net_lines += 1
-            output_size += len(line)
+            output_size += len(line.encode('utf-8'))
             if output_size >= logwatch_max_filesize:
                 break
         block_collector(current_block)
@@ -659,7 +657,7 @@ def check_logwatch_generic(item, params, loglines, found):
     if not skip_reclassification and block_collector.get_lines():
         logmsg_file_handle.seek(0)
         logmsg_file_handle.truncate()
-        logmsg_file_handle.write("[[[%s]]]\n" % pattern_hash)
+        logmsg_file_handle.write(u"[[[%s]]]\n" % pattern_hash)
 
     for line in block_collector.get_lines():
         logmsg_file_handle.write(line)

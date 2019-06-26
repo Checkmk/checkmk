@@ -185,6 +185,56 @@ TEST(FileInfoTest, Misc) {
     EXPECT_EQ(FileInfo::kStatFailed, "stat failed");
 }
 
+TEST(FileInfoTest, CheckDriveLetter) {
+    // boiler plating:
+
+    namespace fs = std::filesystem;
+    using namespace cma::cfg;
+    tst::SafeCleanTempDir();
+    auto [a, b] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test););
+
+    std::tuple<fs::path, std::string_view> data[] = {{a / "a1.txt", "a1"}};
+
+    for (const auto& [path, content] : data) tst::ConstructFile(path, content);
+
+    auto cfg = cma::cfg::GetLoadedConfig();
+    auto fileinfo_node = cfg[groups::kFileInfo];
+    ASSERT_TRUE(fileinfo_node.IsDefined());
+    ASSERT_TRUE(fileinfo_node.IsMap());
+    auto value = a.u8string();
+    auto str = fmt::format("['{}\\*.txt']", value);
+    fileinfo_node[vars::kFileInfoPath] = YAML::Load(str);
+    ASSERT_TRUE(fileinfo_node[vars::kFileInfoPath].IsSequence());
+    {
+        FileInfo fi;
+        fi.mode_ = FileInfo::Mode::legacy;
+        auto out = fi.makeBody();
+
+        ASSERT_TRUE(!out.empty());
+        auto table = cma::tools::SplitString(out, "\n");
+        ASSERT_EQ(table.size(), 2);
+        EXPECT_TRUE(std::atoll(table[0].c_str()) > 0LL);
+        EXPECT_EQ(table[1][0], value[0]);
+    }
+    value[0] = std::toupper(value[0]);
+    str = fmt::format("['{}\\*.txt']", value);
+    fileinfo_node[vars::kFileInfoPath] = YAML::Load(str);
+    ASSERT_TRUE(fileinfo_node[vars::kFileInfoPath].IsSequence());
+    {
+        FileInfo fi;
+        fi.mode_ = FileInfo::Mode::legacy;
+        auto out = fi.makeBody();
+
+        ASSERT_TRUE(!out.empty());
+        auto table = cma::tools::SplitString(out, "\n");
+        ASSERT_EQ(table.size(), 2);
+        EXPECT_TRUE(std::atoll(table[0].c_str()) > 0LL);
+        EXPECT_EQ(table[1][0], value[0]);
+    }
+}
+
 TEST(FileInfoTest, CheckOutput) {
     // boiler plating:
 

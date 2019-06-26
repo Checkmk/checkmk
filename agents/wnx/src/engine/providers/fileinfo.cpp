@@ -521,6 +521,10 @@ static const std::string s_modern_sub_header =
     "name|status|size|time\n"
     "[[[content]]]\n";
 
+static bool IsDriveLetterAtTheStart(std::string_view text) noexcept {
+    return text.size() > 2 && text[1] == ':' && std::isalpha(text[0]);
+}
+
 std::string FileInfo::generateFileList(YAML::Node path_array) {
     using namespace cma::cfg;
     int i_pos = 0;  // logging variable
@@ -529,14 +533,20 @@ std::string FileInfo::generateFileList(YAML::Node path_array) {
         try {
             auto mask = p.as<std::string>();
 
-            if (details::ValidFileInfoPathEntry(mask)) {
-                //
-                out += details::ProcessFileInfoPathEntry(mask, mode_);
-            } else {
+            if (!details::ValidFileInfoPathEntry(mask)) {
                 XLOG::d.t("'{}.{}[{}] = {}' is not valid, skipping",
                           groups::kFileInfo, vars::kFileInfoPath, i_pos, mask);
+                continue;
             }
 
+            // mask is valid:
+            auto ret = details::ProcessFileInfoPathEntry(mask, mode_);
+            if (ret.empty()) continue;
+
+            // drive letter correction:
+            if (IsDriveLetterAtTheStart(mask) && IsDriveLetterAtTheStart(ret))
+                ret[0] = mask[0];
+            out += ret;
         } catch (const std::exception &e) {
             XLOG::l(
                 "'{}.{}[{}]' is seriously not valid, skipping. Exception '{}'",
@@ -548,7 +558,7 @@ std::string FileInfo::generateFileList(YAML::Node path_array) {
     if (mode_ == Mode::modern) return s_modern_sub_header + out;
 
     return out;
-}
+}  // namespace provider
 
 std::string FileInfo::makeBody() {
     // mandatory part of the output:

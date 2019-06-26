@@ -133,8 +133,7 @@ class RulespecInventoryIfRules(HostRulespec):
                          title=_("Appearance of network interface"),
                          help=_(
                              "This option lets Check_MK use either the interface description, alias or "
-                             " port number as item. The port number is the fallback/default."
-                             "used anyway."),
+                             "port number as item. The port number is the fallback resp. default."),
                          choices=[
                              ('descr', _('Use description')),
                              ('alias', _('Use alias')),

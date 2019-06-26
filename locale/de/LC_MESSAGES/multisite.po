@@ -1999,9 +1999,8 @@ msgstr "AWS/ELB Grenzwerte"
 msgid "AWS/ELB Statistics"
 msgstr "MSSQL Statistiken"
 
-#, fuzzy
 msgid "AWS/ELBv2 LCU"
-msgstr "Verarbeitungsdauer"
+msgstr "AWS/ELBv2 LCU"
 
 msgid "AWS/ELBv2 Limits"
 msgstr "AWS/ELBv2 Grenzwerte"
@@ -2740,6 +2739,10 @@ msgstr "Zu überwachende Instanz hinzufügen"
 
 msgid "Add instance to monitor"
 msgstr "Zu überwachende Instanz hinzufügen"
+
+#, fuzzy
+msgid "Add label condition"
+msgstr "Bedingung hinzufügen"
 
 msgid "Add limits"
 msgstr "Schwellwerte hinzufügen"
@@ -4528,9 +4531,8 @@ msgstr "AppDynamics via REST API"
 msgid "Apparent Power"
 msgstr "Scheinleistung"
 
-#, fuzzy
 msgid "Appearance of network interface"
-msgstr "Portstatus von Netzwerkschnittstellen monitoren"
+msgstr "Einsatz einer Netzwerkschnittstelle"
 
 msgid "Append Age to output"
 msgstr "Alter an Ausgabe anhängen"
@@ -10168,7 +10170,8 @@ msgstr "Angepasste Lokalisierungen"
 msgid "Custom notification"
 msgstr "manueller Alarm"
 
-msgid "Custom notification table for user "
+#, fuzzy, python-format
+msgid "Custom notification table for user %s"
 msgstr "Benutzer-Alarmtabelle von Benutzer"
 
 msgid "Custom notification table of this user"
@@ -12075,16 +12078,14 @@ msgstr "Platten-ID"
 msgid "Disk Latency"
 msgstr "Plattenlatenz"
 
-#, fuzzy
 msgid "Disk Read Latency"
-msgstr "Plattenlatenz"
+msgstr "Latenzzeit beim Lesen von Datenträgern"
 
 msgid "Disk Utilization"
 msgstr "Festplattenauslastung"
 
-#, fuzzy
 msgid "Disk Write Latency"
-msgstr "Plattenlatenz"
+msgstr "Latenzzeit beim Schreiben von Festplatten"
 
 msgid "Disk Writeback"
 msgstr "Platten-Writeback"
@@ -18444,6 +18445,10 @@ msgstr "Hostverwaltung"
 msgid "Host match list"
 msgstr "Host-Bedingungen"
 
+#, fuzzy, python-format
+msgid "Host matching labels: %s"
+msgstr "Host-Bedingungen"
+
 msgid "Host name"
 msgstr "Hostname"
 
@@ -21603,7 +21608,8 @@ msgstr "Ungültiger Aufruf: Das Profil fehlt."
 msgid "Invalid call: The snapshot is missing."
 msgstr "Ungültiger Aufruf: Sicherung fehlt."
 
-msgid "Invalid certificate file"
+#, fuzzy, python-format
+msgid "Invalid certificate file: %s"
 msgstr "Ungültige Zertifikatsdatei"
 
 msgid "Invalid check parameter"
@@ -32006,6 +32012,10 @@ msgstr "Filter entfernen"
 msgid "Remove from Favorites"
 msgstr "Aus den Favoriten streichen"
 
+#, fuzzy
+msgid "Remove label condition"
+msgstr "Alle Wartungszeiten löschen"
+
 msgid "Remove service"
 msgstr "Entfernter Service"
 
@@ -34749,9 +34759,8 @@ msgstr "Level einstellen"
 msgid "Set limit and levels for %s"
 msgstr "Grenzwert und Pegel für %s festlegen"
 
-#, fuzzy
 msgid "Set limits and levels for running on-demand instances"
-msgstr "Globale Standardschwellwerte für WARN und CRIT festlegen. "
+msgstr "Legen Sie Grenzen und Schwellen für laufende On-Demand-Instanzen fest"
 
 msgid "Set lower Levels"
 msgstr "Untere Schwellwerte setzen"
@@ -37913,12 +37922,8 @@ msgstr ""
 "<i>Deaktiviere Alarme für alle Hosts mit den Merkmalen <b>NetzwerkHost</b> "
 "und <b>Test</b></i>."
 
-#, fuzzy
-msgid ""
-"Tags classify hosts and services and are the fundament of configuration of "
-"hosts and services."
+msgid "Tags can be used to classify hosts and services in a flexible way."
 msgstr ""
-"Merkmale klassifizeren Hosts: Basis für die Einrichtung von Hosts und Services"
 
 msgid "Tags of the Host"
 msgstr "Tags des Hosts"
@@ -43167,8 +43172,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option lets Check_MK use either the interface description, alias or  "
-"port number as item. The port number is the fallback/default.used anyway."
+"This option lets Check_MK use either the interface description, alias or port "
+"number as item. The port number is the fallback resp. default."
 msgstr ""
 "Diese Option ermöglicht Check_MK die Schnittstellen-Beschreibung an Stelle "
 "der Port-Nummer zu verwenden. Wenn die Beschreibung leer ist, dann wird in "
@@ -44009,10 +44014,11 @@ msgstr ""
 msgid "This rule can be used to control the discovery for Heartbeat CRM checks."
 msgstr "Dieser Regelsatz steuert die Serviceerkennung von Heartbeat-CRM Checks."
 
+#, fuzzy
 msgid ""
 "This rule can be used to control the inventory for network ports. You can "
-"configure the port types and port states for inventoryand the use of alias or "
-"description as service name."
+"configure the port types and port states for inventory and the use of alias "
+"or description as service name."
 msgstr ""
 "Mit dieser Regel wird die Inventarisierung von Netzwerkports gesteuert. Sie "
 "können Porttypen und Portstatus für die Inventarisierung angeben und die "
@@ -46342,9 +46348,8 @@ msgstr "URL auf diese Seite inkl. Seitenleiste"
 msgid "URL:"
 msgstr "URL:"
 
-#, fuzzy
 msgid "USD per day"
-msgstr "Bits pro Tag"
+msgstr "Dollar pro Tag"
 
 msgid "USrv - Allocation Latency"
 msgstr "USrv - Latenz der Bereitstellung"
@@ -47068,17 +47073,15 @@ msgstr "Obere Grenzen für geblockte Verbindungen"
 msgid "Upper levels for clients"
 msgstr "Obere Schwellen für Clients"
 
-#, fuzzy
 msgid "Upper levels for connections in use"
-msgstr "Obere Schwellen für Infizierungen"
+msgstr "Obere Schwellen für die aktiven Verbindungen"
 
 #, fuzzy
 msgid "Upper levels for data"
 msgstr "Obere Schwellen für %s"
 
-#, fuzzy
 msgid "Upper levels for disk usage"
-msgstr "Obere Schwellen für das Alter"
+msgstr "Obere Schwellen für die Festplattennutzung"
 
 msgid "Upper levels for encountered exceptions"
 msgstr "Obere Schwellen für aufgetretene Exceptions"
@@ -47106,9 +47109,8 @@ msgstr "Obere Schwellen für Latenzzeit"
 msgid "Upper levels for license usage"
 msgstr "Obere Schwellen für das Alter"
 
-#, fuzzy
 msgid "Upper levels for load balancer capacity units"
-msgstr "Obere Schwellen für physikalische Kapazität in Prozent"
+msgstr "Obere Schwellen für Kapazitätseinheiten von Loadbalancer"
 
 msgid "Upper levels for number of OSDs which are down"
 msgstr "Obere Schwellen für die Anzahl der OSDs die nicht erreichbar sind"
@@ -47200,13 +47202,11 @@ msgstr "Obere Schwellen für %s"
 msgid "Upper levels on number of Point-to-site connections"
 msgstr "Obere Grenzen für aktive Datenbank Verbindungen"
 
-#, fuzzy
 msgid "Upper levels replica lag"
-msgstr "Obere Schwellen für das Alter"
+msgstr "Obere Schwellen für die Replikaverzögerung"
 
-#, fuzzy
 msgid "Upper levels the oldest replication slot lag"
-msgstr "Obere Schwellen für Infizierungen"
+msgstr "Obere Schwellen für die älteste Replikations-Slot-Verzögerung"
 
 #, fuzzy
 msgid "Upper percentage levels"
@@ -47221,15 +47221,14 @@ msgstr "Obere, prozentuale Schwellen für GET-Anfragen"
 msgid "Upper percentual levels for HEAD requests"
 msgstr "Obere, prozentuale Schwellen für HEAD-Anfragen"
 
-#, fuzzy
 msgid "Upper percentual levels for HTTP 400 errors"
-msgstr "Prozentuale Schwellen für Fehlerraten"
+msgstr "Obere, prozentuale Schwellen HTTP 400-Fehler"
 
 msgid "Upper percentual levels for HTTP 500 errors"
 msgstr "Obere, prozentuale Schwellen für HTTP 500-Fehler"
 
 msgid "Upper percentual levels for LIST requests"
-msgstr ""
+msgstr "Obere, prozentuale Schwellen für LIST-Anfragen"
 
 msgid "Upper percentual levels for POST requests"
 msgstr "Obere, prozentuale Schwellen für POST-Anfragen"
@@ -47676,6 +47675,9 @@ msgstr "Den Status des Check_MK-Agenten verwenden"
 
 msgid "Use the status of the service..."
 msgstr "Den Zustand verwenden von Service..."
+
+msgid "Use this condition to select hosts based on the configured host labels."
+msgstr ""
 
 msgid "Use this custom start URL"
 msgstr "Individuelle Start-URL benutzen"
@@ -51159,6 +51161,12 @@ msgstr ""
 "Sie können dieses Sicherungszuel nicht löschen, das es von diesen Sicherungs-"
 "Jobs verwendet wird: %s"
 
+msgid "You can not override a builtin auxiliary tag."
+msgstr "Sie können eingebaute Hilfs-Merkmale nicht überschreiben."
+
+msgid "You can not override a builtin tag group."
+msgstr "Sie können eingebaute Merkmalsgruppen nicht überschreiben."
+
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr "Sie können \"public\" nicht als erste Pfad-Ebene nutzen."
 
@@ -52306,6 +52314,10 @@ msgstr "erlaube Befehle und Aktionen über TCP"
 msgid "allow users to deactivate this notification"
 msgstr "Benutzern erlauben, diesen Alarm zu deaktivieren"
 
+#, fuzzy
+msgid "and"
+msgstr "Band"
+
 msgid "and spread over"
 msgstr "und verteile sie über"
 
@@ -52810,6 +52822,14 @@ msgstr "h"
 msgid "handles"
 msgstr "Handles"
 
+#, fuzzy
+msgid "has"
+msgstr "Phase"
+
+#, fuzzy
+msgid "has not"
+msgstr "Ist nicht"
+
 msgid "height"
 msgstr "Höhe"
 
@@ -53185,6 +53205,9 @@ msgstr "kein"
 
 msgid "normal connection"
 msgstr "Normale Verbindung"
+
+msgid "not"
+msgstr "nicht"
 
 msgid "not a contact"
 msgstr "kein Kontakt"
@@ -53868,6 +53891,14 @@ msgstr "gestern"
 msgid "z/OS"
 msgstr "z/OS"
 
+#, fuzzy
+#~ msgid ""
+#~ "Tags classify hosts and services and are the fundament of configuration of "
+#~ "hosts and services."
+#~ msgstr ""
+#~ "Merkmale klassifizeren Hosts: Basis für die Einrichtung von Hosts und "
+#~ "Services"
+
 #~ msgid "Contact Check_MK agent and all enabled datasource programs"
 #~ msgstr ""
 #~ "Den Check_MK-Agenten kontaktieren und alle aktiven Datenquellen-Programme "
@@ -53961,9 +53992,6 @@ msgstr "z/OS"
 #~ "Diese Option ermöglicht Check_MK den Schnittstellen-Alias (ifAlias) an "
 #~ "Stelle der Port-Nummer zu verwenden. Wenn kein Alias definiert wurde, dann "
 #~ "wird in jedem Fall die Port-Nummer verwendet."
-
-#~ msgid "not"
-#~ msgstr "nicht"
 
 #~ msgid ""
 #~ "If active, only a single summary item is displayed. The summary will "
@@ -54247,12 +54275,6 @@ msgstr "z/OS"
 #~ "abhängig von der gewählten Authentifizierungsmethode. Es gilt zu beachten, "
 #~ "dass diese Methode in der Monitoring Instanz aktiviert sein muss. "
 #~ "Andernfalls wird die Authentifizierung fehlschlagen. "
-
-#~ msgid "You can not override a builtin auxiliary tag."
-#~ msgstr "Sie können eingebaute Hilfs-Merkmale nicht überschreiben."
-
-#~ msgid "You can not override a builtin tag group."
-#~ msgstr "Sie können eingebaute Merkmalsgruppen nicht überschreiben."
 
 #~ msgid "enable SNI"
 #~ msgstr "aktiviere SNI"

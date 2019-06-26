@@ -195,18 +195,6 @@ def _logwatch_select_forwarded(discoverable_items):
 #
 
 
-def logwatch_level_name(level):
-    if level == 'O':
-        return 'OK'
-    elif level == 'W':
-        return 'WARN'
-    elif level == 'u':
-        return 'WARN'  # undefined states are treated as warning
-    elif level == 'C':
-        return 'CRIT'
-    return 'IGN'
-
-
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
 def logwatch_precompile(hostname, item, _unused):
@@ -678,13 +666,16 @@ def check_logwatch_generic(item, params, loglines, found):
     if block_collector.worst <= 0:
         return (0, "no error messages")
 
-    count_txt = []
-    for level, num in states_counter.iteritems():
-        count_txt.append('%d %s' % (num, logwatch_level_name(level)))
+    expanded_levels = {"O": "OK", "W": "WARN", "u": "WARN", "C": "CRIT"}
+    count_txt = [
+        "%d %s" % (count, expanded_levels.get(level, "IGN"))
+        for level, count in states_counter.iteritems()
+    ]
+    info = "%s messages" % ', '.join(count_txt)
     if logwatch_service_output == 'default':
-        return (block_collector.worst, "%s messages (Last worst: \"%s\")" %
-                (', '.join(count_txt), block_collector.last_worst_line))
-    return (block_collector.worst, "%s messages" % ', '.join(count_txt))
+        info += ' (Last worst: "%s")' % block_collector.last_worst_line
+
+    return block_collector.worst, info
 
 
 #.

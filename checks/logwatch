@@ -270,16 +270,6 @@ def logwatch_reclassify(counts, patterns, text, old_level):
     return new_level
 
 
-def logwatch_parse_line(line):
-    parts = line.split(None, 1)
-    level = parts[0]
-    if len(parts) > 1:
-        text = parts[1]
-    else:
-        text = ""
-    return level, text
-
-
 def inventory_logwatch_single(parsed):
     discoverable_items = _logwatch_discoverable_items(parsed)
     _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
@@ -551,12 +541,14 @@ def check_logwatch_generic(item, params, loglines, found):
             return [header] + self.lines
 
         def add_line(self, line, skip_reclassification):
-            old_level, text = logwatch_parse_line(line)
 
-            if skip_reclassification:
-                level = old_level
-            else:
-                level = self.__reclassify_line(patterns, text, old_level)
+            try:
+                level, text = line.split(None, 1)
+            except ValueError:
+                level, text = line.strip(), ""
+
+            if not skip_reclassification:
+                level = self.__reclassify_line(patterns, text, level)
 
             self.worst = logwatch_level_worst(self.worst, level)
 

@@ -195,14 +195,6 @@ def _logwatch_select_forwarded(discoverable_items):
 #
 
 
-def logwatch_state(state):
-    if state == 1:
-        return "WARN"
-    elif state != 0:
-        return "CRIT"
-    return "OK"
-
-
 def logwatch_level_name(level):
     if level == 'O':
         return 'OK'
@@ -536,9 +528,12 @@ def check_logwatch_generic(item, params, loglines, found):
     state_counts = {}  # for counting number of blocks with a certain state
 
     class LogwatchBlock(object):
+
+        STATE_TO_STR = {0: "OK", 1: "WARN"}
+
         def __init__(self, header):
+            self._timestamp = header.strip("<>").rsplit(None, 1)[0]
             self.worst = -1
-            self.header = header
             self.lines = []
             self.last_worst_line = ''
             self.counts = {}  # for counting number of matches of a certain pattern
@@ -551,8 +546,9 @@ def check_logwatch_generic(item, params, loglines, found):
             return level
 
         def finalize(self):
-            start = " ".join(self.header.split(' ')[0:2])
-            return [start + " %s>>>\n" % logwatch_state(self.worst)] + self.lines
+            state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
+            header = "<<<%s %s>>>\n" % (self._timestamp, state_str)
+            return [header] + self.lines
 
         def add_line(self, line, skip_reclassification):
             old_level, text = logwatch_parse_line(line)

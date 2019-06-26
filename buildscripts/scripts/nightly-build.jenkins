@@ -132,7 +132,7 @@ AGENT_LIST.each { AGENT ->
                 unstash name: 'WinDep'
                 bat 'cd agents\\wnx && call build_release.cmd'
                 dir('artefacts') {
-                    stash name: 'WinMSI', includes: 'check_mk_agent*,check_mk.user.yml'
+                    stash name: 'WinMSI', includes: 'check_mk_agent*'
                 }
             }
         }

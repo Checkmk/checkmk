@@ -81,7 +81,7 @@ set el=%errorlevel%
 @del save.tmp > nul
 git update-index --no-assume-unchanged install/resources/check_mk.marker > nul
 if not %el% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit 88
-move %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent_update.msi
+rem move %REMOTE_MACHINE%\check_mk_service.msi %REMOTE_MACHINE%\check_mk_agent_update.msi
 
 
 %msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x64
@@ -124,7 +124,7 @@ copy check_mk_service64.exe check_mk_agent-64.exe || powershell Write-Host "Fail
 powershell Write-Host "File Deployment succeeded" -Foreground Green
 
 rem touching update msi
-copy check_mk_agent_update.msi /B+ ,,/Y > nul
+rem copy check_mk_agent_update.msi /B+ ,,/Y > nul
 popd
 
 

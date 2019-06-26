@@ -1077,6 +1077,15 @@ msgid ""
 "explicit service names and ignore overall tags</i>: With this selection you "
 "can state explicit names. The overall tags are ignored for these service."
 msgstr ""
+"<i>Sammeln Sie alle Service-Instanzen und schränken Sie durch übergreifende "
+"Tags ein</i> bedeutet, dass, wenn übergreifende Tags vorangestellt werden, "
+"alle Service-Instanzen nach diesen Tags gefiltert werden. Andernfalls werden "
+"alle Instanzen gesammelt.<br>Mit <i>Explizite Service-Tags verwenden und "
+"übergreifende Tags überschreiben</i> können Sie explizite Tags für diese "
+"Dienste angeben. Die übergreifende Tags werden für diese Dienste ignoriert. "
+"<br><i><i>Verwenden Sie explizite Dienstnamen und ignorieren Sie "
+"übergreifende Tags</i>: Mit dieser Auswahl können Sie explizite Namen "
+"angeben. Die ü\\bergreifende Tags werden für diesen Dienst ignoriert."
 
 #, python-format
 msgid "<li>Cannot delete hosts in folder %s: %s</li>"
@@ -7877,7 +7886,7 @@ msgid "Classes"
 msgstr "Klassen"
 
 msgid "Classic Load Balancing (ELB)"
-msgstr ""
+msgstr "Classic Load Balancing (ELB)"
 
 msgid "Classical"
 msgstr "Klassisch"
@@ -8060,7 +8069,7 @@ msgid "Cloud Based Environments"
 msgstr "Cloud-basierte Umgebungen"
 
 msgid "Cloudwatch"
-msgstr ""
+msgstr "Cloudwatch"
 
 msgid "Cluster"
 msgstr "Cluster"
@@ -11335,9 +11344,8 @@ msgstr "Das LVM-Plugin ausrollen"
 msgid "Deploy Linux filesystem quota plugin"
 msgstr "Das Linux filesystem quota Plugin ausrollen"
 
-#, fuzzy
 msgid "Deploy MS Office 365 plugin"
-msgstr "Das LVM-Plugin ausrollen"
+msgstr "Das MS Office 365-Plugin ausrollen"
 
 msgid "Deploy MSSQL Server plugin"
 msgstr "Das MSSQL-Server-Plugin ausrollen"
@@ -11490,9 +11498,8 @@ msgstr "ORACLE-Datenbank-Plugin ausrollen"
 msgid "Deploy the PostgreSQL plugin"
 msgstr "Das PostgresQL-Plugin ausrollen"
 
-#, fuzzy
 msgid "Deploy the SAP HANA plugin"
-msgstr "Das SAP R/3 Plugin ausrollen"
+msgstr "Das SAP HANA-Plugin ausrollen"
 
 msgid "Deploy the SAP R/3 plugin"
 msgstr "Das SAP R/3 Plugin ausrollen"
@@ -11979,9 +11986,8 @@ msgstr "Deaktivierte Warnmeldungen"
 msgid "Disabled checks"
 msgstr "Deaktivierte Checks"
 
-#, fuzzy
 msgid "Disabled clustered services (located on cluster host)"
-msgstr "Überwachte geclusterte Services (befinden sich auf dem Cluster-Host)"
+msgstr "Deaktivierte Cluster-Dienste (auf dem Cluster-Host)"
 
 msgid "Disabled custom checks (defined via rule)"
 msgstr "Abgeschaltete Customchecks, die mit Hilfe einer Regel definiert wurden"
@@ -12468,9 +12474,8 @@ msgstr "Plugin für JAR-Signaturen nicht ausrollen"
 msgid "Do not deploy plugin for MS Exchange database latency"
 msgstr "Das Plugin für MS Exchange Datenbank-Latenzzeiten nicht bereitstellen."
 
-#, fuzzy
 msgid "Do not deploy plugin for MS Office 365"
-msgstr "Kein Plugin für NFS IO Stats bereitstellen"
+msgstr "Das MS Office 365-Plugin nicht ausrollen"
 
 msgid "Do not deploy plugin for Microsoft SQL Server"
 msgstr "Plugin für Microsoft SQL-Server nicht ausrollen"
@@ -12542,9 +12547,8 @@ msgstr "ORACLE-Plugin nicht ausrollen"
 msgid "Do not deploy the PostgreSQL plugin"
 msgstr "Das PostgreSQL Plugin nicht ausrollen"
 
-#, fuzzy
 msgid "Do not deploy the SAP HANA plugin"
-msgstr "Das SAP R/3 Plugin nicht ausrollen"
+msgstr "Das SAP HANA-Plugin nicht ausrollen"
 
 msgid "Do not deploy the SAP R/3 plugin"
 msgstr "Das SAP R/3 Plugin nicht ausrollen"
@@ -12687,7 +12691,7 @@ msgid "Do not translate SNMP traps"
 msgstr "SNMP-Traps nicht übersetzen"
 
 msgid "Do not use 'aws:' prefix for the key."
-msgstr ""
+msgstr "Verwenden Sie kein 'aws:'-Präfix für den Schlüssel."
 
 msgid "Do not use 'aws:' prefix for the values."
 msgstr "Verwenden Sie für die Werte kein 'aws:'-Präfix."
@@ -13411,7 +13415,7 @@ msgstr ""
 "Hostkonfiguration."
 
 msgid "Each tag must be unique and cannot be used multiple times"
-msgstr ""
+msgstr "Jedes Tag muss eindeutig sein und darf nicht mehrfach verwendet werden"
 
 msgid ""
 "Each user defined role is based on one of the builtin roles. When created it "
@@ -13799,10 +13803,10 @@ msgid "Elapsed time"
 msgstr "Verstrichene Zeit"
 
 msgid "Elastic Block Storage (EBS)"
-msgstr ""
+msgstr "Elastic Block Storage (EBS)"
 
 msgid "Elastic Compute Cloud (EC2)"
-msgstr ""
+msgstr "Elastic Compute Cloud (EC2)"
 
 msgid "Elastic IP Addresses"
 msgstr "Elastic IP-Adressen"
@@ -16538,7 +16542,7 @@ msgid "Gateways found"
 msgstr "Gateways gefunden"
 
 msgid "Gather all"
-msgstr ""
+msgstr "Alle einsammeln"
 
 msgid "Gather all service instances and restrict by overall tags"
 msgstr ""
@@ -16677,9 +16681,8 @@ msgstr "Globale Alarmierungsregeln"
 msgid "Global reports"
 msgstr "Globale Berichte"
 
-#, fuzzy
 msgid "Global services to monitor"
-msgstr "Zu monitorende Ressourcen"
+msgstr "Globale Dienste zur Überwachung"
 
 msgid "Global setting"
 msgstr "Globale Einstellung"
@@ -19461,6 +19464,8 @@ msgid ""
 "If limits are enabled all instances are fetched regardless of possibly "
 "configured restriction to names or tags"
 msgstr ""
+"Wenn Limits aktiviert sind, werden alle Instanzen geholt, unabhängig von "
+"einer eventuell konfigurierten Einschränkung auf Namen oder Tags"
 
 msgid ""
 "If no ICMP or TCP-SYN/RST packet is being seen from the target host for a "
@@ -20928,6 +20933,9 @@ msgid ""
 "In order to monitor S3 request metrics you have to enable request metric "
 "monitoring in the AWS/S3 console. This is a paid feature"
 msgstr ""
+"Um S3-Anforderungskennzahlen zu überwachen, müssen Sie die Überwachung der "
+"Anforderungskennzahlen in der AWS/S3-Konsole aktivieren. Dies ist eine "
+"kostenpflichtige Funktion"
 
 msgid ""
 "In order to monitor docker containers the plugin <tt>mk_docker.py</tt> "
@@ -21530,9 +21538,8 @@ msgid ""
 msgstr ""
 "Intervall für: Checks, Wiederholungen, Cluster, Inventarisierungskonf. u.a."
 
-#, fuzzy
 msgid "Invalid (Not loaded)"
-msgstr "Ungültiger Hostname"
+msgstr "Ungültig (Nicht geladen)"
 
 msgid "Invalid CRCs"
 msgstr "Ungültige CRCs"
@@ -24043,7 +24050,7 @@ msgid "MS Exchange counters (various)"
 msgstr "MS Exchange-Counters (verschiede)"
 
 msgid "MS Office 365 (Windows)"
-msgstr ""
+msgstr "MS Office 365 (Windows)"
 
 msgid "MS Office 365 license"
 msgstr "MS Office 365 Lizenz"
@@ -24529,9 +24536,8 @@ msgstr "Betriebszustände abbilden"
 msgid "Map power states"
 msgstr "Zustände übersetzen"
 
-#, fuzzy
 msgid "Map process states"
-msgstr "Zustände übersetzen"
+msgstr "Prozesszustände abbilden"
 
 #, fuzzy
 msgid "Map provisioning states"
@@ -25693,9 +25699,8 @@ msgstr "Überwache die Lanes, wenn ein Port mehrere hat"
 msgid "Monitor containers without executing the <tt>check_mk_agent</tt>"
 msgstr "Container überwachen, ohne den <tt>check_mk_agent</tt> auszuführen."
 
-#, fuzzy
 msgid "Monitor costs and usage"
-msgstr "Monitored auf Instanz"
+msgstr "Überwachung von Kosten und Nutzung"
 
 msgid "Monitor file operations with Inotify (Linux)"
 msgstr "Dateisystemoperationen mittels Inotify überwachen (Linux)"
@@ -25712,13 +25717,11 @@ msgstr "Mehrere JMX-Instanzen auf dem Host überwachen"
 msgid "Monitor multiple instances on the host"
 msgstr "Mehrere Instanzen auf dem Host überwachen"
 
-#, fuzzy
 msgid "Monitor request metrics"
-msgstr "Überwachte Services"
+msgstr "Überwachung von Anforderungsmetriken"
 
-#, fuzzy
 msgid "Monitor service limits"
-msgstr "Überwachte Services"
+msgstr "Überwache Servicelimits"
 
 msgid "Monitor specific TCP/UDP connections and listeners"
 msgstr "Überwache spezifische TCP/UDP-Verbindungen oder Sockets"
@@ -27309,7 +27312,7 @@ msgid "Not restricted to showing a specific object."
 msgstr "Nicht begrenzt auf das Anzeigen eines bestimmten Objektes"
 
 msgid "Not runnable (Loaded but waiting for event)"
-msgstr ""
+msgstr "Nicht lauffähig (Geladen, aber auf Ereignis wartend)"
 
 msgid "Not selected"
 msgstr "Nicht ausgewählt"
@@ -30927,9 +30930,8 @@ msgstr "Prozesserstellungen"
 msgid "Process Discovery"
 msgstr "Serviceerkennung von Prozessen"
 
-#, fuzzy
 msgid "Process Discovery (only SNMP)"
-msgstr "Serviceerkennung von Prozessen"
+msgstr "Prozess-Erkennung (nur SNMP)"
 
 msgid "Process ID"
 msgstr "Prozess ID"
@@ -31841,9 +31843,8 @@ msgstr "Zurückgewiesene Sitzungen"
 msgid "Related Views"
 msgstr "Zusammenhängende Ansichten"
 
-#, fuzzy
 msgid "Relational Database Service (RDS)"
-msgstr "Simple Storage Service (S3)"
+msgstr "Relational Database Service (RDS)"
 
 msgid "Relative"
 msgstr "Relative"
@@ -32402,9 +32403,8 @@ msgstr "Requestmethode"
 msgid "Request latency"
 msgstr "Latenzzeit von Anfragen"
 
-#, fuzzy
 msgid "Request metrics"
-msgstr "Requestmethode"
+msgstr "Anforderungsmetriken"
 
 msgid "Request rate"
 msgstr "Anfragerate"
@@ -32985,9 +32985,8 @@ msgstr ""
 msgid "Run synchronously"
 msgstr "Synchron ausführen"
 
-#, fuzzy
 msgid "Runnable (Waiting for resource)"
-msgstr "Emails, die auf DNS warten"
+msgstr "Lauffähig (Warten auf Ressource)"
 
 msgid "Running"
 msgstr "Läuft"
@@ -33032,18 +33031,16 @@ msgid "SAP Dialog"
 msgstr "SAP-Dialog"
 
 msgid "SAP HANA"
-msgstr ""
+msgstr "SAP HANA"
 
-#, fuzzy
 msgid "SAP HANA Backup"
-msgstr "RMAN Backups"
+msgstr "SAP HANA Backups"
 
-#, fuzzy
 msgid "SAP HANA License"
-msgstr "NTLS-Links"
+msgstr "SAP HANA Lizenz"
 
 msgid "SAP HANA Memory"
-msgstr ""
+msgstr "SAP HANA Memory"
 
 msgid "SAP R/3"
 msgstr "SAP R/3"
@@ -33952,9 +33949,8 @@ msgstr "Ausgewählte Hosts:\n"
 msgid "Selection"
 msgstr "Auswahl"
 
-#, fuzzy
 msgid "Selection of alarms"
-msgstr "Sektionsname"
+msgstr "Auswahl der Alarme"
 
 msgid "Selection of hosts to activate agent updates for"
 msgstr "Auswahl von Hosts, für die Aktivierung der Updates"
@@ -33965,9 +33961,8 @@ msgstr "Auswahl von mehreren Hostgruppen"
 msgid "Selection of multiple service groups"
 msgstr "Auswahl von mehreren Servicegruppen"
 
-#, fuzzy
 msgid "Selection of service instances"
-msgstr "Wahl der Servicegruppe"
+msgstr "Auswahl der Service-Instanzen"
 
 msgid "Selection of site is enforced, use this filter for joining"
 msgstr ""
@@ -34452,9 +34447,8 @@ msgstr "Servicelevel"
 msgid "Service level"
 msgstr "Servicelevel"
 
-#, fuzzy
 msgid "Service limits"
-msgstr "Servicezeit"
+msgstr "Servicelimits"
 
 msgid "Service name"
 msgstr "Servicename"
@@ -34638,9 +34632,8 @@ msgstr "Services von Host %s"
 msgid "Services of this host"
 msgstr "Services dieses Hosts"
 
-#, fuzzy
 msgid "Services per region to monitor"
-msgstr "Serviceperiode für Hosts"
+msgstr "Zu überwachende Dienste pro Region"
 
 msgid "Services states"
 msgstr "Service - Status"
@@ -36686,9 +36679,8 @@ msgstr "Zustand und Anzahl von Prozessen (mit zusätzlichen Metriken)"
 msgid "State and count of processes"
 msgstr "Status und Anzahl von Prozessen"
 
-#, fuzzy
 msgid "State and count of processes (only SNMP)"
-msgstr "Status und Anzahl von Prozessen"
+msgstr "Zustand und Anzahl der Prozesse (nur SNMP)"
 
 msgid "State changes of hosts / services"
 msgstr "Zustandsänderungen von Hosts/Services"
@@ -38787,7 +38779,6 @@ msgstr ""
 "<i>Cache-Alter für Plugins und lokale Checks einstellen</i> und <i>Setze "
 "Ausführungsmodus für Plugins und lokale Checks</i> angepasst werden."
 
-#, fuzzy
 msgid "The access key ID for your AWS account"
 msgstr "Der Zugangsschlüssel für Ihr AWS-Konto"
 
@@ -40077,13 +40068,11 @@ msgstr ""
 msgid "The installed agent needs an update"
 msgstr "Der installierte Agent benötigt ein Update"
 
-#, fuzzy
 msgid "The instance name"
 msgstr "Name der Instanz"
 
-#, fuzzy
 msgid "The instance name and backup type"
-msgstr "Der installierte Agent benötigt ein Update"
+msgstr "Der Instanzname und der Backuptyp"
 
 msgid ""
 "The instance name, the database name and the tablespace name combined like "
@@ -40329,7 +40318,7 @@ msgstr ""
 "angewendet, nicht auf die einzelnen Hops."
 
 msgid "The maximum key length is 128 characters."
-msgstr ""
+msgstr "Die maximale Schlüssellänge beträgt 128 Zeichen."
 
 msgid "The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."
 msgstr "Die maximale Grenze für das Apply-Lag in <tt>v$dataguard_stats</tt>"
@@ -40389,7 +40378,7 @@ msgstr ""
 "Zielhost angewendet, nicht auf die einzelnen Hops."
 
 msgid "The maximum value length is 256 characters."
-msgstr ""
+msgstr "Die maximale Wertlänge beträgt 256 Zeichen."
 
 msgid "The members of certain contact groups"
 msgstr "Mitglieder von Kontaktgruppen"
@@ -41151,7 +41140,6 @@ msgstr "Der Eintrag, den Sie bearbeiten möchten, existiert nicht."
 msgid "The schedule you are trying to execute does not exist."
 msgstr "Der Geplante Bereicht, den Sie ausführen möchten, existiert nicht."
 
-#, fuzzy
 msgid "The secret access key for your AWS account"
 msgstr "Der geheime Schlüssel für Ihr AWS-Konto"
 
@@ -41975,14 +41963,14 @@ msgstr ""
 "dauerhaft deaktivieren. Wenn Sie sicher sind, dass sie nur vorübergehend "
 "sind, lassen Sie sie einfach, bis sie von selbst wieder verschwinden."
 
-#, fuzzy
 msgid ""
 "These services have been found on this host and have been mapped to a cluster "
 "host by a rule in the set <i>Clustered services</i> but disabled via "
 "<i>Disabled services</i> or <i>Disabled checks</i>."
 msgstr ""
-"Diese Services wurden auf diesem Host gefunden aber mithilfe des Regelsatzes "
-"<i>Geclusterte Services</i> einem Cluster zugeordnet."
+"Diese Dienste wurden auf diesem Host gefunden und durch die Regel "
+"<i>Clustered services</i> auf einen Clusterhost abgebildet, aber über "
+"<i>Deaktivierte Services</i> oder <i>Deaktivierte Checks</i> deaktiviert."
 
 #, fuzzy
 msgid ""
@@ -43462,6 +43450,8 @@ msgid ""
 "This plugin can be used to collect information of all MS Office 365 licenses "
 "and serviceplans using the MSOnline PowerShell module."
 msgstr ""
+"Dieses Plugin kann verwendet werden, um Informationen über alle MS Office 365-"
+"Lizenzen und Servicepläne mit dem MSOnline PowerShell-Modul zu sammeln."
 
 msgid ""
 "This plugin can be used to collect information of all running MSSQL servers "
@@ -44611,8 +44601,9 @@ msgid ""
 "This ruleset defines criteria for SNMP processes base upon the HOST Resources "
 "MIB."
 msgstr ""
+"Dieses Regelset definiert Kriterien für SNMP-Prozesse basierend auf der HOST "
+"Resources MIB."
 
-#, fuzzy
 msgid ""
 "This ruleset defines criteria for automatically creating checks for running "
 "SNMP processes based upon the HOST Resource MIB and what is running when the "
@@ -44620,11 +44611,10 @@ msgid ""
 "the path of process within the matching criteria."
 msgstr ""
 "Dieser Regelsatz definiert Kriterien für die automatische Erstellung von "
-"Checks für laufende Prozesse basierend auf dem, was ausgeführt wird, wenn die "
-"Serviceerkennung durchgeführt wird. Diese Dienste werden mit "
-"Standardparametern erstellt. Sie werden kritisch, wenn kein Prozess läuft und "
-"andernfalls OK. Sie können die Prüfung mit dem Regelsatz <i>Zustand und "
-"Anzahl der Prozesse</i> parametrieren."
+"Checks für laufende Prozesse, basierend auf der HOST-Resources-MIB und den "
+"laufenden Prozessen während die Serviceerkennung durchgeführt wird. Sie "
+"können entweder die textliche Beschreibung oder den Pfad des Prozesses "
+"innerhalb der Abgleichskriterien angeben."
 
 msgid ""
 "This ruleset defines criteria for automatically creating checks for running "
@@ -45217,6 +45207,14 @@ msgid ""
 "'instance'. The latter one is default.  Use the FQDN in the query if HOSTNAME "
 "is not set, other the short hostname."
 msgstr ""
+"Dadurch wird das Check_MK-Agent Plugin <tt>mk_sap_hana</tt> bereitgestellt "
+"und konfiguriert. Damit dieses Plugin funktioniert, müssen Sie USERSTOREKEY "
+"oder USER und PASSWORD konfigurieren, d.h. USERSTOREKEY=SVAMON und SID=I08 "
+"bedeutet, dass ein Schlüssel für SVAMONI08 im HDB-Benutzerspeicher benötigt "
+"wird, der in $MK_CONFDIR/sap_hana.cfg angegeben ist. Außerdem können "
+"Sie'RUNAS' mit den folgenden Werten'agent' oder'instance' konfigurieren. "
+"Letzteres ist voreingestellt.  Verwenden Sie den FQDN in der Abfrage, wenn "
+"HOSTNAME nicht gesetzt ist, sonst den kurzen Hostnamen."
 
 msgid ""
 "This will deploy and configure the Check_MK agent plugin <tt>mk_saprouter</"
@@ -47141,9 +47139,8 @@ msgstr "Obere Schwellen für das Alter"
 msgid "Upper levels for the age of the update"
 msgstr "Obere Schwellen für das Alter"
 
-#, fuzzy
 msgid "Upper levels for the backup age"
-msgstr "Obere Schwellen für das Alter"
+msgstr "Obere Schwellen für das Backupalter"
 
 msgid "Upper levels for the bucket size"
 msgstr "Obere Schwellen für Bucketgröße"
@@ -47151,13 +47148,11 @@ msgstr "Obere Schwellen für Bucketgröße"
 msgid "Upper levels for the fan speed of a hardware device"
 msgstr "Obergrenzen für die Lüftergeschwindigkeit von Geräten"
 
-#, fuzzy
 msgid "Upper levels for the license size"
-msgstr "Obere Schwellen für %s"
+msgstr "Obere Schwellen für die Lizenzgröße"
 
-#, fuzzy
 msgid "Upper levels for the license usage"
-msgstr "Obere Schwellen für das Alter"
+msgstr "Obere Schwellen für die Lizenznutzung"
 
 msgid "Upper levels for the number of active database connections"
 msgstr "Obere Grenzen für aktive Datenbank Verbindungen"
@@ -47440,9 +47435,8 @@ msgstr ""
 msgid "Use environment variables from host"
 msgstr "Verwende Umgebungsvariablen vom Host"
 
-#, fuzzy
 msgid "Use explicit names"
-msgstr "Explizite Angabe von Hostnamen"
+msgstr "Verwenden Sie explizite Namen"
 
 msgid "Use explicit proxy settings"
 msgstr "Explizite Proxy-Einstellungen verwenden"
@@ -47450,9 +47444,9 @@ msgstr "Explizite Proxy-Einstellungen verwenden"
 msgid "Use explicit service names and ignore overall tags"
 msgstr "Explizite Servicenamen verwenden und allgemeine Tags ignorieren"
 
-#, fuzzy
 msgid "Use explicit service tags and overrule overall tags"
-msgstr "Nutze Gerätestatus und überschreibe erwarteten Status"
+msgstr ""
+"Verwenden Sie explizite Service-Tags und überschreiben Sie übergeordnete Tags"
 
 msgid "Use favorites"
 msgstr "Favoriten verwenden"
@@ -47985,9 +47979,8 @@ msgstr "Benutzerprofil"
 msgid "User Properties"
 msgstr "Benutzereigenschaften"
 
-#, fuzzy
 msgid "User and password"
-msgstr "Neues Passwort"
+msgstr "Username und Passwort"
 
 msgid "User error"
 msgstr "Benutzer-Fehler"
@@ -48026,9 +48019,8 @@ msgstr "Benutzerrollen"
 msgid "User roles are configurable sets of permissions."
 msgstr "Benutzerrollen sind anpassbare Sätze von Berechtigungen."
 
-#, fuzzy
 msgid "User store key"
-msgstr "Speicherbelegung in Prozent"
+msgstr "Benutzerschlüssel aus dem Speicher"
 
 msgid "User synchronization"
 msgstr "Automatischer Benutzerabgleich"
@@ -48345,9 +48337,8 @@ msgstr "Werttyp"
 msgid "Value must be a %s with two elements."
 msgstr "Der Wert muss vom Typ %s sein und zwei 2 Elemente haben."
 
-#, fuzzy
 msgid "Values"
-msgstr "Wert"
+msgstr "Werte"
 
 msgid "Values to fetch"
 msgstr "Zu holende Werte"
@@ -48361,9 +48352,8 @@ msgstr "Von diesem Gerät zu sammelnde Werte"
 msgid "Vanished"
 msgstr "Verschwunden"
 
-#, fuzzy
 msgid "Vanished clustered services (located on cluster host)"
-msgstr "Überwachte geclusterte Services (befinden sich auf dem Cluster-Host)"
+msgstr "Verschwundene geclusterte Dienste (auf dem Cluster-Host)"
 
 msgid "Vanished services (monitored, but no longer exist)"
 msgstr "Verschwundene Services (überwacht aber nicht mehr vorhanden)"

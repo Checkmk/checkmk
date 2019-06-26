@@ -1,0 +1,21 @@
+Title: cmk-update-agent: Stop stockpiling broken installation packages
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.7.0i1
+Date: 1561529642
+
+After failing to install the downloaded installation package,
+the agent updater keeps the package saved at your system's temp-dir
+for analysis.
+
+While this may be helpful in some situations, it leads to an extensive
+collection of downloaded installation packages if the update fails
+repeatedly.
+
+With this werk, the package is not kept any longer after a failed
+installation. Instead, you are directed to the matching installation
+package located at the checkmk-server.

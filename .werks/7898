@@ -1,0 +1,11 @@
+Title: Fix possible syntax error when configuring service contact groups (1.6.0b2 regression)
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561575813
+Class: fix
+
+A "syntax error" exception could occur when configuring service contact groups
+using the folder hierarchy of WATO

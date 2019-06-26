@@ -26,7 +26,7 @@ export class Toolbar {
         this._setup_toolbar_plugins()
         this.update_toolbar_plugins()
 
-        setTimeout(()=>this._toolbar_plugins["layouting_toolbar"].toggle_active(), 1000)
+//        setTimeout(()=>this._toolbar_plugins["layouting_toolbar"].toggle_active(), 1000)
     }
 
     _setup_toolbar_plugins() {

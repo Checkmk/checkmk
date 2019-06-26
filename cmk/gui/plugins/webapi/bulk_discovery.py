@@ -125,7 +125,7 @@ class APICallBulkDiscovery(APICallCollection):
             if host is None:
                 raise MKUserError(None, _("The host '%s' does not exist") % host_name)
             host.need_permission("write")
-            hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder(), host_name))
+            hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder().path(), host_name))
         return hosts_to_discover
 
     def _bulk_discovery_status(self, request):

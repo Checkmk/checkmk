@@ -34,7 +34,7 @@ import re
 import subprocess
 import time
 import typing  # pylint: disable=unused-import
-from typing import List, Dict  # pylint: disable=unused-import
+from typing import Callable, Optional, List, Dict  # pylint: disable=unused-import
 
 import six
 
@@ -2188,6 +2188,7 @@ def get_search_expression():
 
 
 def get_hostnames_from_checkboxes(filterfunc=None):
+    # type: (Optional[Callable]) -> List[str]
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
     show_checkboxes = html.request.var("show_checkboxes") == "1"

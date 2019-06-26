@@ -43,9 +43,9 @@ from cmk.gui.watolib.utils import exclusive_lock
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.plugins.wato import WatoBackgroundJob
 
-DiscoveryHost = NamedTuple("DiscoveryTask", [("site_id", str), ("folder_path", str),
+DiscoveryHost = NamedTuple("DiscoveryHost", [("site_id", str), ("folder_path", str),
                                              ("host_name", str)])
-DiscoveryTask = NamedTuple("DiscoveryHost", [("site_id", str), ("folder_path", str),
+DiscoveryTask = NamedTuple("DiscoveryTask", [("site_id", str), ("folder_path", str),
                                              ("host_names", list)])
 
 
@@ -57,15 +57,15 @@ def get_tasks(hosts_to_discover, bulk_size):
     mainly done to reduce the overhead of site communication and loading/saving of files
     """
     current_site_and_folder = None
-    tasks = []
+    tasks = []  # type: List[DiscoveryTask]
 
-    for site_id, folder, host_name in sorted(hosts_to_discover):
-        if not tasks or (site_id, folder) != current_site_and_folder or \
+    for site_id, folder_path, host_name in sorted(hosts_to_discover):
+        if not tasks or (site_id, folder_path) != current_site_and_folder or \
            len(tasks[-1].host_names) >= bulk_size:
-            tasks.append(DiscoveryTask(site_id, folder.path(), [host_name]))
+            tasks.append(DiscoveryTask(site_id, folder_path, [host_name]))
         else:
             tasks[-1].host_names.append(host_name)
-        current_site_and_folder = site_id, folder
+        current_site_and_folder = site_id, folder_path
     return tasks
 
 

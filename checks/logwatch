@@ -503,21 +503,22 @@ def check_logwatch_generic(item, params, loglines, found):
     # and the grouping patterns on the second position
     patterns = logwatch_precompile(host_name(), item, None) if params in ('', None) else params
 
-    state_counts = {}  # for counting number of blocks with a certain state
+    states_counter = {}  # counting blocks with a certain state
 
     class LogwatchBlock(object):
 
         CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
         STATE_TO_STR = {0: "OK", 1: "WARN"}
 
-        def __init__(self, header):
+        def __init__(self, header, states_counter):
             self._timestamp = header.strip("<>").rsplit(None, 1)[0]
             self.worst = -1
             self.lines = []
             self.last_worst_line = ''
-            self.counts = {}  # for counting number of matches of a certain pattern
+            self.counts = {}  # counting matches of a certain pattern
+            self._states_counter = states_counter  # counting blocks with a certain state
 
-        def __reclassify_line(self, patterns, text, level):
+        def _reclassify_line(self, patterns, text, level):
             if patterns:
                 newlevel = logwatch_reclassify(self.counts, patterns, text, level)
                 if newlevel is not None:
@@ -537,7 +538,7 @@ def check_logwatch_generic(item, params, loglines, found):
                 level, text = line.strip(), ""
 
             if not skip_reclassification:
-                level = self.__reclassify_line(patterns, text, level)
+                level = self._reclassify_line(patterns, text, level)
 
             state = LogwatchBlock.CHAR_TO_STATE.get(level, -1)
             self.worst = max(state, self.worst)
@@ -548,7 +549,7 @@ def check_logwatch_generic(item, params, loglines, found):
 
             # Count the number of lines by state
             if level != '.':
-                state_counts[level] = state_counts.get(level, 0) + 1
+                self._states_counter[level] = self._states_counter.get(level, 0) + 1
 
             if not skip_reclassification and level != "I":
                 self.lines.append(level + " " + text + "\n")
@@ -611,7 +612,7 @@ def check_logwatch_generic(item, params, loglines, found):
                 # The section is finished here. Add it to the list of reclassified lines if the
                 # state of the block is not "I" -> "ignore"
                 collect_block(current_block)
-                current_block = LogwatchBlock(line)
+                current_block = LogwatchBlock(line, states_counter)
             elif current_block is not None:
                 current_block.add_line(line, skip_reclassification)
                 net_lines += 1
@@ -635,7 +636,7 @@ def check_logwatch_generic(item, params, loglines, found):
 
     # process new input lines - but only when there is some room left in the file
     if output_size < logwatch_max_filesize:
-        current_block = LogwatchBlock(header)
+        current_block = LogwatchBlock(header, states_counter)
         for line in loglines:
             current_block.add_line(line.encode("utf-8"), False)
             net_lines += 1
@@ -670,7 +671,7 @@ def check_logwatch_generic(item, params, loglines, found):
         return (0, "no error messages")
 
     count_txt = []
-    for level, num in state_counts.iteritems():
+    for level, num in states_counter.iteritems():
         count_txt.append('%d %s' % (num, logwatch_level_name(level)))
     if logwatch_service_output == 'default':
         return (collect_block.worst, "%s messages (Last worst: \"%s\")" %

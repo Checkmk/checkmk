@@ -49,6 +49,7 @@ protected:
     friend class FileInfoTest;
     FRIEND_TEST(FileInfoTest, Base);
     FRIEND_TEST(FileInfoTest, CheckOutput);
+    FRIEND_TEST(FileInfoTest, CheckDriveLetter);
 #endif
 };
 

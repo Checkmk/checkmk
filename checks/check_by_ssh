@@ -33,7 +33,7 @@ def check_by_ssh_arguments(params):
     else:
         args += ["-H", "$HOSTADDRESS$"]
 
-    args += ["-C", "\"%s\"" % params[0]]
+    args += ["-C", "%s" % params[0]]
     if "port" in settings:
         args += ["-p", settings["port"]]
     if "ip_version" in settings:

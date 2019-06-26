@@ -79,9 +79,9 @@ multisite_builtin_views.update({
         'num_columns': 1,
         'painters': [(('host', {
             'color_choices': []
-        }), 'hoststatus', None), ('service_description', 'service', None), ('service_state', None, None),
-                     ('host_check_age', None, None), ('svc_acknowledged', None, None),
-                     ('svc_in_downtime', None, None)],
+        }), 'hoststatus', None), ('service_description', 'service', None),
+                     ('service_state', None, None), ('host_check_age', None, None),
+                     ('svc_acknowledged', None, None), ('svc_in_downtime', None, None)],
         'play_sounds': False,
         'public': True,
         'single_infos': ['service', 'host'],

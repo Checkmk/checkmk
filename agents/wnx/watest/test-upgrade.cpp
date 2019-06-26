@@ -551,7 +551,7 @@ TEST(UpgradeTest, StopStartStopOhm) {
     EXPECT_EQ(status, SERVICE_RUNNING);
 }
 
-TEST(UpgradeTest, FindLwa) {
+TEST(UpgradeTest, FindLwa_Long) {
     namespace fs = std::filesystem;
     if (!cma::tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)

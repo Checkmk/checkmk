@@ -228,7 +228,7 @@ def logwatch_precompile(hostname, item, _unused):
 
 
 def logwatch_reclassify(counts, patterns, text, old_level):
-    new_level = None
+    new_level = old_level
 
     # Reclassify state to another state
     change_state_paramkey = ("%s_to" % old_level).lower()
@@ -496,12 +496,6 @@ class LogwatchBlock(object):
         self._states_counter = states_counter  # counting blocks with a certain state
         self._patterns = patterns or {}
 
-    def _reclassify_line(self, text, level):
-        newlevel = logwatch_reclassify(self.counts, self._patterns, text, level)
-        if newlevel is not None:
-            level = newlevel
-        return level
-
     def finalize(self):
         state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
         header = "<<<%s %s>>>\n" % (self._timestamp, state_str)
@@ -515,7 +509,7 @@ class LogwatchBlock(object):
             level, text = line.strip(), ""
 
         if not skip_reclassification:
-            level = self._reclassify_line(text, level)
+            level = logwatch_reclassify(self.counts, self._patterns, text, level)
 
         state = LogwatchBlock.CHAR_TO_STATE.get(level, -1)
         self.worst = max(state, self.worst)
@@ -830,7 +824,7 @@ def check_logwatch_ec(item, params, parsed):
                 counts = {}  # unused...
                 old_level, _text = line.split(" ", 1)
                 level = logwatch_reclassify(counts, logfile_reclassify_settings, line[2:],
-                                            old_level) or old_level
+                                            old_level)
                 if level != old_level:
                     rclfd_total += 1
                     rclfd_level = level

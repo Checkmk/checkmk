@@ -668,7 +668,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
     _compute_node_offsets() {
         let coords = this.get_hierarchy_size()
         d3.tree().nodeSize([this.style_config.options.node_size,
-                                                                this.style_config.options.layer_height])(this.style_root_node)
+                            this.style_config.options.layer_height])(this.style_root_node)
 
         this._node_positions = []
         for (let idx in this.filtered_descendants) {
@@ -744,7 +744,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 
         let left_side = rad > boundary && rad < Math.PI - boundary
 
-        let distance = 20
+        let distance = 21
         let x = Math.cos(-rad * 2) * distance
         let y = Math.sin(-rad * 2) * distance
 

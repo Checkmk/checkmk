@@ -609,14 +609,14 @@ class AbstractGUINode {
     get_context_menu_elements() {
         let elements = []
         elements.push({text: "Details of Host", href:
-                "view.py?host=" + this.node.data.hostname +
-               "&view_name=host&display_options=HLBTM",
+                "view.py?host=" + encodeURIComponent(this.node.data.hostname) +
+               "&view_name=host",
                 img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.png"
         })
         if (this.node.data.service && this.node.data.service != "") {
             elements.push({text: "Details of Service", href:
-                "view.py?host=" + this.node.data.hostname + "&service=" + this.node.data.service +
-                "&view_name=service&display_options=HLBTM",
+                "view.py?host=" + encodeURIComponent(this.node.data.hostname) + "&service=" + encodeURIComponent(this.node.data.service) +
+                "&view_name=service",
                 img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.png"
             })
         }

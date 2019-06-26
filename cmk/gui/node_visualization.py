@@ -49,7 +49,7 @@ def _bi_map():
     html.javascript(
         "node_instance = new cmk.node_visualization.BIVisualization(%s);" % json.dumps(div_id))
 
-    html.javascript("node_instance.set_theme(%s)" % html.get_theme())
+    html.javascript("node_instance.set_theme(%s)" % json.dumps(html.get_theme()))
     html.javascript("node_instance.show_aggregations(%s, %s)" % (json.dumps([aggr_name]),
                                                                  json.dumps(layout_id)))
 

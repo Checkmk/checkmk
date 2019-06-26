@@ -39,6 +39,7 @@ div.node_vis #togglebuttons {
 
 div.node_vis .togglebutton {
     padding: 8px;
+    text-align: center;
 }
 
 div.node_vis div.box, div.node_vis img.box {
@@ -182,17 +183,25 @@ div.node_vis .node_element.focus circle{
 }
 
 div.node_vis .state0 {
-    fill: green;
+    fill: #0b3;
 }
 
 div.node_vis .state1 {
-    fill: yellow;
+    fill: #f8f800;
 }
 
 div.node_vis .state2 {
-    fill: red ;
+    fill: #f00;
 }
 
+div.node_vis .state3 {
+    fill: #f91;
+}
+
+// State pending
+div.node_vis .state-1 {
+    fill: #888;
+}
 
 line.dashed, path.dashed{
   stroke-dasharray: 20 4;

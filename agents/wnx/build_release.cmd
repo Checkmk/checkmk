@@ -50,6 +50,7 @@ if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Re
 %msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x64
 if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-64" -Foreground Red && exit 2
 
+goto build_watest
 if "%SKIP_MINOR_BINARIES%" == "YES" powershell Write-Host "Skipping Minor Binaries!!!!" -Foreground Green goto build_watest
 set exec=plugin_player
 %msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x86

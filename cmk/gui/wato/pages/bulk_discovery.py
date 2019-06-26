@@ -169,10 +169,9 @@ class ModeBulkDiscovery(WatoMode):
         hosts_to_discover = []
 
         if not self._all:
+            filterfunc = None
             if self._only_failed:
                 filterfunc = lambda host: host.discovery_failed()
-            else:
-                filterfunc = None
 
             for host_name in get_hostnames_from_checkboxes(filterfunc):
                 if restrict_to_hosts and host_name not in restrict_to_hosts:
@@ -181,7 +180,9 @@ class ModeBulkDiscovery(WatoMode):
                     continue
                 host = Folder.current().host(host_name)
                 host.need_permission("write")
-                hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder(), host_name))
+                hosts_to_discover.append(
+                    DiscoveryHost(host.site_id(),
+                                  host.folder().path(), host_name))
 
         else:
             # all host in this folder, maybe recursively. New: we always group
@@ -195,7 +196,9 @@ class ModeBulkDiscovery(WatoMode):
                     continue
                 host = folder.host(host_name)
                 host.need_permission("write")
-                hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder(), host_name))
+                hosts_to_discover.append(
+                    DiscoveryHost(host.site_id(),
+                                  host.folder().path(), host_name))
 
         return hosts_to_discover
 

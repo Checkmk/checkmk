@@ -100,8 +100,8 @@ class MKConfigError(MKException):
 
 class MKUserError(MKException):
     def __init__(self, varname, message):
-        # type: (str, Text) -> None
-        self.varname = varname  # type: str
+        # type: (Optional[str], Text) -> None
+        self.varname = varname  # type: Optional[str]
         self.message = message  # type: Text
         super(MKUserError, self).__init__(varname, message)
 

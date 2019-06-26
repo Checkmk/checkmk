@@ -31,6 +31,8 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     MonitoringState,
+    RegExpUnicode,
+    RegExp,
     TextAscii,
 )
 
@@ -104,6 +106,20 @@ class RulespecCheckgroupParametersSystemdServices(CheckParameterRulespecWithItem
     def parameter_valuespec(self):
         return Dictionary(
             elements=[
+                ("ignored",
+                 ListOf(
+                     RegExpUnicode(
+                         title=_("Pattern (Regex)"),
+                         size=40,
+                         mode=RegExp.infix,
+                     ),
+                     title=_("Exclude service with matching provided regex pattern"),
+                     help=_(
+                         '<p>You can optionally define one or multiple regular expressions'
+                         'where a matching case will result in the exclusion of the concerning service(s).'
+                         'This allows to ignore services which are known to fail beforehand. </p>'),
+                     add_label=_("Add pattern"),
+                 )),
                 ("states",
                  Dictionary(
                      title=_("Map systemd states to monitoring states"),

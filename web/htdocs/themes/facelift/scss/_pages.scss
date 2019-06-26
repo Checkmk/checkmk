@@ -636,13 +636,16 @@ table.data {
 
   th input.checkgroup {
     width: 16px;
-    height: 12px;
-    padding: 8px;
+    height: 16px;
+    padding: 4px;
     margin: 0;
-    font-size: 7px;
+    margin-left: 11px;
+    font-size: 10px;
+    font-weight: bold;
     line-height: 5px;
     text-align: center;
     vertical-align: middle;
+    cursor: pointer;
   }
 
   /* TODO: Reproduce this html element */

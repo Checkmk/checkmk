@@ -1,0 +1,16 @@
+Title: email: don't escape email subject and addresses
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1561547352
+Class: fix
+
+Since version 1.5.0p14 the subject and addresses of HTML emails
+were escaped, i.e. the characters '&lt;', '&gt;' and '&amp;'
+were replaced by '&amp;lt;', '&amp;gt;' and '&amp;amp;',
+if present. This resulted in a slightly more unreadable subject
+if any of these characters were present and if an email address
+contained an ampersand it would result in an invalid (escaped)
+email address.

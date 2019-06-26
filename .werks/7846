@@ -1,0 +1,11 @@
+Title: apache_status: Add missing SLES12 process 'httpd-prefork'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p19
+Date: 1561535139
+
+

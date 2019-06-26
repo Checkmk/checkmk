@@ -1,0 +1,10 @@
+Title: Fix configuring empty tag ID tags on hosts / folders
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561578629
+Class: fix
+
+

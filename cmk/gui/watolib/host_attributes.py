@@ -39,6 +39,7 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
     TextAscii,
+    Transform,
     Checkbox,
     DropdownChoice,
 )
@@ -892,13 +893,20 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag):
     """A selection dropdown for a host tag"""
 
     def valuespec(self):
-        choices = self._tag_group.get_tag_choices()
-        return DropdownChoice(
-            title=self._tag_group.title,
-            choices=choices,
-            default_value=choices[0][0],
-            on_change="cmk.wato.fix_visibility();",
-            encode_value=False,
+        # Since encode_value=False is set it is not possible to use empty tag
+        # ID selections (Value: "None"). Transform that back and forth to make
+        # that work.
+        choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
+        return Transform(
+            DropdownChoice(
+                title=self._tag_group.title,
+                choices=choices,
+                default_value=choices[0][0],
+                on_change="cmk.wato.fix_visibility();",
+                encode_value=False,
+            ),
+            forth=lambda s: "" if s is None else s,
+            back=lambda s: None if s == "" else s,
         )
 
     @property

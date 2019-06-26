@@ -154,6 +154,7 @@ class BaseFolder(WithPermissionsAndAttributes):
         return self.hosts().keys()
 
     def host(self, host_name):
+        # type: (str) -> CREHost
         return self.hosts().get(host_name)
 
     def has_host(self, host_name):
@@ -390,6 +391,7 @@ class CREFolder(BaseFolder):
     # this is a host search. This method has to return a folder in all cases.
     @staticmethod
     def current():
+        # type: () -> CREFolder
         if "wato_current_folder" in current_app.g:
             return current_app.g["wato_current_folder"]
 
@@ -1890,6 +1892,7 @@ class CREHost(WithPermissionsAndAttributes):
         return self.attributes().get("alias")
 
     def folder(self):
+        # type: () -> CREFolder
         return self._folder
 
     def linkinfo(self):

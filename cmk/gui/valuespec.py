@@ -2944,7 +2944,7 @@ class Timerange(CascadingDropdown):
         if self._include_time:
             choices += [("time", _("Date & time range"),
                          Tuple(
-                             orientation="horizontal",
+                             orientation="vertical",
                              title_br=False,
                              elements=[
                                  AbsoluteDate(

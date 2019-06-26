@@ -37,7 +37,6 @@
 #       to call and its parameters.
 
 import os
-import pprint
 import re
 import signal
 import subprocess
@@ -50,6 +49,7 @@ import cmk.utils.debug
 from cmk.utils.notify import find_wato_folder, notification_message
 from cmk.utils.regex import regex
 import cmk.utils.paths
+import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.utils
@@ -1421,10 +1421,7 @@ def create_spoolfile(data):
         os.makedirs(notification_spooldir)
     file_path = "%s/%s" % (notification_spooldir, fresh_uuid())
     notify_log("Creating spoolfile: %s" % file_path)
-
-    # First write into tempfile that is not handled by mknotifyd
-    file(file_path + ".new", "w").write(pprint.pformat(data))
-    os.rename(file_path + ".new", file_path)
+    store.save_data_to_file(file_path, data, pretty=True)
 
 
 # There are three types of spool files:
@@ -1436,7 +1433,7 @@ def handle_spoolfile(spoolfile):
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     notify_log("----------------------------------------------------------------------")
     try:
-        data = eval(file(spoolfile).read())
+        data = store.load_data_from_file(spoolfile)
         if "plugin" in data:
             plugin_context = data["context"]
             plugin = data["plugin"]
@@ -1714,7 +1711,7 @@ def notify_bulk(dirname, uuids):
     unhandled_uuids = []
     for mtime, uuid in uuids:
         try:
-            params, context = eval(file(dirname + "/" + uuid).read())
+            params, context = store.load_data_from_file(dirname + "/" + uuid)
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
@@ -1838,20 +1835,13 @@ def store_notification_backlog(raw_context):
             os.remove(path)
         return
 
-    try:
-        backlog = eval(file(path).read())[:config.notification_backlog - 1]
-    except:
-        backlog = []
-
-    backlog = [raw_context] + backlog
-    file(path, "w").write("%r\n" % backlog)
+    backlog = store.load_data_from_file(
+        path, default=[], lock=True)[:config.notification_backlog - 1]
+    store.save_data_to_file(path, [raw_context] + backlog, pretty=False)
 
 
 def raw_context_from_backlog(nr):
-    try:
-        backlog = eval(file(notification_logdir + "/backlog.mk").read())
-    except:
-        backlog = []
+    backlog = store.load_data_from_file(notification_logdir + "/backlog.mk", default=[])
 
     if nr < 0 or nr >= len(backlog):
         console.error("No notification number %d in backlog.\n" % nr)

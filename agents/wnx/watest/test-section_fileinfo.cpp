@@ -195,7 +195,8 @@ TEST(FileInfoTest, CheckDriveLetter) {
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
     ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test););
 
-    std::tuple<fs::path, std::string_view> data[] = {{a / "a1.txt", "a1"}};
+    std::tuple<fs::path, std::string_view> data[] = {{a / "a1.txt", "a1"},
+                                                     {a / "a2.txt", "a2"}};
 
     for (const auto& [path, content] : data) tst::ConstructFile(path, content);
 
@@ -204,7 +205,7 @@ TEST(FileInfoTest, CheckDriveLetter) {
     ASSERT_TRUE(fileinfo_node.IsDefined());
     ASSERT_TRUE(fileinfo_node.IsMap());
     auto value = a.u8string();
-    auto str = fmt::format("['{}\\*.txt']", value);
+    auto str = fmt::format("['{}\\*.txt', 'c:\\weirdfile' ]", value);
     fileinfo_node[vars::kFileInfoPath] = YAML::Load(str);
     ASSERT_TRUE(fileinfo_node[vars::kFileInfoPath].IsSequence());
     {
@@ -214,12 +215,14 @@ TEST(FileInfoTest, CheckDriveLetter) {
 
         ASSERT_TRUE(!out.empty());
         auto table = cma::tools::SplitString(out, "\n");
-        ASSERT_EQ(table.size(), 2);
+        ASSERT_EQ(table.size(), 4);
         EXPECT_TRUE(std::atoll(table[0].c_str()) > 0LL);
         EXPECT_EQ(table[1][0], value[0]);
+        EXPECT_EQ(table[2][0], value[0]);
+        EXPECT_EQ(table[3][0], value[0]);
     }
     value[0] = std::toupper(value[0]);
-    str = fmt::format("['{}\\*.txt']", value);
+    str = fmt::format("['{}\\*.txt', 'C:\\weirdfile']", value);
     fileinfo_node[vars::kFileInfoPath] = YAML::Load(str);
     ASSERT_TRUE(fileinfo_node[vars::kFileInfoPath].IsSequence());
     {
@@ -229,9 +232,11 @@ TEST(FileInfoTest, CheckDriveLetter) {
 
         ASSERT_TRUE(!out.empty());
         auto table = cma::tools::SplitString(out, "\n");
-        ASSERT_EQ(table.size(), 2);
+        ASSERT_EQ(table.size(), 4);
         EXPECT_TRUE(std::atoll(table[0].c_str()) > 0LL);
         EXPECT_EQ(table[1][0], value[0]);
+        EXPECT_EQ(table[2][0], value[0]);
+        EXPECT_EQ(table[3][0], value[0]);
     }
 }
 

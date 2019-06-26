@@ -12,7 +12,10 @@ class TestPaths(object):
     drive = os.getcwd()[:2]
 
     def tempdir1(self):
-        return os.path.join(self.drive, user_dir, 'Testdir1')
+        _, path = os.path.splitdrive(user_dir)
+        return os.path.join(self.drive, path, 'Testdir1')
+        # orginal code, doesn't work on dev machine
+        # return os.path.join(self.drive, user_dir, 'Testdir1')
 
     def tempdir2(self):
         return os.path.join(self.tempdir1(), 'Testdir2')

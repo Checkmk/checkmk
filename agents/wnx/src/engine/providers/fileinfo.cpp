@@ -441,23 +441,39 @@ std::string MakeFileInfoString(const std::filesystem::path &file_path,
     return MakeFileInfoStringPresented(file_name, mode);
 }
 
-// single entry form config
-// path =
+static bool IsDriveLetterAtTheStart(std::string_view text) noexcept {
+    return text.size() > 2 && text[1] == ':' && std::isalpha(text[0]);
+}
+
+static void CorrectDriveLetterByEntry(std::string &ret,
+                                      std::string_view entry) {
+    // drive letter correction:
+    if (IsDriveLetterAtTheStart(entry) && IsDriveLetterAtTheStart(ret))
+        ret[0] = entry[0];
+}
+
+// single entry from config: a, b and c
+// path: [a,b,c]
 std::string ProcessFileInfoPathEntry(std::string_view entry,
                                      FileInfo::Mode mode) {
-    // normal entry must be registestered
-    if (!FileInfo::ContainsGlobSymbols(entry))
-        return MakeFileInfoString(entry, mode);
+    // normal entry must be registered
+    if (!FileInfo::ContainsGlobSymbols(entry)) {
+        auto ret = MakeFileInfoString(entry, mode);
+        CorrectDriveLetterByEntry(ret, entry);
+        return ret;
+    }
 
     // glob entries
     auto mask = wtools::ConvertToUTF16(entry);
-    const auto filePaths = FindFilesByMask(mask);
+    const auto file_paths = FindFilesByMask(mask);
 
-    if (filePaths.empty()) return {};
+    if (file_paths.empty()) return {};
 
     std::string out;
-    for (const auto &entry : filePaths) {
-        out += MakeFileInfoString(entry, mode);
+    for (const auto &f : file_paths) {
+        auto ret = MakeFileInfoString(f, mode);
+        CorrectDriveLetterByEntry(ret, entry);
+        out += ret;
     }
 
     return out;
@@ -521,10 +537,6 @@ static const std::string s_modern_sub_header =
     "name|status|size|time\n"
     "[[[content]]]\n";
 
-static bool IsDriveLetterAtTheStart(std::string_view text) noexcept {
-    return text.size() > 2 && text[1] == ':' && std::isalpha(text[0]);
-}
-
 std::string FileInfo::generateFileList(YAML::Node path_array) {
     using namespace cma::cfg;
     int i_pos = 0;  // logging variable
@@ -543,9 +555,6 @@ std::string FileInfo::generateFileList(YAML::Node path_array) {
             auto ret = details::ProcessFileInfoPathEntry(mask, mode_);
             if (ret.empty()) continue;
 
-            // drive letter correction:
-            if (IsDriveLetterAtTheStart(mask) && IsDriveLetterAtTheStart(ret))
-                ret[0] = mask[0];
             out += ret;
         } catch (const std::exception &e) {
             XLOG::l(

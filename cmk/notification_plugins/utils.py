@@ -106,7 +106,14 @@ def format_plugin_output(output):
 
 
 def html_escape_context(context):
-    unescaped_variables = {'PARAMETER_INSERT_HTML_SECTION'}
+    unescaped_variables = {
+        'PARAMETER_INSERT_HTML_SECTION',
+        'PARAMETER_BULK_SUBJECT',
+        'PARAMETER_HOST_SUBJECT',
+        'PARAMETER_SERVICE_SUBJECT',
+        'PARAMETER_FROM',
+        'PARAMETER_REPLY_TO',
+    }
     for variable, value in context.iteritems():
         if variable not in unescaped_variables:
             context[variable] = html_escape(value)

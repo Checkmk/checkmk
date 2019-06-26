@@ -96,13 +96,23 @@ def test_api_endpoint_url(monkeypatch, value, result):
         # If not explicitly allowed as unescaped...
         (
             {
-                'PARAMETER_INSERT_HTML_SECTION': '<h1>Important</h1>'
+                'PARAMETER_HOST_SUBJECT': '$HOSTALIAS$ > $HOSTSTATE$ < $HOST_SERVERTYP$',
+                'PARAMETER_SERVICE_SUBJECT': '<>&',
+                'PARAMETER_BULK_SUBJECT': '<>&',
+                'PARAMETER_INSERT_HTML_SECTION': '<h1>Important</h1>',
+                'PARAMETER_FROM': 'Harri Hirsch <harri.hirsch@test.de>',
+                'PARAMETER_REPLY_TO': 'Harri Hirsch <harri.hirsch@test.de>',
             },
             {
-                'PARAMETER_INSERT_HTML_SECTION': '<h1>Important</h1>'
+                'PARAMETER_HOST_SUBJECT': '$HOSTALIAS$ > $HOSTSTATE$ < $HOST_SERVERTYP$',
+                'PARAMETER_SERVICE_SUBJECT': '<>&',
+                'PARAMETER_BULK_SUBJECT': '<>&',
+                'PARAMETER_INSERT_HTML_SECTION': '<h1>Important</h1>',
+                'PARAMETER_FROM': 'Harri Hirsch <harri.hirsch@test.de>',
+                'PARAMETER_REPLY_TO': 'Harri Hirsch <harri.hirsch@test.de>',
             },
         ),
-        # ... all variables should be escaped
+        # ... all variables will be escaped
         (
             {
                 'SERVICEOUTPUT': '<h1>Important</h1>'

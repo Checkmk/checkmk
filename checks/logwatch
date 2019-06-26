@@ -207,18 +207,6 @@ def logwatch_level_name(level):
     return 'IGN'
 
 
-def logwatch_level_worst(worst, level):
-    if level == 'O':
-        return max(worst, 0)
-    elif level == 'W':
-        return max(worst, 1)
-    elif level == 'u':
-        return max(worst, 1)
-    elif level == 'C':
-        return max(worst, 2)
-    return worst
-
-
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
 def logwatch_precompile(hostname, item, _unused):
@@ -519,6 +507,7 @@ def check_logwatch_generic(item, params, loglines, found):
 
     class LogwatchBlock(object):
 
+        CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
         STATE_TO_STR = {0: "OK", 1: "WARN"}
 
         def __init__(self, header):
@@ -550,10 +539,11 @@ def check_logwatch_generic(item, params, loglines, found):
             if not skip_reclassification:
                 level = self.__reclassify_line(patterns, text, level)
 
-            self.worst = logwatch_level_worst(self.worst, level)
+            state = LogwatchBlock.CHAR_TO_STATE.get(level, -1)
+            self.worst = max(state, self.worst)
 
             # Save the last worst line of this block
-            if logwatch_level_worst(0, level) == self.worst:
+            if max(state, 0) == self.worst:
                 self.last_worst_line = text
 
             # Count the number of lines by state

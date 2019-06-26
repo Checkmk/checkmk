@@ -172,6 +172,20 @@ div.floatfilter {
 
   &.double {
     height: 110px;
+
+    &.log_class .content, &.log_state .content {
+      table {
+	border-spacing: 6px 0;
+      }
+
+      .checkbox {
+	margin-bottom: 4px;
+      }
+    }
+
+    &.log_state .content table td {
+      line-height: 20px;
+    }
   }
 
   .legend {

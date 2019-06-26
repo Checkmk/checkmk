@@ -2268,7 +2268,6 @@ class FilterLogState(Filter):
                 html.u("%s:" % title)
                 html.close_td()
                 html.open_td()
-            html.write_text("&nbsp; ")
             html.checkbox("logst_" + varsuffix, True, label=text)
             if not html.mobile:
                 html.br()

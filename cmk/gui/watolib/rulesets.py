@@ -857,7 +857,7 @@ class Rule(object):
 
         match_object = ruleset_matcher.RulesetMatchObject(
             host_name=hostname,
-            host_folder="/" + host_folder.path(),
+            host_folder=host_folder.path_for_rule_matching(),
             host_tags=host.tag_groups(),
             host_labels=host.labels(),
             service_description=service_description,
@@ -887,7 +887,7 @@ class Rule(object):
         )
 
         rule_dict = self.to_config()
-        rule_dict["condition"]["host_folder"] = self.folder.path()
+        rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
 
         if self.ruleset.item_type():
             if matcher.is_matching_service_ruleset(match_object, [rule_dict]):

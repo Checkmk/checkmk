@@ -906,6 +906,11 @@ class CREFolder(BaseFolder):
             return self.name()
         return self.parent().path() + "/" + self.name()
 
+    def path_for_rule_matching(self):
+        if self.is_root():
+            return "/"
+        return "/wato/%s/" % self.path()
+
     def linkinfo(self):
         return self.path() + ":"
 

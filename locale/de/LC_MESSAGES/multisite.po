@@ -901,7 +901,7 @@ msgstr ""
 "tt>. Sie haben %d Argumente definiert: <tt>%s</tt>"
 
 msgid "<b>N</b> * 100% as each core contributes with 100% at full load"
-msgstr ""
+msgstr "<b>N</b> * 100%, da jeder Kern mit 100% bei Volllast beiträgt"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -6463,7 +6463,7 @@ msgid "CPU request"
 msgstr "Anfragen"
 
 msgid "CPU rescale maximum load"
-msgstr ""
+msgstr "Neuskalierung der maximalen CPU-Last"
 
 #, fuzzy
 msgid "CPU resources"
@@ -6533,6 +6533,11 @@ msgid ""
 "be rescaled down, making 100% the maximum and thinking in terms of total CPU "
 "utilization."
 msgstr ""
+"Die CPU-Auslastung wird vom Betriebssystem als pro CPU-Kern-Basis "
+"bereitgestellt. Somit trägt jeder Kern bei voller Auslastung zu 100% bei und "
+"erzeugt eine maximale Last von N*100% (N=Anzahl der Kerne). Der Einfachheit "
+"halber kann dieses Maximum verkleinert werden, so dass 100% das Maximum "
+"darstellen und in Bezug auf die Gesamtauslastung der CPU gedacht wird."
 
 msgid "CPU utilization last 15 minutes"
 msgstr "CPU-Auslastung in den letzten 15 Minuten"
@@ -10112,9 +10117,8 @@ msgstr "Eigene MBeans"
 msgid "Custom Notes"
 msgstr "Benutzernotizen"
 
-#, fuzzy
 msgid "Custom SQL"
-msgstr "Benutzer-URL"
+msgstr "Benutzerdefiniertes SQL"
 
 msgid "Custom Time Span:"
 msgstr "Benutzer-Zeitspanne:"
@@ -14665,9 +14669,8 @@ msgstr "Genauer Mountpunktname oder regex"
 msgid "Exact name of the operating system user"
 msgstr "Exakter Name des Betriebssystembenutzers"
 
-#, fuzzy
 msgid "Exact name of the process path"
-msgstr "Genauer Name des Prozesses ohne Argumente"
+msgstr "Genauer Name des Prozesspfades"
 
 msgid "Exact name of the process without argments"
 msgstr "Genauer Name des Prozesses ohne Argumente"
@@ -14675,9 +14678,8 @@ msgstr "Genauer Name des Prozesses ohne Argumente"
 msgid "Exact name of the task"
 msgstr "Genauer Name des Tasks"
 
-#, fuzzy
 msgid "Exact name of the textual description"
-msgstr "Genauer Name des Tasks"
+msgstr "Genauer Name der textuelle Beschreibung"
 
 msgid "Exact path of the node"
 msgstr "Exakter Pfad"
@@ -21360,9 +21362,8 @@ msgstr "Instanz"
 msgid "Instance ID"
 msgstr "Instanz-ID"
 
-#, fuzzy
 msgid "Instance error state"
-msgstr "Benutzername der Instanz"
+msgstr "Fehlerstatus einer Instanz"
 
 msgid "Instance identifier"
 msgstr "Instanz-ID"
@@ -24045,13 +24046,13 @@ msgid "MS Office 365 (Windows)"
 msgstr ""
 
 msgid "MS Office 365 license"
-msgstr ""
+msgstr "MS Office 365 Lizenz"
 
 msgid "MS Office 365 licenses"
-msgstr ""
+msgstr "MS Office 365 Lizenzen"
 
 msgid "MS Office 365 service plans"
-msgstr ""
+msgstr "MS Office 365 Servicepläne"
 
 msgid "MSSQL"
 msgstr "MSSQL"
@@ -24659,9 +24660,8 @@ msgstr "Nur die folgenden Services"
 msgid "Match original source IP address"
 msgstr "Ursprungs-IP-Adresse matchen"
 
-#, fuzzy
 msgid "Match process path"
-msgstr "Passend auf alle Prozesse"
+msgstr "Mit Prozesspfad abgleichen"
 
 msgid "Match service event type"
 msgstr "Art des Service-Ereignisses"
@@ -24681,9 +24681,8 @@ msgstr "Passende Syslog Facility"
 msgid "Match syslog priority"
 msgstr "Passende Syslog Priorität"
 
-#, fuzzy
 msgid "Match textual description"
-msgstr "Interfacebeschreibung matchen (regex)"
+msgstr "Mit textueller Beschreibung abgleichen"
 
 msgid "Match the alias"
 msgstr "Auf den Alias matchen"
@@ -28600,9 +28599,8 @@ msgstr "Optionen für Berichtsemails"
 msgid "Oracle"
 msgstr "Oracle"
 
-#, fuzzy
 msgid "Oracle Custom SQLs"
-msgstr "Oracle Sitzungen"
+msgstr "Benutzerdefinierte Oracle-SQLs"
 
 msgid "Oracle DB"
 msgstr "Oracle DB"
@@ -30940,7 +30938,7 @@ msgid "Process ID of the origin process"
 msgstr "Prozess-ID des Ursprungsprozesses"
 
 msgid "Process Match textual description or path of process"
-msgstr ""
+msgstr "Prozessabgleich textuelle Beschreibung oder Pfad des Prozesses"
 
 msgid "Process Matching"
 msgstr "Passende Prozesse"
@@ -30948,20 +30946,17 @@ msgstr "Passende Prozesse"
 msgid "Process Name"
 msgstr "Prozessname"
 
-#, fuzzy
 msgid "Process Name Matching"
-msgstr "Passende Prozesse"
+msgstr "Abgleich von Prozessnamen"
 
-#, fuzzy
 msgid "Process Path Matching"
-msgstr "Passende Prozesse"
+msgstr "Abgleich von Prozesspfaden"
 
 msgid "Process Runtime"
 msgstr "Prozesslaufzeit"
 
-#, fuzzy
 msgid "Process Status Matching"
-msgstr "Passende Prozesse"
+msgstr "Mit Prozessstatus abgleichen"
 
 msgid "Process at most"
 msgstr "Maximal verarbeiten"
@@ -31795,13 +31790,11 @@ msgstr "Regulärer Ausdruck für Tasks"
 msgid "Regular expression matching the path"
 msgstr "Auf den Pfad passender regulärer Ausdruck"
 
-#, fuzzy
 msgid "Regular expression matching the process path"
-msgstr "Auf den Pfad passender regulärer Ausdruck"
+msgstr "Regulärer Ausdruck, der mit dem Pfad übereinstimmt"
 
-#, fuzzy
 msgid "Regular expression matching the textual description"
-msgstr "Auf den Pfad passender regulärer Ausdruck"
+msgstr "Regulärer Ausdruck, der mit der textuellen Beschreibung übereinstimmt."
 
 msgid "Regular expression matching username"
 msgstr "Regulärer Ausdruck für den Benutzernamen"
@@ -36767,9 +36760,9 @@ msgid "State if LGETTIME and LGETDATE are available but not set"
 msgstr ""
 "Status falls LGETTIME und LGETDATE zwar vorhanden, aber nicht gesetzt sind"
 
-#, fuzzy
 msgid "State if at least one blocked session"
-msgstr "Der Standardstatus, sobald es mindestens eine blockierte Sitzung gibt."
+msgstr ""
+"Geben Sie den Status an, ob mindestens eine blockierte Sitzung gesperrt ist"
 
 msgid "State if battery needs replacement"
 msgstr "Zustand, wenn die Batterie ausgetauscht werden muss"
@@ -43170,14 +43163,13 @@ msgstr ""
 "Mit dieser Option fügt Check_MK den Text <tt>ISL</tt> in den Servicenamen ein "
 "bei solchen Ports, welche Verbindungen zu anderen Switchen bilden. "
 
-#, fuzzy
 msgid ""
 "This option lets Check_MK use either the interface description, alias or port "
 "number as item. The port number is the fallback resp. default."
 msgstr ""
-"Diese Option ermöglicht Check_MK die Schnittstellen-Beschreibung an Stelle "
-"der Port-Nummer zu verwenden. Wenn die Beschreibung leer ist, dann wird in "
-"jedem Fall die Port-Nummer verwendet."
+"Mit dieser Option kann Check_MK entweder die Schnittstellenbeschreibung, den "
+"Alias oder die Portnummer als Element verwenden. Die Portnummer ist der "
+"Fallback bzw. die Voreinstellung."
 
 msgid ""
 "This option lets Check_MK use the port name as item instead of the port "
@@ -43669,7 +43661,6 @@ msgstr "Dieses Problem wurde quittiert"
 msgid "This problem has been acknowledged."
 msgstr "Dieses Problem wurde quittiert"
 
-#, fuzzy
 msgid ""
 "This regex must match the <i>beginning</i> of the complete command line of "
 "the process including arguments.<br>When using groups, matches will be "
@@ -43680,14 +43671,15 @@ msgid ""
 "use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$<br>In manual "
 "check groups are aggregated"
 msgstr ""
-"Der reguläre Ausdruck wird genutzt um vom Anfang der kompletten "
+"Der reguläre Ausdruck wird genutzt um vom <i>Anfang</i> der kompletten "
 "Kommandozeile, inkl. Argumente, an zu prüfen.<br>Wenn Sie Gruppen benutzen, "
-"werden diese während der Prozessergennung aufgelöst, z.B. (py.*) wird auf "
-"python, python_dev und python_test zutreffen und 3 Services erzeugen. Während "
-"der Check-Ausführung werden alle Prozesse zusammen aggregiert, weil python "
-"ein Bestandteil von python_test und python_dev ist. Wenn dies nicht dem "
-"gewünschten Verhalten entspricht, nutzen Sie die Trenner '$' oder '\\b' in "
-"Ihrem Ausdruck, z.B. (py.*)$"
+"werden diese während der Prozesserkennung aufgelöst, z.B. (py.*) wird auf "
+"python, python_dev und python_test zutreffen, und 3 Services werden erzeugt. "
+"Während der Check-Ausführung werden alle Prozesse zusammen aggregiert, weil "
+"python ein Bestandteil von python_test und python_dev ist. Wenn dies nicht "
+"dem gewünschten Verhalten entspricht, nutzen Sie die Trenner '$' oder '\\b' "
+"in Ihrem Ausdruck, z.B. (py.*)$<br>Bei statischen Check werden Gruppen "
+"aggregiert"
 
 msgid ""
 "This regex must match the <i>beginning</i> of the complete command line of "
@@ -43703,7 +43695,6 @@ msgstr ""
 "Der reguläre Ausdruck muss auf den <i>Anfang</i> des vollständigen Pfades "
 "passen, wie er vom Agenten geliefert wird."
 
-#, fuzzy
 msgid ""
 "This regex must match the <i>beginning</i> of the complete path of the "
 "process including arguments.<br>When using groups, matches will be "
@@ -43714,16 +43705,15 @@ msgid ""
 "use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$<br>In manual "
 "check groups are aggregated"
 msgstr ""
-"Der reguläre Ausdruck wird genutzt um vom Anfang der kompletten "
-"Kommandozeile, inkl. Argumente, an zu prüfen.<br>Wenn Sie Gruppen benutzen, "
-"werden diese während der Prozessergennung aufgelöst, z.B. (py.*) wird auf "
-"python, python_dev und python_test zutreffen und 3 Services erzeugen. Während "
+"Der reguläre Ausdruck wird genutzt um vom <i>Anfang</i> des kompletten "
+"Pfades, inkl. Argumente, an zu prüfen.<br>Wenn Sie Gruppen benutzen, werden "
+"diese während der Prozesserkennung aufgelöst, z.B. (py.*) wird auf python, "
+"python_dev und python_test zutreffen, und 3 Services werden erzeugt. Während "
 "der Check-Ausführung werden alle Prozesse zusammen aggregiert, weil python "
 "ein Bestandteil von python_test und python_dev ist. Wenn dies nicht dem "
 "gewünschten Verhalten entspricht, nutzen Sie die Trenner '$' oder '\\b' in "
-"Ihrem Ausdruck, z.B. (py.*)$"
+"Ihrem Ausdruck, z.B. (py.*)$<br>Bei statischen Check werden Gruppen aggregiert"
 
-#, fuzzy
 msgid ""
 "This regex must match the <i>beginning</i> of the complete textual "
 "description of the process including arguments.<br>When using groups, matches "
@@ -43734,14 +43724,15 @@ msgid ""
 "use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$<br>In manual "
 "check groups are aggregated"
 msgstr ""
-"Der reguläre Ausdruck wird genutzt um vom Anfang der kompletten "
-"Kommandozeile, inkl. Argumente, an zu prüfen.<br>Wenn Sie Gruppen benutzen, "
-"werden diese während der Prozessergennung aufgelöst, z.B. (py.*) wird auf "
-"python, python_dev und python_test zutreffen und 3 Services erzeugen. Während "
-"der Check-Ausführung werden alle Prozesse zusammen aggregiert, weil python "
-"ein Bestandteil von python_test und python_dev ist. Wenn dies nicht dem "
-"gewünschten Verhalten entspricht, nutzen Sie die Trenner '$' oder '\\b' in "
-"Ihrem Ausdruck, z.B. (py.*)$"
+"Der reguläre Ausdruck wird genutzt um vom <i>Anfang</i> der kompletten "
+"textuellen Beschreibung, inkl. Argumente, an zu prüfen.<br>Wenn Sie Gruppen "
+"benutzen, werden diese während der Prozessergennung aufgelöst, z.B. (py.*) "
+"wird auf python, python_dev und python_test zutreffen und 3 Services "
+"erzeugen. Während der Check-Ausführung werden alle Prozesse zusammen "
+"aggregiert, weil python ein Bestandteil von python_test und python_dev ist. "
+"Wenn dies nicht dem gewünschten Verhalten entspricht, nutzen Sie die Trenner "
+"'$' oder '\\b' in Ihrem Ausdruck, z.B. (py.*)$<br>Bei statischen Check werden "
+"Gruppen aggregiert"
 
 msgid "This regex must match the <i>beginning</i> of the complete username"
 msgstr ""
@@ -44014,15 +44005,15 @@ msgstr ""
 msgid "This rule can be used to control the discovery for Heartbeat CRM checks."
 msgstr "Dieser Regelsatz steuert die Serviceerkennung von Heartbeat-CRM Checks."
 
-#, fuzzy
 msgid ""
 "This rule can be used to control the inventory for network ports. You can "
 "configure the port types and port states for inventory and the use of alias "
 "or description as service name."
 msgstr ""
-"Mit dieser Regel wird die Inventarisierung von Netzwerkports gesteuert. Sie "
-"können Porttypen und Portstatus für die Inventarisierung angeben und die "
-"Verwendung von Aliasen oder Beschreibungen als Service-Namen."
+"Diese Regel kann verwendet werden, um den Bestand für Netzwerkports zu "
+"kontrollieren. Sie können die Porttypen und Portzustände für die "
+"Inventarisierung und die Verwendung von Alias oder Beschreibung als "
+"Servicename konfigurieren."
 
 msgid ""
 "This rule can be used to control the service discovery for brocade ports. You "
@@ -45912,9 +45903,8 @@ msgstr "Gesamte Cachenutzung"
 msgid "Total count"
 msgstr "Gesamtanzahl"
 
-#, fuzzy
 msgid "Total data file size: Absolute upper levels"
-msgstr "Protokolldateien: Absolute obere Schwellenwerte"
+msgstr "Gesamtgröße der Datendatei: Absolute obere Schwellen"
 
 msgid "Total devices"
 msgstr "Geräte insgesamt"
@@ -45946,9 +45936,8 @@ msgstr "Gesamtlatenz aller Laufwerke"
 msgid "Total licenses"
 msgstr "Gesamtzahl der Lizenzen"
 
-#, fuzzy
 msgid "Total log file size: Absolute upper levels"
-msgstr "Protokolldateien: Absolute obere Schwellenwerte"
+msgstr "Gesamtgröße der Protokolldatei: Absolute obere Schwellenwerte"
 
 #, fuzzy
 msgid "Total memory usage"
@@ -47105,9 +47094,8 @@ msgstr "Obere Schwellen für Infizierungen"
 msgid "Upper levels for latency"
 msgstr "Obere Schwellen für Latenzzeit"
 
-#, fuzzy
 msgid "Upper levels for license usage"
-msgstr "Obere Schwellen für das Alter"
+msgstr "Obere Schwellen für die Lizenznutzung"
 
 msgid "Upper levels for load balancer capacity units"
 msgstr "Obere Schwellen für Kapazitätseinheiten von Loadbalancer"
@@ -47125,9 +47113,8 @@ msgstr "Obere Schwellen für die Anzahl der OSDs die außen sind"
 msgid "Upper levels for open network sockets"
 msgstr "Obere Schwellwerte für offene Netzwerksockets"
 
-#, fuzzy
 msgid "Upper levels for pending activations"
-msgstr "Obere Schwellen für Infizierungen"
+msgstr "Obere Schwellen ausstehende Aktivierungen"
 
 msgid "Upper levels for physical capacity in percent"
 msgstr "Obere Schwellen für physikalische Kapazität in Prozent"
@@ -47497,9 +47484,8 @@ msgstr "Hostnamen benutzen"
 msgid "Use in notifications"
 msgstr "In Alarmen nutzen"
 
-#, fuzzy
 msgid "Use index"
-msgstr "Portindex"
+msgstr "Verwende den Portindex"
 
 msgid ""
 "Use insecure message format for compatibility with 1.4.0p36, 1.5.0p6 or older"
@@ -47921,9 +47907,8 @@ msgstr "Schwellen für benutzte Leases in Prozent"
 msgid "Used licenses"
 msgstr "Genutzte Lizenzen"
 
-#, fuzzy
 msgid "Used log files: Absolute or relative upper levels"
-msgstr "Protokolldateien: Absolute obere Schwellenwerte"
+msgstr "Verwendete Protokolldateien: Absolute oder relative obere Schwellen"
 
 msgid "Used meta data"
 msgstr "Genutzte Metadaten"

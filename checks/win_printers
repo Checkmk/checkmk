@@ -38,8 +38,17 @@ factory_settings['win_printer_default_levels'] = {
 
 def inventory_win_printers(info):
     for line in info:
-        if line[-1] != '9' and len(line) == 4:  # Do not discovery offline printers
-            yield " ".join(line[:-3]), {}
+        if line[-1] != '9' and len(line) >= 4:  # Do not discovery offline printers
+            try:
+                # Agent output may look like:
+                # ['"printerstatus","detectederrorstate"', '-Type', 'OnlyIfInBoth',
+                #  '|', 'format-table', '-HideTableHeaders']
+                # But we expect an integer (#jobs) on third from last entry
+                int(line[-3])
+            except ValueError:
+                pass
+            else:
+                yield " ".join(line[:-3]), {}
 
 
 def check_win_printers(item, params, info):
@@ -80,7 +89,7 @@ def check_win_printers(item, params, info):
         warn, crit = params.get('levels', (None, None))
 
     for line in info:
-        if len(line) != 4:
+        if len(line) < 4:
             continue
         name = " ".join(line[:-3])
         if name == item:

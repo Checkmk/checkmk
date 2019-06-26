@@ -589,7 +589,7 @@ def check_logwatch_generic(item, params, loglines, found):
         raise MKGeneralException(
             "User %s cannot open file for writing: %s" % (logwatch_username(), exc))
 
-    pattern_hash = hashlib.sha256(repr(patterns)).hexdigest()
+    pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()
     net_lines = 0
     # parse cached log lines
     if logmsg_file_exists:

@@ -7,4 +7,4 @@ set arte=%cur_dir%\..\..\artefacts
 cd integration 
 net stop checkmkservice
 mkdir %arte%\plugins
-py.test || powershell Write-Host "Integration Test Failed" -Foreground Red && cd .. && exit 39
+py.test %1 || powershell Write-Host "Integration Test Failed" -Foreground Red && cd .. && exit 39

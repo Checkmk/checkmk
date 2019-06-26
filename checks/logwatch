@@ -482,6 +482,56 @@ def _makedirs_exist_ok(directory):
             raise
 
 
+class LogwatchBlock(object):
+
+    CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
+    STATE_TO_STR = {0: "OK", 1: "WARN"}
+
+    def __init__(self, header, patterns, states_counter):
+        self._timestamp = header.strip("<>").rsplit(None, 1)[0]
+        self.worst = -1
+        self.lines = []
+        self.last_worst_line = ''
+        self.counts = {}  # counting matches of a certain pattern
+        self._states_counter = states_counter  # counting blocks with a certain state
+        self._patterns = patterns or {}
+
+    def _reclassify_line(self, text, level):
+        newlevel = logwatch_reclassify(self.counts, self._patterns, text, level)
+        if newlevel is not None:
+            level = newlevel
+        return level
+
+    def finalize(self):
+        state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
+        header = "<<<%s %s>>>\n" % (self._timestamp, state_str)
+        return [header] + self.lines
+
+    def add_line(self, line, skip_reclassification):
+
+        try:
+            level, text = line.split(None, 1)
+        except ValueError:
+            level, text = line.strip(), ""
+
+        if not skip_reclassification:
+            level = self._reclassify_line(text, level)
+
+        state = LogwatchBlock.CHAR_TO_STATE.get(level, -1)
+        self.worst = max(state, self.worst)
+
+        # Save the last worst line of this block
+        if max(state, 0) == self.worst:
+            self.last_worst_line = text
+
+        # Count the number of lines by state
+        if level != '.':
+            self._states_counter[level] = self._states_counter.get(level, 0) + 1
+
+        if not skip_reclassification and level != "I":
+            self.lines.append(level + " " + text + "\n")
+
+
 def check_logwatch_generic(item, params, loglines, found):
     import hashlib
     logmsg_dir = Path(logwatch_dir, host_name())
@@ -504,55 +554,6 @@ def check_logwatch_generic(item, params, loglines, found):
     patterns = logwatch_precompile(host_name(), item, None) if params in ('', None) else params
 
     states_counter = {}  # counting blocks with a certain state
-
-    class LogwatchBlock(object):
-
-        CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
-        STATE_TO_STR = {0: "OK", 1: "WARN"}
-
-        def __init__(self, header, patterns, states_counter):
-            self._timestamp = header.strip("<>").rsplit(None, 1)[0]
-            self.worst = -1
-            self.lines = []
-            self.last_worst_line = ''
-            self.counts = {}  # counting matches of a certain pattern
-            self._states_counter = states_counter  # counting blocks with a certain state
-            self._patterns = patterns or {}
-
-        def _reclassify_line(self, text, level):
-            newlevel = logwatch_reclassify(self.counts, self._patterns, text, level)
-            if newlevel is not None:
-                level = newlevel
-            return level
-
-        def finalize(self):
-            state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
-            header = "<<<%s %s>>>\n" % (self._timestamp, state_str)
-            return [header] + self.lines
-
-        def add_line(self, line, skip_reclassification):
-
-            try:
-                level, text = line.split(None, 1)
-            except ValueError:
-                level, text = line.strip(), ""
-
-            if not skip_reclassification:
-                level = self._reclassify_line(text, level)
-
-            state = LogwatchBlock.CHAR_TO_STATE.get(level, -1)
-            self.worst = max(state, self.worst)
-
-            # Save the last worst line of this block
-            if max(state, 0) == self.worst:
-                self.last_worst_line = text
-
-            # Count the number of lines by state
-            if level != '.':
-                self._states_counter[level] = self._states_counter.get(level, 0) + 1
-
-            if not skip_reclassification and level != "I":
-                self.lines.append(level + " " + text + "\n")
 
     def collect_block(block):
         if block and block.worst > -1:

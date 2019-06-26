@@ -41972,14 +41972,14 @@ msgstr ""
 "<i>Clustered services</i> auf einen Clusterhost abgebildet, aber über "
 "<i>Deaktivierte Services</i> oder <i>Deaktivierte Checks</i> deaktiviert."
 
-#, fuzzy
 msgid ""
 "These services have been found on this host and have been mapped to a cluster "
 "host by a rule in the set <i>Clustered services</i> but disappeared from this "
 "host."
 msgstr ""
-"Diese Services wurden auf diesem Host gefunden aber mithilfe des Regelsatzes "
-"<i>Geclusterte Services</i> einem Cluster zugeordnet."
+"Diese Dienste wurden auf diesem Host gefunden und durch die Regel "
+"<i>Geclusterte Services</i> auf einen Cluster-Host abgebildet, sind aber von "
+"diesem Host verschwunden."
 
 msgid ""
 "These services have been found on this host and have been mapped to a cluster "

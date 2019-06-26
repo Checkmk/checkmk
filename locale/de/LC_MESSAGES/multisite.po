@@ -34656,8 +34656,7 @@ msgstr "Services, die schon länger als erwartet nicht mehr aktualisiert wurden.
 
 #, python-format
 msgid "Services: %d total, %d added, %d removed, %d kept"
-msgstr ""
-"Services: %d gesamt, %d hinzugefügt, %d entfernt, %d entfernt, %d behalten"
+msgstr "Services: %d gesamt, %d hinzugefügt, %d entfernt, %d behalten"
 
 msgid "Services: CRIT"
 msgstr "Services: CRIT"

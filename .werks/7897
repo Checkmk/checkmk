@@ -1,0 +1,12 @@
+Title: Fix "TypeError: not enough arguments for format string" at end of bulk discovery
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1561547082
+
+When using the German localized GUI an error was displayed at end of the
+bulk discovery run. However, the bulk discovery was executed correctly.

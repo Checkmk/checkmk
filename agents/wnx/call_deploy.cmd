@@ -25,7 +25,7 @@ goto end
 :update
 @rem Update check
 mkdir %ALLUSERSPROFILE%\CheckMk\Agent\Update 2> nul
-copy check_mk_agent_update.msi %ALLUSERSPROFILE%\CheckMk\Agent\update\check_mk_agent.msi > nul
+copy check_mk_agent.msi %ALLUSERSPROFILE%\CheckMk\Agent\update\check_mk_agent.msi > nul
 powershell Start-Sleep 20
 echo update > control.tmp
 fc "%ProgramFiles(X86)%\check_mk_service\check_mk.marker" control.tmp > nul

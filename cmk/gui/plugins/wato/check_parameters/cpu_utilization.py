@@ -194,7 +194,7 @@ class RulespecCheckgroupParametersCpuIowait(CheckParameterRulespecWithoutItem):
 
     @property
     def title(self):
-        return _("CPU utilization (legacy)")
+        return _("CPU utilization")
 
     @property
     def match_type(self):

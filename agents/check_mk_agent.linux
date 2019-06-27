@@ -425,8 +425,9 @@ sections_systemd
 
 # Filesystem usage for ZFS
 if inpath zfs; then
-    echo '<<<zfsget>>>'
+    echo '<<<zfsget:sep(9)>>>'
     zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null
+    echo '<<<zfsget>>>'
     echo '[df]'
     df -PTlk -t zfs | sed 1d
 fi

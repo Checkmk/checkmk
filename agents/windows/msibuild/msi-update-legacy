@@ -271,7 +271,7 @@ try:
 
     shutil.rmtree(work_dir)
     verbose("Successfully created file " + new_msi_file)
-except Exception, e:
+except Exception as e:
     if work_dir and os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     bail_out("Error on creating msi file: %s" % str(e))

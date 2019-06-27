@@ -282,7 +282,7 @@ def parse_report(host):
                 'wrst': parts[7],
                 'stddev': parts[8],
             }
-    except Exception, e:
+    except Exception as e:
         sys.stdout.write("**ERROR** Could not parse report file %s, "
                          "tossing away invalid data %s\n" % (reportfile, e))
         del status[host]

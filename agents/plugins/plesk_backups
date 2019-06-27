@@ -50,7 +50,7 @@ def connect():
             passwd=file('/etc/psa/.psa.shadow').read().strip(),
             charset='utf8',
         )
-    except MySQLdb.Error, e:
+    except MySQLdb.Error as e:
         sys.stderr.write("MySQL-Error %d: %s\n" % (e.args[0], e.args[1]))
         sys.exit(1)
 
@@ -149,7 +149,7 @@ for domain, p in domains.iteritems():
         output.append(
             '%s 0 %s %d %d' % (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
 
-    except Exception, e:
+    except Exception as e:
         output.append('%s 2 %s' % (domain, e))
 
 # Write cache and output

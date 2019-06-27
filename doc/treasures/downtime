@@ -80,7 +80,7 @@ if omd_site:
     opt_url = "http://localhost/" + omd_site + "/check_mk/"
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n\n" % err)
     usage()
     sys.exit(1)
@@ -115,7 +115,7 @@ if omd_site and not opt_secret:
     try:
         opt_secret = file(omd_root + "/var/check_mk/web/" + opt_user +
                           "/automation.secret").read().strip()
-    except Exception, e:
+    except Exception as e:
         bail_out("Cannot read automation secret from user %s: %s" % (opt_user, e))
 
 elif not omd_site and not opt_secret:
@@ -164,7 +164,7 @@ def set_downtime(variables, add_vars):
         for line in lines:
             if line.startswith('<div class=error>'):
                 bail_out(line[17:].split('<')[0])
-    except Exception, e:
+    except Exception as e:
         bail_out("Cannot call Multisite URL: %s" % e)
 
 

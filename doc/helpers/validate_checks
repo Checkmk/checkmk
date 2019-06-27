@@ -99,7 +99,7 @@ def get_manpage(check):
     if not check in manpage:
         try:
             manpage[check] = open('checkman/%s' % check.split('.')[0]).read()
-        except IOError, e:
+        except IOError as e:
             manpage[check] = ""
     return manpage[check]
 
@@ -108,7 +108,7 @@ def get_checkfile(check):
     if not check in checkfiles:
         try:
             checkfiles[check] = open('checks/%s' % check.split('.')[0]).read()
-        except IOError, e:
+        except IOError as e:
             checkfiles[check] = ""
     return checkfiles[check]
 
@@ -393,7 +393,7 @@ _alternative_output = False
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], ''.join([x[0] for x in _args]), [x[1] for x in _args])
-except getopt.error, msg:
+except getopt.error as msg:
     usage(msg)
 for o, a in opts:
     if o in ('-v', '--verbose'):

@@ -142,11 +142,11 @@ def open_url(client, url, method='GET', data=None, timeout=None):
         else:
             debug('GET %s' % url)
             fd = client.open(url, timeout=timeout)  # GET
-    except urllib2.HTTPError, e:
+    except urllib2.HTTPError as e:
         new_state(2, 'Unable to open %s: [%d] %s' % (url, e.code, e))
-    except urllib2.URLError, e:
+    except urllib2.URLError as e:
         new_state(2, 'Unable to open %s: %s' % (url, e.reason))
-    except socket.timeout, e:
+    except socket.timeout as e:
         new_state(2, 'Unable to open %s: %s' % (url, e))
     real_url = fd.geturl()
     code = fd.getcode()
@@ -244,7 +244,7 @@ def main():
 
     try:
         opts = getopt.getopt(sys.argv[1:], short_options, long_options)[0]
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         sys.stderr.write("%s\n" % err)
         sys.exit(1)
 
@@ -337,7 +337,7 @@ def main():
                             expect_regex)
                 else:
                     new_state(0, 'Form has been submitted')
-            except HostResult, e:
+            except HostResult as e:
                 if not multiple:
                     bail_out(*e.result)
                 states[host] = e.result
@@ -363,7 +363,7 @@ def main():
                 txt += ' (%s)' % ', '.join(['%s: %s' % (n, msg[1]) for n, msg in failed])
             bail_out(sum_state, txt)
 
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         bail_out(3, 'Exception occured: %s\n' % e)

@@ -38,7 +38,7 @@ def main(argv):
     try:
         opt, args = getopt.getopt(argv, "h:n:w:c:",
                                   ['help', 'clustername=', 'warning=', 'critical='])
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print str(err)
         usage()
         sys.exit(2)
@@ -147,7 +147,7 @@ def main(argv):
             print "OK - (.)" + str_up
             sys.exit(0)
 
-    except Exception, e:  # livestatus.MKLivestatusException, e:
+    except Exception as e:  # livestatus.MKLivestatusException, e:
         print "Livestatus error: %s" % str(e)
 
 

@@ -66,7 +66,7 @@ opt_timeout = 10
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -186,7 +186,7 @@ try:
         print "<<<hp_msa_%s>>>" % section
         print "\n".join(x.encode("utf-8") for x in lines)
 
-except Exception, e:
+except Exception as e:
     if opt_debug:
         sys.stdout.write('----------------------------\n')
         sys.stdout.write(traceback.format_exc())

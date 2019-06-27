@@ -119,5 +119,5 @@ try:
     else:
         sys.stderr.write("Error sending SMS to %s: %s\n" % (to, response))
         sys.stderr.write("URL was %s\n" % url)
-except Exception, e:
+except Exception as e:
     sys.stderr.write("Error sending SMS to %s. Exception: %s%s\n" % e)

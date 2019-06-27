@@ -62,7 +62,7 @@ cmk_base.utils.register_sigint_handler()
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     console.error("ERROR: %s\n\n" % err)
     modes.get("help").handler_function()
     sys.exit(1)
@@ -105,11 +105,11 @@ try:
     profiling.output_profile()
     sys.exit(exit_status)
 
-except MKTerminate, e:
+except MKTerminate as e:
     console.output("<Interrupted>\n", stream=sys.stderr)
     sys.exit(1)
 
-except (MKGeneralException, MKBailOut), e:
+except (MKGeneralException, MKBailOut) as e:
     sys.stderr.write("%s\n" % e)
     if cmk.utils.debug.enabled():
         raise

@@ -85,7 +85,7 @@ long_options = ["help", "in-downtime=", "acknowledged=", "use-automation-user"]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -209,10 +209,10 @@ try:
 except requests.Timeout:
     sys.stdout.write('ERROR: Socket timeout while opening URL: %s\n' % (url))
     sys.exit(3)
-except requests.URLRequired, e:
+except requests.URLRequired as e:
     sys.stdout.write("UNKNOWN: %s\n" % e)
     sys.exit(3)
-except Exception, e:
+except Exception as e:
     sys.stdout.write(
         'ERROR: Exception while opening URL: %s - %s\n%s' % (url, e, traceback.format_exc()))
     sys.exit(3)
@@ -223,7 +223,7 @@ if raw_response.startswith("ERROR:"):
 
 try:
     obj = ast.literal_eval(raw_response)
-except Exception, e:
+except Exception as e:
     sys.stdout.write('ERROR: Invalid response (%s): %s\n' % (e, raw_response))
     sys.exit(3)
 

@@ -106,7 +106,7 @@ def fetch_var(server, port, path, suburi):
 
     try:
         obj = eval(json)
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
         sys.stderr.write('       Response %s\n' % json)
         return None

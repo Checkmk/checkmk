@@ -43,7 +43,7 @@ def get_data(address):
     headers = {"Authorization": "Basic %s" % base64string, "Content-Type": "application/json"}
     try:
         return requests.get(address, headers=headers).text
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Connection error: %s" % e)
         sys.exit(2)
 

@@ -25,15 +25,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import requests, json, os, re, sys
+import json
+import os
+import re
+import sys
+
+import requests
 
 api_url = "https://api.pushover.net/1/messages.json"
 
 
 def main():
-    context = dict([(var[7:], value.decode("utf-8"))
-                    for (var, value) in os.environ.items()
-                    if var.startswith("NOTIFY_")])
+    context = {
+        var[7:]: value.decode('utf-8')
+        for var, value in os.environ.iteritems()
+        if var.startswith('NOTIFY_')
+    }
 
     subject = get_subject(context)
     text = get_text(context)
@@ -140,18 +147,20 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
     if context.get("PARAMETER_SOUND", "none") != "none":
         params.append(("sound", context["PARAMETER_SOUND"]))
 
-    s = requests.Session()
+    session = requests.Session()
     if context.get("PARAMETER_PROXY_URL"):
-        r = s.post(api_url, params=dict(params), proxies={"https": context["PARAMETER_PROXY_URL"]})
+        response = session.post(
+            api_url, params=dict(params), proxies={"https": context["PARAMETER_PROXY_URL"]})
     else:
-        r = s.post(api_url, params=dict(params))
+        response = session.post(api_url, params=dict(params))
 
-    r_status = r.status_code
-    if r_status == '200':
+    if response.status_code == '200':
         return True
     else:
-        sys.stdout.write(
-            "Failed to send notification. Status: %s, Response: %s\n" % (r_status, r.text))
+        sys.stdout.write("Failed to send notification. Status: %s, Response: %s\n" %
+                         (response.status_code, response.text))
         return False
 
-main()
+
+if __name__ == '__main__':
+    main()

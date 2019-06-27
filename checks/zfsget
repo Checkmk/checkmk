@@ -176,9 +176,8 @@ def parse_zfsget(info):
     return parsed_final
 
 
-def inventory_zfsget(info):
+def inventory_zfsget(parsed):
     mplist = []
-    parsed = parse_zfsget(info)
     for mountpoint in parsed.iterkeys():
         if mountpoint not in inventory_df_exclude_mountpoints:
             mplist.append(mountpoint)
@@ -196,11 +195,10 @@ def inventory_zfsget(info):
 #     return float(txt[:-1]) * units_to_mb[txt[-1]]
 
 
-def check_zfsget(item, params, info):
-    entries = parse_zfsget(info)
+def check_zfsget(item, params, parsed):
     # ist item drin -> OK, ansonsten gleich hier
     fslist = []
-    for mountpoint, entry in entries.items():
+    for mountpoint, entry in parsed.items():
         if "patterns" in params or item == mountpoint:
             # 1. Filesystems with a quota
             if "quota" in entry:
@@ -218,6 +216,7 @@ def check_zfsget(item, params, info):
 
 
 check_info['zfsget'] = {
+    "parse_function": parse_zfsget,
     "check_function": check_zfsget,
     "inventory_function": inventory_zfsget,
     "service_description": "Filesystem %s",

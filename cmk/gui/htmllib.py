@@ -67,16 +67,10 @@ import json
 import abc
 import pprint
 from contextlib import contextmanager
+# suppress missing import error from mypy
+from html import escape as html_escape  # type: ignore
 
 import six
-
-try:
-    # First try python3
-    # suppress missing import error from mypy
-    from html import escape as html_escape  # type: ignore
-except ImportError:
-    # Default to python2
-    from cgi import escape as html_escape
 
 
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.

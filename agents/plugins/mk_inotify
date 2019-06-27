@@ -134,7 +134,7 @@ if not opt_foreground:
                 os.close(fd)
             except OSError:
                 pass
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Error forking mk_inotify: %s" % e)
 
     # Save pid of working process.

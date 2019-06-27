@@ -38,7 +38,7 @@ if "--legacy" in sys.argv:
     try:
         from NaElement import NaElement  # pylint: disable=import-error
         from NaServer import NaServer  # pylint: disable=import-error
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "\
                          "provided by the NetApp Managability SDK and must be put into "\
                          "the sites folder ~/local/lib/python.\nDetailed error: %s\n" % e)
@@ -371,7 +371,7 @@ class NetAppResponse(object):
             try:
                 clean = NetAppResponse.INVALID_XML.sub('', self.raw_response_text)
                 self.content = NetAppNode(ET.fromstring(clean))
-            except ET.ParseError, exc:
+            except ET.ParseError as exc:
                 self.status = "parse-exception"
                 self.reason = str(exc)
             return
@@ -1496,7 +1496,7 @@ def main():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         sys.stderr.write("%s\n" % err)
         return 1
 

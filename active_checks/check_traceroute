@@ -190,7 +190,7 @@ try:
     sys.stdout.write(output.strip() + "\n" + long_output)
     sys.exit(status)
 
-except Exception, e:
+except Exception as e:
     if opt_debug:
         raise
     bail_out(e)

@@ -20,7 +20,7 @@ def main():
             something_changed = cleanup_indentation_style(filename)
             sys.stdout.write(something_changed and "done.\n" or "unchanged.\n")
 
-        except Exception, e:
+        except Exception as e:
             sys.stdout.write("ERROR: %s\n" % e)
             if opt_debug:
                 raise

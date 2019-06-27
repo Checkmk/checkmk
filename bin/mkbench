@@ -256,7 +256,7 @@ def run_performance_test(num_hosts, num_helpers):
 
         try:
             renderer.run(fork=False)
-        except npyscreen.wgwidget.NotEnoughSpaceForWidget, e:
+        except npyscreen.wgwidget.NotEnoughSpaceForWidget as e:
             raise MKGeneralException("Too small terminal (%s)" % e)
 
         finally:
@@ -318,7 +318,7 @@ class Test(object):
         test_dir = self.dir()
         try:
             os.makedirs(test_dir)
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.EEXIST:
                 pass
             else:
@@ -471,7 +471,7 @@ class TestRunner(threading.Thread):
 
             result = Test.RESULT_COMPLETED
 
-        except Exception, e:
+        except Exception as e:
             if opt_debug:
                 raise
             self.test.error("Test failed: %s" % traceback.format_exc())
@@ -552,7 +552,7 @@ class TestRunner(threading.Thread):
                         while time.time() <= step.until:
                             try:
                                 self._while_waiting()
-                            except MKSkipTestCase, e:
+                            except MKSkipTestCase as e:
                                 self.test.info(
                                     "Skipping %s (%s): %s" %
                                     (test_case.name(), fmt_timespan(test_case.duration()), e))
@@ -571,7 +571,7 @@ class TestRunner(threading.Thread):
                     "Finished %s (%s)" % (test_case.name(), fmt_timespan(test_case.duration())))
                 self._increase_hosts()
 
-            except MKFailTestCase, e:
+            except MKFailTestCase as e:
                 result = TestCase.RESULT_FAILED
                 result_msg = "Test case aborted: %s" % e
                 self.test.error(result_msg)
@@ -581,7 +581,7 @@ class TestRunner(threading.Thread):
                 else:
                     break
 
-            except Exception, e:
+            except Exception as e:
                 result = TestCase.RESULT_FAILED
                 result_msg = "Test case failed: %s" % e
                 self.test.error(result_msg)
@@ -966,7 +966,7 @@ class Measurement(object):
         try:
             raw_data = ast.literal_eval(open(path).read())
             self.deserialize(raw_data)
-        except Exception, e:
+        except Exception as e:
             if opt_debug:
                 raise
             raise MKGeneralException("Failed to load '%s': %s" % (path, e))
@@ -1063,7 +1063,7 @@ class Measurement(object):
             live.set_timeout(5)
             self.site_stats = live.query_row_assoc("GET status")
             live.disconnect()
-        except livestatus.MKLivestatusException, e:
+        except livestatus.MKLivestatusException as e:
             self._runner.test.error("Livestatus: %s" % e)
             self.site_stats = None
 
@@ -1115,7 +1115,7 @@ class AgentListener(multiprocessing.Process):
                 s.listen(1)
                 self._sockets.append(s)
                 self._socket_map[s.getsockname()] = host_id
-            except Exception, e:
+            except Exception as e:
                 if opt_debug:
                     raise
                 sys.stderr.write("Failed to open %s:%d: %s\n" % (address[0], address[1], e))
@@ -1126,7 +1126,7 @@ class AgentListener(multiprocessing.Process):
             try:
                 try:
                     readable = select.select(self._sockets, [], [], 0.2)[0]
-                except select.error, e:
+                except select.error as e:
                     if e[0] == 4:
                         continue
                     else:
@@ -1140,7 +1140,7 @@ class AgentListener(multiprocessing.Process):
                     client_socket.close()
             except (KeyboardInterrupt, MKTerminate):
                 break
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write("Error in listener: %s - %s\n" % (type(e), e))
 
     def _close_sockets(self):
@@ -2560,7 +2560,7 @@ class TestAgentBasedStandardHosts(TestCase):
         config_dir = self._cmk_config_dir()
         try:
             os.makedirs(config_dir)
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.EEXIST:
                 pass
             else:
@@ -2618,7 +2618,7 @@ class TestAgentBasedStandardHosts(TestCase):
         config_dir = self._cmk_config_dir()
         try:
             os.makedirs(config_dir)
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.EEXIST:
                 pass
             else:
@@ -2764,7 +2764,7 @@ class TestAgentBasedStandardHosts(TestCase):
 
                 try:
                     shutil.copytree(src_dir, target_dir)
-                except OSError, e:
+                except OSError as e:
                     if e.errno == errno.EEXIST:
                         pass
                     else:
@@ -2865,7 +2865,7 @@ class TestAgentBasedStandardHosts(TestCase):
             try:
                 matched_pids = subprocess.check_output(
                     ["pgrep", "-u", site_id(), "-f", "python.*cmk --keepalive$"]).split("\n")
-            except subprocess.CalledProcessError, e:
+            except subprocess.CalledProcessError as e:
                 self._test.error("  Found no helper yet (%s)" % e.returncode)
                 continue
 
@@ -3209,7 +3209,7 @@ def main():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage("%s" % e)
 
     mode = "run"
@@ -3290,7 +3290,7 @@ if __name__ == "__main__":
         sys.stderr.write("Terminated.\n")
         sys.exit(0)
 
-    except MKGeneralException, e:
+    except MKGeneralException as e:
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise

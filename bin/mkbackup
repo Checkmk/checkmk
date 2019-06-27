@@ -87,7 +87,7 @@ class Log(object):
         self.orig.write(data)
         try:
             add_output(self.color_replace.sub('', data))
-        except Exception, e:
+        except Exception as e:
             self.orig.write("Failed to add output: %s\n" % e)
 
     def flush(self):
@@ -166,14 +166,14 @@ def acquire_backup_lock():
             g_backup_lock_f = tempfile.NamedTemporaryFile(mode="a+", dir="/tmp", delete=False)
             set_permissions(g_backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid, 0660)
             os.rename(g_backup_lock_f.name, lock_file_path)
-        except (IOError, OSError), e:
+        except (IOError, OSError) as e:
             raise MKGeneralException("Failed to open lock file \"%s\": %s" % (lock_file_path, e))
     else:
         g_backup_lock_f = file(lock_file_path, "a")
 
     try:
         fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except IOError, e:
+    except IOError as e:
         raise MKGeneralException("Failed to get the exclusive backup lock. "
                                  "Another backup/restore seems to be running (%s)." % e)
 
@@ -190,7 +190,7 @@ def acquire_backup_lock():
 def set_permissions(path, uid, gid, mode):
     try:
         os.chown(path, uid, gid)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EACCES:
             pass  # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
             # are set, this is not possible. So skip over.
@@ -203,7 +203,7 @@ def set_permissions(path, uid, gid, mode):
 
     try:
         os.chmod(path, mode)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EACCES:
             pass  # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
             # are set, this is not possible. So skip over.
@@ -224,7 +224,7 @@ def makedirs(path, user=None, group=None, mode=None):
     if head and tail and not os.path.exists(head):
         try:
             makedirs(head, user, group, mode)
-        except OSError, e:
+        except OSError as e:
             # be happy if someone already created the path
             if e.errno != errno.EEXIST:
                 raise
@@ -409,7 +409,7 @@ class MKTarFile(TarFile):
 
         try:
             super(MKTarFile, self).makefile(tarinfo, targetpath)
-        except IOError, e:
+        except IOError as e:
             if e.errno == errno.EISDIR:
                 # Handle "IOError: [Errno 21] Is a directory"
                 # Happens e.g. when a dir is being replaced by a file during restore
@@ -563,7 +563,7 @@ def mode_backup(local_job_id, opts):
     except KeyboardInterrupt:
         raise
 
-    except MKGeneralException, e:
+    except MKGeneralException as e:
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise
@@ -1116,7 +1116,7 @@ def do_system_backup(opts):
     # Create missing directories. Ensure group permissions and mode.
     try:
         makedirs(os.path.dirname(system_backup_archive_path()), group="omd", mode=0775)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EACCES:
             raise MKGeneralException("Failed to create the backup directory: %s" % e)
         else:
@@ -1224,7 +1224,7 @@ def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
     tar_mode = "w|gz" if compress_archives() else "w|"
     try:
         tar = TarFile.open(fileobj=fobj, mode=tar_mode)
-    except IOError, e:
+    except IOError as e:
         if not opt_debug and e.errno == errno.ESPIPE:
             log("Failed to init backup to tarfile: %s" % e)
             return
@@ -1269,7 +1269,7 @@ def cleanup_previous_incomplete_backup():
         log("Found previous incomplete backup. Cleaning up those files.")
         try:
             shutil.rmtree(job_backup_path_during_backup())
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.EACCES:
                 raise MKGeneralException("Failed to write the backup directory: %s" % e)
             else:
@@ -1438,7 +1438,7 @@ def mode_restore(target_id, backup_id, opts):
     except KeyboardInterrupt:
         raise
 
-    except MKGeneralException, e:
+    except MKGeneralException as e:
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise
@@ -1523,7 +1523,7 @@ def do_site_restore(opts, info, site=None):
                     archive_started = True
 
                 p.stdin.write(chunk)
-        except IOError, e:
+        except IOError as e:
             log("Error while sending data to restore process: %s" % e)
 
         # s.process() ends when backup_file is processed. Then end the restore process.
@@ -1759,7 +1759,7 @@ def read_from_tarfile_threaded(s, pipeout_fd):
     try:
         for chunk in s.process():
             pipeout.write(chunk)
-    except IOError, e:
+    except IOError as e:
         log("Error while sending data to restore process: %s" % e)
 
     # s.process() ends when backup_file is processed. Then end the restore process.
@@ -1899,7 +1899,7 @@ def main():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage("%s" % e)
 
     for o, _unused_a in opts:
@@ -1933,7 +1933,7 @@ def main():
     # Load the mode specific options
     try:
         mode_opts, mode_args = getopt.getopt(args, [], mode_options(mode).keys())
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage("%s" % e)
 
     # Validate arguments
@@ -1948,7 +1948,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except MKTerminate, e:
+    except MKTerminate as e:
         sys.stderr.write("%s\n" % e)
         sys.exit(1)
 
@@ -1956,7 +1956,7 @@ if __name__ == "__main__":
         sys.stderr.write("Terminated.\n")
         sys.exit(0)
 
-    except MKGeneralException, e:
+    except MKGeneralException as e:
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise

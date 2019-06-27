@@ -141,7 +141,7 @@ required_params = [
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -232,7 +232,7 @@ def connect():
             g_M = fetch_class(fetch_server, fetch_port)
             g_M.login(fetch_user, fetch_pass)
             g_M.select('INBOX', readonly=False)  # select INBOX
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         bail_out(3, 'Failed connect to %s:%d: %s' % (fetch_server, fetch_port, parse_exception(e)))
@@ -255,7 +255,7 @@ def fetch_mails():
                     try:
                         data = g_M.fetch(num, '(RFC822)')[1]
                         mails[num] = email.message_from_string(data[0][1])
-                    except Exception, e:
+                    except Exception as e:
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
                                         (num, parse_exception(e), messages))
 
@@ -267,7 +267,7 @@ def fetch_mails():
                     del mails[index]
 
         return mails
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         bail_out(3, 'Failed to check for mails: %s' % parse_exception(e))
@@ -309,7 +309,7 @@ def cleanup_mailbox():
 
         if fetch_proto == 'IMAP':
             g_M.expunge()
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         bail_out(2, 'Failed to delete mail: %s' % parse_exception(e))
@@ -431,7 +431,7 @@ def forward_to_ec(mails):
 
         bail_out(0, 'Forwarded %d messages to event console' % len(messages),
                  [('messages', len(messages))])
-    except Exception, e:
+    except Exception as e:
         bail_out(
             3, 'Unable to forward messages to event console (%s). Left %d messages untouched.' %
             (e, len(messages)))
@@ -456,7 +456,7 @@ socket.setdefaulttimeout(conn_timeout)
 
 try:
     main()
-except Exception, e:
+except Exception as e:
     if opt_debug:
         raise
     bail_out(2, 'Unhandled exception: %s' % parse_exception(e))

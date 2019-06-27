@@ -101,11 +101,11 @@ class Application(object):
                     profile_file=os.path.join(cmk.utils.paths.var_dir, "multisite.profile")):
                 self._handle_request()
 
-        except HTTPRedirect, e:
+        except HTTPRedirect as e:
             self._response.status_code = e.status
             self._response.headers["Location"] = e.url
 
-        except FinalizeRequest, e:
+        except FinalizeRequest as e:
             self._response.status_code = e.status
 
         except (
@@ -116,7 +116,7 @@ class Application(object):
                 MKGeneralException,
                 livestatus.MKLivestatusNotFoundError,
                 livestatus.MKLivestatusException,
-        ), e:
+        ) as e:
             # TODO: Refactor all the special cases handled here to simplify the exception handling
             ty = type(e)
             if ty == livestatus.MKLivestatusNotFoundError:
@@ -146,7 +146,7 @@ class Application(object):
             if ty in [MKConfigError, MKGeneralException]:
                 logger.error(_("%s: %s") % (plain_title, e))
 
-        except Exception, e:
+        except Exception as e:
             logger.exception()
             if self._plain_error():
                 html.set_output_format("text")
@@ -197,7 +197,7 @@ class Application(object):
             if handler != self._page_not_found:
                 try:
                     handler()
-                except Exception, e:
+                except Exception as e:
                     self._show_exception_info(e)
                 raise FinalizeRequest(httplib.OK)
 

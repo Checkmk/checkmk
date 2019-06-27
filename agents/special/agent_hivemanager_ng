@@ -80,14 +80,14 @@ def main():
 
     try:
         response = requests.get(address, headers=headers, params=params)
-    except requests.RequestException, e:
+    except requests.RequestException as e:
         bail_out(
             'Request to the API failed. Please check your connection settings. '
             'A guide to setup the API can be found on the Aerohive homepage.', args.debug)
 
     try:
         json = response.json()
-    except ValueError, e:
+    except ValueError as e:
         bail_out(e.message, args.debug)
 
     if json['error']:

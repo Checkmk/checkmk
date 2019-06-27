@@ -176,6 +176,7 @@ private:
     // Internal class from  ASIO documentation
     class server {
     public:
+        // this server is not used anymore, left as reference
         server(asio::io_context& io_context, bool Ipv6, short port,
                cma::world::ReplyFunc Reply)
             : acceptor_(
@@ -223,12 +224,12 @@ private:
 
                         // only_from checking
                         // we are doping it always
-                        if (!cma::cfg::groups::global.isIpAddressAllowed(ip)) {
+                        if (cma::cfg::groups::global.isIpAddressAllowed(ip))
+                            sink(x, Port);
+                        else {
                             XLOG::d("Address '{}' is not allowed", ip);
-                            return;
                         }
 
-                        sink(x, Port);
                     } catch (const std::system_error& e) {
                         if (e.code().value() == WSAECONNRESET)
                             XLOG::l.i(XLOG_FLINE + " Client closed connection");
@@ -250,7 +251,7 @@ private:
         }
 
     private:
-        // this is the only entry point
+        // this is obsolete entry point for obsolete server
         void do_accept(cma::world::ReplyFunc Reply) {
             acceptor_.async_accept(socket_, [this, Reply](std::error_code ec) {
                 if (ec.value()) {
@@ -271,11 +272,10 @@ private:
                         // we are doping it always
                         if (!cma::cfg::groups::global.isIpAddressAllowed(ip)) {
                             XLOG::d.i("Address '{}' is not allowed", ip);
-                            return;
+                        } else {
+                            // #TODO blocking call here. This is not a good idea
+                            x->start(Reply);
                         }
-
-                        // #TODO blocking call here. This is not a good idea
-                        x->start(Reply);
                     } catch (const std::system_error& e) {
                         if (e.code().value() == WSAECONNRESET)
                             XLOG::l.i(XLOG_FLINE + " Client closed connection");

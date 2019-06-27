@@ -223,7 +223,7 @@ void ExternalPort::processQueue(cma::world::ReplyFunc reply) noexcept {
                 if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
                     as->start(reply);
                 } else {
-                    XLOG::d.i("Address '{}' is not allowed", ip);
+                    XLOG::d("Address '{}' is not allowed, this call should happen", ip);
                 }
             }
 

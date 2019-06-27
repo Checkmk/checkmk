@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-__version__ = "1.5.0p19"
+__version__ = "1.5.0p20"
 
 # TODO:
 # - Create a more detailed report out of the test results. For example

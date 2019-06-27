@@ -52,7 +52,7 @@ fi
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.5.0p19
+echo Version: 1.5.0p20
 echo AgentOS: hpux
 echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR

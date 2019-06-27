@@ -1,0 +1,15 @@
+Title: pushover: fix broken error handling
+Level: 2
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b3
+Date: 1561628038
+
+Since its introduction in version 1.2.8 the error handling of the
+pushover notification script is broken. Notifications were always
+handled as successful even if the Pushover API returned an error.
+Version 1.5.0 introduced another bug that printed an error
+message to the notify.log for successful notifications.

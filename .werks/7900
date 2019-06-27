@@ -1,0 +1,11 @@
+Title: BI: Fix "Request-URI Too Long" after creating BI rule
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561639505
+Class: fix
+
+When creating a BI rule in WATO and clicking on the icon button to show the
+rule tree, this could lead to an HTTP Request-URI too long error.

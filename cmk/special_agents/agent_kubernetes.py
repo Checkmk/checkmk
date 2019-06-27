@@ -1100,6 +1100,6 @@ def main(args=None):
     except Exception as e:
         if arguments.debug:
             raise
-        print("%s" % e, file=sys.stderr)
+        sys.stderr.write("%s\n" % e)
         return 1
     return 0

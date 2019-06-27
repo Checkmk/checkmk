@@ -11,6 +11,10 @@
 #include "common/cfg_info.h"
 #include "windows_service_api.h"
 
+namespace cma::details {
+extern bool G_Test;
+}
+
 namespace cma {
 
 // internal global variables:
@@ -91,6 +95,7 @@ bool DetermineWorkingFolders(AppType Type) {
 bool OnStart(AppType Type, YamlCacheOp UpdateCacheOnSuccess,
              const std::wstring& ConfigFile) {
     if (Type == AppType::automatic) Type = AppDefaultType();
+    if (Type == AppType::test) cma::details::G_Test = true;
 
     wtools::InitWindowsCom();
 
@@ -99,7 +104,7 @@ bool OnStart(AppType Type, YamlCacheOp UpdateCacheOnSuccess,
 
     auto old_value = S_OnStartCalled.exchange(true);
     if (old_value) {
-        details::KillDefaultConfig();
+        cfg::details::KillDefaultConfig();
     }
 
     // false is possible only for watest

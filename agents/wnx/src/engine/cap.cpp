@@ -301,25 +301,33 @@ bool ReinstallIni(const std::filesystem::path target_ini,
     namespace fs = std::filesystem;
     std::error_code ec;
 
+    auto packaged_agent = IsIniFileFromInstaller(source_ini);
+    if (packaged_agent)
+        XLOG::l.i(
+            "This is PACKAGED AGENT,"
+            "upgrading ini to the bakery.yml skipped");
+
     // remove old files
     auto bakery_yml = cma::cfg::GetBakeryFile();
-    fs::remove(bakery_yml, ec);
+    if (!packaged_agent) fs::remove(bakery_yml, ec);
     fs::remove(target_ini, ec);
 
     // generate new
-    if (!fs::exists(source_ini)) return true;
+    if (!fs::exists(source_ini, ec)) return true;
 
-    cma::cfg::cvt::Parser p;
-    p.prepare();
-    p.readIni(source_ini.u8string(), false);
-    auto yaml = p.emitYaml();
+    if (!packaged_agent) {
+        cma::cfg::cvt::Parser p;
+        p.prepare();
+        p.readIni(source_ini.u8string(), false);
+        auto yaml = p.emitYaml();
 
-    std::ofstream ofs(bakery_yml, std::ios::binary);
-    if (ofs) {
-        ofs << cma::cfg::upgrade::MakeComments(source_ini, true);
-        ofs << yaml;
+        std::ofstream ofs(bakery_yml, std::ios::binary);
+        if (ofs) {
+            ofs << cma::cfg::upgrade::MakeComments(source_ini, true);
+            ofs << yaml;
+        }
+        ofs.close();
     }
-    ofs.close();
     fs::copy_file(source_ini, target_ini, ec);
 
     return true;
@@ -359,19 +367,6 @@ static void InstallIniFile() {
     } else
         XLOG::l.t(
             "Installing of INI file is not required, the file is already installed");
-}
-
-bool IsIniFileFromInstaller(const std::filesystem::path &filename) {
-    namespace fs = std::filesystem;
-
-    auto data = cma::tools::ReadFileInVector(filename);
-    if (!data.has_value()) return false;
-
-    constexpr std::string_view base = kIniFromInstallMarker;
-    if (data->size() < base.length()) return false;
-
-    auto content = data->data();
-    return !memcmp(content, base.data(), base.length());
 }
 
 static void PrintInstallCopyLog(std::string_view info_on_error,

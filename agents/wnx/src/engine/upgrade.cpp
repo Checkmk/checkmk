@@ -755,10 +755,19 @@ std::string GetTimeString() {
     return sss.str();
 }
 
-bool CreateProtocolFile(std::filesystem::path& ProtocolFile,
+std::filesystem::path ConstructProtocolFileName(
+    const std::filesystem::path& dir) noexcept {
+    namespace fs = std::filesystem;
+    fs::path protocol_file = cma::cfg::GetRootDir();
+    protocol_file /= cma::cfg::files::kUpgradeProtocol;
+    return protocol_file;
+}
+
+bool CreateProtocolFile(std::filesystem::path& dir,
                         std::string_view OptionalContent) {
     try {
-        std::ofstream ofs(ProtocolFile, std::ios::binary);
+        auto protocol_file = ConstructProtocolFileName(dir);
+        std::ofstream ofs(protocol_file, std::ios::binary);
 
         if (ofs) {
             ofs << "Upgraded:\n";
@@ -775,6 +784,21 @@ bool CreateProtocolFile(std::filesystem::path& ProtocolFile,
     return true;
 }
 
+bool IsProtocolFileExists(const std::filesystem::path& root_folder) {
+    namespace fs = std::filesystem;
+    auto protocol_file = ConstructProtocolFileName(root_folder);
+    std::error_code ec;
+
+    return fs::exists(protocol_file, ec);
+}
+
+static void InfoOnStdio(bool force) {
+    if (!force) return;
+
+    XLOG::SendStringToStdio("Upgrade(migration) is forced by command line\n",
+                            XLOG::Colors::kYellow);
+}
+
 // The only API entry DIRECTLY used in production
 bool UpgradeLegacy(Force force_upgrade) {
     XLOG::l.i("Starting upgrade(migration) process...");
@@ -786,20 +810,14 @@ bool UpgradeLegacy(Force force_upgrade) {
 
     bool force = Force::yes == force_upgrade;
 
-    if (force) {
-        XLOG::SendStringToStdio(
-            "Upgrade(migration) is forced by command line\n",
-            XLOG::Colors::kYellow);
-    }
+    InfoOnStdio(force);
 
-    namespace fs = std::filesystem;
-    fs::path protocol_file = cma::cfg::GetRootDir();
-    protocol_file /= cma::cfg::files::kUpgradeProtocol;
-    std::error_code ec;
+    std::filesystem::path root_dir = cma::cfg::GetRootDir();
 
-    if (fs::exists(protocol_file, ec) && !force) {
-        XLOG::l.i("Protocol File '{}' exists, upgrade(migration) not required",
-                  protocol_file.u8string());
+    if (IsProtocolFileExists(root_dir) && !force) {
+        XLOG::l.i(
+            "Protocol File at '{}' exists, upgrade(migration) not required",
+            root_dir.u8string());
         return false;
     }
 
@@ -815,17 +833,19 @@ bool UpgradeLegacy(Force force_upgrade) {
         XLOG::l("Legacy Agent is not possible to stop");
     }
 
-    auto count =
-        CopyAllFolders(path, cma::cfg::GetUserDir(), CopyFolderMode::keep_old);
+    std::filesystem::path user_dir = cma::cfg::GetUserDir();
 
-    count += CopyRootFolder(path, cma::cfg::GetUserDir());
+    // FOLDERS:
+    auto count = CopyAllFolders(path, user_dir, CopyFolderMode::keep_old);
+    count += CopyRootFolder(path, user_dir);
 
-    XLOG::l.i("Converting ini file");
-    ConvertIniFiles(path, cma::cfg::GetUserDir());
+    // INI:
+    XLOG::l.i("Converting ini file...");
+    ConvertIniFiles(path, user_dir);
 
-    XLOG::l.i("Saving protocol file");
-    // making protocol file:
-    CreateProtocolFile(protocol_file, {});
+    // PROTOCOL:
+    XLOG::l.i("Saving protocol file...");
+    CreateProtocolFile(root_dir, {});
 
     return true;
 }
@@ -866,8 +886,8 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
         auto user_yaml_file =
             wtools::ConvertToUTF8(files::kDefaultMainConfigName);
 
-        auto out_file = CreateYamlFromIniSmart(
-            local_ini_file, ProgramData, user_yaml_file, CfgFileType::user);
+        auto out_file =
+            CreateUserYamlFromIni(local_ini_file, ProgramData, user_yaml_file);
         if (!out_file.empty() && fs::exists(out_file, ec)) {
             XLOG::l.i("Local File '{}' was converted as user YML file '{}'",
                       local_ini_file.u8string(), out_file.u8string());
@@ -875,8 +895,10 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
         }
     }
 
-    XLOG::l.t("Local ini File is absent or has no data",
-              local_ini_file.u8string());
+    XLOG::l.t(
+        "Local INI File was not converted, absent, has no data or other reason",
+        local_ini_file.u8string());
+
     return false;
 }
 
@@ -884,6 +906,12 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
                         const std::filesystem::path& ProgramData,
                         bool LocalFileExists) {
     namespace fs = std::filesystem;
+
+    // simple sanity check
+    if (cma::cfg::DetermineInstallationType() == InstallationType::wato) {
+        XLOG::l("Bad Call for Bad Installation");
+        return false;
+    }
 
     const std::string root_ini = "check_mk.ini";
     auto user_ini_file = LegacyRoot / root_ini;
@@ -902,9 +930,15 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
 
     // if local.ini file exists, then second file must be a bakery file(pure
     // logic)
-    auto mode = LocalFileExists ? CfgFileType::bakery : CfgFileType::automatic;
-    auto yaml_file = CreateYamlFromIniSmart(user_ini_file, out_folder,
-                                            wtools::ConvertToUTF8(name), mode);
+    auto wato_ini = IsBakeryIni(user_ini_file);
+    fs::path yaml_file;
+
+    if (wato_ini || LocalFileExists)
+        yaml_file = CreateBakeryYamlFromIni(user_ini_file, out_folder,
+                                            wtools::ConvertToUTF8(name));
+    else
+        yaml_file = CreateUserYamlFromIni(user_ini_file, out_folder,
+                                          wtools::ConvertToUTF8(name));
     // check
     if (!yaml_file.empty() && fs::exists(yaml_file, ec)) {
         XLOG::l.t("User ini File {} was converted to YML file {}",
@@ -922,16 +956,12 @@ bool ConvertIniFiles(const std::filesystem::path& legacy_root,
     namespace fs = std::filesystem;
     using namespace cma::cfg;
 
-    {
-        std::error_code ec;
-        auto bakery_ini =
-            (program_data / dirs::kBakery / files::kDefaultMainConfig)
-                .replace_extension(files::kDefaultBakeryExt);
-        XLOG::l.t("Removing '{}'", bakery_ini.u8string());
-        fs::remove(bakery_ini, ec);
-    }
+    auto installation_type = cma::cfg::DetermineInstallationType();
 
     bool local_file_exists = ConvertLocalIniFile(legacy_root, program_data);
+
+    // if installation is baked, than only local ini conversion allowed
+    if (installation_type == InstallationType::wato) return local_file_exists;
 
     auto user_or_bakery_exists =
         ConvertUserIniFile(legacy_root, program_data, local_file_exists);
@@ -980,11 +1010,42 @@ bool StoreYaml(const std::filesystem::path& filename, YAML::Node yaml_node,
     return true;
 }
 
-std::filesystem::path CreateYamlFromIniSmart(
+std::filesystem::path CreateUserYamlFromIni(
     const std::filesystem::path& ini_file,      // ini file to use
     const std::filesystem::path& program_data,  // directory to send
-    const std::string& yaml_name,               // name to be used in output
-    CfgFileType cfg_file_type) noexcept {       // hard bakery or soft
+    const std::string& yaml_name                // name to be used in output
+    ) noexcept {
+    namespace fs = std::filesystem;
+
+    // conversion
+    auto yaml = LoadIni(ini_file);
+    if (!yaml.has_value() || !yaml.value().IsMap()) {
+        XLOG::l.w("File '{}' is empty, no yaml created", ini_file.u8string());
+        return {};
+    }
+
+    // storing
+    auto comments = MakeComments(ini_file, false);
+    auto yaml_file = program_data;
+
+    std::error_code ec;
+    if (!fs::exists(yaml_file, ec)) {
+        fs::create_directories(yaml_file, ec);
+    }
+
+    yaml_file /= yaml_name;
+    yaml_file.replace_extension(files::kDefaultUserExt);
+
+    StoreYaml(yaml_file, yaml.value(), comments);
+    XLOG::l.i("File '{}' is successfully converted", ini_file.u8string());
+
+    return yaml_file;
+}
+
+std::filesystem::path CreateBakeryYamlFromIni(
+    const std::filesystem::path& ini_file,      // ini file to use
+    const std::filesystem::path& program_data,  // directory to send
+    const std::string& yaml_name) noexcept {    // name to be used in output
 
     namespace fs = std::filesystem;
 
@@ -996,13 +1057,19 @@ std::filesystem::path CreateYamlFromIniSmart(
     }
 
     // storing
-    auto bakery_file =
-        (cfg_file_type != CfgFileType::user) &&
-        (cfg_file_type == CfgFileType::bakery || IsBakeryIni(ini_file));
-
-    auto comments = MakeComments(ini_file, bakery_file);
+    auto comments = MakeComments(ini_file, true);
     auto yaml_file = program_data;
-    if (bakery_file) yaml_file /= dirs::kBakery;
+    // check installation type
+    auto agent_type = cma::cfg::DetermineInstallationType();
+
+    if (agent_type == InstallationType::wato) {
+        XLOG::l.w(
+            "Legacy INI file is not converted,"
+            " because This is Bakery Agent");
+        return {};
+    }
+
+    yaml_file /= dirs::kBakery;
 
     std::error_code ec;
     if (!fs::exists(yaml_file, ec)) {
@@ -1010,8 +1077,7 @@ std::filesystem::path CreateYamlFromIniSmart(
     }
 
     yaml_file /= yaml_name;
-    yaml_file.replace_extension(bakery_file ? files::kDefaultBakeryExt
-                                            : files::kDefaultUserExt);
+    yaml_file.replace_extension(files::kDefaultBakeryExt);
 
     StoreYaml(yaml_file, yaml.value(), comments);
     XLOG::l.i("File '{}' is successfully converted", ini_file.u8string());

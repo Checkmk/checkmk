@@ -29,15 +29,16 @@ import requests, json, os, re, sys
 
 api_url = "https://api.pushover.net/1/messages.json"
 
+
 def main():
-    context = dict([ (var[7:], value.decode("utf-8"))
-                      for (var, value) in os.environ.items()
-                      if var.startswith("NOTIFY_")])
+    context = dict([(var[7:], value.decode("utf-8"))
+                    for (var, value) in os.environ.items()
+                    if var.startswith("NOTIFY_")])
 
     subject = get_subject(context)
-    text    = get_text(context)
+    text = get_text(context)
 
-    api_key       = context["PARAMETER_API_KEY"]
+    api_key = context["PARAMETER_API_KEY"]
     recipient_key = context["PARAMETER_RECIPIENT_KEY"]
 
     send_push_notification(api_key, recipient_key, subject, text, context)
@@ -64,7 +65,7 @@ def get_subject(context):
     s += " "
 
     notification_type = context["NOTIFICATIONTYPE"]
-    if notification_type in [ "PROBLEM", "RECOVERY" ]:
+    if notification_type in ["PROBLEM", "RECOVERY"]:
         s += "$PREVIOUS@HARDSHORTSTATE$ %s $@SHORTSTATE$" % unichr(8594)
 
     elif notification_type.startswith("FLAP"):
@@ -107,7 +108,7 @@ def get_text(context):
 
 def substitute_context(template, context):
     for varname, value in context.items():
-        template = template.replace("$"+varname+"$", value)
+        template = template.replace("$" + varname + "$", value)
 
     # Remove the rest of the variables and make them empty
     template = re.sub("\$[A-Z_][A-Z_0-9]*\$", "", template)
@@ -116,12 +117,12 @@ def substitute_context(template, context):
 
 def send_push_notification(api_key, recipient_key, subject, text, context):
     params = [
-        ("token",     api_key),
-        ("user",      recipient_key),
-        ("title",     subject.encode("utf-8")),
-        ("message",   text.encode("utf-8")),
-        ("timestamp", int(context["MICROTIME"])/1000000),
-        ("html",      1),
+        ("token", api_key),
+        ("user", recipient_key),
+        ("title", subject.encode("utf-8")),
+        ("message", text.encode("utf-8")),
+        ("timestamp", int(context["MICROTIME"]) / 1000000),
+        ("html", 1),
     ]
 
     if context.get("PARAMETER_PRIORITY") in ["-2", "-1", "0", "1"]:
@@ -130,8 +131,8 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
     elif context.get("PARAMETER_PRIORITY_PRIORITY") == "2":
         params += [
             ("priority", context["PARAMETER_PRIORITY_PRIORITY"]),
-            ("expire",   context.get("PARAMETER_PRIORITY_EXPIRE", 0)),
-            ("retry",    context.get("PARAMETER_PRIORITY_RETRY", 0)),
+            ("expire", context.get("PARAMETER_PRIORITY_EXPIRE", 0)),
+            ("retry", context.get("PARAMETER_PRIORITY_RETRY", 0)),
         ]
         if context.get("PARAMETER_PRIORITY_RECEIPTS"):
             params.append(("receipts", context["PARAMETER_PRIORITY_RECEIPTS"]))
@@ -142,7 +143,6 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
     s = requests.Session()
     if context.get("PARAMETER_PROXY_URL"):
         r = s.post(api_url, params=dict(params), proxies={"https": context["PARAMETER_PROXY_URL"]})
-
     else:
         r = s.post(api_url, params=dict(params))
 
@@ -150,8 +150,8 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
     if r_status == '200':
         return True
     else:
-        sys.stdout.write("Failed to send notification. Status: %s, Response: %s\n" % (r_status, r.text))
+        sys.stdout.write(
+            "Failed to send notification. Status: %s, Response: %s\n" % (r_status, r.text))
         return False
-
 
 main()

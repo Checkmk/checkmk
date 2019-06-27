@@ -22,9 +22,9 @@ mockldap = "*"
 isort = "*"
 freezegun = "*"
 compiledb = "*"
-future = "*"
 
 [packages]
+future = "==0.17.1"
 setuptools_scm = "==3.1.0"
 pysphere = "==0.1.7"
 pyasn1 = "==0.4.4"

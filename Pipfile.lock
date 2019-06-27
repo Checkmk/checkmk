@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "bfffd79b379c065d8e051007940a4c4dee9f2dc41eb765bdf672d5134cab3763"
+            "sha256": "6cbd09a3fed685403605d2e7b8ad6eea8451d07b412b01dac3360d677f6a54cb"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -290,6 +290,13 @@
             ],
             "index": "pypi",
             "version": "==0.8"
+        },
+        "future": {
+            "hashes": [
+                "sha256:67045236dcfd6816dc439556d009594abf643e5eb48992e36beac09c2ca659b8"
+            ],
+            "index": "pypi",
+            "version": "==0.17.1"
         },
         "futures": {
             "hashes": [
@@ -1056,7 +1063,7 @@
                 "sha256:9d98697f088eb1b0fa451391f91afb5e3ebde16bbdb272819fd091151fda4f1a",
                 "sha256:f0b0e4eba956de51238e17573b7087e852dfe9854afd2e9c873f73fc0ca0a6dd"
             ],
-            "markers": "python_version < '3.4'",
+            "markers": "python_version == '2.7'",
             "version": "==1.5"
         },
         "backports.ssl-match-hostname": {
@@ -1219,13 +1226,6 @@
             ],
             "markers": "python_version < '3.3'",
             "version": "==1.0.2"
-        },
-        "future": {
-            "hashes": [
-                "sha256:67045236dcfd6816dc439556d009594abf643e5eb48992e36beac09c2ca659b8"
-            ],
-            "index": "pypi",
-            "version": "==0.17.1"
         },
         "futures": {
             "hashes": [

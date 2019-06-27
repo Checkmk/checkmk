@@ -203,6 +203,8 @@ PYTHON_MODULES_LIST += fancycompleter-0.8.tar.gz # needed for pdbpp
 PYTHON_MODULES_LIST += wmctrl-0.3.tar.gz # needed for pdbpp
 PYTHON_MODULES_LIST += pdbpp-0.10.0.tar.gz
 PYTHON_MODULES_LIST += PySnooper-0.0.31.tar.gz
+# Added to support Python 3 transition
+PYTHON_MODULES_LIST += future-0.17.1.tar.gz
 
 
 # NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH

@@ -322,6 +322,7 @@ python-modules-dump-Pipfile:
 	@echo 'isort = "*"'
 	@echo 'freezegun = "*"'
 	@echo 'compiledb = "*"'
+	@echo 'future = "*"'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

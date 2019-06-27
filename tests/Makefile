@@ -6,6 +6,7 @@ BANDIT   := $(PIPENV) run bandit
 COVERAGE := $(PIPENV) run coverage
 PYTEST   := $(PIPENV) run py.test -vv
 YAPF     := $(PIPENV) run yapf
+FUTURIZE := $(PIPENV) run ./test-futurize
 
 include ../defines.make
 
@@ -24,6 +25,7 @@ help:
 	@echo "test-integration          - Run integration tests"
 	@echo "test-packaging            - Run packaging tests"
 	@echo "test-pylint               - Run pylint based tests"
+	@echo "test-python-futurize      - Run python futurize tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
 	@echo "test-format-shell         - Run the shell formatting"
 	@echo "test-unit                 - Run unit tests"
@@ -66,6 +68,10 @@ test-format-python: $(VENV) ../.style.yapf
 	$(YAPF) --parallel --style ../.style.yapf --verbose --diff $$PYTHON_FILES | \
 	grep '^+++ .*(reformatted)$$' | \
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/'
+
+test-python-futurize: $(VENV)
+	$(FUTURIZE)
+
 
 test-gui-crawl: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T gui_crawl $(realpath integration/cmk/gui/test_crawl.py)

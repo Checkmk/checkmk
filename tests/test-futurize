@@ -32,7 +32,7 @@ cd "$REPO_PATH"
 ENABLED_FIXERS=
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_apply"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_dict"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_except"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_except"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_exec"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_exitfunc"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_filter"

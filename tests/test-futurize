@@ -99,7 +99,9 @@ done
 # shellcheck disable=SC2086
 RESULT=$(futurize $FIXER_OPTS $PYTHON_FILES 2>&1)
 echo "$RESULT"
-if [[ $RESULT =~ "No files need to be modified" ]]; then
+if [[ $RESULT =~ "ParseError: bad input" ]]; then
+    exit 1
+elif [[ $RESULT =~ "No files need to be modified" ]]; then
     exit 0
 else
     exit 1

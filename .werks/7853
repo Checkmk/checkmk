@@ -1,0 +1,11 @@
+Title: oracle_longactivesessions: Added Perf-O-Meter for session counter
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b3
+Date: 1561631548
+
+

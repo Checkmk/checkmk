@@ -7769,6 +7769,12 @@ check_metrics["check_mk-arcserve_backup"] = {
     }
 }
 
+check_metrics["check_mk-oracle_longactivesessions"] = {
+    "count": {
+        "name": "oracle_count",
+    },
+}
+
 check_metrics["check_mk-oracle_rman"] = {
     "age": {
         "name": "backup_age"
@@ -8338,6 +8344,13 @@ perfometer_info.append({
     "type": "logarithmic",
     "metric": "logswitches_last_hour",
     "half_value": 15,
+    "exponent": 2,
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "oracle_count",
+    "half_value": 250,
     "exponent": 2,
 })
 

@@ -18,26 +18,6 @@
 #include "tools/_tgt.h"
 #include "yaml-cpp/yaml.h"
 
-namespace cma::cfg {
-TEST(CmaCfg, ProcessPluginEnvironment) {
-    //
-    cma::OnStartTest();
-    std::vector<std::pair<std::string, std::string>> pairs;
-    ProcessPluginEnvironment(
-        [&pairs](std::string_view name, std::string_view value) {
-            pairs.emplace_back(std::string(name), std::string(value));
-        });
-
-    EXPECT_EQ(pairs.size(), 9);
-    auto ret = std::none_of(pairs.begin(), pairs.end(),
-                            [](std::pair<std::string, std::string> p) {
-                                return p.first.empty() || p.second.empty();
-                            });
-    EXPECT_TRUE(ret);
-    //
-}
-}  // namespace cma::cfg
-
 namespace cma::cfg::details {  // to become friendly for cma::cfg classes
 
 static std::filesystem::path CreateYamlnInTemp(const std::string& Name,

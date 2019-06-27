@@ -309,6 +309,7 @@ call check_watest.cmd watest
     </ClCompile>
     <ClCompile Include="test-cap.cpp" />
     <ClCompile Include="test-carrier.cpp" />
+    <ClCompile Include="test-cfg.cpp" />
     <ClCompile Include="test-cma-tools.cpp" />
     <ClCompile Include="test-cvt.cpp" />
     <ClCompile Include="test-encryption.cpp" />

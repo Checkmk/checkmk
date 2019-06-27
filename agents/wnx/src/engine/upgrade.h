@@ -42,16 +42,20 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
                         const std::filesystem::path& ProgramData,
                         bool LocalFileExists);
 
-enum class CfgFileType { user, bakery, automatic };
-// This function will use correct extension and correct sub path
-std::filesystem::path CreateYamlFromIniSmart(
+std::filesystem::path CreateUserYamlFromIni(
     const std::filesystem::path& ini_file,      // ini file to use
     const std::filesystem::path& program_data,  // directory to send
-    const std::string& yaml_name,               // name to be used in output
-    CfgFileType cfg_file_type) noexcept;        // how create bakery yml
+    const std::string& yaml_name                // name to be used in output
+    ) noexcept;
+
+std::filesystem::path CreateBakeryYamlFromIni(
+    const std::filesystem::path& ini_file,      // ini file to use
+    const std::filesystem::path& program_data,  // directory to send
+    const std::string& yaml_name                // name to be used in output
+    ) noexcept;
 
 // after upgrade we create in root our protocol
-bool CreateProtocolFile(std::filesystem::path& ProtocolFile,
+bool CreateProtocolFile(std::filesystem::path& dir,
                         std::string_view OptionalContent);
 // LOW level
 // gtest [+]
@@ -112,6 +116,8 @@ namespace details {
 bool IsIgnoredFile(const std::filesystem::path& filename);
 }
 
+std::filesystem::path ConstructProtocolFileName(
+    const std::filesystem::path& dir) noexcept;
 }  // namespace cma::cfg::upgrade
 
 #endif  // upgrade_h__

@@ -1589,8 +1589,11 @@ class ModeBIRules(ModeBI):
                     html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
 
                     if rule_refs == 0:
-                        tree_url = html.makeuri_contextless([("mode", "bi_rule_tree"),
-                                                             ("id", rule_id)])
+                        tree_url = html.makeuri_contextless([
+                            ("mode", "bi_rule_tree"),
+                            ("id", rule_id),
+                            ("pack", self._pack_id),
+                        ])
                         html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"),
                                          "bitree")
 

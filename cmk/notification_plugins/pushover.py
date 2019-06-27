@@ -112,16 +112,16 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
     if context.get("PARAMETER_SOUND", "none") != "none":
         params.append(("sound", context["PARAMETER_SOUND"]))
 
-    s = requests.Session()
+    session = requests.Session()
     if context.get("PARAMETER_PROXY_URL"):
-        r = s.post(api_url, params=dict(params), proxies={"https": context["PARAMETER_PROXY_URL"]})
-
+        response = session.post(
+            api_url, params=dict(params), proxies={"https": context["PARAMETER_PROXY_URL"]})
     else:
-        r = s.post(api_url, params=dict(params))
+        response = session.post(api_url, params=dict(params))
 
-    r_status = r.status_code
-    if r_status == '200':
+    if response.status_code == '200':
         return True
 
-    sys.stdout.write("Failed to send notification. Status: %s, Response: %s\n" % (r_status, r.text))
+    sys.stdout.write("Failed to send notification. Status: %s, Response: %s\n" %
+                     (response.status_code, response.text))
     return False

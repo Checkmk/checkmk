@@ -49,6 +49,16 @@ just to signal that real build script was not called -->
     <!-- Property Id="ALLUSERS" Value="1" /<- This option already set -->
     <Property Id="REINSTALLMODE" Value="amus" />
 
+    <!-- Help Link in the Control Panel -->
+    <Property Id="ARPHELPLINK" Value="https://tribe29.com" />
+    <!-- Support Link in the Control Panel -->
+    <Property Id="ARPURLINFOABOUT" Value="https://tribe29.com" />
+    
+    <!-- Other links
+    <Property Id="ARPURLUPDATEINFO" Value="https://tribe29.com" />
+    <Property Id="ARPAUTHORIZEDCDFPREFIX" Value="https://tribe29.com/ARPAUTHORIZEDCDFPREFIX" />
+     -->
+    
     <!-- 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed. Stopping installation" />
     this code is disabled, because bakery/msi-update is not able to upgrade versions correctly 

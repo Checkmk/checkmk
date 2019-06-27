@@ -128,6 +128,9 @@
     <ClCompile Include="test-cma-tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test-cfg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\test_files\config\check_mk.old.example.yml">

@@ -112,9 +112,9 @@ TEST(CapTest, PackagedAgent) {
     auto ini_path = fs::current_path();
     ini_path /= "check_mk.ini";
     std::error_code ec;
-    if (fs::exists(ini_path, ec))
+    if (fs::exists(ini_path, ec)) {
         EXPECT_TRUE(IsIniFileFromInstaller(ini_path));
-    else
+    } else
         XLOG::SendStringToStdio(
             fmt::format(
                 "Skipping Cap packagedAgen internal TEST, no file '{}'\n",

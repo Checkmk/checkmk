@@ -6,6 +6,7 @@
 
 #include <filesystem>
 
+#include "cap.h"
 #include "cfg.h"
 #include "read_file.h"
 #include "test_tools.h"
@@ -88,7 +89,7 @@ std::string not_bakeryfile =
     "    counters = Terminal Services:ts_sessions\n"
     "\n";
 
-static void CreateFile(std::filesystem::path Path, std::string Content) {
+static void CreateFileTest(std::filesystem::path Path, std::string Content) {
     std::ofstream ofs(Path);
 
     ofs << Content;
@@ -97,7 +98,7 @@ static void CreateFile(std::filesystem::path Path, std::string Content) {
 static auto CreateIniFile(std::filesystem::path Lwa, const std::string Content,
                           const std::string YamlName) {
     auto ini_file = Lwa / (YamlName + ".ini");
-    CreateFile(Lwa / ini_file, Content);
+    CreateFileTest(Lwa / ini_file, Content);
     return ini_file;
 }
 
@@ -121,10 +122,11 @@ TEST(UpgradeTest, CreateProtocol) {
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
     namespace fs = std::filesystem;
-    fs::path protocol_file = cma::cfg::GetTempDir();
-    protocol_file /= cma::cfg::files::kUpgradeProtocol;
-    auto x = CreateProtocolFile(protocol_file, "  aaa: aaa");
+    fs::path dir = cma::cfg::GetTempDir();
+    auto x = CreateProtocolFile(dir, "  aaa: aaa");
     ASSERT_TRUE(x);
+
+    auto protocol_file = ConstructProtocolFileName(dir);
     auto f = cma::tools::ReadFileInVector(protocol_file);
     ASSERT_TRUE(f.has_value());
     auto file_content = f.value();
@@ -133,7 +135,19 @@ TEST(UpgradeTest, CreateProtocol) {
     EXPECT_EQ(table.size(), 3);
 }
 
-TEST(UpgradeTest, OnlyUserIni) {
+std::filesystem::path ConstructBakeryYmlPath(std::filesystem::path pd_dir) {
+    auto bakery_yaml = pd_dir / dirs::kBakery / files::kDefaultMainConfigName;
+    bakery_yaml += files::kDefaultBakeryExt;
+    return bakery_yaml;
+}
+
+std::filesystem::path ConstructUserYmlPath(std::filesystem::path pd_dir) {
+    auto user_yaml = pd_dir / files::kDefaultMainConfigName;
+    user_yaml += files::kDefaultUserExt;
+    return user_yaml;
+}
+
+TEST(UpgradeTest, UserIniPackagedAgent) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
@@ -143,27 +157,10 @@ TEST(UpgradeTest, OnlyUserIni) {
 
     std::error_code ec;
 
-    auto expected_bakery_name =
-        pd_dir / dirs::kBakery / files::kDefaultMainConfigName;
-    expected_bakery_name += files::kDefaultBakeryExt;
-    auto expected_user_name = pd_dir / files::kDefaultMainConfigName;
-    expected_user_name += files::kDefaultUserExt;
+    auto expected_bakery_name = ConstructBakeryYmlPath(pd_dir);
+    auto expected_user_name = ConstructUserYmlPath(pd_dir);
 
-    // usual file
-    {
-        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
-                        tst::SafeCleanTempDir("out"););
-        auto name = "check_mk";
-        auto ini = CreateIniFile(lwa_dir, not_bakeryfile, name);
-        auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
-        ASSERT_FALSE(local_exists);
-        auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
-        EXPECT_TRUE(user_exists);
-        EXPECT_TRUE(fs::exists(expected_user_name, ec));
-        EXPECT_FALSE(fs::exists(expected_bakery_name, ec));
-    }
-
-    // bakery file
+    // bakery file and no local
     {
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
@@ -177,24 +174,7 @@ TEST(UpgradeTest, OnlyUserIni) {
         EXPECT_FALSE(fs::exists(expected_user_name, ec));
     }
 
-    // non_bakery file + local
-    {
-        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
-                        tst::SafeCleanTempDir("out"););
-        auto u_name = "check_mk";
-        CreateIniFile(lwa_dir, not_bakeryfile, u_name);
-        auto l_name = "check_mk_local";
-        CreateIniFile(lwa_dir, not_bakeryfile_strange, l_name);
-
-        auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
-        ASSERT_TRUE(local_exists);
-        auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
-        EXPECT_TRUE(user_exists);
-        EXPECT_TRUE(fs::exists(expected_bakery_name, ec));
-        EXPECT_TRUE(fs::exists(expected_user_name, ec));
-    }
-
-    // bakery file + local
+    // bakery file and local
     {
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
@@ -209,6 +189,43 @@ TEST(UpgradeTest, OnlyUserIni) {
         EXPECT_TRUE(user_exists);
         EXPECT_TRUE(fs::exists(expected_bakery_name, ec));
         EXPECT_TRUE(fs::exists(expected_user_name, ec));
+        auto bakery_size = fs::file_size(expected_bakery_name, ec);
+        auto user_size = fs::file_size(expected_user_name, ec);
+        EXPECT_TRUE(bakery_size > user_size);
+    }
+
+    // private file and no local
+    {
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
+                        tst::SafeCleanTempDir("out"););
+        auto name = "check_mk";
+        auto ini = CreateIniFile(lwa_dir, not_bakeryfile, name);
+        auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
+        ASSERT_FALSE(local_exists);
+        auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
+        EXPECT_TRUE(user_exists);
+        EXPECT_TRUE(fs::exists(expected_user_name, ec));
+        EXPECT_FALSE(fs::exists(expected_bakery_name, ec));
+    }
+
+    // private file and local
+    {
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
+                        tst::SafeCleanTempDir("out"););
+        auto u_name = "check_mk";
+        CreateIniFile(lwa_dir, not_bakeryfile, u_name);
+        auto l_name = "check_mk_local";
+        CreateIniFile(lwa_dir, not_bakeryfile_strange, l_name);
+
+        auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
+        ASSERT_TRUE(local_exists);
+        auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
+        EXPECT_TRUE(user_exists);
+        EXPECT_TRUE(fs::exists(expected_bakery_name, ec));
+        EXPECT_TRUE(fs::exists(expected_user_name, ec));
+        auto bakery_size = fs::file_size(expected_bakery_name, ec);
+        auto user_size = fs::file_size(expected_user_name, ec);
+        EXPECT_TRUE(bakery_size > user_size);
     }
 
     // null file + local
@@ -241,6 +258,124 @@ TEST(UpgradeTest, OnlyUserIni) {
         EXPECT_FALSE(user_exists);
         EXPECT_FALSE(fs::exists(expected_bakery_name, ec));
         EXPECT_TRUE(fs::exists(expected_user_name, ec));
+    }
+}
+
+void SimulateWatoInstall(std::filesystem::path pd_dir) {
+    namespace fs = std::filesystem;
+    auto bakery_yaml = ConstructBakeryYmlPath(pd_dir);
+    auto user_yaml = ConstructUserYmlPath(pd_dir);
+    std::error_code ec;
+    fs::create_directory(pd_dir / dirs::kBakery, ec);
+    ASSERT_EQ(ec.value(), 0);
+    tst::ConstructFile(bakery_yaml, "11");
+    tst::ConstructFile(user_yaml, "0");
+}
+
+TEST(UpgradeTest, UserIniWatoAgent) {
+    using namespace cma::cfg;
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    auto [lwa_dir, pd_dir] = CreateInOut();
+    ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
+
+    cma::cfg::SetTestInstallationType(InstallationType::wato);
+    ON_OUT_OF_SCOPE(
+        cma::cfg::SetTestInstallationType(InstallationType::packaged));
+
+    std::error_code ec;
+
+    // SIMULATE wato agent installation
+    auto bakery_yaml = ConstructBakeryYmlPath(pd_dir);
+    auto user_yaml = ConstructUserYmlPath(pd_dir);
+
+    // bakery file and no local
+    {
+        SimulateWatoInstall(pd_dir);
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
+                        tst::SafeCleanTempDir("out"););
+        auto name = "check_mk";
+        auto ini = CreateIniFile(lwa_dir, bakeryfile, name);
+        auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
+        ASSERT_FALSE(local_exists);
+        auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
+        EXPECT_FALSE(user_exists);
+        // no changes
+        EXPECT_EQ(fs::file_size(bakery_yaml, ec), 2);
+        EXPECT_EQ(fs::file_size(user_yaml, ec), 1);
+    }
+
+    // bakery file and local
+    {
+        SimulateWatoInstall(pd_dir);
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
+                        tst::SafeCleanTempDir("out"););
+        auto u_name = "check_mk";
+        CreateIniFile(lwa_dir, bakeryfile, u_name);
+        auto l_name = "check_mk_local";
+        CreateIniFile(lwa_dir, not_bakeryfile_strange, l_name);
+
+        auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
+        ASSERT_TRUE(local_exists);
+        auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
+        EXPECT_FALSE(user_exists);
+        // local changed
+        EXPECT_EQ(fs::file_size(bakery_yaml, ec), 2);
+        EXPECT_GE(fs::file_size(user_yaml, ec), 50);
+    }
+
+    // private file and no local
+    {
+        SimulateWatoInstall(pd_dir);
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
+                        tst::SafeCleanTempDir("out"););
+        auto name = "check_mk";
+        auto ini = CreateIniFile(lwa_dir, not_bakeryfile, name);
+        auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
+        ASSERT_FALSE(local_exists);
+        auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
+
+        EXPECT_FALSE(user_exists);
+        // no changes
+        EXPECT_EQ(fs::file_size(bakery_yaml, ec), 2);
+        EXPECT_EQ(fs::file_size(user_yaml, ec), 1);
+    }
+
+    // private file and local
+    {
+        SimulateWatoInstall(pd_dir);
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
+                        tst::SafeCleanTempDir("out"););
+        auto u_name = "check_mk";
+        CreateIniFile(lwa_dir, not_bakeryfile, u_name);
+        auto l_name = "check_mk_local";
+        CreateIniFile(lwa_dir, not_bakeryfile_strange, l_name);
+
+        auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
+        ASSERT_TRUE(local_exists);
+        auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
+        // local changed
+        EXPECT_EQ(fs::file_size(bakery_yaml, ec), 2);
+        EXPECT_GE(fs::file_size(user_yaml, ec), 50);
+    }
+
+    // no private file and local
+    {
+        SimulateWatoInstall(pd_dir);
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
+                        tst::SafeCleanTempDir("out"););
+        auto u_name = "check_mk";
+        CreateIniFile(lwa_dir, not_bakeryfile, u_name);
+        auto l_name = "check_mk_local";
+        CreateIniFile(lwa_dir, not_bakeryfile_strange, l_name);
+
+        auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
+        ASSERT_TRUE(local_exists);
+        auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
+        // local changed
+        EXPECT_EQ(fs::file_size(bakery_yaml, ec), 2);
+        EXPECT_GE(fs::file_size(user_yaml, ec), 50);
     }
 }
 
@@ -283,8 +418,10 @@ TEST(UpgradeTest, LoadIni) {
     {
         auto name = "nullfile";
         auto ini = CreateIniFile(lwa_dir, nullfile, name);
-        auto yaml_file =
-            CreateYamlFromIniSmart(ini, pd_dir, name, CfgFileType::automatic);
+        auto yaml_file = CreateUserYamlFromIni(ini, pd_dir, name);
+        EXPECT_FALSE(IsBakeryIni(ini));
+        EXPECT_TRUE(yaml_file.empty());
+        yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_FALSE(IsBakeryIni(ini));
         EXPECT_TRUE(yaml_file.empty());
     }
@@ -292,9 +429,8 @@ TEST(UpgradeTest, LoadIni) {
     {
         auto name = "bakeryfile";
         auto ini = CreateIniFile(lwa_dir, bakeryfile, name);
-        auto yaml_file =
-            CreateYamlFromIniSmart(ini, pd_dir, name, CfgFileType::automatic);
         EXPECT_TRUE(IsBakeryIni(ini));
+        auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
         auto yaml = YAML::LoadFile(yaml_file.u8string());
@@ -302,11 +438,10 @@ TEST(UpgradeTest, LoadIni) {
     }
 
     {
-        // check that any file we couuld load as klocal
+        // check that any file we could load as local
         auto name = "bakeryfile";
         auto ini = CreateIniFile(lwa_dir, bakeryfile, name);
-        auto yaml_file =
-            CreateYamlFromIniSmart(ini, pd_dir, name, CfgFileType::user);
+        auto yaml_file = CreateUserYamlFromIni(ini, pd_dir, name);
         EXPECT_TRUE(IsBakeryIni(ini));
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultUserExt);
@@ -317,19 +452,22 @@ TEST(UpgradeTest, LoadIni) {
     {
         auto name = "not_bakeryfile";
         auto ini = CreateIniFile(lwa_dir, not_bakeryfile, name);
-        auto yaml_file =
-            CreateYamlFromIniSmart(ini, pd_dir, name, CfgFileType::automatic);
+        auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_FALSE(IsBakeryIni(ini));
         auto yaml = YAML::LoadFile(yaml_file.u8string());
+        EXPECT_EQ(yaml_file.filename().wstring(),
+                  wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
         EXPECT_TRUE(yaml.IsMap());
     }
+
     {
         auto name = "not_bakeryfile_strange";
         auto ini = CreateIniFile(lwa_dir, not_bakeryfile_strange, name);
-        auto yaml_file =
-            CreateYamlFromIniSmart(ini, pd_dir, name, CfgFileType::automatic);
+        auto yaml_file = CreateUserYamlFromIni(ini, pd_dir, name);
         EXPECT_FALSE(IsBakeryIni(ini));
         auto yaml = YAML::LoadFile(yaml_file.u8string());
+        EXPECT_EQ(yaml_file.filename().wstring(),
+                  wtools::ConvertToUTF16(name) + files::kDefaultUserExt);
         EXPECT_TRUE(yaml.IsMap());
     }
 }

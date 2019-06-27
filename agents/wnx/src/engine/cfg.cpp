@@ -28,13 +28,29 @@ namespace details {
 // internal and hidden variables
 // #TODO to be relocated in the application parameters global
 bool G_Service = false;  // set to true only when we run service
+bool G_Test = false;     // set to true only when we run watest
 }  // namespace details
 
 bool IsService() { return details::G_Service; }
+bool IsTest() { return details::G_Test; }
 
 };  // namespace cma
 
 namespace cma::cfg {
+
+InstallationType G_TestInstallationType = InstallationType::packaged;
+void SetTestInstallationType(InstallationType installation_type) {
+    G_TestInstallationType = installation_type;
+}
+
+InstallationType DetermineInstallationType() noexcept {
+    if (cma::IsTest()) return G_TestInstallationType;
+
+    std::filesystem::path source_ini = cma::cfg::GetFileInstallDir();
+    source_ini /= files::kIniFile;
+    return IsIniFileFromInstaller(source_ini) ? InstallationType::packaged
+                                              : InstallationType::wato;
+}
 
 std::wstring WinPerf::buildCmdLine() const {
     std::unique_lock lk(lock_);
@@ -1366,3 +1382,19 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
 }
 
 }  // namespace cma::cfg::details
+
+namespace cma::cfg {
+bool IsIniFileFromInstaller(const std::filesystem::path& filename) {
+    namespace fs = std::filesystem;
+
+    auto data = cma::tools::ReadFileInVector(filename);
+    if (!data.has_value()) return false;
+
+    constexpr std::string_view base = kIniFromInstallMarker;
+    if (data->size() < base.length()) return false;
+
+    auto content = data->data();
+    return !memcmp(content, base.data(), base.length());
+}
+
+}  // namespace cma::cfg

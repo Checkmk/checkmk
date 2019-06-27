@@ -75,6 +75,7 @@ catalog_titles = {
             "sensatronics" : "Sensatronics",
             "socomec"      : "Socomec",
             "stulz"        : "STULZ",
+            "teracom"      : "Teracom",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
             "emka"         : "EMKA Electronic Locking & Monitoring",

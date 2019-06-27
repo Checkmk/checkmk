@@ -27,17 +27,11 @@ import os
 import re
 import subprocess
 import sys
+# suppress missing import error from mypy
+from html import escape as html_escape  # type: ignore
 from typing import AnyStr, Dict, Optional, Tuple  # pylint: disable=unused-import
 
 import requests
-
-try:
-    # First try python3
-    # suppress missing import error from mypy
-    from html import escape as html_escape  # type: ignore
-except ImportError:
-    # Default to python2
-    from cgi import escape as html_escape
 
 from cmk.utils.notify import find_wato_folder
 import cmk.utils.password_store

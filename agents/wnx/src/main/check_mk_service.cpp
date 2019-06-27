@@ -404,7 +404,8 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::TestLegacy();
     }
 
-    if (param == wtools::ConvertToUTF16(kExecParam)) {
+    if (param == wtools::ConvertToUTF16(kExecParam) ||
+        param == wtools::ConvertToUTF16(kAdhocParam)) {
         std::wstring second_param = argc > 2 ? Argv[2] : L"";
 
         auto log_on_screen = cma::srv::StdioLog::no;

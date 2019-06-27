@@ -205,6 +205,7 @@ TEST(FileInfoTest, CheckDriveLetter) {
     ASSERT_TRUE(fileinfo_node.IsDefined());
     ASSERT_TRUE(fileinfo_node.IsMap());
     auto value = a.u8string();
+    value[0] = std::tolower(value[0]);
     auto str = fmt::format("['{}\\*.txt', 'c:\\weirdfile' ]", value);
     fileinfo_node[vars::kFileInfoPath] = YAML::Load(str);
     ASSERT_TRUE(fileinfo_node[vars::kFileInfoPath].IsSequence());

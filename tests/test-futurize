@@ -98,6 +98,10 @@ done
 
 # shellcheck disable=SC2086
 RESULT=$(futurize $FIXER_OPTS $PYTHON_FILES 2>&1)
-echo "$RESULT"
+# This may be a bug: futurize produces some bogus messages like:
+#     RefactoringTool: No changes to check_bi_aggr
+#     RefactoringTool: Files that need to be modified:
+#     RefactoringTool: check_bi_aggr
+echo "$RESULT" | grep  -v '^RefactoringTool: '
 echo "$RESULT" | grep '^+++ .*(refactored)$' | \
     sed -e 's/^+++ //' -e 's/[[:blank:]]*(refactored)$/:1:1: error: file needs to be refactored/'

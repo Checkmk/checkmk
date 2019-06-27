@@ -1761,7 +1761,7 @@ table.data.job_table > tbody > tr > td {
   }
 
   tag {
-    margin: 0 0 2px 5px;
+    margin: 0 5px 2px 0;
 
     > div {
       padding: $tag-padding;
@@ -1772,7 +1772,7 @@ table.data.job_table > tbody > tr > td {
 
     x {
       top: 45%;
-      right: 2px;
+      right: 7px;
       font-size: 10px;
       line-height: 14px;
     }
@@ -1832,6 +1832,6 @@ table.data.job_table > tbody > tr > td {
 }
 
 .tagify.display[readonly] tag {
-    padding: 2px 6px;
+    padding: 1px 0px;
     margin: 0px 0px;
 }

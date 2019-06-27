@@ -112,25 +112,38 @@ $LONGSERVICEOUTPUT$
 
     short_desc = utils.substitute_context(short_desc, context)
     desc = utils.substitute_context(desc, context)
+    incident = handle_issue_exists(problem_id, url, user, pwd)
 
     if context['NOTIFICATIONTYPE'] == 'PROBLEM':
+        if incident:
+            sys.stdout.write(
+                "Ticket %s with Check_MK problem ID: %s in work notes already exists.\n" %
+                (incident[0], problem_id))
+            return 0
         handle_problem(url, user, pwd, short_desc, desc, hostname, servicename, problem_id, caller,
                        urgency, impact, timeout)
     elif context['NOTIFICATIONTYPE'] == 'RECOVERY':
-        handle_recovery(problem_id, url, user, pwd, desc, caller, timeout)
+        handle_recovery(incident, url, user, pwd, desc, caller, timeout)
     elif context['NOTIFICATIONTYPE'] == 'ACKNOWLEDGEMENT':
-        handle_ack(problem_id, url, user, pwd, ack_comment, ack_author, ack_state, caller, timeout)
+        handle_ack(incident, url, user, pwd, ack_comment, ack_author, ack_state, caller, timeout)
     elif context['NOTIFICATIONTYPE'] == 'DOWNTIMESTART':
         desc = """Downtime was set.
 User: $NOTIFICATIONAUTHOR$
 Comment: $NOTIFICATIONCOMMENT$
 """
         desc = utils.substitute_context(desc, context)
-        handle_downtime(problem_id, url, user, pwd, desc, "start", dtstart_state, caller, timeout)
-    elif context['NOTIFICATIONTYPE'] == 'DOWNTIMECANCELLED':
-        desc = """Downtime expired.
+        handle_downtime(incident, url, user, pwd, desc, dtstart_state, caller, timeout)
+        sys.stdout.write('Ticket %s: successfully added downtime.\n' % incident[0])
+    elif context['NOTIFICATIONTYPE'] == 'DOWNTIMEEND':
+        desc = """Downtime ended.
 """
-        handle_downtime(problem_id, url, user, pwd, desc, "end", dtend_state, caller, timeout)
+        handle_downtime(incident, url, user, pwd, desc, dtend_state, caller, timeout)
+        sys.stdout.write('Ticket %s: successfully removed downtime.\n' % incident[0])
+    elif context['NOTIFICATIONTYPE'] == 'DOWNTIMECANCELLED':
+        desc = """Downtime canceled.
+"""
+        handle_downtime(incident, url, user, pwd, desc, dtend_state, caller, timeout)
+        sys.stdout.write('Ticket %s: successfully cancelled downtime.\n' % incident[0])
     else:
         sys.stdout.write("Noticication type %s not supported\n" % (context['NOTIFICATIONTYPE']))
         return 0
@@ -138,13 +151,6 @@ Comment: $NOTIFICATIONCOMMENT$
 
 def handle_problem(url, user, pwd, short_desc, desc, hostname, servicename, problem_id, caller,
                    urgency, impact, timeout):
-    incident = handle_issue_exists(problem_id, url, user, pwd)
-
-    if incident:
-        sys.stdout.write("Ticket %s with Check_MK problem ID: %s in work notes already exists.\n" %
-                         (incident[0], problem_id))
-        return 0
-
     url += "/api/now/table/incident"
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     response = requests.post(url,
@@ -170,9 +176,7 @@ def handle_problem(url, user, pwd, short_desc, desc, hostname, servicename, prob
     return 0
 
 
-def handle_recovery(problem_id, url, user, pwd, desc, caller, timeout):
-    incident = handle_issue_exists(problem_id, url, user, pwd)
-
+def handle_recovery(incident, url, user, pwd, desc, caller, timeout):
     url += "/api/now/table/incident/%s" % incident[1]
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     response = requests.put(url,
@@ -195,9 +199,7 @@ def handle_recovery(problem_id, url, user, pwd, desc, caller, timeout):
     return 0
 
 
-def handle_ack(problem_id, url, user, pwd, ack_comment, ack_author, ack_state, caller, timeout):
-    incident = handle_issue_exists(problem_id, url, user, pwd)
-
+def handle_ack(incident, url, user, pwd, ack_comment, ack_author, ack_state, caller, timeout):
     url += "/api/now/table/incident/%s" % incident[1]
     json = {
         "caller_id": caller,
@@ -219,9 +221,7 @@ def handle_ack(problem_id, url, user, pwd, ack_comment, ack_author, ack_state, c
     return 0
 
 
-def handle_downtime(problem_id, url, user, pwd, desc, which, dt_state, caller, timeout):
-    incident = handle_issue_exists(problem_id, url, user, pwd)
-
+def handle_downtime(incident, url, user, pwd, desc, dt_state, caller, timeout):
     url += "/api/now/table/incident/%s" % incident[1]
     json = {"caller_id": caller, "work_notes": desc}
 
@@ -236,10 +236,6 @@ def handle_downtime(problem_id, url, user, pwd, desc, which, dt_state, caller, t
                          (response.status_code, response.json()))
         return 2
 
-    if which == "start":
-        sys.stdout.write('Ticket %s: successfully added downtime.\n' % incident[0])
-    if which == "end":
-        sys.stdout.write('Ticket %s: successfully removed downtime.\n' % incident[0])
     return 0
 
 

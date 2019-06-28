@@ -22,6 +22,8 @@ mockldap = "*"
 isort = "*"
 freezegun = "*"
 compiledb = "*"
+pymongo = "*"
+bson = "*"
 
 [packages]
 setuptools_scm = "==3.1.0"

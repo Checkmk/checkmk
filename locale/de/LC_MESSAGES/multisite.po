@@ -2142,9 +2142,8 @@ msgstr "Akzeptierte Pakete/s"
 msgid "Accepted connections"
 msgstr "Angenommene Verbindungen"
 
-#, fuzzy
 msgid "Accepted connections per second"
-msgstr "Verbindungen pro Sekunde"
+msgstr "Angenommene Verbindungen pro Sekunde"
 
 msgid ""
 "Accepts any SSH Host Key presented by the storage device. Please note: This "
@@ -2675,9 +2674,8 @@ msgstr "Attribut hinzufügen"
 msgid "Add child node generator"
 msgstr "Generator für Child-Node hinzufügen"
 
-#, fuzzy
 msgid "Add cluster mapping"
-msgstr "Neue Umwandlung hinzufügen"
+msgstr "Clusterzuordnung hinzufügen"
 
 msgid "Add column"
 msgstr "Spalte hinzufügen"
@@ -2858,13 +2856,11 @@ msgstr "Remote-Instanz hinzufügen"
 msgid "Add renaming"
 msgstr "Umbenennung hinzufügen"
 
-#, fuzzy
 msgid "Add resource group"
-msgstr "Ressourcengruppe"
+msgstr "Ressourcengruppe hinzufügen"
 
-#, fuzzy
 msgid "Add resource tag"
-msgstr "Ressourcengruppe"
+msgstr "Ressourcentag hinzufügen"
 
 msgid "Add role rule"
 msgstr "Rollenregel hinzufügen"
@@ -3096,9 +3092,8 @@ msgstr "Adhoc für %d Minuten"
 msgid "Admin"
 msgstr "Admin"
 
-#, fuzzy
 msgid "Admin states to discover"
-msgstr "Administrative Status, die erkannt werden sollen"
+msgstr "Admin Zustände, die erkannt werden sollen"
 
 msgid "Administration Tool (WATO)"
 msgstr "Konfigurations-GUI (WATO)"
@@ -3139,9 +3134,10 @@ msgstr "Administratoren (mit dem Recht \"Schreibrecht auf alle Passworte\")"
 msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Leistung"
 
-#, fuzzy
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
-msgstr "SSL/TLS Unterstützung für erweiterte Hostnamen (SNI) ein"
+msgstr ""
+"Fortgeschritten: Unterstützung für  SSL/TLS Hostnamen Erweiterung (SNI) "
+"ausschalten"
 
 msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
@@ -3631,21 +3627,17 @@ msgstr "Alarmiere bei zu hoher CPU-Auslastung"
 msgid "Alert on too high FPGA utilization"
 msgstr "Alarm bei zu hoher FPGA-Auslastung"
 
-#, fuzzy
 msgid "Alert on too high PCI IO utilization"
-msgstr "Alarmiere bei zu hoher CPU-Auslastung"
+msgstr "Alarmiere bei zu hoher PCI IO Auslastung"
 
-#, fuzzy
 msgid "Alert on too high memory utilization"
-msgstr "Alarmiere bei zu hoher CPU-Auslastung"
+msgstr "Alarmiere bei zu hoher Speicher-Auslastung"
 
-#, fuzzy
 msgid "Alert on too high overall utilization"
-msgstr "Alarmiere bei zu hoher CPU-Auslastung"
+msgstr "Alarmiere bei zu hoher Gesamtauslastung"
 
-#, fuzzy
 msgid "Alert on too high power consumption"
-msgstr "Alarmiere bei zu hoher CPU-Auslastung"
+msgstr "Alarmiere bei zu hohem Energieverbrauch"
 
 msgid "Alerting depending on the number of used licenses is disabled"
 msgstr "Alarmierung der Anzahl der Benutzen Lizenzen ist deaktiviert"
@@ -5271,9 +5263,8 @@ msgid "Average latency used by Azure Storage to process a successful request"
 msgstr ""
 "Durchschnittliche Latenzzeit, von Azure Storage für eine erfolgreiche Anfrage"
 
-#, fuzzy
 msgid "Average processor speed"
-msgstr "Durchschnittliche Antwortzeit"
+msgstr "Durchschnittliche Prozessor Gescwindigkeit"
 
 msgid "Average read request size"
 msgstr "Durchschnittliche Lese-Request-Größe"
@@ -6387,7 +6378,7 @@ msgid "CIFS"
 msgstr "CIFS"
 
 msgid "CISCO Digital Optical Monitoring (DOM)"
-msgstr ""
+msgstr "CISCO Digitales optisches Überwachen (DOM)"
 
 msgid "CLOSED"
 msgstr "CLOSED"
@@ -6445,9 +6436,8 @@ msgstr "CPU-Zeit"
 msgid "CPU Utilization of Clusters"
 msgstr "CPU-Auslastung von Clustern"
 
-#, fuzzy
 msgid "CPU entitlement"
-msgstr "CPU-Zeit"
+msgstr "CPU-Kontingent"
 
 msgid "CPU idle time"
 msgstr "CPU-Leerlaufzeit"
@@ -6521,9 +6511,8 @@ msgstr "CPU-Auslastung Warnung bei"
 msgid "CPU utilization"
 msgstr "CPU-Auslastung"
 
-#, fuzzy
 msgid "CPU utilization (%(util_numcpu_as_max:max@count) CPU Threads)"
-msgstr "CPU-Auslastung (%(util:max@count) CPU-Threads)"
+msgstr "CPU-Auslastung (%(util_numcpu_as_max:max@count) CPU-Threads)"
 
 msgid "CPU utilization (average)"
 msgstr "CPU-Auslastung (Durchschnitt)"
@@ -6971,9 +6960,8 @@ msgstr "Ceph-Status"
 msgid "Certificate Chain (Root / Intermediate Certificate)"
 msgstr "Zertifikatkette (Root / Zwischenzertifikat)"
 
-#, fuzzy
 msgid "Certificate Checking"
-msgstr "Überprüfung von SSL-Zertifikaten"
+msgstr "Überprüfung von Zertifikaten"
 
 msgid "Certificate chain"
 msgstr "Zertifikatskette"
@@ -7460,12 +7448,11 @@ msgstr ""
 "Überprüfe die Auflösung von Hostname in IP Adresse durch einen DNS Server. "
 "Dieser Check benutzt <tt>check_dns</tt> der Standard-Nagios Plugins."
 
-#, fuzzy
 msgid ""
 "Check this to turn off multiprocessing. Recommended for debugging purposes "
 "only."
 msgstr ""
-"Auswählen um multiprocessing zu deaktivieren. Nur zum debuggen empfohlen."
+"Auswählen um multiprocessing zu deaktivieren. Nur zum Debuggen empfohlen."
 
 msgid "Check timeout for services (Microcore)"
 msgstr "Checktimeout für Services (Microcore)"
@@ -7953,9 +7940,8 @@ msgstr "Kunden ID"
 msgid "Client ID / Application ID"
 msgstr "Client-ID / Anwendungs-ID"
 
-#, fuzzy
 msgid "Client Secret"
-msgstr "Kundenpasswort"
+msgstr "Clientpasswort"
 
 msgid "Client TLS errors"
 msgstr "TLS-Fehler auf Clientseite"
@@ -8078,9 +8064,8 @@ msgstr "Cluster %d"
 msgid "Cluster IP"
 msgstr "Cluster"
 
-#, fuzzy
 msgid "Cluster Name"
-msgstr "Geclustert"
+msgstr "Clustername"
 
 #, fuzzy
 msgid "Cluster behaviour"
@@ -8093,9 +8078,8 @@ msgstr "Ist Cluster-Host"
 msgid "Cluster host"
 msgstr "Ist Cluster-Host"
 
-#, fuzzy
 msgid "Cluster node IPs"
-msgstr "Ist Cluster-Host"
+msgstr "Clusterknoten IP Adressen"
 
 msgid "Cluster node definition"
 msgstr "Definition von Clusterknoten"
@@ -8476,9 +8460,8 @@ msgstr "Konfiguration des Updateplugins"
 msgid "Configuration variable:"
 msgstr "Konfigurationsvariable:"
 
-#, fuzzy
 msgid "Configure a logfile section"
-msgstr "Konfigurationsverbindung"
+msgstr "Konfiguriere eine Logdatei Sektion"
 
 msgid "Configure access permissions to NagVis maps."
 msgstr "Zugangsberechtigungen für NagVis-Karten konfigurieren."
@@ -8957,9 +8940,8 @@ msgstr "Verbindungszeit"
 msgid "Connection timeout"
 msgstr "Verbindungstimeout"
 
-#, fuzzy
 msgid "Connection timeout in seconds"
-msgstr "Verbindungstimeout"
+msgstr "Verbindungstimeout in Sekunden"
 
 msgid "Connection to the Web API"
 msgstr "Verbindung zur Web-API"
@@ -9104,9 +9086,8 @@ msgstr "Container"
 msgid "Container ID"
 msgstr "Container"
 
-#, fuzzy
 msgid "Container Identifier"
-msgstr "Instanz-ID"
+msgstr "Container Identifizierung"
 
 msgid "Container Name"
 msgstr "Containername"
@@ -9362,9 +9343,8 @@ msgstr "Zähle bis ausgelöst wird"
 msgid "Count, size and age of files (Linux, Windows)"
 msgstr "Anzahl, Größe und Alter von Dateien (Linux, Windows)"
 
-#, fuzzy
 msgid "Count, size and age of files - mk_filestat (Linux)"
-msgstr "Anzahl, Größe und Alter von Dateien (Linux, Windows)"
+msgstr "Anzahl, Größe und Alter von Dateien - mk_filestat (Linux)"
 
 msgid "Counter"
 msgstr "Zähler"
@@ -9787,9 +9767,8 @@ msgstr "Sicherung %s erzeugt"
 msgid "Created with CheckMK Version $CHECK_MK_VERSION$"
 msgstr "Erstellt mit Check_MK-Version $CHECK_MK_VERSION$"
 
-#, fuzzy
 msgid "Creating all sections"
-msgstr "Graphensammlung erstellen"
+msgstr "Alle Sektionen werden erzeugt"
 
 #, python-format
 msgid "Creating scheduled report '%s'..."
@@ -11456,13 +11435,13 @@ msgid "Deploy powershell plugin - recommended for Win2k8 upwards"
 msgstr ""
 "Powershell-Version des Plugins ausrollen (für Windows 2008 und aufwärts)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deploy the %s plugin and its configuration"
-msgstr "Das Logwatch Plugin mit Konfiguration ausrollen"
+msgstr "Das %s Plugin mit Konfiguration ausrollen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deploy the %s plugin without configuration"
-msgstr "Das Logwatch Plugin ohne Konfiguration ausrollen"
+msgstr "Das %s Plugin ohne Konfiguration ausrollen"
 
 msgid "Deploy the APT plugin"
 msgstr "Das APT-Plugin ausrollen"
@@ -11527,13 +11506,11 @@ msgstr "Das Agentenplugin <tt>mk_sshd_config</tt> ausrollen."
 msgid "Deploy the agent plugin <tt>mk_suseconnect</tt>."
 msgstr "Das Agentenplugin <tt>mk_suseconnect</tt> ausrollen."
 
-#, fuzzy
 msgid "Deploy the docker container plugin"
-msgstr "Das SAP-Router-Plugin ausrollen"
+msgstr "Das Docker Container Plugin ausrollen"
 
-#, fuzzy
 msgid "Deploy the docker plugin"
-msgstr "Das Docker-Node-Plugin ausrollen"
+msgstr "Das Docker Plugin ausrollen"
 
 msgid "Deploy the netstat plugin"
 msgstr "Bereitstellen des netstat-Plugins"
@@ -12494,9 +12471,9 @@ msgstr "Plugin für Windows Broadcom-Bonding nicht ausrollen"
 msgid "Do not deploy plugin for Windows interfaces"
 msgstr "Nicht für Windows Interfaces ausrollen."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Do not deploy the %s plugin"
-msgstr "Das APT-Plugin nicht ausrollen"
+msgstr "Das %s Plugin nicht ausrollen"
 
 msgid "Do not deploy the APT plugin"
 msgstr "Das APT-Plugin nicht ausrollen"
@@ -12561,13 +12538,11 @@ msgstr "Das TSM Plugin nicht ausrollen"
 msgid "Do not deploy the Zypper plugin"
 msgstr "Das Zypper Plugin nicht ausrollen"
 
-#, fuzzy
 msgid "Do not deploy the docker container plugin"
-msgstr "Das SAP-Router-Plugin nicht ausrollen"
+msgstr "Das Docker Container Plugin nicht ausrollen"
 
-#, fuzzy
 msgid "Do not deploy the docker plugin"
-msgstr "Das Docker-Node-Plugin ausrollen"
+msgstr "Das Docker Plugin nicht ausrollen"
 
 msgid "Do not deploy the netstat plugin"
 msgstr "Das Netstat-Plugin nicht bereitstellen"
@@ -12961,9 +12936,8 @@ msgstr "Docker Images"
 msgid "Docker node"
 msgstr "Docker-Node"
 
-#, fuzzy
 msgid "Docker node and containers"
-msgstr "Docker Node Container Schwellwerte"
+msgstr "Docker Node und Container"
 
 msgid "Docker node container levels"
 msgstr "Docker Node Container Schwellwerte"
@@ -14273,9 +14247,8 @@ msgstr "Engine-IDs (nur für SNMPv3 benötigt)"
 msgid "English"
 msgstr "Englisch"
 
-#, fuzzy
 msgid "Ent-to-end latency"
-msgstr "Leselatenz"
+msgstr "Ende-zu-Ende Latenz"
 
 msgid "Enter"
 msgstr "OK"
@@ -14322,15 +14295,13 @@ msgid "Enterasys Switch: Temperature"
 msgstr "Enterasys Switch: Temperatur"
 
 msgid "Entitled capacity consumed"
-msgstr ""
+msgstr "Verbrauch des Kapazitätskontigentes"
 
-#, fuzzy
 msgid "Entitlement"
-msgstr "Elemente"
+msgstr "Kontingent"
 
-#, fuzzy
 msgid "Entity"
-msgstr "Identität"
+msgstr "Entität"
 
 msgid "Entries"
 msgstr "Einträge"
@@ -14754,9 +14725,8 @@ msgstr "Folgende Services ausschließen"
 msgid "Exclude times out of notification period"
 msgstr "Zeiten außerhalb der Alarmierungsperiode ausschließen"
 
-#, fuzzy
 msgid "Excluded"
-msgstr "Schließe aus"
+msgstr "Ausgeschlossen"
 
 msgid "Exclusive Locks"
 msgstr "Exklusive Locks"
@@ -16128,9 +16098,8 @@ msgstr "Für folgende Zustände:"
 msgid "Forbid to see the whole tree"
 msgstr "Verbiete, den ganzen Baum zu sehen"
 
-#, fuzzy
 msgid "Force agent to run in single thread"
-msgstr "In einem einzigen Thread ausführen"
+msgstr "Den Agenten in einem einzigen Thread ausführen"
 
 msgid ""
 "Force explicit setting for parents even if setting matches that of the folder"
@@ -16329,9 +16298,8 @@ msgstr "Freier RAM"
 msgid "Free SGA memory available"
 msgstr "Freier SGA-Speicher vorhanden"
 
-#, fuzzy
 msgid "Free filesystem space"
-msgstr "Belegter Dateisystemplatz"
+msgstr "Freier Dateisystemplatz"
 
 msgid "Free leases levels"
 msgstr "Schwellen für freie Leases"
@@ -16486,13 +16454,11 @@ msgstr "Voraussetzung erfüllt"
 msgid "Fulltext search"
 msgstr "Volltext-Suche"
 
-#, fuzzy
 msgid "Fully monitor docker containers"
-msgstr "Docker Container"
+msgstr "Docker Container vollständig überwachen"
 
-#, fuzzy
 msgid "Fully monitor the docker node"
-msgstr "Das Docker-Node-Plugin ausrollen"
+msgstr "Den Docker Node vollständig überwachen"
 
 msgid "GB"
 msgstr "GB"
@@ -17066,13 +17032,11 @@ msgstr "Verschachtelte Gruppen unterstützen (nur Active Directory)"
 msgid "Handled Requests"
 msgstr "Bearbeitete Anfragen"
 
-#, fuzzy
 msgid "Handled connections"
-msgstr "Fehlgeschlagene Verbindungen"
+msgstr "Behandelte Verbindungen"
 
-#, fuzzy
 msgid "Handled connections per second"
-msgstr "Verbindungen pro Sekunde"
+msgstr "Behandelte Verbindungen pro Sekunde"
 
 msgid "Handling"
 msgstr "Auswahl"
@@ -17150,9 +17114,8 @@ msgstr "Hardware- & Software-Baum"
 msgid "Hardware / Software Inventory"
 msgstr "Hardware/Software-Inventur"
 
-#, fuzzy
 msgid "Hardware Corrupted"
-msgstr "Hardwarekorrupter Speicher"
+msgstr "Korrumpierte Hardware"
 
 msgid "Hardware Sensors via OpenHardwareMonitor"
 msgstr "Hardware-Sensoren via OpenHardware Monitor"
@@ -18521,9 +18484,8 @@ msgstr "Host-Suche"
 msgid "Host service level"
 msgstr "Host Service-Level"
 
-#, fuzzy
 msgid "Host settings"
-msgstr "Individuelle Einstellungen"
+msgstr "Host Einstellungen"
 
 msgid "Host site and name"
 msgstr "Hostname und Site"
@@ -18780,9 +18742,8 @@ msgstr "Hosts mit Serviceproblemen"
 msgid "Hosts in this folder"
 msgstr "Hosts in diesem Ordner"
 
-#, fuzzy
 msgid "Hosts name / IP address"
-msgstr "DNS Hostname/IP Adresse"
+msgstr "Hostname/IP Adresse"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Hosts, die kein inline-SNMP verwenden"
@@ -19026,9 +18987,8 @@ msgstr "IBM SVC Platte"
 msgid "IBM SVC Pool Capacity"
 msgstr "IBM SVC Pool-Kapazität"
 
-#, fuzzy
 msgid "IBM SVC Total Disk Latency"
-msgstr "IBM SVC: Schwellen für die Gesamte Plattenlatzenz"
+msgstr "IBM SVC: Gesamte Plattenlatzenz"
 
 msgid "IBM SVC disk"
 msgstr "IBM SVC Platte"
@@ -19218,9 +19178,8 @@ msgstr "IPv4-Adresse"
 msgid "IPv4 only"
 msgstr "Nur IPv4"
 
-#, fuzzy
 msgid "IPv4/IPv6 address"
-msgstr "IPv6-Adresse"
+msgstr "IPv4/IPv6-Adresse"
 
 msgid "IPv4/IPv6 dual-stack"
 msgstr "IPv4/IPV6 Dual-Stack"
@@ -20938,6 +20897,12 @@ msgid ""
 "li></ul>Moreover you have to create piggybacked hosts in Check_MK for each "
 "docker container. The piggybacked host name is the docker container ID."
 msgstr ""
+"Um Docker-Container zu überwachen, sammelt das Plugin <tt>mk_docker.py</tt> "
+"folgende Informationen von jedem Docker-Container als Huckepack-Daten:"
+"<ul><li><li>Zustand, Knotenname, Labels und Netzwerkinformationen</"
+"li><li>Ausführung des <tt>check_mk_agent</tt> innerhalb laufender Container</"
+"li></ul> Außerdem müssen Sie in Check_MK für jeden Docker-Container "
+"Huckepackhosts anlegen. Der Huckepackthostname ist die Docker-Container-ID."
 
 msgid ""
 "In order to save resources on the target host and on the update server it is "
@@ -23837,9 +23802,8 @@ msgstr "Logwatch Event Console Weiterleitung"
 msgid "Logwatch Patterns"
 msgstr "Logwatch Muster"
 
-#, fuzzy
 msgid "Long - Use the full ID"
-msgstr "Die folgende ID verwenden"
+msgstr "Lang - Die gesamte ID verwenden"
 
 msgid "Long active sessions"
 msgstr "Lang aktive Sitzungen"
@@ -24500,13 +24464,11 @@ msgstr "Bilde autoclose-Status ab"
 msgid "Map auto shrink status"
 msgstr "Bilde Auto-Shrink-Status ab"
 
-#, fuzzy
 msgid "Map data relating to VMs"
-msgstr "Gesamte Daten relativ zu RAM"
+msgstr "Daten von VMs zuordnen"
 
-#, fuzzy
 msgid "Map data to group host"
-msgstr "Status eines Hosts"
+msgstr "Daten dem Gruppen-Host zuordnen"
 
 msgid "Map data to the VM itself"
 msgstr "Daten der VM selbst zuordnen"
@@ -24546,9 +24508,8 @@ msgstr "Standbystatus abbilden"
 msgid "Map states"
 msgstr "Zustände übersetzen"
 
-#, fuzzy
 msgid "Map systemd states to monitoring states"
-msgstr "Benutzer anlegen, ändern und löschen, Ändern von Passworten"
+msgstr "Systemd Zustände auf Überwachungszustände abbilden"
 
 msgid "Mapped data"
 msgstr "Gemappte Daten"
@@ -24806,17 +24767,14 @@ msgstr "Maximales Alter der ältesten Datei"
 msgid "Maximal file count"
 msgstr "Maximale Dateianzahl"
 
-#, fuzzy
 msgid "Maximal number of daemon threads"
-msgstr "Maximale Anzahl von Threads"
+msgstr "Maximale Anzahl von Daemon Threads"
 
-#, fuzzy
 msgid "Maximal number of threads"
 msgstr "Maximale Anzahl von Threads"
 
-#, fuzzy
 msgid "Maximal rate of thread count"
-msgstr "Maximale Dateianzahl"
+msgstr "Maximale Rate der Anzahl von Threads"
 
 msgid "Maximal size"
 msgstr "Maximale Größe"
@@ -25223,9 +25181,8 @@ msgstr "Speicherverbrauch von DB2 (Linux, AIX, Solaris)"
 msgid "Memory used by caches"
 msgstr "Speicher belegt von Caches"
 
-#, fuzzy
 msgid "Memory utilization"
-msgstr "Auslastung pro Kern"
+msgstr "Speicher Auslastung"
 
 msgid "Memory warning at"
 msgstr "speicherwarnung ab"
@@ -26142,9 +26099,8 @@ msgstr ""
 msgid "Name"
 msgstr "Name"
 
-#, fuzzy
 msgid "Name - Use the containers name"
-msgstr "Name des Containers"
+msgstr "Name - Den Namen des Containers verwenden"
 
 msgid "Name / Description"
 msgstr "Name/Beschreibung"
@@ -26531,9 +26487,8 @@ msgstr "Netzwerkchecks ohne Agent"
 msgid "Networks"
 msgstr "Netzwerke"
 
-#, fuzzy
 msgid "Never analyzed/vacuumed tables"
-msgstr "Alter der niemals ausgewerteten/vakuumierten Tabellen"
+msgstr "Niemals ausgewertete/vakuumierte Tabellen"
 
 msgid "Never do activate changes in the following time ranges"
 msgstr "Niemals Änderungen in folgenden Zeitbereichen aktivieren"
@@ -28176,9 +28131,8 @@ msgstr "Älteste zuerst"
 msgid "Omit ICMP payload"
 msgstr "ICMP-Payload weglassen"
 
-#, fuzzy
 msgid "Omit docker disk usage info"
-msgstr "Docker Node Festplattennutzung"
+msgstr "Docker Node Festplattennutzung auslassen"
 
 msgid "Omit payload in ICMP packets"
 msgstr "ICMP-Pakete ohne Payload erzeugen"
@@ -29846,7 +29800,7 @@ msgid "Personal Settings"
 msgstr "Persönliche Einstellungen"
 
 msgid "Phantom interruptions received"
-msgstr ""
+msgstr "Empfangene Phantom Unterbrechungen"
 
 msgid "Phase"
 msgstr "Phase"
@@ -29932,9 +29886,8 @@ msgstr "Huckepage-Informationen von einem anderen Host"
 msgid "Piggyback name of virtual machines"
 msgstr "Huckepack Name der virtuellen Maschine"
 
-#, fuzzy
 msgid "Piggybacked docker containers"
-msgstr "Docker Container"
+msgstr "Huckepack Docker Container"
 
 msgid "Ping"
 msgstr "Ping"
@@ -30504,9 +30457,8 @@ msgstr "Ressourcengruppe"
 msgid "Pods"
 msgstr "Pods"
 
-#, fuzzy
 msgid "Point-to-site bandwidth"
-msgstr "Eingehende Bandbreite"
+msgstr "Point-to-Site Bandbreite"
 
 msgid "Policy name"
 msgstr "Name der Policy"
@@ -30537,11 +30489,10 @@ msgstr "Port Nummer"
 msgid "Port Usage"
 msgstr "Portbelegung"
 
-#, fuzzy
 msgid "Port defaults to 443. In this mode the URL is not checked."
 msgstr ""
-"Minimale Anzahl von Tagen für die Gültigkeit eines Zertifikats. Standard-"
-"port: 443. Wenn diese Option verwendet wird, dann wird die URL nicht geprüft."
+"Standard-port ist 443. Wenn diese Option verwendet wird, dann wird die URL "
+"nicht geprüft."
 
 msgid "Port down time until considered unused"
 msgstr "Unbenutzte Zeit bevor der Port als frei bezeichnet wird"
@@ -31076,13 +31027,11 @@ msgstr "Schwellen für Provisionierung"
 msgid "Proxy URL"
 msgstr "Proxy-URL"
 
-#, fuzzy
 msgid "Proxy basic authorization"
-msgstr "Proxy-Autorisation"
+msgstr "Proxy-Autorisation (basic)"
 
-#, fuzzy
 msgid "Proxy server address"
-msgstr "Serveradresse"
+msgstr "Proxyserveradresse"
 
 msgid "Proxy settings"
 msgstr "Proxy-Einstellungen"
@@ -32418,9 +32367,8 @@ msgstr ""
 msgid "Requests in Processing"
 msgstr "Aktuell bearbeitete Anfragen"
 
-#, fuzzy
 msgid "Requests per connection"
-msgstr "Durchschnittliche Requests pro Verbindung"
+msgstr "Requests pro Verbindung"
 
 msgid "Requests per second"
 msgstr "Anfragen pro Sekunde"
@@ -32587,9 +32535,8 @@ msgstr "Schnittstellenkennungen festlegen"
 msgid "Restrict monitoring services by one of these tags"
 msgstr "Einschränkung der Monitoring-Dienste durch eines dieser Tags"
 
-#, fuzzy
 msgid "Restrict number of processed messages per cycle"
-msgstr "Anzahl der neuen Nachrichten pro Zyklus begrenzen"
+msgstr "Anzahl der verarbeiteten Nachrichten pro Zyklus begrenzen"
 
 msgid "Restrict runtime of logfile parsing"
 msgstr "Laufzeit des Logdateien-Parsings begrenzen"
@@ -32935,13 +32882,11 @@ msgstr "Regelsätze mit nicht wirksamen Regeln"
 msgid "Run agent as non-root user (Linux)"
 msgstr "Agent als nicht-root-Benutzer laufen lassen (Linux)"
 
-#, fuzzy
 msgid "Run agent in single thread"
-msgstr "In einem einzigen Thread ausführen"
+msgstr "Den Agenten in einem einzigen Thread ausführen"
 
-#, fuzzy
 msgid "Run agent multithreaded"
-msgstr "In einem einzigen Thread ausführen"
+msgstr "Den Agenten in mehreren Threads ausführen"
 
 msgid "Run as"
 msgstr "Führe aus als"
@@ -33740,9 +33685,8 @@ msgstr "Wartezeit in Sekunden zwischen Senden und Abfragen"
 msgid "Section name"
 msgstr "Sektionsname"
 
-#, fuzzy
 msgid "Section of files to monitor"
-msgstr "Zu überwachende Dateien hinzufügen"
+msgstr "Sektion zu überwachender Dateien"
 
 msgid "Sections - data to collect"
 msgstr "Sektionen - Zu sammelnde Daten"
@@ -34069,9 +34013,8 @@ msgstr "Sensorbeschreibung und -index"
 msgid "Sensor ID"
 msgstr "Sensor ID"
 
-#, fuzzy
 msgid "Sensor description if present, sensor index otherwise"
-msgstr "Zeige die Beschreibung, falls diese gesetzt ist, ansonten den Alias"
+msgstr "Sensorbeschreibung, falls diese gesetzt ist, ansonsten Index"
 
 msgid "Sensor name"
 msgstr "Sensorname"
@@ -34127,9 +34070,8 @@ msgstr "Server Status"
 msgid "Server Time"
 msgstr "Uhrzeit des Servers"
 
-#, fuzzy
 msgid "Server latency"
-msgstr "Gesamtlatenz"
+msgstr "Serverlatenz"
 
 msgid "Service"
 msgstr "Service"
@@ -34161,9 +34103,8 @@ msgstr "Servicekontakt (Regex)"
 msgid "Service Contact Group"
 msgstr "Service-Kontaktgruppe"
 
-#, fuzzy
 msgid "Service Costs per Day"
-msgstr "Alter des Service-Status"
+msgstr "Servicekosten pro Tag"
 
 msgid "Service Description"
 msgstr "Servicebeschreibung"
@@ -34256,9 +34197,8 @@ msgstr "Servicestatus-Gruppierung"
 msgid "Service Time"
 msgstr "Servicezeit"
 
-#, fuzzy
 msgid "Service Type"
-msgstr "Gerätetyp"
+msgstr "Servicetyp"
 
 msgid "Service alternative display name"
 msgstr "Service: Alternativer Anzeigename"
@@ -34709,9 +34649,8 @@ msgstr "Wähle benutzerdefiniertes Aussehen"
 msgid "Set default time range"
 msgstr "Standard-Zeitbereich setzen"
 
-#, fuzzy
 msgid "Set default values for all sections"
-msgstr "Standardschablone für alle Berichte"
+msgstr "Standardwerte für alle Sektionen setzen"
 
 msgid "Set diskstates"
 msgstr "Plattenzustände setzen"
@@ -34853,9 +34792,9 @@ msgstr ""
 "Wenn Sie diesen Wert leer lassen, dann wird die IP Adresse des Hosts "
 "verwendet."
 
-#, fuzzy
 msgid "Set this in order to specify the name of the virtual host for the query."
-msgstr "Bitte Namen für Status-Host angeben."
+msgstr ""
+"Setzen Sie dies, um den Namen des virtuellen Hosts für die Abfrage anzugeben."
 
 msgid "Set timeouts for plugins and local checks"
 msgstr "Timeouts für Plugins und lokale Checks"
@@ -35015,9 +34954,8 @@ msgstr "Gemeinsame Poolgröße"
 msgid "Shared with"
 msgstr "Freigegeben an"
 
-#, fuzzy
 msgid "Short - Use the first 12 characters of ID"
-msgstr "Hoststatus (1. Zeichen)"
+msgstr "Kurz - Die ersten 12 Zeichen der Container ID verwenden"
 
 msgid "Short Time Intervals"
 msgstr "Kurze Zeitintervalle"
@@ -35605,9 +35543,8 @@ msgstr "Zustand der Instanz ist unbekannt"
 msgid "Site-specific global configuration for %s"
 msgstr "Instanzspezifische globale Konfiguration für %s"
 
-#, fuzzy
 msgid "Site-to-site bandwidth"
-msgstr "Output-Bandbreite"
+msgstr "Site-to-Site Bandbreite"
 
 msgid "Site:"
 msgstr "Instanz:"
@@ -35686,9 +35623,8 @@ msgstr "%s ausgelassen: %s"
 msgid "Skipping disk usage info"
 msgstr "Informationen über Festplattenbelegung wird übersprungen"
 
-#, fuzzy
 msgid "Skipping execution of check_mk agent"
-msgstr "Ausführungszeit des Check_MK-Agenten"
+msgstr "Ausführung des Check_MK-Agenten überspringen"
 
 msgid "Skipping this test (Plugin is not enabled)"
 msgstr "Diesen Test auslassen (Plugin ist nicht aktiviert)"
@@ -37982,6 +37918,10 @@ msgid ""
 "applied both to the initial connection, as well as the time the plugin has to "
 "wait between chunks of data it receives."
 msgstr ""
+"Weisen Sie das jolokia-Plugin an, nicht länger als die angegebene Anzahl von "
+"Sekunden auf eine Antwort von jeder konfigurierten Instanz zu warten. Diese "
+"Zeitbegrenzung gilt sowohl für die erste Verbindung als auch für die Zeit, "
+"die das Plugin zwischen den Datenblöcken warten muss, die es empfängt."
 
 msgid "Temperature"
 msgstr "Temperatur"
@@ -38815,6 +38755,9 @@ msgid ""
 "their number, size and age. Files are grouped according to the configured "
 "section"
 msgstr ""
+"Das Agenten-Plugin <tt>mk_filestats</tt> überwacht einen konfigurierten Satz "
+"von Dateien auf ihre Anzahl, Größe und ihr Alter. Die Dateien werden nach der "
+"konfigurierten Sektion gruppiert."
 
 msgid ""
 "The agent plugins <tt>mk_logwatch</tt> and <tt>mk_logwatch.exe</tt> monitor a "
@@ -45244,6 +45187,10 @@ msgid ""
 "monitor the node and/or the individual containers. This plugin requires the "
 "python library 'docker-py' to be installed on the monitored system."
 msgstr ""
+"Hiermit wird das Agenten-Plugin <tt>mk_docker.py</tt> ausgerollt. Sie können "
+"den Knoten und/oder die einzelnen Container überwachen. Dieses Plugin setzt "
+"voraus, dass die Python-Bibliothek 'docker-py' auf dem überwachten System "
+"installiert ist."
 
 msgid ""
 "This will deploy the agent plugin <tt>mk_mysql</tt> on linux systems and "
@@ -46626,6 +46573,8 @@ msgstr "Unevictable-Speicher"
 msgid ""
 "Unfortunately, using a proxy and a virtual host is not supported (try '%s')."
 msgstr ""
+"Leider ist die Verwendung eines Proxys und eines virtuellen Hosts nicht "
+"unterstützt (versuchen Sie es mit '%s')."
 
 msgid "Unhandled"
 msgstr "offen"
@@ -50263,6 +50212,10 @@ msgid ""
 "case the monitoring site is operated in a failover cluster configuration this "
 "option is required to prevent from potentially duplicated log entries."
 msgstr ""
+"Mit aktivieren dieser Option können Clusterknoten IPs auf einen Cluster "
+"abgebildet werden. Wenn die Monitoring-Site in einer Failover-Cluster-"
+"Konfiguration betrieben wird, ist diese Option erforderlich, um potenziell "
+"doppelte Log-Einträge zu verhindern."
 
 msgid ""
 "With this option activated you can make the Event Console monitor that a "
@@ -52697,9 +52650,8 @@ msgstr "erweitere Sonderzeichen"
 msgid "expect all"
 msgstr "erwarte alles"
 
-#, fuzzy
 msgid "explicitly specified groups"
-msgstr "Gruppen explizit auflisten"
+msgstr "Explizit aufgelistete Gruppen"
 
 msgid "failures"
 msgstr "Ausfällen"
@@ -53040,9 +52992,9 @@ msgstr "E-Mails"
 msgid "maintenance"
 msgstr "Instandhaltung"
 
-#, fuzzy, python-format
+#, python-format
 msgid "manually configure %s"
-msgstr "Datensicherung konfiguriert"
+msgstr "%s manuell Konfigurieren"
 
 msgid "master / standalone"
 msgstr "Master / unabhängig"

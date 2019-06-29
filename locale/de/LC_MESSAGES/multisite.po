@@ -6528,10 +6528,6 @@ msgstr "CPU-Auslastung (%(util:max@count) CPU-Threads)"
 msgid "CPU utilization (average)"
 msgstr "CPU-Auslastung (Durchschnitt)"
 
-#, fuzzy
-msgid "CPU utilization (legacy)"
-msgstr "CPU-Auslastung (Durchschnitt)"
-
 msgid "CPU utilization for Appliances"
 msgstr "CPU-Auslastung für Appliances"
 
@@ -10034,9 +10030,6 @@ msgstr "Aktueller Status des Back-Prozesses"
 
 msgid "Current status of local Event Console"
 msgstr "Aktueller Status der lokalen Event Console"
-
-msgid "Current status of process"
-msgstr "Aktueller Status"
 
 msgid "Current status of synchronization process"
 msgstr "Aktueller Status der Synchronisation"
@@ -22125,6 +22118,10 @@ msgstr "Jobname"
 msgid "Job state: %s"
 msgstr "Job status: %s"
 
+#, fuzzy
+msgid "Job status"
+msgstr "Job status: %s"
+
 msgid "Jobs"
 msgstr "Jobs"
 
@@ -32617,9 +32614,6 @@ msgstr "Ergebnis"
 
 msgid "Result of last baking process"
 msgstr "Ergebnis des letzten Agentenbackens"
-
-msgid "Result of last process"
-msgstr "Letztes Ergebnis"
 
 msgid "Result of last synchronization process"
 msgstr "Ergebnis der letzten Synchronisation"
@@ -53864,6 +53858,16 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#, fuzzy
+#~ msgid "CPU utilization (legacy)"
+#~ msgstr "CPU-Auslastung (Durchschnitt)"
+
+#~ msgid "Current status of process"
+#~ msgstr "Aktueller Status"
+
+#~ msgid "Result of last process"
+#~ msgstr "Letztes Ergebnis"
 
 #, fuzzy
 #~ msgid ""

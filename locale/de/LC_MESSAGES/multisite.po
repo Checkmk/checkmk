@@ -4583,13 +4583,11 @@ msgstr "Anwendungen, Prozesse & Services"
 msgid "Apply"
 msgstr "Anwenden"
 
-#, fuzzy
 msgid "Apply Finish Time"
-msgstr "Minimale Zeit für das Apply-Lag"
+msgstr "Endzeit des Anwendens"
 
-#, fuzzy
 msgid "Apply Lag"
-msgstr "Anwenden"
+msgstr "Verzögerung des Anwendens"
 
 msgid "Apply Lag Maximum Time"
 msgstr "Maximale Zeit für das Apply-Lag"
@@ -9851,9 +9849,8 @@ msgstr "Kritisch bei einer Speicherauslastung von"
 msgid "Critical at a provisioning of"
 msgstr "CRIT bei Provisionierung von"
 
-#, fuzzy
 msgid "Critical at a steal time of"
-msgstr "CRIT bei einer Benutzung von"
+msgstr "Kritisch bei einer Steal-Zeit von"
 
 msgid "Critical at a usage of"
 msgstr "CRIT bei einer Benutzung von"
@@ -10508,9 +10505,8 @@ msgstr "Übersichtselement"
 msgid "Dashlet Type"
 msgstr "Dashlet-Typ"
 
-#, fuzzy
-msgid "Data engress"
-msgstr "Datenquellen"
+msgid "Data egress"
+msgstr "Datenausfluss"
 
 msgid "Data files size"
 msgstr "Datafiles-Größe"
@@ -12332,9 +12328,8 @@ msgstr ""
 msgid "Do not check"
 msgstr "Nicht überprüfen"
 
-#, fuzzy
 msgid "Do not check age of never analyzed/vacuumed tables"
-msgstr "Alter der niemals ausgewerteten/vakuumierten Tabellen"
+msgstr "Alter der niemals ausgewerteten/vakuumierten Tabellen nicht überprüfen"
 
 msgid "Do not convert case"
 msgstr "Groß-/Kleinschreibung nicht umwandeln"
@@ -18972,7 +18967,6 @@ msgstr "IBM SVC / V7000: Latenz von Drives/MDisks/VDisks gesamt"
 msgid "IBM SVC / V7000: System Info"
 msgstr "IBM SVC / V7000: Systeminfo"
 
-#, fuzzy
 msgid "IBM SVC Disk"
 msgstr "IBM SVC Platte"
 
@@ -18980,9 +18974,8 @@ msgstr "IBM SVC Platte"
 msgid "IBM SVC Enclosure"
 msgstr "EMC VNX Enclosures"
 
-#, fuzzy
 msgid "IBM SVC Hosts"
-msgstr "IBM SVC Platte"
+msgstr "IBM SVC Hosts"
 
 msgid "IBM SVC Pool Capacity"
 msgstr "IBM SVC Pool-Kapazität"
@@ -22039,7 +22032,6 @@ msgstr "JVM Anfragen"
 msgid "JVM session count"
 msgstr "JVM Sitzungen"
 
-#, fuzzy
 msgid "JVM threading"
 msgstr "JVM Threads"
 
@@ -22212,9 +22204,8 @@ msgstr "Kubernetes Namespaced Pods CPU-Nutzung"
 msgid "Kubernetes Namespaced pods memory usage"
 msgstr "Kubernetes Namespaced Pods Speichernutzung"
 
-#, fuzzy
 msgid "Kubernetes Network interfaces"
-msgstr "Netzwerkschnittstellen"
+msgstr "Kubernetes Netzwerkschnittstellen"
 
 #, fuzzy
 msgid "Kubernetes Port"
@@ -22929,9 +22920,8 @@ msgstr "Schwellen für aktive Verbindungen"
 msgid "Levels on single cores"
 msgstr "Schwellen für die einzelne Kerne"
 
-#, fuzzy
 msgid "Levels on steal CPU utilization"
-msgstr "Schwellwerte für die gesamte CPU-Auslastung"
+msgstr "Schwellwerte für die Steal-CPU-Auslastung"
 
 msgid "Levels on temperature decrease per period"
 msgstr "Schwellwerte für Temperaturabfall pro Zeitperiode"
@@ -23746,9 +23736,8 @@ msgstr "Logical Volume Pool"
 msgid "Logical Volume Pools (LVM)"
 msgstr "Logical Volume Pools (LVM)"
 
-#, fuzzy
 msgid "Logical processor(s) utilization"
-msgstr "Auslastung des Storageprozessors"
+msgstr "Auslastung logischer Prozessoren"
 
 msgid "Login"
 msgstr "Login"
@@ -26145,7 +26134,6 @@ msgstr "Name der Gruppe"
 msgid "Name of group in service description"
 msgstr "Name der Gruppe in Service-Beschreibung"
 
-#, fuzzy
 msgid "Name of license"
 msgstr "Name der Lizenz"
 
@@ -26158,7 +26146,6 @@ msgstr "Name des Managers"
 msgid "Name of manager or instance"
 msgstr "Manager- oder Instanzname"
 
-#, fuzzy
 msgid "Name of node"
 msgstr "Name des Knotens"
 
@@ -28814,9 +28801,8 @@ msgstr "Gesamtstatus Ihrer Favoriten-Hosts"
 msgid "Overall status"
 msgstr "Gesamtstatus"
 
-#, fuzzy
 msgid "Overall utilization"
-msgstr "Bandauslastung"
+msgstr "Gesamtauslastung"
 
 msgid "Overdue bulk notifications!"
 msgstr "Überfällige Sammelalarme!"
@@ -28824,9 +28810,8 @@ msgstr "Überfällige Sammelalarme!"
 msgid "Overflows"
 msgstr "Überläufe"
 
-#, fuzzy
 msgid "Overprovisioned"
-msgstr "Schwellen für Provisionierung"
+msgstr "Überprovisioniert"
 
 msgid "Override check state based on channel state"
 msgstr "Check-Status durch den Kanalstatus überschreiben"
@@ -28885,9 +28870,8 @@ msgstr "PARTIAL"
 msgid "PASSIVE"
 msgstr "PASSIV"
 
-#, fuzzy
 msgid "PCI Express IO utilization"
-msgstr "Bänderauslastung"
+msgstr "PCI Express IO Auslastung"
 
 msgid "PCIe flash module"
 msgstr "PCIe Flash Modul"
@@ -29861,9 +29845,8 @@ msgstr "Physikalische Speicherbelegung, in Prozent vom gesamten RAM"
 msgid "Physical port states to discover"
 msgstr "Physikalische Status, die überwacht werden sollen"
 
-#, fuzzy
 msgid "Physical processors consumed"
-msgstr "Physikalischer Speicherverbrauch"
+msgstr "Verbrauchte physikalische Prozessoren"
 
 msgid "Physical state of port"
 msgstr "Physischer Status des Ports"
@@ -36169,7 +36152,6 @@ msgstr ""
 "den die Spannungsschwellwerte gelten sollen. Die Liste wird beim Speichern "
 "automatisch sortiert."
 
-#, fuzzy
 msgid "Specify levels"
 msgstr "Level einstellen"
 
@@ -37801,9 +37783,8 @@ msgstr "Merkmalauswahl ergänzen"
 msgid "Tag groups"
 msgstr "Neue Merkmal-Gruppe"
 
-#, fuzzy
 msgid "Tag value"
-msgstr "Durchschnittswerte"
+msgstr "Wert des Merkmals"
 
 #, python-format
 msgid "Tag: %s"
@@ -37812,9 +37793,8 @@ msgstr "Merkmal: %s"
 msgid "Tags"
 msgstr "Merkmale"
 
-#, fuzzy
 msgid "Tags (with titles)"
-msgstr "Hostmerkmake (mit Titeln)"
+msgstr "Merkmake (mit Titeln)"
 
 #, python-format
 msgid "Tags IDs must be unique. You've used <b>%s</b> twice."
@@ -38198,7 +38178,7 @@ msgid ""
 "The CPU utilization sums up the percentages of CPU time that is used for user "
 "processes, kernel routines (system), disk wait (sometimes also called IO "
 "wait) or nothing (idle). The levels are always applied on the average "
-"utiliazation since the last check - which is usually one minute."
+"utilization since the last check - which is usually one minute."
 msgstr ""
 "Hier können Sie Schwellwerte auf der CPU-Nutzung festlegen, das heißt auf der "
 "Summe von <i>System</i>, <i>User</i> und <i>IO-Wait</i>. Die Schwellwerte "

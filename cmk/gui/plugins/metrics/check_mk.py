@@ -685,7 +685,7 @@ metric_info["ingress"] = {
 }
 
 metric_info["egress"] = {
-    "title": _("Data engress"),
+    "title": _("Data egress"),
     "unit": "bytes",
     "color": "43/a",
 }

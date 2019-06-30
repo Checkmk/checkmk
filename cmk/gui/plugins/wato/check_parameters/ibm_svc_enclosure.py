@@ -90,7 +90,4 @@ class RulespecCheckgroupParametersIbmSvcEnclosure(CheckParameterRulespecWithItem
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Name of enclosure"),
-            help=_("Name of the enclosure, e.g. Enclosure 1"),
-        )
+        return TextAscii(title=_("Name of enclosure"),)

@@ -11664,21 +11664,17 @@ msgstr "Abweichung vom Kalibrationspunkt"
 msgid "Device"
 msgstr "Gerät"
 
-#, fuzzy
 msgid "Device Component Memory Utilization"
-msgstr "Schwellwerte für die gesamte CPU-Auslastung"
+msgstr "Speicherauslastung der Gerätekomponente"
 
-#, fuzzy
 msgid "Device Component Overall Utilization"
-msgstr "Schwellwerte für die gesamte CPU-Auslastung"
+msgstr "Gesamtauslastung der Gerätekomponente"
 
-#, fuzzy
 msgid "Device Component PCI IO Utilization"
-msgstr "Schwellwerte für die gesamte CPU-Auslastung"
+msgstr "PCI-IO-Auslastung der Gerätekomponente"
 
-#, fuzzy
 msgid "Device Component Power Consumption"
-msgstr "USV Stromverbrauch"
+msgstr "Stromverbrauch der Gerätekomponente"
 
 msgid "Device Name"
 msgstr "Gerätename"
@@ -15737,6 +15733,9 @@ msgstr "Erledigt. Klicken Sie auf das Icon um die Daten herunterzuladen."
 msgid "Fireeye Active VMs"
 msgstr "Aktive Fireeye-VMs"
 
+msgid "Fireeye Content Security"
+msgstr "Fireeye Sicherheit von Inhalten"
+
 msgid "Fireeye Licenses"
 msgstr "Fireeye-Lizenzen"
 
@@ -15748,9 +15747,6 @@ msgstr "Durchschnittliche Rate der Fireeye-Mails"
 
 msgid "Fireeye Quarantine Usage"
 msgstr "Auslastung der Fireeye-Quarantäne"
-
-msgid "Fireeye Security Content"
-msgstr ""
 
 msgid "Firewall Interfaces"
 msgstr "Firewall-Netzwerkschnittstellen"
@@ -18970,9 +18966,8 @@ msgstr "IBM SVC / V7000: Systeminfo"
 msgid "IBM SVC Disk"
 msgstr "IBM SVC Platte"
 
-#, fuzzy
 msgid "IBM SVC Enclosure"
-msgstr "EMC VNX Enclosures"
+msgstr "IBM SVC Gerätegehäuse"
 
 msgid "IBM SVC Hosts"
 msgstr "IBM SVC Hosts"
@@ -26121,9 +26116,8 @@ msgstr "Name des Zertifikats"
 msgid "Name of channel"
 msgstr "Kanalname"
 
-#, fuzzy
 msgid "Name of enclosure"
-msgstr "Queuename"
+msgstr "Name des Gerätegehäuses"
 
 msgid "Name of filesystem with quotas enabled"
 msgstr "Name des Dateisystems, bei dem die Quotas aktiviert sind"
@@ -26208,10 +26202,6 @@ msgstr "Name des Hosts"
 
 msgid "Name of the disk, e.g. mdisk0"
 msgstr "Name der Platte, e.g. mdisk0"
-
-#, fuzzy
-msgid "Name of the enclosure, e.g. Enclosure 1"
-msgstr "Name der Ressourcengruppe"
 
 msgid "Name of the form to populate and submit"
 msgstr "Name des Formulars, das ausgefüllt und abgeschickt wird"
@@ -40633,16 +40623,16 @@ msgstr ""
 msgid "The original aspect of the image will be ignored."
 msgstr "Das ursprüngliche Seitenverhältnis des Bildes wird ignoriert."
 
-#, fuzzy
 msgid ""
 "The overall utilization as aggregation of various utilizatons (cpu, memory, "
 "etc.) of components of a device (e.g. rack units as components of a rack "
 "server as device) in the last check interval. The possible range is from 0% "
 "to 100%"
 msgstr ""
-"Die CPU Auslastung ist der prozentuale Gesamtwert der CPU Zeit für Benutzer "
-"Prozesse und Kernel Routinen aller verfügbaren Prozessor-Kerne innerhalb des "
-"letzten Überprüfungs-Intervalls. Gültige Werte: 0% bis 100%."
+"Die Gesamtauslastung als Aggregation einzelner Auslastungen (CPU, Speicher, "
+"etc.) der Komponenten eines Gerätes (z.B. Rackeinheiten als Komponenten eines "
+"Rackservers als Gerät) während des letzten Checkintervalls. Gültige Werte: 0% "
+"bis 100%."
 
 msgid "The pager address is optional "
 msgstr "Pager Adresse ist optional "
@@ -42257,14 +42247,13 @@ msgstr ""
 "können Sie auch einen Fehlerbericht an das Entwicklerteam senden, wenn Sie "
 "möchten."
 
-#, fuzzy
 msgid ""
 "This check crashed. Please inform a Check_MK user that is allowed to view and "
 "submit crash reports to the development team."
 msgstr ""
-"Dieser Check ist abgestürzt. Klicken Sie hier für mehr Informationen. Dort "
-"können Sie auch einen Fehlerbericht an das Entwicklerteam senden, wenn Sie "
-"möchten."
+"Dieser Check ist abgestürzt. Bitte informieren sie einen Check_MK Benutzer, "
+"der die nötigen Berechtingungen hat Crashreports zu sehen und an das "
+"Entwicklerteam zu übermitteln."
 
 msgid "This check has no parameters."
 msgstr "Dieser Check hat keine Parameter."
@@ -46481,7 +46470,7 @@ msgid "Unable to upload image: %s"
 msgstr "Fehler beim Hochladen des Bilds: %s"
 
 msgid "Unaccounted turbo cycles"
-msgstr ""
+msgstr "Nicht zugeordete Turbozyklen"
 
 #, python-format
 msgid "Unacknowledge this test result for site %s"
@@ -53156,9 +53145,8 @@ msgstr "eine Stunde"
 msgid "online"
 msgstr "online"
 
-#, fuzzy
 msgid "online canisters"
-msgstr "Alle gerade aktiven Benutzer"
+msgstr "online Canister"
 
 msgid "only v4"
 msgstr "nur v4"
@@ -53771,6 +53759,10 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#, fuzzy
+#~ msgid "Name of the enclosure, e.g. Enclosure 1"
+#~ msgstr "Name der Ressourcengruppe"
 
 #, fuzzy
 #~ msgid "CPU utilization (legacy)"

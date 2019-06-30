@@ -50,7 +50,7 @@ class RulespecCheckgroupParametersFireeyeContent(CheckParameterRulespecWithoutIt
 
     @property
     def title(self):
-        return _("Fireeye Security Content")
+        return _("Fireeye Content Security")
 
     @property
     def match_type(self):

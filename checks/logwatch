@@ -26,6 +26,7 @@
 
 import errno
 import os
+import collections
 
 from pathlib2 import Path
 
@@ -475,13 +476,13 @@ class LogwatchBlock(object):
     CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
     STATE_TO_STR = {0: "OK", 1: "WARN"}
 
-    def __init__(self, header, patterns, states_counter):
+    def __init__(self, header, patterns):
         self._timestamp = header.strip("<>").rsplit(None, 1)[0]
         self.worst = -1
         self.lines = []
         self.last_worst_line = ''
         self.counts = {}  # counting matches of a certain pattern
-        self._states_counter = states_counter  # counting blocks with a certain state
+        self.states_counter = collections.Counter()  # counting lines with a certain state
         self._patterns = patterns or {}
 
     def finalize(self):
@@ -508,7 +509,7 @@ class LogwatchBlock(object):
 
         # Count the number of lines by state
         if level != '.':
-            self._states_counter[level] = self._states_counter.get(level, 0) + 1
+            self.states_counter[level] += 1
 
         if not skip_reclassification and level != "I":
             self.lines.append(u"%s %s\n" % (level, text))
@@ -519,6 +520,7 @@ class LogwatchBlockCollector(object):
         self.worst = 0
         self.last_worst_line = ""
         self._output_lines = []
+        self._states_counter = collections.Counter()
 
     @property
     def size(self):
@@ -527,6 +529,8 @@ class LogwatchBlockCollector(object):
     def __call__(self, block):
         if not block or block.worst <= -1:
             return
+
+        self._states_counter += block.states_counter
 
         self._output_lines.extend(block.finalize())
         if block.worst >= self.worst:
@@ -538,6 +542,12 @@ class LogwatchBlockCollector(object):
 
     def get_lines(self):
         return self._output_lines
+
+    def get_count_info(self):
+        expanded_levels = {"O": "OK", "W": "WARN", "u": "WARN", "C": "CRIT"}
+        count_txt = ("%d %s" % (count, expanded_levels.get(level, "IGN"))
+                     for level, count in self._states_counter.iteritems())
+        return "%s messages" % ', '.join(count_txt)
 
 
 def check_logwatch_generic(item, params, loglines, found):
@@ -560,8 +570,6 @@ def check_logwatch_generic(item, params, loglines, found):
     # checks, params are a tuple with the normal logwatch parameters on the first
     # and the grouping patterns on the second position
     patterns = logwatch_precompile(host_name(), item, None) if params in ('', None) else params
-
-    states_counter = {}  # counting blocks with a certain state
 
     block_collector = LogwatchBlockCollector()
     current_block = None
@@ -607,7 +615,7 @@ def check_logwatch_generic(item, params, loglines, found):
                 # The section is finished here. Add it to the list of reclassified lines if the
                 # state of the block is not "I" -> "ignore"
                 block_collector(current_block)
-                current_block = LogwatchBlock(line, patterns, states_counter)
+                current_block = LogwatchBlock(line, patterns)
             elif current_block is not None:
                 current_block.add_line(line, skip_reclassification)
                 net_lines += 1
@@ -632,7 +640,7 @@ def check_logwatch_generic(item, params, loglines, found):
 
     # process new input lines - but only when there is some room left in the file
     if output_size < logwatch_max_filesize:
-        current_block = LogwatchBlock(header, patterns, states_counter)
+        current_block = LogwatchBlock(header, patterns)
         for line in loglines:
             current_block.add_line(line, False)
             net_lines += 1
@@ -666,12 +674,7 @@ def check_logwatch_generic(item, params, loglines, found):
     if block_collector.worst <= 0:
         return (0, "no error messages")
 
-    expanded_levels = {"O": "OK", "W": "WARN", "u": "WARN", "C": "CRIT"}
-    count_txt = [
-        "%d %s" % (count, expanded_levels.get(level, "IGN"))
-        for level, count in states_counter.iteritems()
-    ]
-    info = "%s messages" % ', '.join(count_txt)
+    info = block_collector.get_count_info()
     if logwatch_service_output == 'default':
         info += ' (Last worst: "%s")' % block_collector.last_worst_line
 

@@ -61,9 +61,9 @@ class RulespecCheckgroupParametersOverallUtilizationMultiitem(CheckParameterRule
     def parameter_valuespec(self):
         return Dictionary(
             help=_("The overall utilization as aggregation of various utilizatons"
-                   "(cpu, memory, etc.) of components of a device (e.g. rack units"
-                   "as components of a rack server as device) in the last check interval."
-                   "The possible range is from 0% to 100%"),
+                   " (cpu, memory, etc.) of components of a device (e.g. rack units"
+                   " as components of a rack server as device) in the last check interval."
+                   " The possible range is from 0% to 100%"),
             elements=[
                 (
                     "upper_levels",

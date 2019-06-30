@@ -61,8 +61,8 @@ class RulespecCheckgroupParametersPciIoUtilizationMultiitem(CheckParameterRulesp
     def parameter_valuespec(self):
         return Dictionary(
             help=_("The PCI IO utilization of components of a device (e.g. PCI Express card IO"
-                   "utilization of the rack units as components of a rack server as device)"
-                   "in the last check interval. The possible range is from 0% to 100%"),
+                   " utilization of the rack units as components of a rack server as device)"
+                   " in the last check interval. The possible range is from 0% to 100%"),
             elements=[
                 (
                     "upper_levels",

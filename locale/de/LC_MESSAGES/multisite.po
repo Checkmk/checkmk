@@ -38173,17 +38173,17 @@ msgstr ""
 "Prozesse und Kernel Routinen aller verfügbaren Prozessor-Kerne innerhalb des "
 "letzten Überprüfungs-Intervalls. Gültige Werte: 0% bis 100%."
 
-#, fuzzy
 msgid ""
 "The CPU utilization sums up the percentages of CPU time that is used for user "
 "processes, kernel routines (system), disk wait (sometimes also called IO "
 "wait) or nothing (idle). The levels are always applied on the average "
 "utilization since the last check - which is usually one minute."
 msgstr ""
-"Hier können Sie Schwellwerte auf der CPU-Nutzung festlegen, das heißt auf der "
-"Summe von <i>System</i>, <i>User</i> und <i>IO-Wait</i>. Die Schwellwerte "
-"geltn immer für die durchschnittliche CPU-Nutzung seit dem letzten Check - "
-"was üblicherweise eine Minute ist."
+"Die CPU-Auslastung summiert die Prozentsätze der CPU-Zeit, die für "
+"Benutzerprozesse, Kernelroutinen (system), Festplattenwartung (manchmal auch "
+"IO-wait genannt) oder nichts (idle) verwendet wird. Die Werte werden immer "
+"auf die durchschnittliche Auslastung seit der letzten Überprüfung angewendet "
+"- in der Regel eine Minute."
 
 msgid ""
 "The Check_MK Agent for Windows has a number of builtin modules that provide "
@@ -38540,15 +38540,14 @@ msgstr ""
 msgid "The Number of the power Phase."
 msgstr "Nummer der Stromphase."
 
-#, fuzzy
 msgid ""
-"The PCI IO utilization of components of a device (e.g. PCI Express card "
-"IOutilization of the rack units as components of a rack server as device)in "
+"The PCI IO utilization of components of a device (e.g. PCI Express card IO "
+"utilization of the rack units as components of a rack server as device) in "
 "the last check interval. The possible range is from 0% to 100%"
 msgstr ""
-"Die CPU Auslastung ist der prozentuale Gesamtwert der CPU Zeit für Benutzer "
-"Prozesse und Kernel Routinen aller verfügbaren Prozessor-Kerne innerhalb des "
-"letzten Überprüfungs-Intervalls. Gültige Werte: 0% bis 100%."
+"Die PCI IO-Auslastung von Komponenten eines Gerätes (z.B. PCI Express Karte "
+"IO-Auslastung der Rackeinheiten als Komponenten eines Rackservers als Gerät) "
+"im letzten Checkintervall. Gültige Werte liegen zwischen 0% und 100%."
 
 msgid "The Port Description"
 msgstr "Port Beschreibung"
@@ -38576,9 +38575,8 @@ msgstr ""
 "können. Die zweite Spalte wird als Checkausgabe genutzt. Die dritte Spalte "
 "ist optional und kann Performancedaten enthalten."
 
-#, fuzzy
 msgid "The Section name will be used as the item name by Check_MK"
-msgstr "Dieser Name wird als Service-Beschreibung verwendet"
+msgstr "Der Sektionsname wird von Check_MK als Service-Item verwendet."
 
 msgid "The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>."
 msgstr "Der TCP-Port, auf dem der SMTP-Server läuft. Standard ist <tt>25</tt>."
@@ -39476,7 +39474,6 @@ msgstr "Die Beschreibung der Schnittstelle wie vom Gerät angegeben"
 msgid "The directory %s does not exist or is not a directory."
 msgstr "Verzeichnis %s nicht vorhanden oder kein Verzeichnis."
 
-#, fuzzy
 msgid ""
 "The disk wait is the total percentage of time all CPUs have nothing else to "
 "do but waiting for data coming from or going to disk. If you have a "
@@ -39484,14 +39481,12 @@ msgid ""
 "that depending on the applications being run this might or might not be "
 "totally normal."
 msgstr ""
-"Die CPU Auslastung ist der prozentuale Gesamtwert der CPU Zeit für Benutzer "
-"Prozesse, Kernel Routinen (System), <tt>Disk wait</tt> (manchmal auch <tt>IO "
-"wait</tt> genannt) oder Leerlauf (idle). Im Moment können Sie Schwellwerte "
-"nur für <tt>Disk wait</tt> festlegen. Das ist der prozentuale Gesamtwert für "
-"die Zeit in der alle CPUs auf ein-/ausgehende Daten von/zu Datenträgern "
-"warten. Wenn Sie auffallend hohe <tt>Disk wait</tt>-Werte haben, dann ist der "
-"Flaschenhals Ihres Servers IO. Es hängt von Anwendungen ab, ob dieser Zustand "
-"normal oder nicht normal ist."
+"Die Festplatten-Wartezeit ist der Gesamtprozentsatz der Zeit, in der alle "
+"CPUs nichts zu tun haben, außer auf Daten zu warten, die von der Festplatte "
+"gelesen oder auf sie geschrieben werden. Wenn Sie eine signifikante "
+"Festplatten-Wartezeit haben, ist der limitierende Faktor auf Ihrem Server IO. "
+"Bitte beachten Sie, dass dies je nach den ausgeführten Anwendungen völlig "
+"normal sein kann oder auch nicht."
 
 msgid ""
 "The distinguished name of the container object, which holds the user objects "
@@ -39598,11 +39593,9 @@ msgstr ""
 "Der Ausdruck \"%s\" nutzt eine andere Konsolidierungsfunktion als der Graph "
 "(%s). Dies ist nicht erlaubt."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The file %s needs to be created and maintained manually."
-msgstr ""
-"Die Datei <tt>/etc/check_mk/logwatch.cfg</tt> muss manuell erstellt und "
-"gepflegt werden."
+msgstr "Die Datei %s muss manuell erstellt und gepflegt werden."
 
 msgid "The file does not look like a valid key file."
 msgstr "Diese Datei ist scheinbar keine gültige Schlüssel-Datei."
@@ -39944,9 +39937,10 @@ msgstr "Die ID des Moduls."
 msgid "The identificator of the thermal sensor."
 msgstr "Die ID für den Temperatursensor."
 
-#, fuzzy
 msgid "The identifier of device component the consumed power is related to."
-msgstr "Die ID der Phase, die hier parametriert wird."
+msgstr ""
+"Der Identifikator der Gerätekomponente, auf die die verbrauchte Leistung sich "
+"bezieht"
 
 msgid "The identifier of the chassis."
 msgstr "Die ID des Gehäuses"
@@ -40307,15 +40301,14 @@ msgstr ""
 "Hosts. Das ist relevant für Host, die mehrere separate Speicherbereiche "
 "verwalten, z.B. Plugins-Karten."
 
-#, fuzzy
 msgid ""
-"The memory utilization of components of a device (e.g. memory utilizationof "
-"the rack units as components of a rack server as device) in the lastcheck "
-"interval. The possible range is from 0% to 100%"
+"The memory utilization of components of a device (e.g. memory utilization of "
+"the rack units as components of a rack server as device) in the last check "
+"interval. The possible range is from 0% to 100%."
 msgstr ""
-"Die CPU Auslastung ist der prozentuale Gesamtwert der CPU Zeit für Benutzer "
-"Prozesse und Kernel Routinen aller verfügbaren Prozessor-Kerne innerhalb des "
-"letzten Überprüfungs-Intervalls. Gültige Werte: 0% bis 100%."
+"Die Speicherauslastung von Komponenten einer Vorrichtung (z.B. "
+"Speicherauslastung der Rackeinheiten als Komponenten eines Rackservers als "
+"Vorrichtung) im letzten Checkintervall. Gültige Werte sind von 0% bis 100%."
 
 msgid "The message text does not match the required pattern."
 msgstr "Nachrichtentext passt nicht auf das erwartete Muster."
@@ -40642,10 +40635,10 @@ msgstr "Das ursprüngliche Seitenverhältnis des Bildes wird ignoriert."
 
 #, fuzzy
 msgid ""
-"The overall utilization as aggregation of various utilizatons(cpu, memory, "
-"etc.) of components of a device (e.g. rack unitsas components of a rack "
-"server as device) in the last check interval.The possible range is from 0% to "
-"100%"
+"The overall utilization as aggregation of various utilizatons (cpu, memory, "
+"etc.) of components of a device (e.g. rack units as components of a rack "
+"server as device) in the last check interval. The possible range is from 0% "
+"to 100%"
 msgstr ""
 "Die CPU Auslastung ist der prozentuale Gesamtwert der CPU Zeit für Benutzer "
 "Prozesse und Kernel Routinen aller verfügbaren Prozessor-Kerne innerhalb des "
@@ -40934,9 +40927,8 @@ msgstr "Die angeforderte Instanz existiert nicht"
 msgid "The requested user does not exist"
 msgstr "Der angefragte Benutzer existiert nicht"
 
-#, fuzzy
 msgid "The resource tag"
-msgstr "Merkmal: syslog"
+msgstr "Das Ressourcenmerkmal"
 
 msgid ""
 "The response reached a size limit. This could be due to a sizelimit "
@@ -42551,9 +42543,8 @@ msgstr "Dieser Host hat keinen passenden gebackenen Agenten"
 msgid "This host has no such service"
 msgstr "Dieser Host hat keinen solchen Service"
 
-#, fuzzy
 msgid "This host in not in the selected WATO folders."
-msgstr "%s nicht in einem der ausgewählten WATO-Ordner ist."
+msgstr "Dieser Host ist in nicht in den ausgewählten WATO-Ordnern."
 
 #, python-format
 msgid "This host is a cluster of %s"
@@ -43941,7 +43932,6 @@ msgstr ""
 msgid "This rule configures bulk notifications."
 msgstr "Diese Regel konfiguriert Sammelalarme."
 
-#, fuzzy
 msgid ""
 "This rule configures levels for the CPU utilization (not load) for Linux/"
 "UNIX, Windows and VMWare ESX host systems, as well as devices implementing "
@@ -43950,9 +43940,11 @@ msgid ""
 "here are applicable to all checks."
 msgstr ""
 "Dieser Regelsatz konfiguriert Schwellwerte für die CPU-Auslastung (nicht "
-"Last!) für Windows und für VMWare ESX Hostsysteme, sowie für Geräte, die die "
-"Host Resources MIB implementieren. Die Auslastung reicht von 0 bis 100 - "
-"unabhängig von der Anzahl von CPUs."
+"Last!) für Linux/UNNIX, Windows und für VMWare ESX Hostsysteme, sowie für "
+"Geräte, die die Host Resources MIB implementieren. Die prozentuale Auslastung "
+"wird relativ zur Gesamtanzahl der CPUs berechnet. Beachten Sie, dass nicht "
+"alle Parameter die Sie hier konfigurieren können auf alle Checks angewendbar "
+"sind."
 
 msgid ""
 "This rule controls the discovery of tasks on Lotus Domino systems. Any "
@@ -44037,9 +44029,9 @@ msgstr ""
 msgid "This rule is currently disabled and will not be applied"
 msgstr "Diese Regel ist zur Zeit deaktiviert und wird nicht angewendet"
 
-#, fuzzy, python-format
+#, python-format
 msgid "This rule is deprecated. Please use \"%s\" instead."
-msgstr "Dieser Name wird bereits verwendet. Bitte wählen Sie einen andere."
+msgstr "Dieser Regel ist veraltet. Bitte nutzen Sie stattdessen \"%s\"."
 
 msgid "This rule is disabled"
 msgstr "Diese Regel ist deaktiviert"
@@ -45946,9 +45938,8 @@ msgstr "Verkehr"
 msgid "Transaction Logs Disk Usage"
 msgstr "Transaktionsprotokolle der Festplattennutzung"
 
-#, fuzzy
 msgid "Transaction count"
-msgstr "Transaktionslog"
+msgstr "Anzahl der Transaktionen"
 
 msgid "Transactionlog"
 msgstr "Transaktionslog"
@@ -47057,9 +47048,8 @@ msgstr "Schwellwerte für die Längen der Schlange"
 msgid "Upper levels for the age"
 msgstr "Obere Schwellen für das Alter"
 
-#, fuzzy
 msgid "Upper levels for the age of the update"
-msgstr "Obere Schwellen für das Alter"
+msgstr "Obere Schwellwerte für das Alter des Updates"
 
 msgid "Upper levels for the backup age"
 msgstr "Obere Schwellen für das Backupalter"
@@ -47094,17 +47084,14 @@ msgstr "Obere Schwellen für das Alter"
 msgid "Upper levels on Point-to-site bandwidth in bytes per second"
 msgstr "Obere Level der Point-to-Site-Bandbreite in Bytes pro Sekunde"
 
-#, fuzzy
 msgid "Upper levels on Site-to-site bandwidth in bytes per second"
-msgstr "Obere Schwellen für \"expired objects\" pro Sekunde"
+msgstr "Obere Schwellwerte für Site-to-Site Bandbreite in Bytes pro Sekunde"
 
-#, fuzzy
 msgid "Upper levels on daily costs"
-msgstr "Obere Schwellen für %s"
+msgstr "Obere Schwellwerte für tägliche Kosten"
 
-#, fuzzy
 msgid "Upper levels on number of Point-to-site connections"
-msgstr "Obere Grenzen für aktive Datenbank Verbindungen"
+msgstr "Obere Grenzen für die Anzahl der Point-to-Site Verbindungen"
 
 msgid "Upper levels replica lag"
 msgstr "Obere Schwellen für die Replikaverzögerung"
@@ -47334,9 +47321,8 @@ msgstr "Standardthema verwenden"
 msgid "Use description"
 msgstr "Beschreibung verwenden"
 
-#, fuzzy
 msgid "Use device levels"
-msgstr "Nutze Gerätestatus"
+msgstr "Nutze Geräte Schwellwerte"
 
 msgid "Use device states"
 msgstr "Nutze Gerätestatus"
@@ -47468,7 +47454,6 @@ msgstr "Portnamen als Servicenamen verwenden"
 msgid "Use procedure call instead of SQL statement"
 msgstr "Prozedur anstelle von SQL-Anfrage verwenden"
 
-#, fuzzy
 msgid "Use proxy"
 msgstr "Verwende Proxy-Server"
 
@@ -47535,13 +47520,11 @@ msgstr "Standard Aussehen benutzen"
 msgid "Use the following ID"
 msgstr "Die folgende ID verwenden"
 
-#, fuzzy
 msgid "Use the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
 
-#, fuzzy
 msgid "Use the following levels"
-msgstr "Mit den folgenden Daten anmelden"
+msgstr "Die folgenden Schwellwerte benutzen"
 
 msgid "Use the following status host"
 msgstr "Den folgenden Status-Host verwenden"
@@ -47854,9 +47837,8 @@ msgstr "Belegter Platz in Dateisystemen via SNMP"
 msgid "Used storage in percent"
 msgstr "Speicherbelegung in Prozent"
 
-#, fuzzy
 msgid "Used storage space"
-msgstr "Speicherbelegung in Prozent"
+msgstr "Speicherbelegung"
 
 msgid "User"
 msgstr "Benutzer"
@@ -47891,9 +47873,8 @@ msgstr "Benutzerschnittstelle"
 msgid "User Management"
 msgstr "Benutzer-Verwaltung"
 
-#, fuzzy
 msgid "User Name"
-msgstr "Benutzer"
+msgstr "Benutzername"
 
 msgid "User Profile"
 msgstr "Benutzerprofil"
@@ -48137,7 +48118,6 @@ msgstr ""
 "möglich. Mithilfe dieses Regelsatzes können Sie einen alternative Weg für das "
 "Prüfen des Hoststatus auswählen."
 
-#, fuzzy
 msgid ""
 "Usually Check_MK will nail this check to the primary IP address of the host "
 "it is attached to. It will use corresponding IP version (IPv4/IPv6) and the "
@@ -48147,9 +48127,14 @@ msgid ""
 "contacted servers address from your virtual host name (e.g. if the virtual "
 "host name is not resolvable by DNS)."
 msgstr ""
-"Normalerweise werden Checks an die IP Adresse eines Hosts gebunden. Mit "
-"dieser Option erreichen Sie dass der Check den Namen eines virtuellen Hosts "
-"benutzt und eine DNS Suche auslöst."
+"Normalerweise wird dieser Check von Check_MK an die primäre IP-Adresse des "
+"Hosts gebunden, für den er definiert wurde. Es wird die entsprechende IP-"
+"Version (IPv4/IPv6) und den Standard-Port (80/443) verwenden. Mit dieser "
+"Option können Sie einen dieser Parameter überschreiben. Standardmäßig wird "
+"der Hostname / die IP-Adresse auch als virtueller Host verwendet. In einigen "
+"Konfigurationen können Sie jedoch die Adresse der kontaktierten Server von "
+"Ihrem virtuellen Hostnamen unterscheiden (z.B. wenn der virtuelle Hostname "
+"nicht durch DNS auflösbar ist)."
 
 msgid ""
 "Usually the check goes to WARN if a VM or host is powered off and OK "
@@ -48494,9 +48479,8 @@ msgstr "Virtuelles Systeme"
 msgid "Virtual addresses for mapping"
 msgstr "Virtuelle Adressraum für Mappings"
 
-#, fuzzy
 msgid "Virtual context switches"
-msgstr "Freiwillige Kontextwechsel"
+msgstr "Virtuelle Kontextwechsel"
 
 msgid ""
 "Virtual displays the quantity of virtual memory used by the mongod process. "
@@ -48827,9 +48811,8 @@ msgstr "Warnung bei einem Speicherverbrauch von"
 msgid "Warning at a provisioning of"
 msgstr "Warnung bei Provisionierung von"
 
-#, fuzzy
 msgid "Warning at a steal time of"
-msgstr "Warnung bei Verwendung von"
+msgstr "Warnung bei einer Steal-Zeit von"
 
 msgid "Warning at a usage of"
 msgstr "Warnung bei Verwendung von"
@@ -50172,13 +50155,12 @@ msgstr ""
 "Konfiguration kann für den Check <i>lparstat_aix.cpu_util</i> nicht genutzt "
 "werden!"
 
-#, fuzzy
 msgid ""
 "With this option activated at most <i>X</i> messages are processed per "
 "monitoring cycle."
 msgstr ""
 "Wenn diese Option aktiviert ist, werden höchstens <i>X</i> neue Nachrichten "
-"pro Monitoring-Zyklus übergeben."
+"pro Monitoring-Zyklus verarbeitet."
 
 msgid ""
 "With this option activated at most the configured time is being spent for "
@@ -50490,7 +50472,6 @@ msgstr ""
 msgid "Write IO operations per second"
 msgstr "Schreibende IO-Operationen pro Sekunde"
 
-#, fuzzy
 msgid "Write Operations/s"
 msgstr "Schreibzugriffe"
 

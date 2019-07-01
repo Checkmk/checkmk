@@ -1376,7 +1376,8 @@ class EventsMode(WatoMode):
 def sort_sites(sitelist):
     # type: (List[typing.Tuple[str, Dict]]) -> List[typing.Tuple[str, Dict]]
     """Sort given sites argument by local, followed by remote sites"""
-    return sorted(sitelist, key=lambda (sid, s): (s.get("replication"), s.get("alias"), sid))
+    return sorted(
+        sitelist, key=lambda sid_s: (sid_s[1].get("replication"), sid_s[1].get("alias"), sid_s[0]))
 
 
 class ModeRegistry(cmk.utils.plugin_registry.ClassRegistry):

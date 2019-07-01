@@ -355,6 +355,9 @@ setup:
 	    librrd-dev \
 	    llvm-7-dev \
 	    libsasl2-dev \
+	    libldap2-dev \
+	    libkrb5-dev \
+	    libmysqlclient-dev \
 	    pngcrush \
 	    valgrind \
 	    direnv \

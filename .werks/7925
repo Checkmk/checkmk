@@ -1,0 +1,10 @@
+Title: prism_storage_pools: New check to monitor the capacity and usage of Prism storage pools
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1561967997
+Class: feature
+
+You can monitor the available disk space for your storage pools of your Prism containers.

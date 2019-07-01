@@ -1,0 +1,12 @@
+Title: Fixed execution_time column for passive checks.
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1561988493
+Class: fix
+
+The execution_time column for passive checks doesn't really make sense, so
+we set it to a (near) zero value when using the CMC.  This is in line with
+Nagios' behavior.

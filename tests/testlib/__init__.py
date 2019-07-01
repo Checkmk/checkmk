@@ -1411,7 +1411,7 @@ def create_linux_test_host(request, web, site, hostname):
         "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['%s']))\n" %
         hostname)
 
-    site.execute(["mkdir", "-p", site.path("var/check_mk/agent_output/"]))
+    site.execute(["mkdir", "-p", site.path("var/check_mk/agent_output/")])
     site.write_file(
         "var/check_mk/agent_output/%s" % hostname,
         file("%s/tests/livestatus/linux-agent-output" % repo_path()).read())

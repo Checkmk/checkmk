@@ -327,6 +327,11 @@ def get_cmk_passive_service_attributes(config_cache, host_config, description, c
 def get_service_attributes(hostname, description, config_cache, checkname=None, params=None):
     attrs = _extra_service_attributes(hostname, description, config_cache, checkname, params)
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
+    attrs.update(
+        _get_tag_attributes(config_cache.labels_of_service(hostname, description), "LABEL"))
+    attrs.update(
+        _get_tag_attributes(
+            config_cache.label_sources_of_service(hostname, description), "LABELSOURCE"))
     return attrs
 
 

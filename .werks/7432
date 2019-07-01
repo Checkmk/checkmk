@@ -1,0 +1,12 @@
+Title: postgres_instances: fix crash of the parse function
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561988389
+Class: fix
+
+The check crashed with the error:
+
+TypeError (update expected at most 1 arguments, got 2)

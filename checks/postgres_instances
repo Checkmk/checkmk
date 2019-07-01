@@ -48,11 +48,10 @@ def parse_postgres_instances(info):
             db_id = line[0][3:-3]
             is_single = True
             parsed.setdefault(db_id.upper(), {})
-
         elif len(line) >= 4:
             if not is_single:
                 db_id = line[3].split("/")[-1]
-            parsed.update(db_id.upper(), {"pid": line[0]})
+            parsed.setdefault(db_id.upper(), {}).update(pid=line[0])
 
     return parsed
 

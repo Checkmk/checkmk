@@ -138,8 +138,7 @@ def discovery_systemd_units_services(parsed):
     def state_match(rule_states, state):
         return any(s in (None, state) for s in rule_states)
 
-    for rule in discovery_systemd_units_services_rules:
-        settings = rule[0]
+    for settings in host_extra_conf(host_name(), discovery_systemd_units_services_rules):
         descriptions = settings.get("descriptions", [])
         names = settings.get("names", [])
         states = settings.get("states")

@@ -1,0 +1,18 @@
+Title: mk_postgres: version detection may fail
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1561979743
+
+The version detection for the server did not use the
+configured database, user and port defined in the
+postgres.cfg. Instead the default values were used.
+If the plugin cannot execute queries with the default
+values the plugin will exit prematurely.
+
+To resolve the issue the fixed version of the mk_postgres
+plugin has to be deployed on the affected hosts.

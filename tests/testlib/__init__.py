@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import os
 import glob
@@ -1390,3 +1391,27 @@ def ec(site, web):
     #ec.enable_remote_status_port(web)
     #ec.activate_changes(web)
     return ec
+
+
+def create_linux_test_host(request, web, site, hostname):
+    def finalizer():
+        web.delete_host(hostname)
+        web.activate_changes()
+        if site.file_exists("var/check_mk/agent_output/%s" % hostname):
+            site.delete_file("var/check_mk/agent_output/%s" % hostname)
+        if site.file_exists("etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname):
+            site.delete_file("etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname)
+
+    request.addfinalizer(finalizer)
+
+    web.add_host(hostname, attributes={"ipaddress": "127.0.0.1"})
+
+    site.write_file(
+        "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
+        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['%s']))\n" %
+        hostname)
+
+    site.execute(["mkdir", "-p", "var/check_mk/agent_output/"])
+    site.write_file(
+        "var/check_mk/agent_output/%s" % hostname,
+        file("%s/tests/livestatus/linux-agent-output" % repo_path()).read())

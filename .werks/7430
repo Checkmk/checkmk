@@ -1,0 +1,14 @@
+Title: ps: fix empty output on older distros with cgroups
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561972950
+Class: fix
+
+Werk #7420 used the column cgname to determine if a process
+belongs to a docker container. Unfortunately, the column is
+not available on older distros with cgroups like e.g.
+Ubuntu 16.04. To fix this issue the ps section now uses the
+cgroup column.

@@ -472,9 +472,9 @@ grep ^/dev </proc/mounts | grep -v " squashfs "
 # processes including username, without kernel processes
 echo '<<<ps>>>'
 if [ -z "$IS_DOCKERIZED" ] && [ -e /sys/fs/cgroup ]; then
-    # Omit processes with "/docker/" in the control group name, because
+    # Omit processes with "/docker/" in the control group, because
     # they belong to docker containers.
-    ps ax -o cgname:32,user:32,vsz,rss,cputime,etime,pid,command --columns 10000 |
+    ps ax -o cgroup:32,user:32,vsz,rss,cputime,etime,pid,command --columns 10000 |
         sed -e 1d -e '/^[^ ]*\/docker\/[^ ]* /d' \
             -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\2,\3,\4,\5\/\6,\7) /'
 else

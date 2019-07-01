@@ -1,0 +1,10 @@
+Title: systemd_units: fix broken discovery rule
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561979923
+Class: fix
+
+This fix solves the exception which occured when a systemd service discovery rule was defined

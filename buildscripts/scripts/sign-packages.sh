@@ -62,8 +62,8 @@ fi
 
 # Hashes der kopierten Dateien ablegen (werden später auf der Webseite angezeigt)
 echo "+ Create HASHES file..."
-sha256sum -- *.cma >>HASHES || true
-sha256sum -- *.tar.gz >>HASHES || true
-sha256sum -- *.rpm >>HASHES || true
-sha256sum -- *.deb >>HASHES || true
-sha256sum -- *.cmk >>HASHES || true
+sha256sum -- $TARGET/*.cma >>$TARGET/HASHES || true
+sha256sum -- $TARGET/*.tar.gz >>$TARGET/HASHES || true
+sha256sum -- $TARGET/*.rpm >>$TARGET/HASHES || true
+sha256sum -- $TARGET/*.deb >>$TARGET/HASHES || true
+sha256sum -- $TARGET/*.cmk >>$TARGET/HASHES || true

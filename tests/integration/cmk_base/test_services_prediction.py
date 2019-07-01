@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name
+
 from datetime import datetime
 import os
 import time
@@ -7,13 +9,39 @@ import cmk.prediction
 from cmk_base import prediction
 from cmk.exceptions import MKGeneralException
 
-from testlib import web, repo_path
+from testlib import web, repo_path  # pylint: disable=unused-import
+
+
+def create_linux_test_host(request, web, site, hostname):
+    def finalizer():
+        web.delete_host(hostname)
+        web.activate_changes()
+        site.delete_file("var/check_mk/agent_output/%s" % hostname)
+        site.delete_file("etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname)
+
+    request.addfinalizer(finalizer)
+
+    web.add_host(hostname, attributes={"ipaddress": "127.0.0.1"})
+
+    site.write_file(
+        "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
+        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['%s']))\n" %
+        hostname)
+
+    site.makedirs("var/check_mk/agent_output/")
+    site.write_file(
+        "var/check_mk/agent_output/%s" % hostname,
+        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
 
 @pytest.fixture(scope="module")
-def cfg_setup(web, site):
-    web.add_host('test-prediction', attributes={"ipaddress": "127.0.0.1"})
+def cfg_setup(request, web, site):
+    create_linux_test_host(request, web, site, "test-prediction")
+    web.discover_services("test-prediction")
+    web.activate_changes()
 
+    # Enforce use of the pre-created RRD file from the git. The restart of the core
+    # is needed to make it renew it's internal RRD file cache
     site.makedirs("var/check_mk/rrd/test-prediction/")
     site.write_file(
         "var/check_mk/rrd/test-prediction/CPU_load.rrd",
@@ -21,16 +49,12 @@ def cfg_setup(web, site):
     site.write_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",
         file("%s/tests/integration/cmk_base/test-files/CPU_load.info" % repo_path()).read())
-
-    web.discover_services("test-prediction")
-    web.activate_changes()
+    site.omd("restart", "cmc")
 
     yield
 
     # Cleanup
     site.delete_dir("var/check_mk/rrd/")
-    web.delete_host("test-prediction")
-    web.activate_changes()
 
 
 @pytest.mark.parametrize('date, period, result', [

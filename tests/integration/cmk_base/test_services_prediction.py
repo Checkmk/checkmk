@@ -9,29 +9,7 @@ import cmk.prediction
 from cmk_base import prediction
 from cmk.exceptions import MKGeneralException
 
-from testlib import web, repo_path  # pylint: disable=unused-import
-
-
-def create_linux_test_host(request, web, site, hostname):
-    def finalizer():
-        web.delete_host(hostname)
-        web.activate_changes()
-        site.delete_file("var/check_mk/agent_output/%s" % hostname)
-        site.delete_file("etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname)
-
-    request.addfinalizer(finalizer)
-
-    web.add_host(hostname, attributes={"ipaddress": "127.0.0.1"})
-
-    site.write_file(
-        "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
-        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['%s']))\n" %
-        hostname)
-
-    site.makedirs("var/check_mk/agent_output/")
-    site.write_file(
-        "var/check_mk/agent_output/%s" % hostname,
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+from testlib import web, repo_path, create_linux_test_host  # pylint: disable=unused-import
 
 
 @pytest.fixture(scope="module")

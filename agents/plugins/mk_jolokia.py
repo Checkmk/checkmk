@@ -39,7 +39,7 @@ except ImportError as import_error:
         "<<<jolokia_info>>>\n"
         "Error: mk_jolokia requires either the json or simplejson library."
         " Please either use a Python version that contains the json library or install the"
-        " simplejson library on the monitored system.")
+        " simplejson library on the monitored system.\n")
     sys.exit(1)
 
 try:
@@ -49,7 +49,7 @@ try:
 except ImportError as import_error:
     sys.stdout.write("<<<jolokia_info>>>\n"
                      "Error: mk_jolokia requires the requests library."
-                     " Please install it on the monitored system.")
+                     " Please install it on the monitored system.\n")
     sys.exit(1)
 
 VERBOSE = sys.argv.count('--verbose') + sys.argv.count('-v') + 2 * sys.argv.count('-vv')
@@ -181,7 +181,7 @@ class SkipMBean(RuntimeError):
 
 
 def get_default_config_dict():
-    return {t[0]: t[1] for t in DEFAULT_CONFIG_TUPLES}
+    return dict(tup[:2] for tup in DEFAULT_CONFIG_TUPLES)
 
 
 def write_section(name, iterable):
@@ -211,12 +211,12 @@ class JolokiaInstance(object):
         if instance:
             err_msg += " for %s" % instance
 
-        required_keys = {"protocol", "server", "port", "suburi", "timeout"}
+        required_keys = set(("protocol", "server", "port", "suburi", "timeout"))
         auth_mode = config.get("mode")
         if auth_mode in ("digest", "basic", "basic_preemtive"):
-            required_keys |= {"user", "password"}
+            required_keys |= set(("user", "password"))
         elif auth_mode == "https":
-            required_keys |= {"client_cert", "client_key"}
+            required_keys |= set(("client_cert", "client_key"))
         if config.get("service_url") is not None and config.get("service_user") is not None:
             required_keys.add("service_password")
         missing_keys = required_keys - set(config.keys())
@@ -560,7 +560,7 @@ def yield_configured_instances(custom_config=None):
     individual_configs = custom_config.pop("instances", [{}])
     for cfg in individual_configs:
         keys = set(cfg.keys() + custom_config.keys())
-        conf_dict = {k: cfg.get(k, custom_config.get(k)) for k in keys}
+        conf_dict = dict((k, cfg.get(k, custom_config.get(k))) for k in keys)
         if VERBOSE:
             sys.stderr.write("DEBUG: configuration: %r\n" % conf_dict)
         yield conf_dict

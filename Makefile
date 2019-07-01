@@ -230,6 +230,7 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 		windows/cfg_examples \
 		windows/check_mk_agent*.{exe,msi} \
 		windows/check_mk.example.ini \
+		windows/check_mk.user.yml \
 		windows/CONTENTS \
 		windows/mrpe \
 		windows/plugins

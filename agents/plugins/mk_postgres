@@ -413,6 +413,7 @@ function postgres_main() {
     # sufficient in this case.
     ECHO_DATABASES="$(echo "$DATABASES" | sed 's/^/\\echo /')"
 
+    postgres_check_server_version
     postgres_sessions
     postgres_simple_queries
     postgres_stats
@@ -427,7 +428,7 @@ function postgres_check_server_version() {
     # Terminate the script if the server can not be queried.
     # We want $(su ...) to be
     # shellcheck disable=SC2046
-    set -- $(su - "$DBUSER" -c "$psql -A -t -c 'SHOW server_version;'" | tr '.' ' ')
+    set -- $(su - "$DBUSER" -c "$psql -A -t -X ${EXTRA_ARGS} -c 'SHOW server_version;'" | tr '.' ' ')
     test $# -eq 0 && exit 0
     POSTGRES_VERSION="$1.$2"
     postgres_set_condition_vars
@@ -494,7 +495,6 @@ if [ -e "$MK_CONFFILE" ]; then
                      sed -e 's/.*=//g' -e 's/\s*#.*$//g')/psql"
             fi
 
-            postgres_check_server_version
             postgres_main
 
         fi
@@ -514,7 +514,6 @@ else
     INSTANCE_SECTION=""
     psql="psql"
 
-    postgres_check_server_version
     postgres_instances "$DBUSER"
     postgres_main
 

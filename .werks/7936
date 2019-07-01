@@ -1,0 +1,11 @@
+Title: Fixed libevent dependency for Ubuntu Disco Dingo.
+Level: 1
+Component: deb
+Compatible: compat
+Edition: cre
+Version: 1.5.0p20
+Date: 1561988745
+Class: fix
+
+The Debian package Disco Dingo had an outdated libevent version as a
+dependency, this has been fixed.

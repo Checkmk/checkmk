@@ -63,7 +63,6 @@ ENABLED_FIXERS+=" lib2to3.fixes.fix_repr"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_throw"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_tuple_params"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_types"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_ws_comma"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_xreadlines"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_zip"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_absolute_import"
@@ -82,6 +81,13 @@ ENABLED_FIXERS+=" lib2to3.fixes.fix_throw"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_unicode_keep_u"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_xrange_with_import"
 ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
+
+# *** Useless fixers ***
+#---------------------------------------------------------------------------
+# lib2to3.fixes.fix_ws_comma
+# This performs cosmetic changes. This is not applied by default because it
+# does not serve to improve Python 2/3 compatibility. (In some cases it may
+# also reduce readability: see issue #58.)
 
 if [ -z "$ENABLED_FIXERS" ]; then
     echo "No fixer enabled"

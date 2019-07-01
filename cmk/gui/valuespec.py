@@ -3395,7 +3395,7 @@ class Tuple(ValueSpec):
         for no, element in enumerate(self._elements):
             try:
                 val = value[no]
-            except IndexError:
+            except (TypeError, IndexError):
                 val = element.default_value()
             vp = varprefix + "_" + str(no)
             if self._orientation == "vertical":

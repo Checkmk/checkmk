@@ -1172,9 +1172,8 @@ if cd "$PLUGINSDIR"; then
 fi
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ]
-then
-    pushd "$SPOOLDIR" > /dev/null
+if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
+    pushd "$SPOOLDIR" >/dev/null
     now=$(date +%s)
 
     for file in *

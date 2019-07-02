@@ -1,0 +1,14 @@
+Title: check_mk_agent.{aix,linux,openwrt}: Fixed accessing $SPOOLDIR
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p20
+Date: 1562054546
+
+If the check_mk_agent is executed under a certain user which has no
+permissions on the $SPOOLDIR and the $SPOOLDIR exists then the content
+of each plugin below $PLUGINSDIR or $LOCALDIR may be appended to the
+agent output.

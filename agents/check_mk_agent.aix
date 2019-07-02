@@ -386,8 +386,7 @@ then
 fi
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ]
-then
+if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
     cd "$SPOOLDIR" > /dev/null
     now=$(date +%s)
 

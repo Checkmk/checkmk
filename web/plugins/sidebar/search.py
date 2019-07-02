@@ -259,8 +259,8 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
             "svcgroups":    ["servicegroup_regex",           "name"],
 
             # Host/Service domain (hosts, services)
-            "allservices":  ["%sgroups" % self._group_type ,
-                             self._group_type == "service" and "groups" or "host_groups"],
+            "allservices": ["%sgroups" % self._group_type,
+                            "%s_groups" % self._group_type],
             "searchsvc":    ["%sgroups" % self._group_type ,
                              self._group_type == "service" and "groups" or "host_groups"],
             "searchhost":   ["%sgroups" % self._group_type ,

@@ -102,6 +102,7 @@ class InfoboxNodeFormatter extends AbstractInfoboxFormatter {
             .append("tr")
             .append("td")
               .classed("noselect", true)
+              .classed("infobox_entry", true)
               .text(d=>d.name)
               .each(function (d) {d3.select(this).classed("state" + d.state, true)})
               .on("click", d=>this._zoom_node(d.name))

@@ -600,11 +600,12 @@ class AbstractGUINode {
              .attr("y", coords.y)
              .on("mouseover", () => this._show_quickinfo())
              .on("mouseout", () => this._hide_quickinfo())
-             .on("click", () => this._fixate_quickinfo())
              .on("contextmenu", () => this.nodes_layer.render_context_menu(this))
     }
 
-
+    _get_details_url() {
+        return null
+    }
 
     get_context_menu_elements() {
         let elements = []
@@ -622,7 +623,6 @@ class AbstractGUINode {
         }
         return elements
     }
-
 
     _filter_root_cause(node) {
         if (!node._children)
@@ -709,6 +709,9 @@ class AbstractGUINode {
     }
 
     _show_quickinfo() {
+        if (this.viewport.layout_manager.edit_layout)
+            return
+
         let div_selection = this.nodes_layer.div_selection.selectAll("div.quickinfo").data([this.node], d=>d.data.id)
         this._quickinfo_selection = div_selection.enter().append("div")
                             .classed("quickinfo", true)
@@ -784,7 +787,10 @@ class AbstractGUINode {
               .attr("r", this.radius + 1)
               .attr("fill", "black")
 
-        this.selection.append("circle")
+        this.selection
+              .append("a")
+              .attr("xlink:href", this._get_details_url())
+              .append("circle")
               .attr("r", this.radius)
               .classed("state_circle", true)
 //              .style("fill-opacity", 0.8)
@@ -880,6 +886,16 @@ class BILeafNode extends AbstractGUINode {
 
         d3.html(view_url ,{credentials: "include"}).then(html=>this._got_quickinfo(html))
     }
+
+    _get_details_url() {
+        if (this.node.data.service && this.node.data.service != "") {
+            return "view.py?view_name=service" +
+                "&host=" + encodeURIComponent(this.node.data.hostname) +
+                "&service=" + encodeURIComponent(this.node.data.service)
+        } else {
+            return "view.py?view_name=host&host=" + encodeURIComponent(this.node.data.hostname)
+        }
+    }
 }
 
 class BIAggregatorNode extends AbstractGUINode {
@@ -924,35 +940,33 @@ class BIAggregatorNode extends AbstractGUINode {
     get_context_menu_elements() {
         let elements = []
 
+        let theme_prefix = this.viewport.main_instance.get_theme_prefix()
+
         // Local actions
-        if (!this.node.parent)
-            // This is the aggregation root node
 // TODO: provide aggregation ID (if available)
+//        if (!this.node.parent)
+//        // This is the aggregation root node
 //            elements.push({text: "Edit aggregation (Missing: You need to configure an ID for this aggregation)", href: "wato.py?mode=bi_edit_rule&id=" + this.node.data.rule_id.rule +
 //               "&pack=" + this.node.data.rule_id.pack,
 //               img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_edit.png"})
 
-            elements.push({text: "Edit aggregation", href: "wato.py?mode=bi_edit_rule&id=" + this.node.data.rule_id.rule +
-               "&pack=" + this.node.data.rule_id.pack,
-               img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_edit.png"})
-
         elements.push({text: "Edit rule", href: "wato.py?mode=bi_edit_rule&id=" + this.node.data.rule_id.rule +
            "&pack=" + this.node.data.rule_id.pack,
-           img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_edit.png"})
+           img: theme_prefix + "/images/icon_edit.png"})
 
         if (this.node.children != this.node._children)
             elements.push({text: "Below this node, expand all nodes", on: ()=>{d3.event.stopPropagation(); this.expand_node()}, href: "",
-                            img: "images/icons/icons8-expand-48.png"})
+                            img: theme_prefix + "/images/icons/icons8-expand-48.png"})
         else
             elements.push({text: "Collapse this node", on: ()=>{d3.event.stopPropagation(); this.collapse_node()}, href: "",
-                            img: "images/icons/icons8-collapse-48.png"})
+                            img: theme_prefix + "/images/icons/icons8-collapse-48.png"})
 
         elements.push({text: "Expand all nodes", on: ()=>{d3.event.stopPropagation();
                                                                 this.expand_node_including_children(this.node.data.chunk.tree)
                                                                 this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk)
                                                                 this.viewport.update_layers()
                                                             }, href: "",
-                            img: "images/icons/icons8-expand-48.png"})
+                            img: theme_prefix + "/images/icons/icons8-expand-48.png"})
 
         if (this.node.data.state != 0) {
             elements.push({text: "Below this node, show only problems", on: ()=>{
@@ -961,7 +975,7 @@ class BIAggregatorNode extends AbstractGUINode {
                                 this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk)
                                 this.viewport.update_layers()
             },
-            img: "images/icons/icons8-error-48.png"})
+            img: theme_prefix + "/images/icons/icons8-error-48.png"})
         }
         return elements
     }
@@ -1215,8 +1229,6 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         } else {
             let last_zoom = this.viewport.last_zoom
             coords = {x: (d3.event.layerX - last_zoom.x) / last_zoom.k, y: (d3.event.layerY - last_zoom.y) / last_zoom.k}
-            console.log("coords", d3.event)
-            console.log("coords", coords)
         }
 
         d3.event.preventDefault()

@@ -916,19 +916,19 @@ class LayoutApplier{
                 elements.push({text: "Convert to " + style.prototype.description(),
                                on: ()=> this._convert_node(node, style),
                                href: "",
-                               img: this.layout_manager.viewport.main_instance.get_theme_previx() + "/images/icon_aggr.png"})
+                               img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
             } else {
                 elements.push({text: "Convert all nodes to " + style.prototype.description(),
                            on: ()=> this._convert_all(style),
                            href: "",
-                           img: this.layout_manager.viewport.main_instance.get_theme_previx() + "/images/icon_aggr.png"})
+                           img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
             }
         }
         let modification_element = this.layout_manager.toolbar_plugin.layout_style_configuration
         elements.push({text: "Show " + node_visualization_layout_styles.LayoutStyleForce.prototype.description() + " options",
                        on: ()=>modification_element.update_current_style(this.layout_manager.force_style),
                        href: "",
-                       img: this.layout_manager.viewport.main_instance.get_theme_previx() + "/images/icon_aggr.png"})
+                       img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
         return elements
     }
 

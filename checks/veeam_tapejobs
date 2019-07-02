@@ -57,7 +57,7 @@ def check_veeam_tapejobs(item, params, data):
     last_result = data["last_result"]
     last_state = data["last_state"]
 
-    if last_result != "None" or last_state != "Working":
+    if last_result != "None" or last_state not in ("Working", "Idle"):
         yield BACKUP_STATE.get(last_result, 2), "Last backup result: %s" % last_result
         yield 0, "Last state: %s" % last_state
         clear_item_state("%s.running_since" % job_id)
@@ -70,7 +70,8 @@ def check_veeam_tapejobs(item, params, data):
         set_item_state("%s.running_since" % job_id, now)
     running_time = now - running_since
 
-    yield 0, "Backup in progress since %s" % get_timestamp_human_readable(running_since)
+    yield 0, "Backup in progress since %s (currently %s)" % (
+        get_timestamp_human_readable(running_since), last_state.lower())
     yield check_levels(
         running_time,
         None,

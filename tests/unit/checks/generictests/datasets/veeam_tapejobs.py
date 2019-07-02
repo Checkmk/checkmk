@@ -24,6 +24,8 @@ mock_item_state = {
     '': {
         '4.running_since': 1562056000,
         '5.running_since': 1560006000,
+        '6.running_since': 1562056000,
+        '7.running_since': 1560006000,
     }
 }
 
@@ -56,20 +58,20 @@ checks = {
             (0, 'Last state: Stopped', []),
         ]),
         ('Job Four', (86400, 172800), [
-            (0, 'Backup in progress since 2019-07-02 10:26:40', []),
+            (0, 'Backup in progress since 2019-07-02 10:26:40 (currently working)', []),
             (0, 'Running time: 14 m', []),
         ]),
         ('Job Five (older)', (86400, 172800), [
-            (0, 'Backup in progress since 2019-06-08 17:00:00', []),
+            (0, 'Backup in progress since 2019-06-08 17:00:00 (currently working)', []),
             (2, 'Running time: 24 d (warn/crit at 24 h/2 d)', []),
         ]),
         ('Job Six', (86400, 172800), [
-            (2, 'Last backup result: None', []),
-            (0, 'Last state: Idle', []),
+            (0, 'Backup in progress since 2019-07-02 10:26:40 (currently idle)', []),
+            (0, 'Running time: 14 m', []),
         ]),
         ('Job Seven (older)', (86400, 172800), [
-            (2, 'Last backup result: None', []),
-            (0, 'Last state: Idle', []),
+            (0, 'Backup in progress since 2019-06-08 17:00:00 (currently idle)', []),
+            (2, 'Running time: 24 d (warn/crit at 24 h/2 d)', []),
         ]),
     ],
 }

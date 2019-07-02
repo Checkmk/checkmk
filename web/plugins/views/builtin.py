@@ -267,6 +267,7 @@ multisite_builtin_views.update({
                  'show_filters': ['service_in_notification_period',
                                   'service_in_service_period',
                                   'optservicegroup',
+                                  'servicegroups',
                                   'service_notifications_enabled',
                                   'host_in_notification_period',
                                   'in_downtime',

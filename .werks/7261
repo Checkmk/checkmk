@@ -1,0 +1,14 @@
+Title: Quicksearch: Fixed exception shown with queries "sg: mysg s: .*"
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p20
+Date: 1561988948
+
+Note: Using queries with the pattern "sg: mysg s: .*" always requires an explicit set service group.
+So the query "sg: my.* s: .*" won't work.
+
+

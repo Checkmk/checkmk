@@ -612,12 +612,12 @@ class NodeList(K8sList[Node]):
 
     def total_resources(self):
         merge = functools.partial(left_join_dicts, operation=operator.add)
-        return reduce(merge, self.resources().itervalues())
+        return functools.reduce(merge, self.resources().itervalues())
 
     def cluster_stats(self):
         stats = self.stats()
         merge = functools.partial(left_join_dicts, operation=operator.add)
-        result = reduce(merge, stats.itervalues())
+        result = functools.reduce(merge, stats.itervalues())
         # During the merging process the sum of all timestamps is calculated.
         # To obtain the average time of all nodes devide by the number of nodes.
         result['timestamp'] = round(result['timestamp'] / len(stats), 1)
@@ -683,14 +683,14 @@ class PodList(K8sList[Pod]):
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
         merge = functools.partial(left_join_dicts, operation=operator.add)
         return {
-            node: reduce(merge, [p.resources for p in pods], Pod.zero_resources())
+            node: functools.reduce(merge, [p.resources for p in pods], Pod.zero_resources())
             for node, pods in by_node
             if node is not None
         }
 
     def total_resources(self):
         merge = functools.partial(left_join_dicts, operation=operator.add)
-        return reduce(merge, [p.resources for p in self], Pod.zero_resources())
+        return functools.reduce(merge, [p.resources for p in self], Pod.zero_resources())
 
 
 class NamespaceList(K8sList[Namespace]):
@@ -947,8 +947,8 @@ class ApiData(object):
                 grouped_metrics.setdefault(namespace, []).append(response[namespace])
 
         for namespace in grouped_metrics:
-            grouped_metrics[namespace] = reduce(operator.add,
-                                                grouped_metrics[namespace]).list_metrics()
+            grouped_metrics[namespace] = functools.reduce(
+                operator.add, grouped_metrics[namespace]).list_metrics()
 
         return grouped_metrics
 

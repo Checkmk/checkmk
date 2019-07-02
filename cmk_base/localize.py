@@ -175,7 +175,11 @@ def _localize_init_po(lang):
 def _localize_sniff():
     logger.info('Sniffing source code...')
 
-    paths = [cmk.utils.paths.default_config_dir, cmk.utils.paths.web_dir]
+    paths = [
+        cmk.utils.paths.default_config_dir,
+        cmk.utils.paths.web_dir + "/app",
+        cmk.utils.paths.lib_dir + "/python/cmk",
+    ]
     if os.path.exists(cmk.utils.paths.local_web_dir):
         paths.append(cmk.utils.paths.local_web_dir)
 

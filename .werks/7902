@@ -1,0 +1,12 @@
+Title: cmk --localize update: Finds relevant texts again
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1562076066
+
+The command missed to scan in lib/python/cmk directory and
+was missing a lot of texts as a result.

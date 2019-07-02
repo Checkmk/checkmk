@@ -219,11 +219,11 @@ static cma::PathVector GetFolderStructure() {
     namespace fs = std::filesystem;
     fs::path tmp = cma::cfg::GetTempDir();
     if (!fs::exists(tmp) || !fs::is_directory(tmp) ||
-        tmp.u8string().find("\\temp") == 0 ||
-        tmp.u8string().find("\\temp") == std::string::npos) {
+        tmp.u8string().find("\\tmp") == 0 ||
+        tmp.u8string().find("\\tmp") == std::string::npos) {
         XLOG::l(XLOG::kStdio)("Cant create folder structure {} {} {}",
                               fs::exists(tmp), fs::is_directory(tmp),
-                              tmp.u8string().find("\\temp"));
+                              tmp.u8string().find("\\tmp"));
         return {};
     }
     PathVector pv;

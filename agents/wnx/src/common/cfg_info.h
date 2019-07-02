@@ -142,16 +142,17 @@ inline std::filesystem::path MakePathToConfigTestFiles(std::wstring Root) {
 namespace dirs {
 // Program Files/check_mk_service/
 constexpr const wchar_t* kAgentPlugins = L"plugins";      // plugins from CMK
-constexpr const wchar_t* kAgentBin = L"bin";              // legacy for OHM
 constexpr const wchar_t* kAgentProviders = L"providers";  // only agent's exe
 constexpr const wchar_t* kAgentUtils = L"utils";          // anything to use
-constexpr const wchar_t* kAgentMrpe = L"mrpe";            // mrpe
 constexpr const wchar_t* kFileInstallDir = L"install";    // from here!
 
 // ProgramData/CheckMK/Agent
+constexpr const wchar_t* kAgentBin = L"bin";  // owned by agent legacy for OHM
+
 constexpr const wchar_t* kCache = L"cache";             // owned by agent
 constexpr const wchar_t* kUserPlugins = L"plugins";     // owned by user
 constexpr const wchar_t* kLocal = L"local";             // owned by user
+constexpr const wchar_t* kAgentMrpe = L"mrpe";          // owned by user
 constexpr const wchar_t* kInstall = L"install";         // owned by agent
 constexpr const wchar_t* kUserInstallDir = L"install";  // owned by agent
 constexpr const wchar_t* kBakery = L"bakery";           // owned by site
@@ -159,7 +160,7 @@ constexpr const wchar_t* kState = L"state";             // owned by plugins
 constexpr const wchar_t* kPluginConfig = L"config";     // owned by plugins
 
 constexpr const wchar_t* kSpool = L"spool";    // owned by user/sys plugins
-constexpr const wchar_t* kTemp = L"temp";      // owned by user plugins
+constexpr const wchar_t* kTemp = L"tmp";       // owned by user plugins
 constexpr const wchar_t* kUpdate = L"update";  // owned by agent
 constexpr const wchar_t* kMrpe = L"mrpe";      // owned by user(!) for mrpe
 

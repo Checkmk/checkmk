@@ -65,7 +65,7 @@ AgentDirectory: c:\\dev\\shared
 PluginsDirectory: C:\\ProgramData\\CheckMK\\Agent\\plugins
 StateDirectory: C:\\ProgramData\\CheckMK\\Agent\\state
 ConfigDirectory: C:\\ProgramData\\CheckMK\\Agent\\config
-TempDirectory: C:\\ProgramData\\CheckMK\\Agent\\temp
+TempDirectory: C:\\ProgramData\\CheckMK\\Agent\\tmp
 LogDirectory: C:\\Users\\Public
 SpoolDirectory: C:\\ProgramData\\CheckMK\\Agent\\spool
 LocalDirectory: C:\\ProgramData\\CheckMK\\Agent\\local
@@ -110,7 +110,7 @@ def expected_output():
         r'PluginsDirectory: %s' % (re.escape(os.path.join(user_dir, 'plugins'))),
         r'StateDirectory: %s' % (re.escape(os.path.join(user_dir, 'state'))),
         r'ConfigDirectory: %s' % (re.escape(os.path.join(user_dir, 'config'))),
-        r'TempDirectory: %s' % (re.escape(os.path.join(user_dir, 'temp'))),
+        r'TempDirectory: %s' % (re.escape(os.path.join(user_dir, 'tmp'))),
         r'LogDirectory: %s' % (re.escape('C:\\Users\\Public')),
         r'SpoolDirectory: %s' % (re.escape(os.path.join(user_dir, 'spool'))),
         r'LocalDirectory: %s' % (re.escape(os.path.join(user_dir, 'local'))),

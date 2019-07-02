@@ -26,27 +26,28 @@ void PrintNode(YAML::Node node, std::string_view S) {
 void SafeCleanTempDir() {
     namespace fs = std::filesystem;
     auto temp_dir = cma::cfg::GetTempDir();
-    auto normal_dir = temp_dir.find(L"\\temp", 0) != std::wstring::npos;
-    if (normal_dir) {
-        // clean
-        fs::remove_all(cma::cfg::GetTempDir());
-        fs::create_directory(temp_dir);
-    }
+    auto really_temp_dir = temp_dir.find(L"\\tmp", 0) != std::wstring::npos;
+    if (!really_temp_dir) return;
+
+    // clean
+    fs::remove_all(cma::cfg::GetTempDir());
+    fs::create_directory(temp_dir);
 }
 
-void SafeCleanTempDir(const std::string Sub) {
+void SafeCleanTempDir(std::string_view sub_dir) {
     namespace fs = std::filesystem;
     auto temp_dir = cma::cfg::GetTempDir();
-    auto normal_dir = temp_dir.find(L"\\temp", 0) != std::wstring::npos;
-    if (normal_dir) {
-        // clean
-        fs::path t_d = temp_dir;
-        fs::remove_all(t_d / Sub);
-        fs::create_directory(t_d / Sub);
-    } else {
+    auto really_temp_dir = temp_dir.find(L"\\tmp", 0) != std::wstring::npos;
+    if (!really_temp_dir) {
         XLOG::l("attempt to delete suspicious dir {}",
                 wtools::ConvertToUTF8(temp_dir));
+        return;
     }
+
+    // clean
+    fs::path t_d = temp_dir;
+    fs::remove_all(t_d / sub_dir);
+    fs::create_directory(t_d / sub_dir);
 }
 
 template <typename T, typename V>

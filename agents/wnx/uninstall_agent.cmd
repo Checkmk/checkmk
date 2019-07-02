@@ -62,7 +62,7 @@ DEL /F/Q/S !fldr! > NUL
 RMDIR /Q/S !fldr!
 
 if not "!all!" == "1" goto exit_all
-powershell Write-Host "Deleting log and protocol upgarde files..." -Foreground Cyan
+powershell Write-Host "Deleting log and protocol upgrade files..." -Foreground Cyan
 del %public%\check_mk.log
 del "%ProgramFiles(x86)%\check_mk_service\upgrade.protocol"
 :exit_all

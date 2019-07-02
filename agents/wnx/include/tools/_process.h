@@ -216,12 +216,6 @@ inline std::wstring GetTempFolder() {
     return L"";
 }
 
-inline std::wstring GetCurrentFolder() noexcept {
-    wchar_t dir[MAX_PATH * 2] = L"";
-    GetCurrentDirectory(MAX_PATH * 2, dir);
-    return dir;
-}
-
 }  // namespace win
 
 inline bool IsFileExist(const std::wstring& File) noexcept {

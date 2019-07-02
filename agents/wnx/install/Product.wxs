@@ -49,6 +49,10 @@ just to signal that real build script was not called -->
     <!-- Property Id="ALLUSERS" Value="1" /<- This option already set -->
     <Property Id="REINSTALLMODE" Value="amus" />
 
+    <!-- Repair disabled 
+    <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
+    -->
+
     <!-- Help Link in the Control Panel -->
     <Property Id="ARPHELPLINK" Value="https://tribe29.com" />
     <!-- Support Link in the Control Panel -->
@@ -94,10 +98,25 @@ just to signal that real build script was not called -->
     <Feature Id="install" Title="Install Folder" Level="1">
       <ComponentRef Id="install"/>
     </Feature>
+    <Feature Id="clean_feature" Title="Program Data Folder Clean" Level="1">
+      <ComponentRef Id="remove_install_protocol"/>
+
+      <ComponentRef Id="clean_update"/>
+      <ComponentRef Id="clean_cache"/>
+      <ComponentRef Id="clean_config"/>
+      <ComponentRef Id="clean_bakery"/>
+      <ComponentRef Id="clean_state"/>
+      <ComponentRef Id="clean_spool"/>
+      <ComponentRef Id="clean_tmp"/>
+    </Feature>
+    
 
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">
         <Directory Id="INSTALLFOLDER" Name="$(var.FolderName)">
+          <Component Id="remove_install_protocol" Guid="{C0E6D8DD-1895-4947-80BE-A7B4F0129C60}">
+            <RemoveFile Id="RemoveInstallProtocol" On ="uninstall" Name="install.protocol"/>
+          </Component>
           <Directory Id="providers" Name="providers">
             <Component Id="providers" Guid="{E639320D-8326-49BC-84E4-4D9218333E3F}"
               SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
@@ -135,7 +154,82 @@ just to signal that real build script was not called -->
           </Directory>
         </Directory>
       </Directory>
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="CmkFolder" Name="CheckMK">
+          <Directory Id="UserFolder" Name="Agent">
+            
+            <Directory Id="BakeryFolder" Name="bakery">
+              <Component Id="clean_bakery" Guid="{3593E36E-BC8C-4951-8ED8-8522D6205D3A}">
+                <RemoveFile Id="clean_check_mk_bakery_yml" On ="uninstall" Name="check_mk.bakery.yml"/>
+                <RemoveFolder Id ="RemoveBakeryFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+            
+            <Directory Id="StateFolder" Name="state">
+              <Component Id="clean_state" Guid="{269E6BDA-4B99-4285-997E-3B3B1798E7D6}">
+                <RemoveFile Id="clean_state" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveStateFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+
+            <Directory Id="SpoolFolder" Name="spool">
+              <Component Id="clean_spool" Guid="{19581C7B-0EE6-49BF-858A-90059FC844D1}">
+                <RemoveFile Id="clean_spool" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveSpoolFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+
+            <Directory Id="ConfigFolder" Name="config">
+              <Component Id="clean_config" Guid="{1D6B56F5-DC84-42CD-B026-EB29B15518D4}">
+                <RemoveFile Id="clean_config" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveConfigFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+            
+            <Directory Id="UpdateFolder" Name="update">
+              <Component Id="clean_update" Guid="{BAABD622-3B82-44DD-8877-4E4528248FBE}">
+                <RemoveFile Id="clean_update" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveUpdateFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+            
+            <Directory Id="CacheFolder" Name="cache">
+              <Component Id="clean_cache" Guid="{20F41F71-0BC0-4BAA-BF25-10C44BD84C2F}">
+                <RemoveFile Id="clean_cache" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveCacheFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+
+            <Directory Id="TmpFolder" Name="tmp">
+              <Component Id="clean_tmp" Guid="{4E12FD73-AB1E-4881-A910-954D103C6FFD}">
+                <RemoveFile Id="clean_tmp" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveTmpFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+            <!--      
+            -->
+          
+          </Directory>
+        </Directory>
+      </Directory>
+      <!--      
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="PDFOLDER" Name="CheckMK">
+          <Directory Id="pd_dir" Name="pd_dir_name">
+            <Component Id="pd_dir" Guid="{A21C3961-4585-49A7-A17B-8FD2AD4E29C5}"
+              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+              Win64="no" Location="either">
+              <CreateFolder/>
+              <RemoveFile Id="pd_dir_files_remove" On ="uninstall" Name="*.*"/>
+              <RemoveFolder Id="pd_dir_folder_remove" On="uninstall"/>            
+            </Component>
+          </Directory>
+        </Directory>
+      </Directory>
+      -->
     </Directory>
+    
+
 
     <!-- Step 2: Add files to your installer package -->
     <DirectoryRef Id="providers">

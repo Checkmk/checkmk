@@ -75,8 +75,9 @@ def inventory_esx_vsphere_counters_diskio(parsed):
         return [("SUMMARY", {})]
 
 def check_esx_vsphere_counters_diskio(item, params, parsed):
-    if "disk.read" not in parsed:
-        raise MKCounterWrapped("Counter data is missing")
+    for key in ("disk.read","disk.numberWrite"):
+        if key not in parsed:
+            raise MKCounterWrapped("Counter data is missing")
 
     values = {}
     values['read_throughput']  = 0

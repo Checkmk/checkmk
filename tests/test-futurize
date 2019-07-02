@@ -44,7 +44,6 @@ ENABLED_FIXERS=
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_next"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_numliterals"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_operator"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_reduce"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_types"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_xreadlines"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_zip"
@@ -84,6 +83,7 @@ ENABLED_FIXERS+=" lib2to3.fixes.fix_standarderror"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_sys_exc"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_throw"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_tuple_params"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_reduce"
 ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
 
 # *** More complex fixers ***

@@ -23,8 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionSkype.h"
+
 #include "Logger.h"
 #include "PerfCounterCommon.h"
+#include "SectionHeader.h"
 #include "WinApiInterface.h"
 #include "stringutil.h"
 
@@ -74,6 +76,17 @@ SectionSkype::SectionSkype(const Environment &env, Logger *logger,
     const std::string counterName = "ASP.NET Apps v4.0.30319";
     withDependentSubSection(new SectionPerfcounter(
         counterName, counterName, _env, _nameNumberMap, _logger, _winapi));
+
+    // ***************************************************************************
+    // Hammer is only effective method to force skype to use ',' instead of
+    // wmi/section_group(!) '|' as a separator
+    // This legacy code is not good, but frozen
+    // Hierarchy, structure and testing should not be changed
+    // Only local error fixing is allowed
+    // ***************************************************************************
+    // overwrite with correct header.
+    _header =
+        std::make_unique<SectionHeader<',', SectionBrackets>>("skype", logger);
 }
 
 bool SectionSkype::produceOutputInner(

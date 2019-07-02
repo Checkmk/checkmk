@@ -32,7 +32,6 @@ cd "$REPO_PATH"
 ENABLED_FIXERS=
 
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_dict"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_exec"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_funcattrs"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_idioms"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_itertools"
@@ -84,6 +83,7 @@ ENABLED_FIXERS+=" lib2to3.fixes.fix_throw"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_tuple_params"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_reduce"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_numliterals"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_exec"
 ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
 
 # *** More complex fixers ***

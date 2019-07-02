@@ -1,0 +1,13 @@
+Title: esx_vsphere_counters: Fixed crash on missing values
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p39
+Date: 1562091613
+Class: fix
+
+We have seen cases in which the counter "disk.numberWrite" was missing and a
+KeyError was raised. This has been fixed.
+
+

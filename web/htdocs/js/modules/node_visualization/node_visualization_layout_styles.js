@@ -722,10 +722,11 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         if (!this._layout_manager.edit_layout)
             return
 
+        let theme_prefix = this._layout_manager.viewport.main_instance.get_theme_prefix()
         this.add_enclosing_hull(this.selection, this._vertices)
         let elements = [
-            {node: this.style_root_node, type: "scale",  image: "images/icons/icons8-resize-filled-48.png", call: this.get_drag_callback(()=>this.resize_layer_drag())},
-            {node: this.style_root_node, type: "rotation", image: "images/icons/icons8-rotate-left-48.png", call: this.get_drag_callback(()=>this.change_rotation())}
+            {node: this.style_root_node, type: "scale",  image: theme_prefix + "/images/icons/icons8-resize-filled-48.png", call: this.get_drag_callback(()=>this.resize_layer_drag())},
+            {node: this.style_root_node, type: "rotation", image: theme_prefix + "/images/icons/icons8-rotate-left-48.png", call: this.get_drag_callback(()=>this.change_rotation())}
         ]
         let coords = this._layout_manager.viewport.translate_to_zoom({x: this.style_root_node.x, y: this.style_root_node.y})
         this.add_option_icons(coords, elements)
@@ -964,14 +965,15 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
 
 
         // Icons
+        let theme_prefix = this._layout_manager.viewport.main_instance.get_theme_prefix()
         let elements = [
-            {node: this.style_root_node, type: "radius", image: "images/icons/icons8-resize-filled-48.png",
+            {node: this.style_root_node, type: "radius", image: theme_prefix + "/images/icons/icons8-resize-filled-48.png",
              call: this.get_drag_callback(()=>this.change_radius())
             },
-            {node: this.style_root_node, type: "rotation", image: "images/icons/icons8-rotate-left-48.png",
+            {node: this.style_root_node, type: "rotation", image: theme_prefix + "/images/icons/icons8-rotate-left-48.png",
              call: this.get_drag_callback(()=>this.change_rotation())
             },
-            {node: this.style_root_node, type: "degree", image: "images/icons/icons8-pie-chart-filled-48.png",
+            {node: this.style_root_node, type: "degree", image: theme_prefix + "/images/icons/icons8-pie-chart-filled-48.png",
              call: this.get_drag_callback(()=>this.change_degree())
             }
         ]

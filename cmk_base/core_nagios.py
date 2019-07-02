@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Code for support of Nagios (and compatible) cores"""
 
+import base64
 import os
 import sys
 import py_compile
@@ -562,6 +563,14 @@ def _add_ping_service(cfg, config_cache, host_config, ipaddress, family, descr, 
 def _format_nagios_object(object_type, object_spec):
     cfg = ["define %s {" % object_type]
     for key, val in sorted(object_spec.iteritems(), key=lambda x: x[0]):
+        # Use a base16 encoding for names and values of tags, labels and label
+        # sources to work around the syntactic restrictions in Nagios' object
+        # configuration files.
+        if key[0] == "_":  # quick pre-check: custom variable?
+            for prefix in ("__TAG_", "__LABEL_", "__LABELSOURCE_"):
+                if key.startswith(prefix):
+                    key = prefix + base64.b16encode(key[len(prefix):])
+                    val = base64.b16encode(val)
         cfg.append("  %-29s %s" % (key, val))
     cfg.append("}")
 

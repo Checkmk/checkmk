@@ -426,6 +426,9 @@ class Site(object):
         else:
             return os.path.exists("%s/%s" % (self.root, rel_path))
 
+    def makedirs(self, rel_path):
+        p = self.execute(["mkdir", "-p", self.path(rel_path)])
+        return p.wait() == 0
 
     def cleanup_if_wrong_version(self):
         if not self.exists():
@@ -1411,7 +1414,8 @@ def create_linux_test_host(request, web, site, hostname):
         "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['%s']))\n" %
         hostname)
 
-    site.execute(["mkdir", "-p", site.path("var/check_mk/agent_output/")])
+    if not site.file_exists("var/check_mk/agent_output"):
+        assert site.makedirs("var/check_mk/agent_output")
     site.write_file(
         "var/check_mk/agent_output/%s" % hostname,
         file("%s/tests/livestatus/linux-agent-output" % repo_path()).read())

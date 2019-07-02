@@ -1,4 +1,6 @@
 #include <cstddef>
+#include <iomanip>
+#include <sstream>
 #include <string>
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsDictFilter.h"
@@ -13,6 +15,16 @@
 #include "test_utilities.h"
 
 namespace {
+std::string b16encode(const std::string& str) {
+    std::ostringstream os;
+    os << std::hex << std::uppercase << std::setfill('0');
+    for (auto ch : str) {
+        os << std::setw(2)
+           << static_cast<unsigned>(static_cast<unsigned char>(ch));
+    }
+    return os.str();
+}
+
 struct CustomVarsDictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string& value) {
         CustomVarsDictColumn cvdc{
@@ -26,14 +38,15 @@ struct CustomVarsDictFilterTest : public ::testing::Test {
     NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
                     Encoding::utf8};
 
-    TestHost test_host{{{"ERNIE", "Bert"},
-                        {"GUT", "Mies"},
-                        {"_TAG_Rock'n", "Rock'n Roll"},
-                        {"_TAG_Rollin", "Rock'n Rollin'"},
-                        {"_TAG_GUT", "Guten Tag!"},
-                        {"_LABEL_GÓÐ", "Góðan dag!"},
-                        {"_LABEL_GUT", "foo"},
-                        {"_LABELSOURCE_GUT", "bar"}}};
+    TestHost test_host{
+        {{"ERNIE", "Bert"},
+         {"GUT", "Mies"},
+         {"_TAG_" + b16encode("Rock'n"), b16encode("Rock'n Roll")},
+         {"_TAG_" + b16encode("Rollin"), b16encode("Rock'n Rollin'")},
+         {"_TAG_" + b16encode("GUT"), b16encode("Guten Tag!")},
+         {"_LABEL_" + b16encode("GÓÐ"), b16encode("Góðan dag!")},
+         {"_LABEL_" + b16encode("GUT"), b16encode("foo")},
+         {"_LABELSOURCE_" + b16encode("GUT"), b16encode("bar")}}};
 };
 }  // namespace
 

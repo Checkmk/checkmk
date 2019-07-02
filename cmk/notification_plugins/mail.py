@@ -854,7 +854,11 @@ def construct_content(context):
         context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
     if context["WHAT"] == "SERVICE":
         context["SERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["SERVICEOUTPUT"])
-        context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["LONGSERVICEOUTPUT"])
+
+        long_serviceoutput = context["LONGSERVICEOUTPUT"]\
+            .replace('\\n', '<br>')\
+            .replace('\n', '<br>')
+        context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(long_serviceoutput)
 
     attachments = []
 

@@ -62,7 +62,7 @@ def mock_context():
         'LOGDIR': u'/omd/sites/heute/var/check_mk/notify',
         'LONGDATETIME': u'Wed Mar 20 16:51:46 CET 2019',
         'LONGHOSTOUTPUT': u'',
-        'LONGSERVICEOUTPUT': u'<script>console.log("evil");</script>(!)',
+        'LONGSERVICEOUTPUT': u'<script>console.log("evil");</script>(!)\nanother line\\nlast line',
         'MAIL_COMMAND': u"mail -s '$SUBJECT$' '$CONTACTEMAIL$'",
         'MAXHOSTATTEMPTS': u'1',
         'MAXSERVICEATTEMPTS': u'1',
@@ -121,6 +121,7 @@ Address:             127.0.0.1
 Date / Time:         Wed Mar 20 16:51:46 CET 2019
 Plugin Output:       &lt;script&gt;console.log("evil");&lt;/script&gt; Ok (!)
 Additional Output:   &lt;script&gt;console.log("evil");&lt;/script&gt;(!)
+another line\\nlast line
 Host Metrics:        \n\
 Service Metrics:     \n\
 """
@@ -142,6 +143,7 @@ def test_mail_content_from_context(mocker):
 
     # The state markers (!) and (!!) as well as the states in EVENT_TXT have to be
     # replaced with HTML, but raw input from plugins has to be escaped.
+    # LONGSERVICEOUTPUT_HTML additionally replaces '\n' and '\\n' by '<br>'.
     assert content.context["EVENT_TXT"] == "OK -> WARN"
     assert content.context[
         "EVENT_HTML"] == '<span class="stateOK">OK</span> &rarr; <span class="stateWARNING">WARNING</span>'
@@ -154,9 +156,9 @@ def test_mail_content_from_context(mocker):
     assert content.context[
         "SERVICEOUTPUT_HTML"] == '&lt;script&gt;console.log("evil");&lt;/script&gt; Ok <b class="stmarkWARNING">WARN</b>'
     assert content.context[
-        "LONGSERVICEOUTPUT"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;(!)'
+        "LONGSERVICEOUTPUT"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;(!)\nanother line\\nlast line'
     assert content.context[
-        "LONGSERVICEOUTPUT_HTML"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;<b class="stmarkWARNING">WARN</b>'
+        "LONGSERVICEOUTPUT_HTML"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;<b class="stmarkWARNING">WARN</b><br>another line<br>last line'
 
     assert content.mailto == 'test@abc.de'
     assert content.subject == 'Check_MK: heute/CPU utilization OK -> WARN'

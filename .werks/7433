@@ -1,0 +1,13 @@
+Title: mail: make the long output of HTML mails more readable
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b3
+Date: 1562072699
+
+The mail script now replaces '\n' in the long output by '&lt;br&gt;'
+so that every line of the long output is now a separate line in the
+HTML output as well.

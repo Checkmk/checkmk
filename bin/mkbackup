@@ -164,7 +164,7 @@ def acquire_backup_lock():
     if not os.path.exists(lock_file_path):
         try:
             g_backup_lock_f = tempfile.NamedTemporaryFile(mode="a+", dir="/tmp", delete=False)
-            set_permissions(g_backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid, 0660)
+            set_permissions(g_backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid, 0o660)
             os.rename(g_backup_lock_f.name, lock_file_path)
         except (IOError, OSError) as e:
             raise MKGeneralException("Failed to open lock file \"%s\": %s" % (lock_file_path, e))
@@ -620,7 +620,7 @@ def do_site_backup(opts, site=None, try_stop=True):
     backup_path = site_backup_archive_path(site)
 
     # Create missing directories. Ensure group permissions and mode.
-    makedirs(os.path.dirname(backup_path), group="omd", mode=0775)
+    makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
 
     verbose("Command: %s" % " ".join(cmd))
     p = subprocess.Popen(
@@ -1115,7 +1115,7 @@ def verify_backup_files(info, files, needed):
 def do_system_backup(opts):
     # Create missing directories. Ensure group permissions and mode.
     try:
-        makedirs(os.path.dirname(system_backup_archive_path()), group="omd", mode=0775)
+        makedirs(os.path.dirname(system_backup_archive_path()), group="omd", mode=0o775)
     except OSError as e:
         if e.errno == errno.EACCES:
             raise MKGeneralException("Failed to create the backup directory: %s" % e)
@@ -1497,7 +1497,7 @@ def do_site_restore(opts, info, site=None):
         omd_root = "/omd/sites/%s" % site
         if not os.path.exists(omd_root):
             os.mkdir(omd_root)
-            set_permissions(omd_root, pwd.getpwnam(site).pw_uid, grp.getgrnam(site).gr_gid, 0775)
+            set_permissions(omd_root, pwd.getpwnam(site).pw_uid, grp.getgrnam(site).gr_gid, 0o775)
 
     cmd.append("-")
 

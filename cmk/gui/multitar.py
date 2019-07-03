@@ -390,7 +390,7 @@ def create(tar_filename, components):
             info.uid = 0
             info.gid = 0
             info.size = subtar_size
-            info.mode = 0644
+            info.mode = 0o644
             info.type = tarfile.REGTYPE
 
             tar.addfile(info, subtar_buffer)

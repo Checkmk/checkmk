@@ -90,7 +90,7 @@ def _do_create_snapshot(data):
             tarinfo.mtime = time.time()
             tarinfo.uid = 0
             tarinfo.gid = 0
-            tarinfo.mode = 0644
+            tarinfo.mode = 0o644
             tarinfo.type = tarfile.REGTYPE
             return tarinfo
 

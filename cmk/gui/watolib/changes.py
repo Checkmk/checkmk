@@ -77,7 +77,7 @@ def log_entry(linkinfo, action, message, user_id=None):
 
     store.makedirs(os.path.dirname(audit_log_path))
     with open(audit_log_path, "ab") as f:
-        os.chmod(f.name, 0660)
+        os.chmod(f.name, 0o660)
         f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id, action,
                                       message.replace("\n", "\\n")))
 
@@ -220,7 +220,7 @@ class SiteChanges(object):
                 f.flush()
                 os.fsync(f.fileno())
 
-            os.chmod(path, 0660)
+            os.chmod(path, 0o660)
 
         except Exception as e:
             raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))

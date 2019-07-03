@@ -558,7 +558,7 @@ class BILock(object):
         lock_options = fcntl.LOCK_SH if self._shared else fcntl.LOCK_EX
         lock_options = lock_options if self._blocking else (lock_options | fcntl.LOCK_NB)
 
-        self._fd = os.open(self._filepath, os.O_RDONLY | os.O_CREAT, 0660)
+        self._fd = os.open(self._filepath, os.O_RDONLY | os.O_CREAT, 0o660)
         lock_info = []
         lock_info.append(self._shared and "SHARED" or "EXCLUSIVE")
         lock_info.append(self._blocking and "BLOCKING" or "NON-BLOCKING")

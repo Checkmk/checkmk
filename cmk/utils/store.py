@@ -62,11 +62,11 @@ logger = cmk.utils.log.get_logger("store")
 #   '----------------------------------------------------------------------'
 
 
-def mkdir(path, mode=0770):
+def mkdir(path, mode=0o770):
     pathlib.Path(path).mkdir(mode=mode, exist_ok=True)
 
 
-def makedirs(path, mode=0770):
+def makedirs(path, mode=0o770):
     pathlib.Path(path).mkdir(mode=mode, exist_ok=True, parents=True)
 
 
@@ -186,7 +186,7 @@ def save_data_to_file(path, data, pretty=True):
 
 # Saving assumes a locked destination file (usually done by loading code)
 # Then the new file is written to a temporary file and moved to the target path
-def save_file(path, content, mode=0660):
+def save_file(path, content, mode=0o660):
     tmp_path = None
     try:
         # Normally the file is already locked (when data has been loaded before with lock=True),
@@ -284,9 +284,9 @@ def aquire_lock(path, blocking=True):
 
     # Create file (and base dir) for locking if not existant yet
     if not os.path.exists(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path), mode=0770)
+        os.makedirs(os.path.dirname(path), mode=0o770)
 
-    fd = os.open(path, os.O_RDONLY | os.O_CREAT, 0660)
+    fd = os.open(path, os.O_RDONLY | os.O_CREAT, 0o660)
 
     # Handle the case where the file has been renamed in the meantime
     while True:
@@ -295,7 +295,7 @@ def aquire_lock(path, blocking=True):
             flags |= fcntl.LOCK_NB
 
         fcntl.flock(fd, flags)
-        fd_new = os.open(path, os.O_RDONLY | os.O_CREAT, 0660)
+        fd_new = os.open(path, os.O_RDONLY | os.O_CREAT, 0o660)
         if os.path.sameopenfile(fd, fd_new):
             os.close(fd_new)
             break

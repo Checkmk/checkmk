@@ -21,18 +21,18 @@ namespace cma {
 namespace srv {
 enum class StdioLog { no, yes, extended };
 class ServiceProcessor;
-int InstallMainService();                 // on install
-int RemoveMainService();                  // on remove
-int TestIo();                             // on check -io
-int TestMt();                             // on check -mt
-int TestMainServiceSelf(int Interval);    // on check self
-int TestLegacy();                         // on test
-int ExecMainService(StdioLog stdio_log);  // on exec
-int ExecStartLegacy();                    // on start_legacy
-int ExecStopLegacy();                     // on stop_legacy
-int ExecCap();                            // on cap
-int ExecShowConfig();                     // on showconfig
-int ExecUpgradeParam(bool Force);         // om upgrade
+int InstallMainService();                  // on install
+int RemoveMainService();                   // on remove
+int TestIo();                              // on check -io
+int TestMt();                              // on check -mt
+int TestMainServiceSelf(int Interval);     // on check self
+int TestLegacy();                          // on test
+int ExecMainService(StdioLog stdio_log);   // on exec
+int ExecStartLegacy();                     // on start_legacy
+int ExecStopLegacy();                      // on stop_legacy
+int ExecCap();                             // on cap
+int ExecShowConfig(std::string_view sec);  // on showconfig
+int ExecUpgradeParam(bool Force);          // om upgrade
 
 int ExecSkypeTest();               // on skype :hidden
 int ExecRealtimeTest(bool Print);  // on rt

@@ -419,9 +419,11 @@ int ExecMainService(StdioLog stdio_log) {
         XLOG::setup::EnableTraceLog(false);
     else
         XLOG::setup::EnableTraceLog(true);
-    xlog::sendStringToStdio("Ad hoc/Exec Mode, press any key to stop",
-                            xlog::internal::kCyan);
-    auto delay = 1000ms;  // #TODO create const
+    XLOG::SendStringToStdio(
+        "Adhoc/Exec Mode,"
+        "press any key to stop execution\n",
+        XLOG::Colors::kCyan);
+    auto delay = 1000ms;
     auto processor =
         std::make_unique<ServiceProcessor>(delay, [](const void* Processor) {
     // default embedded callback for exec
@@ -442,11 +444,9 @@ int ExecMainService(StdioLog stdio_log) {
         // setup output
         if (stdio_log != StdioLog::no) XLOG::setup::DuplicateOnStdio(true);
 
-        XLOG::l.i("Press any key to stop");
-
         cma::tools::GetKeyPress();  // blocking  wait for key press
     } catch (const std::exception& e) {
-        xlog::l("Exception \"%s\"", e.what());
+        XLOG::l("Exception '{}'", e.what());
     }
 
     XLOG::l.i("Server is going to stop");
@@ -469,19 +469,33 @@ int ExecCap() {
     return 0;
 }
 
-int ExecShowConfig() {
+int ExecShowConfig(std::string_view sec) {
+    XLOG::setup::ColoredOutputOnStdio(true);
     using namespace cma::cfg;
-    auto y = GetLoadedConfig();
+    const auto yaml = GetLoadedConfig();
+    YAML::Node filtered_yaml =
+        sec.empty() ? YAML::Clone(yaml) : YAML::Clone(yaml[sec.data()]);
+    cma::cfg::RemoveInvalidNodes(filtered_yaml);
     YAML::Emitter emit;
-    emit << y;
-    XLOG::stdio("# Environment Variables:\n");
+    emit << filtered_yaml;
+    XLOG::SendStringToStdio("# Environment Variables:\n", XLOG::Colors::kGreen);
     ProcessPluginEnvironment([](std::string_view name, std::string_view value) {
         XLOG::stdio("# {}=\"{}\"\n", name, value);
     });
 
-    XLOG::stdio("# Loaded Config Files: {}\n",
-                wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
-    XLOG::stdio("{}\n", emit.c_str());
+    auto files = wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig());
+    auto file_table = cma::tools::SplitString(files, ",");
+
+    XLOG::SendStringToStdio("# Loaded Config Files:\n", XLOG::Colors::kGreen);
+    std::string markers[] = {"# system: ", "# bakery: ", "# user  : "};
+    int i = 0;
+    for (auto f : file_table) {
+        XLOG::SendStringToStdio(markers[i++], XLOG::Colors::kWhite);
+        XLOG::SendStringToStdio(f + "\n");
+    }
+
+    XLOG::setup::ColoredOutputOnStdio(false);
+    XLOG::stdio("\n# {}\n{}\n", sec, emit.c_str());
 
     return 0;
 }

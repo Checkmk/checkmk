@@ -111,8 +111,10 @@ void PrintShowConfig() {
     PrintBlock(
         "Display Config and Environment Variables:\n", Colors::kCyan, []() {
             return fmt::format(
-                "\t{1} {2}\n"
-                "\t{2:<{0}} - show configuration parameters\n",
+                "\t{1} {2} [section]\n"
+                "\t{2:<{0}} - show configuration parameters\n"
+                "\tsection - optional parameter like global or ps\n"
+                "\t\tExample: {1} {2} fileinfo\n",
                 kParamShift,
                 kServiceExeName,  // service name from th project definitions
                 kShowConfigParam);
@@ -433,7 +435,8 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     }
 
     if (param == wtools::ConvertToUTF16(kShowConfigParam)) {
-        return cma::srv::ExecShowConfig();
+        std::wstring second_param = argc > 2 ? Argv[2] : L"";
+        return cma::srv::ExecShowConfig(wtools::ConvertToUTF8(second_param));
     }
 
     if (param == wtools::ConvertToUTF16(kUpgradeParam)) {

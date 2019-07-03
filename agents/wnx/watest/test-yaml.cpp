@@ -1133,4 +1133,86 @@ TEST(AgentConfig, GlobalTest) {
     EXPECT_TRUE((val >= 1) && (val < 100));
 }
 
+static std::string node_text =
+    "global:\n"
+    "  execute: []\n"  // expected clean
+    "  realtime:\n"
+    "    run: a b\n"  // expected array
+    "  sections:\n"
+    "    - x y\n"
+    "    - [z]\n"
+    "  _sections:\n"
+    "    - x y\n"
+    "    - [z]\n"
+    "  disabled_sections: ~\n"
+    "_global:\n"
+    "  execute: []\n"  // expected clean
+    "  realtime:\n"
+    "    run: a b\n"  // expected array
+    "  sections: \n"
+    "    - x y\n"
+    "    - [z]\n"
+    "  disabled_sections: ~\n"
+    "fileinfo:\n"
+    "  execute: []\n"  // expected clean
+    "  realtime:\n"
+    "    test:\n"  // expected array
+    "      _name: 'aaa'\n"
+    "  sections:\n"
+    "    - x y\n"
+    "    - [z]\n"
+    "  disabled_sections: ~"
+
+    ;
+
+static std::string node_ok =
+    "global:\n"
+    "  execute: []\n"  // expected clean
+    "  realtime:\n"
+    "    run: a b\n"  // expected array
+    "  sections:\n"
+    "    - x y\n"
+    "    - [z]\n"
+    "  disabled_sections: ~\n"
+    "fileinfo:\n"
+    "  execute: []\n"  // expected clean
+    "  realtime:\n"
+    "    test:\n"  // expected array
+    "      {}\n"
+    "  sections:\n"
+    "    - x y\n"
+    "    - [z]\n"
+    "  disabled_sections: ~"
+
+    ;
+
+static YAML::Node generateTestNode() {
+    try {
+        return YAML::Load(node_text);
+    } catch (const std::exception& e) {
+        XLOG::l("exception '{}'", e.what());
+    }
+
+    return {};
+}
+
+TEST(AgentConfig, NodeCleanup) {
+    ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
+    {
+        const auto node_base = generateTestNode();
+        YAML::Node node = YAML::Clone(node_base);
+        ASSERT_TRUE(node.IsMap());
+        auto expected_count = RemoveInvalidNodes(node);
+        EXPECT_EQ(expected_count, 3);
+        YAML::Emitter emit;
+        emit << node;
+        std::string value = emit.c_str();
+        EXPECT_TRUE(!value.empty());
+
+        EXPECT_EQ(value, node_ok);
+
+        expected_count = RemoveInvalidNodes(node);
+        EXPECT_EQ(expected_count, 0);
+    }
+}
 }  // namespace cma::cfg

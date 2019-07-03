@@ -143,6 +143,8 @@ bool StoreUserYamlToCache() noexcept;
 
 std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept;
 
+int RemoveInvalidNodes(YAML::Node node);
+
 // std::wstring GetUserYamlFromCache() noexcept;
 
 // *******************************************************

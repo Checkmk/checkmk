@@ -207,7 +207,7 @@ std::wstring GetPathOfLoadedConfig() noexcept {
     using namespace wtools;
 
     std::wstring wstr = fmt::format(
-        L"'{}' '{}' '{}'", details::G_ConfigInfo.getRootYamlPath().c_str(),
+        L"'{}','{}','{}'", details::G_ConfigInfo.getRootYamlPath().c_str(),
         details::G_ConfigInfo.getBakeryDir().c_str(),
         details::G_ConfigInfo.getUserYamlPath().c_str());
     return wstr;
@@ -1253,10 +1253,10 @@ static void PreMergeSections(YAML::Node target, YAML::Node source) {
     MergeStringSequence(tgt_local, src_local, vars::kPluginsFolders);
 }
 
-// Config is typical config from the root
+// node is typical config from the root
 // we will load all others configs and try to merge
 // success ALWAYS
-void ConfigInfo::loadYamlDataWithMerge(YAML::Node Config,
+void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
                                        const std::vector<YamlData>& Yd) {
     namespace fs = std::filesystem;
     bool bakery_ok = false;
@@ -1265,10 +1265,10 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node Config,
         if (Yd[1].exists()) {
             auto bakery = YAML::LoadFile(Yd[1].path_.u8string());
             // special cases for plugins and folder
-            PreMergeSections(bakery, Config);
+            PreMergeSections(bakery, node);
 
             // normal cases
-            smartMerge(Config, bakery, Combine::overwrite);
+            smartMerge(node, bakery, Combine::overwrite);
             bakery_ok = true;
         }
     } catch (...) {
@@ -1279,9 +1279,9 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node Config,
         if (Yd[2].exists()) {
             auto user = YAML::LoadFile(Yd[2].path_.u8string());
             // special cases for plugins and folder
-            PreMergeSections(user, Config);
+            PreMergeSections(user, node);
             // normal cases
-            smartMerge(Config, user, Combine::overwrite);
+            smartMerge(node, user, Combine::overwrite);
             user_ok = true;
         }
     } catch (...) {
@@ -1294,7 +1294,11 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node Config,
     bakery_ok_ = bakery_ok;
     user_yaml_time_ = user_ok ? Yd[2].timestamp() : user_yaml_time_.min();
     user_ok_ = user_ok;
-    yaml_ = Config;
+
+    // RemoveInvalidNodes(node); <-- disabled at the moment
+
+    yaml_ = node;
+
     XLOG::d.t(
         "Loaded Config's root: '{}' size={} bakery: '{}' size={} user: '{}' size={}",
         Yd[0].path_.u8string(), Yd[0].data().size(), Yd[1].path_.u8string(),
@@ -1468,6 +1472,38 @@ std::filesystem::path ConstructInstallFileName(
     fs::path protocol_file = dir;
     protocol_file /= cma::cfg::files::kInstallProtocol;
     return protocol_file;
+}
+
+bool IsNodeNameValid(std::string_view name) {
+    if (name.empty()) return true;
+    if (name[0] == '_') return false;
+
+    return true;
+}
+
+int RemoveInvalidNodes(YAML::Node node) {
+    //
+    if (!node.IsDefined() || !node.IsMap()) return 0;
+
+    std::vector<std::string> to_remove;
+    int counter = 0;
+
+    for (YAML::const_iterator it = node.begin(); it != node.end(); ++it) {
+        std::string key = it->first.as<std::string>();  // <- key
+        if (!IsNodeNameValid(key)) {
+            XLOG::t("Removing node '{}'", key);
+            to_remove.emplace_back(key);
+            continue;
+        }
+
+        int sub_count = RemoveInvalidNodes(node[key]);
+        counter += sub_count;
+    }
+    for (auto& r : to_remove) {
+        node.remove(r);
+        ++counter;
+    }
+    return counter;
 }
 
 }  // namespace cma::cfg

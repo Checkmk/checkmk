@@ -162,7 +162,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
 
     if cores and any([x in params for x in ["core_util_graph", "core_util_time", "levels_single"]]):
         for core_index, (core, total_perc) in enumerate(cores):
-            for sub_result in util_perfdata(core, total_perc, core_index, this_time, params):
+            for sub_result in _util_perfdata(core, total_perc, core_index, this_time, params):
                 yield sub_result
 
 
@@ -230,7 +230,7 @@ def check_cpu_util_unix(values, params, cores=None, values_counter=True):
         yield check_result
 
 
-def util_perfdata(core, total_perc, core_index, this_time, params):
+def _util_perfdata(core, total_perc, core_index, this_time, params):
     if "core_util_graph" in params:
         yield 0, "", [(cpu_util_core_name(core, core_index), total_perc)]
 

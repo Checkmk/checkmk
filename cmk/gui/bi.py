@@ -2478,8 +2478,7 @@ def state_weight(s):
 
 
 def x_best_state(l, x):
-    ll = [(state_weight(s), s) for s in l]
-    ll.sort()
+    ll = sorted([(state_weight(s), s) for s in l])
     if x < 0:
         ll.reverse()
     n = abs(x)

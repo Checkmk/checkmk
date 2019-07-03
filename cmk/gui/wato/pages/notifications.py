@@ -688,8 +688,7 @@ class ModeNotifications(NotificationsMode):
 
         if self._show_user_rules:
             users = userdb.load_users()
-            userids = users.keys()
-            userids.sort()  # Create same order as modules/notification.py
+            userids = sorted(users.keys())
             for userid in userids:
                 user = users[userid]
                 user_rules = user.get("notification_rules", [])

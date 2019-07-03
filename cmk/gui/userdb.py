@@ -380,11 +380,10 @@ class UserSelection(DropdownChoice):
                                                only_automation=False):
         def get_wato_users(nv):
             users = load_users()
-            elements = [(name, "%s - %s" % (name, us.get("alias", name)))
-                        for (name, us) in users.items()
-                        if (not only_contacts or us.get("contactgroups")) and
-                        (not only_automation or us.get("automation_secret"))]
-            elements.sort()
+            elements = sorted([(name, "%s - %s" % (name, us.get("alias", name)))
+                               for (name, us) in users.items()
+                               if (not only_contacts or us.get("contactgroups")) and
+                               (not only_automation or us.get("automation_secret"))])
             if nv is not None:
                 elements = [(None, none_value)] + elements
             return elements

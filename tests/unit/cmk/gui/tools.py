@@ -54,7 +54,7 @@ def compare_soup(html1, html2):
 
     for d1, d2 in zip(children_1, children_2):
 
-        assert type(d1) == type(d2), "\n%s\n%s" % (type(d1), type(d2))
+        assert isinstance(d1, type(d2)), "\n%s\n%s" % (type(d1), type(d2))
 
         if isinstance(d1, NavigableString):
             set1 = {x for x in subber(d1).split(' ') if x}

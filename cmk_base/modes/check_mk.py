@@ -326,9 +326,8 @@ def mode_list_checks():
     import cmk.utils.man_pages as man_pages
     all_check_manuals = man_pages.all_man_pages()
 
-    checks_sorted = config.check_info.items() + \
-       [ ("check_" + name, entry) for (name, entry) in config.active_check_info.items() ]
-    checks_sorted.sort()
+    checks_sorted = sorted(config.check_info.items() + \
+       [ ("check_" + name, entry) for (name, entry) in config.active_check_info.items() ])
     for check_plugin_name, check in checks_sorted:
         man_filename = all_check_manuals.get(check_plugin_name)
         try:

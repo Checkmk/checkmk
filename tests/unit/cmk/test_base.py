@@ -5,7 +5,7 @@ import cmk
 
 
 def test_version():
-    assert type(cmk.__version__) == str
+    assert isinstance(cmk.__version__, str)
 
 
 def test_is_enterprise_edition(monkeypatch):

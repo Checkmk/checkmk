@@ -8,7 +8,7 @@ from cmk.gui.globals import html
 
 
 def test_htmllib_integration(register_builtin_html):
-    assert type(html.encoder) == htmllib.Encoder
+    assert isinstance(html.encoder, htmllib.Encoder)
 
     assert html.urlencode_vars([]) == ""
     assert html.urlencode("") == ""
@@ -28,7 +28,7 @@ def test_htmllib_integration(register_builtin_html):
 ])
 def test_urlencode_vars(inp, out):
     result = htmllib.Encoder().urlencode_vars(inp)
-    assert type(result) == str
+    assert isinstance(result, str)
     assert result == out
 
 
@@ -47,5 +47,5 @@ def test_urlencode_vars(inp, out):
     ])
 def test_urlencode(inp, out):
     result = htmllib.Encoder().urlencode(inp)
-    assert type(result) == str
+    assert isinstance(result, str)
     assert result == out

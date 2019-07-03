@@ -120,7 +120,7 @@ if not omd_root:
 
 def is_list(relation):
     list_start = ""
-    if type(relation) == dict:  # filter and converter are dicts, check them too
+    if isinstance(relation, dict):  # filter and converter are dicts, check them too
         relation = relation.keys()
     for field in relation:
         if not field.startswith("@"):
@@ -207,7 +207,7 @@ def list_get(hostname, list_start):
             subtree = subtree[item]
         except:
             print "   %s does not exist in database of host" % item
-    if type(subtree) == list:
+    if isinstance(subtree, list):
         for package in subtree:
             if filt_it(package, relations[ofs]):
                 continue
@@ -267,7 +267,7 @@ for ofs in relations:
                     subtree = subtree[item]
                 except:
                     print "   %s does not exist in database of host" % item
-            if type(subtree) == list:
+            if isinstance(subtree, list):
                 for package in subtree:
                     if filt_it(package, relations[ofs]):
                         continue

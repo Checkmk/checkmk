@@ -5076,10 +5076,9 @@ class RulespecServiceDescriptionTranslation(HostRulespec):
 
 def get_snmp_checktypes():
     checks = get_check_information()
-    types = [(cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
-             for (cn, c) in checks.items()
-             if c['snmp']]
-    types.sort()
+    types = sorted([(cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
+                    for (cn, c) in checks.items()
+                    if c['snmp']])
     return [(None, _('All SNMP Checks'))] + types
 
 

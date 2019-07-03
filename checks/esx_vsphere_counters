@@ -260,8 +260,7 @@ def convert_esx_counters_if(parsed):
     #         'bandwidth': 10000000,
     #     },
     # }
-    nics = by_item.keys()
-    nics.sort()
+    nics = sorted(by_item.keys())
 
     # This is for the if Check
     converted = [

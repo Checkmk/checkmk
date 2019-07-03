@@ -1081,8 +1081,7 @@ class CheckTypeSelection(DualListChoice):
 
     def get_elements(self):
         checks = get_check_information()
-        elements = [(cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()]
-        elements.sort()
+        elements = sorted([(cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()])
         return elements
 
 

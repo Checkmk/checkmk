@@ -1435,8 +1435,7 @@ class ListOf(ValueSpec):
     def from_html_vars(self, varprefix):
         indexes = self.get_indexes(varprefix)
         value = []
-        k = indexes.keys()
-        k.sort()
+        k = sorted(indexes.keys())
         for i in k:
             val = self._valuespec.from_html_vars(varprefix + "_%d" % indexes[i])
             value.append(val)

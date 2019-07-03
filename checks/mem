@@ -401,8 +401,7 @@ def check_mem_linux(_no_item, params, info):
     # Now send performance data. We simply output *all* fields of meminfo
     # except for a few really useless values
     perfdata = []
-    items = meminfo.items()
-    items.sort()
+    items = sorted(meminfo.items())
     for name, value in items:
         if name.startswith("DirectMap"):
             continue

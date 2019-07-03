@@ -122,8 +122,7 @@ def html_escape_context(context):
 def add_debug_output(template, context):
     ascii_output = ""
     html_output = "<table class=context>\n"
-    elements = context.items()
-    elements.sort()
+    elements = sorted(context.items())
     for varname, value in elements:
         ascii_output += "%s=%s\n" % (varname, value)
         html_output += "<tr><td class=varname>%s</td><td class=value>%s</td></tr>\n" % (

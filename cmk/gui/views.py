@@ -1156,8 +1156,7 @@ def show_filter_form(is_open, filters):
     html.open_td()
 
     # sort filters according to title
-    s = [(f.sort_index, f.title, f) for f in filters if f.available()]
-    s.sort()
+    s = sorted([(f.sort_index, f.title, f) for f in filters if f.available()])
 
     # First show filters with double height (due to better floating
     # layout)

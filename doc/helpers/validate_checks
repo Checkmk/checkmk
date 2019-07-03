@@ -79,8 +79,7 @@ def check_has_perfdata(check):
 
 
 def get_all_checks():
-    k = check_info.keys()
-    k.sort()
+    k = sorted(check_info.keys())
     return k
 
 
@@ -91,7 +90,7 @@ def is_snmp_check(check):
 def all_nonfunction_vars():
     return {
         name for name, value in globals().items()
-        if name[0] != '_' and type(value) != type(lambda: 0)
+        if name[0] != '_' and not isinstance(value, type(lambda: 0))
     }
 
 

@@ -93,7 +93,7 @@ def test_startmonth_schedule_on_same_day():
     # If the actual time matches the schedule exactly the
     # the next date equals the actual time.
     s = schedule.StartMonthSchedule(7, datetime.time(12, 30))
-    now = datetime.datetime(2018, 3, 7, 12, 30, 01)
+    now = datetime.datetime(2018, 3, 7, 12, 30, 1)
 
     next_expected = datetime.datetime(2018, 4, 7, 12, 30)
     assert s.next(now) == next_expected

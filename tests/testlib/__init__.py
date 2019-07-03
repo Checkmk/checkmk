@@ -108,7 +108,7 @@ def InterProcessLock(filename):
         # respects the umask "mode & ~umask" (See "man 2 open").
         old_umask = os.umask(0)
         try:
-            fd = os.open(filename, os.O_RDONLY | os.O_CREAT, 0666)
+            fd = os.open(filename, os.O_RDONLY | os.O_CREAT, 0o666)
         finally:
             os.umask(old_umask)
 
@@ -118,7 +118,7 @@ def InterProcessLock(filename):
             fcntl.flock(fd, fcntl.LOCK_EX)
 
             try:
-                fd_new = os.open(filename, os.O_RDONLY | os.O_CREAT, 0666)
+                fd_new = os.open(filename, os.O_RDONLY | os.O_CREAT, 0o666)
             finally:
                 os.umask(old_umask)
 

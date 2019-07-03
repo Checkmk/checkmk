@@ -260,7 +260,7 @@ def output_profile():
                "import pstats\n"
                "stats = pstats.Stats('%s')\n"
                "stats.sort_stats('time').print_stats()\n" % g_profile_path)
-    os.chmod(show_profile, 0755)
+    os.chmod(show_profile, 0o755)
 
     sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
 

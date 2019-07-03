@@ -700,7 +700,7 @@ def get_skel_permissions(skel_path, perms, relpath):
 
 def get_file_permissions(path):
     try:
-        return os.stat(path).st_mode & 07777
+        return os.stat(path).st_mode & 0o7777
     except Exception:
         return 0
 
@@ -813,9 +813,9 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
         mode = g_skel_permissions.get(relpath)
         if mode is None:
             if os.path.isdir(skel_path):
-                mode = 0755
+                mode = 0o755
             else:
-                mode = 0644
+                mode = 0o644
         os.chmod(user_path, mode)
 
 

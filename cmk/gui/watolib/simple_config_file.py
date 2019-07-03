@@ -54,7 +54,7 @@ class WatoSimpleConfigFile(object):
 
     def save(self, cfg):
         # Should be fixed when using pylint 2.0 (https://github.com/PyCQA/pylint/issues/1660)
-        self._config_file_path.parent.mkdir(mode=0770, exist_ok=True)  # pylint: disable=no-member
+        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True)  # pylint: disable=no-member
         cmk.utils.store.save_to_mk_file("%s" % self._config_file_path, self._config_variable, cfg)
 
     def filter_usable_entries(self, entries):

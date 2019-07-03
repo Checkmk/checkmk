@@ -231,7 +231,7 @@ def check_cpu_util_unix(values, params, cores=None, values_counter=True):
 
 
 def _util_perfdata(core, total_perc, core_index, this_time, params):
-    if "core_util_graph" in params:
+    if params.get("core_util_graph"):
         yield 0, "", [(cpu_util_core_name(core, core_index), total_perc)]
 
     if "core_util_time" in params:

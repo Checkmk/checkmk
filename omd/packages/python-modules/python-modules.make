@@ -155,25 +155,10 @@ PYTHON_MODULES_LIST += python-dateutil-2.7.5.tar.gz
 PYTHON_MODULES_LIST += python-snap7-0.10.tar.gz
 # Added for azure special agent
 PYTHON_MODULES_LIST += PyJWT-1.6.4.tar.gz
-PYTHON_MODULES_LIST += SecretStorage-2.3.1.tar.gz
 PYTHON_MODULES_LIST += adal-1.2.0.tar.gz
-PYTHON_MODULES_LIST += azure-nspkg-3.0.2.zip
-PYTHON_MODULES_LIST += azure-common-1.1.16.zip
-PYTHON_MODULES_LIST += azure-mgmt-nspkg-3.0.2.zip
-PYTHON_MODULES_LIST += isodate-0.6.0.tar.gz
 PYTHON_MODULES_LIST += oauthlib-2.1.0.tar.gz
 PYTHON_MODULES_LIST += requests-oauthlib-1.0.0.tar.gz
-PYTHON_MODULES_LIST += msrest-0.6.1.tar.gz
-# use azure-mgmt-monitor 0.4.0 and its dependency
-# msrestazure 0.4.34 since the monitor version 0.5.0
-# will not deliver all metrics.
-PYTHON_MODULES_LIST += msrestazure-0.4.34.tar.gz
-PYTHON_MODULES_LIST += azure-mgmt-monitor-0.4.0.zip
-PYTHON_MODULES_LIST += azure-mgmt-resource-2.0.0.zip
-PYTHON_MODULES_LIST += azure-mgmt-compute-4.3.1.zip
 PYTHON_MODULES_LIST += configparser-3.5.1.tar.gz
-PYTHON_MODULES_LIST += entrypoints-0.2.3.tar.gz
-PYTHON_MODULES_LIST += keyring-15.1.0.tar.gz
 # Added for the GUI
 PYTHON_MODULES_LIST += Werkzeug-0.14.1.tar.gz
 PYTHON_MODULES_LIST += passlib-1.7.1.tar.gz

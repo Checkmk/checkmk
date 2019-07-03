@@ -635,10 +635,7 @@ class NotificationParameterServiceNow(NotificationParameter):
     @property
     def spec(self):
         return Dictionary(
-            optional_keys=[
-                'urgency', 'impact', 'timeout', 'host_short_desc', 'svc_short_desc', 'host_desc',
-                'svc_desc', 'ack_state', 'dt_state'
-            ],
+            required_keys=['url', 'username', 'password', 'caller'],
             elements=[
                 ("url",
                  HTTPUrl(
@@ -646,6 +643,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                      help=_("Configure your servicenow URL here (eg. https://myservicenow.com)."),
                      allow_empty=False,
                  )),
+                ("proxy_url", HTTPProxyReference()),
                 ("username", TextAscii(
                     title=_("Username"),
                     size=40,

@@ -270,6 +270,7 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes=None):
         } for (mp, size_mb, avail_mb, reserved_mb) in fslist_blocks
     }
 
+    inodes_info = {}
     if fslist_inodes:
         inodes_info = {
             mp: {
@@ -277,34 +278,24 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes=None):
                 "inodes_avail": inodes_avail,
             } for (mp, inodes_total, inodes_avail) in fslist_inodes
         }
-    else:
-        inodes_info = {}
 
-    mplist = blocks_info.keys()
+    def add_mp_group(metric, info, mountpoints_group):
+        return sum(
+            block_info[metric] for (mp, block_info) in info.items() if mp in mountpoints_group)
 
     if "patterns" in params:
         patterns = params["patterns"]
-        matching_mountpoints = mountpoints_in_group(mplist, patterns)
+        matching_mountpoints = mountpoints_in_group(blocks_info.keys(), patterns)
         count = len(matching_mountpoints)
         if count == 0:
             return 3, "No filesystem matching the patterns"
 
-        total_size_mb = sum(block_info["size_mb"]
-                            for (mp, block_info) in blocks_info.items()
-                            if mp in matching_mountpoints)
-        total_avail_mb = sum(block_info["avail_mb"]
-                             for (mp, block_info) in blocks_info.items()
-                             if mp in matching_mountpoints)
-        total_reserved_mb = sum(block_info["reserved_mb"]
-                                for (mp, block_info) in blocks_info.items()
-                                if mp in matching_mountpoints)
+        total_size_mb = add_mp_group("size_mb", blocks_info, matching_mountpoints)
+        total_avail_mb = add_mp_group("avail_mb", blocks_info, matching_mountpoints)
+        total_reserved_mb = add_mp_group("reserved_mb", blocks_info, matching_mountpoints)
 
-        total_inodes = sum(inode_info["inodes_total"]
-                           for (mp, inode_info) in inodes_info.items()
-                           if mp in matching_mountpoints)
-        total_inodes_avail = sum(inode_info["inodes_avail"]
-                                 for (mp, inode_info) in inodes_info.items()
-                                 if mp in matching_mountpoints)
+        total_inodes = add_mp_group("inodes_total", inodes_info, matching_mountpoints)
+        total_inodes_avail = add_mp_group("inodes_avail", inodes_info, matching_mountpoints)
 
         status, infotext, perfdata = df_check_filesystem_single(item, total_size_mb, total_avail_mb,
                                                                 total_reserved_mb, total_inodes,

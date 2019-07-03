@@ -1620,13 +1620,12 @@ def view_optiondial(view, option, choices, help_txt):
 
     title = dict(choices).get(value, value)
     html.begin_context_buttons()  # just to be sure
-    # Remove unicode strings
-    choices = [[c[0], str(c[1])] for c in choices]
     html.open_div(
         id_="optiondial_%s" % option,
         class_=["optiondial", option, "val_%s" % value],
         title=help_txt,
-        onclick="cmk.views.dial_option(this, \'%s\', \'%s\', %r)" % (view["name"], option, choices))
+        onclick="cmk.views.dial_option(this, %s, %s, %s)" % (json.dumps(
+            view["name"]), json.dumps(option), json.dumps(choices)))
     html.div(title)
     html.close_div()
     html.final_javascript("cmk.views.init_optiondial('optiondial_%s');" % option)

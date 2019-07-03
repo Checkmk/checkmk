@@ -59,7 +59,7 @@ class PerfValue(Tuploid):
                msg.replace(' or None', '') % ('value', value, type(value))
         for n in ('warn', 'crit', 'minimum', 'maximum'):
             v = getattr(self, n)
-            assert type(v) in [int, float, types.NoneType], msg % (n, v, type(v))
+            assert type(v) in [int, float, type(None)], msg % (n, v, type(v))
 
     @property
     def tuple(self):
@@ -259,7 +259,7 @@ class DiscoveryEntry(Tuploid):
     def __init__(self, entry):
         self.item, self.default_params = entry
         ti = type(self.item)
-        assert ti in [str, unicode, types.NoneType], \
+        assert ti in [str, unicode, type(None)], \
                "DiscoveryEntry: item %r must be of type str, unicode or None - not %r" \
                % (self.item, ti)
 

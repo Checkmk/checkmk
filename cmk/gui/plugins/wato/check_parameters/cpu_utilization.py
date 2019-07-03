@@ -163,7 +163,7 @@ class RulespecCheckgroupParametersCpuUtilizationOs(CheckParameterRulespecWithout
 
     @property
     def title(self):
-        return _("CPU utilization")
+        return _("CPU utilization for simple devices")
 
     @property
     def match_type(self):
@@ -195,7 +195,7 @@ class RulespecCheckgroupParametersCpuIowait(CheckParameterRulespecWithoutItem):
 
     @property
     def title(self):
-        return _("CPU utilization")
+        return _("CPU utilization on Linux/UNIX")
 
     @property
     def match_type(self):

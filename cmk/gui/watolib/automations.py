@@ -91,7 +91,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output
         # if config.debug:
-        #     html.write("<div class=message>Running <tt>%s</tt></div>\n" % " ".join(cmd))
+        #     html.write("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
         auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
         p = subprocess.Popen(
             cmd,
@@ -100,7 +100,8 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
             stderr=subprocess.STDOUT,
             close_fds=True)
     except Exception as e:
-        raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (" ".join(cmd), e))
+        raise MKGeneralException(
+            "Cannot execute <tt>%s</tt>: %s" % (subprocess.list2cmdline(cmd), e))
 
     if stdin_data is not None:
         auto_logger.info("STDIN: %r" % stdin_data)
@@ -119,8 +120,9 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
             "Error running %r (exit code %d)" % (subprocess.list2cmdline(cmd), exitcode))
 
         if config.debug:
-            raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>" %
-                                     (" ".join(cmd), exitcode, _hilite_errors(outdata)))
+            raise MKGeneralException(
+                "Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>" %
+                (subprocess.list2cmdline(cmd), exitcode, _hilite_errors(outdata)))
         else:
             raise MKGeneralException(_hilite_errors(outdata))
 
@@ -133,7 +135,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     except SyntaxError as e:
         raise MKGeneralException(
             "Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
-            (" ".join(cmd), e, outdata))
+            (subprocess.list2cmdline(cmd), e, outdata))
 
 
 def _hilite_errors(outdata):

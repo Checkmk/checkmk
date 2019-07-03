@@ -95,17 +95,16 @@ google-auth = "==1.6.1"
 PyYAML = "==5.1"
 websocket_client = "==0.54.0"
 kubernetes = "==8.0.0"
-# Has been added for jira notification plugin
-defusedxml = "==0.5.0"
-requests-toolbelt = "==0.9.1"
-jira = "==2.0.0"
-# Has been added for opsgenie notification plugin
-opsgenie-sdk = "==0.3.1"
+defusedxml = "==0.5.0"  # Has been added for jira notification plugin
+requests-toolbelt = "==0.9.1"  # Has been added for jira notification plugin
+jira = "==2.0.0"  # Has been added for jira notification plugin
+opsgenie-sdk = "==0.3.1"  # Has been added for opsgenie notification plugin
 pytz = "==2019.1"
 fancycompleter = "==0.8"
 wmctrl = "==0.3"
 pdbpp = "==0.10.0"
 PySnooper = "==0.0.31"
+future = "==0.17.1"
 
 [requires]
 python_version = "2.7"

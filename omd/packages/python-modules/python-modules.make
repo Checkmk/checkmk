@@ -303,6 +303,8 @@ python-modules-dump-Pipfile:
 	@echo 'pyenchant = "*"'
 	@echo 'yapf = "==0.26.0"  # Keep 0.26.0 for the moment because 0.27.0 needs whole code base reformatting or config change'
 	@echo 'docker = "*"'
+	@echo 'astroid = "*"'
+	@echo 'mock = "*"'
 	@echo 'mockldap = "*"'
 	@echo 'isort = "*"'
 	@echo 'freezegun = "*"'

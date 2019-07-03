@@ -22,7 +22,7 @@ def bakelet(request):
     extended_source = 'from cmk_base.cee.agent_bakery_plugins import bakery_info' + '\n' + source
 
     bakelet = imp.new_module('bakelet')
-    exec extended_source in bakelet.__dict__
+    exec(extended_source, bakelet.__dict__)  # yapf: disable
     yield bakelet
 
 

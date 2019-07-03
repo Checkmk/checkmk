@@ -9626,7 +9626,7 @@ register_check_parameters(
         elements = [
             ( "average",
               Integer(
-                  title = _("Averaging"),
+                  title = _("Averaging for total CPU utilization"),
                   help = _("When this option is activated then the CPU utilization is being "
                            "averaged <b>before</b> the levels are being applied."),
                   unit = _("minutes"),

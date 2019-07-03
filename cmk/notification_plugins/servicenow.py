@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -64,6 +63,8 @@ def main():
 
     hostname = context['HOSTNAME']
     url = context['PARAMETER_URL']
+    proxy_url = context.get("PARAMETER_PROXY_URL")
+    proxies = {"https": proxy_url} if proxy_url else None
     user = context['PARAMETER_USERNAME']
     pwd = retrieve_from_passwordstore(context['PARAMETER_PASSWORD'])
     caller = context['PARAMETER_CALLER']
@@ -112,7 +113,7 @@ $LONGSERVICEOUTPUT$
 
     short_desc = utils.substitute_context(short_desc, context)
     desc = utils.substitute_context(desc, context)
-    incident = handle_issue_exists(problem_id, url, user, pwd)
+    incident = handle_issue_exists(problem_id, proxies, url, user, pwd)
 
     if context['NOTIFICATIONTYPE'] == 'PROBLEM':
         if incident:
@@ -120,40 +121,42 @@ $LONGSERVICEOUTPUT$
                 "Ticket %s with Check_MK problem ID: %s in work notes already exists.\n" %
                 (incident[0], problem_id))
             return 0
-        handle_problem(url, user, pwd, short_desc, desc, hostname, servicename, problem_id, caller,
-                       urgency, impact, timeout)
+        handle_problem(url, proxies, user, pwd, short_desc, desc, hostname, servicename, problem_id,
+                       caller, urgency, impact, timeout)
     elif context['NOTIFICATIONTYPE'] == 'RECOVERY':
-        handle_recovery(incident, url, user, pwd, desc, caller, timeout)
+        handle_recovery(incident, url, proxies, user, pwd, desc, caller, timeout)
     elif context['NOTIFICATIONTYPE'] == 'ACKNOWLEDGEMENT':
-        handle_ack(incident, url, user, pwd, ack_comment, ack_author, ack_state, caller, timeout)
+        handle_ack(incident, url, proxies, user, pwd, ack_comment, ack_author, ack_state, caller,
+                   timeout)
     elif context['NOTIFICATIONTYPE'] == 'DOWNTIMESTART':
         desc = """Downtime was set.
 User: $NOTIFICATIONAUTHOR$
 Comment: $NOTIFICATIONCOMMENT$
 """
         desc = utils.substitute_context(desc, context)
-        handle_downtime(incident, url, user, pwd, desc, dtstart_state, caller, timeout)
+        handle_downtime(incident, url, proxies, user, pwd, desc, dtstart_state, caller, timeout)
         sys.stdout.write('Ticket %s: successfully added downtime.\n' % incident[0])
     elif context['NOTIFICATIONTYPE'] == 'DOWNTIMEEND':
         desc = """Downtime ended.
 """
-        handle_downtime(incident, url, user, pwd, desc, dtend_state, caller, timeout)
+        handle_downtime(incident, url, proxies, user, pwd, desc, dtend_state, caller, timeout)
         sys.stdout.write('Ticket %s: successfully removed downtime.\n' % incident[0])
     elif context['NOTIFICATIONTYPE'] == 'DOWNTIMECANCELLED':
         desc = """Downtime canceled.
 """
-        handle_downtime(incident, url, user, pwd, desc, dtend_state, caller, timeout)
+        handle_downtime(incident, url, proxies, user, pwd, desc, dtend_state, caller, timeout)
         sys.stdout.write('Ticket %s: successfully cancelled downtime.\n' % incident[0])
     else:
         sys.stdout.write("Noticication type %s not supported\n" % (context['NOTIFICATIONTYPE']))
         return 0
 
 
-def handle_problem(url, user, pwd, short_desc, desc, hostname, servicename, problem_id, caller,
-                   urgency, impact, timeout):
+def handle_problem(url, proxies, user, pwd, short_desc, desc, hostname, servicename, problem_id,
+                   caller, urgency, impact, timeout):
     url += "/api/now/table/incident"
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     response = requests.post(url,
+                             proxies=proxies,
                              auth=(user, pwd),
                              headers=headers,
                              timeout=timeout,
@@ -167,8 +170,7 @@ def handle_problem(url, user, pwd, short_desc, desc, hostname, servicename, prob
                              })
 
     if response.status_code != 201:
-        sys.stderr.write('Status: %s Error response: %s\n' %
-                         (response.status_code, response.json()))
+        sys.stderr.write('Status: %s\n' % response.status_code)
         return 2
 
     incident_nr = response.json()["result"]["number"]
@@ -176,10 +178,11 @@ def handle_problem(url, user, pwd, short_desc, desc, hostname, servicename, prob
     return 0
 
 
-def handle_recovery(incident, url, user, pwd, desc, caller, timeout):
+def handle_recovery(incident, url, proxies, user, pwd, desc, caller, timeout):
     url += "/api/now/table/incident/%s" % incident[1]
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     response = requests.put(url,
+                            proxies=proxies,
                             auth=(user, pwd),
                             headers=headers,
                             timeout=timeout,
@@ -191,15 +194,15 @@ def handle_recovery(incident, url, user, pwd, desc, caller, timeout):
                             })
 
     if response.status_code != 200:
-        sys.stderr.write('Status: %s Error response: %s\n' %
-                         (response.status_code, response.json()))
+        sys.stderr.write('Status: %s\n' % response.status_code)
         return 2
 
     sys.stdout.write('Ticket %s successfully resolved.\n' % incident[0])
     return 0
 
 
-def handle_ack(incident, url, user, pwd, ack_comment, ack_author, ack_state, caller, timeout):
+def handle_ack(incident, url, proxies, user, pwd, ack_comment, ack_author, ack_state, caller,
+               timeout):
     url += "/api/now/table/incident/%s" % incident[1]
     json = {
         "caller_id": caller,
@@ -210,18 +213,22 @@ def handle_ack(incident, url, user, pwd, ack_comment, ack_author, ack_state, cal
         json.update({"state": ack_state})
 
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    response = requests.put(url, auth=(user, pwd), headers=headers, timeout=timeout, json=json)
+    response = requests.put(url,
+                            proxies=proxies,
+                            auth=(user, pwd),
+                            headers=headers,
+                            timeout=timeout,
+                            json=json)
 
     if response.status_code != 200:
-        sys.stderr.write('Status: %s Error Response: %s\n' %
-                         (response.status_code, response.json()))
+        sys.stderr.write('Status: %s\n' % response.status_code)
         return 2
 
     sys.stdout.write('Ticket %s: successfully added acknowledgedment.\n' % incident[0])
     return 0
 
 
-def handle_downtime(incident, url, user, pwd, desc, dt_state, caller, timeout):
+def handle_downtime(incident, url, proxies, user, pwd, desc, dt_state, caller, timeout):
     url += "/api/now/table/incident/%s" % incident[1]
     json = {"caller_id": caller, "work_notes": desc}
 
@@ -229,20 +236,19 @@ def handle_downtime(incident, url, user, pwd, desc, dt_state, caller, timeout):
         json.update({"state": dt_state})
 
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    response = requests.put(url, auth=(user, pwd), headers=headers, json=json)
+    response = requests.put(url, proxies=proxies, auth=(user, pwd), headers=headers, json=json)
 
     if response.status_code != 200:
-        sys.stderr.write('Status: %s Error response: %s\n' %
-                         (response.status_code, response.json()))
+        sys.stderr.write('Status: %s\n' % response.status_code)
         return 2
 
     return 0
 
 
-def handle_issue_exists(problem_id, url, user, pwd):
+def handle_issue_exists(problem_id, proxies, url, user, pwd):
     headers = {"Accept": "application/json"}
     url += '/api/now/table/incident?sysparm_query=work_notesLIKECheck_MK Problem ID: %s' % problem_id
-    response = requests.get(url, auth=(user, pwd), headers=headers)
+    response = requests.get(url, proxies=proxies, auth=(user, pwd), headers=headers)
     try:
         return response.json()["result"][0]["number"], response.json()["result"][0]["sys_id"]
     except IndexError:

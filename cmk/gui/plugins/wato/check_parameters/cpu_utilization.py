@@ -80,7 +80,7 @@ cpu_util_common_dict = Dictionary(
                  "The CPU utilization sums up the percentages of CPU time that is used "
                  "for user processes, kernel routines (system), disk wait (sometimes also "
                  "called IO wait) or nothing (idle). The levels are always applied "
-                 "on the average utiliazation since the last check - which is usually one minute."),
+                 "on the average utilization since the last check - which is usually one minute."),
          )),
         ("core_util_time_total",
          Tuple(

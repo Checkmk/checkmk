@@ -261,7 +261,7 @@ def do_remote_automation(site, command, vars_, timeout=None):
     return response
 
 
-def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
+def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
     response = requests.post(
         url,
         data=data,
@@ -282,7 +282,11 @@ def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
     elif response.status_code != 200:
         raise MKUserError(None, _("HTTP Error - %d: %s") % (response.status_code, response.text))
 
-    return response.text
+    return response
+
+
+def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
+    return get_url_raw(url, insecure, auth, data, files, timeout).text
 
 
 def do_site_login(site_id, name, password):

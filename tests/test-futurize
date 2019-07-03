@@ -31,8 +31,6 @@ cd "$REPO_PATH"
 
 ENABLED_FIXERS=
 
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_idioms"
-
 # *** Fixers that are not listed via futurize -l ***
 #---------------------------------------------------------------------------
 ENABLED_FIXERS+=" lib2to3.fixes.fix_asserts"
@@ -83,6 +81,7 @@ ENABLED_FIXERS+=" lib2to3.fixes.fix_filter"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_funcattrs"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_getcwdu"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_has_key"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_idioms"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_input"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_intern"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_isinstance"

@@ -102,30 +102,26 @@ def compare_soup(html1, html2):
         assert type(d1) == type(d2), "\n%s\n%s" % (type(d1), type(d2))
 
         if isinstance(d1, NavigableString):
-            set1 = set(filter(lambda x: x, subber(d1).split(' ')))
-            set2 = set(filter(lambda x: x, subber(d2).split(' ')))
+            set1 = set([x for x in subber(d1).split(' ') if x])
+            set2 = set([x for x in subber(d2).split(' ') if x])
             assert set1 == set2, "\n%s\n%s\n" % (set1, set2)
 
         else:
             assert len(list(d1.children)) == len(list(d2.children)), '%s\n%s' % (html1, html2)
-            attrs1 = {
-                k: filter(lambda x: x != '', (v)) for k, v in d1.attrs.iteritems() if len(v) > 0
-            }
-            attrs2 = {
-                k: filter(lambda x: x != '', (v)) for k, v in d2.attrs.iteritems() if len(v) > 0
-            }
+            attrs1 = {k: [x for x in (v) if x != ''] for k, v in d1.attrs.iteritems() if len(v) > 0}
+            attrs2 = {k: [x for x in (v) if x != ''] for k, v in d2.attrs.iteritems() if len(v) > 0}
 
             for key in attrs1.keys():
                 assert key in attrs2, '%s\n%s\n\n%s' % (key, d1, d2)
                 if key.startswith("on") or key == "style":
-                    val1 = filter(
-                        lambda x: x,
-                        map(lambda x: unify_attrs(x).strip(' '),
-                            attrs1.pop(key, '').split(';')))
-                    val2 = filter(
-                        lambda x: x,
-                        map(lambda x: unify_attrs(x).strip(' '),
-                            attrs2.pop(key, '').split(';')))
+                    val1 = [
+                        x for x in map(lambda x: unify_attrs(x).strip(' '),
+                                       attrs1.pop(key, '').split(';')) if x
+                    ]
+                    val2 = [
+                        x for x in map(lambda x: unify_attrs(x).strip(' '),
+                                       attrs2.pop(key, '').split(';')) if x
+                    ]
                     assert val1 == val2, '\n%s\n%s' % (val1, val2)
 
             assert attrs1 == attrs2, '\n%s\n%s' % (html1, html2)

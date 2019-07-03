@@ -32,7 +32,7 @@ factory_settings["genua_fan_default_levels"] = {
 
 def inventory_genua_fan(info):
     # remove empty elements due to alternative enterprise id in snmp_info
-    info = filter(None, info)
+    info = [_f for _f in info if _f]
 
     if not info:
         return
@@ -45,7 +45,7 @@ def inventory_genua_fan(info):
 
 def check_genua_fan(item, params, info):
     # remove empty elements due to alternative enterprise id in snmp_info
-    info = filter(None, info)
+    info = [_f for _f in info if _f]
 
     map_states = {
         "1": (0, "OK"),

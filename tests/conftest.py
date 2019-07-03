@@ -117,11 +117,13 @@ def fake_version_and_paths():
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.tmp_dir", tmp_dir)
+    monkeypatch.setattr("cmk.utils.paths.omd_root", tmp_dir)
+    monkeypatch.setattr("cmk.utils.paths.tmp_dir", os.path.join(tmp_dir, "tmp/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
     monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
                         os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
     monkeypatch.setattr("cmk.utils.paths.include_cache_dir",
-                        os.path.join(tmp_dir, "check_mk/check_includes"))
+                        os.path.join(tmp_dir, "tmp/check_mk/check_includes"))
     monkeypatch.setattr("cmk.utils.paths.check_mk_config_dir",
                         os.path.join(tmp_dir, "etc/check_mk/conf.d"))
     monkeypatch.setattr("cmk.utils.paths.default_config_dir", os.path.join(tmp_dir, "etc/check_mk"))

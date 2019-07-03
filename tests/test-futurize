@@ -62,10 +62,11 @@ ENABLED_FIXERS=
 
 # *** Mechanical/easy fixers ***
 #---------------------------------------------------------------------------
-ENABLED_FIXERS+=" lib2to3.fixes.fix_filter"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_apply"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_except"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_exec"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_exitfunc"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_filter"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_getcwdu"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_has_key"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_input"
@@ -73,17 +74,16 @@ ENABLED_FIXERS+=" lib2to3.fixes.fix_intern"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_isinstance"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_ne"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_nonzero"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_numliterals"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_paren"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_raw_input"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_reduce"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_renames"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_repr"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_standarderror"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_sys_exc"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_throw"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_tuple_params"
-ENABLED_FIXERS+=" lib2to3.fixes.fix_reduce"
-ENABLED_FIXERS+=" lib2to3.fixes.fix_numliterals"
-ENABLED_FIXERS+=" lib2to3.fixes.fix_exec"
 ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
 
 # *** More complex fixers ***

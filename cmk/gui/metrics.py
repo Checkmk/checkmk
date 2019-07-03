@@ -64,7 +64,8 @@ from cmk.gui.plugins.metrics.utils import (  # pylint: disable=unused-import
     TB, PB, m, K, M, G, T, P, evaluate, get_graph_range, replace_expressions,
     generic_graph_template, scale_symbols, hsv_to_hexrgb, render_color, parse_color,
     parse_color_into_hexrgb, render_color_icon, darken_color, get_palette_color_by_index,
-    parse_perf_data, perfvar_translation, translate_metrics, get_graph_templates,
+    parse_perf_data, perfvar_translation, translate_metrics, get_graph_templates, MAX_CORES,
+    indexed_color,
 )
 
 #   .--Plugins-------------------------------------------------------------.

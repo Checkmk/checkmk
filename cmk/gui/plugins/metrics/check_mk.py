@@ -43,6 +43,8 @@ from cmk.gui.plugins.metrics import (
     TB,
     m,
     parse_color_into_hexrgb,
+    MAX_CORES,
+    indexed_color,
 )
 
 # TODO Graphingsystem:
@@ -320,71 +322,7 @@ unit_info['EUR'] = {
 #   '----------------------------------------------------------------------'
 
 # Title are always lower case - except the first character!
-
-# Colors:
-#
-#                   red
-#  magenta                       orange
-#            11 12 13 14 15 16
-#         46                   21
-#         45                   22
-#   blue  44                   23  yellow
-#         43                   24
-#         42                   25
-#         41                   26
-#            36 35 34 33 32 31
-#     cyan                       yellow-green
-#                  green
-#
-# Special colors:
-# 51  gray
-# 52  brown 1
-# 53  brown 2
-#
-# For a new metric_info you have to choose a color. No more hex-codes are needed!
-# Instead you can choose a number of the above color ring and a letter 'a' or 'b
-# where 'a' represents the basic color and 'b' is a nuance/shading of the basic color.
-# Both number and letter must be declared!
-#
-# Example:
-# "color" : "23/a" (basic color yellow)
-# "color" : "23/b" (nuance of color yellow)
-#
-# As an alternative you can call indexed_color with a color index and the maximum
-# number of colors you will need to generate a color. This function tries to return
-# high contrast colors for "close" indices, so the colors of idx 1 and idx 2 may
-# have stronger contrast than the colors at idx 3 and idx 10.
-
-# retrieve an indexed color.
-# param idx: the color index
-# param total: the total number of colors needed in one graph.
-COLOR_WHEEL_SIZE = 48
-
-
-def indexed_color(idx, total):
-    if idx < COLOR_WHEEL_SIZE:
-        # use colors from the color wheel if possible
-        base_col = (idx % 4) + 1
-        tone = ((idx / 4) % 6) + 1
-        if idx % 8 < 4:
-            shade = "a"
-        else:
-            shade = "b"
-        return "%d%d/%s" % (base_col, tone, shade)
-    else:
-        # generate distinct rgb values. these may be ugly ; also, they
-        # may overlap with the colors from the wheel
-        idx = idx - COLOR_WHEEL_SIZE
-        base_color = idx % 7  # red, green, blue, red+green, red+blue,
-        # green+blue, red+green+blue
-        delta = 255 / ((total - COLOR_WHEEL_SIZE) / 7)
-        offset = 255 - (delta * ((idx / 7) + 1))
-
-        red = int(base_color in [0, 3, 4, 6])
-        green = int(base_color in [1, 3, 5, 6])
-        blue = int(base_color in [2, 4, 5, 6])
-        return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
-
+# Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 MAX_NUMBER_HOPS = 45  # the amount of hop metrics, graphs and perfometers to create
 
@@ -1689,8 +1627,6 @@ metric_info["cpu_entitlement_util"] = {
     "unit": "",
     "color": "#FF5555",
 }
-
-MAX_CORES = 128
 
 for i in range(MAX_CORES):
     # generate different colors for each core.

@@ -178,7 +178,16 @@ inline std::string formatString(int Fl, const char* Prefix,
 }
 
 namespace internal {
-enum Colors { kDefault, kRed, kGreen, kYellow, kPink, kCyan, kPinkLight };
+enum Colors {
+    kDefault,
+    kRed,
+    kGreen,
+    kYellow,
+    kPink,
+    kCyan,
+    kPinkLight,
+    kWhite
+};
 
 static uint16_t GetColorAttribute(Colors color) {
     switch (color) {
@@ -194,6 +203,9 @@ static uint16_t GetColorAttribute(Colors color) {
             return FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
         case kCyan:
             return FOREGROUND_GREEN | FOREGROUND_BLUE;
+        case kWhite:
+            return FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE |
+                   FOREGROUND_INTENSITY;
         default:
             return 0;
     }

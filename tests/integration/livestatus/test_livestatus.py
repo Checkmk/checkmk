@@ -48,9 +48,6 @@ def test_host_table(default_cfg, site):
 
 
 def test_host_custom_variables(default_cfg, site):
-    if default_cfg.core == "nagios":
-        pytest.skip("Disabled until tags column is supported by play nagios")
-
     rows = site.live.query(
         "GET hosts\nColumns: custom_variables tags\nFilter: name = livestatus-test-host\n")
     assert isinstance(rows, list)

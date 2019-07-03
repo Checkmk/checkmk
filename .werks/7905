@@ -1,0 +1,10 @@
+Title: Analyze configuration: Fix Livestatus usage test with Nagios core
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1562146445
+Class: fix
+
+

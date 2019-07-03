@@ -1174,6 +1174,8 @@ class AutomationDiagHost(Automation):
                         source.set_port(agent_port)
                         if tcp_connect_timeout is not None:
                             source.set_timeout(tcp_connect_timeout)
+                    else:
+                        continue
 
                     output += source.run_raw()
                     if source.exception():

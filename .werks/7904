@@ -1,0 +1,10 @@
+Title: Host diagnose: Only contact agent source in agent test
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1562140172
+Class: fix
+
+In previous versions the agent test also tried to contact SNMP (when configured).

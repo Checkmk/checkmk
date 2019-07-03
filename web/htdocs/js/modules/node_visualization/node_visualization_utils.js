@@ -75,7 +75,13 @@ export class NodeMatcher {
         elements = ["aggr_path_id", "aggr_path_name"]
         for (let idx in elements) {
             let match_type = elements[idx]
-            if (matcher[match_type] && !matcher[match_type].disabled && node.data[match_type].join("#") != matcher[match_type].value)
+            if (!matcher[match_type])
+                continue
+
+            if (matcher[match_type].disabled)
+                continue
+
+            if (JSON.stringify(matcher[match_type].value) != JSON.stringify(node.data[match_type]))
                 return false
         }
 

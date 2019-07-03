@@ -107,6 +107,7 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
             this.register_toolbar_plugin()
         }
 
+        // TODO: use only update_current_style
         this.toolbar_plugin.update_content()
         this.force_style.update_data()
 
@@ -276,77 +277,112 @@ export class LayoutStyleConfiguration {
     render_style_config(style_div_box) {
         this.selection = style_div_box
         let style_div = this.selection.selectAll("div#style_div").data([null])
-        style_div = style_div.enter().append("div").attr("id", "style_div").merge(style_div)
+        let style_div_enter = style_div.enter().append("div").attr("id", "style_div")
 
-        style_div.selectAll("#styleconfig_headline").data([null]).enter().append("h2")
+        style_div_enter.selectAll("#styleconfig_headline").data([null]).enter().append("h2")
                         .attr("id", "styleconfig_headline").text("Style configuration")
 
 
-        style_div.selectAll("#style_options").data([null]).enter().append("div")
-                                               .attr("id", "style_options")
-                                               .classed("noselect", true)
+        style_div_enter.selectAll("div.style_component").data(["style_options", "style_matcher"]).enter()
+                      .append("div").attr("id", d=>d)
+                      .classed("style_component", true)
 
-        style_div.selectAll("#matcher_headline").data([null]).enter().append("h4")
-                        .attr("id", "matcher_headline").text("Matcher")
 
-        style_div.selectAll("#matcher_config").data([null]).enter().append("div")
-                        .attr("id", "matcher_config")
+        // Add foldable trees for basic and advanced matchers
+        let style_matcher = style_div_enter.select("#style_matcher")
+        style_matcher.append("b").text("Matcher settings")
+        style_matcher.append("br")
+        style_matcher.append("label").text("(How to find the root node of this style)")
+        style_matcher.append("br")
+        style_matcher.append("br")
 
-        if (!this.current_style)
-            this.selection.style("display", "none")
+        let theme_prefix = this.layout_manager.viewport.main_instance.get_theme_prefix()
+        let matcher_topics = [
+            {id: "basic_matchers", text: "Basic matching", default_open: true},
+            {id: "advanced_matchers", text: "Advanced matching", default_open: false},
+        ]
+        let matchers_enter = style_matcher.selectAll("div.foldable#matcher_topic").data(matcher_topics, d=>d.id).enter()
+                        .append("div").classed("matcher_topic", true).classed("foldable", true)
+        matchers_enter.append("img")
+                        .classed("treeangle", true)
+                        .classed("open", d=>d.default_open)
+                        .attr("src",  theme_prefix + "/images/tree_closed.png")
+                        .on("click", function() {
+                            let image = d3.select(this)
+                            image.classed("open", !image.classed("open"))
+                            image.classed("closed", image.classed("open"))
+                            d3.select(this.parentNode).select(".matcher_topic_content").style("display", image.classed("open") ? null : "none")
+                        })
+        matchers_enter.append("b").classed("treeangle", true).classed("title", true).text(d=>d.text).style("color", "black")
+                        .on("click", function() {
+                            let image = d3.select(this.parentNode).select("img")
+                            image.classed("open", !image.classed("open"))
+                            image.classed("closed", image.classed("open"))
+                            d3.select(this.parentNode).select(".matcher_topic_content").style("display", image.classed("open") ? null : "none")
+                        })
+        matchers_enter.append("div").classed("matcher_topic_content", true).attr("id", d=>d.id)
+                       .style("display", d=>d.default_open ? null : "none")
+        matchers_enter.append("br")
+
+        this.update_current_style(this.current_style)
     }
 
     update_current_style(style) {
-        this.current_style = style
-        if (!this.current_style) {
-            this.selection.transition().duration(node_visualization_utils.DefaultTransition.duration())
-                .style("height", "0px")
-                .style("display", "none")
-            return
-        }
+        if (style != this.current_style)
+            this._cleanup_old_style_config()
 
-        let matcher = this.current_style.get_matcher()
-        let style_options = this.current_style.get_style_options()
-        if (matcher == null && style_options.length == 0) {
+        this.current_style = style
+
+        let hide_style_config = false
+        if (!this.current_style)
+            hide_style_config = true
+        else if (this.current_style.type() == node_visualization_layout_styles.LayoutStyleForce.prototype.type())
+            hide_style_config = false
+        else if (this.current_style.get_matcher() == null || this.current_style.get_style_options().length == 0)
+            hide_style_config = true
+
+        if (hide_style_config) {
             this.selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
                 .style("height", "0px")
                 .style("display", "none")
             return
         }
-
-        if (this.selection.style("display") == "none"){
-            this.selection.style("display", null)
-            this.selection.style("height", "0px")
-                .transition().duration(node_visualization_utils.DefaultTransition.duration())
-                .style("height", null)
-        }
+        this.selection.style("height", null)
+        this.selection.style("display", null)
 
         this._update_current_style_options()
-        this._update_current_style_matcher(style)
+        this._update_current_style_matcher()
+    }
+
+    _cleanup_old_style_config() {
+        this.selection.selectAll("div#style_options").selectAll("*").remove()
+        this.selection.selectAll(".matcher_topic_content").selectAll("*").remove()
+    }
+
+    _update_current_style_options() {
+        let options_selection = this.selection.select("#style_options")
+        this.current_style.render_options(options_selection)
     }
 
     _update_current_style_matcher() {
         let matcher = this.current_style.get_matcher()
         if (!matcher) {
-            this.selection.select("#matcher_config").style("display", "none")
-            this.selection.select("#matcher_headline").style("display", "none")
+            this.selection.select("#style_matcher").style("display", "none")
             return
         }
-        this.selection.select("#matcher_config").style("display", null)
-        this.selection.select("#matcher_headline").style("display", null)
-
-        let matcher_config = this.selection.select("#matcher_config")
-        matcher_config.selectAll("label#matcher_headline").data([null]).enter()
-                        .append("label").attr("id", "matcher_headline").text("Assign this style to nodes matching")
+        this.selection.select("#style_matcher").style("display", null)
 
 
-        let matcher_table = matcher_config.selectAll("table").data([matcher])
-        matcher_table = matcher_table.enter().append("div").append("table").merge(matcher_table)
-        matcher_table.selectAll("*").remove()
+        this._update_basic_matcher_config(matcher)
+        this._update_advanced_matcher_config(matcher)
+    }
 
+    _update_basic_matcher_config(matcher) {
+        let basic_matcher_config = this.selection.select("#basic_matchers")
+        let basic_matcher_table = basic_matcher_config.selectAll("table").data([matcher])
+        basic_matcher_table = basic_matcher_table.enter().append("div").append("table").merge(basic_matcher_table)
         let input_fields = []
-
         if (this.current_style.style_root_node.data.node_type == "bi_leaf") {
             input_fields.push({name: "Hostname", id: "hostname"})
             input_fields.push({name: "Service Description", id: "service"})
@@ -355,24 +391,53 @@ export class LayoutStyleConfiguration {
             input_fields.push({name: "Aggregation Rule ID", id: "rule_id"})
             input_fields.push({name: "Aggregation Rule Name", id: "rule_name"})
         }
-
-        input_fields.push({name: "Aggregation Path ID", id: "aggr_path_id"})
-
-        input_fields.push({name: "Aggregation Path Name", id: "aggr_path_name"})
-
-        let input_selection = matcher_table.selectAll("div.input_field").data(input_fields)
-        let divs = input_selection.enter().append("tr")
-                                          .append("td")
-                                          .append("div")
-                                            .classed("input_field", true)
-                                    .merge(input_selection)
-
+        let input_selection = basic_matcher_table.selectAll("div.input_field").data(input_fields)
+        let divs = input_selection.enter().append("tr").append("td").append("div").classed("input_field", true)
         divs.append("input").attr("type", "checkbox").property("checked", d=>!matcher[d.id].disabled)
-                            .on("change", (d)=>this.toggle_matcher_condition(d.id))
+                            .on("change", d=>this.toggle_matcher_condition(d.id))
         divs.append("b").text(d=>d.name).append("br")
         divs.append("input").attr("value", d=>matcher[d.id].value)
                             .attr("id", d=>"matcher_text_" + d.id)
-                            .on("input", (d)=>this.update_matcher_condition_text(d.id))
+                            .on("input", d=>this.update_matcher_condition_text(d.id))
+    }
+
+    _update_advanced_matcher_config(matcher) {
+        // Create topics
+        let advanced_matcher_config = this.selection.select("#advanced_matchers")
+        let advanced_matcher_table = advanced_matcher_config.selectAll("table").data([matcher])
+
+        advanced_matcher_table = advanced_matcher_table.enter().append("div").append("table").merge(advanced_matcher_table)
+        let input_fields = []
+        input_fields.push({name: "Aggregation Rule Path ID", id: "aggr_path_id", value: matcher.aggr_path_id.value})
+        input_fields.push({name: "Aggregation Rule Path Name", id: "aggr_path_name", value: matcher.aggr_path_name.value})
+        let input_selection = advanced_matcher_table.selectAll("div.input_field").data(input_fields)
+        let divs = input_selection.enter().append("tr")
+                                          .append("td")
+                                          .append("div")
+                                            .attr("id", d=>d.id)
+                                            .classed("input_field", true)
+        divs.append("input").attr("type", "checkbox").property("checked", d=>!matcher[d.id].disabled)
+                            .on("change", d=>this.toggle_matcher_condition(d.id))
+        divs.append("b").text(d=>d.name)
+        divs.append("br")
+        divs.append("div").classed("path_details", true)
+
+        this.selection.selectAll(".path_details").each(this._render_aggr_path_table)
+    }
+
+    _render_aggr_path_table(data) {
+        let table = d3.select(this).selectAll("table").data([null])
+        let table_enter = table.enter().append("table")
+        let table_header = table_enter.append("tr")
+        table_header.append("th").text("Name")
+        table_header.append("th").text("Instance number")
+        table = table_enter.merge(table)
+
+        let rows = table.selectAll("tr.content").data(data.value)
+        rows.exit().remove()
+        let rows_enter = rows.enter().append("tr").classed("content", true)
+        rows_enter.append("td").text(d=>d[0]).style("width", "100%")
+        rows_enter.append("td").text(d=>d[1]).style("text-align", "right")
     }
 
     toggle_matcher_condition(condition_id) {
@@ -388,16 +453,10 @@ export class LayoutStyleConfiguration {
 
     update_matcher_condition_text(condition_id) {
         let matcher = this.current_style.get_matcher()
-        let value = this.selection.select("#matcher_text_" + condition_id).property("value")
+        let value = this.selection.selectAll("#matcher_text_" + condition_id).property("value")
         matcher[condition_id].value = value
         this.current_style.set_matcher(matcher)
         this.layout_manager.layout_applier.apply_all_layouts()
-    }
-
-    _update_current_style_options() {
-        let options_selection = this.selection.select("#style_options")
-        options_selection.selectAll("*").remove()
-        this.current_style.render_options(options_selection)
     }
 }
 
@@ -531,7 +590,6 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             .style("margin-top", null)
             .style("margin-bottom", null)
             .style("width", "100%")
-//            .style("padding", "12px")
             .on("click", d=>{
                 this._save_explicit_layout_clicked()
             })
@@ -570,7 +628,6 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             if (layers[idx].is_toggleable())
                 configurable_layers.push(layers[idx])
         }
-
 
         let table_selection = into_selection.selectAll("table#overlay_configuration").data([null]).style("width", "100%")
         let table_enter = table_selection.enter().append("table").attr("id", "overlay_configuration")
@@ -616,7 +673,6 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     update_available_layouts(layouts) {
         this.layout_manager.layout_applier.layouts = layouts
         let choices = Object.keys(layouts)
-//        console.log("update layouts " + choices)
 
         choices.sort()
         let choice_selection = this.content_selection.select("#available_layouts")

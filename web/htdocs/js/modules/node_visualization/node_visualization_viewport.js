@@ -368,7 +368,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
             this._node_chunk_list.splice(removed_chunks.pop(), 1)
     }
 
-    _add_aggr_path_and_node_id(node, siblings_rule_counter) {
+    _add_aggr_path_and_node_id(node, siblings_id_counter) {
         let aggr_path_id = []
         let aggr_path_name = []
         if (node.parent) {
@@ -377,39 +377,46 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         }
 
         let rule_id = node.data.rule_id
+        let name = node.data.name
         if (rule_id != null) {
+            // Aggregation node
             rule_id = rule_id.rule
-            if (!siblings_rule_counter[rule_id]) {
-                siblings_rule_counter[rule_id] = []
-            }
-            siblings_rule_counter[rule_id].push(rule_id)
-            aggr_path_id = aggr_path_id.concat([rule_id + "[" + siblings_rule_counter[rule_id].length + "]"])
+            aggr_path_id = aggr_path_id.concat([[rule_id, this._get_siblings_index("rule_id", rule_id, siblings_id_counter)]])
+            aggr_path_name = aggr_path_name.concat([[name, this._get_siblings_index("rule_name", name, siblings_id_counter)]])
         }
-        if (node.data.hostname)
-            aggr_path_id.push(node.data.hostname)
-        if (node.data.service)
-            aggr_path_id.push(node.data.service)
 
         node.data.aggr_path_id = aggr_path_id
-
-        aggr_path_name.push(node.data.name)
         node.data.aggr_path_name = aggr_path_name
-        node.data.id = node.data.aggr_path_name.join("#")
+
+        let node_id = ""
+        node.data.aggr_path_name.forEach(token=>{
+            node_id += "#" + token[0] + "#" + token[1]
+        })
+        if (node.data.hostname)
+            node_id += node.data.hostname
+        if (node.data.service)
+            node_id += node.data.service
+        node.data.id = node_id
 
         if (node.children) {
-            let siblings_rule_counter = {}
-            node.children.forEach(child=>this._add_aggr_path_and_node_id(child, siblings_rule_counter))
+            let siblings_id_counter = {}
+            node.children.forEach(child=>this._add_aggr_path_and_node_id(child, siblings_id_counter))
         }
+    }
+
+    _get_siblings_index(domain, value, siblings_id_counter) {
+        if (!siblings_id_counter[domain + "_" + value])
+            siblings_id_counter[domain + "_" + value] = []
+        siblings_id_counter[domain + "_" + value].push(value)
+        return siblings_id_counter[domain + "_" + value].length
     }
 
     _arrange_multiple_node_chunks() {
         if (this._node_chunk_list.length == 0)
             return
 
-//        console.log("number of chunks", this._node_chunk_list.length)
         let partition_hierarchy = {name: "root", children: []}
         this._node_chunk_list.forEach(chunk=>{
-//            console.log("chunk size ", chunk.nodes.length)
             partition_hierarchy.children.push({name: chunk.nodes[0].data.id,
                                                value: chunk.nodes.length})
         })

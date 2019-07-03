@@ -89,6 +89,7 @@ class AjaxFetchAggregationData(AjaxPage):
                     template_layout_id = row["tree"]["aggr_tree"]["use_layout_id"]
                     if template_layout_id and template_layout_id in BILayoutManagement.get_all_bi_template_layouts(
                     ):
+                        data["template_layout_id"] = template_layout_id
                         data["use_layout"] = BILayoutManagement.load_bi_template_layout(
                             template_layout_id)
                         data["layout_origin"] = _("Template: %s" % template_layout_id)

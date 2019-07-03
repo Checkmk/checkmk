@@ -1,8 +1,8 @@
 
 
 export class NodeVisualizationLayout {
-    constructor(viewport) {
-        this.id = null
+    constructor(viewport, id) {
+        this.id = id
         this.viewport = viewport
         this.reference_size = {}
         this.style_configs = []
@@ -24,8 +24,6 @@ export class NodeVisualizationLayout {
 
     serialize() {
         return {
-            auto_align_mode: this.auto_align,
-            description: this.description,
             reference_size: this.reference_size,
             style_configs: this.style_configs,
             overlay_config: this.overlay_config,
@@ -33,7 +31,6 @@ export class NodeVisualizationLayout {
     }
 
     deserialize(data) {
-        this.id = data.id
         this.reference_size = data.reference_size
         this.style_configs  = data.style_configs
         this.overlay_config = data.overlay_config

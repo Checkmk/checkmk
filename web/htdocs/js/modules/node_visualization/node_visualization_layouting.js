@@ -672,7 +672,8 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
 
     update_available_layouts(layouts) {
         this.layout_manager.layout_applier.layouts = layouts
-        let choices = Object.keys(layouts)
+        let choices = [""]
+        choices = choices.concat(Object.keys(layouts))
 
         choices.sort()
         let choice_selection = this.content_selection.select("#available_layouts")
@@ -694,7 +695,6 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         let selected_id = d3.event.target.value
         this.layout_manager.layout_applier.apply_layout_id(selected_id)
         this.layout_style_configuration.update_current_style()
-        this.layout_manager.viewport.update_active_overlays()
         this.content_selection.select("#layout_name").property("value", selected_id)
         this.update_content()
         this.update_save_layout_button()
@@ -741,7 +741,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         // Text input and save button
         row_enter = table_enter.append("tr")
         row_enter.append("td").append("input")
-            .attr("value", "custom_layout")
+            .attr("value", "")
             .attr("id", "layout_name")
             .style("width", "100%")
             .style("box-sizing", "border-box")
@@ -765,13 +765,18 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     update_save_layout_button() {
-        let dropdown_id = this.content_selection.select("#available_layouts").select("select").property("value")
-        let input_id= this.content_selection.select("#layout_name").property("value");
+        let dropdown_id = this.content_selection.select("#available_layouts").select("select").property("value").trim()
+        let input_id= this.content_selection.select("#layout_name").property("value").trim()
         let button = this.content_selection.select("#save_button")
         let infotext = this.content_selection.select("#infotext")
         infotext.text("")
 
-        if (dropdown_id == input_id) {
+        if (input_id== "") {
+            button.attr("disabled", true)
+            button.classed("disabled", true)
+            button.attr("value", "Save template")
+        }
+        else if (dropdown_id == input_id) {
             button.attr("disabled", null)
             button.classed("disabled", false)
             button.attr("value", "Save template")
@@ -796,6 +801,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
        let new_layout = {}
        new_layout[new_id] = current_layout_group
        this.layout_manager.save_layout_template(new_layout)
+       this.layout_manager.layout_applier.current_layout_group.id = new_id
     }
 
     _save_explicit_layout_clicked(){
@@ -1007,6 +1013,8 @@ class LayoutApplier{
             chunk_layout.save_style(new_style.style_config)
         }
         this.layout_manager.layout_applier.apply_all_layouts()
+        // TODO: fix workaround
+        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(null)
         this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(new_style)
     }
 
@@ -1026,17 +1034,22 @@ class LayoutApplier{
         })
 
         this.apply_all_layouts()
+        // TODO: fix workaround
+        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(null)
         this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(current_style)
     }
 
     apply_layout_id(layout_id) {
-        let new_layout = new node_visualization_layout.NodeVisualizationLayout(this.viewport)
-        new_layout.deserialize(JSON.parse(JSON.stringify(this.layouts[layout_id])))
+        let new_layout = new node_visualization_layout.NodeVisualizationLayout(this.viewport, layout_id)
+        if (layout_id != "") {
+            let config = JSON.parse(JSON.stringify(this.layouts[layout_id]))
+            config.id = layout_id
+            new_layout.deserialize(config)
+        }
         this.apply(new_layout)
     }
 
     apply(new_layout) {
-//        console.log("apply layout", new_layout.id)
         this._apply_force_style_options(new_layout)
 
         let node_matcher = new node_visualization_utils.NodeMatcher(this.layout_manager.viewport.get_hierarchy_list())
@@ -1044,6 +1057,11 @@ class LayoutApplier{
         this._update_node_specific_styles(nodes_with_style)
 
         this.current_layout_group = new_layout
+
+        this.layout_manager.viewport.get_hierarchy_list().forEach(chunk=>{
+            chunk.layout = new_layout
+        })
+
         this.viewport.update_active_overlays()
     }
 
@@ -1054,21 +1072,27 @@ class LayoutApplier{
     apply_multiple_layouts(node_chunk_list, global_layout_config) {
         let nodes_with_style = []
         let skip_layout_alignment = false
+
+        let used_layout_id = null
+
         node_chunk_list.forEach(node_chunk=>{
             let node_matcher = new node_visualization_utils.NodeMatcher([node_chunk])
             // TODO: When removing an explicit layout, the new layout should replace the explict one
             if (!node_chunk.layout) {
                 node_chunk.layout = new node_visualization_layout.NodeVisualizationLayout(this)
 
-                let use_layout = null
                 if (global_layout_config) {
                     // A layout which may span over multiple chunks has been set
                     // Each chunk gets its own layout config instance, since config-wise chunks are still separated after all..
                     let enforced_layout = new node_visualization_layout.NodeVisualizationLayout(this.viewport)
                     enforced_layout.deserialize(global_layout_config)
                     node_chunk.layout = enforced_layout
-                } else if (node_chunk.use_layout)
+                } else if (node_chunk.use_layout) {
                     node_chunk.layout.deserialize(node_chunk.use_layout)
+                    // TODO: fix id handling
+                    if (node_chunk.template_layout_id)
+                        used_layout_id = node_chunk.template_layout_id
+                }
                 else if (node_chunk.use_default_layout && node_chunk.use_default_layout != "force") {
                     let default_style = this.layout_style_factory.instantiate_style_name(node_chunk.use_default_layout, node_chunk.tree)
                     default_style.style_config.position = {x: 50, y: 50}
@@ -1079,10 +1103,15 @@ class LayoutApplier{
                 skip_layout_alignment = true
 
             nodes_with_style = nodes_with_style.concat(this.find_nodes_for_layout(node_chunk.layout, node_matcher))
+            this._apply_force_style_options(node_chunk.layout)
         })
         this._update_node_specific_styles(nodes_with_style, skip_layout_alignment)
 
         this.current_layout_group = this.get_current_layout_group()
+        // TODO: fix id handling
+        if (used_layout_id)
+            this.current_layout_group.id = used_layout_id
+
         this.viewport.update_active_overlays()
 
         if (this.layout_manager.edit_layout)

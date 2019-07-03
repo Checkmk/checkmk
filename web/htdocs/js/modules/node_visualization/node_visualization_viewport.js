@@ -308,7 +308,8 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         //                       automatically computed out of the hierarchy layout
         //   layout:             active_layout
         //   use_default_layout: fallback layout to use in case no specific layout is set
-        //   layout_origin:      explicit set, based on template, generic
+        //   template_layout_id: used template id
+        //   layout_origin:      explicit set, based on template or generic
         // }
         let chunk = {}
 
@@ -326,6 +327,10 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
 
         chunk.tree = hierarchy
         chunk.nodes = chunk.tree.descendants()
+
+        if (chunk_rawdata.template_layout_id) {
+            chunk.template_layout_id = chunk_rawdata.template_layout_id
+        }
 
         // Determine layout
         if (chunk_rawdata.use_layout)

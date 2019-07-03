@@ -337,7 +337,7 @@ def main_list(args, format):
             ("compatible", compatible),
         ]:
             for v in values:
-                if type(v) == tuple:
+                if isinstance(v, tuple):
                     v = v[0]
                 if v.startswith(a):
                     entries = filters.get(tp, [])
@@ -410,7 +410,7 @@ def werk_class(werk):
     for entry in classes:
         if entry == cl:
             return cl
-        elif type(entry) == tuple and entry[0] == cl:
+        elif isinstance(entry, tuple) and entry[0] == cl:
             return entry[1]
     return cl
 
@@ -478,7 +478,7 @@ def input_choice(what, choices):
     ctc = {}
     texts = []
     for choice in choices:
-        if type(choice) == tuple:
+        if isinstance(choice, tuple):
             choice = choice[0]
 
         added = False

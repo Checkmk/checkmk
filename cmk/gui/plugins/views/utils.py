@@ -1346,8 +1346,7 @@ def _merge_data(data, columns):
             merged[mergekey] = row
 
     # return all rows sorted according to merge key
-    mergekeys = merged.keys()
-    mergekeys.sort()
+    mergekeys = sorted(merged.keys())
     return [merged[k] for k in mergekeys]
 
 

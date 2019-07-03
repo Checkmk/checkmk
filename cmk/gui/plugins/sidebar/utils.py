@@ -339,19 +339,16 @@ def visuals_by_topic(permitted_visuals, default_order=None):
             _("Problems"),
         ]
 
-    s = [(_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name,
-          'painters' in visual)
-         for name, visual in permitted_visuals
-         if not visual["hidden"] and not visual.get("mobile")]
-
-    s.sort()
+    s = sorted([(_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name,
+                 'painters' in visual)
+                for name, visual in permitted_visuals
+                if not visual["hidden"] and not visual.get("mobile")])
 
     result = []
     for topic in default_order:
         result.append((topic, s))
 
-    rest = list({t for (t, _t, _v, _i) in s if t not in default_order})
-    rest.sort()
+    rest = sorted({t for (t, _t, _v, _i) in s if t not in default_order})
     for topic in rest:
         if topic:
             result.append((topic, s))

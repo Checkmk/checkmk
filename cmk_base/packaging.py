@@ -183,8 +183,7 @@ def do_packaging(args):
             logger.error("%s" % e)
             sys.exit(1)
     else:
-        allc = commands.keys()
-        allc.sort()
+        allc = sorted(commands.keys())
         allc = [tty.bold + c + tty.normal for c in allc]
         logger.error("Invalid packaging command. Allowed are: %s and %s.", ", ".join(allc[:-1]),
                      allc[-1])

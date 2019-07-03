@@ -629,8 +629,8 @@ def is_root():
 
 
 def all_sites():
-    l = [s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s))]
-    l.sort()
+    l = sorted(
+        [s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s))])
     return l
 
 
@@ -1780,8 +1780,7 @@ def remove_from_fstab(site):
 def init_scripts(sitename):
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
     try:
-        scripts = os.listdir(rc_dir)
-        scripts.sort()
+        scripts = sorted(os.listdir(rc_dir))
         return rc_dir, scripts
     except Exception:
         return rc_dir, []
@@ -2201,8 +2200,7 @@ omd config change        - change multiple at once. Provide newline separated
 
 def config_show(site, config_hooks, args):
     if len(args) == 0:
-        hook_names = config_hooks.keys()
-        hook_names.sort()
+        hook_names = sorted(config_hooks.keys())
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
             if hook["active"] and not hook["deprecated"]:
@@ -2221,8 +2219,7 @@ def config_show(site, config_hooks, args):
 
 
 def config_configure(site, config_hooks):
-    hook_names = config_hooks.keys()
-    hook_names.sort()
+    hook_names = sorted(config_hooks.keys())
     current_hook_name = ""
     menu_open = False
     current_menu = "Basic"

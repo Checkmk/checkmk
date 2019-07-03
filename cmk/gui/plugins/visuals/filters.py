@@ -2771,8 +2771,7 @@ class FilterECServiceLevelRange(Filter):
         ], [])
 
     def _prepare_choices(self):
-        choices = config.mkeventd_service_levels[:]
-        choices.sort()
+        choices = sorted(config.mkeventd_service_levels[:])
         return [(str(x[0]), "%s - %s" % (x[0], x[1])) for x in choices]
 
     def display(self):

@@ -11,7 +11,7 @@ class Tuploid(object):
     def __eq__(self, other_value):
         if isinstance(other_value, self.__class__):
             return other_value.tuple == self.tuple
-        elif type(other_value) == tuple:
+        elif isinstance(other_value, tuple):
             return all(x == y for x, y in zip(other_value, self.tuple))
 
     def __ne__(self, other_value):
@@ -126,7 +126,7 @@ class BasicCheckResult(Tuploid):
                 assert te in [tuple, PerfValue], \
                        "BasicCheckResult: perfdata entry %r must be of type " \
                        "tuple or PerfValue - not %r" % (entry, te)
-                if type(entry) is tuple:
+                if isinstance(entry, tuple):
                     self.perfdata.append(PerfValue(*entry))
                 else:
                     self.perfdata.append(entry)
@@ -546,7 +546,7 @@ def assertEqual(first, second, descr=''):
     if first == second:
         return
 
-    assert type(first) == type(second), "%sdiffering type: %r != %r for values %r and %r" \
+    assert isinstance(first, type(second)), "%sdiffering type: %r != %r for values %r and %r" \
         % (descr, type(first), type(second), first, second)
 
     if isinstance(first, dict):

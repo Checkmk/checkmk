@@ -1807,8 +1807,7 @@ def get_bi_leaf_history(aggr_rows, time_range, livestatus_limit):
         phases.setdefault(row["from"], {})[(row["host_name"], row["service_description"])] = row
 
     # Convert phases to sorted list
-    sorted_times = phases.keys()
-    sorted_times.sort()
+    sorted_times = sorted(phases.keys())
     phases_list = []
 
     for from_time in sorted_times:

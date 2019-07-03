@@ -51,7 +51,7 @@ def test_options_setter(mk_logwatch, option_string, key, expected_value):
     opt = mk_logwatch.Options()
     opt.set_opt(option_string)
     actual_value = getattr(opt, key)
-    assert type(actual_value) == type(expected_value)
+    assert isinstance(actual_value, type(expected_value))
     assert actual_value == expected_value
 
 
@@ -186,7 +186,7 @@ def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfile
     assert logfiles.files == logfiles_files
     assert len(logfiles.patterns) == len(logfiles_patterns)
     for actual, expected in zip(logfiles.patterns, logfiles_patterns):
-        assert type(actual) == type(expected)
+        assert isinstance(actual, type(expected))
         assert actual == expected
 
 
@@ -297,7 +297,7 @@ def test_log_lines_iter(mk_logwatch):
     assert log_iter.get_position() == 710
 
     line = log_iter.next_line()
-    assert type(line) == unicode
+    assert isinstance(line, unicode)
     assert line == u"# This file is part of Check_MK.\n"
     assert log_iter.get_position() == 743
 

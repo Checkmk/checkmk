@@ -382,8 +382,7 @@ class MobileViewRenderer(views.ViewRenderer):
 
 def show_filter_form(show_filters):
     # Sort filters
-    s = [(f.sort_index, f.title, f) for f in show_filters if f.available()]
-    s.sort()
+    s = sorted([(f.sort_index, f.title, f) for f in show_filters if f.available()])
 
     html.begin_form("filter")
     html.open_ul(**{"data-role": "listview", "data-inset": "false"})

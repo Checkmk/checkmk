@@ -25,8 +25,7 @@ headers = response[0]
 
 # Output all results
 for row in response[1:]:
-    with_headers = zip(headers, row)
-    with_headers.sort()
+    with_headers = sorted(zip(headers, row))
 
     for key, value in with_headers:
         print "%-20s: %s" % (key, value)

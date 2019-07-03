@@ -280,8 +280,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
         return result
 
-    host_checks = check_table.get_check_table(hostname, remove_duplicates=True).items()
-    host_checks.sort()  # Create deterministic order
+    host_checks = sorted(check_table.get_check_table(hostname, remove_duplicates=True).items())
     have_at_least_one_service = False
     used_descriptions = {}
     for ((checkname, item), (params, description, deps)) in host_checks:
@@ -590,8 +589,7 @@ def _create_nagios_config_hostgroups(cfg):
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Host groups (controlled by define_hostgroups)\n")
         outfile.write("# ------------------------------------------------------------\n")
-        hgs = list(cfg.hostgroups_to_define)
-        hgs.sort()
+        hgs = sorted(cfg.hostgroups_to_define)
         for hg in hgs:
             try:
                 alias = config.define_hostgroups[hg]
@@ -620,8 +618,7 @@ def _create_nagios_config_servicegroups(cfg):
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Service groups (controlled by define_servicegroups)\n")
         outfile.write("# ------------------------------------------------------------\n")
-        sgs = list(cfg.servicegroups_to_define)
-        sgs.sort()
+        sgs = sorted(cfg.servicegroups_to_define)
         for sg in sgs:
             try:
                 alias = config.define_servicegroups[sg]
@@ -710,8 +707,7 @@ def _create_nagios_config_timeperiods(cfg):
         cfg.outfile.write("\n# ------------------------------------------------------------\n")
         cfg.outfile.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
         cfg.outfile.write("# ------------------------------------------------------------\n\n")
-        tpnames = config.timeperiods.keys()
-        tpnames.sort()
+        tpnames = sorted(config.timeperiods.keys())
         for name in tpnames:
             tp = config.timeperiods[name]
             timeperiod_spec = {
@@ -739,8 +735,7 @@ def _create_nagios_config_contacts(cfg, hostnames):
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Contact definitions (controlled by variable 'contacts')\n")
         outfile.write("# ------------------------------------------------------------\n\n")
-        cnames = config.contacts.keys()
-        cnames.sort()
+        cnames = sorted(config.contacts.keys())
         for cname in cnames:
             contact = config.contacts[cname]
             # Create contact groups in nagios, even when they are empty. This is needed

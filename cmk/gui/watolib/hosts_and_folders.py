@@ -667,8 +667,7 @@ class CREFolder(BaseFolder):
 
         all_hosts = []  # type: List[str]
         clusters = {}  # type: Dict[str, List[str]]
-        hostnames = self.hosts().keys()
-        hostnames.sort()
+        hostnames = sorted(self.hosts().keys())
         custom_macros = {}  # collect value for attributes that are to be present in Nagios
         cleaned_hosts = {}
         host_tags = {}

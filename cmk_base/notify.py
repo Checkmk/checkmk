@@ -523,8 +523,7 @@ def notify_rulebased(raw_context, analyse=False):
     else:
         # Now do the actual notifications
         notify_log("Executing %d notifications:" % len(notifications))
-        entries = notifications.items()
-        entries.sort()
+        entries = sorted(notifications.items())
         for (contacts, plugin), (locked, params, bulk) in entries:
             verb = "would notify" if analyse else "notifying"
             contactstxt = ", ".join(contacts)
@@ -602,8 +601,7 @@ def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
 # rule indices
 def user_notification_rules():
     user_rules = []
-    contactnames = config.contacts.keys()
-    contactnames.sort()
+    contactnames = sorted(config.contacts.keys())
     for contactname in contactnames:
         contact = config.contacts[contactname]
         for rule in contact.get("notification_rules", []):

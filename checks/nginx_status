@@ -74,8 +74,7 @@ def check_nginx_status(item, params, data):
         per_sec = get_rate("nginx_status.%s" % key, this_time, data[key])
         computed_values['%s_per_sec' % key] = per_sec
 
-    perfdata = data.items()
-    perfdata.sort()
+    perfdata = sorted(data.items())
 
     worst_state = 0
 

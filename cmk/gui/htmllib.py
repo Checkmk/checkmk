@@ -2919,8 +2919,7 @@ class html(HTMLGenerator):
         if self.times:
             self.measure_time('body')
             self.open_div(class_=["execution_times"])
-            entries = self.times.items()
-            entries.sort()
+            entries = sorted(self.times.items())
             for name, duration in entries:
                 self.div("%s: %.1fms" % (name, duration * 1000))
             self.close_div()

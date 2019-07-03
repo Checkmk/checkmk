@@ -94,8 +94,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             hostnames += host_config.nodes
 
     # Then remove clusters and make list unique
-    hostnames = list({h for h in hostnames if not config_cache.get_host_config(h).is_cluster})
-    hostnames.sort()
+    hostnames = sorted({h for h in hostnames if not config_cache.get_host_config(h).is_cluster})
 
     # Now loop through all hosts
     for hostname in hostnames:
@@ -190,8 +189,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
     final_items.sort()
     _save_autochecks_file(hostname, final_items)
 
-    found_check_plugin_names = stats.keys()
-    found_check_plugin_names.sort()
+    found_check_plugin_names = sorted(stats.keys())
 
     if found_check_plugin_names:
         for check_plugin_name in found_check_plugin_names:

@@ -1553,9 +1553,7 @@ def notes_matching_pattern_entries(dirs, item):
     matching = []
     for directory in dirs:
         if os.path.isdir(directory):
-            entries = [d for d in os.listdir(directory) if d[0] != '.']
-            entries.sort()
-            entries.reverse()
+            entries = sorted([d for d in os.listdir(directory) if d[0] != '.'], reverse=True)
             for pattern in entries:
                 if pattern[0] == '.':
                     continue
@@ -1575,9 +1573,7 @@ def paint_custom_notes(what, row):
         dirs = [cmk.utils.paths.default_config_dir + "/notes/hosts"]
         item = host
 
-    files = notes_matching_pattern_entries(dirs, item)
-    files.sort()
-    files.reverse()
+    files = sorted(notes_matching_pattern_entries(dirs, item), reverse=True)
     contents = []
 
     def replace_tags(text):
@@ -1706,8 +1702,7 @@ def paint_custom_vars(what, row, blacklist=None):
     if blacklist is None:
         blacklist = []
 
-    items = row[what + "_custom_variables"].items()
-    items.sort()
+    items = sorted(row[what + "_custom_variables"].items())
     rows = []
     for varname, value in items:
         if varname not in blacklist:

@@ -664,8 +664,7 @@ def output_mors(what, properties, direct=False):
             print '<<<<%s>>>>' % obj_name
 
         print '<<<esx_vsphere_%s>>>' % (what.replace('virtualmachine', 'vm'))
-        items = data.items()
-        items.sort()
+        items = sorted(data.items())
         running_on = ''
         power_state = ''
         for name, value in items:

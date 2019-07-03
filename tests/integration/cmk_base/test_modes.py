@@ -1,8 +1,10 @@
-import pytest
+# pylint: disable=redefined-outer-name
+
 import re
 import subprocess
+import pytest
 
-from testlib import web, repo_path
+from testlib import web, repo_path  # pylint: disable=unused-import
 
 
 @pytest.fixture(scope="module")
@@ -439,7 +441,25 @@ def test_restore(request, test_cfg, site):
 #   |                       |_| |_|\__,_|___/_| |_|                        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-# TODO
+
+
+def test_flush_existing_host(test_cfg, site):
+    p = site.execute(["cmk", "--flush", "modes-test-host4"],
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    assert p.wait() == 0
+    assert stderr == ""
+    assert stdout == "modes-test-host4    : (nothing)\n"
+
+
+def test_flush_not_existing_host(test_cfg, site):
+    p = site.execute(["cmk", "--flush", "bums"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    assert p.wait() == 0
+    assert stderr == ""
+    assert stdout == "bums                : (nothing)\n"
+
 
 #.
 #   .--nagios-config-------------------------------------------------------.
@@ -730,7 +750,6 @@ def test_check_verbose_only_check(test_cfg, site):
 
 
 def test_version(test_cfg, site):
-    import cmk
     p = site.execute(["cmk", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0

@@ -27,7 +27,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
-    Checkbox,
+    DropdownChoice,
     Dictionary,
     Integer,
     Optional,
@@ -132,15 +132,20 @@ cpu_util_common_dict = Dictionary(
              help=_("Here you can set levels on the steal CPU utilization."),
          )),
         ("core_util_graph",
-         Checkbox(
+         DropdownChoice(
              title=_("Graphs for individual cores"),
-             label=_("Enable performance graph for utilization of individual cores"),
              help=_("This adds another graph to the performance CPU utilization "
                     "details page, showing utilization of individual cores. "
                     "Please note that this graph may be impractical on "
                     "device with very many cores. "
                     "This is currently only supported on linux and windows agents "
-                    "as well as devices monitored through the host-resource mib"))),
+                    "as well as devices monitored through the host-resource mib"),
+             choices=[
+                 (True, _("Enable")),
+                 (False, _("Disable")),
+             ],
+             default_value=True,
+         )),
     ],
 )
 

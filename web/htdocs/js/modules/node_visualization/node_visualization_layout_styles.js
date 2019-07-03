@@ -88,7 +88,7 @@ export class AbstractLayoutStyle {
             return
 
         this.options_selection.selectAll("#styleoptions_headline").data([null]).enter()
-                .append("h4")
+                .append("b")
                     .attr("id", "styleoptions_headline")
                     .text("Options")
 
@@ -96,6 +96,7 @@ export class AbstractLayoutStyle {
         table = table.enter().append("table").merge(table)
 
         let rows = table.selectAll("tr").data(style_options)
+        rows.exit().remove()
 
         let rows_enter = rows.enter().append("tr")
         rows_enter.append("td").text(d=>d.text)
@@ -117,6 +118,7 @@ export class AbstractLayoutStyle {
                             })
         rows_enter.append("td").classed("text", true)
         rows = rows_enter.merge(rows)
+
         rows.select("td input.range").property("value",d=>d.value)
         rows.select("td.text").text(d=>d.value)
 
@@ -181,8 +183,8 @@ export class AbstractLayoutStyle {
             this.style_root_node.data.node_type == "bi_leaf") {
 
             // Match by aggr_path: The path of rule_ids up to the node
-            matcher_conditions.aggr_path_id = {value: this.style_root_node.data.aggr_path_id.join("#")}
-            matcher_conditions.aggr_path_name = {value: this.style_root_node.data.aggr_path_name.join("#")}
+            matcher_conditions.aggr_path_id = {value: this.style_root_node.data.aggr_path_id, disabled: true}
+            matcher_conditions.aggr_path_name = {value: this.style_root_node.data.aggr_path_name, disabled: true}
 
             if (this.style_root_node.data.node_type == "bi_aggregator") {
                 // Aggregator: Match by rule_id
@@ -837,19 +839,24 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         let radius = this.style_config.options.radius * (this.max_depth - this.style_root_node.depth + 1)
         let rotation_rad = this.style_config.options.rotation / 360 * 2 * Math.PI
         let tree = d3.cluster().size([(this.style_config.options.degree/360 * 2*Math.PI), radius])
-        tree(this.style_root_node)
+
         this.style_root_node_offsets = []
 
-        for (let idx in this.filtered_descendants) {
-            let node = this.filtered_descendants[idx]
-            let radius_reduction = 0
-            if (!node.children) {
-                radius_reduction = this.style_config.options.radius * 1
-            }
+        if (this.filtered_descendants.length == 1)
+            this.style_root_node_offsets.push([this.style_root_node, 0, 0, 0])
+        else {
+            tree(this.style_root_node)
+            for (let idx in this.filtered_descendants) {
+                let node = this.filtered_descendants[idx]
+                let radius_reduction = 0
+                if (!node.children) {
+                    radius_reduction = this.style_config.options.radius * 1
+                }
 
-            let x = Math.cos(node.x + rotation_rad) * (node.y - radius_reduction)
-            let y = -Math.sin(node.x + rotation_rad) * (node.y - radius_reduction)
-            this.style_root_node_offsets.push([node, x, y, (node.x + rotation_rad) % (2 * Math.PI)])
+                let x = Math.cos(node.x + rotation_rad) * (node.y - radius_reduction)
+                let y = -Math.sin(node.x + rotation_rad) * (node.y - radius_reduction)
+                this.style_root_node_offsets.push([node, x, y, (node.x + rotation_rad) % (2 * Math.PI)])
+            }
         }
     }
 

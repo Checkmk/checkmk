@@ -78,25 +78,10 @@ python-dateutil = "==2.7.5"
 python-snap7 = "==0.10"
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
 PyJWT = "==1.6.4"
-SecretStorage = {version = "==2.3.1", markers = "sys_platform == 'linux2' and python_version < '3.5'"}
 adal = "==1.2.0"
-azure-nspkg = "==3.0.2"
-azure-common = "==1.1.16"
-azure-mgmt-nspkg = "==3.0.2"
-isodate = "==0.6.0"
 oauthlib = "==2.1.0"
 requests-oauthlib = "==1.0.0"
-msrest = "==0.6.1"
-# use azure-mgmt-monitor 0.4.0 and its dependency
-# msrestazure 0.4.34 since the monitor version 0.5.0
-# will not deliver all metrics.
-msrestazure = "==0.4.34"
-azure-mgmt-monitor = "==0.4.0"
-azure-mgmt-resource = "==2.0.0"
-azure-mgmt-compute = "==4.3.1"
 configparser = "==3.5.1"
-entrypoints = "==0.2.3"
-keyring = "==15.1.0"
 Werkzeug = "==0.14.1"
 passlib = "==1.7.1"
 docutils = "==0.14"

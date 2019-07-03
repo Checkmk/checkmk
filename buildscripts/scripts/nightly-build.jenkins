@@ -132,7 +132,7 @@ AGENT_LIST.each { AGENT ->
                 unstash name: 'WinDep'
                 bat 'cd agents\\wnx && call build_release.cmd'
                 dir('artefacts') {
-                    stash name: 'WinMSI', includes: 'check_mk_agent*'
+                    stash name: 'WinMSI', includes: 'check_mk_agent*,check_mk.user.yml'
                 }
             }
         }
@@ -201,6 +201,7 @@ node {
                sh 'rm -rf *'
                unstash name: 'WinMSI'
                sh "mv check_mk_agent* ${DAILY_DATA}/agents/"
+               sh "mv check_mk.user.yml ${DAILY_DATA}/agents/"
                dir("${DAILY_DATA}/git") {
                     if(EDITION != 'raw') {
                         sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
@@ -209,6 +210,7 @@ node {
                     }
                     sh "cp ${DAILY_DATA}/agents/check_mk_agent*.msi agents/windows"
                     sh "cp ${DAILY_DATA}/agents/check_mk_agent*.exe agents/windows"
+                    sh "cp ${DAILY_DATA}/agents/check_mk.user.yml agents/windows"
                     sh 'make dist || cat /root/.npm/_logs/*-debug.log'
                 }
             }

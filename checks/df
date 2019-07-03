@@ -240,12 +240,9 @@ def check_df(item, params, parsed):
     volume_and_mp_to_mp = {
         ("%s %s" % (volume_info[mp]["volume_name"], mp)): mp for mp in volume_info
     }
-    if "patterns" in params or item in volume_info:
-        mountpoint = item
-    elif item in volume_and_mp_to_mp:
+    mountpoint = item
+    if item in volume_and_mp_to_mp and "patterns" not in params and item not in volume_info:
         mountpoint = volume_and_mp_to_mp[item]
-    else:
-        mountpoint = item
     return df_check_filesystem_list(mountpoint, params, df_blocks, df_inodes)
 
 

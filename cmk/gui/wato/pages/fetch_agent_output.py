@@ -266,7 +266,7 @@ class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob
                                  self._request.agent_type)
         title = _("Fetching %s of %s / %s") % (self._request.agent_type, host.site_id(),
                                                host.name())
-        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title)
+        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title, deletable=False)
 
         self.set_function(self._fetch_agent_output)
 

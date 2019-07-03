@@ -22,14 +22,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-Summary:   Check_MK Agent for Linux
+Summary:   Checkmk Agent for Linux
 Name:      check-mk-agent
 Version:   (automatically inserted)
 Release:   1
 License:   GPL
 Group:     System/Monitoring
-URL:       http://mathias-kettner.de/check_mk.html
-Vendor:    Mathias Kettner GmbH
+URL:       https://checkmk.com/
+Vendor:    tribe29 GmbH
 Source:    check-mk-agent-%{_version}.tar.gz
 BuildRoot: %{_topdir}/buildroot
 AutoReq:   off
@@ -39,8 +39,8 @@ Obsoletes: check_mk-agent check_mk_agent
 Provides:  check_mk-agent check_mk_agent
 
 %description
-The Check_MK Agent uses xinetd to provide information about the system
-on TCP port 6556. This can be used to monitor the host via Check_MK.
+The Checkmk Agent uses xinetd or systemd to provide information about the system
+on TCP port 6556. This can be used to monitor the host via Checkmk.
 
 %define _binaries_in_noarch_packages_terminate_build 0
 
@@ -90,7 +90,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %define cleanup_rpmnew if [ -f /etc/xinetd.d/check_mk.rpmnew ] ; then rm /etc/xinetd.d/check_mk.rpmnew ; fi
 
-%define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Check_MK_Agent in systemd..." ; systemctl enable check_mk.socket ; systemctl restart sockets.target ; fi
+%define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Checkmk Agent in systemd..." ; systemctl enable check_mk.socket ; systemctl restart sockets.target ; fi
 
 %pre
 if ! which xinetd >/dev/null 2>&1 && ! which systemctl >/dev/null 2>&1 ; then

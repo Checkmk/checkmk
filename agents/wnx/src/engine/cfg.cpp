@@ -233,6 +233,11 @@ std::wstring GetUserDir() noexcept {
     return details::G_ConfigInfo.getUserDir();
 }
 
+std::wstring GetUpgradeProtocolDir() noexcept {
+    auto dir = details::G_ConfigInfo.getUserDir() / dirs::kInstall;
+    return dir;
+}
+
 std::wstring GetBakeryDir() noexcept {
     return details::G_ConfigInfo.getBakeryDir();
 }
@@ -393,10 +398,8 @@ static std::vector<std::filesystem::path> FillExternalCommandPaths() {
     wstring service_path_old = L"C:\\Program Files (x86)\\check_mk";
     wstring service_path_new = L"C:\\Program Files (x86)\\check_mk_service";
 
-    auto cur_dir = cma::tools::win::GetCurrentFolder();
-    if (!exists(cur_dir)) {
-        cur_dir.resize(0);
-    }
+    std::error_code ec;
+    auto cur_dir = current_path(ec);
 
     wstring exe_path = wtools::GetCurrentExePath();
 
@@ -409,7 +412,7 @@ static std::vector<std::filesystem::path> FillExternalCommandPaths() {
         if (remote_machine_string[0]) full.emplace_back(remote_machine_string);
 
         // tests
-        if (cur_dir.size()) full.emplace_back(cur_dir);
+        if (!cur_dir.empty()) full.emplace_back(cur_dir);
 
         // own path
         if (exe_path.size()) full.emplace_back(exe_path);
@@ -540,10 +543,10 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
 // 2. Public/CorpName/AgentName
 //
 std::filesystem::path Folders::makeDefaultDataFolder(
-    const std::wstring& AgentDataFolder) {
+    std::wstring_view AgentDataFolder) {
     using namespace cma::tools;
     namespace fs = std::filesystem;
-    auto draw_folder = [](const std::wstring& DataFolder) -> auto {
+    auto draw_folder = [](std::wstring_view DataFolder) -> auto {
         fs::path app_data = DataFolder;
         app_data /= cma::cfg::kAppDataCompanyName;
         app_data /= cma::cfg::kAppDataAppName;
@@ -951,6 +954,39 @@ void SetupRemoteHostEnvironment(const std::string& IpAddress) {
 };  // namespace cma::cfg
 
 namespace cma::cfg::details {
+
+std::tuple<bool, std::filesystem::path> IsInstallProtocolExists(
+    const std::filesystem::path& root) {
+    XLOG::l.i("Current root for install protocol '{}'", root.u8string());
+    auto install_file = ConstructInstallFileName(root);
+    std::error_code ec;
+    if (install_file.empty()) return {false, {}};
+
+    return {std::filesystem::exists(install_file, ec), install_file};
+}
+
+void UpdateInstallProtocolFile(bool exists_install_protocol,
+                               const std::filesystem::path& install_file) {
+    if (install_file.empty()) {
+        XLOG::l("Install file cannot be generated, because it is not correct");
+        return;
+    }
+
+    if (exists_install_protocol) {
+        XLOG::l.i("Install protocol exists, no generation.");
+        return;
+    }
+
+    XLOG::l.i("Creating '{}' to indicate that installation is finished",
+              install_file.u8string());
+    std::ofstream ofs(install_file, std::ios::binary);
+
+    if (ofs) {
+        ofs << "Installed:\n";
+        ofs << "  time: '" << cma::cfg::GetTimeString() << "'\n";
+    }
+}
+
 void ConfigInfo::initAll(
     const std::wstring& ServiceValidName,  // look in registry
     const std::wstring& RootFolder,        // look in disk
@@ -958,10 +994,18 @@ void ConfigInfo::initAll(
 {
     initEnvironment();
     folders_.setRoot(ServiceValidName, RootFolder);
+    auto root = folders_.getRoot();
+    auto [exists_install_protocol, install_file] =
+        IsInstallProtocolExists(root);
+
     folders_.createDataFolderStructure(AgentDataFolder);
+    if (folders_.getData().empty())
+        XLOG::l("Data folder is empty.This is bad.");
+    else
+        UpdateInstallProtocolFile(exists_install_protocol, install_file);
 
     // exe
-    auto root = folders_.getRoot();
+    root = folders_.getRoot();
     constexpr const wchar_t* dir_tails[] = {
         dirs::kAgentBin, dirs::kAgentPlugins, dirs::kAgentProviders,
         dirs::kAgentUtils};
@@ -1395,6 +1439,35 @@ bool IsIniFileFromInstaller(const std::filesystem::path& filename) {
 
     auto content = data->data();
     return !memcmp(content, base.data(), base.length());
+}
+
+// generates standard agent time string
+std::string GetTimeString() {
+    using namespace std::chrono;
+    auto cur_time = system_clock::now();
+    auto in_time_t = system_clock::to_time_t(cur_time);
+    std::stringstream sss;
+    auto ms = duration_cast<milliseconds>(cur_time.time_since_epoch()) % 1000;
+    auto loc_time = std::localtime(&in_time_t);
+    auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
+    sss << p_time << "." << std::setfill('0') << std::setw(3) << ms.count()
+        << std::ends;
+
+    return sss.str();
+}
+
+// makes the name of install.protocol file
+// may return empty path
+std::filesystem::path ConstructInstallFileName(
+    const std::filesystem::path& dir) noexcept {
+    namespace fs = std::filesystem;
+    if (dir.empty()) {
+        XLOG::d("Attempt to create install protocol in current folder");
+        return {};
+    }
+    fs::path protocol_file = dir;
+    protocol_file /= cma::cfg::files::kInstallProtocol;
+    return protocol_file;
 }
 
 }  // namespace cma::cfg

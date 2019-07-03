@@ -106,7 +106,7 @@ static std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
     namespace fs = std::filesystem;
     fs::path temp_dir = cma::cfg::GetTempDir();
     auto normal_dir =
-        temp_dir.wstring().find(L"\\temp", 0) != std::wstring::npos;
+        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
     if (normal_dir) {
         std::error_code ec;
         auto lwa_dir = temp_dir / "in";
@@ -116,6 +116,44 @@ static std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
         return {lwa_dir, pd_dir};
     }
     return {};
+}
+
+TEST(UpgradeTest, CheckProtocolUpdate) {
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    auto [old_location, new_location] = CreateInOut();
+    EXPECT_TRUE(
+        UpdateProtocolFile(new_location.wstring(), old_location.wstring()));
+    EXPECT_FALSE(
+        UpdateProtocolFile(new_location.wstring(), new_location.wstring()));
+
+    std::error_code ec;
+    auto old_file = ConstructProtocolFileName(old_location);
+    EXPECT_EQ(
+        old_location.string() + "\\" + std::string(files::kUpgradeProtocol),
+        old_file.string());
+
+    auto x = CreateProtocolFile(old_location, "  old_file");
+    ASSERT_TRUE(fs::exists(old_file, ec));
+
+    EXPECT_TRUE(
+        UpdateProtocolFile(new_location.wstring(), old_location.wstring()));
+    auto new_file = ConstructProtocolFileName(new_location);
+    EXPECT_TRUE(fs::exists(new_file, ec));
+    EXPECT_FALSE(fs::exists(old_file, ec));
+    auto content = cma::tools::ReadFileInString(new_file.string().c_str());
+    ASSERT_TRUE(content.has_value());
+    EXPECT_TRUE(content->find("old_file") != std::string::npos);
+
+    x = CreateProtocolFile(old_location, "  new_file");
+    EXPECT_TRUE(
+        UpdateProtocolFile(new_location.wstring(), old_location.wstring()));
+    EXPECT_TRUE(fs::exists(new_file, ec));
+    EXPECT_FALSE(fs::exists(old_file, ec));
+    content = cma::tools::ReadFileInString(new_file.string().c_str());
+    ASSERT_TRUE(content.has_value());
+    EXPECT_TRUE(content->find("old_file") != std::string::npos);
 }
 
 TEST(UpgradeTest, CreateProtocol) {
@@ -387,8 +425,8 @@ TEST(UpgradeTest, LoadIni) {
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
 
     auto normal_dir =
-        temp_dir.wstring().find(L"\\temp", 0) != std::wstring::npos;
-    ASSERT_TRUE(normal_dir) << "temp dir invalid " << temp_dir;
+        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
+    ASSERT_TRUE(normal_dir) << "tmp dir invalid " << temp_dir;
 
     std::error_code ec;
     auto lwa_dir = temp_dir / "in";

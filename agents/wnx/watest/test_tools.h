@@ -32,7 +32,7 @@ inline void ConstructFile(std::filesystem::path Path,
 }
 
 void SafeCleanTempDir();
-void SafeCleanTempDir(const std::string Sub);
+void SafeCleanTempDir(std::string_view sub_dir);
 
 inline auto CreateIniFile(std::filesystem::path Lwa, const std::string Content,
                           const std::string YamlName) {
@@ -45,7 +45,7 @@ inline std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
     namespace fs = std::filesystem;
     fs::path temp_dir = cma::cfg::GetTempDir();
     auto normal_dir =
-        temp_dir.wstring().find(L"\\temp", 0) != std::wstring::npos;
+        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
     if (normal_dir) {
         std::error_code ec;
         auto lwa_dir = temp_dir / "in";

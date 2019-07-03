@@ -114,7 +114,7 @@ private:
     // #TODO gtest?
     // #TODO into ConfigInfo
     std::filesystem::path makeDefaultDataFolder(
-        const std::wstring& AgentDataFolder);
+        std::wstring_view AgentDataFolder);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //

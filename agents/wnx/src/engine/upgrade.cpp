@@ -741,29 +741,15 @@ bool RunDetachedProcess(const std::wstring& Name) {
     return ret == TRUE;
 }
 
-std::string GetTimeString() {
-    using namespace std::chrono;
-    auto cur_time = system_clock::now();
-    auto in_time_t = system_clock::to_time_t(cur_time);
-    std::stringstream sss;
-    auto ms = duration_cast<milliseconds>(cur_time.time_since_epoch()) % 1000;
-    auto loc_time = std::localtime(&in_time_t);
-    auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
-    sss << p_time << "." << std::setfill('0') << std::setw(3) << ms.count()
-        << std::ends;
-
-    return sss.str();
-}
-
 std::filesystem::path ConstructProtocolFileName(
     const std::filesystem::path& dir) noexcept {
     namespace fs = std::filesystem;
-    fs::path protocol_file = cma::cfg::GetRootDir();
+    fs::path protocol_file = dir;
     protocol_file /= cma::cfg::files::kUpgradeProtocol;
     return protocol_file;
 }
 
-bool CreateProtocolFile(std::filesystem::path& dir,
+bool CreateProtocolFile(const std::filesystem::path& dir,
                         std::string_view OptionalContent) {
     try {
         auto protocol_file = ConstructProtocolFileName(dir);
@@ -771,7 +757,7 @@ bool CreateProtocolFile(std::filesystem::path& dir,
 
         if (ofs) {
             ofs << "Upgraded:\n";
-            ofs << "  time: '" << GetTimeString() << "'\n";
+            ofs << "  time: '" << cma::cfg::GetTimeString() << "'\n";
             if (!OptionalContent.empty()) {
                 ofs << OptionalContent;
                 ofs << "\n";
@@ -799,6 +785,29 @@ static void InfoOnStdio(bool force) {
                             XLOG::Colors::kYellow);
 }
 
+bool UpdateProtocolFile(std::wstring_view new_location,
+                        std::wstring_view old_location) {
+    if (new_location == old_location) return false;
+
+    namespace fs = std::filesystem;
+    auto old_protocol_file_exists = IsProtocolFileExists(old_location);
+    auto new_protocol_file_exists = IsProtocolFileExists(new_location);
+
+    std::error_code ec;
+    if (new_protocol_file_exists && old_protocol_file_exists) {
+        fs::remove(ConstructProtocolFileName(old_location), ec);
+        XLOG::d("Manipulation with old protocol file:remove");
+        return true;
+    }
+
+    if (old_protocol_file_exists) {
+        fs::rename(ConstructProtocolFileName(old_location),
+                   ConstructProtocolFileName(new_location), ec);
+        XLOG::d("Manipulation with old protocol file:rename");
+    }
+    return true;
+}
+
 // The only API entry DIRECTLY used in production
 bool UpgradeLegacy(Force force_upgrade) {
     XLOG::l.i("Starting upgrade(migration) process...");
@@ -812,12 +821,14 @@ bool UpgradeLegacy(Force force_upgrade) {
 
     InfoOnStdio(force);
 
-    std::filesystem::path root_dir = cma::cfg::GetRootDir();
+    auto protocol_dir = cma::cfg::GetUpgradeProtocolDir();
+    auto old_protocol_dir = cma::cfg::GetRootDir();
+    UpdateProtocolFile(protocol_dir, old_protocol_dir);
 
-    if (IsProtocolFileExists(root_dir) && !force) {
+    if (IsProtocolFileExists(protocol_dir) && !force) {
         XLOG::l.i(
             "Protocol File at '{}' exists, upgrade(migration) not required",
-            root_dir.u8string());
+            wtools::ConvertToUTF8(protocol_dir));
         return false;
     }
 
@@ -844,8 +855,9 @@ bool UpgradeLegacy(Force force_upgrade) {
     ConvertIniFiles(path, user_dir);
 
     // PROTOCOL:
+
     XLOG::l.i("Saving protocol file...");
-    CreateProtocolFile(root_dir, {});
+    CreateProtocolFile(protocol_dir, {});
 
     return true;
 }

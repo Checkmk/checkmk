@@ -52,6 +52,7 @@ constexpr const wchar_t* kDefaultUserExt = L".user.yml";
 
 // special
 constexpr std::string_view kUpgradeProtocol = "upgrade.protocol";
+constexpr std::string_view kInstallProtocol = "install.protocol";
 constexpr std::string_view kAgentUpdater = "cmk-update-agent.exe";
 
 // located in test_files/config
@@ -118,6 +119,7 @@ std::wstring GetSystemPluginsDir() noexcept;
 std::wstring GetRootDir() noexcept;
 std::wstring GetFileInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetUserDir() noexcept;
+std::wstring GetUpgradeProtocolDir() noexcept;
 std::wstring GetBakeryDir() noexcept;
 std::filesystem::path GetBakeryFile() noexcept;
 std::wstring GetLocalDir() noexcept;
@@ -990,7 +992,9 @@ bool IsIniFileFromInstaller(const std::filesystem::path& filename);
 enum class InstallationType { packaged, wato, unknown };
 InstallationType DetermineInstallationType() noexcept;
 void SetTestInstallationType(cma::cfg::InstallationType installation_type);
-
+std::filesystem::path ConstructInstallFileName(
+    const std::filesystem::path& dir) noexcept;
+std::string GetTimeString();
 }  // namespace cma::cfg
 
 #include "cfg_details.h"

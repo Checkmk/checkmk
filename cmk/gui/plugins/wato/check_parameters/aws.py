@@ -508,7 +508,7 @@ class RulespecCheckgroupParametersAwsEc2Limits(CheckParameterRulespecWithoutItem
 
 
 @rulespec_registry.register
-class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithoutItem):
+class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithItem):
     @property
     def group(self):
         return RulespecGroupCheckParametersApplications
@@ -537,6 +537,10 @@ class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithout
                 ],
             ),
         )],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("The service name"))
 
 
 #.

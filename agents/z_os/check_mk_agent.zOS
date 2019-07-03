@@ -36,8 +36,7 @@ dir=$(pwd)
 
 # Processes
 echo '<<<ps>>>'
-echo 'ps -ef -o user,vsz,vsz64,pcpu,comm' | su | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
-
+echo 'COLUMNS=10000 ps -ef -o user,vsz,vsz64,time,etime,pid,args' | su | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\  ) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
 
 # Uptime
 echo '<<<uptime>>>'

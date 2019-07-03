@@ -1,0 +1,85 @@
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+factory_settings['keepalived_default_levels'] = {
+        'master'  : '0',
+        'unknown' : '3',
+        'init'    : '0',
+        'backup'  : '0',
+        'fault'   : '2',
+}
+
+def hex2ip(hexstr):
+    """
+    Can parse strings in this form:
+    17 20 16 00 00 01
+    """
+    hexstr = hexstr.replace(' ', '')
+    blocks = (''.join(block) for block in zip(*[iter(hexstr)]*2))
+    blocks = (int(block, 16) for block in blocks)
+    return '.'.join(str(block) for block in blocks)
+
+def inventory_keepalived(info):
+    for entry in info[0]:
+        vrrp_id=entry[0]
+        yield vrrp_id, None
+
+def check_keepalived(item,params,info):
+    map_state = {
+        "0" : "init",
+        "1" : "backup",
+        "2" : "master",
+        "3" : "fault",
+        "4" : "unknown",
+    }
+    status = 3
+    infotext = "Item not found in output"
+    for id,entry in enumerate(info[0]):
+        vrrp_id=entry[0]
+        address=info[1][id][0]
+        hexaddr=address.encode("latin-1").encode("hex")
+        if vrrp_id == item:
+            status = params[map_state[str(entry[1])]]
+            infotext = "This node is %s. IP Address: %s" %(map_state[str(entry[1])],hex2ip(hexaddr))
+    yield int(status),infotext
+
+check_info['keepalived'] = {
+    'inventory_function'      : inventory_keepalived,
+    'default_levels_variable' : 'keepalived_default_levels',
+    'check_function'          : check_keepalived,
+    'service_description'     : 'VRRP Instance %s',
+    'snmp_info'               : [('.1.3.6.1.4.1.9586.100.5.2.3.1', [
+                                        '2', #vrrpInstance
+                                        '4', #vrrpInstanceState
+                                        ]
+                                 ),
+                                 ('.1.3.6.1.4.1.9586.100.5.2', [
+                                        '6.1.3', #vrrpAddressValue
+                                        ]
+                                 )
+                                ],
+    'snmp_scan_function'      : lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
+                                oid(".1.3.6.1.4.1.9586.100.5.1.1.0") != None,
+    'group'                   : 'keepalived',
+}

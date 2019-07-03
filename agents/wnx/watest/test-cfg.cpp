@@ -53,6 +53,21 @@ std::string wato_ini =
 
 extern void SetTestInstallationType(InstallationType);
 
+TEST(CmaCfg, SmallFoos) {
+    auto s = GetTimeString();
+    EXPECT_TRUE(!s.empty());
+}
+
+TEST(CmaCfg, InstallProtocol) {
+    auto name = ConstructInstallFileName(cma::cfg::GetRootDir());
+    EXPECT_TRUE(!name.empty());
+    auto str = name.string();
+    EXPECT_TRUE(str.find(files::kInstallProtocol) != std::string::npos);
+
+    name = ConstructInstallFileName("");
+    EXPECT_TRUE(name.empty());
+}
+
 TEST(CmaCfg, ProcessPluginEnvironment) {
     //
     cma::OnStartTest();

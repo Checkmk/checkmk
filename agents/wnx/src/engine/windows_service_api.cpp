@@ -113,9 +113,9 @@ static bool execMsi() {
 // execute it
 static void CheckForCommand(std::string& Command) {
     Command = "";
-    char dir[MAX_PATH * 2] = "";
-    GetCurrentDirectoryA(MAX_PATH * 2, dir);
-    std::cout << dir << ": tick\n";
+    std::error_code ec;
+    auto dir = std::filesystem::current_path(ec);
+    std::cout << dir.u8string() << ": tick\n";
     try {
         constexpr const char* kUpdateFileCommandDone = "update.command.done";
         std::string done_file_name = kUpdateFileCommandDone;
@@ -147,24 +147,25 @@ static void CheckForCommand(std::string& Command) {
         if (length > MAX_PATH) {
             // sanity check - too long file will be ignored
             xlog::l("File %s is too big", command_file_name.c_str()).print();
-            command_file.close();
-        } else {
-            // store command & rename file
-            char buffer[MAX_PATH * 2];
-            command_file.read(buffer, length);
-            buffer[length] = 0;
-            command_file.close();
-            auto ret =
-                ::MoveFileA(command_file_name.c_str(), done_file_name.c_str());
-            if (ret) {
-                Command = buffer;
-                xlog::l("To exec %s", Command.c_str());
-                execMsi();
-            } else {
-                xlog::l("Cannot Rename File from to %s %s with error %d",
-                        done_file_name.c_str(), GetLastError());
-            }
+            return;
         }
+
+        // store command & rename file
+        char buffer[MAX_PATH * 2];
+        command_file.read(buffer, length);
+        buffer[length] = 0;
+        command_file.close();
+        auto ret =
+            ::MoveFileA(command_file_name.c_str(), done_file_name.c_str());
+        if (ret) {
+            Command = buffer;
+            xlog::l("To exec %s", Command.c_str());
+            execMsi();
+            return;
+        }
+
+        xlog::l("Cannot Rename File from to %s %s with error %d",
+                done_file_name.c_str(), GetLastError());
     } catch (...) {
     }
     return;

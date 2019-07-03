@@ -21,6 +21,11 @@ constexpr std::string_view kBakeryMarker =
 enum class Force { no, yes };
 bool UpgradeLegacy(Force force_upgrade = Force::no);
 
+// optionally move protocol file from old location to new one
+// return true if location are different
+bool UpdateProtocolFile(std::wstring_view new_location,
+                        std::wstring_view old_location);
+
 // Intermediate API
 // accepts only "CheckMK\\Agent" ending path as program data
 // return count of files copied
@@ -55,7 +60,7 @@ std::filesystem::path CreateBakeryYamlFromIni(
     ) noexcept;
 
 // after upgrade we create in root our protocol
-bool CreateProtocolFile(std::filesystem::path& dir,
+bool CreateProtocolFile(const std::filesystem::path& dir,
                         std::string_view OptionalContent);
 // LOW level
 // gtest [+]

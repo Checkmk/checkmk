@@ -79,9 +79,10 @@ cpu_util_common_dict = Dictionary(
                     "as well as devices monitored through the host-resource mib"))),
         ("average",
          Integer(
-             title=_("Averaging"),
-             help=_("When this option is activated then the CPU utilization is being "
-                    "averaged <b>before</b> the levels are being applied."),
+             title=_("Averaging for total CPU utilization"),
+             help=_(
+                 "When this option is activated then the CPU utilization is being "
+                 "averaged <b>before</b> the levels on total CPU utilization are being applied."),
              unit=_("minutes"),
              minvalue=1,
              default_value=15,

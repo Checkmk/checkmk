@@ -997,7 +997,7 @@ modes.register(
         argument=True,
         argument_descr="HOST1 HOST2...",
         argument_optional=True,
-        needs_config=False,
+        needs_config=True,
         short_help="Flush all data of some or all hosts",
         long_help=[
             "Deletes all runtime data belonging to a host. This includes "

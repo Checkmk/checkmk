@@ -143,7 +143,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         return rowinfo
 
     def _get_rowinfo_from_snmp_process(self, snmp_process):
-        line_iter = snmp_process.stdout.xreadlines()
+        line_iter = snmp_process.stdout
         # Ugly(1): in some cases snmpwalk inserts line feed within one
         # dataset. This happens for example on hexdump outputs longer
         # than a few bytes. Those dumps are enclosed in double quotes.

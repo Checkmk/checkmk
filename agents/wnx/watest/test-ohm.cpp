@@ -49,10 +49,10 @@ TEST(SectionProviderOhm, ReadData) {
         for (auto i = 0; i < 30; ++i) {
             out = ohm.generateContent(section::kUseEmbeddedName, true);
             if (!out.empty()) break;
-            xlog::sendStringToStdio(".", Colors::kYellow);
+            xlog::sendStringToStdio(".", Colors::yellow);
             ::Sleep(500);
         }
-        xlog::sendStringToStdio("\n", Colors::kYellow);
+        xlog::sendStringToStdio("\n", Colors::yellow);
         EXPECT_TRUE(!out.empty()) << "Probably you have to clean ohm";
         if (!out.empty()) {
             // testing output
@@ -101,7 +101,7 @@ namespace cma::srv {
 int CalcOhmCount() {
     using namespace cma::tools;
     int count = 0;
-    std::string ohm_name{cma::provider::kOpenHardwareMonitorCli};
+    std::string ohm_name{cma::provider::ohm::kExeModule};
     StringLower(ohm_name);
 
     wtools::ScanProcessList(
@@ -144,6 +144,48 @@ TEST(SectionProviderOhm, DoubleStart) {
     EXPECT_EQ(count, 0) << "OHM is not killed";
 }
 
+TEST(SectionProviderOhm, ErrorReporting) {
+    using namespace cma::provider;
+    namespace fs = std::filesystem;
+
+    XLOG::l.t("Killing open hardware monitor...");
+    auto test_count = wtools::FindProcess(L"Explorer.exe");
+    EXPECT_TRUE(test_count > 0);
+
+    auto ohm_count = wtools::FindProcess(ohm::kExeModuleWide);
+    fs::path ohm_exe = GetOhmCliPath();
+    if (ohm_count) {
+        XLOG::SendStringToStdio("OHM is running...", XLOG::Colors::yellow);
+
+        // Presence
+        auto result = cma::tools::IsValidRegularFile(ohm_exe);
+        if (!result) {
+            XLOG::SendStringToStdio(
+                "OHM exe not found, will not stop running OHM, test skipped",
+                XLOG::Colors::yellow);
+            return;
+        }
+
+        for (int i = 0; i < ohm_count; ++i) {
+            wtools::KillProcess(ohm::kExeModuleWide, 1);
+        }
+    }
+
+    OhmProvider ohm(provider::kOhm, ohm::kSepChar);
+    auto x = ohm.generateContent("buzz", true);
+    EXPECT_TRUE(x.empty());
+    EXPECT_EQ(ohm.errorCount(), 1);
+    if (ohm_count) {
+        cma::tools::RunDetachedCommand(ohm_exe.u8string());
+    }
+}
+
+TEST(SectionProviderOhm, ResetOhm) {
+    std::wstring x(cma::provider::ohm::kResetCommand);
+    XLOG::l.i("out = {}", wtools::ConvertToUTF8(x));
+    EXPECT_FALSE(x.empty());
+}
+
 TEST(SectionProviderOhm, StartStop) {
     namespace fs = std::filesystem;
     TheMiniProcess oprocess;
@@ -153,8 +195,8 @@ TEST(SectionProviderOhm, StartStop) {
 
     // this approximate logic to find OHM executable
     fs::path ohm_exe = cma::cfg::GetUserDir();
-    ohm_exe /= cma::cfg::dirs::kAgentBin;
-    ohm_exe /= cma::provider::kOpenHardwareMonitorCli;
+    ohm_exe /= cma::cfg::dirs::kUserBin;
+    ohm_exe /= cma::provider::ohm::kExeModule;
     // Now check this logic vs API
     EXPECT_EQ(cma::provider::GetOhmCliPath(), ohm_exe);
     // Presence

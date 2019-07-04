@@ -119,7 +119,7 @@ TEST(CapTest, PackagedAgent) {
             fmt::format(
                 "Skipping Cap packagedAgen internal TEST, no file '{}'\n",
                 ini_path.string()),
-            XLOG::Colors::kYellow);
+            XLOG::Colors::yellow);
 
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););

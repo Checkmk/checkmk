@@ -220,12 +220,15 @@ bool KillProcess(uint32_t process_id, int exit_code = -1) noexcept;
 
 // process terminator
 // used to kill OpenHardwareMonitor
-bool KillProcess(const std::wstring& process_name, int exit_code = 9) noexcept;
+bool KillProcess(std::wstring_view process_name, int exit_code = 9) noexcept;
 
-// special function to kill suspicious processes with all here childs
+// special function to kill suspicious processes with all here children
 // useful mostly to stop legacy agent which may have plugins running
 bool KillProcessFully(const std::wstring& process_name,
                       int exit_code = 9) noexcept;
+
+// calculates count of processes in the system
+int FindProcess(std::wstring_view process_name) noexcept;
 
 // WIN32 described method of killing process tree
 inline void KillProcessTree(uint32_t ProcessId) {

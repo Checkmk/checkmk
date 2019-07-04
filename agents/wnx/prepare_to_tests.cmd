@@ -20,7 +20,7 @@ if not exist "..\windows\plugins" powershell Write-Host "Folder agents\windows\p
 
 powershell Write-Host "Installation simulation Root Folder: plugins, ohm, yml"  -Foreground Green
 copy ..\windows\plugins\*.*         	%root%\plugins\ > nul || powershell Write-Host "Failed plugins copy" -Foreground Red	&& exit 3
-copy .\test_files\ohm\cli\*.*       	%user_dir%\bin\ > nul || powershell Write-Host "Failed ohm copy. Try to kill Open Hardware Monitor: taskkill /F /IM OpenhardwareMonitorCLI.exe" -Foreground Red		&& exit 4
+copy .\test_files\ohm\cli\*.*       	%user_dir%\bin\ > nul || powershell Write-Host "Failed ohm copy. Try to kill Open Hardware Monitor: taskkill /F /IM OpenhardwareMonitorCLI.exe" -Foreground Yellow
 copy .\install\resources\check_mk.yml  	%root%\ > nul         || powershell Write-Host "Failed check_mk.yml copy" -Foreground Red	&& exit 5
 copy .\install\resources\check_mk.ini  	%root%\ > nul         || powershell Write-Host "Failed check_mk.ini copy" -Foreground Red	&& exit 5
 

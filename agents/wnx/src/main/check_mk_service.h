@@ -44,6 +44,8 @@ constexpr std::string_view kSectionParamShow = "-show";  // logging sub param
 
 constexpr std::string_view kShowConfigParam = "showconfig";  // show config
 
+constexpr std::string_view kResetOhm = "resetohm";  // reset ohm as treasury
+
 // Service name and Targeting
 #if defined(CMK_SERVICE_NAME)
 constexpr const char* const kServiceExeName = "check_mk_agent.exe";

@@ -255,13 +255,13 @@ std::string Wmi::makeBody() {
 
     XLOG::t.i("WMI main section '{}'", getUniqName());
 
-    auto sep = CharToWideString(separator_);
+    auto sep = CharToWideString(separator());
     auto [data, status] = GenerateWmiTable(name_space_, object_, columns_, sep);
 
     // on timeout: reuse cache and ignore data, even if partially filled
     if (status == wtools::WmiStatus::timeout) {
         XLOG::d("On timeout in section '{}' try reuse cache", getUniqName());
-        return WmiCachedDataHelper(cache_, {}, separator_);
+        return WmiCachedDataHelper(cache_, {}, separator());
     }
 
     // on ok: update cache and send data as usually
@@ -272,7 +272,7 @@ std::string Wmi::makeBody() {
         }
 
         // only normal return
-        return WmiCachedDataHelper(cache_, data, separator_);
+        return WmiCachedDataHelper(cache_, data, separator());
     }
 
     // all other errors means disaster and we sends NOTHING

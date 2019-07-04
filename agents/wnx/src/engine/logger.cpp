@@ -108,7 +108,7 @@ CalcLogParam(const xlog::LogParam &Param, int Modifications) {
     auto directions = lp.directions_;
     auto flags = lp.flags_;
     using namespace fmt::v5;
-    auto c = Colors::kDefault;
+    auto c = Colors::dflt;
 
     if (Modifications & Mods::kStdio) directions |= xlog::kStdioPrint;
     if (Modifications & Mods::kNoStdio) directions &= ~xlog::kStdioPrint;
@@ -131,17 +131,17 @@ CalcLogParam(const xlog::LogParam &Param, int Modifications) {
             marker = "[ERROR:CRITICAL] ";
             flags &= ~xlog::kNoPrefix;
             directions |= xlog::kEventPrint;
-            c = Colors::kPinkLight;
+            c = Colors::pink_light;
             break;
 
         case Mods::kError:
             marker = "[Err  ] ";
-            c = Colors::kRed;
+            c = Colors::red;
             break;
 
         case Mods::kWarning:
             marker = "[Warn ] ";
-            c = Colors::kYellow;
+            c = Colors::yellow;
             break;
 
         case Mods::kTrace:
@@ -150,7 +150,7 @@ CalcLogParam(const xlog::LogParam &Param, int Modifications) {
         case Mods::kInfo:
         default:
             // nothing here, empty.
-            c = xlog::internal::Colors::kGreen;
+            c = xlog::internal::Colors::green;
             break;
     }
 

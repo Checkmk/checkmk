@@ -13,6 +13,7 @@
 #include "external_port.h"
 #include "realtime.h"
 #include "tools/_process.h"
+#include "upgrade.h"
 #include "yaml-cpp/yaml.h"
 
 namespace cma::srv {
@@ -228,6 +229,28 @@ void ServiceProcessor::detachedPluginsStart() {
     plugins.detachedStart();
 }
 
+void ServiceProcessor::resetOhm() noexcept {
+    using namespace cma::cfg::upgrade;
+    auto powershell_exe = cma::FindPowershellExe();
+    if (powershell_exe.empty()) {
+        XLOG::l("NO POWERSHELL!");
+        return;
+    }
+
+    // terminating all
+    wtools::KillProcess(cma::provider::ohm::kExeModuleWide, 1);
+    StopWindowsService(cma::provider::ohm::kDriverNameWide);
+    auto status = WaitForStatus(GetServiceStatusByName,
+                                cma::provider::ohm::kDriverNameWide,
+                                SERVICE_STOPPED, 5000);
+    auto cmd_line = powershell_exe;
+    cmd_line += L" ";
+    cmd_line += std::wstring(cma::provider::ohm::kResetCommand);
+    XLOG::l.i("I'm going to execute '{}'", wtools::ConvertToUTF8(cmd_line));
+
+    cma::tools::RunStdCommand(cmd_line, true);
+}
+
 // conditions are: yml + exists(ohm) + elevated
 // true on successful start or if OHM is already started
 bool ServiceProcessor::conditionallyStartOhm() noexcept {
@@ -247,13 +270,27 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
     }
 
     auto ohm_exe = cma::provider::GetOhmCliPath();
-    if (IsValidRegularFile(ohm_exe)) {
-        ohm_process_.start(ohm_exe.wstring());
-        return true;
+    if (!IsValidRegularFile(ohm_exe)) {
+        XLOG::d("OHM file '{}' is not found", ohm_exe.u8string());
+        return false;
     }
 
-    XLOG::d("OHM file '{}' is not found", ohm_exe.u8string());
-    return false;
+    auto error_count = ohm_engine.errorCount();
+    if (error_count > cma::cfg::kMaxOhmErrorsBeforeRestart) {
+        XLOG::l(
+            "Too many errors [{}] on the OHM, stopping, cleaning and starting",
+            error_count);
+        // no ohm, nop reset
+        auto running = ohm_process_.running();
+        if (running) ohm_process_.stop();
+
+        resetOhm();
+
+        ohm_engine.resetError();
+        if (running) ohm_process_.start(ohm_exe.wstring());
+    } else
+        ohm_process_.start(ohm_exe.wstring());
+    return true;
 }
 
 // This is relative simple function which kicks to call

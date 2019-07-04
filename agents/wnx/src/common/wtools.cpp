@@ -1727,7 +1727,7 @@ bool KillProcess(uint32_t ProcessId, int Code) noexcept {
 
 // process terminator
 // used to kill OpenHardwareMonitor
-bool KillProcess(const std::wstring& process_name, int exit_code) noexcept {
+bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
     auto snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
     if (snapshot == nullptr) return false;
 
@@ -1739,7 +1739,8 @@ bool KillProcess(const std::wstring& process_name, int exit_code) noexcept {
     entry32.dwSize = sizeof(entry32);
     auto result = Process32First(snapshot, &entry32);
     while (0 != result) {
-        if (cma::tools::IsEqual(entry32.szExeFile, process_name) &&
+        if (cma::tools::IsEqual(std::wstring_view(entry32.szExeFile),
+                                process_name) &&
             (entry32.th32ProcessID != current_process_id)) {
             auto process =
                 OpenProcess(PROCESS_TERMINATE, 0, entry32.th32ProcessID);
@@ -1839,7 +1840,7 @@ bool ScanProcessList(std::function<bool(const PROCESSENTRY32&)> op) {
     return true;
 }
 
-// finds all process and kills them with all their childs
+// finds all process and kills them with all their children
 bool KillProcessFully(const std::wstring& process_name,
                       int exit_code) noexcept {
     std::vector<DWORD> processes_to_kill;
@@ -1860,6 +1861,23 @@ bool KillProcessFully(const std::wstring& process_name,
     }
 
     return true;
+}
+
+// finds all process and kills them with all their children
+int FindProcess(std::wstring_view process_name) noexcept {
+    std::vector<DWORD> processes_to_kill;
+    int count = 0;
+    std::wstring name(process_name);
+    cma::tools::WideLower(name);
+    ScanProcessList([&processes_to_kill, name,
+                     &count](const PROCESSENTRY32& entry) -> bool {
+        std::wstring incoming_name = entry.szExeFile;
+        cma::tools::WideLower(incoming_name);
+        if (name == incoming_name) count++;
+        return true;
+    });
+
+    return count;
 }
 
 }  // namespace wtools

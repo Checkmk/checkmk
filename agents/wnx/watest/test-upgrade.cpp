@@ -701,7 +701,7 @@ TEST(UpgradeTest, StopStartStopOhm) {
     if (!fs::exists(ohm)) {
         xlog::sendStringToStdio(
             "OHM is not installed with LWA, further testing of OHM is skipped\n",
-            xlog::internal::Colors::kYellow);
+            xlog::internal::Colors::yellow);
         return;
     }
     ASSERT_TRUE(fs::exists(ohm))
@@ -750,7 +750,7 @@ TEST(UpgradeTest, FindLwa_Long) {
     if (!fs::exists(ohm, ec)) {
         xlog::sendStringToStdio(
             "OHM is not installed with LWA, testing is limited\n",
-            xlog::internal::Colors::kYellow);
+            xlog::internal::Colors::yellow);
         StartWindowsService(L"check_mk_agent");
         // wait for service status
         for (int i = 0; i < 5; ++i) {
@@ -767,7 +767,7 @@ TEST(UpgradeTest, FindLwa_Long) {
         auto status = GetServiceStatusByName(L"check_mk_agent");
         if (status != SERVICE_STOPPED) {
             xlog::sendStringToStdio("Service Killed with a hammer\n",
-                                    xlog::internal::Colors::kYellow);
+                                    xlog::internal::Colors::yellow);
             wtools::KillProcessFully(L"check_mk_agent.exe", 9);
 
             status = SERVICE_STOPPED;
@@ -815,7 +815,7 @@ TEST(UpgradeTest, FindLwa_Long) {
     status = GetServiceStatusByName(L"check_mk_agent");
     if (status != SERVICE_STOPPED) {
         xlog::sendStringToStdio("Service Killed with a hammer\n",
-                                xlog::internal::Colors::kYellow);
+                                xlog::internal::Colors::yellow);
         wtools::KillProcessFully(L"check_mk_agent.exe", 9);
 
         // normally this is not mandatory, but we may have few OHM running

@@ -119,8 +119,8 @@ Service:             CPU utilization
 Event:               OK -> WARN
 Address:             127.0.0.1
 Date / Time:         Wed Mar 20 16:51:46 CET 2019
-Plugin Output:       &lt;script&gt;console.log("evil");&lt;/script&gt; Ok (!)
-Additional Output:   &lt;script&gt;console.log("evil");&lt;/script&gt;(!)
+Plugin Output:       &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok (!)
+Additional Output:   &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;(!)
 another line\\nlast line
 Host Metrics:        \n\
 Service Metrics:     \n\
@@ -148,17 +148,17 @@ def test_mail_content_from_context(mocker):
     assert content.context[
         "EVENT_HTML"] == '<span class="stateOK">OK</span> &rarr; <span class="stateWARNING">WARNING</span>'
     assert content.context[
-        "HOSTOUTPUT"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;Packet received via smart PING (!)'
+        "HOSTOUTPUT"] == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;Packet received via smart PING (!)'
     assert content.context[
-        "HOSTOUTPUT_HTML"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;Packet received via smart PING <b class="stmarkWARNING">WARN</b>'
+        "HOSTOUTPUT_HTML"] == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;Packet received via smart PING <b class="stmarkWARNING">WARN</b>'
     assert content.context[
-        "SERVICEOUTPUT"] == '&lt;script&gt;console.log("evil");&lt;/script&gt; Ok (!)'
+        "SERVICEOUTPUT"] == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok (!)'
     assert content.context[
-        "SERVICEOUTPUT_HTML"] == '&lt;script&gt;console.log("evil");&lt;/script&gt; Ok <b class="stmarkWARNING">WARN</b>'
+        "SERVICEOUTPUT_HTML"] == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok <b class="stmarkWARNING">WARN</b>'
     assert content.context[
-        "LONGSERVICEOUTPUT"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;(!)\nanother line\\nlast line'
+        "LONGSERVICEOUTPUT"] == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;(!)\nanother line\\nlast line'
     assert content.context[
-        "LONGSERVICEOUTPUT_HTML"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;<b class="stmarkWARNING">WARN</b><br>another line<br>last line'
+        "LONGSERVICEOUTPUT_HTML"] == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;<b class="stmarkWARNING">WARN</b><br>another line<br>last line'
 
     assert content.mailto == 'test@abc.de'
     assert content.subject == 'Check_MK: heute/CPU utilization OK -> WARN'

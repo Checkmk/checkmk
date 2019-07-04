@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e04626f668f64b9318eaa4b7969995d7b44401202051fc9f7edeb8b47d7b0de7"
+            "sha256": "f19e0f2974b0458ae76c8afb7462dbd4989aba1fed7216439b2835f69fc1984e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -232,6 +232,13 @@
             ],
             "index": "pypi",
             "version": "==0.8"
+        },
+        "future": {
+            "hashes": [
+                "sha256:67045236dcfd6816dc439556d009594abf643e5eb48992e36beac09c2ca659b8"
+            ],
+            "index": "pypi",
+            "version": "==0.17.1"
         },
         "futures": {
             "hashes": [
@@ -1049,7 +1056,7 @@
                 "sha256:9d98697f088eb1b0fa451391f91afb5e3ebde16bbdb272819fd091151fda4f1a",
                 "sha256:f0b0e4eba956de51238e17573b7087e852dfe9854afd2e9c873f73fc0ca0a6dd"
             ],
-            "markers": "python_version < '3'",
+            "markers": "python_version == '2.7'",
             "version": "==1.5"
         },
         "backports.ssl-match-hostname": {
@@ -1179,13 +1186,6 @@
             ],
             "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2' and python_version < '4'",
             "version": "==4.5.3"
-        },
-        "dill": {
-            "hashes": [
-                "sha256:993409439ebf7f7902d9de93eaa2a395e0446ff773d29f13dc46646482f76906"
-            ],
-            "index": "pypi",
-            "version": "==0.3.0"
         },
         "docker": {
             "hashes": [

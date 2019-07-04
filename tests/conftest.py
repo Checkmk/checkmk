@@ -6,9 +6,7 @@ import pytest
 pytest.register_assert_rewrite(
     "testlib",  #
     "unit.checks.checktestlib",  #
-    "unit.checks.generictests.run",  #
-    "unit.cmk.gui.old.html_tests",  #
-    "unit.cmk.gui.tools")
+    "unit.checks.generictests.run")
 
 import _pytest.monkeypatch
 import re

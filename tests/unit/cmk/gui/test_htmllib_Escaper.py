@@ -20,7 +20,7 @@ def test_htmllib_integration(register_builtin_html):
     (htmllib.HTML("\">alert(1)"), "\">alert(1)"),
     (1.1, "1.1"),
     ("<", "&lt;"),
-    ("'", "'"),
+    ("'", "&#x27;"),
 ])
 def test_escape_attribute(inp, out):
     assert htmllib.Escaper().escape_attribute(inp) == out

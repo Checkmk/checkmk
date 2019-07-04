@@ -247,10 +247,10 @@ def assertCheckResultsEqual(actual, expected):
                "%r is not a CheckResult instance" % actual
         assert isinstance(expected, CheckResult), \
                "%r is not a CheckResult instance" % expected
-        assert len(actual.subresults) == len(expected.subresults), \
-               "subresults not of equal length (expected %d)" % len(expected.subresults)
         for suba, sube in zip(actual.subresults, expected.subresults):
             assertBasicCheckResultsEqual(suba, sube)
+        len_ac, len_ex = len(actual.subresults), len(expected.subresults)
+        assert len_ac == len_ex, "expected %d subresults, but got %d instead" % (len_ac, len_ex)
 
 
 class DiscoveryEntry(Tuploid):

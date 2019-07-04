@@ -24,19 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-veeam_tapejobs_default_levels = (1*3600*24, 2*3600*24)
+veeam_tapejobs_default_levels = (1 * 3600 * 24, 2 * 3600 * 24)
+
 
 def parse_veeam_tapejobs(info):
     parsed = {}
     columns = map(lambda s: s.lower(), info[0])
 
     for line in info[1:]:
-        name = " ".join( line[:-(len(columns)-1)] )
-        job_id, last_result, last_state = line[-(len(columns)-1):]
+        name = " ".join(line[:-(len(columns) - 1)])
+        job_id, last_result, last_state = line[-(len(columns) - 1):]
         parsed[name] = {
-            "job_id"        : job_id,
-            "last_result"   : last_result,
-            "last_state"    : last_state,
+            "job_id": job_id,
+            "last_result": last_result,
+            "last_state": last_state,
         }
 
     return parsed
@@ -88,11 +89,10 @@ def check_veeam_tapejobs(item, params, parsed):
             return 2, "Last backup result: " + last_result + statetext
 
 
-
 check_info["veeam_tapejobs"] = {
-    'parse_function'        :   parse_veeam_tapejobs,
-    'inventory_function'    :   inventory_veeam_tapejobs,
-    'check_function'        :   check_veeam_tapejobs,
-    'service_description'   :   'VEEAM Tape Job %s',
-    'group'                 :   'veeam_tapejobs',
+    'parse_function': parse_veeam_tapejobs,
+    'inventory_function': inventory_veeam_tapejobs,
+    'check_function': check_veeam_tapejobs,
+    'service_description': 'VEEAM Tape Job %s',
+    'group': 'veeam_tapejobs',
 }

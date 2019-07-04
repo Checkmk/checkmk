@@ -6,10 +6,12 @@
 #include <cstdint>
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 #include "cvt.h"
 #include "glob_match.h"
 #include "logger.h"
+#include "providers/ohm.h"
 #include "tools/_misc.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
@@ -267,7 +269,7 @@ int SendServiceCommand(SC_HANDLE Handle, uint32_t Command) {
 }
 
 std::tuple<SC_HANDLE, SC_HANDLE, DWORD> OpenServiceForControl(
-    const std::wstring& service_name) {
+    std::wstring_view service_name) {
     auto manager_handle =
         ::OpenSCManager(nullptr,                 // local computer
                         nullptr,                 // ServicesActive database
@@ -282,8 +284,8 @@ std::tuple<SC_HANDLE, SC_HANDLE, DWORD> OpenServiceForControl(
     // Get a handle to the service.
 
     auto handle =
-        ::OpenService(manager_handle,        // SCM database
-                      service_name.c_str(),  // name of service
+        ::OpenService(manager_handle,       // SCM database
+                      service_name.data(),  // name of service
                       SERVICE_STOP | SERVICE_START | SERVICE_QUERY_STATUS |
                           SERVICE_ENUMERATE_DEPENDENTS);
 
@@ -377,7 +379,7 @@ static bool TryStopService(SC_HANDLE handle, const std::string& name_to_log,
     return true;
 }
 
-bool StopWindowsService(const std::wstring& service_name) {
+bool StopWindowsService(std::wstring_view service_name) {
     auto name_to_log = wtools::ConvertToUTF8(service_name);
     XLOG::l.t("Service {} stopping ...", name_to_log);
 
@@ -543,11 +545,10 @@ bool DeactivateLegacyAgent() {
 }
 
 int WaitForStatus(std::function<int(const std::wstring&)> StatusChecker,
-                  const std::wstring& ServiceName, int ExpectedStatus,
-                  int Time) {
+                  std::wstring_view ServiceName, int ExpectedStatus, int Time) {
     int status = -1;
     while (true) {
-        status = StatusChecker(ServiceName);
+        status = StatusChecker(std::wstring(ServiceName));
         if (status == ExpectedStatus) return status;
         if (Time >= 0) {
             cma::tools::sleep(1000);
@@ -567,7 +568,7 @@ static void LogAndDisplayErrorMessage(int status) {
 
     using namespace xlog::internal;
     if (!driver_body.empty()) {
-        xlog::sendStringToStdio("Probably you have : ", Colors::kGreen);
+        xlog::sendStringToStdio("Probably you have : ", Colors::green);
         XLOG::l.crit("Failed to stop kernel legacy driver winring0_1_2_0 [{}]",
                      status);
         return;
@@ -582,7 +583,7 @@ static void LogAndDisplayErrorMessage(int status) {
     }
 
     // this may be ok
-    xlog::sendStringToStdio("This is just info: ", Colors::kGreen);
+    xlog::sendStringToStdio("This is just info: ", Colors::green);
     XLOG::l.w(
         "Can't stop winring0_1_2_0 [{}], probably you have no 'Open Hardware Monitor' running.",
         status);
@@ -624,8 +625,8 @@ bool FindStopDeactivateLegacyAgent() {
     }
 
     XLOG::l.t("Killing open hardware monitor...");
-    wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
-    wtools::KillProcess(L"Openhardwaremonitorcli.exe",
+    wtools::KillProcess(cma::provider::ohm::kExeModuleWide, 1);
+    wtools::KillProcess(cma::provider::ohm::kExeModuleWide,
                         1);  // we may have two :)
 
     XLOG::l.t("Stopping winring0_1_2_0...");
@@ -782,7 +783,7 @@ static void InfoOnStdio(bool force) {
     if (!force) return;
 
     XLOG::SendStringToStdio("Upgrade(migration) is forced by command line\n",
-                            XLOG::Colors::kYellow);
+                            XLOG::Colors::yellow);
 }
 
 bool UpdateProtocolFile(std::wstring_view new_location,

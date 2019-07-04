@@ -145,7 +145,7 @@ TEST(SelfConfigure, Checker) {
     if (handle == nullptr) {
         xlog::sendStringToStdio(
             "No test self configuration, agent is not installed",
-            xlog::internal::Colors::kYellow);
+            xlog::internal::Colors::yellow);
         return;
     }
     ON_OUT_OF_SCOPE(CloseServiceHandle(handle));

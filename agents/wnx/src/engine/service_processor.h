@@ -212,6 +212,8 @@ public:
         return answer_.addSegment(Name, Tp, std::vector<uint8_t>());
     }
 
+    void resetOhm() noexcept;
+
 private:
     std::vector<uint8_t> makeTestString(const char* Text) {
         const std::string answer_test = Text;
@@ -581,7 +583,8 @@ private:
 
     SectionProvider<provider::MrpeProvider> mrpe_provider_;
     SectionProvider<provider::SkypeProvider> skype_provider_;
-    SectionProvider<provider::OhmProvider> ohm_provider_{provider::kOhm, ','};
+    SectionProvider<provider::OhmProvider> ohm_provider_{
+        provider::kOhm, provider::ohm::kSepChar};
     SectionProvider<provider::SpoolProvider> spool_provider_;
 
     SectionProvider<provider::Wmi> dotnet_clrmemory_provider_{

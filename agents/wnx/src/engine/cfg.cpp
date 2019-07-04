@@ -515,7 +515,7 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
     // directories to be created
     // should be more clear defined in cfg_info
     auto dir_list = {dirs::kBakery,         // config file(s)
-                     dirs::kAgentBin,       // placeholder for ohm
+                     dirs::kUserBin,        // placeholder for ohm
                      dirs::kCache,          // cached data from agent
                      dirs::kState,          // state folder
                      dirs::kSpool,          // keine Ahnung
@@ -1006,9 +1006,9 @@ void ConfigInfo::initAll(
 
     // exe
     root = folders_.getRoot();
-    constexpr const wchar_t* dir_tails[] = {
-        dirs::kAgentBin, dirs::kAgentPlugins, dirs::kAgentProviders,
-        dirs::kAgentUtils};
+    constexpr const wchar_t* dir_tails[] = {dirs::kUserBin, dirs::kAgentPlugins,
+                                            dirs::kAgentProviders,
+                                            dirs::kAgentUtils};
     for (auto& d : dir_tails) exe_command_paths_.emplace_back((root / d));
     exe_command_paths_.emplace_back(root);
 

@@ -126,12 +126,12 @@ TEST(SectionPerf, Runner) {
     auto ret = RunPerf(prefix, L"12345", port_param, 20, counters);
     ASSERT_EQ(ret, 0);
     for (int i = 0; i < 20; i++) {
-        xlog::sendStringToStdio(".", xlog::internal::kYellow);
+        xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
         if (S_Storage.delivered_) break;
         cma::tools::sleep(200);
     }
 
-    xlog::sendStringToStdio("\n", xlog::internal::kYellow);
+    xlog::sendStringToStdio("\n", xlog::internal::Colors::yellow);
 
     auto data = S_Storage.buffer_.data();
     auto data_end = data + S_Storage.buffer_.size();

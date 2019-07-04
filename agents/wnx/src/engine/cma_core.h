@@ -60,32 +60,39 @@ inline bool IsExecutable(const std::filesystem::path& FileToExec) {
     return false;
 }
 
+inline std::wstring FindPowershellExe() noexcept {
+    namespace fs = std::filesystem;
+    constexpr std::wstring_view powershell_name = L"powershell.exe";
+    wchar_t buffer[16];
+    auto ret =
+        ::SearchPathW(NULL, powershell_name.data(), NULL, 1, buffer, NULL);
+
+    if (ret != 0) return std::wstring(powershell_name);
+
+    // file not found on path
+    auto powershell_path =
+        cma::tools::win::GetSomeSystemFolder(FOLDERID_System);
+    fs::path ps(powershell_path);
+    ps /= L"WindowsPowerShell";
+    ps /= L"v1.0";
+    ps /= powershell_name;
+    try {
+        if (fs::exists(ps)) return ps;
+        XLOG::l("Not found powershell");
+    } catch (const std::exception& e) {
+        XLOG::l("malformed name {} e:{}", ps.u8string(), e.what());
+    }
+    return {};
+}
+
 // either finds powershell on the path
 // or build command
 // gtest[+]
 inline std::wstring MakePowershellWrapper() {
     namespace fs = std::filesystem;
 
-    std::wstring powershell_exe = L"powershell.exe";
-    wchar_t buffer[16];
-    auto ret = SearchPathW(NULL, L"powershell.exe", NULL, 1, buffer, NULL);
+    std::wstring powershell_exe = FindPowershellExe();
 
-    if (ret == 0) {
-        // file not found on path
-        auto powershell_path =
-            cma::tools::win::GetSomeSystemFolder(FOLDERID_System);
-        fs::path ps(powershell_path);
-        ps /= L"WindowsPowerShell";
-        ps /= L"v1.0";
-        ps /= L"powershell.exe";
-        try {
-            if (!fs::exists(ps)) return {};
-        } catch (const std::exception& e) {
-            XLOG::l("malformed name {} e:{}", ps.u8string(), e.what());
-            return {};
-        }
-        powershell_exe = ps.wstring();
-    }
     // file found
     return powershell_exe +
            L" -NoLogo -NoProfile -ExecutionPolicy Bypass -File \"{}\"";

@@ -36,7 +36,7 @@ void PrintBlock(std::string_view title, xlog::internal::Colors title_color,
 
 void PrintMain() {
     using namespace xlog::internal;
-    PrintBlock("Normal Usage:\n", Colors::kGreen, []() {
+    PrintBlock("Normal Usage:\n", Colors::green, []() {
         return fmt::format(
             "\t{1} <{2}|{3}>\n"
             "\t{2:<{0}} - test\n"
@@ -50,7 +50,7 @@ void PrintMain() {
 
 void PrintSelfCheck() {
     using namespace xlog::internal;
-    PrintBlock("Self Checking:\n", Colors::kCyan, []() {
+    PrintBlock("Self Checking:\n", Colors::cyan, []() {
         return fmt::format(
             "\t{1} {2} <{3}|{4}|{5} [number of seconds]>\n"
             "\t{2:<{0}} - check test\n"
@@ -64,7 +64,7 @@ void PrintSelfCheck() {
 
 void PrintAdHoc() {
     using namespace xlog::internal;
-    PrintBlock("Ad Hoc Testing:\n", Colors::kCyan, []() {
+    PrintBlock("Ad Hoc Testing:\n", Colors::cyan, []() {
         return fmt::format(
             "\t{1} <{2}> [{3}|{4}]\n"
             "\t{2:{0}} - run as application (adhoc mode)\n"
@@ -80,7 +80,7 @@ void PrintAdHoc() {
 // obsolete
 void PrintLegacyTesting() {
     using namespace xlog::internal;
-    PrintBlock("Classic/Legacy Testing:\n", Colors::kCyan, []() {
+    PrintBlock("Classic/Legacy Testing:\n", Colors::cyan, []() {
         return fmt::format(
             "\t{1} {2}\n"
             "\t{2:{0}} - legacy(standard) test\n",
@@ -94,7 +94,7 @@ void PrintInstallUninstall() {
     using namespace xlog::internal;
     PrintBlock(
         "To install or remove service: for Experienced Users only:\n",
-        Colors::kPink, []() {
+        Colors::pink, []() {
             return fmt::format(
                 "\t{1} <{2}|{3}>\n"
                 "\t{2:<{0}} - install as a service, Administrative Rights are required\n"
@@ -109,7 +109,7 @@ void PrintInstallUninstall() {
 void PrintShowConfig() {
     using namespace xlog::internal;
     PrintBlock(
-        "Display Config and Environment Variables:\n", Colors::kCyan, []() {
+        "Display Config and Environment Variables:\n", Colors::cyan, []() {
             return fmt::format(
                 "\t{1} {2} [section]\n"
                 "\t{2:<{0}} - show configuration parameters\n"
@@ -123,7 +123,7 @@ void PrintShowConfig() {
 
 void PrintRealtimeTesting() {
     using namespace xlog::internal;
-    PrintBlock("Realtime Testing:\n", Colors::kCyan, []() {
+    PrintBlock("Realtime Testing:\n", Colors::cyan, []() {
         return fmt::format(
             "\t{1} {2}\n"
             "\t{2:{0}} - test realtime data with all sections and encryption\n",
@@ -136,8 +136,8 @@ void PrintRealtimeTesting() {
 void PrintCvt() {
     using namespace xlog::internal;
     PrintBlock(
-        "To Convert Legacy Agent Ini File into Agent Yml file:\n",
-        Colors::kPink, []() {
+        "To Convert Legacy Agent Ini File into Agent Yml file:\n", Colors::pink,
+        []() {
             return fmt::format(
                 "\t{0} {1} [{2}] <inifile> [yamlfile]\n"
                 "\tinifile - from Legacy Agent\n"
@@ -151,7 +151,7 @@ void PrintCvt() {
 void PrintLwaActivate() {
     using namespace xlog::internal;
 
-    PrintBlock("To Activate/Deactivate Legacy Agent:\n", Colors::kPink, []() {
+    PrintBlock("To Activate/Deactivate Legacy Agent:\n", Colors::pink, []() {
         return fmt::format(
             "\t{1} <{2}|{3}>\n"
             "\t{2:{0}} - stop and deactivate legacy agent\n"
@@ -164,7 +164,7 @@ void PrintLwaActivate() {
 
 void PrintUpgrade() {
     using namespace xlog::internal;
-    PrintBlock("To Upgrade Legacy Agent(migration):\n", Colors::kPink, []() {
+    PrintBlock("To Upgrade Legacy Agent(migration):\n", Colors::pink, []() {
         return fmt::format(
             "\t{1} {2} [{3}]\n"
             "\t{2:{0}} - upgrading/migration\n"
@@ -181,7 +181,7 @@ void PrintCap() {
 
     PrintBlock(
         "To Install Bakery Files, plugins.cap and check_mk.ini, in install folder:\n",
-        Colors::kPink, []() {
+        Colors::pink, []() {
             return fmt::format(
                 "\t{0} {1}\n",
                 kServiceExeName,  // service name from th project definitions
@@ -192,7 +192,7 @@ void PrintCap() {
 void PrintSectionTesting() {
     using namespace xlog::internal;
 
-    PrintBlock("To test Sections individually:\n", Colors::kPink, []() {
+    PrintBlock("To test Sections individually:\n", Colors::pink, []() {
         return fmt::format(
             "\t{1} {2} {3} [{4} [{5}]] \n"
             "\t\t{3:{0}} - any section name(df, fileinfo and so on)\n"
@@ -218,7 +218,7 @@ static void ServiceUsage(std::wstring_view comment) {
     XLOG::setup::DuplicateOnStdio(true);
     if (!comment.empty()) {
         xlog::sendStringToStdio(wtools::ConvertToUTF8(comment).data(),
-                                Colors::kRed);
+                                Colors::red);
     }
 
     try {
@@ -424,6 +424,10 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     if (param == kSkypeParam) {
         return cma::srv::ExecSkypeTest();
     }
+    if (param == wtools::ConvertToUTF16(kResetOhm)) {
+        return cma::srv::ExecResetOhm();
+    }
+
     if (param == wtools::ConvertToUTF16(kStopLegacyParam)) {
         return cma::srv::ExecStopLegacy();
     }

@@ -93,22 +93,20 @@ bool FindActivateStartLegacyAgent(AddAction action = AddAction::nothing);
 std::wstring FindLegacyAgent();
 int GetServiceStatusByName(const std::wstring& Name);
 int GetServiceStatus(SC_HANDLE ServiceHandle);
+// this is full-featured function
+// may be used in production as part of top level API
+bool StopWindowsService(std::wstring_view service_name);
 
 bool IsLegacyAgentActive();
 bool ActivateLegacyAgent();
 bool DeactivateLegacyAgent();
-
-// this is full-featured function
-// may be used in production as part of top level API
-bool StopWindowsService(const std::wstring& Name);
 
 // limited function, just to have for testing
 bool StartWindowsService(const std::wstring& Name);
 
 // used to wait for some long starting/stopping drivers
 int WaitForStatus(std::function<int(const std::wstring&)> StatusChecker,
-                  const std::wstring& ServiceName, int ExpectedStatus,
-                  int Time);
+                  std::wstring_view ServiceName, int ExpectedStatus, int Time);
 
 // used to copy folders from legacy agent to programdata
 int CopyFolderRecursive(

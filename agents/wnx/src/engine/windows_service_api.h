@@ -34,7 +34,9 @@ int ExecCap();                             // on cap
 int ExecShowConfig(std::string_view sec);  // on showconfig
 int ExecUpgradeParam(bool Force);          // om upgrade
 
-int ExecSkypeTest();               // on skype :hidden
+int ExecSkypeTest();  // on skype :hidden
+int ExecResetOhm();   // on resetohm :hidden
+
 int ExecRealtimeTest(bool Print);  // on rt
 int ExecCvtIniYaml(std::filesystem::path IniFile,
                    std::filesystem::path YamlFile,

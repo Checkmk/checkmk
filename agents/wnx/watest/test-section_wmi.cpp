@@ -467,6 +467,31 @@ TEST(ProviderTest, BasicWmi) {
     }
 }
 
+TEST(ProviderTest, BasicWmiDefaultsAndError) {
+    using namespace std::chrono;
+    {
+        Wmi tst("check", '|');
+
+        EXPECT_EQ(tst.delay_on_fail_, 0s);
+        EXPECT_EQ(tst.timeout_, 0);
+        EXPECT_TRUE(tst.enabled_);
+        EXPECT_FALSE(tst.headerless_);
+
+        EXPECT_EQ(tst.separator_, '|');
+        EXPECT_EQ(tst.error_count_, 0);
+        EXPECT_EQ(tst.errorCount(), 0);
+        tst.registerError();
+        EXPECT_EQ(tst.error_count_, 1);
+        EXPECT_EQ(tst.errorCount(), 1);
+        tst.registerError();
+        EXPECT_EQ(tst.error_count_, 2);
+        EXPECT_EQ(tst.errorCount(), 2);
+        tst.resetError();
+        EXPECT_EQ(tst.error_count_, 0);
+        EXPECT_EQ(tst.errorCount(), 0);
+    }
+}
+
 TEST(ProviderTest, WmiMsExch) {
     using namespace cma::section;
     using namespace cma::provider;

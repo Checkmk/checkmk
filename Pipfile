@@ -5,24 +5,24 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-pytest = "*"
+astroid = "*"  # used by testlib.pylint_checker_localization
+bandit = "*"  # used by test/Makefile's test-bandit target
+"beautifulsoup4" = "*"  # used by the GUI crawler and various tests
+bson = "*"  # used by test_mk_mongodb unit test
+compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
+docker = "*"  # used by test_docker test and mk_docker agent plugin
+freezegun = "*"  # used by various unit tests
+isort = "*"  # used as a plugin for editors
+lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
+mock = "*"  # used in checktestlib in unit tests
+mockldap = "*"  # used in test_userdb_ldap_connector unit test
+pyenchant = "*"
+pylint = "*"
+pymongo = "*"
+pytest = "*"  # used by various test/Makefile targets
 pytest-cov = "*"
 pytest-mock = "*"
-"beautifulsoup4" = "*"
-bandit = "*"
-lxml = "*"
-pylint = "*"
-pyenchant = "*"
-yapf = "==0.26.0"  # Keep 0.26.0 for the moment because 0.27.0 needs whole code base reformatting or config change
-docker = "*"
-astroid = "*"
-mock = "*"
-mockldap = "*"
-isort = "*"
-freezegun = "*"
-compiledb = "*"
-pymongo = "*"
-bson = "*"
+yapf = "==0.26.0"  # used by test/Makefile's test-bandit target. Keep 0.26.0 for the moment to avoid reformatting.
 
 [packages]
 setuptools_scm = "==3.1.0"

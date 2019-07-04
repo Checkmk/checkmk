@@ -48,7 +48,6 @@ ENABLED_FIXERS=
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_metaclass"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_object"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_print_with_import"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_raise"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_unicode_keep_u"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_xrange_with_import"
 
@@ -84,6 +83,7 @@ ENABLED_FIXERS+=" lib2to3.fixes.fix_types"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_xreadlines"
 ENABLED_FIXERS+=" libfuturize.fixes.fix_absolute_import"
 ENABLED_FIXERS+=" libfuturize.fixes.fix_next_call"
+ENABLED_FIXERS+=" libfuturize.fixes.fix_raise"
 ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
 
 # *** More complex fixers ***

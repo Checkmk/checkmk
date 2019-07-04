@@ -40,7 +40,6 @@ ENABLED_FIXERS=
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_next"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_operator"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_zip"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_absolute_import"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_basestring"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_cmp"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_division_safe"
@@ -57,7 +56,6 @@ ENABLED_FIXERS=
 
 # *** Mechanical/easy fixers ***
 #---------------------------------------------------------------------------
-ENABLED_FIXERS+=" libfuturize.fixes.fix_next_call"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_apply"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_except"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_exec"
@@ -84,6 +82,8 @@ ENABLED_FIXERS+=" lib2to3.fixes.fix_throw"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_tuple_params"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_types"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_xreadlines"
+ENABLED_FIXERS+=" libfuturize.fixes.fix_absolute_import"
+ENABLED_FIXERS+=" libfuturize.fixes.fix_next_call"
 ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
 
 # *** More complex fixers ***

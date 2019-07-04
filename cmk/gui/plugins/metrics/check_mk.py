@@ -4057,18 +4057,6 @@ metric_info["page_lookups_sec"] = {
     "color": "42/a",
 }
 
-metric_info["page_swap_in"] = {
-    "title": _("Page Swap In"),
-    "unit": "bytes/s",
-    "color": "33/a",
-}
-
-metric_info["page_swap_out"] = {
-    "title": _("Page Swap Out"),
-    "unit": "bytes/s",
-    "color": "36/a",
-}
-
 metric_info["failed_search_requests"] = {
     "title": _("WEB - Failed search requests"),
     "unit": "1/s",
@@ -11001,14 +10989,6 @@ graph_info["page_activity"] = {
     "metrics": [
         ("page_reads_sec", "area"),
         ("page_writes_sec", "-area"),
-    ]
-}
-
-graph_info["page_swap"] = {
-    "title": _("Page Swap"),
-    "metrics": [
-        ("page_swap_in", "area"),
-        ("page_swap_out", "-area"),
     ]
 }
 

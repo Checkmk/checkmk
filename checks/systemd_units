@@ -68,26 +68,47 @@ def parse_systemd_units(info):
     if not info:
         return {}
 
-    # second to last line (see above): "X loaded units listed."
-    count = int(info[-2][0])
-    if count == 0:
-        return parsed
+    iter_info = iter(info)
+    target_states = {}
 
-    UnitEntry = collections.namedtuple("UnitEntry",
-                                       ['name', 'type', 'load', 'active', 'sub', 'description'])
-    for row in info[1:count + 1]:
-        if row[0] == '*':  # remove the '● ' (seems to get converted to '*')
-            row.pop(0)
-        line = ' '.join(row)
-        for unit_marker in _SYSTEMD_UNITS:
-            if unit_marker in line:
-                utype = unit_marker.strip('. ')
-                name, remains = line.split(unit_marker, 1)
-                load, active, sub, descr = remains.split(' ', 3)
-                unit = UnitEntry(name, utype, load, active, sub, descr)
-                parsed.setdefault(unit.type, {})[unit.name] = unit
+    line = next(iter_info)
+
+    if line[0] == "[list-unit-files]":
+        for line in iter_info:
+            if line[0].startswith('['):
                 break
+        if len(line) >= 2:
+            target_states[line[0]] = line[1]
 
+    if line[0] == '[all]':
+        try:
+            line = next(iter_info)
+
+        # no services listed
+        except StopIteration:
+            return parsed
+
+        UnitEntry = collections.namedtuple(
+            "UnitEntry", ['name', 'type', 'load', 'active', 'sub', 'description', 'state'])
+
+        for row in iter_info:
+            if row[0] == '*':
+                row.pop(0)
+            line = ' '.join(row)
+            for unit_marker in _SYSTEMD_UNITS:
+                if unit_marker in line:
+                    utype = unit_marker.strip('. ')
+                    name, remains = line.split(unit_marker, 1)
+                    if "@" in name:
+                        pos = name.find("@")
+                        temp = name[:pos + 1]
+                    else:
+                        temp = name
+                    state = target_states.get("%s.%s" % (temp, utype), "unknown")
+                    load, active, sub, descr = remains.split(' ', 3)
+                    unit = UnitEntry(name, utype, load, active, sub, descr, state)
+                    parsed.setdefault(unit.type, {})[unit.name] = unit
+                    break
     return parsed
 
 
@@ -177,13 +198,16 @@ def discovery_systemd_units_services_summary(parsed):
 def services_split(services, blacklist):
     excluded = []
     included = []
+    disabled = []
     compiled_patterns = [regex(p) for p in blacklist]
     for service in services:
-        if any(expr.match(service.name) for expr in compiled_patterns):
+        if service.state in ["disabled", "indirect"]:
+            disabled.append(service)
+        elif any(expr.match(service.name) for expr in compiled_patterns):
             excluded.append(service)
         else:
             included.append(service)
-    return included, excluded
+    return included, excluded, disabled
 
 
 def check_systemd_units_services_summary(_no_item, params, parsed):
@@ -191,9 +215,7 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
     blacklist = params.get('ignored', [])
     yield 0, "%d services in total" % len(services)
 
-    services, excluded = services_split(services, blacklist)
-    if excluded:
-        yield 0, "%d ignored services" % len(excluded)
+    services, excluded, disabled = services_split(services, blacklist)
 
     all_states = sorted(set(s.active for s in services))
 
@@ -207,6 +229,10 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
         service_names = ", ".join(service_names)
         yield state, "%d service%s %s (%s)" % (cnt, '' if cnt == 1 else 's', active_state,
                                                service_names)
+    if excluded:
+        yield 0, "%d ignored services" % len(excluded)
+    if disabled:
+        yield 0, "%d disabled services" % len(disabled)
 
 
 check_info['systemd_units.services_summary'] = {

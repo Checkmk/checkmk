@@ -133,7 +133,7 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
         if state in ["direct", "root", "gateway"]:
             # The following code updates the host config. The progress from loading the WATO folder
             # until it has been saved needs to be locked.
-            with watolib.exclusive_lock():
+            with watolib.lock_checkmk_configuration():
                 self._configure_host_and_gateway(task, settings, state, gateway)
         else:
             self._logger.error(error)

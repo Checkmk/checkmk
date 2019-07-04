@@ -556,7 +556,7 @@ class ActivateChangesManager(ActivateChanges):
             raise MKUserError(None, _("Can not start activation: %s") % e)
 
     def _create_snapshots(self):
-        with cmk.gui.watolib.utils.exclusive_lock():
+        with cmk.gui.watolib.utils.lock_checkmk_configuration():
             if not self._changes:
                 raise MKUserError(None, _("Currently there are no changes to activate."))
 
@@ -765,7 +765,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def _do_housekeeping(self):
         """Cleanup stale activations in case it is needed"""
-        with cmk.gui.watolib.utils.exclusive_lock():
+        with cmk.gui.watolib.utils.lock_checkmk_configuration():
             for activation_id in self._existing_activation_ids():
                 # skip the current activation_id
                 if self._activation_id == activation_id:

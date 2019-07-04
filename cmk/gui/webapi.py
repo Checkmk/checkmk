@@ -224,7 +224,7 @@ def _check_request_keys(api_call, request_object):
 
 def _execute_action(api_call, request_object):
     if api_call.get("locking", True):
-        with watolib.exclusive_lock():
+        with watolib.lock_checkmk_configuration():
             return _execute_action_no_lock(api_call, request_object)
     return _execute_action_no_lock(api_call, request_object)
 

@@ -39,7 +39,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.changes import add_service_change
-from cmk.gui.watolib.utils import exclusive_lock
+from cmk.gui.watolib.utils import lock_checkmk_configuration
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.plugins.wato import WatoBackgroundJob
 
@@ -209,7 +209,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     def _process_discovery_results(self, task, job_interface, counts, failed_hosts):
         # The following code updates the host config. The progress from loading the WATO folder
         # until it has been saved needs to be locked.
-        with exclusive_lock():
+        with lock_checkmk_configuration():
             Folder.invalidate_caches()
             folder = Folder.folder(task.folder_path)
             for hostname in task.host_names:

@@ -1,0 +1,10 @@
+Title: Graph Tunings: Now able to disable graph
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0b3
+Date: 1562223616
+

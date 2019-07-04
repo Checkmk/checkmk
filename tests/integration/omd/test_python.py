@@ -80,7 +80,6 @@ def test_03_pip_interpreter_version(site):
     "dateutil",
     "snap7",
     "rrdtool",
-    "azure.mgmt.monitor",
     "werkzeug",
     "boto3",
     "kubernetes",

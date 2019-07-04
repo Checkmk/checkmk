@@ -126,7 +126,7 @@ def format_config_value(value):
 
 
 @contextmanager
-def exclusive_lock():
+def lock_checkmk_configuration():
     path = cmk.utils.paths.default_config_dir + "/multisite.mk"
     store.aquire_lock(path)
     try:
@@ -135,7 +135,7 @@ def exclusive_lock():
         store.release_lock(path)
 
 
-# TODO: Use exclusive_lock() and nuke this!
+# TODO: Use lock_checkmk_configuration() and nuke this!
 def lock_exclusive():
     store.aquire_lock(cmk.utils.paths.default_config_dir + "/multisite.mk")
 

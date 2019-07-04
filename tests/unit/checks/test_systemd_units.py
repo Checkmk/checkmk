@@ -1,11 +1,11 @@
-import pytest  # type:ignore
+import pytest
 import collections
 from cmk_base.check_api import MKGeneralException
 
 pytestmark = pytest.mark.checks
 
-UnitEntry = collections.namedtuple("UnitEntry",
-                                   ['name', 'type', 'load', 'active', 'sub', 'description'])
+UnitEntry = collections.namedtuple(
+    "UnitEntry", ['name', 'type', 'load', 'active', 'sub', 'description', 'state'])
 
 
 @pytest.mark.parametrize('services, blacklist, expected', [
@@ -15,78 +15,92 @@ UnitEntry = collections.namedtuple("UnitEntry",
                   load=u'loaded',
                   active=u'inactive',
                   sub=u'dead',
-                  description=u'Detect the available GPUs and deal with any system changes'),
+                  description=u'Detect the available GPUs and deal with any system changes',
+                  state=u'unknown'),
         UnitEntry(name=u'rsyslog',
                   type='service',
                   load=u'loaded',
                   active=u'active',
                   sub=u'running',
-                  description=u'System Logging Service'),
+                  description=u'System Logging Service',
+                  state=u'enabled'),
         UnitEntry(name=u'alsa-state',
                   type='service',
                   load=u'loaded',
                   active=u'inactive',
                   sub=u'dead',
-                  description=u'Manage Sound Card State (restore and store)')
+                  description=u'Manage Sound Card State (restore and store)',
+                  state=u'disabled'),
     ], [], ([
         UnitEntry(name=u'gpu-manager',
                   type='service',
                   load=u'loaded',
                   active=u'inactive',
                   sub=u'dead',
-                  description=u'Detect the available GPUs and deal with any system changes'),
+                  description=u'Detect the available GPUs and deal with any system changes',
+                  state=u'unknown'),
         UnitEntry(name=u'rsyslog',
                   type='service',
                   load=u'loaded',
                   active=u'active',
                   sub=u'running',
-                  description=u'System Logging Service'),
+                  description=u'System Logging Service',
+                  state=u'enabled'),
+    ], [], [
         UnitEntry(name=u'alsa-state',
                   type='service',
                   load=u'loaded',
                   active=u'inactive',
                   sub=u'dead',
-                  description=u'Manage Sound Card State (restore and store)')
-    ], [])),
+                  description=u'Manage Sound Card State (restore and store)',
+                  state=u'disabled'),
+    ])),
     ([
         UnitEntry(name=u'gpu-manager',
                   type='service',
                   load=u'loaded',
                   active=u'inactive',
                   sub=u'dead',
-                  description=u'Detect the available GPUs and deal with any system changes'),
+                  description=u'Detect the available GPUs and deal with any system changes',
+                  state=u'unknown'),
         UnitEntry(name=u'rsyslog',
                   type='service',
                   load=u'loaded',
                   active=u'active',
                   sub=u'running',
-                  description=u'System Logging Service'),
+                  description=u'System Logging Service',
+                  state=u'enabled'),
         UnitEntry(name=u'alsa-state',
                   type='service',
                   load=u'loaded',
                   active=u'inactive',
                   sub=u'dead',
-                  description=u'Manage Sound Card State (restore and store)')
+                  description=u'Manage Sound Card State (restore and store)',
+                  state=u'indirect')
     ], [u'gpu'], ([
         UnitEntry(name=u'rsyslog',
                   type='service',
                   load=u'loaded',
                   active=u'active',
                   sub=u'running',
-                  description=u'System Logging Service'),
-        UnitEntry(name=u'alsa-state',
-                  type='service',
-                  load=u'loaded',
-                  active=u'inactive',
-                  sub=u'dead',
-                  description=u'Manage Sound Card State (restore and store)')
+                  description=u'System Logging Service',
+                  state=u'enabled'),
     ], [
         UnitEntry(name=u'gpu-manager',
                   type='service',
                   load=u'loaded',
                   active=u'inactive',
                   sub=u'dead',
-                  description=u'Detect the available GPUs and deal with any system changes')
+                  description=u'Detect the available GPUs and deal with any system changes',
+                  state=u'unknown'),
+    ], [
+        UnitEntry(name=u'alsa-state',
+                  type='service',
+                  load=u'loaded',
+                  active=u'inactive',
+                  sub=u'dead',
+                  description=u'Manage Sound Card State (restore and store)',
+                  state=u'indirect')
     ])),
 ])
 def test_services_split(check_manager, services, blacklist, expected):

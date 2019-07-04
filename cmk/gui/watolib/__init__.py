@@ -270,7 +270,7 @@ from cmk.gui.watolib.utils import (
     lock_exclusive,
     mk_repr,
     mk_eval,
-    exclusive_lock,
+    lock_checkmk_configuration,
     has_agent_bakery,
     site_neutral_path,
 )
@@ -315,7 +315,7 @@ def init_wato_datastructures(with_wato_lock=False):
         _create_sample_config()
 
     if with_wato_lock:
-        with exclusive_lock():
+        with lock_checkmk_configuration():
             init()
     else:
         init()

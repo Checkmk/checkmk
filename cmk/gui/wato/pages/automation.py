@@ -114,7 +114,7 @@ class ModeAutomation(AjaxPage):
         # the normal WATO page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
         # we request the lock in all cases.
-        with watolib.exclusive_lock():
+        with watolib.lock_checkmk_configuration():
             watolib.init_wato_datastructures(with_wato_lock=False)
 
             # TODO: Refactor these two calls to also use the automation_command_registry

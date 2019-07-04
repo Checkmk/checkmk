@@ -50,14 +50,10 @@ def _edition_short_from_pkg_path(pkg_path):
 ])
 def test_package_sizes(version_path, what, min_size, max_size):
     for pkg in _get_package_paths(version_path, what):
-        file_name = os.path.basename(pkg)
-        if file_name.startswith("check-mk-raw-") or file_name.startswith("check-mk-enterprise-"):
-            print "Skip package size tests for non CEE package: %s" % pkg
-            continue
-
-        size = os.stat(pkg).st_size
-        assert min_size <= size <= max_size, \
-            "Package %s size %s not between %s and %s bytes." % \
+        if os.path.basename(pkg).startswith("check-mk-enterprise-"):
+            size = os.stat(pkg).st_size
+            assert min_size <= size <= max_size, \
+                "Package %s size %s not between %s and %s bytes." % \
                 (pkg, size, min_size, max_size)
 
 

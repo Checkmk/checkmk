@@ -63,12 +63,12 @@ def test_nfsmounts(check_manager, info, discovery_expected, check_expected):
     check_cifs = check_manager.get_check("cifsmounts")
 
     # assure that the code of both checks is identical
-    assert (check_nfs.info['parse_function'].func_code.co_code ==
-            check_cifs.info['parse_function'].func_code.co_code)
-    assert (check_nfs.info['inventory_function'].func_code.co_code ==
-            check_cifs.info['inventory_function'].func_code.co_code)
-    assert (check_nfs.info['check_function'].func_code.co_code ==
-            check_cifs.info['check_function'].func_code.co_code)
+    assert (check_nfs.info['parse_function'].__code__.co_code ==
+            check_cifs.info['parse_function'].__code__.co_code)
+    assert (check_nfs.info['inventory_function'].__code__.co_code ==
+            check_cifs.info['inventory_function'].__code__.co_code)
+    assert (check_nfs.info['check_function'].__code__.co_code ==
+            check_cifs.info['check_function'].__code__.co_code)
 
     parsed = check_nfs.run_parse(info)
 

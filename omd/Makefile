@@ -24,6 +24,7 @@ PACKAGES := \
     libgsf \
     perl-modules \
     Python \
+    Python3 \
     freetds \
     re2 \
     python-modules \

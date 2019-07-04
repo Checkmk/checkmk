@@ -44,6 +44,21 @@ check-python:
 	    exit 1 ; \
 	fi
 
+# python3 #######################################################################
+
+PACKAGE_PYTHON3_DESTDIR         := $(PACKAGE_BASE)/python3/destdir
+PACKAGE_PYTHON3_PYTHONPATH      := $(PACKAGE_PYTHON3_DESTDIR)/lib/python3
+PACKAGE_PYTHON3_LDFLAGS         := -L$(PACKAGE_PYTHON3_DESTDIR)/lib -L$(PACKAGE_PYTHON3_PYTHONPATH)/config
+PACKAGE_PYTHON3_LD_LIBRARY_PATH := $(PACKAGE_PYTHON3_DESTDIR)/lib
+PACKAGE_PYTHON3_BIN             := $(PACKAGE_PYTHON3_DESTDIR)/bin
+PACKAGE_PYTHON3_EXECUTABLE      := $(PACKAGE_PYTHON3_BIN)/python3
+
+check-python3:
+	@if [ ! -d "$(PACKAGE_PYTHON3_DESTDIR)" ]; then \
+	    echo "ERROR: You need to build the \"Python3\" package first" ; \
+	    exit 1 ; \
+	fi
+
 # freetds #####################################################################
 
 PACKAGE_FREETDS_DESTDIR := $(PACKAGE_BASE)/freetds/destdir

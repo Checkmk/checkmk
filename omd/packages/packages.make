@@ -92,6 +92,7 @@ include     packages/apache-omd/apache-omd.make \
     packages/perl-modules/perl-modules.make \
     packages/pnp4nagios/pnp4nagios.make \
     packages/Python/Python.make \
+    packages/Python3/Python3.make \
     packages/python-modules/python-modules.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \

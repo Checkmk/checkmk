@@ -1097,8 +1097,12 @@ table.nform {
     }
   }
 
-  > tbody > tr td {
+  > tbody > tr td, a {
     color: #000;
+  }
+
+  a:hover {
+    text-decoration: none;
   }
 
   > tbody > tr > td {

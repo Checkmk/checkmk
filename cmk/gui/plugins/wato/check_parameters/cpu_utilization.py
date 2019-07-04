@@ -114,8 +114,8 @@ cpu_util_common_dict = Dictionary(
          Tuple(
              title=_("Levels on IO wait (UNIX only)"),
              elements=[
-                 Percentage(title=_("Warning at a disk wait of"), default_value=30.0),
-                 Percentage(title=_("Critical at a disk wait of"), default_value=50.0)
+                 Percentage(title=_("Warning at a disk wait of"), default_value=5.0),
+                 Percentage(title=_("Critical at a disk wait of"), default_value=10.0)
              ],
              help=_(
                  "The disk wait is the total percentage of time all CPUs have nothing else to do but waiting "

@@ -140,39 +140,39 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                 continue
 
             reading = sdr.sensors[number].decode_sensor_reading(rsp['data'])
-            if reading is None:
-                continue
-
-            # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
-            #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
-            #  'value': 25.0, 'unavailable': 0}]]
-            health_txt = "N/A"
-            if reading.health >= ipmi_const.Health.Failed:
-                health_txt = "FAILED"
-            elif reading.health >= ipmi_const.Health.Critical:
-                health_txt = "CRITICAL"
-            elif reading.health >= ipmi_const.Health.Warning:
-                health_txt = "WARNING"
-                # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
-                health_txt = _handle_false_positive_warnings(reading)
-            elif reading.health == ipmi_const.Health.Ok:
-                health_txt = "OK"
-
-            parts = [
-                "%d" % number,
-                reading.name,
-                reading.type,
-                ("%0.2f" % reading.value) if reading.value else "N/A",
-                reading.units if reading.units != "\xc2\xb0C" else "C",
-                health_txt,
-            ]
-
-            sensors.append(parts)
+            if reading is not None:
+                sensors.append(self._parse_sensor_reading(number, reading))
 
         output = "<<<mgmt_ipmi_sensors:sep(124)>>>\n" \
                + "".join([ "|".join(sensor) + "\n"  for sensor in sensors ])
 
         return output
+
+    @staticmethod
+    def _parse_sensor_reading(number, reading):
+        # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
+        #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
+        #  'value': 25.0, 'unavailable': 0}]]
+        health_txt = "N/A"
+        if reading.health >= ipmi_const.Health.Failed:
+            health_txt = "FAILED"
+        elif reading.health >= ipmi_const.Health.Critical:
+            health_txt = "CRITICAL"
+        elif reading.health >= ipmi_const.Health.Warning:
+            health_txt = "WARNING"
+            # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
+            health_txt = _handle_false_positive_warnings(reading)
+        elif reading.health == ipmi_const.Health.Ok:
+            health_txt = "OK"
+
+        return [
+            "%d" % number,
+            reading.name,
+            reading.type,
+            ("%0.2f" % reading.value) if reading.value else "N/A",
+            reading.units if reading.units != "\xc2\xb0C" else "C",
+            health_txt,
+        ]
 
     def _fetch_ipmi_firmware_section(self, connection):
         self._logger.debug("Fetching firmware information via UDP from %s:623" % (self._ipaddress))

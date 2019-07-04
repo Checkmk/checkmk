@@ -51,7 +51,6 @@ ENABLED_FIXERS=
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_future_standard_library"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_future_standard_library_urllib"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_metaclass"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_next_call"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_object"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_print_with_import"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_raise"
@@ -60,6 +59,7 @@ ENABLED_FIXERS=
 
 # *** Mechanical/easy fixers ***
 #---------------------------------------------------------------------------
+ENABLED_FIXERS+=" libfuturize.fixes.fix_next_call"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_apply"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_except"
 ENABLED_FIXERS+=" lib2to3.fixes.fix_exec"

@@ -26,6 +26,8 @@
 
 veeam_tapejobs_default_levels = (1 * 3600 * 24, 2 * 3600 * 24)
 
+BACKUP_STATE = {"Success": 0, "Warning": 1, "Failed": 2}
+
 
 def parse_veeam_tapejobs(info):
     parsed = {}
@@ -48,45 +50,33 @@ def inventory_veeam_tapejobs(parsed):
         yield job, "veeam_tapejobs_default_levels"
 
 
-def check_veeam_tapejobs(item, params, parsed):
-    data = parsed.get(item)
-    if data is None:
-        return
+@get_parsed_item_data
+def check_veeam_tapejobs(item, params, data):
 
+    job_id = data["job_id"]
     last_result = data["last_result"]
     last_state = data["last_state"]
-    statetext = ", last state: " + last_state
 
-    warn, crit = params
+    if last_result != "None" or last_state != "Working":
+        yield BACKUP_STATE.get(last_result, 2), "Last backup result: %s" % last_result
+        yield 0, "Last state: %s" % last_state
+        clear_item_state("%s.running_since" % job_id)
+        return
 
+    running_since = get_item_state("%s.running_since" % job_id)
     now = time.time()
+    if not running_since:
+        running_since = now
+        set_item_state("%s.running_since" % job_id, now)
+    running_time = now - running_since
 
-    running_since = get_item_state("running_since")
-
-    if last_result == "None" and last_state == "Working":
-        if not running_since:
-            running_since = now
-            set_item_state("running_since", now)
-        running_time = now - running_since
-        status = 0
-        levelstext = " (warn/crit at %s/%s)" % tuple(map(get_age_human_readable, params))
-        if running_time >= crit:
-            status = 2
-        elif running_time >= warn:
-            status = 1
-        else:
-            levelstext = ""
-        infotext = "Backup in progress since " + get_timestamp_human_readable(running_since)\
-                    + " (" + get_age_human_readable(running_time) + ")" + levelstext
-        return status, infotext
-    else:
-        clear_item_state("running_since")
-        if last_result == "Success":
-            return 0, "Last backup successful" + statetext
-        elif last_result == "Warning":
-            return 1, "Last backup result: " + last_result + statetext
-        else:
-            return 2, "Last backup result: " + last_result + statetext
+    yield 0, "Backup in progress since %s" % get_timestamp_human_readable(running_since)
+    yield check_levels_backport(
+        running_time,
+        None,
+        params,
+        human_readable_func=get_age_human_readable,
+        infoname="Running time")
 
 
 check_info["veeam_tapejobs"] = {
@@ -95,4 +85,5 @@ check_info["veeam_tapejobs"] = {
     'check_function': check_veeam_tapejobs,
     'service_description': 'VEEAM Tape Job %s',
     'group': 'veeam_tapejobs',
+    'includes': ["backport.include"],
 }

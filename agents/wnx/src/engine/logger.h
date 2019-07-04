@@ -178,32 +178,23 @@ inline std::string formatString(int Fl, const char* Prefix,
 }
 
 namespace internal {
-enum Colors {
-    kDefault,
-    kRed,
-    kGreen,
-    kYellow,
-    kPink,
-    kCyan,
-    kPinkLight,
-    kWhite
-};
+enum class Colors { dflt, red, green, yellow, pink, cyan, pink_light, white };
 
 static uint16_t GetColorAttribute(Colors color) {
     switch (color) {
-        case kRed:
+        case Colors::red:
             return FOREGROUND_RED;
-        case kGreen:
+        case Colors::green:
             return FOREGROUND_GREEN;
-        case kYellow:
+        case Colors::yellow:
             return FOREGROUND_RED | FOREGROUND_GREEN;
-        case kPink:
+        case Colors::pink:
             return FOREGROUND_RED | FOREGROUND_BLUE;
-        case kPinkLight:
+        case Colors::pink_light:
             return FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-        case kCyan:
+        case Colors::cyan:
             return FOREGROUND_GREEN | FOREGROUND_BLUE;
-        case kWhite:
+        case Colors::white:
             return FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE |
                    FOREGROUND_INTENSITY;
         default:
@@ -249,8 +240,8 @@ inline void sendStringToDebugger(const char* String) {
     internal_PrintStringDebugger(String);
 }
 
-inline void sendStringToStdio(
-    const char* String, internal::Colors Color = internal::Colors::kDefault) {
+inline void sendStringToStdio(const char* String,
+                              internal::Colors Color = internal::Colors::dflt) {
     if (!XLOG::details::IsColoredOnStdio()) {
         internal_PrintStringStdio(String);
         return;
@@ -291,7 +282,7 @@ void ColoredOutputOnStdio(bool On);
 using Colors = xlog::internal::Colors;
 
 inline void SendStringToStdio(std::string_view string,
-                              Colors Color = Colors::kDefault) {
+                              Colors Color = Colors::dflt) {
     return xlog::sendStringToStdio(string.data(), Color);
 }
 

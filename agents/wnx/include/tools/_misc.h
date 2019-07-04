@@ -41,6 +41,14 @@ inline bool IsEqual(std::string_view Left, std::string_view Right) {
                       });
 }
 
+inline bool IsEqual(std::wstring_view Left, std::wstring_view Right) {
+    return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
+                      [](wchar_t LeftChar, wchar_t RightChar) {
+                          return std::tolower(LeftChar) ==
+                                 std::tolower(RightChar);
+                      });
+}
+
 inline bool IsEqual(const std::wstring& Left, const std::wstring& Right) {
     return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
                       [](wchar_t LeftChar, wchar_t RightChar) {

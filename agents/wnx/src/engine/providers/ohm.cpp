@@ -23,11 +23,15 @@ namespace cma::provider {
 
 // makes OHM binary filename
 std::filesystem::path GetOhmCliPath() noexcept {
+    return GetOhmCliPath(cma::cfg::GetUserDir());
+}
+
+std::filesystem::path GetOhmCliPath(const std::filesystem::path& dir) noexcept {
     namespace fs = std::filesystem;
 
-    fs::path ohm_exe = cma::cfg::GetUserDir();
-    ohm_exe /= cma::cfg::dirs::kAgentBin;
-    ohm_exe /= cma::provider::kOpenHardwareMonitorCli;
+    fs::path ohm_exe = dir;
+    ohm_exe /= cma::cfg::dirs::kUserBin;
+    ohm_exe /= ohm::kExeModule;
 
     return ohm_exe;
 }
@@ -45,16 +49,21 @@ void OhmProvider::updateSectionStatus() {
     }
 }
 
-/*
-std::string OhmProvider::makeBody(){
+std::string OhmProvider::makeBody() {
     using namespace cma::cfg;
-    XLOG::t(XLOG_FUNC + " entering");
-
+    auto result = Wmi::makeBody();
     // probably we do not need this function
     // during loading config
+    if (result.empty()) {
+        auto error_count = registerError();
+        XLOG::d.t("No data for OHM, error number [{}]", error_count + 1);
+    } else {
+        if (resetError()) {
+            XLOG::d.t("OHM is available again ");
+        }
+    }
 
-    return "";
+    return result;
 }
-*/
 
 }  // namespace cma::provider

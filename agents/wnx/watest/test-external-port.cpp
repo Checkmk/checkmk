@@ -58,9 +58,9 @@ TEST(ExternalPortTest, StartStop) {
         ret = test_port.startIo(reply);  //
         EXPECT_FALSE(ret);
 
-        xlog::sendStringToStdio("sleeping for 1000ms\n", Colors::kDefault);
+        xlog::sendStringToStdio("sleeping for 1000ms\n", Colors::dflt);
         cma::tools::sleep(1000);
-        xlog::sendStringToStdio("end of sleep\n", Colors::kDefault);
+        xlog::sendStringToStdio("end of sleep\n", Colors::dflt);
         EXPECT_TRUE(test_port.io_thread_.joinable());
         test_port.shutdownIo();  //
         EXPECT_TRUE(!test_port.io_thread_.joinable());
@@ -105,9 +105,9 @@ TEST(ExternalPortTest, Read) {
         ret = test_port.startIo(reply);  //
         EXPECT_FALSE(ret);
 
-        xlog::sendStringToStdio("sleeping for 1000ms\n", Colors::kDefault);
+        xlog::sendStringToStdio("sleeping for 1000ms\n", Colors::dflt);
         cma::tools::sleep(1000);
-        xlog::sendStringToStdio("end of sleep\n", Colors::kDefault);
+        xlog::sendStringToStdio("end of sleep\n", Colors::dflt);
 
         using namespace asio;
 

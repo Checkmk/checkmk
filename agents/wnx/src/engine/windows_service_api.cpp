@@ -35,10 +35,10 @@ static std::string_view kYouHaveToBeElevatedMessage =
 int InstallMainService() {
     XLOG::setup::ColoredOutputOnStdio(true);
     xlog::sendStringToStdio("Service to be installed...\n",
-                            xlog::internal::Colors::kGreen);
+                            xlog::internal::Colors::green);
     if (!cma::tools::win::IsElevated()) {
         xlog::sendStringToStdio(kYouHaveToBeElevatedMessage.data(),
-                                xlog::internal::Colors::kRed);
+                                xlog::internal::Colors::red);
         return 1;
     }
 
@@ -58,10 +58,10 @@ int InstallMainService() {
 int RemoveMainService() {
     XLOG::setup::ColoredOutputOnStdio(true);
     xlog::sendStringToStdio("Service to be removed...\n",
-                            xlog::internal::Colors::kGreen);
+                            xlog::internal::Colors::green);
     if (!cma::tools::win::IsElevated()) {
         xlog::sendStringToStdio(kYouHaveToBeElevatedMessage.data(),
-                                xlog::internal::Colors::kRed);
+                                xlog::internal::Colors::red);
         return 1;
     }
 
@@ -297,9 +297,9 @@ int TestMt() {
             }
             return true;
         });
-        XLOG::SendStringToStdio("Testing...\n\n", XLOG::Colors::kGreen);
+        XLOG::SendStringToStdio("Testing...\n\n", XLOG::Colors::green);
         sp.startTestingMainThread();
-        XLOG::SendStringToStdio("\nPress any key\n", XLOG::Colors::kGreen);
+        XLOG::SendStringToStdio("\nPress any key\n", XLOG::Colors::green);
         cma::tools::GetKeyPress();
         sp.stopTestingMainThread();
 
@@ -422,7 +422,7 @@ int ExecMainService(StdioLog stdio_log) {
     XLOG::SendStringToStdio(
         "Adhoc/Exec Mode,"
         "press any key to stop execution\n",
-        XLOG::Colors::kCyan);
+        XLOG::Colors::cyan);
     auto delay = 1000ms;
     auto processor =
         std::make_unique<ServiceProcessor>(delay, [](const void* Processor) {
@@ -478,7 +478,7 @@ int ExecShowConfig(std::string_view sec) {
     cma::cfg::RemoveInvalidNodes(filtered_yaml);
     YAML::Emitter emit;
     emit << filtered_yaml;
-    XLOG::SendStringToStdio("# Environment Variables:\n", XLOG::Colors::kGreen);
+    XLOG::SendStringToStdio("# Environment Variables:\n", XLOG::Colors::green);
     ProcessPluginEnvironment([](std::string_view name, std::string_view value) {
         XLOG::stdio("# {}=\"{}\"\n", name, value);
     });
@@ -486,11 +486,11 @@ int ExecShowConfig(std::string_view sec) {
     auto files = wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig());
     auto file_table = cma::tools::SplitString(files, ",");
 
-    XLOG::SendStringToStdio("# Loaded Config Files:\n", XLOG::Colors::kGreen);
+    XLOG::SendStringToStdio("# Loaded Config Files:\n", XLOG::Colors::green);
     std::string markers[] = {"# system: ", "# bakery: ", "# user  : "};
     int i = 0;
     for (auto f : file_table) {
-        XLOG::SendStringToStdio(markers[i++], XLOG::Colors::kWhite);
+        XLOG::SendStringToStdio(markers[i++], XLOG::Colors::white);
         XLOG::SendStringToStdio(f + "\n");
     }
 
@@ -605,6 +605,18 @@ int ExecSkypeTest() {
     return 0;
 }
 
+// on -skype
+// verify that skype business is present
+int ExecResetOhm() {
+    G_SkypeTesting = true;
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::SendStringToStdio("Resetting OHM internally\n", XLOG::Colors::yellow);
+    cma::srv::ServiceProcessor sp;
+    sp.resetOhm();
+    return 0;
+}
+
 constexpr static int kRtTestPort = 5555;
 constexpr static std::string_view kRtTestPassword = "axecerc";
 
@@ -647,7 +659,7 @@ private:
 
         xlog::sendStringToStdio(
             "Press any key to STOP testing Realtime Sections\n",
-            xlog::internal::Colors::kPink);
+            xlog::internal::Colors::pink);
     }
 
     const std::string password_{kRtTestPassword};
@@ -687,7 +699,7 @@ int ExecRealtimeTest(bool Print) {
 
     xlog::sendStringToStdio(
         "Press any key to START testing Realtime Sections\n",
-        xlog::internal::Colors::kGreen);
+        xlog::internal::Colors::green);
     cma::tools::GetKeyPress();  // blocking  wait for key press
     dev.connectFrom("127.0.0.1", kRtTestPort,
                     {"mem", "df", "winperf_processor"}, kRtTestPassword, 30);

@@ -289,8 +289,6 @@ bool EventLog::fillBuffer() {
         flags |= EVENTLOG_SEQUENTIAL_READ;
     }
 
-    XLOG::t("  seek to {}", record_offset_);
-
     DWORD bytes_required = 0;
 
     if (::ReadEventLogW(handle_, flags, record_offset_, buffer_.data(),
@@ -312,11 +310,10 @@ bool EventLog::fillBuffer() {
         return fillBuffer();
     }
 
-
     if ((error == ERROR_INVALID_PARAMETER) &&
         0 != (flags & EVENTLOG_SEEK_READ)) {
         // if error during "seek_read" we should retry with
-        // sequenial read
+        // sequential read
         // the most likely cause for this error (since our
         // parameters are good) is the following bug:
         // https://support.microsoft.com/en-us/kb/177199

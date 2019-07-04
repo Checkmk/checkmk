@@ -42,6 +42,8 @@ enum LogLevel { kLogBase = 0, kLogDebug = 1, kLogAll = 2 };
 constexpr int kBackupLogMaxCount = 5;
 constexpr size_t kBackupLogMaxSize = 8 * 1024 * 1024;
 
+constexpr uint32_t kMaxOhmErrorsBeforeRestart = 3;
+
 constexpr int kDefaultLogLevel = kLogBase;
 
 // #TODO CONFIRM VALUE:
@@ -147,7 +149,7 @@ constexpr const wchar_t* kAgentUtils = L"utils";          // anything to use
 constexpr const wchar_t* kFileInstallDir = L"install";    // from here!
 
 // ProgramData/CheckMK/Agent
-constexpr const wchar_t* kAgentBin = L"bin";  // owned by agent legacy for OHM
+constexpr const wchar_t* kUserBin = L"bin";  // owned by agent legacy for OHM
 
 constexpr const wchar_t* kCache = L"cache";             // owned by agent
 constexpr const wchar_t* kUserPlugins = L"plugins";     // owned by user

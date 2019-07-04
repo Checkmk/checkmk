@@ -84,6 +84,10 @@ public:
     virtual void registerCommandLine(const std::string& CmdLine);
 
     virtual void preStart() noexcept {}
+    uint64_t errorCount() const { return error_count_; }
+    uint64_t resetError() { return error_count_.exchange(0); }
+
+    char separator() const { return separator_; }
 
 protected:
     // conditionally(depending from the name of section) sets delay after error
@@ -106,8 +110,6 @@ protected:
     virtual std::string makeBody() = 0;
 
     const std::string uniq_name_;  // unique identification of section provider
-    std::string ip_;
-    char separator_;
 
     cma::carrier::CoreCarrier carrier_;  // transport
     std::chrono::time_point<std::chrono::steady_clock> allowed_from_time_;
@@ -119,11 +121,19 @@ protected:
 
     int timeout_;  // may be set in...
     bool enabled_;
+    // optional API to store info about errors used, for example by OHM
+    uint64_t registerError() { return error_count_.fetch_add(1); }
+
+private:
+    std::string ip_;
+    char separator_;
+    std::atomic<uint64_t> error_count_ = 0;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ProviderTest;
     FRIEND_TEST(ProviderTest, WmiAll);
     FRIEND_TEST(ProviderTest, BasicWmi);
+    FRIEND_TEST(ProviderTest, BasicWmiDefaultsAndError);
 #endif
 };
 

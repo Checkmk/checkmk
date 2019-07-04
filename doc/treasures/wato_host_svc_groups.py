@@ -40,7 +40,7 @@ import sys
 path = sys.argv[1]
 
 alias = False
-next = False
+next_ = False
 
 servicegroups = {}
 hostgroups = {}
@@ -52,16 +52,16 @@ for line in file(path).readlines():
             attr = attr.strip()
             value = value.strip()
             if attr == "hostgroup_name":
-                next = "hostgroup"
+                next_ = "hostgroup"
                 name = value
             elif attr == "servicegroup_name":
-                next = "servicegroup"
+                next_ = "servicegroup"
                 name = value
 
             if alias == True:
-                if next == "hostgroup":
+                if next_ == "hostgroup":
                     hostgroups[name] = value
-                elif next == "servicegroup":
+                elif next_ == "servicegroup":
                     servicegroups[name] = value
                 alias = False
             alias = True

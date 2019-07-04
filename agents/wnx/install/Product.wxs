@@ -554,8 +554,8 @@ just to signal that real build script was not called -->
         <File Id="check_mk.yml" Source="resources\check_mk.yml" DiskId="1" />
       </Component>
 
-      <Component Id="readme.md" Guid="{14F083A7-2ACE-4738-A8E4-3D5D8C1DA50C}">
-        <File Id="readme.md" Source="resources\readme.md" DiskId="1" />
+      <Component Id="readme.txt" Guid="{14F083A7-2ACE-4738-A8E4-3D5D8C1DA50C}">
+        <File Id="readme.txt" Source="resources\readme.txt" DiskId="1" />
       </Component>
       
       <!-- not required anybmore -->

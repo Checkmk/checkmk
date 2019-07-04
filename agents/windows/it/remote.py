@@ -120,7 +120,7 @@ class IniWriter(ConfigParser.RawConfigParser):
         case-insensitive variants.
         """
         if section.lower() == 'default':
-            raise ValueError, 'Invalid section name: %s' % section
+            raise ValueError('Invalid section name: %s' % section)
 
         if section in self._sections:
             raise DuplicateSectionError(section)

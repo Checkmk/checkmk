@@ -1,0 +1,14 @@
+Title: veeam_tapejobs: treat idle background jobs like working ones
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p20
+Date: 1562061831
+
+Previously idle backgroud jobs went to a {CRIT} state right away.
+They are now treated in the same manner as working backgroud jobs,
+going to {WARN} or {CRIT} when the corresponding configured (or default)
+levels are exceeded.

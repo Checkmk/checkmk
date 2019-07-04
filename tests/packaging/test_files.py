@@ -43,12 +43,11 @@ def _edition_short_from_pkg_path(pkg_path):
 
 # In case packages grow/shrink this check has to be changed.
 @pytest.mark.parametrize("what,min_size,max_size", [
-    ("rpm", 168 * 1024 * 1024, 203 * 1024 * 1024),
-    ("deb", 133 * 1024 * 1024, 144 * 1024 * 1024),
-    ("cma", 243 * 1024 * 1024, 253 * 1024 * 1024),
-    ("tar.gz", 384 * 1024 * 1024, 394 * 1024 * 1024),
+    ("rpm", 167 * 1024 * 1024, 201 * 1024 * 1024),
+    ("deb", 133 * 1024 * 1024, 145 * 1024 * 1024),
+    ("cma", 240 * 1024 * 1024, 250 * 1024 * 1024),
+    ("tar.gz", 384 * 1024 * 1024, 441 * 1024 * 1024),
 ])
-@pytest.mark.skip(reason="removed quite a few Python packages")
 def test_package_sizes(version_path, what, min_size, max_size):
     for pkg in _get_package_paths(version_path, what):
         file_name = os.path.basename(pkg)

@@ -2,6 +2,8 @@
 checkname = 'systemd_units'
 
 info = [
+    ['[list-unit-files]'],
+    ['[all]'],
     ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
     [
         'proc-sys-fs-binfmt_misc.automount', 'loaded', 'active', 'running', 'Arbitrary',
@@ -135,19 +137,6 @@ info = [
         'ureadahead-stop.timer', 'loaded', 'active', 'elapsed', 'Stop', 'ureadahead', 'data',
         'collection', '45s', 'after', 'completed', 'startup'
     ],
-    [],
-    ['LOAD', '=', 'Reflects', 'whether', 'the', 'unit', 'definition', 'was', 'properly', 'loaded.'],
-    [
-        'ACTIVE', '=', 'The', 'high-level', 'unit', 'activation', 'state,', 'i.e.',
-        'generalization', 'of', 'SUB.'
-    ],
-    [
-        'SUB', '=', 'The', 'low-level', 'unit', 'activation', 'state,', 'values', 'depend', 'on',
-        'unit', 'type.'
-    ],
-    [],
-    ['54', 'loaded', 'units', 'listed.'],
-    ['To', 'show', 'all', 'installed', 'unit', 'files', 'use', "'systemctl", "list-unit-files'."],
 ]
 
 discovery = {'services': [], 'services_summary': [('Summary', {})]}

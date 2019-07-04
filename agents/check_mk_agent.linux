@@ -400,7 +400,7 @@ run_real_time_checks() {
 }
 
 echo "<<<check_mk>>>"
-echo "Version: 1.6.0b3"
+echo "Version: 1.6.0b4"
 echo "AgentOS: linux"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

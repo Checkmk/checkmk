@@ -1093,7 +1093,7 @@ class FilterServiceState(Filter):
         html.begin_checkbox_group()
         html.hidden_field(self.prefix + "_filled", "1", add_var=True)
         for var, text in [(self.prefix + "st0", _("OK")), (self.prefix + "st1", _("WARN")), \
-                          (self.prefix + "st2", _("CRIT")), (self.prefix + "st3", _("UNKNOWN")),
+                          (self.prefix + "st2", _("CRIT")), (self.prefix + "st3", _("UNKN")),
                           (self.prefix + "stp", _("PEND"))]:
             html.checkbox(var, True if not self._filter_used() else False, label=text)
         html.end_checkbox_group()
@@ -1195,7 +1195,7 @@ class FilterHostState(Filter):
             ("hst0", _("UP")),
             ("hst1", _("DOWN")),
             ("hst2", _("UNREACH")),
-            ("hstp", _("PENDING")),
+            ("hstp", _("PEND")),
         ]:
             html.checkbox(var, True if not self._filter_used() else False, label=text)
         html.end_checkbox_group()
@@ -3325,7 +3325,7 @@ class BIStatusFilter(Filter):
             ('1', _('WARN')),
             ('2', _('CRIT')),
             ('3', _('UNKN')),
-            ('-1', _('PENDING')),
+            ('-1', _('PEND')),
             ('n', _('no assumed state set')),
         ]:
             if self.code != 'a' and varend == 'n':

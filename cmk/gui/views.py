@@ -1938,8 +1938,7 @@ def infos_needed_by_painter(painter, add_columns=None):
     if add_columns is None:
         add_columns = []
 
-    return set(
-        [c.split("_", 1)[0] for c in painter.columns if c != "site" and c not in add_columns])
+    return {c.split("_", 1)[0] for c in painter.columns if c != "site" and c not in add_columns}
 
 
 def painter_choices(painters, add_params=False):

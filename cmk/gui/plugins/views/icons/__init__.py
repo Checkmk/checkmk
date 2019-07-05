@@ -172,13 +172,13 @@ def _process_icon(what, row, tags, custom_vars, icon_id, icon):
 #  False to get only columns for dropdown menu icons
 #  None to get columns for all active icons
 def iconpainter_columns(what, toplevel):
-    cols = set([
+    cols = {
         'site',
         'host_name',
         'host_address',
         'host_custom_variable_names',
         'host_custom_variable_values',
-    ])
+    }
 
     if what == 'service':
         cols.update([

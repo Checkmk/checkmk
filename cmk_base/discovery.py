@@ -94,7 +94,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             hostnames += host_config.nodes
 
     # Then remove clusters and make list unique
-    hostnames = list(set([h for h in hostnames if not config_cache.get_host_config(h).is_cluster]))
+    hostnames = list({h for h in hostnames if not config_cache.get_host_config(h).is_cluster})
     hostnames.sort()
 
     # Now loop through all hosts

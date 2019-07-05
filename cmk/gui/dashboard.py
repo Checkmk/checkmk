@@ -916,7 +916,7 @@ def dashlet_styles(board):
 
 
 def used_dashlet_types(board):
-    type_names = list(set([d['type'] for d in board['dashlets']]))
+    type_names = list({d['type'] for d in board['dashlets']})
     return [dashlet_registry[ty] for ty in type_names]
 
 

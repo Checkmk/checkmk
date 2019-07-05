@@ -2305,7 +2305,7 @@ class CMEFolder(CREFolder):
                 "involved_customers": set()
             }
             subfolder._determine_involved_customers(result_dict)
-            other_customers = result_dict["involved_customers"] - set([target_folder_customer])
+            other_customers = result_dict["involved_customers"] - {target_folder_customer}
             if other_customers:
                 other_customers_text = ", ".join(
                     map(managed.get_customer_name_by_id, other_customers))

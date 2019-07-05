@@ -57,8 +57,8 @@ def compare_soup(html1, html2):
         assert type(d1) == type(d2), "\n%s\n%s" % (type(d1), type(d2))
 
         if isinstance(d1, NavigableString):
-            set1 = set([x for x in subber(d1).split(' ') if x])
-            set2 = set([x for x in subber(d2).split(' ') if x])
+            set1 = {x for x in subber(d1).split(' ') if x}
+            set2 = {x for x in subber(d2).split(' ') if x}
             assert set1 == set2, "\n%s\n%s\n" % (set1, set2)
 
         else:

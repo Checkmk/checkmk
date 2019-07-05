@@ -212,7 +212,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
     if only_check_plugin_names is None:
-        only_check_plugins = set([e[0] for e in table])
+        only_check_plugins = {e[0] for e in table}
     else:
         only_check_plugins = set(only_check_plugin_names)
 

@@ -79,7 +79,7 @@ class FilterWatoFolder(Filter):
         # least one host in that folder.
         result = sites.live().query(
             "GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n")
-        allowed_folders = set([""])
+        allowed_folders = {""}
         for path, _host_count in result:
             # convert '/wato/server/hosts.mk' to 'server'
             folder = path[6:-9]

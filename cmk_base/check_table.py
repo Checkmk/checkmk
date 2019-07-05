@@ -117,8 +117,9 @@ class HostCheckTable(object):
                         check_table.update(self._handle_entry(checkname, item, cluster_params))
 
         # Remove dependencies to non-existing services
-        all_descr = set(
-            [descr for ((checkname, item), (params, descr, deps)) in check_table.iteritems()])
+        all_descr = {
+            descr for ((checkname, item), (params, descr, deps)) in check_table.iteritems()
+        }
         for (checkname, item), (params, descr, deps) in check_table.iteritems():
             deeps = deps[:]
             del deps[:]
@@ -318,7 +319,7 @@ def get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None, 
 
     ordered = []
     while len(unsorted) > 0:
-        unsorted_descrs = set([entry[3] for entry in unsorted])
+        unsorted_descrs = {entry[3] for entry in unsorted}
         left = []
         at_least_one_hit = False
         for check in unsorted:

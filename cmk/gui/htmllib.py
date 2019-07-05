@@ -474,15 +474,15 @@ class HTMLGenerator(OutputFunnel):
     # TODO: Replace u, i, b with underline, italic, bold, usw.
 
     # these tags can be called by their tag names, e.g. 'self.title(content)'
-    _shortcut_tags = set(["title", "h1", "h2", "h3", "h4", "th", "tr", "td", "center", "pre", "style", "iframe",\
-                          "div", "p", "span", "canvas", "strong", "sub", "tt", "u", "i", "b", "x", "option"])
+    _shortcut_tags = {"title", "h1", "h2", "h3", "h4", "th", "tr", "td", "center", "pre", "style", "iframe",\
+                          "div", "p", "span", "canvas", "strong", "sub", "tt", "u", "i", "b", "x", "option"}
 
     # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
-    _tag_names = set([
+    _tag_names = {
         'html', 'head', 'body', 'header', 'footer', 'a', 'b', 'sup', 'script', 'form', 'button',
         'p', 'select', 'fieldset', 'table', 'tbody', 'row', 'ul', 'li', 'br', 'nobr', 'input',
         'span', 'tags', 'tag'
-    ])
+    }
 
     # Of course all shortcut tags can be used as well.
     _tag_names.update(_shortcut_tags)

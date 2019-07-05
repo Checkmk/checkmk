@@ -1050,7 +1050,7 @@ class Overridable(Base):
             for owner, instance_id in to_delete:
                 cls.remove_instance((owner, instance_id))
 
-            for owner in set([e[0] for e in to_delete]):
+            for owner in {e[0] for e in to_delete}:
                 cls.save_user_instances(owner)
 
             html.reload_sidebar()

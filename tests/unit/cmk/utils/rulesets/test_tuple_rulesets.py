@@ -158,34 +158,34 @@ def test_in_boolean_serviceconf_list(ts, parameters):
 def test_all_matching_hosts(ts):
     config_cache = ts.config_cache
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}}, with_foreign_hosts=False) == \
-            set(["host1", "host2"])
+            {"host1", "host2"}
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"criticality": "test"}}, with_foreign_hosts=False) == \
-            set(["host1"])
+            {"host1"}
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"criticality": {"$ne": "test"}}}, with_foreign_hosts=False) == \
-            set(["host2"])
+            {"host2"}
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"criticality": {"$ne": "test"}}}, with_foreign_hosts=True) == \
-            set(["host2", "host3"])
+            {"host2", "host3"}
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": []}, with_foreign_hosts=True) == \
     set([])
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": ["host1"]}, with_foreign_hosts=True) == \
-    set(["host1"])
+    {"host1"}
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": {"$ne": "no-agent"}}, "host_name": ["host1"]}, with_foreign_hosts=False) == \
     set([])
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": "h"}]}, with_foreign_hosts=False) == \
-    set(["host1", "host2"])
+    {"host1", "host2"}
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": ".*2"}]}, with_foreign_hosts=False) == \
-    set(["host2"])
+    {"host2"}
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": ".*2$"}]}, with_foreign_hosts=False) == \
-    set(["host2"])
+    {"host2"}
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts({"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": "2"}]}, with_foreign_hosts=False) == \
     set([])

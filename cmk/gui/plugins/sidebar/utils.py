@@ -350,7 +350,7 @@ def visuals_by_topic(permitted_visuals, default_order=None):
     for topic in default_order:
         result.append((topic, s))
 
-    rest = list(set([t for (t, _t, _v, _i) in s if t not in default_order]))
+    rest = list({t for (t, _t, _v, _i) in s if t not in default_order})
     rest.sort()
     for topic in rest:
         if topic:

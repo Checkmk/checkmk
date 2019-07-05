@@ -62,7 +62,7 @@ class TranslationBaseChecker(BaseChecker):
     """
 
     __implements__ = (IAstroidChecker,)
-    TRANSLATION_FUNCTIONS = set([
+    TRANSLATION_FUNCTIONS = {
         '_',
         'gettext',
         'ngettext',
@@ -76,7 +76,7 @@ class TranslationBaseChecker(BaseChecker):
         'ugettext_noop',
         'ungettext',
         'ungettext_lazy',
-    ])
+    }
 
     name = 'translation-base-checker'
     BASE_ID = 76

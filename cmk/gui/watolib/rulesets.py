@@ -881,7 +881,7 @@ class Rule(object):
             host_paths={match_object.host_name: match_object.host_folder},
             # TODO: What about the host_label_rules?
             labels=LabelManager({match_object.host_name: match_object.host_labels}, []),
-            all_configured_hosts=set([match_object.host_name]),
+            all_configured_hosts={match_object.host_name},
             clusters_of={},
             nodes_of={},
         )

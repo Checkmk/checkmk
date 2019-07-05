@@ -90,8 +90,16 @@ class MenuItem(object):
     def sort_index(self):
         return self._sort_index
 
+    @property
+    def enabled(self):
+        # type: () -> bool
+        return True
+
     def may_see(self):
         """Whether or not the currently logged in user is allowed to see this module"""
+        if not self.enabled:
+            return False
+
         if self.permission is None:
             return True
 

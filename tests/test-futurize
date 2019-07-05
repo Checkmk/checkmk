@@ -41,7 +41,7 @@ ENABLED_FIXERS=
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_imports"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_imports2"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_reload"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_set_literal"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_set_literal"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_urllib"
 
 # *** Mechanical/easy fixers ***

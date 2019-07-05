@@ -1,6 +1,6 @@
 # yapf: disable
-from itertools import izip_longest
 from collections import namedtuple
+from six.moves import zip_longest
 import pytest
 from cmk_base.check_api import MKGeneralException
 from checktestlib import CheckResult, assertCheckResultsEqual
@@ -182,7 +182,7 @@ def test_parse_ps(check_manager, capture, result):
 
     parsed = check.run_parse(capture)
     assert parsed[0] == result[0]  # cpu_cores
-    for out, ref in izip_longest(parsed[1], result[1]):
+    for out, ref in zip_longest(parsed[1], result[1]):
         assert out[0] == ref[0]
         assert out[1] == check.context["ps_info"](*ref[1])
         assert out[2:] == ref[2:]

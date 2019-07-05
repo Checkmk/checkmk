@@ -29,12 +29,10 @@ import re
 import pprint
 import base64
 import pickle
-from contextlib import contextmanager
 
 import cmk
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
-import cmk.utils.store as store
 
 import cmk.gui.config as config
 from cmk.gui.globals import html
@@ -123,21 +121,6 @@ def default_site():
 def format_config_value(value):
     format_func = pprint.pformat if config.wato_pprint_config else repr
     return format_func(value)
-
-
-@contextmanager
-def lock_checkmk_configuration():
-    path = cmk.utils.paths.default_config_dir + "/multisite.mk"
-    store.aquire_lock(path)
-    try:
-        yield
-    finally:
-        store.release_lock(path)
-
-
-# TODO: Use lock_checkmk_configuration() and nuke this!
-def lock_exclusive():
-    store.aquire_lock(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
 
 def mk_repr(s):

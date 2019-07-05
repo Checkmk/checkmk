@@ -27,6 +27,8 @@
 
 import collections
 
+import cmk.utils.store as store
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -133,7 +135,7 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
         if state in ["direct", "root", "gateway"]:
             # The following code updates the host config. The progress from loading the WATO folder
             # until it has been saved needs to be locked.
-            with watolib.lock_checkmk_configuration():
+            with store.lock_checkmk_configuration():
                 self._configure_host_and_gateway(task, settings, state, gateway)
         else:
             self._logger.error(error)

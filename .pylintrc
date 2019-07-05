@@ -112,6 +112,8 @@ disable=
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.
+    # NOTE: If we want to enable one of these checks, we need to add pyenchant
+    # to our dev dependencies.
     wrong-spelling-in-comment,
     wrong-spelling-in-docstring,
 

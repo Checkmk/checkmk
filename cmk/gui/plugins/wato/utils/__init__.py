@@ -39,6 +39,7 @@ from typing import Callable, Optional, List, Dict  # pylint: disable=unused-impo
 import six
 
 import cmk.utils.plugin_registry
+import cmk.utils.store
 
 from cmk.gui.globals import current_app
 import cmk.gui.mkeventd
@@ -185,7 +186,6 @@ from cmk.gui.watolib import (
     ConfigDomainCACertificates,
     LivestatusViaTCP,
     site_neutral_path,
-    lock_exclusive,
 )
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,
@@ -2211,7 +2211,7 @@ class WatoBackgroundProcess(gui_background_job.GUIBackgroundProcess):
 
         if self._jobstatus.get_status_from_file().get("lock_wato"):
             cmk.utils.store.release_all_locks()
-            lock_exclusive()
+            cmk.utils.store.lock_exclusive()
 
 
 class WatoBackgroundJob(gui_background_job.GUIBackgroundJob):

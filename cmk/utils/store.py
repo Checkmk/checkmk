@@ -28,6 +28,7 @@ functionality is the locked file opening realized with the File() context
 manager."""
 
 import ast
+from contextlib import contextmanager
 import errno
 import fcntl
 import os
@@ -41,11 +42,40 @@ import pathlib2 as pathlib
 import cmk.utils.log
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.i18n import _
+from cmk.utils.paths import default_config_dir
 
 logger = cmk.utils.log.get_logger("store")
 
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.
+
+#.
+#   .--Predefined----------------------------------------------------------.
+#   |          ____               _       __ _                _            |
+#   |         |  _ \ _ __ ___  __| | ___ / _(_)_ __   ___  __| |           |
+#   |         | |_) | '__/ _ \/ _` |/ _ \ |_| | '_ \ / _ \/ _` |           |
+#   |         |  __/| | |  __/ (_| |  __/  _| | | | |  __/ (_| |           |
+#   |         |_|   |_|  \___|\__,_|\___|_| |_|_| |_|\___|\__,_|           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Predefined locks                                                     |
+#   '----------------------------------------------------------------------'
+
+
+@contextmanager
+def lock_checkmk_configuration():
+    path = default_config_dir + "/multisite.mk"
+    aquire_lock(path)
+    try:
+        yield
+    finally:
+        release_lock(path)
+
+
+# TODO: Use lock_checkmk_configuration() and nuke this!
+def lock_exclusive():
+    aquire_lock(default_config_dir + "/multisite.mk")
+
 
 #.
 #.

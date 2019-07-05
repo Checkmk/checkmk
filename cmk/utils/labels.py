@@ -60,8 +60,9 @@ class LabelManager(object):
 
     def label_sources_of_host(self, ruleset_matcher, hostname):
         # type: (RulesetMatcher, str) -> Dict[str, str]
-        """Returns the effective set of host label keys with their source identifier instead of the value
-        Order and merging logic is equal to _get_host_labels()"""
+        """Returns the effective set of host label keys with their source
+        identifier instead of the value Order and merging logic is equal to
+        _get_host_labels()"""
         labels = {}
         labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
         labels.update(
@@ -116,14 +117,14 @@ class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
 
 
 class DiscoveredServiceLabelsStore(ABCDiscoveredLabelsStore):
-    def __init__(self, hostname, service_desc):
-        # type: (str, Text) -> None
+    """The labels of all services per host are stored in a single file
+    in the path var/check_mk/discovered_service_labels."""
+    def __init__(self, hostname):
+        # type: (str) -> None
         super(DiscoveredServiceLabelsStore, self).__init__()
         self._hostname = hostname
-        self._service_desc = service_desc
 
     @property
     def file_path(self):
         # type () -> Path
-        return (cmk.utils.paths.discovered_service_labels_dir / self._hostname /
-                self._service_desc).with_suffix(".mk")
+        return (cmk.utils.paths.discovered_service_labels_dir / self._hostname).with_suffix(".mk")

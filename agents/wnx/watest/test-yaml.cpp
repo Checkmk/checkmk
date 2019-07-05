@@ -321,7 +321,7 @@ TEST(AgentConfig, SmartMerge) {
 
         // merge bakery to target
         ConfigInfo::smartMerge(target_config, source_bakery,
-                               ConfigInfo::Combine::overwrite);
+                               Combine::overwrite);
 
         // CHECK result
         auto gl = target_config[groups::kGlobal];
@@ -359,7 +359,7 @@ TEST(AgentConfig, SmartMerge) {
 
         // merge and check output INTO core
         ConfigInfo::smartMerge(target_config, source_bakery,
-                               ConfigInfo::Combine::overwrite);
+                               Combine::overwrite);
 
         // CHECK result
         gl = target_config[groups::kGlobal];
@@ -460,7 +460,7 @@ TEST(AgentConfig, Aggregate) {
             ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(), 3);
             auto b = YAML::LoadFile(cfgs[1].u8string());
             ASSERT_EQ(b[groups::kWinPerf][vars::kWinPerfCounters].size(), 4);
-            ConfigInfo::smartMerge(r, b, ConfigInfo::Combine::overwrite);
+            ConfigInfo::smartMerge(r, b, Combine::overwrite);
             ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(),
                       6);  // three new, 638, 9999 and ts
             ASSERT_EQ(r["bakery"]["status"].as<std::string>(), "loaded");
@@ -1131,6 +1131,80 @@ TEST(AgentConfig, GlobalTest) {
 
     auto val = groups::global.getWmiTimeout();
     EXPECT_TRUE((val >= 1) && (val < 100));
+}
+
+#define LW_ROOT_APP "- application: warn context"
+#define LW_ROOT_STAR "- \"*\": warn nocontext"
+
+#define LW_USER_APP "- application: warn nocontext"
+#define LW_USER_SYS "- system: warn context"
+
+static std::string lw_user =
+    "  logfile:\n"
+    "    " LW_USER_APP
+    "\n"
+    "    " LW_USER_SYS "\n";
+
+static std::string lw_root =
+    "  logfile:\n"
+    "    " LW_ROOT_APP
+    "\n"
+    "    " LW_ROOT_STAR "\n";
+
+TEST(AgentConfig, MergeSeqCombineExpected) {
+    EXPECT_EQ(details::GetCombineMode(groups::kWinPerf),
+              details::Combine::merge);
+    EXPECT_EQ(details::GetCombineMode(groups::kLogWatchEvent),
+              details::Combine::merge_value);
+    EXPECT_EQ(details::GetCombineMode(""), details::Combine::overwrite);
+    EXPECT_EQ(details::GetCombineMode(groups::kLogFiles),
+              details::Combine::overwrite);
+}
+
+TEST(AgentConfig, MergeSeqCombineValue) {
+    YAML::Node user = YAML::Load(lw_user);
+    YAML::Node target = YAML::Load(lw_root);
+    cma::cfg::details::CombineSequence("name", target["logfile"],
+                                       user["logfile"],
+                                       details::Combine::merge_value);
+    YAML::Emitter emit;
+    emit << target["logfile"];
+    auto result = emit.c_str();
+    auto table = cma::tools::SplitString(result, "\n");
+    EXPECT_EQ(table.size(), 3);
+    EXPECT_EQ(table[0], LW_USER_APP);
+    EXPECT_EQ(table[1], LW_USER_SYS);
+    EXPECT_EQ(table[2], LW_ROOT_STAR);
+}
+
+TEST(AgentConfig, MergeSeqCombine) {
+    YAML::Node user = YAML::Load(lw_user);
+    YAML::Node target = YAML::Load(lw_root);
+    cma::cfg::details::CombineSequence(
+        "name", target["logfile"], user["logfile"], details::Combine::merge);
+    YAML::Emitter emit;
+    emit << target["logfile"];
+    auto result = emit.c_str();
+    auto table = cma::tools::SplitString(result, "\n");
+    EXPECT_EQ(table.size(), 3);
+    EXPECT_EQ(table[0], LW_ROOT_APP);
+    EXPECT_EQ(table[1], LW_ROOT_STAR);
+    EXPECT_EQ(table[2], LW_USER_SYS);
+}
+
+TEST(AgentConfig, MergeSeqOverride) {
+    YAML::Node user = YAML::Load(lw_user);
+    YAML::Node target = YAML::Load(lw_root);
+    cma::cfg::details::CombineSequence("name", target["logfile"],
+                                       user["logfile"],
+                                       details::Combine::overwrite);
+    YAML::Emitter emit;
+    emit << target["logfile"];
+    auto result = emit.c_str();
+    auto table = cma::tools::SplitString(result, "\n");
+    EXPECT_EQ(table.size(), 2);
+    EXPECT_EQ(table[0], LW_USER_APP);
+    EXPECT_EQ(table[1], LW_USER_SYS);
 }
 
 static std::string node_text =

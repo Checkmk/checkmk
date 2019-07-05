@@ -131,6 +131,11 @@ private:
 
 namespace cma::cfg {
 namespace details {
+// low level API to combine sequences
+enum class Combine { overwrite, merge, merge_value };
+constexpr Combine GetCombineMode(std::string_view name);
+void CombineSequence(std::string_view name, YAML::Node target_value,
+                     const YAML::Node source_value, Combine combine);
 
 // critical and invisible global variables
 // YAML config and PAThs are here
@@ -349,7 +354,6 @@ public:
     LoadCfgStatus loadAggregated(const std::wstring& config_filename,
                                  YamlCacheOp cache_op);
 
-    enum class Combine { overwrite, merge };
     static bool smartMerge(YAML::Node Target, YAML::Node Src, Combine combine);
 
     // THIS IS ONLY FOR TESTING

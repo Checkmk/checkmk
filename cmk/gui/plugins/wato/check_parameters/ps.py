@@ -275,11 +275,20 @@ def match_alt(x):
     return 0
 
 
+def validate_process_discovery_descr_option(description, varprefix):
+    if '%s' in description and re.search(r'%(\d+)', description):
+        raise MKUserError(
+            varprefix,
+            _('Combining "%s" and "%1" style replacements in the sevice description is not allowed.'
+             ))
+
+
 def process_discovery_descr_option():
     return TextAscii(
         title=_('Process Name'),
         style="dropdown",
         allow_empty=False,
+        validate=validate_process_discovery_descr_option,
         help=_("<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
                "you do this, then the pattern must be a regular expression and be prefixed "
                "with ~. For each <tt>%s</tt> in the description, the expression has to "

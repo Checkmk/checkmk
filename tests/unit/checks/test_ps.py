@@ -523,14 +523,15 @@ def test_inventory_common(check_manager):
     ("PS %2 %1", ["service", "check"], "PS check service"),
     ("PS %2 %1", ["service", "check", "sm"], "PS check service"),
     ("PS %s %s", ["service", "rename"], "PS service rename"),
-    ("PS %2 %s", ["service", "rename"], "PS rename service"),
     ("My Foo Service", ("Moo", "Cow"), "My Foo Service"),
     ("My %sService", ("", "Cow"), "My Service"),
-    # TODO: thos should result in "My Service" as well
+    # TODO: this should result in "My Service" as well
     ("My %sService", (None, "Cow"), "My NoneService"),
     ("My %s Service", ("Moo", "Cow"), "My Moo Service"),
     ("My %2 Service sais '%1!'", ("Moo", "Cow"), "My Cow Service sais 'Moo!'"),
-    # the following is not very sensible. Make sure we know what's happening, though
+    # the following is not very sensible, and not allowed by WATO configuration since 1.7.0i1.
+    # Make sure we know what's happening, though
+    ("PS %2 %s", ["service", "rename"], "PS rename service"),
     ("%s %2 %s %1", ("one", "two", "three", "four"), "one two two one")
 ])
 def test_replace_service_description(check_manager, service_description, matches, result):

@@ -446,27 +446,27 @@ PS_DISCOVERED_ITEMS = [
         "process_info": "html",
         "virtual_levels": (1024**3, 2 * 1024**3),
         "resident_levels": (1024**3, 2 * 1024**3),
-        "match_groups": [],
+        "match_groups": (),
     }),
     ("firefox is on fire", {
         "process": "~.*(fire)fox",
         "process_info": "text",
         "user": None,
         'cpu_rescale_max': None,
-        'match_groups': ['fire'],
+        'match_groups': ('fire',),
     }),
     ("Checkhelpers heute", {
         "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
         "process_info": "text",
         "user": None,
         'cpu_rescale_max': None,
-        'match_groups': ['heute'],
+        'match_groups': ('heute',),
     }),
     ("Checkhelpers Overall", {
         "process": "~/omd/sites/\\w+/lib/cmc/checkhelper",
         "process_info": "text",
         "user": None,
-        'match_groups': [],
+        'match_groups': (),
         'cpu_rescale_max': None,
     }),
     ("Checkhelpers twelve", {
@@ -474,19 +474,19 @@ PS_DISCOVERED_ITEMS = [
         "process_info": "text",
         "user": None,
         'cpu_rescale_max': None,
-        'match_groups': ['twelve'],
+        'match_groups': ('twelve',),
     }),
     ("sshd", {
         "process": "~.*sshd",
         "user": None,
         'cpu_rescale_max': None,
-        "match_groups": [],
+        "match_groups": (),
     }),
     ("PS counter", {
         'cpu_rescale_max': None,
         'process': None,
         'user': 'zombie',
-        "match_groups": [],
+        "match_groups": (),
     }),
     ("svchost", {
         "cpulevels": (90.0, 98.0),
@@ -500,13 +500,13 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         "virtual_levels": (1073741824000, 2147483648000),
         'cpu_rescale_max': None,
-        "match_groups": [],
+        "match_groups": (),
     }),
     ("smss", {
         "process": "~smss.exe",
         "user": None,
         'cpu_rescale_max': None,
-        "match_groups": [],
+        "match_groups": (),
     }),
 ]
 
@@ -525,14 +525,13 @@ def test_inventory_common(check_manager):
     ("PS %s %s", ["service", "rename"], "PS service rename"),
     ("My Foo Service", ("Moo", "Cow"), "My Foo Service"),
     ("My %sService", ("", "Cow"), "My Service"),
-    # TODO: this should result in "My Service" as well
-    ("My %sService", (None, "Cow"), "My NoneService"),
+    ("My %sService", (None, "Cow"), "My Service"),
     ("My %s Service", ("Moo", "Cow"), "My Moo Service"),
     ("My %2 Service sais '%1!'", ("Moo", "Cow"), "My Cow Service sais 'Moo!'"),
     # the following is not very sensible, and not allowed by WATO configuration since 1.7.0i1.
     # Make sure we know what's happening, though
-    ("PS %2 %s", ["service", "rename"], "PS rename service"),
-    ("%s %2 %s %1", ("one", "two", "three", "four"), "one two two one")
+    ("PS %2 %s", ["service", "rename"], "PS rename rename"),
+    ("%s %2 %s %1", ("one", "two", "three", "four"), "three two four one")
 ])
 def test_replace_service_description(check_manager, service_description, matches, result):
     check = check_manager.get_check("ps")
@@ -759,21 +758,21 @@ def test_subset_patterns(check_manager):
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999),
             'process': '~(main.*)\\b',
-            'match_groups': ['main'],
+            'match_groups': ('main',),
             'user': None,
         }),
         ('main_dev', {
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999),
             'process': '~(main.*)\\b',
-            'match_groups': ['main_dev'],
+            'match_groups': ('main_dev',),
             'user': None,
         }),
         ('main_test', {
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999),
             'process': '~(main.*)\\b',
-            'match_groups': ['main_test'],
+            'match_groups': ('main_test',),
             'user': None,
         }),
     ]

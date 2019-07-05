@@ -26,6 +26,7 @@
 """Helper functions for dealing with host tags"""
 
 import os
+import errno
 from pathlib2 import Path
 
 import cmk.utils.paths
@@ -56,13 +57,16 @@ class TagConfigFile(WatoSimpleConfigFile):
             return self._load_pre_16_config(lock=lock)
         return super(TagConfigFile, self)._load_file(lock=lock)
 
+    def _pre_16_hosttags_path(self):
+        return Path(multisite_dir()).joinpath("hosttags.mk")
+
     def _load_pre_16_config(self, lock):
-        file_path = Path(multisite_dir()) / "hosttags.mk"
         legacy_cfg = store.load_mk_file(
-            str(file_path), {
+            str(self._pre_16_hosttags_path()), {
                 "wato_host_tags": [],
                 "wato_aux_tags": []
-            }, lock=lock)
+            },
+            lock=lock)
 
         return cmk.utils.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
                                                     legacy_cfg["wato_aux_tags"])
@@ -71,6 +75,14 @@ class TagConfigFile(WatoSimpleConfigFile):
     def save(self, cfg):
         super(TagConfigFile, self).save(cfg)
         self._save_base_config(cfg)
+
+        # Cleanup pre 1.6 config files (tags were just saved with new path)
+        try:
+            self._pre_16_hosttags_path().unlink()  # pylint: disable=no-member
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
         _export_hosttags_to_php(cfg)
 
     def _save_base_config(self, cfg):

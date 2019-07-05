@@ -1306,6 +1306,25 @@ def test_labels_of_service(monkeypatch):
     }
 
 
+def test_host_labels_of_service_discovered_labels(monkeypatch, tmp_path):
+    ts = Scenario().add_host("test-host")
+
+    monkeypatch.setattr(cmk.utils.paths, "discovered_service_labels_dir", tmp_path)
+    host_file = (tmp_path / "test-host").with_suffix(".mk")
+    with host_file.open(mode="wb") as f:
+        f.write(repr({u"CPU load": {u"äzzzz": u"eeeeez"}}) + "\n")
+
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.labels_of_service("xyz", u"CPU load") == {}
+    assert config_cache.label_sources_of_service("xyz", u"CPU load") == {}
+
+    assert config_cache.labels_of_service("test-host", u"CPU load") == {u"äzzzz": u"eeeeez"}
+    assert config_cache.label_sources_of_service("test-host", u"CPU load") == {
+        u"äzzzz": u"discovered"
+    }
+
+
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", {
         "check_interval": 1.0

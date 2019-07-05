@@ -8,6 +8,9 @@ from cmk.utils.labels import (
     DiscoveredServiceLabelsStore,
 )
 
+# Manager is currently not tested explicitly. Indirect tests can be found
+# at tests/unit/cmk_base/test_config.py::test_host_config_labels*
+
 
 @pytest.fixture()
 def discovered_host_labels_dir(tmp_path, monkeypatch):

@@ -2618,7 +2618,11 @@ class ConfigCache(object):
         tag_to_group_map = self.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)
 
-        self.labels = LabelManager(host_labels, host_label_rules)
+        self.labels = LabelManager(
+            host_labels,
+            host_label_rules,
+            service_label_rules,
+        )
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             tag_to_group_map=tag_to_group_map,
@@ -2812,19 +2816,12 @@ class ConfigCache(object):
 
         Last one wins.
         """
-        labels = {}
-        labels.update(self.service_extra_conf_merged(hostname, svc_desc, service_label_rules))
-        return labels
+        return self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc)
 
     def label_sources_of_service(self, hostname, svc_desc):
         """Returns the effective set of service label keys with their source identifier instead of the value
         Order and merging logic is equal to labels_of_service()"""
-        labels = {}
-        labels.update({
-            k: "ruleset"
-            for k in self.service_extra_conf_merged(hostname, svc_desc, service_label_rules)
-        })
-        return labels
+        return self.labels.label_sources_of_service(self.ruleset_matcher, hostname, svc_desc)
 
     def extra_attributes_of_service(self, hostname, description):
         # type: (str, Text) -> Dict[str, Any]

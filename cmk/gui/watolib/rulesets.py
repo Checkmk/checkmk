@@ -845,12 +845,18 @@ class Rule(object):
         return any(self._get_mismatch_reasons_of_match_object(match_object, host_tags=[]))
 
     def _get_mismatch_reasons_of_match_object(self, match_object, host_tags):
+        # TODO: What about the host_label_rules and service_label_rules?
+        label_manager = LabelManager(
+            explicit_host_labels={match_object.host_name: match_object.host_labels},
+            host_label_rules=[],
+            service_label_rules=[],
+        )
+
         matcher = ruleset_matcher.RulesetMatcher(
             tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags),
             host_tag_lists={match_object.host_name: host_tags},
             host_paths={match_object.host_name: match_object.host_folder},
-            # TODO: What about the host_label_rules?
-            labels=LabelManager({match_object.host_name: match_object.host_labels}, []),
+            labels=label_manager,
             all_configured_hosts=set([match_object.host_name]),
             clusters_of={},
             nodes_of={},

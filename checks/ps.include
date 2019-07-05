@@ -111,12 +111,12 @@ def inventory_ps_common(invdata, invrules, parsed):
             # New in 1.2.2b4: Alle %1, %2, etc. to be replaced with first, second, ...
             # group. This allows a reordering of the matched groups
             for nr, group in enumerate(match_groups):
-                i_servicedesc = i_servicedesc.replace("%%%d" % (nr+1), group)
+                i_servicedesc = i_servicedesc.replace("%%%d" % (nr+1), group or "")
 
             # It is allowed (1.1.4) that the pattern contains more subexpressions then the
             # service description. In that case only the first subexpressions are used as
             # item.
-            i_servicedesc = i_servicedesc % tuple(match_groups[:num_perc_s])
+            i_servicedesc = i_servicedesc % tuple(g or "" for g in match_groups[:num_perc_s])
 
             inv_params = {
                 "process" : pattern,
@@ -165,7 +165,7 @@ def process_matches_for_discovery(process_line, process_pattern, userspec):
         reg = regex(process_pattern[1:]) # skip "~"
         matchobject = reg.match(" ".join(command_line))
         if matchobject:
-            return [ g and g or "" for g in matchobject.groups() ], grabbed_user
+            return matchobject.groups(), grabbed_user
     else:
         if command_line[0] == process_pattern:
             return (), grabbed_user
@@ -178,7 +178,6 @@ def process_matches_for_check(process_line, params):
     process_pattern = params.get("process")
     user_pattern = params.get("user")
     match_groups = params.get('match_groups')
-
     user, command_line = process_line[0][0], process_line[1:]
 
     # Check process owner. Note: the first field with process information is

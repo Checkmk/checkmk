@@ -31,25 +31,7 @@ cd "$REPO_PATH"
 
 ENABLED_FIXERS=
 
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_dict"
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_idioms"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_long"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_map"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_next"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_operator"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_zip"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_basestring"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_cmp"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_division_safe"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_execfile"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_future_builtins"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_future_standard_library"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_future_standard_library_urllib"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_metaclass"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_object"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_print_with_import"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_unicode_keep_u"
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_xrange_with_import"
 
 # *** Mechanical/easy fixers ***
 #---------------------------------------------------------------------------
@@ -86,8 +68,113 @@ ENABLED_FIXERS+=" libfuturize.fixes.fix_next_call"
 ENABLED_FIXERS+=" libfuturize.fixes.fix_raise"
 ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
 
-# *** More complex fixers ***
+# *** More complex fixers, need to be verified manually ***
 #---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_dict"
+# Python 3 dictionaries have .keys(), .values(), and .items() methods which
+# return memory-efficient set-like iterator objects, not lists as in Python 2.
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_map"
+# Python 3: Returns an iterator, Python 2 returns a list.
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_zip"
+# Python 3: Returns an iterator, Python 2 returns a list.
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_operator"
+# RefactoringTool: No files need to be modified.
+# RefactoringTool: Warnings/messages while refactoring:
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_dotnet_clrmemory.py ###
+# RefactoringTool: Line 52: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_eventlog.py ###
+# RefactoringTool: Line 152: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/_test_section_openhardwaremonitor.py ###
+# RefactoringTool: Line 57: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_plugin_group.py ###
+# RefactoringTool: Line 94: You should use 'operator.mul(repeating_pattern)' here.
+# RefactoringTool: Line 107: You should use 'operator.mul(re_variadic)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_ps.py ###
+# RefactoringTool: Line 51: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_services.py ###
+# RefactoringTool: Line 38: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_winperf.py ###
+# RefactoringTool: Line 46: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_wmi_webservices.py ###
+# RefactoringTool: Line 93: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_dotnet_clrmemory.py ###
+# RefactoringTool: Line 52: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_eventlog.py ###
+# RefactoringTool: Line 145: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/_test_section_openhardwaremonitor.py ###
+# RefactoringTool: Line 57: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/_test_section_plugin_group.py ###
+# RefactoringTool: Line 94: You should use 'operator.mul(repeating_pattern)' here.
+# RefactoringTool: Line 107: You should use 'operator.mul(re_variadic)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_ps.py ###
+# RefactoringTool: Line 69: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_services.py ###
+# RefactoringTool: Line 38: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_winperf.py ###
+# RefactoringTool: Line 44: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_wmi_webservices.py ###
+# RefactoringTool: Line 89: You should use 'operator.mul(re_str)' here.
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_basestring"
+#   from past.builtins import basestring
+# As six does
+#   str_types = (str, unicode) if sys.version_info[0] == 3 else (basestring,)
+# Then we can grep after 'sys.version_info' and remove these statements
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_long"
+# Similar to libfuturize.fixes.fix_basestring
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_cmp"
+#   from past.builtins import cmp
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_division_safe"
+#-  x = a / b
+#+  from __future__ import division
+#+  from past.utils import old_div
+#+  x = old_div(a, b)
+# Note: Path("/path1") / Path("path2") is also handled :(
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_execfile"
+#   from past.builtins import execfile
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_future_builtins"
+#+  from builtins import chr, map, str, range, ...
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_future_standard_library"
+# A lot of module imports are changed
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_future_standard_library_urllib"
+# A urllib2 -> urllib
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_xrange_with_import"
+# from builtins import range
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_unicode_keep_u"
+# unicode (Python2) -> str (Python 3)
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_print_with_import"
+#+  from __future__ import print_function
+#-    print "Foo"
+#+    print("Foo")
+# Can be changed easily
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_object"
+#+  from builtins import object
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_metaclass"
+#-  class ABCSNMPBackend(object):
+#-      __metaclass__ = abc.ABCMeta
+#-
+#+  class ABCSNMPBackend(with_metaclass(abc.ABCMeta, object)):
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_next"
+# The fix_next_call fixer in libfuturize.fixes is applied instead of fix_next in
+# stage 1. The new fixer changes any obj.next() calls to next(obj), which is
+# Py2/3 compatible, but doesn’t change any next method names to __next__, which
+# would break Py2 compatibility
 
 # *** Useless fixers ***
 #---------------------------------------------------------------------------

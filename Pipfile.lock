@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f19e0f2974b0458ae76c8afb7462dbd4989aba1fed7216439b2835f69fc1984e"
+            "sha256": "fe705e3346b9bd90922c5ad3ec735faa1970253fedc69b753d3e4fbc0e5c525b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1056,7 +1056,7 @@
                 "sha256:9d98697f088eb1b0fa451391f91afb5e3ebde16bbdb272819fd091151fda4f1a",
                 "sha256:f0b0e4eba956de51238e17573b7087e852dfe9854afd2e9c873f73fc0ca0a6dd"
             ],
-            "markers": "python_version == '2.7'",
+            "markers": "python_version < '3.4'",
             "version": "==1.5"
         },
         "backports.ssl-match-hostname": {
@@ -1446,16 +1446,6 @@
             ],
             "index": "pypi",
             "version": "==0.2.2"
-        },
-        "pyenchant": {
-            "hashes": [
-                "sha256:9a66aa441535e27d228baca320f7feed1b08d0c5e6167d5e5cf455b545b7c2cd",
-                "sha256:b9526fc2c5f1ba0637e50200b645a7c20fb6644dbc6f6322027e7d2fbf1084a5",
-                "sha256:e8000144e61551fcab9cd1b6fdccdded20e577e8d6d0985533f0b2b9c38fd952",
-                "sha256:fc31cda72ace001da8fe5d42f11c26e514a91fa8c70468739216ddd8de64e2a0"
-            ],
-            "index": "pypi",
-            "version": "==2.0.0"
         },
         "pylint": {
             "hashes": [

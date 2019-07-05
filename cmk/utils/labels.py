@@ -40,11 +40,12 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObjec
 
 class LabelManager(object):
     """Helper class to manage access to the host and service labels"""
-    def __init__(self, explicit_host_labels, host_label_rules):
-        # type: (Dict, List) -> None
+    def __init__(self, explicit_host_labels, host_label_rules, service_label_rules):
+        # type: (Dict, List, List) -> None
         super(LabelManager, self).__init__()
         self._explicit_host_labels = explicit_host_labels
         self._host_label_rules = host_label_rules
+        self._service_label_rules = service_label_rules
 
     def labels_of_host(self, ruleset_matcher, hostname):
         # type: (RulesetMatcher, str) -> Dict
@@ -82,6 +83,45 @@ class LabelManager(object):
     def _discovered_labels_of_host(self, hostname):
         # type: (str) -> Dict
         return DiscoveredHostLabelsStore(hostname).load()
+
+    def labels_of_service(self, ruleset_matcher, hostname, service_desc):
+        # type: (RulesetMatcher, str, Text) -> Dict
+        """Returns the effective set of service labels from all available sources
+
+        1. Discovered labels
+        2. Ruleset "Host labels"
+
+        Last one wins.
+        """
+        labels = {}
+        labels.update(self._discovered_labels_of_service(hostname, service_desc))
+        labels.update(self._ruleset_labels_of_service(ruleset_matcher, hostname, service_desc))
+        return labels
+
+    def label_sources_of_service(self, ruleset_matcher, hostname, service_desc):
+        # type: (RulesetMatcher, str, Text) -> Dict[str, str]
+        """Returns the effective set of host label keys with their source
+        identifier instead of the value Order and merging logic is equal to
+        _get_host_labels()"""
+        labels = {}
+        labels.update({
+            k: "discovered"
+            for k in self._discovered_labels_of_service(hostname, service_desc).keys()
+        })
+        labels.update({
+            k: "ruleset"
+            for k in self._ruleset_labels_of_service(ruleset_matcher, hostname, service_desc)
+        })
+        return labels
+
+    def _ruleset_labels_of_service(self, ruleset_matcher, hostname, service_desc):
+        # type: (RulesetMatcher, str, Text) -> Dict
+        match_object = RulesetMatchObject(hostname, service_description=service_desc)
+        return ruleset_matcher.get_host_ruleset_merged_dict(match_object, self._service_label_rules)
+
+    def _discovered_labels_of_service(self, hostname, service_desc):
+        # type: (str, Text) -> Dict
+        return DiscoveredServiceLabelsStore(hostname).load().get(service_desc, {})
 
 
 class ABCDiscoveredLabelsStore(object):

@@ -451,7 +451,7 @@ TEST(LogWatchEventTest, TestAddLog) {
     using namespace cma::cfg;
 
     StateVector states;
-    AddLogState(states, false, "xxx", false);
+    AddLogState(states, false, "xxx", SendMode::normal);
     {
         auto& s0 = states[0];
 
@@ -463,15 +463,15 @@ TEST(LogWatchEventTest, TestAddLog) {
         EXPECT_EQ(s0.presented_, true);                      // default
 
         s0.presented_ = false;
-        AddLogState(states, false, "xxx", false);
+        AddLogState(states, false, "xxx", SendMode::normal);
         EXPECT_EQ(s0.presented_, true);  // reset for found
 
-        AddLogState(states, true, "xxx", false);
+        AddLogState(states, true, "xxx", SendMode::normal);
         EXPECT_EQ(s0.in_config_, true);  // reset with 2 param
     }
 
     {
-        AddLogState(states, true, "yyy", true);
+        AddLogState(states, true, "yyy", SendMode::all);
         auto& s1 = states[1];
         EXPECT_EQ(s1.pos_, 0);                    // 4 parameter
         EXPECT_EQ(s1.name_, std::string("yyy"));  // 3 param
@@ -587,7 +587,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
         auto st = states;
         auto logs_in = logs_in_registry;
         logs_in.push_back("Zcx");
-        auto processed = UpdateEventLogStates(st, logs_in, false);
+        auto processed = UpdateEventLogStates(st, logs_in, SendMode::normal);
         EXPECT_TRUE(processed == logs_in.size());
         int count = 0;
         for (auto& s : st) {
@@ -610,7 +610,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
         auto st = states;
         std::vector<std::string> logs_in;
         logs_in.push_back("Zcx");
-        auto processed = UpdateEventLogStates(st, logs_in, true);
+        auto processed = UpdateEventLogStates(st, logs_in, SendMode::all);
         EXPECT_EQ(processed, 1);
         int count = 0;
         for (auto& s : st) {
@@ -629,7 +629,8 @@ TEST(LogWatchEventTest, TestMakeBody) {
         EXPECT_EQ(count, logs_in.size());  // all must be inside
     }
 
-    auto processed = UpdateEventLogStates(states, logs_in_registry, false);
+    auto processed =
+        UpdateEventLogStates(states, logs_in_registry, SendMode::normal);
 
     int application_index = -1;
     int system_index = -1;
@@ -654,7 +655,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
     {
         // add Demo
         for (auto& e : lwe.entries())
-            AddLogState(states, true, e.name(), false);
+            AddLogState(states, true, e.name(), SendMode::normal);
 
         for (auto& s : states) {
             if (s.name_ == std::string("Demo")) demo_index = index;

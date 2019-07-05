@@ -294,24 +294,24 @@ constexpr const char* S_EventLogRegPath =
     "SYSTEM\\CurrentControlSet\\Services\\Eventlog";
 
 // updates presented flag or add to the States
-void AddLogState(StateVector& States, bool FromConfig,
-                 const std::string LogName, bool ResetPosToNull) {
-    for (auto& state : States) {
-        if (cma::tools::IsEqual(state.name_, LogName)) {
-            XLOG::t("Old event log '{}' found", LogName);
+void AddLogState(StateVector& states, bool from_config,
+                 const std::string& log_name, SendMode send_mode) {
+    for (auto& state : states) {
+        if (cma::tools::IsEqual(state.name_, log_name)) {
+            XLOG::t("Old event log '{}' found", log_name);
 
             state.setDefaults();
-            state.in_config_ = FromConfig;
+            state.in_config_ = from_config;
             state.presented_ = true;
             return;
         }
     }
 
     // new added
-    uint64_t pos = ResetPosToNull ? 0 : cma::cfg::kInitialPos;
-    States.emplace_back(State(LogName, pos, true));
-    States.back().in_config_ = FromConfig;
-    XLOG::t("New event log '{}' added with pos {}", LogName, pos);
+    uint64_t pos = send_mode == SendMode::all ? 0 : cma::cfg::kInitialPos;
+    states.emplace_back(State(log_name, pos, true));
+    states.back().in_config_ = from_config;
+    XLOG::t("New event log '{}' added with pos {}", log_name, pos);
 }
 
 // main API to add config entries to the engine
@@ -342,12 +342,13 @@ void AddConfigEntry(StateVector& States, const LogWatchEntry& Log,
 // Update States vector with log entries and Send All flags
 // event logs are available
 // returns count of processed Logs entries
-int UpdateEventLogStates(StateVector& States, std::vector<std::string> Logs,
-                         bool SendAll) {
-    for (auto& log : Logs) {
-        AddLogState(States, false, log, SendAll);
+int UpdateEventLogStates(StateVector& states, std::vector<std::string> logs,
+                         SendMode send_mode) {
+    for (auto& log : logs) {
+        AddLogState(states, false, log, send_mode);
     };
-    return static_cast<int>(Logs.size());
+
+    return static_cast<int>(logs.size());
 }
 
 std::vector<std::string> GatherEventLogEntriesFromRegistry() {
@@ -518,7 +519,8 @@ std::string LogWatchEvent::makeBody() {
     if (logs.size() == 0) {
         XLOG::l("Registry has nothing to logwatch. This is STRANGE");
     }
-    UpdateEventLogStates(states, logs, send_all_);
+    UpdateEventLogStates(states, logs,
+                         send_all_ ? SendMode::all : SendMode::normal);
 
     // 2) Register additional, configured logs that are not in registry.
     //    Note: only supported with vista API enabled.

@@ -1118,13 +1118,14 @@ static std::string GetMapNodeName(const YAML::Node& Node) noexcept {
     }
 }
 
-constexpr bool IsSmartMerge(std::string_view name) {
-    return name == groups::kWinPerf;
+constexpr Combine GetCombineMode(std::string_view name) {
+    if (name == groups::kWinPerf) return Combine::merge;
+    if (name == groups::kLogWatchEvent) return Combine::merge_value;
+    return Combine::overwrite;
 }
 
-static void loadSequence(std::string_view name, YAML::Node target_value,
-                         const YAML::Node source_value,
-                         ConfigInfo::Combine combine) {
+void CombineSequence(std::string_view name, YAML::Node target_value,
+                     const YAML::Node source_value, Combine combine) {
     if (source_value.IsScalar()) {
         XLOG::d(
             XLOG_FLINE + " overriding seq with scalar '{}' this is temporary",
@@ -1140,28 +1141,49 @@ static void loadSequence(std::string_view name, YAML::Node target_value,
     }
 
     // SEQ-SEQ here
-    if (combine == ConfigInfo::Combine::overwrite) {
-        target_value = source_value;
-        return;
-    }
+    switch (combine) {
+        case Combine::overwrite:
+            target_value = source_value;
+            return;
 
-    // special case when we are merging some sequences from
-    // different files
-    for (auto entry : source_value) {
-        auto s_name = GetMapNodeName(entry);
-        if (s_name.empty()) continue;
+        // special case when we are merging some sequences from
+        // different files
+        case Combine::merge:
+            for (auto entry : source_value) {
+                auto s_name = GetMapNodeName(entry);
+                if (s_name.empty()) continue;
 
-        if (std::none_of(std::begin(target_value), std::end(target_value),
-                         [s_name](YAML::Node Node) -> bool {
-                             return s_name == GetMapNodeName(Node);
-                         }))
-            target_value.push_back(entry);
+                if (std::none_of(std::begin(target_value),
+                                 std::end(target_value),
+                                 [s_name](YAML::Node Node) -> bool {
+                                     return s_name == GetMapNodeName(Node);
+                                 }))
+                    target_value.push_back(entry);
+            }
+            break;
+
+        // by logfiles
+        case Combine::merge_value: {
+            YAML::Node new_seq = YAML::Clone(source_value);
+            for (auto entry : target_value) {
+                auto s_name = GetMapNodeName(entry);
+                if (s_name.empty()) continue;
+
+                if (std::none_of(std::begin(source_value),
+                                 std::end(source_value),
+                                 [s_name](YAML::Node node) -> bool {
+                                     return s_name == GetMapNodeName(node);
+                                 }))
+                    new_seq.push_back(entry);
+            }
+            target_value = new_seq;
+            break;
+        }
     }
 }
 
 static void loadMap(std::string_view name, YAML::Node target_value,
-                    const YAML::Node source_value,
-                    ConfigInfo::Combine combine) {
+                    const YAML::Node source_value, Combine combine) {
     // MAP
     if (!IsYamlMap(source_value)) {
         if (!source_value.IsNull())
@@ -1173,8 +1195,7 @@ static void loadMap(std::string_view name, YAML::Node target_value,
     // MAP-MAP
     for (YAML::const_iterator itx = source_value.begin();
          itx != source_value.end(); ++itx) {
-        auto combine_type = IsSmartMerge(name) ? ConfigInfo::Combine::merge
-                                               : ConfigInfo::Combine::overwrite;
+        auto combine_type = GetCombineMode(name);
         ConfigInfo::smartMerge(target_value, source_value, combine_type);
     }
 }
@@ -1204,7 +1225,7 @@ bool ConfigInfo::smartMerge(YAML::Node target, const YAML::Node source,
             loadMap(name, target_value, source_value, combine);
         } else if (IsYamlSeq(target_value)) {
             // SEQ
-            loadSequence(name, target_value, source_value, combine);
+            CombineSequence(name, target_value, source_value, combine);
         } else {
             // SCALAR or UNDEF
             if (source_value.IsDefined())

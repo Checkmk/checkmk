@@ -172,6 +172,15 @@ class Request(object):
     def set_var(self, varname, value):
         if not isinstance(value, six.string_types):
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
+
+        # All items in self._vars are encoded at the moment. This should be changed one day,
+        # but for the moment we treat vars set with set_var() equal to the vars received from
+        # the HTTP request.
+        if isinstance(varname, unicode):
+            varname = varname.encode("utf-8")
+        if isinstance(value, unicode):
+            value = value.encode("utf-8")
+
         self._vars[varname] = value
 
     # TODO: self._vars should be strictly read only in the Request() object

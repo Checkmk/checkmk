@@ -62,9 +62,13 @@ logger = cmk.utils.log.get_logger("store")
 #   '----------------------------------------------------------------------'
 
 
+def configuration_lockfile():
+    return default_config_dir + "/multisite.mk"
+
+
 @contextmanager
 def lock_checkmk_configuration():
-    path = default_config_dir + "/multisite.mk"
+    path = configuration_lockfile()
     aquire_lock(path)
     try:
         yield
@@ -74,7 +78,7 @@ def lock_checkmk_configuration():
 
 # TODO: Use lock_checkmk_configuration() and nuke this!
 def lock_exclusive():
-    aquire_lock(default_config_dir + "/multisite.mk")
+    aquire_lock(configuration_lockfile())
 
 
 #.

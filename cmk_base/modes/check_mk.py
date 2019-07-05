@@ -33,6 +33,7 @@ import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.log
 import cmk.utils.debug
+import cmk.utils.store
 from cmk.utils.exceptions import MKBailOut
 
 import cmk_base.data_sources as data_sources
@@ -1384,7 +1385,8 @@ modes.register(
 
 def mode_notify(options, *args):
     import cmk_base.notify as notify
-    config.load(with_conf_d=True, validate_hosts=False)
+    with cmk.utils.store.lock_checkmk_configuration():
+        config.load(with_conf_d=True, validate_hosts=False)
     # TODO: Fix the code and remove the pragma below!
     return notify.do_notify(options, *args)  # pylint: disable=no-value-for-parameter
 

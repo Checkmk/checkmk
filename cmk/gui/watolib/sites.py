@@ -703,29 +703,31 @@ class AutomationPushSnapshot(AutomationCommand):
 
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool
-        multitar.extract_from_buffer(request.tar_content,
-                                     cmk.gui.watolib.activate_changes.get_replication_paths())
+        with store.lock_checkmk_configuration():
+            multitar.extract_from_buffer(request.tar_content,
+                                         cmk.gui.watolib.activate_changes.get_replication_paths())
 
-        try:
-            self._save_site_globals_on_slave_site(request.tar_content)
+            try:
+                self._save_site_globals_on_slave_site(request.tar_content)
 
-            cmk.gui.watolib.activate_changes.confirm_all_local_changes()  # pending changes are lost
+                # pending changes are lost
+                cmk.gui.watolib.activate_changes.confirm_all_local_changes()
 
-            hooks.call("snapshot-pushed")
+                hooks.call("snapshot-pushed")
 
-            # Create rule making this site only monitor our hosts
-            create_distributed_wato_file(request.site_id, is_slave=True)
-        except Exception:
-            raise MKGeneralException(
-                _("Failed to deploy configuration: \"%s\". "
-                  "Please note that the site configuration has been synchronized "
-                  "partially.") % traceback.format_exc())
+                # Create rule making this site only monitor our hosts
+                create_distributed_wato_file(request.site_id, is_slave=True)
+            except Exception:
+                raise MKGeneralException(
+                    _("Failed to deploy configuration: \"%s\". "
+                      "Please note that the site configuration has been synchronized "
+                      "partially.") % traceback.format_exc())
 
-        cmk.gui.watolib.changes.log_audit(
-            None, "replication",
-            _("Synchronized with master (my site id is %s.)") % request.site_id)
+            cmk.gui.watolib.changes.log_audit(
+                None, "replication",
+                _("Synchronized with master (my site id is %s.)") % request.site_id)
 
-        return True
+            return True
 
     def _save_site_globals_on_slave_site(self, tarcontent):
         tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(html)

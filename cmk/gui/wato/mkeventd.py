@@ -1030,6 +1030,10 @@ class EventConsoleMode(WatoMode):
         self._rule_packs = load_mkeventd_rules()
         super(EventConsoleMode, self).__init__()
 
+    def _verify_ec_enabled(self):
+        if not config.mkeventd_enabled:
+            raise MKUserError(None, _("The Event Console is disabled (\"omd config\")."))
+
     def _search_expression(self):
         return get_search_expression()
 
@@ -1325,6 +1329,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
         save_mkeventd_rules(rule_packs)
 
     def page(self):
+        self._verify_ec_enabled()
         rep_mode = cmk.gui.mkeventd.replication_mode()
         if rep_mode in ["sync", "takeover"]:
             copy_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")])
@@ -1622,6 +1627,7 @@ class ModeEventConsoleRules(EventConsoleMode):
                 self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
 
     def page(self):
+        self._verify_ec_enabled()
         search_expression = self._search_expression()
         search_form("%s: " % _("Search in rules"), "mkeventd_rules")
         if search_expression:
@@ -1877,6 +1883,7 @@ class ModeEventConsoleEditRulePack(EventConsoleMode):
         return "mkeventd_rule_packs"
 
     def page(self):
+        self._verify_ec_enabled()
         html.begin_form("rule_pack")
         vs = self._valuespec()
         vs.render_input("rule_pack", self._rule_pack)
@@ -2048,6 +2055,7 @@ class ModeEventConsoleEditRule(EventConsoleMode):
         return "mkeventd_rules"
 
     def page(self):
+        self._verify_ec_enabled()
         html.begin_form("rule")
         vs = self._valuespec()
         vs.render_input("rule", self._rule)
@@ -2100,6 +2108,8 @@ class ModeEventConsoleStatus(EventConsoleMode):
         return
 
     def page(self):
+        self._verify_ec_enabled()
+
         if not cmk.gui.mkeventd.daemon_running():
             warning = _("The Event Console Daemon is currently not running. ")
             warning += _(
@@ -2228,6 +2238,7 @@ class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
         return "mkeventd_edit_configvar"
 
     def page(self):
+        self._verify_ec_enabled()
         self._show_configuration_variables(self._groups())
 
 
@@ -2506,6 +2517,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
                 os.remove(f)
 
     def page(self):
+        self._verify_ec_enabled()
         html.h3(_("Upload MIB file"))
         html.write_text(
             _("Use this form to upload MIB files for translating incoming SNMP traps. "
@@ -2748,6 +2760,10 @@ class MainModuleEventConsole(MainModule):
     @property
     def sort_index(self):
         return 68
+
+    @property
+    def enabled(self):
+        return config.mkeventd_enabled
 
 
 #.

@@ -1,0 +1,12 @@
+Title: Fix updating hosts after editing tags
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1562334547
+Class: fix
+
+When adding new tag groups or aux tags to existing tag choices, these
+tags were not immediately applied to the host configuration. The tags
+were applied to the hosts only after editing the host configuration.

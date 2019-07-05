@@ -72,8 +72,22 @@ from cmk.gui.plugins.wato import (
 )
 
 
+class ABCTagMode(WatoMode):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self):
+        super(ABCTagMode, self).__init__()
+        self._tag_config_file = TagConfigFile()
+
+    def _save_tags_and_update_hosts(self, tag_config):
+        self._tag_config_file.save(tag_config)
+        config.load_config()
+        watolib.Folder.invalidate_caches()
+        watolib.Folder.root_folder().rewrite_hosts_files()
+
+
 @mode_registry.register
-class ModeTags(WatoMode):
+class ModeTags(ABCTagMode):
     @classmethod
     def name(cls):
         return "tags"
@@ -86,7 +100,6 @@ class ModeTags(WatoMode):
         super(ModeTags, self).__init__()
         self._builtin_config = cmk.utils.tags.BuiltinTagConfig()
 
-        self._tag_config_file = TagConfigFile()
         self._tag_config = cmk.utils.tags.TagConfig()
         self._tag_config.parse_config(self._tag_config_file.load_for_reading())
 
@@ -130,9 +143,7 @@ class ModeTags(WatoMode):
         if message:
             self._tag_config.remove_tag_group(del_id)
             self._tag_config.validate_config()
-            self._tag_config_file.save(self._tag_config.get_dict_format())
-            watolib.Folder.invalidate_caches()
-            watolib.Folder.root_folder().rewrite_hosts_files()
+            self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
             return "tags", message != True and message or None
 
@@ -162,9 +173,7 @@ class ModeTags(WatoMode):
         if message:
             self._tag_config.aux_tag_list.remove(del_id)
             self._tag_config.validate_config()
-            self._tag_config_file.save(self._tag_config.get_dict_format())
-            watolib.Folder.invalidate_caches()
-            watolib.Folder.root_folder().rewrite_hosts_files()
+            self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
             return "tags", message != True and message or None
 
@@ -275,7 +284,7 @@ class ModeTags(WatoMode):
         return sorted(used_tags)
 
 
-class ABCEditTagMode(WatoMode):
+class ABCEditTagMode(ABCTagMode):
     __metaclass__ = abc.ABCMeta
 
     @classmethod
@@ -461,10 +470,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             # Inserts and verifies changed tag group
             changed_hosttags_config.insert_tag_group(changed_tag_group)
             changed_hosttags_config.validate_config()
-            self._tag_config_file.save(changed_hosttags_config.get_dict_format())
-
-            # Make sure, that all tags are active (also manual ones from main.mk)
-            config.load_config()
+            self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id)
             return "tags", _("Created new host tag group '%s'") % changed_tag_group.title
 
@@ -495,8 +501,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         # Now check, if any folders, hosts or rules are affected
         message = _rename_tags_after_confirmation(operation)
         if message:
-            self._tag_config_file.save(changed_hosttags_config.get_dict_format())
-            config.load_config()
+            self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
             return "tags", message != True and message or None
 

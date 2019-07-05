@@ -10,7 +10,7 @@ Class: fix
 Processes that where monitored on CPU utilization did not have a consistent
 behavior. On windows systems 100% CPU utilization implied all cores in the
 system where at max load. On other systems every core contributed with a
-100% at full load, thus the maximum load was N*100%.
+100% at full load, thus the maximum load was <b>N</b>*100%.
 
 This was also inconsistent with the system wide CPU utilization check
 where, 100% is all cores at full load.
@@ -18,7 +18,9 @@ where, 100% is all cores at full load.
 Consistency is brought is this werk, where 100% is all cores at full load
 by default. For backwards compatibility with previous configurations, where
 threshold rules were explicitly configured, the old behavior continues to
-be used until the user explicitly chooses a particular behavior.
+be used until the user explicitly chooses a particular behavior. This will
+be reminded in the rules overview with the message <i>CPU rescale maximum
+load: Element 'None' does not exist anymore</i>
 
 This option is available under CPU rescale maximum load in the process
 discovery rules.

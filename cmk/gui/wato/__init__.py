@@ -431,7 +431,7 @@ def page_handler():
 
     # If we do an action, we aquire an exclusive lock on the complete WATO.
     if html.is_transaction():
-        with watolib.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration():
             _wato_page_handler(current_mode, mode_permissions, mode_class)
     else:
         _wato_page_handler(current_mode, mode_permissions, mode_class)
@@ -690,14 +690,14 @@ def add_scanned_hosts_to_folder(folder, found):
         if not watolib.Host.host_exists(host_name):
             entries.append((host_name, attrs, None))
 
-    with watolib.lock_checkmk_configuration():
+    with store.lock_checkmk_configuration():
         folder.create_hosts(entries)
         folder.save()
 
 
 def save_network_scan_result(folder, result):
     # Reload the folder, lock WATO before to protect against concurrency problems.
-    with watolib.lock_checkmk_configuration():
+    with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.
         write_folder = watolib.Folder.folder(folder.path())

@@ -33,6 +33,8 @@ import dicttoxml  # type: ignore
 
 import cmk
 
+import cmk.utils.store as store
+
 import cmk.gui.pages
 from cmk.gui.log import logger
 import cmk.gui.utils as utils
@@ -224,7 +226,7 @@ def _check_request_keys(api_call, request_object):
 
 def _execute_action(api_call, request_object):
     if api_call.get("locking", True):
-        with watolib.lock_checkmk_configuration():
+        with store.lock_checkmk_configuration():
             return _execute_action_no_lock(api_call, request_object)
     return _execute_action_no_lock(api_call, request_object)
 

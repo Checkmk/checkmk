@@ -26,6 +26,9 @@
 
 import abc
 import collections
+from typing import Text, List, Dict  # pylint: disable=unused-import
+
+from cmk.utils.exceptions import MKGeneralException
 
 
 class ABCDiscoveredLabels(collections.MutableMapping, object):
@@ -78,6 +81,70 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         })
 
 
+class ServiceLabel(object):
+    """Representing a service label in Checkmk
+
+    This class is meant to be exposed to the check API. It will be usable in
+    the discovery function to create a new label like this:
+
+    yield ServiceLabel(u"my_label_key", u"my_value")
+    """
+
+    __slots__ = ["_name", "_value"]
+
+    def __init__(self, name, value):
+        # type: (Text, Text) -> None
+
+        if not isinstance(name, unicode):
+            raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
+        self._name = name
+
+        if not isinstance(value, unicode):
+            raise MKGeneralException("Invalid label value given: Only unicode strings are allowed")
+        self._value = value
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def label(self):
+        return "%s:%s" % (self._name, self._value)
+
+
 class DiscoveredServiceLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single service during runtime"""
-    pass
+    def add_label(self, label):
+        # type: (ServiceLabel) -> None
+        self._labels[label.name] = label.value
+
+
+class DiscoveredServiceLabelsOfHost(object):
+    """Manages the discovered labels of all services of one host
+
+    During the service discovery in Checkmk base code, this class
+    is used to collect all discovered labels.
+    """
+    __slots__ = ["_service_labels"]
+
+    def __init__(self, **kwargs):
+        super(DiscoveredServiceLabelsOfHost, self).__init__()
+        self._service_labels = kwargs  # type: Dict[Text, DiscoveredServiceLabels]
+
+    def add_label(self, service_desc, label):
+        # type: (Text, ServiceLabel) -> None
+        if service_desc not in self._service_labels:
+            service_labels = self._service_labels[service_desc] = DiscoveredServiceLabels()
+        else:
+            service_labels = self._service_labels[service_desc]
+        service_labels.add_label(label)
+
+    def to_dict(self):
+        return {
+            service_descr: service_labels.to_dict()
+            for service_descr, service_labels in self._service_labels.items()
+        }

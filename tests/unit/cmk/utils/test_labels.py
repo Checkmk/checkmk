@@ -35,10 +35,10 @@ def discovered_service_labels_dir(tmp_path, monkeypatch):
 
 def test_discovered_service_labels_store_file_path(discovered_service_labels_dir):
     assert DiscoveredServiceLabelsStore(
-        "host", "SÄRVICE").file_path == discovered_service_labels_dir / "host" / "SÄRVICE.mk"
+        "host").file_path == discovered_service_labels_dir / "host.mk"
 
 
 def test_discovered_service_labels_store_load_default(discovered_service_labels_dir):
-    store = DiscoveredServiceLabelsStore("host", "SÄRVICE")
+    store = DiscoveredServiceLabelsStore("host")
     assert not store.file_path.exists()  # pylint: disable=no-member
-    assert store.load() == {}
+    assert store.load().get(u"särvice", {}) == {}

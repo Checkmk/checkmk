@@ -78,10 +78,7 @@ def inventory_ps_common(invrules, parsed):
             i_servicedesc = servicedesc.replace("%u", i_userspec or "")
 
             # Process capture
-            if hasattr(matches, 'groups'):
-                match_groups = [g if g else "" for g in matches.groups()]
-            else:
-                match_groups = []
+            match_groups = matches.groups() if hasattr(matches, 'groups') else ()
 
             i_servicedesc = replace_service_description(i_servicedesc, match_groups, pattern)
 
@@ -111,28 +108,26 @@ def inventory_ps_common(invrules, parsed):
 
 def replace_service_description(service_description, match_groups, pattern):
 
-    # New in 1.2.2b4: Alle %1, %2, etc. to be replaced with first, second, ...
+    # New in 1.2.2b4: All %1, %2, etc. to be replaced with first, second, ...
     # group. This allows a reordering of the matched groups
-    service_description = re.sub(r'%(\d+)', r'{\1}', service_description)
-
-    # First argument is None, because format is zero indexed
-    service_description = service_description.format(None, *match_groups)
-
-    num_elements_replace = service_description.count('%s')
-    if len(match_groups) < num_elements_replace:
-        raise MKGeneralException(
-            "Invalid entry in inventory_processes_rules: "
-            "service description '%s' contains "
-            "%d replaceable elements, but "
-            "regular expression '%s' contains only %d subexpression(s)." %
-            (service_description, num_elements_replace, pattern, len(match_groups)))
+    # replace all %1:
+    description_template, count = re.subn(r'%(\d+)', r'{\1}', service_description)
+    # replace plain %s:
+    total_replacements_count = count + description_template.count('%s')
+    for number in range(count + 1, total_replacements_count + 1):
+        description_template = description_template.replace('%s', '{%d}' % number, 1)
 
     # It is allowed (1.1.4) that the pattern contains more subexpressions
     # then the service description. In that case only the first
     # subexpressions are used as item.
-    service_description = service_description % tuple(match_groups[:num_elements_replace])
-
-    return service_description
+    try:
+        # First argument is None, because format is zero indexed
+        return description_template.format(None, *(g or "" for g in match_groups))
+    except IndexError:
+        raise MKGeneralException(
+            "Invalid entry in inventory_processes_rules: service description '%s' contains %d "
+            "replaceable elements, but regular expression %r contains only %d subexpression(s)." %
+            (service_description, total_replacements_count, pattern, len(match_groups)))
 
 
 def match_user(user, user_pattern):

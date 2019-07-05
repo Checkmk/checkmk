@@ -1,0 +1,14 @@
+Title: ps: Missing services for non-matching subexpressions
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1562315349
+
+If you are discovering services with a process name pattern that included non-matching
+subexpressions, the check could not see the corresponding services, resulting in a process
+count of zero.
+If you are affected by this, please rediscover the affected services.

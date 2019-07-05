@@ -33,6 +33,17 @@ ENABLED_FIXERS=
 
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_idioms"
 
+# *** Fixers that are not listed via futurize -l ***
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_asserts"
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_buffer"
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_import"
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_imports"
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_imports2"
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_reload"
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_set_literal"
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_urllib"
+
 # *** Mechanical/easy fixers ***
 #---------------------------------------------------------------------------
 ENABLED_FIXERS+=" lib2to3.fixes.fix_apply"

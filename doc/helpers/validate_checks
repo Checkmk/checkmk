@@ -89,10 +89,10 @@ def is_snmp_check(check):
 
 
 def all_nonfunction_vars():
-    return set([
+    return {
         name for name, value in globals().items()
         if name[0] != '_' and type(value) != type(lambda: 0)
-    ])
+    }
 
 
 def get_manpage(check):

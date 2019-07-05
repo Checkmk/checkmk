@@ -1289,7 +1289,7 @@ def test_registered_painters():
             'title': u'Host groups the host is member of'
         },
         'host_icons': {
-            'columns': set([
+            'columns': {
                 'host_scheduled_downtime_depth',
                 'host_in_check_period',
                 'host_downtimes_with_extra_info',
@@ -1316,7 +1316,7 @@ def test_registered_painters():
                 'host_check_command',
                 'host_name',
                 'host_notes_url_expanded',
-            ]),
+            },
             'printable': False,
             'short': u'Icons',
             'title': u'Host icons'
@@ -2635,7 +2635,7 @@ def test_registered_painters():
             'title': u'Service Graphs with Timerange Previews'
         },
         'service_icons': {
-            'columns': set([
+            'columns': {
                 'host_scheduled_downtime_depth',
                 'service_check_command',
                 'host_downtimes_with_extra_info',
@@ -2676,7 +2676,7 @@ def test_registered_painters():
                 'host_name',
                 'service_is_flapping',
                 'service_state',
-            ]),
+            },
             'printable': False,
             'short': u'Icons',
             'title': u'Service icons'
@@ -4004,7 +4004,7 @@ def test_registered_painters():
     names = cmk.gui.plugins.views.painter_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
-    known_keys = set([
+    known_keys = {
         "title",
         "columns",
         "short",
@@ -4012,7 +4012,7 @@ def test_registered_painters():
         "options",
         "printable",
         "load_inv",
-    ])
+    }
     for spec in expected.values():
         this_keys = set(spec.keys())
         assert not this_keys.difference(known_keys)

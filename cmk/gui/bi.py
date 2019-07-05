@@ -1373,7 +1373,7 @@ def api_get_aggregation_state(filter_names=None, filter_groups=None):
     rows = []
     missing_sites = set()
     missing_bi_aggr = set()
-    online_sites = set([x[0] for x in get_current_sitestats()["online_sites"]])
+    online_sites = {x[0] for x in get_current_sitestats()["online_sites"]}
 
     def is_tree_required(tree):
         aggr_name = tree.get("title")

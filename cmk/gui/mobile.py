@@ -163,7 +163,7 @@ def jqm_page_index(title, items):
     for topic in manual_sort:
         jqm_page_index_topic_renderer(topic, items)
 
-    other_topics = list(set([x[0] for x in items if x[0] not in manual_sort]))
+    other_topics = list({x[0] for x in items if x[0] not in manual_sort})
 
     for topic in other_topics:
         jqm_page_index_topic_renderer(topic, items)

@@ -8,20 +8,20 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize('group_patterns, filename, expected', [
     ([], 'lumberjacks.log', {}),
     ([('plain_group', ('*jack*', ''))], 'lumberjacks.log', {
-        'plain_group': set([('*jack*', '')]),
+        'plain_group': {('*jack*', '')},
     }),
     ([('plain_group', ('*jack*', '*.log'))], 'lumberjacks.log', {}),
     ([('plain_group', (u'~.*\\..*', ''))], 'lumberjacks.log', {
-        'plain_group': set([(u'~.*\\..*', '')])
+        'plain_group': {(u'~.*\\..*', '')}
     }),
     ([('%s_group', ('~.{6}(.ack)', ''))], 'lumberjacks.log', {
-        'jack_group': set([('~.{6}jack', '')]),
+        'jack_group': {('~.{6}jack', '')},
     }),
     ([('%s', ('~(.).*', '')), ('%s', ('~lumberjacks.([l])og', ''))], 'lumberjacks.log', {
-        'l': set([('~l.*', ''), ('~lumberjacks.log', '')]),
+        'l': {('~l.*', ''), ('~lumberjacks.log', '')},
     }),
     ([('%s%s', ('~lum(ber).{8}(.)', '~ladida'))], 'lumberjacks.log', {
-        'berg': set([('~lumber.{8}g', '~ladida')]),
+        'berg': {('~lumber.{8}g', '~ladida')},
     }),
 ])
 def test_logwatch_groups_of_logfile(check_manager, group_patterns, filename, expected):

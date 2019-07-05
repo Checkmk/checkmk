@@ -96,7 +96,7 @@ def main():
             'A guide to setup the API can be found on the Aerohive '
             'homepage.', args.debug)
 
-    used = set([
+    used = {
         'hostName',
         'connected',
         'activeClients',
@@ -104,7 +104,7 @@ def main():
         'serialId',
         'osVersion',
         'lastUpdated',
-    ])
+    }
 
     for device in json['data']:
         device_txt = "|".join(["%s::%s" % (k, v) for (k, v) in device.items() if k in used])

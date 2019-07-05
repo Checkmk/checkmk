@@ -803,7 +803,7 @@ def get_annotation_date_render_function(annotations, avoptions):
         itertools.chain.from_iterable([(a[1]["from"], a[1]["until"]) for a in annotations] +
                                       [avoptions["range"][0]]))
 
-    multi_day = len(set([time.localtime(t)[:3] for t in timestamps])) > 1
+    multi_day = len({time.localtime(t)[:3] for t in timestamps}) > 1
     if multi_day:
         return cmk.utils.render.date_and_time
     return cmk.utils.render.time_of_day

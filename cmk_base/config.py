@@ -293,7 +293,7 @@ def get_derived_config_variable_names():
 
     The origin variable (extra_service_conf) should not be exported to the helper config. Only
     the service levels are needed."""
-    return set(["service_service_levels", "host_service_levels"])
+    return {"service_service_levels", "host_service_levels"}
 
 
 def _verify_non_duplicate_hosts():
@@ -317,10 +317,10 @@ def set_folder_paths(new_hosts, filename):
 def verify_non_invalid_variables(vars_before_config):
     # Check for invalid configuration variables
     vars_after_config = all_nonfunction_vars()
-    ignored_variables = set([
+    ignored_variables = {
         'vars_before_config', 'parts', 'seen_hostnames', 'taggedhost', 'hostname',
         'service_service_levels', 'host_service_levels'
-    ])
+    }
 
     found_invalid = 0
     for name in vars_after_config:
@@ -374,8 +374,7 @@ def _verify_no_deprecated_check_rulesets():
 
 
 def all_nonfunction_vars():
-    return set(
-        [name for name, value in globals().items() if name[0] != '_' and not callable(value)])
+    return {name for name, value in globals().items() if name[0] != '_' and not callable(value)}
 
 
 class PackedConfig(object):
@@ -637,10 +636,10 @@ def all_offline_hosts():
     if only_hosts is None:
         return set()
 
-    return set([
+    return {
         hostname for hostname in hostlist
         if not config_cache.in_binary_hostlist(hostname, only_hosts)
-    ])
+    }
 
 
 def all_configured_offline_hosts():
@@ -651,10 +650,10 @@ def all_configured_offline_hosts():
     if only_hosts is None:
         return set()
 
-    return set([
+    return {
         hostname for hostname in hostlist
         if not config_cache.in_binary_hostlist(hostname, only_hosts)
-    ])
+    }
 
 
 #.
@@ -1139,7 +1138,7 @@ _all_checks_loaded = False
 
 # workaround: set of check-groups that are to be treated as service-checks even if
 #   the item is None
-service_rule_groups = set(["temperature"])
+service_rule_groups = {"temperature"}
 
 #.
 #   .--Loading-------------------------------------------------------------.

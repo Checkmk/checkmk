@@ -1323,7 +1323,7 @@ class LDAPUserConnector(UserConnector):
     # Calculates the attributes of the users which are locked for users managed
     # by this connector
     def locked_attributes(self):
-        locked = set(['password'])  # This attributes are locked in all cases!
+        locked = {'password'}  # This attributes are locked in all cases!
         for key, params in self._config['active_plugins'].items():
             plugin = ldap_attribute_plugin_registry[key]()
             locked.update(plugin.lock_attributes(params))
@@ -2067,7 +2067,7 @@ def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_c
     user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
 
     # Get list of LDAP connections to query
-    connections = set([connection])
+    connections = {connection}
     for connection_id in other_connection_ids:
         c = userdb.get_connection(connection_id)
         if c:
@@ -2466,7 +2466,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
 
     def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
         # Which groups need to be checked whether or not the user is a member?
-        cg_names = list(set([g["cn"] for g in params["groups"]]))
+        cg_names = list({g["cn"] for g in params["groups"]})
 
         # Get the group names the user is member of
         groups = get_groups_of_user(connection, user_id, ldap_user, cg_names,
@@ -2780,8 +2780,8 @@ def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
         if not jobs:
             break
 
-    contacted_sites = set([x[0] for x in remote_sites])
-    working_sites = set([result.site_id for result in results])
+    contacted_sites = {x[0] for x in remote_sites}
+    working_sites = {result.site_id for result in results}
     for site_id in contacted_sites - working_sites:
         results.append(
             SynchronizationResult(

@@ -40,7 +40,7 @@ def test_all_offline_hosts_with_wato_default_config(monkeypatch):
     ts.add_host("blub2", tags={"criticality": "offline", "site": "site2"})
     ts.add_host("bla")
     ts.apply(monkeypatch)
-    assert config.all_offline_hosts() == set(["blub1"])
+    assert config.all_offline_hosts() == {"blub1"}
 
 
 def test_all_configured_offline_hosts(monkeypatch):
@@ -51,7 +51,7 @@ def test_all_configured_offline_hosts(monkeypatch):
     ts.add_host("blub1", tags={"criticality": "offline", "site": "site1"})
     ts.add_host("blub2", tags={"criticality": "offline", "site": "site2"})
     ts.apply(monkeypatch)
-    assert config.all_offline_hosts() == set(["blub1"])
+    assert config.all_offline_hosts() == {"blub1"}
 
 
 def test_all_configured_hosts(monkeypatch):
@@ -64,10 +64,11 @@ def test_all_configured_hosts(monkeypatch):
     ts.add_cluster("cluster3", nodes=["node3"])
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.all_configured_clusters() == set(["cluster1", "cluster2", "cluster3"])
-    assert config_cache.all_configured_realhosts() == set(["real1", "real2", "real3"])
-    assert config_cache.all_configured_hosts() == set(
-        ["cluster1", "cluster2", "cluster3", "real1", "real2", "real3"])
+    assert config_cache.all_configured_clusters() == {"cluster1", "cluster2", "cluster3"}
+    assert config_cache.all_configured_realhosts() == {"real1", "real2", "real3"}
+    assert config_cache.all_configured_hosts() == {
+        "cluster1", "cluster2", "cluster3", "real1", "real2", "real3"
+    }
 
 
 def test_all_active_hosts(monkeypatch):
@@ -80,9 +81,9 @@ def test_all_active_hosts(monkeypatch):
     ts.add_cluster("cluster3", nodes=["node3"])
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.all_active_clusters() == set(["cluster1", "cluster3"])
-    assert config_cache.all_active_realhosts() == set(["real1", "real3"])
-    assert config_cache.all_active_hosts() == set(["cluster1", "cluster3", "real1", "real3"])
+    assert config_cache.all_active_clusters() == {"cluster1", "cluster3"}
+    assert config_cache.all_active_realhosts() == {"real1", "real3"}
+    assert config_cache.all_active_hosts() == {"cluster1", "cluster3", "real1", "real3"}
 
 
 def test_config_cache_tag_to_group_map(monkeypatch):
@@ -1132,19 +1133,19 @@ def test_config_cache_tag_list_of_host(monkeypatch):
 
     print config_cache._hosttags["test-host"]
     print config_cache._hosttags["xyz"]
-    assert config_cache.tag_list_of_host("xyz") == set([
+    assert config_cache.tag_list_of_host("xyz") == {
         '/wato/', 'lan', 'ip-v4', 'cmk-agent', 'no-snmp', 'tcp', 'auto-piggyback', 'ip-v4-only',
         'site:unit', 'prod'
-    ])
+    }
 
 
 def test_config_cache_tag_list_of_host_not_existing(monkeypatch):
     ts = Scenario()
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.tag_list_of_host("not-existing") == set([
+    assert config_cache.tag_list_of_host("not-existing") == {
         '/', 'lan', 'cmk-agent', 'no-snmp', 'auto-piggyback', 'ip-v4-only', 'site:NO_SITE', 'prod'
-    ])
+    }
 
 
 def test_host_tags_default():

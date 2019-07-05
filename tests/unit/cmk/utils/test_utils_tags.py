@@ -238,7 +238,7 @@ def test_tag_config_get_aux_tags_by_topic(test_cfg):
 
 
 def test_tag_config_get_tag_ids(test_cfg):
-    assert test_cfg.get_tag_ids() == set([
+    assert test_cfg.get_tag_ids() == {
         None,
         'none_val',
         'bla',
@@ -249,11 +249,11 @@ def test_tag_config_get_tag_ids(test_cfg):
         'prod',
         'test',
         'wan',
-    ])
+    }
 
 
 def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
-    assert test_cfg.get_tag_ids_with_group_prefix() == set([
+    assert test_cfg.get_tag_ids_with_group_prefix() == {
         'none_choice/none_val',
         'none_choice/None',
         'bla',
@@ -264,7 +264,7 @@ def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
         'networking/dmz',
         'networking/lan',
         'networking/wan',
-    ])
+    }
 
 
 def test_tag_config_get_tag_or_aux_tag(test_cfg):

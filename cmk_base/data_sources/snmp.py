@@ -228,7 +228,7 @@ class SNMPDataSource(DataSource):
         # There are some nested check plugin names which have to be considered, too.
         #   for f in $(grep "service_description.*CPU [^lL]" -m1 * | cut -d":" -f1); do
         #   if grep -q "snmp_info" $f; then echo $f; fi done
-        cpu_checks_without_cpu_in_check_name = set(["brocade_sys", "bvip_util"])
+        cpu_checks_without_cpu_in_check_name = {"brocade_sys", "bvip_util"}
         return sorted(
             check_plugin_names,
             key=lambda x: (not ('cpu' in x or x in cpu_checks_without_cpu_in_check_name), x))

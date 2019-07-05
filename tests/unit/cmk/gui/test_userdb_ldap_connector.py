@@ -352,7 +352,7 @@ def test_group_base_dn_not_exists(mocked_ldap, monkeypatch):
 
 
 def test_locked_attributes(mocked_ldap):
-    assert set(mocked_ldap.locked_attributes()) == set(['alias', 'password', 'locked', 'email'])
+    assert set(mocked_ldap.locked_attributes()) == {'alias', 'password', 'locked', 'email'}
 
 
 def test_multisite_attributes(mocked_ldap):

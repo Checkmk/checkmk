@@ -959,6 +959,15 @@ function drag_dashlet_stop(event) {
 }
 
 function persist_dashlet_pos(nr) {
+    var dashlet = dashboard_properties.dashlets[nr];
+
+    if (!Number.isInteger(dashlet.x) || !Number.isInteger(dashlet.y)
+        || !Number.isInteger(dashlet.w) || !Number.isInteger(dashlet.h)) {
+        alert("Error: Invalid dashlet coordinates found. Please report "
+            + "this issue (" + JSON.stringify(dashlet) + ").");
+        return;
+    }
+
     ajax.get_url("ajax_dashlet_pos.py?name=" + dashboard_properties.dashboard_name + "&id=" + nr
             + "&x=" + dashboard_properties.dashlets[nr].x + "&y=" + dashboard_properties.dashlets[nr].y
             + "&w=" + dashboard_properties.dashlets[nr].w + "&h=" + dashboard_properties.dashlets[nr].h,

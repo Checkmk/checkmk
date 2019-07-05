@@ -57,6 +57,7 @@ from cmk.gui.plugins.wato import (
     ManualCheckParameterRulespec,
     CheckParameterRulespecWithItem,
 )
+from cmk.gui.htmllib import HTML
 
 
 def process_level_elements():
@@ -74,7 +75,8 @@ def process_level_elements():
              orientation="vertical",
              choices=[
                  (True, _("100% is all cores at full load")),
-                 (False, _("<b>N</b> * 100% as each core contributes with 100% at full load")),
+                 (False,
+                  HTML(_("<b>N</b> * 100% as each core contributes with 100% at full load"))),
              ])),
         ('levels',
          Tuple(

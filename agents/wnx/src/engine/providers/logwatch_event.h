@@ -143,12 +143,13 @@ private:
 // ***********************************************************************
 // Read from registry registered sources and add them to the states vector
 std::vector<std::string> GatherEventLogEntriesFromRegistry();
+enum class SendMode { all, normal };
 
 // Update States vector with log entries and Send All flags
 // event logs are available
 // returns count of processed Logs entries
-int UpdateEventLogStates(StateVector& States, std::vector<std::string> Logs,
-                         bool SendAll);
+int UpdateEventLogStates(StateVector& states, std::vector<std::string> logs,
+                         SendMode send_mode);
 
 LogWatchEntry GenerateDefaultValue();
 
@@ -156,12 +157,11 @@ LogWatchEntry GenerateDefaultValue();
 void UpdateStatesByConfig(StateVector& States,
                           const LogWatchEntryVector& Entries,
                           const LogWatchEntry* Default);
-
 // manual adding: two things possible
 // 1. added brand new
 // 2. existing marked as presented_
-void AddLogState(StateVector& States, bool FromConfig,
-                 const std::string LogName, bool SendAll);
+void AddLogState(StateVector& states, bool from_config,
+                 const std::string& log_name, SendMode send_mode);
 
 // to use for load entries of config
 void AddConfigEntry(StateVector& States, const LogWatchEntry&,

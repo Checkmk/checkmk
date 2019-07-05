@@ -219,7 +219,8 @@ class ModeTags(WatoMode):
                 table.text_cell(_("Topic"), tag_group.topic or _("Tags"))
                 table.cell(_("Demonstration"), sortable=False)
                 html.begin_form("tag_%s" % tag_group.id)
-                watolib.host_attribute("tag_%s" % tag_group.id).render_input("", None)
+                tag_group_attribute = watolib.host_attribute("tag_%s" % tag_group.id)
+                tag_group_attribute.render_input("", tag_group_attribute.default_value())
                 html.end_form()
 
     def _show_tag_icons(self, tag_group, nr):

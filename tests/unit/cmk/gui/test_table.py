@@ -43,7 +43,7 @@ def test_basic(register_builtin_html):
     title = " TEST "
 
     with html.plugged():
-        with table_element(table_id, title, searchable=False, sortable=False) as table:
+        with table_element("%d" % table_id, title, searchable=False, sortable=False) as table:
             table.row()
             table.cell("A", "1")
             table.cell("B", "2")
@@ -60,7 +60,7 @@ def test_plug(register_builtin_html):
     title = " TEST "
 
     with html.plugged():
-        with table_element(table_id, title, searchable=False, sortable=False) as table:
+        with table_element("%d" % table_id, title, searchable=False, sortable=False) as table:
             table.row()
             table.cell("A", "1")
             html.write("a")
@@ -82,7 +82,7 @@ def test_context(register_builtin_html):
     header = ["Number", "Cubical"]
 
     with html.plugged():
-        with table_element(table_id=table_id, searchable=False, sortable=False) as table:
+        with table_element(table_id="%d" % table_id, searchable=False, sortable=False) as table:
             for row in rows:
                 table.row()
                 for h, r in zip(header, row):
@@ -100,12 +100,12 @@ def test_nesting(register_builtin_html):
     title = " TEST "
 
     with html.plugged():
-        with table_element(table_id, title, searchable=False, sortable=False) as table1:
+        with table_element("%d" % table_id, title, searchable=False, sortable=False) as table1:
             table1.row()
             table1.cell("A", "1")
             table1.cell("B", "")
             with table_element(
-                    table_id + 1, title + "2", searchable=False, sortable=False) as table2:
+                    "%d" % (table_id + 1), title + "2", searchable=False, sortable=False) as table2:
                 table2.row()
                 table2.cell("_", "+")
                 table2.cell("|", "-")
@@ -133,12 +133,12 @@ def test_nesting_context(register_builtin_html):
 
     with html.plugged():
         with table_element(
-                table_id=table_id, title=title, searchable=False, sortable=False) as table1:
+                table_id="%d" % table_id, title=title, searchable=False, sortable=False) as table1:
             table1.row()
             table1.cell("A", "1")
             table1.cell("B", "")
             with table_element(
-                    table_id + 1, title + "2", searchable=False, sortable=False) as table2:
+                    "%d" % (table_id + 1), title + "2", searchable=False, sortable=False) as table2:
                 table2.row()
                 table2.cell("_", "+")
                 table2.cell("|", "-")
@@ -187,7 +187,7 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
     # Table construction
     with html.plugged():
         with table_element(
-                table_id=table_id,
+                table_id="%d" % table_id,
                 title=title,
                 sortable=sortable,
                 searchable=searchable,

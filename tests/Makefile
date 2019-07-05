@@ -99,6 +99,8 @@ test-format-shell:
 test-unit: $(VENV)
 	$(PYTEST) -T unit git unit
 
+# TODO: We should perhaps use the pytest --cov/--cov-report options, which the
+# pytest-cov plugin package adds to pyttest.
 test-unit-coverage-html: $(VENV)
 	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit git unit
 	$(COVERAGE) html

@@ -9660,8 +9660,8 @@ register_check_parameters(
                    Tuple(
                        title = _("Levels on disk wait (IO wait)"),
                        elements = [
-                             Percentage(title = _("Warning at a disk wait of"), default_value = 30.0),
-                             Percentage(title = _("Critical at a disk wait of"), default_value = 50.0)],
+                             Percentage(title = _("Warning at a disk wait of"), default_value = 5.0),
+                             Percentage(title = _("Critical at a disk wait of"), default_value = 10.0)],
                        help = _("The CPU utilization sums up the percentages of CPU time that is used "
                                 "for user processes, kernel routines (system), disk wait (sometimes also "
                                 "called IO wait) or nothing (idle). "

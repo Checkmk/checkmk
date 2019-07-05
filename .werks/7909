@@ -1,0 +1,11 @@
+Title: Fix broken "stored reports" page
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1562312931
+
+The "stored reports" page failed to render just showing an AssertionError.

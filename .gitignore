@@ -50,3 +50,4 @@ tests/web/data/*
 htmlcov/
 artefacts/
 node_modules/
+web/htdocs/js/*_min.js.map

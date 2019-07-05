@@ -5,11 +5,11 @@ unset LANG
 log() { echo "[$(date '+%F %T')] ==============================" "$@"; }
 die() { log "$@"; exit 1; }
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$S" = "" ]; then
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ]; then
     echo "Aufrufen: bw-docker-bauen [BRANCH] [EDITION] [VERSION] [SET_LATEST_TAG]"
     echo "          bw-docker-bauen 1.5.0 enterprise 1.5.0p4 no"
     echo
-    exit 0
+    exit 1
 fi
 
 BRANCH=$1

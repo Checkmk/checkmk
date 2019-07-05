@@ -1,0 +1,21 @@
+Title: Fix host tag update problem
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1562326499
+Class: fix
+
+With 1.6 the data structure of tag definitions has been changed
+and also moved to another file. WATO is now saving the tags in
+<tt>etc/check_mk/conf.d/wato/tags.mk</tt> instead of
+<tt>etc/check_mk/conf.d/wato/hosttags.mk</tt>.
+
+There is no manual action needed for migration. During update
+from previous versions the old configuration is read and saved
+in the new format and file.
+
+In previous 1.6 versions the migration did not correctly delete
+the <tt>etc/check_mk/conf.d/wato/hosttags.mk</tt> after saving
+it in the new file which is fixed now.

@@ -50,6 +50,8 @@ from pathlib2 import Path
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
+vsphere_output = []
+
 
 class MKQueryServerException(Exception):
     pass
@@ -780,7 +782,7 @@ def put_in_envelope(payload):
            '<SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25">' + payload + '</SOAP-ENV:Body></SOAP-ENV:Envelope>'
 
 
-def convert_hostname(h):
+def convert_hostname(h, opt):
     if opt.spaces == "cut":
         return h.split()[0]
     return h.replace(" ", "_")
@@ -854,17 +856,17 @@ def output(ln):
     vsphere_output.append(ln)
 
 
-def write_output(lines, fetch_agent, address):
+def write_output(lines, fetch_agent, address, opt):
     if fetch_agent:
-        win_agent_output = get_agent_info_tcp(address)
+        win_agent_output = get_agent_info_tcp(address, opt)
         sys.stdout.write(win_agent_output)
 
-    for ln in lines:
-        sys.stdout.write((ln.encode("utf-8") if isinstance(ln, unicode) else ln) + "\n")
+    for line in lines:
+        sys.stdout.write((line.encode("utf-8") if isinstance(line, unicode) else line) + "\n")
     sys.stdout.flush()
 
 
-def get_agent_info_tcp(address):
+def get_agent_info_tcp(address, opt):
     raw_response = ""
     try:
         # TODO: gethostbyname() automatically detects IP addresses and does
@@ -951,12 +953,12 @@ class ESXConnection(object):
         if "NotAuthenticatedFault" in text:
             raise MKQueryServerException("No longer authenticated")
 
-    def __init__(self, address, user, secret, no_cert, debug, tracefile):
+    def __init__(self, address, user, secret, opt):
         super(ESXConnection, self).__init__()
         self._user = user
         self._secret = secret
-        self.tracefile = tracefile
-        self._server_handle = self._connect_to_server(address, no_cert, debug)
+        self.tracefile = opt.tracefile
+        self._server_handle = self._connect_to_server(address, opt.no_cert, opt.debug)
 
         self._host_cookie_path = Path("%s/agents/agent_vsphere/cookie.%s" %
                                       (cmk.utils.paths.tmp_dir, address[0]))
@@ -1125,7 +1127,7 @@ def output_aggregated_snapshots(vms, hostsystems=None):
         output('<<<<>>>>')
 
 
-def section_systemtime(connection):
+def section_systemtime(connection, opt):
     try:
         response = connection.query_server(telegram_list["systemtime"])
         elements = get_pattern('<returnval>(.*)</returnval>', response)
@@ -1253,7 +1255,7 @@ def fetch_counters_syntax(connection):
     return counters_syntax
 
 
-def fetch_extra_interface_counters(connection):
+def fetch_extra_interface_counters(connection, opt):
     # Get additional interface counter info, this only works when querying ESX hosts
     # TODO: get this info from the vcenter
     if not opt.direct:
@@ -1424,11 +1426,11 @@ def fetch_hostsystem_data(connection):
     return hostsystems_properties, hostsystems_sensors
 
 
-def output_hostsystems(hostsystems_properties, hostsystems_sensors):
+def output_hostsystems(hostsystems_properties, hostsystems_sensors, opt):
     # TODO: improve error handling: check if multiple results and opt.direct
     for hostname, properties in hostsystems_properties.items():
         if not opt.direct:
-            output("<<<<%s>>>>" % convert_hostname(properties["name"][0]))
+            output("<<<<%s>>>>" % convert_hostname(properties["name"][0], opt))
 
         output("<<<esx_vsphere_hostsystem>>>")
         for key in sorted(properties.keys()):
@@ -1459,15 +1461,15 @@ def output_licenses(licenses_response):
         output("%s\t%s %s" % (name, used, total))
 
 
-def process_counters(connection, hostsystems, datastores):
-    net_extra_info = fetch_extra_interface_counters(connection)
+def process_counters(connection, hostsystems, datastores, opt):
+    net_extra_info = fetch_extra_interface_counters(connection, opt)
     counters_syntax = fetch_counters_syntax(connection)
     max_samples = get_max_samples(connection)
 
     counter_data_payload = telegram_list["perfcounterdata"]
     for host in hostsystems.keys():
         if not opt.direct:
-            output("<<<<%s>>>>" % convert_hostname(hostsystems[host]))
+            output("<<<<%s>>>>" % convert_hostname(hostsystems[host], opt))
 
         ### TODO: check if this host supports perfdata
         ### TODO: try to get esx hosts perfdata from vCenter
@@ -1535,7 +1537,7 @@ def process_counters(connection, hostsystems, datastores):
         output('<<<<>>>>')
 
 
-def fetch_virtual_machines(connection, hostsystems, datastores):
+def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     vms, vm_esx_host = {}, {}
 
     # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
@@ -1570,17 +1572,17 @@ def fetch_virtual_machines(connection, hostsystems, datastores):
     return vms, vm_esx_host
 
 
-def output_virtual_machines(vms):
+def output_virtual_machines(vms, opt):
     for key in sorted(vms.keys()):
         data = vms[key]
         if data.get("name"):
-            output("<<<<%s>>>>" % convert_hostname(key))
+            output("<<<<%s>>>>" % convert_hostname(key, opt))
             output("<<<esx_vsphere_vm>>>")
             for entry in sorted(data.items()):
                 output("%s %s" % entry)
 
 
-def process_clusters(connection, vm_esx_host):
+def process_clusters(connection, vm_esx_host, opt):
     if opt.direct:
         return
 
@@ -1608,7 +1610,7 @@ def process_clusters(connection, vm_esx_host):
                    (datacenter, cluster[1], "\t".join(map(convert_hostname, cluster_vms))))
 
 
-def fetch_data(connection):
+def fetch_data(connection, opt):
     output("<<<esx_systeminfo>>>")
     for entry in connection.system_info.items():
         output("%s %s" % entry)
@@ -1621,7 +1623,7 @@ def fetch_data(connection):
     ###########################
     # Licenses
     ###########################
-    if "licenses" in query_objects:
+    if "licenses" in opt.query_objects:
         licenses_response = connection.query_server(telegram_list["licensesused"])
         output_licenses(licenses_response)
 
@@ -1631,29 +1633,29 @@ def fetch_data(connection):
     # We need the datastore info later on in the virtualmachines and counter sections
     datastores = fetch_datastores(connection)
 
-    if "datastore" in query_objects:
+    if "datastore" in opt.query_objects:
         output_datastores(datastores)
 
     ###########################
     # Counters
     ###########################
-    if "counters" in query_objects:
-        process_counters(connection, hostsystems, datastores)
+    if "counters" in opt.query_objects:
+        process_counters(connection, hostsystems, datastores, opt)
 
     ###########################
     # Hostsystem
     ###########################
-    if "hostsystem" in query_objects:
+    if "hostsystem" in opt.query_objects:
         hostsystems_properties, hostsystems_sensors = fetch_hostsystem_data(connection)
-        output_hostsystems(hostsystems_properties, hostsystems_sensors)
+        output_hostsystems(hostsystems_properties, hostsystems_sensors, opt)
 
     ###########################
     # Virtual machines
     ###########################
     vm_esx_host = {}
-    if "virtualmachine" in query_objects:
-        vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores)
-        output_virtual_machines(vms)
+    if "virtualmachine" in opt.query_objects:
+        vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
+        output_virtual_machines(vms, opt)
 
         if opt.snapshot_display == 'esxhost':
             output_aggregated_snapshots(vms, hostsystems)
@@ -1663,7 +1665,7 @@ def fetch_data(connection):
     # TODO: Where is the related piggyback open tag?
     output("<<<<>>>>")
 
-    process_clusters(connection, vm_esx_host)
+    process_clusters(connection, vm_esx_host, opt)
 
     output("<<<esx_vsphere_objects:sep(9)>>>")
 
@@ -1671,7 +1673,7 @@ def fetch_data(connection):
     vm_piggy_data = {}
     host_piggy_data = {}
 
-    if "hostsystem" in query_objects:
+    if "hostsystem" in opt.query_objects:
         if opt.host_pwr_display != "vm":  # handled later on..
             if opt.direct and opt.hostname:
                 for hostname, data in hostsystems_properties.items():
@@ -1681,7 +1683,7 @@ def fetch_data(connection):
             else:
                 for hostname, data in hostsystems_properties.items():
                     converted_hostname = convert_hostname(
-                        hostsystems_properties[hostname]["name"][0])
+                        hostsystems_properties[hostname]["name"][0], opt)
                     host_info = "hostsystem\t%s\t\t%s" % (
                         converted_hostname,
                         hostsystems_properties[hostname]["runtime.powerState"][0])
@@ -1689,21 +1691,21 @@ def fetch_data(connection):
                         host_piggy_data.setdefault(converted_hostname, []).append(host_info)
                     output(host_info)
 
-    if "virtualmachine" in query_objects:
+    if "virtualmachine" in opt.query_objects:
         for key in vms:
             data = vms[key]
             running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
-            vm_info = "virtualmachine\t%s\t%s\t%s" % (convert_hostname(key), running_on,
-                                                      data.get("runtime.powerState"))
+            vm_info = "virtualmachine\t%s\t%s\t%s" % (convert_hostname(
+                key, opt), running_on, data.get("runtime.powerState"))
 
             if opt.vm_pwr_display == "vm":
-                vm_name = convert_hostname(key)
+                vm_name = convert_hostname(key, opt)
                 vm_piggy_data.setdefault(vm_name, []).append(vm_info)
             elif opt.vm_pwr_display == "esxhost" and not opt.direct:
                 host_piggy_data.setdefault(running_on, []).append(vm_info)
             output(vm_info)
 
-    if ("virtualmachine" in query_objects and "hostsystem" in query_objects and
+    if ("virtualmachine" in opt.query_objects and "hostsystem" in opt.query_objects and
             opt.host_pwr_display == "vm"):
 
         for key in vms:
@@ -1715,7 +1717,7 @@ def fetch_data(connection):
 
             vm_info = "hostsystem\t%s\t\t%s" % (
                 running_on, hostsystems_properties[vm_host]["runtime.powerState"][0])
-            vm_name = convert_hostname(key)
+            vm_name = convert_hostname(key, opt)
             vm_piggy_data.setdefault(vm_name, []).append(vm_info)
 
     for entries in [host_piggy_data, vm_piggy_data]:
@@ -1725,7 +1727,7 @@ def fetch_data(connection):
             output("\n".join(values))
     output("<<<<>>>>")
 
-    section_systemtime(connection)
+    section_systemtime(connection, opt)
 
 
 def call_legacy_pysphere():
@@ -1765,9 +1767,12 @@ class Opt(object):
         self.vm_piggyname = "alias"
         self.spaces = "underscore"
         self.no_cert = False
+        self.query_objects = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
 
 
-if __name__ == "__main__":
+def main():
+    global vsphere_output  # Guess what's TODO.
+
     short_options = "hi:u:s:Dat:H:Pp:S:"
     long_options = [
         "help", "user=", "secret=", "direct", "agent", "debug", "modules=", "timeout=",
@@ -1780,7 +1785,6 @@ if __name__ == "__main__":
     host_address = None
     g_user = None
     g_secret = None
-    query_objects = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -1810,7 +1814,7 @@ if __name__ == "__main__":
         elif o in ['-s', '--secret']:
             g_secret = a
         elif o in ['-i', '--modules']:
-            query_objects = a.split(',')
+            opt.query_objects = a.split(',')
         elif o in ['-t', '--timeout']:
             opt.timeout = int(a)
         elif o in ['-H', '--hostname']:
@@ -1862,14 +1866,13 @@ if __name__ == "__main__":
                             (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
 
     try:
-        esx_connection = ESXConnection((host_address, opt.port), g_user, g_secret, opt.no_cert,
-                                       opt.debug, opt.tracefile)
+        esx_connection = ESXConnection((host_address, opt.port), g_user, g_secret, opt)
 
         # If the data aquisition fails, e.g. invalid cookie we try another run
         for _run_count in [0, 1]:
             # Note: If the cookie fails inbetween these calls, we also start a second run
             try:
-                fetch_data(esx_connection)
+                fetch_data(esx_connection, opt)
                 break
             except MKQueryServerException:
                 # There was a problem during the query.
@@ -1888,6 +1891,8 @@ if __name__ == "__main__":
         sys.stderr.write("%s\n" % exc)
         sys.exit(0 if opt.agent else 1)
 
-    write_output(vsphere_output, opt.agent, host_address)
+    write_output(vsphere_output, opt.agent, host_address, opt)
 
-    sys.exit(0)
+
+if __name__ == "__main__":
+    main()

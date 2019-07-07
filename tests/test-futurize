@@ -35,14 +35,43 @@ ENABLED_FIXERS=
 
 # *** Fixers that are not listed via futurize -l ***
 #---------------------------------------------------------------------------
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_asserts"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_asserts"
+#---------------------------------------------------------------------------
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_buffer"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_import"
+# from futurize docs: perhaps not safe
+#---------------------------------------------------------------------------
+ENABLED_FIXERS+=" lib2to3.fixes.fix_import"
+# No diff, this fixer fixes:
+#   mypkg/
+#       __init__.py
+#       collections.py
+#       core.py
+#       ...
+# Python 2 (in core.py):
+#   from collections import deque
+# Since Python 2.5 relative imports were introduced.
+# The following statements are equivalent:
+#   from .collections import deque
+#   from mypkg.collections import deque
+# In Python 3 the former one is recommended.
+#---------------------------------------------------------------------------
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_imports"
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_imports2"
+# Called by libfuturize.fixes.fix_future_standard_library
+#---------------------------------------------------------------------------
+ENABLED_FIXERS+=" lib2to3.fixes.fix_imports2"
+# futurize does not handle this yet. Fix incompatible imports and module
+# references that must be fixed after fix_imports. No diff; maps:
+#   'whichdb' to 'dbm' (whichdb included in dbm)
+#	'anydbm' to 'dbm' (anydbm included in dbm)
+#---------------------------------------------------------------------------
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_reload"
+# Unknown fixer
+#---------------------------------------------------------------------------
 ENABLED_FIXERS+=" lib2to3.fixes.fix_set_literal"
+#---------------------------------------------------------------------------
 #ENABLED_FIXERS+=" lib2to3.fixes.fix_urllib"
+# Included in libfuturize.fix_future_standard_library_urllib
+#---------------------------------------------------------------------------
 
 # *** Mechanical/easy fixers ***
 #---------------------------------------------------------------------------
@@ -78,6 +107,7 @@ ENABLED_FIXERS+=" libfuturize.fixes.fix_absolute_import"
 ENABLED_FIXERS+=" libfuturize.fixes.fix_next_call"
 ENABLED_FIXERS+=" libfuturize.fixes.fix_raise"
 ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
+#---------------------------------------------------------------------------
 
 # *** More complex fixers, need to be verified manually ***
 #---------------------------------------------------------------------------
@@ -186,6 +216,7 @@ ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
 # stage 1. The new fixer changes any obj.next() calls to next(obj), which is
 # Py2/3 compatible, but doesn’t change any next method names to __next__, which
 # would break Py2 compatibility
+#---------------------------------------------------------------------------
 
 # *** Useless fixers ***
 #---------------------------------------------------------------------------
@@ -193,6 +224,7 @@ ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
 # This performs cosmetic changes. This is not applied by default because it
 # does not serve to improve Python 2/3 compatibility. (In some cases it may
 # also reduce readability: see issue #58.)
+#---------------------------------------------------------------------------
 
 if [ -z "$ENABLED_FIXERS" ]; then
     echo "No fixer enabled"

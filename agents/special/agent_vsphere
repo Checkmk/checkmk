@@ -781,7 +781,7 @@ def put_in_envelope(payload):
 
 
 def convert_hostname(h):
-    if opt_spaces == "cut":
+    if opt.spaces == "cut":
         return h.split()[0]
     return h.replace(" ", "_")
 
@@ -876,7 +876,7 @@ def get_agent_info_tcp(address):
             ipaddress = socket.gethostbyname(address)
         soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            soc.settimeout(opt_timeout)
+            soc.settimeout(opt.timeout)
         except AttributeError:
             pass  # some old Python versions lack settimeout(). Better ignore than fail
         soc.connect((ipaddress, 6556))
@@ -894,7 +894,7 @@ def get_agent_info_tcp(address):
         soc.close()
         return raw_response
     except Exception:
-        if opt_debug:
+        if opt.debug:
             raise
     return raw_response
 
@@ -951,10 +951,11 @@ class ESXConnection(object):
         if "NotAuthenticatedFault" in text:
             raise MKQueryServerException("No longer authenticated")
 
-    def __init__(self, address, user, secret, no_cert, debug):
+    def __init__(self, address, user, secret, no_cert, debug, tracefile):
         super(ESXConnection, self).__init__()
         self._user = user
         self._secret = secret
+        self.tracefile = tracefile
         self._server_handle = self._connect_to_server(address, no_cert, debug)
 
         self._host_cookie_path = Path("%s/agents/agent_vsphere/cookie.%s" %
@@ -1011,8 +1012,8 @@ class ESXConnection(object):
         self._init_headers(soapdata)
         response_data = []
 
-        if tracefile:
-            tracefile.write("####   Sent  ####\n%s" % soapdata)
+        if self.tracefile:
+            self.tracefile.write("####   Sent  ####\n%s" % soapdata)
             time_sent = time.time()
         self._server_handle.send(soapdata)
 
@@ -1038,9 +1039,9 @@ class ESXConnection(object):
                 break
 
         respose_text = "".join(response_data)
-        if tracefile:
+        if self.tracefile:
             timing_info = "Response took: %f" % (time.time() - time_sent)
-            tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, respose_text))
+            self.tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, respose_text))
 
         return response, respose_text
 
@@ -1135,7 +1136,7 @@ def section_systemtime(connection):
             output("<<<systemtime>>>")
             output(localtime.strftime("%s"))
     except Exception:
-        if opt_debug:
+        if opt.debug:
             raise
 
 
@@ -1255,7 +1256,7 @@ def fetch_counters_syntax(connection):
 def fetch_extra_interface_counters(connection):
     # Get additional interface counter info, this only works when querying ESX hosts
     # TODO: get this info from the vcenter
-    if not opt_direct:
+    if not opt.direct:
         return []
 
     net_extra_info = []
@@ -1424,9 +1425,9 @@ def fetch_hostsystem_data(connection):
 
 
 def output_hostsystems(hostsystems_properties, hostsystems_sensors):
-    # TODO: improve error handling: check if multiple results and opt_direct
+    # TODO: improve error handling: check if multiple results and opt.direct
     for hostname, properties in hostsystems_properties.items():
-        if not opt_direct:
+        if not opt.direct:
             output("<<<<%s>>>>" % convert_hostname(properties["name"][0]))
 
         output("<<<esx_vsphere_hostsystem>>>")
@@ -1465,7 +1466,7 @@ def process_counters(connection, hostsystems, datastores):
 
     counter_data_payload = telegram_list["perfcounterdata"]
     for host in hostsystems.keys():
-        if not opt_direct:
+        if not opt.direct:
             output("<<<<%s>>>>" % convert_hostname(hostsystems[host]))
 
         ### TODO: check if this host supports perfdata
@@ -1530,7 +1531,7 @@ def process_counters(connection, hostsystems, datastores):
         for line in net_extra_info:
             output(line)
 
-    if not opt_direct:
+    if not opt.direct:
         output('<<<<>>>>')
 
 
@@ -1543,7 +1544,7 @@ def fetch_virtual_machines(connection, hostsystems, datastores):
     elements = get_pattern("<objects>(.*?)</objects>", vmdetails_response)
     for entry in elements:
         vm_data = dict(get_pattern("<name>(.*?)</name><val.*?>(.*?)</val>", entry))
-        if opt_skip_placeholder_vm and is_placeholder_vm(vm_data.get("config.hardware.device")):
+        if opt.skip_placeholder_vm and is_placeholder_vm(vm_data.get("config.hardware.device")):
             continue
 
         if "runtime.host" in vm_data:
@@ -1561,7 +1562,7 @@ def fetch_virtual_machines(connection, hostsystems, datastores):
             if key in vm_data:
                 vm_data[key] = transform(vm_data[key], datastores)
 
-        if opt_vm_piggyname == "hostname" and vm_data.get("summary.guest.hostName"):
+        if opt.vm_piggyname == "hostname" and vm_data.get("summary.guest.hostName"):
             vms[vm_data.get("summary.guest.hostName")] = vm_data
         else:
             vms[vm_data.get("name")] = vm_data
@@ -1580,7 +1581,7 @@ def output_virtual_machines(vms):
 
 
 def process_clusters(connection, vm_esx_host):
-    if opt_direct:
+    if opt.direct:
         return
 
     response = connection.query_server(telegram_list["datacenters"])
@@ -1654,9 +1655,9 @@ def fetch_data(connection):
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores)
         output_virtual_machines(vms)
 
-        if opt_snapshot_display == 'esxhost':
+        if opt.snapshot_display == 'esxhost':
             output_aggregated_snapshots(vms, hostsystems)
-        elif opt_snapshot_display == 'vCenter':
+        elif opt.snapshot_display == 'vCenter':
             output_aggregated_snapshots(vms)
 
     # TODO: Where is the related piggyback open tag?
@@ -1671,12 +1672,12 @@ def fetch_data(connection):
     host_piggy_data = {}
 
     if "hostsystem" in query_objects:
-        if opt_host_pwr_display != "vm":  # handled later on..
-            if opt_direct and opt_hostname:
+        if opt.host_pwr_display != "vm":  # handled later on..
+            if opt.direct and opt.hostname:
                 for hostname, data in hostsystems_properties.items():
                     output(
                         "hostsystem\t%s\t\t%s" %
-                        (opt_hostname, hostsystems_properties[hostname]["runtime.powerState"][0]))
+                        (opt.hostname, hostsystems_properties[hostname]["runtime.powerState"][0]))
             else:
                 for hostname, data in hostsystems_properties.items():
                     converted_hostname = convert_hostname(
@@ -1684,7 +1685,7 @@ def fetch_data(connection):
                     host_info = "hostsystem\t%s\t\t%s" % (
                         converted_hostname,
                         hostsystems_properties[hostname]["runtime.powerState"][0])
-                    if opt_host_pwr_display == "esxhost" and not opt_direct:
+                    if opt.host_pwr_display == "esxhost" and not opt.direct:
                         host_piggy_data.setdefault(converted_hostname, []).append(host_info)
                     output(host_info)
 
@@ -1695,15 +1696,15 @@ def fetch_data(connection):
             vm_info = "virtualmachine\t%s\t%s\t%s" % (convert_hostname(key), running_on,
                                                       data.get("runtime.powerState"))
 
-            if opt_vm_pwr_display == "vm":
+            if opt.vm_pwr_display == "vm":
                 vm_name = convert_hostname(key)
                 vm_piggy_data.setdefault(vm_name, []).append(vm_info)
-            elif opt_vm_pwr_display == "esxhost" and not opt_direct:
+            elif opt.vm_pwr_display == "esxhost" and not opt.direct:
                 host_piggy_data.setdefault(running_on, []).append(vm_info)
             output(vm_info)
 
     if ("virtualmachine" in query_objects and "hostsystem" in query_objects and
-            opt_host_pwr_display == "vm"):
+            opt.host_pwr_display == "vm"):
 
         for key in vms:
             data = vms[key]
@@ -1745,6 +1746,27 @@ def call_legacy_pysphere():
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+
+class Opt(object):
+    def __init__(self):
+        super(Opt, self).__init__()
+        self.debug = False
+        self.direct = False
+        self.agent = False
+        self.timeout = 60
+        self.port = 443
+        self.hostname = None
+        self.skip_placeholder_vm = False
+        self.pysphere = False
+        self.tracefile = None
+        self.host_pwr_display = None
+        self.vm_pwr_display = None
+        self.snapshot_display = None
+        self.vm_piggyname = "alias"
+        self.spaces = "underscore"
+        self.no_cert = False
+
+
 if __name__ == "__main__":
     short_options = "hi:u:s:Dat:H:Pp:S:"
     long_options = [
@@ -1753,51 +1775,36 @@ if __name__ == "__main__":
         "host_pwr_display=", "vm_pwr_display=", "snapshot_display=", "vm_piggyname="
     ]
 
-    opt_debug = False
-    opt_direct = False
-    opt_agent = False
-    opt_timeout = 60
-    opt_port = 443
-    opt_hostname = None
-    opt_skip_placeholder_vm = False
-    opt_pysphere = False
-    opt_tracefile = None
-    opt_host_pwr_display = None
-    opt_vm_pwr_display = None
-    opt_snapshot_display = None
-    opt_vm_piggyname = "alias"
-    opt_spaces = "underscore"
-    opt_no_cert = False
+    opt = Opt()
 
     host_address = None
     g_user = None
     g_secret = None
-    tracefile = None
     query_objects = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-    except getopt.GetoptError as get_opt_exc:
-        sys.stderr.write("%s\n" % get_opt_exc)
+    except getopt.GetoptError as exc:
+        sys.stderr.write("%s\n" % exc)
         sys.exit(1)
 
     for o, a in opts:
         if o in ['--debug']:
-            opt_debug = True
+            opt.debug = True
         elif o in ['--tracefile']:
-            opt_tracefile = a
+            opt.tracefile = a
         elif o in ['-D', '--direct']:
-            opt_direct = True
+            opt.direct = True
         elif o in ['-a', '--agent']:
-            opt_agent = True
+            opt.agent = True
         elif o == '-P':
-            opt_skip_placeholder_vm = True
+            opt.skip_placeholder_vm = True
         elif o in ['-p', '--port']:
-            opt_port = a
+            opt.port = a
         elif o in ['--no-cert-check']:
-            opt_no_cert = True
+            opt.no_cert = True
         elif o == '--pysphere':
-            opt_pysphere = True
+            opt.pysphere = True
         elif o in ['-u', '--user']:
             g_user = a
         elif o in ['-s', '--secret']:
@@ -1805,28 +1812,28 @@ if __name__ == "__main__":
         elif o in ['-i', '--modules']:
             query_objects = a.split(',')
         elif o in ['-t', '--timeout']:
-            opt_timeout = int(a)
+            opt.timeout = int(a)
         elif o in ['-H', '--hostname']:
-            opt_hostname = a
+            opt.hostname = a
         elif o in ['--vm_piggyname']:
-            opt_vm_piggyname = a
+            opt.vm_piggyname = a
         elif o in ['--vm_pwr_display']:
-            opt_vm_pwr_display = a
+            opt.vm_pwr_display = a
         elif o in ['--host_pwr_display']:
-            opt_host_pwr_display = a
+            opt.host_pwr_display = a
         elif o in ['--snapshot_display']:
-            opt_snapshot_display = a
+            opt.snapshot_display = a
         elif o in ['-S', '--spaces']:
             if a not in ["cut", "underscore"]:
                 usage()
                 sys.exit(1)
-            opt_spaces = a
+            opt.spaces = a
         elif o in ['-h', '--help']:
             usage()
             sys.exit(0)
 
     # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
-    if opt_pysphere:
+    if opt.pysphere:
         sys.exit(call_legacy_pysphere())
 
     if len(args) == 1:
@@ -1840,23 +1847,23 @@ if __name__ == "__main__":
 
     vsphere_output = []
 
-    socket.setdefaulttimeout(opt_timeout)
+    socket.setdefaulttimeout(opt.timeout)
 
-    if opt_tracefile:
-        tracefile_dir = os.path.dirname(opt_tracefile) or "."
+    if opt.tracefile:
+        tracefile_dir = os.path.dirname(opt.tracefile) or "."
         if os.path.exists(tracefile_dir):
-            tracefile = file(opt_tracefile, "w")
-        elif opt_debug:
-            sys.stderr.write("Path for tracefile %s does not exist" % opt_tracefile)
+            opt.tracefile = file(opt.tracefile, "w")
+        elif opt.debug:
+            sys.stderr.write("Path for tracefile %s does not exist" % opt.tracefile)
             sys.stderr.flush()
 
-    if tracefile:
-        tracefile.write("Tracefile %s Host address: %s\n" %
-                        (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
+    if opt.tracefile:
+        opt.tracefile.write("Tracefile %s Host address: %s\n" %
+                            (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
 
     try:
-        esx_connection = ESXConnection((host_address, opt_port), g_user, g_secret, opt_no_cert,
-                                       opt_debug)
+        esx_connection = ESXConnection((host_address, opt.port), g_user, g_secret, opt.no_cert,
+                                       opt.debug, opt.tracefile)
 
         # If the data aquisition fails, e.g. invalid cookie we try another run
         for _run_count in [0, 1]:
@@ -1873,14 +1880,14 @@ if __name__ == "__main__":
                 esx_connection.login()
                 continue  # do a second run
             except Exception:
-                if opt_debug:
+                if opt.debug:
                     raise
                 raise MKGeneralException("Error while processing received data")
 
     except MKGeneralException as exc:
         sys.stderr.write("%s\n" % exc)
-        sys.exit(0 if opt_agent else 1)
+        sys.exit(0 if opt.agent else 1)
 
-    write_output(vsphere_output, opt_agent, host_address)
+    write_output(vsphere_output, opt.agent, host_address)
 
     sys.exit(0)

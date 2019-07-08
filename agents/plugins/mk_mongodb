@@ -1,205 +1,251 @@
 #!/usr/bin/python
-# Monitor MongoDB on Linux
+"""Monitor MongoDB on Linux
 
+This agent plugin creates various sections out of the MongoDB server status information.
+Important: 1) If MongoDB runs as single instance the agent data is assigned
+              to the host same host where the plugin resides.
+
+           2) If MongoDB is deployed as replica set the agent data is piggybacked
+              to a different hostname, name after the replica set name.
+              You have to create a new host in the monitoring system matching the
+              replica set name, or use the piggyback translation rule to modify the
+              hostname according to your needs.
+"""
+import os
+import pprint
 import sys
 import time
-import pprint
-import os
-import datetime
+import inspect
+from contextlib import contextmanager
 
-# This agent plugin creates various sections out of the MongoDB server status information.
-# Important: 1) If MongoDB runs as single instance the agent data is assigned
-#               to the host same host where the plugin resides.
-#
-#            2) If MongoDB is deployed as replica set the agent data is piggybacked
-#               to a different hostname, name after the replica set name.
-#               You have to create a new host in the monitoring system matching the
-#               replica set name, or use the piggyback translation rule to modify the
-#               hostname according to your needs.
+import pymongo  # pylint: disable=import-error
 
-try:
-    import pymongo
-except ImportError, e:
-    sys.stderr.write("ERROR: Unable to import pymongo module\n")
-    sys.exit(2)
+MK_VARDIR = os.environ.get("MK_VARDIR")
 
-# TODO: might be implemented in the future..
-host   = None
-port   = None
 
-try:
-    con = pymongo.MongoClient(host, port)
+@contextmanager
+def piggyback(info):
+    piggyhost = info.get("setName") if info else None
+    if piggyhost:
+        sys.stdout.write("<<<<%s>>>>\n" % piggyhost)
     try:
-        # pylint: disable=no-member
-        con = pymongo.database_names()
-    except:
-        con = pymongo.MongoClient(None, None,  read_preference=pymongo.ReadPreference.SECONDARY)
+        yield
+    finally:
+        if piggyhost:
+            sys.stdout.write("<<<<>>>>\n")
 
-    con.admin.read_preference = pymongo.ReadPreference.SECONDARY
 
-    # if user and passwd:
-    #     db = con["admin"]
-    #     if not db.authenticate(user, passwd):
-    #        sys.exit("Username/Password incorrect")
+def get_database_info(client):
+    if inspect.ismethod(client.list_database_names):
+        db_names = client.list_database_names()
+    elif inspect.ismethod(client.database_names):
+        db_names = client.database_names()
+    else:
+        db_names = []
 
-    server_status = con.admin.command("serverStatus")
-except:
+    databases = {n: {} for n in db_names}
+    for name in db_names:
+        database = client[name]
+        databases[name]["collections"] = database.collection_names()
+        databases[name]["stats"] = database.command("dbstats")
+        databases[name]["collstats"] = {}
+        for collection in databases[name]["collections"]:
+            databases[name]["collstats"][collection] = database.command("collstats", collection)
+    return databases
+
+
+def section_instance(server_status):
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
-    sys.stdout.write("error\tInstance is down\n")
-    sys.exit(0)
+    sys.stdout.write("version\t%s\n" % server_status.get("version", "n/a"))
+    sys.stdout.write("pid\t%s\n" % server_status.get("pid", "n/a"))
 
-server_version = tuple(con.server_info()['version'].split('.'))
+    repl_info = server_status.get("repl")
+    if not repl_info:
+        sys.stdout.write("mode\tSingle Instance\n")
+        return
 
-repl_info = server_status.get("repl")
-
-sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
-if not repl_info:
-    sys.stdout.write("mode\tSingle Instance\n")
-else:
     if repl_info.get("ismaster"):
         sys.stdout.write("mode\tPrimary\n")
-    elif repl_info.get("secondary"):
+        return
+
+    if repl_info.get("secondary"):
         sys.stdout.write("mode\tSecondary\n")
-    else:
-        sys.stdout.write("mode\tArbiter\n")
-    sys.stdout.write("address\t%s\n" % repl_info["me"])
+        return
 
-sys.stdout.write("version\t%s\n" % server_status["version"])
-sys.stdout.write("pid\t%s\n" % server_status["pid"])
+    sys.stdout.write("mode\tArbiter\n")
+    if repl_info.get("me"):
+        sys.stdout.write("address\t%s\n" % repl_info.get("me", "n/a"))
 
-if repl_info:
-    if not repl_info.get("ismaster"):
-        sys.exit(0)
-    sys.stdout.write("<<<<%s>>>>\n" % repl_info["setName"])
+
+def section_flushing(server_status):
+    # key is depricated for MongoDB 4.0
+    flushing_info = server_status.get("backgroundFlushing")
+    if flushing_info is None:
+        return
+    sys.stdout.write("<<<mongodb_flushing>>>\n")
+    sys.stdout.write("average_ms %s\n" % flushing_info.get("average_ms", "n/a"))
+    sys.stdout.write("last_ms %s\n" % flushing_info.get("last_ms", "n/a"))
+    sys.stdout.write("flushed %s\n" % flushing_info.get("flushes", "n/a"))
+
+
+def sections_replica(client, server_status):
+    repl_info = server_status.get("repl")
+    if not repl_info:
+        return
     sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
-    sys.stdout.write("primary\t%s\n" % repl_info.get("primary"))
-    sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
-    sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
+    sys.stdout.write("primary\t%s\n" % repl_info.get("primary", "n/a"))
+    if repl_info.get("hosts"):
+        sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
+
+    if repl_info.get("arbiters"):
+        sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
 
     sys.stdout.write("<<<mongodb_replstatus>>>\n")
-    sys.stdout.write(pprint.pformat(con.admin.command("replSetGetStatus")))
-
-sys.stdout.write("<<<mongodb_asserts>>>\n")
-for key, value in server_status.get("asserts", {}).items():
-    sys.stdout.write("%s %s\n" % (key, value))
+    sys.stdout.write(pprint.pformat(client.admin.command("replSetGetStatus")))
+    sys.stdout.write("\n")
 
 
-sys.stdout.write("<<<mongodb_connections>>>\n")
-sys.stdout.write("%s\n" % "\n".join(map(lambda x: "%s %s" % x, server_status["connections"].items())))
+def section_chunks(client, databases):
+    sys.stdout.write("<<<mongodb_chunks>>>\n")
+    col = client.config.chunks
+    for db_name, db_data in databases.items():
+        shards = col.distinct("shard")
+        sys.stdout.write("shardcount %d\n" % len(shards))
+        for collection in db_data.get("collections"):
+            nsfilter = "%s.%s" % (db_name, collection)
+            sys.stdout.write("nscount %s %s\n" % (nsfilter, col.find({"ns": nsfilter}).count()))
+            for shard in shards:
+                matches = col.find({"ns": nsfilter, "shard": shard}).count()
+                sys.stdout.write("shardmatches" " %s#%s %s\n" % (nsfilter, shard, matches))
 
-databases = dict(map(lambda x: (x, {}), con.database_names()))
 
-for name in databases.keys():
-    databases[name]["collections"] = con[name].collection_names()
-    databases[name]["stats"]       = con[name].command("dbstats")
-    databases[name]["collstats"]   = {}
-    for collection in databases[name]["collections"]:
-        databases[name]["collstats"][collection] = con[name].command("collstats", collection)
+def section_locks(server_status):
+    sys.stdout.write("<<<mongodb_locks>>>\n")
+    global_lock_info = server_status.get("globalLock")
+    if global_lock_info:
+        for what in ["activeClients", "currentQueue"]:
+            if what in global_lock_info:
+                for key, value in global_lock_info[what].items():
+                    sys.stdout.write("%s %s %s\n" % (what, key, value))
 
 
-sys.stdout.write("<<<mongodb_chunks>>>\n")
-col = con.config.chunks
-for db_name, db_data in databases.items():
-    shards = col.distinct("shard")
-    sys.stdout.write("shardcount %d\n" % len(shards))
-    for collection in db_data.get("collections"):
-        nsfilter = "%s.%s" % (db_name, collection)
-        sys.stdout.write("nscount %s %s\n" % (nsfilter, col.find({"ns": nsfilter}).count()))
-        for shard in shards:
-            sys.stdout.write("shardmatches %s#%s %s\n" % (nsfilter, shard, col.find({"ns": nsfilter, "shard": shard}).count()))
+def section_by_keys(section_name, keys, server_status, output_key=False):
+    sys.stdout.write("<<<mongodb_%s>>>\n" % section_name)
+    for key in keys:
+        fmt = ("%s " % key if output_key else "") + "%s %s\n"
+        for item in server_status.get(key, {}).items():
+            sys.stdout.write(fmt % item)
 
-sys.stdout.write("<<<mongodb_locks>>>\n")
-global_lock_info = server_status.get("globalLock")
-if global_lock_info:
-    for what in [ "activeClients", "currentQueue" ]:
-        if what in global_lock_info:
-            for key, value in global_lock_info[what].items():
-                sys.stdout.write("%s %s %s\n" % (what, key, value))
 
-sys.stdout.write("<<<mongodb_flushing>>>\n")
-sys.stdout.write("average_ms %s\n" % server_status["backgroundFlushing"]["average_ms"])
-sys.stdout.write("last_ms %s\n" %    server_status["backgroundFlushing"]["last_ms"])
-sys.stdout.write("flushed %s\n" %    server_status["backgroundFlushing"]["flushes"])
+def section_collections(databases):
+    sys.stdout.write("<<<mongodb_collections:sep(9)>>>\n")
+    for dbname, dbdata in databases.items():
+        for collname, colldata in dbdata.get("collstats", {}).items():
+            for key, value in colldata.items():
+                if 'size' in key.lower():
+                    sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, key, value))
 
-# Unused
-#try:
-#    if server_version >= tuple("2.4.0".split(".")):
-#        indexCounters = server_status['indexCounters']
-#    else:
-#        indexCounters = server_status['indexCounters']["btree"]
-#    print "<<<mongodb_indexcounters>>>"
-#    for key, value in indexCounters.items():
-#        print "%s %s" % (key, value)
-#except:
-#    pass
 
-sys.stdout.write("<<<mongodb_mem>>>\n")
-for key, value in server_status["mem"].items():
-    sys.stdout.write("%s %s\n" % (key, value))
-for key, value in server_status["extra_info"].items():
-    sys.stdout.write("%s %s\n" % (key, value))
+def get_timestamp(text):
+    """parse timestamps like 'Nov  6 13:44:09.345' or '2015-10-17T05:35:24.234'"""
+    text = text.split('.')[0]
+    for pattern in ["%a %b %d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
+        try:
+            return time.mktime(time.strptime(text, pattern))
+        except ValueError:
+            pass
 
-sys.stdout.write("<<<mongodb_counters>>>\n")
-for what in ["opcounters", "opcountersRepl"]:
-    for key, value in server_status.get(what, {}).items():
-        sys.stdout.write("%s %s %s\n" % (what, key, value))
 
-sys.stdout.write("<<<mongodb_collections:sep(9)>>>\n")
-for dbname, dbdata in databases.items():
-    for collname, colldata in dbdata.get("collstats", {}).items():
-        for what, value in colldata.items():
-            sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, what, value))
+def read_statefile(state_file):
+    try:
+        with open(state_file) as state_fd:
+            last_timestamp = int(state_fd.read())
+    except (IOError, ValueError):
+        return None, True
 
-sys.stdout.write("<<<logwatch>>>\n")
-sys.stdout.write("[[[MongoDB startupWarnings]]]\n")
-startup_warnings = con.admin.command({"getLog": "startupWarnings"})
+    if time.localtime(last_timestamp).tm_year >= 2015:
+        return last_timestamp, False
 
-var_dir = os.environ.get("MK_VARDIR")
-if var_dir:
-    state_file     = "%s/mongodb.state" % var_dir
-    last_timestamp = None
-    output_all     = False
+    # Note: there is no year information in these loglines
+    # As workaround we look at the creation date (year) of the last statefile
+    # If it differs and there are new messages we start from the beginning
+    statefile_year = time.localtime(os.stat(state_file).st_ctime).tm_year
+    output_all = time.localtime().tm_year != statefile_year
+    return last_timestamp, output_all
 
-    # Supports: Nov  6 13:44:09
-    #           2015-10-17T05:35:24
-    def get_timestamp(text):
-        for pattern in [ "%a %b %d %H:%M:%S",
-                         "%Y-%m-%dT%H:%M:%S" ]:
-            try:
-                result = time.mktime(time.strptime(text, pattern))
-                return result
-            except:
-                continue
 
-    year_available = False
-    if os.path.exists(state_file):
-        last_timestamp = int(file(state_file).read())
-        if time.localtime(last_timestamp).tm_year >= 2015:
-            year_available = True
+def update_statefile(state_file, startup_warnings):
+    lines = startup_warnings.get("log")
+    if not lines:
+        return
+    timestamp = get_timestamp(lines[-1])
+    try:
+        with open(state_file, 'w') as state_fd:
+            state_fd.write("%d" % timestamp)
+    except (IOError, TypeError):
+        # TypeError: timestamp was None, but at least ctime is updated.
+        pass
 
-        # Note: there is no year information in these loglines
-        # As workaround we look at the creation date (year) of the last statefile
-        # If it differs and there are new messages we start from the beginning
-        if not year_available:
-            statefile_year = time.localtime(os.stat(state_file).st_ctime).tm_year
-            if time.localtime().tm_year != statefile_year:
-                output_all = True
+
+def section_logwatch(client):
+    if not MK_VARDIR:
+        return
+
+    sys.stdout.write("<<<logwatch>>>\n")
+    sys.stdout.write("[[[MongoDB startupWarnings]]]\n")
+    startup_warnings = client.admin.command({"getLog": "startupWarnings"})
+
+    state_file = "%s/mongodb.state" % MK_VARDIR
+
+    last_timestamp, output_all = read_statefile(state_file)
 
     for line in startup_warnings["log"]:
         state = "C"
-        state_index = line.find("]")+2
+        state_index = line.find("]") + 2
         if len(line) == state_index or line[state_index:].startswith("**  "):
             state = "."
 
         if "** WARNING:" in line:
             state = "W"
 
-        if output_all or get_timestamp(line.split(".")[0]) > last_timestamp:
+        if output_all or get_timestamp(line) > last_timestamp:
             sys.stdout.write("%s %s\n" % (state, line))
 
-    # update state file
-    if startup_warnings["log"]:
-        file(state_file, "w").write("%d" % get_timestamp(startup_warnings["log"][-1].split(".")[0]))
+    update_statefile(state_file, startup_warnings)
 
-sys.stdout.write("<<<<>>>>\n")
 
+def main():
+    client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY)
+    try:
+        # connecting is lazy, it might fail only now
+        server_status = client.admin.command("serverStatus")
+    except pymongo.errors.ConnectionFailure:
+        sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
+        sys.stdout.write("error\tInstance is down\n")
+        return
+
+    section_instance(server_status)
+    repl_info = server_status.get("repl")
+    if repl_info and not repl_info.get("ismaster"):
+        return
+
+    with piggyback(repl_info):
+        potentially_piggybacked_sections(client, server_status)
+
+
+def potentially_piggybacked_sections(client, server_status):
+    sections_replica(client, server_status)
+    section_by_keys("asserts", ("asserts",), server_status)
+    section_by_keys("connections", ("connections",), server_status)
+    databases = get_database_info(client)
+    section_chunks(client, databases)
+    section_locks(server_status)
+    section_flushing(server_status)
+    section_by_keys("mem", ("mem", "extra_info"), server_status)
+    section_by_keys("counters", ("opcounters", "opcountersRepl"), server_status, output_key=True)
+    section_collections(databases)
+    section_logwatch(client)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

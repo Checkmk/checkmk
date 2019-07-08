@@ -35,39 +35,46 @@
 # page_faults 86
 # heap_usage_bytes 65501032
 
-def inventory_mongodb_mem(info):
-    return [(None, {})]
 
-def check_mongodb_mem(_no_item, params, info):
-    info_dict = dict(map(lambda x: (x[0], " ".join(x[1:])), info))
-    resident_bytes = int(info_dict["resident"]) * 1024 **2
+def parse_mongodb_mem(info):
+    parsed = {}
+    for line in info:
+        key, value = line[0], " ".join(line[1:])
+        try:
+            parsed[key] = int(value)
+        except ValueError:
+            parsed[key] = value
+    return parsed
 
-    for what in [ "resident", "virtual", "mapped" ]:
-        value_bytes = int(info_dict[what]) * 1024 **2
-        warn, crit = None, None
-        state = 0
-        if "%s_levels" % what in params:
-            warn, crit = params["%s_levels" % what]
-            if value_bytes >= crit:
-                state = 2
-            elif value_bytes >= warn:
-                state = 1
-        yield state, "%s usage: %s" % (what.title(), get_bytes_human_readable(value_bytes)),\
-                    [ ("process_%s_size" % what, value_bytes, warn, crit) ]
+
+def check_mongodb_mem(_no_item, params, parsed):
+
+    for key in ("resident", "virtual", "mapped"):
+        if key in parsed:  # 'mapped' only for the MMAPv1 storage engine, deprecated with 4x
+            value_bytes = parsed[key] * 1024**2
+            levels = params.get("%s_levels" % key, (None, None))
+            yield check_levels_backport(
+                value_bytes,
+                "process_%s_size" % key,
+                levels,
+                human_readable_func=get_bytes_human_readable,
+                infoname="%s usage" % key.title())
 
     # MongoDB doc: If virtual value is significantly larger than mapped (e.g. 3 or more times),
     #              this may indicate a memory leak.
-    virtual_bytes  = float(info_dict["virtual"])
-    mapped_bytes   = float(info_dict["mapped"])
-    virt_mapped_factor = virtual_bytes / mapped_bytes
-    if virt_mapped_factor >= 3:
-        yield 1, "Virtual size is %.1f times the mapped size (Possible memory leak)" % virt_mapped_factor
+    if parsed.get("mapped"):  # present, non-zero
+        virt_mapped_factor = parsed["virtual"] / float(parsed["mapped"])
+        if virt_mapped_factor >= 3:
+            textfmt = "Virtual size is %.1f times the mapped size (possible memory leak)"
+            yield 1, textfmt % virt_mapped_factor
+
 
 check_info['mongodb_mem'] = {
-    "inventory_function"      : inventory_mongodb_mem,
-    "check_function"          : check_mongodb_mem,
-    "service_description"     : "Memory used MongoDB",
-    "group"                   : "mongodb_mem",
-    "has_perfdata"            : True
+    "parse_function": parse_mongodb_mem,
+    "inventory_function": discover_single,
+    "check_function": check_mongodb_mem,
+    "service_description": "Memory used MongoDB",
+    "group": "mongodb_mem",
+    "has_perfdata": True,
+    "includes": ["backport.include"]
 }
-

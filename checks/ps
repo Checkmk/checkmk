@@ -159,7 +159,7 @@ def extract_wmic_info(info):
             line = next(lines)
             if line[-1] == '[wmic process]':
                 is_wmic = True
-                wmic_headers = ["node"] + lines.next()[1:]
+                wmic_headers = ["node"] + next(lines)[1:]
                 continue
             elif line[-1] == '[wmic process end]':
                 is_wmic = False

@@ -218,7 +218,7 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
 # Restrictions for newly added functions: no function arguments, only getters
 class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
     def has_exception(self):
-        return self.get_status().get("state") == background_job.JobStatus.state_exception
+        return self.get_status().get("state") == background_job.JobStatusStates.EXCEPTION
 
     def acknowledged_by(self):
         return self.get_status().get("acknowledged_by")
@@ -244,7 +244,7 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
         if self.is_foreign() and not config.user.may("background_jobs.stop_foreign_jobs"):
             return False
 
-        if not self.is_running():
+        if not self.is_active():
             return False
 
         return True
@@ -253,7 +253,7 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
         if not self.is_deletable():
             return False
 
-        if not self.is_stoppable() and self.is_running():
+        if not self.is_stoppable() and self.is_active():
             return False
 
         if not config.user.may("background_jobs.delete_jobs"):
@@ -270,8 +270,8 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
     # FIXME: There is some arcane metaprogramming Kung Fu going on in
     # GUIBackgroundStatusSnapshot which needs the methods *in this class*,
     # although they are actually totally useless here.
-    def is_running(self):  # pylint: disable=useless-super-delegation
-        return super(GUIBackgroundJobSnapshottedFunctions, self).is_running()
+    def is_active(self):  # pylint: disable=useless-super-delegation
+        return super(GUIBackgroundJobSnapshottedFunctions, self).is_active()
 
     def exists(self):  # pylint: disable=useless-super-delegation
         return super(GUIBackgroundJobSnapshottedFunctions, self).exists()
@@ -415,12 +415,12 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
             try:
                 job = GUIBackgroundJob(job_id)
                 job_status = job.get_status()
-                is_running = job.is_running()
+                is_active = job.is_active()
             except Exception as e:
                 self._logger.error(_("Exception parsing background job %s: %s") % (job_id, str(e)))
                 continue
 
-            if is_running and job.may_stop():
+            if is_active and job.may_stop():
                 job_status["may_stop"] = True
 
             if job.may_delete():
@@ -449,9 +449,9 @@ class JobRenderer(object):
         # Static info
         for left, right in [
             (_("ID"), job_id),
-            (_("Title"), job_status["title"]),
+            (_("Title"), job_status.get("title", "")),
             (_("Started"), cmk.utils.render.date_and_time(job_status["started"])),
-            (_("Owner"), job_status["user"]),
+            (_("Owner"), job_status.get("user", "")),
         ]:
             html.open_tr()
             html.th(left)
@@ -483,7 +483,7 @@ class JobRenderer(object):
         html.td(job_status["state"], css=cls.get_css_for_jobstate(job_status["state"]))
         html.close_tr()
 
-        if job_status["state"] == background_job.JobStatus.state_exception:
+        if job_status["state"] == background_job.JobStatusStates.EXCEPTION:
             html.open_tr()
             html.th(_("Acknowledged by"))
             html.td(job_status.get("acknowledged_by", ""))
@@ -493,7 +493,7 @@ class JobRenderer(object):
         loginfo = job_status.get("loginfo")
         runtime_info = cmk.utils.render.timespan(job_status.get("duration", 0))
         if job_status[
-                "state"] == background_job.JobStatus.state_running and "estimated_duration" in job_status:
+                "state"] == background_job.JobStatusStates.RUNNING and "estimated_duration" in job_status:
             runtime_info += " (%s: %s)" % (_("estimated duration"),
                                            cmk.utils.render.timespan(
                                                job_status["estimated_duration"]))
@@ -628,7 +628,7 @@ class JobRenderer(object):
         # Progress info
         loginfo = job_status.get("loginfo")
         if loginfo:
-            if job_status.get("state") == background_job.JobStatus.state_exception:
+            if job_status.get("state") == background_job.JobStatusStates.EXCEPTION:
                 html.td(HTML("<br>".join(loginfo["JobException"])), css="job_last_progress")
             else:
                 progress_text = ""
@@ -644,11 +644,11 @@ class JobRenderer(object):
     @classmethod
     def get_css_for_jobstate(cls, job_state):
         job_css_map = {
-            background_job.JobStatus.state_initialized: "job_state job_initialized",
-            background_job.JobStatus.state_running: "job_state job_running",
-            background_job.JobStatus.state_exception: "job_state job_exception",
-            background_job.JobStatus.state_stopped: "job_state job_exception",  # same css as exception
-            background_job.JobStatus.state_finished: "job_state job_finished"
+            background_job.JobStatusStates.INITIALIZED: "job_state job_initialized",
+            background_job.JobStatusStates.RUNNING: "job_state job_running",
+            background_job.JobStatusStates.EXCEPTION: "job_state job_exception",
+            background_job.JobStatusStates.STOPPED: "job_state job_exception",  # same css as exception
+            background_job.JobStatusStates.FINISHED: "job_state job_finished"
         }
         return job_css_map.get(job_state, "")
 
@@ -721,7 +721,7 @@ class ActionHandler(object):
             return
 
         html.header("Interuption of job")
-        if self.confirm_dialog_opened() and not job.is_running():
+        if self.confirm_dialog_opened() and not job.is_active():
             html.message(_("No longer able to stop job. Background job just finished."))
             return
 

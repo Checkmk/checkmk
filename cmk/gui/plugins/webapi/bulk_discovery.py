@@ -65,7 +65,7 @@ class APICallBulkDiscovery(APICallCollection):
 
     def _bulk_discovery_start(self, request):
         job = BulkDiscoveryBackgroundJob()
-        if job.is_running():
+        if job.is_active():
             raise MKUserError(
                 None,
                 _("A bulk discovery job is already running. Please use the "
@@ -132,7 +132,7 @@ class APICallBulkDiscovery(APICallCollection):
         job = BulkDiscoveryBackgroundJob()
         status = job.get_status()
         return {
-            "is_running": job.is_running(),
+            "is_active": job.is_active(),
             "job": {
                 "state": status["state"],
                 "result_msg": "\n".join(status["loginfo"]["JobResult"]),

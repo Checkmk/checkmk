@@ -95,8 +95,8 @@ class DataSource(object):
     def _setup_logger(self):
         """Add the source log prefix to the class logger"""
         self._logger.propagate = False
-        self._logger.set_format(
-            " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id(), tty.bold, tty.normal))
+        self._logger.set_format(" %s[%s%s%s]%s %%(message)s" %
+                                (tty.bold, tty.normal, self.id(), tty.bold, tty.normal))
 
     def run(self, hostname=None, ipaddress=None, get_raw_data=False):
         """Wrapper for self._execute() that unifies several things:
@@ -247,8 +247,8 @@ class DataSource(object):
                 else:
                     raise
         except Exception as e:
-            raise MKGeneralException(
-                "Cannot create directory %r: %s" % (os.path.dirname(cachefile), e))
+            raise MKGeneralException("Cannot create directory %r: %s" %
+                                     (os.path.dirname(cachefile), e))
 
         self._logger.debug("Write data to cache file %s" % (cachefile))
         try:
@@ -465,8 +465,8 @@ class DataSource(object):
 
             # Don't overwrite sections that have been received from the source with this call
             if section_name in host_sections.sections:
-                self._logger.debug(
-                    "Skipping persisted section %r, live data available" % (section_name))
+                self._logger.debug("Skipping persisted section %r, live data available" %
+                                   (section_name))
             else:
                 self._logger.debug("Using persisted section %r" % (section_name))
                 host_sections.add_cached_section(section_name, section_info, persisted_from,

@@ -60,8 +60,8 @@ class ModeBulkEdit(WatoMode):
         return _("Bulk edit hosts")
 
     def buttons(self):
-        html.context_button(
-            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
+                            "back")
 
     def action(self):
         if not html.check_transaction():
@@ -82,8 +82,9 @@ class ModeBulkEdit(WatoMode):
 
     def page(self):
         host_names = get_hostnames_from_checkboxes()
-        hosts = dict(
-            [(host_name, watolib.Folder.current().host(host_name)) for host_name in host_names])
+        hosts = dict([
+            (host_name, watolib.Folder.current().host(host_name)) for host_name in host_names
+        ])
         current_host_hash = sha256(repr(hosts))
 
         # When bulk edit has been made with some hosts, then other hosts have been selected

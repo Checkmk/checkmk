@@ -59,15 +59,16 @@ class RulespecCheckgroupParametersVeeamBackup(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("age",
-                       Tuple(
-                           title=_("Time since end of last backup"),
-                           elements=[
-                               Age(title=_("Warning if older than"), default_value=108000),
-                               Age(title=_("Critical if older than"), default_value=172800)
-                           ],
-                       ))],)
+        return Dictionary(elements=[("age",
+                                     Tuple(
+                                         title=_("Time since end of last backup"),
+                                         elements=[
+                                             Age(title=_("Warning if older than"),
+                                                 default_value=108000),
+                                             Age(title=_("Critical if older than"),
+                                                 default_value=172800)
+                                         ],
+                                     ))],)
 
     @property
     def item_spec(self):

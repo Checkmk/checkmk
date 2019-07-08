@@ -106,14 +106,22 @@ def check_docker_container_diskstat(item, params, parsed):
             raise MKCounterWrapped('No time difference')
         set_item_state(counter_base + "time", timestamp)
 
-        read_ios_rate = get_rate(
-            counter_base + "read_ios", timestamp, device["ios"]["Read"], onwrap=0.0)
-        write_ios_rate = get_rate(
-            counter_base + "write_ios", timestamp, device["ios"]["Write"], onwrap=0.0)
-        read_bytes_rate = get_rate(
-            counter_base + "read_bytes", timestamp, device["bytes"]["Read"], onwrap=0.0)
-        write_bytes_rate = get_rate(
-            counter_base + "write_bytes", timestamp, device["bytes"]["Write"], onwrap=0.0)
+        read_ios_rate = get_rate(counter_base + "read_ios",
+                                 timestamp,
+                                 device["ios"]["Read"],
+                                 onwrap=0.0)
+        write_ios_rate = get_rate(counter_base + "write_ios",
+                                  timestamp,
+                                  device["ios"]["Write"],
+                                  onwrap=0.0)
+        read_bytes_rate = get_rate(counter_base + "read_bytes",
+                                   timestamp,
+                                   device["bytes"]["Read"],
+                                   onwrap=0.0)
+        write_bytes_rate = get_rate(counter_base + "write_bytes",
+                                    timestamp,
+                                    device["bytes"]["Write"],
+                                    onwrap=0.0)
 
         disks[device_name] = {
             "node": node_name,

@@ -340,28 +340,27 @@ class IFrameDashlet(Dashlet):
 
         # Fix of iPad >:-P
         html.open_div(style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch;")
-        html.iframe(
-            '',
-            src="about:blank" if self.reload_on_resize() else iframe_url,
-            id_="dashlet_iframe_%d" % self._dashlet_id,
-            allowTransparency="true",
-            frameborder="0",
-            width="100%",
-            height="100%")
+        html.iframe('',
+                    src="about:blank" if self.reload_on_resize() else iframe_url,
+                    id_="dashlet_iframe_%d" % self._dashlet_id,
+                    allowTransparency="true",
+                    frameborder="0",
+                    width="100%",
+                    height="100%")
         html.close_div()
 
         if self.reload_on_resize():
-            html.javascript('cmk.dashboard.set_reload_on_resize(%s, %s);' % (json.dumps(
-                self._dashlet_id), json.dumps(iframe_url)))
+            html.javascript('cmk.dashboard.set_reload_on_resize(%s, %s);' %
+                            (json.dumps(self._dashlet_id), json.dumps(iframe_url)))
 
     def _get_iframe_url(self):
         if not self.is_iframe_dashlet():
             return
 
-        return html.makeuri_contextless(
-            [('name', self._dashboard_name), ('id', self._dashlet_id),
-             ('mtime', self._dashboard['mtime'])] + self._get_global_context_url_vars(),
-            filename="dashboard_dashlet.py")
+        return html.makeuri_contextless([('name', self._dashboard_name), ('id', self._dashlet_id),
+                                         ('mtime', self._dashboard['mtime'])] +
+                                        self._get_global_context_url_vars(),
+                                        filename="dashboard_dashlet.py")
 
     @abc.abstractmethod
     def update(self):

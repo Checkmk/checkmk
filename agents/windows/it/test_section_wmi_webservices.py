@@ -16,13 +16,12 @@ def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(
-    params=[('webservices', True), ('wmi_webservices', True), ('webservices', False),
-            ('wmi_webservices', False)],
-    ids=[
-        'sections=webservices', 'sections=wmi_webservices', 'sections=webservices_systemtime',
-        'sections=wmi_webservices_systemtime'
-    ])
+@pytest.fixture(params=[('webservices', True), ('wmi_webservices', True), ('webservices', False),
+                        ('wmi_webservices', False)],
+                ids=[
+                    'sections=webservices', 'sections=wmi_webservices',
+                    'sections=webservices_systemtime', 'sections=wmi_webservices_systemtime'
+                ])
 def testconfig(request, config):
     Globals.alone = request.param[1]
     if Globals.alone:

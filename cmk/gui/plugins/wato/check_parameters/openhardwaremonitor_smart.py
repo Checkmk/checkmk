@@ -59,18 +59,17 @@ class RulespecCheckgroupParametersOpenhardwaremonitorSmart(CheckParameterRulespe
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("remaining_life",
-                 Tuple(
-                     title=_("Remaining Life"),
-                     help=_("Estimated remaining health of the disk based on other readings."),
-                     elements=[
-                         Percentage(title=_("Warning below"), default_value=30),
-                         Percentage(title=_("Critical below"), default_value=10),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("remaining_life",
+             Tuple(
+                 title=_("Remaining Life"),
+                 help=_("Estimated remaining health of the disk based on other readings."),
+                 elements=[
+                     Percentage(title=_("Warning below"), default_value=30),
+                     Percentage(title=_("Critical below"), default_value=10),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

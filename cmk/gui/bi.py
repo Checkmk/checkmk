@@ -980,9 +980,8 @@ class BIJobManager(object):
         g_bi_cache_manager.generate_cachefiles()
 
     def _compile_jobs_parallel(self):
-        with BILock(
-                "%s/bi_cache_COMPILATION_LOCK" % get_cache_dir(),
-                blocking=False) as compilation_lock:
+        with BILock("%s/bi_cache_COMPILATION_LOCK" % get_cache_dir(),
+                    blocking=False) as compilation_lock:
             if not compilation_lock.has_lock():
                 log("Did not get compilation lock")
                 return False  # Someone else is compiling
@@ -1555,8 +1554,11 @@ def compile_rule_node(aggr_type, calllist, lvl):
         for (hostname, hostalias), matchgroups in matches:
             args = substitute_matches(arglist, hostname, hostalias, matchgroups)
             if tuple(args) not in handled_args:
-                new_elements += compile_aggregation_rule(
-                    aggr_type, rule, args, lvl, rulename=rulename)
+                new_elements += compile_aggregation_rule(aggr_type,
+                                                         rule,
+                                                         args,
+                                                         lvl,
+                                                         rulename=rulename)
                 handled_args.add(tuple(args))
 
         return new_elements
@@ -1880,8 +1882,8 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
                         handled_args.add(tuple(args) + matchgroups)
             else:
                 # This is a plain leaf node with just host/service
-                new_elements = compile_leaf_node(
-                    subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
+                new_elements = compile_leaf_node(subst_vars(node[0], arginfo),
+                                                 subst_vars(node[1], arginfo))
 
         else:
             # substitute our arguments in rule arguments
@@ -2266,8 +2268,8 @@ def execute_rule_node(node, status_info, aggregation_options):
     func = config.aggregation_functions.get(funcname)
     if not func:
         raise MKConfigError(
-            _("Undefined aggregation function '%s'. Available are: %s") % (funcname, ", ".join(
-                config.aggregation_functions.keys())))
+            _("Undefined aggregation function '%s'. Available are: %s") %
+            (funcname, ", ".join(config.aggregation_functions.keys())))
 
     # prepare information for aggregation function
     subtrees = []
@@ -2679,8 +2681,8 @@ def ajax_render_tree():
     # Now look for our aggregation
     if aggr_group not in g_tree_cache["forest"]:
         raise MKGeneralException(
-            _("Unknown BI Aggregation group %s. Available are: %s") % (aggr_group, ", ".join(
-                g_tree_cache["forest"].keys())))
+            _("Unknown BI Aggregation group %s. Available are: %s") %
+            (aggr_group, ", ".join(g_tree_cache["forest"].keys())))
 
     trees = g_tree_cache["forest"][aggr_group]
     for tree in trees:
@@ -2691,12 +2693,11 @@ def ajax_render_tree():
             row["aggr_group"] = aggr_group
 
             # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
-            renderer = renderer_cls(
-                row,
-                omit_root=omit_root,
-                expansion_level=load_ex_level(),
-                only_problems=only_problems,
-                lazy=False)
+            renderer = renderer_cls(row,
+                                    omit_root=omit_root,
+                                    expansion_level=load_ex_level(),
+                                    only_problems=only_problems,
+                                    lazy=False)
             html.write(renderer.render())
             return
 
@@ -2975,19 +2976,17 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                 html.write("&nbsp;")
 
             if tree[2].get("docu_url"):
-                html.icon_button(
-                    tree[2]["docu_url"],
-                    _("Context information about this rule"),
-                    "url",
-                    target="_blank")
+                html.icon_button(tree[2]["docu_url"],
+                                 _("Context information about this rule"),
+                                 "url",
+                                 target="_blank")
                 html.write("&nbsp;")
 
             html.write_text(tree[2]["title"])
 
         if not is_empty:
-            html.open_ul(
-                id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
-                class_=["subtree", css_class])
+            html.open_ul(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                         class_=["subtree", css_class])
 
             if not self._omit_content(path):
                 for node in tree[3]:
@@ -3021,10 +3020,9 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
         if mousecode:
             if img_class:
-                html.img(
-                    src=html.theme_url("images/tree_black_closed.png"),
-                    class_=["treeangle", img_class],
-                    onclick=mousecode)
+                html.img(src=html.theme_url("images/tree_black_closed.png"),
+                         class_=["treeangle", img_class],
+                         onclick=mousecode)
 
             html.open_span(class_=["content", "name"])
 
@@ -3058,8 +3056,8 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
             html.close_span()
 
-        output = cmk.gui.view_utils.format_plugin_output(
-            effective_state["output"], shall_escape=config.escape_plugin_output)
+        output = cmk.gui.view_utils.format_plugin_output(effective_state["output"],
+                                                         shall_escape=config.escape_plugin_output)
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:
@@ -3103,10 +3101,9 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
 
         omit = self._omit_root and len(path) == 1
         if not omit:
-            html.open_span(
-                id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
-                class_=classes,
-                onclick=mc)
+            html.open_span(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                           class_=classes,
+                           onclick=mc)
 
             if is_leaf:
                 self._show_leaf(tree, show_host)
@@ -3116,9 +3113,8 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
             html.close_span()
 
         if not is_leaf and not self._omit_content(path):
-            html.open_span(
-                class_="bibox",
-                style="display: none;" if not self._is_open(path) and not omit else "")
+            html.open_span(class_="bibox",
+                           style="display: none;" if not self._is_open(path) and not omit else "")
             for node in tree[3]:
                 new_path = path + [node[2]["title"]]
                 self._show_subtree(node, new_path, show_host)
@@ -3336,25 +3332,36 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
 
 def hostname_table(view, columns, query, only_sites, limit, all_active_filters):
     """Table of all host aggregations, i.e. aggregations using data from exactly one host"""
-    return singlehost_table(
-        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=False)
+    return singlehost_table(view,
+                            columns,
+                            query,
+                            only_sites,
+                            limit,
+                            all_active_filters,
+                            joinbyname=True,
+                            bygroup=False)
 
 
 def hostname_by_group_table(view, columns, query, only_sites, limit, all_active_filters):
-    return singlehost_table(
-        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=True)
+    return singlehost_table(view,
+                            columns,
+                            query,
+                            only_sites,
+                            limit,
+                            all_active_filters,
+                            joinbyname=True,
+                            bygroup=True)
 
 
 def host_table(view, columns, query, only_sites, limit, all_active_filters):
-    return singlehost_table(
-        view,
-        columns,
-        query,
-        only_sites,
-        limit,
-        all_active_filters,
-        joinbyname=False,
-        bygroup=False)
+    return singlehost_table(view,
+                            columns,
+                            query,
+                            only_sites,
+                            limit,
+                            all_active_filters,
+                            joinbyname=False,
+                            bygroup=False)
 
 
 def singlehost_table(view, columns, query, only_sites, limit, all_active_filters, joinbyname,
@@ -3390,8 +3397,8 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
 
     if config.bi_precompile_on_demand:
         log("* Compiling forest on demand...")
-        compile_forest(
-            only_groups=only_groups, only_hosts=[(h['site'], h['name']) for h in hostrows])
+        compile_forest(only_groups=only_groups,
+                       only_hosts=[(h['site'], h['name']) for h in hostrows])
     else:
         log("* Compiling forest...")
         compile_forest()

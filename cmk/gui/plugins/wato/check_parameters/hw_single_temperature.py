@@ -56,10 +56,9 @@ class RulespecCheckgroupParametersHwSingleTemperature(CheckParameterRulespecWith
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            help=_("Temperature levels for hardware devices with "
-                   "a single temperature sensor."),
-            elements=[
-                Integer(title=_("warning at"), unit=u"°C", default_value=35),
-                Integer(title=_("critical at"), unit=u"°C", default_value=40),
-            ])
+        return Tuple(help=_("Temperature levels for hardware devices with "
+                            "a single temperature sensor."),
+                     elements=[
+                         Integer(title=_("warning at"), unit=u"°C", default_value=35),
+                         Integer(title=_("critical at"), unit=u"°C", default_value=40),
+                     ])

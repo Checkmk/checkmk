@@ -102,8 +102,9 @@ def get_piggyback_files(piggyback_max_cachefile_age, hostname):
 
         # Skip piggyback files that are outdated at all
         if file_age > piggyback_max_cachefile_age:
-            console.verbose("Piggyback file %s is outdated (%d seconds too old). Skip processing.\n"
-                            % (piggyback_file_path, file_age - piggyback_max_cachefile_age))
+            console.verbose(
+                "Piggyback file %s is outdated (%d seconds too old). Skip processing.\n" %
+                (piggyback_file_path, file_age - piggyback_max_cachefile_age))
             continue
 
         status_file_path = _piggyback_source_status_path(source_host)
@@ -181,11 +182,10 @@ def store_piggyback_raw_data(source_host, piggybacked_raw_data):
 
 
 def _store_status_file_of(status_file_path, piggyback_file_paths):
-    with tempfile.NamedTemporaryFile(
-            "w",
-            dir=os.path.dirname(status_file_path),
-            prefix=".%s.new" % os.path.basename(status_file_path),
-            delete=False) as tmp:
+    with tempfile.NamedTemporaryFile("w",
+                                     dir=os.path.dirname(status_file_path),
+                                     prefix=".%s.new" % os.path.basename(status_file_path),
+                                     delete=False) as tmp:
         tmp_path = tmp.name
         os.chmod(tmp_path, 0660)
         tmp.write("")
@@ -238,8 +238,8 @@ def _cleanup_old_source_status_files(piggyback_max_cachefile_age):
             continue  # File might've been deleted. That's ok.
 
         if file_age > piggyback_max_cachefile_age:
-            console.verbose(
-                "Removing outdated piggyback source status file %s\n" % piggyback_file_path)
+            console.verbose("Removing outdated piggyback source status file %s\n" %
+                            piggyback_file_path)
             _remove_piggyback_file(piggyback_file_path)
 
 
@@ -268,8 +268,9 @@ def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
 
             piggyback_file_path = os.path.join(backed_host_dir_path, source_host_name)
 
-            delete_reason = _shall_cleanup_piggyback_file(
-                piggyback_max_cachefile_age, piggyback_file_path, source_host_name, keep_sources)
+            delete_reason = _shall_cleanup_piggyback_file(piggyback_max_cachefile_age,
+                                                          piggyback_file_path, source_host_name,
+                                                          keep_sources)
             if delete_reason:
                 console.verbose("Removing outdated piggyback file (%s) %s\n" %
                                 (delete_reason, piggyback_file_path))

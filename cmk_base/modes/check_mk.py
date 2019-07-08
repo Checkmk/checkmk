@@ -243,29 +243,28 @@ def _list_all_hosts(hostgroups, options):
 
 
 modes.register(
-    Mode(
-        long_option="list-hosts",
-        short_option="l",
-        handler_function=mode_list_hosts,
-        argument=True,
-        argument_descr="G1 G2...",
-        argument_optional=True,
-        short_help="Print list of all hosts or members of host groups",
-        long_help=[
-            "Called without argument lists all hosts. You may "
-            "specify one or more host groups to restrict the output to hosts "
-            "that are in at least one of those groups.",
-        ],
-        sub_options=[
-            Option(
-                long_option="all-sites",
-                short_help="Include hosts of foreign sites",
-            ),
-            Option(
-                long_option="include-offline",
-                short_help="Include offline hosts",
-            ),
-        ]))
+    Mode(long_option="list-hosts",
+         short_option="l",
+         handler_function=mode_list_hosts,
+         argument=True,
+         argument_descr="G1 G2...",
+         argument_optional=True,
+         short_help="Print list of all hosts or members of host groups",
+         long_help=[
+             "Called without argument lists all hosts. You may "
+             "specify one or more host groups to restrict the output to hosts "
+             "that are in at least one of those groups.",
+         ],
+         sub_options=[
+             Option(
+                 long_option="all-sites",
+                 short_help="Include hosts of foreign sites",
+             ),
+             Option(
+                 long_option="include-offline",
+                 short_help="Include offline hosts",
+             ),
+         ]))
 
 #.
 #   .--list-tag------------------------------------------------------------.
@@ -302,14 +301,13 @@ def _list_all_hosts_with_tags(tags):
 
 
 modes.register(
-    Mode(
-        long_option="list-tag",
-        handler_function=mode_list_tag,
-        argument=True,
-        argument_descr="TAG1 TAG2...",
-        argument_optional=True,
-        short_help="List hosts having certain tags",
-        long_help=["Prints all hosts that have all of the specified tags at once."]))
+    Mode(long_option="list-tag",
+         handler_function=mode_list_tag,
+         argument=True,
+         argument_descr="TAG1 TAG2...",
+         argument_optional=True,
+         short_help="List hosts having certain tags",
+         long_help=["Prints all hosts that have all of the specified tags at once."]))
 
 #.
 #   .--list-checks---------------------------------------------------------.
@@ -412,18 +410,17 @@ def mode_dump_agent(hostname):
 
 
 modes.register(
-    Mode(
-        long_option="dump-agent",
-        short_option="d",
-        handler_function=mode_dump_agent,
-        argument=True,
-        argument_descr="HOSTNAME|ADDRESS",
-        short_help="Show raw information from agent",
-        long_help=[
-            "Shows the raw information received from the given host. For regular "
-            "hosts it shows the agent output plus possible piggyback information. "
-            "Does not work on clusters but only on real hosts. "
-        ]))
+    Mode(long_option="dump-agent",
+         short_option="d",
+         handler_function=mode_dump_agent,
+         argument=True,
+         argument_descr="HOSTNAME|ADDRESS",
+         short_help="Show raw information from agent",
+         long_help=[
+             "Shows the raw information received from the given host. For regular "
+             "hosts it shows the agent output plus possible piggyback information. "
+             "Does not work on clusters but only on real hosts. "
+         ]))
 
 #.
 #   .--dump----------------------------------------------------------------.
@@ -446,19 +443,18 @@ def mode_dump_hosts(hostlist):
 
 
 modes.register(
-    Mode(
-        long_option="dump",
-        short_option="D",
-        handler_function=mode_dump_hosts,
-        argument=True,
-        argument_descr="H1 H2...",
-        argument_optional=True,
-        short_help="Dump info about all or some hosts",
-        long_help=[
-            "Dumps out the complete configuration and information "
-            "about one, several or all hosts. It shows all services, hostgroups, "
-            "contacts and other information about that host.",
-        ]))
+    Mode(long_option="dump",
+         short_option="D",
+         handler_function=mode_dump_hosts,
+         argument=True,
+         argument_descr="H1 H2...",
+         argument_optional=True,
+         short_help="Dump info about all or some hosts",
+         long_help=[
+             "Dumps out the complete configuration and information "
+             "about one, several or all hosts. It shows all services, hostgroups, "
+             "contacts and other information about that host.",
+         ]))
 
 #.
 #   .--paths---------------------------------------------------------------.
@@ -865,13 +861,12 @@ modes.register(
                 "enterprises. You can specify this option multiple "
                 "times.",
             ),
-            Option(
-                long_option="oid",
-                argument=True,
-                argument_descr="A",
-                argument_conv=_oids.append,
-                short_help="Walk on this OID instead of mib-2 and enterprises. "
-                "You can specify this option multiple times."),
+            Option(long_option="oid",
+                   argument=True,
+                   argument_descr="A",
+                   argument_conv=_oids.append,
+                   short_help="Walk on this OID instead of mib-2 and enterprises. "
+                   "You can specify this option multiple times."),
         ],
     ))
 
@@ -1269,26 +1264,25 @@ def mode_inventory(options, args):
 
 
 modes.register(
-    Mode(
-        long_option="inventory",
-        short_option="i",
-        handler_function=mode_inventory,
-        argument=True,
-        argument_descr="HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Do a HW/SW-Inventory on some ar all hosts",
-        long_help=[
-            "Does a HW/SW-Inventory for all, one or several "
-            "hosts. If you add the option -f, --force then persisted sections "
-            "will be used even if they are outdated."
-        ],
-        sub_options=[
-            Option(
-                long_option="force",
-                short_option="f",
-                short_help="Use cached agent data even if it's outdated.",
-            ),
-        ]))
+    Mode(long_option="inventory",
+         short_option="i",
+         handler_function=mode_inventory,
+         argument=True,
+         argument_descr="HOST1 HOST2...",
+         argument_optional=True,
+         short_help="Do a HW/SW-Inventory on some ar all hosts",
+         long_help=[
+             "Does a HW/SW-Inventory for all, one or several "
+             "hosts. If you add the option -f, --force then persisted sections "
+             "will be used even if they are outdated."
+         ],
+         sub_options=[
+             Option(
+                 long_option="force",
+                 short_option="f",
+                 short_help="Use cached agent data even if it's outdated.",
+             ),
+         ]))
 
 #.
 #   .--inventory-as-check--------------------------------------------------.
@@ -1501,41 +1495,40 @@ def mode_discover(options, args):
 
 
 modes.register(
-    Mode(
-        long_option="discover",
-        short_option="I",
-        handler_function=mode_discover,
-        argument=True,
-        argument_descr="[-I] HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Find new services",
-        long_help=[
-            "Make Check_MK behave as monitoring plugins that checks if an "
-            "inventory would find new or vanished services for the host. "
-            "If configured to do so, this will queue those hosts for automatic "
-            "discover-marked-hosts",
-            "Can be restricted to certain check types. Write '--checks df -I' if "
-            "you just want to look for new filesystems. Use 'check_mk -L' for a "
-            "list of all check types. Use 'tcp' for all TCP based checks and "
-            "'snmp' for all SNMP based checks.",
-            "-II does the same as -I but deletes all existing checks of the "
-            "specified types and hosts."
-        ],
-        sub_options=[
-            Option(
-                long_option="discover",
-                short_option="I",
-                short_help="Delete existing services before starting discovery",
-                count=True,
-            ),
-            Option(
-                long_option="checks",
-                short_help="Restrict discovery to certain check types",
-                argument=True,
-                argument_descr="C",
-                argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
-            ),
-        ]))
+    Mode(long_option="discover",
+         short_option="I",
+         handler_function=mode_discover,
+         argument=True,
+         argument_descr="[-I] HOST1 HOST2...",
+         argument_optional=True,
+         short_help="Find new services",
+         long_help=[
+             "Make Check_MK behave as monitoring plugins that checks if an "
+             "inventory would find new or vanished services for the host. "
+             "If configured to do so, this will queue those hosts for automatic "
+             "discover-marked-hosts",
+             "Can be restricted to certain check types. Write '--checks df -I' if "
+             "you just want to look for new filesystems. Use 'check_mk -L' for a "
+             "list of all check types. Use 'tcp' for all TCP based checks and "
+             "'snmp' for all SNMP based checks.",
+             "-II does the same as -I but deletes all existing checks of the "
+             "specified types and hosts."
+         ],
+         sub_options=[
+             Option(
+                 long_option="discover",
+                 short_option="I",
+                 short_help="Delete existing services before starting discovery",
+                 count=True,
+             ),
+             Option(
+                 long_option="checks",
+                 short_help="Restrict discovery to certain check types",
+                 argument=True,
+                 argument_descr="C",
+                 argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
+             ),
+         ]))
 
 #.
 #   .--check---------------------------------------------------------------.
@@ -1583,54 +1576,53 @@ def mode_check(options, args):
 
 
 modes.register(
-    Mode(
-        long_option="check",
-        handler_function=mode_check,
-        argument=True,
-        argument_descr="HOST [IPADDRESS]",
-        argument_optional=True,
-        short_help="Check all services on the given HOST",
-        long_help=[
-            "Execute all checks on the given HOST. Optionally you can specify "
-            "a second argument, the IPADDRESS. If you don't set this, the "
-            "configured IP address of the HOST is used.",
-            "By default the check results are sent to the core. If you provide "
-            "the option '-n', the results will not be sent to the core and the "
-            "counters of the check will not be stored.",
-            "You can use '-v' to see the results of the checks. Add '-p' to "
-            "also see the performance data of the checks."
-            "Can be restricted to certain check types. Write '--checks df -I' if "
-            "you just want to look for new filesystems. Use 'check_mk -L' for a "
-            "list of all check types. Use 'tcp' for all TCP based checks and "
-            "'snmp' for all SNMP based checks.",
-        ],
-        sub_options=[
-            Option(
-                long_option="no-submit",
-                short_option="n",
-                short_help="Do not submit results to core, do not save counters",
-            ),
-            Option(
-                long_option="perfdata",
-                short_option="p",
-                short_help="Also show performance data (use with -v)",
-            ),
-            Option(
-                long_option="checks",
-                short_help="Restrict discovery to certain check types",
-                argument=True,
-                argument_descr="C",
-                argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
-            ),
-            keepalive_option,
-            Option(
-                long_option="keepalive-fd",
-                argument=True,
-                argument_descr="I",
-                argument_conv=int,
-                short_help="File descriptor to send output to",
-            ),
-        ]))
+    Mode(long_option="check",
+         handler_function=mode_check,
+         argument=True,
+         argument_descr="HOST [IPADDRESS]",
+         argument_optional=True,
+         short_help="Check all services on the given HOST",
+         long_help=[
+             "Execute all checks on the given HOST. Optionally you can specify "
+             "a second argument, the IPADDRESS. If you don't set this, the "
+             "configured IP address of the HOST is used.",
+             "By default the check results are sent to the core. If you provide "
+             "the option '-n', the results will not be sent to the core and the "
+             "counters of the check will not be stored.",
+             "You can use '-v' to see the results of the checks. Add '-p' to "
+             "also see the performance data of the checks."
+             "Can be restricted to certain check types. Write '--checks df -I' if "
+             "you just want to look for new filesystems. Use 'check_mk -L' for a "
+             "list of all check types. Use 'tcp' for all TCP based checks and "
+             "'snmp' for all SNMP based checks.",
+         ],
+         sub_options=[
+             Option(
+                 long_option="no-submit",
+                 short_option="n",
+                 short_help="Do not submit results to core, do not save counters",
+             ),
+             Option(
+                 long_option="perfdata",
+                 short_option="p",
+                 short_help="Also show performance data (use with -v)",
+             ),
+             Option(
+                 long_option="checks",
+                 short_help="Restrict discovery to certain check types",
+                 argument=True,
+                 argument_descr="C",
+                 argument_conv=lambda x: config.check_info.keys() if x == "@all" else x.split(","),
+             ),
+             keepalive_option,
+             Option(
+                 long_option="keepalive-fd",
+                 argument=True,
+                 argument_descr="I",
+                 argument_conv=int,
+                 short_help="File descriptor to send output to",
+             ),
+         ]))
 
 #.
 #   .--version-------------------------------------------------------------.

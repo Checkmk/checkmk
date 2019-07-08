@@ -58,8 +58,10 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
 
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
-        snmp_process = subprocess.Popen(
-            command, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        snmp_process = subprocess.Popen(command,
+                                        close_fds=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
         exitstatus = snmp_process.wait()
         if exitstatus:
             console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
@@ -107,12 +109,11 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         exitstatus = None
         rowinfo = []  # type: snmp_utils.SNMPRowInfo
         try:
-            snmp_process = subprocess.Popen(
-                command,
-                close_fds=True,
-                stdin=open(os.devnull),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE)
+            snmp_process = subprocess.Popen(command,
+                                            close_fds=True,
+                                            stdin=open(os.devnull),
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
 
             rowinfo = self._get_rowinfo_from_snmp_process(snmp_process)
 
@@ -138,8 +139,8 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         if exitstatus:
             console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal +
                             "SNMP error: %s\n" % error.strip())
-            raise MKSNMPError(
-                "SNMP Error on %s: %s (Exit-Code: %d)" % (ipaddress, error.strip(), exitstatus))
+            raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" %
+                              (ipaddress, error.strip(), exitstatus))
         return rowinfo
 
     def _get_rowinfo_from_snmp_process(self, snmp_process):

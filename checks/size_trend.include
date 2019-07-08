@@ -72,8 +72,11 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
 
     # compute current rate in MB/s by computing delta since last check
     try:
-        rate = get_rate(
-            "%s.%s.delta" % (check, item), timestamp, used_mb, allow_negative=True, onwrap=ZERO)
+        rate = get_rate("%s.%s.delta" % (check, item),
+                        timestamp,
+                        used_mb,
+                        allow_negative=True,
+                        onwrap=ZERO)
     except MKCounterWrapped:
         # need more data for computing a trend
         return 0, '', []

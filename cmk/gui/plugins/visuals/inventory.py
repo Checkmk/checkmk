@@ -574,11 +574,10 @@ class FilterInvHasSoftwarePackage(Filter):
         html.br()
         html.begin_radio_group(horizontal=True)
         html.radiobutton(self._varprefix + "match", "exact", True, label=_("exact match"))
-        html.radiobutton(
-            self._varprefix + "match",
-            "regex",
-            False,
-            label=_("regular expression, substring match"))
+        html.radiobutton(self._varprefix + "match",
+                         "regex",
+                         False,
+                         label=_("regular expression, substring match"))
         html.end_radio_group()
         html.br()
         html.write_text(_("Min.&nbsp;Version:"))
@@ -587,10 +586,9 @@ class FilterInvHasSoftwarePackage(Filter):
         html.write_text(_("Max.&nbsp;Vers.:"))
         html.text_input(self._varprefix + "version_to", size=9)
         html.br()
-        html.checkbox(
-            self._varprefix + "negate",
-            False,
-            label=_("Negate: find hosts <b>not</b> having this package"))
+        html.checkbox(self._varprefix + "negate",
+                      False,
+                      label=_("Negate: find hosts <b>not</b> having this package"))
 
     def filter_table(self, rows):
         name = self.filtername

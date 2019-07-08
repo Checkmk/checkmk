@@ -59,35 +59,34 @@ class RulespecCheckgroupParametersK8SResources(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('port', Integer(
-                    title=_('Port'),
-                    minvalue=0,
-                    maxvalue=65535,
-                )),
-                ('target_port', Integer(
-                    title=_('Target port'),
-                    minvalue=0,
-                    maxvalue=65535,
-                )),
-                ('node_port', Integer(
-                    title=_('Node port'),
-                    minvalue=0,
-                    maxvalue=65535,
-                )),
-                ('protocol',
-                 DropdownChoice(
-                     title=_('Protocol'),
-                     choices=[
-                         ('TCP', _('TCP')),
-                         ('UDP', _('UDP')),
-                         ('HTTP', _('HTTP')),
-                         ('PROXY', _('PROXY')),
-                         ('SCTP', _('SCTP')),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('port', Integer(
+                title=_('Port'),
+                minvalue=0,
+                maxvalue=65535,
+            )),
+            ('target_port', Integer(
+                title=_('Target port'),
+                minvalue=0,
+                maxvalue=65535,
+            )),
+            ('node_port', Integer(
+                title=_('Node port'),
+                minvalue=0,
+                maxvalue=65535,
+            )),
+            ('protocol',
+             DropdownChoice(
+                 title=_('Protocol'),
+                 choices=[
+                     ('TCP', _('TCP')),
+                     ('UDP', _('UDP')),
+                     ('HTTP', _('HTTP')),
+                     ('PROXY', _('PROXY')),
+                     ('SCTP', _('SCTP')),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

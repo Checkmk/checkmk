@@ -278,14 +278,12 @@ def get_vs_flexible_notifications():
                                         orientation="horizontal",
                                         show_titles=False,
                                         elements=[
-                                            DropdownChoice(
-                                                label=_("from:"),
-                                                choices=cmk.gui.mkeventd.service_levels,
-                                                prefix_values=True),
-                                            DropdownChoice(
-                                                label=_(" to:"),
-                                                choices=cmk.gui.mkeventd.service_levels,
-                                                prefix_values=True),
+                                            DropdownChoice(label=_("from:"),
+                                                           choices=cmk.gui.mkeventd.service_levels,
+                                                           prefix_values=True),
+                                            DropdownChoice(label=_(" to:"),
+                                                           choices=cmk.gui.mkeventd.service_levels,
+                                                           prefix_values=True),
                                         ],
                                     ),
                                 ),

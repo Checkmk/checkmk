@@ -58,14 +58,13 @@ class RulespecCheckgroupParametersMemPages(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[(
-                "pages_per_second",
-                Tuple(
-                    title=_("Pages per second"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("pages/s")),
-                        Integer(title=_("Critical at"), unit=_("pages/s")),
-                    ],
-                ),
-            )],)
+        return Dictionary(elements=[(
+            "pages_per_second",
+            Tuple(
+                title=_("Pages per second"),
+                elements=[
+                    Integer(title=_("Warning at"), unit=_("pages/s")),
+                    Integer(title=_("Critical at"), unit=_("pages/s")),
+                ],
+            ),
+        )],)

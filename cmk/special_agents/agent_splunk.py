@@ -36,13 +36,14 @@ def main():
     # Sections to query
     # https://docs.splunk.com/Documentation/Splunk/7.2.6/RESTREF/RESTlicense#licenser.2Fpools
     sections = [
-        Section(
-            name="license_state", uri="/services/licenser/licenses", handler=handle_license_state),
+        Section(name="license_state",
+                uri="/services/licenser/licenses",
+                handler=handle_license_state),
         Section(name="license_usage", uri="/services/licenser/usage", handler=handle_license_usage),
         Section(name="system_msg", uri="/services/messages", handler=handle_system_msg),
         Section(name="jobs", uri="/services/search/jobs", handler=handle_jobs),
-        Section(
-            name="health", uri="/services/server/health/splunkd/details", handler=handle_health),
+        Section(name="health", uri="/services/server/health/splunkd/details",
+                handler=handle_health),
         Section(name="alerts", uri="/services/alerts/fired_alerts", handler=handle_alerts),
     ]
 
@@ -63,8 +64,9 @@ def handle_request(args, sections):
     for section in sections:
         try:
             url = url_base + section.uri
-            response = requests.get(
-                url, auth=(args.user, args.password), data={"output_mode": "json"})
+            response = requests.get(url,
+                                    auth=(args.user, args.password),
+                                    data={"output_mode": "json"})
 
         except requests.exceptions.RequestException:
             if args.debug:
@@ -81,18 +83,20 @@ def parse_arguments(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument("-u", "--user", default=None, help="Username for splunk login")
     parser.add_argument("-s", "--password", default=None, help="Password for splunk login")
-    parser.add_argument(
-        "-P",
-        "--proto",
-        default="https",
-        help="Use 'http' or 'https' for connection to splunk (default=https)")
-    parser.add_argument(
-        "-p", "--port", default=8089, type=int, help="Use alternative port (default: 8089)")
+    parser.add_argument("-P",
+                        "--proto",
+                        default="https",
+                        help="Use 'http' or 'https' for connection to splunk (default=https)")
+    parser.add_argument("-p",
+                        "--port",
+                        default=8089,
+                        type=int,
+                        help="Use alternative port (default: 8089)")
     parser.add_argument(
         "-m",
         "--modules",
@@ -101,11 +105,13 @@ def parse_arguments(argv=None):
         help=
         "Space-separated list of data to query. Possible values: 'license_state license_usage system_msg jobs health alerts' (default: all)"
     )
-    parser.add_argument(
-        "--debug", action="store_true", help="Debug mode: let Python exceptions come through")
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help="Debug mode: let Python exceptions come through")
 
-    parser.add_argument(
-        "hostname", metavar="HOSTNAME", help="Name of the splunk instance to query.")
+    parser.add_argument("hostname",
+                        metavar="HOSTNAME",
+                        help="Name of the splunk instance to query.")
 
     return parser.parse_args()
 
@@ -166,8 +172,9 @@ def handle_health(value):
 
         for feature, status in state["features"].iteritems():
             feature_name = "%s%s" % (feature[0].upper(), feature[1:].lower())
-            sys.stdout.write("%s %s %s\n" % (func_name.replace(" ", "_"),
-                                             feature_name.replace(" ", "_"), status["health"]))
+            sys.stdout.write(
+                "%s %s %s\n" %
+                (func_name.replace(" ", "_"), feature_name.replace(" ", "_"), status["health"]))
 
 
 def handle_alerts(value):

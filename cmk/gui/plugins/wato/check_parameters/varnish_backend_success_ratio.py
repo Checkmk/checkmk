@@ -58,16 +58,13 @@ class RulespecCheckgroupParametersVarnishBackendSuccessRatio(CheckParameterRules
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels_lower",
-                 Tuple(
-                     title=_("Lower levels"),
-                     elements=[
-                         Percentage(
-                             title=_("Warning if below"), default_value=70.0, allow_empty=False),
-                         Percentage(
-                             title=_("Critical if below"), default_value=60.0, allow_empty=False)
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("levels_lower",
+             Tuple(
+                 title=_("Lower levels"),
+                 elements=[
+                     Percentage(title=_("Warning if below"), default_value=70.0, allow_empty=False),
+                     Percentage(title=_("Critical if below"), default_value=60.0, allow_empty=False)
+                 ],
+             )),
+        ],)

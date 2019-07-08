@@ -188,8 +188,10 @@ class AutomationTryDiscovery(Automation):
 
         data_sources.abstract.DataSource.set_may_use_cache_file(use_caches)
         hostname = args[0]
-        table = discovery.get_check_preview(
-            hostname, use_caches=use_caches, do_snmp_scan=do_snmp_scan, on_error=on_error)
+        table = discovery.get_check_preview(hostname,
+                                            use_caches=use_caches,
+                                            do_snmp_scan=do_snmp_scan,
+                                            on_error=on_error)
 
         # Content of one row
         # check_source, check_plugin_name, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata
@@ -443,11 +445,11 @@ class AutomationRenameHosts(Automation):
                 actions.append("rrd")
 
             # entries of rrdcached journal
-            if self.rename_host_in_files(
-                    os.path.join(cmk.utils.paths.omd_root, "var/rrdcached/rrd.journal.*"),
-                    "/(perfdata|rrd)/%s/" % oldregex,
-                    "/\\1/%s/" % newname,
-                    extended_regex=True):
+            if self.rename_host_in_files(os.path.join(cmk.utils.paths.omd_root,
+                                                      "var/rrdcached/rrd.journal.*"),
+                                         "/(perfdata|rrd)/%s/" % oldregex,
+                                         "/\\1/%s/" % newname,
+                                         extended_regex=True):
                 actions.append("rrdcached")
 
             # Spoolfiles of NPCD
@@ -469,11 +471,10 @@ class AutomationRenameHosts(Automation):
 
         # State retention (important for Downtimes, Acknowledgements, etc.)
         if config.monitoring_core == "nagios":
-            if self.rename_host_in_files(
-                    "%s/var/nagios/retention.dat" % cmk.utils.paths.omd_root,
-                    "^host_name=%s$" % oldregex,
-                    "host_name=%s" % newname,
-                    extended_regex=True):
+            if self.rename_host_in_files("%s/var/nagios/retention.dat" % cmk.utils.paths.omd_root,
+                                         "^host_name=%s$" % oldregex,
+                                         "host_name=%s" % newname,
+                                         extended_regex=True):
                 actions.append("retention")
 
         else:  # CMC
@@ -485,11 +486,10 @@ class AutomationRenameHosts(Automation):
             actions.append("retention")
 
         # NagVis maps
-        if self.rename_host_in_files(
-                "%s/etc/nagvis/maps/*.cfg" % cmk.utils.paths.omd_root,
-                "^[[:space:]]*host_name=%s[[:space:]]*$" % oldregex,
-                "host_name=%s" % newname,
-                extended_regex=True):
+        if self.rename_host_in_files("%s/etc/nagvis/maps/*.cfg" % cmk.utils.paths.omd_root,
+                                     "^[[:space:]]*host_name=%s[[:space:]]*$" % oldregex,
+                                     "host_name=%s" % newname,
+                                     extended_regex=True):
             actions.append("nagvis")
 
         return actions
@@ -542,12 +542,11 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         handled_files = []
 
         command = ["sed", "-ri", "--file=/dev/fd/0"]
-        p = subprocess.Popen(
-            command + file_paths,
-            stdin=subprocess.PIPE,
-            stdout=open(os.devnull, "w"),
-            stderr=subprocess.STDOUT,
-            close_fds=True)
+        p = subprocess.Popen(command + file_paths,
+                             stdin=subprocess.PIPE,
+                             stdout=open(os.devnull, "w"),
+                             stderr=subprocess.STDOUT,
+                             close_fds=True)
         p.communicate(sed_commands)
         # TODO: error handling?
 
@@ -560,9 +559,8 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         paths = glob.glob(path_pattern)
         if paths:
             extended = ["-r"] if extended_regex else []
-            subprocess.call(
-                ["sed", "-i"] + extended + ["s@%s@%s@" % (old, new)] + paths,
-                stderr=open(os.devnull, "w"))
+            subprocess.call(["sed", "-i"] + extended + ["s@%s@%s@" % (old, new)] + paths,
+                            stderr=open(os.devnull, "w"))
             return True
 
         return False
@@ -873,8 +871,8 @@ class AutomationRestart(Automation):
                 cmk_base.core.do_core_action(self._mode())
             else:
                 broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-                file(broken_config_path, "w").write(
-                    file(cmk.utils.paths.nagios_objects_file).read())
+                file(broken_config_path,
+                     "w").write(file(cmk.utils.paths.nagios_objects_file).read())
 
                 if backup_path:
                     os.rename(backup_path, objects_file)
@@ -999,8 +997,8 @@ class AutomationGetCheckInformation(Automation):
             except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise
-                raise MKAutomationError(
-                    "Failed to parse man page '%s': %s" % (check_plugin_name, e))
+                raise MKAutomationError("Failed to parse man page '%s': %s" %
+                                        (check_plugin_name, e))
         return check_infos
 
 
@@ -1028,8 +1026,8 @@ class AutomationGetRealTimeChecks(Automation):
                     if cmk.utils.debug.enabled():
                         raise
 
-                rt_checks.append((check_plugin_name,
-                                  "%s - %s" % (check_plugin_name, title.decode("utf-8"))))
+                rt_checks.append(
+                    (check_plugin_name, "%s - %s" % (check_plugin_name, title.decode("utf-8"))))
 
         return rt_checks
 
@@ -1097,8 +1095,10 @@ class AutomationScanParents(Automation):
         config_cache = config.get_config_cache()
 
         try:
-            gateways = cmk_base.parent_scan.scan_parents_of(
-                config_cache, hostnames, silent=True, settings=settings)
+            gateways = cmk_base.parent_scan.scan_parents_of(config_cache,
+                                                            hostnames,
+                                                            silent=True,
+                                                            settings=settings)
             return gateways
         except Exception as e:
             raise MKAutomationError("%s" % e)
@@ -1263,10 +1263,9 @@ class AutomationDiagHost(Automation):
                     is_inline_snmp_host=snmp_config.is_inline_snmp_host,
                 )
 
-                data = snmp.get_snmp_table(
-                    snmp_config,
-                    None, ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),
-                    use_snmpwalk_cache=True)
+                data = snmp.get_snmp_table(snmp_config,
+                                           None, ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),
+                                           use_snmpwalk_cache=True)
 
                 if data:
                     return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(

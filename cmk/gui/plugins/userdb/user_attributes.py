@@ -100,29 +100,27 @@ class DisableNotificationsUserAttribute(UserAttribute):
         return "personal"
 
     def valuespec(self):
-        return Transform(
-            Dictionary(
-                title=_("Disable Notifications"),
-                help=_("When this option is active you will not get <b>any</b> "
-                       "alerts or other notifications via email, SMS or similar. "
-                       "This overrides all other notification settings and rules, so make "
-                       "sure that you know what you do. Moreover you can specify a timerange "
-                       "where no notifications are generated."),
-                elements=[("disable",
-                           FixedValue(
-                               True,
-                               title=_("Temporarily disable <b>all</b> notifications!"),
-                               totext="",
-                           )),
-                          ("timerange",
-                           Tuple(
-                               title=_("Customize timerange"),
-                               elements=[
-                                   AbsoluteDate(title=_("From:"), include_time=True),
-                                   AbsoluteDate(title=_("To:"), include_time=True),
-                               ]))],
-            ),
-            forth=self._transform_disable_notification)
+        return Transform(Dictionary(
+            title=_("Disable Notifications"),
+            help=_("When this option is active you will not get <b>any</b> "
+                   "alerts or other notifications via email, SMS or similar. "
+                   "This overrides all other notification settings and rules, so make "
+                   "sure that you know what you do. Moreover you can specify a timerange "
+                   "where no notifications are generated."),
+            elements=[("disable",
+                       FixedValue(
+                           True,
+                           title=_("Temporarily disable <b>all</b> notifications!"),
+                           totext="",
+                       )),
+                      ("timerange",
+                       Tuple(title=_("Customize timerange"),
+                             elements=[
+                                 AbsoluteDate(title=_("From:"), include_time=True),
+                                 AbsoluteDate(title=_("To:"), include_time=True),
+                             ]))],
+        ),
+                         forth=self._transform_disable_notification)
 
     def _transform_disable_notification(self, p):
         if p is None:

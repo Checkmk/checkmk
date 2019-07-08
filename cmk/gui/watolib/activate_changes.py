@@ -636,8 +636,10 @@ class ActivateChangesManager(ActivateChanges):
         # Add site-specific global settings
         site_specific_paths = [("file", "sitespecific", os.path.join(site_tmp_dir,
                                                                      "sitespecific.mk"))]
-        snapshot_creator.generate_snapshot(
-            snapshot_path, paths, site_specific_paths, reuse_identical_snapshots=True)
+        snapshot_creator.generate_snapshot(snapshot_path,
+                                           paths,
+                                           site_specific_paths,
+                                           reuse_identical_snapshots=True)
 
         shutil.rmtree(site_tmp_dir)
 
@@ -786,8 +788,9 @@ class ActivateChangesManager(ActivateChanges):
                     delete = not manager.is_running()
                 finally:
                     if delete:
-                        shutil.rmtree("%s/%s" % (ActivateChangesManager.activation_tmp_base_dir,
-                                                 activation_id))
+                        shutil.rmtree(
+                            "%s/%s" %
+                            (ActivateChangesManager.activation_tmp_base_dir, activation_id))
 
     def _existing_activation_ids(self):
         ids = []

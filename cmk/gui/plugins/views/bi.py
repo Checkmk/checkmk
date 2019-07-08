@@ -226,16 +226,15 @@ class PainterAggrIcons(Painter):
             html.icon_button(avail_url, _("Analyse availability of this aggregation"),
                              "availability")
             if row["aggr_effective_state"]["in_downtime"] != 0:
-                html.icon(
-                    _("A service or host in this aggregation is in downtime."), "derived_downtime")
+                html.icon(_("A service or host in this aggregation is in downtime."),
+                          "derived_downtime")
             if row["aggr_effective_state"]["acknowledged"]:
                 html.icon(
                     _("The critical problems that make this aggregation non-OK have been acknowledged."
                      ), "ack")
             if not row["aggr_effective_state"]["in_service_period"]:
-                html.icon(
-                    _("This aggregation is currently out of its service period."),
-                    "outof_serviceperiod")
+                html.icon(_("This aggregation is currently out of its service period."),
+                          "outof_serviceperiod")
             code = html.drain()
         return "buttons", code
 
@@ -595,13 +594,12 @@ def paint_aggregated_tree_state(row, force_renderer_cls=None):
     else:
         raise NotImplementedError()
 
-    renderer = cls(
-        row,
-        omit_root=(treetype == "boxes-omit-root"),
-        expansion_level=expansion_level,
-        only_problems=only_problems,
-        lazy=True,
-        wrap_texts=wrap_texts)
+    renderer = cls(row,
+                   omit_root=(treetype == "boxes-omit-root"),
+                   expansion_level=expansion_level,
+                   only_problems=only_problems,
+                   lazy=True,
+                   wrap_texts=wrap_texts)
     return renderer.css_class(), renderer.render()
 
 

@@ -222,13 +222,12 @@ def test_save_user_config_allowed(mocker, monkeypatch):
 ])
 def test_ajax_fold(register_builtin_html, mocker, origin_state, fold_var, set_state):
     html.request.set_var("fold", fold_var)
-    m_config = mocker.patch.object(
-        config.user,
-        "load_file",
-        return_value={
-            "fold": origin_state,
-            "snapins": [("tactical_overview", "open")],
-        })
+    m_config = mocker.patch.object(config.user,
+                                   "load_file",
+                                   return_value={
+                                       "fold": origin_state,
+                                       "snapins": [("tactical_overview", "open")],
+                                   })
     m_save = mocker.patch.object(config.user, "save_file")
 
     sidebar.ajax_fold()
@@ -254,16 +253,15 @@ def test_ajax_fold(register_builtin_html, mocker, origin_state, fold_var, set_st
 def test_ajax_openclose_close(register_builtin_html, mocker, origin_state, set_state):
     html.request.set_var("name", "tactical_overview")
     html.request.set_var("state", set_state)
-    m_config = mocker.patch.object(
-        config.user,
-        "load_file",
-        return_value={
-            "fold": False,
-            "snapins": [
-                ("tactical_overview", origin_state),
-                ("views", "open"),
-            ],
-        })
+    m_config = mocker.patch.object(config.user,
+                                   "load_file",
+                                   return_value={
+                                       "fold": False,
+                                       "snapins": [
+                                           ("tactical_overview", origin_state),
+                                           ("views", "open"),
+                                       ],
+                                   })
     m_save = mocker.patch.object(config.user, "save_file")
 
     sidebar.ajax_openclose()

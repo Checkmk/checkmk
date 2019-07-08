@@ -244,8 +244,8 @@ class ConfigDomainCACertificates(ConfigDomain):
         except Exception:
             logger.exception()
             return [
-                "Failed to create trusted CA file '%s': %s" % (self.trusted_cas_file,
-                                                               traceback.format_exc())
+                "Failed to create trusted CA file '%s': %s" %
+                (self.trusted_cas_file, traceback.format_exc())
             ]
 
     def _update_trusted_cas(self, current_config):

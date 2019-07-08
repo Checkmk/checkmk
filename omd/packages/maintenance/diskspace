@@ -216,8 +216,8 @@ def cleanup_oldest_files():
     # check diskspace against configuration
     bytes_free = get_free_space()
     if not opt_force and above_threshold(bytes_free):
-        verbose(
-            'Free space is above threshold of %s. Nothing to be done.' % fmt_bytes(min_free_bytes))
+        verbose('Free space is above threshold of %s. Nothing to be done.' %
+                fmt_bytes(min_free_bytes))
         return
 
     # the scheduling of the cleanup job is supposed to be equal for

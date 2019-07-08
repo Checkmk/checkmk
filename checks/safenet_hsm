@@ -141,8 +141,11 @@ def check_safenet_hsm(_no_item, params, parsed):
     def check_operation_request_rate(operation_requests):
         request_rate = get_rate("operation_requests", now, operation_requests)
 
-        status, infotext, extra_perf = check_levels(
-            request_rate, "request_rate", params["request_rate"], unit="1/s", infoname="Requests")
+        status, infotext, extra_perf = check_levels(request_rate,
+                                                    "request_rate",
+                                                    params["request_rate"],
+                                                    unit="1/s",
+                                                    infoname="Requests")
         perfdata = [("requests_per_second", request_rate)] + extra_perf[1:]
         return status, infotext, perfdata
 

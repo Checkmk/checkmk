@@ -246,8 +246,10 @@ def get_precompiled_check_table(hostname,
          During check execution will update the check parameters once more with
          checking.determine_check_params() right before execution the check.
     """
-    host_checks = get_sorted_check_table(
-        hostname, remove_duplicates, filter_mode=filter_mode, skip_ignored=skip_ignored)
+    host_checks = get_sorted_check_table(hostname,
+                                         remove_duplicates,
+                                         filter_mode=filter_mode,
+                                         skip_ignored=skip_ignored)
     precomp_table = []
     for check_plugin_name, item, params, description in host_checks:
         # make these globals available to the precompile function
@@ -255,8 +257,8 @@ def get_precompiled_check_table(hostname,
         item_state.set_item_state_prefix(check_plugin_name, item)
 
         params = get_precompiled_check_parameters(hostname, item, params, check_plugin_name)
-        precomp_table.append((check_plugin_name, item, params,
-                              description))  # deps not needed while checking
+        precomp_table.append(
+            (check_plugin_name, item, params, description))  # deps not needed while checking
     return precomp_table
 
 
@@ -292,11 +294,10 @@ def remove_duplicate_checks(check_table):
 def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
     # type: (str, bool, Optional[str], bool) -> List[str]
     return [
-        e[0] for e in get_check_table(
-            hostname,
-            remove_duplicates=remove_duplicates,
-            filter_mode=filter_mode,
-            skip_ignored=skip_ignored)
+        e[0] for e in get_check_table(hostname,
+                                      remove_duplicates=remove_duplicates,
+                                      filter_mode=filter_mode,
+                                      skip_ignored=skip_ignored)
     ]
 
 
@@ -308,11 +309,11 @@ def get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None, 
     # Convert from dictionary into simple tuple list. Then sort
     # it according to the service dependencies.
     unsorted = [(checkname, item, params, descr, deps)
-                for ((checkname, item), (params, descr, deps)) in get_check_table(
-                    hostname,
-                    remove_duplicates=remove_duplicates,
-                    filter_mode=filter_mode,
-                    skip_ignored=skip_ignored).items()]
+                for ((checkname, item),
+                     (params, descr, deps)) in get_check_table(hostname,
+                                                               remove_duplicates=remove_duplicates,
+                                                               filter_mode=filter_mode,
+                                                               skip_ignored=skip_ignored).items()]
 
     unsorted.sort(key=lambda x: x[3])
 

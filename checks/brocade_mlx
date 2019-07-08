@@ -193,8 +193,9 @@ def inventory_brocade_mlx_module_cpu(info):
         # and: monitor cpu only on NI-MLX and BR-MLX modules
         if module_state != "0" and module_state != "11" and (module_descr.startswith("NI-MLX") or
                                                              module_descr.startswith("BR-MLX")):
-            inventory.append((brocade_mlx_combine_item(module_id, module_descr),
-                              "brocade_mlx_cpu_default_levels"))
+            inventory.append(
+                (brocade_mlx_combine_item(module_id,
+                                          module_descr), "brocade_mlx_cpu_default_levels"))
     return inventory
 
 

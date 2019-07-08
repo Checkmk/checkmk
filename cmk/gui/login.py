@@ -210,8 +210,8 @@ def renew_cookie(cookie_name, username):
     # b) A logout is requested
     if (html.myfile != 'logout' and not html.request.has_var('_ajaxid')) \
        and cookie_name == auth_cookie_name():
-        auth_logger.debug(
-            "Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, dict(html.request.itervars())))
+        auth_logger.debug("Renewing auth cookie (%s.py, vars: %r)" %
+                          (html.myfile, dict(html.request.itervars())))
         renew_auth_session(username)
 
 
@@ -239,8 +239,8 @@ def check_auth_cookie(cookie_name):
     if html.myfile != 'user_change_pw':
         result = userdb.need_to_change_pw(username)
         if result:
-            raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' % (html.urlencode(
-                html.makeuri([])), result))
+            raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' %
+                               (html.urlencode(html.makeuri([])), result))
 
     # Return the authenticated username
     return username
@@ -508,8 +508,8 @@ def normal_login_page(called_directly=True):
     if "hide_version" not in config.login_screen:
         footer.append("Version: %s" % cmk.__version__)
 
-    footer.append(
-        "&copy; %s" % html.render_a("tribe29 GmbH", href="https://checkmk.com", target="_blank"))
+    footer.append("&copy; %s" %
+                  html.render_a("tribe29 GmbH", href="https://checkmk.com", target="_blank"))
 
     html.write(HTML(" - ").join(footer))
 

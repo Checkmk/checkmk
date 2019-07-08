@@ -153,23 +153,22 @@ def handle_problem(url, user, pwd, short_desc, desc, hostname, servicename, prob
                    urgency, impact, timeout):
     url += "/api/now/table/incident"
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    response = requests.post(
-        url,
-        auth=(user, pwd),
-        headers=headers,
-        timeout=timeout,
-        json={
-            "short_description": short_desc,
-            "description": desc,
-            "urgency": urgency,
-            "impact": impact,
-            "caller_id": caller,
-            "work_notes": "Check_MK Problem ID: %s" % problem_id
-        })
+    response = requests.post(url,
+                             auth=(user, pwd),
+                             headers=headers,
+                             timeout=timeout,
+                             json={
+                                 "short_description": short_desc,
+                                 "description": desc,
+                                 "urgency": urgency,
+                                 "impact": impact,
+                                 "caller_id": caller,
+                                 "work_notes": "Check_MK Problem ID: %s" % problem_id
+                             })
 
     if response.status_code != 201:
-        sys.stderr.write(
-            'Status: %s Error response: %s\n' % (response.status_code, response.json()))
+        sys.stderr.write('Status: %s Error response: %s\n' %
+                         (response.status_code, response.json()))
         return 2
 
     incident_nr = response.json()["result"]["number"]
@@ -180,21 +179,20 @@ def handle_problem(url, user, pwd, short_desc, desc, hostname, servicename, prob
 def handle_recovery(incident, url, user, pwd, desc, caller, timeout):
     url += "/api/now/table/incident/%s" % incident[1]
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    response = requests.put(
-        url,
-        auth=(user, pwd),
-        headers=headers,
-        timeout=timeout,
-        json={
-            "close_code": "Closed/Resolved by Check_MK",
-            "state": "7",
-            "caller_id": caller,
-            "close_notes": desc
-        })
+    response = requests.put(url,
+                            auth=(user, pwd),
+                            headers=headers,
+                            timeout=timeout,
+                            json={
+                                "close_code": "Closed/Resolved by Check_MK",
+                                "state": "7",
+                                "caller_id": caller,
+                                "close_notes": desc
+                            })
 
     if response.status_code != 200:
-        sys.stderr.write(
-            'Status: %s Error response: %s\n' % (response.status_code, response.json()))
+        sys.stderr.write('Status: %s Error response: %s\n' %
+                         (response.status_code, response.json()))
         return 2
 
     sys.stdout.write('Ticket %s successfully resolved.\n' % incident[0])
@@ -215,8 +213,8 @@ def handle_ack(incident, url, user, pwd, ack_comment, ack_author, ack_state, cal
     response = requests.put(url, auth=(user, pwd), headers=headers, timeout=timeout, json=json)
 
     if response.status_code != 200:
-        sys.stderr.write(
-            'Status: %s Error Response: %s\n' % (response.status_code, response.json()))
+        sys.stderr.write('Status: %s Error Response: %s\n' %
+                         (response.status_code, response.json()))
         return 2
 
     sys.stdout.write('Ticket %s: successfully added acknowledgedment.\n' % incident[0])
@@ -234,8 +232,8 @@ def handle_downtime(incident, url, user, pwd, desc, dt_state, caller, timeout):
     response = requests.put(url, auth=(user, pwd), headers=headers, json=json)
 
     if response.status_code != 200:
-        sys.stderr.write(
-            'Status: %s Error response: %s\n' % (response.status_code, response.json()))
+        sys.stderr.write('Status: %s Error response: %s\n' %
+                         (response.status_code, response.json()))
         return 2
 
     return 0

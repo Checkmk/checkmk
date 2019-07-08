@@ -1028,10 +1028,9 @@ def render_metrics_table(translated_metrics, host_name, service_description):
         if cmk_graphs_possible():
             output += "<td>"
             output += html.render_popup_trigger(
-                html.render_icon(
-                    "custom_graph",
-                    title=_("Add this metric to a custom graph"),
-                    cssclass="iconbutton"),
+                html.render_icon("custom_graph",
+                                 title=_("Add this metric to a custom graph"),
+                                 cssclass="iconbutton"),
                 ident="add_metric_to_graph_" + host_name + ";" + service_description,
                 what="add_metric_to_custom_graph",
                 url_vars=[

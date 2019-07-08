@@ -36,8 +36,8 @@ factory_settings['aws_ec2_limits_default_levels'] = {
     'active_spot_fleet_requests': (None, 80.0, 90.0),
     'spot_fleet_total_target_capacity': (None, 80.0, 90.0),
     'running_ondemand_instances_total': (None, 80.0, 90.0),
-    'running_ondemand_instances':
-        [(inst_type, (None, 80.0, 90.0)) for inst_type in AWSEC2InstTypes],
+    'running_ondemand_instances': [(inst_type, (None, 80.0, 90.0)) for inst_type in AWSEC2InstTypes
+                                  ],
 }
 
 

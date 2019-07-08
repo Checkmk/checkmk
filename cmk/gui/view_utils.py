@@ -112,15 +112,13 @@ def query_limit_exceeded_with_warn(rows, limit, user_config):
 
     if html.get_ascii_input("limit",
                             "soft") == "soft" and user_config.may("general.ignore_soft_limit"):
-        text += html.render_a(
-            _('Repeat query and allow more results.'),
-            target="_self",
-            href=html.makeuri([("limit", "hard")]))
+        text += html.render_a(_('Repeat query and allow more results.'),
+                              target="_self",
+                              href=html.makeuri([("limit", "hard")]))
     elif html.get_ascii_input("limit") == "hard" and user_config.may("general.ignore_hard_limit"):
-        text += html.render_a(
-            _('Repeat query without limit.'),
-            target="_self",
-            href=html.makeuri([("limit", "none")]))
+        text += html.render_a(_('Repeat query without limit.'),
+                              target="_self",
+                              href=html.makeuri([("limit", "none")]))
 
     text += " " + _(
         "<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
@@ -129,13 +127,19 @@ def query_limit_exceeded_with_warn(rows, limit, user_config):
 
 
 def render_labels(labels, object_type, with_links, label_sources):
-    return _render_tag_groups_or_labels(
-        labels, object_type, with_links, label_type="label", label_sources=label_sources)
+    return _render_tag_groups_or_labels(labels,
+                                        object_type,
+                                        with_links,
+                                        label_type="label",
+                                        label_sources=label_sources)
 
 
 def render_tag_groups(tag_groups, object_type, with_links):
-    return _render_tag_groups_or_labels(
-        tag_groups, object_type, with_links, label_type="tag_group", label_sources={})
+    return _render_tag_groups_or_labels(tag_groups,
+                                        object_type,
+                                        with_links,
+                                        label_type="tag_group",
+                                        label_sources={})
 
 
 def _render_tag_groups_or_labels(entries, object_type, with_links, label_type, label_sources):
@@ -144,14 +148,15 @@ def _render_tag_groups_or_labels(entries, object_type, with_links, label_type, l
                           label_sources.get(tg_id, "unspecified"))
         for tg_id, tag in sorted(entries.items())
     ]
-    return html.render_tags(
-        HTML("").join(elements), class_=["tagify", label_type, "display"], readonly="true")
+    return html.render_tags(HTML("").join(elements),
+                            class_=["tagify", label_type, "display"],
+                            readonly="true")
 
 
 def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_source):
-    span = html.render_tag(
-        html.render_div(html.render_span("%s:%s" % (tg_id, tag), class_=["tagify__tag-text"])),
-        class_=["tagify--noAnim", label_source])
+    span = html.render_tag(html.render_div(
+        html.render_span("%s:%s" % (tg_id, tag), class_=["tagify__tag-text"])),
+                           class_=["tagify--noAnim", label_source])
     if not with_link:
         return span
 
@@ -171,11 +176,10 @@ def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_sour
     else:
         raise NotImplementedError()
 
-    url = html.makeuri_contextless(
-        [
-            ("filled_in", "filter"),
-            ("search", "Search"),
-            ("view_name", "searchhost" if object_type == "host" else "searchsvc"),
-        ] + type_filter_vars,
-        filename="view.py")
+    url = html.makeuri_contextless([
+        ("filled_in", "filter"),
+        ("search", "Search"),
+        ("view_name", "searchhost" if object_type == "host" else "searchsvc"),
+    ] + type_filter_vars,
+                                   filename="view.py")
     return html.render_a(span, href=url)

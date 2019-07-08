@@ -197,12 +197,11 @@ class ConfigVariableNotificationLogging(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            DropdownChoice(
-                choices=[
-                    (20, _("Minimal logging")),
-                    (15, _("Normal logging")),
-                    (10, _("Full dump of all variables and command")),
-                ],),
+            DropdownChoice(choices=[
+                (20, _("Minimal logging")),
+                (15, _("Normal logging")),
+                (10, _("Full dump of all variables and command")),
+            ],),
             forth=self._transform_log_level,
             title=_("Notification log level"),
             help=_("You can configure the notification mechanism to log more details about "

@@ -217,8 +217,8 @@ def write_as_text(werks, f, write_version=True):
         # write_version=False is used by the announcement mails
         if write_version:
             f.write("%s:\n" % version)
-        for component, component_group in itertools.groupby(
-                version_group, key=translator.component_of):
+        for component, component_group in itertools.groupby(version_group,
+                                                            key=translator.component_of):
             f.write("    %s:\n" % component.encode("utf-8"))
             for werk in component_group:
                 write_werk_as_text(f, werk)
@@ -260,11 +260,10 @@ _COMPATIBLE_SORTING_VALUE = {
 # sort by version and within one version by component
 def sort_by_version_and_component(werks):
     translator = WerkTranslator()
-    return sorted(
-        werks,
-        key=lambda w: (-parse_check_mk_version(w["version"]), translator.component_of(w),
-                       _CLASS_SORTING_VALUE.get(w["class"], 99), -w["level"],
-                       _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99), w["title"]))
+    return sorted(werks,
+                  key=lambda w: (-parse_check_mk_version(w["version"]), translator.component_of(w),
+                                 _CLASS_SORTING_VALUE.get(w["class"], 99), -w["level"],
+                                 _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99), w["title"]))
 
 
 def sort_by_date(werks):

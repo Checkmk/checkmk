@@ -205,8 +205,8 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
                 handlec = int(psinfo.get("HandleCount", 0))  # Only in newer psperf.bat versions
                 threadc = int(psinfo["ThreadCount"])  # do not resolve counter here!
                 line[1:1] = [
-                    "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)" % (virt, resi, pid, pagefile, userc,
-                                                              kernelc, handlec, threadc)
+                    "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)" %
+                    (virt, resi, pid, pagefile, userc, kernelc, handlec, threadc)
                 ]
         info.append(line)
 

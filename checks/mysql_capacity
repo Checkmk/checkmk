@@ -75,12 +75,11 @@ def check_mysql_size(item, params, parsed):
 
     # size and avail are given as bytes
     levels = (params[0] * 1024, params[1] * 1024) if params else None
-    yield check_levels(
-        size,
-        'database_size',
-        levels,
-        human_readable_func=get_bytes_human_readable,
-        infoname="Size")
+    yield check_levels(size,
+                       'database_size',
+                       levels,
+                       human_readable_func=get_bytes_human_readable,
+                       infoname="Size")
 
 
 check_info['mysql_capacity'] = {

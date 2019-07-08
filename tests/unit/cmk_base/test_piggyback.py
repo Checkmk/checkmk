@@ -52,9 +52,8 @@ def test_get_piggyback_raw_data_outdate_old_pigs():
                                             "test-host") == [('source1', '<<<check_mk>>>\nlala\n')]
 
     # Fake age the test-host piggyback file
-    os.utime(
-        str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
-        (time.time() - 10, time.time() - 10))
+    os.utime(str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
+             (time.time() - 10, time.time() - 10))
 
     piggyback.store_piggyback_raw_data("source1", {"test-host2": [
         u"<<<check_mk>>>",

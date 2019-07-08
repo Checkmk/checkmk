@@ -303,11 +303,12 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes=None):
     else:
         if item in blocks_info:
             mp = item
-            return df_check_filesystem_single(
-                mp, blocks_info[mp]["size_mb"], blocks_info[mp]["avail_mb"],
-                blocks_info[mp]["reserved_mb"],
-                inodes_info.get(mp, {}).get("inodes_total", None),
-                inodes_info.get(mp, {}).get("inodes_avail", None), params)
+            return df_check_filesystem_single(mp, blocks_info[mp]["size_mb"],
+                                              blocks_info[mp]["avail_mb"],
+                                              blocks_info[mp]["reserved_mb"],
+                                              inodes_info.get(mp, {}).get("inodes_total", None),
+                                              inodes_info.get(mp, {}).get("inodes_avail",
+                                                                          None), params)
         return 3, "filesystem not found"
 
 
@@ -420,11 +421,10 @@ def check_inodes(levels, inodes_total, inodes_avail):
         inodes_crit = (100 - inodes_crit) / 100.0 * inodes_total
         human_readable_func = lambda x: get_percent_human_readable(100.0 * x / inodes_total)
 
-    inode_status, infotext, i_perf = check_levels(
-        inodes_total - inodes_avail,
-        'inodes_used', (inodes_warn, inodes_crit),
-        human_readable_func=human_readable_func,
-        infoname="Inodes Used")
+    inode_status, infotext, i_perf = check_levels(inodes_total - inodes_avail,
+                                                  'inodes_used', (inodes_warn, inodes_crit),
+                                                  human_readable_func=human_readable_func,
+                                                  infoname="Inodes Used")
 
     i_perf[0] += (0, inodes_total)  # because check_levels does not include min, max
 

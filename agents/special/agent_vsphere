@@ -957,8 +957,8 @@ class ESXConnection(object):
         self._secret = secret
         self._server_handle = self._connect_to_server(address, no_cert, debug)
 
-        self._host_cookie_path = Path(
-            "%s/agents/agent_vsphere/cookie.%s" % (cmk.utils.paths.tmp_dir, address[0]))
+        self._host_cookie_path = Path("%s/agents/agent_vsphere/cookie.%s" %
+                                      (cmk.utils.paths.tmp_dir, address[0]))
 
         self.last_cookie_access_time = None
         self.system_info = None
@@ -1162,8 +1162,9 @@ def eval_virtual_device(info, _datastores):
         type_info = get_pattern("type=\"(.*?)\"", virtual_device)
         device_info = get_pattern(search_pattern, virtual_device)
         if device_info:
-            response.append("virtualDeviceType %s|%s" % (type_info[0], "|".join(
-                "%s %s" % x for x in zip(show_fields, device_info[0]))))
+            response.append(
+                "virtualDeviceType %s|%s" %
+                (type_info[0], "|".join("%s %s" % x for x in zip(show_fields, device_info[0]))))
 
     return "@@".join(response)
 
@@ -1179,8 +1180,8 @@ def eval_snapshot_list(info, _datastores):
             creation_time = int(time.mktime(time.strptime(entry[2][:19], "%Y-%m-%dT%H:%M:%S")))
         except ValueError:
             creation_time = 0
-        response.append(
-            "%s %s %s %s" % (entry[1], creation_time, entry[3], entry[0].replace("|", " ")))
+        response.append("%s %s %s %s" %
+                        (entry[1], creation_time, entry[3], entry[0].replace("|", " ")))
     return "|".join(response)
 
 
@@ -1267,8 +1268,8 @@ def fetch_extra_interface_counters(connection):
             bandwidth = get_pattern('</driver><linkSpeed><speedMb>(.*?)</speedMb>', bandwidth_block)
             net_extra_info.append("net.macaddress|%s|%s|mac" % (nic_if[0][1], nic_if[0][3]))
             if bandwidth:
-                net_extra_info.append(
-                    "net.bandwidth|%s|%s|bytes" % (nic_if[0][1], int(bandwidth[0]) * 1000000))
+                net_extra_info.append("net.bandwidth|%s|%s|bytes" %
+                                      (nic_if[0][1], int(bandwidth[0]) * 1000000))
                 net_extra_info.append("net.state|%s|1|state" % nic_if[0][1])
             else:
                 net_extra_info.append("net.state|%s|2|state" % nic_if[0][1])
@@ -1438,8 +1439,8 @@ def output_hostsystems(hostsystems_properties, hostsystems_sensors):
             if data["key"].lower() in ["green", "unknown"]:
                 continue
             output('%s;%s;%s;%s;%s;%s;%s;%s;%s' %
-                   (data["name"].replace(";", "_"), data.get("baseUnits", ""),
-                    data.get("currentReading", ""), data.get("sensorType", ""),
+                   (data["name"].replace(";", "_"), data.get(
+                       "baseUnits", ""), data.get("currentReading", ""), data.get("sensorType", ""),
                     data.get("unitModifier", ""), data.get("rateUnits", ""), data["key"],
                     data["label"], data["summary"].replace(";", "_")))
 
@@ -1470,8 +1471,8 @@ def process_counters(connection, hostsystems, datastores):
         ### TODO: check if this host supports perfdata
         ### TODO: try to get esx hosts perfdata from vCenter
         counter_avail = telegram_list["perfcounteravail"]
-        counter_avail_response = connection.query_server(
-            counter_avail, payload_params={"esxhost": host})
+        counter_avail_response = connection.query_server(counter_avail,
+                                                         payload_params={"esxhost": host})
 
         counters_avail = {}
         elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)",
@@ -1486,13 +1487,12 @@ def process_counters(connection, hostsystems, datastores):
                     "<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>"
                     % (entry, instance))
         counters_value = {}
-        counter_data_response = connection.query_server(
-            counter_data_payload,
-            payload_params={
-                "esxhost": host,
-                "counters": "".join(counter_data),
-                "samples": max_samples
-            })
+        counter_data_response = connection.query_server(counter_data_payload,
+                                                        payload_params={
+                                                            "esxhost": host,
+                                                            "counters": "".join(counter_data),
+                                                            "samples": max_samples
+                                                        })
         # Python regex only supports up to 100 match groups in a regex..
         # We are only extracting the whole value line and split it later on
         # This is a perfect candidate for "Catastrophic Backtracking" :)
@@ -1586,16 +1586,16 @@ def process_clusters(connection, vm_esx_host):
     response = connection.query_server(telegram_list["datacenters"])
     datacenters = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>', response)
     for datacenter in datacenters:
-        response = connection.query_server(
-            telegram_list["clustersofdatacenter"], payload_params={"datacenter": datacenter})
+        response = connection.query_server(telegram_list["clustersofdatacenter"],
+                                           payload_params={"datacenter": datacenter})
         clusters = get_pattern(
             '<objects><obj type="ClusterComputeResource">(.*?)</obj>.*?string">(.*?)</val></propSet></objects>',
             response)
 
         output("<<<esx_vsphere_clusters:sep(9)>>>")
         for cluster in clusters:
-            response = connection.query_server(
-                telegram_list["esxhostsofcluster"], payload_params={"clustername": cluster[0]})
+            response = connection.query_server(telegram_list["esxhostsofcluster"],
+                                               payload_params={"clustername": cluster[0]})
             cluster_vms = []
             hosts = get_pattern(
                 '<objects><obj type="HostSystem">.*?string">(.*?)</val></propSet></objects>',
@@ -1603,8 +1603,8 @@ def process_clusters(connection, vm_esx_host):
             for host in hosts:
                 cluster_vms.extend(vm_esx_host.get(host, []))
             output("%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)))
-            output("%s\tvms\t%s\t%s" % (datacenter, cluster[1], "\t".join(
-                map(convert_hostname, cluster_vms))))
+            output("%s\tvms\t%s\t%s" %
+                   (datacenter, cluster[1], "\t".join(map(convert_hostname, cluster_vms))))
 
 
 def fetch_data(connection):

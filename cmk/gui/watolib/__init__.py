@@ -348,8 +348,8 @@ def _create_sample_config():
             generator.generate()
             logger.debug("Finished [%s]" % generator.ident())
         except Exception:
-            logger.error(
-                "Exception in sample config generator [%s]" % generator.ident(), exc_info=True)
+            logger.error("Exception in sample config generator [%s]" % generator.ident(),
+                         exc_info=True)
 
     logger.debug("Finished creating the sample config")
 

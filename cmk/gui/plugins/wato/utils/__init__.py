@@ -318,51 +318,45 @@ class SNMPCredentials(Alternative):
                     title=_("SNMP community (SNMP Versions 1 and 2c)"),
                     allow_empty=False,
                 ),
-                Transform(
-                    Tuple(
-                        title=
-                        _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"
-                         ),
-                        elements=[
-                            FixedValue(
-                                "noAuthNoPriv",
-                                title=_("Security Level"),
-                                totext=_("No authentication, no privacy"),
-                            ),
-                            TextAscii(title=_("Security name"), attrencode=True, allow_empty=False),
-                        ]),
-                    forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", "")),
-                Tuple(
+                Transform(Tuple(
                     title=_(
-                        "Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"
-                    ),
+                        "Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
                     elements=[
                         FixedValue(
-                            "authNoPriv",
+                            "noAuthNoPriv",
                             title=_("Security Level"),
-                            totext=_("authentication but no privacy"),
+                            totext=_("No authentication, no privacy"),
                         ),
-                    ] + self._snmpv3_auth_elements()),
-                Tuple(
-                    title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
-                    elements=[
-                        FixedValue(
-                            "authPriv",
-                            title=_("Security Level"),
-                            totext=_("authentication and encryption"),
-                        ),
-                    ] + self._snmpv3_auth_elements() + [
-                        DropdownChoice(
-                            choices=[
-                                ("DES", _("DES")),
-                                ("AES", _("AES")),
-                            ],
-                            title=_("Privacy protocol")),
-                        Password(
-                            title=_("Privacy pass phrase"),
-                            minlen=8,
-                        ),
+                        TextAscii(title=_("Security name"), attrencode=True, allow_empty=False),
                     ]),
+                          forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", "")),
+                Tuple(title=_(
+                    "Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
+                      elements=[
+                          FixedValue(
+                              "authNoPriv",
+                              title=_("Security Level"),
+                              totext=_("authentication but no privacy"),
+                          ),
+                      ] + self._snmpv3_auth_elements()),
+                Tuple(title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
+                      elements=[
+                          FixedValue(
+                              "authPriv",
+                              title=_("Security Level"),
+                              totext=_("authentication and encryption"),
+                          ),
+                      ] + self._snmpv3_auth_elements() + [
+                          DropdownChoice(choices=[
+                              ("DES", _("DES")),
+                              ("AES", _("AES")),
+                          ],
+                                         title=_("Privacy protocol")),
+                          Password(
+                              title=_("Privacy pass phrase"),
+                              minlen=8,
+                          ),
+                      ]),
             ],
             "match": match,
             "style": "dropdown",
@@ -382,12 +376,11 @@ class SNMPCredentials(Alternative):
 
     def _snmpv3_auth_elements(self):
         return [
-            DropdownChoice(
-                choices=[
-                    ("md5", _("MD5")),
-                    ("sha", _("SHA1")),
-                ],
-                title=_("Authentication protocol")),
+            DropdownChoice(choices=[
+                ("md5", _("MD5")),
+                ("sha", _("SHA1")),
+            ],
+                           title=_("Authentication protocol")),
             TextAscii(title=_("Security name"), attrencode=True),
             Password(
                 title=_("Authentication password"),
@@ -454,13 +447,12 @@ def _translation_elements(what):
 
     return [
         ("case",
-         DropdownChoice(
-             title=_("Case translation"),
-             choices=[
-                 (None, _("Do not convert case")),
-                 ("upper", _("Convert %s to upper case") % plural),
-                 ("lower", _("Convert %s to lower case") % plural),
-             ])),
+         DropdownChoice(title=_("Case translation"),
+                        choices=[
+                            (None, _("Do not convert case")),
+                            ("upper", _("Convert %s to upper case") % plural),
+                            ("lower", _("Convert %s to lower case") % plural),
+                        ])),
         ("regex",
          Transform(
              ListOf(
@@ -556,32 +548,35 @@ class _GroupSelection(ElementSelection):
 
 def ContactGroupSelection(**kwargs):
     """Select a single contact group"""
-    return _GroupSelection(
-        "contact", choices=lambda: _group_choices(load_contact_group_information()), **kwargs)
+    return _GroupSelection("contact",
+                           choices=lambda: _group_choices(load_contact_group_information()),
+                           **kwargs)
 
 
 def ServiceGroupSelection(**kwargs):
     """Select a single service group"""
-    return _GroupSelection(
-        "service", choices=lambda: _group_choices(load_service_group_information()), **kwargs)
+    return _GroupSelection("service",
+                           choices=lambda: _group_choices(load_service_group_information()),
+                           **kwargs)
 
 
 def HostGroupSelection(**kwargs):
     """Select a single host group"""
-    return _GroupSelection(
-        "host", choices=lambda: _group_choices(load_host_group_information()), **kwargs)
+    return _GroupSelection("host",
+                           choices=lambda: _group_choices(load_host_group_information()),
+                           **kwargs)
 
 
 def ContactGroupChoice(**kwargs):
     """Select multiple contact groups"""
-    return DualListChoice(
-        choices=lambda: _group_choices(load_contact_group_information()), **kwargs)
+    return DualListChoice(choices=lambda: _group_choices(load_contact_group_information()),
+                          **kwargs)
 
 
 def ServiceGroupChoice(**kwargs):
     """Select multiple service groups"""
-    return DualListChoice(
-        choices=lambda: _group_choices(load_service_group_information()), **kwargs)
+    return DualListChoice(choices=lambda: _group_choices(load_service_group_information()),
+                          **kwargs)
 
 
 def HostGroupChoice(**kwargs):
@@ -899,14 +894,13 @@ def PredictiveLevels(**args):
         headers="sup",
         elements=[
             ("period",
-             DropdownChoice(
-                 title=_("Base prediction on"),
-                 choices=[
-                     ("wday", _("Day of the week (1-7, 1 is Monday)")),
-                     ("day", _("Day of the month (1-31)")),
-                     ("hour", _("Hour of the day (0-23)")),
-                     ("minute", _("Minute of the hour (0-59)")),
-                 ])),
+             DropdownChoice(title=_("Base prediction on"),
+                            choices=[
+                                ("wday", _("Day of the week (1-7, 1 is Monday)")),
+                                ("day", _("Day of the month (1-31)")),
+                                ("hour", _("Hour of the day (0-23)")),
+                                ("minute", _("Minute of the hour (0-59)")),
+                            ])),
             ("horizon",
              Integer(
                  title=_("Time horizon"),
@@ -926,36 +920,30 @@ def PredictiveLevels(**args):
                  choices=[
                      ("absolute", _("Absolute difference from prediction"),
                       Tuple(elements=[
-                          Float(
-                              title=_("Warning at"),
-                              unit=unitname + _("above predicted value"),
-                              default_value=dif[0]),
-                          Float(
-                              title=_("Critical at"),
-                              unit=unitname + _("above predicted value"),
-                              default_value=dif[1]),
+                          Float(title=_("Warning at"),
+                                unit=unitname + _("above predicted value"),
+                                default_value=dif[0]),
+                          Float(title=_("Critical at"),
+                                unit=unitname + _("above predicted value"),
+                                default_value=dif[1]),
                       ])),
                      ("relative", _("Relative difference from prediction"),
                       Tuple(elements=[
-                          Percentage(
-                              title=_("Warning at"),
-                              unit=_("% above predicted value"),
-                              default_value=10),
-                          Percentage(
-                              title=_("Critical at"),
-                              unit=_("% above predicted value"),
-                              default_value=20),
+                          Percentage(title=_("Warning at"),
+                                     unit=_("% above predicted value"),
+                                     default_value=10),
+                          Percentage(title=_("Critical at"),
+                                     unit=_("% above predicted value"),
+                                     default_value=20),
                       ])),
                      ("stdev", _("In relation to standard deviation"),
                       Tuple(elements=[
-                          Float(
-                              title=_("Warning at"),
-                              unit=_("times the standard deviation above the predicted value"),
-                              default_value=2.0),
-                          Float(
-                              title=_("Critical at"),
-                              unit=_("times the standard deviation above the predicted value"),
-                              default_value=4.0),
+                          Float(title=_("Warning at"),
+                                unit=_("times the standard deviation above the predicted value"),
+                                default_value=2.0),
+                          Float(title=_("Critical at"),
+                                unit=_("times the standard deviation above the predicted value"),
+                                default_value=4.0),
                       ])),
                  ])),
             ("levels_upper_min",
@@ -975,36 +963,30 @@ def PredictiveLevels(**args):
                  choices=[
                      ("absolute", _("Absolute difference from prediction"),
                       Tuple(elements=[
-                          Float(
-                              title=_("Warning at"),
-                              unit=unitname + _("below predicted value"),
-                              default_value=2.0),
-                          Float(
-                              title=_("Critical at"),
-                              unit=unitname + _("below predicted value"),
-                              default_value=4.0),
+                          Float(title=_("Warning at"),
+                                unit=unitname + _("below predicted value"),
+                                default_value=2.0),
+                          Float(title=_("Critical at"),
+                                unit=unitname + _("below predicted value"),
+                                default_value=4.0),
                       ])),
                      ("relative", _("Relative difference from prediction"),
                       Tuple(elements=[
-                          Percentage(
-                              title=_("Warning at"),
-                              unit=_("% below predicted value"),
-                              default_value=10),
-                          Percentage(
-                              title=_("Critical at"),
-                              unit=_("% below predicted value"),
-                              default_value=20),
+                          Percentage(title=_("Warning at"),
+                                     unit=_("% below predicted value"),
+                                     default_value=10),
+                          Percentage(title=_("Critical at"),
+                                     unit=_("% below predicted value"),
+                                     default_value=20),
                       ])),
                      ("stdev", _("In relation to standard deviation"),
                       Tuple(elements=[
-                          Float(
-                              title=_("Warning at"),
-                              unit=_("times the standard deviation below the predicted value"),
-                              default_value=2.0),
-                          Float(
-                              title=_("Critical at"),
-                              unit=_("times the standard deviation below the predicted value"),
-                              default_value=4.0),
+                          Float(title=_("Warning at"),
+                                unit=_("times the standard deviation below the predicted value"),
+                                default_value=2.0),
+                          Float(title=_("Critical at"),
+                                unit=_("times the standard deviation below the predicted value"),
+                                default_value=4.0),
                       ])),
                  ])),
         ])
@@ -1044,16 +1026,14 @@ def Levels(**kwargs):
             Tuple(
                 title=_("Fixed Levels"),
                 elements=[
-                    Float(
-                        unit=unit,
-                        title=_("Warning at"),
-                        default_value=default_levels[0],
-                        allow_int=True),
-                    Float(
-                        unit=unit,
-                        title=_("Critical at"),
-                        default_value=default_levels[1],
-                        allow_int=True),
+                    Float(unit=unit,
+                          title=_("Warning at"),
+                          default_value=default_levels[0],
+                          allow_int=True),
+                    Float(unit=unit,
+                          title=_("Critical at"),
+                          default_value=default_levels[1],
+                          allow_int=True),
                 ],
             ),
             PredictiveLevels(default_difference=default_difference,),
@@ -1094,8 +1074,9 @@ class ConfigHostname(TextAsciiAutocomplete):
     ident = "monitored_hostname"
 
     def __init__(self, **kwargs):
-        super(ConfigHostname, self).__init__(
-            completion_ident=self.ident, completion_params={}, **kwargs)
+        super(ConfigHostname, self).__init__(completion_ident=self.ident,
+                                             completion_params={},
+                                             **kwargs)
 
     @classmethod
     def autocomplete_choices(cls, value, params):
@@ -1509,8 +1490,8 @@ def configure_attributes(new,
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = _("Inherited from ") + html.render_a(
-                            container.title(), href=url)
+                        inherited_from = _("Inherited from ") + html.render_a(container.title(),
+                                                                              href=url)
 
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True
@@ -1584,14 +1565,16 @@ def configure_attributes(new,
                     parent.locked_hosts()) or (for_what == "folder" and myself and myself.locked()):
                 checkbox_code = None
             elif force_entry:
-                checkbox_code = html.render_checkbox(
-                    "ignored_" + checkbox_name, disabled="disabled")
+                checkbox_code = html.render_checkbox("ignored_" + checkbox_name,
+                                                     disabled="disabled")
                 checkbox_code += html.render_hidden_field(checkbox_name, "on")
             else:
                 onclick = "cmk.wato.fix_visibility(); cmk.wato.toggle_attribute(this, '%s');" % attrname
                 checkbox_kwargs = {"disabled": "disabled"} if disabled else {}
-                checkbox_code = html.render_checkbox(
-                    checkbox_name, active, onclick=onclick, **checkbox_kwargs)
+                checkbox_code = html.render_checkbox(checkbox_name,
+                                                     active,
+                                                     onclick=onclick,
+                                                     **checkbox_kwargs)
 
             forms.section(_u(attr.title()), checkbox=checkbox_code, section_id="attr_" + attrname)
             html.help(attr.help())
@@ -1617,15 +1600,14 @@ def configure_attributes(new,
                 # as two DIV elements, one of which is visible at one time.
 
                 # DIV with the input elements
-                html.open_div(
-                    id_="attr_entry_%s" % attrname, style="display: none;" if not active else None)
+                html.open_div(id_="attr_entry_%s" % attrname,
+                              style="display: none;" if not active else None)
                 attr.render_input(varprefix, defvalue)
                 html.close_div()
 
-                html.open_div(
-                    class_="inherited",
-                    id_="attr_default_%s" % attrname,
-                    style="display: none;" if active else None)
+                html.open_div(class_="inherited",
+                              id_="attr_default_%s" % attrname,
+                              style="display: none;" if active else None)
 
             #
             # DIV with actual / inherited / default value
@@ -1754,13 +1736,12 @@ class NotificationParameterRegistry(cmk.utils.plugin_registry.ClassRegistry):
         # TODO: Cleanup this hack
         valuespec._title = _("Call with the following parameters:")
 
-        register_rule(
-            rulespec_group_registry["monconf/notifications"],
-            "notification_parameters:" + plugin.ident,
-            valuespec,
-            _("Parameters for %s") % script_title,
-            itemtype=None,
-            match="dict")
+        register_rule(rulespec_group_registry["monconf/notifications"],
+                      "notification_parameters:" + plugin.ident,
+                      valuespec,
+                      _("Parameters for %s") % script_title,
+                      itemtype=None,
+                      match="dict")
 
 
 notification_parameter_registry = NotificationParameterRegistry()
@@ -1924,11 +1905,10 @@ class DictHostTagCondition(Transform):
         )
 
     def _is_or_is_not(self, **kwargs):
-        return DropdownChoice(
-            choices=[
-                ("is", _("is")),
-                ("is_not", _("is not")),
-            ], **kwargs)
+        return DropdownChoice(choices=[
+            ("is", _("is")),
+            ("is_not", _("is not")),
+        ], **kwargs)
 
 
 class HostTagCondition(ValueSpec):
@@ -2023,10 +2003,9 @@ class HostTagCondition(ValueSpec):
                 if tag_group.is_checkbox_tag_group:
                     html.write_text(" " + _("set"))
                 else:
-                    html.dropdown(
-                        varprefix + "tagvalue_" + tag_group.id,
-                        [(t[0], _u(t[1])) for t in choices if t[0] is not None],
-                        deflt=default_tag)
+                    html.dropdown(varprefix + "tagvalue_" + tag_group.id,
+                                  [(t[0], _u(t[1])) for t in choices if t[0] is not None],
+                                  deflt=default_tag)
 
                 html.close_div()
                 html.close_td()
@@ -2089,9 +2068,8 @@ class HostTagCondition(ValueSpec):
             div_is_open = html.request.var(dropdown_id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
-        html.open_div(
-            id_="%stag_sel_%s" % (varprefix, id_),
-            style="display: none;" if not div_is_open else None)
+        html.open_div(id_="%stag_sel_%s" % (varprefix, id_),
+                      style="display: none;" if not div_is_open else None)
 
 
 def transform_simple_to_multi_host_rule_match_conditions(value):
@@ -2125,16 +2103,15 @@ def _site_rule_match_condition():
 def _multi_folder_rule_match_condition():
     return (
         "match_folders",
-        ListOf(
-            FullPathFolderChoice(
-                title=_("Folder"),
-                help=_("This condition makes the rule match only hosts that are managed "
-                       "via WATO and that are contained in this folder - either directly "
-                       "or in one of its subfolders."),
-            ),
-            add_label=_("Add additional folder"),
-            title=_("Match folders"),
-            movable=False),
+        ListOf(FullPathFolderChoice(
+            title=_("Folder"),
+            help=_("This condition makes the rule match only hosts that are managed "
+                   "via WATO and that are contained in this folder - either directly "
+                   "or in one of its subfolders."),
+        ),
+               add_label=_("Add additional folder"),
+               title=_("Match folders"),
+               movable=False),
     )
 
 

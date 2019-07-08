@@ -206,8 +206,9 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                                 try:
                                     if len(parts) > 1 and parts[0].lower().startswith(
                                             "<directory") and "pnp4nagios" in line:
-                                        cleanedup = line.replace("<", "").replace(">", "").replace(
-                                            '"', "")
+                                        cleanedup = line.replace("<",
+                                                                 "").replace(">",
+                                                                             "").replace('"', "")
                                         cleanedup = cleanedup[9:]
                                         dir = cleanedup.strip()
                                         if os.path.exists(dir) and os.path.exists(

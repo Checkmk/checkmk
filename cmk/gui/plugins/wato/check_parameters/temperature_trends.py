@@ -71,38 +71,36 @@ class RulespecCheckgroupParametersTemperatureTrends(CheckParameterRulespecWithIt
               "checks, right now the <tt>adva_fsp_temp</tt> check."),
             elements=[
                 ("trend_range",
-                 Optional(
-                     Integer(
-                         title=_("Time range for temperature trend computation"),
-                         default_value=30,
-                         minvalue=5,
-                         unit=_("minutes")),
-                     title=_("Trend computation"),
-                     label=_("Enable trend computation"))),
+                 Optional(Integer(title=_("Time range for temperature trend computation"),
+                                  default_value=30,
+                                  minvalue=5,
+                                  unit=_("minutes")),
+                          title=_("Trend computation"),
+                          label=_("Enable trend computation"))),
                 ("trend_c",
-                 Tuple(
-                     title=_("Levels on trends in degrees Celsius per time range"),
-                     elements=[
-                         Integer(
-                             title=_("Warning at"), unit=u"°C / " + _("range"), default_value=5),
-                         Integer(
-                             title=_("Critical at"), unit=u"°C / " + _("range"), default_value=10)
-                     ])),
+                 Tuple(title=_("Levels on trends in degrees Celsius per time range"),
+                       elements=[
+                           Integer(title=_("Warning at"),
+                                   unit=u"°C / " + _("range"),
+                                   default_value=5),
+                           Integer(title=_("Critical at"),
+                                   unit=u"°C / " + _("range"),
+                                   default_value=10)
+                       ])),
                 ("trend_timeleft",
-                 Tuple(
-                     title=_("Levels on the time left until limit is reached"),
-                     elements=[
-                         Integer(
-                             title=_("Warning if below"),
-                             unit=_("minutes"),
-                             default_value=240,
-                         ),
-                         Integer(
-                             title=_("Critical if below"),
-                             unit=_("minutes"),
-                             default_value=120,
-                         ),
-                     ])),
+                 Tuple(title=_("Levels on the time left until limit is reached"),
+                       elements=[
+                           Integer(
+                               title=_("Warning if below"),
+                               unit=_("minutes"),
+                               default_value=240,
+                           ),
+                           Integer(
+                               title=_("Critical if below"),
+                               unit=_("minutes"),
+                               default_value=120,
+                           ),
+                       ])),
             ],
         )
 

@@ -99,8 +99,8 @@ def parse_arguments(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument("-u", "--user", default=None, help="Username for elasticsearch login")
     parser.add_argument("-s", "--password", default=None, help="Password for easticsearch login")
@@ -118,8 +118,9 @@ def parse_arguments(argv=None):
         help=
         "Space-separated list of modules to query. Possible values: cluster_health, nodes, stats (default: all)"
     )
-    parser.add_argument(
-        "--debug", action="store_true", help="Debug mode: let Python exceptions come through")
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help="Debug mode: let Python exceptions come through")
 
     parser.add_argument(
         "HOSTNAME",
@@ -143,14 +144,14 @@ def handle_nodes(response):
         cpu = proc["cpu"]
         mem = proc["mem"]
 
-        sys.stdout.write(
-            "%s open_file_descriptors %s\n" % (node["name"], proc["open_file_descriptors"]))
-        sys.stdout.write(
-            "%s max_file_descriptors %s\n" % (node["name"], proc["max_file_descriptors"]))
+        sys.stdout.write("%s open_file_descriptors %s\n" %
+                         (node["name"], proc["open_file_descriptors"]))
+        sys.stdout.write("%s max_file_descriptors %s\n" %
+                         (node["name"], proc["max_file_descriptors"]))
         sys.stdout.write("%s cpu_percent %s\n" % (node["name"], cpu["percent"]))
         sys.stdout.write("%s cpu_total_in_millis %s\n" % (node["name"], cpu["total_in_millis"]))
-        sys.stdout.write(
-            "%s mem_total_virtual_in_bytes %s\n" % (node["name"], mem["total_virtual_in_bytes"]))
+        sys.stdout.write("%s mem_total_virtual_in_bytes %s\n" %
+                         (node["name"], mem["total_virtual_in_bytes"]))
 
 
 def handle_stats(response):
@@ -175,5 +176,6 @@ def handle_stats(response):
             if ind[:-11] == indice:
                 all_counts.append(response.json()["indices"][ind]["total"]["docs"]["count"])
                 all_sizes.append(response.json()["indices"][ind]["total"]["store"]["size_in_bytes"])
-        sys.stdout.write("%s %s %s\n" % (indice, sum(all_counts) / len(all_counts),
-                                         sum(all_sizes) / len(all_sizes)))
+        sys.stdout.write(
+            "%s %s %s\n" %
+            (indice, sum(all_counts) / len(all_counts), sum(all_sizes) / len(all_sizes)))

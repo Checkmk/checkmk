@@ -222,12 +222,11 @@ def inventory_icom_repeater_temp(parsed):
 
 
 def check_icom_repeater_temp(_no_item, params, parsed):
-    return check_temperature(
-        parsed["temp"],
-        params,
-        "icom_repeater_temp",
-        dev_unit=parsed["temp_devunit"],
-        dev_status=parsed["temp_devstatus"])
+    return check_temperature(parsed["temp"],
+                             params,
+                             "icom_repeater_temp",
+                             dev_unit=parsed["temp_devunit"],
+                             dev_status=parsed["temp_devstatus"])
 
 
 check_info["icom_repeater.temp"] = {

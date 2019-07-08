@@ -16,11 +16,10 @@ def test_cfg(request, web, site):
     site.set_config("CORE", config.core, with_restart=True)
 
     print "Applying default config"
-    web.add_host(
-        "test-host", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_agent": "no-agent",
-        })
+    web.add_host("test-host", attributes={
+        "ipaddress": "127.0.0.1",
+        "tag_agent": "no-agent",
+    })
 
     web.activate_changes()
     yield config

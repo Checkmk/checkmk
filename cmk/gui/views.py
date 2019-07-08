@@ -471,8 +471,8 @@ class GUIViewRenderer(ViewRenderer):
            and display_options.enabled(display_options.W) \
            and html.output_format == "html":
             for info in sites.live().dead_sites().itervalues():
-                html.show_error("<b>%s - %s</b><br>%s" % (info["site"]["alias"],
-                                                          _('Livestatus error'), info["exception"]))
+                html.show_error("<b>%s - %s</b><br>%s" %
+                                (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
         # FIXME: Sauberer waere noch die Status Icons hier mit aufzunehmen
         if display_options.enabled(display_options.R):
@@ -509,16 +509,16 @@ def load_plugins(force):
     # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
     # will be displayed.
     if multisite_painter_options:
-        raise MKGeneralException(
-            "Found legacy painter option plugins: %s. You will either have to "
-            "remove or migrate them." % ", ".join(multisite_painter_options.keys()))
+        raise MKGeneralException("Found legacy painter option plugins: %s. You will either have to "
+                                 "remove or migrate them." %
+                                 ", ".join(multisite_painter_options.keys()))
     if multisite_layouts:
         raise MKGeneralException("Found legacy layout plugins: %s. You will either have to "
                                  "remove or migrate them." % ", ".join(multisite_layouts.keys()))
     if multisite_datasources:
-        raise MKGeneralException(
-            "Found legacy data source plugins: %s. You will either have to "
-            "remove or migrate them." % ", ".join(multisite_datasources.keys()))
+        raise MKGeneralException("Found legacy data source plugins: %s. You will either have to "
+                                 "remove or migrate them." %
+                                 ", ".join(multisite_datasources.keys()))
 
     # TODO: Kept for compatibility with pre 1.6 plugins
     for cmd_spec in multisite_commands:
@@ -736,10 +736,10 @@ def page_create_view(next_url=None):
 @cmk.gui.pages.register("create_view_infos")
 def page_create_view_infos():
     ds_class, ds_name = html.get_item_input("datasource", data_source_registry)
-    visuals.page_create_visual(
-        'views',
-        ds_class().infos,
-        next_url='edit_view.py?mode=create&datasource=%s&single_infos=%%s' % ds_name)
+    visuals.page_create_visual('views',
+                               ds_class().infos,
+                               next_url='edit_view.py?mode=create&datasource=%s&single_infos=%%s' %
+                               ds_name)
 
 
 #.
@@ -1147,8 +1147,9 @@ def show_filter(f):
 
 def show_filter_form(is_open, filters):
     # Table muss einen anderen Namen, als das Formular
-    html.open_div(
-        id_="filters", class_=["view_form"], style="display: none;" if not is_open else None)
+    html.open_div(id_="filters",
+                  class_=["view_form"],
+                  style="display: none;" if not is_open else None)
 
     html.begin_form("filter")
     html.open_table(class_=["filterform"], cellpadding="0", cellspacing="0", border="0")
@@ -1227,8 +1228,9 @@ def show_view(view, view_renderer, only_count=False):
 
     # Not all filters are really shown later in show_filter_form(), because filters which
     # have a hardcoded value are not changeable by the user
-    show_filters = visuals.filters_of_visual(
-        view.spec, view.datasource.infos, link_filters=view.datasource.link_filters)
+    show_filters = visuals.filters_of_visual(view.spec,
+                                             view.datasource.infos,
+                                             link_filters=view.datasource.link_filters)
     show_filters = visuals.visible_filters_of_visual(view.spec, show_filters)
 
     # FIXME TODO HACK to make grouping single contextes possible on host/service infos
@@ -1517,13 +1519,13 @@ def _do_table_join(view, master_rows, master_filters, sorters):
 
     join_filters.append("Or: %d" % len(join_filters))
     headers = "%s%s\n" % (master_filters, "\n".join(join_filters))
-    rows = slave_ds.table.query(
-        view,
-        columns=list(set([join_master_column, join_slave_column] + join_columns)),
-        headers=headers,
-        only_sites=view.only_sites,
-        limit=None,
-        all_active_filters=None)
+    rows = slave_ds.table.query(view,
+                                columns=list(
+                                    set([join_master_column, join_slave_column] + join_columns)),
+                                headers=headers,
+                                only_sites=view.only_sites,
+                                limit=None,
+                                all_active_filters=None)
     per_master_entry = {}
     current_key = None
     current_entry = None
@@ -1623,12 +1625,11 @@ def view_optiondial(view, option, choices, help_txt):
 
     title = dict(choices).get(value, value)
     html.begin_context_buttons()  # just to be sure
-    html.open_div(
-        id_="optiondial_%s" % option,
-        class_=["optiondial", option, "val_%s" % value],
-        title=help_txt,
-        onclick="cmk.views.dial_option(this, %s, %s, %s)" % (json.dumps(
-            view["name"]), json.dumps(option), json.dumps(choices)))
+    html.open_div(id_="optiondial_%s" % option,
+                  class_=["optiondial", option, "val_%s" % value],
+                  title=help_txt,
+                  onclick="cmk.views.dial_option(this, %s, %s, %s)" %
+                  (json.dumps(view["name"]), json.dumps(option), json.dumps(choices)))
     html.div(title)
     html.close_div()
     html.final_javascript("cmk.views.init_optiondial('optiondial_%s');" % option)
@@ -1686,20 +1687,18 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
 
     if display_options.enabled(display_options.D):
         painter_options = PainterOptions.get_instance()
-        html.toggle_button(
-            "painteroptions",
-            False,
-            "painteroptions",
-            _("Modify display options"),
-            disabled=not painter_options.painter_option_form_enabled())
+        html.toggle_button("painteroptions",
+                           False,
+                           "painteroptions",
+                           _("Modify display options"),
+                           disabled=not painter_options.painter_option_form_enabled())
 
     if display_options.enabled(display_options.C):
-        html.toggle_button(
-            "commands",
-            False,
-            "commands",
-            _("Execute commands on hosts, services and other objects"),
-            hidden=not enable_commands)
+        html.toggle_button("commands",
+                           False,
+                           "commands",
+                           _("Execute commands on hosts, services and other objects"),
+                           hidden=not enable_commands)
         html.toggle_button("commands", False, "commands", "", hidden=enable_commands, disabled=True)
 
         selection_enabled = enable_checkboxes if enable_commands else thisview.get(
@@ -1709,18 +1708,17 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
                 id_="checkbox",
                 icon="checkbox",
                 title=_("Enable/Disable checkboxes for selecting rows for commands"),
-                onclick="location.href='%s';" % html.makeuri([('show_checkboxes',
-                                                               show_checkboxes and '0' or '1')]),
+                onclick="location.href='%s';" %
+                html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
                 isopen=show_checkboxes,
                 hidden=True,
             )
-        html.toggle_button(
-            "checkbox",
-            False,
-            "checkbox",
-            "",
-            hidden=not thisview.get("force_checkboxes"),
-            disabled=True)
+        html.toggle_button("checkbox",
+                           False,
+                           "checkbox",
+                           "",
+                           hidden=not thisview.get("force_checkboxes"),
+                           disabled=True)
         html.javascript('cmk.selection.set_selection_enabled(%s);' % json.dumps(selection_enabled))
 
     if display_options.enabled(display_options.O):
@@ -1754,22 +1752,27 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
                 url = _link_to_host_by_name(host)
             else:
                 url = _link_to_folder_by_path(html.request.var("wato_folder", ""))
-            html.context_button(
-                _("WATO"), url, "wato", id_="wato", bestof=config.context_buttons_to_show)
+            html.context_button(_("WATO"),
+                                url,
+                                "wato",
+                                id_="wato",
+                                bestof=config.context_buttons_to_show)
 
         # Button for creating an instant report (if reporting is available)
         if config.reporting_available() and config.user.may("general.reporting"):
-            html.context_button(
-                _("Export as PDF"),
-                html.makeuri([], filename="report_instant.py"),
-                "report",
-                class_="context_pdf_export")
+            html.context_button(_("Export as PDF"),
+                                html.makeuri([], filename="report_instant.py"),
+                                "report",
+                                class_="context_pdf_export")
 
         # Buttons to other views, dashboards, etc.
         links = visuals.collect_context_links(thisview)
         for linktitle, uri, icon, buttonid in links:
-            html.context_button(
-                linktitle, url=uri, icon=icon, id_=buttonid, bestof=config.context_buttons_to_show)
+            html.context_button(linktitle,
+                                url=uri,
+                                icon=icon,
+                                id_=buttonid,
+                                bestof=config.context_buttons_to_show)
 
     # Customize/Edit view button
     if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
@@ -1782,13 +1785,16 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
             url_vars.append(("load_user", thisview["owner"]))
 
         url = html.makeuri_contextless(url_vars, filename="edit_view.py")
-        html.context_button(
-            _("Edit View"), url, "edit", id_="edit", bestof=config.context_buttons_to_show)
+        html.context_button(_("Edit View"),
+                            url,
+                            "edit",
+                            id_="edit",
+                            bestof=config.context_buttons_to_show)
 
     if display_options.enabled(display_options.E):
         if _show_availability_context_button(view):
-            html.context_button(
-                _("Availability"), html.makeuri([("mode", "availability")]), "availability")
+            html.context_button(_("Availability"), html.makeuri([("mode", "availability")]),
+                                "availability")
 
         if _show_combined_graphs_context_button(view):
             html.context_button(
@@ -1839,8 +1845,8 @@ def _link_to_host_by_name(host_name):
 
 
 def update_context_links(enable_command_toggle, enable_checkbox_toggle):
-    html.javascript(
-        "cmk.views.update_togglebutton('commands', %d);" % (enable_command_toggle and 1 or 0))
+    html.javascript("cmk.views.update_togglebutton('commands', %d);" %
+                    (enable_command_toggle and 1 or 0))
     html.javascript("cmk.views.update_togglebutton('checkbox', %d);" %
                     (enable_command_toggle and enable_checkbox_toggle and 1 or 0,))
 
@@ -2027,8 +2033,9 @@ def show_command_form(is_open, datasource):
     # will be one of "host", "service", "command" or "downtime".
     what = datasource.infos[0]
 
-    html.open_div(
-        id_="commands", class_=["view_form"], style="display:none;" if not is_open else None)
+    html.open_div(id_="commands",
+                  class_=["view_form"],
+                  style="display:none;" if not is_open else None)
     html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
@@ -2129,13 +2136,12 @@ def do_actions(view, what, action_rows, backurl):
     command = None
     title, executor = core_command(what, action_rows[0], 0,
                                    len(action_rows))[1:3]  # just get the title and executor
-    if not html.confirm(
-            _("Do you really want to %(title)s the following %(count)d %(what)s?") % {
-                "title": title,
-                "count": len(action_rows),
-                "what": visual_info_registry[what]().title_plural,
-            },
-            method='GET'):
+    if not html.confirm(_("Do you really want to %(title)s the following %(count)d %(what)s?") % {
+            "title": title,
+            "count": len(action_rows),
+            "what": visual_info_registry[what]().title_plural,
+    },
+                        method='GET'):
         return False
 
     count = 0

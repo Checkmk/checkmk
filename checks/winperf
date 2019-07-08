@@ -115,10 +115,8 @@ def check_win_diskstat(item, params, info):
         raise e
 
     perfdata = [("read", "%dc" % read_bytes_ctr), ("write", "%dc" % write_bytes_ctr)]
-    return (
-        0,
-        "reading %.1f MB/s, writing %.1f MB/s" % (read_per_sec / 1048576, write_per_sec / 1048576),
-        perfdata)
+    return (0, "reading %.1f MB/s, writing %.1f MB/s" %
+            (read_per_sec / 1048576, write_per_sec / 1048576), perfdata)
 
 
 check_info["winperf.cpuusage"] = {

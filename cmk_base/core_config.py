@@ -151,8 +151,8 @@ def host_check_command(config_cache,
             pass  # not needed and not available with CMC
         return "check-mk-custom!" + autodetect_plugin(value[1])
 
-    raise MKGeneralException(
-        "Invalid value %r for host_check_command of host %s." % (value, host_config.hostname))
+    raise MKGeneralException("Invalid value %r for host_check_command of host %s." %
+                             (value, host_config.hostname))
 
 
 def autodetect_plugin(command_line):
@@ -291,8 +291,8 @@ def active_check_arguments(hostname, description, args):
     if not isinstance(args, (str, unicode, list)):
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname,
-                                                                               description))
+            "string of the concatenated arguments (Host: %s, Service: %s)." %
+            (hostname, description))
 
     return config.prepare_check_command(args, hostname, description)
 
@@ -327,11 +327,11 @@ def get_cmk_passive_service_attributes(config_cache, host_config, description, c
 def get_service_attributes(hostname, description, config_cache, checkname=None, params=None):
     attrs = _extra_service_attributes(hostname, description, config_cache, checkname, params)
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
+    attrs.update(_get_tag_attributes(config_cache.labels_of_service(hostname, description),
+                                     "LABEL"))
     attrs.update(
-        _get_tag_attributes(config_cache.labels_of_service(hostname, description), "LABEL"))
-    attrs.update(
-        _get_tag_attributes(
-            config_cache.label_sources_of_service(hostname, description), "LABELSOURCE"))
+        _get_tag_attributes(config_cache.label_sources_of_service(hostname, description),
+                            "LABELSOURCE"))
     return attrs
 
 

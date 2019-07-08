@@ -280,6 +280,6 @@ def post_request(message_constructor, success_code=200):
     if r.status_code == success_code:
         sys.exit(0)
     else:
-        sys.stderr.write(
-            "Failed to send notification. Status: %i, Response: %s\n" % (r.status_code, r.text))
+        sys.stderr.write("Failed to send notification. Status: %i, Response: %s\n" %
+                         (r.status_code, r.text))
         sys.exit(2)

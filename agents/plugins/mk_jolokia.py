@@ -61,8 +61,8 @@ MBEAN_SECTIONS = {
 
 MBEAN_SECTIONS_SPECIFIC = {
     'tomcat': {
-        'jvm_threading': (
-            "*:name=*,type=ThreadPool/maxThreads,currentThreadCount,currentThreadsBusy/",),
+        'jvm_threading':
+            ("*:name=*,type=ThreadPool/maxThreads,currentThreadCount,currentThreadsBusy/",),
     },
 }
 
@@ -138,12 +138,12 @@ QUERY_SPECS_SPECIFIC_LEGACY = {
         # too wide location for addressing the right info
         # ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
     ],
-    "jboss": [("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"],
-               False),],
+    "jboss": [("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path",
+                                                                              "context"], False),],
 }
 
-AVAILABLE_PRODUCTS = sorted(
-    set(QUERY_SPECS_SPECIFIC_LEGACY.keys() + MBEAN_SECTIONS_SPECIFIC.keys()))
+AVAILABLE_PRODUCTS = sorted(set(QUERY_SPECS_SPECIFIC_LEGACY.keys() +
+                                MBEAN_SECTIONS_SPECIFIC.keys()))
 
 # Default global configuration: key, value [, help]
 DEFAULT_CONFIG_TUPLES = (

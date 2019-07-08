@@ -50,8 +50,8 @@ def dump_host(hostname):
     else:
         color = tty.bgblue
         add_txt = ""
-    console.output(
-        "%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
+    console.output("%s%s%s%-78s %s\n" %
+                   (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(host_config)
 
@@ -131,8 +131,8 @@ def _evaluate_params(params):
         return params
 
     current_params = checking.determine_check_params(params)
-    return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(time.time()),
-                                                  current_params)
+    return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(
+        time.time()), current_params)
 
 
 def _ip_address_for_dump_host(host_config, family=None):

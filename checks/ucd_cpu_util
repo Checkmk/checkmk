@@ -60,16 +60,21 @@ def check_ucd_cpu_util(item, params, info):
     wait = 100 * (parts[4])
     util = user + system + wait
 
-    yield check_levels(
-        user, "user", None, human_readable_func=get_percent_human_readable, infoname="User")
-    yield check_levels(
-        system, "system", None, human_readable_func=get_percent_human_readable, infoname="System")
-    yield check_levels(
-        wait,
-        "wait",
-        params.get("iowait"),
-        human_readable_func=get_percent_human_readable,
-        infoname="Wait")
+    yield check_levels(user,
+                       "user",
+                       None,
+                       human_readable_func=get_percent_human_readable,
+                       infoname="User")
+    yield check_levels(system,
+                       "system",
+                       None,
+                       human_readable_func=get_percent_human_readable,
+                       infoname="System")
+    yield check_levels(wait,
+                       "wait",
+                       params.get("iowait"),
+                       human_readable_func=get_percent_human_readable,
+                       infoname="Wait")
 
     for util_result in check_cpu_util(util, params):
         yield util_result

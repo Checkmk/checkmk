@@ -315,12 +315,11 @@ def inventory_bluenet2_powerrail_temp(parsed):
 def check_bluenet2_powerrail_temp(item, params, parsed):
     if item in parsed["sensors"].get("temp", {}):
         reading, (state, state_readable) = parsed["sensors"]["temp"][item]
-        return check_temperature(
-            reading,
-            params,
-            "bluenet2_powerrail_temp_%s" % item,
-            dev_status=state,
-            dev_status_name=state_readable)
+        return check_temperature(reading,
+                                 params,
+                                 "bluenet2_powerrail_temp_%s" % item,
+                                 dev_status=state,
+                                 dev_status_name=state_readable)
 
 
 check_info["bluenet2_powerrail.temp"] = {

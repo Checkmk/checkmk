@@ -59,17 +59,16 @@ class RulespecCheckgroupParametersMssqlConnections(CheckParameterRulespecWithIte
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[(
-                "levels",
-                Tuple(
-                    title=_("Upper levels for the number of active database connections"),
-                    elements=[
-                        Integer(title=_("Warning if over"), default_value=20),
-                        Integer(title=_("Critical if over"), default_value=50),
-                    ],
-                ),
-            )],)
+        return Dictionary(elements=[(
+            "levels",
+            Tuple(
+                title=_("Upper levels for the number of active database connections"),
+                elements=[
+                    Integer(title=_("Warning if over"), default_value=20),
+                    Integer(title=_("Critical if over"), default_value=50),
+                ],
+            ),
+        )],)
 
     @property
     def item_spec(self):

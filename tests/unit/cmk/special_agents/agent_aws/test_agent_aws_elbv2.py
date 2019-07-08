@@ -84,8 +84,11 @@ def get_elbv2_sections():
         elbv2_summary_distributor = ResultDistributor()
 
         elbv2_limits = ELBv2Limits(fake_elbv2_client, region, config, elbv2_limits_distributor)
-        elbv2_summary = ELBSummaryGeneric(
-            fake_elbv2_client, region, config, elbv2_summary_distributor, resource='elbv2')
+        elbv2_summary = ELBSummaryGeneric(fake_elbv2_client,
+                                          region,
+                                          config,
+                                          elbv2_summary_distributor,
+                                          resource='elbv2')
         elbv2_labels = ELBLabelsGeneric(fake_elbv2_client, region, config, resource='elbv2')
         elbv2_target_groups = ELBv2TargetGroups(fake_elbv2_client, region, config)
         elbv2_application = ELBv2Application(fake_cloudwatch_client, region, config)
@@ -102,30 +105,33 @@ def get_elbv2_sections():
 
 
 elbv2_tags_params = [
-    ((None, None), ['LoadBalancerName-0', 'LoadBalancerName-1', 'LoadBalancerName-2'],
-     ['LoadBalancerName-0', 'LoadBalancerName-1']),
+    ((None, None), ['LoadBalancerName-0', 'LoadBalancerName-1',
+                    'LoadBalancerName-2'], ['LoadBalancerName-0', 'LoadBalancerName-1']),
     (([['FOO']], [['BAR']]), [], []),
     (([['Key-0']], [['Value-0']]), ['LoadBalancerName-0', 'LoadBalancerName-1'],
      ['LoadBalancerName-0', 'LoadBalancerName-1']),
-    (([['Key-0', 'Foo']], [['Value-0', 'Bar']]), ['LoadBalancerName-0', 'LoadBalancerName-1'],
-     ['LoadBalancerName-0', 'LoadBalancerName-1']),
+    (([['Key-0',
+        'Foo']], [['Value-0',
+                   'Bar']]), ['LoadBalancerName-0',
+                              'LoadBalancerName-1'], ['LoadBalancerName-0', 'LoadBalancerName-1']),
 ]
 
 elbv2_params = [
-    (None, (None, None), ['LoadBalancerName-0', 'LoadBalancerName-1', 'LoadBalancerName-2'],
-     ['LoadBalancerName-0', 'LoadBalancerName-1']),
+    (None, (None, None), ['LoadBalancerName-0', 'LoadBalancerName-1',
+                          'LoadBalancerName-2'], ['LoadBalancerName-0', 'LoadBalancerName-1']),
     (None, ([['FOO']], [['BAR']]), [], []),
     (None, ([['Key-0']], [['Value-0']]), ['LoadBalancerName-0', 'LoadBalancerName-1'],
      ['LoadBalancerName-0', 'LoadBalancerName-1']),
     (None, ([['Key-0', 'Foo']], [['Value-0', 'Bar']]), ['LoadBalancerName-0', 'LoadBalancerName-1'],
      ['LoadBalancerName-0', 'LoadBalancerName-1']),
     (['LoadBalancerName-0'], (None, None), ['LoadBalancerName-0'], ['LoadBalancerName-0']),
-    (['LoadBalancerName-0', 'Foobar'], (None, None), ['LoadBalancerName-0'],
-     ['LoadBalancerName-0']),
+    (['LoadBalancerName-0',
+      'Foobar'], (None, None), ['LoadBalancerName-0'], ['LoadBalancerName-0']),
     (['LoadBalancerName-0', 'LoadBalancerName-1'], (None, None),
      ['LoadBalancerName-0', 'LoadBalancerName-1'], ['LoadBalancerName-0', 'LoadBalancerName-1']),
-    (['LoadBalancerName-0', 'LoadBalancerName-2'], (None, None),
-     ['LoadBalancerName-0', 'LoadBalancerName-2'], ['LoadBalancerName-0']),
+    (['LoadBalancerName-0',
+      'LoadBalancerName-2'], (None, None), ['LoadBalancerName-0',
+                                            'LoadBalancerName-2'], ['LoadBalancerName-0']),
 ]
 
 

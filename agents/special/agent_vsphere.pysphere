@@ -712,8 +712,8 @@ def output_datastores():
 
     # print inspect.getmembers(MORTypes)
     print "<<<esx_vsphere_datastores:sep(%d)>>>" % ord('\t')
-    rows = host._retrieve_properties_traversal(
-        property_names=property_names, obj_type=MORTypes.Datastore)
+    rows = host._retrieve_properties_traversal(property_names=property_names,
+                                               obj_type=MORTypes.Datastore)
     # if the user has no permission to host / datastores, rows is None, skip it then
     if rows:
         last_name = None

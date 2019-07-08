@@ -63,5 +63,5 @@ def output_profile():
                 "stats.sort_stats('time').print_stats()\n" % _profile_path)
     os.chmod(show_profile, 0755)
 
-    console.output(
-        "Profile '%s' written. Please run %s.\n" % (_profile_path, show_profile), stream=sys.stderr)
+    console.output("Profile '%s' written. Please run %s.\n" % (_profile_path, show_profile),
+                   stream=sys.stderr)

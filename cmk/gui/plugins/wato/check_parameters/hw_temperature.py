@@ -57,15 +57,14 @@ class RulespecCheckgroupParametersHwTemperature(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            help=_("Temperature levels for hardware devices like "
-                   "Brocade switches with (potentially) several "
-                   "temperature sensors. Sensor IDs can be selected "
-                   "in the rule."),
-            elements=[
-                Integer(title=_("warning at"), unit=u"°C", default_value=35),
-                Integer(title=_("critical at"), unit=u"°C", default_value=40),
-            ])
+        return Tuple(help=_("Temperature levels for hardware devices like "
+                            "Brocade switches with (potentially) several "
+                            "temperature sensors. Sensor IDs can be selected "
+                            "in the rule."),
+                     elements=[
+                         Integer(title=_("warning at"), unit=u"°C", default_value=35),
+                         Integer(title=_("critical at"), unit=u"°C", default_value=40),
+                     ])
 
     @property
     def item_spec(self):

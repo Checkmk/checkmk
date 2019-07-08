@@ -20,13 +20,12 @@ def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(
-    params=[('ohm', True), ('openhardwaremonitor', True), ('ohm', False),
-            ('openhardwaremonitor', False)],
-    ids=[
-        'sections=ohm', 'sections=openhardwaremonitor', 'sections=ohm_systemtime',
-        'sections=openhardwaremonitor_systemtime'
-    ])
+@pytest.fixture(params=[('ohm', True), ('openhardwaremonitor', True), ('ohm', False),
+                        ('openhardwaremonitor', False)],
+                ids=[
+                    'sections=ohm', 'sections=openhardwaremonitor', 'sections=ohm_systemtime',
+                    'sections=openhardwaremonitor_systemtime'
+                ])
 def testconfig(request, make_ini_config):
     Globals.alone = request.param[1]
     if Globals.alone:
@@ -63,9 +62,8 @@ def manage_ohm_binaries():
         binaries = ['OpenHardwareMonitorCLI.exe', 'OpenHardwareMonitorLib.dll']
 
         sourcedir = os.path.normpath(
-            os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'omd', 'packages',
-                'openhardwaremonitor'))
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'omd',
+                         'packages', 'openhardwaremonitor'))
 
         targetdir = os.path.join(src_exec_dir, 'bin')
         targetdir_win = targetdir.replace('/', '\\')

@@ -56,24 +56,32 @@ def check_vms_cpu(_no_item, params, parsed):
     util = 100. - parsed["idle"]
     system = util - user - wait
 
-    yield check_levels(
-        user, "user", None, human_readable_func=get_percent_human_readable, infoname="User")
-    yield check_levels(
-        system, "system", None, human_readable_func=get_percent_human_readable, infoname="System")
-    yield check_levels(
-        wait,
-        "wait",
-        params.get("iowait"),
-        human_readable_func=get_percent_human_readable,
-        infoname="Wait")
+    yield check_levels(user,
+                       "user",
+                       None,
+                       human_readable_func=get_percent_human_readable,
+                       infoname="User")
+    yield check_levels(system,
+                       "system",
+                       None,
+                       human_readable_func=get_percent_human_readable,
+                       infoname="System")
+    yield check_levels(wait,
+                       "wait",
+                       params.get("iowait"),
+                       human_readable_func=get_percent_human_readable,
+                       infoname="Wait")
 
     for util_result in check_cpu_util(util, params):
         yield util_result
 
     num_cpus = parsed['num_cpus']
     unit = "CPU" if num_cpus == 1 else "CPUs"
-    yield check_levels(
-        num_cpus, 'cpu_entitlement', None, unit=unit, infoname="100% corresponding to")
+    yield check_levels(num_cpus,
+                       'cpu_entitlement',
+                       None,
+                       unit=unit,
+                       infoname="100% corresponding to")
 
 
 check_info['vms_cpu'] = {

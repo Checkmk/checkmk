@@ -152,12 +152,11 @@ class PainterOptionMatrixOmitUniform(PainterOption):
 
     @property
     def valuespec(self):
-        return DropdownChoice(
-            title=_("Find differences..."),
-            choices=[
-                (False, _("Always show all rows")),
-                (True, _("Omit rows where all columns are identical")),
-            ])
+        return DropdownChoice(title=_("Find differences..."),
+                              choices=[
+                                  (False, _("Always show all rows")),
+                                  (True, _("Omit rows where all columns are identical")),
+                              ])
 
 
 #.
@@ -233,8 +232,11 @@ def paint_icons(what, row):
                     onclick = url[8:]
                     url = 'javascript:void(0)'
 
-                output += html.render_icon_button(
-                    url, title, icon_name, onclick=onclick, target=target_frame)
+                output += html.render_icon_button(url,
+                                                  title,
+                                                  icon_name,
+                                                  onclick=onclick,
+                                                  target=target_frame)
             else:
                 output += html.render_icon(icon_name, title)
         else:
@@ -2543,18 +2545,19 @@ class PainterHost(Painter):
 
     @property
     def parameters(self):
-        elements = [("color_choices",
-                     ListChoice(
-                         choices=[("colorize_up", _("Colorize background if host is up")),
-                                  ("colorize_down", _("Colorize background if host is down")),
-                                  ("colorize_unreachable",
-                                   _("Colorize background if host unreachable")),
-                                  ("colorize_pending", _("Colorize background if host is pending")),
-                                  ("colorize_downtime",
-                                   _("Colorize background if host is downtime"))],
-                         title=_("Coloring"),
-                         help=_("Here you can configure the background color for specific states. "
-                                "The coloring for host in dowtime overrules all other coloring.")))]
+        elements = [
+            ("color_choices",
+             ListChoice(choices=[
+                 ("colorize_up", _("Colorize background if host is up")),
+                 ("colorize_down", _("Colorize background if host is down")),
+                 ("colorize_unreachable", _("Colorize background if host unreachable")),
+                 ("colorize_pending", _("Colorize background if host is pending")),
+                 ("colorize_downtime", _("Colorize background if host is downtime"))
+             ],
+                        title=_("Coloring"),
+                        help=_("Here you can configure the background color for specific states. "
+                               "The coloring for host in dowtime overrules all other coloring.")))
+        ]
 
         return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
 
@@ -3446,8 +3449,8 @@ class PainterHostgroupHosts(Painter):
     def render(self, row, cell):
         h = ""
         for host, state, checked in row["hostgroup_members_with_state"]:
-            link = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(row["site"]),
-                                                               html.urlencode(host))
+            link = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(
+                row["site"]), html.urlencode(host))
             if checked:
                 css = "hstate%d" % state
             else:
@@ -4067,8 +4070,10 @@ class PainterCommentExpires(Painter):
         return ['ts_format', 'ts_date']
 
     def render(self, row, cell):
-        return paint_age(
-            row["comment_expire_time"], row["comment_expire_time"] != 0, 3600, what='future')
+        return paint_age(row["comment_expire_time"],
+                         row["comment_expire_time"] != 0,
+                         3600,
+                         what='future')
 
 
 @painter_registry.register
@@ -5045,8 +5050,8 @@ class ABCPainterTagsWithTitles(Painter):
         for tag_group_id, tag_id in get_tag_groups(row, self.object_type).items():
             tag_group = config.tags.get_tag_group(tag_group_id)
             if tag_group:
-                entries.append((tag_group.title, dict(tag_group.get_tag_choices()).get(
-                    tag_id, tag_id)))
+                entries.append(
+                    (tag_group.title, dict(tag_group.get_tag_choices()).get(tag_id, tag_id)))
                 continue
 
             aux_tag_title = dict(config.tags.aux_tag_list.get_choices()).get(tag_group_id)
@@ -5161,11 +5166,10 @@ class PainterHostLabels(Painter):
         return "host_labels"
 
     def render(self, row, cell):
-        return "", render_labels(
-            get_labels(row, "host"),
-            "host",
-            with_links=True,
-            label_sources=get_label_sources(row, "host"))
+        return "", render_labels(get_labels(row, "host"),
+                                 "host",
+                                 with_links=True,
+                                 label_sources=get_label_sources(row, "host"))
 
 
 @painter_registry.register
@@ -5191,8 +5195,7 @@ class PainterServiceLabels(Painter):
         return "service_labels"
 
     def render(self, row, cell):
-        return "", render_labels(
-            get_labels(row, "service"),
-            "service",
-            with_links=True,
-            label_sources=get_label_sources(row, "service"))
+        return "", render_labels(get_labels(row, "service"),
+                                 "service",
+                                 with_links=True,
+                                 label_sources=get_label_sources(row, "service"))

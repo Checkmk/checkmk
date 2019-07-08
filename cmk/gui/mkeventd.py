@@ -186,8 +186,8 @@ def send_event(event):
 
     rfc = [
         "<%d>@%d" % (prio, int(time.time())),
-        "%d %s|%s %s: %s\n" % (event["sl"], event["host"], event["ipaddress"], event["application"],
-                               event["text"]),
+        "%d %s|%s %s: %s\n" %
+        (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
     execute_command("CREATE", map(cmk.utils.make_utf8, rfc), site=event["site"])
@@ -306,8 +306,8 @@ def get_total_stats(only_sites):
 def get_stats_per_site(only_sites, stats_keys):
     try:
         sites.live().set_only_sites(only_sites)
-        for list_row in sites.live().query(
-                "GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys)):
+        for list_row in sites.live().query("GET eventconsolestatus\nColumns: %s" %
+                                           " ".join(stats_keys)):
             yield dict(zip(stats_keys, list_row))
     finally:
         sites.live().set_only_sites(None)

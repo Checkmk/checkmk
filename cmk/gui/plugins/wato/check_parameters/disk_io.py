@@ -62,23 +62,19 @@ class RulespecCheckgroupParametersDiskIo(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("read",
-                 Levels(
-                     title=_("Read throughput"),
-                     unit=_("MB/s"),
-                     default_value=None,
-                     default_levels=(50.0, 100.0))),
-                ("write",
-                 Levels(
-                     title=_("Write throughput"),
-                     unit=_("MB/s"),
-                     default_value=None,
-                     default_levels=(50.0, 100.0))),
-                ("average",
-                 Integer(
-                     title=_("Average"),
+        return Dictionary(elements=[
+            ("read",
+             Levels(title=_("Read throughput"),
+                    unit=_("MB/s"),
+                    default_value=None,
+                    default_levels=(50.0, 100.0))),
+            ("write",
+             Levels(title=_("Write throughput"),
+                    unit=_("MB/s"),
+                    default_value=None,
+                    default_levels=(50.0, 100.0))),
+            ("average",
+             Integer(title=_("Average"),
                      help=_("When averaging is set, a floating average value "
                             "of the disk throughput is computed and the levels for read "
                             "and write will be applied to the average instead of the current "
@@ -86,61 +82,59 @@ class RulespecCheckgroupParametersDiskIo(CheckParameterRulespecWithItem):
                      default_value=5,
                      minvalue=1,
                      unit=_("minutes"))),
-                ("latency",
-                 Tuple(
-                     title=_("IO Latency"),
-                     elements=[
-                         Float(title=_("warning at"), unit=_("ms"), default_value=80.0),
-                         Float(title=_("critical at"), unit=_("ms"), default_value=160.0),
-                     ],
-                 )),
-                (
-                    "latency_perfdata",
-                    Checkbox(
-                        title=_("Performance Data for Latency"),
-                        label=_("Collect performance data for disk latency"),
-                        help=_("Note: enabling performance data for the latency might "
-                               "cause incompatibilities with existing historical data "
-                               "if you are running PNP4Nagios in SINGLE mode.")),
-                ),
-                ("read_ql",
-                 Tuple(
-                     title=_("Read Queue-Length"),
-                     elements=[
-                         Float(title=_("warning at"), default_value=80.0),
-                         Float(title=_("critical at"), default_value=90.0),
-                     ],
-                 )),
-                ("write_ql",
-                 Tuple(
-                     title=_("Write Queue-Length"),
-                     elements=[
-                         Float(title=_("warning at"), default_value=80.0),
-                         Float(title=_("critical at"), default_value=90.0),
-                     ],
-                 )),
-                (
-                    "ql_perfdata",
-                    Checkbox(
-                        title=_("Performance Data for Queue Length"),
-                        label=_("Collect performance data for disk latency"),
-                        help=_("Note: enabling performance data for the latency might "
-                               "cause incompatibilities with existing historical data "
-                               "if you are running PNP4Nagios in SINGLE mode.")),
-                ),
-                ("read_ios",
-                 Levels(
-                     title=_("Read operations"),
-                     unit=_("1/s"),
-                     default_levels=(400.0, 600.0),
-                 )),
-                ("write_ios",
-                 Levels(
-                     title=_("Write operations"),
-                     unit=_("1/s"),
-                     default_levels=(300.0, 400.0),
-                 )),
-            ],)
+            ("latency",
+             Tuple(
+                 title=_("IO Latency"),
+                 elements=[
+                     Float(title=_("warning at"), unit=_("ms"), default_value=80.0),
+                     Float(title=_("critical at"), unit=_("ms"), default_value=160.0),
+                 ],
+             )),
+            (
+                "latency_perfdata",
+                Checkbox(title=_("Performance Data for Latency"),
+                         label=_("Collect performance data for disk latency"),
+                         help=_("Note: enabling performance data for the latency might "
+                                "cause incompatibilities with existing historical data "
+                                "if you are running PNP4Nagios in SINGLE mode.")),
+            ),
+            ("read_ql",
+             Tuple(
+                 title=_("Read Queue-Length"),
+                 elements=[
+                     Float(title=_("warning at"), default_value=80.0),
+                     Float(title=_("critical at"), default_value=90.0),
+                 ],
+             )),
+            ("write_ql",
+             Tuple(
+                 title=_("Write Queue-Length"),
+                 elements=[
+                     Float(title=_("warning at"), default_value=80.0),
+                     Float(title=_("critical at"), default_value=90.0),
+                 ],
+             )),
+            (
+                "ql_perfdata",
+                Checkbox(title=_("Performance Data for Queue Length"),
+                         label=_("Collect performance data for disk latency"),
+                         help=_("Note: enabling performance data for the latency might "
+                                "cause incompatibilities with existing historical data "
+                                "if you are running PNP4Nagios in SINGLE mode.")),
+            ),
+            ("read_ios",
+             Levels(
+                 title=_("Read operations"),
+                 unit=_("1/s"),
+                 default_levels=(400.0, 600.0),
+             )),
+            ("write_ios",
+             Levels(
+                 title=_("Write operations"),
+                 unit=_("1/s"),
+                 default_levels=(300.0, 400.0),
+             )),
+        ],)
 
     @property
     def item_spec(self):

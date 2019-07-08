@@ -168,8 +168,8 @@ def local_compute_state(perfdata):
 def inventory_local(parsed):
     if None in parsed:
         output = parsed[None][0]
-        raise MKGeneralException(
-            "Invalid line in agent section <<<local>>>: %s" % " ".join(output.line))
+        raise MKGeneralException("Invalid line in agent section <<<local>>>: %s" %
+                                 " ".join(output.line))
     return [(key, {}) for key in parsed]
 
 
@@ -218,8 +218,8 @@ def check_local(_no_item, params, data):
         node_dict.setdefault(result.item, _parse_local_line(result))
     if not collected_stats:
         most_recent_expirery = min(r.expired for r in data)
-        raise MKCounterWrapped(
-            "Cached data expired %s ago." % get_age_human_readable(most_recent_expirery))
+        raise MKCounterWrapped("Cached data expired %s ago." %
+                               get_age_human_readable(most_recent_expirery))
 
     if params is not None and params.get("outcome_on_cluster", "worst") == "best":
         yield _calculate_local_best_state(collected_stats)

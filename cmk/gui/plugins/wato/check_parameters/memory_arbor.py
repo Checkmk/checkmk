@@ -50,22 +50,20 @@ from cmk.gui.plugins.wato import (
 
 def UsedSize(**args):
     GB = 1024 * 1024 * 1024
-    return Tuple(
-        elements=[
-            Filesize(title=_("Warning at"), default_value=1 * GB),
-            Filesize(title=_("Critical at"), default_value=2 * GB),
-        ],
-        **args)
+    return Tuple(elements=[
+        Filesize(title=_("Warning at"), default_value=1 * GB),
+        Filesize(title=_("Critical at"), default_value=2 * GB),
+    ],
+                 **args)
 
 
 def FreeSize(**args):
     GB = 1024 * 1024 * 1024
-    return Tuple(
-        elements=[
-            Filesize(title=_("Warning below"), default_value=2 * GB),
-            Filesize(title=_("Critical below"), default_value=1 * GB),
-        ],
-        **args)
+    return Tuple(elements=[
+        Filesize(title=_("Warning below"), default_value=2 * GB),
+        Filesize(title=_("Critical below"), default_value=1 * GB),
+    ],
+                 **args)
 
 
 def UsedPercentage(default_percents=None, of_what=None):
@@ -82,11 +80,10 @@ def UsedPercentage(default_percents=None, of_what=None):
             unit=unit,
             maxvalue=maxvalue,
         ),
-        Percentage(
-            title=_("Critical at"),
-            default_value=default_percents and default_percents[1] or 90.0,
-            unit=unit,
-            maxvalue=maxvalue),
+        Percentage(title=_("Critical at"),
+                   default_value=default_percents and default_percents[1] or 90.0,
+                   unit=unit,
+                   maxvalue=maxvalue),
     ])
 
 
@@ -96,14 +93,12 @@ def FreePercentage(default_percents=None, of_what=None):
     else:
         unit = "%"
     return Tuple(elements=[
-        Percentage(
-            title=_("Warning below"),
-            default_value=default_percents and default_percents[0] or 20.0,
-            unit=unit),
-        Percentage(
-            title=_("Critical below"),
-            default_value=default_percents and default_percents[1] or 10.0,
-            unit=unit),
+        Percentage(title=_("Warning below"),
+                   default_value=default_percents and default_percents[0] or 20.0,
+                   unit=unit),
+        Percentage(title=_("Critical below"),
+                   default_value=default_percents and default_percents[1] or 10.0,
+                   unit=unit),
     ])
 
 
@@ -141,8 +136,7 @@ class RulespecCheckgroupParametersMemoryArbor(CheckParameterRulespecWithoutItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels_ram", DualMemoryLevels(_("RAM"))),
-                ("levels_swap", DualMemoryLevels(_("Swap"))),
-            ],)
+        return Dictionary(elements=[
+            ("levels_ram", DualMemoryLevels(_("RAM"))),
+            ("levels_swap", DualMemoryLevels(_("Swap"))),
+        ],)

@@ -59,23 +59,21 @@ class RulespecCheckgroupParametersPfmHealth(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                (
-                    "health_lifetime_perc",
-                    Tuple(
-                        title=_("Lower levels for health lifetime"),
-                        elements=[
-                            Percentage(title=_("Warning if below"), default_value=10),
-                            Percentage(title=_("Critical if below"), default_value=5)
-                        ],
-                    ),
+        return Dictionary(elements=[
+            (
+                "health_lifetime_perc",
+                Tuple(
+                    title=_("Lower levels for health lifetime"),
+                    elements=[
+                        Percentage(title=_("Warning if below"), default_value=10),
+                        Percentage(title=_("Critical if below"), default_value=5)
+                    ],
                 ),
-            ],)
+            ),
+        ],)
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Number or ID of the disk"),
-            help=_("How the disks are named depends on the type of hardware being "
-                   "used. Please look at already discovered checks for examples."))
+        return TextAscii(title=_("Number or ID of the disk"),
+                         help=_("How the disks are named depends on the type of hardware being "
+                                "used. Please look at already discovered checks for examples."))

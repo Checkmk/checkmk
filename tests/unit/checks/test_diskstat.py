@@ -40,10 +40,12 @@ pytestmark = pytest.mark.checks
         (0, 'Average Write Wait: 0.00 ms', [('disk_average_write_wait', 0.0)]),
         (0, 'Latency: 0.00 ms', [('disk_latency', 0.0)]),
         (0, 'Average Queue Length: 0.00', [('disk_queue_length', 0.0)]),
-        (1, 'Read operations: 201.00 1/s (warn/crit at 200.00 1/s/300.00 1/s)',
-         [('disk_read_ios', 201.0, 200.0, 300.0)]),
-        (1, 'Write operations: 401.00 1/s (warn/crit at 400.00 1/s/500.00 1/s)',
-         [('disk_write_ios', 401.0, 400.0, 500.0)]),
+        (1, 'Read operations: 201.00 1/s (warn/crit at 200.00 1/s/300.00 1/s)', [
+            ('disk_read_ios', 201.0, 200.0, 300.0)
+        ]),
+        (1, 'Write operations: 401.00 1/s (warn/crit at 400.00 1/s/500.00 1/s)', [
+            ('disk_write_ios', 401.0, 400.0, 500.0)
+        ]),
         (0, '', [('disk_average_read_request_size', 0.0), ('disk_average_request_size', 0.0),
                  ('disk_average_write_request_size', 0.0)])]),
     ("sda", {
@@ -80,10 +82,12 @@ pytestmark = pytest.mark.checks
         (0, 'Average Write Wait: 0.00 ms', [('disk_average_write_wait', 0.0)]),
         (0, 'Latency: 0.00 ms', [('disk_latency', 0.0)]),
         (0, 'Average Queue Length: 0.00', [('disk_queue_length', 0.0)]),
-        (2, 'Read operations: 301.00 1/s (warn/crit at 200.00 1/s/300.00 1/s)',
-         [('disk_read_ios', 301.0, 200.0, 300.0)]),
-        (2, 'Write operations: 501.00 1/s (warn/crit at 400.00 1/s/500.00 1/s)',
-         [('disk_write_ios', 501.0, 400.0, 500.0)]),
+        (2, 'Read operations: 301.00 1/s (warn/crit at 200.00 1/s/300.00 1/s)', [
+            ('disk_read_ios', 301.0, 200.0, 300.0)
+        ]),
+        (2, 'Write operations: 501.00 1/s (warn/crit at 400.00 1/s/500.00 1/s)', [
+            ('disk_write_ios', 501.0, 400.0, 500.0)
+        ]),
         (0, '', [('disk_average_read_request_size', 0.0), ('disk_average_request_size', 0.0),
                  ('disk_average_write_request_size', 0.0)])])
 ])

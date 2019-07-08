@@ -36,12 +36,11 @@ def check_kentix_temp(item, params, info):
     value, lower_warn, upper_warn, _alarm, _text = info[0]
     temp = float(value) / 10
 
-    return check_temperature(
-        temp,
-        params,
-        "kentix_temp_%s" % item,
-        dev_levels=(float(upper_warn), float(upper_warn)),
-        dev_levels_lower=(float(lower_warn), float(lower_warn)))
+    return check_temperature(temp,
+                             params,
+                             "kentix_temp_%s" % item,
+                             dev_levels=(float(upper_warn), float(upper_warn)),
+                             dev_levels_lower=(float(lower_warn), float(lower_warn)))
 
 
 check_info["kentix_temp"] = {

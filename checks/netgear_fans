@@ -128,8 +128,8 @@ def check_netgear_fans(item, params, parsed):
     reading_str = data["reading_str"]
     if reading_str != "Not Supported":
         yield check_fan(int(data["reading_str"]), params)
-    state, state_readable = netgear_map_state_txt_to_int(data["state"], parsed.get(
-        "__version__", ""))
+    state, state_readable = netgear_map_state_txt_to_int(data["state"],
+                                                         parsed.get("__version__", ""))
     yield state, "Status: %s" % state_readable
 
 

@@ -153,8 +153,7 @@ class RulespecCheckgroupParametersFilestats(CheckParameterRulespecWithItem):
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("File Group Name"),
-            help=_("This name must match the name of the section defined "
-                   "in the mk_filestats configuration."),
-            allow_empty=True)
+        return TextAscii(title=_("File Group Name"),
+                         help=_("This name must match the name of the section defined "
+                                "in the mk_filestats configuration."),
+                         allow_empty=True)

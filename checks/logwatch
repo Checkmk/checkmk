@@ -570,8 +570,8 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
         else:
             logwatch_file = open(logfile, 'w')
     except Exception, e:
-        raise MKGeneralException(
-            "User %s cannot open file for writing: %s" % (logwatch_username(), e))
+        raise MKGeneralException("User %s cannot open file for writing: %s" %
+                                 (logwatch_username(), e))
 
     pattern_hash = hashlib.sha256(repr(patterns)).hexdigest()
     net_lines = 0
@@ -707,8 +707,8 @@ def inventory_logwatch_ec(info, one_svc_per_log):
     forwarded_logs, _not_forwarded_logs = logwatch_select_forwarded(info)
 
     if forwarded_logs:
-        forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters(
-            'logwatch_ec', []))
+        forward_settings = host_extra_conf(host_name(),
+                                           get_checkgroup_parameters('logwatch_ec', []))
 
         merged_rules = {}
         for rule in forward_settings[-1::-1]:
@@ -931,8 +931,8 @@ def logwatch_forward_spool_directory(method, item, messages):
         return LogwatchFordwardResult()
 
     spool_path = method[6:]
-    file_name = '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or '',
-                              time.time())
+    file_name = '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or
+                              '', time.time())
     if not os.path.exists(spool_path):
         os.makedirs(spool_path)
     file('%s/%s' % (spool_path, file_name), 'w').write(('\n'.join(messages)).encode("utf-8") + '\n')

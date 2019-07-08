@@ -51,8 +51,8 @@ def ps_wato_configured_inventory_rules(invrules):
         if "cpu_rescale_max" not in default_params:
             default_params["cpu_rescale_max"] = None
 
-        inventory_specs.append((value['descr'], value.get('match'), value.get('user'),
-                                default_params))
+        inventory_specs.append(
+            (value['descr'], value.get('match'), value.get('user'), default_params))
 
     return inventory_specs
 
@@ -208,9 +208,9 @@ def format_process_list(processes, html_output):
         header_line = ""
 
     return table_bracket % (header_line + "".join([
-        line_bracket % cell_seperator.join(
-            [cell_bracket % (key, format_value(value))
-             for key, value in process])
+        line_bracket %
+        cell_seperator.join([cell_bracket % (key, format_value(value))
+                             for key, value in process])
         for process in processes
     ]))
 

@@ -155,8 +155,8 @@ def cached_dns_lookup(hostname, family):
             return cached_ip
         else:
             cache[cache_id] = None
-            raise MKIPAddressLookupError(
-                "Failed to lookup IPv%d address of %s via DNS: %s" % (family, hostname, e))
+            raise MKIPAddressLookupError("Failed to lookup IPv%d address of %s via DNS: %s" %
+                                         (family, hostname, e))
 
 
 def _initialize_ip_lookup_cache():

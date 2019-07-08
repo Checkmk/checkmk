@@ -75,12 +75,11 @@ def check_sap_hana_backup(item, params, node_data):
         yield state, "Status: %s" % state_name
 
         yield 0, "Last: %s" % data['backup_time_readable']
-        yield check_levels(
-            now - data['sys_end_time'],
-            "backup_age",
-            params['backup_age'],
-            human_readable_func=get_age_human_readable,
-            infoname="Age")
+        yield check_levels(now - data['sys_end_time'],
+                           "backup_age",
+                           params['backup_age'],
+                           human_readable_func=get_age_human_readable,
+                           infoname="Age")
 
         comment = data["comment"]
         if comment:

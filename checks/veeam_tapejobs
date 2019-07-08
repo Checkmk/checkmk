@@ -72,12 +72,11 @@ def check_veeam_tapejobs(item, params, data):
 
     yield 0, "Backup in progress since %s (currently %s)" % (
         get_timestamp_human_readable(running_since), last_state.lower())
-    yield check_levels(
-        running_time,
-        None,
-        params,
-        human_readable_func=get_age_human_readable,
-        infoname="Running time")
+    yield check_levels(running_time,
+                       None,
+                       params,
+                       human_readable_func=get_age_human_readable,
+                       infoname="Running time")
 
 
 check_info["veeam_tapejobs"] = {

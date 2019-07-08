@@ -195,9 +195,10 @@ def save_file(path, content, mode=0660):
         # Please note that this already creates the file with 0 bytes (in case it is missing).
         aquire_lock(path)
 
-        with tempfile.NamedTemporaryFile(
-                "w", dir=os.path.dirname(path), prefix=".%s.new" % os.path.basename(path),
-                delete=False) as tmp:
+        with tempfile.NamedTemporaryFile("w",
+                                         dir=os.path.dirname(path),
+                                         prefix=".%s.new" % os.path.basename(path),
+                                         delete=False) as tmp:
             tmp_path = tmp.name
             os.chmod(tmp_path, mode)
             tmp.write(content)

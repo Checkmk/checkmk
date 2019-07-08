@@ -44,13 +44,12 @@ factory_settings['msexch_info_store_defaultlevels'] = {
 
 
 def check_msexch_isstore(item, params, parsed):
-    yield wmi_yield_raw_average(
-        parsed[""],
-        item,
-        "RPCAverageLatency",
-        label="ms average latency",
-        perfvar="average_latency",
-        levels=params['store_latency'])
+    yield wmi_yield_raw_average(parsed[""],
+                                item,
+                                "RPCAverageLatency",
+                                label="ms average latency",
+                                perfvar="average_latency",
+                                levels=params['store_latency'])
 
 
 check_info['msexch_isstore'] = {

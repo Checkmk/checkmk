@@ -74,88 +74,77 @@ class RulespecCheckgroupParametersIbmSvcHost(CheckParameterRulespecWithoutItem):
     @property
     def parameter_valuespec(self):
         return Transform(
-            Dictionary(
-                elements=[
-                    (
-                        "active_hosts",
-                        Tuple(
-                            title=_("Count of active hosts"),
-                            elements=[
-                                Integer(
-                                    title=_("Warning at or below"),
+            Dictionary(elements=[
+                (
+                    "active_hosts",
+                    Tuple(
+                        title=_("Count of active hosts"),
+                        elements=[
+                            Integer(title=_("Warning at or below"),
                                     minvalue=0,
                                     unit=_("active hosts")),
-                                Integer(
-                                    title=_("Critical at or below"),
+                            Integer(title=_("Critical at or below"),
                                     minvalue=0,
                                     unit=_("active hosts")),
-                            ],
-                        ),
+                        ],
                     ),
-                    (
-                        "inactive_hosts",
-                        Tuple(
-                            title=_("Count of inactive hosts"),
-                            elements=[
-                                Integer(
-                                    title=_("Warning at or above"),
+                ),
+                (
+                    "inactive_hosts",
+                    Tuple(
+                        title=_("Count of inactive hosts"),
+                        elements=[
+                            Integer(title=_("Warning at or above"),
                                     minvalue=0,
                                     unit=_("inactive hosts")),
-                                Integer(
-                                    title=_("Critical at or above"),
+                            Integer(title=_("Critical at or above"),
                                     minvalue=0,
                                     unit=_("inactive hosts")),
-                            ],
-                        ),
+                        ],
                     ),
-                    (
-                        "degraded_hosts",
-                        Tuple(
-                            title=_("Count of degraded hosts"),
-                            elements=[
-                                Integer(
-                                    title=_("Warning at or above"),
+                ),
+                (
+                    "degraded_hosts",
+                    Tuple(
+                        title=_("Count of degraded hosts"),
+                        elements=[
+                            Integer(title=_("Warning at or above"),
                                     minvalue=0,
                                     unit=_("degraded hosts")),
-                                Integer(
-                                    title=_("Critical at or above"),
+                            Integer(title=_("Critical at or above"),
                                     minvalue=0,
                                     unit=_("degraded hosts")),
-                            ],
-                        ),
+                        ],
                     ),
-                    (
-                        "offline_hosts",
-                        Tuple(
-                            title=_("Count of offline hosts"),
-                            elements=[
-                                Integer(
-                                    title=_("Warning at or above"),
+                ),
+                (
+                    "offline_hosts",
+                    Tuple(
+                        title=_("Count of offline hosts"),
+                        elements=[
+                            Integer(title=_("Warning at or above"),
                                     minvalue=0,
                                     unit=_("offline hosts")),
-                                Integer(
-                                    title=_("Critical at or above"),
+                            Integer(title=_("Critical at or above"),
                                     minvalue=0,
                                     unit=_("offline hosts")),
-                            ],
-                        ),
+                        ],
                     ),
-                    (
-                        "other_hosts",
-                        Tuple(
-                            title=_("Count of other hosts"),
-                            elements=[
-                                Integer(
-                                    title=_("Warning at or above"),
+                ),
+                (
+                    "other_hosts",
+                    Tuple(
+                        title=_("Count of other hosts"),
+                        elements=[
+                            Integer(title=_("Warning at or above"),
                                     minvalue=0,
                                     unit=_("other hosts")),
-                                Integer(
-                                    title=_("Critical at or above"),
+                            Integer(title=_("Critical at or above"),
                                     minvalue=0,
                                     unit=_("other hosts")),
-                            ],
-                        ),
+                        ],
                     ),
-                ],),
+                ),
+            ],),
             forth=transform_ibm_svc_host,
         )

@@ -82,11 +82,10 @@ def check_esx_vsphere_datastores(item, params, data):
     prov_percent = (prov_bytes * 100.) / size_bytes if size_bytes != 0 else 0
 
     warn, crit = params.get('provisioning_levels', (None, None))
-    yield check_levels(
-        prov_percent,
-        None, (warn, crit),
-        human_readable_func=get_percent_human_readable,
-        infoname="Provisioning")
+    yield check_levels(prov_percent,
+                       None, (warn, crit),
+                       human_readable_func=get_percent_human_readable,
+                       infoname="Provisioning")
 
     if warn is not None:
         # convert percent to abs MiB

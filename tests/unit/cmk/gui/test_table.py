@@ -104,8 +104,8 @@ def test_nesting(register_builtin_html):
             table1.row()
             table1.cell("A", "1")
             table1.cell("B", "")
-            with table_element(
-                    "%d" % (table_id + 1), title + "2", searchable=False, sortable=False) as table2:
+            with table_element("%d" % (table_id + 1), title + "2", searchable=False,
+                               sortable=False) as table2:
                 table2.row()
                 table2.cell("_", "+")
                 table2.cell("|", "-")
@@ -132,13 +132,13 @@ def test_nesting_context(register_builtin_html):
     title = " TEST "
 
     with html.plugged():
-        with table_element(
-                table_id="%d" % table_id, title=title, searchable=False, sortable=False) as table1:
+        with table_element(table_id="%d" % table_id, title=title, searchable=False,
+                           sortable=False) as table1:
             table1.row()
             table1.cell("A", "1")
             table1.cell("B", "")
-            with table_element(
-                    "%d" % (table_id + 1), title + "2", searchable=False, sortable=False) as table2:
+            with table_element("%d" % (table_id + 1), title + "2", searchable=False,
+                               sortable=False) as table2:
                 table2.row()
                 table2.cell("_", "+")
                 table2.cell("|", "-")
@@ -186,13 +186,12 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
 
     # Table construction
     with html.plugged():
-        with table_element(
-                table_id="%d" % table_id,
-                title=title,
-                sortable=sortable,
-                searchable=searchable,
-                limit=limit,
-                output_format=output_format) as table:
+        with table_element(table_id="%d" % table_id,
+                           title=title,
+                           sortable=sortable,
+                           searchable=searchable,
+                           limit=limit,
+                           output_format=output_format) as table:
             for row in rows:
                 table.row()
                 for h, r in zip(header, row):

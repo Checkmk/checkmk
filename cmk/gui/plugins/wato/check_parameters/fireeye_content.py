@@ -60,10 +60,9 @@ class RulespecCheckgroupParametersFireeyeContent(CheckParameterRulespecWithoutIt
     def parameter_valuespec(self):
         return Dictionary(elements=[(
             "update_time_levels",
-            Tuple(
-                title=_("Upper levels for the age of the update"),
-                elements=[
-                    Age(title=_("Warning at")),
-                    Age(title=_("Critical at")),
-                ]),
+            Tuple(title=_("Upper levels for the age of the update"),
+                  elements=[
+                      Age(title=_("Warning at")),
+                      Age(title=_("Critical at")),
+                  ]),
         )])

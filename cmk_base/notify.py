@@ -276,8 +276,9 @@ def notify_notify(raw_context, analyse=False):
     notify_log_debug(events.render_context_dump(raw_context))
 
     _complete_raw_context_with_notification_vars(raw_context)
-    events.complete_raw_context(
-        raw_context, with_dump=config.notification_logging <= 10, log_func=notify_log)
+    events.complete_raw_context(raw_context,
+                                with_dump=config.notification_logging <= 10,
+                                log_func=notify_log)
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):
@@ -476,8 +477,8 @@ def notify_rulebased(raw_context, analyse=False):
                                    (contactstxt, plugintxt))
                         continue
 
-                    notify_log("   - cancelling notification of %s via %s" % (", ".join(overlap),
-                                                                              plugintxt))
+                    notify_log("   - cancelling notification of %s via %s" %
+                               (", ".join(overlap), plugintxt))
 
                     remaining = notify_contacts.difference(contacts)
                     if not remaining:
@@ -492,8 +493,8 @@ def notify_rulebased(raw_context, analyse=False):
                         notify_log("   - cannot modify notification of %s via %s: it is locked" %
                                    (contactstxt, plugintxt))
                         continue
-                    notify_log(
-                        "   - modifying notification of %s via %s" % (contactstxt, plugintxt))
+                    notify_log("   - modifying notification of %s via %s" %
+                               (contactstxt, plugintxt))
                 else:
                     notify_log("   - adding notification of %s via %s" % (contactstxt, plugintxt))
                 bulk = rbn_get_bulk_params(rule)
@@ -531,8 +532,8 @@ def notify_rulebased(raw_context, analyse=False):
             plugintxt = plugin or "plain email"
             paramtxt = ", ".join(params) if params else "(no parameters)"
             bulktxt = "yes" if bulk else "no"
-            notify_log("  * %s %s via %s, parameters: %s, bulk: %s" % (verb, contactstxt, plugintxt,
-                                                                       paramtxt, bulktxt))
+            notify_log("  * %s %s via %s, parameters: %s, bulk: %s" %
+                       (verb, contactstxt, plugintxt, paramtxt, bulktxt))
 
             try:
                 plugin_context = create_plugin_context(raw_context, params)
@@ -846,8 +847,8 @@ def rbn_rule_contacts(rule, context):
             if disable_notifications_opts.get("disable", False):
                 start, end = disable_notifications_opts.get("timerange", (None, None))
                 if start is None or end is None:
-                    notify_log(
-                        "   - skipping contact %s: he/she has disabled notifications" % contactname)
+                    notify_log("   - skipping contact %s: he/she has disabled notifications" %
+                               contactname)
                     continue
                 elif start <= time.time() <= end:
                     notify_log(
@@ -1059,8 +1060,8 @@ def should_notify(context, entry):
                 skip = negate
                 break
         if skip:
-            notify_log(" - Skipping: host '%s' matches none of %s" % (hostname, ", ".join(
-                entry["only_hosts"])))
+            notify_log(" - Skipping: host '%s' matches none of %s" %
+                       (hostname, ", ".join(entry["only_hosts"])))
             return False
 
     # Check if the host has to be in a special service_level
@@ -1107,8 +1108,8 @@ def should_notify(context, entry):
                     skip = negate
                     break
             if skip:
-                notify_log(" - Skipping: service '%s' matches none of %s" % (servicedesc, ", ".join(
-                    entry["only_services"])))
+                notify_log(" - Skipping: service '%s' matches none of %s" %
+                           (servicedesc, ", ".join(entry["only_services"])))
                 return False
 
     # Check notification type
@@ -1639,11 +1640,11 @@ def find_bulks(only_ripe):
                     if age >= interval:
                         notify_log("Bulk %s is ripe: age %d >= %d" % (bulk_dir, age, interval))
                     elif len(uuids) >= count:
-                        notify_log(
-                            "Bulk %s is ripe: count %d >= %d" % (bulk_dir, len(uuids), count))
+                        notify_log("Bulk %s is ripe: count %d >= %d" %
+                                   (bulk_dir, len(uuids), count))
                     else:
-                        notify_log("Bulk %s is not ripe yet (age: %d, count: %d)!" % (bulk_dir, age,
-                                                                                      len(uuids)))
+                        notify_log("Bulk %s is not ripe yet (age: %d, count: %d)!" %
+                                   (bulk_dir, age, len(uuids)))
                         if only_ripe:
                             continue
 
@@ -1656,25 +1657,27 @@ def find_bulks(only_ripe):
                         # livestatus connection error appears. It also implies
                         # that an ongoing connection error will hold back bulk
                         # notifications.
-                        notify_log("Error while checking activity of timeperiod %s: assuming active"
-                                   % timeperiod)
+                        notify_log(
+                            "Error while checking activity of timeperiod %s: assuming active" %
+                            timeperiod)
                         active = True
 
                     if active is True and len(uuids) < count:
                         # Only add a log entry every 10 minutes since timeperiods
                         # can be very long (The default would be 10s).
                         if now % 600 <= config.notification_bulk_interval:
-                            notify_log("Bulk %s is not ripe yet (timeperiod %s: active, count: %d)"
-                                       % (bulk_dir, timeperiod, len(uuids)))
+                            notify_log(
+                                "Bulk %s is not ripe yet (timeperiod %s: active, count: %d)" %
+                                (bulk_dir, timeperiod, len(uuids)))
 
                         if only_ripe:
                             continue
                     elif active is False:
-                        notify_log(
-                            "Bulk %s is ripe: timeperiod %s has ended" % (bulk_dir, timeperiod))
+                        notify_log("Bulk %s is ripe: timeperiod %s has ended" %
+                                   (bulk_dir, timeperiod))
                     elif len(uuids) >= count:
-                        notify_log(
-                            "Bulk %s is ripe: count %d >= %d" % (bulk_dir, len(uuids), count))
+                        notify_log("Bulk %s is ripe: count %d >= %d" %
+                                   (bulk_dir, len(uuids), count))
                     else:
                         notify_log("Bulk %s is ripe: timeperiod %s is not known anymore" %
                                    (bulk_dir, timeperiod))
@@ -1835,8 +1838,8 @@ def store_notification_backlog(raw_context):
             os.remove(path)
         return
 
-    backlog = store.load_data_from_file(
-        path, default=[], lock=True)[:config.notification_backlog - 1]
+    backlog = store.load_data_from_file(path, default=[],
+                                        lock=True)[:config.notification_backlog - 1]
     store.save_data_to_file(path, [raw_context] + backlog, pretty=False)
 
 

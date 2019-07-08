@@ -221,8 +221,8 @@ def main():
                     parsed = parse_line(line.rstrip())
                     forward_line(parsed)
                 except Exception, e:
-                    log('EXCEPTION while processing line "%s" (%s). Skipping...' % (line.rstrip(),
-                                                                                    e))
+                    log('EXCEPTION while processing line "%s" (%s). Skipping...' %
+                        (line.rstrip(), e))
                     if opt_debug:
                         raise
 

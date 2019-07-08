@@ -112,8 +112,8 @@ def _process_icons(what, row, tags, custom_vars, toplevel, user_icon_ids):
             for result in _process_icon(what, row, tags, custom_vars, icon_id, icon):
                 icons.append(result)
         except Exception:
-            icons.append((icon.sort_index(),
-                          'Exception in icon plugin!<br />' + traceback.format_exc()))
+            icons.append(
+                (icon.sort_index(), 'Exception in icon plugin!<br />' + traceback.format_exc()))
     return icons
 
 

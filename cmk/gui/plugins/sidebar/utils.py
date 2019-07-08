@@ -298,11 +298,10 @@ def footnotelinks(links):
 
 def nagioscgilink(text, target):
     html.open_li(class_="sidebar")
-    html.a(
-        text,
-        class_="link",
-        target="main",
-        href="%snagios/cgi-bin/%s" % (config.url_prefix(), target))
+    html.a(text,
+           class_="link",
+           target="main",
+           href="%snagios/cgi-bin/%s" % (config.url_prefix(), target))
     html.close_li()
 
 
@@ -339,8 +338,8 @@ def visuals_by_topic(permitted_visuals, default_order=None):
             _("Problems"),
         ]
 
-    s = [(_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name,
-          'painters' in visual)
+    s = [(_u(visual.get("topic") or
+             _("Other")), _u(visual.get("title")), name, 'painters' in visual)
          for name, visual in permitted_visuals
          if not visual["hidden"] and not visual.get("mobile")]
 

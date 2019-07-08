@@ -59,33 +59,32 @@ class RulespecCheckgroupParametersStorageThroughput(CheckParameterRulespecWithIt
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("read",
-                 Tuple(
-                     title=_(u"Read throughput per second"),
-                     elements=[
-                         Filesize(title=_(u"Warning at")),
-                         Filesize(title=_(u"Critical at")),
-                     ],
-                 )),
-                ("write",
-                 Tuple(
-                     title=_(u"Write throughput per second"),
-                     elements=[
-                         Filesize(title=_(u"Warning at")),
-                         Filesize(title=_(u"Critical at")),
-                     ],
-                 )),
-                ("total",
-                 Tuple(
-                     title=_(u"Total throughput per second"),
-                     elements=[
-                         Filesize(title=_(u"Warning at")),
-                         Filesize(title=_(u"Critical at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("read",
+             Tuple(
+                 title=_(u"Read throughput per second"),
+                 elements=[
+                     Filesize(title=_(u"Warning at")),
+                     Filesize(title=_(u"Critical at")),
+                 ],
+             )),
+            ("write",
+             Tuple(
+                 title=_(u"Write throughput per second"),
+                 elements=[
+                     Filesize(title=_(u"Warning at")),
+                     Filesize(title=_(u"Critical at")),
+                 ],
+             )),
+            ("total",
+             Tuple(
+                 title=_(u"Total throughput per second"),
+                 elements=[
+                     Filesize(title=_(u"Warning at")),
+                     Filesize(title=_(u"Critical at")),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

@@ -166,17 +166,17 @@ def remotetest(expected_output, actual_output, testfile, testname=None, testclas
             # if re.match(expected, actual) is None:
             #     print 'DEBUG: actual output\r\n', '\r\n'.join(actual_output)
             #     print 'DEBUG: expected output\r\n', '\r\n'.join(expected_output)
-            assert re.match(expected,
-                            actual) is not None, ("expected '%s', actual '%s'" % (expected, actual))
+            assert re.match(expected, actual) is not None, ("expected '%s', actual '%s'" %
+                                                            (expected, actual))
         try:
             assert len(actual_output) >= len(expected_output), (
                 'actual output is shorter than expected:\n'
-                'expected output:\n%s\nactual output:\n%s' % ('\n'.join(expected_output),
-                                                              '\n'.join(actual_output)))
+                'expected output:\n%s\nactual output:\n%s' %
+                ('\n'.join(expected_output), '\n'.join(actual_output)))
             assert len(actual_output) <= len(expected_output), (
                 'actual output is longer than expected:\n'
-                'expected output:\n%s\nactual output:\n%s' % ('\n'.join(expected_output),
-                                                              '\n'.join(actual_output)))
+                'expected output:\n%s\nactual output:\n%s' %
+                ('\n'.join(expected_output), '\n'.join(actual_output)))
         except TypeError:
             # expected_output may be an iterator without len
             assert len(actual_output) > 0, 'Actual output was empty'

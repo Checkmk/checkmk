@@ -58,32 +58,30 @@ class RulespecCheckgroupParametersVarnishBackend(CheckParameterRulespecWithoutIt
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("busy",
-                 Tuple(
-                     title=_("Upper levels for \"backend connections busy/too many\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("fail",
-                 Tuple(
-                     title=_("Upper levels for \"backend connections failures\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("unhealthy",
-                 Tuple(
-                     title=
-                     _("Upper levels for \"backend connections unhealthy/not attempted\" per second"
-                      ),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("busy",
+             Tuple(
+                 title=_("Upper levels for \"backend connections busy/too many\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("fail",
+             Tuple(
+                 title=_("Upper levels for \"backend connections failures\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("unhealthy",
+             Tuple(
+                 title=_(
+                     "Upper levels for \"backend connections unhealthy/not attempted\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+        ],)

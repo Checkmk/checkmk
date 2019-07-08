@@ -268,10 +268,9 @@ class BaseFolder(WithPermissionsAndAttributes):
             breadcrump_element_start(z_index=100 + num)
             html.open_div(class_=["content"])
             html.open_form(name="folderpath", method="GET")
-            html.dropdown(
-                "folder", [("", "")] + self.subfolder_choices(),
-                class_="folderpath",
-                onchange="folderpath.submit();")
+            html.dropdown("folder", [("", "")] + self.subfolder_choices(),
+                          class_="folderpath",
+                          onchange="folderpath.submit();")
             if keepvarnames is True:
                 html.hidden_fields()
             else:
@@ -740,8 +739,8 @@ class CREFolder(BaseFolder):
                     out.write("\nhost_contactgroups += %s\n\n" % format_config_value(group_rules))
 
                     if cgconfig.get("use_for_services"):
-                        out.write(
-                            "\nservice_contactgroups += %s\n\n" % format_config_value(group_rules))
+                        out.write("\nservice_contactgroups += %s\n\n" %
+                                  format_config_value(group_rules))
 
             for attr in host_attribute_registry.attributes():
                 attrname = attr.name()
@@ -869,8 +868,10 @@ class CREFolder(BaseFolder):
                     subfolder_path = self.path() + "/" + entry
                 else:
                     subfolder_path = entry
-                self._subfolders[entry] = Folder(
-                    entry, subfolder_path, self, root_dir=self._root_dir)
+                self._subfolders[entry] = Folder(entry,
+                                                 subfolder_path,
+                                                 self,
+                                                 root_dir=self._root_dir)
 
     def wato_info_path(self):
         return self.filesystem_path() + "/.wato"
@@ -1045,8 +1046,8 @@ class CREFolder(BaseFolder):
         return sorted(self.all_subfolders().values(), cmp=lambda a, b: cmp(a.title(), b.title()))
 
     def visible_subfolders_sorted_by_title(self):
-        return sorted(
-            self.visible_subfolders().values(), cmp=lambda a, b: cmp(a.title(), b.title()))
+        return sorted(self.visible_subfolders().values(),
+                      cmp=lambda a, b: cmp(a.title(), b.title()))
 
     def site_id(self):
         if "site" in self._attributes:
@@ -1323,11 +1324,10 @@ class CREFolder(BaseFolder):
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
         self._subfolders[name] = new_subfolder
         new_subfolder.save()
-        add_change(
-            "new-folder",
-            _("Created new folder %s") % new_subfolder.alias_path(),
-            obj=new_subfolder,
-            sites=[new_subfolder.site_id()])
+        add_change("new-folder",
+                   _("Created new folder %s") % new_subfolder.alias_path(),
+                   obj=new_subfolder,
+                   sites=[new_subfolder.site_id()])
         hooks.call("folder-created", new_subfolder)
         need_sidebar_reload()
         return new_subfolder
@@ -1348,11 +1348,10 @@ class CREFolder(BaseFolder):
 
         # 3. Actual modification
         hooks.call("folder-deleted", subfolder)
-        add_change(
-            "delete-folder",
-            _("Deleted folder %s") % subfolder.alias_path(),
-            obj=self,
-            sites=subfolder.all_site_ids())
+        add_change("delete-folder",
+                   _("Deleted folder %s") % subfolder.alias_path(),
+                   obj=self,
+                   sites=subfolder.all_site_ids())
         self._remove_subfolder(name)
         shutil.rmtree(subfolder.filesystem_path())
         Folder.invalidate_caches()
@@ -1384,11 +1383,10 @@ class CREFolder(BaseFolder):
         subfolder.rewrite_hosts_files()  # fixes changed inheritance
         Folder.invalidate_caches()
         affected_sites = list(set(affected_sites + subfolder.all_site_ids()))
-        add_change(
-            "move-folder",
-            _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
-            obj=subfolder,
-            sites=affected_sites)
+        add_change("move-folder",
+                   _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
+                   obj=subfolder,
+                   sites=affected_sites)
         need_sidebar_reload()
 
     def edit(self, new_title, new_attributes):
@@ -1425,11 +1423,10 @@ class CREFolder(BaseFolder):
         self.rewrite_hosts_files()
 
         affected_sites = list(set(affected_sites + self.all_site_ids()))
-        add_change(
-            "edit-folder",
-            _("Edited properties of folder %s") % self.title(),
-            obj=self,
-            sites=affected_sites)
+        add_change("edit-folder",
+                   _("Edited properties of folder %s") % self.title(),
+                   obj=self,
+                   sites=affected_sites)
 
     def _get_cgconf_from_attributes(self, attributes):
         v = attributes.get("contactgroups", (False, []))
@@ -1454,11 +1451,10 @@ class CREFolder(BaseFolder):
             host = Host(self, host_name, attributes, cluster_nodes)
             self._hosts[host_name] = host
             self._num_hosts = len(self._hosts)
-            add_change(
-                "create-host",
-                _("Created new host %s.") % host_name,
-                obj=host,
-                sites=[host.site_id()])
+            add_change("create-host",
+                       _("Created new host %s.") % host_name,
+                       obj=host,
+                       sites=[host.site_id()])
         self._save_wato_info()  # num_hosts has changed
         self.save_hosts()
 
@@ -1483,8 +1479,10 @@ class CREFolder(BaseFolder):
             host = self.hosts()[host_name]
             del self._hosts[host_name]
             self._num_hosts = len(self._hosts)
-            add_change(
-                "delete-host", _("Deleted host %s") % host_name, obj=host, sites=[host.site_id()])
+            add_change("delete-host",
+                       _("Deleted host %s") % host_name,
+                       obj=host,
+                       sites=[host.site_id()])
 
         self._save_wato_info()  # num_hosts has changed
         self.save_hosts()
@@ -1535,11 +1533,10 @@ class CREFolder(BaseFolder):
             target_folder._add_host(host)
 
             affected_sites = list(set(affected_sites + [host.site_id()]))
-            add_change(
-                "move-host",
-                _("Moved host from %s to %s") % (self.path(), target_folder.path()),
-                obj=host,
-                sites=affected_sites)
+            add_change("move-host",
+                       _("Moved host from %s to %s") % (self.path(), target_folder.path()),
+                       obj=host,
+                       sites=affected_sites)
 
         self._save_wato_info()  # num_hosts has changed
         self.save_hosts()
@@ -1558,11 +1555,10 @@ class CREFolder(BaseFolder):
         host.rename(newname)
         del self._hosts[oldname]
         self._hosts[newname] = host
-        add_change(
-            "rename-host",
-            _("Renamed host from %s to %s") % (oldname, newname),
-            obj=host,
-            sites=[host.site_id()])
+        add_change("rename-host",
+                   _("Renamed host from %s to %s") % (oldname, newname),
+                   obj=host,
+                   sites=[host.site_id()])
         self.save_hosts()
 
     def rename_parent(self, oldname, newname):
@@ -1572,12 +1568,11 @@ class CREFolder(BaseFolder):
         if not changed:
             return False
 
-        add_change(
-            "rename-parent",
-            _("Renamed parent from %s to %s in folder \"%s\"") % (oldname, newname,
-                                                                  self.alias_path()),
-            obj=self,
-            sites=self.all_site_ids())
+        add_change("rename-parent",
+                   _("Renamed parent from %s to %s in folder \"%s\"") %
+                   (oldname, newname, self.alias_path()),
+                   obj=self,
+                   sites=self.all_site_ids())
         self.save_hosts()
         self.save()
         return True
@@ -1660,8 +1655,8 @@ def validate_host_uniqueness(varname, host_name):
         raise MKUserError(
             varname,
             _('A host with the name <b><tt>%s</tt></b> already '
-              'exists in the folder <a href="%s">%s</a>.') % (host_name, host.folder().url(),
-                                                              host.folder().alias_path()))
+              'exists in the folder <a href="%s">%s</a>.') %
+            (host_name, host.folder().url(), host.folder().alias_path()))
 
 
 class SearchFolder(BaseFolder):
@@ -1671,8 +1666,10 @@ class SearchFolder(BaseFolder):
     def criteria_from_html_vars():
         crit = {".name": html.request.var("host_search_host")}
         crit.update(
-            cmk.gui.watolib.host_attributes.collect_attributes(
-                "host_search", new=False, do_validate=False, varprefix="host_search_"))
+            cmk.gui.watolib.host_attributes.collect_attributes("host_search",
+                                                               new=False,
+                                                               do_validate=False,
+                                                               varprefix="host_search_"))
         return crit
 
     # This method is allowed to return None when no search is currently performed.
@@ -2087,8 +2084,10 @@ class CREHost(WithPermissionsAndAttributes):
         self._cluster_nodes = cluster_nodes
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
-        add_change(
-            "edit-host", _("Modified host %s.") % self.name(), obj=self, sites=affected_sites)
+        add_change("edit-host",
+                   _("Modified host %s.") % self.name(),
+                   obj=self,
+                   sites=affected_sites)
 
     def update_attributes(self, changed_attributes):
         new_attributes = self.attributes().copy()
@@ -2108,11 +2107,10 @@ class CREHost(WithPermissionsAndAttributes):
                 del self._attributes[attrname]
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
-        add_change(
-            "edit-host",
-            _("Removed explicit attributes of host %s.") % self.name(),
-            obj=self,
-            sites=affected_sites)
+        add_change("edit-host",
+                   _("Removed explicit attributes of host %s.") % self.name(),
+                   obj=self,
+                   sites=affected_sites)
 
     def _need_folder_write_permissions(self):
         if not self.folder().may("write"):
@@ -2151,11 +2149,10 @@ class CREHost(WithPermissionsAndAttributes):
         if not changed:
             return False
 
-        add_change(
-            "rename-node",
-            _("Renamed cluster node from %s into %s.") % (oldname, newname),
-            obj=self,
-            sites=[self.site_id()])
+        add_change("rename-node",
+                   _("Renamed cluster node from %s into %s.") % (oldname, newname),
+                   obj=self,
+                   sites=[self.site_id()])
         self.folder().save_hosts()
         return True
 
@@ -2165,20 +2162,18 @@ class CREHost(WithPermissionsAndAttributes):
         if not changed:
             return False
 
-        add_change(
-            "rename-parent",
-            _("Renamed parent from %s into %s.") % (oldname, newname),
-            obj=self,
-            sites=[self.site_id()])
+        add_change("rename-parent",
+                   _("Renamed parent from %s into %s.") % (oldname, newname),
+                   obj=self,
+                   sites=[self.site_id()])
         self.folder().save_hosts()
         return True
 
     def rename(self, new_name):
-        add_change(
-            "rename-host",
-            _("Renamed host from %s into %s.") % (self.name(), new_name),
-            obj=self,
-            sites=[self.site_id()])
+        add_change("rename-host",
+                   _("Renamed host from %s into %s.") % (self.name(), new_name),
+                   obj=self,
+                   sites=[self.site_id()])
         self._name = new_name
 
 
@@ -2245,8 +2240,8 @@ class CMEFolder(CREFolder):
                 None,
                 _("The configured target site refers to the default customer <i>%s</i>. The parent folder however, "
                   "already have the specific customer <i>%s</i> set. This violates the CME folder hierarchy."
-                 ) % (managed.get_customer_name_by_id(managed.default_customer_id()),
-                      managed.get_customer_name_by_id(customer_id)))
+                 ) % (managed.get_customer_name_by_id(
+                     managed.default_customer_id()), managed.get_customer_name_by_id(customer_id)))
 
         # The parents customer id may be the default customer or the same customer
         customer_id = self._get_customer_id()

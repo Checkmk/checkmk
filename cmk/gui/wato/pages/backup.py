@@ -92,8 +92,8 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
 
     def page(self):
         self.targets().show_list()
-        backup.SystemBackupTargetsReadOnly().show_list(
-            editable=False, title=_("System global targets"))
+        backup.SystemBackupTargetsReadOnly().show_list(editable=False,
+                                                       title=_("System global targets"))
 
 
 @mode_registry.register
@@ -197,8 +197,8 @@ class ModeAjaxBackupJobState(AjaxPage):
 
 class SiteBackupKeypairStore(backup.BackupKeypairStore):
     def __init__(self):
-        super(SiteBackupKeypairStore, self).__init__(
-            cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys")
+        super(SiteBackupKeypairStore,
+              self).__init__(cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys")
 
 
 @mode_registry.register
@@ -284,8 +284,8 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
 
     def _show_target_list(self):
         super(ModeBackupRestore, self)._show_target_list()
-        backup.SystemBackupTargetsReadOnly().show_list(
-            editable=False, title=_("System global targets"))
+        backup.SystemBackupTargetsReadOnly().show_list(editable=False,
+                                                       title=_("System global targets"))
 
     def _show_backup_list(self):
         self._target.show_backup_list("Check_MK")

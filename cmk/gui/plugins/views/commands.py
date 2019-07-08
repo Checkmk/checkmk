@@ -702,12 +702,12 @@ class CommandAcknowledge(Command):
         html.button("_remove_ack", _("Remove Acknowledgement"))
         html.hr()
         html.checkbox("_ack_sticky", config.view_action_defaults["ack_sticky"], label=_("sticky"))
-        html.checkbox(
-            "_ack_notify", config.view_action_defaults["ack_notify"], label=_("send notification"))
-        html.checkbox(
-            "_ack_persistent",
-            config.view_action_defaults["ack_persistent"],
-            label=_('persistent comment'))
+        html.checkbox("_ack_notify",
+                      config.view_action_defaults["ack_notify"],
+                      label=_("send notification"))
+        html.checkbox("_ack_persistent",
+                      config.view_action_defaults["ack_persistent"],
+                      label=_('persistent comment'))
         html.hr()
 
         self._vs_expire().render_input("_ack_expire",
@@ -984,17 +984,17 @@ class CommandScheduleDowntimes(Command):
             html.checkbox("_include_childs_recurse", False, label=_('Do this recursively'))
         elif what == "service":
             html.hr()
-            html.checkbox(
-                "_on_hosts",
-                False,
-                label=_('Schedule downtimes on the affected '
-                        '<b>hosts</b> instead of on the individual '
-                        'services'))
+            html.checkbox("_on_hosts",
+                          False,
+                          label=_('Schedule downtimes on the affected '
+                                  '<b>hosts</b> instead of on the individual '
+                                  'services'))
 
         if self._has_recurring_downtimes():
             html.hr()
-            html.checkbox(
-                "_down_do_recur", False, label=_("Repeat this downtime on a regular basis every"))
+            html.checkbox("_down_do_recur",
+                          False,
+                          label=_("Repeat this downtime on a regular basis every"))
             html.write_text(" ")
 
             from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types

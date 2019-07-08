@@ -144,8 +144,8 @@ try:
              time.strftime("%b %d %H:%M:%S", time.localtime(untiltime))) ]
 
     if cpu_peak:
-        info.append(
-            "Highest Peak of %d%% at %s" % (cpu_peak, time.strftime("%b %d %H:%M:%S", peak_time)))
+        info.append("Highest Peak of %d%% at %s" %
+                    (cpu_peak, time.strftime("%b %d %H:%M:%S", peak_time)))
         state = 0
         if crit_level and cpu_peak <= crit_level:
             info.append("less than %d (!!)" % crit_level)

@@ -185,8 +185,8 @@ def check_fc_port(item, params, info):
         if average:
             value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
             output.append("Avg(%dmin): %s/s" % (average, get_bytes_human_readable(value)))
-            perfaverages.append(("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0,
-                                 wirespeed))
+            perfaverages.append(
+                ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
 
         # handle levels for in/out
         if crit_bytes is not None and value >= crit_bytes:

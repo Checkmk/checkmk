@@ -58,17 +58,16 @@ class RulespecCheckgroupParametersFilehandler(CheckParameterRulespecWithoutItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Levels"),
-                        default_value=(80.0, 90.0),
-                        elements=[
-                            Percentage(title=_("Warning at"), unit=_("%")),
-                            Percentage(title=_("Critical at"), unit=_("%"))
-                        ],
-                    ),
+        return Dictionary(elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels"),
+                    default_value=(80.0, 90.0),
+                    elements=[
+                        Percentage(title=_("Warning at"), unit=_("%")),
+                        Percentage(title=_("Critical at"), unit=_("%"))
+                    ],
                 ),
-            ],)
+            ),
+        ],)

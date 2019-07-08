@@ -57,11 +57,10 @@ def mobile_html_head(title, ready_code=""):
     html.stylesheet(href="themes/classic/theme.css")
 
     html.write(
-        html._render_opening_tag(
-            "link",
-            rel="apple-touch-icon",
-            href="themes/classic/images/ios_logo.png",
-            close_tag=True))
+        html._render_opening_tag("link",
+                                 rel="apple-touch-icon",
+                                 href="themes/classic/images/ios_logo.png",
+                                 close_tag=True))
     html.javascript_file(src='js/mobile_min.js')
 
     if metrics.cmk_graphs_possible():
@@ -90,16 +89,15 @@ def mobile_html_foot():
 
 
 def jqm_header_button(pos, url, title, icon=""):
-    html.a(
-        '',
-        href=url,
-        class_="ui-btn-%s" % pos,
-        title=title,
-        **{
-            "data-direction": "reverse",
-            "data-icon": icon,
-            "data-iconpos": "notext"
-        })
+    html.a('',
+           href=url,
+           class_="ui-btn-%s" % pos,
+           title=title,
+           **{
+               "data-direction": "reverse",
+               "data-icon": icon,
+               "data-iconpos": "notext"
+           })
 
 
 def jqm_page_header(title, id_=None, left_button=None, right_button=None):
@@ -139,14 +137,13 @@ def jqm_page_navfooter(items, current, page_id):
             custom_css += ' ui-state-persist ui-btn-active'
         else:
             html.open_li()
-            html.open_a(
-                href=href,
-                class_=custom_css,
-                **{
-                    "data-transition": "slide",
-                    "data-icon": icon,
-                    "data-iconpos": "bottom"
-                })
+            html.open_a(href=href,
+                        class_=custom_css,
+                        **{
+                            "data-transition": "slide",
+                            "data-icon": icon,
+                            "data-iconpos": "bottom"
+                        })
             html.write(title)
             html.close_a()
             html.close_li()
@@ -215,9 +212,8 @@ def page_login():
     html.end_form()
     html.open_div(id_="loginfoot")
     html.img("themes/classic/images/logo_cmk_small.png", class_="logomk")
-    html.div(
-        HTML(_("&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>")),
-        class_="copyright")
+    html.div(HTML(_("&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>")),
+             class_="copyright")
     jqm_page_footer()
     mobile_html_foot()
 
@@ -226,10 +222,9 @@ def page_login():
 def page_index():
     title = _("Check_MK Mobile")
     mobile_html_head(title)
-    jqm_page_header(
-        title,
-        right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
-        id_="data")
+    jqm_page_header(title,
+                    right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
+                    id_="data")
     items = []
     for view_name, view_spec in views.get_permitted_views().items():
         if view_spec.get("mobile") and not view_spec.get("hidden"):
@@ -254,13 +249,12 @@ def page_index():
     html.hr()
     html.open_ul(**{"data-role": "listview", "data-theme": "b", "data-inset": "true"})
     html.open_li()
-    html.a(
-        _("Classical web GUI"),
-        href="index.py?mobile=",
-        **{
-            "data-ajax": "false",
-            "data-transition": "fade"
-        })
+    html.a(_("Classical web GUI"),
+           href="index.py?mobile=",
+           **{
+               "data-ajax": "false",
+               "data-transition": "fade"
+           })
     html.close_li()
     html.close_ul()
 
@@ -352,11 +346,11 @@ class MobileViewRenderer(views.ViewRenderer):
 
         elif page == "data":
             # Page: data rows of view
-            jqm_page_header(
-                title,
-                left_button=home,
-                right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
-                id_="data")
+            jqm_page_header(title,
+                            left_button=home,
+                            right_button=("javascript:document.location.reload();", _("Reload"),
+                                          "refresh"),
+                            id_="data")
             html.open_div(id_="view_results")
             if len(rows) == 0:
                 html.write(_("No hosts/services found."))

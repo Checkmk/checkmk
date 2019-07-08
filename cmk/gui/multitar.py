@@ -223,13 +223,12 @@ class SnapshotCreationBase(object):
             if debug:
                 self._logger.debug(" ".join(command))
             try:
-                p = subprocess.Popen(
-                    command,
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    shell=False,
-                    close_fds=True)
+                p = subprocess.Popen(command,
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     shell=False,
+                                     close_fds=True)
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
                     raise MKGeneralException(_("Activate changes error. Unable to prepare site snapshots. Failed command: %r; StdOut: %r; StdErr: %s") %\
@@ -380,8 +379,9 @@ def create(tar_filename, components):
                 def exclude_filter(x, excludes=excludes):
                     return filter_subtar_files(x, excludes)
 
-                subtar_obj.add(
-                    os.path.join(basedir, filename), arcname=filename, filter=exclude_filter)
+                subtar_obj.add(os.path.join(basedir, filename),
+                               arcname=filename,
+                               filter=exclude_filter)
 
             subtar_size = len(subtar_buffer.getvalue())
             subtar_buffer.seek(0)
@@ -396,8 +396,8 @@ def create(tar_filename, components):
 
             tar.addfile(info, subtar_buffer)
 
-    logger.debug(
-        "Packaging %s took %.3fsec" % (os.path.basename(tar_filename), time.time() - start))
+    logger.debug("Packaging %s took %.3fsec" %
+                 (os.path.basename(tar_filename), time.time() - start))
 
 
 def filter_subtar_files(tarinfo, excludes):
@@ -640,8 +640,8 @@ def extract(tar, components):
             subtar = tarfile.open(fileobj=subtarstream)
             subtar.extractall(target_dir)
         except Exception:
-            raise MKGeneralException(
-                'Failed to extract subtar %s: %s' % (name, traceback.format_exc()))
+            raise MKGeneralException('Failed to extract subtar %s: %s' %
+                                     (name, traceback.format_exc()))
 
 
 # Try to cleanup everything starting from the root_path

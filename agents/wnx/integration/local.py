@@ -232,12 +232,12 @@ def local_test(expected_output, actual_output, testfile, test_name=None, test_cl
     try:
         assert len(actual_output) >= len(expected_output), (
             'actual output is shorter than expected:\n'
-            'expected output:\n%s\nactual output:\n%s' % ('\n'.join(expected_output),
-                                                          '\n'.join(actual_output)))
+            'expected output:\n%s\nactual output:\n%s' %
+            ('\n'.join(expected_output), '\n'.join(actual_output)))
         assert len(actual_output) <= len(expected_output), (
             'actual output is longer than expected:\n'
-            'expected output:\n%s\nactual output:\n%s' % ('\n'.join(expected_output),
-                                                          '\n'.join(actual_output)))
+            'expected output:\n%s\nactual output:\n%s' %
+            ('\n'.join(expected_output), '\n'.join(actual_output)))
     except TypeError:
         # expected_output may be an iterator without len
         assert len(actual_output) > 0, 'Actual output was empty'

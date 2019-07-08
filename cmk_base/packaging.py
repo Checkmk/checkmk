@@ -499,8 +499,8 @@ def validate_package_files_part(packages, pacname, part, directory, rel_paths):
         for other_pacname, other_package_info in packages.items():
             for other_rel_path in other_package_info["files"].get(part, []):
                 if other_rel_path == rel_path and other_pacname != pacname:
-                    raise PackageException(
-                        "File %s does already belong to package %s" % (path, other_pacname))
+                    raise PackageException("File %s does already belong to package %s" %
+                                           (path, other_pacname))
 
 
 def package_install(args):
@@ -563,8 +563,8 @@ def install_package(file_name=None, file_object=None):
 
             tarsource = tar.extractfile(part.ident + ".tar")
 
-            tardest = subprocess.Popen(
-                ["tar", "xf", "-", "-C", part.path] + filenames, stdin=subprocess.PIPE)
+            tardest = subprocess.Popen(["tar", "xf", "-", "-C", part.path] + filenames,
+                                       stdin=subprocess.PIPE)
             while True:
                 data = tarsource.read(4096)
                 if not data:

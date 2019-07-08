@@ -168,8 +168,8 @@ class ModeEditSite(WatoMode):
 
     def buttons(self):
         super(ModeEditSite, self).buttons()
-        html.context_button(
-            _("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
+        html.context_button(_("All Sites"), watolib.folder_preserving_link([("mode", "sites")]),
+                            "back")
         if not self._new:
             _site_detail_buttons(self._site_id, self._site, current_mode=self.name())
 
@@ -205,11 +205,10 @@ class ModeEditSite(WatoMode):
 
         # Don't know exactly what have been changed, so better issue a change
         # affecting all domains
-        watolib.add_change(
-            "edit-sites",
-            msg,
-            sites=[self._site_id],
-            domains=watolib.ConfigDomain.enabled_domains())
+        watolib.add_change("edit-sites",
+                           msg,
+                           sites=[self._site_id],
+                           domains=watolib.ConfigDomain.enabled_domains())
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
         if not site_spec["replication"]:
@@ -217,8 +216,10 @@ class ModeEditSite(WatoMode):
 
         if self._site_id != config.omd_site():
             # On central site issue a change only affecting the GUI
-            watolib.add_change(
-                "edit-sites", msg, sites=[config.omd_site()], domains=[watolib.ConfigDomainGUI])
+            watolib.add_change("edit-sites",
+                               msg,
+                               sites=[config.omd_site()],
+                               domains=[watolib.ConfigDomainGUI])
 
         return "sites", msg
 
@@ -465,8 +466,8 @@ class ModeDistributedMonitoring(WatoMode):
 
     def buttons(self):
         super(ModeDistributedMonitoring, self).buttons()
-        html.context_button(
-            _("New connection"), watolib.folder_preserving_link([("mode", "edit_site")]), "new")
+        html.context_button(_("New connection"),
+                            watolib.folder_preserving_link([("mode", "edit_site")]), "new")
 
     def action(self):
         delete_id = html.request.var("_delete")
@@ -528,11 +529,10 @@ class ModeDistributedMonitoring(WatoMode):
             if "secret" in site:
                 del site["secret"]
             self._site_mgmt.save_sites(configured_sites)
-            watolib.add_change(
-                "edit-site",
-                _("Logged out of remote site %s") % html.render_tt(site["alias"]),
-                domains=[watolib.ConfigDomainGUI],
-                sites=[watolib.default_site()])
+            watolib.add_change("edit-site",
+                               _("Logged out of remote site %s") % html.render_tt(site["alias"]),
+                               domains=[watolib.ConfigDomainGUI],
+                               sites=[watolib.default_site()])
             return None, _("Logged out.")
 
         elif c is False:
@@ -616,8 +616,9 @@ class ModeDistributedMonitoring(WatoMode):
         forms.section(_('Administrator password'))
         html.password_input("_passwd")
         forms.section(_('Confirm overwrite'))
-        html.checkbox(
-            "_confirm", False, label=_("Confirm overwrite of the remote site configuration"))
+        html.checkbox("_confirm",
+                      False,
+                      label=_("Confirm overwrite of the remote site configuration"))
         forms.end()
         html.button("_do_login", _("Login"))
         html.button("_abort", _("Abort"))
@@ -696,10 +697,9 @@ class ModeDistributedMonitoring(WatoMode):
 
         # The status is fetched asynchronously for all sites. Show a temporary loading icon.
         html.open_div(id_="livestatus_status_%s" % site_id, class_="connection_status")
-        html.icon(
-            _("Fetching livestatus status"),
-            "reload",
-            class_=["reloading", "replication_status_loading"])
+        html.icon(_("Fetching livestatus status"),
+                  "reload",
+                  class_=["reloading", "replication_status_loading"])
         html.close_div()
 
     def _show_config_connection_config(self, table, site_id, site):
@@ -731,10 +731,9 @@ class ModeDistributedMonitoring(WatoMode):
         html.open_div(id_="replication_status_%s" % site_id, class_="connection_status")
         if site.get("replication"):
             # The status is fetched asynchronously for all sites. Show a temporary loading icon.
-            html.icon(
-                _("Fetching replication status"),
-                "reload",
-                class_=["reloading", "replication_status_loading"])
+            html.icon(_("Fetching replication status"),
+                      "reload",
+                      class_=["reloading", "replication_status_loading"])
         html.close_div()
 
 
@@ -780,8 +779,8 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             icon = "failed"
             msg = "%s" % status.response
 
-        return (html.render_icon(icon, title=msg) + html.render_span(
-            msg, style="vertical-align:middle"))
+        return (html.render_icon(icon, title=msg) +
+                html.render_span(msg, style="vertical-align:middle"))
 
     def _render_status_connection_status(self, site_id, site):
         site_status = cmk.gui.sites.state(site_id, {})
@@ -796,8 +795,8 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             message = status_msg.title()
 
         icon = "success" if status == "online" else "failed"
-        return (html.render_icon(icon, title=message) + html.render_span(
-            message, style="vertical-align:middle"))
+        return (html.render_icon(icon, title=message) +
+                html.render_span(message, style="vertical-align:middle"))
 
 
 PingResult = NamedTuple("PingResult", [
@@ -829,8 +828,8 @@ class ReplicationStatusFetcher(object):
 
         processes = []
         for site_id, site in sites:
-            process = multiprocessing.Process(
-                target=self._fetch_for_site, args=(site_id, site, result_queue))
+            process = multiprocessing.Process(target=self._fetch_for_site,
+                                              args=(site_id, site, result_queue))
             process.start()
             processes.append((site_id, process))
 
@@ -926,8 +925,8 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
 
     def buttons(self):
         super(ModeEditSiteGlobals, self).buttons()
-        html.context_button(
-            _("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
+        html.context_button(_("All Sites"), watolib.folder_preserving_link([("mode", "sites")]),
+                            "back")
         _site_detail_buttons(self._site_id, self._site, current_mode=self.name())
 
     # TODO: Consolidate with ModeEditGlobals.action()
@@ -1054,8 +1053,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     def buttons(self):
         super(ModeSiteLivestatusEncryption, self).buttons()
-        html.context_button(
-            _("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
+        html.context_button(_("All Sites"), watolib.folder_preserving_link([("mode", "sites")]),
+                            "back")
         _site_detail_buttons(self._site_id, self._site, current_mode=self.name())
 
     def action(self):
@@ -1100,11 +1099,11 @@ class ModeSiteLivestatusEncryption(WatoMode):
         trusted_cas.append(cert_pem)
         global_settings["trusted_certificate_authorities"] = trusted
 
-        watolib.add_change(
-            "edit-configvar",
-            _("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256,
-            domains=[config_variable.domain()],
-            need_restart=config_variable.need_restart())
+        watolib.add_change("edit-configvar",
+                           _("Added CA with fingerprint %s to trusted certificate authorities") %
+                           digest_sha256,
+                           domains=[config_variable.domain()],
+                           need_restart=config_variable.need_restart())
         watolib.save_global_settings(global_settings)
 
         return None, _(
@@ -1164,10 +1163,9 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 table.text_cell(_("Is CA"), _("Yes") if cert_detail.is_ca else _("No"))
                 table.text_cell(_("Fingerprint"), cert_detail.digest_sha256)
                 table.text_cell(_("Valid till"), cert_detail.valid_till)
-                table.text_cell(
-                    _("Trusted"),
-                    self._render_cert_trusted(cert_detail),
-                    css=self._cert_trusted_css_class(cert_detail))
+                table.text_cell(_("Trusted"),
+                                self._render_cert_trusted(cert_detail),
+                                css=self._cert_trusted_css_class(cert_detail))
 
     def _render_cert_trusted(self, cert):
         if cert.verify_result.is_valid:

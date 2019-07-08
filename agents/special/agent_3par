@@ -124,15 +124,14 @@ if not opt_verify:
 # in json format. The standard port for all requests is 8080 as it is hard
 # coded above. Maybe this will be changed later!
 try:
-    req = requests.post(
-        "%s/credentials" % url,
-        json={
-            'user': opt_user,
-            'password': opt_password
-        },
-        headers=headers,
-        timeout=10,
-        verify=opt_verify)
+    req = requests.post("%s/credentials" % url,
+                        json={
+                            'user': opt_user,
+                            'password': opt_password
+                        },
+                        headers=headers,
+                        timeout=10,
+                        verify=opt_verify)
 
 except requests.exceptions.RequestException as e:
     sys.stderr.write("Error: %s\n" % e)
@@ -140,8 +139,8 @@ except requests.exceptions.RequestException as e:
 
 # Status code should be 201.
 if not req.status_code == requests.codes.CREATED:  # pylint: disable=no-member
-    sys.stderr.write(
-        "Wrong status code: %s. Expected: %s \n" % (req.status_code, requests.codes.CREATED))  # pylint: disable=no-member
+    sys.stderr.write("Wrong status code: %s. Expected: %s \n" %
+                     (req.status_code, requests.codes.CREATED))  # pylint: disable=no-member
     sys.exit(1)
 else:
     try:
@@ -163,13 +162,12 @@ for value in opt_values:
 
 # Perform a proper disconnect. The Connection is closed if the session key
 # is deleted. The standard timeout for a session would be 15 minutes.
-req = requests.delete(
-    "%s/credentials/%s" % (url, headers["X-HP3PAR-WSAPI-SessionKey"]),
-    headers=headers,
-    timeout=10,
-    verify=opt_verify)
+req = requests.delete("%s/credentials/%s" % (url, headers["X-HP3PAR-WSAPI-SessionKey"]),
+                      headers=headers,
+                      timeout=10,
+                      verify=opt_verify)
 
 if not req.status_code == requests.codes.OK:  # pylint: disable=no-member
-    sys.stderr.write(
-        "Wrong status code: %s. Expected: %s \n" % (req.status_code, requests.codes.OK))  # pylint: disable=no-member
+    sys.stderr.write("Wrong status code: %s. Expected: %s \n" %
+                     (req.status_code, requests.codes.OK))  # pylint: disable=no-member
     sys.exit(1)

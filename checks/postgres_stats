@@ -55,8 +55,8 @@ def _check_never_checked(item, text, never_checked, params, now):
         return
 
     count = len(never_checked)
-    infotext = "%d tables were never %s: %s%s" % (count, text, "/".join(never_checked[:5]),
-                                                  " (first 5 shown)" if count > 5 else "")
+    infotext = "%d tables were never %s: %s%s" % (count, text, "/".join(
+        never_checked[:5]), " (first 5 shown)" if count > 5 else "")
     yield 0, infotext
 
     last_ts = get_item_state(key)
@@ -108,12 +108,11 @@ def check_postgres_stats(item, params, parsed):
     if oldest_element:
         yield 0, "Table: %s" % oldest_element["tname"]
         oldest_age = now - int(oldest_element[stats_field])
-        yield check_levels(
-            oldest_age,
-            None,
-            params.get("last_%s" % paramskey),
-            human_readable_func=get_age_human_readable,
-            infoname='Time since last vacuum')
+        yield check_levels(oldest_age,
+                           None,
+                           params.get("last_%s" % paramskey),
+                           human_readable_func=get_age_human_readable,
+                           infoname='Time since last vacuum')
 
     for subresult in _check_never_checked(item, text, never_checked, params, now):
         yield subresult

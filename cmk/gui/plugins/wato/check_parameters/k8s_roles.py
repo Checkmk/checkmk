@@ -58,33 +58,32 @@ class RulespecCheckgroupParametersK8SRoles(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('total',
-                 Tuple(
-                     title=_('Total'),
-                     default_value=(80.0, 90.0),
-                     elements=[
-                         Integer(title=_("Warning above")),
-                         Integer(title=_("Critical above")),
-                     ],
-                 )),
-                ('cluster_roles',
-                 Tuple(
-                     title=_('Cluster roles'),
-                     default_value=(80.0, 90.0),
-                     elements=[
-                         Integer(title=_("Warning above")),
-                         Integer(title=_("Critical above")),
-                     ],
-                 )),
-                ('roles',
-                 Tuple(
-                     title=_('Roles'),
-                     default_value=(80.0, 90.0),
-                     elements=[
-                         Integer(title=_("Warning above")),
-                         Integer(title=_("Critical above")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('total',
+             Tuple(
+                 title=_('Total'),
+                 default_value=(80.0, 90.0),
+                 elements=[
+                     Integer(title=_("Warning above")),
+                     Integer(title=_("Critical above")),
+                 ],
+             )),
+            ('cluster_roles',
+             Tuple(
+                 title=_('Cluster roles'),
+                 default_value=(80.0, 90.0),
+                 elements=[
+                     Integer(title=_("Warning above")),
+                     Integer(title=_("Critical above")),
+                 ],
+             )),
+            ('roles',
+             Tuple(
+                 title=_('Roles'),
+                 default_value=(80.0, 90.0),
+                 elements=[
+                     Integer(title=_("Warning above")),
+                     Integer(title=_("Critical above")),
+                 ],
+             )),
+        ],)

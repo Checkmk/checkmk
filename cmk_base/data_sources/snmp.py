@@ -184,14 +184,14 @@ class SNMPDataSource(DataSource):
             # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added latera
             if self._persisted_sections and section_name in self._persisted_sections:
-                self._logger.debug(
-                    "%s: Skip fetching data (persisted info exists)" % (check_plugin_name))
+                self._logger.debug("%s: Skip fetching data (persisted info exists)" %
+                                   (check_plugin_name))
                 continue
 
             # Prevent duplicate data fetching of identical section in case of SNMP sub checks
             if section_name in info:
-                self._logger.debug(
-                    "%s: Skip fetching data (section already fetched)" % (check_plugin_name))
+                self._logger.debug("%s: Skip fetching data (section already fetched)" %
+                                   (check_plugin_name))
                 continue
 
             self._logger.debug("%s: Fetching data" % (check_plugin_name))

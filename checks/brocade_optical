@@ -215,11 +215,10 @@ def check_brocade_optical(item, params, parsed):
             yield 0, 'Operational %s' % oper_status_readable
 
         if 'temp' in iface:
-            yield check_temperature(
-                iface['temp'][0],
-                params,
-                "brocade_optical_%s" % item,
-                dev_status=nagios_state(iface, 'temp'))
+            yield check_temperature(iface['temp'][0],
+                                    params,
+                                    "brocade_optical_%s" % item,
+                                    dev_status=nagios_state(iface, 'temp'))
 
         if 'tx_light' in iface and iface['tx_light'][0] is not None:
             yield nagios_state(iface, 'tx_light'), infotext(iface['tx_light'], "TX Light", "dBm"),\
@@ -231,11 +230,10 @@ def check_brocade_optical(item, params, parsed):
 
         if 'lanes' in iface and params.get('lanes', False):
             for num, lane in iface['lanes'].iteritems():
-                state, text, perf = check_temperature(
-                    lane['temp'][0],
-                    params,
-                    "brocade_optical_lane%d_%s" % (num, item),
-                    dev_status=nagios_state(lane, 'temp'))
+                state, text, perf = check_temperature(lane['temp'][0],
+                                                      params,
+                                                      "brocade_optical_lane%d_%s" % (num, item),
+                                                      dev_status=nagios_state(lane, 'temp'))
                 perf = [("port_%s_%d" % (perf[0][0], num), perf[0][1])]
                 if state in [1, 2]:
                     yield state, "Temperature (Lane %d) %s" % (num, text), perf

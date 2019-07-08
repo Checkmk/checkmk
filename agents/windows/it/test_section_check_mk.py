@@ -35,8 +35,8 @@ def testconfig(request, config):
     return config
 
 
-@pytest.fixture(
-    params=[None, 'MontyPython'], ids=['host_restriction=None', 'host_restriction=MontyPython'])
+@pytest.fixture(params=[None, 'MontyPython'],
+                ids=['host_restriction=None', 'host_restriction=MontyPython'])
 def testconfig_host(request, testconfig):
     Globals.host = request.param
     if request.param:
@@ -44,8 +44,8 @@ def testconfig_host(request, testconfig):
     return testconfig
 
 
-@pytest.fixture(
-    params=[None, '127.0.0.1 10.1.2.3'], ids=['only_from=None', 'only_from=127.0.0.1_10.1.2.3'])
+@pytest.fixture(params=[None, '127.0.0.1 10.1.2.3'],
+                ids=['only_from=None', 'only_from=127.0.0.1_10.1.2.3'])
 def testconfig_only_from(request, testconfig_host):
     Globals.only_from = request.param
     if request.param:
@@ -53,16 +53,17 @@ def testconfig_only_from(request, testconfig_host):
     return testconfig_host
 
 
-@pytest.fixture(
-    params=[['test'], ['debug'], ['file', Globals.output_file]], ids=['test', 'debug', 'file'])
+@pytest.fixture(params=[['test'], ['debug'], ['file', Globals.output_file]],
+                ids=['test', 'debug', 'file'])
 def actual_output_no_tcp(request, write_config):
     if platform.system() == 'Windows':
         # Run agent and yield its output.
         try:
             save_cwd = os.getcwd()
             os.chdir(remotedir)
-            p = subprocess.Popen(
-                [agent_exe] + request.param, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen([agent_exe] + request.param,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
             stdout, stderr = p.communicate()
             sys.stdout.write(stdout)
             sys.stderr.write(stderr)
@@ -100,8 +101,8 @@ def expected_output():
         r'Architecture: \d{2}bit',
         r'WorkingDirectory: %s%s' % (drive_letter, re.escape(remotedir)),
         r'ConfigFile: %s%s' % (drive_letter, re.escape(os.path.join(remotedir, 'check_mk.ini'))),
-        r'LocalConfigFile: %s%s' % (drive_letter,
-                                    re.escape(os.path.join(remotedir, 'check_mk_local.ini'))),
+        r'LocalConfigFile: %s%s' %
+        (drive_letter, re.escape(os.path.join(remotedir, 'check_mk_local.ini'))),
         r'AgentDirectory: %s%s' % (drive_letter, re.escape(remotedir)),
         r'PluginsDirectory: %s%s' % (drive_letter, re.escape(os.path.join(remotedir, 'plugins'))),
         r'StateDirectory: %s%s' % (drive_letter, re.escape(os.path.join(remotedir, 'state'))),

@@ -220,8 +220,10 @@ for device in devices:
         data = {}
         for (area_name, db_number), (start, end) in addresses.items():
             area_id = area_name_to_area_id(area_name)
-            data[(area_name, db_number)] = client.read_area(
-                area_id, db_number, start, size=end - start)
+            data[(area_name, db_number)] = client.read_area(area_id,
+                                                            db_number,
+                                                            start,
+                                                            size=end - start)
 
         # Now loop all values to be fetched and extract the data
         # from the bytes fetched above

@@ -59,15 +59,16 @@ class RulespecCheckgroupParametersOracleRman(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("levels",
-                       Tuple(
-                           title=_("Maximum Age for RMAN backups"),
-                           elements=[
-                               Age(title=_("warning if older than"), default_value=1800),
-                               Age(title=_("critical if older than"), default_value=3600),
-                           ],
-                       ))],)
+        return Dictionary(elements=[("levels",
+                                     Tuple(
+                                         title=_("Maximum Age for RMAN backups"),
+                                         elements=[
+                                             Age(title=_("warning if older than"),
+                                                 default_value=1800),
+                                             Age(title=_("critical if older than"),
+                                                 default_value=3600),
+                                         ],
+                                     ))],)
 
     @property
     def item_spec(self):

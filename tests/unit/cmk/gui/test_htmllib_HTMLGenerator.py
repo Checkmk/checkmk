@@ -44,11 +44,10 @@ def test_HTMLGenerator(register_builtin_html):
             html.render_a("test", href=u"www.test.case")
             html.render_a(u"test", href=u"www.test.case")
             try:
-                assert html.render_a(
-                    u"test",
-                    href=unicode("www.test.case"),
-                    id_=unicode("something"),
-                    class_=unicode("test_%s") % a)
+                assert html.render_a(u"test",
+                                     href=unicode("www.test.case"),
+                                     id_=unicode("something"),
+                                     class_=unicode("test_%s") % a)
             except Exception as e:
                 print traceback.print_exc()
                 print e

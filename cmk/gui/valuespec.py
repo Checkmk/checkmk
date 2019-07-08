@@ -259,8 +259,8 @@ class Age(ValueSpec):
         # TODO: Validate for correct numbers!
         return (utils.saveint(html.request.var(varprefix + '_days', 0)) * 3600 * 24 +
                 utils.saveint(html.request.var(varprefix + '_hours', 0)) * 3600 +
-                utils.saveint(html.request.var(varprefix + '_minutes', 0)) * 60 + utils.saveint(
-                    html.request.var(varprefix + '_seconds', 0)))
+                utils.saveint(html.request.var(varprefix + '_minutes', 0)) * 60 +
+                utils.saveint(html.request.var(varprefix + '_seconds', 0)))
 
     def value_to_text(self, value):
         days, rest = divmod(value, 60 * 60 * 24)
@@ -787,8 +787,9 @@ class MonitoredHostname(TextAsciiAutocomplete):
     ident = "monitored_hostname"
 
     def __init__(self, **kwargs):
-        super(MonitoredHostname, self).__init__(
-            completion_ident=self.ident, completion_params={}, **kwargs)
+        super(MonitoredHostname, self).__init__(completion_ident=self.ident,
+                                                completion_params={},
+                                                **kwargs)
 
     @classmethod
     def autocomplete_choices(cls, value, params):
@@ -956,8 +957,9 @@ class Url(TextAscii):
 
         # Remove trailing / if the url does not contain any path component
         if self._show_as_link:
-            return html.render_a(
-                text, href=value, target=self._link_target if self._link_target else None)
+            return html.render_a(text,
+                                 href=value,
+                                 target=self._link_target if self._link_target else None)
 
         return value
 
@@ -967,8 +969,9 @@ class HTTPUrl(Url):
 
     def __init__(self, **kwargs):
         kwargs.setdefault("show_as_link", True)
-        super(HTTPUrl, self).__init__(
-            allowed_schemes=["http", "https"], default_scheme="http", **kwargs)
+        super(HTTPUrl, self).__init__(allowed_schemes=["http", "https"],
+                                      default_scheme="http",
+                                      **kwargs)
 
 
 def CheckMKVersion(**args):
@@ -1012,13 +1015,12 @@ class TextAreaUnicode(TextUnicode):
         if self._monospaced:
             attrs["class"] = "tt"
 
-        html.text_area(
-            varprefix,
-            value,
-            rows=rows,
-            cols=self._cols,
-            attrs=attrs,
-            try_max_width=self._try_max_width)
+        html.text_area(varprefix,
+                       value,
+                       rows=rows,
+                       cols=self._cols,
+                       attrs=attrs,
+                       try_max_width=self._try_max_width)
 
     # Overridded because we do not want to strip() here and remove '\r'
     def from_html_vars(self, varprefix):
@@ -1142,8 +1144,8 @@ class ListOfStrings(ValueSpec):
         html.close_div()
         html.div('', style="clear:left;")
         html.javascript("cmk.valuespecs.list_of_strings_init(%s, %s, %s);" %
-                        (json.dumps(varprefix), json.dumps(self._split_on_paste),
-                         json.dumps(self._split_separators)))
+                        (json.dumps(varprefix), json.dumps(
+                            self._split_on_paste), json.dumps(self._split_separators)))
 
     def canonical_value(self):
         return []
@@ -1272,8 +1274,10 @@ class ListOf(ValueSpec):
         else:
             count = len(value)
 
-        html.hidden_field(
-            '%s_count' % varprefix, str(count), id_='%s_count' % varprefix, add_var=True)
+        html.hidden_field('%s_count' % varprefix,
+                          str(count),
+                          id_='%s_count' % varprefix,
+                          add_var=True)
 
         self._show_entries(varprefix, value)
 
@@ -1326,8 +1330,9 @@ class ListOf(ValueSpec):
             html.close_table()
 
         elif self._style == ListOf.Style.FLOATING:
-            html.open_div(
-                id_="%s_prototype" % varprefix, class_="vlof_prototype", style="display:none;")
+            html.open_div(id_="%s_prototype" % varprefix,
+                          class_="vlof_prototype",
+                          style="display:none;")
 
             self._show_entry(varprefix, index, value)
 
@@ -1348,8 +1353,8 @@ class ListOf(ValueSpec):
             html.close_table()
 
         elif self._style == ListOf.Style.FLOATING:
-            html.open_div(
-                id_="%s_container" % varprefix, class_=["valuespec_listof_floating_container"])
+            html.open_div(id_="%s_container" % varprefix,
+                          class_=["valuespec_listof_floating_container"])
 
             for nr, v in enumerate(value):
                 self._show_entry(varprefix, "%d" % (nr + 1), v)
@@ -1382,19 +1387,19 @@ class ListOf(ValueSpec):
     def _show_entry_cell(self, varprefix, index, value):
         html.open_td(class_="vlof_buttons")
 
-        html.hidden_field(
-            varprefix + "_indexof_" + index, "", add_var=True,
-            class_="index")  # reconstruct order after moving stuff
-        html.hidden_field(
-            varprefix + "_orig_indexof_" + index, "", add_var=True, class_="orig_index")
+        html.hidden_field(varprefix + "_indexof_" + index, "", add_var=True,
+                          class_="index")  # reconstruct order after moving stuff
+        html.hidden_field(varprefix + "_orig_indexof_" + index,
+                          "",
+                          add_var=True,
+                          class_="orig_index")
         if self._movable:
-            html.element_dragger_js(
-                "tr",
-                drop_handler="cmk.valuespecs.listof_drop_handler",
-                handler_args={
-                    "cur_index": index,
-                    "varprefix": varprefix
-                })
+            html.element_dragger_js("tr",
+                                    drop_handler="cmk.valuespecs.listof_drop_handler",
+                                    handler_args={
+                                        "cur_index": index,
+                                        "varprefix": varprefix
+                                    })
         self._del_button(varprefix, index)
         html.close_td()
         html.open_td(class_="vlof_content")
@@ -1491,11 +1496,10 @@ class ListOfMultiple(ValueSpec):
             value = self.from_html_vars(varprefix)
 
         # Save all selected items
-        html.hidden_field(
-            '%s_active' % varprefix,
-            ';'.join([k for k in value.keys() if k in self._choice_dict]),
-            id_='%s_active' % varprefix,
-            add_var=True)
+        html.hidden_field('%s_active' % varprefix,
+                          ';'.join([k for k in value.keys() if k in self._choice_dict]),
+                          id_='%s_active' % varprefix,
+                          add_var=True)
 
         # Actual table of currently existing entries
         html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof", extra_css])
@@ -1525,11 +1529,10 @@ class ListOfMultiple(ValueSpec):
         html.br()
 
         choices = [('', '')] + [(ident, vs.title()) for ident, vs in self._choices]
-        html.dropdown(
-            varprefix + '_choice',
-            choices,
-            style="width: %dex" % self._size if self._size is not None else None,
-            class_="vlof_filter" if self._delete_style == "filter" else None)
+        html.dropdown(varprefix + '_choice',
+                      choices,
+                      style="width: %dex" % self._size if self._size is not None else None,
+                      class_="vlof_filter" if self._delete_style == "filter" else None)
         html.javascript('cmk.valuespecs.listofmultiple_init(\'%s\');' % varprefix)
         html.jsbutton(varprefix + '_add', self._add_label,
                       "cmk.valuespecs.listofmultiple_add('%s')" % varprefix)
@@ -1665,8 +1668,8 @@ class Checkbox(ValueSpec):
         if not isinstance(value, bool):
             raise MKUserError(
                 varprefix,
-                _("The value %r has type %s, but must be of type bool") % (value,
-                                                                           _type_name(value)))
+                _("The value %r has type %s, but must be of type bool") %
+                (value, _type_name(value)))
 
 
 # A type-save dropdown choice. Parameters:
@@ -1751,16 +1754,16 @@ class DropdownChoice(ValueSpec):
         if len(options) == 0:
             html.write(self._empty_text)
         elif len(options[0]) == 3:
-            html.icon_dropdown(
-                varprefix, self._options_for_html(options), deflt=self._option_for_html(defval))
+            html.icon_dropdown(varprefix,
+                               self._options_for_html(options),
+                               deflt=self._option_for_html(defval))
         else:
-            html.dropdown(
-                varprefix,
-                self._options_for_html(options),
-                deflt=self._option_for_html(defval),
-                onchange=self._on_change,
-                ordered=self._sorted,
-                read_only=self._read_only)
+            html.dropdown(varprefix,
+                          self._options_for_html(options),
+                          deflt=self._option_for_html(defval),
+                          onchange=self._on_change,
+                          ordered=self._sorted,
+                          read_only=self._read_only)
 
     def _get_invalid_choice_title(self, value):
         if "%s" in self._invalid_choice_title or "%r" in self._invalid_choice_title:
@@ -1959,8 +1962,12 @@ class CascadingDropdown(ValueSpec):
 
         vp = varprefix + "_sel"
         onchange = "cmk.valuespecs.cascading_change(this, '%s', %d);" % (varprefix, len(choices))
-        html.dropdown(
-            vp, options, deflt=def_val, onchange=onchange, ordered=self._sorted, label=self._label)
+        html.dropdown(vp,
+                      options,
+                      deflt=def_val,
+                      onchange=onchange,
+                      ordered=self._sorted,
+                      label=self._label)
 
         # make sure, that the visibility is done correctly, in both
         # cases:
@@ -2016,12 +2023,11 @@ class CascadingDropdown(ValueSpec):
 
                 if self._render == CascadingDropdown.Render.foldable:
                     with html.plugged():
-                        html.begin_foldable_container(
-                            "foldable_cascading_dropdown",
-                            id_=hashlib.sha256(repr(value)).hexdigest(),
-                            isopen=False,
-                            title=title,
-                            indent=False)
+                        html.begin_foldable_container("foldable_cascading_dropdown",
+                                                      id_=hashlib.sha256(repr(value)).hexdigest(),
+                                                      isopen=False,
+                                                      title=title,
+                                                      indent=False)
                         html.write(vs.value_to_text(value[1]))
                         html.end_foldable_container()
                     return html.drain()
@@ -2182,9 +2188,8 @@ class ListChoice(ValueSpec):
     def _draw_listchoice(self, varprefix, value, elements, columns, toggle_all):
 
         if self._toggle_all:
-            html.a(
-                _("Check / Uncheck all"),
-                href="javascript:cmk.valuespecs.list_choice_toggle_all('%s')" % varprefix)
+            html.a(_("Check / Uncheck all"),
+                   href="javascript:cmk.valuespecs.list_choice_toggle_all('%s')" % varprefix)
 
         html.open_table(id_="%s_tbl" % varprefix, class_=["listchoice"])
         for nr, (key, title) in enumerate(elements):
@@ -2316,9 +2321,8 @@ class DualListChoice(ListChoice):
         unselect_func = 'cmk.valuespecs.duallist_switch(\'selected\', \'%s\', %d);' % (
             varprefix, 1 if self._custom_order else 0)
 
-        html.open_table(
-            class_=["vs_duallist"],
-            style="width: %dpx;" % (self._size * 6.4) if self._size else None)
+        html.open_table(class_=["vs_duallist"],
+                        style="width: %dpx;" % (self._size * 6.4) if self._size else None)
 
         html.open_tr()
         html.open_td(class_="head")
@@ -2353,18 +2357,19 @@ class DualListChoice(ListChoice):
 
             html.open_td()
             attrs["onchange"] = onchange_func
-            html.multi_select(
-                "%s_%s" % (varprefix, suffix),
-                choices,
-                deflt='',
-                ordered=self._custom_order,
-                **attrs)
+            html.multi_select("%s_%s" % (varprefix, suffix),
+                              choices,
+                              deflt='',
+                              ordered=self._custom_order,
+                              **attrs)
             html.close_td()
         html.close_tr()
 
         html.close_table()
-        html.hidden_field(
-            varprefix, '|'.join([k for k, v in selected]), id_=varprefix, add_var=True)
+        html.hidden_field(varprefix,
+                          '|'.join([k for k, v in selected]),
+                          id_=varprefix,
+                          add_var=True)
 
     def validate_value(self, value, varprefix):
         try:
@@ -2425,9 +2430,8 @@ class OptionalDropdownChoice(DropdownChoice):
         else:
             div_is_open = self.value_is_explicit(value)
 
-        html.open_span(
-            id_="%s_ex" % varprefix,
-            style=["white-space: nowrap;", None if div_is_open else "display:none;"])
+        html.open_span(id_="%s_ex" % varprefix,
+                       style=["white-space: nowrap;", None if div_is_open else "display:none;"])
         html.nbsp()
 
         if defval == "other":
@@ -2932,30 +2936,28 @@ class Timerange(CascadingDropdown):
             ("y1", _("Last year")),
             ("age", _("The last..."), Age()),
             ("date", _("Date range"),
-             Tuple(
-                 orientation="horizontal",
-                 title_br=False,
-                 elements=[
-                     AbsoluteDate(title=_("From:")),
-                     AbsoluteDate(title=_("To:")),
-                 ])),
+             Tuple(orientation="horizontal",
+                   title_br=False,
+                   elements=[
+                       AbsoluteDate(title=_("From:")),
+                       AbsoluteDate(title=_("To:")),
+                   ])),
         ]
 
         if self._include_time:
             choices += [("time", _("Date & time range"),
-                         Tuple(
-                             orientation="horizontal",
-                             title_br=False,
-                             elements=[
-                                 AbsoluteDate(
-                                     title=_("From:"),
-                                     include_time=True,
-                                 ),
-                                 AbsoluteDate(
-                                     title=_("To:"),
-                                     include_time=True,
-                                 ),
-                             ]))]
+                         Tuple(orientation="horizontal",
+                               title_br=False,
+                               elements=[
+                                   AbsoluteDate(
+                                       title=_("From:"),
+                                       include_time=True,
+                                   ),
+                                   AbsoluteDate(
+                                       title=_("To:"),
+                                       include_time=True,
+                                   ),
+                               ]))]
         return choices
 
     def _get_graph_timeranges(self):
@@ -3025,8 +3027,9 @@ class Timerange(CascadingDropdown):
                 'd': (_("Today"), _("Yesterday")),
                 'w': (_("This week"), _("Last week")),
                 'y': (str(year), str(year - 1)),
-                'm': ("%s %d" % (defines.month_name(month - 1), year),
-                      "%s %d" % (defines.month_name((month + 10) % 12), year - int(month == 1))),
+                'm':
+                    ("%s %d" % (defines.month_name(month - 1), year), "%s %d" % (defines.month_name(
+                        (month + 10) % 12), year - int(month == 1))),
             }[rangespec[0]]
 
             if rangespec[1] == '0':
@@ -3106,12 +3109,11 @@ class Optional(ValueSpec):
         else:
             label = _(" Activate this option")
 
-        html.checkbox(
-            "%s_use" % varprefix,
-            checked,
-            label=label,
-            onclick="cmk.valuespecs.toggle_option(this, %r, %r)" % (div_id,
-                                                                    1 if self._negate else 0))
+        html.checkbox("%s_use" % varprefix,
+                      checked,
+                      label=label,
+                      onclick="cmk.valuespecs.toggle_option(this, %r, %r)" %
+                      (div_id, 1 if self._negate else 0))
 
         if self._sameline:
             html.nbsp()
@@ -3124,11 +3126,11 @@ class Optional(ValueSpec):
         else:
             indent = 0
 
-        html.open_span(
-            id_=div_id,
-            style=[
-                "margin-left: %dpx;" % indent, "display:none;" if checked == self._negate else None
-            ])
+        html.open_span(id_=div_id,
+                       style=[
+                           "margin-left: %dpx;" % indent,
+                           "display:none;" if checked == self._negate else None
+                       ])
         if value == self._none_value:
             value = self._valuespec.default_value()
         if self._valuespec.title():
@@ -3197,13 +3199,13 @@ class OptionalEdit(Optional):
         if value is None:
             value = self._valuespec.default_value()
 
-        html.open_span(
-            id_="%s_off" % div_id, style="display:none;" if checked != self._negate else None)
+        html.open_span(id_="%s_off" % div_id,
+                       style="display:none;" if checked != self._negate else None)
         html.write(value)
         html.close_span()
 
-        html.open_span(
-            id_="%s_on" % div_id, style="display:none;" if checked == self._negate else None)
+        html.open_span(id_="%s_on" % div_id,
+                       style="display:none;" if checked == self._negate else None)
         if self._valuespec.title():
             html.write(self._valuespec.title() + " ")
         self._valuespec.render_input(varprefix + "_value", value)
@@ -3573,11 +3575,10 @@ class Dictionary(ValueSpec):
                 if self._columns == 2:
                     label += ":"
                     colon_printed = True
-                html.checkbox(
-                    "%s_USE" % vp,
-                    visible,
-                    label=label,
-                    onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id)
+                html.checkbox("%s_USE" % vp,
+                              visible,
+                              label=label,
+                              onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id)
             else:
                 visible = True
                 if vs.title():
@@ -3640,11 +3641,19 @@ class Dictionary(ValueSpec):
                     css = None
                 else:
                     header, css, section_elements = entry
-                self.render_input_form_header(
-                    varprefix, value, header, section_elements, as_part, css=css)
+                self.render_input_form_header(varprefix,
+                                              value,
+                                              header,
+                                              section_elements,
+                                              as_part,
+                                              css=css)
         else:
-            self.render_input_form_header(
-                varprefix, value, self.title() or _("Properties"), None, as_part, css=None)
+            self.render_input_form_header(varprefix,
+                                          value,
+                                          self.title() or _("Properties"),
+                                          None,
+                                          as_part,
+                                          css=None)
 
         if not as_part:
             forms.end()
@@ -4052,17 +4061,15 @@ class PasswordSpec(Password):
         self.classtype_info()
         TextAscii.render_input(self, varprefix, value)
         if not value:
-            html.icon_button(
-                "#",
-                _(u"Randomize password"),
-                "random",
-                onclick="cmk.valuespecs.passwordspec_randomize(this);")
+            html.icon_button("#",
+                             _(u"Randomize password"),
+                             "random",
+                             onclick="cmk.valuespecs.passwordspec_randomize(this);")
         if self._hidden:
-            html.icon_button(
-                "#",
-                _(u"Show/Hide password"),
-                "showhide",
-                onclick="cmk.valuespecs.toggle_hidden(this);")
+            html.icon_button("#",
+                             _(u"Show/Hide password"),
+                             "showhide",
+                             onclick="cmk.valuespecs.toggle_hidden(this);")
 
         self.password_plaintext_warning()
 
@@ -4097,8 +4104,8 @@ class FileUpload(ValueSpec):
             if not matched:
                 raise MKUserError(
                     varprefix,
-                    _("Invalid file name extension. Allowed are: %s") % ", ".join(
-                        self._allowed_extensions))
+                    _("Invalid file name extension. Allowed are: %s") %
+                    ", ".join(self._allowed_extensions))
 
         self.custom_validate(value, varprefix)
 
@@ -4164,11 +4171,10 @@ class UploadOrPasteTextFile(Alternative):
         allow_empty = kwargs.get("allow_empty", True)
         kwargs["elements"] = [
             FileUpload(title=_("Upload %s") % file_title, allow_empty=allow_empty),
-            TextAreaUnicode(
-                title=_("Content of %s") % file_title,
-                allow_empty=allow_empty,
-                cols=80,
-                rows="auto"),
+            TextAreaUnicode(title=_("Content of %s") % file_title,
+                            allow_empty=allow_empty,
+                            cols=80,
+                            rows="auto"),
         ]
 
         if kwargs.get("default_mode", "text") == "upload":
@@ -4267,14 +4273,14 @@ class Labels(ValueSpec):
 
     def render_input(self, varprefix, value):
         html.help(self.help())
-        html.text_input(
-            varprefix,
-            default_value=json.dumps(_encode_labels_for_tagify(value.items())).decode("utf-8"),
-            cssclass="labels",
-            attrs={
-                "placeholder": _("Add some label"),
-                "data-world": self._world.value,
-            })
+        html.text_input(varprefix,
+                        default_value=json.dumps(_encode_labels_for_tagify(
+                            value.items())).decode("utf-8"),
+                        cssclass="labels",
+                        attrs={
+                            "placeholder": _("Add some label"),
+                            "data-world": self._world.value,
+                        })
 
 
 @page_registry.register_page("ajax_autocomplete_labels")
@@ -4454,22 +4460,20 @@ class IconSelector(ValueSpec):
         for category_name, category_alias, icons in available_icons:
             html.open_li(class_="active" if active_category == category_name else None)
             # TODO: TEST
-            html.a(
-                category_alias,
-                href="javascript:cmk.valuespecs.iconselector_toggle(\'%s\', \'%s\')" %
-                (varprefix, category_name),
-                id_="%s_%s_nav" % (varprefix, category_name),
-                class_="%s_nav" % varprefix)
+            html.a(category_alias,
+                   href="javascript:cmk.valuespecs.iconselector_toggle(\'%s\', \'%s\')" %
+                   (varprefix, category_name),
+                   id_="%s_%s_nav" % (varprefix, category_name),
+                   class_="%s_nav" % varprefix)
             html.close_li()
         html.close_ul()
 
         # Now render the icons grouped by category
         empty = ['empty'] if self._allow_empty else []
         for category_name, category_alias, icons in available_icons:
-            html.open_div(
-                id_="%s_%s_container" % (varprefix, category_name),
-                class_=["icon_container", "%s_container" % varprefix],
-                style="display:none;" if active_category != category_name else None)
+            html.open_div(id_="%s_%s_container" % (varprefix, category_name),
+                          class_=["icon_container", "%s_container" % varprefix],
+                          style="display:none;" if active_category != category_name else None)
 
             for icon in empty + sorted(icons):
                 html.open_a(
@@ -4490,10 +4494,10 @@ class IconSelector(ValueSpec):
 
         html.open_div(class_="buttons")
 
-        html.jsbutton(
-            "_toggle_names",
-            _("Toggle names"),
-            onclick="cmk.valuespecs.iconselector_toggle_names(event, %s)" % json.dumps(varprefix))
+        html.jsbutton("_toggle_names",
+                      _("Toggle names"),
+                      onclick="cmk.valuespecs.iconselector_toggle_names(event, %s)" %
+                      json.dumps(varprefix))
 
         import cmk.gui.config as config  # FIXME: Clean this up. But how?
         if config.user.may('wato.icons'):
@@ -4529,17 +4533,16 @@ class IconSelector(ValueSpec):
 
 class ListOfTimeRanges(ListOf):
     def __init__(self, **kwargs):
-        super(ListOfTimeRanges, self).__init__(
-            TimeofdayRange(
-                allow_empty=True,
-                allow_24_00=True,
-            ),
-            movable=False,
-            add_label=_("Add time range"),
-            del_label=_("Delete time range"),
-            style=ListOf.Style.FLOATING,
-            magic="#!#",
-            **kwargs)
+        super(ListOfTimeRanges, self).__init__(TimeofdayRange(
+            allow_empty=True,
+            allow_24_00=True,
+        ),
+                                               movable=False,
+                                               add_label=_("Add time range"),
+                                               del_label=_("Delete time range"),
+                                               style=ListOf.Style.FLOATING,
+                                               magic="#!#",
+                                               **kwargs)
 
 
 # Kept for compatibility reasons (removed in 1.6)
@@ -4571,11 +4574,10 @@ class Color(ValueSpec):
         # Holds the actual value for form submission
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var=True)
 
-        indicator = html.render_div(
-            '',
-            id_="%s_preview" % varprefix,
-            class_="cp-preview",
-            style="background-color:%s" % value)
+        indicator = html.render_div('',
+                                    id_="%s_preview" % varprefix,
+                                    class_="cp-preview",
+                                    style="background-color:%s" % value)
 
         # TODO(rh): Please take a look at this hard coded HTML
         # FIXME: Rendering with HTML class causes bug in html popup_trigger function.
@@ -4590,12 +4592,11 @@ class Color(ValueSpec):
             "cmk.valuespecs.add_color_picker(%s, %s)" \
             "</script>" % (json.dumps(varprefix), json.dumps(value))
 
-        html.popup_trigger(
-            indicator,
-            varprefix + '_popup',
-            menu_content=menu_content,
-            cssclass="colorpicker",
-            onclose=self._on_change)
+        html.popup_trigger(indicator,
+                           varprefix + '_popup',
+                           menu_content=menu_content,
+                           cssclass="colorpicker",
+                           onclose=self._on_change)
 
     def from_html_vars(self, varprefix):
         color = html.request.var(varprefix + '_value')

@@ -92,8 +92,9 @@ class RulespecCheckgroupParametersNetappLuns(CheckParameterRulespecWithItem):
                      elements=[
                          get_free_used_dynamic_valuespec("used", "LUN"),
                          Transform(
-                             get_free_used_dynamic_valuespec(
-                                 "free", "LUN", default_value=(20.0, 10.0)),
+                             get_free_used_dynamic_valuespec("free",
+                                                             "LUN",
+                                                             default_value=(20.0, 10.0)),
                              allow_empty=False,
                              forth=transform_filesystem_free,
                              back=transform_filesystem_free,
@@ -101,14 +102,12 @@ class RulespecCheckgroupParametersNetappLuns(CheckParameterRulespecWithItem):
                      ],
                  )),
                 ("trend_range",
-                 Optional(
-                     Integer(
-                         title=_("Time Range for lun filesystem trend computation"),
-                         default_value=24,
-                         minvalue=1,
-                         unit=_("hours")),
-                     title=_("Trend computation"),
-                     label=_("Enable trend computation"))),
+                 Optional(Integer(title=_("Time Range for lun filesystem trend computation"),
+                                  default_value=24,
+                                  minvalue=1,
+                                  unit=_("hours")),
+                          title=_("Trend computation"),
+                          label=_("Enable trend computation"))),
                 ("trend_mb",
                  Tuple(
                      title=_("Levels on trends in MB per time range"),
@@ -158,16 +157,14 @@ class RulespecCheckgroupParametersNetappLuns(CheckParameterRulespecWithItem):
                          "the configured levels have been breached. If you set this option "
                          "the check always reports this information"))),
                 ("trend_perfdata",
-                 Checkbox(
-                     title=_("Trend performance data"),
-                     label=_("Enable generation of performance data from trends"))),
+                 Checkbox(title=_("Trend performance data"),
+                          label=_("Enable generation of performance data from trends"))),
                 ("read_only",
-                 Checkbox(
-                     title=_("LUN is read-only"),
-                     help=_("Display a warning if a LUN is not read-only. Without "
-                            "this setting a warning will be displayed if a LUN is "
-                            "read-only."),
-                     label=_("Enable"))),
+                 Checkbox(title=_("LUN is read-only"),
+                          help=_("Display a warning if a LUN is not read-only. Without "
+                                 "this setting a warning will be displayed if a LUN is "
+                                 "read-only."),
+                          label=_("Enable"))),
             ],
         )
 

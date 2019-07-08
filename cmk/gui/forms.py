@@ -242,9 +242,8 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
     if g_header_open:
         end()
 
-    html.open_table(
-        id_=table_id if table_id else None,
-        class_=["nform", "narrow" if narrow else None, css if css else None])
+    html.open_table(id_=table_id if table_id else None,
+                    class_=["nform", "narrow" if narrow else None, css if css else None])
 
     g_section_isopen = html.begin_foldable_container(
         treename=html.form_name if html.form_name else "nform",
@@ -283,17 +282,15 @@ def section(title=None,
     if g_section_open:
         html.close_td()
         html.close_tr()
-    html.open_tr(
-        id_=section_id,
-        class_=["open" if g_section_isopen else "closed", css],
-        style="display:none;" if hide else None)
+    html.open_tr(id_=section_id,
+                 class_=["open" if g_section_isopen else "closed", css],
+                 style="display:none;" if hide else None)
 
     if legend:
         html.open_td(class_=["legend", "simple" if simple else None])
         if title:
-            html.open_div(
-                class_=["title", "withcheckbox" if checkbox else None],
-                title=html.strip_tags(title))
+            html.open_div(class_=["title", "withcheckbox" if checkbox else None],
+                          title=html.strip_tags(title))
             html.write(html.permissive_attrencode(title))
             html.span('.' * 100, class_="dots")
             html.close_div()
@@ -303,8 +300,9 @@ def section(title=None,
                 html.write(checkbox)
             else:
                 name, active, attrname = checkbox
-                html.checkbox(
-                    name, active, onclick='cmk.wato.toggle_attribute(this, \'%s\')' % attrname)
+                html.checkbox(name,
+                              active,
+                              onclick='cmk.wato.toggle_attribute(this, \'%s\')' % attrname)
             html.close_div()
         html.close_td()
     html.open_td(class_=["content", "simple" if simple else None])
@@ -318,6 +316,6 @@ def end():
         html.close_td()
         html.close_tr()
     html.end_foldable_container()
-    html.tr(
-        html.render_td('', colspan=2), class_=["bottom", "open" if g_section_isopen else "closed"])
+    html.tr(html.render_td('', colspan=2),
+            class_=["bottom", "open" if g_section_isopen else "closed"])
     html.close_table()

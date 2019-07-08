@@ -81,17 +81,17 @@ def event_status(settings, config, perfcounters, history):
 @pytest.fixture(scope="function")
 def event_server(settings, config, slave_status, perfcounters, lock_configuration, history,
                  event_status):
-    return cmk.ec.main.EventServer(
-        logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, perfcounters,
-        lock_configuration, history, event_status, cmk.ec.main.StatusTableEvents.columns)
+    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config,
+                                   slave_status, perfcounters, lock_configuration, history,
+                                   event_status, cmk.ec.main.StatusTableEvents.columns)
 
 
 @pytest.fixture(scope="function")
 def status_server(settings, config, slave_status, perfcounters, lock_configuration, history,
                   event_status, event_server):
-    return cmk.ec.main.StatusServer(
-        logging.getLogger("cmk.mkeventd.StatusServer"), settings, config, slave_status,
-        perfcounters, lock_configuration, history, event_status, event_server, threading.Event())
+    return cmk.ec.main.StatusServer(logging.getLogger("cmk.mkeventd.StatusServer"), settings,
+                                    config, slave_status, perfcounters, lock_configuration, history,
+                                    event_status, event_server, threading.Event())
 
 
 def test_handle_client(status_server):

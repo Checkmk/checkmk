@@ -368,8 +368,8 @@ class UserSelection(DropdownChoice):
 
     def __init__(self, **kwargs):
         only_contacts = kwargs.get("only_contacts", False)
-        kwargs["choices"] = self._generate_wato_users_elements_function(
-            kwargs.get("none"), only_contacts=only_contacts)
+        kwargs["choices"] = self._generate_wato_users_elements_function(kwargs.get("none"),
+                                                                        only_contacts=only_contacts)
         kwargs["invalid_choice"] = "complain"  # handle vanished users correctly!
         DropdownChoice.__init__(self, **kwargs)
 
@@ -841,10 +841,10 @@ def _save_user_profiles(updated_profiles):
         # the amount of data to be loaded during regular page processing
         save_custom_attr(user_id, 'serial', str(user.get('serial', 0)))
         save_custom_attr(user_id, 'num_failed_logins', str(user.get('num_failed_logins', 0)))
-        save_custom_attr(user_id, 'enforce_pw_change', str(
-            int(user.get('enforce_pw_change', False))))
-        save_custom_attr(user_id, 'last_pw_change', str(
-            user.get('last_pw_change', int(time.time()))))
+        save_custom_attr(user_id, 'enforce_pw_change', str(int(user.get('enforce_pw_change',
+                                                                        False))))
+        save_custom_attr(user_id, 'last_pw_change', str(user.get('last_pw_change',
+                                                                 int(time.time()))))
 
         if "idle_timeout" in user:
             save_custom_attr(user_id, "idle_timeout", user["idle_timeout"])
@@ -907,35 +907,34 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir=None):
 
     # Remove multisite keys in contacts.
     # TODO: Clean this up. Just improved the performance, but still have no idea what its actually doing...
-    contacts = dict(
-        e for e in [(id,
-                     split_dict(
-                         user,
-                         non_contact_keys + non_contact_attributes_cache[user.get('connector')],
-                         False,
-                     )) for (id, user) in updated_profiles.items()])
+    contacts = dict(e for e in [(id,
+                                 split_dict(
+                                     user,
+                                     non_contact_keys +
+                                     non_contact_attributes_cache[user.get('connector')],
+                                     False,
+                                 )) for (id, user) in updated_profiles.items()])
 
     # Only allow explicitely defined attributes to be written to multisite config
     users = {}
     for uid, profile in updated_profiles.items():
-        users[uid] = dict(
-            [(p, val)
-             for p, val in profile.items()
-             if p in multisite_keys + multisite_attributes_cache[profile.get('connector')]])
+        users[uid] = dict([
+            (p, val)
+            for p, val in profile.items()
+            if p in multisite_keys + multisite_attributes_cache[profile.get('connector')]
+        ])
 
     # Check_MK's monitoring contacts
-    store.save_to_mk_file(
-        "%s/%s" % (check_mk_config_dir, "contacts.mk"),
-        "contacts",
-        contacts,
-        pprint_value=config.wato_pprint_config)
+    store.save_to_mk_file("%s/%s" % (check_mk_config_dir, "contacts.mk"),
+                          "contacts",
+                          contacts,
+                          pprint_value=config.wato_pprint_config)
 
     # GUI specific user configuration
-    store.save_to_mk_file(
-        "%s/%s" % (multisite_config_dir, "users.mk"),
-        "multisite_users",
-        users,
-        pprint_value=config.wato_pprint_config)
+    store.save_to_mk_file("%s/%s" % (multisite_config_dir, "users.mk"),
+                          "multisite_users",
+                          users,
+                          pprint_value=config.wato_pprint_config)
 
 
 # User attributes not to put into contact definitions for Check_MK
@@ -1164,8 +1163,8 @@ def save_connection_config(connections, base_dir=None):
     if not base_dir:
         base_dir = _multisite_dir()
     store.mkdir(base_dir)
-    store.save_to_mk_file(
-        os.path.join(base_dir, "user_connections.mk"), "user_connections", connections)
+    store.save_to_mk_file(os.path.join(base_dir, "user_connections.mk"), "user_connections",
+                          connections)
 
     for connector_class in user_connector_registry.values():
         connector_class.config_changed()
@@ -1365,8 +1364,8 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
                     _("[%s] Finished sync for connection") % connection_id)
             except Exception as e:
                 job_interface.send_exception(_("[%s] Exception: %s") % (connection_id, e))
-                logger.error(
-                    'Exception (%s, userdb_job): %s' % (connection_id, traceback.format_exc()))
+                logger.error('Exception (%s, userdb_job): %s' %
+                             (connection_id, traceback.format_exc()))
 
         job_interface.send_progress_update(_("Finalizing synchronization"))
         general_userdb_job()

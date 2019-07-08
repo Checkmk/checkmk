@@ -367,8 +367,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
             # compute argument, and quote ! and \ for Nagios
             args = core_config.active_check_arguments(
-                hostname, description, act_info["argument_function"](params)).replace(
-                    "\\", "\\\\").replace("!", "\\!")
+                hostname, description,
+                act_info["argument_function"](params)).replace("\\", "\\\\").replace("!", "\\!")
 
             if description in used_descriptions:
                 cn, it = used_descriptions[description]
@@ -1099,8 +1099,9 @@ def _get_needed_check_plugin_names(host_config):
             needed_check_plugin_names.add(source.special_agent_plugin_file_name)
 
     # Collect the needed check plugin names using the host check table
-    for check_plugin_name in check_table.get_needed_check_names(
-            host_config.hostname, filter_mode="include_clustered", skip_ignored=False):
+    for check_plugin_name in check_table.get_needed_check_names(host_config.hostname,
+                                                                filter_mode="include_clustered",
+                                                                skip_ignored=False):
         if config.check_info[check_plugin_name].get("extra_sections"):
             for section_name in config.check_info[check_plugin_name]["extra_sections"]:
                 if section_name in config.check_info:

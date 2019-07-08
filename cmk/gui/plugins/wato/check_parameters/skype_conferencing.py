@@ -58,57 +58,41 @@ class RulespecCheckgroupParametersSkypeConferencing(CheckParameterRulespecWithou
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('incomplete_calls',
-                 Dictionary(
-                     title=_("Incomplete Calls"),
-                     elements=[
-                         ("upper",
-                          Tuple(
-                              elements=[
-                                  Float(
-                                      title=_("Warning at"),
-                                      unit=_("per second"),
-                                      default_value=20.0),
-                                  Float(
-                                      title=_("Critical at"),
-                                      unit=_("per second"),
-                                      default_value=40.0),
-                              ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-                ('create_conference_latency',
-                 Dictionary(
-                     title=_("Create Conference Latency"),
-                     elements=[
-                         ("upper",
-                          Tuple(
-                              elements=[
-                                  Float(
-                                      title=_("Warning at"), unit=_("seconds"), default_value=5.0),
-                                  Float(
-                                      title=_("Critical at"), unit=_("seconds"),
-                                      default_value=10.0),
-                              ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-                ('allocation_latency',
-                 Dictionary(
-                     title=_("Conference Allocation Latency"),
-                     elements=[
-                         ("upper",
-                          Tuple(
-                              elements=[
-                                  Float(
-                                      title=_("Warning at"), unit=_("seconds"), default_value=5.0),
-                                  Float(
-                                      title=_("Critical at"), unit=_("seconds"),
-                                      default_value=10.0),
-                              ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('incomplete_calls',
+             Dictionary(
+                 title=_("Incomplete Calls"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Float(title=_("Warning at"), unit=_("per second"), default_value=20.0),
+                          Float(title=_("Critical at"), unit=_("per second"), default_value=40.0),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+            ('create_conference_latency',
+             Dictionary(
+                 title=_("Create Conference Latency"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Float(title=_("Warning at"), unit=_("seconds"), default_value=5.0),
+                          Float(title=_("Critical at"), unit=_("seconds"), default_value=10.0),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+            ('allocation_latency',
+             Dictionary(
+                 title=_("Conference Allocation Latency"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Float(title=_("Warning at"), unit=_("seconds"), default_value=5.0),
+                          Float(title=_("Critical at"), unit=_("seconds"), default_value=10.0),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+        ],)

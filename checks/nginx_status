@@ -91,15 +91,15 @@ def check_nginx_status(item, params, data):
     output = [
         'Active: %d%s (%d reading, %d writing, %d waiting)' %
         (data['active'], conn_txt, data['reading'], data['writing'], data['waiting']),
-        'Requests: %0.2f/s (%0.2f/Connection)' % (computed_values['requests_per_sec'],
-                                                  computed_values['requests_per_conn']),
+        'Requests: %0.2f/s (%0.2f/Connection)' %
+        (computed_values['requests_per_sec'], computed_values['requests_per_conn']),
     ]
 
     if data['accepted'] == data['handled']:
         output.append('Accepted/Handled: %0.2f/s' % computed_values['accepted_per_sec'])
     else:
-        output.append('Accepted: %0.2f/s, Handled: %0.2f/s' % (computed_values['accepted_per_sec'],
-                                                               computed_values['handled_per_sec']))
+        output.append('Accepted: %0.2f/s, Handled: %0.2f/s' %
+                      (computed_values['accepted_per_sec'], computed_values['handled_per_sec']))
 
     return worst_state, ', '.join(output), perfdata
 

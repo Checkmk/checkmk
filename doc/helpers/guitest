@@ -30,8 +30,8 @@ def run_guitests(args):
     if not args:
         args = names_of_all_tests()
 
-    sys.stdout.write(
-        "Going to run %d tests%s...\n" % (len(args), opt_repair and " in repair mode" or ""))
+    sys.stdout.write("Going to run %d tests%s...\n" %
+                     (len(args), opt_repair and " in repair mode" or ""))
 
     num_successfull = 0
     for test_name in args:
@@ -49,8 +49,8 @@ def run_guitests(args):
         sys.stdout.write("%sAll %d tests succeeded.%s\n" % (tty_green, num_successfull, tty_normal))
         sys.exit(0)
     else:
-        sys.stdout.write("%d tests succeeded, but last one %sfailed.%s\n" % (num_successfull,
-                                                                             tty_red, tty_normal))
+        sys.stdout.write("%d tests succeeded, but last one %sfailed.%s\n" %
+                         (num_successfull, tty_red, tty_normal))
         sys.exit(1)
 
 
@@ -156,12 +156,12 @@ def run_test_step(test_name, step_nr, step, repair):
         return []
 
     url = "http://localhost/%s/check_mk/guitest.py" % omd_site()
-    response = requests.post(
-        url, data={
-            "test": test_name,
-            "step": str(step_nr),
-            "repair": repair and "1" or "0"
-        })
+    response = requests.post(url,
+                             data={
+                                 "test": test_name,
+                                 "step": str(step_nr),
+                                 "repair": repair and "1" or "0"
+                             })
     try:
         response_text = response.text.decode(response.encoding)
     except:
@@ -198,16 +198,14 @@ def do_wait(seconds):
 def hilite_keywords(text):
     text = text.replace(" expected ", tty_green + " expected " + tty_normal) \
                .replace(" got ", tty_red + " got " + tty_normal)
-    text = re.sub(
-        r" expected (.*?)\[\[\[([^]]*?)\]\]\]",
-        r" expected \1" + tty_green + r"\2" + tty_normal,
-        text,
-        flags=re.DOTALL)
-    text = re.sub(
-        r" got (.*?)\[\[\[(.*?)\]\]\]",
-        r" got \1" + tty_red + r"\2" + tty_normal,
-        text,
-        flags=re.DOTALL)
+    text = re.sub(r" expected (.*?)\[\[\[([^]]*?)\]\]\]",
+                  r" expected \1" + tty_green + r"\2" + tty_normal,
+                  text,
+                  flags=re.DOTALL)
+    text = re.sub(r" got (.*?)\[\[\[(.*?)\]\]\]",
+                  r" got \1" + tty_red + r"\2" + tty_normal,
+                  text,
+                  flags=re.DOTALL)
     return text
 
 

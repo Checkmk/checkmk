@@ -87,7 +87,10 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.0.1")
     monkeypatch.setattr(config_cache, "host_of_clustered_service", host_of_clustered_service)
 
-    section_content = multi_host_sections.get_section_content(
-        hostname, "127.0.0.1", "check_plugin_name", False, service_description=service_descr)
+    section_content = multi_host_sections.get_section_content(hostname,
+                                                              "127.0.0.1",
+                                                              "check_plugin_name",
+                                                              False,
+                                                              service_description=service_descr)
     assert expected_result == section_content,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, section_content)

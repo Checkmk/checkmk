@@ -170,13 +170,12 @@ class NotificationsMode(EventsMode):
                          elements=[
                              ("match_rule_id",
                               Transform(
-                                  ListOf(
-                                      ID(title=_("Match event rule"),
-                                         label=_("Rule ID:"),
-                                         size=12,
-                                         allow_empty=False),
-                                      add_label=_("Add Rule ID"),
-                                      title=_("Rule IDs")),
+                                  ListOf(ID(title=_("Match event rule"),
+                                            label=_("Rule ID:"),
+                                            size=12,
+                                            allow_empty=False),
+                                         add_label=_("Add Rule ID"),
+                                         title=_("Rule IDs")),
                                   forth=transform_ec_rule_id_match,
                               )),
                              ("match_priority",
@@ -186,14 +185,12 @@ class NotificationsMode(EventsMode):
                                   orientation="horizontal",
                                   show_titles=False,
                                   elements=[
-                                      DropdownChoice(
-                                          label=_("from:"),
-                                          choices=cmk.gui.mkeventd.syslog_priorities,
-                                          default_value=4),
-                                      DropdownChoice(
-                                          label=_(" to:"),
-                                          choices=cmk.gui.mkeventd.syslog_priorities,
-                                          default_value=0),
+                                      DropdownChoice(label=_("from:"),
+                                                     choices=cmk.gui.mkeventd.syslog_priorities,
+                                                     default_value=4),
+                                      DropdownChoice(label=_(" to:"),
+                                                     choices=cmk.gui.mkeventd.syslog_priorities,
+                                                     default_value=0),
                                   ],
                               )),
                              ("match_facility",
@@ -310,9 +307,8 @@ class NotificationsMode(EventsMode):
 
                     table.cell("", css="narrow")
                     if rule.get("disabled"):
-                        html.icon(
-                            _("This rule is currently disabled and will not be applied"),
-                            "disabled")
+                        html.icon(_("This rule is currently disabled and will not be applied"),
+                                  "disabled")
                     else:
                         html.empty_icon_button()
 
@@ -338,8 +334,10 @@ class NotificationsMode(EventsMode):
                     table.cell(_("Description"))
                     url = rule.get("docu_url")
                     if url:
-                        html.icon_button(
-                            url, _("Context information about this rule"), "url", target="_blank")
+                        html.icon_button(url,
+                                         _("Context information about this rule"),
+                                         "url",
+                                         target="_blank")
                         html.write("&nbsp;")
                     html.write_text(rule["description"])
                     table.cell(_("Contacts"))
@@ -423,21 +421,21 @@ class ModeNotifications(NotificationsMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(
-            _("New Rule"), watolib.folder_preserving_link([("mode", "notification_rule")]), "new")
+        html.context_button(_("New Rule"),
+                            watolib.folder_preserving_link([("mode", "notification_rule")]), "new")
         if self._show_user_rules:
-            html.context_button(
-                _("Hide user rules"), html.makeactionuri([("_show_user", "")]), "users")
+            html.context_button(_("Hide user rules"), html.makeactionuri([("_show_user", "")]),
+                                "users")
         else:
-            html.context_button(
-                _("Show user rules"), html.makeactionuri([("_show_user", "1")]), "users")
+            html.context_button(_("Show user rules"), html.makeactionuri([("_show_user", "1")]),
+                                "users")
 
         if self._show_backlog:
-            html.context_button(
-                _("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]), "analyze")
+            html.context_button(_("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]),
+                                "analyze")
         else:
-            html.context_button(
-                _("Analyse"), html.makeactionuri([("_show_backlog", "1")]), "analyze")
+            html.context_button(_("Analyse"), html.makeactionuri([("_show_backlog", "1")]),
+                                "analyze")
 
         if self._show_bulks:
             html.context_button(_("Hide Bulks"), html.makeactionuri([("_show_bulks", "")]), "bulk")
@@ -559,8 +557,8 @@ class ModeNotifications(NotificationsMode):
                 table.cell(_("Max. Count"), str(maxcount), css="number")
                 table.cell(_("Count"), str(len(uuids)), css="number")
                 if len(uuids) >= maxcount:
-                    html.icon(
-                        _("Number of notifications exceeds maximum allowed number"), "warning")
+                    html.icon(_("Number of notifications exceeds maximum allowed number"),
+                              "warning")
         return True
 
     def _show_notification_backlog(self):
@@ -572,9 +570,9 @@ class ModeNotifications(NotificationsMode):
         if not backlog:
             return
 
-        with table_element(
-                table_id="backlog", title=_("Recent notifications (for analysis)"),
-                sortable=False) as table:
+        with table_element(table_id="backlog",
+                           title=_("Recent notifications (for analysis)"),
+                           sortable=False) as table:
             for nr, context in enumerate(backlog):
                 self._convert_context_to_unicode(context)
                 table.row()
@@ -584,11 +582,11 @@ class ModeNotifications(NotificationsMode):
                 html.icon_button(analyse_url, _("Analyze ruleset with this notification"),
                                  "analyze")
 
-                html.icon_button(
-                    None,
-                    _("Show / hide notification context"),
-                    "toggle_context",
-                    onclick="cmk.wato.toggle_container('notification_context_%d')" % nr)
+                html.icon_button(None,
+                                 _("Show / hide notification context"),
+                                 "toggle_context",
+                                 onclick="cmk.wato.toggle_container('notification_context_%d')" %
+                                 nr)
 
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"),
@@ -694,13 +692,12 @@ class ModeNotifications(NotificationsMode):
                 user = users[userid]
                 user_rules = user.get("notification_rules", [])
                 if user_rules:
-                    self._render_notification_rules(
-                        user_rules,
-                        userid,
-                        show_title=True,
-                        show_buttons=False,
-                        analyse=analyse,
-                        start_nr=start_nr)
+                    self._render_notification_rules(user_rules,
+                                                    userid,
+                                                    show_title=True,
+                                                    show_buttons=False,
+                                                    analyse=analyse,
+                                                    start_nr=start_nr)
                     start_nr += len(user_rules)
 
         if analyse:
@@ -716,15 +713,14 @@ class ModeNotifications(NotificationsMode):
                     if bulk:
                         html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
                         html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                        html.write(", %s %s" % (_("group by"),
-                                                self._vs_notification_bulkby().value_to_text(
-                                                    bulk["groupby"])))
+                        html.write(", %s %s" %
+                                   (_("group by"), self._vs_notification_bulkby().value_to_text(
+                                       bulk["groupby"])))
 
     def _vs_notification_scripts(self):
-        return DropdownChoice(
-            title=_("Notification Script"),
-            choices=watolib.notification_script_choices,
-            default_value="mail")
+        return DropdownChoice(title=_("Notification Script"),
+                              choices=watolib.notification_script_choices,
+                              default_value="mail")
 
 
 class UserNotificationsMode(NotificationsMode):
@@ -750,8 +746,8 @@ class UserNotificationsMode(NotificationsMode):
         return _("Custom notification table for user %s") % self._user_id()
 
     def buttons(self):
-        html.context_button(
-            _("All Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
+        html.context_button(_("All Users"), watolib.folder_preserving_link([("mode", "users")]),
+                            "back")
         html.context_button(
             _("User Properties"),
             watolib.folder_preserving_link([("mode", "edit_user"), ("edit", self._user_id())]),
@@ -792,8 +788,8 @@ class UserNotificationsMode(NotificationsMode):
 
                 self._add_change(
                     "notification-move-user-rule",
-                    _("Changed position of notification rule %d of user %s") % (from_pos,
-                                                                                self._user_id()))
+                    _("Changed position of notification rule %d of user %s") %
+                    (from_pos, self._user_id()))
 
     def page(self):
         if self._start_async_repl:
@@ -856,8 +852,9 @@ class ModePersonalUserNotifications(UserNotificationsMode):
 
     def buttons(self):
         html.context_button(_("Profile"), "user_profile.py", "back")
-        html.context_button(
-            _("New Rule"), watolib.folder_preserving_link([("mode", "notification_rule_p")]), "new")
+        html.context_button(_("New Rule"),
+                            watolib.folder_preserving_link([("mode", "notification_rule_p")]),
+                            "new")
 
 
 # TODO: Split editing of user notification rule and global notification rule
@@ -1072,76 +1069,74 @@ class EditNotificationRuleMode(NotificationsMode):
                      default_value=("mail", {}),
                  )),
                 ("bulk",
-                 Transform(
-                     CascadingDropdown(
-                         title="Notification Bulking",
-                         orientation="vertical",
-                         choices=[
-                             ("always", _("Always bulk"),
-                              Dictionary(
-                                  help=
-                                  _("Enabling the bulk notifications will collect several subsequent notifications "
-                                    "for the same contact into one single notification, which lists of all the "
-                                    "actual problems, e.g. in a single email. This cuts down the number of notifications "
-                                    "in cases where many (related) problems occur within a short time."
-                                   ),
-                                  elements=[
-                                      ("interval",
-                                       Age(
-                                           title=_("Time horizon"),
-                                           label=_("Bulk up to"),
-                                           help=
-                                           _("Notifications are kept back for bulking at most for this time."
-                                            ),
-                                           default_value=60,
-                                       )),
-                                  ] + bulk_options,
-                                  columns=1,
-                                  optional_keys=["bulk_subject"],
-                              )),
-                             ("timeperiod", _("Bulk during timeperiod"),
-                              Dictionary(
-                                  help=
-                                  _("By enabling this option notifications will be bulked only if the "
-                                    "specified timeperiod is active. When the timeperiod ends a "
-                                    "bulk containing all notifications that appeared during that time "
-                                    "will be sent. "
-                                    "If bulking should be enabled outside of the timeperiod as well, "
-                                    "the option \"Also Bulk outside of timeperiod\" can be used."),
-                                  elements=[
-                                      ("timeperiod",
-                                       watolib.timeperiods.TimeperiodSelection(
-                                           title=
-                                           _("Only bulk notifications during the following timeperiod"
-                                            ),)),
-                                  ] + bulk_options + [
-                                      ("bulk_outside",
-                                       Dictionary(
-                                           title=_("Also bulk outside of timeperiod"),
-                                           help=_(
-                                               "By enabling this option notifications will be bulked "
-                                               "outside of the defined timeperiod as well."),
-                                           elements=[
-                                               ("interval",
-                                                Age(
-                                                    title=_("Time horizon"),
-                                                    label=_("Bulk up to"),
-                                                    help=
-                                                    _("Notifications are kept back for bulking at most for this time."
-                                                     ),
-                                                    default_value=60,
-                                                )),
-                                           ] + bulk_options,
-                                           columns=1,
-                                           optional_keys=["bulk_subject"],
-                                       )),
-                                  ],
-                                  columns=1,
-                                  optional_keys=["bulk_subject", "bulk_outside"],
-                              )),
-                         ],
-                     ),
-                     forth=lambda x: x if isinstance(x, tuple) else ("always", x))),
+                 Transform(CascadingDropdown(
+                     title="Notification Bulking",
+                     orientation="vertical",
+                     choices=[
+                         ("always", _("Always bulk"),
+                          Dictionary(
+                              help=
+                              _("Enabling the bulk notifications will collect several subsequent notifications "
+                                "for the same contact into one single notification, which lists of all the "
+                                "actual problems, e.g. in a single email. This cuts down the number of notifications "
+                                "in cases where many (related) problems occur within a short time."
+                               ),
+                              elements=[
+                                  ("interval",
+                                   Age(
+                                       title=_("Time horizon"),
+                                       label=_("Bulk up to"),
+                                       help=
+                                       _("Notifications are kept back for bulking at most for this time."
+                                        ),
+                                       default_value=60,
+                                   )),
+                              ] + bulk_options,
+                              columns=1,
+                              optional_keys=["bulk_subject"],
+                          )),
+                         ("timeperiod", _("Bulk during timeperiod"),
+                          Dictionary(
+                              help=_(
+                                  "By enabling this option notifications will be bulked only if the "
+                                  "specified timeperiod is active. When the timeperiod ends a "
+                                  "bulk containing all notifications that appeared during that time "
+                                  "will be sent. "
+                                  "If bulking should be enabled outside of the timeperiod as well, "
+                                  "the option \"Also Bulk outside of timeperiod\" can be used."),
+                              elements=[
+                                  ("timeperiod",
+                                   watolib.timeperiods.TimeperiodSelection(title=_(
+                                       "Only bulk notifications during the following timeperiod"),)
+                                  ),
+                              ] + bulk_options + [
+                                  ("bulk_outside",
+                                   Dictionary(
+                                       title=_("Also bulk outside of timeperiod"),
+                                       help=_(
+                                           "By enabling this option notifications will be bulked "
+                                           "outside of the defined timeperiod as well."),
+                                       elements=[
+                                           ("interval",
+                                            Age(
+                                                title=_("Time horizon"),
+                                                label=_("Bulk up to"),
+                                                help=
+                                                _("Notifications are kept back for bulking at most for this time."
+                                                 ),
+                                                default_value=60,
+                                            )),
+                                       ] + bulk_options,
+                                       columns=1,
+                                       optional_keys=["bulk_subject"],
+                                   )),
+                              ],
+                              columns=1,
+                              optional_keys=["bulk_subject", "bulk_outside"],
+                          )),
+                     ],
+                 ),
+                           forth=lambda x: x if isinstance(x, tuple) else ("always", x))),
             ],
             optional_keys=[
                 "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts",
@@ -1194,10 +1189,9 @@ class EditNotificationRuleMode(NotificationsMode):
                 style="dropdown",
                 elements=[
                     vs,
-                    FixedValue(
-                        None,
-                        totext=_("previous notifications of this type are cancelled"),
-                        title=_("Cancel previous notifications")),
+                    FixedValue(None,
+                               totext=_("previous notifications of this type are cancelled"),
+                               title=_("Cancel previous notifications")),
                 ],
             )
 
@@ -1244,8 +1238,8 @@ class EditNotificationRuleMode(NotificationsMode):
     def buttons(self):
         html.context_button(
             _("All Rules"),
-            watolib.folder_preserving_link([("mode", "notifications"), ("userid",
-                                                                        self._user_id())]), "back")
+            watolib.folder_preserving_link([("mode", "notifications"),
+                                            ("userid", self._user_id())]), "back")
 
     def action(self):
         if not html.check_transaction():
@@ -1364,6 +1358,6 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
         return _("Edit notification rule %d") % self._edit_nr
 
     def buttons(self):
-        html.context_button(
-            _("All Rules"), watolib.folder_preserving_link([("mode", "user_notifications_p")]),
-            "back")
+        html.context_button(_("All Rules"),
+                            watolib.folder_preserving_link([("mode", "user_notifications_p")]),
+                            "back")

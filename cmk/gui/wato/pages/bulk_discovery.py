@@ -136,8 +136,8 @@ class ModeBulkDiscovery(WatoMode):
             #   imported/selected hosts can be executed
             vs = vs_bulk_discovery(render_form=True, include_subfolders=False)
             msgs.append(
-                _("You have selected <b>%d</b> hosts for bulk discovery.") % len(
-                    self._get_hosts_to_discover()))
+                _("You have selected <b>%d</b> hosts for bulk discovery.") %
+                len(self._get_hosts_to_discover()))
             selection = self._bulk_discovery_params["selection"]
             self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 

@@ -53,15 +53,15 @@ class RulespecCheckgroupParametersPlugs(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return DropdownChoice(
-            help=_("This rule sets the required state of a PDU plug. It is meant to "
-                   "be independent of the hardware manufacturer."),
-            title=_("Required plug state"),
-            choices=[
-                ("on", _("Plug is ON")),
-                ("off", _("Plug is OFF")),
-            ],
-            default_value="on")
+        return DropdownChoice(help=_(
+            "This rule sets the required state of a PDU plug. It is meant to "
+            "be independent of the hardware manufacturer."),
+                              title=_("Required plug state"),
+                              choices=[
+                                  ("on", _("Plug is ON")),
+                                  ("off", _("Plug is OFF")),
+                              ],
+                              default_value="on")
 
     @property
     def item_spec(self):

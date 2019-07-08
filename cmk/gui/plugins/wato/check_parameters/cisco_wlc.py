@@ -65,14 +65,12 @@ class RulespecCheckgroupParametersCiscoWlc(CheckParameterRulespecWithItem):
                    "access point is missing (might be powered off). The access point "
                    "can be specified by the AP name or the AP model"),
             elements=[("ap_name",
-                       ListOf(
-                           Tuple(
-                               elements=[
-                                   TextAscii(title=_("AP name")),
-                                   MonitoringState(title=_("State when missing"), default_value=2)
-                               ],),
-                           title=_("Access point name"),
-                           add_label=_("Add name")))],
+                       ListOf(Tuple(elements=[
+                           TextAscii(title=_("AP name")),
+                           MonitoringState(title=_("State when missing"), default_value=2)
+                       ],),
+                              title=_("Access point name"),
+                              add_label=_("Add name")))],
         )
 
     @property

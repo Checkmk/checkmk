@@ -325,9 +325,10 @@ class Test(object):
                 raise
 
         path = os.path.join(test_dir, "state")
-        with tempfile.NamedTemporaryFile(
-                "w", dir=os.path.dirname(path), prefix=".%s.new" % os.path.basename(path),
-                delete=False) as tmp:
+        with tempfile.NamedTemporaryFile("w",
+                                         dir=os.path.dirname(path),
+                                         prefix=".%s.new" % os.path.basename(path),
+                                         delete=False) as tmp:
             tmp_path = tmp.name
             tmp.write(pprint.pformat(self.serialize()) + "\n")
         os.rename(tmp_path, path)
@@ -567,8 +568,8 @@ class TestRunner(threading.Thread):
 
                             time.sleep(1)
 
-                self.test.info(
-                    "Finished %s (%s)" % (test_case.name(), fmt_timespan(test_case.duration())))
+                self.test.info("Finished %s (%s)" %
+                               (test_case.name(), fmt_timespan(test_case.duration())))
                 self._increase_hosts()
 
             except MKFailTestCase, e:
@@ -607,11 +608,10 @@ class TestRunner(threading.Thread):
 
     def _generate_test_cases(self):
         while not self._stop.isSet():
-            yield TestAgentBasedStandardHosts(
-                self,
-                num_hosts=self._num_hosts,
-                planned_duration=15 * 60,
-                num_cmk_helpers=self._num_helpers)
+            yield TestAgentBasedStandardHosts(self,
+                                              num_hosts=self._num_hosts,
+                                              planned_duration=15 * 60,
+                                              num_cmk_helpers=self._num_helpers)
         #return [
         #    TestAgentBasedStandardHosts(self, num_hosts=100,   planned_duration=15*60, num_cmk_helpers=20),
         #    TestAgentBasedStandardHosts(self, num_hosts=200,   planned_duration=15*60, num_cmk_helpers=20),
@@ -656,15 +656,15 @@ class TestRunner(threading.Thread):
                                  (self.test.system_info.block_device, fmt_bytes(m.disk_usage.free)))
 
         if m.cpu_load[1] > self.test.system_info.cpu_count * 1.2:
-            raise MKFailTestCase(
-                "The 5 min average CPU load %0.2f is higher than "
-                "number of CPUs (%d)." % (m.cpu_load[1], self.test.system_info.cpu_count))
+            raise MKFailTestCase("The 5 min average CPU load %0.2f is higher than "
+                                 "number of CPUs (%d)." %
+                                 (m.cpu_load[1], self.test.system_info.cpu_count))
 
         # Check memory threshold. There are different values provided by psutil.
         # this value sounds good to me for testing.
         if m.memory.available < 100 * 1024 * 1024:
-            raise MKFailTestCase(
-                "There is only %s memory available." % (fmt_bytes(m.memory.available)))
+            raise MKFailTestCase("There is only %s memory available." %
+                                 (fmt_bytes(m.memory.available)))
 
         # Initial scheduling of the CMC spreads the service checks for a maximum of
         # 5 * check_interval. So we should terminate the test only after some initialization
@@ -975,9 +975,10 @@ class Measurement(object):
         test_dir = self._runner.test.dir()
 
         path = os.path.join(test_dir, "%d.data" % self.time)
-        with tempfile.NamedTemporaryFile(
-                "w", dir=os.path.dirname(path), prefix=".%s.new" % os.path.basename(path),
-                delete=False) as tmp:
+        with tempfile.NamedTemporaryFile("w",
+                                         dir=os.path.dirname(path),
+                                         prefix=".%s.new" % os.path.basename(path),
+                                         delete=False) as tmp:
             tmp_path = tmp.name
             tmp.write(pprint.pformat(self.serialize()) + "\n")
         os.rename(tmp_path, path)
@@ -2859,8 +2860,8 @@ class TestAgentBasedStandardHosts(TestCase):
             if num_not_ready is None:
                 self._test.info("  Waiting for helper initialization")
             else:
-                self._test.info(
-                    "  Waiting for helper initialization (%d not ready)" % num_not_ready)
+                self._test.info("  Waiting for helper initialization (%d not ready)" %
+                                num_not_ready)
 
             try:
                 matched_pids = subprocess.check_output(
@@ -2962,17 +2963,17 @@ def run_report(test_id):
             "",
             "CPU load    : %0.2f %0.2f %0.2f" % values.cpu_load,
             "Memory      : %0.2f %%" % values.memory.percent,
-            "Disk %-6s : %s free" % (os.path.basename(test.system_info.block_device),
-                                     fmt_bytes(values.disk_usage.free)),
-            "Disk IO     : read %s/s, write %s/s" % (fmt_bytes(values.disk_io.read_bytes),
-                                                     fmt_bytes(values.disk_io.write_bytes)),
+            "Disk %-6s : %s free" %
+            (os.path.basename(test.system_info.block_device), fmt_bytes(values.disk_usage.free)),
+            "Disk IO     : read %s/s, write %s/s" %
+            (fmt_bytes(values.disk_io.read_bytes), fmt_bytes(values.disk_io.write_bytes)),
         ]
 
         if values.site_stats:
             data += [
                 "",
-                "Objects     : %d Hosts, %d Services" % (values.site_stats["num_hosts"],
-                                                         values.site_stats["num_services"]),
+                "Objects     : %d Hosts, %d Services" %
+                (values.site_stats["num_hosts"], values.site_stats["num_services"]),
                 "Check lat.  : %0.2f sec" % values.site_stats["average_latency_cmk"],
                 "Checks      : %0.2f Hosts/s %0.2f Services/s" %
                 (values.site_stats["host_checks_rate"], values.site_stats["service_checks_rate"]),
@@ -3027,8 +3028,8 @@ class GeneralInformation(npyscreen.BoxTitle):
                 "Memory     : %0.2f %%" % values.memory.percent,
                 "Disk %-6s: %s free" % (os.path.basename(
                     self._runner.test.system_info.block_device), fmt_bytes(values.disk_usage.free)),
-                "Disk IO    : r %s/s, w %s/s" % (fmt_bytes(values.disk_io.read_bytes),
-                                                 fmt_bytes(values.disk_io.write_bytes)),
+                "Disk IO    : r %s/s, w %s/s" %
+                (fmt_bytes(values.disk_io.read_bytes), fmt_bytes(values.disk_io.write_bytes)),
             ]
         super(GeneralInformation, self).update(clear)
 
@@ -3064,11 +3065,11 @@ class SiteInformation(npyscreen.BoxTitle):
             return
 
         self.values += [
-            "Objects     : %d H, %d S" % (values.site_stats["num_hosts"],
-                                          values.site_stats["num_services"]),
+            "Objects     : %d H, %d S" %
+            (values.site_stats["num_hosts"], values.site_stats["num_services"]),
             "Check lat.  : %0.2f s" % values.site_stats["average_latency_cmk"],
-            "Checks      : %0.2f H/s %0.2f S/s" % (values.site_stats["host_checks_rate"],
-                                                   values.site_stats["service_checks_rate"]),
+            "Checks      : %0.2f H/s %0.2f S/s" %
+            (values.site_stats["host_checks_rate"], values.site_stats["service_checks_rate"]),
             "CMK helpers : %0.2f %%" % (values.site_stats["helper_usage_cmk"] * 100),
         ]
 
@@ -3101,8 +3102,8 @@ class Log(npyscreen.BoxTitle):
                 lines = entry.split("\n")
 
             for line in lines:
-                entries.append(
-                    "%s %s" % (time.strftime("%H:%M:%S", time.localtime(timestamp)), line))
+                entries.append("%s %s" %
+                               (time.strftime("%H:%M:%S", time.localtime(timestamp)), line))
 
         self.entry_widget.clearBuffer()
         self.entry_widget.buffer(entries, scroll_end=True)
@@ -3138,21 +3139,19 @@ class ConsoleRenderer(npyscreen.NPSApp):
         help_height = 2
         log_height = max_y - info_box_height - form_border - help_height
 
-        self._general = self._window.add(
-            GeneralInformation,
-            relx=1,
-            rely=1,
-            max_height=info_box_height,
-            width=info_box_width,
-            runner=self._runner)
+        self._general = self._window.add(GeneralInformation,
+                                         relx=1,
+                                         rely=1,
+                                         max_height=info_box_height,
+                                         width=info_box_width,
+                                         runner=self._runner)
 
-        self._site = self._window.add(
-            SiteInformation,
-            relx=info_box_width + 1,
-            rely=1,
-            max_height=info_box_height,
-            width=info_box_width,
-            runner=self._runner)
+        self._site = self._window.add(SiteInformation,
+                                      relx=info_box_width + 1,
+                                      rely=1,
+                                      max_height=info_box_height,
+                                      width=info_box_width,
+                                      runner=self._runner)
 
         self._log = self._window.add(
             Log,
@@ -3236,8 +3235,8 @@ def main():
                 raise MKGeneralException("--num-hosts must be given as number")
 
             if num_hosts not in TestRunner.host_steps:
-                raise MKGeneralException(
-                    "--num-hosts must be one of: %s" % ", ".join(map(str, TestRunner.host_steps)))
+                raise MKGeneralException("--num-hosts must be one of: %s" %
+                                         ", ".join(map(str, TestRunner.host_steps)))
 
         elif o == "--num-helpers":
             try:

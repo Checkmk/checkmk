@@ -58,30 +58,29 @@ class RulespecCheckgroupParametersFireeyeMailq(CheckParameterRulespecWithoutItem
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("deferred",
-                 Tuple(
-                     title=_("Levels for Deferred Queue length"),
-                     elements=[
-                         Integer(title="Warning at", default_value=10, unit="Mails"),
-                         Integer(title="Critical at", default_value=15, unit="Mails"),
-                     ],
-                 )),
-                ("hold",
-                 Tuple(
-                     title=_("Levels for Hold Queue length"),
-                     elements=[
-                         Integer(title="Warning at", default_value=500, unit="Mails"),
-                         Integer(title="Critical at", default_value=700, unit="Mails"),
-                     ],
-                 )),
-                ("drop",
-                 Tuple(
-                     title=_("Levels for Drop Queue length"),
-                     elements=[
-                         Integer(title="Warning at", default_value=10, unit="Mails"),
-                         Integer(title="Critical at", default_value=15, unit="Mails"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("deferred",
+             Tuple(
+                 title=_("Levels for Deferred Queue length"),
+                 elements=[
+                     Integer(title="Warning at", default_value=10, unit="Mails"),
+                     Integer(title="Critical at", default_value=15, unit="Mails"),
+                 ],
+             )),
+            ("hold",
+             Tuple(
+                 title=_("Levels for Hold Queue length"),
+                 elements=[
+                     Integer(title="Warning at", default_value=500, unit="Mails"),
+                     Integer(title="Critical at", default_value=700, unit="Mails"),
+                 ],
+             )),
+            ("drop",
+             Tuple(
+                 title=_("Levels for Drop Queue length"),
+                 elements=[
+                     Integer(title="Warning at", default_value=10, unit="Mails"),
+                     Integer(title="Critical at", default_value=15, unit="Mails"),
+                 ],
+             )),
+        ],)

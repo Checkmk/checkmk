@@ -98,8 +98,8 @@ class MkpRulePackProxy(UserDict.DictMixin):
         # type: (Dict[str, Any]) -> None
         """Binds this rule pack to the given MKP rule pack"""
         if self.id_ != mkp_rule_pack['id']:
-            raise MkpRulePackBindingError(
-                'The IDs of %s and %s cannot be different.' % (self, mkp_rule_pack))
+            raise MkpRulePackBindingError('The IDs of %s and %s cannot be different.' %
+                                          (self, mkp_rule_pack))
 
         self.rule_pack = mkp_rule_pack
 
@@ -192,8 +192,8 @@ def _bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
             if isinstance(rule_pack, MkpRulePackProxy):
                 rule_pack.bind_to(mkp_rule_packs[rule_pack.id_])
         except KeyError:
-            raise MkpRulePackBindingError(
-                'Exported rule pack with ID "%s" not found.' % rule_pack.id_)
+            raise MkpRulePackBindingError('Exported rule pack with ID "%s" not found.' %
+                                          rule_pack.id_)
 
 
 def load_config(settings):
@@ -338,8 +338,8 @@ def override_rule_pack_proxy(rule_pack_nr, rule_packs):
     """
     proxy = rule_packs[rule_pack_nr]
     if not isinstance(proxy, MkpRulePackProxy):
-        raise TypeError('Expected an instance of %s got %s' % (MkpRulePackProxy.__name__,
-                                                               proxy.__class__.__name__))
+        raise TypeError('Expected an instance of %s got %s' %
+                        (MkpRulePackProxy.__name__, proxy.__class__.__name__))
     rule_packs[rule_pack_nr] = copy.deepcopy(proxy.rule_pack)
 
 

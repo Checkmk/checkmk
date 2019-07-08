@@ -60,9 +60,8 @@ class RulespecCheckgroupParametersSnapvault(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=
-            [(
+        return Dictionary(elements=[
+            (
                 "lag_time",
                 Tuple(
                     title=_("Default levels"),
@@ -72,28 +71,29 @@ class RulespecCheckgroupParametersSnapvault(CheckParameterRulespecWithItem):
                     ],
                 ),
             ),
-             ("policy_lag_time",
-              ListOf(
-                  Tuple(
-                      orientation="horizontal",
-                      elements=[
-                          TextAscii(title=_("Policy name")),
-                          Tuple(
-                              title=_("Maximum age"),
-                              elements=[
-                                  Age(title=_("Warning at")),
-                                  Age(title=_("Critical at")),
-                              ],
-                          ),
-                      ],
-                  ),
-                  title=_('Policy specific levels (Clustermode only)'),
-                  help=
-                  _("Here you can specify levels for different policies which overrule the levels "
-                    "from the <i>Default levels</i> parameter. This setting only works in NetApp Clustermode setups."
-                   ),
-                  allow_empty=False,
-              ))],)
+            ("policy_lag_time",
+             ListOf(
+                 Tuple(
+                     orientation="horizontal",
+                     elements=[
+                         TextAscii(title=_("Policy name")),
+                         Tuple(
+                             title=_("Maximum age"),
+                             elements=[
+                                 Age(title=_("Warning at")),
+                                 Age(title=_("Critical at")),
+                             ],
+                         ),
+                     ],
+                 ),
+                 title=_('Policy specific levels (Clustermode only)'),
+                 help=_(
+                     "Here you can specify levels for different policies which overrule the levels "
+                     "from the <i>Default levels</i> parameter. This setting only works in NetApp Clustermode setups."
+                 ),
+                 allow_empty=False,
+             ))
+        ],)
 
     @property
     def item_spec(self):

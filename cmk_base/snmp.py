@@ -293,8 +293,8 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     console.vverbose("       Getting OID %s: " % oid)
     for context_name in snmp_contexts:
         try:
-            snmp_backend = SNMPBackendFactory().factory(
-                snmp_config, enforce_stored_walks=_enforce_stored_walks)
+            snmp_backend = SNMPBackendFactory().factory(snmp_config,
+                                                        enforce_stored_walks=_enforce_stored_walks)
             value = snmp_backend.get(snmp_config, oid, context_name)
 
             if value is not None:
@@ -552,23 +552,22 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
         snmp_contexts = [None]
 
     for context_name in snmp_contexts:
-        snmp_backend = SNMPBackendFactory().factory(
-            snmp_config, enforce_stored_walks=_enforce_stored_walks)
+        snmp_backend = SNMPBackendFactory().factory(snmp_config,
+                                                    enforce_stored_walks=_enforce_stored_walks)
 
-        rows = snmp_backend.walk(
-            snmp_config,
-            fetchoid,
-            check_plugin_name=check_plugin_name,
-            table_base_oid=base_oid,
-            context_name=context_name)
+        rows = snmp_backend.walk(snmp_config,
+                                 fetchoid,
+                                 check_plugin_name=check_plugin_name,
+                                 table_base_oid=base_oid,
+                                 context_name=context_name)
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when
         # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
         # by removing any duplicate OID information
         if len(rows) > 1 and rows[0][0] == rows[1][0]:
-            console.vverbose(
-                "Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rows[0][0])
+            console.vverbose("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" %
+                             rows[0][0])
             rows = rows[:1]
 
         for row_oid, val in rows:
@@ -755,8 +754,10 @@ def do_snmptranslate(walk_filename):
 
             command = ["snmptranslate", "-m", "ALL",
                        "-M+%s" % cmk.utils.paths.local_mibs_dir] + oids_for_command
-            p = subprocess.Popen(
-                command, stdout=subprocess.PIPE, stderr=open(os.devnull, "w"), close_fds=True)
+            p = subprocess.Popen(command,
+                                 stdout=subprocess.PIPE,
+                                 stderr=open(os.devnull, "w"),
+                                 close_fds=True)
             p.wait()
             output = p.stdout.read()
             result = output.split("\n")[0::2]

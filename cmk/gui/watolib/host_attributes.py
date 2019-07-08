@@ -470,8 +470,8 @@ def get_sorted_host_attributes_by_topic(topic_id):
         return 0
 
     sorted_attributes = []
-    for attr in sorted(
-            host_attribute_registry.get_sorted_host_attributes(), cmp=sort_host_attributes):
+    for attr in sorted(host_attribute_registry.get_sorted_host_attributes(),
+                       cmp=sort_host_attributes):
         if attr.topic() == host_attribute_topic_registry[topic_id]:
             sorted_attributes.append(attr)
     return sorted_attributes

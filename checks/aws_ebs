@@ -100,11 +100,10 @@ check_info['aws_ebs'] = {
 @get_parsed_item_data
 def check_aws_ebs_burst_balance(item, params, metrics):
     warn, crit = params.get("burst_balance_levels_lower", (None, None))
-    yield check_levels(
-        metrics['BurstBalance'],
-        "aws_burst_balance", (None, None, warn, crit),
-        human_readable_func=get_percent_human_readable,
-        infoname='Balance')
+    yield check_levels(metrics['BurstBalance'],
+                       "aws_burst_balance", (None, None, warn, crit),
+                       human_readable_func=get_percent_human_readable,
+                       infoname='Balance')
 
 
 check_info['aws_ebs.burst_balance'] = {

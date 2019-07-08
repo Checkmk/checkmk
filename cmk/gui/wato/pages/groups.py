@@ -281,12 +281,11 @@ class ModeHostgroups(ModeGroups):
 
     def buttons(self):
         super(ModeHostgroups, self).buttons()
-        html.context_button(
-            _("Service groups"), watolib.folder_preserving_link([("mode", "service_groups")]),
-            "hostgroups")
-        html.context_button(
-            _("New host group"), watolib.folder_preserving_link([("mode", "edit_host_group")]),
-            "new")
+        html.context_button(_("Service groups"),
+                            watolib.folder_preserving_link([("mode", "service_groups")]),
+                            "hostgroups")
+        html.context_button(_("New host group"),
+                            watolib.folder_preserving_link([("mode", "edit_host_group")]), "new")
         html.context_button(
             _("Rules"),
             watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", "host_groups")]),
@@ -328,12 +327,11 @@ class ModeServicegroups(ModeGroups):
 
     def buttons(self):
         super(ModeServicegroups, self).buttons()
-        html.context_button(
-            _("Host groups"), watolib.folder_preserving_link([("mode", "host_groups")]),
-            "servicegroups")
-        html.context_button(
-            _("New service group"), watolib.folder_preserving_link([("mode",
-                                                                     "edit_service_group")]), "new")
+        html.context_button(_("Host groups"),
+                            watolib.folder_preserving_link([("mode", "host_groups")]),
+                            "servicegroups")
+        html.context_button(_("New service group"),
+                            watolib.folder_preserving_link([("mode", "edit_service_group")]), "new")
         html.context_button(
             _("Rules"),
             watolib.folder_preserving_link([("mode", "edit_ruleset"),
@@ -363,9 +361,8 @@ class ModeContactgroups(ModeGroups):
 
     def buttons(self):
         super(ModeContactgroups, self).buttons()
-        html.context_button(
-            _("New contact group"), watolib.folder_preserving_link([("mode",
-                                                                     "edit_contact_group")]), "new")
+        html.context_button(_("New contact group"),
+                            watolib.folder_preserving_link([("mode", "edit_contact_group")]), "new")
         html.context_button(
             _("Rules"),
             watolib.folder_preserving_link([("mode", "rulesets"), ("filled_in", "search"),
@@ -397,9 +394,9 @@ class ModeContactgroups(ModeGroups):
         table.cell(_("Members"))
         html.write_html(
             HTML(", ").join([
-                html.render_a(
-                    alias,
-                    href=watolib.folder_preserving_link([("mode", "edit_user"), ("edit", userid)]))
+                html.render_a(alias,
+                              href=watolib.folder_preserving_link([("mode", "edit_user"),
+                                                                   ("edit", userid)]))
                 for userid, alias in self._members.get(name, [])
             ]))
 

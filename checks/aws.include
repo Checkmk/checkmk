@@ -165,11 +165,10 @@ def check_aws_limits(aws_service, params, parsed):
         if not limit_ref:
             continue
 
-        state, extrainfo, _perfdata = check_levels(
-            100.0 * amount / limit_ref,
-            "%s_usage" % perfvar, (warn, crit),
-            human_readable_func=get_percent_human_readable,
-            infoname="Usage")
+        state, extrainfo, _perfdata = check_levels(100.0 * amount / limit_ref,
+                                                   "%s_usage" % perfvar, (warn, crit),
+                                                   human_readable_func=get_percent_human_readable,
+                                                   infoname="Usage")
 
         max_state = max(state, max_state)
         if state:

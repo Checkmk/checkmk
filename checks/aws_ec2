@@ -111,11 +111,10 @@ def check_aws_ec2_cpu_credits(item, params, parsed):
 
     yield 0, "Usage: %.2f" % metrics['CPUCreditUsage']
     warn, crit = params["balance_levels_lower"]
-    yield check_levels(
-        metrics['CPUCreditBalance'],
-        "aws_cpu_credit_balance", (None, None, warn, crit),
-        human_readable_func=lambda x: "%.2f" % x,
-        infoname='Balance')
+    yield check_levels(metrics['CPUCreditBalance'],
+                       "aws_cpu_credit_balance", (None, None, warn, crit),
+                       human_readable_func=lambda x: "%.2f" % x,
+                       infoname='Balance')
 
 
 check_info['aws_ec2.cpu_credits'] = {

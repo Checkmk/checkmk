@@ -67,12 +67,11 @@ def parse(args):
     # type: (List[str]) -> argparse.Namespace
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--debug', action='store_true', help='Debug mode: raise Python exceptions')
-    p.add_argument(
-        '-v',
-        '--verbose',
-        action='count',
-        default=0,
-        help='Verbose mode (for even more output use -vvv)')
+    p.add_argument('-v',
+                   '--verbose',
+                   action='count',
+                   default=0,
+                   help='Verbose mode (for even more output use -vvv)')
     p.add_argument('host', metavar='HOST', help='Kubernetes host to connect to')
     p.add_argument('--port', type=int, default=443, help='Port to connect to')
     p.add_argument('--token', required=True, help='Token for that user')
@@ -83,16 +82,14 @@ def parse(args):
         help='Comma separated list of items that should be fetched',
     )
     p.add_argument('--url-prefix', help='Custom URL prefix for Kubernetes API calls')
-    p.add_argument(
-        '--path-prefix',
-        default='',
-        action=PathPrefixAction,
-        help='Optional URL path prefix to prepend to Kubernetes API calls')
+    p.add_argument('--path-prefix',
+                   default='',
+                   action=PathPrefixAction,
+                   help='Optional URL path prefix to prepend to Kubernetes API calls')
     p.add_argument('--no-cert-check', action='store_true', help='Disable certificate verification')
-    p.add_argument(
-        '--profile',
-        metavar='FILE',
-        help='Profile the performance of the agent and write the output to a file')
+    p.add_argument('--profile',
+                   metavar='FILE',
+                   help='Profile the performance of the agent and write the output to a file')
 
     arguments = p.parse_args(args)
     return arguments
@@ -917,8 +914,8 @@ class ApiData(object):
         self.namespaces = NamespaceList(map(Namespace, namespaces.items))
         self.roles = RoleList(map(Role, roles.items))
         self.cluster_roles = RoleList(map(Role, cluster_roles.items))
-        self.component_statuses = ComponentStatusList(
-            map(ComponentStatus, component_statuses.items))
+        self.component_statuses = ComponentStatusList(map(ComponentStatus,
+                                                          component_statuses.items))
         self.nodes = NodeList(map(Node, nodes.items, nodes_stats))
         self.persistent_volumes = PersistentVolumeList(map(PersistentVolume, pvs.items))
         self.persistent_volume_claims = PersistentVolumeClaimList(
@@ -1083,8 +1080,8 @@ def main(args=None):
         setup_logging(arguments.verbose)
         logging.debug('parsed arguments: %s\n', arguments)
 
-        with cmk.utils.profile.Profile(
-                enabled=bool(arguments.profile), profile_file=arguments.profile):
+        with cmk.utils.profile.Profile(enabled=bool(arguments.profile),
+                                       profile_file=arguments.profile):
             api_client = get_api_client(arguments)
             api_data = ApiData(api_client)
             print(api_data.cluster_sections())

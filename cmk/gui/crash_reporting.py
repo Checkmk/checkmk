@@ -163,9 +163,9 @@ def show_context_buttons(what, tardata):
 
     elif what == "gui":
         download_data_url = "data:application/octet-stream;base64,%s" % base64.b64encode(tardata)
-        html.context_button(
-            _("Download"), "javascript:cmk.crash_reporting.download('%s')" % download_data_url,
-            "download")
+        html.context_button(_("Download"),
+                            "javascript:cmk.crash_reporting.download('%s')" % download_data_url,
+                            "download")
 
     html.end_context_buttons()
 
@@ -357,18 +357,20 @@ def show_crash_report(info):
     html.h2(_("Crash Report"))
     html.open_table(class_=["data", "crash_report"])
 
-    _crash_row(
-        _("Exception"), "%s (%s)" % (info["exc_type"], info["exc_value"]), odd=True, pre=True)
+    _crash_row(_("Exception"),
+               "%s (%s)" % (info["exc_type"], info["exc_value"]),
+               odd=True,
+               pre=True)
     _crash_row(_("Traceback"), format_traceback(info["exc_traceback"]), odd=False, pre=True)
-    _crash_row(
-        _("Local Variables"),
-        format_local_vars(info["local_vars"]) if "local_vars" in info else "",
-        odd=True,
-        pre=True)
+    _crash_row(_("Local Variables"),
+               format_local_vars(info["local_vars"]) if "local_vars" in info else "",
+               odd=True,
+               pre=True)
 
     _crash_row(_("Crash Type"), info["crash_type"], odd=False, legend=True)
-    _crash_row(
-        _("Time"), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])), odd=True)
+    _crash_row(_("Time"),
+               time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])),
+               odd=True)
     _crash_row(_("Operating System"), info["os"], False)
     if info["crash_type"] == "cma":
         version_title = _("CMA Version")

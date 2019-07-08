@@ -58,10 +58,9 @@ class RulespecCheckgroupParametersMssqlBackupPerType(CheckParameterRulespecWithI
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels", _vs_mssql_backup_age("Upper levels for the backup age")),
-            ],)
+        return Dictionary(elements=[
+            ("levels", _vs_mssql_backup_age("Upper levels for the backup age")),
+        ],)
 
     @property
     def item_spec(self):

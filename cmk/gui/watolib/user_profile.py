@@ -73,14 +73,13 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
         ("debug", config.debug and "1" or ""),
     ])
 
-    response = get_url(
-        url,
-        site.get('insecure', False),
-        data={
-            'user_id': user_id,
-            'profile': mk_repr(profile),
-        },
-        timeout=60)
+    response = get_url(url,
+                       site.get('insecure', False),
+                       data={
+                           'user_id': user_id,
+                           'profile': mk_repr(profile),
+                       },
+                       timeout=60)
 
     if not response:
         raise MKAutomationException(_("Empty output from remote site."))
@@ -94,8 +93,9 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
 
 
 def push_user_profiles_to_site(site, user_profiles):
-    return do_remote_automation(
-        site, "push-profiles", [("profiles", repr(user_profiles))], timeout=60)
+    return do_remote_automation(site,
+                                "push-profiles", [("profiles", repr(user_profiles))],
+                                timeout=60)
 
 
 PushUserProfilesRequest = NamedTuple("PushUserProfilesRequest", [("user_profiles", dict)])

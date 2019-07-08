@@ -142,8 +142,8 @@ class RulespecCheckgroupParametersElInphase(CheckParameterRulespecWithItem):
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Input Name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
+        return TextAscii(title=_("Input Name"),
+                         help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
 
 
 @rulespec_registry.register
@@ -173,12 +173,11 @@ class RulespecCheckgroupParametersUpsOutphase(CheckParameterRulespecWithItem):
                 "actually supplies values for these parameters."),
             elements=_phase_elements() + [
                 ("load",
-                 Tuple(
-                     title=_("Load"),
-                     elements=[
-                         Integer(title=_("warning at"), unit=u"%", default_value=80),
-                         Integer(title=_("critical at"), unit=u"%", default_value=90),
-                     ])),
+                 Tuple(title=_("Load"),
+                       elements=[
+                           Integer(title=_("warning at"), unit=u"%", default_value=80),
+                           Integer(title=_("critical at"), unit=u"%", default_value=90),
+                       ])),
                 ("map_device_states",
                  ListOf(
                      Tuple(elements=[TextAscii(size=10), MonitoringState()]),
@@ -191,6 +190,5 @@ class RulespecCheckgroupParametersUpsOutphase(CheckParameterRulespecWithItem):
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Output Name"),
-            help=_("The name of the output, e.g. <tt>Phase 1</tt>/<tt>PDU 1</tt>"))
+        return TextAscii(title=_("Output Name"),
+                         help=_("The name of the output, e.g. <tt>Phase 1</tt>/<tt>PDU 1</tt>"))

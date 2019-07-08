@@ -160,8 +160,10 @@ def _init_language(lang):
     translations = []  # type: List[gettext_module.NullTranslations]
     for locale_base_dir in _get_language_dirs():
         try:
-            translation = gettext_module.translation(
-                "multisite", locale_base_dir, languages=[lang], codeset='UTF-8')
+            translation = gettext_module.translation("multisite",
+                                                     locale_base_dir,
+                                                     languages=[lang],
+                                                     codeset='UTF-8')
 
         except IOError:
             continue

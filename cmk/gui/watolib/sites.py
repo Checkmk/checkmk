@@ -368,11 +368,10 @@ class SiteManagement(object):
         del all_sites[site_id]
         cls.save_sites(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
-        cmk.gui.watolib.changes.add_change(
-            "edit-sites",
-            _("Deleted site %s") % html.render_tt(site_id),
-            domains=domains,
-            sites=[default_site()])
+        cmk.gui.watolib.changes.add_change("edit-sites",
+                                           _("Deleted site %s") % html.render_tt(site_id),
+                                           domains=domains,
+                                           sites=[default_site()])
         return None
 
     @classmethod
@@ -469,23 +468,21 @@ class CEESiteManagement(SiteManagement):
                  default_value=defaults["channels"],
              )),
             ("heartbeat",
-             Tuple(
-                 title=_("Regular heartbeat"),
-                 orientation="float",
-                 elements=[
-                     Integer(
-                         label=_("One heartbeat every"),
-                         unit=_("sec"),
-                         minvalue=1,
-                         default_value=defaults["heartbeat"][0],
-                     ),
-                     Float(
-                         label=_("with a timeout of"),
-                         unit=_("sec"),
-                         minvalue=0.1,
-                         default_value=defaults["heartbeat"][1],
-                         display_format="%.1f"),
-                 ])),
+             Tuple(title=_("Regular heartbeat"),
+                   orientation="float",
+                   elements=[
+                       Integer(
+                           label=_("One heartbeat every"),
+                           unit=_("sec"),
+                           minvalue=1,
+                           default_value=defaults["heartbeat"][0],
+                       ),
+                       Float(label=_("with a timeout of"),
+                             unit=_("sec"),
+                             minvalue=0.1,
+                             default_value=defaults["heartbeat"][1],
+                             display_format="%.1f"),
+                   ])),
             ("channel_timeout",
              Float(
                  title=_("Timeout waiting for a free channel"),

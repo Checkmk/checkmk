@@ -189,11 +189,10 @@ def _vs_notify():
     return Dictionary(
         elements=[
             ('text',
-             TextAreaUnicode(
-                 title=_('Text'),
-                 help=_('Insert the text to be sent to all reciepents.'),
-                 cols=50,
-                 rows=10)),
+             TextAreaUnicode(title=_('Text'),
+                             help=_('Insert the text to be sent to all reciepents.'),
+                             cols=50,
+                             rows=10)),
             ('dest',
              CascadingDropdown(
                  title=_('Send notification to'),
@@ -380,12 +379,11 @@ def notify_mail(user_id, msg):
             _('No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.'))
 
     try:
-        p = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.PIPE,
-            close_fds=True)
+        p = subprocess.Popen(command,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             stdin=subprocess.PIPE,
+                             close_fds=True)
     except OSError as e:
         raise MKInternalError(
             _('Mail could not be delivered. '

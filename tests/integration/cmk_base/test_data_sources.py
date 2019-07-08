@@ -20,22 +20,18 @@ import cmk_base.automations
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
     print "Applying default config"
-    web.add_host(
-        "ds-test-host1", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-    web.add_host(
-        "ds-test-host2", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-    web.add_host(
-        "ds-test-node1", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-    web.add_host(
-        "ds-test-node2", attributes={
-            "ipaddress": "127.0.0.1",
-        })
+    web.add_host("ds-test-host1", attributes={
+        "ipaddress": "127.0.0.1",
+    })
+    web.add_host("ds-test-host2", attributes={
+        "ipaddress": "127.0.0.1",
+    })
+    web.add_host("ds-test-node1", attributes={
+        "ipaddress": "127.0.0.1",
+    })
+    web.add_host("ds-test-node2", attributes={
+        "ipaddress": "127.0.0.1",
+    })
 
     web.add_host(
         "ds-test-cluster1",
@@ -56,8 +52,8 @@ def test_cfg(web, site):
     for h in ["ds-test-host1", "ds-test-host2", "ds-test-node1", "ds-test-node2"]:
         site.write_file(
             "var/check_mk/agent_output/%s" % h,
-            file(
-                "%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+                 repo_path()).read())
 
     web.activate_changes()
 
@@ -145,11 +141,10 @@ def _patch_data_source_run(monkeypatch, **kwargs):
 
         return result
 
-    monkeypatch.setattr(
-        cmk_base.data_sources.abstract.DataSource,
-        "_run",
-        cmk_base.data_sources.abstract.DataSource.run,
-        raising=False)
+    monkeypatch.setattr(cmk_base.data_sources.abstract.DataSource,
+                        "_run",
+                        cmk_base.data_sources.abstract.DataSource.run,
+                        raising=False)
     monkeypatch.setattr(cmk_base.data_sources.abstract.DataSource, "run", run)
 
 
@@ -244,11 +239,10 @@ def test_mode_check_discovery_default(test_cfg, monkeypatch):
 
 
 def test_mode_check_discovery_cached(test_cfg, monkeypatch):
-    _patch_data_source_run(
-        monkeypatch,
-        _max_cachefile_age=120,
-        _use_outdated_cache_file=True,
-        _may_use_cache_file=True)
+    _patch_data_source_run(monkeypatch,
+                           _max_cachefile_age=120,
+                           _use_outdated_cache_file=True,
+                           _may_use_cache_file=True)
 
     try:
         cmk_base.modes.check_mk.option_cache()
@@ -275,11 +269,10 @@ def test_mode_discover_explicit_hosts(test_cfg, monkeypatch):
 
 def test_mode_discover_explicit_hosts_cache(test_cfg, monkeypatch):
     try:
-        _patch_data_source_run(
-            monkeypatch,
-            _max_cachefile_age=120,
-            _may_use_cache_file=True,
-            _use_outdated_cache_file=True)
+        _patch_data_source_run(monkeypatch,
+                               _max_cachefile_age=120,
+                               _may_use_cache_file=True,
+                               _use_outdated_cache_file=True)
         cmk_base.modes.check_mk.option_cache()
         cmk_base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
         assert _counter_run == 2

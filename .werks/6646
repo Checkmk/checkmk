@@ -19,8 +19,7 @@ Consistency is brought is this werk, where 100% is all cores at full load
 by default. For backwards compatibility with previous configurations, where
 threshold rules were explicitly configured, the old behavior continues to
 be used until the user explicitly chooses a particular behavior. This will
-be reminded in the rules overview with the message <i>CPU rescale maximum
-load: Element 'None' does not exist anymore</i>
+be reminded in the rules overview.
 
 This option is available under CPU rescale maximum load in the process
-discovery rules.
+discovery rules and in state and count of processes.

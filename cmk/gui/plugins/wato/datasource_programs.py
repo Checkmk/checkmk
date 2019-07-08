@@ -2238,3 +2238,80 @@ class RulespecSpecialAgentsSplunk(HostRulespec):
                  )),
             ],
         )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsJenkins(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:jenkins"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check state of Jenkins jobs and builds"),
+            help=_("Requests data from a jenkins instance."),
+            optional_keys=["port"],
+            elements=[
+                ("instance",
+                 TextAscii(
+                     title=_("Jenkins instance to query."),
+                     help=_("Use this option to set which instance should be "
+                            "checked by the special agent. Please add the "
+                            "hostname here, eg. my_jenkins.com."),
+                     size=32,
+                     allow_empty=False,
+                 )),
+                ("user",
+                 TextAscii(
+                     title=_("Username"),
+                     help=_("The username that should be used for accessing the "
+                            "jenkins API. Has to have read permissions at least."),
+                     size=32,
+                     allow_empty=False,
+                 )),
+                ("password",
+                 PasswordFromStore(
+                     help=_("The password or API key of the user."),
+                     title=_("Password of the user"),
+                     allow_empty=False,
+                 )),
+                ("protocol",
+                 DropdownChoice(title=_("Protocol"),
+                                choices=[
+                                    ("http", "HTTP"),
+                                    ("https", "HTTPS"),
+                                ],
+                                default_value="https")),
+                ("port",
+                 Integer(
+                     title=_("Port"),
+                     help=
+                     _("Use this option to query a port which is different from standard port 8080."
+                      ),
+                     default_value=443,
+                     allow_empty=False,
+                 )),
+                ("infos",
+                 ListChoice(
+                     title=_("Informations to query"),
+                     help=_("Defines what information to query. "
+                            "For now you can choose to query "
+                            "job states."),
+                     choices=[
+                         ("jobs", _("Job state")),
+                     ],
+                     default_value=["jobs"],
+                     allow_empty=False,
+                 )),
+            ],
+        )

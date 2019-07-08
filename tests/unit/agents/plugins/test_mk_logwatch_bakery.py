@@ -42,9 +42,10 @@ def test_get_applicable_configs(bakelet, configs, applicable):
 @pytest.mark.parametrize('config, expected', [
     ([
         {
-            'context': True,
+            'context': False,
             'logfiles': ['/var/log/*.log', '/omd/sites/*/var/log/*.log'],
             'overflow': 'C',
+            'fromstart': True,
             'patterns': [('C', u'foo'), ('W', u'BAR'), ('O', u'')]
         },
         {
@@ -59,7 +60,7 @@ def test_get_applicable_configs(bakelet, configs, applicable):
         },
     ], [
         '',
-        '/var/log/*.log /omd/sites/*/var/log/*.log overflow=C',
+        '/var/log/*.log /omd/sites/*/var/log/*.log overflow=C nocontext=True fromstart=True',
         ' C foo',
         ' W BAR',
         ' O .*',

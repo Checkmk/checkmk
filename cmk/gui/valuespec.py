@@ -4262,9 +4262,18 @@ class Labels(ValueSpec):
         return {}
 
     def from_html_vars(self, varprefix):
-        return dict([s.strip()
-                     for s in e["value"].split(":", 1)]
-                    for e in json.loads(html.get_unicode_input(varprefix) or "[]"))
+        labels = {}
+
+        for entry in json.loads(html.get_unicode_input(varprefix) or "[]"):
+            label_id, label_value = [p.strip() for p in entry["value"].split(":", 1)]
+            if label_id in labels:
+                raise MKUserError(
+                    varprefix,
+                    _("A label key can be used only once per object. "
+                      "The Label key \"%s\" is used twice.") % label_id)
+            labels[label_id] = label_value
+
+        return labels
 
     def value_to_text(self, value):
         from cmk.gui.view_utils import render_labels

@@ -1,0 +1,10 @@
+Title: ceph_status: Show more detailed error messages if avail and check state is WARN, CRIT or UNKNOWN
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1563874290
+Class: feature
+
+

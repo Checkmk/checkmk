@@ -1014,7 +1014,7 @@ sorter_registry = SorterRegistry()
 # register some painters dynamically
 def register_sorter(ident, spec):
     cls = type(
-        "LegacySorter%s" % ident.title(), (Sorter,), {
+        "LegacySorter%s" % str(ident).title(), (Sorter,), {
             "_ident": ident,
             "_spec": spec,
             "ident": property(lambda s: s._ident),

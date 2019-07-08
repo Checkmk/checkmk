@@ -253,17 +253,17 @@ def test_tag_config_get_tag_ids(test_cfg):
 
 
 def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
-    assert test_cfg.get_tag_ids_with_group_prefix() == set([
-        'none_choice/none_val',
-        'none_choice/None',
-        'bla',
-        'criticality/critical',
-        'criticality/offline',
-        'criticality/prod',
-        'criticality/test',
-        'networking/dmz',
-        'networking/lan',
-        'networking/wan',
+    assert test_cfg.get_tag_ids_by_group() == set([
+        ('bla', 'bla'),
+        ('criticality', 'critical'),
+        ('criticality', 'offline'),
+        ('criticality', 'prod'),
+        ('criticality', 'test'),
+        ('networking', 'dmz'),
+        ('networking', 'lan'),
+        ('networking', 'wan'),
+        ('none_choice', None),
+        ('none_choice', 'none_val'),
     ])
 
 
@@ -371,7 +371,7 @@ def test_tag_group_get_tag_group_config_none_choice(test_cfg):
     assert tg.get_tag_group_config(None) == {'bla': 'bla'}
 
 
-def test_tag_group_get_tag_group_config_none_choice(test_cfg):
+def test_tag_group_get_tag_group_config_none_val(test_cfg):
     tg = test_cfg.get_tag_group("none_choice")
     assert tg.get_tag_group_config('none_val') == {'none_choice': 'none_val'}
 

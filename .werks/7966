@@ -1,0 +1,11 @@
+Title: Web API: Fix broken set_hosttags API call
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1562602532
+Class: fix
+
+The API call for updating the tag configuration did not work in previous 1.6 releases.
+Calls did always fail with an error like this: "AttributeError: 'Rule' object has no attribute 'tag_specs'\n".

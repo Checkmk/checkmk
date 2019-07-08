@@ -641,7 +641,7 @@ def _create_tag_group_attribute(tag_group):
     else:
         base_class = ABCHostAttributeHostTagList
 
-    return type("HostAttributeTag%s" % tag_group.id.title(), (base_class,), {
+    return type("HostAttributeTag%s" % str(tag_group.id).title(), (base_class,), {
         "_tag_group": tag_group,
     })
 

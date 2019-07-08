@@ -92,6 +92,17 @@ check-python-modules:
 	    exit 1 ; \
 	fi
 
+# python3-module ################################################################
+
+PACKAGE_PYTHON3_MODULES_DESTDIR    := $(PACKAGE_BASE)/python3-modules/destdir
+PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib
+
+check-python3-modules:
+	@if [ ! -d $(PACKAGE_PYTHON3_MODULES_DESTDIR) ]; then \
+	    echo "ERROR: You need to build the \"python3-modules\" package first" ; \
+	    exit 1 ; \
+	fi
+
 # perl #########################################################################
 
 PACKAGE_BOOST_DESTDIR := $(PACKAGE_BASE)/boost/destdir

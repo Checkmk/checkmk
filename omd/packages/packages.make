@@ -94,6 +94,7 @@ include     packages/apache-omd/apache-omd.make \
     packages/Python/Python.make \
     packages/Python3/Python3.make \
     packages/python-modules/python-modules.make \
+    packages/python3-modules/python3-modules.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \
     packages/snap7/snap7.make \

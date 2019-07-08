@@ -74,10 +74,10 @@ def agent_vsphere(request):
         "timeout": 23
     }),
     (['--port', '80'], {
-        "port": '80'
+        "port": 80
     }),
     (['-p', '80'], {
-        "port": '80'
+        "port": 80
     }),
     (['--hostname', 'myHost'], {
         "hostname": 'myHost'
@@ -94,17 +94,17 @@ def agent_vsphere(request):
     (['--tracefile', 'pathToTracefile'], {
         "tracefile": "pathToTracefile"
     }),
-    (['--host_pwr_display', 'whoopdeedoo'], {
-        "host_pwr_display": "whoopdeedoo"
+    (['--host_pwr_display', 'vm'], {
+        "host_pwr_display": "vm"
     }),
-    (['--vm_pwr_display', 'whoopdeedoo'], {
-        "vm_pwr_display": "whoopdeedoo"
+    (['--vm_pwr_display', 'esxhost'], {
+        "vm_pwr_display": "esxhost"
     }),
-    (['--snapshot_display', 'whoopdeedoo'], {
-        "snapshot_display": "whoopdeedoo"
+    (['--snapshot_display', 'vCenter'], {
+        "snapshot_display": "vCenter"
     }),
-    (['--vm_piggyname', 'MissPiggy'], {
-        "vm_piggyname": "MissPiggy"
+    (['--vm_piggyname', 'hostname'], {
+        "vm_piggyname": "hostname"
     }),
     (['--spaces', 'underscore'], {
         "spaces": "underscore"
@@ -144,9 +144,12 @@ def test_parse_arguments(agent_vsphere, argv, expected_non_default_args):
 
 @pytest.mark.parametrize("invalid_argv", [
     [],
-    ['--skip_placeholder_vm'],
     ['--tracefile', 'wrongly_interpreted_as_host_address'],
     ['--spaces', 'safe'],
+    ['--host_pwr_display', 'whoopdeedoo'],
+    ['--vm_pwr_display', 'whoopdeedoo'],
+    ['--snapshot_display', 'whoopdeedoo'],
+    ['--vm_piggyname', 'MissPiggy'],
 ])
 def test_parse_arguments_invalid(agent_vsphere, invalid_argv):
     with pytest.raises(SystemExit):

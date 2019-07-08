@@ -796,13 +796,13 @@ def service_description(hostname, check_plugin_name, item):
     return get_final_service_description(hostname, descr)
 
 
-def old_active_http_check_service_description(params):
+def _old_active_http_check_service_description(params):
     name = params[0] if isinstance(params, tuple) else params["name"]
     return name[1:] if name.startswith("^") else "HTTP %s" % name
 
 
 _old_active_check_service_descriptions = {
-    "http": old_active_http_check_service_description,
+    "http": _old_active_http_check_service_description,
 }
 
 

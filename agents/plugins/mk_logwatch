@@ -522,8 +522,8 @@ def process_logfile(logfile, patterns, opt, status):
     status[logfile] = stat.st_size, inode
 
     # If we have never seen this file before, we do not want
-    # to make a fuss about ancient log messages...
-    if offset is None and not debug():
+    # to make a fuss about ancient log messages... (unless configured to)
+    if offset is None and not (opt.fromstart or debug()):
         return output
 
     # If the inode of the logfile has changed it has appearently
@@ -667,6 +667,7 @@ class Options(object):
         'overflow': 'C',
         'nocontext': None,
         'maxoutputsize': 500000,  # same as logwatch_max_filesize in check plugin
+        'fromstart': False,
     }
 
     def __init__(self):
@@ -704,6 +705,10 @@ class Options(object):
     def maxoutputsize(self):
         return self._attr_or_default('maxoutputsize')
 
+    @property
+    def fromstart(self):
+        return self._attr_or_default('fromstart')
+
     def _attr_or_default(self, key):
         if key in self.values:
             return self.values[key]
@@ -733,7 +738,7 @@ class Options(object):
             elif key in ('regex', 'iregex'):
                 flags = (re.IGNORECASE if key.startswith('i') else 0) | re.UNICODE
                 self.values['regex'] = re.compile(value, flags)
-            elif key in ('nocontext',):
+            elif key in ('nocontext', 'fromstart'):
                 if value.lower() not in Options.MAP_BOOL.keys():
                     raise ValueError("Invalid %s: %r (choose from %r)" % (
                         key,

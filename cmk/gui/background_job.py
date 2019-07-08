@@ -213,8 +213,9 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         """Create a temporary file and use it as stdout / stderr buffer"""
         # We can not use io.BytesIO() or similar because we need real file descriptors
         # to be able to catch the (debug) output of libraries like libldap or subproccesses
-        sys.stdout = sys.stderr = (Path(self.get_work_dir()) /
-                                   BackgroundJobDefines.progress_update_filename).open("wb")  # pylint: disable=no-member
+        sys.stdout = sys.stderr = (
+            Path(self.get_work_dir()) /  # pylint: disable=no-member
+            BackgroundJobDefines.progress_update_filename).open("wb")
 
         os.dup2(sys.stdout.fileno(), 1)
         os.dup2(sys.stderr.fileno(), 2)

@@ -37,7 +37,6 @@ from cmk.gui.htmllib import HTML
 
 @contextmanager
 def table_element(table_id=None, title=None, **kwargs):
-    assert isinstance(table_id, str)
     with html.plugged():
         table = Table(table_id, title, **kwargs)
         try:

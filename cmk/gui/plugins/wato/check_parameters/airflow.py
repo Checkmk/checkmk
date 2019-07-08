@@ -57,36 +57,29 @@ class RulespecCheckgroupParametersAirflow(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("level_low",
-                 Tuple(
-                     title=_("Lower levels"),
-                     elements=[
-                         Float(
-                             title=_("Warning if below"),
+        return Dictionary(elements=[
+            ("level_low",
+             Tuple(title=_("Lower levels"),
+                   elements=[
+                       Float(title=_("Warning if below"),
                              unit=_("l/s"),
                              default_value=5.0,
                              allow_int=True),
-                         Float(
-                             title=_("Critical if below"),
+                       Float(title=_("Critical if below"),
                              unit=_("l/s"),
                              default_value=2.0,
                              allow_int=True)
-                     ])),
-                ("level_high",
-                 Tuple(
-                     title=_("Upper levels"),
-                     elements=[
-                         Float(
-                             title=_("Warning at"),
+                   ])),
+            ("level_high",
+             Tuple(title=_("Upper levels"),
+                   elements=[
+                       Float(title=_("Warning at"),
                              unit=_("l/s"),
                              default_value=10.0,
                              allow_int=True),
-                         Float(
-                             title=_("Critical at"),
+                       Float(title=_("Critical at"),
                              unit=_("l/s"),
                              default_value=11.0,
                              allow_int=True)
-                     ])),
-            ],)
+                   ])),
+        ],)

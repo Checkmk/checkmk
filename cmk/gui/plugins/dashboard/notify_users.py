@@ -76,8 +76,8 @@ function delete_user_notification(msg_id, btn) {
 
     def show(self):
         html.open_div(class_="notify_users")
-        with table_element(
-                "notify_users", sortable=False, searchable=False, omit_if_empty=True) as table:
+        with table_element("notify_users", sortable=False, searchable=False,
+                           omit_if_empty=True) as table:
 
             for entry in sorted(notify.get_gui_messages(), key=lambda e: e["time"], reverse=True):
                 if "dashlet" not in entry["methods"]:
@@ -90,11 +90,10 @@ function delete_user_notification(msg_id, btn) {
                 message = entry["text"].replace("\n", " ")
 
                 table.cell(_("Actions"), css="buttons", sortable=False)
-                html.icon_button(
-                    "",
-                    _("Delete"),
-                    "delete",
-                    onclick="delete_user_notification('%s', this);" % msg_id)
+                html.icon_button("",
+                                 _("Delete"),
+                                 "delete",
+                                 onclick="delete_user_notification('%s', this);" % msg_id)
 
                 table.text_cell(_("Message"), message)
                 table.text_cell(_("Date"), datetime)

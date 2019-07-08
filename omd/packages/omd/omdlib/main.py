@@ -274,8 +274,8 @@ def user_confirms(site, title, message, relpath, yes_choice, yes_text, no_choice
 
     user_path = site.dir + "/" + relpath
     options = [(yes_choice, yes_text), (no_choice, no_text),
-               ("shell", "Open a shell for looking around"), ("abort",
-                                                              "Stop here and abort update!")]
+               ("shell", "Open a shell for looking around"),
+               ("abort", "Stop here and abort update!")]
     while True:
         choice = ask_user_choices(title, message, options)
         if choice == "abort":
@@ -362,18 +362,19 @@ def ask_user_choices(title, message, choices):
     empty_line = " %s%-78s%s\n" % (tty_bgblue + tty_white, "", tty_normal)
     sys.stdout.write(empty_line)
     for choice, choice_title in choices:
-        sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" % (tty_bgblue + tty_white, tty_bold, choice[0],
-                                                        tty_normal + tty_bgblue + tty_white,
-                                                        choice[1:], choice_title, tty_normal))
+        sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" %
+                         (tty_bgblue + tty_white, tty_bold, choice[0], tty_normal + tty_bgblue +
+                          tty_white, choice[1:], choice_title, tty_normal))
         for c in choice:
             if c.lower() not in chars:
                 chars.append(c)
                 break
     sys.stdout.write(empty_line)
 
-    choicetxt = (tty_bold + tty_magenta + "/").join(
-        [(tty_bold + tty_white + char + tty_normal + tty_bgmagenta)
-         for (char, _c) in zip(chars, choices)])
+    choicetxt = (tty_bold + tty_magenta + "/").join([
+        (tty_bold + tty_white + char + tty_normal + tty_bgmagenta)
+        for (char, _c) in zip(chars, choices)
+    ])
     l = len(choices) * 2 - 1
     sys.stdout.write(" %s %s" % (tty_bgmagenta, choicetxt))
     sys.stdout.write(" ==> %s   %s" % (tty_bgred, tty_bgmagenta))
@@ -575,8 +576,8 @@ def user_verify(site, allow_populated=False):
         bail_out(tty_error + ": primary group for siteuser must be %s" % name)
 
     if not user_has_group(g_info.APACHE_USER, name):
-        bail_out(tty_error +
-                 ": apache user %s must be member of group %s" % (g_info.APACHE_USER, name))
+        bail_out(tty_error + ": apache user %s must be member of group %s" %
+                 (g_info.APACHE_USER, name))
 
     if not user_has_group(name, "omd"):
         bail_out(tty_error + ": siteuser must be member of group omd")
@@ -896,8 +897,10 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in=None, relbase='.')
                         todo = False
                         sys.stderr.write(StateMarkers.error * 40 + "\n")
                         sys.stderr.write(StateMarkers.error + " Exception      %s\n" % (path))
-                        sys.stderr.write(StateMarkers.error + " " + traceback.format_exc().replace(
-                            '\n', "\n" + StateMarkers.error + " ") + "\n")
+                        sys.stderr.write(
+                            StateMarkers.error + " " +
+                            traceback.format_exc().replace('\n', "\n" + StateMarkers.error + " ") +
+                            "\n")
                         sys.stderr.write(StateMarkers.error * 40 + "\n")
 
                         # If running in interactive mode ask the user to terminate or retry
@@ -1124,8 +1127,8 @@ def merge_update_file(site, relpath, old_version, new_version):
                 "diff -u %s-%s %s.orig%s" % (user_path, old_version, user_path, pipe_pager()))
         elif choice == "new":
             os.system(  # nosec
-                "diff -u %s-%s %s-%s%s" % (user_path, old_version, user_path, new_version,
-                                           pipe_pager()))
+                "diff -u %s-%s %s-%s%s" %
+                (user_path, old_version, user_path, new_version, pipe_pager()))
         elif choice == "missing":
             if os.path.exists(reject_file):
                 sys.stdout.write(tty_bgblue + tty_white + file(reject_file).read() + tty_normal)
@@ -1135,10 +1138,10 @@ def merge_update_file(site, relpath, old_version, new_version):
         elif choice == "shell":
             relname = relpath.split("/")[-1]
             sys.stdout.write(" %-25s: the current half-merged file\n" % relname)
-            sys.stdout.write(
-                " %-25s: the default version of %s\n" % (relname + "." + old_version, old_version))
-            sys.stdout.write(
-                " %-25s: the default version of %s\n" % (relname + "." + new_version, new_version))
+            sys.stdout.write(" %-25s: the default version of %s\n" %
+                             (relname + "." + old_version, old_version))
+            sys.stdout.write(" %-25s: the default version of %s\n" %
+                             (relname + "." + new_version, new_version))
             sys.stdout.write(" %-25s: your original version\n" % (relname + ".orig"))
             if os.path.exists(reject_file):
                 sys.stdout.write(" %-25s: changes that haven't been merged\n" % relname + ".rej")
@@ -1207,8 +1210,8 @@ def _try_merge(site, relpath, old_version, new_version):
                         "ignore", "Assume the file to be empty"):
                     skel_content = ""
                     break
-        file("%s-%s" % (user_path, version), "w").write(
-            replace_tags(skel_content, site.replacements))
+        file("%s-%s" % (user_path, version),
+             "w").write(replace_tags(skel_content, site.replacements))
     version_patch = os.popen(  # nosec
         "diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
@@ -1411,16 +1414,16 @@ def update_file(relpath, site, old_version, new_version, old_perms):
                 "%s in the new version. But meanwhile you "
                 "changed to link target to %s. "
                 "Shall I keep your link or replace it with "
-                "the new default target?" % (relpath, os.readlink(old_path), os.readlink(new_path),
-                                             os.readlink(user_path)), relpath, "keep",
-                "Keep your symbolic link pointing to %s" % os.readlink(user_path), "replace",
-                "Change link target to %s" % os.readlink(new_path)):
+                "the new default target?" %
+            (relpath, os.readlink(old_path), os.readlink(new_path), os.readlink(user_path)),
+                relpath, "keep", "Keep your symbolic link pointing to %s" % os.readlink(user_path),
+                "replace", "Change link target to %s" % os.readlink(new_path)):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             os.remove(user_path)
             os.symlink(os.readlink(new_path), user_path)
-            sys.stdout.write(StateMarkers.warn +
-                             " Set link       %s to new target %s\n" % (fn, os.readlink(new_path)))
+            sys.stdout.write(StateMarkers.warn + " Set link       %s to new target %s\n" %
+                             (fn, os.readlink(new_path)))
 
     # E ---> FILE TYPE HAS CHANGED (NASTY)
 
@@ -1436,8 +1439,8 @@ def update_file(relpath, site, old_version, new_version, old_perms):
                 "the new version. Meanwhile you have changed "
                 "the %s of your copy of that %s. "
                 "Do you want to keep your version or replace "
-                "it with the new default? " % (old_type, relpath, new_type,
-                                               user_changed_type and "type" or "content", old_type),
+                "it with the new default? " %
+            (old_type, relpath, new_type, user_changed_type and "type" or "content", old_type),
                 relpath, "keep", "Keep your %s" % user_type, "replace",
                 "Replace it with the new %s" % new_type):
             sys.stdout.write(StateMarkers.warn + " Keeping your version of %s\n" % fn)
@@ -1533,13 +1536,13 @@ def update_file(relpath, site, old_version, new_version, old_perms):
                 what = "default"
 
         if what == "keep":
-            sys.stdout.write(StateMarkers.warn +
-                             " Permissions    %04o %s (unchanged)\n" % (user_perm, fn))
+            sys.stdout.write(StateMarkers.warn + " Permissions    %04o %s (unchanged)\n" %
+                             (user_perm, fn))
         elif what == "default":
             try:
                 os.chmod(user_path, new_perm)
-                sys.stdout.write(StateMarkers.good +
-                                 " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn))
+                sys.stdout.write(StateMarkers.good + " Permissions    %04o -> %04o %s\n" %
+                                 (user_perm, new_perm, fn))
             except Exception as e:
                 sys.stdout.write(StateMarkers.error +
                                  " Permission:    cannot change %04o -> %04o %s: %s\n" %
@@ -1631,12 +1634,11 @@ def prepare_tmpfs(site):
         os.mkdir(site.tmp_dir)
 
     mount_options = shlex.split(g_info.MOUNT_OPTIONS)
-    p = subprocess.Popen(
-        ["mount"] + mount_options + [site.tmp_dir],
-        shell=False,
-        stdin=open(os.devnull),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT)
+    p = subprocess.Popen(["mount"] + mount_options + [site.tmp_dir],
+                         shell=False,
+                         stdin=open(os.devnull),
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
     exit_code = p.wait()
     if exit_code == 0:
         return  # Fine: Mounted
@@ -2114,8 +2116,8 @@ def validate_config_change_commands(config_hooks, settings):
                         (value, key, ", ".join(choices)))
         else:
             if not hook["choices"].match(value):
-                bail_out(
-                    "Invalid value %r for %r. Does not match allowed pattern.\n" % (value, key))
+                bail_out("Invalid value %r for %r. Does not match allowed pattern.\n" %
+                         (value, key))
 
 
 def config_set(site, config_hooks, args):
@@ -2730,16 +2732,16 @@ def main_create(site, args, options=None):
         welcome_message(site, admin_password)
 
     else:
-        sys.stdout.write(
-            "Create new site %s in disabled state and with empty %s.\n" % (site.name, site.dir))
+        sys.stdout.write("Create new site %s in disabled state and with empty %s.\n" %
+                         (site.name, site.dir))
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (site.dir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
 
 def welcome_message(site, admin_password):
     sys.stdout.write("Created new site %s with version %s.\n\n" % (site.name, omdlib.__version__))
-    sys.stdout.write(
-        "  The site can be started with %somd start %s%s.\n" % (tty_bold, site.name, tty_normal))
+    sys.stdout.write("  The site can be started with %somd start %s%s.\n" %
+                     (tty_bold, site.name, tty_normal))
     sys.stdout.write("  The default web UI is available at %shttp://%s/%s/%s\n" %
                      (tty_bold, hostname(), site.name, tty_normal))
     sys.stdout.write("\n")
@@ -3012,8 +3014,8 @@ def main_mv_or_cp(old_site, what, args, options=None):
         if not reuse:
             remove_from_fstab(old_site)
 
-    sys.stdout.write(
-        "%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old_site.name, new_site.name))
+    sys.stdout.write("%sing site %s to %s..." %
+                     (what == "mv" and "Mov" or "Copy", old_site.name, new_site.name))
     sys.stdout.flush()
 
     # Create new user. Note: even on mv we need to create a new user.
@@ -3143,11 +3145,10 @@ def diff_list(options, site, from_skelroot, from_version, orig_path):
     else:
         if not rel_path:
             rel_path = "."
-        walk_skel(
-            from_skelroot,
-            print_diff, (options, site, from_skelroot, site.dir, from_version, old_perms),
-            depth_first=False,
-            relbase=rel_path)
+        walk_skel(from_skelroot,
+                  print_diff, (options, site, from_skelroot, site.dir, from_version, old_perms),
+                  depth_first=False,
+                  relbase=rel_path)
 
 
 def print_diff(rel_path, options, site, source_path, target_path, source_version, source_perms):
@@ -3299,15 +3300,15 @@ def main_update(site, args, options=None):
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
     # First walk through skeleton files of new version
-    walk_skel(
-        to_skelroot, update_file, (site, from_version, to_version, old_perms), depth_first=False)
+    walk_skel(to_skelroot,
+              update_file, (site, from_version, to_version, old_perms),
+              depth_first=False)
 
     # Now handle files present in old but not in new skel files
-    walk_skel(
-        from_skelroot,
-        update_file, (site, from_version, to_version, old_perms),
-        depth_first=True,
-        exclude_if_in=to_skelroot)
+    walk_skel(from_skelroot,
+              update_file, (site, from_version, to_version, old_perms),
+              depth_first=True,
+              exclude_if_in=to_skelroot)
 
     # Change symbolic link pointing to new version
     create_version_symlink(site, to_version)
@@ -3373,12 +3374,12 @@ def main_umount(site, args, options=None):
 
             # Skip the site even when it is partly running
             if not site.is_stopped():
-                sys.stderr.write(
-                    "Cannot unmount tmpfs of site '%s' while it is running.\n" % site.name)
+                sys.stderr.write("Cannot unmount tmpfs of site '%s' while it is running.\n" %
+                                 site.name)
                 continue
 
-            sys.stdout.write(
-                "%sUnmounting tmpfs of site %s%s..." % (tty_bold, site.name, tty_normal))
+            sys.stdout.write("%sUnmounting tmpfs of site %s%s..." %
+                             (tty_bold, site.name, tty_normal))
             sys.stdout.flush()
 
             if not show_success(unmount_tmpfs(site, False, kill="kill" in options)):
@@ -3447,8 +3448,8 @@ def main_init_action(site, command, args, options=None):
         if command == "status" and bare:
             sys.stdout.write('[%s]\n' % site.name)
         elif not parallel:
-            sys.stdout.write(
-                "%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site.name, tty_normal))
+            sys.stdout.write("%sDoing '%s' on site %s:%s\n" %
+                             (tty_bold, command, site.name, tty_normal))
         else:
             parallel_output(site.name, "Invoking '%s'\n" % (command))
         sys.stdout.flush()
@@ -3458,11 +3459,10 @@ def main_init_action(site, command, args, options=None):
         stdout = sys.stdout if not parallel else subprocess.PIPE
         stderr = sys.stderr if not parallel else subprocess.STDOUT
         bare_arg = ["--bare"] if bare else []
-        p = subprocess.Popen(
-            [sys.argv[0], command] + bare_arg + [site.name] + args,
-            stdin=open(os.devnull, "r"),
-            stdout=stdout,
-            stderr=stderr)
+        p = subprocess.Popen([sys.argv[0], command] + bare_arg + [site.name] + args,
+                             stdin=open(os.devnull, "r"),
+                             stdout=stdout,
+                             stderr=stderr)
 
         if parallel:
             # Make the output non blocking
@@ -3676,8 +3676,8 @@ def main_restore(site, args, options=None):
                 new_linkname = '/'.join(parts[1:])
 
                 if opt_verbose:
-                    sys.stdout.write("  Rewriting link target from %s to %s\n" % (tarinfo.linkname,
-                                                                                  new_linkname))
+                    sys.stdout.write("  Rewriting link target from %s to %s\n" %
+                                     (tarinfo.linkname, new_linkname))
                 tarinfo.linkname = new_linkname
 
         tar.extract(tarinfo, path=site.dir)
@@ -3976,13 +3976,12 @@ class PackageManager(object):
         if opt_verbose:
             sys.stdout.write("Executing: %s\n" % subprocess.list2cmdline(cmd))
 
-        return subprocess.Popen(
-            cmd,
-            shell=False,
-            close_fds=True,
-            stdin=open(os.devnull),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+        return subprocess.Popen(cmd,
+                                shell=False,
+                                close_fds=True,
+                                stdin=open(os.devnull),
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
 
 
 class PackageManagerDEB(PackageManager):
@@ -4285,8 +4284,8 @@ class VersionInfo(object):
                         else:
                             info[var.strip()] = value
                     except Exception:
-                        bail_out(
-                            'Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
+                        bail_out('Unable to parse line "%s" in file "%s"' %
+                                 (line, info_dir + "/" + f))
         return info
 
 
@@ -4317,9 +4316,9 @@ commands = [
      "Sets the default version of OMD which will be used by new sites", ""),
     ("version", False, False, 0, 0, False, "[SITE]", main_version,
      [("bare", "b", False, "output plain text optimized for parsing")], "Show version of OMD", ""),
-    ("versions", False, False, 0, 0, False, "", main_versions,
-     [("bare", "b", False,
-       "output plain text optimized for parsing")], "List installed OMD versions", ""),
+    ("versions", False, False, 0, 0, False, "", main_versions, [
+        ("bare", "b", False, "output plain text optimized for parsing")
+    ], "List installed OMD versions", ""),
     ("sites", False, False, 0, 0, False, "", main_sites,
      [("bare", "b", False, "output plain text for easy parsing")], "Show list of sites", ""),
     ("create", True, False, 1, 0, False, "", main_create, [
@@ -4359,9 +4358,9 @@ commands = [
      "- Remove the system group <SITENAME>\n"
      "- Remove the site home directory\n"
      "- Restart the system wide apache daemon\n"),
-    ("disable", True, False, 1, 1, False, "", main_disable,
-     [("kill", None, False, "kill processes using tmpfs before unmounting it")],
-     "Disable a site (stop it, unmount tmpfs, remove Apache hook)", ""),
+    ("disable", True, False, 1, 1, False, "", main_disable, [
+        ("kill", None, False, "kill processes using tmpfs before unmounting it")
+    ], "Disable a site (stop it, unmount tmpfs, remove Apache hook)", ""),
     ("enable", True, False, 1, 1, False, "", main_enable, [],
      "Enable a site (reenable a formerly disabled site)", ""),
     ("mv", True, False, 1, 1, False, "NEWNAME",
@@ -4378,11 +4377,11 @@ commands = [
           "Issue a reload of the system apache instead of a restart"),
      ], "Rename a site", ""),
     ("cp", True, False, 1, 1, False, "NEWNAME",
-     lambda site, args, opts: main_mv_or_cp(site, "cp", args, opts), [
-         ("uid", "u", True, "create site user with UID ARG"),
-         ("gid", "g", True, "create site group with GID ARG"),
-         ("reuse", None, False, "do not create a site user, reuse existing one")
-     ] + exclude_options + [
+     lambda site, args, opts: main_mv_or_cp(site, "cp", args, opts),
+     [("uid", "u", True, "create site user with UID ARG"),
+      ("gid", "g", True, "create site group with GID ARG"),
+      ("reuse", None, False, "do not create a site user, reuse existing one")] + exclude_options +
+     [
          ("conflict", None, True,
           "non-interactive conflict resolution. ARG is install, keepold, abort or ask"),
          ("tmpfs-size", "t", True,
@@ -4391,10 +4390,10 @@ commands = [
          ("apache-reload", False, False,
           "Issue a reload of the system apache instead of a restart"),
      ], "Make a copy of a site", ""),
-    ("update", False, False, 1, 1, False, "", main_update,
-     [("conflict", None, True,
-       "non-interactive conflict resolution. ARG is install, keepold, abort or ask")],
-     "Update site to other version of OMD", ""),
+    ("update", False, False, 1, 1, False, "", main_update, [
+        ("conflict", None, True,
+         "non-interactive conflict resolution. ARG is install, keepold, abort or ask")
+    ], "Update site to other version of OMD", ""),
     ("start", False, False, 2, 1, False, "[SERVICE]",
      lambda site, args, opts: main_init_action(site, "start", args, opts), [
          ("version", "V", True, "only start services having version ARG"),
@@ -4406,13 +4405,13 @@ commands = [
          ("parallel", "p", False, "Invoke stop of sites in parallel"),
      ], "Stop services of site(s)", ""),
     ("restart", False, False, 2, 1, False, "[SERVICE]",
-     lambda site, args, opts: main_init_action(site, "restart", args, opts),
-     [("version", "V", True,
-       "only restart sites having version ARG")], "Restart services of site(s)", ""),
+     lambda site, args, opts: main_init_action(site, "restart", args, opts), [
+         ("version", "V", True, "only restart sites having version ARG")
+     ], "Restart services of site(s)", ""),
     ("reload", False, False, 2, 1, False, "[SERVICE]",
-     lambda site, args, opts: main_init_action(site, "reload", args, opts),
-     [("version", "V", True,
-       "only reload sites having version ARG")], "Reload services of site(s)", ""),
+     lambda site, args, opts: main_init_action(site, "reload", args, opts), [
+         ("version", "V", True, "only reload sites having version ARG")
+     ], "Reload services of site(s)", ""),
     ("status", False, False, 2, 1, False, "[SERVICE]",
      lambda site, args, opts: main_init_action(site, "status", args, opts), [
          ("version", "V", True, "show only sites having version ARG"),
@@ -4421,14 +4420,14 @@ commands = [
      ], "Show status of services of site(s)", ""),
     ("config", False, False, 1, 1, False, "...", main_config, [],
      "Show and set site configuration parameters", ""),
-    ("diff", False, False, 1, 1, False, "([RELBASE])", main_diff,
-     [("bare", "b", False, "output plain diff format, no beautifying")],
-     "Shows differences compared to the original version files", ""),
+    ("diff", False, False, 1, 1, False, "([RELBASE])", main_diff, [
+        ("bare", "b", False, "output plain diff format, no beautifying")
+    ], "Shows differences compared to the original version files", ""),
     ("su", True, False, 1, 1, False, "", main_su, [], "Run a shell as a site-user", ""),
-    ("umount", False, False, 2, 1, False, "", main_umount,
-     [("version", "V", True, "unmount only sites with version ARG"),
-      ("kill", None, False, "kill processes using the tmpfs before unmounting it")],
-     "Umount ramdisk volumes of site(s)", ""),
+    ("umount", False, False, 2, 1, False, "", main_umount, [
+        ("version", "V", True, "unmount only sites with version ARG"),
+        ("kill", None, False, "kill processes using the tmpfs before unmounting it")
+    ], "Umount ramdisk volumes of site(s)", ""),
     ("backup", False, True, 1, 1, False, "[SITE] [-|ARCHIVE_PATH]", main_backup, exclude_options + [
         ("no-compression", None, False, "do not compress tar archive"),
     ], "Create a backup tarball of a site, writing it to a file or stdout", ""),

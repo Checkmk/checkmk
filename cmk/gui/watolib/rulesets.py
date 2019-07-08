@@ -453,8 +453,9 @@ class Ruleset(object):
         for _folder_path, folder_rules in self._rules.items():
             for rule_index, rule in enumerate(folder_rules):
                 rules.append((rule.folder, rule_index, rule))
-        return sorted(
-            rules, key=lambda x: (x[0].path().split("/"), len(rules) - x[1]), reverse=True)
+        return sorted(rules,
+                      key=lambda x: (x[0].path().split("/"), len(rules) - x[1]),
+                      reverse=True)
 
     def get_folder_rules(self, folder):
         try:
@@ -475,10 +476,9 @@ class Ruleset(object):
     def insert_rule_after(self, rule, after):
         index = self._rules[rule.folder.path()].index(after) + 1
         self._rules[rule.folder.path()].insert(index, rule)
-        add_change(
-            "clone-ruleset",
-            _("Cloned rule in ruleset '%s'") % self.title(),
-            sites=rule.folder.all_site_ids())
+        add_change("clone-ruleset",
+                   _("Cloned rule in ruleset '%s'") % self.title(),
+                   sites=rule.folder.all_site_ids())
         self._on_change()
 
     def from_config(self, folder, rules_config):
@@ -488,8 +488,9 @@ class Ruleset(object):
         # Resets the rules of this ruleset for this folder!
         self._rules[folder.path()] = []
 
-        self.tuple_transformer.transform_in_place(
-            rules_config, is_service=bool(self.item_type()), is_binary=not self.valuespec())
+        self.tuple_transformer.transform_in_place(rules_config,
+                                                  is_service=bool(self.item_type()),
+                                                  is_binary=not self.valuespec())
 
         for rule_config in rules_config:
             rule = Rule(folder, self)
@@ -600,19 +601,17 @@ class Ruleset(object):
         return self._rules[folder.path()][rule_index]
 
     def edit_rule(self, rule):
-        add_change(
-            "edit-rule",
-            _("Changed properties of rule \"%s\" in folder \"%s\"") % (self.title(),
-                                                                       rule.folder.alias_path()),
-            sites=rule.folder.all_site_ids())
+        add_change("edit-rule",
+                   _("Changed properties of rule \"%s\" in folder \"%s\"") %
+                   (self.title(), rule.folder.alias_path()),
+                   sites=rule.folder.all_site_ids())
         self._on_change()
 
     def delete_rule(self, rule):
         self._rules[rule.folder.path()].remove(rule)
-        add_change(
-            "edit-ruleset",
-            _("Deleted rule in ruleset '%s'") % self.title(),
-            sites=rule.folder.all_site_ids())
+        add_change("edit-ruleset",
+                   _("Deleted rule in ruleset '%s'") % self.title(),
+                   sites=rule.folder.all_site_ids())
         self._on_change()
 
     def move_rule_up(self, rule):
@@ -620,50 +619,45 @@ class Ruleset(object):
         index = rules.index(rule)
         del rules[index]
         rules[index - 1:index - 1] = [rule]
-        add_change(
-            "edit-ruleset",
-            _("Moved rule #%d up in ruleset \"%s\"") % (index, self.title()),
-            sites=rule.folder.all_site_ids())
+        add_change("edit-ruleset",
+                   _("Moved rule #%d up in ruleset \"%s\"") % (index, self.title()),
+                   sites=rule.folder.all_site_ids())
 
     def move_rule_down(self, rule):
         rules = self._rules[rule.folder.path()]
         index = rules.index(rule)
         del rules[index]
         rules[index + 1:index + 1] = [rule]
-        add_change(
-            "edit-ruleset",
-            _("Moved rule #%d down in ruleset \"%s\"") % (index, self.title()),
-            sites=rule.folder.all_site_ids())
+        add_change("edit-ruleset",
+                   _("Moved rule #%d down in ruleset \"%s\"") % (index, self.title()),
+                   sites=rule.folder.all_site_ids())
 
     def move_rule_to_top(self, rule):
         rules = self._rules[rule.folder.path()]
         index = rules.index(rule)
         rules.remove(rule)
         rules.insert(0, rule)
-        add_change(
-            "edit-ruleset",
-            _("Moved rule #%d to top in ruleset \"%s\"") % (index, self.title()),
-            sites=rule.folder.all_site_ids())
+        add_change("edit-ruleset",
+                   _("Moved rule #%d to top in ruleset \"%s\"") % (index, self.title()),
+                   sites=rule.folder.all_site_ids())
 
     def move_rule_to_bottom(self, rule):
         rules = self._rules[rule.folder.path()]
         index = rules.index(rule)
         rules.remove(rule)
         rules.append(rule)
-        add_change(
-            "edit-ruleset",
-            _("Moved rule #%d to bottom in ruleset \"%s\"") % (index, self.title()),
-            sites=rule.folder.all_site_ids())
+        add_change("edit-ruleset",
+                   _("Moved rule #%d to bottom in ruleset \"%s\"") % (index, self.title()),
+                   sites=rule.folder.all_site_ids())
 
     def move_rule_to(self, rule, index):
         rules = self._rules[rule.folder.path()]
         old_index = rules.index(rule)
         rules.remove(rule)
         rules.insert(index, rule)
-        add_change(
-            "edit-ruleset",
-            _("Moved rule #%d to #%d in ruleset \"%s\"") % (old_index, index, self.title()),
-            sites=rule.folder.all_site_ids())
+        add_change("edit-ruleset",
+                   _("Moved rule #%d to #%d in ruleset \"%s\"") % (old_index, index, self.title()),
+                   sites=rule.folder.all_site_ids())
 
     # TODO: Remove these getters
     def valuespec(self):

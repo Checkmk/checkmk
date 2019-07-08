@@ -112,10 +112,10 @@ class PageKeyManagement(object):
     def buttons(self):
         self._back_button()
         if self._may_edit_config():
-            html.context_button(
-                _("Create Key"), html.makeuri_contextless([("mode", self.edit_mode)]), "new")
-            html.context_button(
-                _("Upload Key"), html.makeuri_contextless([("mode", self.upload_mode)]), "new")
+            html.context_button(_("Create Key"),
+                                html.makeuri_contextless([("mode", self.edit_mode)]), "new")
+            html.context_button(_("Upload Key"),
+                                html.makeuri_contextless([("mode", self.upload_mode)]), "new")
 
     def _may_edit_config(self):
         return True
@@ -366,12 +366,11 @@ class PageUploadKey(object):
                      is_stored_plain=False,
                  )),
                 ("key_file",
-                 CascadingDropdown(
-                     title=_("Key"),
-                     choices=[
-                         ("upload", _("Upload CRT/PEM File"), FileUpload()),
-                         ("text", _("Paste PEM Content"), TextAreaUnicode()),
-                     ])),
+                 CascadingDropdown(title=_("Key"),
+                                   choices=[
+                                       ("upload", _("Upload CRT/PEM File"), FileUpload()),
+                                       ("text", _("Paste PEM Content"), TextAreaUnicode()),
+                                   ])),
             ],
             optional_keys=False,
             render="form",
@@ -426,10 +425,11 @@ class PageDownloadKey(object):
         raise NotImplementedError()
 
     def page(self):
-        html.write("<p>%s</p>" % _(
-            "To be able to download the key, you need to unlock the key by entering the "
-            "passphrase. This is only done to verify that you are allowed to download the key. "
-            "The key will be downloaded in encrypted form."))
+        html.write(
+            "<p>%s</p>" %
+            _("To be able to download the key, you need to unlock the key by entering the "
+              "passphrase. This is only done to verify that you are allowed to download the key. "
+              "The key will be downloaded in encrypted form."))
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
         self._vs_key().render_input("key", {})

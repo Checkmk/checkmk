@@ -146,8 +146,8 @@ for domain, p in domains.iteritems():
 
         total_size = get_size(ftp, '')
 
-        output.append(
-            '%s 0 %s %d %d' % (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
+        output.append('%s 0 %s %d %d' %
+                      (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
 
     except Exception as e:
         output.append('%s 2 %s' % (domain, e))

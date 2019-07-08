@@ -214,11 +214,10 @@ def render_tree_folder(tree_id, folder, js_func):
     elif folder and folder['.path'] != '':
         html.open_ul(style="padding-left:0px;")
 
-    title = html.render_a(
-        "%s (%d)" % (folder["title"], folder[".num_hosts"]),
-        href="#",
-        class_="link",
-        onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
+    title = html.render_a("%s (%d)" % (folder["title"], folder[".num_hosts"]),
+                          href="#",
+                          class_="link",
+                          onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
 
     if not is_leaf:
         html.begin_foldable_container(tree_id, "/" + folder[".path"], False, HTML(title))
@@ -270,11 +269,10 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         html.open_tr()
         html.td(_('Topic:'), class_="label")
         html.open_td()
-        html.dropdown(
-            "topic",
-            topics,
-            deflt=selected_topic,
-            onchange='cmk.sidebar.wato_tree_topic_changed(this)')
+        html.dropdown("topic",
+                      topics,
+                      deflt=selected_topic,
+                      onchange='cmk.sidebar.wato_tree_topic_changed(this)')
         html.close_td()
         html.close_tr()
 
@@ -298,12 +296,11 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
                 default, style = '', 'display:none'
             else:
                 default, style = selected_target, None
-            html.dropdown(
-                "target_%s" % topic,
-                targets,
-                deflt=default,
-                onchange='cmk.sidebar.wato_tree_target_changed(this)',
-                style=style)
+            html.dropdown("target_%s" % topic,
+                          targets,
+                          deflt=default,
+                          onchange='cmk.sidebar.wato_tree_target_changed(this)',
+                          style=style)
 
         html.close_td()
         html.close_tr()

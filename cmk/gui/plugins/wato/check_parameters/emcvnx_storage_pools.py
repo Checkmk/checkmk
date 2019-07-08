@@ -59,17 +59,16 @@ class RulespecCheckgroupParametersEmcvnxStoragePools(CheckParameterRulespecWithI
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("percent_full",
-                 Tuple(
-                     title=_("Upper levels for physical capacity in percent"),
-                     elements=[
-                         Percentage(title=_("Warning at"), default_value=70.0),
-                         Percentage(title=_("Critical at"), default_value=90.0),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("percent_full",
+             Tuple(
+                 title=_("Upper levels for physical capacity in percent"),
+                 elements=[
+                     Percentage(title=_("Warning at"), default_value=70.0),
+                     Percentage(title=_("Critical at"), default_value=90.0),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

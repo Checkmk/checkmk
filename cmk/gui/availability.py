@@ -205,32 +205,29 @@ def get_av_display_options(what):
 
         # Show colummns for min, max, avg duration and count
         ("outage_statistics", "double", True,
-         Tuple(
-             title=_("Outage statistics"),
-             orientation="horizontal",
-             elements=[
-                 ListChoice(
-                     title=_("Aggregations"),
-                     choices=[
-                         ("min", _("min. duration")),
-                         ("max", _("max. duration")),
-                         ("avg", _("avg. duration")),
-                         ("cnt", _("count")),
-                     ]),
-                 ListChoice(
-                     title=_("For these states:"),
-                     columns=2,
-                     choices=[
-                         ("ok", _("OK/Up")),
-                         ("warn", _("Warn")),
-                         ("crit", _("Crit/Down")),
-                         ("unknown", _("Unknown/Unreach")),
-                         ("flapping", _("Flapping")),
-                         ("host_down", _("Host Down")),
-                         ("in_downtime", _("Downtime")),
-                         ("outof_notification_period", _("OO/Notif")),
-                     ])
-             ])),
+         Tuple(title=_("Outage statistics"),
+               orientation="horizontal",
+               elements=[
+                   ListChoice(title=_("Aggregations"),
+                              choices=[
+                                  ("min", _("min. duration")),
+                                  ("max", _("max. duration")),
+                                  ("avg", _("avg. duration")),
+                                  ("cnt", _("count")),
+                              ]),
+                   ListChoice(title=_("For these states:"),
+                              columns=2,
+                              choices=[
+                                  ("ok", _("OK/Up")),
+                                  ("warn", _("Warn")),
+                                  ("crit", _("Crit/Down")),
+                                  ("unknown", _("Unknown/Unreach")),
+                                  ("flapping", _("Flapping")),
+                                  ("host_down", _("Host Down")),
+                                  ("in_downtime", _("Downtime")),
+                                  ("outof_notification_period", _("OO/Notif")),
+                              ])
+               ])),
         ("timeformat", "double", True,
          Tuple(
              title=_("Format time ranges"),
@@ -243,22 +240,20 @@ def get_av_display_options(what):
                      ],
                      default_value="perc",
                  ),
-                 DropdownChoice(
-                     choices=[
-                         ("percentage_0", _("Percentage - XX %")),
-                         ("percentage_1", _("Percentage - XX.X %")),
-                         ("percentage_2", _("Percentage - XX.XX %")),
-                         ("percentage_3", _("Percentage - XX.XXX %")),
-                     ],
-                     default_value="percentage_2"),
-                 DropdownChoice(
-                     choices=[
-                         ("seconds", _("Seconds")),
-                         ("minutes", _("Minutes")),
-                         ("hours", _("Hours")),
-                         ("hhmmss", _("HH:MM:SS")),
-                     ],
-                     default_value=None),
+                 DropdownChoice(choices=[
+                     ("percentage_0", _("Percentage - XX %")),
+                     ("percentage_1", _("Percentage - XX.X %")),
+                     ("percentage_2", _("Percentage - XX.XX %")),
+                     ("percentage_3", _("Percentage - XX.XXX %")),
+                 ],
+                                default_value="percentage_2"),
+                 DropdownChoice(choices=[
+                     ("seconds", _("Seconds")),
+                     ("minutes", _("Minutes")),
+                     ("hours", _("Hours")),
+                     ("hhmmss", _("HH:MM:SS")),
+                 ],
+                                default_value=None),
              ],
          )),
 
@@ -985,8 +980,8 @@ def reclassify_service_by_annotation(history_entry, annotation, key_to_change):
     if annotation["from"] < history_entry["until"] and annotation["until"] > history_entry["from"]:
         for is_in, p_from, p_until in [
             (False, history_entry["from"], max(history_entry["from"], annotation["from"])),
-            (True, max(history_entry["from"], annotation["from"]),
-             min(history_entry["until"], annotation["until"])),
+            (True, max(history_entry["from"],
+                       annotation["from"]), min(history_entry["until"], annotation["until"])),
             (False, min(history_entry["until"], annotation["until"]), history_entry["until"]),
         ]:
             if p_from < p_until:
@@ -1314,8 +1309,9 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                                              ("aggr_name", service), ("view_name", "aggr_single")])
             urls.append(("timeline", _("Timeline"), timeline_url))
             if what != "bi":
-                urls.append(("history", _("Event History"),
-                             history_url_of((site, host, service), time_range)))
+                urls.append(
+                    ("history", _("Event History"), history_url_of((site, host, service),
+                                                                   time_range)))
         row["urls"] = urls
 
         # Column with host/service or aggregate name
@@ -1346,8 +1342,11 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 
         # Inline timeline
         if show_timeline:
-            row["timeline"] = layout_timeline(
-                what, entry["timeline"], entry["considered_duration"], avoptions, style="inline")
+            row["timeline"] = layout_timeline(what,
+                                              entry["timeline"],
+                                              entry["considered_duration"],
+                                              avoptions,
+                                              style="inline")
 
         # Actuall cells with availability data
         row["cells"] = []
@@ -1863,9 +1862,10 @@ def compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list)
             next_tree_state = compute_bi_tree_state(timeline_container.aggr_tree,
                                                     timeline_container.states)
             timeline_container.timeline.append(
-                create_bi_timeline_entry(
-                    timeline_container.aggr_tree, timeline_container.aggr_group,
-                    timeline_container.tree_time, from_time, timeline_container.tree_state))
+                create_bi_timeline_entry(timeline_container.aggr_tree,
+                                         timeline_container.aggr_group,
+                                         timeline_container.tree_time, from_time,
+                                         timeline_container.tree_state))
 
             timeline_container.tree_state = next_tree_state
             timeline_container.tree_time = from_time
@@ -1874,9 +1874,10 @@ def compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list)
 
     # Each element gets a final timeline_entry - to the end of the interval
     for timeline_container in timeline_containers:
-        timeline_container.timeline.append((create_bi_timeline_entry(
-            timeline_container.aggr_tree, timeline_container.aggr_group,
-            timeline_container.tree_time, time_range[1], timeline_container.tree_state)))
+        timeline_container.timeline.append(
+            (create_bi_timeline_entry(timeline_container.aggr_tree, timeline_container.aggr_group,
+                                      timeline_container.tree_time, time_range[1],
+                                      timeline_container.tree_state)))
 
     return timeline_containers
 

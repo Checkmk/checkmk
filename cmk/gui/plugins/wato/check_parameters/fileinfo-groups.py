@@ -240,32 +240,31 @@ class RulespecCheckgroupParametersFileinfoGroups(CheckParameterRulespecWithItem)
                  )),
                 ("conjunctions",
                  ListOf(
-                     Tuple(
-                         elements=[
-                             MonitoringState(title=_("Monitoring state"), default_value=2),
-                             ListOf(
-                                 CascadingDropdown(
-                                     orientation="hroizontal",
-                                     choices=[
-                                         ("count", _("File count at"), Integer()),
-                                         ("count_lower", _("File count below"), Integer()),
-                                         ("size", _("File size at"), Filesize()),
-                                         ("size_lower", _("File size below"), Filesize()),
-                                         ("largest_size", _("Largest file size at"), Filesize()),
-                                         ("largest_size_lower", _("Largest file size below"),
-                                          Filesize()),
-                                         ("smallest_size", _("Smallest file size at"), Filesize()),
-                                         ("smallest_size_lower", _("Smallest file size below"),
-                                          Filesize()),
-                                         ("oldest_age", _("Oldest file age at"), Age()),
-                                         ("oldest_age_lower", _("Oldest file age below"), Age()),
-                                         ("newest_age", _("Newest file age at"), Age()),
-                                         ("newest_age_lower", _("Newest file age below"), Age()),
-                                     ],
-                                 ),
-                                 magic="@#@#",
-                             )
-                         ],),
+                     Tuple(elements=[
+                         MonitoringState(title=_("Monitoring state"), default_value=2),
+                         ListOf(
+                             CascadingDropdown(
+                                 orientation="hroizontal",
+                                 choices=[
+                                     ("count", _("File count at"), Integer()),
+                                     ("count_lower", _("File count below"), Integer()),
+                                     ("size", _("File size at"), Filesize()),
+                                     ("size_lower", _("File size below"), Filesize()),
+                                     ("largest_size", _("Largest file size at"), Filesize()),
+                                     ("largest_size_lower", _("Largest file size below"),
+                                      Filesize()),
+                                     ("smallest_size", _("Smallest file size at"), Filesize()),
+                                     ("smallest_size_lower", _("Smallest file size below"),
+                                      Filesize()),
+                                     ("oldest_age", _("Oldest file age at"), Age()),
+                                     ("oldest_age_lower", _("Oldest file age below"), Age()),
+                                     ("newest_age", _("Newest file age at"), Age()),
+                                     ("newest_age_lower", _("Newest file age below"), Age()),
+                                 ],
+                             ),
+                             magic="@#@#",
+                         )
+                     ],),
                      title=_("Level conjunctions"),
                      help=
                      _("In order to check dependent file group statistics you can configure "

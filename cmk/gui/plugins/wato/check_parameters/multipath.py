@@ -111,8 +111,7 @@ class RulespecCheckgroupParametersMultipath(CheckParameterRulespecWithItem):
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Name of the MP LUN"),
-            help=_("For Linux multipathing this is either the UUID (e.g. "
-                   "60a9800043346937686f456f59386741), or the configured "
-                   "alias."))
+        return TextAscii(title=_("Name of the MP LUN"),
+                         help=_("For Linux multipathing this is either the UUID (e.g. "
+                                "60a9800043346937686f456f59386741), or the configured "
+                                "alias."))

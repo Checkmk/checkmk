@@ -74,8 +74,7 @@ class RulespecCheckgroupParametersMsxRpcclientaccess(CheckParameterRulespecWitho
                            title=_("Maximum number of RPC requests per second"),
                            elements=[
                                Integer(title=_("Warning at"), unit=_('requests'), default_value=30),
-                               Integer(
-                                   title=_("Critical at"), unit=_('requests'), default_value=40)
+                               Integer(title=_("Critical at"), unit=_('requests'), default_value=40)
                            ],
                        ))],
             optional_keys=[],

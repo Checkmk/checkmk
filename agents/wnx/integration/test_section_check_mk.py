@@ -39,8 +39,8 @@ def testconfig_host(request, testconfig):
     return testconfig
 
 
-@pytest.fixture(
-    params=[None, '127.0.0.1 10.1.2.3'], ids=['only_from=None', 'only_from=127.0.0.1_10.1.2.3'])
+@pytest.fixture(params=[None, '127.0.0.1 10.1.2.3'],
+                ids=['only_from=None', 'only_from=127.0.0.1_10.1.2.3'])
 def testconfig_only_from(request, testconfig_host):
     Globals.only_from = request.param
     if request.param:

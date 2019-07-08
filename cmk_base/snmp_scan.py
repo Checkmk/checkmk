@@ -45,12 +45,11 @@ def gather_snmp_check_plugin_names(host_config,
 
     try:
         check_plugin_names.update(
-            _snmp_scan(
-                host_config,
-                on_error=on_error,
-                do_snmp_scan=do_snmp_scan,
-                for_inv=for_inventory,
-                for_mgmt_board=for_mgmt_board))
+            _snmp_scan(host_config,
+                       on_error=on_error,
+                       do_snmp_scan=do_snmp_scan,
+                       for_inv=for_inventory,
+                       for_mgmt_board=for_mgmt_board))
     except Exception as e:
         if on_error == "raise":
             raise
@@ -128,8 +127,10 @@ def _snmp_scan(host_config,
             try:
 
                 def oid_function(oid, default_value=None, cp_name=check_plugin_name):
-                    value = snmp.get_single_oid(
-                        host_config, oid, cp_name, do_snmp_scan=do_snmp_scan)
+                    value = snmp.get_single_oid(host_config,
+                                                oid,
+                                                cp_name,
+                                                do_snmp_scan=do_snmp_scan)
                     return default_value if value is None else value
 
                 result = scan_function(oid_function)
@@ -159,12 +160,11 @@ def _snmp_scan(host_config,
     if default_found:
         _output_snmp_check_plugins("SNMP without scan function", default_found)
 
-    filtered = config.filter_by_management_board(
-        host_config.hostname,
-        found_check_plugin_names,
-        for_mgmt_board,
-        for_discovery=True,
-        for_inventory=for_inv)
+    filtered = config.filter_by_management_board(host_config.hostname,
+                                                 found_check_plugin_names,
+                                                 for_mgmt_board,
+                                                 for_discovery=True,
+                                                 for_inventory=for_inv)
 
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
     snmp.write_single_oid_cache(host_config)

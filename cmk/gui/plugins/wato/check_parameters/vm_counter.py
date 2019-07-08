@@ -65,8 +65,7 @@ class RulespecCheckgroupParametersVmCounter(CheckParameterRulespecWithItem):
 
     @property
     def item_spec(self):
-        return DropdownChoice(
-            title=_("kernel counter"),
-            choices=[("Context Switches", _("Context Switches")),
-                     ("Process Creations", _("Process Creations")),
-                     ("Major Page Faults", _("Major Page Faults"))])
+        return DropdownChoice(title=_("kernel counter"),
+                              choices=[("Context Switches", _("Context Switches")),
+                                       ("Process Creations", _("Process Creations")),
+                                       ("Major Page Faults", _("Major Page Faults"))])

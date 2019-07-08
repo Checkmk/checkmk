@@ -58,20 +58,19 @@ class RulespecCheckgroupParametersLocal(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[(
-                "outcome_on_cluster",
-                DropdownChoice(
-                    choices=[
-                        ("worst", _("Worst state")),
-                        ("best", _("Best state")),
-                    ],
-                    title=_("Clusters: Prefered check result of local checks"),
-                    help=_(
-                        "If you're running local checks on clusters via clustered services rule "
+        return Dictionary(elements=[
+            ("outcome_on_cluster",
+             DropdownChoice(
+                 choices=[
+                     ("worst", _("Worst state")),
+                     ("best", _("Best state")),
+                 ],
+                 title=_("Clusters: Prefered check result of local checks"),
+                 help=_("If you're running local checks on clusters via clustered services rule "
                         "you can influence the check result with this rule. You can choose between "
                         "best or worst state. Default setting is worst state."),
-                    default_value="worst"))],)
+                 default_value="worst"))
+        ],)
 
     @property
     def item_spec(self):

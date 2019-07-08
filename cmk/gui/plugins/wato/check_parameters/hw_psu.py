@@ -59,17 +59,16 @@ class RulespecCheckgroupParametersHwPsu(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels",
-                 Tuple(
-                     title=_("PSU Capacity Levels"),
-                     elements=[
-                         Percentage(title=_("Warning at"), default_value=80.0),
-                         Percentage(title=_("Critical at"), default_value=90.0),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("levels",
+             Tuple(
+                 title=_("PSU Capacity Levels"),
+                 elements=[
+                     Percentage(title=_("Warning at"), default_value=80.0),
+                     Percentage(title=_("Critical at"), default_value=90.0),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

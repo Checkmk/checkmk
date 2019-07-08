@@ -58,22 +58,21 @@ class RulespecCheckgroupParametersVmSnapshots(CheckParameterRulespecWithoutItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("age",
-                 Tuple(
-                     title=_("Age of the last snapshot"),
-                     elements=[
-                         Age(title=_("Warning if older than")),
-                         Age(title=_("Critical if older than"))
-                     ],
-                 )),
-                ("age_oldest",
-                 Tuple(
-                     title=_("Age of the oldest snapshot"),
-                     elements=[
-                         Age(title=_("Warning if older than")),
-                         Age(title=_("Critical if older than"))
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("age",
+             Tuple(
+                 title=_("Age of the last snapshot"),
+                 elements=[
+                     Age(title=_("Warning if older than")),
+                     Age(title=_("Critical if older than"))
+                 ],
+             )),
+            ("age_oldest",
+             Tuple(
+                 title=_("Age of the oldest snapshot"),
+                 elements=[
+                     Age(title=_("Warning if older than")),
+                     Age(title=_("Critical if older than"))
+                 ],
+             )),
+        ],)

@@ -76,8 +76,8 @@ def test_livestatus_local_connection_omd_root_not_set(monkeypatch, tmpdir):
 
 def test_livestatus_local_connection_no_socket(sock_path):
     live = livestatus.LocalConnection()
-    with pytest.raises(
-            livestatus.MKLivestatusSocketError, match="Cannot connect to 'unix:%s'" % sock_path):
+    with pytest.raises(livestatus.MKLivestatusSocketError,
+                       match="Cannot connect to 'unix:%s'" % sock_path):
         live.connect()
 
 
@@ -86,8 +86,8 @@ def test_livestatus_local_connection_not_listening(sock_path):
     sock.bind("%s" % sock_path)
 
     live = livestatus.LocalConnection()
-    with pytest.raises(
-            livestatus.MKLivestatusSocketError, match="Cannot connect to 'unix:%s'" % sock_path):
+    with pytest.raises(livestatus.MKLivestatusSocketError,
+                       match="Cannot connect to 'unix:%s'" % sock_path):
         live.connect()
 
 
@@ -171,8 +171,10 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
     if ca_file_path is not None:
         ca_file_path = "%s/%s" % (ca.ca_path, ca_file_path)
 
-    live = livestatus.SingleSiteConnection(
-        "unix:/tmp/xyz", tls=tls, verify=verify, ca_file_path=ca_file_path)
+    live = livestatus.SingleSiteConnection("unix:/tmp/xyz",
+                                           tls=tls,
+                                           verify=verify,
+                                           ca_file_path=ca_file_path)
 
     if ca_file_path is None:
         ca_file_path = "%s/var/ssl/ca-certificates.crt" % tmpdir
@@ -191,17 +193,20 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
 
 
 def test_create_socket_not_existing_ca_file():
-    live = livestatus.SingleSiteConnection(
-        "unix:/tmp/xyz", tls=True, verify=True, ca_file_path="/x/y/z.pem")
+    live = livestatus.SingleSiteConnection("unix:/tmp/xyz",
+                                           tls=True,
+                                           verify=True,
+                                           ca_file_path="/x/y/z.pem")
     with pytest.raises(livestatus.MKLivestatusConfigError, match="No such file or"):
         live._create_socket(socket.AF_INET)
 
 
 def test_create_socket_no_cert(tmpdir):
     open("%s/z.pem" % tmpdir, "wb")
-    live = livestatus.SingleSiteConnection(
-        "unix:/tmp/xyz", tls=True, verify=True, ca_file_path="%s/z.pem" % tmpdir)
-    with pytest.raises(
-            livestatus.MKLivestatusConfigError,
-            match="(unknown error|no certificate or crl found)"):
+    live = livestatus.SingleSiteConnection("unix:/tmp/xyz",
+                                           tls=True,
+                                           verify=True,
+                                           ca_file_path="%s/z.pem" % tmpdir)
+    with pytest.raises(livestatus.MKLivestatusConfigError,
+                       match="(unknown error|no certificate or crl found)"):
         live._create_socket(socket.AF_INET)

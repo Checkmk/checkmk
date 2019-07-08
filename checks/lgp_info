@@ -53,8 +53,8 @@ def check_lgp_info(item, params, info):
             devices = []
             for id_, manufacturer, unit_number in info[1]:
                 id_ = lgp_info_devices.get(id_, id_)
-                devices.append(
-                    'ID: %s, Manufacturer: %s, Unit-Number: %s' % (id_, manufacturer, unit_number))
+                devices.append('ID: %s, Manufacturer: %s, Unit-Number: %s' %
+                               (id_, manufacturer, unit_number))
             device_output = '\n'.join(devices)
 
         return (0, 'Model: %s, Firmware: %s, S/N: %s\n%s' % tuple(agent_info + [device_output]))

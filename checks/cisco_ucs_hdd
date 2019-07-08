@@ -45,8 +45,8 @@ def check_cisco_ucs_hdd(item, _no_params, info):
         if ident == item:
             state, state_readable = map_operability.get(status,
                                                         (3, "Unknown, status code %s" % status))
-            size_readable = get_bytes_human_readable(
-                int(size) * 1024 * 1024)  # size is returned in MB
+            size_readable = get_bytes_human_readable(int(size) * 1024 *
+                                                     1024)  # size is returned in MB
             return state, "Status: %s, Size: %s, Model: %s, Vendor: %s, SN: %s" % \
                 (state_readable, size_readable, model, vendor, serial)
 

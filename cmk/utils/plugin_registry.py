@@ -65,8 +65,8 @@ class ClassRegistry(object):
     def register(self, plugin_class):
         """Register a class with the registry, can be used as a decorator"""
         if not issubclass(plugin_class, self.plugin_base_class()):
-            raise TypeError('%s is not a subclass of %s' % (plugin_class.__name__,
-                                                            self.plugin_base_class().__name__))
+            raise TypeError('%s is not a subclass of %s' %
+                            (plugin_class.__name__, self.plugin_base_class().__name__))
         self.registration_hook(plugin_class)
         self._entries[self.plugin_name(plugin_class)] = plugin_class
         return plugin_class

@@ -58,22 +58,21 @@ class RulespecCheckgroupParametersMcafeeWebGatewayMisc(CheckParameterRulespecWit
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("clients",
-                 Tuple(
-                     title=_("Upper levels for clients"),
-                     elements=[
-                         Integer(title=_("Warning at")),
-                         Integer(title=_("Critical at")),
-                     ],
-                 )),
-                ("network_sockets",
-                 Tuple(
-                     title=_("Upper levels for open network sockets"),
-                     elements=[
-                         Integer(title=_("Warning at")),
-                         Integer(title=_("Critical at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("clients",
+             Tuple(
+                 title=_("Upper levels for clients"),
+                 elements=[
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
+                 ],
+             )),
+            ("network_sockets",
+             Tuple(
+                 title=_("Upper levels for open network sockets"),
+                 elements=[
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
+                 ],
+             )),
+        ],)

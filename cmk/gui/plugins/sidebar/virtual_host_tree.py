@@ -97,12 +97,11 @@ class VirtualHostTree(SidebarSnapin):
     def _show_tree_selection(self):
         html.begin_form("vtree")
 
-        html.dropdown(
-            "vtree",
-            self._tree_choices(),
-            deflt="%s" % self._current_tree_id,
-            onchange='virtual_host_tree_changed(this)',
-            style="width:210px" if self._current_tree_path else None)
+        html.dropdown("vtree",
+                      self._tree_choices(),
+                      deflt="%s" % self._current_tree_id,
+                      onchange='virtual_host_tree_changed(this)',
+                      style="width:210px" if self._current_tree_path else None)
 
         # Give chance to change one level up, if we are in a subtree
         if self._current_tree_path:
@@ -158,11 +157,10 @@ class VirtualHostTree(SidebarSnapin):
                     html.write(self._tag_tree_bullet(subtree.get("_state", 0), subpath, True))
                     if subtree.get("_svc_problems"):
                         url = self._tag_tree_url(tree_spec, subpath, "svcproblems")
-                        html.icon_button(
-                            url,
-                            _("Show the service problems contained in this branch"),
-                            "svc_problems",
-                            target="main")
+                        html.icon_button(url,
+                                         _("Show the service problems contained in this branch"),
+                                         "svc_problems",
+                                         target="main")
                     html.write(node_title)
                     html.br()
             else:

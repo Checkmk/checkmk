@@ -77,10 +77,10 @@ def inventory_ucs_bladecenter_psu(parsed):
 
 @get_parsed_item_data
 def check_ucs_bladecenter_psu(item, params, psu):
-    for param_key, perfname, key, text in [("levels_3v_", "3_3v", "Output3v3Avg",
-                                            "Output 3.3V-Average"),
-                                           ("levels_12v_", "12v", "Output12vAvg",
-                                            "Output 12V-Average")]:
+    for param_key, perfname, key, text in [
+        ("levels_3v_", "3_3v", "Output3v3Avg", "Output 3.3V-Average"),
+        ("levels_12v_", "12v", "Output12vAvg", "Output 12V-Average")
+    ]:
         voltage = float(psu[key])
         yield 0, "%s: %.2f V" % (text, voltage), [(perfname, voltage)]
         if key in psu.keys():

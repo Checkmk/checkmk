@@ -58,15 +58,17 @@ class RulespecCheckgroupParametersMongodbAsserts(CheckParameterRulespecWithoutIt
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("%s_assert_rate" % what,
-                       Tuple(
-                           title=_("%s rate") % what.title(),
-                           elements=[
-                               Float(
-                                   title=_("Warning at"), unit=_("Asserts / s"), default_value=1.0),
-                               Float(
-                                   title=_("Critical at"), unit=_("Asserts / s"),
-                                   default_value=2.0),
-                           ],
-                       )) for what in ["msg", "rollovers", "regular", "warning", "user"]],)
+        return Dictionary(elements=[("%s_assert_rate" % what,
+                                     Tuple(
+                                         title=_("%s rate") % what.title(),
+                                         elements=[
+                                             Float(title=_("Warning at"),
+                                                   unit=_("Asserts / s"),
+                                                   default_value=1.0),
+                                             Float(title=_("Critical at"),
+                                                   unit=_("Asserts / s"),
+                                                   default_value=2.0),
+                                         ],
+                                     ))
+                                    for what in ["msg", "rollovers", "regular", "warning", "user"]
+                                   ],)

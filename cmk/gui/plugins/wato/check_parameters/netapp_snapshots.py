@@ -60,18 +60,17 @@ class RulespecCheckgroupParametersNetappSnapshots(CheckParameterRulespecWithItem
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels",
-                 Tuple(
-                     title=_("Levels for used configured reserve"),
-                     elements=[
-                         Percentage(title=_("Warning at or above"), unit="%", default_value=85.0),
-                         Percentage(title=_("Critical at or above"), unit="%", default_value=90.0),
-                     ],
-                 )),
-                ("state_noreserve", MonitoringState(title=_("State if no reserve is configured"),)),
-            ],)
+        return Dictionary(elements=[
+            ("levels",
+             Tuple(
+                 title=_("Levels for used configured reserve"),
+                 elements=[
+                     Percentage(title=_("Warning at or above"), unit="%", default_value=85.0),
+                     Percentage(title=_("Critical at or above"), unit="%", default_value=90.0),
+                 ],
+             )),
+            ("state_noreserve", MonitoringState(title=_("State if no reserve is configured"),)),
+        ],)
 
     @property
     def item_spec(self):

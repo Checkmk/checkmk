@@ -135,8 +135,8 @@ def manage_plugins(request, plugindir):
     Globals.pluginname = request.param
     targetdir = plugindir[1].replace('/', '\\')
     if platform.system() != 'Windows':
-        fullbuilddir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), Globals.builddir)
+        fullbuilddir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                    Globals.builddir)
         cmds = [[
             'ssh', sshopts,
             '%s@%s' % (remoteuser, remote_ip),

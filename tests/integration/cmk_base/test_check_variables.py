@@ -9,10 +9,9 @@ import cmk_base.check_api as check_api
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
     print "Applying default config"
-    web.add_host(
-        "modes-test-host", attributes={
-            "ipaddress": "127.0.0.1",
-        })
+    web.add_host("modes-test-host", attributes={
+        "ipaddress": "127.0.0.1",
+    })
 
     site.write_file(
         "etc/check_mk/conf.d/modes-test-host.mk",

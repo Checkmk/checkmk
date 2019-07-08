@@ -195,8 +195,11 @@ def check_ibm_svc_systemstats_disk_latency(item, params, info):
 
     for what, latency in [('read', parsed[item]['r_ms']), ('write', parsed[item]['w_ms'])]:
 
-        yield check_levels(
-            latency, what + "_latency", params.get(what), unit="ms", infoname="%s latency" % what)
+        yield check_levels(latency,
+                           what + "_latency",
+                           params.get(what),
+                           unit="ms",
+                           infoname="%s latency" % what)
 
 
 check_info["ibm_svc_systemstats.disk_latency"] = {

@@ -99,41 +99,38 @@ class RulespecCheckgroupParametersHeartbeatCrm(CheckParameterRulespecWithoutItem
 
     @property
     def parameter_valuespec(self):
-        return Transform(
-            Dictionary(
-                elements=[
-                    ("max_age",
-                     Integer(
-                         title=_("Maximum age"),
-                         help=_("Maximum accepted age of the reported data in seconds"),
-                         unit=_("seconds"),
-                         default_value=60,
-                     )),
-                    ("dc",
-                     TextAscii(
-                         allow_empty=False,
-                         title=_("Expected DC"),
-                         help=_(
-                             "The hostname of the expected distinguished controller of the cluster"
-                         ),
-                     )),
-                    ("num_nodes",
-                     Integer(
-                         min_value=0,
-                         default_value=2,
-                         title=_("Number of Nodes"),
-                         help=_("The expected number of nodes in the cluster"),
-                     )),
-                    ("num_resources",
-                     Integer(
-                         min_value=0,
-                         title=_("Number of Resources"),
-                         help=_("The expected number of resources in the cluster"),
-                     )),
-                ],
-                optional_keys=["dc", "num_nodes", "num_resources"],
-            ),
-            forth=self._transform_heartbeat_crm)
+        return Transform(Dictionary(
+            elements=[
+                ("max_age",
+                 Integer(
+                     title=_("Maximum age"),
+                     help=_("Maximum accepted age of the reported data in seconds"),
+                     unit=_("seconds"),
+                     default_value=60,
+                 )),
+                ("dc",
+                 TextAscii(
+                     allow_empty=False,
+                     title=_("Expected DC"),
+                     help=_("The hostname of the expected distinguished controller of the cluster"),
+                 )),
+                ("num_nodes",
+                 Integer(
+                     min_value=0,
+                     default_value=2,
+                     title=_("Number of Nodes"),
+                     help=_("The expected number of nodes in the cluster"),
+                 )),
+                ("num_resources",
+                 Integer(
+                     min_value=0,
+                     title=_("Number of Resources"),
+                     help=_("The expected number of resources in the cluster"),
+                 )),
+            ],
+            optional_keys=["dc", "num_nodes", "num_resources"],
+        ),
+                         forth=self._transform_heartbeat_crm)
 
     def _transform_heartbeat_crm(self, params):
         if isinstance(params, dict):

@@ -108,8 +108,8 @@ def declare_visual_permissions(what, what_plural):
     declare_permission(
         "general.edit_" + what,
         _("Customize %s and use them") % what_plural,
-        _("Allows to create own %s, customize builtin %s and use them.") % (what_plural,
-                                                                            what_plural),
+        _("Allows to create own %s, customize builtin %s and use them.") %
+        (what_plural, what_plural),
         ["admin", "user"],
     )
 
@@ -482,8 +482,8 @@ def page_list(what,
                 config.user.may("general.edit_foreign_%s" % what):
             foreign_visuals.append((owner, visual_name, visual))
 
-    for title1, items in [(_('Customized'), my_visuals), (_("Owned by other users"),
-                                                          foreign_visuals),
+    for title1, items in [(_('Customized'), my_visuals),
+                          (_("Owned by other users"), foreign_visuals),
                           (_('Builtin'), builtin_visuals)]:
         html.open_h3()
         html.write(title1)
@@ -532,10 +532,9 @@ def page_list(what,
                 table.cell(_('Title'))
                 title2 = _u(visual['title'])
                 if _visual_can_be_linked(what, visual_name, visuals, visual, owner):
-                    html.a(
-                        title2,
-                        href="%s.py?%s=%s" % (what_s, visual_type_registry[what]().ident_attr,
-                                              visual_name))
+                    html.a(title2,
+                           href="%s.py?%s=%s" %
+                           (what_s, visual_type_registry[what]().ident_attr, visual_name))
                 else:
                     html.write_text(title2)
                 html.help(_u(visual['description']))
@@ -859,15 +858,15 @@ def page_edit_visual(what,
                  allow_empty=False)),
             ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
             ('topic', TextUnicode(title=_('Topic') + '<sup>*</sup>', size=50)),
-            ('description', TextAreaUnicode(
-                title=_('Description') + '<sup>*</sup>', rows=4, cols=50)),
+            ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
+                                            rows=4,
+                                            cols=50)),
             ('linktitle',
-             TextUnicode(
-                 title=_('Button Text') + '<sup>*</sup>',
-                 help=_('If you define a text here, then it will be used in '
-                        'context buttons linking to the %s instead of the regular title.') %
-                 visual_type.title,
-                 size=26)),
+             TextUnicode(title=_('Button Text') + '<sup>*</sup>',
+                         help=_('If you define a text here, then it will be used in '
+                                'context buttons linking to the %s instead of the regular title.') %
+                         visual_type.title,
+                         size=26)),
             ('icon', IconSelector(title=_('Button Icon'),)),
             ('visibility', Dictionary(
                 title=_('Visibility'),
@@ -1492,11 +1491,10 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
                 break
             vars_values.append((var, val))
 
-        add_site_hint = may_add_site_hint(
-            name,
-            info_keys=visual_info_registry.keys(),
-            single_info_keys=visual["single_infos"],
-            filter_names=dict(vars_values).keys())
+        add_site_hint = may_add_site_hint(name,
+                                          info_keys=visual_info_registry.keys(),
+                                          single_info_keys=visual["single_infos"],
+                                          filter_names=dict(vars_values).keys())
 
         if add_site_hint and html.request.var('site'):
             vars_values.append(('site', html.request.var('site')))
@@ -1517,8 +1515,8 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
             # For views and dashboards currently the current filter
             # settings
             else:
-                uri = html.makeuri_contextless(
-                    vars_values + [(visual_type.ident_attr, name)], filename=visual_type.show_url)
+                uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
+                                               filename=visual_type.show_url)
             icon = visual.get("icon")
             buttonid = "cb_" + name
             context_links.append((_u(linktitle), uri, icon, buttonid))
@@ -1596,9 +1594,9 @@ def ajax_popup_add():
 
         for name, title in sorted(visuals, key=lambda x: x[1]):
             html.open_li()
-            html.open_a(
-                href="javascript:void(0)",
-                onclick="cmk.popup_menu.add_to_visual(\'%s\', \'%s\')" % (visual_type_name, name))
+            html.open_a(href="javascript:void(0)",
+                        onclick="cmk.popup_menu.add_to_visual(\'%s\', \'%s\')" %
+                        (visual_type_name, name))
             html.icon(None, visual_type_name.rstrip('s'))
             html.write(title)
             html.close_a()

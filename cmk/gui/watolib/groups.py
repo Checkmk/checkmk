@@ -94,8 +94,8 @@ def _load_cmk_base_groups():
         "define_contactgroups": {},
     }
 
-    return store.load_mk_file(
-        cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", default=group_specs)
+    return store.load_mk_file(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk",
+                              default=group_specs)
 
 
 def _load_gui_groups():
@@ -106,8 +106,8 @@ def _load_gui_groups():
         "multisite_contactgroups": {},
     }
 
-    return store.load_mk_file(
-        cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk", default=group_specs)
+    return store.load_mk_file(cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk",
+                              default=group_specs)
 
 
 def add_group(name, group_type, extra_info):
@@ -177,8 +177,8 @@ def delete_group(name, group_type):
     if usages:
         raise MKUserError(
             None,
-            _("Unable to delete group. It is still in use by: %s") % ", ".join(
-                [e[0] for e in usages]))
+            _("Unable to delete group. It is still in use by: %s") %
+            ", ".join([e[0] for e in usages]))
 
     # Delete group
     group = groups.pop(name)
@@ -446,26 +446,23 @@ class HostAttributeContactGroups(ABCHostAttribute):
         html.hr()
 
         if is_host:
-            html.checkbox(
-                varprefix + self.name() + "_use",
-                value["use"],
-                label=_("Add these contact groups to the host"))
+            html.checkbox(varprefix + self.name() + "_use",
+                          value["use"],
+                          label=_("Add these contact groups to the host"))
 
         elif not is_search:
-            html.checkbox(
-                varprefix + self.name() + "_recurse_perms",
-                value["recurse_perms"],
-                label=_("Give these groups also <b>permission on all subfolders</b>"))
+            html.checkbox(varprefix + self.name() + "_recurse_perms",
+                          value["recurse_perms"],
+                          label=_("Give these groups also <b>permission on all subfolders</b>"))
             html.hr()
             html.checkbox(
                 varprefix + self.name() + "_use",
                 value["use"],
                 label=_("Add these groups as <b>contacts</b> to all hosts in this folder"))
             html.br()
-            html.checkbox(
-                varprefix + self.name() + "_recurse_use",
-                value["recurse_use"],
-                label=_("Add these groups as <b>contacts in all subfolders</b>"))
+            html.checkbox(varprefix + self.name() + "_recurse_use",
+                          value["recurse_use"],
+                          label=_("Add these groups as <b>contacts in all subfolders</b>"))
 
         html.hr()
         html.help(
@@ -474,10 +471,9 @@ class HostAttributeContactGroups(ABCHostAttribute):
               "assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. "
               "As long as you do not have any such rule a service always inherits all contact groups "
               "from its host."))
-        html.checkbox(
-            varprefix + self.name() + "_use_for_services",
-            value.get("use_for_services", False),
-            label=_("Always add host contact groups also to its services"))
+        html.checkbox(varprefix + self.name() + "_use_for_services",
+                      value.get("use_for_services", False),
+                      label=_("Always add host contact groups also to its services"))
 
     def load_data(self):
         # Make cache valid only during this HTTP request

@@ -91,8 +91,8 @@ for folder in folders:
         extra_aux_tags = ""
         if host_aux_tags:
             extra_aux_tags = "|".join(host_aux_tags) + "|"
-        all_hosts += "'%s|%swato|/' + FOLDER_PATH + '/',\n" % (name.replace(" ", "|"),
-                                                               extra_aux_tags)
+        all_hosts += "'%s|%swato|/' + FOLDER_PATH + '/',\n" % (name.replace(" ",
+                                                                            "|"), extra_aux_tags)
 
         # WATO Alias extra info
         if alias:
@@ -121,6 +121,6 @@ for folder in folders:
     hosts_mk_file.close()
 
     wato_file = open(pathlokal + folder + '/.wato', 'w')
-    wato_file.write(
-        "{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n" % (len(folders[folder]), folder))
+    wato_file.write("{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n" %
+                    (len(folders[folder]), folder))
     wato_file.close()

@@ -428,8 +428,8 @@ def fake_filesystem(tmp_path):
     assert fake_symlink_file_root_level.is_symlink()
 
     fake_symlink_file_subdir_level = fake_fs_subdir / "symlink_to_file.log"
-    fake_symlink_file_subdir_level.symlink_to(
-        fake_fs_subdir / "another_symlinked_file.log", target_is_directory=False)
+    fake_symlink_file_subdir_level.symlink_to(fake_fs_subdir / "another_symlinked_file.log",
+                                              target_is_directory=False)
     assert fake_symlink_file_subdir_level.is_symlink()
 
     fake_fs_symlink_to_dir = fake_fs / "symlink_to_dir"

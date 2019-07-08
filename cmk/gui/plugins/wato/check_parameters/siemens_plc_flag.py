@@ -53,15 +53,15 @@ class RulespecCheckgroupParametersSiemensPlcFlag(CheckParameterRulespecWithItem)
 
     @property
     def parameter_valuespec(self):
-        return DropdownChoice(
-            help=_("This rule sets the expected state, the one which should result in an OK state, "
-                   "of the monitored flags of Siemens PLC devices."),
-            title=_("Expected flag state"),
-            choices=[
-                (True, _("Expect the flag to be: On")),
-                (False, _("Expect the flag to be: Off")),
-            ],
-            default_value=True)
+        return DropdownChoice(help=_(
+            "This rule sets the expected state, the one which should result in an OK state, "
+            "of the monitored flags of Siemens PLC devices."),
+                              title=_("Expected flag state"),
+                              choices=[
+                                  (True, _("Expect the flag to be: On")),
+                                  (False, _("Expect the flag to be: Off")),
+                              ],
+                              default_value=True)
 
     @property
     def item_spec(self):

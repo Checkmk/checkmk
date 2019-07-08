@@ -61,23 +61,21 @@ class RulespecCheckgroupParametersLvmLvsPools(CheckParameterRulespecWithItem):
         return Dictionary(elements=[
             (
                 "levels_meta",
-                Tuple(
-                    title=_("Levels for Meta"),
-                    default_value=(80.0, 90.0),
-                    elements=[
-                        Percentage(title=_("Warning at"), unit=_("%")),
-                        Percentage(title=_("Critical at"), unit=_("%"))
-                    ]),
+                Tuple(title=_("Levels for Meta"),
+                      default_value=(80.0, 90.0),
+                      elements=[
+                          Percentage(title=_("Warning at"), unit=_("%")),
+                          Percentage(title=_("Critical at"), unit=_("%"))
+                      ]),
             ),
             (
                 "levels_data",
-                Tuple(
-                    title=_("Levels for Data"),
-                    default_value=(80.0, 90.0),
-                    elements=[
-                        Percentage(title=_("Warning at"), unit=_("%")),
-                        Percentage(title=_("Critical at"), unit=_("%"))
-                    ]),
+                Tuple(title=_("Levels for Data"),
+                      default_value=(80.0, 90.0),
+                      elements=[
+                          Percentage(title=_("Warning at"), unit=_("%")),
+                          Percentage(title=_("Critical at"), unit=_("%"))
+                      ]),
             ),
         ])
 

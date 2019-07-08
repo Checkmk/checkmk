@@ -354,12 +354,11 @@ def check_emka_modules_sensor_temp(item, params, parsed):
     if item in parsed.get("sensor_temp", {}):
         attrs = parsed["sensor_temp"][item]
         value = attrs["value"]
-        return check_temperature(
-            value,
-            params,
-            "emka_modules_sensor_temp.%s" % item,
-            dev_levels=attrs["levels"],
-            dev_levels_lower=attrs["levels_lower"])
+        return check_temperature(value,
+                                 params,
+                                 "emka_modules_sensor_temp.%s" % item,
+                                 dev_levels=attrs["levels"],
+                                 dev_levels_lower=attrs["levels_lower"])
 
 
 check_info["emka_modules.sensor_temp"] = {

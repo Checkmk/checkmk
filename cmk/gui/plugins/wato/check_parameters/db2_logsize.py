@@ -62,18 +62,18 @@ class RulespecCheckgroupParametersDb2Logsize(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("levels",
-                       Transform(
-                           get_free_used_dynamic_valuespec(
-                               "free", "logfile", default_value=(20.0, 10.0)),
-                           title=_("Logfile levels"),
-                           allow_empty=False,
-                           forth=transform_filesystem_free,
-                           back=transform_filesystem_free))],)
+        return Dictionary(elements=[
+            ("levels",
+             Transform(get_free_used_dynamic_valuespec("free",
+                                                       "logfile",
+                                                       default_value=(20.0, 10.0)),
+                       title=_("Logfile levels"),
+                       allow_empty=False,
+                       forth=transform_filesystem_free,
+                       back=transform_filesystem_free))
+        ],)
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Instance"),
-            help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
+        return TextAscii(title=_("Instance"),
+                         help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))

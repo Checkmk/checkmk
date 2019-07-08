@@ -56,5 +56,6 @@ class APICallExecuteRemoteAutomation(APICallCollection):
         if request["site_id"] not in dict(config.wato_slave_sites()):
             raise MKUserError("site_id", _("This site is not a distributed WATO site."))
 
-        return cmk.gui.watolib.automations.do_remote_automation(
-            config.site(request["site_id"]), request["command"], request["command_args"])
+        return cmk.gui.watolib.automations.do_remote_automation(config.site(request["site_id"]),
+                                                                request["command"],
+                                                                request["command_args"])

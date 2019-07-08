@@ -61,12 +61,11 @@ class TagConfigFile(WatoSimpleConfigFile):
         return Path(multisite_dir()).joinpath("hosttags.mk")
 
     def _load_pre_16_config(self, lock):
-        legacy_cfg = store.load_mk_file(
-            str(self._pre_16_hosttags_path()), {
-                "wato_host_tags": [],
-                "wato_aux_tags": []
-            },
-            lock=lock)
+        legacy_cfg = store.load_mk_file(str(self._pre_16_hosttags_path()), {
+            "wato_host_tags": [],
+            "wato_aux_tags": []
+        },
+                                        lock=lock)
 
         return cmk.utils.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
                                                     legacy_cfg["wato_aux_tags"])
@@ -86,8 +85,8 @@ class TagConfigFile(WatoSimpleConfigFile):
         _export_hosttags_to_php(cfg)
 
     def _save_base_config(self, cfg):
-        base_config_file = WatoSimpleConfigFile(
-            config_file_path=Path(wato_root_dir()) / "tags.mk", config_variable="tag_config")
+        base_config_file = WatoSimpleConfigFile(config_file_path=Path(wato_root_dir()) / "tags.mk",
+                                                config_variable="tag_config")
         base_config_file.save(cfg)
 
 

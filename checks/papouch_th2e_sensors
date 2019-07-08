@@ -92,13 +92,12 @@ def inventory_papouch_th2e_sensors_temp(parsed, what):
 def check_papouch_th2e_sensors_temp(item, params, parsed, what):
     if item in parsed[what]:
         (state, state_readable), reading, unit = parsed[what][item]
-        return check_temperature(
-            reading,
-            params,
-            "papouch_th2e_sensors_%s_%s" % (what, item),
-            dev_unit=unit,
-            dev_status=state,
-            dev_status_name=state_readable)
+        return check_temperature(reading,
+                                 params,
+                                 "papouch_th2e_sensors_%s_%s" % (what, item),
+                                 dev_unit=unit,
+                                 dev_status=state,
+                                 dev_status_name=state_readable)
 
 
 check_info['papouch_th2e_sensors'] = {

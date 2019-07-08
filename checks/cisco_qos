@@ -298,8 +298,8 @@ def check_cisco_qos(item, params, info):
         if average:
             avg_value = get_average("cisco_qos.%s.%s.avg" % (name, item), this_time, rate, average)
             rates.append(avg_value)
-            perfdata_avg.append(("%s_avg_%d" % (name, average), avg_value, warn, crit, min_val,
-                                 max_val))
+            perfdata_avg.append(
+                ("%s_avg_%d" % (name, average), avg_value, warn, crit, min_val, max_val))
 
     perfdata.extend(perfdata_avg)
 

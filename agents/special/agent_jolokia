@@ -43,8 +43,9 @@ def parse_arguments(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument("--verbose", action="count", help='''Verbose mode''')
-    parser.add_argument(
-        "--debug", action="store_true", help="Debug mode: let python exceptions come through")
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help="Debug mode: let python exceptions come through")
 
     opts_with_help = (t for t in mk_jolokia.DEFAULT_CONFIG_TUPLES if len(t) == 3)
 
@@ -55,10 +56,9 @@ def parse_arguments(argv=None):
         parser.add_argument("--%s" % key, default=default, help=help_str)
 
     # now add some arguments we cannot define in the way above:
-    parser.add_argument(
-        "--no-cert-check",
-        action="store_true",
-        help='''Skip SSL certificate verification (not recommended)''')
+    parser.add_argument("--no-cert-check",
+                        action="store_true",
+                        help='''Skip SSL certificate verification (not recommended)''')
 
     return parser.parse_args(argv)
 

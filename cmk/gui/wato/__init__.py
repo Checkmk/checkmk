@@ -509,10 +509,9 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
             action_message = e.reason
             html.add_user_error(None, e.reason)
 
-    wato_html_head(
-        mode.title(),
-        show_body_start=display_options.enabled(display_options.H),
-        show_top_heading=display_options.enabled(display_options.T))
+    wato_html_head(mode.title(),
+                   show_body_start=display_options.enabled(display_options.H),
+                   show_top_heading=display_options.enabled(display_options.T))
 
     if display_options.enabled(display_options.B):
         # Show contexts buttons
@@ -539,8 +538,8 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
     if config.wato_use_git and html.is_transaction():
         watolib.git.do_git_commit()
 
-    wato_html_footer(
-        display_options.enabled(display_options.Z), display_options.enabled(display_options.H))
+    wato_html_footer(display_options.enabled(display_options.Z),
+                     display_options.enabled(display_options.H))
 
 
 def get_mode_permission_and_class(mode_name):
@@ -627,8 +626,8 @@ def execute_network_scan_job():
         if config.site_is_local(folder.site_id()):
             found = cmk.gui.watolib.network_scan.do_network_scan(folder)
         else:
-            found = watolib.do_remote_automation(
-                config.site(folder.site_id()), "network-scan", [("folder", folder.path())])
+            found = watolib.do_remote_automation(config.site(folder.site_id()), "network-scan",
+                                                 [("folder", folder.path())])
 
         if not isinstance(found, list):
             raise MKGeneralException(_("Received an invalid network scan result: %r") % found)

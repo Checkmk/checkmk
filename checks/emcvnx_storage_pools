@@ -319,12 +319,11 @@ def check_emcvnx_storage_pools_deduplication(_no_item, _no_params, data):
                                       "emcvnx_dedupl_efficiency_savings")
     yield 0, "Efficiency savings: %s" % txt, perf
 
-    txt, perf = _emcvnx_get_text_perf(
-        data,
-        "Deduplication Percent Completed",
-        "emcvnx_dedupl_perc_completed",
-        format_func=get_percent_human_readable,
-        factor=1.0)
+    txt, perf = _emcvnx_get_text_perf(data,
+                                      "Deduplication Percent Completed",
+                                      "emcvnx_dedupl_perc_completed",
+                                      format_func=get_percent_human_readable,
+                                      factor=1.0)
     yield 0, "Percent completed: %s" % txt, perf
 
     txt, perf = _emcvnx_get_text_perf(data, "Deduplication Remaining Size (GBs)",

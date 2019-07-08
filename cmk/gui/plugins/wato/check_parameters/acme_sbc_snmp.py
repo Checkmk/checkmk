@@ -60,12 +60,11 @@ class RulespecCheckgroupParametersAcmeSbcSnmp(CheckParameterRulespecWithoutItem)
         return Dictionary(
             elements=[
                 ("levels_lower",
-                 Tuple(
-                     title=_("Levels on health status score in percent"),
-                     elements=[
-                         Integer(title=_("Warning below"), unit=_("percent"), default_value=99),
-                         Integer(title=_("Critical below"), unit=_("percent"), default_value=75),
-                     ])),
+                 Tuple(title=_("Levels on health status score in percent"),
+                       elements=[
+                           Integer(title=_("Warning below"), unit=_("percent"), default_value=99),
+                           Integer(title=_("Critical below"), unit=_("percent"), default_value=75),
+                       ])),
             ],
             required_keys=["levels_lower"],
         )

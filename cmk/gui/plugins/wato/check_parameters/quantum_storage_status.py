@@ -57,23 +57,21 @@ class RulespecCheckgroupParametersQuantumStorageStatus(CheckParameterRulespecWit
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("map_states",
-                 Dictionary(
-                     elements=[
-                         ("unavailable",
-                          MonitoringState(title=_("Device unavailable"), default_value=2)),
-                         ("available", MonitoringState(
-                             title=_("Device available"), default_value=0)),
-                         ("online", MonitoringState(title=_("Device online"), default_value=0)),
-                         ("offline", MonitoringState(title=_("Device offline"), default_value=2)),
-                         ("going online",
-                          MonitoringState(title=_("Device going online"), default_value=1)),
-                         ("state not available",
-                          MonitoringState(title=_("Device state not available"), default_value=3)),
-                     ],
-                     title=_('Map Device States'),
-                     optional_keys=[],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("map_states",
+             Dictionary(
+                 elements=[
+                     ("unavailable", MonitoringState(title=_("Device unavailable"),
+                                                     default_value=2)),
+                     ("available", MonitoringState(title=_("Device available"), default_value=0)),
+                     ("online", MonitoringState(title=_("Device online"), default_value=0)),
+                     ("offline", MonitoringState(title=_("Device offline"), default_value=2)),
+                     ("going online",
+                      MonitoringState(title=_("Device going online"), default_value=1)),
+                     ("state not available",
+                      MonitoringState(title=_("Device state not available"), default_value=3)),
+                 ],
+                 title=_('Map Device States'),
+                 optional_keys=[],
+             )),
+        ],)

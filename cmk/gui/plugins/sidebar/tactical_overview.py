@@ -91,8 +91,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                               title=_("Query"),
                               label=_("Table") + ": ",
                               choices=[
-                                  ("hosts", _("Hosts"), visuals.VisualFilterList(
-                                      info_list=["host"],)),
+                                  ("hosts", _("Hosts"), visuals.VisualFilterList(info_list=["host"
+                                                                                           ],)),
                                   ("services", _("Services"),
                                    visuals.VisualFilterList(info_list=["host", "service"],)),
                                   ("events", _("Events"),
@@ -145,8 +145,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.center(_("No data from any site"))
             return
 
-        html.open_table(
-            class_=["content_center", "tacticaloverview"], cellspacing=2, cellpadding=0, border=0)
+        html.open_table(class_=["content_center", "tacticaloverview"],
+                        cellspacing=2,
+                        cellpadding=0,
+                        border=0)
 
         show_stales = self.parameters()["show_stale"] and config.user.may(
             "general.see_stales_in_tactical_overview")
@@ -182,16 +184,16 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.close_td()
 
             for value, ty in [(problems, "handled"), (unhandled_problems, "unhandled")]:
-                url = html.makeuri_contextless(
-                    getattr(row.views, ty) + context_vars, filename="view.py")
+                url = html.makeuri_contextless(getattr(row.views, ty) + context_vars,
+                                               filename="view.py")
                 html.open_td(class_=[td_class, "states prob" if value != 0 else None])
                 link(str(value), url)
                 html.close_td()
 
             if show_stales and has_stale_objects:
                 if row.views.stale:
-                    url = html.makeuri_contextless(
-                        row.views.stale + context_vars, filename="view.py")
+                    url = html.makeuri_contextless(row.views.stale + context_vars,
+                                                   filename="view.py")
                     html.open_td(class_=[td_class, "states prob" if stales != 0 else None])
                     link(str(stales), url)
                     html.close_td()
@@ -283,20 +285,23 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _get_stats(self, what, context):
         if what == "hosts":
-            context_filters, only_sites = visuals.get_filter_headers(
-                table="hosts", infos=["host"], context=context)
+            context_filters, only_sites = visuals.get_filter_headers(table="hosts",
+                                                                     infos=["host"],
+                                                                     context=context)
 
             query = self._get_host_stats_query(context_filters)
 
         elif what == "services":
-            context_filters, only_sites = visuals.get_filter_headers(
-                table="services", infos=["host", "service"], context=context)
+            context_filters, only_sites = visuals.get_filter_headers(table="services",
+                                                                     infos=["host", "service"],
+                                                                     context=context)
 
             query = self._get_service_stats_query(context_filters)
 
         elif what == "events":
-            context_filters, only_sites = visuals.get_filter_headers(
-                table="eventconsoleevents", infos=["host", "event"], context=context)
+            context_filters, only_sites = visuals.get_filter_headers(table="eventconsoleevents",
+                                                                     infos=["host", "event"],
+                                                                     context=context)
 
             query = self._get_event_stats_query(context_filters)
         else:

@@ -62,11 +62,10 @@ def parse_tcw241_analog(info):
         if sensor_minimum < 1 or sensor_maximum < 1:
             continue
 
-        info_dict[oid.split(".")[0]] = AnalogSensor(
-            description=str(description),
-            maximum=sensor_maximum,
-            minimum=sensor_minimum,
-            voltage=sensor_voltage)
+        info_dict[oid.split(".")[0]] = AnalogSensor(description=str(description),
+                                                    maximum=sensor_maximum,
+                                                    minimum=sensor_minimum,
+                                                    voltage=sensor_voltage)
     return info_dict
 
 
@@ -80,11 +79,10 @@ def check_tcw241_analog(item, params, sensor):
     :param sensor: analog sensor data
     :return: status
     """
-    return check_levels(
-        sensor.voltage,
-        "voltage", (sensor.minimum, sensor.maximum),
-        unit="V",
-        infoname="[%s]" % sensor.description)
+    return check_levels(sensor.voltage,
+                        "voltage", (sensor.minimum, sensor.maximum),
+                        unit="V",
+                        infoname="[%s]" % sensor.description)
 
 
 check_info["teracom_tcw241_analog"] = {

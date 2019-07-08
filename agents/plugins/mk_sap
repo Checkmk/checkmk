@@ -379,8 +379,9 @@ def process_alerts(cfg_entry, logs, ms_name, mon_name, node, alerts):
 
         alert_state, alert_msg = alert_details(cfg_entry, alert)
         # Format lines to "logwatch" format
-        logs[hostname][logfile].append('%s %s %s' % (STATE_LOGWATCH_MAP[alert_state['VALUE']],
-                                                     dt.strftime("%Y-%m-%d %H:%M:%S"), alert_msg))
+        logs[hostname][logfile].append(
+            '%s %s %s' %
+            (STATE_LOGWATCH_MAP[alert_state['VALUE']], dt.strftime("%Y-%m-%d %H:%M:%S"), alert_msg))
 
     if newest_log_dt:
         # Write newest log age to cache to prevent double processing of logs
@@ -463,9 +464,9 @@ def check(cfg_entry):
                 path = node["PATH"]
 
                 sap_data.setdefault(sid, [])
-                sap_data[sid].append(
-                    "%s\t%d\t%3d\t%s\t%s\t%s\t%s" % (context, state['VALUE'], state['SEVERITY'],
-                                                     path, perfvalue, uom, status_details))
+                sap_data[sid].append("%s\t%d\t%3d\t%s\t%s\t%s\t%s" %
+                                     (context, state['VALUE'], state['SEVERITY'], path, perfvalue,
+                                      uom, status_details))
 
     for host, host_sap in sap_data.items():
         sys.stdout.write('<<<<%s%s>>>>\n' % (cfg_entry.get("host_prefix", ""), host))

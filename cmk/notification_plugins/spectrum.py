@@ -79,8 +79,8 @@ def main():
         base_oid + ".10": 3,  #SPECIFIC TRAP (type) NUMBER
         base_oid + ".11": "Call number 123456",  #CALLOUT STRING
         base_oid + ".12": complete_url,
-        base_oid + ".13": "%s alarm on host %s" % (context.get('SERVICEDESC', 'Connectivity'),
-                                                   context['HOSTNAME']),
+        base_oid + ".13": "%s alarm on host %s" %
+                          (context.get('SERVICEDESC', 'Connectivity'), context['HOSTNAME']),
         base_oid + ".14": context.get('SERVICEGROUPNAMES', ""),
     }
 

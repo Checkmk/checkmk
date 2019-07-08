@@ -36,23 +36,24 @@ def check_msexch_rpcclientaccess(item, params, parsed):
     # despite the source being raw-data, the averaged latency is
     # pre-processed
     table = parsed[""]
-    yield wmi_yield_raw_counter(
-        table,
-        item,
-        "RPCAveragedLatency",
-        label="ms average latency",
-        perfvar="average_latency",
-        levels=params['latency'])
-    yield wmi_yield_raw_persec(
-        table,
-        item,
-        "RPCRequests",
-        label=" RPC Requests",
-        perfvar="requests_per_sec",
-        levels=params['requests'])
+    yield wmi_yield_raw_counter(table,
+                                item,
+                                "RPCAveragedLatency",
+                                label="ms average latency",
+                                perfvar="average_latency",
+                                levels=params['latency'])
+    yield wmi_yield_raw_persec(table,
+                               item,
+                               "RPCRequests",
+                               label=" RPC Requests",
+                               perfvar="requests_per_sec",
+                               levels=params['requests'])
     yield wmi_yield_raw_counter(table, item, "UserCount", label=" users", perfvar="current_users")
-    yield wmi_yield_raw_counter(
-        table, item, "ActiveUserCount", label=" active users", perfvar="active_users")
+    yield wmi_yield_raw_counter(table,
+                                item,
+                                "ActiveUserCount",
+                                label=" active users",
+                                perfvar="active_users")
 
 
 check_info['msexch_rpcclientaccess'] = {

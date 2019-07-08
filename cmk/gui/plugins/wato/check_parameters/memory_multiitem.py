@@ -73,14 +73,12 @@ class RulespecCheckgroupParametersMemoryMultiitem(CheckParameterRulespecWithItem
                          Tuple(
                              title=_("Specify levels in percentage of total RAM"),
                              elements=[
-                                 Percentage(
-                                     title=_("Warning at a memory usage of"),
-                                     default_value=80.0,
-                                     maxvalue=None),
-                                 Percentage(
-                                     title=_("Critical at a memory usage of"),
-                                     default_value=90.0,
-                                     maxvalue=None)
+                                 Percentage(title=_("Warning at a memory usage of"),
+                                            default_value=80.0,
+                                            maxvalue=None),
+                                 Percentage(title=_("Critical at a memory usage of"),
+                                            default_value=90.0,
+                                            maxvalue=None)
                              ],
                          ),
                          Tuple(

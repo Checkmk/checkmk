@@ -57,12 +57,11 @@ def check_hitachi_hnas_temp(item, params, info):
             if status == 0 or status >= len(temp_status_map):
                 return 3, "unidentified status %s" % status, []
 
-            return check_temperature(
-                temp,
-                params,
-                "hitachi_hnas_temp_%s" % item,
-                dev_status=temp_status_map[status][1],
-                dev_status_name="Unit: %s" % temp_status_map[status][0])
+            return check_temperature(temp,
+                                     params,
+                                     "hitachi_hnas_temp_%s" % item,
+                                     dev_status=temp_status_map[status][1],
+                                     dev_status_name="Unit: %s" % temp_status_map[status][0])
     return 3, "No sensor found", []
 
 

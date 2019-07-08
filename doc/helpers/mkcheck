@@ -98,19 +98,18 @@ check_info['{name}'] = {{{parse}
     'check_function': check_{name},
     'service_description': 'DESCR',{snmp}
 }}
-""".format(
-        name=name,
-        decorator=decorator_str,
-        decorator_info=decorator_info_str,
-        info=info_str,
-        parse=parse_str,
-        parse_function=parse_function_str,
-        snmp=snmp_str)
+""".format(name=name,
+           decorator=decorator_str,
+           decorator_info=decorator_info_str,
+           info=info_str,
+           parse=parse_str,
+           parse_function=parse_function_str,
+           snmp=snmp_str)
 
 
 def parse_arguments(argv):
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--snmp", action="store_true", help="Add SNMP scan and info")
     parser.add_argument("--parse", action="store_true", help="Add parse function")
     parser.add_argument("--decorate", action="store_true", help="Decorate check function")

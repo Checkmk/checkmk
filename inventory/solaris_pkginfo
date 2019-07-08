@@ -77,8 +77,8 @@ def inv_solaris_pkginfo(info):
             # 'try, except' blog is necessary because date conversion may fail because of non en_US
             # locale settings on the remote solaris server
             try:
-                install_date_epoch = int(
-                    time.mktime(time.strptime(value.strip(), "%b %d %Y %H %M")))
+                install_date_epoch = int(time.mktime(time.strptime(value.strip(),
+                                                                   "%b %d %Y %H %M")))
                 entry.update({'install_date': install_date_epoch})
             except Exception:
                 pass

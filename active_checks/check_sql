@@ -275,8 +275,8 @@ def mssql_execute(cursor, cmd, _inpt, procedure):
 
 
 def oracle_connect(host, port, db_name, user, pwd):
-    sys.path.append(
-        '/usr/lib/python%s.%s/site-packages' % (sys.version_info.major, sys.version_info.minor))
+    sys.path.append('/usr/lib/python%s.%s/site-packages' %
+                    (sys.version_info.major, sys.version_info.minor))
     try:
         import cx_Oracle  # pylint: disable=import-error
     except ImportError as exc:

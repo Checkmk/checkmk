@@ -54,19 +54,18 @@ class ManualCheckParameterWMICProcess(ManualCheckParameterRulespec):
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            elements=[
-                TextAscii(
-                    title=_("Name of the process"),
-                    allow_empty=False,
-                ),
-                Integer(title=_("Memory warning at"), unit="MB"),
-                Integer(title=_("Memory critical at"), unit="MB"),
-                Integer(title=_("Pagefile warning at"), unit="MB"),
-                Integer(title=_("Pagefile critical at"), unit="MB"),
-                Percentage(title=_("CPU usage warning at")),
-                Percentage(title=_("CPU usage critical at")),
-            ],)
+        return Tuple(elements=[
+            TextAscii(
+                title=_("Name of the process"),
+                allow_empty=False,
+            ),
+            Integer(title=_("Memory warning at"), unit="MB"),
+            Integer(title=_("Memory critical at"), unit="MB"),
+            Integer(title=_("Pagefile warning at"), unit="MB"),
+            Integer(title=_("Pagefile critical at"), unit="MB"),
+            Percentage(title=_("CPU usage warning at")),
+            Percentage(title=_("CPU usage critical at")),
+        ],)
 
     @property
     def item_spec(self):

@@ -406,8 +406,8 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
             job_id, job_status = job_info.items()[0]
             JobRenderer.show_job_details(job_id, job_status)
         else:
-            raise MKGeneralException(
-                "Background job with id <i>%s</i> not found" % job_snapshot.get_job_id())
+            raise MKGeneralException("Background job with id <i>%s</i> not found" %
+                                     job_snapshot.get_job_id())
 
     def _get_job_infos(self, jobs):
         all_jobs = {}
@@ -592,13 +592,11 @@ class JobRenderer(object):
         # Actions
         html.open_td(css="job_actions")
         if job_status.get("may_stop"):
-            html.icon_button(
-                html.makeactionuri([(ActionHandler.stop_job_var, job_id)]), _("Stop this job"),
-                "disable_test")
+            html.icon_button(html.makeactionuri([(ActionHandler.stop_job_var, job_id)]),
+                             _("Stop this job"), "disable_test")
         if job_status.get("may_delete"):
-            html.icon_button(
-                html.makeactionuri([(ActionHandler.delete_job_var, job_id)]), _("Delete this job"),
-                "delete")
+            html.icon_button(html.makeactionuri([(ActionHandler.delete_job_var, job_id)]),
+                             _("Delete this job"), "delete")
         html.close_td()
 
         # Job ID

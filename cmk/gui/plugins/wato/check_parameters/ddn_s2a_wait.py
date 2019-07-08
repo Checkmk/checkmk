@@ -59,62 +59,61 @@ class RulespecCheckgroupParametersDdnS2AWait(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("read_avg",
-                 Tuple(
-                     title=_(u"Read wait average"),
-                     elements=[
-                         Float(title=_(u"Warning at"), unit="s"),
-                         Float(title=_(u"Critical at"), unit="s"),
-                     ],
-                 )),
-                ("read_min",
-                 Tuple(
-                     title=_(u"Read wait minimum"),
-                     elements=[
-                         Float(title=_(u"Warning at"), unit="s"),
-                         Float(title=_(u"Critical at"), unit="s"),
-                     ],
-                 )),
-                ("read_max",
-                 Tuple(
-                     title=_(u"Read wait maximum"),
-                     elements=[
-                         Float(title=_(u"Warning at"), unit="s"),
-                         Float(title=_(u"Critical at"), unit="s"),
-                     ],
-                 )),
-                ("write_avg",
-                 Tuple(
-                     title=_(u"Write wait average"),
-                     elements=[
-                         Float(title=_(u"Warning at"), unit="s"),
-                         Float(title=_(u"Critical at"), unit="s"),
-                     ],
-                 )),
-                ("write_min",
-                 Tuple(
-                     title=_(u"Write wait minimum"),
-                     elements=[
-                         Float(title=_(u"Warning at"), unit="s"),
-                         Float(title=_(u"Critical at"), unit="s"),
-                     ],
-                 )),
-                ("write_max",
-                 Tuple(
-                     title=_(u"Write wait maximum"),
-                     elements=[
-                         Float(title=_(u"Warning at"), unit="s"),
-                         Float(title=_(u"Critical at"), unit="s"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("read_avg",
+             Tuple(
+                 title=_(u"Read wait average"),
+                 elements=[
+                     Float(title=_(u"Warning at"), unit="s"),
+                     Float(title=_(u"Critical at"), unit="s"),
+                 ],
+             )),
+            ("read_min",
+             Tuple(
+                 title=_(u"Read wait minimum"),
+                 elements=[
+                     Float(title=_(u"Warning at"), unit="s"),
+                     Float(title=_(u"Critical at"), unit="s"),
+                 ],
+             )),
+            ("read_max",
+             Tuple(
+                 title=_(u"Read wait maximum"),
+                 elements=[
+                     Float(title=_(u"Warning at"), unit="s"),
+                     Float(title=_(u"Critical at"), unit="s"),
+                 ],
+             )),
+            ("write_avg",
+             Tuple(
+                 title=_(u"Write wait average"),
+                 elements=[
+                     Float(title=_(u"Warning at"), unit="s"),
+                     Float(title=_(u"Critical at"), unit="s"),
+                 ],
+             )),
+            ("write_min",
+             Tuple(
+                 title=_(u"Write wait minimum"),
+                 elements=[
+                     Float(title=_(u"Warning at"), unit="s"),
+                     Float(title=_(u"Critical at"), unit="s"),
+                 ],
+             )),
+            ("write_max",
+             Tuple(
+                 title=_(u"Write wait maximum"),
+                 elements=[
+                     Float(title=_(u"Warning at"), unit="s"),
+                     Float(title=_(u"Critical at"), unit="s"),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):
-        return DropdownChoice(
-            title=_(u"Host or Disk"), choices=[
-                ("Disk", _(u"Disk")),
-                ("Host", _(u"Host")),
-            ])
+        return DropdownChoice(title=_(u"Host or Disk"),
+                              choices=[
+                                  ("Disk", _(u"Disk")),
+                                  ("Host", _(u"Host")),
+                              ])

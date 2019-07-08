@@ -183,11 +183,10 @@ def inventory_watchdog_sensors_temp(parsed):
 def check_watchdog_sensors_temp(item, params, parsed):
     if item in parsed:
         temperature_str, unit = parsed[item]['temp']
-        return check_temperature(
-            float(temperature_str) / 10.0,
-            params,
-            "check_watchdog_sensors.%s" % item,
-            dev_unit=unit.lower())
+        return check_temperature(float(temperature_str) / 10.0,
+                                 params,
+                                 "check_watchdog_sensors.%s" % item,
+                                 dev_unit=unit.lower())
 
 
 check_info['watchdog_sensors.temp'] = {

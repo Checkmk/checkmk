@@ -951,15 +951,14 @@ class Overridable(Base):
                     table.row()
 
                     if what != "builtin" and instance.may_delete():
-                        table.cell(
-                            html.render_input(
-                                "_toggle_group",
-                                type_="button",
-                                class_="checkgroup",
-                                onclick="cmk.selection.toggle_all_rows(this.form);",
-                                value='X'),
-                            sortable=False,
-                            css="checkbox")
+                        table.cell(html.render_input(
+                            "_toggle_group",
+                            type_="button",
+                            class_="checkgroup",
+                            onclick="cmk.selection.toggle_all_rows(this.form);",
+                            value='X'),
+                                   sortable=False,
+                                   css="checkbox")
                         html.checkbox("_c_%s+%s+%s" % (what, instance.owner(), instance.name()))
 
                     # Actions
@@ -1008,8 +1007,10 @@ class Overridable(Base):
                     ###     render_custom_columns(visual_name, visual)
 
             if what != "builtin":
-                html.button(
-                    "_bulk_delete_%s" % what, _("Bulk delete"), "submit", style="margin-top:10px")
+                html.button("_bulk_delete_%s" % what,
+                            _("Bulk delete"),
+                            "submit",
+                            style="margin-top:10px")
                 html.hidden_fields()
                 html.end_form()
 
@@ -1136,8 +1137,11 @@ class Overridable(Base):
                     "_p_name",
                     _("You already have an element with the ID <b>%s</b>") % page_dict["name"])
 
-        new_page_dict = forms.edit_valuespec(
-            vs, page_dict, validate=validate, focus="_p_title", method="POST")
+        new_page_dict = forms.edit_valuespec(vs,
+                                             page_dict,
+                                             validate=validate,
+                                             focus="_p_title",
+                                             method="POST")
         if new_page_dict is not None:
             # Take over keys from previous value that are specific to the page type
             # and not edited here.
@@ -1178,18 +1182,17 @@ class Overridable(Base):
 class PublishTo(CascadingDropdown):
     def __init__(self, type_title=None, with_foreign_groups=True, **kwargs):
         kwargs.setdefault("title", _('Make this %s available for other users') % type_title)
-        super(PublishTo, self).__init__(
-            choices=[
-                (True, _("Publish to all users")),
-                ("contact_groups", _("Publish to members of contact groups"),
-                 ContactGroupChoice(
-                     with_foreign_groups=with_foreign_groups,
-                     title=_("Publish to members of contact groups"),
-                     rows=5,
-                     size=80,
-                 )),
-            ],
-            **kwargs)
+        super(PublishTo, self).__init__(choices=[
+            (True, _("Publish to all users")),
+            ("contact_groups", _("Publish to members of contact groups"),
+             ContactGroupChoice(
+                 with_foreign_groups=with_foreign_groups,
+                 title=_("Publish to members of contact groups"),
+                 rows=5,
+                 size=80,
+             )),
+        ],
+                                        **kwargs)
 
 
 class ContactGroupChoice(DualListChoice):
@@ -1275,8 +1278,9 @@ class OverridableContainer(Overridable, Container):
         html.open_li()
         html.open_a(
             href="javascript:void(0)",
-            onclick="cmk.popup_menu.pagetype_add_to_container('%s', '%s');cmk.utils.reload_sidebar();"
-            % (type_name, name))
+            onclick=
+            "cmk.popup_menu.pagetype_add_to_container('%s', '%s');cmk.utils.reload_sidebar();" %
+            (type_name, name))
         html.render_icon(type_name)
         html.write_text(title)
         html.close_a()

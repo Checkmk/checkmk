@@ -152,8 +152,8 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
             raise MKGeneralException(
                 "Invalid entry in inventory_fileinfo_groups: "
                 "group name '%s' contains %d times '%%s', but regular expression "
-                "'%s' contains only %d subexpression(s)." % (group_name, num_perc_s, inclusion,
-                                                             len(matches)))
+                "'%s' contains only %d subexpression(s)." %
+                (group_name, num_perc_s, inclusion, len(matches)))
 
         this_group_name = None
         if incl_match and not excl_match:

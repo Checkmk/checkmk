@@ -59,64 +59,44 @@ class RulespecCheckgroupParametersSkypeEdge(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('authentication_failures',
-                 Dictionary(
-                     title=_("Authentication Failures"),
-                     elements=[
-                         ("upper",
-                          Tuple(
-                              elements=[
-                                  Integer(
-                                      title=_("Warning at"), unit=_("per second"),
-                                      default_value=20),
-                                  Integer(
-                                      title=_("Critical at"),
-                                      unit=_("per second"),
-                                      default_value=40),
-                              ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-                ('allocate_requests_exceeding',
-                 Dictionary(
-                     title=_("Allocate Requests Exceeding Port Limit"),
-                     elements=[
-                         ("upper",
-                          Tuple(
-                              elements=[
-                                  Integer(
-                                      title=_("Warning at"), unit=_("per second"),
-                                      default_value=20),
-                                  Integer(
-                                      title=_("Critical at"),
-                                      unit=_("per second"),
-                                      default_value=40),
-                              ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-                ('packets_dropped',
-                 Dictionary(
-                     title=_("Packets Dropped"),
-                     elements=[
-                         ("upper",
-                          Tuple(
-                              elements=[
-                                  Integer(
-                                      title=_("Warning at"),
-                                      unit=_("per second"),
-                                      default_value=200),
-                                  Integer(
-                                      title=_("Critical at"),
-                                      unit=_("per second"),
-                                      default_value=400),
-                              ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('authentication_failures',
+             Dictionary(
+                 title=_("Authentication Failures"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Integer(title=_("Warning at"), unit=_("per second"), default_value=20),
+                          Integer(title=_("Critical at"), unit=_("per second"), default_value=40),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+            ('allocate_requests_exceeding',
+             Dictionary(
+                 title=_("Allocate Requests Exceeding Port Limit"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Integer(title=_("Warning at"), unit=_("per second"), default_value=20),
+                          Integer(title=_("Critical at"), unit=_("per second"), default_value=40),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+            ('packets_dropped',
+             Dictionary(
+                 title=_("Packets Dropped"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Integer(title=_("Warning at"), unit=_("per second"), default_value=200),
+                          Integer(title=_("Critical at"), unit=_("per second"), default_value=400),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+        ],)
 
     @property
     def item_spec(self):

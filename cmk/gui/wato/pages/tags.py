@@ -99,10 +99,10 @@ class ModeTags(WatoMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(
-            _("New tag group"), watolib.folder_preserving_link([("mode", "edit_tag")]), "new")
-        html.context_button(
-            _("New aux tag"), watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
+        html.context_button(_("New tag group"),
+                            watolib.folder_preserving_link([("mode", "edit_tag")]), "new")
+        html.context_button(_("New aux tag"),
+                            watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
 
     def action(self):
         if html.request.has_var("_delete"):
@@ -196,18 +196,17 @@ class ModeTags(WatoMode):
         self._render_aux_tag_list()
 
     def _render_tag_list(self):
-        with table_element(
-                "tags",
-                _("Tag groups"),
-                help=(_("Tags are the basis of Check_MK's rule based configuration. "
-                        "If the first step you define arbitrary tag groups. A host "
-                        "has assigned exactly one tag out of each group. These tags can "
-                        "later be used for defining parameters for hosts and services, "
-                        "such as <i>disable notifications for all hosts with the tags "
-                        "<b>Network device</b> and <b>Test</b></i>.")),
-                empty_text=_("You haven't defined any tag groups yet."),
-                searchable=False,
-                sortable=False) as table:
+        with table_element("tags",
+                           _("Tag groups"),
+                           help=(_("Tags are the basis of Check_MK's rule based configuration. "
+                                   "If the first step you define arbitrary tag groups. A host "
+                                   "has assigned exactly one tag out of each group. These tags can "
+                                   "later be used for defining parameters for hosts and services, "
+                                   "such as <i>disable notifications for all hosts with the tags "
+                                   "<b>Network device</b> and <b>Test</b></i>.")),
+                           empty_text=_("You haven't defined any tag groups yet."),
+                           searchable=False,
+                           sortable=False) as table:
 
             for nr, tag_group in enumerate(self._effective_config.tag_groups):
                 table.row()
@@ -237,15 +236,15 @@ class ModeTags(WatoMode):
         html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
     def _render_aux_tag_list(self):
-        with table_element(
-                "auxtags",
-                _("Auxiliary tags"),
-                help=_("Auxiliary tags can be attached to other tags. That way "
-                       "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
-                       "get also the tag <tt>tcp</tt>. This makes the configuration of "
-                       "your hosts easier."),
-                empty_text=_("You haven't defined any auxiliary tags."),
-                searchable=False) as table:
+        with table_element("auxtags",
+                           _("Auxiliary tags"),
+                           help=_(
+                               "Auxiliary tags can be attached to other tags. That way "
+                               "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
+                               "get also the tag <tt>tcp</tt>. This makes the configuration of "
+                               "your hosts easier."),
+                           empty_text=_("You haven't defined any auxiliary tags."),
+                           searchable=False) as table:
 
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 table.row()
@@ -262,9 +261,8 @@ class ModeTags(WatoMode):
 
                 table.text_cell(_("Title"), _u(aux_tag.title))
                 table.text_cell(_("Topic"), _u(aux_tag.topic) or _("Tags"))
-                table.text_cell(
-                    _("Tags using this auxiliary tag"), ", ".join(
-                        self._get_tags_using_aux_tag(aux_tag)))
+                table.text_cell(_("Tags using this auxiliary tag"),
+                                ", ".join(self._get_tags_using_aux_tag(aux_tag)))
 
     def _get_tags_using_aux_tag(self, aux_tag):
         used_tags = set()
@@ -366,8 +364,8 @@ class ModeEditAuxtag(ABCEditTagMode):
         return _("Edit auxiliary tag")
 
     def buttons(self):
-        html.context_button(
-            _("All tags"), watolib.folder_preserving_link([("mode", "tags")]), "back")
+        html.context_button(_("All tags"), watolib.folder_preserving_link([("mode", "tags")]),
+                            "back")
 
     def action(self):
         if not html.check_transaction():
@@ -439,8 +437,8 @@ class ModeEditTagGroup(ABCEditTagMode):
         return _("Edit tag group")
 
     def buttons(self):
-        html.context_button(
-            _("All tags"), watolib.folder_preserving_link([("mode", "tags")]), "back")
+        html.context_button(_("All tags"), watolib.folder_preserving_link([("mode", "tags")]),
+                            "back")
 
     def action(self):
         if not html.check_transaction():
@@ -541,13 +539,12 @@ class ModeEditTagGroup(ABCEditTagMode):
             ListOf(
                 Tuple(
                     elements=[
-                        TextAscii(
-                            title=_("Tag ID"),
-                            size=16,
-                            regex="^[-a-z0-9A-Z_]*$",
-                            none_is_empty=True,
-                            regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
-                                          "0-9, _ and - are allowed.")),
+                        TextAscii(title=_("Tag ID"),
+                                  size=16,
+                                  regex="^[-a-z0-9A-Z_]*$",
+                                  none_is_empty=True,
+                                  regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
+                                                "0-9, _ and - are allowed.")),
                         TextUnicode(title=_("Title") + "*", allow_empty=False, size=40),
                         Foldable(
                             ListChoice(

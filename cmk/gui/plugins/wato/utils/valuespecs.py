@@ -51,11 +51,11 @@ class RuleComment(TextAreaUnicode):
         date_and_user = "%s %s: " % (time.strftime("%F", time.localtime()), config.user.id)
 
         html.nbsp()
-        html.icon_button(
-            None,
-            title=_("Prefix date and your name to the comment"),
-            icon="insertdate",
-            onclick="cmk.valuespecs.rule_comment_prefix_date_and_user(this, '%s');" % date_and_user)
+        html.icon_button(None,
+                         title=_("Prefix date and your name to the comment"),
+                         icon="insertdate",
+                         onclick="cmk.valuespecs.rule_comment_prefix_date_and_user(this, '%s');" %
+                         date_and_user)
         html.close_div()
 
 

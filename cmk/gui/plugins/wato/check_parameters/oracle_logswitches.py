@@ -76,14 +76,12 @@ class RulespecCheckgroupParametersOracleLogswitches(CheckParameterRulespecWithIt
                         Tuple(
                             title=_("Set upper Levels"),
                             elements=[
-                                Integer(
-                                    title=_("Warning at or above"),
-                                    unit=_("log switches / hour"),
-                                    default_value=50),
-                                Integer(
-                                    title=_("Critical at or above"),
-                                    unit=_("log switches / hour"),
-                                    default_value=100),
+                                Integer(title=_("Warning at or above"),
+                                        unit=_("log switches / hour"),
+                                        default_value=50),
+                                Integer(title=_("Critical at or above"),
+                                        unit=_("log switches / hour"),
+                                        default_value=100),
                             ],
                         ),
                     ),
@@ -92,14 +90,12 @@ class RulespecCheckgroupParametersOracleLogswitches(CheckParameterRulespecWithIt
                         Tuple(
                             title=_("Set lower Levels"),
                             elements=[
-                                Integer(
-                                    title=_("Warning at or below"),
-                                    unit=_("log switches / hour"),
-                                    default_value=-1),
-                                Integer(
-                                    title=_("Critical at or below"),
-                                    unit=_("log switches / hour"),
-                                    default_value=-1),
+                                Integer(title=_("Warning at or below"),
+                                        unit=_("log switches / hour"),
+                                        default_value=-1),
+                                Integer(title=_("Critical at or below"),
+                                        unit=_("log switches / hour"),
+                                        default_value=-1),
                             ],
                         ),
                     ),

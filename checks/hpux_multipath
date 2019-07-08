@@ -110,8 +110,8 @@ def check_hpux_multipath(item, params, info):
     disk, pathcounts = disks[item]
 
     if pathcounts[2] > 0:
-        return (2, "%s: %d failed paths! (%s)" % (disk, pathcounts[2],
-                                                  hpux_multipath_format_pathstatus(pathcounts)))
+        return (2, "%s: %d failed paths! (%s)" %
+                (disk, pathcounts[2], hpux_multipath_format_pathstatus(pathcounts)))
 
     elif list(pathcounts) != list(params):
         return (1, "%s: Invalid path status %s (should be %s)" %

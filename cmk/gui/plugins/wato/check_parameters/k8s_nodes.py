@@ -58,22 +58,21 @@ class RulespecCheckgroupParametersK8SNodes(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('levels',
-                 Tuple(
-                     title=_('Upper levels'),
-                     elements=[
-                         Integer(title=_("Warning above")),
-                         Integer(title=_("Critical above")),
-                     ],
-                 )),
-                ('levels_lower',
-                 Tuple(
-                     title=_('Lower levels'),
-                     elements=[
-                         Integer(title=_("Warning below")),
-                         Integer(title=_("Critical below")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('levels',
+             Tuple(
+                 title=_('Upper levels'),
+                 elements=[
+                     Integer(title=_("Warning above")),
+                     Integer(title=_("Critical above")),
+                 ],
+             )),
+            ('levels_lower',
+             Tuple(
+                 title=_('Lower levels'),
+                 elements=[
+                     Integer(title=_("Warning below")),
+                     Integer(title=_("Critical below")),
+                 ],
+             )),
+        ],)

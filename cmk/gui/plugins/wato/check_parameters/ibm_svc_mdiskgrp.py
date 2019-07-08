@@ -67,14 +67,12 @@ class RulespecCheckgroupParametersIbmSvcMdiskgrp(CheckParameterRulespecWithItem)
                      title=_("Provisioning Levels"),
                      help=_("A provisioning of over 100% means over provisioning."),
                      elements=[
-                         Percentage(
-                             title=_("Warning at a provisioning of"),
-                             default_value=110.0,
-                             maxvalue=None),
-                         Percentage(
-                             title=_("Critical at a provisioning of"),
-                             default_value=120.0,
-                             maxvalue=None),
+                         Percentage(title=_("Warning at a provisioning of"),
+                                    default_value=110.0,
+                                    maxvalue=None),
+                         Percentage(title=_("Critical at a provisioning of"),
+                                    default_value=120.0,
+                                    maxvalue=None),
                      ],
                  )),
             ],

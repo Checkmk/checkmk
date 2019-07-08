@@ -34,9 +34,9 @@ from cmk.gui.watolib.utils import wato_root_dir
 
 class PredefinedConditionStore(WatoSimpleConfigFile):
     def __init__(self):
-        super(PredefinedConditionStore, self).__init__(
-            config_file_path=Path(wato_root_dir()) / "predefined_conditions.mk",
-            config_variable="predefined_conditions")
+        super(PredefinedConditionStore,
+              self).__init__(config_file_path=Path(wato_root_dir()) / "predefined_conditions.mk",
+                             config_variable="predefined_conditions")
 
     def filter_usable_entries(self, entries):
         if config.user.may("wato.edit_all_predefined_conditions"):
@@ -45,8 +45,8 @@ class PredefinedConditionStore(WatoSimpleConfigFile):
         user_groups = userdb.contactgroups_of_user(config.user.id)
 
         entries = self.filter_editable_entries(entries)
-        entries.update(
-            dict([(k, v) for k, v in entries.items() if v["shared_with"] in user_groups]))
+        entries.update(dict([(k, v) for k, v in entries.items() if v["shared_with"] in user_groups
+                            ]))
         return entries
 
     def filter_editable_entries(self, entries):

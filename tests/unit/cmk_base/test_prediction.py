@@ -22,8 +22,9 @@ def test_group_by(group_by, timestamp, result):
     [
         #North Summertime
         # days after each other, start is previous day end
-        ('2018-07-08 2:00', "UTC", 86400 * 3, prediction.prediction_periods['hour'], 'everyday',
-         [(1531008000, 1531094400), (1530921600, 1531008000), (1530835200, 1530921600)]),
+        ('2018-07-08 2:00', "UTC", 86400 * 3, prediction.prediction_periods['hour'], 'everyday', [
+            (1531008000, 1531094400), (1530921600, 1531008000), (1530835200, 1530921600)
+        ]),
         # Same but 2hrs back on timestamp
         ('2018-07-08 2:00', "Europe/Berlin", 86400 * 2, prediction.prediction_periods['hour'],
          'everyday', [(1531000800, 1531087200), (1530914400, 1531000800)]),
@@ -31,8 +32,9 @@ def test_group_by(group_by, timestamp, result):
         ('2018-07-08 2:00', "America/New_York", 86400 * 2, prediction.prediction_periods['hour'],
          'everyday', [(1530936000, 1531022400), (1530849600, 1530936000)]),
         # days after each other, start is previous day end
-        ('2018-10-28 2:00', "UTC", 86400 * 2, prediction.prediction_periods['hour'], 'everyday',
-         [(1540684800, 1540771200), (1540598400, 1540684800)]),
+        ('2018-10-28 2:00', "UTC", 86400 * 2, prediction.prediction_periods['hour'], 'everyday', [
+            (1540684800, 1540771200), (1540598400, 1540684800)
+        ]),
         # After change: missing 1hr between current and previous day, current has 1hr to UTC, previous 2hrs
         ('2018-10-28 2:00', "Europe/Berlin", 86400 * 2, prediction.prediction_periods['hour'],
          'everyday', [(1540681200, 1540767600), (1540591200, 1540677600)]),

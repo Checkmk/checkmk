@@ -579,8 +579,8 @@ def check_logwatch_generic(item, params, loglines, found):
     try:
         logmsg_file_handle = logmsg_file_path.open(mode, encoding='utf-8')
     except IOError as exc:
-        raise MKGeneralException(
-            "User %s cannot open file for writing: %s" % (logwatch_username(), exc))
+        raise MKGeneralException("User %s cannot open file for writing: %s" %
+                                 (logwatch_username(), exc))
 
     pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()
     net_lines = 0
@@ -927,8 +927,8 @@ def logwatch_forward_spool_directory(method, item, messages):
         return LogwatchFordwardResult()
 
     spool_path = method[6:]
-    file_name = '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or '',
-                              time.time())
+    file_name = '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or
+                              '', time.time())
     _makedirs_exist_ok(spool_path)
 
     file('%s/%s' % (spool_path, file_name), 'w').write(('\n'.join(messages)).encode("utf-8") + '\n')

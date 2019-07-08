@@ -40,8 +40,9 @@ branch_name = os.environ.get("BRANCH", "master")
 
 
 def build_version():
-    return testlib.CMKVersion(
-        version=testlib.CMKVersion.DAILY, edition=testlib.CMKVersion.CEE, branch=branch_name)
+    return testlib.CMKVersion(version=testlib.CMKVersion.DAILY,
+                              edition=testlib.CMKVersion.CEE,
+                              branch=branch_name)
 
 
 @pytest.fixture(scope="session")
@@ -66,14 +67,14 @@ def _build(request, client, version, add_args=None):
     _prepare_build()
 
     try:
-        image, build_logs = client.images.build(
-            path=build_path,
-            tag=_image_name(version),
-            buildargs={
-                "CMK_VERSION": version.version,
-                "CMK_EDITION": version.edition(),
-                "CMK_DL_CREDENTIALS": ":".join(testlib.get_cmk_download_credentials()),
-            })
+        image, build_logs = client.images.build(path=build_path,
+                                                tag=_image_name(version),
+                                                buildargs={
+                                                    "CMK_VERSION": version.version,
+                                                    "CMK_EDITION": version.edition(),
+                                                    "CMK_DL_CREDENTIALS": ":".join(
+                                                        testlib.get_cmk_download_credentials()),
+                                                })
     except docker.errors.BuildError as e:
         sys.stdout.write("= Build log ==================\n")
         for entry in e.build_log:
@@ -211,10 +212,9 @@ def test_start_simple(request, client, edition):
 
 
 def test_start_cmkadmin_passsword(request, client):
-    c = _start(
-        request, client, environment={
-            "CMK_PASSWORD": "blabla",
-        })
+    c = _start(request, client, environment={
+        "CMK_PASSWORD": "blabla",
+    })
 
     assert c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin",
                        "blabla"])[0] == 0
@@ -224,19 +224,17 @@ def test_start_cmkadmin_passsword(request, client):
 
 
 def test_start_custom_site_id(request, client):
-    c = _start(
-        request, client, environment={
-            "CMK_SITE_ID": "xyz",
-        })
+    c = _start(request, client, environment={
+        "CMK_SITE_ID": "xyz",
+    })
 
     assert c.exec_run(["omd", "status"], user="xyz")[0] == 0
 
 
 def test_start_enable_livestatus(request, client):
-    c = _start(
-        request, client, environment={
-            "CMK_LIVESTATUS_TCP": "on",
-        })
+    c = _start(request, client, environment={
+        "CMK_LIVESTATUS_TCP": "on",
+    })
 
     exit_code, output = c.exec_run(["omd", "config", "show", "LIVESTATUS_TCP"], user="cmk")
     assert exit_code == 0
@@ -286,13 +284,12 @@ def test_build_using_local_gpg_pubkey(request, client, version):
 
 
 def test_start_enable_mail(request, client):
-    c = _start(
-        request,
-        client,
-        environment={
-            "MAIL_RELAY_HOST": "mailrelay.mydomain.com",
-        },
-        hostname="myhost.mydomain.com")
+    c = _start(request,
+               client,
+               environment={
+                   "MAIL_RELAY_HOST": "mailrelay.mydomain.com",
+               },
+               hostname="myhost.mydomain.com")
 
     cmds = [p[-1] for p in c.top()["Processes"]]
 
@@ -317,13 +314,12 @@ def test_update(request, client, version):
     )
 
     # 1. create container with old version and add a file to mark the pre-update state
-    c_orig = _start(
-        request,
-        client,
-        version=old_version,
-        name=container_name,
-        volumes=["/omd/sites"],
-        tmpfs=["/omd/sites/cmk/tmp"])
+    c_orig = _start(request,
+                    client,
+                    version=old_version,
+                    name=container_name,
+                    volumes=["/omd/sites"],
+                    tmpfs=["/omd/sites/cmk/tmp"])
     assert c_orig.exec_run(["touch", "pre-update-marker"], user="cmk",
                            workdir="/omd/sites/cmk")[0] == 0
 
@@ -350,13 +346,12 @@ def test_update(request, client, version):
     c_orig.rename("%s-old" % container_name)
 
     # 4. create new container
-    c_new = _start(
-        request,
-        client,
-        version=version,
-        is_update=True,
-        name=container_name,
-        volumes_from=c_orig.id)
+    c_new = _start(request,
+                   client,
+                   version=version,
+                   is_update=True,
+                   name=container_name,
+                   volumes_from=c_orig.id)
 
     # 5. verify result
     c_new.exec_run(["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())

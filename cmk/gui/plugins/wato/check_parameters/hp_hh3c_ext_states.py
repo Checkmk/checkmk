@@ -58,32 +58,28 @@ class RulespecCheckgroupParametersHpHh3CExtStates(CheckParameterRulespecWithItem
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("oper",
-                 Dictionary(
-                     title=_("Operational states"),
-                     elements=[
-                         ("not_supported", MonitoringState(
-                             title=_("Not supported"), default_value=1)),
-                         ("disabled", MonitoringState(title=_("Disabled"), default_value=2)),
-                         ("enabled", MonitoringState(title=_("Enabled"), default_value=0)),
-                         ("dangerous", MonitoringState(title=_("Dangerous"), default_value=2)),
-                     ],
-                 )),
-                ("admin",
-                 Dictionary(
-                     title=_("Administrative states"),
-                     elements=[
-                         ("not_supported", MonitoringState(
-                             title=_("Not supported"), default_value=1)),
-                         ("locked", MonitoringState(title=_("Locked"), default_value=0)),
-                         ("shutting_down", MonitoringState(
-                             title=_("Shutting down"), default_value=2)),
-                         ("unlocked", MonitoringState(title=_("Unlocked"), default_value=2)),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("oper",
+             Dictionary(
+                 title=_("Operational states"),
+                 elements=[
+                     ("not_supported", MonitoringState(title=_("Not supported"), default_value=1)),
+                     ("disabled", MonitoringState(title=_("Disabled"), default_value=2)),
+                     ("enabled", MonitoringState(title=_("Enabled"), default_value=0)),
+                     ("dangerous", MonitoringState(title=_("Dangerous"), default_value=2)),
+                 ],
+             )),
+            ("admin",
+             Dictionary(
+                 title=_("Administrative states"),
+                 elements=[
+                     ("not_supported", MonitoringState(title=_("Not supported"), default_value=1)),
+                     ("locked", MonitoringState(title=_("Locked"), default_value=0)),
+                     ("shutting_down", MonitoringState(title=_("Shutting down"), default_value=2)),
+                     ("unlocked", MonitoringState(title=_("Unlocked"), default_value=2)),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

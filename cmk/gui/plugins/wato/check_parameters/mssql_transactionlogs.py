@@ -53,21 +53,20 @@ class RulespecMssqlTransactionlogsDiscovery(HostRulespec):
 
     @property
     def valuespec(self):
-        return Dictionary(
-            title=_("MSSQL Datafile and Transactionlog Discovery"),
-            elements=[
-                ("summarize_datafiles",
-                 Checkbox(
-                     title=_("Display only a summary of all Datafiles"),
-                     label=_("Summarize Datafiles"),
-                 )),
-                ("summarize_transactionlogs",
-                 Checkbox(
-                     title=_("Display only a summary of all Transactionlogs"),
-                     label=_("Summarize Transactionlogs"),
-                 )),
-            ],
-            optional_keys=[])
+        return Dictionary(title=_("MSSQL Datafile and Transactionlog Discovery"),
+                          elements=[
+                              ("summarize_datafiles",
+                               Checkbox(
+                                   title=_("Display only a summary of all Datafiles"),
+                                   label=_("Summarize Datafiles"),
+                               )),
+                              ("summarize_transactionlogs",
+                               Checkbox(
+                                   title=_("Display only a summary of all Transactionlogs"),
+                                   label=_("Summarize Transactionlogs"),
+                               )),
+                          ],
+                          optional_keys=[])
 
 
 @rulespec_registry.register
@@ -99,8 +98,8 @@ class RulespecCheckgroupParametersMssqlTransactionlogs(CheckParameterRulespecWit
                 ("used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used"))),
                 ("allocated_used_levels",
                  levels_absolute_or_dynamic(_("Transactionlog"), _("used of allocation"))),
-                ("allocated_levels", levels_absolute_or_dynamic(
-                    _("Transactionlog"), _("allocated"))),
+                ("allocated_levels", levels_absolute_or_dynamic(_("Transactionlog"),
+                                                                _("allocated"))),
             ],
         )
 

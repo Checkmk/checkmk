@@ -146,8 +146,8 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
                                                              hostname, service_description))))
 
     try:
-        connection = livestatus.SingleSiteConnection(
-            "unix:%s" % cmk.utils.paths.livestatus_unix_socket)
+        connection = livestatus.SingleSiteConnection("unix:%s" %
+                                                     cmk.utils.paths.livestatus_unix_socket)
         response = connection.query_value(lql)
     except MKLivestatusNotFoundError as e:
         if cmk.utils.debug.enabled():

@@ -77,13 +77,13 @@ def test_numeric_filter_raises(invalid_arg):
         mk_filestats.AbstractNumericFilter(invalid_arg)
 
 
-@pytest.mark.parametrize("reg_pat,paths,results", [(
-    r'.*\.txt',
-    ("/path/to/some.txt", "to/sometxt", "/path/to/some.TXT"),
-    (True, False, False),
-), (r'/.*', ("relative/path/should/be/resolved",), (True,)),
-                                                   (u'[^ð]*ð{2}[^ð]*', (u'foðbar', u'fððbar'),
-                                                    (False, True))])
+@pytest.mark.parametrize("reg_pat,paths,results",
+                         [(
+                             r'.*\.txt',
+                             ("/path/to/some.txt", "to/sometxt", "/path/to/some.TXT"),
+                             (True, False, False),
+                         ), (r'/.*', ("relative/path/should/be/resolved",), (True,)),
+                          (u'[^ð]*ð{2}[^ð]*', (u'foðbar', u'fððbar'), (False, True))])
 def test_path_filter(reg_pat, paths, results):
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):

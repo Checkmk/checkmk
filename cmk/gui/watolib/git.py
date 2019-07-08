@@ -93,14 +93,13 @@ def _git_add_files():
 
 def _git_command(args):
     command = ["git"] + [a.encode("utf-8") for a in args]
-    logger.debug("GIT: Execute in %s: %s" % (cmk.utils.paths.default_config_dir,
-                                             subprocess.list2cmdline(command)))
+    logger.debug("GIT: Execute in %s: %s" %
+                 (cmk.utils.paths.default_config_dir, subprocess.list2cmdline(command)))
     try:
-        p = subprocess.Popen(
-            command,
-            cwd=cmk.utils.paths.default_config_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+        p = subprocess.Popen(command,
+                             cwd=cmk.utils.paths.default_config_dir,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
     except OSError as e:
         if e.errno == errno.ENOENT:
             raise MKGeneralException(

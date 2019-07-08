@@ -389,9 +389,8 @@ def complete_raw_context(raw_context, with_dump, log_func):
     if with_dump:
         log_func("Computed variables:\n" + "\n".join(
             sorted([
-                "                    %s=%s" % (k, raw_context[k])
-                for k in raw_context
-                if k not in raw_keys
+                "                    %s=%s" %
+                (k, raw_context[k]) for k in raw_context if k not in raw_keys
             ])))
 
 

@@ -823,8 +823,9 @@ def render_delete_event_icons(row):
             ("_delete_event", _("Archive Event")),
             ("_show_result", "0"),
         ]
-        url = html.makeactionuri(
-            urlvars, filename=filename, delvars=["selection", "show_checkboxes"])
+        url = html.makeactionuri(urlvars,
+                                 filename=filename,
+                                 delvars=["selection", "show_checkboxes"])
         return html.render_icon_button(url, _("Archive this event"), "archive_event")
     else:
         return ''
@@ -1229,8 +1230,8 @@ class CommandECUpdateEvent(ECCommand):
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
-            return "UPDATE;%s;%s;%s;%s;%s" % (row["event_id"], config.user.id, ack and 1 or 0,
-                                              comment, contact), _("update")
+            return "UPDATE;%s;%s;%s;%s;%s" % (row["event_id"], config.user.id, ack and 1 or
+                                              0, comment, contact), _("update")
 
 
 @permission_registry.register

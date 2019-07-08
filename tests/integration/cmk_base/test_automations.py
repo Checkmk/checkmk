@@ -10,25 +10,24 @@ from testlib import web, repo_path  # pylint: disable=unused-import
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
     print "Applying default config"
-    web.add_host(
-        "modes-test-host", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-    web.add_host(
-        "modes-test-host2", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_criticality": "test",
-        })
-    web.add_host(
-        "modes-test-host3", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_criticality": "test",
-        })
-    web.add_host(
-        "modes-test-host4", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_criticality": "offline",
-        })
+    web.add_host("modes-test-host", attributes={
+        "ipaddress": "127.0.0.1",
+    })
+    web.add_host("modes-test-host2",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "tag_criticality": "test",
+                 })
+    web.add_host("modes-test-host3",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "tag_criticality": "test",
+                 })
+    web.add_host("modes-test-host4",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "tag_criticality": "offline",
+                 })
 
     site.write_file(
         "etc/check_mk/conf.d/modes-test-host.mk",
@@ -96,11 +95,10 @@ def _execute_automation(site,
         args = ["--"] + args
 
     print ["cmk", "--automation", cmd] + args
-    p = site.execute(
-        ["cmk", "--automation", cmd] + args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE)
+    p = site.execute(["cmk", "--automation", cmd] + args,
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE,
+                     stdin=subprocess.PIPE)
 
     stdout, stderr = p.communicate(stdin)
 
@@ -144,8 +142,9 @@ def test_automation_discovery_single_host(test_cfg, site):
 
 
 def test_automation_discovery_multiple_hosts(test_cfg, site):
-    data = _execute_automation(
-        site, "inventory", args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"])
+    data = _execute_automation(site,
+                               "inventory",
+                               args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"])
 
     assert isinstance(data, tuple)
     assert len(data) == 2
@@ -239,14 +238,16 @@ def test_automation_set_autochecks(test_cfg, site):
     }
 
     try:
-        data = _execute_automation(
-            site, "set-autochecks", args=["blablahost"], stdin=repr(new_items))
+        data = _execute_automation(site,
+                                   "set-autochecks",
+                                   args=["blablahost"],
+                                   stdin=repr(new_items))
         assert data is None
 
         data = _execute_automation(site, "get-autochecks", args=["blablahost"])
 
-        assert sorted(data) == sorted([('df', u'xxx', 'bla', "'bla'"), ('uptime', None, None,
-                                                                        'None')])
+        assert sorted(data) == sorted([('df', u'xxx', 'bla', "'bla'"),
+                                       ('uptime', None, None, 'None')])
 
         assert site.file_exists("var/check_mk/autochecks/blablahost.mk")
     finally:

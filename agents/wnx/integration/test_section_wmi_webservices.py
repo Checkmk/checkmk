@@ -17,9 +17,8 @@ def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(
-    params=[('wmi_webservices', True), ('wmi_webservices', False)],
-    ids=['sections=wmi_webservices', 'sections=wmi_webservices_systemtime'])
+@pytest.fixture(params=[('wmi_webservices', True), ('wmi_webservices', False)],
+                ids=['sections=wmi_webservices', 'sections=wmi_webservices_systemtime'])
 def testconfig(request, make_yaml_config):
     Globals.alone = request.param[1]
     if Globals.alone:

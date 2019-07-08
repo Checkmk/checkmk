@@ -194,11 +194,12 @@ def handle_alert_ack(key, ack_author, ack_comment, alias, alert_source):
     )
 
     try:
-        response = AlertApi().acknowledge_alert(
-            identifier=alias, identifier_type='alias', body=body)
+        response = AlertApi().acknowledge_alert(identifier=alias,
+                                                identifier_type='alias',
+                                                body=body)
 
-        sys.stdout.write(
-            'Request id: %s, successfully added acknowledgedment.\n' % response.request_id)
+        sys.stdout.write('Request id: %s, successfully added acknowledgedment.\n' %
+                         response.request_id)
         return 0
     except ApiException as err:
         sys.stderr.write('Exception when calling AlertApi->acknowledge_alert: %s\n' % err)

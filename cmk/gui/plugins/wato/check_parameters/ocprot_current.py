@@ -54,11 +54,10 @@ class RulespecCheckgroupParametersOcprotCurrent(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            elements=[
-                Float(title=_("Warning at"), unit=u"A", default_value=14.0),
-                Float(title=_("Critical at"), unit=u"A", default_value=15.0),
-            ],)
+        return Tuple(elements=[
+            Float(title=_("Warning at"), unit=u"A", default_value=14.0),
+            Float(title=_("Critical at"), unit=u"A", default_value=15.0),
+        ],)
 
     @property
     def item_spec(self):

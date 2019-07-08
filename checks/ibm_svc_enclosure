@@ -97,8 +97,11 @@ def check_ibm_svc_enclosure(item, params, data):
         # False, which shall be mapped to (total, total) or (warn, crit).
         levels_lower = params.get("levels_lower_online_%s" % key) or (total, total)
         levels = (None, None) + levels_lower
-        state, infotext, _perfdata = check_levels(
-            online, None, levels, human_readable_func=int, infoname="Online %s" % label)
+        state, infotext, _perfdata = check_levels(online,
+                                                  None,
+                                                  levels,
+                                                  human_readable_func=int,
+                                                  infoname="Online %s" % label)
         if total is not None:
             infotext += " of %s" % total
         yield state, infotext

@@ -173,13 +173,12 @@ def check_entity_sensors_temp(item, params, parsed):
     if item in parsed.get("temp", {}):
         operstate, reading, unit = parsed["temp"][item]
         state, state_readable = operstate
-        return check_temperature(
-            reading,
-            params,
-            "palo_alto_temperature_%s" % item,
-            dev_unit=unit,
-            dev_status=state,
-            dev_status_name=state_readable)
+        return check_temperature(reading,
+                                 params,
+                                 "palo_alto_temperature_%s" % item,
+                                 dev_unit=unit,
+                                 dev_status=state,
+                                 dev_status_name=state_readable)
 
 
 check_info['entity_sensors'] = {

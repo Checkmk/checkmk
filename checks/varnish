@@ -366,11 +366,10 @@ def check_varnish_stats(_no_item, params, parsed, expected_keys):
         if not data:
             continue
         descr_per_sec = "%s/s" % data['descr']
-        yield check_levels(
-            get_rate("varnish.%s" % key, this_time, data['value']),
-            data['perf_var_name'],
-            params.get(data['params_var_name'], (None, None)),
-            human_readable_func=lambda r, d=descr_per_sec: ("%.1f " + d) % r)
+        yield check_levels(get_rate("varnish.%s" % key, this_time, data['value']),
+                           data['perf_var_name'],
+                           params.get(data['params_var_name'], (None, None)),
+                           human_readable_func=lambda r, d=descr_per_sec: ("%.1f " + d) % r)
 
 
 def check_varnish_ratio(_no_item, params, parsed, ratio_keys):
@@ -381,8 +380,9 @@ def check_varnish_ratio(_no_item, params, parsed, ratio_keys):
     if total > 0:
         ratio = 100.0 * reference_value / total
     warn, crit = params["levels_lower"]
-    return check_levels(
-        ratio, perf_key, (None, None, warn, crit), human_readable_func=get_percent_human_readable)
+    return check_levels(ratio,
+                        perf_key, (None, None, warn, crit),
+                        human_readable_func=get_percent_human_readable)
 
 
 #.
@@ -697,10 +697,9 @@ def check_varnish_worker_thread_ratio(_no_item, params, parsed):
     if worker_create > 0:
         ratio = 100.0 * parsed["n_wrk"]['value'] / worker_create
     warn, crit = params["levels_lower"]
-    return check_levels(
-        ratio,
-        "varnish_worker_thread_ratio", (None, None, warn, crit),
-        human_readable_func=get_percent_human_readable)
+    return check_levels(ratio,
+                        "varnish_worker_thread_ratio", (None, None, warn, crit),
+                        human_readable_func=get_percent_human_readable)
 
 
 check_info["varnish.worker_thread_ratio"] = {

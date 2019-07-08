@@ -78,11 +78,10 @@ def do_restart(core, only_reload=False):
         # Save current configuration
         if os.path.exists(cmk.utils.paths.nagios_objects_file):
             backup_path = cmk.utils.paths.nagios_objects_file + ".save"
-            console.verbose(
-                "Renaming %s to %s\n",
-                cmk.utils.paths.nagios_objects_file,
-                backup_path,
-                stream=sys.stderr)
+            console.verbose("Renaming %s to %s\n",
+                            cmk.utils.paths.nagios_objects_file,
+                            backup_path,
+                            stream=sys.stderr)
             os.rename(cmk.utils.paths.nagios_objects_file, backup_path)
         else:
             backup_path = None
@@ -111,8 +110,8 @@ def do_restart(core, only_reload=False):
 
             broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
             file(broken_config_path, "w").write(file(cmk.utils.paths.nagios_objects_file).read())
-            console.error(
-                "The broken file has been copied to \"%s\" for analysis.\n" % broken_config_path)
+            console.error("The broken file has been copied to \"%s\" for analysis.\n" %
+                          broken_config_path)
 
             if backup_path:
                 os.rename(backup_path, cmk.utils.paths.nagios_objects_file)

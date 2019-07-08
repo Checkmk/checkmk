@@ -59,26 +59,27 @@ class RulespecCheckgroupParametersOracleRecoveryStatus(CheckParameterRulespecWit
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("levels",
-                       Tuple(
-                           title=_("Levels for checkpoint time"),
-                           elements=[
-                               Age(title=_("warning if higher then"), default_value=1800),
-                               Age(title=_("critical if higher then"), default_value=3600),
-                           ],
-                       )),
-                      ("backup_age",
-                       Tuple(
-                           title=_("Levels for user managed backup files"),
-                           help=_("Important! This checks is only for monitoring of datafiles "
-                                  "who were left in backup mode. "
-                                  "(alter database datafile ... begin backup;) "),
-                           elements=[
-                               Age(title=_("warning if higher then"), default_value=1800),
-                               Age(title=_("critical if higher then"), default_value=3600),
-                           ],
-                       ))],)
+        return Dictionary(elements=[
+            ("levels",
+             Tuple(
+                 title=_("Levels for checkpoint time"),
+                 elements=[
+                     Age(title=_("warning if higher then"), default_value=1800),
+                     Age(title=_("critical if higher then"), default_value=3600),
+                 ],
+             )),
+            ("backup_age",
+             Tuple(
+                 title=_("Levels for user managed backup files"),
+                 help=_("Important! This checks is only for monitoring of datafiles "
+                        "who were left in backup mode. "
+                        "(alter database datafile ... begin backup;) "),
+                 elements=[
+                     Age(title=_("warning if higher then"), default_value=1800),
+                     Age(title=_("critical if higher then"), default_value=3600),
+                 ],
+             ))
+        ],)
 
     @property
     def item_spec(self):

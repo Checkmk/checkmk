@@ -55,23 +55,20 @@ class RulespecCheckgroupParametersHostsystemSensors(CheckParameterRulespecWithou
 
     @property
     def parameter_valuespec(self):
-        return ListOf(
-            Dictionary(
-                help=_("This rule allows to override alert levels for the given sensor names."),
-                elements=[
-                    ("name", TextAscii(title=_("Sensor name"))),
-                    ("states",
-                     Dictionary(
-                         title=_("Custom states"),
-                         elements=[(element,
-                                    MonitoringState(
-                                        title="Sensor %s" % description,
-                                        label=_("Set state to"),
-                                        default_value=int(element)))
-                                   for (element, description) in [("0", _("OK")), (
-                                       "1", _("WARNING")), ("2", _("CRITICAL")), ("3",
-                                                                                  _("UNKNOWN"))]],
-                     ))
-                ],
-                optional_keys=False),
-            add_label=_("Add sensor name"))
+        return ListOf(Dictionary(
+            help=_("This rule allows to override alert levels for the given sensor names."),
+            elements=[
+                ("name", TextAscii(title=_("Sensor name"))),
+                ("states",
+                 Dictionary(
+                     title=_("Custom states"),
+                     elements=[(element,
+                                MonitoringState(title="Sensor %s" % description,
+                                                label=_("Set state to"),
+                                                default_value=int(element)))
+                               for (element, description) in [("0", _("OK")), (
+                                   "1", _("WARNING")), ("2", _("CRITICAL")), ("3", _("UNKNOWN"))]],
+                 ))
+            ],
+            optional_keys=False),
+                      add_label=_("Add sensor name"))

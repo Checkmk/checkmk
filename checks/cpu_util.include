@@ -139,19 +139,17 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
     if "average" in params:
         util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
         perfdata.append(("util_average", util_avg, warn, crit, 0, perf_max))
-        state, infotext, extraperf = check_levels(
-            util_avg,
-            "util_average",
-            levels,
-            human_readable_func=get_percent_human_readable,
-            infoname="%dmin average" % params["average"])
+        state, infotext, extraperf = check_levels(util_avg,
+                                                  "util_average",
+                                                  levels,
+                                                  human_readable_func=get_percent_human_readable,
+                                                  infoname="%dmin average" % params["average"])
     else:
-        state, infotext, extraperf = check_levels(
-            util,
-            "util",
-            levels,
-            human_readable_func=get_percent_human_readable,
-            infoname="Total CPU")
+        state, infotext, extraperf = check_levels(util,
+                                                  "util",
+                                                  levels,
+                                                  human_readable_func=get_percent_human_readable,
+                                                  infoname="Total CPU")
 
     perfdata += extraperf[1:]  # reference curve for predictive levels
     yield state, infotext, perfdata
@@ -180,40 +178,39 @@ def check_cpu_util_unix(values, params, cores=None, values_counter=True):
         wait_perc = values.iowait
         util_total_perc = values.util_total
 
-    yield check_levels(
-        user_perc, 'user', None, human_readable_func=get_percent_human_readable, infoname="User")
-    yield check_levels(
-        system_perc,
-        'system',
-        None,
-        human_readable_func=get_percent_human_readable,
-        infoname="System")
-    yield check_levels(
-        wait_perc,
-        'wait',
-        params.get('iowait'),
-        human_readable_func=get_percent_human_readable,
-        infoname="Wait")
+    yield check_levels(user_perc,
+                       'user',
+                       None,
+                       human_readable_func=get_percent_human_readable,
+                       infoname="User")
+    yield check_levels(system_perc,
+                       'system',
+                       None,
+                       human_readable_func=get_percent_human_readable,
+                       infoname="System")
+    yield check_levels(wait_perc,
+                       'wait',
+                       params.get('iowait'),
+                       human_readable_func=get_percent_human_readable,
+                       infoname="Wait")
 
     # Compute values used in virtualized environments (Xen, etc.)
     # Only do this for counters that have counted at least one tick
     # since the system boot. This avoids silly output in systems
     # where these counters are not being used
     if values.steal:
-        yield check_levels(
-            steal_perc,
-            "steal",
-            params.get('steal'),
-            human_readable_func=get_percent_human_readable,
-            infoname="Steal")
+        yield check_levels(steal_perc,
+                           "steal",
+                           params.get('steal'),
+                           human_readable_func=get_percent_human_readable,
+                           infoname="Steal")
 
     if values.guest:
-        yield check_levels(
-            guest_perc,
-            'guest',
-            None,
-            human_readable_func=get_percent_human_readable,
-            infoname="Guest")
+        yield check_levels(guest_perc,
+                           'guest',
+                           None,
+                           human_readable_func=get_percent_human_readable,
+                           infoname="Guest")
 
     summary_cores = []
     if cores:
@@ -225,8 +222,11 @@ def check_cpu_util_unix(values, params, cores=None, values_counter=True):
             total_perc = (100.0 * total_diff / sum_jiffies) * len(cores)
             summary_cores.append((core.name, total_perc))
 
-    for check_result in check_cpu_util(
-            util_total_perc, params, this_time, summary_cores, perf_max=None):
+    for check_result in check_cpu_util(util_total_perc,
+                                       params,
+                                       this_time,
+                                       summary_cores,
+                                       perf_max=None):
         yield check_result
 
 

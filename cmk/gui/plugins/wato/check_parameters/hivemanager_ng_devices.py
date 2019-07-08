@@ -59,18 +59,17 @@ class RulespecCheckgroupParametersHivemanagerNgDevices(CheckParameterRulespecWit
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('max_clients',
-                 Tuple(
-                     title=_("Number of clients"),
-                     help=_("Number of clients connected to a Device."),
-                     elements=[
-                         Integer(title=_("Warning at"), unit=_("clients")),
-                         Integer(title=_("Critical at"), unit=_("clients")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('max_clients',
+             Tuple(
+                 title=_("Number of clients"),
+                 help=_("Number of clients connected to a Device."),
+                 elements=[
+                     Integer(title=_("Warning at"), unit=_("clients")),
+                     Integer(title=_("Critical at"), unit=_("clients")),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

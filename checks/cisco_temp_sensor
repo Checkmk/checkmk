@@ -129,8 +129,8 @@ def parse_cisco_temp_sensor(info):
         value = float(value) / (10**int(precision))
         threshold = thresholds[id_] / (10**int(precision))
 
-        sensors.append((id_, descriptions.get(id_), sensortype, scale, value, sensorstate,
-                        threshold))
+        sensors.append(
+            (id_, descriptions.get(id_), sensortype, scale, value, sensorstate, threshold))
     return sensors
 
 

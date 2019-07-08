@@ -495,8 +495,8 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
 
             element_text = []
             for element in "active", "dead", "disabled", "standby", "unknown":
-                element_text.append(
-                    "%d %s%s" % (state_infos[element][1], element, state_infos[element][2]))
+                element_text.append("%d %s%s" %
+                                    (state_infos[element][1], element, state_infos[element][2]))
             message += ", ".join(element_text)
             message += "\nIncluded Paths:\n" + "\n".join(path_names)
             break

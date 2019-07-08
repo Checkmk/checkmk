@@ -77,10 +77,10 @@ def check_windows_updates(_no_item, params, info):
 
         txt = []
         perfdata = []
-        for label, updates, cur, warn, crit in [('important', important, num_imp, imp_warn,
-                                                 imp_crit),
-                                                ('optional', optional, num_opt, opt_warn,
-                                                 opt_crit)]:
+        for label, updates, cur, warn, crit in [
+            ('important', important, num_imp, imp_warn, imp_crit),
+            ('optional', optional, num_opt, opt_warn, opt_crit)
+        ]:
             this_txt = '%d %s updates' % (cur, label)
             if crit and cur >= crit:
                 this_txt += ' >=%d (!!)' % crit

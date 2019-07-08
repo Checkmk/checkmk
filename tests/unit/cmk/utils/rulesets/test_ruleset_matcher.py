@@ -132,10 +132,10 @@ def test_ruleset_matcher_get_host_ruleset_values_labels(monkeypatch, hostname, e
     matcher = config_cache.ruleset_matcher
 
     assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name=hostname, service_description=None),
-            ruleset=label_ruleset,
-            is_binary=False)) == expected_result
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name=hostname,
+                                                           service_description=None),
+                                        ruleset=label_ruleset,
+                                        is_binary=False)) == expected_result
 
 
 def test_basic_get_host_ruleset_values(monkeypatch):
@@ -147,25 +147,25 @@ def test_basic_get_host_ruleset_values(monkeypatch):
     matcher = config_cache.ruleset_matcher
 
     assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name="abc", service_description=None),
-            ruleset=ruleset,
-            is_binary=False)) == []
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name="abc",
+                                                           service_description=None),
+                                        ruleset=ruleset,
+                                        is_binary=False)) == []
     assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name="xyz", service_description=None),
-            ruleset=ruleset,
-            is_binary=False)) == []
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name="xyz",
+                                                           service_description=None),
+                                        ruleset=ruleset,
+                                        is_binary=False)) == []
     assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name="host1", service_description=None),
-            ruleset=ruleset,
-            is_binary=False)) == ["BLA", "BLUB"]
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name="host1",
+                                                           service_description=None),
+                                        ruleset=ruleset,
+                                        is_binary=False)) == ["BLA", "BLUB"]
     assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name="host2", service_description=None),
-            ruleset=ruleset,
-            is_binary=False)) == ["BLUB"]
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name="host2",
+                                                           service_description=None),
+                                        ruleset=ruleset,
+                                        is_binary=False)) == ["BLUB"]
 
 
 def test_basic_get_host_ruleset_values_subfolders(monkeypatch):
@@ -177,20 +177,20 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch):
     matcher = config_cache.ruleset_matcher
 
     assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name="xyz", service_description=None),
-            ruleset=ruleset,
-            is_binary=False)) == []
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name="xyz",
+                                                           service_description=None),
+                                        ruleset=ruleset,
+                                        is_binary=False)) == []
     assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name="lvl1", service_description=None),
-            ruleset=ruleset,
-            is_binary=False)) == []
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name="lvl1",
+                                                           service_description=None),
+                                        ruleset=ruleset,
+                                        is_binary=False)) == []
     assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name="lvl2", service_description=None),
-            ruleset=ruleset,
-            is_binary=False)) == []
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name="lvl2",
+                                                           service_description=None),
+                                        ruleset=ruleset,
+                                        is_binary=False)) == []
 
 
 dict_ruleset = [
@@ -245,22 +245,26 @@ def test_basic_host_ruleset_get_merged_dict_values(monkeypatch):
     config_cache = ts.apply(monkeypatch)
 
     matcher = config_cache.ruleset_matcher
-    assert matcher.get_host_ruleset_merged_dict(
-        RulesetMatchObject(host_name="abc", service_description=None), ruleset=dict_ruleset) == {}
-    assert matcher.get_host_ruleset_merged_dict(
-        RulesetMatchObject(host_name="xyz", service_description=None), ruleset=dict_ruleset) == {}
-    assert matcher.get_host_ruleset_merged_dict(
-        RulesetMatchObject(host_name="host1", service_description=None), ruleset=dict_ruleset) == {
-            "hu": "BLA",
-            "ho": "BLA",
-            "he": "BLUB",
-        }
-    assert matcher.get_host_ruleset_merged_dict(
-        RulesetMatchObject(host_name="host2", service_description=None), ruleset=dict_ruleset) == {
-            "hu": "BLUB",
-            "ho": "BLA",
-            "he": "BLUB",
-        }
+    assert matcher.get_host_ruleset_merged_dict(RulesetMatchObject(host_name="abc",
+                                                                   service_description=None),
+                                                ruleset=dict_ruleset) == {}
+    assert matcher.get_host_ruleset_merged_dict(RulesetMatchObject(host_name="xyz",
+                                                                   service_description=None),
+                                                ruleset=dict_ruleset) == {}
+    assert matcher.get_host_ruleset_merged_dict(RulesetMatchObject(host_name="host1",
+                                                                   service_description=None),
+                                                ruleset=dict_ruleset) == {
+                                                    "hu": "BLA",
+                                                    "ho": "BLA",
+                                                    "he": "BLUB",
+                                                }
+    assert matcher.get_host_ruleset_merged_dict(RulesetMatchObject(host_name="host2",
+                                                                   service_description=None),
+                                                ruleset=dict_ruleset) == {
+                                                    "hu": "BLUB",
+                                                    "ho": "BLA",
+                                                    "he": "BLUB",
+                                                }
 
 
 binary_ruleset = [
@@ -306,18 +310,18 @@ def test_basic_host_ruleset_is_matching_host_ruleset(monkeypatch):
     config_cache = ts.apply(monkeypatch)
 
     matcher = config_cache.ruleset_matcher
-    assert matcher.is_matching_host_ruleset(
-        RulesetMatchObject(host_name="abc", service_description=None),
-        ruleset=binary_ruleset) is False
-    assert matcher.is_matching_host_ruleset(
-        RulesetMatchObject(host_name="xyz", service_description=None),
-        ruleset=binary_ruleset) is False
-    assert matcher.is_matching_host_ruleset(
-        RulesetMatchObject(host_name="host1", service_description=None),
-        ruleset=binary_ruleset) is True
-    assert matcher.is_matching_host_ruleset(
-        RulesetMatchObject(host_name="host2", service_description=None),
-        ruleset=binary_ruleset) is False
+    assert matcher.is_matching_host_ruleset(RulesetMatchObject(host_name="abc",
+                                                               service_description=None),
+                                            ruleset=binary_ruleset) is False
+    assert matcher.is_matching_host_ruleset(RulesetMatchObject(host_name="xyz",
+                                                               service_description=None),
+                                            ruleset=binary_ruleset) is False
+    assert matcher.is_matching_host_ruleset(RulesetMatchObject(host_name="host1",
+                                                               service_description=None),
+                                            ruleset=binary_ruleset) is True
+    assert matcher.is_matching_host_ruleset(RulesetMatchObject(host_name="host2",
+                                                               service_description=None),
+                                            ruleset=binary_ruleset) is False
 
 
 tag_ruleset = [
@@ -400,27 +404,24 @@ tag_ruleset = [
 ])
 def test_ruleset_matcher_get_host_ruleset_values_tags(monkeypatch, hostname, expected_result):
     ts = Scenario()
-    ts.add_host(
-        "host1", tags={
-            "criticality": "prod",
-            "agent": "cmk-agent",
-            "networking": "lan",
-        })
-    ts.add_host(
-        "host2", tags={
-            "criticality": "test",
-            "networking": "wan",
-        })
-    ts.add_host(
-        "host3", tags={
-            "criticality": "test",
-            "networking": "dmz",
-        })
+    ts.add_host("host1", tags={
+        "criticality": "prod",
+        "agent": "cmk-agent",
+        "networking": "lan",
+    })
+    ts.add_host("host2", tags={
+        "criticality": "test",
+        "networking": "wan",
+    })
+    ts.add_host("host3", tags={
+        "criticality": "test",
+        "networking": "dmz",
+    })
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
     assert list(
-        matcher.get_host_ruleset_values(
-            RulesetMatchObject(host_name=hostname, service_description=None),
-            ruleset=tag_ruleset,
-            is_binary=False)) == expected_result
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name=hostname,
+                                                           service_description=None),
+                                        ruleset=tag_ruleset,
+                                        is_binary=False)) == expected_result

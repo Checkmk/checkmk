@@ -92,8 +92,8 @@ class ModeDiagHost(WatoMode):
         return _('Diagnostic of host') + " " + self._hostname
 
     def buttons(self):
-        html.context_button(
-            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
+                            "back")
         host_status_button(self._hostname, "hoststatus")
         html.context_button(_("Properties"), self._host.edit_url(), "edit")
         if config.user.may('wato.rulesets'):
@@ -224,8 +224,10 @@ class ModeDiagHost(WatoMode):
             html.open_div()
             html.icon(title=None, icon="reload", id_="%s_img" % ident)
             html.open_a(href="")
-            html.icon(
-                title=_('Retry this test'), icon="reload", cssclass="retry", id_="%s_retry" % ident)
+            html.icon(title=_('Retry this test'),
+                      icon="reload",
+                      cssclass="retry",
+                      id_="%s_retry" % ident)
             html.close_a()
             html.close_div()
             html.close_td()
@@ -241,20 +243,22 @@ class ModeDiagHost(WatoMode):
                              json.dumps(html.transaction_manager.fresh_transid())))
 
     def _vs_host(self):
-        return Dictionary(
-            required_keys=['hostname'],
-            elements=[
-                ('hostname', FixedValue(self._hostname, title=_('Hostname'), allow_empty=False)),
-                ('ipaddress',
-                 HostAddress(
-                     title=_("IPv4 Address"),
-                     allow_empty=False,
-                     allow_ipv6_address=False,
-                 )),
-                ('snmp_community', Password(title=_("SNMPv1/2 community"), allow_empty=False)),
-                ('snmp_v3_credentials',
-                 cmk.gui.plugins.wato.SNMPCredentials(default_value=None, only_v3=True)),
-            ])
+        return Dictionary(required_keys=['hostname'],
+                          elements=[
+                              ('hostname',
+                               FixedValue(self._hostname, title=_('Hostname'), allow_empty=False)),
+                              ('ipaddress',
+                               HostAddress(
+                                   title=_("IPv4 Address"),
+                                   allow_empty=False,
+                                   allow_ipv6_address=False,
+                               )),
+                              ('snmp_community',
+                               Password(title=_("SNMPv1/2 community"), allow_empty=False)),
+                              ('snmp_v3_credentials',
+                               cmk.gui.plugins.wato.SNMPCredentials(default_value=None,
+                                                                    only_v3=True)),
+                          ])
 
     def _vs_rules(self):
         if config.user.may('wato.add_or_modify_executables'):

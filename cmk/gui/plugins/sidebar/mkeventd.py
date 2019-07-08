@@ -116,8 +116,8 @@ class SidebarSnapinCustomers(SidebarSnapin):
 
         # Load
         entries.append((6, "Processing load", "%.0f%%" % (min(
-            100.0, status["status_average_processing_time"] * status["status_average_message_rate"]
-            * 100.0))))
+            100.0, status["status_average_processing_time"] *
+            status["status_average_message_rate"] * 100.0))))
 
         entries.sort()
         return entries

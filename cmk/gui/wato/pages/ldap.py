@@ -54,8 +54,10 @@ else:
 
 class LDAPMode(WatoMode):
     def _add_change(self, action_name, text):
-        add_change(
-            action_name, text, domains=[watolib.ConfigDomainGUI], sites=config.get_login_sites())
+        add_change(action_name,
+                   text,
+                   domains=[watolib.ConfigDomainGUI],
+                   sites=config.get_login_sites())
 
 
 @mode_registry.register
@@ -74,9 +76,9 @@ class ModeLDAPConfig(LDAPMode):
     def buttons(self):
         global_buttons()
         html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "users")]), "back")
-        html.context_button(
-            _("New connection"), watolib.folder_preserving_link([("mode", "edit_ldap_connection")]),
-            "new")
+        html.context_button(_("New connection"),
+                            watolib.folder_preserving_link([("mode", "edit_ldap_connection")]),
+                            "new")
 
     def action(self):
         connections = userdb.load_connection_config(lock=True)
@@ -131,9 +133,8 @@ class ModeLDAPConfig(LDAPMode):
 
                 table.cell("", css="narrow")
                 if connection.get("disabled"):
-                    html.icon(
-                        _("This connection is currently not being used for synchronization."),
-                        "disabled")
+                    html.icon(_("This connection is currently not being used for synchronization."),
+                              "disabled")
                 else:
                     html.empty_icon_button()
 
@@ -145,8 +146,10 @@ class ModeLDAPConfig(LDAPMode):
                 table.cell(_("Description"))
                 url = connection.get("docu_url")
                 if url:
-                    html.icon_button(
-                        url, _("Context information about this connection"), "url", target="_blank")
+                    html.icon_button(url,
+                                     _("Context information about this connection"),
+                                     "url",
+                                     target="_blank")
                     html.write("&nbsp;")
                 html.write_text(connection["description"])
 
@@ -193,8 +196,8 @@ class ModeEditLDAPConnection(LDAPMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(
-            _("Back"), watolib.folder_preserving_link([("mode", "ldap_config")]), "back")
+        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "ldap_config")]),
+                            "back")
 
     def action(self):
         if not html.check_transaction():

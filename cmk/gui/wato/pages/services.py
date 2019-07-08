@@ -202,8 +202,8 @@ class ModeDiscovery(WatoMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(
-            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
+                            "back")
 
         host_status_button(self._host.name(), "host")
 
@@ -247,8 +247,8 @@ class ModeDiscovery(WatoMode):
         self._async_progress_msg_container()
         self._service_container()
         html.javascript("cmk.service_discovery.start(%s, %s, %s)" %
-                        (json.dumps(self._host.name()), json.dumps(self._host.folder().path()),
-                         json.dumps(self._options._asdict())))
+                        (json.dumps(self._host.name()), json.dumps(
+                            self._host.folder().path()), json.dumps(self._options._asdict())))
 
     def _async_progress_msg_container(self):
         html.open_div(id_="async_progress_msg")
@@ -305,11 +305,11 @@ def _get_check_table_from_remote(request):
         sync_changes_before_remote_automation(request.host.site_id())
 
         return DiscoveryResult(*ast.literal_eval(
-            watolib.do_remote_automation(
-                config.site(request.host.site_id()), "service-discovery-job", [
-                    ("host_name", request.host.name()),
-                    ("options", json.dumps(request.options._asdict())),
-                ])))
+            watolib.do_remote_automation(config.site(request.host.site_id()),
+                                         "service-discovery-job", [
+                                             ("host_name", request.host.name()),
+                                             ("options", json.dumps(request.options._asdict())),
+                                         ])))
     except watolib.MKAutomationException as e:
         if "Invalid automation command: service-discovery-job" not in "%s" % e:
             raise
@@ -367,8 +367,9 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
         host.need_permission("read")
 
         options = json.loads(html.get_ascii_input("options"))
-        return StartDiscoveryRequest(
-            host=host, folder=host.folder(), options=DiscoveryOptions(**options))
+        return StartDiscoveryRequest(host=host,
+                                     folder=host.folder(),
+                                     options=DiscoveryOptions(**options))
 
     def execute(self, request):
         # type: (StartDiscoveryRequest) -> str
@@ -596,12 +597,11 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             messages.append(_("Found no services yet. To retry please execute a full scan."))
 
         with html.plugged():
-            html.begin_foldable_container(
-                treename="service_discovery",
-                id_="options",
-                isopen=False,
-                title=_("Job details"),
-                indent=False)
+            html.begin_foldable_container(treename="service_discovery",
+                                          id_="options",
+                                          isopen=False,
+                                          title=_("Job details"),
+                                          indent=False)
             html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
             html.pre("\n".join(discovery_result.job_status["loginfo"]["JobProgressUpdate"]))
             html.close_div()
@@ -816,8 +816,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         modified_folders = []
 
         service_patterns = _compile_patterns(services)
-        modified_folders += self._remove_from_rule_of_host(
-            ruleset, service_patterns, value=not value)
+        modified_folders += self._remove_from_rule_of_host(ruleset,
+                                                           service_patterns,
+                                                           value=not value)
 
         # Check whether or not the service still needs a host specific setting after removing
         # the host specific setting above and remove all services from the service list
@@ -972,16 +973,20 @@ class DiscoveryPageRenderer(object):
                 table.groupheader(self._get_group_header(entry))
 
                 if entry.show_bulk_actions and len(checks) > 10:
-                    self._show_bulk_actions(
-                        table, discovery_result, entry.table_group, collect_headers=False)
+                    self._show_bulk_actions(table,
+                                            discovery_result,
+                                            entry.table_group,
+                                            collect_headers=False)
 
                 for check in sorted(checks, key=lambda c: c[6].lower()):
                     self._show_check_row(table, discovery_result, request, check,
                                          entry.show_bulk_actions)
 
                 if entry.show_bulk_actions:
-                    self._show_bulk_actions(
-                        table, discovery_result, entry.table_group, collect_headers="finished")
+                    self._show_bulk_actions(table,
+                                            discovery_result,
+                                            entry.table_group,
+                                            collect_headers="finished")
             html.hidden_fields()
             html.end_form()
 
@@ -1151,11 +1156,11 @@ class DiscoveryPageRenderer(object):
         html.jsbutton(
             "_bulk_%s_%s" % (source, target),
             target_label,
-            self._start_js_call(
-                options, request_vars={
-                    "update_target": target,
-                    "update_source": source,
-                }),
+            self._start_js_call(options,
+                                request_vars={
+                                    "update_target": target,
+                                    "update_source": source,
+                                }),
             title=_("Move %s to %s services") % (label, target),
             disabled=self._is_running(discovery_result),
         )
@@ -1233,8 +1238,8 @@ class DiscoveryPageRenderer(object):
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
                 html.write_text(
-                    _("Timespecific parameters computed at %s") % cmk.utils.render.date_and_time(
-                        params["tp_computed_params"]["computed_at"]))
+                    _("Timespecific parameters computed at %s") %
+                    cmk.utils.render.date_and_time(params["tp_computed_params"]["computed_at"]))
                 html.br()
                 params = params["tp_computed_params"]["params"]
             rulespec.valuespec.validate_datatype(params, "")
@@ -1360,13 +1365,12 @@ class DiscoveryPageRenderer(object):
             title=_("Move to %s services") % descr_target,
             icon="service_to_%s" % descr_target,
             class_=button_classes,
-            onclick=self._start_js_call(
-                options,
-                request_vars={
-                    "update_target": table_target,
-                    "update_source": table_source,
-                    "update_services": [checkbox_name],
-                }),
+            onclick=self._start_js_call(options,
+                                        request_vars={
+                                            "update_target": table_target,
+                                            "update_source": table_source,
+                                            "update_services": [checkbox_name],
+                                        }),
         )
 
     def _icon_button_removed(self, table_source, checkbox_name, button_classes):
@@ -1376,13 +1380,12 @@ class DiscoveryPageRenderer(object):
             title=_("Remove service"),
             icon="service_to_removed",
             class_=button_classes,
-            onclick=self._start_js_call(
-                options,
-                request_vars={
-                    "update_target": DiscoveryState.REMOVED,
-                    "update_source": table_source,
-                    "update_services": [checkbox_name],
-                }),
+            onclick=self._start_js_call(options,
+                                        request_vars={
+                                            "update_target": DiscoveryState.REMOVED,
+                                            "update_source": table_source,
+                                            "update_services": [checkbox_name],
+                                        }),
         )
 
     def _rulesets_button(self, descr):
@@ -1601,10 +1604,10 @@ class ModeAjaxExecuteCheck(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
         try:
-            state, output = check_mk_automation(
-                self._site,
-                "active-check", [self._host_name, self._check_type, self._item],
-                sync=False)
+            state, output = check_mk_automation(self._site,
+                                                "active-check",
+                                                [self._host_name, self._check_type, self._item],
+                                                sync=False)
         except Exception as e:
             state = 3
             output = "%s" % e

@@ -40,7 +40,9 @@ def test_no_exeption(site):
     special_agent_dir = Path(site.root) / 'share' / 'check_mk' / 'agents' / 'special'
     for special_agent_path in special_agent_dir.glob('agent_*'):  # pylint: disable=no-member
         command = [str(special_agent_path)]
-        p = site.execute(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=open(os.devnull))
+        p = site.execute(command,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         stdin=open(os.devnull))
         stderr = p.communicate()[1]
         assert "Traceback (most recent call last):" not in stderr

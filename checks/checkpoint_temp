@@ -45,13 +45,12 @@ def check_checkpoint_temp(item, params, info):
             if value == "":
                 return state, "Status: %s" % state_readable
 
-            return check_temperature(
-                float(value),
-                params,
-                "checkpoint_temp_%s" % item,
-                dev_unit=unit,
-                dev_status=state,
-                dev_status_name=state_readable)
+            return check_temperature(float(value),
+                                     params,
+                                     "checkpoint_temp_%s" % item,
+                                     dev_unit=unit,
+                                     dev_status=state,
+                                     dev_status_name=state_readable)
 
 
 check_info['checkpoint_temp'] = {

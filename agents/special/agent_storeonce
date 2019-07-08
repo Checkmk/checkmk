@@ -79,8 +79,9 @@ for o, a in opts:
 def query(url):
     if not opt_cert:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    response = requests.get(
-        url, auth=(args_dict["username"], args_dict["password"]), verify=opt_cert)
+    response = requests.get(url,
+                            auth=(args_dict["username"], args_dict["password"]),
+                            verify=opt_cert)
     raw_xml = response.text
     # Remove namespace nonsense
     raw_xml = re.sub(' xmlns="[^"]+"', '', raw_xml, count=1)

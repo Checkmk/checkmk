@@ -194,6 +194,7 @@ sys.stdout.write('<<<mrpe>>>\n')
 for service in services:
     state = {"OK": 0, "WARN": 1, "CRIT": 2, "UNKNOWN": 3}.get(service['service_state'])
     if state is not None:  # skip pending services
-        sys.stdout.write("(%s) %s %d %s|%s\n" % (service["svc_check_command"].replace(
-            " ", "_"), service["service_description"].replace(
+        sys.stdout.write(
+            "(%s) %s %d %s|%s\n" %
+            (service["svc_check_command"].replace(" ", "_"), service["service_description"].replace(
                 " ", "_"), state, service["svc_plugin_output"], service["svc_perf_data"]))

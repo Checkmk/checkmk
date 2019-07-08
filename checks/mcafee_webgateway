@@ -44,12 +44,11 @@ def check_mcafee_webgateway(_no_item, params, parsed):
     now = time.time()
     for key, value, label in parsed:
         rate = get_rate("check_mcafee_webgateway.%s" % key, now, value)
-        yield check_levels(
-            rate,
-            '%s_rate' % key,
-            params.get(key),
-            human_readable_func=lambda f: "%.1f/s" % f,
-            infoname=label)
+        yield check_levels(rate,
+                           '%s_rate' % key,
+                           params.get(key),
+                           human_readable_func=lambda f: "%.1f/s" % f,
+                           infoname=label)
 
 
 check_info['mcafee_webgateway'] = {

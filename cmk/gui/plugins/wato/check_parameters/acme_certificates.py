@@ -58,14 +58,14 @@ class RulespecCheckgroupParametersAcmeCertificates(CheckParameterRulespecWithIte
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("expire_lower",
-                       Tuple(
-                           title=_("Lower age levels for expire date"),
-                           elements=[
-                               Age(title=_("Warning if below"), default_value=604800),
-                               Age(title=_("Critical if below"), default_value=2592000),
-                           ]))],)
+        return Dictionary(elements=[("expire_lower",
+                                     Tuple(title=_("Lower age levels for expire date"),
+                                           elements=[
+                                               Age(title=_("Warning if below"),
+                                                   default_value=604800),
+                                               Age(title=_("Critical if below"),
+                                                   default_value=2592000),
+                                           ]))],)
 
     @property
     def item_spec(self):

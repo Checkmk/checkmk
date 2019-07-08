@@ -63,8 +63,8 @@ class HostMode(WatoMode):
         super(HostMode, self).__init__()
 
     def buttons(self):
-        html.context_button(
-            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
+                            "back")
 
     def _is_cluster(self):
         return self._host.is_cluster()
@@ -248,8 +248,8 @@ class ModeEditHost(HostMode):
                 _("Diagnostic"),
                 watolib.folder_preserving_link([("mode", "diag_host"),
                                                 ("host", self._host.name())]), "diagnose")
-        html.context_button(
-            _("Update DNS Cache"), html.makeactionuri([("_update_dns_cache", "1")]), "update")
+        html.context_button(_("Update DNS Cache"), html.makeactionuri([("_update_dns_cache", "1")]),
+                            "update")
 
     def action(self):
         if html.request.var("_update_dns_cache"):
@@ -271,8 +271,8 @@ class ModeEditHost(HostMode):
             return delete_host_after_confirm(self._host.name())
 
         if html.check_transaction():
-            attributes = watolib.collect_attributes(
-                "host" if not self._is_cluster() else "cluster", new=False)
+            attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster",
+                                                    new=False)
             watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
             self._host = watolib.Folder.current().host(self._host.name())
 
@@ -385,11 +385,10 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
-        return watolib.Host(
-            folder=watolib.Folder.current(),
-            host_name=html.request.var("host"),
-            attributes={},
-            cluster_nodes=None)
+        return watolib.Host(folder=watolib.Folder.current(),
+                            host_name=html.request.var("host"),
+                            attributes={},
+                            cluster_nodes=None)
 
     @classmethod
     def _host_type_name(cls):
@@ -421,11 +420,10 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
-        return watolib.Host(
-            folder=watolib.Folder.current(),
-            host_name=html.request.var("host"),
-            attributes={},
-            cluster_nodes=[])
+        return watolib.Host(folder=watolib.Folder.current(),
+                            host_name=html.request.var("host"),
+                            attributes={},
+                            cluster_nodes=[])
 
     @classmethod
     def _host_type_name(cls):

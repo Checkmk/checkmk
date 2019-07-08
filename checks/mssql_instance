@@ -98,8 +98,8 @@ def parse_mssql_instance(info):
         elif line[1] == "details":
             _parse_prod_version(line[2])
             instance.update({
-                "prod_version_info": "%s (%s) (%s) - %s" % (_parse_prod_version(line[2]), line[3],
-                                                            line[2], line[4])
+                "prod_version_info": "%s (%s) (%s) - %s" %
+                                     (_parse_prod_version(line[2]), line[3], line[2], line[4])
             })
 
     return parsed

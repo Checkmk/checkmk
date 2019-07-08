@@ -206,8 +206,9 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     if belongs_to_cluster:
         filter_mode = "include_clustered"
 
-    table = check_table.get_precompiled_check_table(
-        hostname, remove_duplicates=True, filter_mode=filter_mode)
+    table = check_table.get_precompiled_check_table(hostname,
+                                                    remove_duplicates=True,
+                                                    filter_mode=filter_mode)
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
@@ -271,8 +272,8 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
     period = config_cache.check_period_of_service(hostname, description)
     if period is not None:
         if not cmk_base.core.check_timeperiod(period):
-            console.verbose(
-                "Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
+            console.verbose("Skipping service %s: currently not in timeperiod %s.\n" %
+                            (description, period))
             return None
         console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
 
@@ -357,12 +358,11 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
                 oldest_cached_at = minn(oldest_cached_at, cached_at)
                 largest_interval = max(largest_interval, cache_interval)
 
-        _submit_check_result(
-            hostname,
-            description,
-            result,
-            cached_at=oldest_cached_at,
-            cache_interval=largest_interval)
+        _submit_check_result(hostname,
+                             description,
+                             result,
+                             cached_at=oldest_cached_at,
+                             cache_interval=largest_interval)
     return True
 
 
@@ -420,8 +420,9 @@ def _evaluate_timespecific_entry(entry):
 
 
 def is_manual_check(hostname, check_plugin_name, item):
-    manual_checks = check_table.get_check_table(
-        hostname, remove_duplicates=True, skip_autochecks=True)
+    manual_checks = check_table.get_check_table(hostname,
+                                                remove_duplicates=True,
+                                                skip_autochecks=True)
     return (check_plugin_name, item) in manual_checks
 
 
@@ -675,8 +676,8 @@ def _open_command_pipe():
     if _nagios_command_pipe is None:
         if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
             _nagios_command_pipe = False  # False means: tried but failed to open
-            raise MKGeneralException(
-                "Missing core command pipe '%s'" % cmk.utils.paths.nagios_command_pipe_path)
+            raise MKGeneralException("Missing core command pipe '%s'" %
+                                     cmk.utils.paths.nagios_command_pipe_path)
         else:
             try:
                 signal.signal(signal.SIGALRM, _core_pipe_open_timeout)

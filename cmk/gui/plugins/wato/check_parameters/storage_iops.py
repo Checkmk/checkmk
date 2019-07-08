@@ -59,33 +59,32 @@ class RulespecCheckgroupParametersStorageIops(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("read",
-                 Tuple(
-                     title=_(u"Read IO operations per second"),
-                     elements=[
-                         Float(title=_(u"Warning at"), unit="1/s"),
-                         Float(title=_(u"Critical at"), unit="1/s"),
-                     ],
-                 )),
-                ("write",
-                 Tuple(
-                     title=_(u"Write IO operations per second"),
-                     elements=[
-                         Float(title=_(u"Warning at"), unit="1/s"),
-                         Float(title=_(u"Critical at"), unit="1/s"),
-                     ],
-                 )),
-                ("total",
-                 Tuple(
-                     title=_(u"Total IO operations per second"),
-                     elements=[
-                         Float(title=_(u"Warning at"), unit="1/s"),
-                         Float(title=_(u"Critical at"), unit="1/s"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("read",
+             Tuple(
+                 title=_(u"Read IO operations per second"),
+                 elements=[
+                     Float(title=_(u"Warning at"), unit="1/s"),
+                     Float(title=_(u"Critical at"), unit="1/s"),
+                 ],
+             )),
+            ("write",
+             Tuple(
+                 title=_(u"Write IO operations per second"),
+                 elements=[
+                     Float(title=_(u"Warning at"), unit="1/s"),
+                     Float(title=_(u"Critical at"), unit="1/s"),
+                 ],
+             )),
+            ("total",
+             Tuple(
+                 title=_(u"Total IO operations per second"),
+                 elements=[
+                     Float(title=_(u"Warning at"), unit="1/s"),
+                     Float(title=_(u"Critical at"), unit="1/s"),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

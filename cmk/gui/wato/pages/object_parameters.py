@@ -86,8 +86,8 @@ class ModeObjectParameters(WatoMode):
             prefix = _("Host-")
         else:
             prefix = u""
-        html.context_button(
-            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
+                            "back")
         if self._service:
             service_status_button(self._hostname, self._service)
         else:
@@ -119,8 +119,8 @@ class ModeObjectParameters(WatoMode):
         last_maingroup = None
         for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names()):
             maingroup = groupname.split("/")[0]
-            for rulespec in sorted(
-                    rulespec_registry.get_by_group(groupname), key=lambda x: x.title):
+            for rulespec in sorted(rulespec_registry.get_by_group(groupname),
+                                   key=lambda x: x.title):
                 if (rulespec.item_type == 'service') == (not self._service):
                     continue  # This rule is not for hosts/services
 
@@ -128,11 +128,10 @@ class ModeObjectParameters(WatoMode):
                 if last_maingroup != maingroup:
                     last_maingroup = maingroup
                     rulegroup = watolib.get_rulegroup(maingroup)
-                    forms.header(
-                        rulegroup.title,
-                        isopen=maingroup == "monconf",
-                        narrow=True,
-                        css="rulesettings")
+                    forms.header(rulegroup.title,
+                                 isopen=maingroup == "monconf",
+                                 narrow=True,
+                                 css="rulesettings")
                     html.help(rulegroup.help)
 
                 self._output_analysed_ruleset(all_rulesets, rulespec, self._service)
@@ -169,9 +168,8 @@ class ModeObjectParameters(WatoMode):
             checkgroup = serviceinfo["checkgroup"]
             checktype = serviceinfo["checktype"]
             if not checkgroup:
-                self._render_rule_reason(
-                    _("Parameters"), None, "", "", True,
-                    _("This check is not configurable via WATO"))
+                self._render_rule_reason(_("Parameters"), None, "", "", True,
+                                         _("This check is not configurable via WATO"))
 
             # Logwatch needs a special handling, since it is not configured
             # via checkgroup_parameters but via "logwatch_rules" in a special
@@ -205,9 +203,8 @@ class ModeObjectParameters(WatoMode):
                             rulespec.valuespec._elements[2].value_to_text(
                                 serviceinfo["parameters"]))
                     else:
-                        self._render_rule_reason(
-                            _("Parameters"), None, "", "", True,
-                            _("This check is not configurable via WATO"))
+                        self._render_rule_reason(_("Parameters"), None, "", "", True,
+                                                 _("This check is not configurable via WATO"))
 
                 else:
                     rulespec = rulespec_registry[grouprule]()
@@ -250,8 +247,8 @@ class ModeObjectParameters(WatoMode):
                                                   ('varname', "custom_checks"),
                                                   ('host', self._hostname)])
             forms.section(html.render_a(_("Command Line"), href=url))
-            url = watolib.folder_preserving_link([('mode', 'edit_rule'), ('varname',
-                                                                          "custom_checks"),
+            url = watolib.folder_preserving_link([('mode', 'edit_rule'),
+                                                  ('varname', "custom_checks"),
                                                   ('rule_folder', rule_folder.path()),
                                                   ('rulenr', rule_index), ('host', self._hostname)])
 
@@ -259,8 +256,8 @@ class ModeObjectParameters(WatoMode):
             html.open_tr()
 
             html.open_td(class_="reason")
-            html.a(
-                "%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()), href=url)
+            html.a("%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()),
+                   href=url)
             html.close_td()
             html.open_td(class_=["settingvalue", "used"])
             if "command_line" in serviceinfo:
@@ -272,8 +269,8 @@ class ModeObjectParameters(WatoMode):
             html.close_tr()
             html.close_table()
 
-        self._show_labels(
-            serviceinfo.get("labels", {}), "service", serviceinfo.get("label_sources", {}))
+        self._show_labels(serviceinfo.get("labels", {}), "service",
+                          serviceinfo.get("label_sources", {}))
 
     def _show_labels(self, labels, object_type, label_sources):
         forms.section(_("Effective labels"))
@@ -285,8 +282,10 @@ class ModeObjectParameters(WatoMode):
         html.close_td()
         html.open_td(class_=["settingvalue", "used"])
         html.write(
-            cmk.gui.view_utils.render_labels(
-                labels, object_type, with_links=False, label_sources=label_sources))
+            cmk.gui.view_utils.render_labels(labels,
+                                             object_type,
+                                             with_links=False,
+                                             label_sources=label_sources))
         html.close_td()
 
         html.close_tr()

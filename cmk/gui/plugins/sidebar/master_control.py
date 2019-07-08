@@ -65,8 +65,8 @@ class MasterControlSnapin(SidebarSnapin):
         site_status_info = {}
         try:
             sites.live().set_prepend_site(True)
-            for row in sites.live().query(
-                    "GET status\nColumns: %s" % " ".join([i[0] for i in items])):
+            for row in sites.live().query("GET status\nColumns: %s" %
+                                          " ".join([i[0] for i in items])):
                 site_id, values = row[0], row[1:]
                 site_status_info[site_id] = values
         finally:
@@ -116,8 +116,8 @@ class MasterControlSnapin(SidebarSnapin):
                     html.open_td()
                     html.toggle_switch(
                         enabled=colvalue,
-                        help_txt=_("Switch '%s' to '%s'") % (title,
-                                                             _("off") if colvalue else _("on")),
+                        help_txt=_("Switch '%s' to '%s'") %
+                        (title, _("off") if colvalue else _("on")),
                         onclick=onclick,
                     )
                     html.close_td()

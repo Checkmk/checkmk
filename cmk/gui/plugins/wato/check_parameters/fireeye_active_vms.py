@@ -58,14 +58,13 @@ class RulespecCheckgroupParametersFireeyeActiveVms(CheckParameterRulespecWithout
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[(
-                "vms",
-                Tuple(
-                    title=_("Levels for active VMs"),
-                    elements=[
-                        Integer(title="Warning at", default_value=60, unit="VMs"),
-                        Integer(title="Critical at", default_value=70, unit="VMs"),
-                    ],
-                ),
-            )],)
+        return Dictionary(elements=[(
+            "vms",
+            Tuple(
+                title=_("Levels for active VMs"),
+                elements=[
+                    Integer(title="Warning at", default_value=60, unit="VMs"),
+                    Integer(title="Critical at", default_value=70, unit="VMs"),
+                ],
+            ),
+        )],)

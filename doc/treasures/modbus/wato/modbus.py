@@ -35,27 +35,25 @@ register_check_parameters(
 register_rule(
     group,
     "special_agents:modbus",
-    Tuple(
-        title=_("Check Modbus devices"),
-        help=_("Configure the Server Address and the ids you want to query from the device"
-               "Please refer to the documentation of the device to find out which ids you want"),
-        elements=[
-            Integer(title=_("Port Number"), default_value=502),
-            ListOf(
-                Tuple(elements=[
-                    Integer(title=_("Counter ID")),
-                    DropdownChoice(
-                        title=_("Number of words"), choices=[
-                            (1, _("1 Word")),
-                            (2, _("2 Words")),
-                        ]),
-                    DropdownChoice(
-                        title=_("Value type"),
-                        choices=[
-                            ("counter", _("Its a counter value")),
-                            ("gauge", _("Its a gauge value")),
-                        ]),
-                    TextAscii(title=_("Counter Description")),
-                ]))
-        ]),
+    Tuple(title=_("Check Modbus devices"),
+          help=_("Configure the Server Address and the ids you want to query from the device"
+                 "Please refer to the documentation of the device to find out which ids you want"),
+          elements=[
+              Integer(title=_("Port Number"), default_value=502),
+              ListOf(
+                  Tuple(elements=[
+                      Integer(title=_("Counter ID")),
+                      DropdownChoice(title=_("Number of words"),
+                                     choices=[
+                                         (1, _("1 Word")),
+                                         (2, _("2 Words")),
+                                     ]),
+                      DropdownChoice(title=_("Value type"),
+                                     choices=[
+                                         ("counter", _("Its a counter value")),
+                                         ("gauge", _("Its a gauge value")),
+                                     ]),
+                      TextAscii(title=_("Counter Description")),
+                  ]))
+          ]),
     match="first")

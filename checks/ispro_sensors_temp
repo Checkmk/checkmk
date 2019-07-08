@@ -41,14 +41,14 @@ def check_ispro_sensors_temp(item, params, info):
     for name, reading_str, status, warn_low, crit_low, warn, crit in info:
         if item == name:
             devstatus, devstatus_name = ispro_sensors_alarm_states(status)
-            return check_temperature(
-                float(reading_str) / 100.0,
-                params,
-                "ispro_sensors_temp_%s" % item,
-                dev_levels=(float(warn) / 100.0, float(crit) / 100.0),
-                dev_levels_lower=(float(warn_low) / 100.0, float(crit_low) / 100.0),
-                dev_status=devstatus,
-                dev_status_name=devstatus_name)
+            return check_temperature(float(reading_str) / 100.0,
+                                     params,
+                                     "ispro_sensors_temp_%s" % item,
+                                     dev_levels=(float(warn) / 100.0, float(crit) / 100.0),
+                                     dev_levels_lower=(float(warn_low) / 100.0,
+                                                       float(crit_low) / 100.0),
+                                     dev_status=devstatus,
+                                     dev_status_name=devstatus_name)
 
 
 check_info['ispro_sensors_temp'] = {

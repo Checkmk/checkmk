@@ -89,9 +89,9 @@ def show_log_list():
     html.header(_("All Problematic Logfiles"))
 
     html.begin_context_buttons()
-    html.context_button(
-        _("Analyze Patterns"), "%swato.py?mode=pattern_editor" % html.request.var('master_url', ''),
-        'analyze')
+    html.context_button(_("Analyze Patterns"),
+                        "%swato.py?mode=pattern_editor" % html.request.var('master_url', ''),
+                        'analyze')
     ack_button()
     html.end_context_buttons()
 
@@ -237,9 +237,8 @@ def show_file(site, host_name, file_name):
 
         for line in log['lines']:
             html.open_p(class_=line['class'])
-            html.icon_button(
-                analyse_url(site, host_name, file_name, line['line']), _("Analyze this line"),
-                "analyze")
+            html.icon_button(analyse_url(site, host_name, file_name, line['line']),
+                             _("Analyze this line"), "analyze")
             html.write_text(line['line'].replace(" ", "&nbsp;").replace("\1", "<br>"))
             html.close_p()
 
@@ -340,8 +339,8 @@ def do_log_ack(site, host_name, file_name):
             html.footer()
             return
 
-    html.message('<b>%s</b><p>%s</p>' % (_('Acknowledged %s') % ack_msg,
-                                         _('Acknowledged all messages in %s.') % ack_msg))
+    html.message('<b>%s</b><p>%s</p>' %
+                 (_('Acknowledged %s') % ack_msg, _('Acknowledged all messages in %s.') % ack_msg))
     html.footer()
 
 

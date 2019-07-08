@@ -166,8 +166,8 @@ class ModeAutomation(AjaxPage):
 
         if our_id is not None and our_id != site_id:
             raise MKGeneralException(
-                _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") % (our_id,
-                                                                                          site_id))
+                _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
+                (our_id, site_id))
 
         profile = html.request.var("profile")
         if not profile:

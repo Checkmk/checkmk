@@ -58,22 +58,19 @@ class RulespecCheckgroupParametersNetworkFs(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                (
-                    "has_perfdata",
-                    DropdownChoice(
-                        title=_("Performance data settings"),
-                        choices=[
-                            (True, _("Enable performance data")),
-                            (False, _("Disable performance data")),
-                        ],
-                        default_value=False),
-                ),
-            ],)
+        return Dictionary(elements=[
+            (
+                "has_perfdata",
+                DropdownChoice(title=_("Performance data settings"),
+                               choices=[
+                                   (True, _("Enable performance data")),
+                                   (False, _("Disable performance data")),
+                               ],
+                               default_value=False),
+            ),
+        ],)
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Name of the mount point"),
-            help=_("For NFS enter the name of the mount point."))
+        return TextAscii(title=_("Name of the mount point"),
+                         help=_("For NFS enter the name of the mount point."))

@@ -55,29 +55,24 @@ class RulespecCheckgroupParametersRuckusAp(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            elements=[
-                Optional(
-                    Tuple(
-                        elements=[
-                            Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
-                            Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
-                        ],),
-                    sameline=True,
-                    label=_("Levels for <i>device time drifted</i>"),
-                    none_label=_("No levels set"),
-                    none_value=(None, None)),
-                Optional(
-                    Tuple(
-                        elements=[
-                            Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
-                            Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
-                        ],),
-                    sameline=True,
-                    label=_("Levels for <i>device not responding</i>"),
-                    none_label=_("No levels set"),
-                    none_value=(None, None)),
-            ],)
+        return Tuple(elements=[
+            Optional(Tuple(elements=[
+                Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
+                Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
+            ],),
+                     sameline=True,
+                     label=_("Levels for <i>device time drifted</i>"),
+                     none_label=_("No levels set"),
+                     none_value=(None, None)),
+            Optional(Tuple(elements=[
+                Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
+                Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
+            ],),
+                     sameline=True,
+                     label=_("Levels for <i>device not responding</i>"),
+                     none_label=_("No levels set"),
+                     none_value=(None, None)),
+        ],)
 
     @property
     def item_spec(self):

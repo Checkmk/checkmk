@@ -61,18 +61,17 @@ class RulespecCheckgroupParametersApcSymentra(CheckParameterRulespecWithoutItem)
             Dictionary(
                 elements=[
                     ("capacity",
-                     Tuple(
-                         title=_("Levels of battery capacity"),
-                         elements=[
-                             Percentage(
-                                 title=_("Warning below"),
-                                 default_value=95.0,
-                             ),
-                             Percentage(
-                                 title=_("Critical below"),
-                                 default_value=90.0,
-                             ),
-                         ])),
+                     Tuple(title=_("Levels of battery capacity"),
+                           elements=[
+                               Percentage(
+                                   title=_("Warning below"),
+                                   default_value=95.0,
+                               ),
+                               Percentage(
+                                   title=_("Critical below"),
+                                   default_value=90.0,
+                               ),
+                           ])),
                     ("calibration_state",
                      MonitoringState(
                          title=_("State if calibration is invalid"),

@@ -62,13 +62,12 @@ def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(
-    params=[('default', True), ('from_start', True), ('rotated', True), ('nocontext', True),
-            ('default', False)],
-    ids=[
-        'default_alone', 'from_start_alone', 'rotated_alone', 'nocontext_alone',
-        'default_with_systemtime'
-    ])
+@pytest.fixture(params=[('default', True), ('from_start', True), ('rotated', True),
+                        ('nocontext', True), ('default', False)],
+                ids=[
+                    'default_alone', 'from_start_alone', 'rotated_alone', 'nocontext_alone',
+                    'default_with_systemtime'
+                ])
 def testconfig(request, make_ini_config):
     Globals.alone = request.param[1]
     if Globals.alone:
@@ -163,8 +162,9 @@ def verify_logstate():
         }
         with open(os.path.join(src_exec_dir, 'state', 'logstate.txt')) as statefile:
             actual_logstate = dict(get_log_state(line) for line in statefile)
-        for (expected_log, expected_state), (actual_log, actual_state) in zip(
-                sorted(expected_logstate.items()), sorted(actual_logstate.items())):
+        for (expected_log, expected_state), (actual_log,
+                                             actual_state) in zip(sorted(expected_logstate.items()),
+                                                                  sorted(actual_logstate.items())):
             assert expected_log == actual_log
             assert expected_state[0] == actual_state[0], (
                 "expected file id for log '%s' is %d but actual file id %d" %
@@ -199,7 +199,8 @@ def test_section_logfiles__new_file(request, testconfig_glob, expected_output_no
 
 
 @pytest.mark.usefixtures('with_statefile')
-def test_section_logfiles__new_entries_in_log(
-        request, testconfig_glob, expected_output_with_statefile, actual_output, testfile):
+def test_section_logfiles__new_entries_in_log(request, testconfig_glob,
+                                              expected_output_with_statefile, actual_output,
+                                              testfile):
     # request.node.name gives test name
     local_test(expected_output_with_statefile, actual_output, testfile, request.node.name)

@@ -39,8 +39,8 @@ def local_test_hosts(web, site):
     for hostname in ["test-host", "test-host2"]:
         site.write_file(
             "var/check_mk/agent_output/%s" % hostname,
-            file(
-                "%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+                 repo_path()).read())
 
     yield
 
@@ -58,10 +58,9 @@ def test_global_settings(site, web):
 def test_add_host(web):
     try:
         # Also tests get_host
-        web.add_host(
-            "test-host", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
     finally:
         web.delete_host("test-host")
 
@@ -108,10 +107,9 @@ def test_add_hosts(web):
 
 def test_edit_host(web):
     try:
-        web.add_host(
-            "test-edit-host", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-edit-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         web.edit_host("test-edit-host", attributes={"ipaddress": "127.10.0.1"})
     finally:
@@ -120,14 +118,12 @@ def test_edit_host(web):
 
 def test_edit_hosts(web):
     try:
-        web.add_host(
-            "test-edit-hosts1", attributes={
-                "ipaddress": "127.0.0.1",
-            })
-        web.add_host(
-            "test-edit-hosts2", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-edit-hosts1", attributes={
+            "ipaddress": "127.0.0.1",
+        })
+        web.add_host("test-edit-hosts2", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         web.edit_hosts([
             ("test-edit-hosts1", {
@@ -143,10 +139,9 @@ def test_edit_hosts(web):
 
 def test_get_all_hosts_basic(web):
     try:
-        web.add_host(
-            "test-host-list", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-list", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         hosts = web.get_all_hosts()
         assert "test-host-list" in hosts
@@ -156,34 +151,30 @@ def test_get_all_hosts_basic(web):
 
 def test_delete_host(web):
     try:
-        web.add_host(
-            "test-host-delete", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-delete", attributes={
+            "ipaddress": "127.0.0.1",
+        })
     finally:
         web.delete_host("test-host-delete")
 
 
 def test_delete_hosts(web):
     try:
-        web.add_host(
-            "test-hosts-delete1", attributes={
-                "ipaddress": "127.0.0.1",
-            })
-        web.add_host(
-            "test-hosts-delete2", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-hosts-delete1", attributes={
+            "ipaddress": "127.0.0.1",
+        })
+        web.add_host("test-hosts-delete2", attributes={
+            "ipaddress": "127.0.0.1",
+        })
     finally:
         web.delete_hosts(["test-hosts-delete1", "test-hosts-delete2"])
 
 
 def test_get_host_effective_attributes(web):
     try:
-        web.add_host(
-            "test-host", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         host = web.get_host("test-host", effective_attributes=False)
         assert "tag_networking" not in host["attributes"]
@@ -197,10 +188,9 @@ def test_get_host_effective_attributes(web):
 
 def test_get_all_hosts_effective_attributes(web):
     try:
-        web.add_host(
-            "test-host", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         hosts = web.get_all_hosts(effective_attributes=False)
         host = hosts["test-host"]
@@ -347,22 +337,21 @@ def test_set_all_sites(web, site, sock_spec):
 
 def test_write_host_tags(web, site):
     try:
-        web.add_host(
-            "test-host-dmz", attributes={
-                "ipaddress": "127.0.0.1",
-                "tag_networking": "dmz",
-            })
+        web.add_host("test-host-dmz",
+                     attributes={
+                         "ipaddress": "127.0.0.1",
+                         "tag_networking": "dmz",
+                     })
 
-        web.add_host(
-            "test-host-lan", attributes={
-                "ipaddress": "127.0.0.1",
-                "tag_networking": "lan",
-            })
+        web.add_host("test-host-lan",
+                     attributes={
+                         "ipaddress": "127.0.0.1",
+                         "tag_networking": "lan",
+                     })
 
-        web.add_host(
-            "test-host-lan2", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-lan2", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         hosts = web.get_all_hosts(effective_attributes=True)
         assert hosts["test-host-dmz"]["attributes"]["tag_networking"] == "dmz"
@@ -460,8 +449,9 @@ def test_edit_group_missing(web, group_type):
         web.add_group(group_type, group_id, attributes)
         try:
             #web.edit_group(group_type, group_id, {"alias": group_alias2}, expect_error = True)
-            web.edit_group(
-                group_type, "%s_missing" % group_id, {"alias": group_alias2}, expect_error=True)
+            web.edit_group(group_type,
+                           "%s_missing" % group_id, {"alias": group_alias2},
+                           expect_error=True)
         except APIError as e:
             assert str(e) != str(None)
             return
@@ -583,10 +573,9 @@ def test_edit_htpasswd_users(web):
 
 def test_discover_services(web):
     try:
-        web.add_host(
-            "test-host-discovery", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-discovery", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         web.discover_services("test-host-discovery")
     finally:
@@ -671,10 +660,9 @@ def test_bulk_discovery_start_multiple_with_subdir(web, local_test_hosts):
 
 def test_activate_changes(web, site):
     try:
-        web.add_host(
-            "test-host-activate", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-activate", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         web.activate_changes()
 
@@ -694,10 +682,9 @@ def graph_test_config(web, site):
 
     try:
         # Now add the host
-        web.add_host(
-            "test-host-get-graph", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-get-graph", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         site.write_file(
             "etc/check_mk/conf.d/test-host-get-graph.mk",
@@ -707,8 +694,8 @@ def graph_test_config(web, site):
         site.makedirs("var/check_mk/agent_output/")
         site.write_file(
             "var/check_mk/agent_output/test-host-get-graph",
-            file(
-                "%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+                 repo_path()).read())
 
         web.discover_services("test-host-get-graph")
         web.activate_changes()
@@ -754,21 +741,19 @@ def test_get_graph_api(web, graph_test_config):
 
 
 def test_get_graph_image(web, graph_test_config):
-    result = web.post(
-        "graph_image.py",
-        data={
-            "request": json.dumps({
-                "specification": [
-                    "template",
-                    {
-                        "service_description": "Check_MK",
-                        "site": web.site.id,
-                        "graph_index": 0,
-                        "host_name": "test-host-get-graph",
-                    }
-                ],
-            }),
-        })
+    result = web.post("graph_image.py",
+                      data={
+                          "request": json.dumps({
+                              "specification": [
+                                  "template", {
+                                      "service_description": "Check_MK",
+                                      "site": web.site.id,
+                                      "graph_index": 0,
+                                      "host_name": "test-host-get-graph",
+                                  }
+                              ],
+                          }),
+                      })
 
     content = result.content
 
@@ -806,8 +791,7 @@ def test_get_graph_hover(web, graph_test_config):
             u'title': u'Time usage by phase',
             u'horizontal_rules': [],
             u'specification': [
-                u'template',
-                {
+                u'template', {
                     u'service_description': u'Check_MK',
                     u'site': web.site.id,
                     u'graph_index': 0,
@@ -831,44 +815,41 @@ def test_get_graph_hover(web, graph_test_config):
                 ],
                 u'unit': u's',
                 u'title': u'CPU time in user space'
-            },
-                         {
-                             u'color': u'#ff8840',
-                             u'line_type': u'stack',
-                             u'expression': [
-                                 u'operator', u'+',
-                                 [[
-                                     u'rrd', u'test-host-get-graph', u'test-host-get-graph',
-                                     u'Check_MK', u'system_time', None, 1
-                                 ],
-                                  [
-                                      u'rrd', u'test-host-get-graph', u'test-host-get-graph',
-                                      u'Check_MK', u'children_system_time', None, 1
-                                  ]]
-                             ],
-                             u'unit': u's',
-                             u'title': u'CPU time in operating system'
-                         },
-                         {
-                             u'color': u'#00b2ff',
-                             u'line_type': u'stack',
-                             u'expression': [
-                                 u'rrd', u'test-host-get-graph', u'test-host-get-graph',
-                                 u'Check_MK', u'cmk_time_agent', None, 1
-                             ],
-                             u'unit': u's',
-                             u'title': u'Time spent waiting for Check_MK agent'
-                         },
-                         {
-                             u'color': u'#d080af',
-                             u'line_type': u'line',
-                             u'expression': [
-                                 u'rrd', u'test-host-get-graph', u'test-host-get-graph',
-                                 u'Check_MK', u'execution_time', None, 1
-                             ],
-                             u'unit': u's',
-                             u'title': u'Total execution time'
-                         }],
+            }, {
+                u'color': u'#ff8840',
+                u'line_type': u'stack',
+                u'expression': [
+                    u'operator', u'+',
+                    [[
+                        u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                        u'system_time', None, 1
+                    ],
+                     [
+                         u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                         u'children_system_time', None, 1
+                     ]]
+                ],
+                u'unit': u's',
+                u'title': u'CPU time in operating system'
+            }, {
+                u'color': u'#00b2ff',
+                u'line_type': u'stack',
+                u'expression': [
+                    u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                    u'cmk_time_agent', None, 1
+                ],
+                u'unit': u's',
+                u'title': u'Time spent waiting for Check_MK agent'
+            }, {
+                u'color': u'#d080af',
+                u'line_type': u'line',
+                u'expression': [
+                    u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                    u'execution_time', None, 1
+                ],
+                u'unit': u's',
+                u'title': u'Total execution time'
+            }],
             u'omit_zero_metrics': False,
             u'unit': u's'
         },
@@ -902,12 +883,11 @@ def test_get_graph_hover(web, graph_test_config):
         }
     }
 
-    result = web.post(
-        "ajax_graph_hover.py",
-        data={
-            "context": json.dumps(graph_context),
-            "hover_time": int(time.time() - 300),
-        })
+    result = web.post("ajax_graph_hover.py",
+                      data={
+                          "context": json.dumps(graph_context),
+                          "hover_time": int(time.time() - 300),
+                      })
 
     data = result.json()
 
@@ -934,9 +914,8 @@ def test_get_inventory(web):
         web.add_host(host_name, attributes={"ipaddress": "127.0.0.1"})
         # NOTE: Deleting the host deletes the file, too.
         web.site.makedirs(inventory_dir)
-        web.site.write_file(
-            os.path.join(inventory_dir, host_name),
-            "{'hardware': {'memory': {'ram': 10000, 'foo': 1}, 'blubb': 42}}")
+        web.site.write_file(os.path.join(inventory_dir, host_name),
+                            "{'hardware': {'memory': {'ram': 10000, 'foo': 1}, 'blubb': 42}}")
 
         inv = web.get_inventory([host_name])
         assert inv[host_name] == {
@@ -995,8 +974,7 @@ def test_get_graph_recipes(web, graph_test_config):
     assert web.get_graph_recipes(
         request={
             "specification": [
-                "template",
-                {
+                "template", {
                     "service_description": "Check_MK",
                     "site": web.site.id,
                     "graph_index": 0,
@@ -1024,58 +1002,53 @@ def test_get_graph_recipes(web, graph_test_config):
                     u'line_type': u'stack',
                     u'title': u'CPU time in user space',
                     u'unit': u's'
-                },
-                             {
-                                 u'color': u'#ff8840',
-                                 u'expression': [
-                                     u'operator', u'+',
-                                     [[
-                                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                                         u'system_time', None, 1.0
-                                     ],
-                                      [
-                                          u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                                          u'children_system_time', None, 1.0
-                                      ]]
-                                 ],
-                                 u'line_type': u'stack',
-                                 u'title': u'CPU time in operating system',
-                                 u'unit': u's'
-                             },
-                             {
-                                 u'color': u'#00b2ff',
-                                 u'expression': [
-                                     u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                                     u'cmk_time_agent', None, 1.0
-                                 ],
-                                 u'line_type': u'stack',
-                                 u'title': u'Time spent waiting for Check_MK agent',
-                                 u'unit': u's'
-                             },
-                             {
-                                 u'color': u'#00d1ff',
-                                 u'expression': [
-                                     u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                                     u'cmk_time_ds', None, 1.0
-                                 ],
-                                 u'line_type': u'stack',
-                                 u'title': u'Time spent waiting for special agent',
-                                 u'unit': u's'
-                             },
-                             {
-                                 u'color': u'#d080af',
-                                 u'expression': [
-                                     u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                                     u'execution_time', None, 1.0
-                                 ],
-                                 u'line_type': u'line',
-                                 u'title': u'Total execution time',
-                                 u'unit': u's'
-                             }],
+                }, {
+                    u'color': u'#ff8840',
+                    u'expression': [
+                        u'operator', u'+',
+                        [[
+                            u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
+                            u'system_time', None, 1.0
+                        ],
+                         [
+                             u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
+                             u'children_system_time', None, 1.0
+                         ]]
+                    ],
+                    u'line_type': u'stack',
+                    u'title': u'CPU time in operating system',
+                    u'unit': u's'
+                }, {
+                    u'color': u'#00b2ff',
+                    u'expression': [
+                        u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_agent',
+                        None, 1.0
+                    ],
+                    u'line_type': u'stack',
+                    u'title': u'Time spent waiting for Check_MK agent',
+                    u'unit': u's'
+                }, {
+                    u'color': u'#00d1ff',
+                    u'expression': [
+                        u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_ds',
+                        None, 1.0
+                    ],
+                    u'line_type': u'stack',
+                    u'title': u'Time spent waiting for special agent',
+                    u'unit': u's'
+                }, {
+                    u'color': u'#d080af',
+                    u'expression': [
+                        u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'execution_time',
+                        None, 1.0
+                    ],
+                    u'line_type': u'line',
+                    u'title': u'Total execution time',
+                    u'unit': u's'
+                }],
                 u'omit_zero_metrics': False,
                 u'specification': [
-                    u'template',
-                    {
+                    u'template', {
                         u'graph_index': 0,
                         u'host_name': u'test-host-get-graph',
                         u'service_description': u'Check_MK',

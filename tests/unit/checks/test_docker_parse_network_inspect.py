@@ -128,34 +128,33 @@ regex = re.compile
             "com.docker.network.driver.mtu": "1500"
         },
         "Labels": {}
-    },
-        {
-            "Name": "example.com",
-            "Id": "40a17e390f71cb60f4815cb7f57341a621645bcf912680e658f0bbf89709fae4",
-            "Created": "2018-05-20T09:48:58.39451255+02:00",
-            "Scope": "local",
-            "Driver": "bridge",
-            "EnableIPv6": False,
-            "IPAM": {
-                "Driver": "default",
-                "Options": {},
-                "Config": [{
-                    "Subnet": "10.5.0.0/24",
-                    "IPRange": "10.5.0.0/24",
-                    "Gateway": "10.5.0.254"
-                }]
-            },
-            "Internal": False,
-            "Attachable": False,
-            "Ingress": False,
-            "ConfigFrom": {
-                "Network": ""
-            },
-            "ConfigOnly": False,
-            "Containers": {},
+    }, {
+        "Name": "example.com",
+        "Id": "40a17e390f71cb60f4815cb7f57341a621645bcf912680e658f0bbf89709fae4",
+        "Created": "2018-05-20T09:48:58.39451255+02:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": False,
+        "IPAM": {
+            "Driver": "default",
             "Options": {},
-            "Labels": {}
-        }]),
+            "Config": [{
+                "Subnet": "10.5.0.0/24",
+                "IPRange": "10.5.0.0/24",
+                "Gateway": "10.5.0.254"
+            }]
+        },
+        "Internal": False,
+        "Attachable": False,
+        "Ingress": False,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": False,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }]),
 ])
 def test_parse_legacy_docker_network_inspect(indata, outdata):
     parsed = parse_legacy_docker_network_inspect(indata)

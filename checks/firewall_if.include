@@ -45,12 +45,11 @@ def check_firewall_if(item, params, data):
         else:
             check_against = rate
 
-        status, infotext, extraperf = check_levels(
-            check_against,
-            what,
-            params.get(what),
-            human_readable_func=lambda x: "%.2f pkts/s" % x,
-            infoname=infotext_names[what])
+        status, infotext, extraperf = check_levels(check_against,
+                                                   what,
+                                                   params.get(what),
+                                                   human_readable_func=lambda x: "%.2f pkts/s" % x,
+                                                   infoname=infotext_names[what])
 
         perfdata = [(what, rate)] + extraperf[:1]
 

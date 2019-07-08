@@ -56,30 +56,25 @@ class RulespecCheckgroupParametersCheckpointPackets(CheckParameterRulespecWithou
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("accepted",
-                 Levels(
-                     title=_("Maximum Rate of Accepted Packets"),
-                     default_value=None,
-                     default_levels=(100000, 200000),
-                     unit="pkts/sec")),
-                ("rejected",
-                 Levels(
-                     title=_("Maximum Rate of Rejected Packets"),
-                     default_value=None,
-                     default_levels=(100000, 200000),
-                     unit="pkts/sec")),
-                ("dropped",
-                 Levels(
-                     title=_("Maximum Rate of Dropped Packets"),
-                     default_value=None,
-                     default_levels=(100000, 200000),
-                     unit="pkts/sec")),
-                ("logged",
-                 Levels(
-                     title=_("Maximum Rate of Logged Packets"),
-                     default_value=None,
-                     default_levels=(100000, 200000),
-                     unit="pkts/sec")),
-            ],)
+        return Dictionary(elements=[
+            ("accepted",
+             Levels(title=_("Maximum Rate of Accepted Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec")),
+            ("rejected",
+             Levels(title=_("Maximum Rate of Rejected Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec")),
+            ("dropped",
+             Levels(title=_("Maximum Rate of Dropped Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec")),
+            ("logged",
+             Levels(title=_("Maximum Rate of Logged Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec")),
+        ],)

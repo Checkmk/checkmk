@@ -52,8 +52,8 @@ def parse_splunk_jobs(info):
         except (IndexError, ValueError):
             pass
 
-    parsed.setdefault("job", []).append(
-        JobCount(job_count, failed_count, zombie_count, long_output))
+    parsed.setdefault("job", []).append(JobCount(job_count, failed_count, zombie_count,
+                                                 long_output))
 
     return parsed
 

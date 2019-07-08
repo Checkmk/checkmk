@@ -451,31 +451,30 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Tuple(
-                elements=[
-                    DropdownChoice(
-                        title=_("Search filter"),
-                        choices=[
-                            ("h", _("Hostname")),
-                            ("al", _("Hostalias")),
-                            ("ad", _("Hostaddress")),
-                            ("tg", _("Hosttag")),
-                            ("hg", _("Hostgroup")),
-                            ("sg", _("Servicegroup")),
-                            ("s", _("Service Description")),
-                        ],
-                    ),
-                    DropdownChoice(
-                        title=_("Match behaviour"),
-                        choices=[
-                            ("continue", _("Continue search")),
-                            ("finished",
-                             _("Search finished: Also show all results of previous filters")),
-                            ("finished_distinct",
-                             _("Search finished: Only show results of this filter")),
-                        ],
-                    ),
-                ],),
+            Tuple(elements=[
+                DropdownChoice(
+                    title=_("Search filter"),
+                    choices=[
+                        ("h", _("Hostname")),
+                        ("al", _("Hostalias")),
+                        ("ad", _("Hostaddress")),
+                        ("tg", _("Hosttag")),
+                        ("hg", _("Hostgroup")),
+                        ("sg", _("Servicegroup")),
+                        ("s", _("Service Description")),
+                    ],
+                ),
+                DropdownChoice(
+                    title=_("Match behaviour"),
+                    choices=[
+                        ("continue", _("Continue search")),
+                        ("finished",
+                         _("Search finished: Also show all results of previous filters")),
+                        ("finished_distinct",
+                         _("Search finished: Only show results of this filter")),
+                    ],
+                ),
+            ],),
             title=_("Quicksearch search order"),
             add_label=_("Add search filter"),
         )
@@ -612,9 +611,9 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
                    "code received from external sources, like plugin output or log messages. "
                    "If you are really sure what you are doing and need to have HTML codes, like "
                    "links rendered, disable this option. Be aware, you might open the way "
-                   "for several injection attacks.") + _(
-                       "This setting can either be set globally or individually for selected hosts "
-                       "or services using the host or service rulesets."),
+                   "for several injection attacks.") +
+            _("This setting can either be set globally or individually for selected hosts "
+              "or services using the host or service rulesets."),
             label=_("Prevent loading HTML from plugin output or log messages"),
         )
 
@@ -1052,16 +1051,15 @@ class ConfigVariableUserLocalizations(ConfigVariable):
     def valuespec(self):
         return Transform(
             ListOf(
-                Tuple(
-                    elements=[
-                        TextUnicode(title=_("Original Text"), size=40),
-                        Dictionary(
-                            title=_("Translations"),
-                            elements=lambda: [(l or "en", TextUnicode(title=a, size=32))
-                                              for (l, a) in cmk.gui.i18n.get_languages()],
-                            columns=2,
-                        ),
-                    ],),
+                Tuple(elements=[
+                    TextUnicode(title=_("Original Text"), size=40),
+                    Dictionary(
+                        title=_("Translations"),
+                        elements=lambda: [(l or "en", TextUnicode(title=a, size=32))
+                                          for (l, a) in cmk.gui.i18n.get_languages()],
+                        columns=2,
+                    ),
+                ],),
                 title=_("Custom localizations"),
                 movable=False,
                 totext=_("%d translations"),
@@ -1085,78 +1083,76 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
     def valuespec(self):
         return Transform(
             ListOf(
-                Tuple(
-                    elements=[
-                        ID(title=_("ID")),
-                        Dictionary(
-                            elements=[
-                                ('icon', IconSelector(
-                                    title=_('Icon'),
-                                    allow_empty=False,
-                                )),
-                                ('title', TextUnicode(title=_('Title'),)),
-                                ('url',
-                                 Transform(
-                                     Tuple(
-                                         title=_('Action'),
-                                         elements=[
-                                             TextAscii(
-                                                 title=_('URL'),
-                                                 help=
-                                                 _('This URL is opened when clicking on the action / icon. You '
-                                                   'can use some macros within the URL which are dynamically '
-                                                   'replaced for each object. These are:<br>'
-                                                   '<ul>'
-                                                   '<li>$HOSTNAME$: Contains the name of the host</li>'
-                                                   '<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>'
-                                                   '<li>$SERVICEDESC$: Contains the service description '
-                                                   '(in case this is a service)</li>'
-                                                   '<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>'
-                                                   '<li>$HOSTADDRESS$: Contains the network address of the host</li>'
-                                                   '<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>'
-                                                   '<li>$USER_ID$: The user ID of the currently active user</li>'
-                                                   '</ul>'),
-                                                 size=80,
-                                             ),
-                                             DropdownChoice(
-                                                 title=_("Open in"),
-                                                 choices=[
-                                                     ("_blank", _("Load in a new window / tab")),
-                                                     ("_self",
-                                                      _("Load in current content area (keep sidebar)"
-                                                       )),
-                                                     ("_top", _("Load as new page (hide sidebar)")),
-                                                 ],
-                                             ),
-                                         ],
-                                     ),
-                                     forth=lambda x: not isinstance(x, tuple) and (x, "_self") or x,
-                                 )),
-                                ('toplevel',
-                                 FixedValue(
-                                     True,
-                                     title=_('Show in column'),
-                                     totext=_('Directly show the action icon in the column'),
-                                     help=_('Makes the icon appear in the column instead '
-                                            'of the dropdown menu.'),
-                                 )),
-                                ('sort_index',
-                                 Integer(
-                                     title=_('Sort index'),
-                                     help=
-                                     _('You can use the sort index to control the order of the '
-                                       'elements in the column and the menu. The elements are sorted '
-                                       'from smaller to higher numbers. The action menu icon '
-                                       'has a sort index of <tt>10</tt>, the graph icon a sort index '
-                                       'of <tt>20</tt>. All other default icons have a sort index of '
-                                       '<tt>30</tt> configured.'),
-                                     min_value=0,
-                                     default_value=15,
-                                 )),
-                            ],
-                            optional_keys=['title', 'url', 'toplevel', 'sort_index'],
-                        ),
-                    ],),
+                Tuple(elements=[
+                    ID(title=_("ID")),
+                    Dictionary(
+                        elements=[
+                            ('icon', IconSelector(
+                                title=_('Icon'),
+                                allow_empty=False,
+                            )),
+                            ('title', TextUnicode(title=_('Title'),)),
+                            ('url',
+                             Transform(
+                                 Tuple(
+                                     title=_('Action'),
+                                     elements=[
+                                         TextAscii(
+                                             title=_('URL'),
+                                             help=
+                                             _('This URL is opened when clicking on the action / icon. You '
+                                               'can use some macros within the URL which are dynamically '
+                                               'replaced for each object. These are:<br>'
+                                               '<ul>'
+                                               '<li>$HOSTNAME$: Contains the name of the host</li>'
+                                               '<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>'
+                                               '<li>$SERVICEDESC$: Contains the service description '
+                                               '(in case this is a service)</li>'
+                                               '<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>'
+                                               '<li>$HOSTADDRESS$: Contains the network address of the host</li>'
+                                               '<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>'
+                                               '<li>$USER_ID$: The user ID of the currently active user</li>'
+                                               '</ul>'),
+                                             size=80,
+                                         ),
+                                         DropdownChoice(
+                                             title=_("Open in"),
+                                             choices=[
+                                                 ("_blank", _("Load in a new window / tab")),
+                                                 ("_self",
+                                                  _("Load in current content area (keep sidebar)")),
+                                                 ("_top", _("Load as new page (hide sidebar)")),
+                                             ],
+                                         ),
+                                     ],
+                                 ),
+                                 forth=lambda x: not isinstance(x, tuple) and (x, "_self") or x,
+                             )),
+                            ('toplevel',
+                             FixedValue(
+                                 True,
+                                 title=_('Show in column'),
+                                 totext=_('Directly show the action icon in the column'),
+                                 help=_('Makes the icon appear in the column instead '
+                                        'of the dropdown menu.'),
+                             )),
+                            ('sort_index',
+                             Integer(
+                                 title=_('Sort index'),
+                                 help=_(
+                                     'You can use the sort index to control the order of the '
+                                     'elements in the column and the menu. The elements are sorted '
+                                     'from smaller to higher numbers. The action menu icon '
+                                     'has a sort index of <tt>10</tt>, the graph icon a sort index '
+                                     'of <tt>20</tt>. All other default icons have a sort index of '
+                                     '<tt>30</tt> configured.'),
+                                 min_value=0,
+                                 default_value=15,
+                             )),
+                        ],
+                        optional_keys=['title', 'url', 'toplevel', 'sort_index'],
+                    ),
+                ],),
                 title=_("Custom icons and actions"),
                 movable=False,
                 totext=_("%d icons and actions"),
@@ -1197,8 +1193,8 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
                              regex=re.compile('^[A-Z_][-A-Z0-9_]*$'),
                              regex_error=_(
                                  "An identifier must only consist of letters, digits, dash and "
-                                 "underscore and it must start with a letter or underscore.") + " "
-                             + _("Only upper case letters are allowed"))),
+                                 "underscore and it must start with a letter or underscore.") +
+                             " " + _("Only upper case letters are allowed"))),
                         ('title', TextUnicode(title=_('Title'),)),
                         ("type",
                          DropdownChoice(
@@ -1460,39 +1456,38 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
     def valuespec(self):
         return Transform(
             ListOf(
-                Tuple(
-                    elements=[
-                        DropdownChoice(
-                            title=_("Icon"),
-                            choices=self._get_builtin_icons,
-                            sorted=True,
-                        ),
-                        Dictionary(
-                            elements=[
-                                ('toplevel',
-                                 Checkbox(
-                                     title=_('Show in column'),
-                                     label=_('Directly show the action icon in the column'),
-                                     help=_('Makes the icon appear in the column instead '
-                                            'of the dropdown menu.'),
-                                     default_value=True,
-                                 )),
-                                ('sort_index',
-                                 Integer(
-                                     title=_('Sort index'),
-                                     help=
-                                     _('You can use the sort index to control the order of the '
-                                       'elements in the column and the menu. The elements are sorted '
-                                       'from smaller to higher numbers. The action menu icon '
-                                       'has a sort index of <tt>10</tt>, the graph icon a sort index '
-                                       'of <tt>20</tt>. All other default icons have a sort index of '
-                                       '<tt>30</tt> configured.'),
-                                     min_value=0,
-                                 )),
-                            ],
-                            optional_keys=['toplevel', 'sort_index'],
-                        ),
-                    ],),
+                Tuple(elements=[
+                    DropdownChoice(
+                        title=_("Icon"),
+                        choices=self._get_builtin_icons,
+                        sorted=True,
+                    ),
+                    Dictionary(
+                        elements=[
+                            ('toplevel',
+                             Checkbox(
+                                 title=_('Show in column'),
+                                 label=_('Directly show the action icon in the column'),
+                                 help=_('Makes the icon appear in the column instead '
+                                        'of the dropdown menu.'),
+                                 default_value=True,
+                             )),
+                            ('sort_index',
+                             Integer(
+                                 title=_('Sort index'),
+                                 help=_(
+                                     'You can use the sort index to control the order of the '
+                                     'elements in the column and the menu. The elements are sorted '
+                                     'from smaller to higher numbers. The action menu icon '
+                                     'has a sort index of <tt>10</tt>, the graph icon a sort index '
+                                     'of <tt>20</tt>. All other default icons have a sort index of '
+                                     '<tt>30</tt> configured.'),
+                                 min_value=0,
+                             )),
+                        ],
+                        optional_keys=['toplevel', 'sort_index'],
+                    ),
+                ],),
                 title=_("Builtin icon visibility"),
                 movable=False,
                 totext=_("%d icons customized"),
@@ -1653,8 +1648,8 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
                             "Please checko out the documentation of your linux distribution "
                             "in case you want to customize trusted CAs system wide. You can "
                             "choose here to trust the system wide CAs here. Check_MK will search "
-                            "these directories for system wide CAs: %s") % ", ".join(
-                                ConfigDomainCACertificates.system_wide_trusted_ca_search_paths),
+                            "these directories for system wide CAs: %s") %
+                     ", ".join(ConfigDomainCACertificates.system_wide_trusted_ca_search_paths),
                      label=_("Trust system wide configured CAs"),
                  )),
                 ("trusted_cas", ListOfCAs(
@@ -2661,11 +2656,10 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Integer(
-                title=_("Perform service discovery check every"),
-                unit=_("minutes"),
-                min_value=1,
-                default_value=720),
+            Integer(title=_("Perform service discovery check every"),
+                    unit=_("minutes"),
+                    min_value=1,
+                    default_value=720),
             title=_("Enable regular service discovery checks (deprecated)"),
             help=_("If enabled, Check_MK will create one additional service per host "
                    "that does a regular check, if the service discovery would find new services "
@@ -3226,9 +3220,9 @@ class RulespecHostCheckCommands(HostRulespec):
             help=_(
                 "Usually Check_MK uses a series of PING (ICMP echo request) in order to determine "
                 "whether a host is up. In some cases this is not possible, however. With this rule "
-                "you can specify an alternative way of determining the host's state.") + _(
-                    "The option to use a custom command can only be configured with the permission "
-                    "\"Can add or modify executables\"."),
+                "you can specify an alternative way of determining the host's state.") +
+            _("The option to use a custom command can only be configured with the permission "
+              "\"Can add or modify executables\"."),
             choices=self._host_check_command_choices,
             default_value="ping",
             orientation="horizontal",
@@ -4238,9 +4232,9 @@ class RulespecExtraHostConfEscapePluginOutput(HostRulespec):
                    "code received from external sources, like plugin output or log messages. "
                    "If you are really sure what you are doing and need to have HTML codes, like "
                    "links rendered, disable this option. Be aware, you might open the way "
-                   "for several injection attacks.") + _(
-                       "This setting can either be set globally or individually for selected hosts "
-                       "or services using the host or service rulesets."),
+                   "for several injection attacks.") +
+            _("This setting can either be set globally or individually for selected hosts "
+              "or services using the host or service rulesets."),
             choices=[
                 ("1", _("Escape HTML codes")),
                 ("0", _("Don't escape HTML codes (insecure)")),
@@ -4271,9 +4265,9 @@ class RulespecExtraServiceConfEscapePluginOutput(ServiceRulespec):
                    "code received from external sources, like plugin output or log messages. "
                    "If you are really sure what you are doing and need to have HTML codes, like "
                    "links rendered, disable this option. Be aware, you might open the way "
-                   "for several injection attacks.") + _(
-                       "This setting can either be set globally or individually for selected hosts "
-                       "or services using the host or service rulesets."),
+                   "for several injection attacks.") +
+            _("This setting can either be set globally or individually for selected hosts "
+              "or services using the host or service rulesets."),
             choices=[
                 ("1", _("Escape HTML codes")),
                 ("0", _("Don't escape HTML codes (insecure)")),
@@ -4753,13 +4747,13 @@ class RulespecAgentEncryption(HostRulespec):
                               ("allow", _("Enable  (accept encrypted and unencrypted data)")),
                               ("disable", _("Disable (drop encrypted data)"))])),
                 ("use_realtime",
-                 DropdownChoice(
-                     title=_("Encryption for Realtime Updates"),
-                     help=_("Choose if realtime updates are sent/expected encrypted"),
-                     default_value="enforce",
-                     choices=[("enforce", _("Enforce (drop unencrypted data)")),
-                              ("allow", _("Enable  (accept encrypted and unencrypted data)")),
-                              ("disable", _("Disable (drop encrypted data)"))])),
+                 DropdownChoice(title=_("Encryption for Realtime Updates"),
+                                help=_("Choose if realtime updates are sent/expected encrypted"),
+                                default_value="enforce",
+                                choices=[("enforce", _("Enforce (drop unencrypted data)")),
+                                         ("allow",
+                                          _("Enable  (accept encrypted and unencrypted data)")),
+                                         ("disable", _("Disable (drop encrypted data)"))])),
             ],
             optional_keys=[],
             title=_("Encryption"),
@@ -4829,9 +4823,8 @@ class RulespecCheckMkExitStatus(HostRulespec):
                          elements=_common_check_mk_exit_status_elements() + [
                              (
                                  "wrong_version",
-                                 MonitoringState(
-                                     default_value=1,
-                                     title=_("State in case of wrong agent version")),
+                                 MonitoringState(default_value=1,
+                                                 title=_("State in case of wrong agent version")),
                              ),
                              (
                                  "missing_sections",
@@ -4843,18 +4836,16 @@ class RulespecCheckMkExitStatus(HostRulespec):
                              (
                                  "specific_missing_sections",
                                  ListOf(
-                                     Tuple(
-                                         elements=[
-                                             RegExpUnicode(
-                                                 help=
-                                                 _('Beside of setting the generic "Missing sections" state above '
-                                                   'you can specify a regex pattern to match specific section names and '
-                                                   'give them an individual state in case they are missing. '
-                                                   'Note that the first match is used.'),
-                                                 mode=RegExpUnicode.prefix),
-                                             MonitoringState(),
-                                         ],
-                                         orientation="horizontal"),
+                                     Tuple(elements=[
+                                         RegExpUnicode(help=_(
+                                             'Beside of setting the generic "Missing sections" state above '
+                                             'you can specify a regex pattern to match specific section names and '
+                                             'give them an individual state in case they are missing. '
+                                             'Note that the first match is used.'),
+                                                       mode=RegExpUnicode.prefix),
+                                         MonitoringState(),
+                                     ],
+                                           orientation="horizontal"),
                                      title=_("State if specific sections are missing"),
                                  ),
                              ),
@@ -4875,29 +4866,23 @@ class RulespecCheckMkExitStatus(HostRulespec):
                                       ),
                                   ])),
                              ("programs",
-                              Dictionary(
-                                  title=_("Programs"),
-                                  elements=_common_check_mk_exit_status_elements())),
+                              Dictionary(title=_("Programs"),
+                                         elements=_common_check_mk_exit_status_elements())),
                              ("special",
-                              Dictionary(
-                                  title=_("Programs"),
-                                  elements=_common_check_mk_exit_status_elements())),
+                              Dictionary(title=_("Programs"),
+                                         elements=_common_check_mk_exit_status_elements())),
                              ("snmp",
-                              Dictionary(
-                                  title=_("SNMP"),
-                                  elements=_common_check_mk_exit_status_elements())),
+                              Dictionary(title=_("SNMP"),
+                                         elements=_common_check_mk_exit_status_elements())),
                              ("mgmt_snmp",
-                              Dictionary(
-                                  title=_("SNMP Management Board"),
-                                  elements=_common_check_mk_exit_status_elements())),
+                              Dictionary(title=_("SNMP Management Board"),
+                                         elements=_common_check_mk_exit_status_elements())),
                              ("mgmt_ipmi",
-                              Dictionary(
-                                  title=_("IPMI Management Board"),
-                                  elements=_common_check_mk_exit_status_elements())),
+                              Dictionary(title=_("IPMI Management Board"),
+                                         elements=_common_check_mk_exit_status_elements())),
                              ("piggyback",
-                              Dictionary(
-                                  title=_("Piggyback"),
-                                  elements=_common_check_mk_exit_status_elements())),
+                              Dictionary(title=_("Piggyback"),
+                                         elements=_common_check_mk_exit_status_elements())),
                          ])),
                 ],
                 optional_keys=["individual"],

@@ -37,9 +37,10 @@ import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 from cmk.gui.valuespec import (
     Timerange,
+    TextAscii,
     DropdownChoice,
     DateFormat,
     Dictionary,
@@ -946,7 +947,7 @@ class PainterSvcNextNotification(Painter):
 
 
 def paint_notification_postponement_reason(what, row):
-    # Needs to be in sync with the possible reasons. Can not be translaated otherwise.
+    # Needs to be in sync with the possible reasons. Can not be translated otherwise.
     reasons = {
         "delayed notification": _("Delay notification"),
         "periodic notification": _("Periodic notification"),
@@ -5199,3 +5200,94 @@ class PainterServiceLabels(Painter):
                                  "service",
                                  with_links=True,
                                  label_sources=get_label_sources(row, "service"))
+
+
+class AbstractPainterSpecificMetric(Painter):
+    @property
+    def ident(self):
+        raise NotImplementedError()
+
+    @property
+    def title(self):
+        return lambda p=None: self.title_with_parameters(p)
+
+    @property
+    def short_title(self):
+        return lambda p=None: self.title_with_parameters(p)
+
+    def title_with_parameters(self, parameters):
+        try:
+            if not parameters:
+                # Used in Edit-View
+                return "Show single metric"
+            return metrics.metric_info[parameters["metric"]]["title"]
+        except KeyError:
+            return _("Metric not found")
+
+    @property
+    def columns(self):
+        raise NotImplementedError()
+
+    @property
+    def parameters(self):
+        cache_id = "painter_specific_metric_choices"
+        if cache_id in current_app.g:
+            choices = current_app.g[cache_id]
+        else:
+            choices = []
+            for key, value in metrics.metric_info.iteritems():
+                choices.append((key, value.get("title")))
+            choices.sort(key=lambda x: x[1])
+            current_app.g[cache_id] = choices
+
+        return Dictionary(elements=[
+            ("metric",
+             DropdownChoice(title=_("Show metric"),
+                            choices=choices,
+                            help=_("If available, the following metric will be shown"))),
+            ("column_title", TextAscii(title=_("Custom title"))),
+        ],
+                          optional_keys=["column_title"])
+
+    def _render(self, row, cell, perf_data_entries, check_command):
+        show_metric = cell.painter_parameters()["metric"]
+        translated_metrics = metrics.translate_perf_data(perf_data_entries,
+                                                         check_command=check_command)
+
+        if show_metric not in translated_metrics:
+            return "", ""
+
+        return "", translated_metrics[show_metric]["unit"]["render"](
+            translated_metrics[show_metric]["value"])
+
+
+@painter_registry.register
+class PainterHostSpecificMetric(AbstractPainterSpecificMetric):
+    @property
+    def ident(self):
+        return "host_specific_metric"
+
+    @property
+    def columns(self):
+        return ["host_perf_data", "host_check_command"]
+
+    def render(self, row, cell):
+        perf_data_entries = row["host_perf_data"]
+        check_command = row["host_check_command"]
+        return self._render(row, cell, perf_data_entries, check_command)
+
+
+@painter_registry.register
+class PainterServiceSpecificMetric(AbstractPainterSpecificMetric):
+    @property
+    def ident(self):
+        return "service_specific_metric"
+
+    @property
+    def columns(self):
+        return ["service_perf_data", "service_check_command"]
+
+    def render(self, row, cell):
+        perf_data_entries = row["service_perf_data"]
+        check_command = row["service_check_command"]
+        return self._render(row, cell, perf_data_entries, check_command)

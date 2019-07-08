@@ -1,0 +1,11 @@
+Title: Added new metric painter: Displays the value of a single configurable metric
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1562590273
+
+

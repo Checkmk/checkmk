@@ -1,0 +1,32 @@
+Title: mknotifyd: fix race condition in distributed setups
+Level: 2
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1562589556
+
+In a distributed setup a slave site may try to deliver
+notifications locally during an activate changes even
+though the slave site should forward notifications to
+the master site.
+
+This effect appears when the option "Notification Spooling"
+is set to "Asynchronous local delivery by notification
+spooler" in the global settings and to "Forward to
+remote site by notification spooler" in the "Site specific
+global settings" of the slave site.
+
+This werk fixes this issue by locking the Checkmk
+configuration when a configuration snapshot is installed
+on the remote site. This way the "cmk --notify"
+command and the mknotifyd cannot use a partially installed
+Checkmk configuration.
+
+As a workaround the "Notification Spooling" can be set to
+"Forward to remote site by notification spooler" in the
+global settings and to "Asynchronous local delivery by
+Notification spooler" in the "Site specific global settings"
+of the slave site.

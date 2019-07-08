@@ -93,8 +93,7 @@ protected:
     // conditionally(depending from the name of section) sets delay after error
     void setupDelayOnFail() noexcept;
 
-    bool headerless_;  // if true no makeHeader called during content generation
-    // may change the time when next request is possible
+    void setHeaderless() { headerless_ = true; }
 
     // to stop section from rerunning during time defined in setupDelayOnFail
     // usually related to the openhardware monitor
@@ -125,15 +124,16 @@ protected:
     uint64_t registerError() { return error_count_.fetch_add(1); }
 
 private:
+    bool headerless_;  // if true no makeHeader called during content generation
     std::string ip_;
     char separator_;
     std::atomic<uint64_t> error_count_ = 0;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class ProviderTest;
-    FRIEND_TEST(ProviderTest, WmiAll);
-    FRIEND_TEST(ProviderTest, BasicWmi);
-    FRIEND_TEST(ProviderTest, BasicWmiDefaultsAndError);
+    friend class WmiProviderTest;
+    FRIEND_TEST(WmiProviderTest, WmiAll);
+    FRIEND_TEST(WmiProviderTest, BasicWmi);
+    FRIEND_TEST(WmiProviderTest, BasicWmiDefaultsAndError);
 #endif
 };
 

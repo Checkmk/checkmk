@@ -43,12 +43,24 @@ constexpr char kSepChar = ',';
 // #TODO think about noch mal, probably should be integrated with WMI
 class SubSection {
 public:
-    SubSection(const std::string& Name) : uniq_name_(Name) { setupByName(); }
+    enum class Type {
+        sub,  // [name]
+        full  //<<<name>>>
+    };
+
+    enum class Mode {
+        standard,     // in production
+        debug_forced  // for testing we could generate only headers
+    };
+    SubSection(std::string_view name, Type type)
+        : uniq_name_(name), type_(type) {
+        setupByName();
+    }
     virtual ~SubSection() {}
 
-    std::string getUniqName() const { return uniq_name_; }
+    std::string getUniqName() const noexcept { return uniq_name_; }
 
-    std::string generateContent();
+    std::string generateContent(Mode mode);
 
 protected:
     // *internal* function which correctly sets
@@ -61,17 +73,23 @@ private:
     std::wstring object_;          // WMI Object name
     const std::string uniq_name_;  // unique id of SUB section provider
     std::string cache_;            // used to store WMI data to later reuse
+    Type type_;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class ProviderTest;
-    FRIEND_TEST(ProviderTest, WmiAll);
+    friend class WmiProviderTest;
+    FRIEND_TEST(WmiProviderTest, WmiAll);
+    FRIEND_TEST(WmiProviderTest, WmiSubSection);
 #endif
 };
 
+// configuration
+SubSection::Type GetSubSectionType(std::string_view name) noexcept;
+bool IsHeaderless(std::string_view name) noexcept;
+
 class Wmi : public Asynchronous {
 public:
-    Wmi(const std::string& Name, char Separator)
-        : Asynchronous(Name, Separator) {
+    Wmi(const std::string& name, char separator)
+        : Asynchronous(name, separator) {
         setupByName();
     }
 
@@ -85,7 +103,7 @@ public:
 protected:
     // *internal* function which correctly sets
     // all parameters
-    void setupByName();
+    void setupByName() noexcept;
     std::string makeBody() override;
 
 private:
@@ -98,10 +116,13 @@ private:
     std::vector<SubSection>
         sub_objects_;  // Windows WMI Object name for the case when we have
 
+    SubSection::Mode subsection_mode_ = SubSection::Mode::standard;
+
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class ProviderTest;
-    FRIEND_TEST(ProviderTest, WmiAll);
-    FRIEND_TEST(ProviderTest, WmiOhm);
+    friend class WmiProviderTest;
+    FRIEND_TEST(WmiProviderTest, WmiAll);
+    FRIEND_TEST(WmiProviderTest, WmiSubSection);
+    FRIEND_TEST(WmiProviderTest, WmiOhm);
 #endif
 };
 

@@ -20,7 +20,7 @@ namespace provider {
 class PluginsProvider : public Asynchronous {
 public:
     PluginsProvider() : Asynchronous(cma::section::kPlugins) {
-        headerless_ = true;
+        setHeaderless();
         timeout_ = 0;
         local_ = false;
         cfg_name_ = cma::cfg::groups::kPlugins;
@@ -28,7 +28,7 @@ public:
 
     PluginsProvider(const std::string_view& Name, char Separator)
         : Asynchronous(Name, Separator) {
-        headerless_ = true;
+        setHeaderless();
         timeout_ = 0;
         local_ = false;
         cfg_name_ = cma::cfg::groups::kPlugins;

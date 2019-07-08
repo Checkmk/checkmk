@@ -79,14 +79,26 @@ def inventory_ceph_status(parsed):
 def check_ceph_status(_no_item, params, parsed):
     map_health_states = {
         "HEALTH_OK": (0, "OK"),
-        "HEALTH_WARN": (1, "warning"),
-        "HEALTH_CRIT": (2, "critical"),
-        "HEALTH_ERR": (2, "error"),
+        "HEALTH_WARN": (1, "Health Warn: "),
+        "HEALTH_CRIT": (2, "Health Crit: "),
+        "HEALTH_ERR": (2, "Health Err: "),
     }
+    
+    if state > 0:
+        errors = parsed["health"]["checks"].values()
+        if len(errors)>1:
+            errormessage = []
+            for error in errors:
+                errormessage.append(error["summary"]["message"])
+            errormessage = str(errormessage)
+        else:
+            errormessage = errors[0]["summary"]["message"]
+        state_readable += errormessage
 
     overall_status = parsed["health"]["status"]
     state, state_readable = map_health_states.get(overall_status,
                                                   (3, "unknown[%s]" % overall_status))
+    
     yield state, 'Status: %s' % state_readable
     yield ceph_check_epoch("ceph_status", parsed["election_epoch"], params)
 

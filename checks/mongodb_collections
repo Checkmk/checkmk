@@ -37,41 +37,42 @@
 # tanserver        tans        nindexes        3
 # tanserver        tans        ns        tanserver.tans
 
-def parse_mongodb_collections(info):
-    databases = {}
-    for line in info:
-        db, coll, what, value = line
-        databases.setdefault(db, {}).setdefault(coll, {})[what] = value
 
+def parse_mongodb_collections(info):
+    required_keys_int = ("size", "storageSize")
     parsed = {}
-    for db, collections in databases.items():
-        for collection, values in collections.items():
-            parsed["%s %s" % (db, collection)] = values
+    for line in info:
+        db_name, collection, key, value = line
+        data = parsed.setdefault("%s %s" % (db_name, collection), {})
+        if key in required_keys_int:
+            try:
+                data[key] = int(value)
+            except ValueError:
+                pass
     return parsed
 
-def inventory_mongodb_collections(parsed):
-    for item in parsed:
-        yield item, {}
 
-def check_mongodb_collections(item, params, parsed):
-    fslist_blocks = []
-    for coll_item, values in parsed.items():
-        used_mb  = float(values["size"]) / 1024.0**2
-        total_mb = float(values["storageSize"]) / 1024.0**2
-        fslist_blocks.append((coll_item, total_mb, total_mb - used_mb, 0))
-
-    return df_check_filesystem_list(item, params, fslist_blocks)
+@get_parsed_item_data
+def check_mongodb_collections(_no_item, params, data):
+    for key, label in (
+        ("size", "Uncompressed size in memory"),
+        ("storageSize", "Allocated for document storage"),
+    ):
+        if key not in data:
+            continue
+        levels = params.get("levels_%s" % key.lower())
+        if levels is not None:
+            levels = (levels[0] * 1024**2, levels[1] * 1024**2)
+        yield check_levels_backport(
+            data[key], None, levels, human_readable_func=get_bytes_human_readable, infoname=label)
 
 
 check_info["mongodb_collections"] = {
-    "parse_function"          : parse_mongodb_collections,
-    "check_function"          : check_mongodb_collections,
-    "inventory_function"      : inventory_mongodb_collections,
-    "service_description"     : "MongoDB Collection %s",
-    "group"                   : "mongodb_collections",
-    "default_levels_variable" : "filesystem_default_levels",
-    "includes"                : [ "size_trend.include", "df.include" ],
-    "has_perfdata"            : True,
+    "parse_function": parse_mongodb_collections,
+    "inventory_function": discover(),
+    "check_function": check_mongodb_collections,
+    "service_description": "MongoDB Collection %s",
+    "group": "mongodb_collections",
+    "has_perfdata": False,
+    "includes": ["backport.include"]
 }
-
-

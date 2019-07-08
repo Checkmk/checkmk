@@ -29,47 +29,63 @@
 # last_ms 0
 # flushed 36479
 
+
 def inventory_mongodb_flushing(info):
     # This check has no default parameters
     # The average/last flush time highly depends on the size of the mongodb setup
     return [(None, {})]
 
+
 def check_mongodb_flushing(_no_item, params, info):
     info_dict = dict(info)
 
-    last_ms = float(info_dict["last_ms"])
-    avg_flush_time = float(info_dict["average_ms"]) / 1000.0
-    flushed = int(info_dict["flushed"])
+    if not {"last_ms", "average_ms", "flushed"} <= set(info_dict):  # check if keys in dict
+        yield 3, "missing data: %s" % (_get_missing_keys(["last_ms", "average_ms", "flushed"],
+                                                         info_dict))
+        return
+
+    try:
+        last_ms = float(info_dict["last_ms"])
+        avg_flush_time = float(info_dict["average_ms"]) / 1000.0
+        flushed = int(info_dict["flushed"])
+    except (ValueError, TypeError):
+        yield 3, "Invalid data: last_ms: %s, average_ms: %s, flushed:%s" % (
+            info_dict["last_ms"], info_dict["average_ms"], info_dict["flushed"])
+        return
 
     if "average_time" in params:
         warn, crit, avg_interval = params["average_time"]
         avg_ms_compute = get_average("flushes", time.time(), last_ms, avg_interval)
-        state = 0
-        if avg_ms_compute >= crit:
-            state = 2
-        elif avg_ms_compute >= warn:
-            state = 1
-        yield state, "Average flush time over %s minutes: %.2f ms" % (avg_interval, avg_ms_compute)
+        yield check_levels_backport(
+            avg_ms_compute,
+            None, (warn, crit),
+            unit="ms",
+            infoname="Average flush time over %s minutes" % (avg_interval))
 
-    state = 0
-    warn, crit = None, None
-    if "last_time" in params:
-        warn, crit = params["last_time"]
-        if last_ms >= crit:
-            state = 2
-        elif last_ms >= warn:
-            state = 1
-    yield state, "Last flush time: %s ms" % last_ms, [ ("flush_time", last_ms / 1000.0, warn, crit) ]
+    yield check_levels_backport((last_ms / 1000.0),
+                       "flush_time",
+                       params.get("last_time"),
+                       unit="s",
+                       infoname="Last flush time")
 
     yield 0, "Flushes since restart: %s" % flushed, [("flushed", flushed)]
-    yield 0, "Average flush time since restart: %s" % get_age_human_readable(avg_flush_time),\
+    yield 0, "Average flush time since restart: %s" % get_age_human_readable(avg_flush_time), \
           [("avg_flush_time", avg_flush_time)]
 
 
+def _get_missing_keys(key_list, info_dict):
+    missing_keys = []
+    for key in key_list:
+        if key not in info_dict:
+            missing_keys += [str(key)]
+    return " and ".join(sorted(missing_keys))
+
+
 check_info['mongodb_flushing'] = {
-    "inventory_function"      : inventory_mongodb_flushing,
-    "check_function"          : check_mongodb_flushing,
-    "service_description"     : "MongoDB Flushing",
-    "group"                   : "mongodb_flushing",
-    "has_perfdata"            : True,
+    "inventory_function": inventory_mongodb_flushing,
+    "check_function": check_mongodb_flushing,
+    "service_description": "MongoDB Flushing",
+    "group": "mongodb_flushing",
+    "has_perfdata": True,
+    "includes": ["backport.include"]
 }

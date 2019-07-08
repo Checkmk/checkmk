@@ -5,7 +5,7 @@ currentBuild.description = '\nBuilding the CMK docker container\n'
 properties([
   parameters([
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
-    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' )
+    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' ),
     string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' )
   ])
 ])

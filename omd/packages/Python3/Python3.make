@@ -16,9 +16,9 @@ Python3-install: $(PYTHON3_INSTALL)
 
 # Environment variables
 ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
-	OPTI := --enable-optimizations
+	PYTHON_ENABLE_OPTIMIZATIONS := --enable-optimizations
 else
-	OPTI :=
+	PYTHON_ENABLE_OPTIMIZATIONS :=
 endif
 
 $(PYTHON3_BUILD): $(PYTHON3_UNPACK)
@@ -31,7 +31,7 @@ $(PYTHON3_BUILD): $(PYTHON3_UNPACK)
 	    --prefix="" \
 	    --enable-shared \
 	    --enable-unicode=ucs4 \
-	    $(OPTI) \
+	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
 	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
 	cd $(PYTHON3_DIR) ; $(MAKE) -j2
 # Install python files (needed by dependent packages like mod_python,

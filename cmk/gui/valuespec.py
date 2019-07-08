@@ -4262,8 +4262,9 @@ class Labels(ValueSpec):
         return {}
 
     def from_html_vars(self, varprefix):
-        return dict(
-            e["value"].split(":", 1) for e in json.loads(html.get_unicode_input(varprefix) or "[]"))
+        return dict([s.strip()
+                     for s in e["value"].split(":", 1)]
+                    for e in json.loads(html.get_unicode_input(varprefix) or "[]"))
 
     def value_to_text(self, value):
         from cmk.gui.view_utils import render_labels

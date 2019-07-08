@@ -1,0 +1,183 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#<<<jenkins_jobs>>>
+#cmk_140 clang_tidy blue 90 1554371146806 200 SUCCESS 1251806 1554371146806
+#cmk_140 cppcheck blue 100 1554371034436 174 SUCCESS 165226 1554371034436
+#cmk_140 daily_build blue 100 1562927640962 23672 SUCCESS 1163 1562927640962
+#cmk_140 duplicate_code blue 100 1562573916992 1340 SUCCESS 17199 1562573916992
+#cmk_140 git_tests blue 100 1562572797049 1732 SUCCESS 50485 1562572797049
+#cmk_140 gui_crawl blue 100 1562574249416 1127 SUCCESS 881681 1562574249416
+
+import json
+
+JenkinsJobInfo = collections.namedtuple("job_info", [
+    "name", "state", "job_score", "last_suc_build", "build_id", "build_result", "build_duration",
+    "build_timestamp"
+])
+
+MAP_JOB_STATES = {
+    "aborted": 1,
+    "aborted_anime": 1,
+    "blue": 0,
+    "blue_anime": 0,  # running
+    "red": 2,
+    "red_anime": 1,
+    "notbuilt": 0,
+    "yellow": 1,
+}
+
+MAP_BUILD_STATES = {
+    "0": 0,  # notbuilt
+    "ABORTED": 1,
+    "FAILURE": 2,
+    "None": 0,  # running
+    "SUCCESS": 0,
+    "UNSTABLE": 1,
+    "null": 1,
+    "-1": 0,
+}
+
+
+def parse_jenkins_jobs(info):
+    parsed = {}
+
+    for line in info:
+        jenkins_data = json.loads(line[0])
+
+        parsed.update(handle_job_type(jenkins_data, {}, ""))
+
+    return parsed
+
+
+@get_parsed_item_data
+def check_jenkins_jobs(item, params, item_data):
+    yield MAP_JOB_STATES[item_data[0].state], "State: %s" % item_data[0].state
+
+    time_since_last_suc = None
+    if item_data[0].last_suc_build:
+        time_since_last_suc = time.time() - item_data[0].last_suc_build
+
+    for key, value, infotext, hr_func in [
+        ("jenkins_job_score", item_data[0].job_score, "Job score", get_percent_human_readable),
+        ("jenkins_time_since", time_since_last_suc, "Time since last successful build",
+         get_age_human_readable),
+        (None, item_data[0].build_timestamp, "Last build at", get_timestamp_human_readable),
+        (None, item_data[0].build_id, "Build id", int),
+        ("jenkins_build_duration", item_data[0].build_duration, "Build duration",
+         get_age_human_readable),
+    ]:
+
+        param_checking = (None, None)
+
+        if params.get(key):
+            warn, crit = params.get(key)
+            if key == "jenkins_job_score":
+                param_checking = (None, None, warn, crit)
+            else:
+                param_checking = (warn, crit)
+
+        if value:
+            yield check_levels(value,
+                               key,
+                               param_checking,
+                               human_readable_func=hr_func,
+                               infoname=infotext)
+        else:
+            yield 0, "%s: not present" % infotext
+
+    if item_data[0].build_result:
+        yield MAP_BUILD_STATES[
+            item_data[0].build_result], "Build result: %s" % item_data[0].build_result.title()
+    else:
+        yield 0, "Build reult: not present"
+
+
+def handle_single_job(job):
+    # key healthReport can have an empty list value
+    try:
+        health_rp = job["healthReport"][0]['score']
+    except (IndexError, KeyError, TypeError):
+        health_rp = None
+
+    # key lastSuccessfulBuild can have None value: {'lastSuccessfulBuild':None}
+    try:
+        last_sb = float(job['lastSuccessfulBuild']['timestamp']) / 1000.0
+    except (
+            KeyError,
+            TypeError,
+            ValueError,
+    ):
+        last_sb = None
+
+    # key lastBuild can have None value: {'lastBuild':None}
+    try:
+        last_br = job["lastBuild"]['result']
+        last_bn = job["lastBuild"]['number']
+        last_bd = float(job["lastBuild"]["duration"]) / 1000.0
+        last_bt = int(job["lastBuild"]['timestamp']) / 1000
+    except (KeyError, TypeError, ValueError):
+        last_br = None
+        last_bn = None
+        last_bd = None
+        last_bt = None
+
+    return JenkinsJobInfo(job["name"], job["color"], health_rp, last_sb, last_bn, last_br, last_bd,
+                          last_bt)
+
+
+def handle_job_type(data, new_dict, folder=""):
+    for job_type in data:
+        item_name = folder
+        if job_type.get("_class") and job_type["_class"] in [
+                "com.cloudbees.hudson.plugins.folder.Folder",
+                "org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject"
+        ]:
+            item_name += "%s " % job_type["name"]
+            if job_type.get("jobs") is not None:
+                handle_job_type(job_type["jobs"], new_dict, item_name)
+            continue
+
+        if item_name is None:
+            item_name = "%s" % job_type["name"]
+        else:
+            item_name = "%s%s" % (item_name, job_type["name"])
+
+        job = handle_single_job(job_type)
+
+        new_dict.setdefault("%s" % item_name, []).append(job)
+
+    return new_dict
+
+
+check_info["jenkins_jobs"] = {
+    "parse_function": parse_jenkins_jobs,
+    "check_function": check_jenkins_jobs,
+    "inventory_function": discover(),
+    "service_description": "Jenkins Job %s",
+    "has_perfdata": True,
+    "group": "jenkins_jobs",
+}

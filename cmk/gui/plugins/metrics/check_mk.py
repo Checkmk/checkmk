@@ -5884,6 +5884,24 @@ metric_info["avg_flush_time"] = {
     "color": "31/a",
 }
 
+metric_info["jenkins_job_score"] = {
+    "title": _("Job score"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["jenkins_time_since"] = {
+    "title": _("Time since last successful build"),
+    "unit": "s",
+    "color": "21/a",
+}
+
+metric_info["jenkins_build_duration"] = {
+    "title": _("Build duration"),
+    "unit": "s",
+    "color": "31/a",
+}
+
 for nimble_op_ty in ["read", "write"]:
     for nimble_key, nimble_title, nimble_color in [
         ("total", "Total", "11/a"),

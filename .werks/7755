@@ -1,0 +1,17 @@
+Title: Jenkins: New special agent to query jenkins instances
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1562614278
+Class: feature
+
+Special agent to monitor job and build states of a jenkins instance. Beside
+the state of the job it gives informations about the job score and the time
+since the last successful build. It also outputs informations about the last
+build, like the time the build was triggered, the build id, duration and
+result.
+
+For performance reasons, the number of recognized jobs is limited to three
+nested folder levels.

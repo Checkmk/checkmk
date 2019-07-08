@@ -78,12 +78,12 @@ def process_level_elements():
                  (False,
                   HTML(_("<b>N</b> * 100% as each core contributes with 100% at full load"))),
              ],
-             invalid_choice_title=_("Unspecified.") + " " + _(
-                 "Starting from version 1.6.0 this value must be configured. "
-                 "Read Werk #6646 for further information."),
-             invalid_choice_error=_("CPU rescale maximum load is Unspecified.") + " " + _(
-                 "Starting from version 1.6.0 this value must be configured. "
-                 "Read Werk #6646 for further information."),
+             invalid_choice_title=_("Unspecified.") + " " +
+             _("Starting from version 1.6.0 this value must be configured. "
+               "Read Werk #6646 for further information."),
+             invalid_choice_error=_("CPU rescale maximum load is Unspecified.") + " " +
+             _("Starting from version 1.6.0 this value must be configured. "
+               "Read Werk #6646 for further information."),
          )),
         ('levels',
          Tuple(

@@ -29,15 +29,16 @@
 # isn't processed through the pysphere module.
 # Instead a simple string process approach is used which drastically
 # reduces the CPU load for this agent
+"""Check_MK vSphere Special Agent"""
 
 # pylint: disable=broad-except
 
 import datetime
 import errno
-import getopt
 import httplib
 import os
 import re
+import argparse
 import socket
 import sys
 import time
@@ -788,165 +789,121 @@ def convert_hostname(h, opt):
     return h.replace(" ", "_")
 
 
-def usage():
-    sys.stderr.write("""Check_MK vSphere Agent
-
-USAGE: agent_vsphere [OPTIONS] HOST
-       agent_vsphere -h
-
-ARGUMENTS:
-  HOST                          Host name or IP address of VMWare HostSystem
-
-OPTIONS:
-  -h, --help                    Show this help message and exit
-  -u USER, --user USER          Username for vSphere login
-  -s SECRET, --secret SECRET    Secret/Password for vSphere login
-  -D, --direct                  Assume a directly queried host system (no vCenter). In
-                                This we expect data about only one HostSystem to be
-                                found and do not create piggy host data for that host.
-  -P                            Skip placeholder virtualmachines. These backup vms are created
-                                by the Site Recovery Manager (SRM) and are identified by not
-                                having any assigned virtual disks.
-  -p, --port port               Alternative port number (default is 443 for the https connection)
-  --no-cert-check               Disables the checking of the servers ssl certificate
-  --pysphere                    Fallback to old pysphere based special agent. It supports
-                                ESX 4.1 but is very slow.
-  -H, --hostname                Specify a hostname. This is neccessary if this is
-                                different from HOST. It is being used when outputting
-                                the hosts power state.
-  -a, --agent                   Also retrieve data from the normal Check_MK Agent.
-                                This makes sense if you query a vCenter that is
-                                Installed on a Windows host that you also want to
-                                Monitor with Check_MK.
-  -t, --timeout SECS            Set the network timeout to vSphere to SECS seconds.
-                                This is also used when connecting the agent (option -a).
-                                Default is 60 seconds. Note: the timeout is not only
-                                applied to the connection, but also to each individual
-                                subquery.
-  --debug                       Debug mode: let Python exceptions come through
-
-  --tracefile FILENAME          Log all outgoing and incoming data into the given tracefile
-  -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
-                                hostsystem, virtualmachine and storage. Default is to
-                                query all modules.
-
-  -S, --spaces HOW              How to handle spaces in hostnames. "cut": cut everyting
-                                after the first space, "underscore": replace with
-                                underscores. Default is "underscore".
-
-  --vm_piggyname hostname|alias Here you can specify whether the virtual machines HOSTNAME or the ESX
-                                system ALIAS name for this machine should be used on creating piggyback data
-
-  --vm_pwr_display WHERE        Specifies where the virtual machines power state should be shown
-                                Default (no option) is on the queried vCenter or ESX-Host
-                                Possible WHERE options: * esxhost : show on ESX host
-                                                        * vm      : show on virtual machine
-  --host_pwr_display WHERE      Specifies where the ESX hosts power state should be shown
-                                Default (no option) is on the queried vCenter or ESX-Host
-                                Possible WHERE options: * esxhost : show on ESX host
-                                                        * vm      : show on virtual machine
-  --snapshot_display WHERE      Specifies where the virtual machines snapshots should be shown
-                                Default (no option) is on the VM
-                                Possible WHERE options: * esxhost : show on ESX host
-                                                        * vCenter : show on vCenter
-""")
-
-
-class Opt(object):
-    def __init__(self):
-        super(Opt, self).__init__()
-        self.debug = False
-        self.direct = False
-        self.agent = False
-        self.timeout = 60
-        self.port = 443
-        self.hostname = None
-        self.skip_placeholder_vm = False
-        self.pysphere = False
-        self.tracefile = None
-        self.host_pwr_display = None
-        self.vm_pwr_display = None
-        self.snapshot_display = None
-        self.vm_piggyname = "alias"
-        self.spaces = "underscore"
-        self.no_cert_check = False
-        self.modules = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
-        self.host_address = None
-        self.user = None
-        self.secret = None
-
-
 def parse_arguments(argv):
+    parser = argparse.ArgumentParser(description=__doc__)
 
-    short_options = "hi:u:s:Dat:H:Pp:S:"
-    long_options = [
-        "help", "user=", "secret=", "direct", "agent", "debug", "modules=", "timeout=",
-        "no-cert-check", "hostname=", "tracefile=", "pysphere", "port=", "spaces=",
-        "host_pwr_display=", "vm_pwr_display=", "snapshot_display=", "vm_piggyname="
-    ]
+    # flags
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help="""Debug mode: let Python exceptions come through""")
+    parser.add_argument("--no-cert-check",
+                        action="store_true",
+                        help="""Disables the checking of the servers ssl certificate""")
+    parser.add_argument(
+        "--pysphere",
+        action="store_true",
+        help="""Fallback to old pysphere based special agent. It supports ESX 4.1 but is
+        very slow.""")
+    parser.add_argument(
+        "-D",
+        "--direct",
+        action="store_true",
+        help="""Assume a directly queried host system (no vCenter). In this we expect data about
+        only one HostSystem to be found and do not create piggy host data for that host.""")
+    parser.add_argument(
+        "-a",
+        "--agent",
+        action="store_true",
+        help="""Also retrieve data from the normal Check_MK Agent. This makes sense if you query
+        a vCenter that is installed on a Windows host that you also want to monitor with
+        Check_MK.""")
+    parser.add_argument(
+        "-P",
+        "--skip-placeholder-vm",
+        action="store_true",
+        help="""Skip placeholder virtualmachines. These backup vms are created by the Site
+        Recovery Manager (SRM) and are identified by not having any assigned virtual disks.""")
 
-    opt = Opt()
+    # optional arguments
+    parser.add_argument("--tracefile",
+                        default=None,
+                        help="""Log all outgoing and incoming data into the given tracefile""")
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        type=int,
+        default=60,
+        help="""Set the network timeout to vSphere to SECS seconds. This is also used when
+        connecting the agent (option -a). Default is 60 seconds.
+        Note: the timeout is not only applied to the connection, but also to each individual
+        subquery.""")
+    parser.add_argument(
+        "-p",
+        "--port",
+        type=int,
+        default=443,
+        help="""Alternative port number (default is 443 for the https connection).""")
+    parser.add_argument(
+        "-S",
+        "--spaces",
+        choices=('cut', 'underscore'),
+        default="underscore",
+        help="""How to handle spaces in hostnames. "cut": cut everyting after the first space,
+        "underscore": replace with underscores. Default is "underscore".""")
+    parser.add_argument(
+        "-i",
+        "--modules",
+        type=lambda s: s.split(','),
+        default=['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses'],
+        help="""Modules to query. This is a comma separated list of hostsystem, virtualmachine,
+        datastore, counters and licenses. Default is to query all modules.""")
+    parser.add_argument(
+        "--vm_piggyname",
+        choices=("hostname", "alias"),
+        default="alias",
+        help="""Here you can specify whether the virtual machines HOSTNAME or the ESX system
+        ALIAS name for this machine should be used on creating piggyback data""")
+    parser.add_argument(
+        "--vm_pwr_display",
+        choices=('vm', 'esxhost'),
+        default=None,
+        help="""Specifies where the virtual machines power state should be shown. Default (no
+        option) is on the queried vCenter or ESX-Host. Possible WHERE options: esxhost - show
+        on ESX host, vm - show on virtual machine""")
+    parser.add_argument(
+        "--host_pwr_display",
+        choices=('vm', 'esxhost'),
+        default=None,
+        help="""Specifies where the ESX hosts power state should be shown. Default (no option)
+        is on the queried vCenter or ESX-Host. Possible WHERE options: esxhost - show on ESX host,
+        vm - show on virtual machine.""")
+    parser.add_argument(
+        "--snapshot_display",
+        choices=('vCenter', 'esxhost'),
+        default=None,
+        help="""Specifies where the virtual machines snapshots should be shown. Default (no
+        option) is on the VM. Possible WHERE options: esxhost - show on ESX host, vCenter -
+        show on vCenter.""")
+    parser.add_argument(
+        "-H",
+        "--hostname",
+        default=None,
+        help="""Specify a hostname. This is neccessary if this is different from HOST.
+        It is being used when outputting the hosts power state.""")
 
-    try:
-        opts, args = getopt.getopt(argv[1:], short_options, long_options)
-    except getopt.GetoptError as exc:
-        sys.stderr.write("%s\n" % exc)
-        sys.exit(1)
+    # optional arguments (from a coding point of view - should some of them be mandatory?)
+    parser.add_argument("-u", "--user", default=None, help="""Username for vSphere login""")
+    parser.add_argument("-s",
+                        "--secret",
+                        default=None,
+                        help="""Secret/Password for vSphere login""")
 
-    for o, a in opts:
-        if o in ['--debug']:
-            opt.debug = True
-        elif o in ['--tracefile']:
-            opt.tracefile = a
-        elif o in ['-D', '--direct']:
-            opt.direct = True
-        elif o in ['-a', '--agent']:
-            opt.agent = True
-        elif o == '-P':
-            opt.skip_placeholder_vm = True
-        elif o in ['-p', '--port']:
-            opt.port = a
-        elif o in ['--no-cert-check']:
-            opt.no_cert_check = True
-        elif o == '--pysphere':
-            opt.pysphere = True
-        elif o in ['-u', '--user']:
-            opt.user = a
-        elif o in ['-s', '--secret']:
-            opt.secret = a
-        elif o in ['-i', '--modules']:
-            opt.modules = a.split(',')
-        elif o in ['-t', '--timeout']:
-            opt.timeout = int(a)
-        elif o in ['-H', '--hostname']:
-            opt.hostname = a
-        elif o in ['--vm_piggyname']:
-            opt.vm_piggyname = a
-        elif o in ['--vm_pwr_display']:
-            opt.vm_pwr_display = a
-        elif o in ['--host_pwr_display']:
-            opt.host_pwr_display = a
-        elif o in ['--snapshot_display']:
-            opt.snapshot_display = a
-        elif o in ['-S', '--spaces']:
-            if a not in ["cut", "underscore"]:
-                usage()
-                sys.exit(1)
-            opt.spaces = a
-        elif o in ['-h', '--help']:
-            usage()
-            sys.exit(0)
+    # positional arguments
+    parser.add_argument("host_address",
+                        metavar="HOST",
+                        help="""Host name or IP address of VMWare HostSystem""")
 
-    if len(args) == 1:
-        opt.host_address = args[0]
-    elif not args:
-        sys.stderr.write("ERROR: No host given.\n")
-        sys.exit(1)
-    else:
-        sys.stderr.write("ERROR: Please specify exactly one host.\n")
-        sys.exit(1)
-
-    return opt
+    return parser.parse_args(argv[1:])
 
 
 def output(line):

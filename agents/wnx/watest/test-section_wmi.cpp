@@ -197,7 +197,7 @@ TEST(WmiWrapper, Table) {
 
 namespace cma::provider {
 
-TEST(ProviderTest, WmiBadName) {  //
+TEST(WmiProviderTest, WmiBadName) {  //
     using namespace std::chrono;
 
     cma::OnStart(cma::AppType::test);
@@ -215,7 +215,7 @@ TEST(ProviderTest, WmiBadName) {  //
     }
 }
 
-TEST(ProviderTest, WmiOhm) {
+TEST(WmiProviderTest, WmiOhm) {
     {
         Wmi ohm(kOhm, ohm::kSepChar);
         EXPECT_EQ(ohm.object(), L"Sensor");
@@ -230,7 +230,88 @@ TEST(ProviderTest, WmiOhm) {
     }
 }
 
-TEST(ProviderTest, WmiAll) {  //
+TEST(WmiProviderTest, WmiConfiguration) {
+    {
+        EXPECT_TRUE(IsHeaderless(kMsExch));
+        EXPECT_FALSE(IsHeaderless(kWmiCpuLoad));
+        EXPECT_FALSE(IsHeaderless("xdf"));
+    }
+    {
+        auto type = GetSubSectionType(kMsExch);
+        EXPECT_TRUE(type == SubSection::Type::full);
+        type = GetSubSectionType(kWmiCpuLoad);
+        EXPECT_TRUE(type == SubSection::Type::sub);
+        type = GetSubSectionType("xdf");
+        EXPECT_TRUE(type == SubSection::Type::sub);
+    }
+}
+
+const char* exch_names[] = {kMsExchActiveSync,     //
+                            kMsExchAvailability,   //
+                            kMsExchOwa,            //
+                            kMsExchAutoDiscovery,  //
+                            kMsExchIsClientType,   //
+                            kMsExchIsStore,        //
+                            kMsExchRpcClientAccess};
+TEST(WmiProviderTest, WmiSubSection) {
+    {
+        {
+            for (auto n : exch_names) {
+                SubSection ss(n, SubSection::Type::full);
+                auto ret = ss.generateContent(SubSection::Mode::standard);
+                EXPECT_TRUE(ret.empty())
+                    << "expected we do not have ms exchange";
+                ret = ss.generateContent(SubSection::Mode::debug_forced);
+                EXPECT_FALSE(ret.empty());
+                EXPECT_NE(ret.find(":sep(124)"), std::string::npos)
+                    << "bad situation with " << n << "\n";
+            }
+        };
+
+        {
+            SubSection ss(kSubSectionSystemPerf, SubSection::Type::sub);
+            auto ret = ss.generateContent(SubSection::Mode::debug_forced);
+            ret = ss.generateContent(SubSection::Mode::debug_forced);
+            auto table = cma::tools::SplitString(ret, "\n");
+            ASSERT_EQ(table.size(), 3);
+            EXPECT_FALSE(table[0].empty());
+            EXPECT_FALSE(table[1].empty());
+            EXPECT_FALSE(table[2].empty());
+            {
+                auto headers = cma::tools::SplitString(
+                    table[1], wtools::ConvertToUTF8(wmi::kSepString));
+                auto values = cma::tools::SplitString(
+                    table[2], wtools::ConvertToUTF8(wmi::kSepString));
+                EXPECT_FALSE(headers.empty());
+                EXPECT_FALSE(values.empty());
+                ASSERT_TRUE(headers.size() > 10);
+                EXPECT_EQ(headers.size(), values.size());
+            }
+            EXPECT_EQ(table[0], std::string("[") + kSubSectionSystemPerf + "]");
+        }
+
+        {
+            Wmi msexch(kMsExch, wmi::kSepChar);
+            msexch.generateContent(kMsExch, true);
+            auto ret = msexch.generateContent(kMsExch, true);
+            EXPECT_TRUE(ret.empty()) << "expected we do not have ms exchange";
+            msexch.subsection_mode_ = SubSection::Mode::debug_forced;
+            ret = msexch.generateContent(kMsExch, true);
+            EXPECT_FALSE(ret.empty());
+            auto table = cma::tools::SplitString(ret, "\n");
+            EXPECT_EQ(table.size(), 7);
+            const int count = 7;
+            for (int k = 0; k < count; ++k) {
+                auto expected =
+                    fmt::format("<<<{}:sep({})>>>", exch_names[k],
+                                static_cast<uint32_t>(wmi::kSepChar));
+                EXPECT_EQ(table[k], expected);
+            }
+        }
+    }
+}
+
+TEST(WmiProviderTest, WmiAll) {  //
     using namespace std::chrono;
     std::wstring sep(wmi::kSepString);
     std::string sep_ascii = wtools::ConvertToUTF8(sep);
@@ -266,6 +347,7 @@ TEST(ProviderTest, WmiAll) {  //
 
     {
         Wmi dotnet_clr(kDotNetClrMemory, wmi::kSepChar);
+        EXPECT_EQ(dotnet_clr.subsection_mode_, SubSection::Mode::standard);
         EXPECT_EQ(dotnet_clr.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
         EXPECT_EQ(dotnet_clr.object(),
                   L"Win32_PerfRawData_NETFramework_NETCLRMemory");
@@ -302,6 +384,7 @@ TEST(ProviderTest, WmiAll) {  //
 
     {
         Wmi wmi_web(kWmiWebservices, wmi::kSepChar);
+        EXPECT_EQ(wmi_web.subsection_mode_, SubSection::Mode::standard);
         EXPECT_EQ(wmi_web.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
 
         EXPECT_EQ(wmi_web.object(), L"Win32_PerfRawData_W3SVC_WebService");
@@ -329,6 +412,8 @@ TEST(ProviderTest, WmiAll) {  //
 
     {
         Wmi cpu(kWmiCpuLoad, wmi::kSepChar);
+        EXPECT_EQ(cpu.subsection_mode_, SubSection::Mode::standard);
+        ASSERT_FALSE(cpu.headerless_);
         EXPECT_EQ(cpu.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
 
         // this is empty section
@@ -353,6 +438,8 @@ TEST(ProviderTest, WmiAll) {  //
     }
     {
         Wmi msexch(kMsExch, wmi::kSepChar);
+        ASSERT_TRUE(msexch.headerless_);
+        EXPECT_EQ(msexch.subsection_mode_, SubSection::Mode::standard);
         EXPECT_EQ(msexch.delay_on_fail_, cma::cfg::G_DefaultDelayOnFail);
         // this is empty section
         EXPECT_EQ(msexch.object(), L"");
@@ -363,13 +450,8 @@ TEST(ProviderTest, WmiAll) {  //
         const int count = 7;
         auto& subs = msexch.sub_objects_;
         EXPECT_EQ(subs.size(), count);
-        EXPECT_EQ(subs[0].getUniqName(), "msexch_activesync");
-        EXPECT_EQ(subs[1].getUniqName(), "msexch_availability");
-        EXPECT_EQ(subs[2].getUniqName(), "msexch_owa");
-        EXPECT_EQ(subs[3].getUniqName(), "msexch_autodiscovery");
-        EXPECT_EQ(subs[4].getUniqName(), "msexch_isclienttype");
-        EXPECT_EQ(subs[5].getUniqName(), "msexch_isstore");
-        EXPECT_EQ(subs[6].getUniqName(), "msexch_rpcclientaccess");
+        for (int k = 0; k < count; ++k)
+            EXPECT_EQ(subs[k].getUniqName(), exch_names[k]);
 
         for (auto& sub : subs) {
             EXPECT_TRUE(!sub.name_space_.empty());
@@ -394,7 +476,7 @@ auto ReadFileAsTable(const std::string Name) {
     return cma::tools::SplitString(content, "\n");
 }
 
-TEST(ProviderTest, WmiDotnet) {
+TEST(WmiProviderTest, WmiDotnet) {
     using namespace cma::section;
     using namespace cma::provider;
     namespace fs = std::filesystem;
@@ -441,7 +523,7 @@ TEST(ProviderTest, WmiDotnet) {
     fs::remove(f);
 }
 
-TEST(ProviderTest, BasicWmi) {
+TEST(WmiProviderTest, BasicWmi) {
     using namespace std::chrono;
     {
         Wmi b("a", ',');
@@ -467,7 +549,7 @@ TEST(ProviderTest, BasicWmi) {
     }
 }
 
-TEST(ProviderTest, BasicWmiDefaultsAndError) {
+TEST(WmiProviderTest, BasicWmiDefaultsAndError) {
     using namespace std::chrono;
     {
         Wmi tst("check", '|');
@@ -492,7 +574,7 @@ TEST(ProviderTest, BasicWmiDefaultsAndError) {
     }
 }
 
-TEST(ProviderTest, WmiMsExch) {
+TEST(WmiProviderTest, WmiMsExch) {
     using namespace cma::section;
     using namespace cma::provider;
     namespace fs = std::filesystem;
@@ -522,7 +604,7 @@ TEST(ProviderTest, WmiMsExch) {
     fs::remove(f);
 }
 
-TEST(ProviderTest, WmiWeb) {
+TEST(WmiProviderTest, WmiWeb) {
     using namespace cma::section;
     using namespace cma::provider;
     namespace fs = std::filesystem;
@@ -553,7 +635,7 @@ TEST(ProviderTest, WmiWeb) {
     }
     fs::remove(f);
 }
-TEST(ProviderTest, WmiCpu) {
+TEST(WmiProviderTest, WmiCpu) {
     using namespace cma::section;
     using namespace cma::provider;
     namespace fs = std::filesystem;

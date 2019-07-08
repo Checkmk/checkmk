@@ -162,7 +162,16 @@ constexpr const char* kOhm = "openhardwaremonitor";
 constexpr const char* kDotNetClrMemory = "dotnet_clrmemory";
 constexpr const char* kWmiWebservices = "wmi_webservices";
 constexpr const char* kWmiCpuLoad = "wmi_cpuload";
+
 constexpr const char* kMsExch = "msexch";
+
+constexpr const char* kMsExchActiveSync = "msexch_activesync";
+constexpr const char* kMsExchAvailability = "msexch_availability";
+constexpr const char* kMsExchOwa = "msexch_owa";
+constexpr const char* kMsExchAutoDiscovery = "msexch_autodiscovery";
+constexpr const char* kMsExchIsClientType = "msexch_isclienttype";
+constexpr const char* kMsExchIsStore = "msexch_isstore";
+constexpr const char* kMsExchRpcClientAccess = "msexch_rpcclientaccess";
 
 constexpr const char* kBadWmi = "bad_wmi";
 

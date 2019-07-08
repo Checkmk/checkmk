@@ -28,7 +28,6 @@ namespace provider {
 // use cache if body is empty(typical for new client, which returns empty on
 // timeout) post process result
 // update cache if data ok(not empty)
-// #TODO gtest
 std::string WmiCachedDataHelper(std::string& cache_data,
                                 const std::string& wmi_data, char separator) {
     using namespace wtools;
@@ -135,21 +134,31 @@ NamedStringVector g_section_subs = {
     // start
     {kWmiCpuLoad,  //
      {kSubSectionSystemPerf, kSubSectionComputerSystem}},
-    {kMsExch,                  //
-     {"msexch_activesync",     //
-      "msexch_availability",   //
-      "msexch_owa",            //
-      "msexch_autodiscovery",  //
-      "msexch_isclienttype",   //
-      "msexch_isstore",        //
-      "msexch_rpcclientaccess"}}
+    {kMsExch,                //
+     {kMsExchActiveSync,     //
+      kMsExchAvailability,   //
+      kMsExchOwa,            //
+      kMsExchAutoDiscovery,  //
+      kMsExchIsClientType,   //
+      kMsExchIsStore,        //
+      kMsExchRpcClientAccess}}
     // end
 };
 
 // This is allowed.
 using namespace std::chrono;
 
-void Wmi::setupByName() {
+SubSection::Type GetSubSectionType(std::string_view name) noexcept {
+    if (name == kMsExch) return SubSection::Type::full;
+    return SubSection::Type::sub;
+}
+
+bool IsHeaderless(std::string_view name) noexcept {
+    if (name == kMsExch) return true;
+    return false;
+}
+
+void Wmi::setupByName() noexcept {
     // setup namespace and object
     try {
         auto& x = g_section_objects[uniq_name_];
@@ -165,6 +174,8 @@ void Wmi::setupByName() {
         return;
     }
 
+    if (IsHeaderless(uniq_name_)) setHeaderless();
+
     // setup columns if any
     try {
         auto& x = g_section_columns[uniq_name_];
@@ -177,8 +188,9 @@ void Wmi::setupByName() {
     // setup columns if any
     try {
         auto& subs = g_section_subs[uniq_name_];
+        auto type = GetSubSectionType(uniq_name_);
         for (auto& sub : subs) {
-            sub_objects_.emplace_back(sub);
+            sub_objects_.emplace_back(SubSection(sub, type));
         }
     } catch (const std::exception&) {
         // ignoring this exception fully:
@@ -248,7 +260,7 @@ std::string Wmi::makeBody() {
         std::string subs_out;
         for (auto& sub : sub_objects_) {
             XLOG::t("Sub section '{}'", sub.getUniqName());
-            subs_out += sub.generateContent();
+            subs_out += sub.generateContent(subsection_mode_);
         }
         return subs_out;
     }
@@ -363,16 +375,23 @@ std::string SubSection::makeBody() {
     }
 }
 
-std::string SubSection::generateContent() {
+// force is used for testing and checking
+std::string SubSection::generateContent(Mode mode) {
     // print body
     try {
         auto section_body = makeBody();
-        if (section_body.empty()) return {};  // this may be normal
+        if (mode == Mode::standard && section_body.empty())
+            return {};  // this may be normal
 
-        // print header with default or commanded section name
-        return std::move(section::MakeSubSectionHeader(uniq_name_) +
-                         section_body);
-
+        // add to front of output header
+        // case for the msexch
+        switch (type_) {
+            case Type::full:
+                return section::MakeHeader(uniq_name_, wmi::kSepChar) +
+                       section_body;
+            case Type::sub:
+                return section::MakeSubSectionHeader(uniq_name_) + section_body;
+        }
     } catch (const std::exception& e) {
         XLOG::l.crit(XLOG_FUNC + " Exception '{}' in '{}'", e.what(),
                      uniq_name_);

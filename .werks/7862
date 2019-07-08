@@ -1,0 +1,14 @@
+Title: Fix parsing of MongDB server status in cluster
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1562570057
+
+
+MongoDB agent had issues parsing MondoDB server status in certain cluster configurations. The parsing is now more robust. 
+
+To resolve the issue the fixed version of the mk_mongodb plugin has to be deployed on the affected hosts. 

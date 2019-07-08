@@ -81,57 +81,58 @@ class ModeFolder(WatoMode):
         global_buttons()
         if not self._folder.is_disk_folder():
             html.context_button(_("Back"), self._folder.parent().url(), "back")
-            html.context_button(
-                _("Refine Search"), self._folder.url([("mode", "search")]), "search")
+            html.context_button(_("Refine Search"), self._folder.url([("mode", "search")]),
+                                "search")
             return
 
         if config.user.may("wato.rulesets") or config.user.may("wato.seeall"):
-            html.context_button(
-                _("Rulesets"), watolib.folder_preserving_link([("mode", "ruleeditor")]), "rulesets")
-            html.context_button(
-                _("Manual Checks"), watolib.folder_preserving_link([("mode", "static_checks")]),
-                "static_checks")
+            html.context_button(_("Rulesets"),
+                                watolib.folder_preserving_link([("mode", "ruleeditor")]),
+                                "rulesets")
+            html.context_button(_("Manual Checks"),
+                                watolib.folder_preserving_link([("mode", "static_checks")]),
+                                "static_checks")
         if self._folder.may("read"):
-            html.context_button(
-                _("Folder Properties"), self._folder.edit_url(backfolder=self._folder), "edit")
+            html.context_button(_("Folder Properties"),
+                                self._folder.edit_url(backfolder=self._folder), "edit")
         if not self._folder.locked_subfolders() and config.user.may(
                 "wato.manage_folders") and self._folder.may("write"):
-            html.context_button(
-                _("New folder"), self._folder.url([("mode", "newfolder")]), "newfolder")
+            html.context_button(_("New folder"), self._folder.url([("mode", "newfolder")]),
+                                "newfolder")
         if not self._folder.locked_hosts() and config.user.may(
                 "wato.manage_hosts") and self._folder.may("write"):
             html.context_button(_("New host"), self._folder.url([("mode", "newhost")]), "new")
-            html.context_button(
-                _("New cluster"), self._folder.url([("mode", "newcluster")]), "new_cluster")
-            html.context_button(
-                _("Bulk import"), self._folder.url([("mode", "bulk_import")]), "bulk_import")
+            html.context_button(_("New cluster"), self._folder.url([("mode", "newcluster")]),
+                                "new_cluster")
+            html.context_button(_("Bulk import"), self._folder.url([("mode", "bulk_import")]),
+                                "bulk_import")
         if config.user.may("wato.services"):
-            html.context_button(
-                _("Bulk discovery"), self._folder.url([("mode", "bulkinventory"), ("all", "1")]),
-                "inventory")
+            html.context_button(_("Bulk discovery"),
+                                self._folder.url([("mode", "bulkinventory"), ("all", "1")]),
+                                "inventory")
         if config.user.may("wato.rename_hosts"):
-            html.context_button(
-                _("Bulk renaming"), self._folder.url([("mode", "bulk_rename_host")]), "rename_host")
+            html.context_button(_("Bulk renaming"),
+                                self._folder.url([("mode", "bulk_rename_host")]), "rename_host")
         if config.user.may("wato.custom_attributes"):
-            html.context_button(
-                _("Custom attributes"), watolib.folder_preserving_link([("mode", "host_attrs")]),
-                "custom_attr")
+            html.context_button(_("Custom attributes"),
+                                watolib.folder_preserving_link([("mode", "host_attrs")]),
+                                "custom_attr")
         if not self._folder.locked_hosts() and config.user.may(
                 "wato.parentscan") and self._folder.may("write"):
-            html.context_button(
-                _("Parent scan"), self._folder.url([("mode", "parentscan"), ("all", "1")]),
-                "parentscan")
+            html.context_button(_("Parent scan"),
+                                self._folder.url([("mode", "parentscan"), ("all", "1")]),
+                                "parentscan")
         folder_status_button()
         if config.user.may("wato.random_hosts"):
-            html.context_button(
-                _("Random Hosts"), self._folder.url([("mode", "random_hosts")]), "random")
-        html.context_button(
-            _("Search"), watolib.folder_preserving_link([("mode", "search")]), "search")
+            html.context_button(_("Random Hosts"), self._folder.url([("mode", "random_hosts")]),
+                                "random")
+        html.context_button(_("Search"), watolib.folder_preserving_link([("mode", "search")]),
+                            "search")
 
         if config.user.may("wato.dcd_connections"):
-            html.context_button(
-                _("Dynamic configuration"),
-                watolib.folder_preserving_link([("mode", "dcd_connections")]), "dcd_connections")
+            html.context_button(_("Dynamic configuration"),
+                                watolib.folder_preserving_link([("mode", "dcd_connections")]),
+                                "dcd_connections")
 
     def action(self):
         if html.request.var("_search"):  # just commit to search form
@@ -279,10 +280,9 @@ class ModeFolder(WatoMode):
             html.div('', class_="folder_foot")
 
     def _show_subfolder(self, subfolder):
-        html.open_div(
-            class_=["floatfolder", "unlocked" if subfolder.may("read") else "locked"],
-            id_="folder_%s" % subfolder.name(),
-            onclick="cmk.wato.open_folder(event, \'%s\');" % subfolder.url())
+        html.open_div(class_=["floatfolder", "unlocked" if subfolder.may("read") else "locked"],
+                      id_="folder_%s" % subfolder.name(),
+                      onclick="cmk.wato.open_folder(event, \'%s\');" % subfolder.url())
         self._show_subfolder_hoverarea(subfolder)
         self._show_subfolder_infos(subfolder)
         self._show_subfolder_title(subfolder)
@@ -291,17 +291,15 @@ class ModeFolder(WatoMode):
     def _show_subfolder_hoverarea(self, subfolder):
         # Only make folder openable when permitted to edit
         if subfolder.may("read"):
-            html.open_div(
-                class_="hoverarea",
-                onmouseover="cmk.wato.toggle_folder(event, this, true);",
-                onmouseout="cmk.wato.toggle_folder(event, this, false);")
+            html.open_div(class_="hoverarea",
+                          onmouseover="cmk.wato.toggle_folder(event, this, true);",
+                          onmouseout="cmk.wato.toggle_folder(event, this, false);")
             self._show_subfolder_buttons(subfolder)
             html.close_div()  # hoverarea
         else:
-            html.icon(
-                html.strip_tags(subfolder.reason_why_may_not("read")),
-                "autherr",
-                class_=["autherr"])
+            html.icon(html.strip_tags(subfolder.reason_why_may_not("read")),
+                      "autherr",
+                      class_=["autherr"])
             html.div('', class_="hoverarea")
 
     def _show_subfolder_title(self, subfolder):
@@ -382,10 +380,9 @@ class ModeFolder(WatoMode):
             style = "display:none"
 
         html.popup_trigger(
-            html.render_icon(
-                "move",
-                title=_("Move this %s to another folder") % what_title,
-                cssclass="iconbutton"),
+            html.render_icon("move",
+                             title=_("Move this %s to another folder") % what_title,
+                             cssclass="iconbutton"),
             ident="move_" + obj.name(),
             what="move_to_folder",
             url_vars=[
@@ -413,8 +410,8 @@ class ModeFolder(WatoMode):
 
         # Show table of hosts in this folder
         html.begin_form("hosts", method="POST")
-        with table_element(
-                "hosts", title=_("Hosts"), searchable=False, omit_empty_columns=True) as table:
+        with table_element("hosts", title=_("Hosts"), searchable=False,
+                           omit_empty_columns=True) as table:
 
             # Remember if that host has a target folder (i.e. was imported with
             # a folder information but not yet moved to that folder). If at least
@@ -484,8 +481,8 @@ class ModeFolder(WatoMode):
                 "selection_id": weblib.selection_id(),
                 "selected_rows": selected,
             }
-            html.javascript(
-                'cmk.selection.init_rowselect(%s);' % (json.dumps(selection_properties)))
+            html.javascript('cmk.selection.init_rowselect(%s);' %
+                            (json.dumps(selection_properties)))
 
     def _show_host_row(self, rendered_hosts, table, hostname, search_text, show_checkboxes, colspan,
                        host_errors, contact_group_names):
@@ -501,22 +498,19 @@ class ModeFolder(WatoMode):
         # Column with actions (buttons)
 
         if show_checkboxes:
-            table.cell(
-                html.render_input(
-                    "_toggle_group",
-                    type_="button",
-                    class_="checkgroup",
-                    onclick="cmk.selection.toggle_all_rows();",
-                    value='X'),
-                sortable=False,
-                css="checkbox")
+            table.cell(html.render_input("_toggle_group",
+                                         type_="button",
+                                         class_="checkgroup",
+                                         onclick="cmk.selection.toggle_all_rows();",
+                                         value='X'),
+                       sortable=False,
+                       css="checkbox")
             # Use CSS class "failed" in order to provide information about
             # selective toggling inventory-failed hosts for Javascript
-            html.input(
-                name="_c_%s" % hostname,
-                type_="checkbox",
-                value=colspan,
-                class_="failed" if host.discovery_failed() else None)
+            html.input(name="_c_%s" % hostname,
+                       type_="checkbox",
+                       value=colspan,
+                       class_="failed" if host.discovery_failed() else None)
             html.label("", "_c_%s" % hostname)
 
         table.cell(_("Actions"), css="buttons", sortable=False)
@@ -584,11 +578,10 @@ class ModeFolder(WatoMode):
         table.cell(_("Explicit labels"), css="tag-ellipsis")
         labels, show_all_code = self._limit_labels(host.labels())
         html.write(
-            cmk.gui.view_utils.render_labels(
-                labels,
-                "host",
-                with_links=False,
-                label_sources={k: "explicit" for k in labels.keys()}))
+            cmk.gui.view_utils.render_labels(labels,
+                                             "host",
+                                             with_links=False,
+                                             label_sources={k: "explicit" for k in labels.keys()}))
         html.write(show_all_code)
 
         # Located in folder
@@ -599,8 +592,8 @@ class ModeFolder(WatoMode):
     def _limit_labels(self, labels):
         show_all, limit = "", 3
         if len(labels) > limit and html.request.var("_show_all") != "1":
-            show_all = " %s" % html.render_a(
-                "... (%s)" % _("show all"), href=html.makeuri([("_show_all", "1")]))
+            show_all = " %s" % html.render_a("... (%s)" % _("show all"),
+                                             href=html.makeuri([("_show_all", "1")]))
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 
@@ -651,13 +644,12 @@ class ModeFolder(WatoMode):
             onclick_uri = html.makeuri([('show_checkboxes', '0')])
             checkbox_title = _('Hide Checkboxes and bulk actions')
 
-        html.toggle_button(
-            "checkbox_on",
-            show_checkboxes,
-            "checkbox",
-            title=checkbox_title,
-            onclick="location.href=\'%s\'" % onclick_uri,
-            is_context_button=False)
+        html.toggle_button("checkbox_on",
+                           show_checkboxes,
+                           "checkbox",
+                           title=checkbox_title,
+                           onclick="location.href=\'%s\'" % onclick_uri,
+                           is_context_button=False)
 
         if withsearch:
             html.text_input("search")
@@ -706,14 +698,13 @@ class ModeFolder(WatoMode):
             if top:
                 field_name = '_top_bulk_moveto'
                 if html.request.has_var('bulk_moveto'):
-                    html.javascript('cmk.selection.update_bulk_moveto("%s")' % html.request.var(
-                        'bulk_moveto', ''))
-            html.dropdown(
-                field_name,
-                choices,
-                deflt="@",
-                onchange="cmk.selection.update_bulk_moveto(this.value)",
-                class_='bulk_moveto')
+                    html.javascript('cmk.selection.update_bulk_moveto("%s")' %
+                                    html.request.var('bulk_moveto', ''))
+            html.dropdown(field_name,
+                          choices,
+                          deflt="@",
+                          onchange="cmk.selection.update_bulk_moveto(this.value)",
+                          class_='bulk_moveto')
 
     def _move_to_imported_folders(self, host_names_to_move):
         c = wato_confirm(
@@ -774,9 +765,8 @@ class ModeFolder(WatoMode):
 
 # TODO: Move to WatoHostFolderMode() once mode_edit_host has been migrated
 def delete_host_after_confirm(delname):
-    c = wato_confirm(
-        _("Confirm host deletion"),
-        _("Do you really want to delete the host <tt>%s</tt>?") % delname)
+    c = wato_confirm(_("Confirm host deletion"),
+                     _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
         watolib.Folder.current().delete_hosts([delname])
         # Delete host files
@@ -926,13 +916,12 @@ class FolderMode(WatoMode):
             parent = watolib.Folder.current().parent()
             myself = watolib.Folder.current()
 
-        configure_attributes(
-            new=new,
-            hosts={"folder": myself},
-            for_what="folder",
-            parent=parent,
-            myself=myself,
-            basic_attributes=basic_attributes)
+        configure_attributes(new=new,
+                             hosts={"folder": myself},
+                             for_what="folder",
+                             parent=parent,
+                             myself=myself,
+                             basic_attributes=basic_attributes)
 
         forms.end()
         if new or not watolib.Folder.current().locked():

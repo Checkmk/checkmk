@@ -49,12 +49,11 @@ def check_k8s_pods_memory(item, params, metrics):
             value = sum(
                 map(parse_mul_prefix,
                     [pod_data['metrics']['memory_%s' % what] for pod_data in metrics]))
-            yield check_levels(
-                value,
-                what,
-                params.get(what),
-                human_readable_func=get_bytes_human_readable,
-                infoname=title)
+            yield check_levels(value,
+                               what,
+                               params.get(what),
+                               human_readable_func=get_bytes_human_readable,
+                               infoname=title)
         except KeyError:
             yield 0, "Memory %s currently unavailable" % what
 
@@ -103,8 +102,11 @@ def check_k8s_pods_fs(item, params, metrics):
             parser = parse_mul_prefix if 'bytes' in what else parse_frac_prefix
             value = sum(map(parser, [pod_data['metrics']['fs_%s' % what] for pod_data in metrics]))
             hrf = get_bytes_human_readable if 'bytes' in what else None
-            yield check_levels(
-                value, what, params.get(what), human_readable_func=hrf, infoname=title)
+            yield check_levels(value,
+                               what,
+                               params.get(what),
+                               human_readable_func=hrf,
+                               infoname=title)
         except KeyError:
             yield 0, "FS %s currently unavailable" % what.title()
 

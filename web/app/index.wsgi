@@ -96,9 +96,9 @@ class Application(object):
         try:
             config.initialize()
 
-            with cmk.utils.profile.Profile(
-                    enabled=self._profiling_enabled(),
-                    profile_file=os.path.join(cmk.utils.paths.var_dir, "multisite.profile")):
+            with cmk.utils.profile.Profile(enabled=self._profiling_enabled(),
+                                           profile_file=os.path.join(cmk.utils.paths.var_dir,
+                                                                     "multisite.profile")):
                 self._handle_request()
 
         except HTTPRedirect as e:

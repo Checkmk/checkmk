@@ -54,13 +54,12 @@ class RulespecCheckgroupParametersUpsOutLoad(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            elements=[
-                Integer(title=_("warning at"), unit=u"%", default_value=85),
-                Integer(title=_("critical at"), unit=u"%", default_value=90),
-            ],)
+        return Tuple(elements=[
+            Integer(title=_("warning at"), unit=u"%", default_value=85),
+            Integer(title=_("critical at"), unit=u"%", default_value=90),
+        ],)
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Phase"), help=_("The identifier of the phase the power is related to."))
+        return TextAscii(title=_("Phase"),
+                         help=_("The identifier of the phase the power is related to."))

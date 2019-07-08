@@ -62,9 +62,10 @@ METRICS_SELECTED = {
         ('storage_percent,deadlock,cpu_percent,dtu_consumption_percent,'
          'connection_successful,connection_failed', 'PT1M', 'average', None),
     ],
-    'Microsoft.Storage/storageAccounts': [('UsedCapacity,Ingress,Egress,Transactions,'
-                                           'SuccessServerLatency,SuccessE2ELatency,Availability',
-                                           'PT1H', 'total', None),],
+    'Microsoft.Storage/storageAccounts': [
+        ('UsedCapacity,Ingress,Egress,Transactions,'
+         'SuccessServerLatency,SuccessE2ELatency,Availability', 'PT1H', 'total', None),
+    ],
     'Microsoft.Web/sites': [('CpuTime,AverageResponseTime,Http5xx', 'PT1M', 'total', None),],
 }
 
@@ -138,28 +139,28 @@ class AsyncMapper(object):  # pylint: disable=too-few-public-methods
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--debug", action="store_true", help='''Debug mode: raise Python exceptions''')
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help='''Verbose mode (for even more output use -vvv)''')
-    parser.add_argument(
-        "--sequential", action="store_true", help='''Sequential mode: do not use multiprocessing''')
-    parser.add_argument(
-        "--dump-config", action="store_true", help='''Dump parsed configuration and exit''')
-    parser.add_argument(
-        "--timeout",
-        default=10,
-        type=int,
-        help='''Timeout for individual processes in seconds (default 10)''')
-    parser.add_argument(
-        "--piggyback_vms",
-        default="grouphost",
-        choices=["grouphost", "self"],
-        help='''Send VM piggyback data to group host (default) or the VM iteself''')
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help='''Debug mode: raise Python exceptions''')
+    parser.add_argument("-v",
+                        "--verbose",
+                        action="count",
+                        default=0,
+                        help='''Verbose mode (for even more output use -vvv)''')
+    parser.add_argument("--sequential",
+                        action="store_true",
+                        help='''Sequential mode: do not use multiprocessing''')
+    parser.add_argument("--dump-config",
+                        action="store_true",
+                        help='''Dump parsed configuration and exit''')
+    parser.add_argument("--timeout",
+                        default=10,
+                        type=int,
+                        help='''Timeout for individual processes in seconds (default 10)''')
+    parser.add_argument("--piggyback_vms",
+                        default="grouphost",
+                        choices=["grouphost", "self"],
+                        help='''Send VM piggyback data to group host (default) or the VM iteself''')
 
     # REQUIRED
     parser.add_argument("--subscription", required=True, help="Azure subscription ID")
@@ -167,20 +168,18 @@ def parse_arguments(argv):
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
-    parser.add_argument(
-        "--require-tag",
-        default=[],
-        metavar='TAG',
-        action='append',
-        help='''Only monitor resources that have the specified TAG.
+    parser.add_argument("--require-tag",
+                        default=[],
+                        metavar='TAG',
+                        action='append',
+                        help='''Only monitor resources that have the specified TAG.
               To require multiple tags, provide the option more than once.''')
-    parser.add_argument(
-        "--require-tag-value",
-        default=[],
-        metavar=("TAG", "VALUE"),
-        nargs=2,
-        action='append',
-        help='''Only monitor resources that have the specified TAG set to VALUE.
+    parser.add_argument("--require-tag-value",
+                        default=[],
+                        metavar=("TAG", "VALUE"),
+                        nargs=2,
+                        action='append',
+                        help='''Only monitor resources that have the specified TAG set to VALUE.
              To require multiple tags, provide the option more than once.''')
     parser.add_argument(
         "--explicit-config",
@@ -370,8 +369,10 @@ class Section(object):
 
 class AzureSection(Section):
     def __init__(self, name, piggytargets=('',)):
-        super(AzureSection, self).__init__(
-            'azure_%s' % name, piggytargets, separator=124, options=[])
+        super(AzureSection, self).__init__('azure_%s' % name,
+                                           piggytargets,
+                                           separator=124,
+                                           options=[])
 
 
 class LabelsSection(Section):
@@ -382,8 +383,10 @@ class LabelsSection(Section):
 class UsageSection(Section):
     def __init__(self, usage_details, piggytargets, cacheinfo):
         options = ['cached(%d,%d)' % cacheinfo]
-        super(UsageSection, self).__init__(
-            'azure_%s' % usage_details.section, piggytargets, separator=124, options=options)
+        super(UsageSection, self).__init__('azure_%s' % usage_details.section,
+                                           piggytargets,
+                                           separator=124,
+                                           options=options)
         self.add(usage_details.dumpinfo())
 
 
@@ -522,13 +525,12 @@ class MetricCache(DataCache):
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
         try:
-            raw_metrics = rest_client.metrics(
-                resource_id,
-                timespan=self._timespan,
-                interval=interval,
-                metricnames=metricnames,
-                aggregation=aggregation,
-                filter=filter_)
+            raw_metrics = rest_client.metrics(resource_id,
+                                              timespan=self._timespan,
+                                              interval=interval,
+                                              metricnames=metricnames,
+                                              aggregation=aggregation,
+                                              filter=filter_)
         except () if self.debug else ApiError as exc:
             err.add("exception", resource_id, str(exc))
             LOG.exception(exc)
@@ -547,8 +549,9 @@ class MetricCache(DataCache):
 
 class UsageClient(DataCache):
     def __init__(self, subscription, debug=False):
-        super(UsageClient, self).__init__(
-            AZURE_CACHE_FILE_PATH, "%s-usage" % subscription, debug=debug)
+        super(UsageClient, self).__init__(AZURE_CACHE_FILE_PATH,
+                                          "%s-usage" % subscription,
+                                          debug=debug)
 
     @property
     def cache_interval(self):
@@ -597,8 +600,9 @@ def gather_metrics(resource, debug=False):
     metric_definitions = METRICS_SELECTED.get(resource.info["type"], [])
     for metric_def in metric_definitions:
         cache = MetricCache(resource, metric_def, NOW, debug=debug)
-        resource.metrics += cache.get_data(
-            resource.info['id'], err, use_cache=cache.cache_interval > 60)
+        resource.metrics += cache.get_data(resource.info['id'],
+                                           err,
+                                           use_cache=cache.cache_interval > 60)
     return err
 
 

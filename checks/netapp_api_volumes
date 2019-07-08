@@ -91,8 +91,10 @@ def check_netapp_api_volumes(item, params, parsed):
                 if value is not None:
                     value = int(value)
                     try:
-                        delta = get_rate(
-                            "netapp_api_volumes.%s.%s" % (item, key), now, value, onwrap=RAISE)
+                        delta = get_rate("netapp_api_volumes.%s.%s" % (item, key),
+                                         now,
+                                         value,
+                                         onwrap=RAISE)
                         perf.append((key, delta))
 
                         # Quite hacky.. this base information is used later on by the "latency" field

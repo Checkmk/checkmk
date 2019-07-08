@@ -129,8 +129,9 @@ class RulesetMatcher(object):
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = match_object.host_name not in \
                                 self.ruleset_optimizer.all_processed_hosts()
-        optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
-            ruleset, with_foreign_hosts, is_binary=is_binary)
+        optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(ruleset,
+                                                                    with_foreign_hosts,
+                                                                    is_binary=is_binary)
 
         for value in optimized_ruleset.get(match_object.host_name, []):
             yield value
@@ -167,8 +168,9 @@ class RulesetMatcher(object):
 
         with_foreign_hosts = match_object.host_name not in \
                                 self.ruleset_optimizer.all_processed_hosts()
-        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
-            ruleset, with_foreign_hosts, is_binary=is_binary)
+        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(ruleset,
+                                                                       with_foreign_hosts,
+                                                                       is_binary=is_binary)
 
         for value, hosts, service_conditions in optimized_ruleset:
             if match_object.host_name not in hosts:
@@ -311,8 +313,8 @@ class RulesetOptimizer(object):
             self._all_processed_hosts_similarity = 1
             return
 
-        self._all_processed_hosts_similarity = (
-            1.0 * len(self._all_processed_hosts) / len(used_groups))
+        self._all_processed_hosts_similarity = (1.0 * len(self._all_processed_hosts) /
+                                                len(used_groups))
 
     def get_host_ruleset(self, ruleset, with_foreign_hosts, is_binary):
         cache_id = id(ruleset), with_foreign_hosts
@@ -346,8 +348,9 @@ class RulesetOptimizer(object):
         if cache_id in self._service_ruleset_cache:
             return self._service_ruleset_cache[cache_id]
 
-        cached_ruleset = self._convert_service_ruleset(
-            ruleset, with_foreign_hosts=with_foreign_hosts, is_binary=is_binary)
+        cached_ruleset = self._convert_service_ruleset(ruleset,
+                                                       with_foreign_hosts=with_foreign_hosts,
+                                                       is_binary=is_binary)
         self._service_ruleset_cache[cache_id] = cached_ruleset
         return cached_ruleset
 

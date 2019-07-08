@@ -64,35 +64,31 @@ class RulespecCheckgroupParametersPllLockVoltage(CheckParameterRulespecWithItem)
             help=_("PLL lock voltages by freqency"),
             elements=[
                 ("rx",
-                 ListOf(
-                     Tuple(
-                         elements=[
-                             Float(title=_("Frequencies up to"), unit=u"MHz"),
-                             Float(title=_("Warning below"), unit=u"V"),
-                             Float(title=_("Critical below"), unit=u"V"),
-                             Float(title=_("Warning at or above"), unit=u"V"),
-                             Float(title=_("Critical at or above"), unit=u"V"),
-                         ],),
-                     title=_("Lock voltages for RX PLL"),
-                     help=_("Specify frequency ranges by the upper boundary of the range "
-                            "to which the voltage levels are to apply. The list is sorted "
-                            "automatically when saving."),
-                     movable=False)),
+                 ListOf(Tuple(elements=[
+                     Float(title=_("Frequencies up to"), unit=u"MHz"),
+                     Float(title=_("Warning below"), unit=u"V"),
+                     Float(title=_("Critical below"), unit=u"V"),
+                     Float(title=_("Warning at or above"), unit=u"V"),
+                     Float(title=_("Critical at or above"), unit=u"V"),
+                 ],),
+                        title=_("Lock voltages for RX PLL"),
+                        help=_("Specify frequency ranges by the upper boundary of the range "
+                               "to which the voltage levels are to apply. The list is sorted "
+                               "automatically when saving."),
+                        movable=False)),
                 ("tx",
-                 ListOf(
-                     Tuple(
-                         elements=[
-                             Float(title=_("Frequencies up to"), unit=u"MHz"),
-                             Float(title=_("Warning below"), unit=u"V"),
-                             Float(title=_("Critical below"), unit=u"V"),
-                             Float(title=_("Warning at or above"), unit=u"V"),
-                             Float(title=_("Critical at or above"), unit=u"V"),
-                         ],),
-                     title=_("Lock voltages for TX PLL"),
-                     help=_("Specify frequency ranges by the upper boundary of the range "
-                            "to which the voltage levels are to apply. The list is sorted "
-                            "automatically when saving."),
-                     movable=False)),
+                 ListOf(Tuple(elements=[
+                     Float(title=_("Frequencies up to"), unit=u"MHz"),
+                     Float(title=_("Warning below"), unit=u"V"),
+                     Float(title=_("Critical below"), unit=u"V"),
+                     Float(title=_("Warning at or above"), unit=u"V"),
+                     Float(title=_("Critical at or above"), unit=u"V"),
+                 ],),
+                        title=_("Lock voltages for TX PLL"),
+                        help=_("Specify frequency ranges by the upper boundary of the range "
+                               "to which the voltage levels are to apply. The list is sorted "
+                               "automatically when saving."),
+                        movable=False)),
             ],
             optional_keys=["rx", "tx"],
         )

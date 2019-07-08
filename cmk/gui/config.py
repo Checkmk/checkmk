@@ -961,8 +961,9 @@ def sitenames():
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
 def allsites():
-    return dict(
-        [(name, site(name)) for name in sitenames() if not site(name).get("disabled", False)])
+    return dict([
+        (name, site(name)) for name in sitenames() if not site(name).get("disabled", False)
+    ])
 
 
 def configured_sites():

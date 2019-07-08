@@ -153,8 +153,8 @@ class Modes(object):
 
                 num_found = 0
                 for hostname in valid_hosts:
-                    if config.hosttags_match_taglist(
-                            config_cache.tag_list_of_host(hostname), tagspec):
+                    if config.hosttags_match_taglist(config_cache.tag_list_of_host(hostname),
+                                                     tagspec):
                         hostlist.append(hostname)
                         num_found += 1
                 if num_found == 0:
@@ -295,15 +295,14 @@ class Mode(Option):
                  sub_options=None):
         # TODO: This disable is needed because of a pylint bug. Remove one day.
         # pylint: disable=bad-super-call
-        super(Mode, self).__init__(
-            long_option,
-            short_help,
-            short_option,
-            argument,
-            argument_descr,
-            argument_conv,
-            argument_optional,
-            handler_function=handler_function)
+        super(Mode, self).__init__(long_option,
+                                   short_help,
+                                   short_option,
+                                   argument,
+                                   argument_descr,
+                                   argument_conv,
+                                   argument_optional,
+                                   handler_function=handler_function)
         self.long_help = long_help
         self.needs_config = needs_config
         self.needs_checks = needs_checks

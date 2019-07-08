@@ -171,12 +171,11 @@ class ModeRuleEditor(WatoMode):
                 help_text = None
 
             menu.add_item(
-                MenuItem(
-                    mode_or_url=url,
-                    title=rulegroup.title,
-                    icon=icon,
-                    permission="rulesets",
-                    description=help_text))
+                MenuItem(mode_or_url=url,
+                         title=rulegroup.title,
+                         icon=icon,
+                         permission="rulesets",
+                         description=help_text))
         menu.show()
 
 
@@ -258,16 +257,16 @@ class RulesetMode(WatoMode):
 
     def _regular_buttons(self):
         if self.name() != "static_checks":
-            html.context_button(
-                _("All Rulesets"), watolib.folder_preserving_link([("mode", "ruleeditor")]), "back")
+            html.context_button(_("All Rulesets"),
+                                watolib.folder_preserving_link([("mode", "ruleeditor")]), "back")
 
         if config.user.may("wato.hosts") or config.user.may("wato.seeall"):
-            html.context_button(
-                _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "folder")
+            html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
+                                "folder")
 
         if self._group_name == "agents":
-            html.context_button(
-                _("Agent Bakery"), watolib.folder_preserving_link([("mode", "agents")]), "agents")
+            html.context_button(_("Agent Bakery"),
+                                watolib.folder_preserving_link([("mode", "agents")]), "agents")
 
     def page(self):
         if not self._only_host:
@@ -287,8 +286,8 @@ class RulesetMode(WatoMode):
 
         html.open_div(class_="rulesets")
 
-        grouped_rulesets = sorted(
-            rulesets.get_grouped(), key=lambda k_v: watolib.get_rulegroup(k_v[0]).title)
+        grouped_rulesets = sorted(rulesets.get_grouped(),
+                                  key=lambda k_v: watolib.get_rulegroup(k_v[0]).title)
 
         for main_group_name, sub_groups in grouped_rulesets:
             # Display the main group header only when there are several main groups shown
@@ -304,8 +303,8 @@ class RulesetMode(WatoMode):
                     float_cls = None
                     if not config.wato_hide_help_in_lists:
                         float_cls = "nofloat" if html.help_visible else "float"
-                    html.open_div(
-                        class_=["ruleset", float_cls], title=html.strip_tags(ruleset.help() or ''))
+                    html.open_div(class_=["ruleset", float_cls],
+                                  title=html.strip_tags(ruleset.help() or ''))
                     html.open_div(class_="text")
 
                     url_vars = [
@@ -317,10 +316,9 @@ class RulesetMode(WatoMode):
                         url_vars.append(("host", self._only_host))
                     view_url = html.makeuri(url_vars)
 
-                    html.a(
-                        ruleset.title(),
-                        href=view_url,
-                        class_="nonzero" if ruleset.is_empty() else "zero")
+                    html.a(ruleset.title(),
+                           href=view_url,
+                           class_="nonzero" if ruleset.is_empty() else "zero")
                     html.span("." * 100, class_="dots")
                     html.close_div()
 
@@ -328,9 +326,8 @@ class RulesetMode(WatoMode):
                     if ruleset.search_matching_rules:
                         num_rules = "%d/%d" % (len(ruleset.search_matching_rules), num_rules)
 
-                    html.div(
-                        num_rules,
-                        class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"])
+                    html.div(num_rules,
+                             class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"])
                     if not config.wato_hide_help_in_lists and ruleset.help():
                         html.help(ruleset.help())
 
@@ -411,10 +408,10 @@ class ModeStaticChecksRulesets(RulesetMode):
 
 
 def predefined_conditions_button():
-    html.context_button(
-        _("Predef. conditions"), watolib.folder_preserving_link([
-            ("mode", "predefined_conditions"),
-        ]), "condition")
+    html.context_button(_("Predef. conditions"),
+                        watolib.folder_preserving_link([
+                            ("mode", "predefined_conditions"),
+                        ]), "condition")
 
 
 def rule_search_button(search_options=None, mode="rulesets"):
@@ -435,14 +432,14 @@ def rule_search_button(search_options=None, mode="rulesets"):
     else:
         title = _("Search")
 
-    html.context_button(
-        title,
-        html.makeuri([
-            ("mode", "rule_search"),
-            ("back_mode", mode),
-        ], delvars=["filled_in"]),
-        "search",
-        hot=is_searching)
+    html.context_button(title,
+                        html.makeuri([
+                            ("mode", "rule_search"),
+                            ("back_mode", mode),
+                        ],
+                                     delvars=["filled_in"]),
+                        "search",
+                        hot=is_searching)
 
 
 def _is_ineffective_rules_page(search_options):
@@ -559,8 +556,9 @@ class ModeEditRuleset(WatoMode):
 
             html.context_button(
                 _("Back"),
-                watolib.folder_preserving_link([("mode", self._back_mode),
-                                                ("host", self._hostname)] + group_arg), "back")
+                watolib.folder_preserving_link([("mode", self._back_mode), ("host",
+                                                                            self._hostname)] +
+                                               group_arg), "back")
 
         predefined_conditions_button()
 
@@ -672,15 +670,15 @@ class ModeEditRuleset(WatoMode):
                   for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0]) \
                   if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
         for folder, folder_rules in groups:
-            with table_element(
-                    "rules_%s_%s" % (self._name, folder.ident()),
-                    title="%s %s (%d)" % (_("Rules in folder"), folder.alias_path(show_main=False),
-                                          ruleset.num_rules_in_folder(folder)),
-                    css="ruleset",
-                    searchable=False,
-                    sortable=False,
-                    limit=None,
-                    foldable=True) as table:
+            with table_element("rules_%s_%s" % (self._name, folder.ident()),
+                               title="%s %s (%d)" %
+                               (_("Rules in folder"), folder.alias_path(show_main=False),
+                                ruleset.num_rules_in_folder(folder)),
+                               css="ruleset",
+                               searchable=False,
+                               sortable=False,
+                               limit=None,
+                               foldable=True) as table:
                 for _folder, rulenr, rule in folder_rules:
                     table.row(css=self._css_for_rule(search_options, rule))
                     self._set_focus(rulenr, rule)
@@ -879,8 +877,9 @@ class ModeEditRuleset(WatoMode):
         html.close_td()
         html.open_td()
 
-        html.dropdown(
-            "rule_folder", watolib.Folder.folder_choices(), deflt=html.request.var('folder'))
+        html.dropdown("rule_folder",
+                      watolib.Folder.folder_choices(),
+                      deflt=html.request.var('folder'))
         html.close_td()
         html.close_tr()
         html.close_table()
@@ -1190,8 +1189,8 @@ class EditRuleMode(WatoMode):
             add_change(
                 "edit-rule",
                 _("Changed properties of rule \"%s\", moved rule from "
-                  "folder \"%s\" to \"%s\"") % (self._ruleset.title(), self._folder.alias_path(),
-                                                new_rule_folder.alias_path()),
+                  "folder \"%s\" to \"%s\"") %
+                (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
                 sites=affected_sites)
 
         return (self._back_mode, self._success_message())
@@ -1404,17 +1403,16 @@ class VSExplicitConditions(Transform):
     def __init__(self, rulespec, **kwargs):
         self._rulespec = rulespec
         super(VSExplicitConditions, self).__init__(
-            Dictionary(
-                elements=self._condition_elements(),
-                headers=[
-                    (_("Folder"), "condition explicit", ["folder_path"]),
-                    (_("Host tags"), "condition explicit", ["host_tags"]),
-                    (_("Host labels"), "condition explicit", ["host_labels"]),
-                    (_("Explicit hosts"), "condition explicit", ["explicit_hosts"]),
-                    (self._service_title(), "condition explicit", ["explicit_services"]),
-                ],
-                optional_keys=["explicit_hosts", "explicit_services"],
-                **kwargs),
+            Dictionary(elements=self._condition_elements(),
+                       headers=[
+                           (_("Folder"), "condition explicit", ["folder_path"]),
+                           (_("Host tags"), "condition explicit", ["host_tags"]),
+                           (_("Host labels"), "condition explicit", ["host_labels"]),
+                           (_("Explicit hosts"), "condition explicit", ["explicit_hosts"]),
+                           (self._service_title(), "condition explicit", ["explicit_services"]),
+                       ],
+                       optional_keys=["explicit_hosts", "explicit_services"],
+                       **kwargs),
             forth=self._to_valuespec,
             back=self._from_valuespec,
         )
@@ -1495,8 +1493,8 @@ class VSExplicitConditions(Transform):
             host_folder=explicit["folder_path"],
             host_tags=explicit["host_tags"],
             host_labels=explicit["host_labels"] if self._allow_label_conditions() else {},
-            host_name=self._condition_list_from_valuespec(
-                explicit.get("explicit_hosts"), is_service=False),
+            host_name=self._condition_list_from_valuespec(explicit.get("explicit_hosts"),
+                                                          is_service=False),
             service_description=service_description,
         )
 
@@ -1573,9 +1571,8 @@ class VSExplicitConditions(Transform):
             title=self._service_title(),
             elements=[
                 self._vs_service_conditions(),
-                Checkbox(
-                    label=_("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"),
-                ),
+                Checkbox(label=_(
+                    "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"),),
             ],
         )
 
@@ -1616,8 +1613,9 @@ class VSExplicitConditions(Transform):
 
         return ListOfStrings(
             orientation="horizontal",
-            valuespec=RegExpUnicode(
-                size=30, mode=RegExpUnicode.prefix, validate=self._validate_list_entry),
+            valuespec=RegExpUnicode(size=30,
+                                    mode=RegExpUnicode.prefix,
+                                    validate=self._validate_list_entry),
             help=self._explicit_service_help_text(),
         )
 
@@ -1754,8 +1752,8 @@ class RuleConditionRenderer(object):
         labels_html = (self._single_label_condition(label_id, label_spec)
                        for label_id, label_spec in conditions.host_labels.iteritems())
         yield HTML(
-            _("Host matching labels: %s") % html.render_i(
-                _("and"), class_="label_operator").join(labels_html))
+            _("Host matching labels: %s") %
+            html.render_i(_("and"), class_="label_operator").join(labels_html))
 
     def _single_label_condition(self, label_id, label_spec):
         negate = False
@@ -2005,8 +2003,8 @@ class ModeNewRule(EditRuleMode):
         self._rulesets.save()
         add_change(
             "edit-rule",
-            _("Created new rule in ruleset \"%s\" in folder \"%s\"") % (self._ruleset.title(),
-                                                                        self._folder.alias_path()),  # pylint: disable=no-member
+            _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
+            (self._ruleset.title(), self._folder.alias_path()),  # pylint: disable=no-member
             sites=self._folder.all_site_ids())  # pylint: disable=no-member
 
     def _success_message(self):

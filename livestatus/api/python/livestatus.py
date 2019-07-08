@@ -364,9 +364,9 @@ class SingleSiteConnection(Helpers):
                 # recoverable by retrying
 
                 if "The handshake operation timed out" in str(e):
-                    raise MKLivestatusSocketError(
-                        "Cannot connect to '%s': %s. The encryption "
-                        "settings are probably wrong." % (self.socketurl, e))
+                    raise MKLivestatusSocketError("Cannot connect to '%s': %s. The encryption "
+                                                  "settings are probably wrong." %
+                                                  (self.socketurl, e))
 
                 raise
 
@@ -903,8 +903,8 @@ class MultiSiteConnection(Helpers):
                     (sitename, self.deadsites[sitename]["exception"]))
         conn = [t[2] for t in self.connections if t[0] == sitename]
         if len(conn) == 0:
-            raise MKLivestatusConfigError(
-                "Cannot send command to unconfigured site '%s'" % sitename)
+            raise MKLivestatusConfigError("Cannot send command to unconfigured site '%s'" %
+                                          sitename)
         conn[0].do_command(command)
 
     # Return connection to localhost (UNIX), if available

@@ -1061,8 +1061,9 @@ def paint_host_list(site, hosts):
 
 
 def format_plugin_output(output, row):
-    return cmk.gui.view_utils.format_plugin_output(
-        output, row, shall_escape=config.escape_plugin_output)
+    return cmk.gui.view_utils.format_plugin_output(output,
+                                                   row,
+                                                   shall_escape=config.escape_plugin_output)
 
 
 def link_to_view(content, row, view_name):
@@ -1110,11 +1111,10 @@ def url_to_view(row, view_name):
             except KeyError:
                 pass
 
-        add_site_hint = visuals.may_add_site_hint(
-            view_name,
-            info_keys=datasource.infos,
-            single_info_keys=view["single_infos"],
-            filter_names=dict(url_vars).keys())
+        add_site_hint = visuals.may_add_site_hint(view_name,
+                                                  info_keys=datasource.infos,
+                                                  single_info_keys=view["single_infos"],
+                                                  filter_names=dict(url_vars).keys())
         if add_site_hint and row.get('site'):
             url_vars.append(('site', row['site']))
 
@@ -1436,10 +1436,9 @@ class ViewStore(object):
         """Loads all view definitions from disk and returns them"""
         # Skip views which do not belong to known datasources
         return _transform_old_views(
-            visuals.load(
-                'views',
-                multisite_builtin_views,
-                skip_func=lambda v: v['datasource'] not in data_source_registry))
+            visuals.load('views',
+                         multisite_builtin_views,
+                         skip_func=lambda v: v['datasource'] not in data_source_registry))
 
     def _load_permitted_views(self, all_views):
         """Returns all view defitions that a user is allowed to use"""
@@ -1933,8 +1932,8 @@ class Cell(object):
 
             return css_classes, txt
         except Exception:
-            raise MKGeneralException(
-                'Failed to paint "%s": %s' % (self.painter_name(), traceback.format_exc()))
+            raise MKGeneralException('Failed to paint "%s": %s' %
+                                     (self.painter_name(), traceback.format_exc()))
 
     def render_content(self, row):
         if not row:

@@ -364,9 +364,8 @@ def check_dell_poweredge_temp(item, params, info):
             state_txt, state = state_table.get(Status, ("unknown state", 3))
             if state:
                 yield state, state_txt
-            yield check_temperature(
-                temp,
-                params,
-                "dell_poweredge_temp_%s" % item,
-                dev_levels=levels,
-                dev_levels_lower=lower_levels)
+            yield check_temperature(temp,
+                                    params,
+                                    "dell_poweredge_temp_%s" % item,
+                                    dev_levels=levels,
+                                    dev_levels_lower=lower_levels)

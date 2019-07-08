@@ -429,29 +429,27 @@ def test_custom_host_attribute_transform(old, new):
     "bulk",
 ])
 def test_host_attribute_topics(for_what):
-    assert attrs.get_sorted_host_attribute_topics(
-        for_what=for_what, new=False) == [
-            ("basic", u"Basic settings"),
-            ("address", u'Network Address'),
-            ("data_sources", u'Data sources'),
-            ('custom_attributes', u'Custom attributes'),
-            ("management_board", u'Management Board'),
-            ('meta_data', u'Creation / Locking'),
-        ]
+    assert attrs.get_sorted_host_attribute_topics(for_what=for_what, new=False) == [
+        ("basic", u"Basic settings"),
+        ("address", u'Network Address'),
+        ("data_sources", u'Data sources'),
+        ('custom_attributes', u'Custom attributes'),
+        ("management_board", u'Management Board'),
+        ('meta_data', u'Creation / Locking'),
+    ]
 
 
 @pytest.mark.usefixtures("load_config")
 def test_host_attribute_topics_for_folders():
-    assert attrs.get_sorted_host_attribute_topics(
-        "folder", new=False) == [
-            ("basic", u"Basic settings"),
-            ('address', u'Network Address'),
-            ('data_sources', u'Data sources'),
-            ('custom_attributes', u'Custom attributes'),
-            ('network_scan', u'Network Scan'),
-            ('management_board', u'Management Board'),
-            ('meta_data', u'Creation / Locking'),
-        ]
+    assert attrs.get_sorted_host_attribute_topics("folder", new=False) == [
+        ("basic", u"Basic settings"),
+        ('address', u'Network Address'),
+        ('data_sources', u'Data sources'),
+        ('custom_attributes', u'Custom attributes'),
+        ('network_scan', u'Network Scan'),
+        ('management_board', u'Management Board'),
+        ('meta_data', u'Creation / Locking'),
+    ]
 
 
 @pytest.mark.usefixtures("load_config")

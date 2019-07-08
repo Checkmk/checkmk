@@ -62,43 +62,42 @@ class RulespecCheckgroupParametersVpnTunnel(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("tunnels",
-                 ListOf(
-                     Tuple(
-                         title=("VPN Tunnel Endpoints"),
-                         elements=[
-                             IPv4Address(
-                                 title=_("IP-Address or Name of Tunnel Endpoint"),
-                                 help=_(
-                                     "The configured value must match a tunnel reported by the monitored "
-                                     "device."),
-                                 allow_empty=False,
-                             ),
-                             TextUnicode(
-                                 title=_("Tunnel Alias"),
-                                 help=_(
-                                     "You can configure an individual alias here for the tunnel matching "
-                                     "the IP-Address or Name configured in the field above."),
-                             ),
-                             MonitoringState(
-                                 default_value=2,
-                                 title=_("State if tunnel is not found"),
-                             )
-                         ],
-                     ),
-                     add_label=_("Add tunnel"),
-                     movable=False,
-                     title=_("VPN tunnel specific configuration"),
-                 )),
-                ("state",
-                 MonitoringState(
-                     title=_("Default state to report when tunnel can not be found anymore"),
-                     help=_("Default state if a tunnel, which is not listed above in this rule, "
-                            "can no longer be found."),
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("tunnels",
+             ListOf(
+                 Tuple(
+                     title=("VPN Tunnel Endpoints"),
+                     elements=[
+                         IPv4Address(
+                             title=_("IP-Address or Name of Tunnel Endpoint"),
+                             help=_(
+                                 "The configured value must match a tunnel reported by the monitored "
+                                 "device."),
+                             allow_empty=False,
+                         ),
+                         TextUnicode(
+                             title=_("Tunnel Alias"),
+                             help=_(
+                                 "You can configure an individual alias here for the tunnel matching "
+                                 "the IP-Address or Name configured in the field above."),
+                         ),
+                         MonitoringState(
+                             default_value=2,
+                             title=_("State if tunnel is not found"),
+                         )
+                     ],
+                 ),
+                 add_label=_("Add tunnel"),
+                 movable=False,
+                 title=_("VPN tunnel specific configuration"),
+             )),
+            ("state",
+             MonitoringState(
+                 title=_("Default state to report when tunnel can not be found anymore"),
+                 help=_("Default state if a tunnel, which is not listed above in this rule, "
+                        "can no longer be found."),
+             )),
+        ],)
 
     @property
     def item_spec(self):

@@ -100,12 +100,12 @@ class RulespecCheckgroupParametersEwon(CheckParameterRulespecWithItem):
                                           title=_("O2 levels"),
                                           elements=[
                                               Percentage(title=_("Warning at"), default_value=16.0),
-                                              Percentage(
-                                                  title=_("Critical at"), default_value=17.0),
-                                              Percentage(
-                                                  title=_("Warning below"), default_value=14.0),
-                                              Percentage(
-                                                  title=_("Critical below"), default_value=13.0),
+                                              Percentage(title=_("Critical at"),
+                                                         default_value=17.0),
+                                              Percentage(title=_("Warning below"),
+                                                         default_value=14.0),
+                                              Percentage(title=_("Critical below"),
+                                                         default_value=13.0),
                                           ],
                                       ))],
                        ))],
@@ -113,7 +113,6 @@ class RulespecCheckgroupParametersEwon(CheckParameterRulespecWithItem):
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Item name"),
-            help=_("The item name. The meaning of this depends on the proxied device: "
-                   "- Wagner OxyReduct: Name of the room/protection zone"))
+        return TextAscii(title=_("Item name"),
+                         help=_("The item name. The meaning of this depends on the proxied device: "
+                                "- Wagner OxyReduct: Name of the room/protection zone"))

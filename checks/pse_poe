@@ -56,8 +56,9 @@ def parse_pse_poe(info):
     """
     poe_dict = {}
     for oid_end, poe_max, pse_op_status, poe_used in info:
-        poe_dict[str(oid_end)] = PseData(
-            poe_max=int(poe_max), poe_used=int(poe_used), pse_op_status=int(pse_op_status))
+        poe_dict[str(oid_end)] = PseData(poe_max=int(poe_max),
+                                         poe_used=int(poe_used),
+                                         pse_op_status=int(pse_op_status))
     return poe_dict
 
 
@@ -79,12 +80,12 @@ def check_pse_poe(item, params, pse_data):
         poe_used_percentage = ((float(pse_data.poe_used) / float(pse_data.poe_max)) *
                                100) if pse_data.poe_max > 0 else 0
 
-        return check_levels(
-            poe_used_percentage,
-            "power_usage_percentage",
-            params["levels"],
-            human_readable_func=get_percent_human_readable,
-            infoname="POE usage (%sW/%sW): " % (pse_data.poe_used, pse_data.poe_max))
+        return check_levels(poe_used_percentage,
+                            "power_usage_percentage",
+                            params["levels"],
+                            human_readable_func=get_percent_human_readable,
+                            infoname="POE usage (%sW/%sW): " %
+                            (pse_data.poe_used, pse_data.poe_max))
 
     # PoE on device is turned OFF
     if pse_data.pse_op_status == Status.OFF:

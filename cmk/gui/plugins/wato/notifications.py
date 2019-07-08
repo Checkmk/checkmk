@@ -156,37 +156,35 @@ class NotificationParameterMail(NotificationParameter):
                  rows="auto",
              )),
             ("url_prefix",
-             Transform(
-                 CascadingDropdown(
-                     style="dropdown",
-                     title=_("URL prefix for links to Check_MK"),
-                     help=_(
-                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                         "host and service links within the notification mail "
-                         "is filled automatically. "
-                         "If you specify an URL prefix here, then several parts of the "
-                         "email body are armed with hyperlinks to your Check_MK GUI. In both cases "
-                         "the recipient of the email can directly visit the host or "
-                         "service in question in Check_MK. Specify an absolute URL including "
-                         "the <tt>.../check_mk/</tt>"),
-                     choices=[
-                         ("automatic_http", _("Automatic HTTP")),
-                         ("automatic_https", _("Automatic HTTPs")),
-                         ("manual", _("Specify URL prefix"),
-                          TextAscii(
-                              regex="^(http|https)://.*/check_mk/$",
-                              regex_error=_("The URL must begin with <tt>http</tt> or "
-                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                              size=64,
-                              default_value="http://" + socket.gethostname() + "/" +
-                              (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
-                          )),
-                     ],
-                     default_value=html.request.is_ssl_request and "automatic_https" or
-                     "automatic_http",
-                 ),
-                 forth=transform_forth_html_mail_url_prefix,
-                 back=transform_back_html_mail_url_prefix)),
+             Transform(CascadingDropdown(
+                 style="dropdown",
+                 title=_("URL prefix for links to Check_MK"),
+                 help=_("If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                        "host and service links within the notification mail "
+                        "is filled automatically. "
+                        "If you specify an URL prefix here, then several parts of the "
+                        "email body are armed with hyperlinks to your Check_MK GUI. In both cases "
+                        "the recipient of the email can directly visit the host or "
+                        "service in question in Check_MK. Specify an absolute URL including "
+                        "the <tt>.../check_mk/</tt>"),
+                 choices=[
+                     ("automatic_http", _("Automatic HTTP")),
+                     ("automatic_https", _("Automatic HTTPs")),
+                     ("manual", _("Specify URL prefix"),
+                      TextAscii(
+                          regex="^(http|https)://.*/check_mk/$",
+                          regex_error=_("The URL must begin with <tt>http</tt> or "
+                                        "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                          size=64,
+                          default_value="http://" + socket.gethostname() + "/" +
+                          (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
+                      )),
+                 ],
+                 default_value=html.request.is_ssl_request and "automatic_https" or
+                 "automatic_http",
+             ),
+                       forth=transform_forth_html_mail_url_prefix,
+                       back=transform_back_html_mail_url_prefix)),
             ("no_floating_graphs",
              FixedValue(
                  True,
@@ -256,33 +254,32 @@ class NotificationParameterSlack(NotificationParameter):
                                ))],
                  )),
                 ("url_prefix",
-                 Transform(
-                     CascadingDropdown(
-                         title=_("URL prefix for links to Check_MK"),
-                         help=_(
-                             "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                             "host and service links within the notification mail "
-                             "is filled automatically. "
-                             "If you specify an URL prefix here, then several parts of the "
-                             "slack message are armed with hyperlinks to your Check_MK GUI. In both cases "
-                             "the recipient of the message can directly visit the host or "
-                             "service in question in Check_MK. Specify an absolute URL including "
-                             "the <tt>.../check_mk/</tt>"),
-                         choices=[
-                             ("automatic_http", _("Automatic HTTP")),
-                             ("automatic_https", _("Automatic HTTPs")),
-                             ("manual", _("Specify URL prefix"),
-                              TextAscii(
-                                  regex="^(http|https)://.*/check_mk/$",
-                                  regex_error=_("The URL must begin with <tt>http</tt> or "
-                                                "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                                  size=64,
-                                  default_value=local_site_url,
-                              )),
-                         ],
-                     ),
-                     forth=transform_forth_html_mail_url_prefix,
-                     back=transform_back_html_mail_url_prefix)),
+                 Transform(CascadingDropdown(
+                     title=_("URL prefix for links to Check_MK"),
+                     help=_(
+                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                         "host and service links within the notification mail "
+                         "is filled automatically. "
+                         "If you specify an URL prefix here, then several parts of the "
+                         "slack message are armed with hyperlinks to your Check_MK GUI. In both cases "
+                         "the recipient of the message can directly visit the host or "
+                         "service in question in Check_MK. Specify an absolute URL including "
+                         "the <tt>.../check_mk/</tt>"),
+                     choices=[
+                         ("automatic_http", _("Automatic HTTP")),
+                         ("automatic_https", _("Automatic HTTPs")),
+                         ("manual", _("Specify URL prefix"),
+                          TextAscii(
+                              regex="^(http|https)://.*/check_mk/$",
+                              regex_error=_("The URL must begin with <tt>http</tt> or "
+                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                              size=64,
+                              default_value=local_site_url,
+                          )),
+                     ],
+                 ),
+                           forth=transform_forth_html_mail_url_prefix,
+                           back=transform_back_html_mail_url_prefix)),
             ],
         )
 
@@ -307,13 +304,12 @@ class NotificationParameterVictorOPS(NotificationParameter):
                        "<br />This URL can also be collected from the Password Store from Check_MK."
                       ),
                      choices=[("webhook_url", _("REST Endpoint URL"),
-                               HTTPUrl(
-                                   size=80,
-                                   allow_empty=False,
-                                   regex=r"^https://alert\.victorops\.com/integrations/.+",
-                                   regex_error=_(
-                                       "The Webhook-URL must begin with "
-                                       "<tt>https://alert.victorops.com/integrations</tt>"))),
+                               HTTPUrl(size=80,
+                                       allow_empty=False,
+                                       regex=r"^https://alert\.victorops\.com/integrations/.+",
+                                       regex_error=_(
+                                           "The Webhook-URL must begin with "
+                                           "<tt>https://alert.victorops.com/integrations</tt>"))),
                               ("store", _("URL from password store"),
                                DropdownChoice(
                                    sorted=True,
@@ -321,34 +317,33 @@ class NotificationParameterVictorOPS(NotificationParameter):
                                ))],
                  )),
                 ("url_prefix",
-                 Transform(
-                     CascadingDropdown(
-                         style="dropdown",
-                         title=_("URL prefix for links to Check_MK"),
-                         help=_(
-                             "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                             "host and service links within the notification mail "
-                             "is filled automatically. "
-                             "If you specify an URL prefix here, then several parts of the "
-                             "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
-                             "the recipient of the message can directly visit the host or "
-                             "service in question in Check_MK. Specify an absolute URL including "
-                             "the <tt>.../check_mk/</tt>"),
-                         choices=[
-                             ("automatic_http", _("Automatic HTTP")),
-                             ("automatic_https", _("Automatic HTTPs")),
-                             ("manual", _("Specify URL prefix"),
-                              TextAscii(
-                                  regex="^(http|https)://.*/check_mk/$",
-                                  regex_error=_("The URL must begin with <tt>http</tt> or "
-                                                "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                                  size=64,
-                                  default_value=local_site_url,
-                              )),
-                         ],
-                     ),
-                     forth=transform_forth_html_mail_url_prefix,
-                     back=transform_back_html_mail_url_prefix)),
+                 Transform(CascadingDropdown(
+                     style="dropdown",
+                     title=_("URL prefix for links to Check_MK"),
+                     help=_(
+                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                         "host and service links within the notification mail "
+                         "is filled automatically. "
+                         "If you specify an URL prefix here, then several parts of the "
+                         "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
+                         "the recipient of the message can directly visit the host or "
+                         "service in question in Check_MK. Specify an absolute URL including "
+                         "the <tt>.../check_mk/</tt>"),
+                     choices=[
+                         ("automatic_http", _("Automatic HTTP")),
+                         ("automatic_https", _("Automatic HTTPs")),
+                         ("manual", _("Specify URL prefix"),
+                          TextAscii(
+                              regex="^(http|https)://.*/check_mk/$",
+                              regex_error=_("The URL must begin with <tt>http</tt> or "
+                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                              size=64,
+                              default_value=local_site_url,
+                          )),
+                     ],
+                 ),
+                           forth=transform_forth_html_mail_url_prefix,
+                           back=transform_back_html_mail_url_prefix)),
             ],
         )
 
@@ -375,38 +370,36 @@ class NotificationParameterPagerDuty(NotificationParameter):
                                DropdownChoice(sorted=True, choices=passwordstore_choices))],
                  )),
                 ("webhook_url",
-                 FixedValue(
-                     "https://events.pagerduty.com/v2/enqueue",
-                     title=_("API Endpoint from PagerDuty V2"))),
+                 FixedValue("https://events.pagerduty.com/v2/enqueue",
+                            title=_("API Endpoint from PagerDuty V2"))),
                 ("url_prefix",
-                 Transform(
-                     CascadingDropdown(
-                         style="dropdown",
-                         title=_("URL prefix for links to Check_MK"),
-                         help=_(
-                             "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                             "host and service links within the notification mail "
-                             "is filled automatically. "
-                             "If you specify an URL prefix here, then several parts of the "
-                             "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
-                             "the recipient of the message can directly visit the host or "
-                             "service in question in Check_MK. Specify an absolute URL including "
-                             "the <tt>.../check_mk/</tt>"),
-                         choices=[
-                             ("automatic_http", _("Automatic HTTP")),
-                             ("automatic_https", _("Automatic HTTPs")),
-                             ("manual", _("Specify URL prefix"),
-                              TextAscii(
-                                  regex="^(http|https)://.*/check_mk/$",
-                                  regex_error=_("The URL must begin with <tt>http</tt> or "
-                                                "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                                  size=64,
-                                  default_value=local_site_url,
-                              )),
-                         ],
-                     ),
-                     forth=transform_forth_html_mail_url_prefix,
-                     back=transform_back_html_mail_url_prefix)),
+                 Transform(CascadingDropdown(
+                     style="dropdown",
+                     title=_("URL prefix for links to Check_MK"),
+                     help=_(
+                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                         "host and service links within the notification mail "
+                         "is filled automatically. "
+                         "If you specify an URL prefix here, then several parts of the "
+                         "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
+                         "the recipient of the message can directly visit the host or "
+                         "service in question in Check_MK. Specify an absolute URL including "
+                         "the <tt>.../check_mk/</tt>"),
+                     choices=[
+                         ("automatic_http", _("Automatic HTTP")),
+                         ("automatic_https", _("Automatic HTTPs")),
+                         ("manual", _("Specify URL prefix"),
+                          TextAscii(
+                              regex="^(http|https)://.*/check_mk/$",
+                              regex_error=_("The URL must begin with <tt>http</tt> or "
+                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                              size=64,
+                              default_value=local_site_url,
+                          )),
+                     ],
+                 ),
+                           forth=transform_forth_html_mail_url_prefix,
+                           back=transform_back_html_mail_url_prefix)),
             ],
         )
 
@@ -419,93 +412,92 @@ class NotificationParameterASCIIMail(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(
-            elements=[
-                ("from", EmailAddress(
-                    title=_("From: Address"),
-                    size=40,
-                    allow_empty=False,
-                )),
-                ("reply_to", EmailAddress(
-                    title=_("Reply-To: Address"),
-                    size=40,
-                    allow_empty=False,
-                )),
-                ("host_subject",
-                 TextUnicode(
-                     title=_("Subject for host notifications"),
-                     help=_("Here you are allowed to use all macros that are defined in the "
-                            "notification context."),
-                     default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                     size=64,
-                 )),
-                ("service_subject",
-                 TextUnicode(
-                     title=_("Subject for service notifications"),
-                     help=_("Here you are allowed to use all macros that are defined in the "
-                            "notification context."),
-                     default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                     size=64,
-                 )),
-                ("common_body",
-                 TextAreaUnicode(
-                     title=_("Body head for both host and service notifications"),
-                     rows=7,
-                     cols=58,
-                     monospaced=True,
-                     default_value="""Host:     $HOSTNAME$
+        return Dictionary(elements=[
+            ("from", EmailAddress(
+                title=_("From: Address"),
+                size=40,
+                allow_empty=False,
+            )),
+            ("reply_to", EmailAddress(
+                title=_("Reply-To: Address"),
+                size=40,
+                allow_empty=False,
+            )),
+            ("host_subject",
+             TextUnicode(
+                 title=_("Subject for host notifications"),
+                 help=_("Here you are allowed to use all macros that are defined in the "
+                        "notification context."),
+                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
+                 size=64,
+             )),
+            ("service_subject",
+             TextUnicode(
+                 title=_("Subject for service notifications"),
+                 help=_("Here you are allowed to use all macros that are defined in the "
+                        "notification context."),
+                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+                 size=64,
+             )),
+            ("common_body",
+             TextAreaUnicode(
+                 title=_("Body head for both host and service notifications"),
+                 rows=7,
+                 cols=58,
+                 monospaced=True,
+                 default_value="""Host:     $HOSTNAME$
 Alias:    $HOSTALIAS$
 Address:  $HOSTADDRESS$
 """,
-                 )),
-                ("host_body",
-                 TextAreaUnicode(
-                     title=_("Body tail for host notifications"),
-                     rows=9,
-                     cols=58,
-                     monospaced=True,
-                     default_value="""Event:    $EVENT_TXT$
+             )),
+            ("host_body",
+             TextAreaUnicode(
+                 title=_("Body tail for host notifications"),
+                 rows=9,
+                 cols=58,
+                 monospaced=True,
+                 default_value="""Event:    $EVENT_TXT$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
 """,
-                 )),
-                ("service_body",
-                 TextAreaUnicode(
-                     title=_("Body tail for service notifications"),
-                     rows=11,
-                     cols=58,
-                     monospaced=True,
-                     default_value="""Service:  $SERVICEDESC$
+             )),
+            ("service_body",
+             TextAreaUnicode(
+                 title=_("Body tail for service notifications"),
+                 rows=11,
+                 cols=58,
+                 monospaced=True,
+                 default_value="""Service:  $SERVICEDESC$
 Event:    $EVENT_TXT$
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
 """,
-                 )),
-                ('bulk_sort_order',
-                 DropdownChoice(
-                     choices=[
-                         ('oldest_first', _('Oldest first')),
-                         ('newest_first', _('Newest first')),
-                     ],
-                     help=_(
-                         "With this option you can specify, whether the oldest (default) or "
-                         "the newest notification should get shown at the top of the notification mail."
-                     ),
-                     title=_("Notification sort order for bulk notifications"),
-                     default="oldest_first")),
-                ("disable_multiplexing",
-                 FixedValue(
-                     True,
-                     title=_("Send seperate notifications to every recipient"),
-                     totext=_("A seperate notification is send to every recipient. Recipients "
-                              "cannot see which other recipients were notified."),
-                     help=_("Per default only one notification is generated for all recipients. "
-                            "Therefore, all recipients can see who was notified and reply to "
-                            "all other recipients."),
-                 )),
-            ],)
+             )),
+            ('bulk_sort_order',
+             DropdownChoice(
+                 choices=[
+                     ('oldest_first', _('Oldest first')),
+                     ('newest_first', _('Newest first')),
+                 ],
+                 help=_(
+                     "With this option you can specify, whether the oldest (default) or "
+                     "the newest notification should get shown at the top of the notification mail."
+                 ),
+                 title=_("Notification sort order for bulk notifications"),
+                 default="oldest_first")),
+            ("disable_multiplexing",
+             FixedValue(
+                 True,
+                 title=_("Send seperate notifications to every recipient"),
+                 totext=_("A seperate notification is send to every recipient. Recipients "
+                          "cannot see which other recipients were notified."),
+                 help=_("Per default only one notification is generated for all recipients. "
+                        "Therefore, all recipients can see who was notified and reply to "
+                        "all other recipients."),
+             )),
+        ],)
 
 
 @notification_parameter_registry.register
@@ -686,28 +678,26 @@ class NotificationParameterServiceNow(NotificationParameter):
                      size=68,
                  )),
                 ("host_desc",
-                 TextAreaUnicode(
-                     title=_("Description for host incidents"),
-                     help=_("Text that should be set in field <tt>Description</tt> "
-                            "for host notifications."),
-                     rows=7,
-                     cols=58,
-                     monospaced=True,
-                     default_value="""Host: $HOSTNAME$
+                 TextAreaUnicode(title=_("Description for host incidents"),
+                                 help=_("Text that should be set in field <tt>Description</tt> "
+                                        "for host notifications."),
+                                 rows=7,
+                                 cols=58,
+                                 monospaced=True,
+                                 default_value="""Host: $HOSTNAME$
 Event:    $EVENT_TXT$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
 """)),
                 ("svc_desc",
-                 TextAreaUnicode(
-                     title=_("Description for service incidents"),
-                     help=_("Text that should be set in field <tt>Description</tt> "
-                            "for service notifications."),
-                     rows=11,
-                     cols=58,
-                     monospaced=True,
-                     default_value="""Host: $HOSTNAME$
+                 TextAreaUnicode(title=_("Description for service incidents"),
+                                 help=_("Text that should be set in field <tt>Description</tt> "
+                                        "for service notifications."),
+                                 rows=11,
+                                 cols=58,
+                                 monospaced=True,
+                                 default_value="""Host: $HOSTNAME$
 Service:  $SERVICEDESC$
 Event:    $EVENT_TXT$
 Output:   $SERVICEOUTPUT$
@@ -807,11 +797,10 @@ $LONGSERVICEOUTPUT$
                      ],
                  )),
                 ("timeout",
-                 TextAscii(
-                     title=_("Set optional timeout for connections to servicenow"),
-                     help=_("Here you can configure timeout settings in seconds."),
-                     default_value=10,
-                     size=3)),
+                 TextAscii(title=_("Set optional timeout for connections to servicenow"),
+                           help=_("Here you can configure timeout settings in seconds."),
+                           default_value=10,
+                           size=3)),
             ],
         )
 
@@ -852,16 +841,15 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      size=16,
                  )),
                 ('priority',
-                 DropdownChoice(
-                     title=_("Priority"),
-                     choices=[
-                         ('P1', _('P1 - Critical')),
-                         ('P2', _('P2 - High')),
-                         ('P3', _('P3 - Moderate')),
-                         ('P4', _('P4 - Low')),
-                         ('P5', _('P5 - Informational')),
-                     ],
-                     default="P3")),
+                 DropdownChoice(title=_("Priority"),
+                                choices=[
+                                    ('P1', _('P1 - Critical')),
+                                    ('P2', _('P2 - High')),
+                                    ('P3', _('P3 - Moderate')),
+                                    ('P4', _('P4 - Low')),
+                                    ('P5', _('P5 - Informational')),
+                                ],
+                                default="P3")),
                 ("note_created",
                  TextUnicode(
                      title=_("Note while creating"),
@@ -893,24 +881,22 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      size=68,
                  )),
                 ("host_desc",
-                 TextAreaUnicode(
-                     title=_("Message for host alerts"),
-                     rows=7,
-                     cols=58,
-                     monospaced=True,
-                     default_value="""Host: $HOSTNAME$
+                 TextAreaUnicode(title=_("Message for host alerts"),
+                                 rows=7,
+                                 cols=58,
+                                 monospaced=True,
+                                 default_value="""Host: $HOSTNAME$
 Event:    $EVENT_TXT$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
 """)),
                 ("svc_desc",
-                 TextAreaUnicode(
-                     title=_("Message for service alerts"),
-                     rows=11,
-                     cols=58,
-                     monospaced=True,
-                     default_value="""Host: $HOSTNAME$
+                 TextAreaUnicode(title=_("Message for service alerts"),
+                                 rows=11,
+                                 cols=58,
+                                 monospaced=True,
+                                 default_value="""Host: $HOSTNAME$
 Service:  $SERVICEDESC$
 Event:    $EVENT_TXT$
 Output:   $SERVICEOUTPUT$
@@ -960,23 +946,22 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(
-            elements=[
-                ("facility",
-                 DropdownChoice(
-                     title=_("Syslog Facility to use"),
-                     help=_("The notifications will be converted into syslog messages with "
-                            "the facility that you choose here. In the Event Console you can "
-                            "later create a rule matching this facility."),
-                     choices=mkeventd.syslog_facilities,
-                 )),
-                ("remote",
-                 IPv4Address(
-                     title=_("IP Address of remote Event Console"),
-                     help=_("If you set this parameter then the notifications will be sent via "
-                            "syslog/UDP (port 514) to a remote Event Console or syslog server."),
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("facility",
+             DropdownChoice(
+                 title=_("Syslog Facility to use"),
+                 help=_("The notifications will be converted into syslog messages with "
+                        "the facility that you choose here. In the Event Console you can "
+                        "later create a rule matching this facility."),
+                 choices=mkeventd.syslog_facilities,
+             )),
+            ("remote",
+             IPv4Address(
+                 title=_("IP Address of remote Event Console"),
+                 help=_("If you set this parameter then the notifications will be sent via "
+                        "syslog/UDP (port 514) to a remote Event Console or syslog server."),
+             )),
+        ],)
 
 
 @notification_parameter_registry.register
@@ -991,19 +976,17 @@ class NotificationParameterSpectrum(NotificationParameter):
             optional_keys=None,
             elements=[
                 ("destination",
-                 IPv4Address(
-                     title=_("Destination IP"),
-                     help=_("IP Address of the Spectrum server receiving the SNMP trap"))),
+                 IPv4Address(title=_("Destination IP"),
+                             help=_("IP Address of the Spectrum server receiving the SNMP trap"))),
                 ("community",
                  Password(
                      title=_("SNMP Community"),
                      help=_("SNMP Community for the SNMP trap"),
                  )),
                 ("baseoid",
-                 TextAscii(
-                     title=_("Base OID"),
-                     help=_("The base OID for the trap content"),
-                     default_value="1.3.6.1.4.1.1234")),
+                 TextAscii(title=_("Base OID"),
+                           help=_("The base OID for the trap content"),
+                           default_value="1.3.6.1.4.1.1234")),
             ],
         )
 

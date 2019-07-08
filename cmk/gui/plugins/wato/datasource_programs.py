@@ -151,31 +151,28 @@ class RulespecSpecialAgentsKubernetes(HostRulespec):
                         allow_empty=False,
                     )),
                     ("infos",
-                     ListChoice(
-                         choices=[
-                             ("nodes", _("Nodes")),
-                             ("services", _("Services")),
-                             ("deployments", _("Deployments")),
-                             ("pods", _("Pods")),
-                         ],
-                         default_value=[
-                             "nodes",
-                         ],
-                         allow_empty=False,
-                         title=_("Retrieve information about..."))),
+                     ListChoice(choices=[
+                         ("nodes", _("Nodes")),
+                         ("services", _("Services")),
+                         ("deployments", _("Deployments")),
+                         ("pods", _("Pods")),
+                     ],
+                                default_value=[
+                                    "nodes",
+                                ],
+                                allow_empty=False,
+                                title=_("Retrieve information about..."))),
                     ("port",
-                     Integer(
-                         title=_(u"Port"),
-                         help=_("If no port is given a default value of 443 will be used."),
-                         default_value=443)),
+                     Integer(title=_(u"Port"),
+                             help=_("If no port is given a default value of 443 will be used."),
+                             default_value=443)),
                     ("url-prefix",
-                     HTTPUrl(
-                         title=_("Custom URL prefix"),
-                         help=_("Defines the scheme (either HTTP or HTTPS) and host part "
-                                "of Kubernetes API calls like e.g. \"https://example.com\". "
-                                "If no prefix is specified HTTPS together with the IP of "
-                                "the host will be used."),
-                         allow_empty=False)),
+                     HTTPUrl(title=_("Custom URL prefix"),
+                             help=_("Defines the scheme (either HTTP or HTTPS) and host part "
+                                    "of Kubernetes API calls like e.g. \"https://example.com\". "
+                                    "If no prefix is specified HTTPS together with the IP of "
+                                    "the host will be used."),
+                             allow_empty=False)),
                     ("path-prefix",
                      TextAscii(
                          title=_("Custom path prefix"),
@@ -186,13 +183,12 @@ class RulespecSpecialAgentsKubernetes(HostRulespec):
                          ),
                          allow_empty=False)),
                     ("no-cert-check",
-                     Alternative(
-                         title=_("Disable certificate verification"),
-                         elements=[
-                             FixedValue(False, title=_("Deactivated"), totext=""),
-                             FixedValue(True, title=_("Activated"), totext=""),
-                         ],
-                         default_value=False)),
+                     Alternative(title=_("Disable certificate verification"),
+                                 elements=[
+                                     FixedValue(False, title=_("Deactivated"), totext=""),
+                                     FixedValue(True, title=_("Activated"), totext=""),
+                                 ],
+                                 default_value=False)),
                 ],
                 optional_keys=["port", "url-prefix", "path-prefix", "no-cert-check"],
                 title=_(u"Kubernetes"),
@@ -225,178 +221,175 @@ class RulespecSpecialAgentsVsphere(HostRulespec):
 
     @property
     def valuespec(self):
-        return Transform(
-            valuespec=Dictionary(
-                elements=[
-                    ("user", TextAscii(
-                        title=_("vSphere User name"),
-                        allow_empty=False,
-                    )),
-                    ("secret", Password(
-                        title=_("vSphere secret"),
-                        allow_empty=False,
-                    )),
-                    ("direct",
-                     DropdownChoice(
-                         title=_("Type of query"),
+        return Transform(valuespec=Dictionary(
+            elements=[
+                ("user", TextAscii(
+                    title=_("vSphere User name"),
+                    allow_empty=False,
+                )),
+                ("secret", Password(
+                    title=_("vSphere secret"),
+                    allow_empty=False,
+                )),
+                ("direct",
+                 DropdownChoice(
+                     title=_("Type of query"),
+                     choices=[
+                         (True, _("Queried host is a host system")),
+                         ("hostsystem_agent",
+                          _("Queried host is a host system with Check_MK Agent installed")),
+                         (False, _("Queried host is the vCenter")),
+                         ("agent", _("Queried host is the vCenter with Check_MK Agent installed")),
+                     ],
+                     default=True,
+                 )),
+                ("tcp_port",
+                 Integer(
+                     title=_("TCP Port number"),
+                     help=_("Port number for HTTPS connection to vSphere"),
+                     default_value=443,
+                     minvalue=1,
+                     maxvalue=65535,
+                 )),
+                ("ssl",
+                 Alternative(
+                     title=_("SSL certificate checking"),
+                     elements=[
+                         FixedValue(False, title=_("Deactivated"), totext=""),
+                         FixedValue(True, title=_("Use hostname"), totext=""),
+                         TextAscii(
+                             title=_("Use other hostname"),
+                             help=
+                             _("The IP of the other hostname needs to be the same IP as the host address"
+                              ))
+                     ],
+                     default_value=False)),
+                ("timeout",
+                 Integer(
+                     title=_("Connect Timeout"),
+                     help=_(
+                         "The network timeout in seconds when communicating with vSphere or "
+                         "to the Check_MK Agent. The default is 60 seconds. Please note that this "
+                         "is not a total timeout but is applied to each individual network transation."
+                     ),
+                     default_value=60,
+                     minvalue=1,
+                     unit=_("seconds"),
+                 )),
+                ("use_pysphere",
+                 Checkbox(
+                     title=_("Compatibility mode"),
+                     label=_("Support ESX 4.1 (using slower PySphere implementation)"),
+                     true_label=_("Support 4.1"),
+                     false_label=_("fast"),
+                     help=_("The current very performant implementation of the ESX special agent "
+                            "does not support older ESX versions than 5.0. Please use the slow "
+                            "compatibility mode for those old hosts."),
+                 )),
+                ("infos",
+                 Transform(
+                     ListChoice(
                          choices=[
-                             (True, _("Queried host is a host system")),
-                             ("hostsystem_agent",
-                              _("Queried host is a host system with Check_MK Agent installed")),
-                             (False, _("Queried host is the vCenter")),
-                             ("agent",
-                              _("Queried host is the vCenter with Check_MK Agent installed")),
+                             ("hostsystem", _("Host Systems")),
+                             ("virtualmachine", _("Virtual Machines")),
+                             ("datastore", _("Datastores")),
+                             ("counters", _("Performance Counters")),
+                             ("licenses", _("License Usage")),
                          ],
-                         default=True,
-                     )),
-                    ("tcp_port",
-                     Integer(
-                         title=_("TCP Port number"),
-                         help=_("Port number for HTTPS connection to vSphere"),
-                         default_value=443,
-                         minvalue=1,
-                         maxvalue=65535,
-                     )),
-                    ("ssl",
-                     Alternative(
-                         title=_("SSL certificate checking"),
-                         elements=[
-                             FixedValue(False, title=_("Deactivated"), totext=""),
-                             FixedValue(True, title=_("Use hostname"), totext=""),
-                             TextAscii(
-                                 title=_("Use other hostname"),
-                                 help=
-                                 _("The IP of the other hostname needs to be the same IP as the host address"
-                                  ))
-                         ],
-                         default_value=False)),
-                    ("timeout",
-                     Integer(
-                         title=_("Connect Timeout"),
+                         default_value=["hostsystem", "virtualmachine", "datastore", "counters"],
+                         allow_empty=False,
+                     ),
+                     forth=lambda v: [x.replace("storage", "datastore") for x in v],
+                     title=_("Retrieve information about..."),
+                 )),
+                ("skip_placeholder_vms",
+                 Checkbox(
+                     title=_("Placeholder VMs"),
+                     label=_("Do no monitor placeholder VMs"),
+                     default_value=True,
+                     true_label=_("ignore"),
+                     false_label=_("monitor"),
+                     help=
+                     _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
+                       "virtual machines in case the default vm is unable to start. This option tells the "
+                       "vsphere agent to exclude placeholder vms in its output."))),
+                ("host_pwr_display",
+                 DropdownChoice(
+                     title=_("Display ESX Host power state on"),
+                     choices=[
+                         (None, _("The queried ESX system (vCenter / Host)")),
+                         ("esxhost", _("The ESX Host")),
+                         ("vm", _("The Virtual Machine")),
+                     ],
+                     default=None,
+                 )),
+                ("vm_pwr_display",
+                 DropdownChoice(
+                     title=_("Display VM power state <i>additionally</i> on"),
+                     help=_("The power state can be displayed additionally either "
+                            "on the ESX host or the VM. This will result in services "
+                            "for <i>both</i> the queried system and the ESX host / VM. "
+                            "By disabling the unwanted services it is then possible "
+                            "to configure where the services are displayed."),
+                     choices=[
+                         (None, _("The queried ESX system (vCenter / Host)")),
+                         ("esxhost", _("The ESX Host")),
+                         ("vm", _("The Virtual Machine")),
+                     ],
+                     default=None,
+                 )),
+                ("snapshot_display",
+                 DropdownChoice(
+                     title=_("<i>Additionally</i> display snapshots on"),
+                     help=_("The created snapshots can be displayed additionally either "
+                            "on the ESX host or the vCenter. This will result in services "
+                            "for <i>both</i> the queried system and the ESX host / vCenter. "
+                            "By disabling the unwanted services it is then possible "
+                            "to configure where the services are displayed."),
+                     choices=[
+                         (None, _("The Virtual Machine")),
+                         ("esxhost", _("The ESX Host")),
+                         ("vCenter", _("The queried ESX system (vCenter / Host)")),
+                     ],
+                     default=None,
+                 )),
+                ("vm_piggyname",
+                 DropdownChoice(
+                     title=_("Piggyback name of virtual machines"),
+                     choices=[
+                         ("alias", _("Use the name specified in the ESX system")),
+                         ("hostname",
+                          _("Use the VMs hostname if set, otherwise fall back to ESX name")),
+                     ],
+                     default="alias",
+                 )),
+                ("spaces",
+                 DropdownChoice(
+                     title=_("Spaces in hostnames"),
+                     choices=[
+                         ("cut", _("Cut everything after first space")),
+                         ("underscore", _("Replace with underscores")),
+                     ],
+                     default="underscore",
+                 )),
+            ],
+            optional_keys=[
+                "tcp_port",
+                "timeout",
+                "vm_pwr_display",
+                "host_pwr_display",
+                "snapshot_display",
+                "vm_piggyname",
+            ],
+        ),
+                         title=_("Check state of VMWare ESX via vSphere"),
                          help=
-                         _("The network timeout in seconds when communicating with vSphere or "
-                           "to the Check_MK Agent. The default is 60 seconds. Please note that this "
-                           "is not a total timeout but is applied to each individual network transation."
-                          ),
-                         default_value=60,
-                         minvalue=1,
-                         unit=_("seconds"),
-                     )),
-                    ("use_pysphere",
-                     Checkbox(
-                         title=_("Compatibility mode"),
-                         label=_("Support ESX 4.1 (using slower PySphere implementation)"),
-                         true_label=_("Support 4.1"),
-                         false_label=_("fast"),
-                         help=_(
-                             "The current very performant implementation of the ESX special agent "
-                             "does not support older ESX versions than 5.0. Please use the slow "
-                             "compatibility mode for those old hosts."),
-                     )),
-                    ("infos",
-                     Transform(
-                         ListChoice(
-                             choices=[
-                                 ("hostsystem", _("Host Systems")),
-                                 ("virtualmachine", _("Virtual Machines")),
-                                 ("datastore", _("Datastores")),
-                                 ("counters", _("Performance Counters")),
-                                 ("licenses", _("License Usage")),
-                             ],
-                             default_value=[
-                                 "hostsystem", "virtualmachine", "datastore", "counters"
-                             ],
-                             allow_empty=False,
-                         ),
-                         forth=lambda v: [x.replace("storage", "datastore") for x in v],
-                         title=_("Retrieve information about..."),
-                     )),
-                    ("skip_placeholder_vms",
-                     Checkbox(
-                         title=_("Placeholder VMs"),
-                         label=_("Do no monitor placeholder VMs"),
-                         default_value=True,
-                         true_label=_("ignore"),
-                         false_label=_("monitor"),
-                         help=
-                         _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
-                           "virtual machines in case the default vm is unable to start. This option tells the "
-                           "vsphere agent to exclude placeholder vms in its output."))),
-                    ("host_pwr_display",
-                     DropdownChoice(
-                         title=_("Display ESX Host power state on"),
-                         choices=[
-                             (None, _("The queried ESX system (vCenter / Host)")),
-                             ("esxhost", _("The ESX Host")),
-                             ("vm", _("The Virtual Machine")),
-                         ],
-                         default=None,
-                     )),
-                    ("vm_pwr_display",
-                     DropdownChoice(
-                         title=_("Display VM power state <i>additionally</i> on"),
-                         help=_("The power state can be displayed additionally either "
-                                "on the ESX host or the VM. This will result in services "
-                                "for <i>both</i> the queried system and the ESX host / VM. "
-                                "By disabling the unwanted services it is then possible "
-                                "to configure where the services are displayed."),
-                         choices=[
-                             (None, _("The queried ESX system (vCenter / Host)")),
-                             ("esxhost", _("The ESX Host")),
-                             ("vm", _("The Virtual Machine")),
-                         ],
-                         default=None,
-                     )),
-                    ("snapshot_display",
-                     DropdownChoice(
-                         title=_("<i>Additionally</i> display snapshots on"),
-                         help=_("The created snapshots can be displayed additionally either "
-                                "on the ESX host or the vCenter. This will result in services "
-                                "for <i>both</i> the queried system and the ESX host / vCenter. "
-                                "By disabling the unwanted services it is then possible "
-                                "to configure where the services are displayed."),
-                         choices=[
-                             (None, _("The Virtual Machine")),
-                             ("esxhost", _("The ESX Host")),
-                             ("vCenter", _("The queried ESX system (vCenter / Host)")),
-                         ],
-                         default=None,
-                     )),
-                    ("vm_piggyname",
-                     DropdownChoice(
-                         title=_("Piggyback name of virtual machines"),
-                         choices=[
-                             ("alias", _("Use the name specified in the ESX system")),
-                             ("hostname",
-                              _("Use the VMs hostname if set, otherwise fall back to ESX name")),
-                         ],
-                         default="alias",
-                     )),
-                    ("spaces",
-                     DropdownChoice(
-                         title=_("Spaces in hostnames"),
-                         choices=[
-                             ("cut", _("Cut everything after first space")),
-                             ("underscore", _("Replace with underscores")),
-                         ],
-                         default="underscore",
-                     )),
-                ],
-                optional_keys=[
-                    "tcp_port",
-                    "timeout",
-                    "vm_pwr_display",
-                    "host_pwr_display",
-                    "snapshot_display",
-                    "vm_piggyname",
-                ],
-            ),
-            title=_("Check state of VMWare ESX via vSphere"),
-            help=_("This rule selects the vSphere agent instead of the normal Check_MK Agent "
-                   "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
-                   "your connection settings here."),
-            forth=lambda a: dict([("skip_placeholder_vms", True), ("ssl", False),
-                                  ("use_pysphere", False), ("spaces", "underscore")] + a.items()))
+                         _("This rule selects the vSphere agent instead of the normal Check_MK Agent "
+                           "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
+                           "your connection settings here."),
+                         forth=lambda a: dict([("skip_placeholder_vms", True), ("ssl", False),
+                                               ("use_pysphere", False), ("spaces", "underscore")] +
+                                              a.items()))
 
 
 @rulespec_registry.register
@@ -441,19 +434,17 @@ class RulespecSpecialAgentsIpmiSensors(HostRulespec):
 
     @property
     def valuespec(self):
-        return Transform(
-            CascadingDropdown(
-                choices=[
-                    ("freeipmi", _("Use FreeIPMI"), self._vs_freeipmi()),
-                    ("ipmitool", _("Use IPMItool"), self._vs_ipmitool()),
-                ],
-                required_keys=["username", "password", "privilege_lvl"],
-                title=_("Check IPMI Sensors via Freeipmi or IPMItool"),
-                help=_(
-                    "This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
-                    "which collects the data through the FreeIPMI resp. IPMItool command"),
-            ),
-            forth=self._transform_ipmi_sensors)
+        return Transform(CascadingDropdown(
+            choices=[
+                ("freeipmi", _("Use FreeIPMI"), self._vs_freeipmi()),
+                ("ipmitool", _("Use IPMItool"), self._vs_ipmitool()),
+            ],
+            required_keys=["username", "password", "privilege_lvl"],
+            title=_("Check IPMI Sensors via Freeipmi or IPMItool"),
+            help=_("This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
+                   "which collects the data through the FreeIPMI resp. IPMItool command"),
+        ),
+                         forth=self._transform_ipmi_sensors)
 
     def _transform_ipmi_sensors(self, params):
         if isinstance(params, dict):
@@ -471,8 +462,8 @@ class RulespecSpecialAgentsIpmiSensors(HostRulespec):
                 ("interpret_oem_data",
                  Checkbox(title=_("OEM data interpretation"), label=_("Enable"))),
                 ("output_sensor_state", Checkbox(title=_("Sensor state"), label=_("Enable"))),
-                ("output_sensor_thresholds", Checkbox(
-                    title=_("Sensor threshold"), label=_("Enable"))),
+                ("output_sensor_thresholds", Checkbox(title=_("Sensor threshold"),
+                                                      label=_("Enable"))),
                 ("ignore_not_available_sensors",
                  Checkbox(title=_("Suppress not available sensors"), label=_("Enable"))),
             ],
@@ -526,38 +517,37 @@ class RulespecSpecialAgentsNetapp(HostRulespec):
 
     @property
     def valuespec(self):
-        return Transform(
-            Dictionary(
-                elements=[
-                    ("username", TextAscii(
-                        title=_("Username"),
-                        allow_empty=False,
-                    )),
-                    ("password", Password(
-                        title=_("Password"),
-                        allow_empty=False,
-                    )),
-                    ("skip_elements",
-                     ListChoice(
-                         choices=[
-                             ("ctr_volumes", _("Do not query volume performance counters")),
-                         ],
-                         title=_("Performance improvements"),
-                         help=_(
-                             "Here you can configure whether the performance counters should get queried. "
-                             "This can save quite a lot of CPU load on larger systems."),
-                     )),
-                ],
-                title=_("Check NetApp via WebAPI"),
-                help=
-                _("This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
-                  "and allows monitoring via the NetApp Web API. To access the data the "
-                  "user requires permissions to several API classes. They are shown when you call the agent with "
-                  "<tt>agent_netapp --help</tt>. The agent itself is located in the site directory under "
-                  "<tt>~/share/check_mk/agents/special</tt>."),
-                optional_keys=False,
-            ),
-            forth=lambda x: dict([("skip_elements", [])] + x.items()))
+        return Transform(Dictionary(
+            elements=[
+                ("username", TextAscii(
+                    title=_("Username"),
+                    allow_empty=False,
+                )),
+                ("password", Password(
+                    title=_("Password"),
+                    allow_empty=False,
+                )),
+                ("skip_elements",
+                 ListChoice(
+                     choices=[
+                         ("ctr_volumes", _("Do not query volume performance counters")),
+                     ],
+                     title=_("Performance improvements"),
+                     help=_(
+                         "Here you can configure whether the performance counters should get queried. "
+                         "This can save quite a lot of CPU load on larger systems."),
+                 )),
+            ],
+            title=_("Check NetApp via WebAPI"),
+            help=
+            _("This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
+              "and allows monitoring via the NetApp Web API. To access the data the "
+              "user requires permissions to several API classes. They are shown when you call the agent with "
+              "<tt>agent_netapp --help</tt>. The agent itself is located in the site directory under "
+              "<tt>~/share/check_mk/agents/special</tt>."),
+            optional_keys=False,
+        ),
+                         forth=lambda x: dict([("skip_elements", [])] + x.items()))
 
 
 @rulespec_registry.register
@@ -578,20 +568,18 @@ class RulespecSpecialAgentsActivemq(HostRulespec):
     @property
     def valuespec(self):
         return Transform(
-            Dictionary(
-                elements=[("servername", TextAscii(
+            Dictionary(elements=[
+                ("servername", TextAscii(
                     title=_("Server Name"),
                     allow_empty=False,
                 )), ("port", Integer(title=_("Port Number"), default_value=8161)),
-                          ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
-                          ("basicauth",
-                           Tuple(
-                               title=_("BasicAuth settings (optional)"),
-                               elements=[
-                                   TextAscii(title=_("Username")),
-                                   Password(title=_("Password"))
-                               ]))],
-                optional_keys=["basicauth"]),
+                ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
+                ("basicauth",
+                 Tuple(title=_("BasicAuth settings (optional)"),
+                       elements=[TextAscii(title=_("Username")),
+                                 Password(title=_("Password"))]))
+            ],
+                       optional_keys=["basicauth"]),
             title=_("Apache ActiveMQ queues"),
             forth=self._transform_activemq,
         )
@@ -893,13 +881,12 @@ class RulespecSpecialAgentsHivemanager(HostRulespec):
 
     @property
     def valuespec(self):
-        return Tuple(
-            title=_("Aerohive HiveManager"),
-            help=_("Activate monitoring of host via a HTTP connect to the HiveManager"),
-            elements=[
-                TextAscii(title=_("Username")),
-                Password(title=_("Password")),
-            ])
+        return Tuple(title=_("Aerohive HiveManager"),
+                     help=_("Activate monitoring of host via a HTTP connect to the HiveManager"),
+                     elements=[
+                         TextAscii(title=_("Username")),
+                         Password(title=_("Password")),
+                     ])
 
 
 @rulespec_registry.register
@@ -1244,17 +1231,16 @@ class RulespecSpecialAgentsRuckusSpot(HostRulespec):
                 )),
                 ("api_key", TextAscii(title=_("API key"), allow_empty=False, size=70)),
                 ("cmk_agent",
-                 Dictionary(
-                     title=_("Also contact Check_MK agent"),
-                     help=_("With this setting, the special agent will also contact the "
-                            "Check_MK agent on the same system at the specified port."),
-                     elements=[("port",
-                                Integer(
-                                    title=_("Port"),
-                                    default_value=6556,
-                                    allow_empty=False,
-                                ))],
-                     optional_keys=[])),
+                 Dictionary(title=_("Also contact Check_MK agent"),
+                            help=_("With this setting, the special agent will also contact the "
+                                   "Check_MK agent on the same system at the specified port."),
+                            elements=[("port",
+                                       Integer(
+                                           title=_("Port"),
+                                           default_value=6556,
+                                           allow_empty=False,
+                                       ))],
+                            optional_keys=[])),
             ],
             title=_("Agent for Ruckus Spot"),
             help=_(
@@ -1359,21 +1345,19 @@ class RulespecSpecialAgentsJolokia(HostRulespec):
                  maxvalue=65535,
              )),
             ("login",
-             Tuple(
-                 title=_("Optional login (if required)"),
-                 elements=[
-                     TextAscii(
-                         title=_("User ID for web login (if login required)"),
-                         default_value="monitoring",
-                     ),
-                     Password(title=_("Password for this user")),
-                     DropdownChoice(
-                         title=_("Login mode"),
-                         choices=[
-                             ("basic", _("HTTP Basic Authentication")),
-                             ("digest", _("HTTP Digest")),
-                         ])
-                 ])),
+             Tuple(title=_("Optional login (if required)"),
+                   elements=[
+                       TextAscii(
+                           title=_("User ID for web login (if login required)"),
+                           default_value="monitoring",
+                       ),
+                       Password(title=_("Password for this user")),
+                       DropdownChoice(title=_("Login mode"),
+                                      choices=[
+                                          ("basic", _("HTTP Basic Authentication")),
+                                          ("digest", _("HTTP Digest")),
+                                      ])
+                   ])),
             ("suburi",
              TextAscii(
                  title=_("relative URI under which Jolokia is visible"),
@@ -1381,10 +1365,9 @@ class RulespecSpecialAgentsJolokia(HostRulespec):
                  size=30,
              )),
             ("instance",
-             TextUnicode(
-                 title=_("Name of the instance in the monitoring"),
-                 help=_("If you do not specify a name here, then the TCP port number "
-                        "will be used as an instance name."))),
+             TextUnicode(title=_("Name of the instance in the monitoring"),
+                         help=_("If you do not specify a name here, then the TCP port number "
+                                "will be used as an instance name."))),
             ("protocol",
              DropdownChoice(title=_("Protocol"), choices=[
                  ("http", "HTTP"),
@@ -1409,12 +1392,11 @@ class RulespecSpecialAgentsTinkerforge(HostRulespec):
             title=_("Tinkerforge"),
             elements=
             [("port",
-              Integer(
-                  title=_('TCP port number'),
-                  help=_('Port number that AppDynamics is listening on. The default is 8090.'),
-                  default_value=4223,
-                  minvalue=1,
-                  maxvalue=65535)),
+              Integer(title=_('TCP port number'),
+                      help=_('Port number that AppDynamics is listening on. The default is 8090.'),
+                      default_value=4223,
+                      minvalue=1,
+                      maxvalue=65535)),
              ("segment_display_uid",
               TextAscii(
                   title=_("7-segment display uid"),
@@ -1443,11 +1425,10 @@ class RulespecSpecialAgentsPrism(HostRulespec):
             title=_("Nutanix Prism"),
             elements=[
                 ("port",
-                 Integer(
-                     title=_("TCP port for connection"),
-                     default_value=9440,
-                     minvalue=1,
-                     maxvalue=65535)),
+                 Integer(title=_("TCP port for connection"),
+                         default_value=9440,
+                         minvalue=1,
+                         maxvalue=65535)),
                 ("username", TextAscii(title=_("User ID for web login"),)),
                 ("password", Password(title=_("Password for this user"))),
             ],
@@ -1535,12 +1516,11 @@ class RulespecSpecialAgentsStoreonce(HostRulespec):
                 ("user", TextAscii(title=_("Username"), allow_empty=False)),
                 ("password", Password(title=_("Password"), allow_empty=False)),
                 ("cert",
-                 DropdownChoice(
-                     title=_("SSL certificate verification"),
-                     choices=[
-                         (True, _("Activate")),
-                         (False, _("Deactivate")),
-                     ])),
+                 DropdownChoice(title=_("SSL certificate verification"),
+                                choices=[
+                                    (True, _("Activate")),
+                                    (False, _("Deactivate")),
+                                ])),
             ],
         )
 
@@ -1723,25 +1703,22 @@ class MultisiteBiDatasource(object):
     def _get_dynamic_valuespec_elements(self):
         return [
             ("site",
-             CascadingDropdown(
-                 choices=[
-                     ("local", _("Connect to the local site")),
-                     ("url", _("Connect to site url"),
-                      HTTPUrl(
-                          help=_("URL of the remote site, for example https://10.3.1.2/testsite"))),
-                 ],
-                 sorted=False,
-                 orientation="horizontal",
-                 title=_("Site connection"))),
+             CascadingDropdown(choices=[
+                 ("local", _("Connect to the local site")),
+                 ("url", _("Connect to site url"),
+                  HTTPUrl(help=_("URL of the remote site, for example https://10.3.1.2/testsite"))),
+             ],
+                               sorted=False,
+                               orientation="horizontal",
+                               title=_("Site connection"))),
             ("credentials",
              CascadingDropdown(
                  choices=[("automation", _("Use the credentials of the 'automation' user")),
                           ("configured", _("Use the following credentials"),
-                           Tuple(
-                               elements=[
-                                   TextAscii(title=_("Automation Username"), allow_empty=True),
-                                   Password(title=_("Automation Secret"), allow_empty=True)
-                               ],))],
+                           Tuple(elements=[
+                               TextAscii(title=_("Automation Username"), allow_empty=True),
+                               Password(title=_("Automation Secret"), allow_empty=True)
+                           ],))],
                  help=_(
                      "Here you can configured the credentials to be used. Keep in mind that the <tt>automation</tt> user need "
                      "to exist if you choose this option"),
@@ -1799,22 +1776,19 @@ class MultisiteBiDatasource(object):
             ])
 
     def _vs_filters(self):
-        return Dictionary(
-            elements=[
-                ("aggr_name_regex",
-                 ListOf(
-                     RegExp(mode=RegExp.prefix, title=_("Pattern")),
-                     title=_("By regular expression"),
-                     add_label=_("Add new pattern"),
-                     movable=False)),
-                ("aggr_groups",
-                 ListOf(
-                     DropdownChoice(choices=bi.aggregation_group_choices),
-                     title=_("By aggregation groups"),
-                     add_label=_("Add new group"),
-                     movable=False)),
-            ],
-            title=_("Filter aggregations"))
+        return Dictionary(elements=[
+            ("aggr_name_regex",
+             ListOf(RegExp(mode=RegExp.prefix, title=_("Pattern")),
+                    title=_("By regular expression"),
+                    add_label=_("Add new pattern"),
+                    movable=False)),
+            ("aggr_groups",
+             ListOf(DropdownChoice(choices=bi.aggregation_group_choices),
+                    title=_("By aggregation groups"),
+                    add_label=_("Add new group"),
+                    movable=False)),
+        ],
+                          title=_("Filter aggregations"))
 
     def _vs_options(self):
         return Dictionary(
@@ -1880,19 +1854,18 @@ def _validate_aws_tags(value, varprefix):
 
 
 def _vs_aws_tags(title):
-    return ListOf(
-        Tuple(
-            help=_("How to configure AWS tags please see "
-                   "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html"),
-            orientation="horizontal",
-            elements=[
-                TextAscii(title=_("Key")),
-                ListOfStrings(title=_("Values"), orientation="horizontal")
-            ]),
-        add_label=_("Add new tag"),
-        movable=False,
-        title=title,
-        validate=_validate_aws_tags)
+    return ListOf(Tuple(help=_(
+        "How to configure AWS tags please see "
+        "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html"),
+                        orientation="horizontal",
+                        elements=[
+                            TextAscii(title=_("Key")),
+                            ListOfStrings(title=_("Values"), orientation="horizontal")
+                        ]),
+                  add_label=_("Add new tag"),
+                  movable=False,
+                  title=title,
+                  validate=_validate_aws_tags)
 
 
 def _vs_element_aws_service_selection():
@@ -1918,12 +1891,11 @@ def _vs_element_aws_service_selection():
 
 def _vs_element_aws_limits():
     return ("limits",
-            FixedValue(
-                True,
-                help=_("If limits are enabled all instances are fetched regardless of "
-                       "possibly configured restriction to names or tags"),
-                title=_("Service limits"),
-                totext=_("Monitor service limits")))
+            FixedValue(True,
+                       help=_("If limits are enabled all instances are fetched regardless of "
+                              "possibly configured restriction to names or tags"),
+                       title=_("Service limits"),
+                       totext=_("Monitor service limits")))
 
 
 @rulespec_registry.register
@@ -1961,10 +1933,9 @@ class RulespecSpecialAgentsAws(HostRulespec):
                      title=_("Global services to monitor"),
                      elements=[
                          ("ce",
-                          FixedValue(
-                              None,
-                              totext=_("Monitor costs and usage"),
-                              title=_("Costs and usage (CE)"))),
+                          FixedValue(None,
+                                     totext=_("Monitor costs and usage"),
+                                     title=_("Costs and usage (CE)"))),
                      ],
                  )),
                 ("regions",
@@ -2050,12 +2021,12 @@ class RulespecSpecialAgentsAws(HostRulespec):
                               title=_("Cloudwatch"),
                               elements=[
                                   ('alarms',
-                                   CascadingDropdown(
-                                       title=_("Selection of alarms"),
-                                       choices=[
-                                           ('all', _("Gather all")),
-                                           ('names', _("Use explicit names"), ListOfStrings()),
-                                       ])),
+                                   CascadingDropdown(title=_("Selection of alarms"),
+                                                     choices=[
+                                                         ('all', _("Gather all")),
+                                                         ('names', _("Use explicit names"),
+                                                          ListOfStrings()),
+                                                     ])),
                                   _vs_element_aws_limits(),
                               ],
                               optional_keys=["alarms", "limits"],
@@ -2064,8 +2035,8 @@ class RulespecSpecialAgentsAws(HostRulespec):
                      ],
                      default_keys=["ec2", "ebs", "s3", "elb", "elbv2", "rds", "cloudwatch"],
                  )),
-                ("overall_tags", _vs_aws_tags(
-                    _("Restrict monitoring services by one of these tags"))),
+                ("overall_tags",
+                 _vs_aws_tags(_("Restrict monitoring services by one of these tags"))),
             ],
             optional_keys=["overall_tags"],
         )
@@ -2138,13 +2109,12 @@ class RulespecSpecialAgentsElasticsearch(HostRulespec):
                     allow_empty=False,
                 )),
                 ("protocol",
-                 DropdownChoice(
-                     title=_("Protocol"),
-                     choices=[
-                         ("http", "HTTP"),
-                         ("https", "HTTPS"),
-                     ],
-                     default_value="https")),
+                 DropdownChoice(title=_("Protocol"),
+                                choices=[
+                                    ("http", "HTTP"),
+                                    ("https", "HTTPS"),
+                                ],
+                                default_value="https")),
                 ("port",
                  Integer(
                      title=_("Port"),
@@ -2209,13 +2179,12 @@ class RulespecSpecialAgentsSplunk(HostRulespec):
                     allow_empty=False,
                 )),
                 ("protocol",
-                 DropdownChoice(
-                     title=_("Protocol"),
-                     choices=[
-                         ("http", "HTTP"),
-                         ("https", "HTTPS"),
-                     ],
-                     default_value="https")),
+                 DropdownChoice(title=_("Protocol"),
+                                choices=[
+                                    ("http", "HTTP"),
+                                    ("https", "HTTPS"),
+                                ],
+                                default_value="https")),
                 ("port",
                  Integer(
                      title=_("Port"),

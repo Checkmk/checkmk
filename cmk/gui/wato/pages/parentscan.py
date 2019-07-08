@@ -160,8 +160,8 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
 
         host = folder.host(task.host_name)
         if host.effective_attribute("parents") == parents:
-            self._logger.info(
-                _("Parents unchanged at %s"), (",".join(parents) if parents else _("none")))
+            self._logger.info(_("Parents unchanged at %s"),
+                              (",".join(parents) if parents else _("none")))
             return
 
         if settings["force_explicit"] or host.folder().effective_attribute("parents") != parents:

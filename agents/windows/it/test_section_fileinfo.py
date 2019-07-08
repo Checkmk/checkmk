@@ -56,10 +56,9 @@ def testconfig_drive(request, config):
     return config
 
 
-@pytest.fixture(
-    params=[(Globals.paths.tempdir1, '**', True), (Globals.paths.tempdir2, 'Te*', True),
-            (Globals.paths.tempdir2, 'Te*', False)],
-    ids=['recursive_glob', 'simple_glob_alone', 'simple_glob_with_systemtime'])
+@pytest.fixture(params=[(Globals.paths.tempdir1, '**', True), (Globals.paths.tempdir2, 'Te*', True),
+                        (Globals.paths.tempdir2, 'Te*', False)],
+                ids=['recursive_glob', 'simple_glob_alone', 'simple_glob_with_systemtime'])
 def testconfig(request, testconfig_drive):
     if platform.system() == 'Windows':
         Globals.alone = request.param[2]

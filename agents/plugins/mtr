@@ -106,8 +106,8 @@ def read_config():
             if not cfg.read(config_file):
                 sys.stdout.write("**ERROR** Failed to parse configuration file %s!\n" % config_file)
         except Exception as e:
-            sys.stdout.write(
-                "**ERROR** Failed to parse config file %s: %s\n" % (config_file, repr(e)))
+            sys.stdout.write("**ERROR** Failed to parse config file %s: %s\n" %
+                             (config_file, repr(e)))
 
     if len(cfg.sections()) == 0:
         sys.stdout.write("**ERROR** Configuration defines no hosts!\n")
@@ -147,8 +147,8 @@ def read_status():
                     'stddev': parts[i * 8 + 10].rstrip(),
                 }
         except Exception as e:
-            sys.stdout.write(
-                "*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" % (line, repr(e)))
+            sys.stdout.write("*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" %
+                             (line, repr(e)))
     return current_status
 
 

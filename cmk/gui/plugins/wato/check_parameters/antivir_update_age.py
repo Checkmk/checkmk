@@ -52,8 +52,7 @@ class RulespecCheckgroupParametersAntivirUpdateAge(CheckParameterRulespecWithout
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            elements=[
-                Age(title=_("Warning level for time since last update")),
-                Age(title=_("Critical level for time since last update")),
-            ],)
+        return Tuple(elements=[
+            Age(title=_("Warning level for time since last update")),
+            Age(title=_("Critical level for time since last update")),
+        ],)

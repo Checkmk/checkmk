@@ -360,8 +360,9 @@ class FilterHostAddress(FilterIPAddress):
         return 102
 
     def __init__(self):
-        FilterIPAddress.__init__(
-            self, "host", ["host_address", "host_address_prefix"], link_columns=["host_address"])
+        FilterIPAddress.__init__(self,
+                                 "host", ["host_address", "host_address_prefix"],
+                                 link_columns=["host_address"])
 
 
 @filter_registry.register
@@ -381,8 +382,9 @@ class FilterHostIpv4Address(FilterIPAddress):
         return 102
 
     def __init__(self):
-        FilterIPAddress.__init__(
-            self, "host", ["host_ipv4_address", "host_ipv4_address_prefix"], link_columns=[])
+        FilterIPAddress.__init__(self,
+                                 "host", ["host_ipv4_address", "host_ipv4_address_prefix"],
+                                 link_columns=[])
 
 
 @filter_registry.register
@@ -402,8 +404,9 @@ class FilterHostIpv6Address(FilterIPAddress):
         return 102
 
     def __init__(self):
-        FilterIPAddress.__init__(
-            self, "host", ["host_ipv6_address", "host_ipv6_address_prefix"], link_columns=[])
+        FilterIPAddress.__init__(self,
+                                 "host", ["host_ipv6_address", "host_ipv6_address_prefix"],
+                                 link_columns=[])
 
 
 @filter_registry.register
@@ -452,10 +455,9 @@ class FilterAddressFamilies(Filter):
         return 103
 
     def __init__(self):
-        Filter.__init__(
-            self, info="host", htmlvars=[
-                "address_families",
-            ], link_columns=[])
+        Filter.__init__(self, info="host", htmlvars=[
+            "address_families",
+        ], link_columns=[])
 
     def display(self):
         html.begin_radio_group()
@@ -509,10 +511,9 @@ class FilterMultigroup(Filter):
         return True
 
     def valuespec(self):
-        return DualListChoice(
-            choices=sites.all_groups(self.what),
-            rows=3 if self.negateable else 4,
-            enlarge_active=True)
+        return DualListChoice(choices=sites.all_groups(self.what),
+                              rows=3 if self.negateable else 4,
+                              enlarge_active=True)
 
     def selection(self):
         current = html.request.var(self.htmlvar, "").strip().split("|")
@@ -601,8 +602,10 @@ class FilterGroupCombo(Filter):
         htmlvars = [self.prefix + what + "_group"]
         if not enforce:
             htmlvars.append("neg_" + htmlvars[0])
-        Filter.__init__(
-            self, info=what.split("_")[0], htmlvars=htmlvars, link_columns=[what + "group_name"])
+        Filter.__init__(self,
+                        info=what.split("_")[0],
+                        htmlvars=htmlvars,
+                        link_columns=[what + "group_name"])
         self.what = what
 
     def double_height(self):
@@ -631,8 +634,8 @@ class FilterGroupCombo(Filter):
             if not self.enforce:
                 return ""
             # Take first group with the name we search
-            table = self.what.replace("host_contact", "contact").replace(
-                "service_contact", "contact")
+            table = self.what.replace("host_contact",
+                                      "contact").replace("service_contact", "contact")
             current_value = sites.live().query_value(
                 "GET %sgroups\nCache: reload\nColumns: name\nLimit: 1\n" % table, None)
 
@@ -662,8 +665,8 @@ class FilterGroupCombo(Filter):
     def heading_info(self):
         current_value = self.current_value()
         if current_value:
-            table = self.what.replace("host_contact", "contact").replace(
-                "service_contact", "contact")
+            table = self.what.replace("host_contact",
+                                      "contact").replace("service_contact", "contact")
             alias = sites.live().query_value(
                 "GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
                 (table, livestatus.lqencode(current_value)), current_value)
@@ -995,8 +998,12 @@ class FilterServicegroupnameregex(FilterText):
         return _("Search field allowing regular expression and partial matches")
 
     def __init__(self):
-        FilterText.__init__(
-            self, "servicegroup", "servicegroup_name", "servicegroup_regex", "~~", negateable=True)
+        FilterText.__init__(self,
+                            "servicegroup",
+                            "servicegroup_name",
+                            "servicegroup_regex",
+                            "~~",
+                            negateable=True)
 
 
 @filter_registry.register
@@ -2199,8 +2206,12 @@ class FilterLogContactNameRegex(FilterText):
         return 261
 
     def __init__(self):
-        FilterText.__init__(
-            self, "log", "log_contact_name", "log_contact_name_regex", "~~", negateable=True)
+        FilterText.__init__(self,
+                            "log",
+                            "log_contact_name",
+                            "log_contact_name_regex",
+                            "~~",
+                            negateable=True)
 
 
 @filter_registry.register
@@ -2218,8 +2229,12 @@ class FilterLogCommandNameRegex(FilterText):
         return 262
 
     def __init__(self):
-        FilterText.__init__(
-            self, "log", "log_command_name", "log_command_name_regex", "~~", negateable=True)
+        FilterText.__init__(self,
+                            "log",
+                            "log_command_name",
+                            "log_command_name_regex",
+                            "~~",
+                            negateable=True)
 
 
 @filter_registry.register
@@ -2441,33 +2456,30 @@ class ABCTagFilter(Filter):
                 tag_id = "" if grouped_tag.id is None else grouped_tag.id
                 grouped[tag_group.id].append([tag_id, grouped_tag.title])
 
-        html.javascript('cmk.utils.set_tag_groups(%s, %s);' % (json.dumps(self.object_type),
-                                                               json.dumps(grouped)))
+        html.javascript('cmk.utils.set_tag_groups(%s, %s);' %
+                        (json.dumps(self.object_type), json.dumps(grouped)))
         html.open_table()
         for num in range(self.count):
             prefix = '%s%d' % (self._var_prefix, num)
             html.open_tr()
             html.open_td()
-            html.dropdown(
-                prefix + '_grp', [("", "")] + groups,
-                onchange='cmk.utils.tag_update_value(\'%s\', \'%s\', this.value)' %
-                (self.object_type, prefix),
-                style='width:129px',
-                ordered=True,
-                class_="grp")
+            html.dropdown(prefix + '_grp', [("", "")] + groups,
+                          onchange='cmk.utils.tag_update_value(\'%s\', \'%s\', this.value)' %
+                          (self.object_type, prefix),
+                          style='width:129px',
+                          ordered=True,
+                          class_="grp")
             html.close_td()
             html.open_td()
-            html.dropdown(
-                prefix + '_op', [("", "")] + operators,
-                style="width:36px",
-                ordered=True,
-                class_="op")
+            html.dropdown(prefix + '_op', [("", "")] + operators,
+                          style="width:36px",
+                          ordered=True,
+                          class_="op")
             html.close_td()
             html.open_td()
-            choices = grouped[html.request.var(prefix + '_grp')] if html.request.var(prefix +
-                                                                                     '_grp') else [
-                                                                                         ("", "")
-                                                                                     ]
+            choices = grouped[html.request.var(prefix +
+                                               '_grp')] if html.request.var(prefix +
+                                                                            '_grp') else [("", "")]
             html.dropdown(prefix + '_val', choices, style="width:129px", ordered=True, class_="val")
             html.close_td()
             html.close_tr()
@@ -2689,8 +2701,10 @@ class ABCFilterCustomAttribute(Filter):
         return 103
 
     def __init__(self, info):
-        Filter.__init__(
-            self, info=info, htmlvars=[self.name_varname, self.value_varname], link_columns=[])
+        Filter.__init__(self,
+                        info=info,
+                        htmlvars=[self.name_varname, self.value_varname],
+                        link_columns=[])
 
     @property
     def name_varname(self):
@@ -3110,8 +3124,10 @@ class BITextFilter(FilterUnicodeFilter):
     def __init__(self, what, how="regex", suffix=""):
         self.how = how
         self.column = "aggr_" + what
-        FilterUnicodeFilter.__init__(
-            self, info="aggr", htmlvars=[self.column + suffix], link_columns=[self.column])
+        FilterUnicodeFilter.__init__(self,
+                                     info="aggr",
+                                     htmlvars=[self.column + suffix],
+                                     link_columns=[self.column])
 
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self.column])]

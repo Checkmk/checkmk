@@ -60,8 +60,8 @@ def check_hp_blade_manager(item, params, info):
         if line[0] == item:
             expected_role = params[0]
             if line[3] != expected_role:
-                return (2, 'Unexpected role: %s (Expected: %s)' % (hp_blade_role_map[int(
-                    line[3])], hp_blade_role_map[int(expected_role)]))
+                return (2, 'Unexpected role: %s (Expected: %s)' %
+                        (hp_blade_role_map[int(line[3])], hp_blade_role_map[int(expected_role)]))
 
             # The SNMP answer is not fully compatible to the MIB file. The value of 0 will
             # be set to "fake OK" to display the other gathered information.

@@ -59,17 +59,16 @@ class RulespecCheckgroupParametersFortisandboxQueues(CheckParameterRulespecWithI
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("length",
-                 Tuple(
-                     title=_("Levels for queue length"),
-                     elements=[
-                         Integer(title=_("Warning at"), unit=_("files")),
-                         Integer(title=_("Critical at"), unit=_("files")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("length",
+             Tuple(
+                 title=_("Levels for queue length"),
+                 elements=[
+                     Integer(title=_("Warning at"), unit=_("files")),
+                     Integer(title=_("Critical at"), unit=_("files")),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

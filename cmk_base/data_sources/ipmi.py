@@ -118,11 +118,10 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
         self._logger.debug("Connecting to %s:623 (User: %s, Privlevel: 2)" %
                            (self._ipaddress, credentials["username"]))
-        return ipmi_cmd.Command(
-            bmc=self._ipaddress,
-            userid=credentials["username"],
-            password=credentials["password"],
-            privlevel=2)
+        return ipmi_cmd.Command(bmc=self._ipaddress,
+                                userid=credentials["username"],
+                                password=credentials["password"],
+                                privlevel=2)
 
     def _fetch_ipmi_sensors_section(self, connection):
         self._logger.debug("Fetching sensor data via UDP from %s:623" % (self._ipaddress))

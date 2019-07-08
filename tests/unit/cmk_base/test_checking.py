@@ -30,11 +30,10 @@ import cmk_base.checking
             "tp_default_value": (2, 2),
             "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]
         }, (1, 1)]), ["tp2"], (2, 2)),
-        (cmk_base.config.TimespecificParamList([(1, 1),
-                                                {
-                                                    "tp_default_value": (2, 2),
-                                                    "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]
-                                                }]), [], (1, 1)),
+        (cmk_base.config.TimespecificParamList([(1, 1), {
+            "tp_default_value": (2, 2),
+            "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]
+        }]), [], (1, 1)),
         # Dict based
         ({
             1: 1

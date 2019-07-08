@@ -702,8 +702,8 @@ def discover(selector=None, default_params=None):
         def discoverer(parsed):
             # type (Union[dict,list]) -> Iterable[Tuple]
 
-            params = default_params if isinstance(default_params,
-                                                  six.string_types + (dict,)) else {}
+            params = default_params if isinstance(default_params, six.string_types +
+                                                  (dict,)) else {}
             filterer = validate_filter(filter_function)
             from_dict = isinstance(parsed, dict)
 

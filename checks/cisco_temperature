@@ -273,13 +273,12 @@ def check_cisco_temperature(item, params, parsed):
             return 3, "This sensor is obsolete, please rediscover"
 
         state, state_readable = data['dev_state']
-        return check_temperature(
-            data['reading'],
-            params,
-            "cisco_temperature_%s" % item,
-            dev_levels=data['dev_levels'],
-            dev_status=state,
-            dev_status_name=state_readable)
+        return check_temperature(data['reading'],
+                                 params,
+                                 "cisco_temperature_%s" % item,
+                                 dev_levels=data['dev_levels'],
+                                 dev_status=state,
+                                 dev_status_name=state_readable)
 
 
 check_info['cisco_temperature'] = {

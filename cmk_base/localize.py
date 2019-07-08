@@ -189,13 +189,12 @@ def _localize_sniff():
                 if f.endswith(".py") or f.endswith(".mk"):
                     sniff_files.append(os.path.join(root, f))
 
-    if subprocess.call(
-        [
+    if subprocess.call([
             'xgettext', '--no-wrap', '--sort-output', '--force-po', '-L', 'Python',
             '--from-code=utf-8', '--omit-header', '-o',
             _pot_file()
-        ] + sniff_files,
-            stdout=open(os.devnull, "wb")) != 0:
+    ] + sniff_files,
+                       stdout=open(os.devnull, "wb")) != 0:
         logger.error('Failed!\n')
     else:
         header = r'''# +------------------------------------------------------------------+
@@ -289,8 +288,8 @@ def _localize_compile(lang):
     if not lang:
         raise LocalizeException('No language given')
     if lang not in _get_languages():
-        raise LocalizeException(
-            'Invalid language given. Available: %s' % ' '.join(_get_languages()))
+        raise LocalizeException('Invalid language given. Available: %s' %
+                                ' '.join(_get_languages()))
 
     po_file = _po_file(lang)
 

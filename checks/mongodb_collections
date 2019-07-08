@@ -63,8 +63,11 @@ def check_mongodb_collections(_no_item, params, data):
         levels = params.get("levels_%s" % key.lower())
         if levels is not None:
             levels = (levels[0] * 1024**2, levels[1] * 1024**2)
-        yield check_levels(
-            data[key], None, levels, human_readable_func=get_bytes_human_readable, infoname=label)
+        yield check_levels(data[key],
+                           None,
+                           levels,
+                           human_readable_func=get_bytes_human_readable,
+                           infoname=label)
 
 
 check_info["mongodb_collections"] = {

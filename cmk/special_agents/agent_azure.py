@@ -93,10 +93,9 @@ class RestApiClient(object):
         return self._get(temp % (group, name), params={'api-version': '2018-06-01'})
 
     def usagedetails(self):
-        return self._get(
-            'providers/Microsoft.Consumption/usageDetails',
-            key='value',
-            params={'api-version': '2019-01-01'})
+        return self._get('providers/Microsoft.Consumption/usageDetails',
+                         key='value',
+                         params={'api-version': '2019-01-01'})
 
     def metrics(self, resource_id, **params):
         url = resource_id.split('/', 3)[-1] + "/providers/microsoft.insights/metrics"

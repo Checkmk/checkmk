@@ -68,14 +68,15 @@ def k8s_network_err_pac(device, params, now):
             except ZeroDivisionError:
                 err_perc = 0
 
-            status, infotext, _perf = check_levels(
-                err_perc,
-                'err_perc', (warn, crit),
-                human_readable_func=get_percent_human_readable,
-                infoname="%s errors" % name)
+            status, infotext, _perf = check_levels(err_perc,
+                                                   'err_perc', (warn, crit),
+                                                   human_readable_func=get_percent_human_readable,
+                                                   infoname="%s errors" % name)
         else:  # absolute levels or no levels
-            status, infotext, _perf = check_levels(
-                err_rate, 'if_errors', (warn, crit), unit='1/s', infoname="%s error rate" % name)
+            status, infotext, _perf = check_levels(err_rate,
+                                                   'if_errors', (warn, crit),
+                                                   unit='1/s',
+                                                   infoname="%s error rate" % name)
 
         yield status, infotext, perf_data
 
@@ -94,13 +95,12 @@ def check_k8s_stats_network(item, params, parsed):
     # Bandwidth
     for name, met, dsname in [('In', 'rx_bytes', 'in'), ('Out', 'tx_bytes', 'out')]:
         rate = get_rate('if.%s.%s' % (item, dsname), now, device[met])
-        yield check_levels(
-            rate,
-            dsname,
-            None,
-            unit='/s',
-            human_readable_func=get_bytes_human_readable,
-            infoname=name)
+        yield check_levels(rate,
+                           dsname,
+                           None,
+                           unit='/s',
+                           human_readable_func=get_bytes_human_readable,
+                           infoname=name)
 
     # Errors / Packets
     for check_result in k8s_network_err_pac(device, params, now):

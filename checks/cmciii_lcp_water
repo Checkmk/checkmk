@@ -95,14 +95,13 @@ def check_cmciii_lcp_water(item, params, parsed):
     limits = temperatures[1:]
     status_name = lines[-1]
 
-    status, info_text, perf_data = check_temperature(
-        temp,
-        params,
-        "cmciii_lcp_water_" + item,
-        dev_levels=(limits[1], limits[0]),
-        dev_levels_lower=(limits[2], limits[3]),
-        dev_status=parse_status(status_name),
-        dev_status_name=status_name)
+    status, info_text, perf_data = check_temperature(temp,
+                                                     params,
+                                                     "cmciii_lcp_water_" + item,
+                                                     dev_levels=(limits[1], limits[0]),
+                                                     dev_levels_lower=(limits[2], limits[3]),
+                                                     dev_status=parse_status(status_name),
+                                                     dev_status_name=status_name)
 
     yield status, "Temperature: " + info_text, perf_data
 

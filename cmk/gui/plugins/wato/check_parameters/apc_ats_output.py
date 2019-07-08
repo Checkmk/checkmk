@@ -64,33 +64,29 @@ class RulespecCheckgroupParametersApcAtsOutput(CheckParameterRulespecWithItem):
             optional_keys=True,
             elements=[
                 ("output_voltage_max",
-                 Tuple(
-                     title=_("Maximum Levels for Voltage"),
-                     elements=[
-                         Integer(title=_("Warning at"), unit="Volt"),
-                         Integer(title=_("Critical at"), unit="Volt"),
-                     ])),
+                 Tuple(title=_("Maximum Levels for Voltage"),
+                       elements=[
+                           Integer(title=_("Warning at"), unit="Volt"),
+                           Integer(title=_("Critical at"), unit="Volt"),
+                       ])),
                 ("output_voltage_min",
-                 Tuple(
-                     title=_("Minimum Levels for Voltage"),
-                     elements=[
-                         Integer(title=_("Warning if below"), unit="Volt"),
-                         Integer(title=_("Critical if below"), unit="Volt"),
-                     ])),
+                 Tuple(title=_("Minimum Levels for Voltage"),
+                       elements=[
+                           Integer(title=_("Warning if below"), unit="Volt"),
+                           Integer(title=_("Critical if below"), unit="Volt"),
+                       ])),
                 ("load_perc_max",
-                 Tuple(
-                     title=_("Maximum Levels for load in percent"),
-                     elements=[
-                         Percentage(title=_("Warning at")),
-                         Percentage(title=_("Critical at")),
-                     ])),
+                 Tuple(title=_("Maximum Levels for load in percent"),
+                       elements=[
+                           Percentage(title=_("Warning at")),
+                           Percentage(title=_("Critical at")),
+                       ])),
                 ("load_perc_min",
-                 Tuple(
-                     title=_("Minimum Levels for load in percent"),
-                     elements=[
-                         Percentage(title=_("Warning if below")),
-                         Percentage(title=_("Critical if below")),
-                     ])),
+                 Tuple(title=_("Minimum Levels for load in percent"),
+                       elements=[
+                           Percentage(title=_("Warning if below")),
+                           Percentage(title=_("Critical if below")),
+                       ])),
             ],
         )
 

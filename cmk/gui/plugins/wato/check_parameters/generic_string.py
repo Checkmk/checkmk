@@ -60,15 +60,14 @@ class RulespecCheckgroupParametersGenericString(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("default_status", MonitoringState(title=_("Default Status"))),
-                ("match_strings",
-                 ListOf(Tuple(elements=[
-                     TextAscii(title=_("Search string")),
-                     MonitoringState(),
-                 ],))),
-            ],)
+        return Dictionary(elements=[
+            ("default_status", MonitoringState(title=_("Default Status"))),
+            ("match_strings",
+             ListOf(Tuple(elements=[
+                 TextAscii(title=_("Search string")),
+                 MonitoringState(),
+             ],))),
+        ],)
 
     @property
     def item_spec(self):

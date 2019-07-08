@@ -58,22 +58,21 @@ class RulespecCheckgroupParametersUptime(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("min",
-                 Tuple(
-                     title=_("Minimum required uptime"),
-                     elements=[
-                         Age(title=_("Warning if below")),
-                         Age(title=_("Critical if below")),
-                     ],
-                 )),
-                ("max",
-                 Tuple(
-                     title=_("Maximum allowed uptime"),
-                     elements=[
-                         Age(title=_("Warning at")),
-                         Age(title=_("Critical at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("min",
+             Tuple(
+                 title=_("Minimum required uptime"),
+                 elements=[
+                     Age(title=_("Warning if below")),
+                     Age(title=_("Critical if below")),
+                 ],
+             )),
+            ("max",
+             Tuple(
+                 title=_("Maximum allowed uptime"),
+                 elements=[
+                     Age(title=_("Warning at")),
+                     Age(title=_("Critical at")),
+                 ],
+             )),
+        ],)

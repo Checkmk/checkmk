@@ -273,9 +273,8 @@ def _transform_mgmt_config_vars_from_140_to_150():
 def _get_config_file_paths(with_conf_d):
     list_of_files = [Path(cmk.utils.paths.main_config_file)]
     if with_conf_d:
-        list_of_files += sorted(
-            Path(cmk.utils.paths.check_mk_config_dir).glob("**/*.mk"),
-            cmp=cmk.utils.cmp_config_paths)
+        list_of_files += sorted(Path(cmk.utils.paths.check_mk_config_dir).glob("**/*.mk"),
+                                cmp=cmk.utils.cmp_config_paths)
     for path in [Path(cmk.utils.paths.final_config_file), Path(cmk.utils.paths.local_config_file)]:
         if path.exists():
             list_of_files.append(path)
@@ -628,10 +627,10 @@ def all_offline_hosts():
     config_cache = get_config_cache()
 
     hostlist = set(
-        _filter_active_hosts(
-            config_cache,
-            config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters()),
-            keep_offline_hosts=True))
+        _filter_active_hosts(config_cache,
+                             config_cache.all_configured_realhosts().union(
+                                 config_cache.all_configured_clusters()),
+                             keep_offline_hosts=True))
 
     if only_hosts is None:
         return set()
@@ -836,8 +835,8 @@ def get_final_service_description(hostname, description):
     try:
         new_description = cache[description]
     except KeyError:
-        new_description = "".join(
-            [c for c in description if c not in nagios_illegal_chars]).rstrip("\\")
+        new_description = "".join([c for c in description if c not in nagios_illegal_chars
+                                  ]).rstrip("\\")
         cache[description] = new_description
 
     return new_description
@@ -1008,8 +1007,8 @@ def prepare_check_command(command_spec, hostname, description):
                 else:
                     descr = ""
 
-                console.warning(
-                    "The stored password \"%s\"%s does not exist (anymore)." % (pw_ident, descr))
+                console.warning("The stored password \"%s\"%s does not exist (anymore)." %
+                                (pw_ident, descr))
                 password = "%%%"
 
             pw_start_index = str(preformated_arg.index("%s"))
@@ -1610,14 +1609,14 @@ def convert_check_info():
             section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
             if section_name not in check_info:
                 if info["node_info"]:
-                    raise MKGeneralException(
-                        "Invalid check implementation: node_info for %s is "
-                        "True, but base check %s not defined" % (check_plugin_name, section_name))
+                    raise MKGeneralException("Invalid check implementation: node_info for %s is "
+                                             "True, but base check %s not defined" %
+                                             (check_plugin_name, section_name))
 
             elif check_info[section_name]["node_info"] != info["node_info"]:
-                raise MKGeneralException(
-                    "Invalid check implementation: node_info for %s "
-                    "and %s are different." % ((section_name, check_plugin_name)))
+                raise MKGeneralException("Invalid check implementation: node_info for %s "
+                                         "and %s are different." %
+                                         ((section_name, check_plugin_name)))
 
     # Now gather snmp_info and snmp_scan_function back to the
     # original arrays. Note: these information is tied to a "agent section",
@@ -2049,8 +2048,8 @@ class HostConfig(object):
 
     def _get_alias(self):
         # type: () -> Text
-        aliases = self._config_cache.host_extra_conf(self.hostname, extra_host_conf.get(
-            "alias", []))
+        aliases = self._config_cache.host_extra_conf(self.hostname,
+                                                     extra_host_conf.get("alias", []))
         if not aliases:
             return self.hostname
 
@@ -2885,8 +2884,10 @@ class ConfigCache(object):
 
     def service_level_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[int]
-        return self.get_service_ruleset_value(
-            hostname, description, service_service_levels, deflt=None)
+        return self.get_service_ruleset_value(hostname,
+                                              description,
+                                              service_service_levels,
+                                              deflt=None)
 
     def check_period_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[str]
@@ -3102,8 +3103,8 @@ class ConfigCache(object):
             nodes = self.nodes_of(cluster)
             if not nodes:
                 raise MKGeneralException(
-                    "Invalid entry clustered_services_of['%s']: %s is not a cluster." % (cluster,
-                                                                                         cluster))
+                    "Invalid entry clustered_services_of['%s']: %s is not a cluster." %
+                    (cluster, cluster))
             if hostname in nodes and \
                 self.in_boolean_serviceconf_list(hostname, servicedesc, conf):
                 return cluster
@@ -3132,8 +3133,10 @@ class CEEConfigCache(ConfigCache):
 
     def rrd_config_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[Dict]
-        return self.get_service_ruleset_value(
-            hostname, description, cmc_service_rrd_config, deflt=None)
+        return self.get_service_ruleset_value(hostname,
+                                              description,
+                                              cmc_service_rrd_config,
+                                              deflt=None)
 
     def recurring_downtimes_of_service(self, hostname, description):
         # type: (str, Text) -> List[Dict[str, Union[int, str]]]
@@ -3141,13 +3144,17 @@ class CEEConfigCache(ConfigCache):
 
     def flap_settings_of_service(self, hostname, description):
         # type: (str, Text) -> Tuple[float, float, float]
-        return self.get_service_ruleset_value(
-            hostname, description, cmc_service_flap_settings, deflt=cmc_flap_settings)
+        return self.get_service_ruleset_value(hostname,
+                                              description,
+                                              cmc_service_flap_settings,
+                                              deflt=cmc_flap_settings)
 
     def log_long_output_of_service(self, hostname, description):
         # type: (str, Text) -> bool
-        return self.get_service_ruleset_value(
-            hostname, description, cmc_service_long_output_in_monitoring_history, deflt=False)
+        return self.get_service_ruleset_value(hostname,
+                                              description,
+                                              cmc_service_long_output_in_monitoring_history,
+                                              deflt=False)
 
     def state_translation_of_service(self, hostname, description):
         # type: (str, Text) -> Dict
@@ -3161,13 +3168,17 @@ class CEEConfigCache(ConfigCache):
     def check_timeout_of_service(self, hostname, description):
         # type: (str, Text) -> int
         """Returns the check timeout in seconds"""
-        return self.get_service_ruleset_value(
-            hostname, description, cmc_service_check_timeout, deflt=cmc_check_timeout)
+        return self.get_service_ruleset_value(hostname,
+                                              description,
+                                              cmc_service_check_timeout,
+                                              deflt=cmc_check_timeout)
 
     def graphite_metrics_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[List[str]]
-        return self.get_service_ruleset_value(
-            hostname, description, cmc_graphite_service_metrics, deflt=None)
+        return self.get_service_ruleset_value(hostname,
+                                              description,
+                                              cmc_graphite_service_metrics,
+                                              deflt=None)
 
     # TODO: Cleanup the GENERIC_AGENT duplication with cmk_base.cee.agent_bakyery.GENERIC_AGENT
     def matched_agent_config_entries(self, hostname):

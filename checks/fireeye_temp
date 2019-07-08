@@ -43,12 +43,11 @@ def check_fireeye_temp(item, params, info):
         dev_status = max(dev_status, state)
         dev_status_name += "%s: %s" % (text, state_readable)
 
-    yield check_temperature(
-        float(reading_str),
-        params,
-        "fireeye_temp_system",
-        dev_status=dev_status,
-        dev_status_name=dev_status_name)
+    yield check_temperature(float(reading_str),
+                            params,
+                            "fireeye_temp_system",
+                            dev_status=dev_status,
+                            dev_status_name=dev_status_name)
 
 
 check_info["fireeye_temp"] = {

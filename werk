@@ -737,8 +737,8 @@ def werk_cherry_pick(commit_id, no_commit):
         if filename.startswith(".werks/") and filename[7].isdigit():
             werk_id = int(filename[7:])
             change_werk_version(werk_id, g_current_version)
-            sys.stdout.write(
-                "Changed version of werk #%04d to %s.\n" % (werk_id, g_current_version))
+            sys.stdout.write("Changed version of werk #%04d to %s.\n" %
+                             (werk_id, g_current_version))
 
     # Commit
     if not no_commit:
@@ -809,8 +809,8 @@ def main_fetch_ids(args):
     # Store the new reserved werk ids
     file('first_free', 'w').write(str(new_first_free) + "\n")
 
-    sys.stdout.write(
-        'Reserved %d additional IDs now. You have %d reserved IDs now.\n' % (num, len(my_ids)))
+    sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
+                     (num, len(my_ids)))
 
     if 0 == os.system("git commit -m 'Reserved %d Werk IDS' ." % num):  # nosec
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")

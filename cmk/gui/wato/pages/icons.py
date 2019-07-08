@@ -75,23 +75,22 @@ class ModeIcons(WatoMode):
         return s.available_icons(only_local=True)
 
     def _vs_upload(self):
-        return Dictionary(
-            title=_('Icon'),
-            optional_keys=False,
-            render="form",
-            elements=[('icon',
-                       ImageUpload(
-                           title=_('Icon'),
-                           allow_empty=False,
-                           max_size=(80, 80),
-                           validate=self._validate_icon,
-                       )),
-                      ('category',
-                       DropdownChoice(
-                           title=_('Category'),
-                           choices=config.wato_icon_categories,
-                           no_preselect=True,
-                       ))])
+        return Dictionary(title=_('Icon'),
+                          optional_keys=False,
+                          render="form",
+                          elements=[('icon',
+                                     ImageUpload(
+                                         title=_('Icon'),
+                                         allow_empty=False,
+                                         max_size=(80, 80),
+                                         validate=self._validate_icon,
+                                     )),
+                                    ('category',
+                                     DropdownChoice(
+                                         title=_('Category'),
+                                         choices=config.wato_icon_categories,
+                                         no_preselect=True,
+                                     ))])
 
     def _validate_icon(self, value, varprefix):
         file_name = value[0]
@@ -107,9 +106,8 @@ class ModeIcons(WatoMode):
         if html.request.has_var("_delete"):
             icon_name = html.request.var("_delete")
             if icon_name in self._load_custom_icons():
-                c = wato_confirm(
-                    _("Confirm Icon deletion"),
-                    _("Do you really want to delete the icon <b>%s</b>?") % icon_name)
+                c = wato_confirm(_("Confirm Icon deletion"),
+                                 _("Do you really want to delete the icon <b>%s</b>?") % icon_name)
                 if c:
                     os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
                               (cmk.utils.paths.omd_root, icon_name))

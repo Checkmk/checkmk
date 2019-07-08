@@ -85,19 +85,18 @@ def parse_arguments(argv=None):
 
     prog, descr, epilog = __doc__.split('\n\n')
     parser = argparse.ArgumentParser(prog=prog, description=descr, epilog=epilog)
-    parser.add_argument(
-        "--debug", action="store_true", help='''Debug mode: raise Python exceptions''')
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help='''Verbose mode (for even more output use -vvv)''')
-    parser.add_argument(
-        "-c",
-        "--config-file",
-        default=DEFAULT_CFG_FILE,
-        help='''Read config file (default: $MK_CONFDIR/docker.cfg)''')
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help='''Debug mode: raise Python exceptions''')
+    parser.add_argument("-v",
+                        "--verbose",
+                        action="count",
+                        default=0,
+                        help='''Verbose mode (for even more output use -vvv)''')
+    parser.add_argument("-c",
+                        "--config-file",
+                        default=DEFAULT_CFG_FILE,
+                        help='''Read config file (default: $MK_CONFDIR/docker.cfg)''')
 
     args = parser.parse_args(argv)
 
@@ -253,8 +252,11 @@ class AgentDispatcher(object):
             LOGGER.info("failed to run bash in container")
             return None
 
-        result = container.exec_run(
-            'bash', environment=self.env_from_node, socket=True, stdin=True, stderr=False)
+        result = container.exec_run('bash',
+                                    environment=self.env_from_node,
+                                    socket=True,
+                                    stdin=True,
+                                    stderr=False)
         try:
             nbytes = result.sendall(self.agent_code)
         except AttributeError:

@@ -56,34 +56,31 @@ class RulespecCheckgroupParametersRaidDisk(CheckParameterRulespecWithItem):
     @property
     def parameter_valuespec(self):
         return Transform(
-            Dictionary(
-                elements=[
-                    (
-                        "expected_state",
-                        TextAscii(
-                            title=_("Expected state"),
-                            help=_(
-                                "State the disk is expected to be in. Typical good states "
-                                "are online, host spare, OK and the like. The exact way of how "
-                                "to specify a state depends on the check and hard type being used. "
-                                "Please take examples from discovered checks for reference.")),
-                    ),
-                    ("use_device_states",
-                     DropdownChoice(
-                         title=_("Use device states and overwrite expected status"),
-                         choices=[
-                             (False, _("Ignore")),
-                             (True, _("Use device states")),
-                         ],
-                         default_value=True,
-                     )),
-                ],),
+            Dictionary(elements=[
+                (
+                    "expected_state",
+                    TextAscii(
+                        title=_("Expected state"),
+                        help=_("State the disk is expected to be in. Typical good states "
+                               "are online, host spare, OK and the like. The exact way of how "
+                               "to specify a state depends on the check and hard type being used. "
+                               "Please take examples from discovered checks for reference.")),
+                ),
+                ("use_device_states",
+                 DropdownChoice(
+                     title=_("Use device states and overwrite expected status"),
+                     choices=[
+                         (False, _("Ignore")),
+                         (True, _("Use device states")),
+                     ],
+                     default_value=True,
+                 )),
+            ],),
             forth=lambda x: isinstance(x, str) and {"expected_state": x} or x,
         )
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Number or ID of the disk"),
-            help=_("How the disks are named depends on the type of hardware being "
-                   "used. Please look at already discovered checks for examples."))
+        return TextAscii(title=_("Number or ID of the disk"),
+                         help=_("How the disks are named depends on the type of hardware being "
+                                "used. Please look at already discovered checks for examples."))

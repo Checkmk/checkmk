@@ -108,24 +108,22 @@ def check_sap_hana_license(item, params, node_data):
 
 
 def _check_product_usage(size, limit, params):
-    yield check_levels(
-        size,
-        "license_size",
-        params.get('license_size', (None, None)),
-        human_readable_func=get_bytes_human_readable,
-        infoname="Size")
+    yield check_levels(size,
+                       "license_size",
+                       params.get('license_size', (None, None)),
+                       human_readable_func=get_bytes_human_readable,
+                       infoname="Size")
 
     try:
         usage_perc = 100.0 * size / limit
     except ZeroDivisionError:
         yield 1, 'Usage: cannot calculate'
     else:
-        yield check_levels(
-            usage_perc,
-            "license_usage_perc",
-            params.get('license_usage_perc', (None, None)),
-            human_readable_func=get_percent_human_readable,
-            infoname="Usage")
+        yield check_levels(usage_perc,
+                           "license_usage_perc",
+                           params.get('license_usage_perc', (None, None)),
+                           human_readable_func=get_percent_human_readable,
+                           infoname="Usage")
 
 
 check_info['sap_hana_license'] = {

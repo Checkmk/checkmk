@@ -65,5 +65,5 @@ class RulespecCheckgroupParametersEfreq(CheckParameterRulespecWithItem):
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Phase"), help=_("The identifier of the phase the power is related to."))
+        return TextAscii(title=_("Phase"),
+                         help=_("The identifier of the phase the power is related to."))

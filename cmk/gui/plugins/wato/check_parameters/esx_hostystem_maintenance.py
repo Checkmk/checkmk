@@ -57,15 +57,14 @@ class RulespecCheckgroupParametersEsxHostystemMaintenance(CheckParameterRulespec
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("target_state",
-                 DropdownChoice(
-                     title=_("Target State"),
-                     help=_("Configure the target mode for the system."),
-                     choices=[
-                         ('true', "System should be in Maintenance Mode"),
-                         ('false', "System not should be in Maintenance Mode"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("target_state",
+             DropdownChoice(
+                 title=_("Target State"),
+                 help=_("Configure the target mode for the system."),
+                 choices=[
+                     ('true', "System should be in Maintenance Mode"),
+                     ('false', "System not should be in Maintenance Mode"),
+                 ],
+             )),
+        ],)

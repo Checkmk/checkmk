@@ -95,8 +95,8 @@ def remove_nonrelated_site_folders(effective_hosts):
 
     # Get all folders in WATO dir
     config_dir = cmk.utils.paths.check_mk_config_dir + "/wato/"
-    all_folders = sorted(
-        [x[0][len(config_dir):] for x in os.walk(config_dir)])[1:]  # Skip first folder (WATO root!)
+    all_folders = sorted([x[0][len(config_dir):] for x in os.walk(config_dir)
+                         ])[1:]  # Skip first folder (WATO root!)
 
     keep_folders = set([])
     total_hosts = 0

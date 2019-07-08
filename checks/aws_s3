@@ -63,12 +63,11 @@ def check_aws_s3_objects(item, params, metrics):
     for storage_type, value in bucket_sizes.iteritems():
         storage_infos.append("%s: %s" % (storage_type, get_bytes_human_readable(value)))
     sum_size = sum(bucket_sizes.values())
-    yield check_levels(
-        sum_size,
-        "aws_bucket_size",
-        params.get('bucket_size_levels', (None, None)),
-        human_readable_func=get_bytes_human_readable,
-        infoname='Bucket size')
+    yield check_levels(sum_size,
+                       "aws_bucket_size",
+                       params.get('bucket_size_levels', (None, None)),
+                       human_readable_func=get_bytes_human_readable,
+                       infoname='Bucket size')
     if storage_infos:
         yield 0, ", ".join(storage_infos)
 
@@ -118,12 +117,11 @@ def check_aws_s3_summary(item, params, parsed):
         if bucket_size >= largest_bucket_size:
             largest_bucket = bucket_name
             largest_bucket_size = bucket_size
-    yield check_levels(
-        sum_size,
-        "aws_bucket_size",
-        params.get('bucket_size_levels', (None, None)),
-        human_readable_func=get_bytes_human_readable,
-        infoname='Total size')
+    yield check_levels(sum_size,
+                       "aws_bucket_size",
+                       params.get('bucket_size_levels', (None, None)),
+                       human_readable_func=get_bytes_human_readable,
+                       infoname='Total size')
 
     if largest_bucket:
         yield 0, 'Largest bucket: %s (%s)' % \

@@ -160,8 +160,8 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
 
         try:
             self.initialize_environment()
-            self._logger.verbose(
-                "Initialized background job (Job ID: %s)" % self._job_parameters["job_id"])
+            self._logger.verbose("Initialized background job (Job ID: %s)" %
+                                 self._job_parameters["job_id"])
             self._jobstatus.update_status({
                 "pid": self.pid,
                 "state": JobStatus.state_running,
@@ -186,8 +186,8 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
             self._logger.warning("Job was stopped")
             self._jobstatus.update_status({"state": JobStatus.state_stopped})
         except Exception:
-            self._logger.error(
-                "Exception while preparing background function environment", exc_info=True)
+            self._logger.error("Exception while preparing background function environment",
+                               exc_info=True)
             self._jobstatus.update_status({"state": JobStatus.state_exception})
 
     def initialize_environment(self):
@@ -213,8 +213,8 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         """Create a temporary file and use it as stdout / stderr buffer"""
         # We can not use io.BytesIO() or similar because we need real file descriptors
         # to be able to catch the (debug) output of libraries like libldap or subproccesses
-        sys.stdout = sys.stderr = (
-            Path(self.get_work_dir()) / BackgroundJobDefines.progress_update_filename).open("wb")  # pylint: disable=no-member
+        sys.stdout = sys.stderr = (Path(self.get_work_dir()) /
+                                   BackgroundJobDefines.progress_update_filename).open("wb")  # pylint: disable=no-member
 
         os.dup2(sys.stdout.fileno(), 1)
         os.dup2(sys.stderr.fileno(), 2)

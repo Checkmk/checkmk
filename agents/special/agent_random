@@ -84,7 +84,7 @@ for service in services:
             history[service] = (now, new_state)
     else:
         new_state = last_state
-    print "%d %s - %s - %s" % (new_state, service.replace(" ", "_"), state_names[new_state],
-                               state_texts[new_state])
+    print "%d %s - %s - %s" % (new_state, service.replace(
+        " ", "_"), state_names[new_state], state_texts[new_state])
 
 file(state_file, "w").write("%r\n" % history)

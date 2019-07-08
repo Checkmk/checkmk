@@ -87,8 +87,9 @@ def check_db2_tablespaces(item, params, parsed):
     warn, crit, levels_text, as_perc = db_get_tablespace_levels_in_bytes(usable, params)
 
     infotext = "%s of %s used" % (get_bytes_human_readable(used), get_bytes_human_readable(usable))
-    perfdata = [("tablespace_size", usable, max(0, total - (warn or 0)), max(
-        0, total - (crit or 0))), ("tablespace_used", used), ("tablespace_max_size", total)]
+    perfdata = [("tablespace_size", usable, max(0,
+                                                total - (warn or 0)), max(0, total - (crit or 0))),
+                ("tablespace_used", used), ("tablespace_max_size", total)]
     yield 0, infotext, perfdata
 
     perc_free = 100.0 - used / usable * 100.0

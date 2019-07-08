@@ -147,11 +147,10 @@ class SimpleWatoModeBase(WatoMode):
     def _add_change(self, action, entry, text):
         # type: (str, dict, str) -> None
         """Add a WATO change entry for this object type modifications"""
-        watolib.add_change(
-            "%s-%s" % (action, self._mode_type.type_name()),
-            text,
-            domains=self._mode_type.affected_config_domains(),
-            sites=self._mode_type.affected_sites(entry))
+        watolib.add_change("%s-%s" % (action, self._mode_type.type_name()),
+                           text,
+                           domains=self._mode_type.affected_config_domains(),
+                           sites=self._mode_type.affected_sites(entry))
 
 
 class SimpleListMode(SimpleWatoModeBase):
@@ -298,9 +297,9 @@ class SimpleEditMode(SimpleWatoModeBase):
         return _("Edit %s: %s") % (self._mode_type.name_singular(), self._entry["title"])
 
     def buttons(self):
-        html.context_button(
-            _("Back"), html.makeuri_contextless([("mode", self._mode_type.list_mode_name())]),
-            "back")
+        html.context_button(_("Back"),
+                            html.makeuri_contextless([("mode", self._mode_type.list_mode_name())]),
+                            "back")
 
     def valuespec(self):
         general_elements = self._vs_mandatory_elements()

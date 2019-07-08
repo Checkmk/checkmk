@@ -141,11 +141,12 @@ else:
         auth = b64encode('%s:%s' % (opt_username, opt_password))
         headers = {'Authorization': 'Basic ' + auth}
         for obj in ['Agent', '*|*']:
-            connection.request(
-                'GET', url % {
-                    'application': arg_application,
-                    'object': obj
-                }, headers=headers)
+            connection.request('GET',
+                               url % {
+                                   'application': arg_application,
+                                   'object': obj
+                               },
+                               headers=headers)
             response = connection.getresponse()
 
             if response.status != 200:
@@ -188,8 +189,8 @@ for node, applications in grouped_data.iteritems():
         for typename, items in types.iteritems():
             typename = typename.lower().replace(' ', '_')
             if typename in ['app', 'memory', 'sessions', 'web_container_runtime']:
-                sys.stdout.write(
-                    '<<<appdynamics_%s:sep(124)>>>\n' % (typename.replace("_runtime", "")))
+                sys.stdout.write('<<<appdynamics_%s:sep(124)>>>\n' %
+                                 (typename.replace("_runtime", "")))
                 for item, values in items.iteritems():
                     if values:
                         output_items = [application, item]

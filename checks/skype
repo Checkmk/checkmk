@@ -168,72 +168,64 @@ def check_skype(item, params, parsed):
     # LS: JoinLauncher – Join Launcher Service Failures\JOINLAUNCHER – Join Failures
     # LS:WEB – Auth Provider related calls\WEB – Failed validate cert calls to the cert auth provider
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:WEB - Address Book Web Query"],
-        item,
-        "WEB - Failed search requests/sec",
-        label=" failed search requests/sec",
-        perfvar="failed_search_requests",
-        levels=params['failed_search_requests'])
+    yield wmi_yield_raw_persec(parsed["LS:WEB - Address Book Web Query"],
+                               item,
+                               "WEB - Failed search requests/sec",
+                               label=" failed search requests/sec",
+                               perfvar="failed_search_requests",
+                               levels=params['failed_search_requests'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:WEB - Location Information Service"],
-        item,
-        "WEB - Failed Get Locations Requests/Second",
-        label=" failed location requests/sec",
-        perfvar="failed_location_requests",
-        levels=params['failed_locations_requests'])
+    yield wmi_yield_raw_persec(parsed["LS:WEB - Location Information Service"],
+                               item,
+                               "WEB - Failed Get Locations Requests/Second",
+                               label=" failed location requests/sec",
+                               perfvar="failed_location_requests",
+                               levels=params['failed_locations_requests'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:WEB - Distribution List Expansion"],
-        item,
-        "WEB - Timed out Active Directory Requests/sec",
-        label=" timeout AD requests/sec",
-        perfvar="failed_ad_requests",
-        levels=params['timedout_ad_requests'])
+    yield wmi_yield_raw_persec(parsed["LS:WEB - Distribution List Expansion"],
+                               item,
+                               "WEB - Timed out Active Directory Requests/sec",
+                               label=" timeout AD requests/sec",
+                               perfvar="failed_ad_requests",
+                               levels=params['timedout_ad_requests'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:WEB - UCWA"],
-        item,
-        "UCWA - HTTP 5xx Responses/Second",
-        label="  HTTP 5xx/sec",
-        perfvar="http_5xx",
-        levels=params['5xx_responses'])
+    yield wmi_yield_raw_persec(parsed["LS:WEB - UCWA"],
+                               item,
+                               "UCWA - HTTP 5xx Responses/Second",
+                               label="  HTTP 5xx/sec",
+                               perfvar="http_5xx",
+                               levels=params['5xx_responses'])
 
-    yield wmi_yield_raw_counter(
-        parsed["ASP.NET Apps v4.0.30319"],
-        item,
-        "Requests Rejected",
-        label=" requests rejected",
-        perfvar="asp_requests_rejected",
-        levels=params['asp_requests_rejected'])
+    yield wmi_yield_raw_counter(parsed["ASP.NET Apps v4.0.30319"],
+                                item,
+                                "Requests Rejected",
+                                label=" requests rejected",
+                                perfvar="asp_requests_rejected",
+                                levels=params['asp_requests_rejected'])
 
     if "LS:WEB - Address Book File Download" in parsed:
-        yield wmi_yield_raw_persec(
-            parsed["LS:WEB - Address Book File Download"],
-            item,
-            "WEB - Failed File Requests/Second",
-            label=" failed file requests/sec",
-            perfvar="failed_file_requests",
-            levels=params['failed_file_requests'])
+        yield wmi_yield_raw_persec(parsed["LS:WEB - Address Book File Download"],
+                                   item,
+                                   "WEB - Failed File Requests/Second",
+                                   label=" failed file requests/sec",
+                                   perfvar="failed_file_requests",
+                                   levels=params['failed_file_requests'])
 
     if "LS:JoinLauncher - Join Launcher Service Failures" in parsed:
-        yield wmi_yield_raw_counter(
-            parsed["LS:JoinLauncher - Join Launcher Service Failures"],
-            item,
-            "JOINLAUNCHER - Join failures",
-            label=" join failures",
-            perfvar="join_failures",
-            levels=params['join_failures'])
+        yield wmi_yield_raw_counter(parsed["LS:JoinLauncher - Join Launcher Service Failures"],
+                                    item,
+                                    "JOINLAUNCHER - Join failures",
+                                    label=" join failures",
+                                    perfvar="join_failures",
+                                    levels=params['join_failures'])
 
     if "LS:WEB - Auth Provider related calls" in parsed:
-        yield wmi_yield_raw_counter(
-            parsed["LS:WEB - Auth Provider related calls"],
-            item,
-            "WEB - Failed validate cert calls to the cert auth provider",
-            label=" failed cert validations",
-            perfvar="failed_validate_cert_calls",
-            levels=params['failed_validate_cert'])
+        yield wmi_yield_raw_counter(parsed["LS:WEB - Auth Provider related calls"],
+                                    item,
+                                    "WEB - Failed validate cert calls to the cert auth provider",
+                                    label=" failed cert validations",
+                                    perfvar="failed_validate_cert_calls",
+                                    levels=params['failed_validate_cert'])
 
 
 check_info['skype'] = {
@@ -303,29 +295,26 @@ def check_skype_conferencing(item, params, parsed):
     # LS:USrv - Conference Mcu Allocator\USrv - Create Conference Latency (msec)
     # LS:USrv - Conference Mcu Allocator\USrv – Allocation Latency (msec)
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:CAA - Operations"],
-        item,
-        "CAA - Incomplete calls per sec",
-        label=" incomplete calls/sec",
-        perfvar="caa_incomplete_calls",
-        levels=params['incomplete_calls'])
+    yield wmi_yield_raw_persec(parsed["LS:CAA - Operations"],
+                               item,
+                               "CAA - Incomplete calls per sec",
+                               label=" incomplete calls/sec",
+                               perfvar="caa_incomplete_calls",
+                               levels=params['incomplete_calls'])
 
-    yield wmi_yield_raw_average(
-        parsed["LS:USrv - Conference Mcu Allocator"],
-        item,
-        "USrv - Create Conference Latency (msec)",
-        label=" create conference latency",
-        perfvar="usrv_create_conference_latency",
-        levels=params['create_conference_latency'])
+    yield wmi_yield_raw_average(parsed["LS:USrv - Conference Mcu Allocator"],
+                                item,
+                                "USrv - Create Conference Latency (msec)",
+                                label=" create conference latency",
+                                perfvar="usrv_create_conference_latency",
+                                levels=params['create_conference_latency'])
 
-    yield wmi_yield_raw_average(
-        parsed["LS:USrv - Conference Mcu Allocator"],
-        item,
-        "USrv - Allocation Latency (msec)",
-        label=" allocation latency",
-        perfvar="usrv_allocation_latency",
-        levels=params['allocation_latency'])
+    yield wmi_yield_raw_average(parsed["LS:USrv - Conference Mcu Allocator"],
+                                item,
+                                "USrv - Allocation Latency (msec)",
+                                label=" allocation latency",
+                                perfvar="usrv_allocation_latency",
+                                levels=params['allocation_latency'])
 
 
 check_info['skype.conferencing'] = {
@@ -358,124 +347,110 @@ def check_skype_sip_stack(item, params, parsed):
     # LS:SIP - Peers\SIP - Flow-controlled Connections
     # LS:SIP - Peers\SIP - Average Outgoing Queue Delay
     # LS:SIP - Peers(*)\SIP-Sends Timed-Out/sec
-    yield wmi_yield_raw_average_timer(
-        parsed["LS:SIP - Protocol"],
-        item,
-        "SIP - Average Incoming Message Processing Time",
-        label=" avg incoming message processing time",
-        perfvar="sip_message_processing_time",
-        levels=params['message_processing_time'])
+    yield wmi_yield_raw_average_timer(parsed["LS:SIP - Protocol"],
+                                      item,
+                                      "SIP - Average Incoming Message Processing Time",
+                                      label=" avg incoming message processing time",
+                                      perfvar="sip_message_processing_time",
+                                      levels=params['message_processing_time'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:SIP - Protocol"],
-        item,
-        "SIP - Incoming Responses Dropped /Sec",
-        label=" incoming responses dropped/sec",
-        perfvar="sip_incoming_responses_dropped",
-        levels=params['incoming_responses_dropped'])
+    yield wmi_yield_raw_persec(parsed["LS:SIP - Protocol"],
+                               item,
+                               "SIP - Incoming Responses Dropped /Sec",
+                               label=" incoming responses dropped/sec",
+                               perfvar="sip_incoming_responses_dropped",
+                               levels=params['incoming_responses_dropped'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:SIP - Protocol"],
-        item,
-        "SIP - Incoming Requests Dropped /Sec",
-        label=" incoming requests dropped/sec",
-        perfvar="sip_incoming_requests_dropped",
-        levels=params['incoming_requests_dropped'])
+    yield wmi_yield_raw_persec(parsed["LS:SIP - Protocol"],
+                               item,
+                               "SIP - Incoming Requests Dropped /Sec",
+                               label=" incoming requests dropped/sec",
+                               perfvar="sip_incoming_requests_dropped",
+                               levels=params['incoming_requests_dropped'])
 
-    yield wmi_yield_raw_average(
-        parsed["LS:USrv - DBStore"],
-        item,
-        "USrv - Queue Latency (msec)",
-        label=" ms queue latency",
-        perfvar="usrv_queue_latency",
-        perfscale=0.001,
-        levels=params['queue_latency'])
+    yield wmi_yield_raw_average(parsed["LS:USrv - DBStore"],
+                                item,
+                                "USrv - Queue Latency (msec)",
+                                label=" ms queue latency",
+                                perfvar="usrv_queue_latency",
+                                perfscale=0.001,
+                                levels=params['queue_latency'])
 
-    yield wmi_yield_raw_average(
-        parsed["LS:USrv - DBStore"],
-        item,
-        "USrv - Sproc Latency (msec)",
-        label=" ms sproc latency",
-        perfvar="usrv_sproc_latency",
-        perfscale=0.001,
-        levels=params['sproc_latency'])
+    yield wmi_yield_raw_average(parsed["LS:USrv - DBStore"],
+                                item,
+                                "USrv - Sproc Latency (msec)",
+                                label=" ms sproc latency",
+                                perfvar="usrv_sproc_latency",
+                                perfscale=0.001,
+                                levels=params['sproc_latency'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:USrv - DBStore"],
-        item,
-        "USrv - Throttled requests/sec",
-        label=" throttled requests/sec",
-        perfvar="usrv_throttled_requests",
-        levels=params['throttled_requests'])
+    yield wmi_yield_raw_persec(parsed["LS:USrv - DBStore"],
+                               item,
+                               "USrv - Throttled requests/sec",
+                               label=" throttled requests/sec",
+                               perfvar="usrv_throttled_requests",
+                               levels=params['throttled_requests'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:SIP - Responses"],
-        item,
-        "SIP - Local 503 Responses /Sec",
-        label=" local 503 responses/sec",
-        perfvar="sip_503_responses",
-        levels=params['local_503_responses'])
+    yield wmi_yield_raw_persec(parsed["LS:SIP - Responses"],
+                               item,
+                               "SIP - Local 503 Responses /Sec",
+                               label=" local 503 responses/sec",
+                               perfvar="sip_503_responses",
+                               levels=params['local_503_responses'])
 
-    yield wmi_yield_raw_counter(
-        parsed["LS:SIP - Load Management"],
-        item,
-        "SIP - Incoming Messages Timed out",
-        label=" incoming messages timed out",
-        perfvar="sip_incoming_messages_timed_out",
-        levels=params['timedout_incoming_messages'])
+    yield wmi_yield_raw_counter(parsed["LS:SIP - Load Management"],
+                                item,
+                                "SIP - Incoming Messages Timed out",
+                                label=" incoming messages timed out",
+                                perfvar="sip_incoming_messages_timed_out",
+                                levels=params['timedout_incoming_messages'])
 
-    yield wmi_yield_raw_average_timer(
-        parsed["LS:SIP - Load Management"],
-        item,
-        "SIP - Average Holding Time For Incoming Messages",
-        label=" avg holding time for incoming messages",
-        perfvar="sip_avg_holding_time_incoming_messages",
-        levels=params['holding_time_incoming'])
+    yield wmi_yield_raw_average_timer(parsed["LS:SIP - Load Management"],
+                                      item,
+                                      "SIP - Average Holding Time For Incoming Messages",
+                                      label=" avg holding time for incoming messages",
+                                      perfvar="sip_avg_holding_time_incoming_messages",
+                                      levels=params['holding_time_incoming'])
 
-    yield wmi_yield_raw_counter(
-        parsed["LS:SIP - Peers"],
-        item,
-        "SIP - Flow-controlled Connections",
-        label=" flow-controlled connections",
-        perfvar="sip_flow_controlled_connections",
-        levels=params['flow_controlled_connections'])
+    yield wmi_yield_raw_counter(parsed["LS:SIP - Peers"],
+                                item,
+                                "SIP - Flow-controlled Connections",
+                                label=" flow-controlled connections",
+                                perfvar="sip_flow_controlled_connections",
+                                levels=params['flow_controlled_connections'])
 
-    yield wmi_yield_raw_average_timer(
-        parsed["LS:SIP - Peers"],
-        item,
-        "SIP - Average Outgoing Queue Delay",
-        label=" avg outgoing queue delay",
-        perfvar="sip_avg_outgoing_queue_delay",
-        levels=params['outgoing_queue_delay'])
+    yield wmi_yield_raw_average_timer(parsed["LS:SIP - Peers"],
+                                      item,
+                                      "SIP - Average Outgoing Queue Delay",
+                                      label=" avg outgoing queue delay",
+                                      perfvar="sip_avg_outgoing_queue_delay",
+                                      levels=params['outgoing_queue_delay'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:SIP - Peers"],
-        item,
-        "SIP - Sends Timed-Out /Sec",
-        label=" sends timed out/sec",
-        perfvar="sip_sends_timed_out",
-        levels=params['timedout_sends'])
+    yield wmi_yield_raw_persec(parsed["LS:SIP - Peers"],
+                               item,
+                               "SIP - Sends Timed-Out /Sec",
+                               label=" sends timed out/sec",
+                               perfvar="sip_sends_timed_out",
+                               levels=params['timedout_sends'])
 
     if "LS:SIP - Authentication" in parsed:
-        yield wmi_yield_raw_persec(
-            parsed["LS:SIP - Authentication"],
-            item,
-            "SIP - Authentication System Errors /Sec",
-            label=" authentication errors/sec",
-            perfvar="sip_authentication_errors",
-            levels=params['authentication_errors'])
+        yield wmi_yield_raw_persec(parsed["LS:SIP - Authentication"],
+                                   item,
+                                   "SIP - Authentication System Errors /Sec",
+                                   label=" authentication errors/sec",
+                                   perfvar="sip_authentication_errors",
+                                   levels=params['authentication_errors'])
 
 
 check_info['skype.sip_stack'] = {
-    'inventory_function': lambda parsed: inventory_wmi_table(
-        parsed,
-        required_tables=[
-            "LS:SIP - Protocol",
-            "LS:USrv - DBStore",
-            "LS:SIP - Responses",
-            "LS:SIP - Load Management",
-            "LS:SIP - Peers",
-        ]),
+    'inventory_function': lambda parsed: inventory_wmi_table(parsed,
+                                                             required_tables=[
+                                                                 "LS:SIP - Protocol",
+                                                                 "LS:USrv - DBStore",
+                                                                 "LS:SIP - Responses",
+                                                                 "LS:SIP - Load Management",
+                                                                 "LS:SIP - Peers",
+                                                             ]),
     'check_function': check_skype_sip_stack,
     'has_perfdata': True,
     'service_description': "Skype SIP Stack",
@@ -490,13 +465,12 @@ def check_skype_mediation_server(item, params, parsed):
     # LS:MediationServer - Global Per Gateway Counters(*)\- Total failed calls caused by unexpected interaction from a gateway
     # LS:MediationServer - Media Relay\- Media Connectivity Check Failure
 
-    yield wmi_yield_raw_counter(
-        parsed["LS:MediationServer - Health Indices"],
-        item,
-        "- Load Call Failure Index",
-        label=" load call failure index",
-        perfvar="mediation_load_call_failure_index",
-        levels=params["load_call_failure_index"])
+    yield wmi_yield_raw_counter(parsed["LS:MediationServer - Health Indices"],
+                                item,
+                                "- Load Call Failure Index",
+                                label=" load call failure index",
+                                perfvar="mediation_load_call_failure_index",
+                                levels=params["load_call_failure_index"])
 
     yield wmi_yield_raw_counter(
         parsed["LS:MediationServer - Global Counters"],
@@ -514,13 +488,12 @@ def check_skype_mediation_server(item, params, parsed):
         perfvar="mediation_failed_calls_because_of_gateway",
         levels=params['failed_calls_because_of_gateway'])
 
-    yield wmi_yield_raw_counter(
-        parsed["LS:MediationServer - Media Relay"],
-        item,
-        "- Media Connectivity Check Failure",
-        label=" media connectivity check failure",
-        perfvar="mediation_media_connectivity_failure",
-        levels=params['media_connectivity_failure'])
+    yield wmi_yield_raw_counter(parsed["LS:MediationServer - Media Relay"],
+                                item,
+                                "- Media Connectivity Check Failure",
+                                label=" media connectivity check failure",
+                                perfvar="mediation_media_connectivity_failure",
+                                levels=params['media_connectivity_failure'])
 
 
 check_info['skype.mediation_server'] = {
@@ -542,13 +515,12 @@ check_info['skype.mediation_server'] = {
 
 def check_skype_edge_auth(item, params, parsed):
     # LS:A/V Auth - Requests\- Bad Requests Received/sec
-    yield wmi_yield_raw_persec(
-        parsed["LS:A/V Auth - Requests"],
-        item,
-        "- Bad Requests Received/sec",
-        label=" bad requests/sec",
-        perfvar="avauth_failed_requests",
-        levels=params['bad_requests'])
+    yield wmi_yield_raw_persec(parsed["LS:A/V Auth - Requests"],
+                               item,
+                               "- Bad Requests Received/sec",
+                               label=" bad requests/sec",
+                               perfvar="avauth_failed_requests",
+                               levels=params['bad_requests'])
 
 
 check_info['skype.edge_auth'] = {
@@ -569,53 +541,47 @@ def check_skype_av_edge(item, params, parsed):
     # LS:A/V Edge - TCP Counters(*)\A/V Edge - Allocate Requests Exceeding Port Limit
     # LS:A/V Edge - UDP Counters(*)\A/V Edge - Packets Dropped/sec
     # LS:A/V Edge - TCP Counters(*)\A/V Edge - Packets Dropped/sec
-    yield wmi_yield_raw_persec(
-        parsed["LS:A/V Edge - UDP Counters"],
-        item,
-        "A/V Edge - Authentication Failures/sec",
-        label=" UDP auth failures/sec",
-        perfvar="edge_udp_failed_auth",
-        levels=params['authentication_failures'])
+    yield wmi_yield_raw_persec(parsed["LS:A/V Edge - UDP Counters"],
+                               item,
+                               "A/V Edge - Authentication Failures/sec",
+                               label=" UDP auth failures/sec",
+                               perfvar="edge_udp_failed_auth",
+                               levels=params['authentication_failures'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:A/V Edge - TCP Counters"],
-        item,
-        "A/V Edge - Authentication Failures/sec",
-        label=" TCP auth failures/sec",
-        perfvar="edge_tcp_failed_auth",
-        levels=params['authentication_failures'])
+    yield wmi_yield_raw_persec(parsed["LS:A/V Edge - TCP Counters"],
+                               item,
+                               "A/V Edge - Authentication Failures/sec",
+                               label=" TCP auth failures/sec",
+                               perfvar="edge_tcp_failed_auth",
+                               levels=params['authentication_failures'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:A/V Edge - UDP Counters"],
-        item,
-        "A/V Edge - Allocate Requests Exceeding Port Limit/sec",
-        label=" UDP allocate requests > port limit/sec",
-        perfvar="edge_udp_allocate_requests_exceeding_port_limit",
-        levels=params['allocate_requests_exceeding'])
+    yield wmi_yield_raw_persec(parsed["LS:A/V Edge - UDP Counters"],
+                               item,
+                               "A/V Edge - Allocate Requests Exceeding Port Limit/sec",
+                               label=" UDP allocate requests > port limit/sec",
+                               perfvar="edge_udp_allocate_requests_exceeding_port_limit",
+                               levels=params['allocate_requests_exceeding'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:A/V Edge - TCP Counters"],
-        item,
-        "A/V Edge - Allocate Requests Exceeding Port Limit/sec",
-        label=" TCP allocate requests > port limit/sec",
-        perfvar="edge_tcp_allocate_requests_exceeding_port_limit",
-        levels=params['allocate_requests_exceeding'])
+    yield wmi_yield_raw_persec(parsed["LS:A/V Edge - TCP Counters"],
+                               item,
+                               "A/V Edge - Allocate Requests Exceeding Port Limit/sec",
+                               label=" TCP allocate requests > port limit/sec",
+                               perfvar="edge_tcp_allocate_requests_exceeding_port_limit",
+                               levels=params['allocate_requests_exceeding'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:A/V Edge - UDP Counters"],
-        item,
-        "A/V Edge - Packets Dropped/sec",
-        label=" UDP packets dropped/sec",
-        perfvar="edge_udp_packets_dropped",
-        levels=params['packets_dropped'])
+    yield wmi_yield_raw_persec(parsed["LS:A/V Edge - UDP Counters"],
+                               item,
+                               "A/V Edge - Packets Dropped/sec",
+                               label=" UDP packets dropped/sec",
+                               perfvar="edge_udp_packets_dropped",
+                               levels=params['packets_dropped'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:A/V Edge - TCP Counters"],
-        item,
-        "A/V Edge - Packets Dropped/sec",
-        label=" TCP packets dropped/sec",
-        perfvar="edge_tcp_packets_dropped",
-        levels=params['packets_dropped'])
+    yield wmi_yield_raw_persec(parsed["LS:A/V Edge - TCP Counters"],
+                               item,
+                               "A/V Edge - Packets Dropped/sec",
+                               label=" TCP packets dropped/sec",
+                               perfvar="edge_tcp_packets_dropped",
+                               levels=params['packets_dropped'])
 
 
 check_info['skype.edge'] = {
@@ -661,21 +627,19 @@ check_info['skype.data_proxy'] = {
 def check_skype_xmpp_proxy(item, params, parsed):
     # LS:XmppFederationProxy - Streams\XmppFederationProxy - Failed outbound stream establishes/sec
     # LS:XmppFederationProxy - Streams\XmppFederationProxy - Failed inbound stream establishes/sec
-    yield wmi_yield_raw_persec(
-        parsed["LS:XmppFederationProxy - Streams"],
-        item,
-        "XmppFederationProxy - Failed outbound stream establishes/sec",
-        label=" failed outbound streams",
-        perfvar="xmpp_failed_outbound_streams",
-        levels=params['failed_outbound_streams'])
+    yield wmi_yield_raw_persec(parsed["LS:XmppFederationProxy - Streams"],
+                               item,
+                               "XmppFederationProxy - Failed outbound stream establishes/sec",
+                               label=" failed outbound streams",
+                               perfvar="xmpp_failed_outbound_streams",
+                               levels=params['failed_outbound_streams'])
 
-    yield wmi_yield_raw_persec(
-        parsed["LS:XmppFederationProxy - Streams"],
-        item,
-        "XmppFederationProxy - Failed inbound stream establishes/sec",
-        label=" failed inbound streams",
-        perfvar="xmpp_failed_inbound_streams",
-        levels=params['failed_inbound_streams'])
+    yield wmi_yield_raw_persec(parsed["LS:XmppFederationProxy - Streams"],
+                               item,
+                               "XmppFederationProxy - Failed inbound stream establishes/sec",
+                               label=" failed inbound streams",
+                               perfvar="xmpp_failed_inbound_streams",
+                               levels=params['failed_inbound_streams'])
 
 
 check_info['skype.xmpp_proxy'] = {
@@ -713,13 +677,12 @@ def check_skype_mobile(item, params, parsed):
             # still properly build a combined graph for active sessions
             yield 0, "", [("active_sessions_%s" % name.lower(), 0, None, None, None, None)]
 
-    yield wmi_yield_raw_counter(
-        parsed["LS:WEB - Throttling and Authentication"],
-        item,
-        "WEB - Total Requests In Processing",
-        label=" requested",
-        perfvar="web_requests_processing",
-        levels=params['requests_processing'])
+    yield wmi_yield_raw_counter(parsed["LS:WEB - Throttling and Authentication"],
+                                item,
+                                "WEB - Total Requests In Processing",
+                                label=" requested",
+                                perfvar="web_requests_processing",
+                                levels=params['requests_processing'])
 
 
 check_info['skype.mobile'] = {

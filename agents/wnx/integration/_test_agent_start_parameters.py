@@ -168,9 +168,8 @@ def pack_plugins(script):
             with open(os.path.join(plugindir, pluginname), 'w') as outfile:
                 outfile.write(content)
     else:
-        source = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), Globals.builddir,
-            Globals.binaryplugin)
+        source = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                              Globals.builddir, Globals.binaryplugin)
         shutil.copy(source, plugindir)
 
     with open(Globals.capfile, 'wb') as capfile:
@@ -224,9 +223,9 @@ def verify_plugin_contents():
             with open(os.path.join(root, f)) as fhandle:
                 actual_data = fhandle.read()
                 expected_data = plugin_contents[0]
-                assert expected_data == actual_data, (
-                    'expected contents of file %s: %s, '
-                    'actual contents: %s' % (f, expected_data, actual_data))
+                assert expected_data == actual_data, ('expected contents of file %s: %s, '
+                                                      'actual contents: %s' %
+                                                      (f, expected_data, actual_data))
 
 
 def verify_plugin_output():

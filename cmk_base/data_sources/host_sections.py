@@ -191,8 +191,9 @@ class MultiHostSections(object):
             except KeyError:
                 continue
 
-            host_section_content = self._update_with_node_column(
-                host_section_content, check_plugin_name, host_entry[0], for_discovery)
+            host_section_content = self._update_with_node_column(host_section_content,
+                                                                 check_plugin_name, host_entry[0],
+                                                                 for_discovery)
 
             if section_content is None:
                 section_content = []

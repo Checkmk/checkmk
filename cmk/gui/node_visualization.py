@@ -46,12 +46,12 @@ def _bi_map():
     html.header("BI visualization")
     div_id = "node_visualization"
     html.div("", id=div_id)
-    html.javascript(
-        "node_instance = new cmk.node_visualization.BIVisualization(%s);" % json.dumps(div_id))
+    html.javascript("node_instance = new cmk.node_visualization.BIVisualization(%s);" %
+                    json.dumps(div_id))
 
     html.javascript("node_instance.set_theme(%s)" % json.dumps(html.get_theme()))
-    html.javascript("node_instance.show_aggregations(%s, %s)" % (json.dumps([aggr_name]),
-                                                                 json.dumps(layout_id)))
+    html.javascript("node_instance.show_aggregations(%s, %s)" %
+                    (json.dumps([aggr_name]), json.dumps(layout_id)))
 
 
 @page_registry.register_page("ajax_fetch_aggregation_data")
@@ -95,8 +95,8 @@ class AjaxFetchAggregationData(AjaxPage):
                         data["layout_origin"] = _("Template: %s" % template_layout_id)
                     else:
                         data["use_default_layout"] = config.default_bi_layout
-                        data["layout_origin"] = _(
-                            "Default layout: %s" % config.default_bi_layout.title())
+                        data["layout_origin"] = _("Default layout: %s" %
+                                                  config.default_bi_layout.title())
 
             aggregation_info["aggregations"][row["tree"]["aggr_name"]] = data
 
@@ -149,11 +149,10 @@ class BILayoutManagement(object):
 
     @classmethod
     def save_layouts(cls):
-        store.save_to_mk_file(
-            str(BILayoutManagement._config_file),
-            "bi_layouts",
-            config.bi_layouts,
-            pprint_value=True)
+        store.save_to_mk_file(str(BILayoutManagement._config_file),
+                              "bi_layouts",
+                              config.bi_layouts,
+                              pprint_value=True)
 
     @classmethod
     def load_bi_template_layout(cls, template_id):

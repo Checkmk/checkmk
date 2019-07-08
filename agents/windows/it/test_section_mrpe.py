@@ -47,27 +47,25 @@ def expected_output():
     drive = r'[A-Z]:%s' % re.escape(os.sep)
     expected = [
         re.escape(r'<<<%s>>>' % Globals.section),
-        r'\(%s\) %s 2 CRIT - This check is always critical' % (Globals.pluginname,
-                                                               Globals.checkname)
+        r'\(%s\) %s 2 CRIT - This check is always critical' %
+        (Globals.pluginname, Globals.checkname)
     ]
     if not Globals.alone:
         expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
     return expected
 
 
-@pytest.fixture(
-    params=[-1, 0, 1, 2],
-    ids=[
-        'direct', 'include_without_newline', 'include_with_newline',
-        'include_with_newline_forward_slash'
-    ],
-    autouse=True)
+@pytest.fixture(params=[-1, 0, 1, 2],
+                ids=[
+                    'direct', 'include_without_newline', 'include_with_newline',
+                    'include_with_newline_forward_slash'
+                ],
+                autouse=True)
 def manage_plugin(request):
     Globals.newline = request.param
     plugindir = (Globals.mrpedir if Globals.newline < 0 else Globals.includedir)
-    source = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), Globals.mrpedir,
-        Globals.pluginname)
+    source = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                          Globals.mrpedir, Globals.pluginname)
     targetdir = os.path.join(remotedir, plugindir)
     targetdir_windows = targetdir.replace('/', '\\')
     if platform.system() != 'Windows':
@@ -84,8 +82,8 @@ def manage_plugin(request):
             path = os.path.join(targetdir_windows, Globals.pluginname)
             if Globals.newline == 2:
                 path = path.replace('\\', '/')
-            cfg.write('check = %s "%s"%s' % (Globals.checkname, path,
-                                             '\n' if Globals.newline > 0 else ""))
+            cfg.write('check = %s "%s"%s' %
+                      (Globals.checkname, path, '\n' if Globals.newline > 0 else ""))
     yield
     if platform.system() == 'Windows':
         os.unlink(os.path.join(targetdir, Globals.pluginname))

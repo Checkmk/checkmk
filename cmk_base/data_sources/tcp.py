@@ -78,8 +78,8 @@ class TCPDataSource(CheckMKAgentDataSource):
 
     def _execute(self):
         if self._use_only_cache:
-            raise MKAgentError(
-                "Got no data: No usable cache file present at %s" % self._cache_file_path())
+            raise MKAgentError("Got no data: No usable cache file present at %s" %
+                               self._cache_file_path())
 
         self._verify_ipaddress()
 
@@ -93,8 +93,8 @@ class TCPDataSource(CheckMKAgentDataSource):
         timeout = self._get_timeout()
 
         output = []
-        self._logger.debug(
-            "Connecting via TCP to %s:%d (%ss timeout)" % (self._ipaddress, port, timeout))
+        self._logger.debug("Connecting via TCP to %s:%d (%ss timeout)" %
+                           (self._ipaddress, port, timeout))
         try:
             s.settimeout(timeout)
             s.connect((self._ipaddress, port))

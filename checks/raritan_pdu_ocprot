@@ -85,8 +85,8 @@ def check_raritan_pdu_ocprot(item, params, data):
 
 check_info["raritan_pdu_ocprot"] = {
     "parse_function": parse_raritan_pdu_ocprot,
-    "inventory_function": discover(
-        lambda key, value: True, default_params="raritan_pdu_ocprot_current_default_levels"),
+    "inventory_function": discover(lambda key, value: True,
+                                   default_params="raritan_pdu_ocprot_current_default_levels"),
     "check_function": check_raritan_pdu_ocprot,
     "has_perfdata": True,
     "service_description": "Overcurrent Protector %s",

@@ -41,13 +41,12 @@ from cmk.gui.plugins.wato import (
 
 def ceph_epoch_element(title):
     return [("epoch",
-             Tuple(
-                 title=title,
-                 elements=[
-                     Float(title=_("Warning at")),
-                     Float(title=_("Critical at")),
-                     Integer(title=_("Average interval"), unit=_("minutes")),
-                 ]))]
+             Tuple(title=title,
+                   elements=[
+                       Float(title=_("Warning at")),
+                       Float(title=_("Critical at")),
+                       Integer(title=_("Average interval"), unit=_("minutes")),
+                   ]))]
 
 
 @rulespec_registry.register

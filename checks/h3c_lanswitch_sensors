@@ -64,8 +64,8 @@ def h3c_lanswitch_genitem(endoid):
 #
 #
 # finally,just check fan status
-snmp_info["h3c_lanswitch_sensors"] = (".1.3.6.1.4.1.43.45.1.2.23.1.9.1", ["1.1", "2.1"],
-                                      [OID_END, "2"])
+snmp_info["h3c_lanswitch_sensors"] = (".1.3.6.1.4.1.43.45.1.2.23.1.9.1", ["1.1",
+                                                                          "2.1"], [OID_END, "2"])
 
 snmp_scan_functions["h3c_lanswitch_sensors"] = lambda oid: '3com s' in oid(".1.3.6.1.2.1.1.1.0"
                                                                           ).lower()

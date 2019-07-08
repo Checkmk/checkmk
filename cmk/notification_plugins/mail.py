@@ -643,8 +643,8 @@ def fetch_pnp_data(context, params):
 def fetch_num_sources(context):
     svc_desc = '_HOST_' if context['WHAT'] == 'HOST' else context['SERVICEDESC']
     infos = fetch_pnp_data(
-        context, '/json?host=%s&srv=%s&view=0' % (context['HOSTNAME'].encode('utf-8'),
-                                                  svc_desc.encode('utf-8')))
+        context, '/json?host=%s&srv=%s&view=0' %
+        (context['HOSTNAME'].encode('utf-8'), svc_desc.encode('utf-8')))
     if not infos.startswith('[{'):
         raise GraphException('Unable to fetch graph infos: %s' % extract_graph_error(infos))
 
@@ -720,8 +720,8 @@ def render_cmk_graphs(context):
     except Exception as e:
         if opt_debug:
             raise
-        sys.stderr.write(
-            "ERROR: Failed to decode graphs: %s\nURL: %s\nData: %r\n" % (e, url, json_data))
+        sys.stderr.write("ERROR: Failed to decode graphs: %s\nURL: %s\nData: %r\n" %
+                         (e, url, json_data))
         return []
 
     return map(base64.b64decode, base64_strings)

@@ -315,8 +315,10 @@ class Server(object):
         try:
             if self._verify_ssl is False:
                 urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
-            response = self._session.post(
-                self._url, headers=headers, data=xml_string, verify=self._verify_ssl)
+            response = self._session.post(self._url,
+                                          headers=headers,
+                                          data=xml_string,
+                                          verify=self._verify_ssl)
         except requests.ConnectionError as e:
             logging.debug("Server._communicate: PostError: '%s'", e)
             raise CommunicationException(e)
@@ -359,12 +361,11 @@ def debug():
 
 
 def parse_arguments(argv):
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument(
-        "--no-cert-check",
-        action="store_true",
-        help="Disables the checking of the servers ssl certificate.")
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--no-cert-check",
+                        action="store_true",
+                        help="Disables the checking of the servers ssl certificate.")
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument("-u", "--username", required=True, help="The username.")
     parser.add_argument("-p", "--password", required=True, help="The password.")

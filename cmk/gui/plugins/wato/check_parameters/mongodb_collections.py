@@ -59,12 +59,11 @@ class RulespecCheckgroupParametersMongodbCollections(CheckParameterRulespecWithI
         ])
 
     def _size_tuple(self, title, course):
-        return Tuple(
-            title=_(title),
-            elements=[
-                Integer(title=_("Warning if %s") % course, unit=_("MiB"), minvalue=0),
-                Integer(title=_("Critical if %s") % course, unit=_("MiB"), minvalue=0),
-            ])
+        return Tuple(title=_(title),
+                     elements=[
+                         Integer(title=_("Warning if %s") % course, unit=_("MiB"), minvalue=0),
+                         Integer(title=_("Critical if %s") % course, unit=_("MiB"), minvalue=0),
+                     ])
 
     @property
     def item_spec(self):

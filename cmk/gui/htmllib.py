@@ -645,8 +645,11 @@ class HTMLGenerator(OutputFunnel):
 
     def stylesheet(self, href):
         self.write_html(
-            self._render_opening_tag(
-                'link', rel="stylesheet", type_="text/css", href=href, close_tag=True))
+            self._render_opening_tag('link',
+                                     rel="stylesheet",
+                                     type_="text/css",
+                                     href=href,
+                                     close_tag=True))
 
     #
     # Scriptingi
@@ -1576,14 +1579,13 @@ class html(HTMLGenerator):
         return filename
 
     def makeactionuri(self, addvars, filename=None, delvars=None):
-        return self.makeuri(
-            addvars + [("_transid", self.transaction_manager.get())],
-            filename=filename,
-            delvars=delvars)
+        return self.makeuri(addvars + [("_transid", self.transaction_manager.get())],
+                            filename=filename,
+                            delvars=delvars)
 
     def makeactionuri_contextless(self, addvars, filename=None):
-        return self.makeuri_contextless(
-            addvars + [("_transid", self.transaction_manager.get())], filename=filename)
+        return self.makeuri_contextless(addvars + [("_transid", self.transaction_manager.get())],
+                                        filename=filename)
 
     #
     # HTML heading and footer rendering
@@ -1593,12 +1595,11 @@ class html(HTMLGenerator):
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
         self.meta(httpequiv="X-UA-Compatible", content="IE=edge")
         self.write_html(
-            self._render_opening_tag(
-                'link',
-                rel="shortcut icon",
-                href="themes/%s/images/favicon.ico" % self._theme,
-                type_="image/ico",
-                close_tag=True))
+            self._render_opening_tag('link',
+                                     rel="shortcut icon",
+                                     href="themes/%s/images/favicon.ico" % self._theme,
+                                     type_="image/ico",
+                                     close_tag=True))
 
     def _head(self, title, javascripts=None):
         javascripts = javascripts if javascripts else []
@@ -1628,8 +1629,8 @@ class html(HTMLGenerator):
 
         if self.browser_reload != 0:
             if self.browser_redirect != '':
-                self.javascript('cmk.utils.set_reload(%s, \'%s\')' % (self.browser_reload,
-                                                                      self.browser_redirect))
+                self.javascript('cmk.utils.set_reload(%s, \'%s\')' %
+                                (self.browser_reload, self.browser_redirect))
             else:
                 self.javascript('cmk.utils.set_reload(%s)' % (self.browser_reload))
 
@@ -1640,8 +1641,8 @@ class html(HTMLGenerator):
             self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
 
         if config.custom_style_sheet:
-            self.write(
-                '<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)
+            self.write('<link rel="stylesheet" type="text/css" href="%s">\n' %
+                       config.custom_style_sheet)
 
         if self._theme == "classic" and cmk.is_managed_edition():
             import cmk.gui.cme.gui_colors as gui_colors
@@ -1752,24 +1753,22 @@ class html(HTMLGenerator):
         # here and self.a() escapes the content (with permissive escaping) again. We don't want
         # to handle "title" permissive.
         title = HTML(self.escaper.escape_attribute(title))
-        self.a(
-            title,
-            href="#",
-            onfocus="if (this.blur) this.blur();",
-            onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
+        self.a(title,
+               href="#",
+               onfocus="if (this.blur) this.blur();",
+               onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
         self.close_td()
 
     def top_heading_right(self):
         cssclass = "active" if self.help_visible else "passive"
 
-        self.icon_button(
-            None,
-            _("Toggle context help texts"),
-            "help",
-            id_="helpbutton",
-            onclick="cmk.help.toggle()",
-            style="display:none",
-            cssclass=cssclass)
+        self.icon_button(None,
+                         _("Toggle context help texts"),
+                         "help",
+                         id_="helpbutton",
+                         onclick="cmk.help.toggle()",
+                         style="display:none",
+                         cssclass=cssclass)
         self.open_a(href="https://checkmk.com", class_="head_logo", target="_blank")
         self.img(src="themes/%s/images/logo_cmk_small.png" % self._theme)
         self.close_a()
@@ -1803,8 +1802,8 @@ class html(HTMLGenerator):
                 self.td('', class_="middle")
 
                 self.open_td(class_="right")
-                content = _("refresh: %s secs") % self.render_div(
-                    self.browser_reload, id_="foot_refresh_time")
+                content = _("refresh: %s secs") % self.render_div(self.browser_reload,
+                                                                  id_="foot_refresh_time")
                 style = "display:inline-block;" if self.browser_reload else "display:none;"
                 self.div(HTML(content), id_="foot_refresh", style=style)
                 self.close_td()
@@ -1852,14 +1851,13 @@ class html(HTMLGenerator):
         if action is None:
             action = self.myfile + ".py"
         self.current_form = name
-        self.open_form(
-            id_="form_%s" % name,
-            name=name,
-            class_=name,
-            action=action,
-            method=method,
-            onsubmit=onsubmit,
-            enctype="multipart/form-data" if method.lower() == "post" else None)
+        self.open_form(id_="form_%s" % name,
+                       name=name,
+                       class_=name,
+                       action=action,
+                       method=method,
+                       onsubmit=onsubmit,
+                       enctype="multipart/form-data" if method.lower() == "post" else None)
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
             self.hidden_field("_transid", str(self.transaction_manager.get()))
@@ -1953,14 +1951,13 @@ class html(HTMLGenerator):
 
     def render_button(self, varname, title, cssclass=None, style=None, help_=None):
         self.add_form_var(varname)
-        return self.render_input(
-            name=varname,
-            type_="submit",
-            id_=varname,
-            class_=["button", cssclass if cssclass else None],
-            value=title,
-            title=help_,
-            style=style)
+        return self.render_input(name=varname,
+                                 type_="submit",
+                                 id_=varname,
+                                 class_=["button", cssclass if cssclass else None],
+                                 value=title,
+                                 title=help_,
+                                 style=style)
 
     def buttonlink(self,
                    href,
@@ -1985,16 +1982,15 @@ class html(HTMLGenerator):
             else:
                 css_classes.extend(class_)
 
-        self.input(
-            name=obj_id,
-            type_="button",
-            id_=obj_id,
-            class_=css_classes,
-            value=text,
-            style=style,
-            title=title,
-            disabled=disabled,
-            onclick="location.href=\'%s\'" % href)
+        self.input(name=obj_id,
+                   type_="button",
+                   id_=obj_id,
+                   class_=css_classes,
+                   value=text,
+                   style=style,
+                   title=title,
+                   disabled=disabled,
+                   onclick="location.href=\'%s\'" % href)
 
     # TODO: Refactor the arguments. It is only used in views/wato
     def toggle_button(self,
@@ -2066,17 +2062,16 @@ class html(HTMLGenerator):
 
         # autocomplete="off": Is needed for firefox not to set "disabled="disabled" during page reload
         # when it has been set on a page via javascript before. Needed for WATO activate changes page.
-        self.input(
-            name=varname,
-            type_="button",
-            id_=varname,
-            class_=["button", cssclass] + classes,
-            autocomplete="off",
-            onclick=onclick,
-            style=style,
-            disabled=disabled,
-            value=text,
-            title=title)
+        self.input(name=varname,
+                   type_="button",
+                   id_=varname,
+                   class_=["button", cssclass] + classes,
+                   autocomplete="off",
+                   onclick=onclick,
+                   style=style,
+                   disabled=disabled,
+                   value=text,
+                   title=title)
 
     #
     # Other input elements
@@ -2194,12 +2189,11 @@ class html(HTMLGenerator):
     # Shows a colored button with text (used in site and customer status snapins)
     def status_label_button(self, content, status, title, onclick, **attrs):
         button_cls = "button" if onclick else None
-        self.div(
-            content,
-            title=title,
-            class_=["status_label", button_cls, status],
-            onclick=onclick,
-            **attrs)
+        self.div(content,
+                 title=title,
+                 class_=["status_label", button_cls, status],
+                 onclick=onclick,
+                 **attrs)
 
     def toggle_switch(self, enabled, help_txt, **attrs):
         # Same API as other elements: class_ can be a list or string/None
@@ -2341,11 +2335,11 @@ class html(HTMLGenerator):
         for value, text, icon in choices:
             # if both the default in choices and current was '' then selected depended on the order in choices
             selected = (value == current) or (not value and not current)
-            self.option(
-                text,
-                value=value if value else "",
-                selected='' if selected else None,
-                style="background-image:url(themes/%s/images/icon_%s.png);" % (self._theme, icon))
+            self.option(text,
+                        value=value if value else "",
+                        selected='' if selected else None,
+                        style="background-image:url(themes/%s/images/icon_%s.png);" %
+                        (self._theme, icon))
         self.close_select()
 
     # Wrapper for DualListChoice
@@ -2423,8 +2417,11 @@ class html(HTMLGenerator):
         # View
         id_ = "rb_%s_%s" % (varname, value) if label else None
         self.open_span(class_="radiobutton_group")
-        self.input(
-            name=varname, type_="radio", value=value, checked='' if checked else None, id_=id_)
+        self.input(name=varname,
+                   type_="radio",
+                   value=value,
+                   checked='' if checked else None,
+                   id_=id_)
         if label:
             self.label(label, for_=id_)
         self.close_span()
@@ -2500,15 +2497,13 @@ class html(HTMLGenerator):
             self.open_tr(class_="heading")
             self.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan="2")
             if icon:
-                self.img(
-                    class_=["treeangle", "title"],
-                    src="themes/%s/images/icon_%s.png" % (self._theme, icon))
+                self.img(class_=["treeangle", "title"],
+                         src="themes/%s/images/icon_%s.png" % (self._theme, icon))
             else:
-                self.img(
-                    id_=img_id,
-                    class_=["treeangle", "nform", "open" if isopen else "closed"],
-                    src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
-                    align="absbottom")
+                self.img(id_=img_id,
+                         class_=["treeangle", "nform", "open" if isopen else "closed"],
+                         src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
+                         align="absbottom")
             self.write_text(title)
             self.close_td()
             self.close_tr()
@@ -2516,27 +2511,24 @@ class html(HTMLGenerator):
             self.open_div(class_="foldable")
 
             if not icon:
-                self.img(
-                    id_="treeimg.%s.%s" % (treename, id_),
-                    class_=["treeangle", "open" if isopen else "closed"],
-                    src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
-                    align="absbottom",
-                    onclick=onclick)
+                self.img(id_="treeimg.%s.%s" % (treename, id_),
+                         class_=["treeangle", "open" if isopen else "closed"],
+                         src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
+                         align="absbottom",
+                         onclick=onclick)
             if isinstance(title, HTML):  # custom HTML code
                 if icon:
-                    self.img(
-                        class_=["treeangle", "title"],
-                        src="themes/%s/images/icon_%s.png" % (self._theme, icon),
-                        onclick=onclick)
+                    self.img(class_=["treeangle", "title"],
+                             src="themes/%s/images/icon_%s.png" % (self._theme, icon),
+                             onclick=onclick)
                 self.write_text(title)
                 if indent != "form":
                     self.br()
             else:
                 self.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
                 if icon:
-                    self.img(
-                        class_=["treeangle", "title"],
-                        src="themes/%s/images/icon_%s.png" % (self._theme, icon))
+                    self.img(class_=["treeangle", "title"],
+                             src="themes/%s/images/icon_%s.png" % (self._theme, icon))
                 if title_url:
                     self.a(title, href=title_url, target=title_target)
                 else:
@@ -2550,10 +2542,9 @@ class html(HTMLGenerator):
                 self.close_tr()
                 self.close_table()
                 indent_style += "margin: 0; "
-            self.open_ul(
-                id_="tree.%s.%s" % (treename, id_),
-                class_=["treeangle", "open" if isopen else "closed"],
-                style=indent_style)
+            self.open_ul(id_="tree.%s.%s" % (treename, id_),
+                         class_=["treeangle", "open" if isopen else "closed"],
+                         style=indent_style)
 
         # give caller information about current toggling state (needed for nform)
         return isopen
@@ -2584,8 +2575,9 @@ class html(HTMLGenerator):
     def end_context_buttons(self):
         if self._context_buttons_open:
             if self.context_button_hidden:
-                self.open_div(
-                    title=_("Show all buttons"), id="toggle", class_=["contextlink", "short"])
+                self.open_div(title=_("Show all buttons"),
+                              id="toggle",
+                              class_=["contextlink", "short"])
                 self.a("...", onclick='cmk.utils.unhide_context_buttons(this);', href='#')
                 self.close_div()
             self.div("", class_="end")
@@ -2601,15 +2593,14 @@ class html(HTMLGenerator):
                        bestof=None,
                        hover_title=None,
                        class_=None):
-        self._context_button(
-            title,
-            url,
-            icon=icon,
-            hot=hot,
-            id_=id_,
-            bestof=bestof,
-            hover_title=hover_title,
-            class_=class_)
+        self._context_button(title,
+                             url,
+                             icon=icon,
+                             hot=hot,
+                             id_=id_,
+                             bestof=bestof,
+                             hover_title=hover_title,
+                             class_=class_)
 
     def _context_button(self,
                         title,
@@ -2645,10 +2636,9 @@ class html(HTMLGenerator):
 
         self.open_div(class_=css_classes, id_=id_, style="display:%s;" % display)
 
-        self.open_a(
-            href=url,
-            title=hover_title,
-            onclick="cmk.utils.count_context_button(this);" if bestof else None)
+        self.open_a(href=url,
+                    title=hover_title,
+                    onclick="cmk.utils.count_context_button(this);" if bestof else None)
 
         if icon:
             self.icon('', icon, cssclass="inline", middle=False)
@@ -2664,8 +2654,9 @@ class html(HTMLGenerator):
     #
 
     def begin_floating_options(self, div_id, is_open):
-        self.open_div(
-            id_=div_id, class_=["view_form"], style="display: none" if not is_open else None)
+        self.open_div(id_=div_id,
+                      class_=["view_form"],
+                      style="display: none" if not is_open else None)
         self.open_table(class_=["filterform"], cellpadding="0", cellspacing="0", border="0")
         self.open_tr()
         self.open_td()
@@ -2734,8 +2725,9 @@ class html(HTMLGenerator):
 
         rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s.png" % (self._theme,
                                                                                icon_name)
-        if os.path.exists(cmk.utils.paths.omd_root + "/" + rel_path) or os.path.exists(
-                cmk.utils.paths.omd_root + "/local/" + rel_path):
+        if os.path.exists(cmk.utils.paths.omd_root + "/" +
+                          rel_path) or os.path.exists(cmk.utils.paths.omd_root + "/local/" +
+                                                      rel_path):
             return "themes/%s/images/icon_%s.png" % (self._theme, icon_name)
 
         # TODO: This fallback is odd. Find use cases and clean this up
@@ -2800,11 +2792,15 @@ class html(HTMLGenerator):
                      json.dumps(resizable))
 
         #TODO: Check if HTML'ing content is correct and necessary!
-        atag = self.render_a(
-            HTML(content), class_="popup_trigger", href="javascript:void(0);", onclick=onclick)
+        atag = self.render_a(HTML(content),
+                             class_="popup_trigger",
+                             href="javascript:void(0);",
+                             onclick=onclick)
 
-        return self.render_div(
-            atag, class_=["popup_trigger", cssclass], id_="popup_trigger_%s" % ident, style=style)
+        return self.render_div(atag,
+                               class_=["popup_trigger", cssclass],
+                               id_="popup_trigger_%s" % ident,
+                               style=style)
 
     def element_dragger_url(self, dragging_tag, base_url):
         self.write_html(
@@ -2824,12 +2820,11 @@ class html(HTMLGenerator):
     # Currently only tested with tables. But with some small changes it may work with other
     # structures too.
     def render_element_dragger(self, dragging_tag, drop_handler):
-        return self.render_a(
-            self.render_icon("drag", _("Move this entry")),
-            href="javascript:void(0)",
-            class_=["element_dragger"],
-            onmousedown="cmk.element_dragging.start(event, this, %s, %s" % (json.dumps(
-                dragging_tag.upper()), drop_handler))
+        return self.render_a(self.render_icon("drag", _("Move this entry")),
+                             href="javascript:void(0)",
+                             class_=["element_dragger"],
+                             onmousedown="cmk.element_dragging.start(event, this, %s, %s" %
+                             (json.dumps(dragging_tag.upper()), drop_handler))
 
     #
     # HTML - All the common and more complex HTML rendering methods
@@ -2856,24 +2851,25 @@ class html(HTMLGenerator):
     # TODO: Rename the status_icons because they are not only showing states. There are also actions.
     # Something like footer icons or similar seems to be better
     def _write_status_icons(self):
-        self.icon_button(
-            self.makeuri([]), _("URL to this frame"), "frameurl", target="_top", cssclass="inline")
-        self.icon_button(
-            "index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]),
-            _("URL to this page including sidebar"),
-            "pageurl",
-            target="_top",
-            cssclass="inline")
+        self.icon_button(self.makeuri([]),
+                         _("URL to this frame"),
+                         "frameurl",
+                         target="_top",
+                         cssclass="inline")
+        self.icon_button("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]),
+                         _("URL to this page including sidebar"),
+                         "pageurl",
+                         target="_top",
+                         cssclass="inline")
 
         # TODO: Move this away from here. Make a context button. The view should handle this
         if self.myfile == "view" and self.request.var('mode') != 'availability' and config.user.may(
                 "general.csv_export"):
-            self.icon_button(
-                self.makeuri([("output_format", "csv_export")]),
-                _("Export as CSV"),
-                "download_csv",
-                target="_top",
-                cssclass="inline")
+            self.icon_button(self.makeuri([("output_format", "csv_export")]),
+                             _("Export as CSV"),
+                             "download_csv",
+                             target="_top",
+                             cssclass="inline")
 
         # TODO: This needs to be realized as plugin mechanism
         if self.myfile == "view":
@@ -2899,15 +2895,15 @@ class html(HTMLGenerator):
         # TODO: This should be handled by pagetypes.py
         elif self.myfile == "graph_collection":
 
-            self.popup_trigger(
-                self.render_icon(
-                    "menu", _("Add this graph collection to..."), cssclass="iconbutton inline"),
-                'add_visual',
-                'add_visual',
-                data=["graph_collection", {}, {
-                    'name': self.request.var('name')
-                }],
-                url_vars=[("add_type", "graph_collection")])
+            self.popup_trigger(self.render_icon("menu",
+                                                _("Add this graph collection to..."),
+                                                cssclass="iconbutton inline"),
+                               'add_visual',
+                               'add_visual',
+                               data=["graph_collection", {}, {
+                                   'name': self.request.var('name')
+                               }],
+                               url_vars=[("add_type", "graph_collection")])
 
         for img, tooltip in self.status_icons.items():
             if isinstance(tooltip, tuple):
@@ -2949,23 +2945,21 @@ class html(HTMLGenerator):
 
     # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def time_input(self, varname, hours, mins, submit=None):
-        self.text_input(
-            varname,
-            "%02d:%02d" % (hours, mins),
-            cssclass="time",
-            size=5,
-            submit=submit,
-            omit_css_width=True)
+        self.text_input(varname,
+                        "%02d:%02d" % (hours, mins),
+                        cssclass="time",
+                        size=5,
+                        submit=submit,
+                        omit_css_width=True)
 
     # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def date_input(self, varname, year, month, day, submit=None):
-        self.text_input(
-            varname,
-            "%04d-%02d-%02d" % (year, month, day),
-            cssclass="date",
-            size=10,
-            submit=submit,
-            omit_css_width=True)
+        self.text_input(varname,
+                        "%04d-%02d-%02d" % (year, month, day),
+                        cssclass="date",
+                        size=10,
+                        submit=submit,
+                        omit_css_width=True)
 
     # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def get_datetime_input(self, varname):

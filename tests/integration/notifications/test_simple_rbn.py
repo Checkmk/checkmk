@@ -23,10 +23,9 @@ def test_config(web, site):
     assert not expected_users - set(all_users.keys())
 
     # Notify
-    web.add_host(
-        "notify-test", attributes={
-            "ipaddress": "127.0.0.1",
-        })
+    web.add_host("notify-test", attributes={
+        "ipaddress": "127.0.0.1",
+    })
     web.activate_changes()
 
     site.live.command("[%d] DISABLE_HOST_CHECK;notify-test" % time.time())

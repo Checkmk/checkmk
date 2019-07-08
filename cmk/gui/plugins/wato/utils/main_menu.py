@@ -126,13 +126,12 @@ class MainModule(MenuItem):
 
     def __init__(self):
         # TODO: Cleanup hierarchy
-        super(MainModule, self).__init__(
-            mode_or_url=None,
-            title=None,
-            icon=None,
-            permission=None,
-            description=None,
-            sort_index=None)
+        super(MainModule, self).__init__(mode_or_url=None,
+                                         title=None,
+                                         icon=None,
+                                         permission=None,
+                                         description=None,
+                                         sort_index=None)
 
     @abc.abstractproperty
     def mode_or_url(self):

@@ -79,12 +79,11 @@ def render_checkbox_td(view, row, num_tds):
 
 def render_group_checkbox_th():
     html.open_th()
-    html.input(
-        type_="button",
-        class_="checkgroup",
-        name="_toggle_group",
-        onclick="cmk.selection.toggle_group_rows(this);",
-        value='X')
+    html.input(type_="button",
+               class_="checkgroup",
+               name="_toggle_group",
+               onclick="cmk.selection.toggle_group_rows(this);",
+               value='X')
     html.close_th()
 
 
@@ -132,11 +131,10 @@ class LayoutSingleDataset(Layout):
                     cell.paint(row)
 
                 if len(thispart) < num_columns:
-                    html.td(
-                        '',
-                        class_="gap",
-                        style="border-style: none;",
-                        colspan=(1 + num_columns - len(thispart)))
+                    html.td('',
+                            class_="gap",
+                            style="border-style: none;",
+                            colspan=(1 + num_columns - len(thispart)))
                 html.close_tr()
             rownum += num_columns
         html.close_table()
@@ -209,8 +207,8 @@ class GroupedBoxesLayout(Layout):
         if column_headers != "off":
             self._show_header_line(cells, show_checkboxes)
 
-        groups, rows_with_ids = calculate_view_grouping_of_services(
-            rows_with_ids, row_group_cells=None)
+        groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids,
+                                                                    row_group_cells=None)
 
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
@@ -300,14 +298,13 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
     html.open_tr(
         class_=["data", "grouped_row_header", "closed" if not is_open else '',
                 "%s0" % trclass])
-    html.open_td(
-        colspan=num_cells,
-        onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" % (index, num_rows))
+    html.open_td(colspan=num_cells,
+                 onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" %
+                 (index, num_rows))
 
-    html.img(
-        html.theme_url("images/tree_black_closed.png"),
-        align="absbottom",
-        class_=["treeangle", "nform", "open" if is_open else "closed"])
+    html.img(html.theme_url("images/tree_black_closed.png"),
+             align="absbottom",
+             class_=["treeangle", "nform", "open" if is_open else "closed"])
     html.write_text("%s (%d)" % (group_spec["title"], num_rows))
 
     html.close_td()
@@ -608,8 +605,8 @@ class LayoutTable(Layout):
             self._show_header_line(cells, num_columns, show_checkboxes)
 
         rows_with_ids = [(row_id(view, row), row) for row in rows]
-        groups, rows_with_ids = calculate_view_grouping_of_services(
-            rows_with_ids, row_group_cells=group_cells)
+        groups, rows_with_ids = calculate_view_grouping_of_services(rows_with_ids,
+                                                                    row_group_cells=group_cells)
 
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
@@ -639,11 +636,12 @@ class LayoutTable(Layout):
 
                     if not header_is_empty:
                         html.open_tr(class_="groupheader")
-                        html.open_td(
-                            class_="groupheader",
-                            colspan=(num_cells * (num_columns + 2) + (num_columns - 1)))
-                        html.open_table(
-                            class_="groupheader", cellspacing=0, cellpadding=0, border=0)
+                        html.open_td(class_="groupheader",
+                                     colspan=(num_cells * (num_columns + 2) + (num_columns - 1)))
+                        html.open_table(class_="groupheader",
+                                        cellspacing=0,
+                                        cellpadding=0,
+                                        border=0)
                         html.open_tr()
                         painted = False
                         for cell in group_cells:

@@ -93,15 +93,14 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
         # if config.debug:
         #     html.write("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
         auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(
-            cmd,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            close_fds=True)
+        p = subprocess.Popen(cmd,
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             close_fds=True)
     except Exception as e:
-        raise MKGeneralException(
-            "Cannot execute <tt>%s</tt>: %s" % (subprocess.list2cmdline(cmd), e))
+        raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" %
+                                 (subprocess.list2cmdline(cmd), e))
 
     if stdin_data is not None:
         auto_logger.info("STDIN: %r" % stdin_data)
@@ -116,8 +115,8 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     auto_logger.info("FINISHED: %d" % exitcode)
     auto_logger.debug("OUTPUT: %r" % outdata)
     if exitcode != 0:
-        auto_logger.error(
-            "Error running %r (exit code %d)" % (subprocess.list2cmdline(cmd), exitcode))
+        auto_logger.error("Error running %r (exit code %d)" %
+                          (subprocess.list2cmdline(cmd), exitcode))
 
         if config.debug:
             raise MKGeneralException(
@@ -152,13 +151,13 @@ def check_mk_remote_automation(site_id,
     site = config.site(site_id)
     if "secret" not in site:
         raise MKGeneralException(
-            _("Cannot connect to site \"%s\": The site is not logged in") % site.get(
-                "alias", site_id))
+            _("Cannot connect to site \"%s\": The site is not logged in") %
+            site.get("alias", site_id))
 
     if not site.get("replication"):
         raise MKGeneralException(
-            _("Cannot connect to site \"%s\": The replication is disabled") % site.get(
-                "alias", site_id))
+            _("Cannot connect to site \"%s\": The replication is disabled") %
+            site.get("alias", site_id))
 
     if sync:
         sync_changes_before_remote_automation(site_id)
@@ -302,12 +301,12 @@ def do_site_login(site_id, name, password):
         '_login': '1',
         '_username': name,
         '_password': password,
-        '_origtarget': 'automation_login.py?_version=%s&_edition_short=%s' % (cmk.__version__,
-                                                                              cmk.edition_short()),
+        '_origtarget': 'automation_login.py?_version=%s&_edition_short=%s' %
+                       (cmk.__version__, cmk.edition_short()),
         '_plain_error': '1',
     }
-    response = get_url(
-        url, site.get('insecure', False), auth=(name, password), data=post_data).strip()
+    response = get_url(url, site.get('insecure', False), auth=(name, password),
+                       data=post_data).strip()
     if '<html>' in response.lower():
         message = _("Authentication to web service failed.<br>Message:<br>%s") % \
             html.strip_tags(html.strip_scripts(response))

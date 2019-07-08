@@ -97,12 +97,11 @@ def parse_fjdarye_disks(info):
     for idx, disk_state in info:
         state, state_readable = fjdarye_disks_status.get(disk_state,
                                                          (3, "unknown[%s]" % disk_state))
-        parsed.setdefault(
-            int(idx), {
-                "state": state,
-                "state_readable": state_readable,
-                "state_disk": disk_state,
-            })
+        parsed.setdefault(int(idx), {
+            "state": state,
+            "state_readable": state_readable,
+            "state_disk": disk_state,
+        })
     return parsed
 
 

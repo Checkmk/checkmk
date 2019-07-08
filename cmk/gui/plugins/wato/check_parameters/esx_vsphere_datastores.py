@@ -72,14 +72,12 @@ class RulespecCheckgroupParametersEsxVsphereDatastores(CheckParameterRulespecWit
                        "set levels for the maximum provisioning. A warning level of 150% will warn at 50% over provisioning."
                       ),
                      elements=[
-                         Percentage(
-                             title=_("Warning at a provisioning of"),
-                             maxvalue=None,
-                             default_value=120.0),
-                         Percentage(
-                             title=_("Critical at a provisioning of"),
-                             maxvalue=None,
-                             default_value=150.0),
+                         Percentage(title=_("Warning at a provisioning of"),
+                                    maxvalue=None,
+                                    default_value=120.0),
+                         Percentage(title=_("Critical at a provisioning of"),
+                                    maxvalue=None,
+                                    default_value=150.0),
                      ],
                  )),
             ],
@@ -88,5 +86,6 @@ class RulespecCheckgroupParametersEsxVsphereDatastores(CheckParameterRulespecWit
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Datastore Name"), help=_("The name of the Datastore"), allow_empty=False)
+        return TextAscii(title=_("Datastore Name"),
+                         help=_("The name of the Datastore"),
+                         allow_empty=False)

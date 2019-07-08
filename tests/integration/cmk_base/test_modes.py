@@ -10,25 +10,24 @@ from testlib import web, repo_path  # pylint: disable=unused-import
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
     print "Applying default config"
-    web.add_host(
-        "modes-test-host", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-    web.add_host(
-        "modes-test-host2", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_criticality": "test",
-        })
-    web.add_host(
-        "modes-test-host3", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_criticality": "test",
-        })
-    web.add_host(
-        "modes-test-host4", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_criticality": "offline",
-        })
+    web.add_host("modes-test-host", attributes={
+        "ipaddress": "127.0.0.1",
+    })
+    web.add_host("modes-test-host2",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "tag_criticality": "test",
+                 })
+    web.add_host("modes-test-host3",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "tag_criticality": "test",
+                 })
+    web.add_host("modes-test-host4",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "tag_criticality": "offline",
+                 })
 
     site.write_file(
         "etc/check_mk/conf.d/modes-test-host.mk",
@@ -220,8 +219,8 @@ def test_dump_agent_test(test_cfg, site):
         stdout, stderr = p.communicate()
         assert p.returncode == 0
         assert stderr == ""
-        assert stdout == file(
-            "%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read()
+        assert stdout == file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+                              repo_path()).read()
 
 
 #.

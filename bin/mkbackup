@@ -359,8 +359,8 @@ def get_files_for_backup_info():
     files = []
     backup_path = job_backup_path_during_backup()
     for f in sorted(os.listdir(backup_path)):
-        files.append((f, os.path.getsize(backup_path + "/" + f),
-                      file_checksum(backup_path + "/" + f)))
+        files.append(
+            (f, os.path.getsize(backup_path + "/" + f), file_checksum(backup_path + "/" + f)))
 
     return files
 
@@ -623,12 +623,16 @@ def do_site_backup(opts, site=None, try_stop=True):
     makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
 
     verbose("Command: %s" % " ".join(cmd))
-    p = subprocess.Popen(
-        cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=open(os.devnull))
+    p = subprocess.Popen(cmd,
+                         close_fds=True,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         stdin=open(os.devnull))
 
     with open(backup_path, "w") as backup_file:
-        s = BackupStream(
-            stream=p.stdout, is_alive=lambda: p.poll() is None, key_ident=g_job_config["encrypt"])
+        s = BackupStream(stream=p.stdout,
+                         is_alive=lambda: p.poll() is None,
+                         key_ident=g_job_config["encrypt"])
         for chunk in s.process():
             backup_file.write(chunk)
 
@@ -667,8 +671,8 @@ def stop_site(site):
     omd_command("stop", *site_arg)
 
     for c in range(5):
-        if subprocess.call(
-            ["omd", "status", "--bare"] + site_arg, stdout=open(os.devnull, "w")) == 1:
+        if subprocess.call(["omd", "status", "--bare"] + site_arg, stdout=open(os.devnull,
+                                                                               "w")) == 1:
             break
         elif c == 4:
             raise MKGeneralException("Failed to stop site")
@@ -680,12 +684,11 @@ def start_site(site):
     omd_command("start", *site_arg)
 
     for c in range(5):
-        if subprocess.call(
-            [
+        if subprocess.call([
                 "omd",
                 "status",
                 "--bare",
-            ] + site_arg, stdout=open(os.devnull, "w")) == 0:
+        ] + site_arg, stdout=open(os.devnull, "w")) == 0:
             break
         elif c == 4:
             raise MKGeneralException("Failed to start site")
@@ -694,12 +697,11 @@ def start_site(site):
 def omd_command(*args):
     cmd = ["omd"] + list(args)
     verbose("Command: %s" % " ".join(cmd))
-    p = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        stdin=open(os.devnull),
-        close_fds=True)
+    p = subprocess.Popen(cmd,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT,
+                         stdin=open(os.devnull),
+                         close_fds=True)
     stdout = p.communicate()[0]
     verbose(stdout)
     if p.returncode != 0:
@@ -916,8 +918,8 @@ class RestoreStream(MKBackupStream):
 
         file_version = read_field()
         if file_version not in ["1", "2"]:
-            raise MKGeneralException(
-                "Failed to process backup file (invalid version %r)" % file_version)
+            raise MKGeneralException("Failed to process backup file (invalid version %r)" %
+                                     file_version)
 
         try:
             key_len = int(read_field())
@@ -1099,8 +1101,8 @@ def verify_backup_files(info, files, needed):
 
         if size is None:
             if needed:
-                raise MKGeneralException(
-                    "The backup is missing the needed archive %s." % archive_file)
+                raise MKGeneralException("The backup is missing the needed archive %s." %
+                                         archive_file)
             else:
                 continue  # missing optional files are OK
 
@@ -1260,8 +1262,8 @@ def complete_backup():
     duration = time.time() - state["started"]
 
     log("--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---" %
-        (render.timespan(duration), render.fmt_bytes(info["size"]),
-         render.fmt_bytes(state["bytes_per_second"])))
+        (render.timespan(duration), render.fmt_bytes(
+            info["size"]), render.fmt_bytes(state["bytes_per_second"])))
 
 
 def cleanup_previous_incomplete_backup():
@@ -1307,14 +1309,15 @@ def globalize_job_id(local_job_id):
 
 
 def init_new_run():
-    save_state({
-        "state": "started",
-        "pid": os.getpid(),
-        "started": time.time(),
-        "output": "",
-        "bytes_per_second": 0,
-    },
-               update=False)
+    save_state(
+        {
+            "state": "started",
+            "pid": os.getpid(),
+            "started": time.time(),
+            "output": "",
+            "bytes_per_second": 0,
+        },
+        update=False)
 
 
 def save_next_run():
@@ -1355,8 +1358,10 @@ def save_state(new_attrs, update=True):
         state = {}
     state.update(new_attrs)
 
-    store.save_file(state_path(), json.dumps(
-        state, sort_keys=True, indent=4, separators=(',', ': ')))
+    store.save_file(state_path(), json.dumps(state,
+                                             sort_keys=True,
+                                             indent=4,
+                                             separators=(',', ': ')))
 
 
 def state_path():
@@ -1506,8 +1511,9 @@ def do_site_restore(opts, info, site=None):
     p = subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
     with open(backup_path, "r") as backup_file:
-        s = RestoreStream(
-            stream=backup_file, is_alive=lambda: False, key_ident=g_job_config["encrypt"])
+        s = RestoreStream(stream=backup_file,
+                          is_alive=lambda: False,
+                          key_ident=g_job_config["encrypt"])
         try:
             archive_started = False
             for chunk in s.process():
@@ -1732,8 +1738,9 @@ def do_system_data_restore(opts, info):
 
 def restore_system_backup(backup_path):
     with open(backup_path, "r") as backup_file:
-        s = RestoreStream(
-            stream=backup_file, is_alive=lambda: False, key_ident=g_job_config["encrypt"])
+        s = RestoreStream(stream=backup_file,
+                          is_alive=lambda: False,
+                          key_ident=g_job_config["encrypt"])
 
         pipein_fd, pipeout_fd = os.pipe()
         pipein = os.fdopen(pipein_fd)
@@ -1776,8 +1783,8 @@ def complete_restore():
 
 def mode_list(target_id, opts):
     if target_id not in g_config["targets"]:
-        raise MKGeneralException("This backup target does not exist. Choose one of: %s" % ", ".join(
-            g_config["targets"].keys()))
+        raise MKGeneralException("This backup target does not exist. Choose one of: %s" %
+                                 ", ".join(g_config["targets"].keys()))
 
     verify_target_is_ready(target_id)
 
@@ -1835,11 +1842,10 @@ def usage(error=None):
 
     for mode_name, mode in sorted(modes.items()):
         mode_indent = " " * 18
-        wrapped_descr = textwrap.fill(
-            mode["description"],
-            width=82,
-            initial_indent="    %-13s " % mode_name,
-            subsequent_indent=mode_indent)
+        wrapped_descr = textwrap.fill(mode["description"],
+                                      width=82,
+                                      initial_indent="    %-13s " % mode_name,
+                                      subsequent_indent=mode_indent)
         sys.stdout.write(wrapped_descr + "\n")
         sys.stdout.write("\n")
         if "args" in mode:

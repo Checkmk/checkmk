@@ -95,6 +95,6 @@ else:
     sys.stdout.write(
         "Message Rate per sec: %d, Processing Time: %2.1f ms Busy: %2.1f %% | rate_sec=%d;800;1000;; processing_times=%2.1f"
         "ms;50;100;; busy=%2.1f"
-        "%%;70;100;;\n" % (processing_rate_av, processing_time, busy, processing_rate_av,
-                           processing_time, busy))
+        "%%;70;100;;\n" %
+        (processing_rate_av, processing_time, busy, processing_rate_av, processing_time, busy))
     sys.exit(exit_code)

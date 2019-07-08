@@ -1550,14 +1550,13 @@ class NodeRenderer(object):
                 "ajax_inv_render_tree.py",
             )
 
-            if html.begin_foldable_container(
-                    "inv_%s%s" % (self._hostname, self._tree_id),
-                    invpath,
-                    False,
-                    header,
-                    icon=icon,
-                    fetch_url=fetch_url,
-                    tree_img="tree_black"):
+            if html.begin_foldable_container("inv_%s%s" % (self._hostname, self._tree_id),
+                                             invpath,
+                                             False,
+                                             header,
+                                             icon=icon,
+                                             fetch_url=fetch_url,
+                                             tree_img="tree_black"):
                 # Render only if it is open. We'll get the stuff via ajax later if it's closed
                 for child in inventory.sort_children(node.get_node_children()):
                     child.show(self, path=raw_invpath)
@@ -1620,9 +1619,8 @@ class NodeRenderer(object):
                 ],
                 filename="view.py",
             )
-            html.div(
-                html.render_a(_("Open this table for filtering / sorting"), href=url),
-                class_="invtablelink")
+            html.div(html.render_a(_("Open this table for filtering / sorting"), href=url),
+                     class_="invtablelink")
 
         self._show_numeration_table(titles, invpath, data)
 
@@ -1785,8 +1783,11 @@ def ajax_inv_render_tree():
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
         struct_tree = inventory.load_filtered_and_merged_tree(row)
-        tree_renderer = AttributeRenderer(
-            site_id, hostname, "", invpath, show_internal_tree_paths=show_internal_tree_paths)
+        tree_renderer = AttributeRenderer(site_id,
+                                          hostname,
+                                          "",
+                                          invpath,
+                                          show_internal_tree_paths=show_internal_tree_paths)
 
     if struct_tree is None:
         html.show_error(_("No such inventory tree."))

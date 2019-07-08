@@ -84,12 +84,10 @@ class RulespecCheckgroupParametersMemory(CheckParameterRulespecWithoutItem):
                                         Tuple(
                                             title=_("Specify levels in percentage of total RAM"),
                                             elements=[
-                                                Percentage(
-                                                    title=_("Warning at a usage of"),
-                                                    maxvalue=None),
-                                                Percentage(
-                                                    title=_("Critical at a usage of"),
-                                                    maxvalue=None)
+                                                Percentage(title=_("Warning at a usage of"),
+                                                           maxvalue=None),
+                                                Percentage(title=_("Critical at a usage of"),
+                                                           maxvalue=None)
                                             ],
                                         ),
                                         Tuple(
@@ -109,21 +107,19 @@ class RulespecCheckgroupParametersMemory(CheckParameterRulespecWithoutItem):
                                                 title=_(
                                                     "Specify levels in percentage of total RAM"),
                                                 elements=[
-                                                    Percentage(
-                                                        title=_("Warning if less than"),
-                                                        maxvalue=None),
-                                                    Percentage(
-                                                        title=_("Critical if less than"),
-                                                        maxvalue=None)
+                                                    Percentage(title=_("Warning if less than"),
+                                                               maxvalue=None),
+                                                    Percentage(title=_("Critical if less than"),
+                                                               maxvalue=None)
                                                 ],
                                             ),
                                             Tuple(
                                                 title=_("Specify levels in absolute values"),
                                                 elements=[
-                                                    Integer(
-                                                        title=_("Warning if below"), unit=_("MB")),
-                                                    Integer(
-                                                        title=_("Critical if below"), unit=_("MB"))
+                                                    Integer(title=_("Warning if below"),
+                                                            unit=_("MB")),
+                                                    Integer(title=_("Critical if below"),
+                                                            unit=_("MB"))
                                                 ],
                                             ),
                                         ],

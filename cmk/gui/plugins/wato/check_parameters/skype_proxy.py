@@ -68,11 +68,10 @@ class RulespecCheckgroupParametersSkypeProxy(CheckParameterRulespecWithItem):
                      title=_("Throttled Server Connections"),
                      elements=[
                          ("upper",
-                          Tuple(
-                              elements=[
-                                  Integer(title=_("Warning at"), default_value=3),
-                                  Integer(title=_("Critical at"), default_value=6),
-                              ],)),
+                          Tuple(elements=[
+                              Integer(title=_("Warning at"), default_value=3),
+                              Integer(title=_("Critical at"), default_value=6),
+                          ],)),
                      ],
                      optional_keys=[],
                  )),

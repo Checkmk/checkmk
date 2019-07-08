@@ -90,8 +90,11 @@ def check_mssql_tablespaces(item, params, parsed):
 
     if size is not None:
         levels = params.get("size", (None, None))
-        yield check_levels(
-            size, 'size', levels, human_readable_func=get_bytes_human_readable, infoname="Size")
+        yield check_levels(size,
+                           'size',
+                           levels,
+                           human_readable_func=get_bytes_human_readable,
+                           infoname="Size")
 
     for key, title, is_upper in [
         ('unallocated', 'Unallocated space', False),

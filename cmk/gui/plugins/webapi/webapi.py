@@ -705,14 +705,13 @@ class APICallRules(APICallCollection):
             folder_rulesets = watolib.FolderRulesets(folder)
             folder_rulesets.load()
             # TODO: This add_change() call should be made by the data classes
-            watolib.add_change(
-                "edit-ruleset",
-                _("Set ruleset '%s' for '%s' with %d rules") % (
-                    new_ruleset.title(),
-                    folder.title(),
-                    len(rules),
-                ),
-                sites=folder.all_site_ids())
+            watolib.add_change("edit-ruleset",
+                               _("Set ruleset '%s' for '%s' with %d rules") % (
+                                   new_ruleset.title(),
+                                   folder.title(),
+                                   len(rules),
+                               ),
+                               sites=folder.all_site_ids())
             folder_rulesets.set(ruleset_name, new_ruleset)
             folder_rulesets.save()
 
@@ -723,13 +722,12 @@ class APICallRules(APICallCollection):
             folder_rulesets = watolib.FolderRulesets(folder)
             folder_rulesets.load()
             # TODO: This add_change() call should be made by the data classes
-            watolib.add_change(
-                "edit-ruleset",
-                _("Deleted ruleset '%s' for '%s'") % (
-                    watolib.Ruleset(ruleset_name, tag_to_group_map).title(),
-                    folder.title(),
-                ),
-                sites=folder.all_site_ids())
+            watolib.add_change("edit-ruleset",
+                               _("Deleted ruleset '%s' for '%s'") % (
+                                   watolib.Ruleset(ruleset_name, tag_to_group_map).title(),
+                                   folder.title(),
+                               ),
+                               sites=folder.all_site_ids())
 
             new_ruleset = watolib.Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, [])
@@ -1018,9 +1016,8 @@ class APICallBIAggregationState(APICallCollection):
         }
 
     def _get(self, request):
-        return bi.api_get_aggregation_state(
-            filter_names=request.get("filter", {}).get("names"),
-            filter_groups=request.get("filter", {}).get("groups"))
+        return bi.api_get_aggregation_state(filter_names=request.get("filter", {}).get("names"),
+                                            filter_groups=request.get("filter", {}).get("groups"))
 
 
 #.
@@ -1064,8 +1061,8 @@ class APICallOther(APICallCollection):
             # This is currently the only way to get some actual discovery statitics.
             # Start a dry-run -> Get statistics
             # Do an actual discovery on the nodes -> data is written
-            result = watolib.check_mk_automation(
-                host_attributes.get("site"), "try-inventory", ["@scan"] + [hostname])
+            result = watolib.check_mk_automation(host_attributes.get("site"), "try-inventory",
+                                                 ["@scan"] + [hostname])
             counts = {"new": 0, "old": 0}
             for entry in result["check_table"]:
                 if entry[0] in counts:
@@ -1081,11 +1078,12 @@ class APICallOther(APICallCollection):
 
             # A cluster cannot fail, just the nodes. This information is currently discarded
             failed_hosts = None
-            watolib.check_mk_automation(
-                host_attributes.get("site"), "inventory", ["@scan", mode] + host.cluster_nodes())
+            watolib.check_mk_automation(host_attributes.get("site"), "inventory",
+                                        ["@scan", mode] + host.cluster_nodes())
         else:
-            counts, failed_hosts = watolib.check_mk_automation(
-                host_attributes.get("site"), "inventory", ["@scan", mode] + [hostname])
+            counts, failed_hosts = watolib.check_mk_automation(host_attributes.get("site"),
+                                                               "inventory",
+                                                               ["@scan", mode] + [hostname])
 
         if failed_hosts:
             if not host.discovery_failed():

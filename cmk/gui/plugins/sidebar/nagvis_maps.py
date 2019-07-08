@@ -82,15 +82,14 @@ class NagVisMaps(SidebarSnapin):
         for map_cfg in request["maps"]:
             html.open_tr()
             html.open_td()
-            html.div(
-                "",
-                class_=[
-                    "statebullet",
-                    self._state_class(map_cfg),
-                    self._sub_state_class(map_cfg),
-                    self._stale_class(map_cfg)
-                ],
-                title=self._state_title(map_cfg))
+            html.div("",
+                     class_=[
+                         "statebullet",
+                         self._state_class(map_cfg),
+                         self._sub_state_class(map_cfg),
+                         self._stale_class(map_cfg)
+                     ],
+                     title=self._state_title(map_cfg))
             html.a(map_cfg["alias"], href=map_cfg["url"], class_="link", target="main")
             html.close_td()
             html.close_tr()
@@ -142,14 +141,13 @@ class NagVisMaps(SidebarSnapin):
         for map_name, map_cfg in maps.iteritems():
             html.open_li()
             if map_name in children:
-                html.begin_foldable_container(
-                    treename="nagvis",
-                    id_=map_name,
-                    isopen=False,
-                    title=map_cfg["alias"],
-                    title_url=map_cfg["url"],
-                    title_target="main",
-                    indent=False)
+                html.begin_foldable_container(treename="nagvis",
+                                              id_=map_name,
+                                              isopen=False,
+                                              title=map_cfg["alias"],
+                                              title_url=map_cfg["url"],
+                                              title_target="main",
+                                              indent=False)
                 self._show_tree_nodes(children[map_name], children)
                 html.end_foldable_container()
             else:

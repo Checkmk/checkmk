@@ -122,8 +122,8 @@ class AgentOutputPage(Page):
         if not host:
             raise MKGeneralException(
                 _("Host is not managed by WATO. "
-                  "Click <a href=\"%s\">here</a> to go back.") % html.escaper.escape_attribute(
-                      self._back_url))
+                  "Click <a href=\"%s\">here</a> to go back.") %
+                html.escaper.escape_attribute(self._back_url))
         host.need_permission("read")
 
         self._request = FetchAgentOutputRequest(host=host, agent_type=ty)
@@ -183,20 +183,20 @@ class PageFetchAgentOutput(AgentOutputPage):
             start_fetch_agent_job(self._request)
             return
 
-        watolib.do_remote_automation(
-            config.site(self._request.host.site_id()), "fetch-agent-output-start", [
-                ("request", repr(self._request.serialize())),
-            ])
+        watolib.do_remote_automation(config.site(self._request.host.site_id()),
+                                     "fetch-agent-output-start", [
+                                         ("request", repr(self._request.serialize())),
+                                     ])
 
     def _get_job_status(self):
         # type: () -> Dict
         if config.site_is_local(self._request.host.site_id()):
             return get_fetch_agent_job_status(self._request)
 
-        return watolib.do_remote_automation(
-            config.site(self._request.host.site_id()), "fetch-agent-output-get-status", [
-                ("request", repr(self._request.serialize())),
-            ])
+        return watolib.do_remote_automation(config.site(self._request.host.site_id()),
+                                            "fetch-agent-output-get-status", [
+                                                ("request", repr(self._request.serialize())),
+                                            ])
 
 
 class ABCAutomationFetchAgentOutput(AutomationCommand):
@@ -206,8 +206,8 @@ class ABCAutomationFetchAgentOutput(AutomationCommand):
         # type: () -> FetchAgentOutputRequest
         config.user.need_permission("wato.download_agent_output")
 
-        return FetchAgentOutputRequest.deserialize(
-            ast.literal_eval(html.get_ascii_input("request")))
+        return FetchAgentOutputRequest.deserialize(ast.literal_eval(
+            html.get_ascii_input("request")))
 
 
 @automation_command_registry.register
@@ -308,10 +308,10 @@ class PageDownloadAgentOutput(AgentOutputPage):
         if config.site_is_local(self._request.host.site_id()):
             return get_fetch_agent_output_file(self._request)
 
-        return watolib.do_remote_automation(
-            config.site(self._request.host.site_id()), "fetch-agent-output-get-file", [
-                ("request", repr(self._request.serialize())),
-            ])
+        return watolib.do_remote_automation(config.site(self._request.host.site_id()),
+                                            "fetch-agent-output-get-file", [
+                                                ("request", repr(self._request.serialize())),
+                                            ])
 
 
 @automation_command_registry.register

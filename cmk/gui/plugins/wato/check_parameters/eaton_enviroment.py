@@ -57,28 +57,25 @@ class RulespecCheckgroupParametersEatonEnviroment(CheckParameterRulespecWithoutI
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("temp",
-                 Tuple(
-                     title=_("Temperature"),
-                     elements=[
-                         Integer(title=_("warning at"), unit=u"°C", default_value=26),
-                         Integer(title=_("critical at"), unit=u"°C", default_value=30),
-                     ])),
-                ("remote_temp",
-                 Tuple(
-                     title=_("Remote Temperature"),
-                     elements=[
-                         Integer(title=_("warning at"), unit=u"°C", default_value=26),
-                         Integer(title=_("critical at"), unit=u"°C", default_value=30),
-                     ])),
-                ("humidity",
-                 Tuple(
-                     title=_("Humidity"),
-                     elements=[
-                         Integer(title=_("warning at"), unit=u"%", default_value=60),
-                         Integer(title=_("critical at"), unit=u"%", default_value=75),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("temp",
+             Tuple(title=_("Temperature"),
+                   elements=[
+                       Integer(title=_("warning at"), unit=u"°C", default_value=26),
+                       Integer(title=_("critical at"), unit=u"°C", default_value=30),
+                   ])),
+            ("remote_temp",
+             Tuple(title=_("Remote Temperature"),
+                   elements=[
+                       Integer(title=_("warning at"), unit=u"°C", default_value=26),
+                       Integer(title=_("critical at"), unit=u"°C", default_value=30),
+                   ])),
+            ("humidity",
+             Tuple(
+                 title=_("Humidity"),
+                 elements=[
+                     Integer(title=_("warning at"), unit=u"%", default_value=60),
+                     Integer(title=_("critical at"), unit=u"%", default_value=75),
+                 ],
+             )),
+        ],)

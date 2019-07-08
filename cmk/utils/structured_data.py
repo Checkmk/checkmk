@@ -989,8 +989,9 @@ class Node(object):
             if self._children.get(child_type) is None \
                and foreign._children.get(child_type) is None:
                 continue
-            comparable_children.add((abs_path, self._children.get(child_type, child),
-                                     foreign._children.get(child_type, child)))
+            comparable_children.add(
+                (abs_path, self._children.get(child_type,
+                                              child), foreign._children.get(child_type, child)))
         return comparable_children
 
     def copy(self):

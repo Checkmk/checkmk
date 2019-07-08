@@ -59,15 +59,16 @@ class RulespecCheckgroupParametersOracleLocks(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("levels",
-                       Tuple(
-                           title=_("Levels for minimum wait time for a lock"),
-                           elements=[
-                               Age(title=_("warning if higher then"), default_value=1800),
-                               Age(title=_("critical if higher then"), default_value=3600),
-                           ],
-                       ))],)
+        return Dictionary(elements=[("levels",
+                                     Tuple(
+                                         title=_("Levels for minimum wait time for a lock"),
+                                         elements=[
+                                             Age(title=_("warning if higher then"),
+                                                 default_value=1800),
+                                             Age(title=_("critical if higher then"),
+                                                 default_value=3600),
+                                         ],
+                                     ))],)
 
     @property
     def item_spec(self):

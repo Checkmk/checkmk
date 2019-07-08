@@ -218,8 +218,8 @@ class DataSources(object):
 
     def get_data_sources(self):
         # Always execute piggyback at the end
-        return sorted(
-            self._sources.values(), key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
+        return sorted(self._sources.values(),
+                      key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
 
     def set_max_cachefile_age(self, max_cachefile_age):
         for source in self.get_data_sources():
@@ -246,8 +246,9 @@ class DataSources(object):
             for node_hostname in nodes:
                 node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
 
-                node_check_names = check_table.get_needed_check_names(
-                    node_hostname, remove_duplicates=True, filter_mode="only_clustered")
+                node_check_names = check_table.get_needed_check_names(node_hostname,
+                                                                      remove_duplicates=True,
+                                                                      filter_mode="only_clustered")
 
                 node_data_sources = DataSources(node_hostname, node_ipaddress)
                 node_data_sources.enforce_check_plugin_names(set(node_check_names))

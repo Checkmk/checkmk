@@ -66,12 +66,11 @@ def check_elasticsearch_indices(item, params, item_data):
         else:
             avg = 30
 
-        yield check_levels(
-            value,
-            name, (None, None),
-            human_readable_func=hr_func,
-            unit=unit,
-            infoname="Total %s" % infotext)
+        yield check_levels(value,
+                           name, (None, None),
+                           human_readable_func=hr_func,
+                           unit=unit,
+                           infoname="Total %s" % infotext)
 
         this_time = time.time()
         rate = get_rate("elasticsearch_indices.%s.%s" % (name, item), this_time, value) * 60
@@ -87,13 +86,12 @@ def check_elasticsearch_indices(item, params, item_data):
         else:
             params_avg = (None, None)
 
-        yield check_levels(
-            rate,
-            "%s_rate" % name,
-            params_avg,
-            human_readable_func=hr_func,
-            unit="%s per Minute" % unit,
-            infoname="Average %s" % infotext)
+        yield check_levels(rate,
+                           "%s_rate" % name,
+                           params_avg,
+                           human_readable_func=hr_func,
+                           unit="%s per Minute" % unit,
+                           infoname="Average %s" % infotext)
 
 
 check_info["elasticsearch_indices"] = {

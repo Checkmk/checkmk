@@ -58,30 +58,29 @@ class RulespecCheckgroupParametersVarnishWorker(CheckParameterRulespecWithoutIte
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("wrk_drop",
-                 Tuple(
-                     title=_("Upper levels for \"dropped work requests\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("wrk_failed",
-                 Tuple(
-                     title=_("Upper levels for \"worker threads not created\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("wrk_queued",
-                 Tuple(
-                     title=_("Upper levels for \"queued work requests\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("wrk_drop",
+             Tuple(
+                 title=_("Upper levels for \"dropped work requests\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("wrk_failed",
+             Tuple(
+                 title=_("Upper levels for \"worker threads not created\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("wrk_queued",
+             Tuple(
+                 title=_("Upper levels for \"queued work requests\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+        ],)

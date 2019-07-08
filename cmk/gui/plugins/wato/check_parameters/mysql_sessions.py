@@ -89,10 +89,12 @@ class RulespecCheckgroupParametersMysqlSessions(CheckParameterRulespecWithItem):
                     Tuple(
                         title=_("Number of new connections per second"),
                         elements=[
-                            Integer(
-                                title=_("Warning at"), unit=_("connection/sec"), default_value=20),
-                            Integer(
-                                title=_("Critical at"), unit=_("connection/sec"), default_value=40),
+                            Integer(title=_("Warning at"),
+                                    unit=_("connection/sec"),
+                                    default_value=20),
+                            Integer(title=_("Critical at"),
+                                    unit=_("connection/sec"),
+                                    default_value=40),
                         ],
                     ),
                 ),

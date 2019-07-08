@@ -356,8 +356,8 @@ class SidebarRenderer(object):
         refresh_snapins = []
         restart_snapins = []
 
-        html.open_div(
-            class_="scroll" if config.sidebar_show_scrollbar else None, id_="side_content")
+        html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None,
+                      id_="side_content")
         for snapin in user_config.snapins:
             name = snapin.snapin_type.type_name()
 
@@ -379,8 +379,8 @@ class SidebarRenderer(object):
         html.write("<script language=\"javascript\">\n")
         if restart_snapins:
             html.write("cmk.sidebar.set_sidebar_restart_time(%s);\n" % time.time())
-        html.write(
-            "cmk.sidebar.set_sidebar_update_interval(%0.2f);\n" % config.sidebar_update_interval)
+        html.write("cmk.sidebar.set_sidebar_update_interval(%0.2f);\n" %
+                   config.sidebar_update_interval)
         html.write("cmk.sidebar.register_edge_listeners();\n")
         html.write("cmk.sidebar.set_sidebar_size();\n")
         html.write("cmk.sidebar.set_refresh_snapins(%s);\n" % json.dumps(refresh_snapins))
@@ -426,20 +426,18 @@ class SidebarRenderer(object):
 
         if config.user.may("general.configure_sidebar"):
             # Icon for mini/maximizing
-            html.div(
-                "",
-                class_="minisnapin",
-                title=_("Toggle this snapin"),
-                onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
+            html.div("",
+                     class_="minisnapin",
+                     title=_("Toggle this snapin"),
+                     onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
 
             # Button for closing (removing) a snapin
             html.open_div(class_="closesnapin")
             close_url = "sidebar_openclose.py?name=%s&state=off" % name
-            html.icon_button(
-                url=None,
-                title=_("Remove this snapin"),
-                icon="closesnapin",
-                onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" % close_url)
+            html.icon_button(url=None,
+                             title=_("Remove this snapin"),
+                             icon="closesnapin",
+                             onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" % close_url)
             html.close_div()
 
         # The heading. A click on the heading mini/maximizes the snapin
@@ -465,8 +463,9 @@ class SidebarRenderer(object):
             if not url is None:
                 # Fetch the contents from an external URL. Don't render it on our own.
                 refresh_url = url
-                html.javascript("cmk.ajax.get_url(\"%s\", cmk.utils.update_contents, \"snapin_%s\")"
-                                % (refresh_url, name))
+                html.javascript(
+                    "cmk.ajax.get_url(\"%s\", cmk.utils.update_contents, \"snapin_%s\")" %
+                    (refresh_url, name))
         except Exception as e:
             logger.exception()
             write_snapin_exception(e)
@@ -485,10 +484,9 @@ class SidebarRenderer(object):
     def _sidebar_head(self):
         html.open_div(id_="side_header")
         html.div('', id_="side_fold")
-        html.open_a(
-            href=config.user.get_attribute("start_url") or config.start_url,
-            target="main",
-            title=_("Go to main overview"))
+        html.open_a(href=config.user.get_attribute("start_url") or config.start_url,
+                    target="main",
+                    title=_("Go to main overview"))
         html.div("", id_="side_bg")
 
         if config.sidebar_show_version_in_sidebar:
@@ -501,10 +499,10 @@ class SidebarRenderer(object):
             if werks.may_acknowledge():
                 num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()
                 if num_unacknowledged_werks:
-                    html.span(
-                        num_unacknowledged_werks,
-                        class_="unack_werks",
-                        title=_("%d unacknowledged incompatible werks") % num_unacknowledged_werks)
+                    html.span(num_unacknowledged_werks,
+                              class_="unack_werks",
+                              title=_("%d unacknowledged incompatible werks") %
+                              num_unacknowledged_werks)
 
         html.close_a()
         html.close_div()
@@ -525,30 +523,27 @@ class SidebarRenderer(object):
     def _sidebar_foot(self, user_config):
         html.open_div(id_="side_footer")
         if config.user.may("general.configure_sidebar"):
-            html.icon_button(
-                "sidebar_add_snapin.py",
-                _("Add snapin to the sidebar"),
-                "sidebar_addsnapin",
-                target="main")
+            html.icon_button("sidebar_add_snapin.py",
+                             _("Add snapin to the sidebar"),
+                             "sidebar_addsnapin",
+                             target="main")
         # editing the profile is not possible on remote sites which are sync targets
         # of a central WATO system
         if config.wato_enabled and \
            (config.user.may("general.edit_profile") or config.user.may("general.change_password")):
-            html.icon_button(
-                "user_profile.py",
-                _("Edit your personal settings, change your password"),
-                "sidebar_settings",
-                target="main")
+            html.icon_button("user_profile.py",
+                             _("Edit your personal settings, change your password"),
+                             "sidebar_settings",
+                             target="main")
         if config.user.may("general.logout") and not config.auth_by_http_header:
             html.icon_button("logout.py", _("Log out"), "sidebar_logout", target="_top")
 
-        html.icon_button(
-            "return void();",
-            _("You have pending messages."),
-            "sidebar_messages",
-            onclick='cmk.sidebar.read_message()',
-            id_='msg_button',
-            style='display:none')
+        html.icon_button("return void();",
+                         _("You have pending messages."),
+                         "sidebar_messages",
+                         onclick='cmk.sidebar.read_message()',
+                         id_='msg_button',
+                         style='display:none')
         html.open_div(style="display:none;", id_="messages")
         self.render_messages()
         html.close_div()
@@ -566,11 +561,10 @@ class SidebarRenderer(object):
         for msg in notify.get_gui_messages():
             if 'gui_hint' in msg['methods']:
                 html.open_div(id_="message-%s" % msg['id'], class_=["popup_msg"])
-                html.a(
-                    "x",
-                    href="javascript:void(0)",
-                    class_=["close"],
-                    onclick="cmk.sidebar.message_close(\'%s\')" % msg['id'])
+                html.a("x",
+                       href="javascript:void(0)",
+                       class_=["close"],
+                       onclick="cmk.sidebar.message_close(\'%s\')" % msg['id'])
                 html.write_text(msg['text'].replace('\n', '<br>\n'))
                 html.close_div()
             if 'gui_popup' in msg['methods']:
@@ -623,8 +617,8 @@ def ajax_snapin():
                 write_snapin_exception(e)
                 e_message = _("Exception during snapin refresh (snapin \'%s\')"
                              ) % snapin_instance.type_name()
-                logger.error(
-                    "%s %s: %s" % (html.request.requested_url, e_message, traceback.format_exc()))
+                logger.error("%s %s: %s" %
+                             (html.request.requested_url, e_message, traceback.format_exc()))
             finally:
                 snapin_code.append(html.drain())
 
@@ -829,10 +823,9 @@ class PageAddSnapin(object):
 
             transid = html.transaction_manager.get()
             url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)
-            html.open_div(
-                class_="snapinadder",
-                onmouseover="this.style.cursor=\'pointer\';",
-                onmousedown="window.location.href=\'%s\'; return false;" % url)
+            html.open_div(class_="snapinadder",
+                          onmouseover="this.style.cursor=\'pointer\';",
+                          onmousedown="window.location.href=\'%s\'; return false;" % url)
 
             html.open_div(class_=["snapin_preview"])
             html.div('', class_=["clickshield"])

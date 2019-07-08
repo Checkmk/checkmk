@@ -90,23 +90,21 @@ class RulespecGroupActiveChecks(RulespecGroup):
 def check_icmp_params():
     return [
         ("rta",
-         Tuple(
-             title=_("Round trip average"),
-             elements=[
-                 Float(title=_("Warning if above"), unit="ms", default_value=200.0),
-                 Float(title=_("Critical if above"), unit="ms", default_value=500.0),
-             ])),
+         Tuple(title=_("Round trip average"),
+               elements=[
+                   Float(title=_("Warning if above"), unit="ms", default_value=200.0),
+                   Float(title=_("Critical if above"), unit="ms", default_value=500.0),
+               ])),
         ("loss",
-         Tuple(
-             title=_("Packet loss"),
-             help=_("When the percentage of lost packets is equal or greater then "
-                    "this level, then the according state is triggered. The default for critical "
-                    "is 100%. That means that the check is only critical if <b>all</b> packets "
-                    "are lost."),
-             elements=[
-                 Percentage(title=_("Warning at"), default_value=80.0),
-                 Percentage(title=_("Critical at"), default_value=100.0),
-             ])),
+         Tuple(title=_("Packet loss"),
+               help=_("When the percentage of lost packets is equal or greater then "
+                      "this level, then the according state is triggered. The default for critical "
+                      "is 100%. That means that the check is only critical if <b>all</b> packets "
+                      "are lost."),
+               elements=[
+                   Percentage(title=_("Warning at"), default_value=80.0),
+                   Percentage(title=_("Critical at"), default_value=100.0),
+               ])),
         ("packets",
          Integer(
              title=_("Number of packets"),
@@ -133,11 +131,11 @@ def _imap_parameters():
         optional_keys=[],
         elements=[
             ('server',
-             TextAscii(
-                 title=_('IMAP Server'),
-                 allow_empty=False,
-                 help=_('You can specify a hostname or IP address different from the IP address '
-                        'of the host this check will be assigned to.'))),
+             TextAscii(title=_('IMAP Server'),
+                       allow_empty=False,
+                       help=_(
+                           'You can specify a hostname or IP address different from the IP address '
+                           'of the host this check will be assigned to.'))),
             ('ssl',
              CascadingDropdown(
                  title=_('SSL Encryption'),
@@ -180,11 +178,11 @@ def _pop3_parameters():
         optional_keys=['server'],
         elements=[
             ('server',
-             TextAscii(
-                 title=_('POP3 Server'),
-                 allow_empty=False,
-                 help=_('You can specify a hostname or IP address different from the IP address '
-                        'of the host this check will be assigned to.'))),
+             TextAscii(title=_('POP3 Server'),
+                       allow_empty=False,
+                       help=_(
+                           'You can specify a hostname or IP address different from the IP address '
+                           'of the host this check will be assigned to.'))),
             ('ssl',
              CascadingDropdown(
                  title=_('SSL Encryption'),
@@ -225,12 +223,11 @@ def _pop3_parameters():
 def _mail_receiving_params():
     return [
         ('fetch',
-         CascadingDropdown(
-             title=_('Mail Receiving'),
-             choices=[
-                 ('IMAP', _('IMAP'), _imap_parameters()),
-                 ('POP3', _('POP3'), _pop3_parameters()),
-             ])),
+         CascadingDropdown(title=_('Mail Receiving'),
+                           choices=[
+                               ('IMAP', _('IMAP'), _imap_parameters()),
+                               ('POP3', _('POP3'), _pop3_parameters()),
+                           ])),
     ]
 
 
@@ -264,10 +261,9 @@ class RulespecActiveChecksSsh(HostRulespec):
                 ),
                 (
                     "timeout",
-                    Integer(
-                        title=_("Connect Timeout"),
-                        help=_("Seconds before connection times out"),
-                        default_value=10),
+                    Integer(title=_("Connect Timeout"),
+                            help=_("Seconds before connection times out"),
+                            default_value=10),
                 ),
                 ("remote_version",
                  TextAscii(
@@ -370,12 +366,11 @@ class RulespecActiveChecksFtp(HostRulespec):
                     default_value=21,
                 )),
                 ("response_time",
-                 Tuple(
-                     title=_("Expected response time"),
-                     elements=[
-                         Float(title=_("Warning if above"), unit="ms", default_value=100.0),
-                         Float(title=_("Critical if above"), unit="ms", default_value=200.0),
-                     ])),
+                 Tuple(title=_("Expected response time"),
+                       elements=[
+                           Float(title=_("Warning if above"), unit="ms", default_value=100.0),
+                           Float(title=_("Critical if above"), unit="ms", default_value=200.0),
+                       ])),
                 ("timeout",
                  Integer(
                      title=_("Seconds before connection times out"),
@@ -383,13 +378,12 @@ class RulespecActiveChecksFtp(HostRulespec):
                      default_value=10,
                  )),
                 ("refuse_state",
-                 DropdownChoice(
-                     title=_("State for connection refusal"),
-                     choices=[
-                         ('crit', _("CRITICAL")),
-                         ('warn', _("WARNING")),
-                         ('ok', _("OK")),
-                     ])),
+                 DropdownChoice(title=_("State for connection refusal"),
+                                choices=[
+                                    ('crit', _("CRITICAL")),
+                                    ('warn', _("WARNING")),
+                                    ('ok', _("OK")),
+                                ])),
                 ("send_string", TextAscii(title=_("String to send"), size=30)),
                 ("expect",
                  ListOfStrings(
@@ -398,8 +392,8 @@ class RulespecActiveChecksFtp(HostRulespec):
                      valuespec=TextAscii(size=30),
                  )),
                 ("ssl",
-                 FixedValue(
-                     value=True, totext=_("use SSL"), title=_("Use SSL for the connection."))),
+                 FixedValue(value=True, totext=_("use SSL"), title=_("Use SSL for the connection."))
+                ),
                 (
                     "cert_days",
                     Transform(
@@ -408,8 +402,8 @@ class RulespecActiveChecksFtp(HostRulespec):
                             help=_("Minimum number of days a certificate has to be valid"),
                             elements=[
                                 Integer(title=_("Warning at or below"), minvalue=0, unit=_("days")),
-                                Integer(
-                                    title=_("Critical at or below"), minvalue=0, unit=_("days")),
+                                Integer(title=_("Critical at or below"), minvalue=0, unit=_(
+                                    "days")),
                             ],
                         ),
                         forth=transform_cert_days,
@@ -496,12 +490,11 @@ class RulespecActiveChecksSftp(HostRulespec):
                                    "(e.g. \'testfile\'). If you also enabled "
                                    "'Put file to SFTP server', you can use the same file for both tests."
                                   )),
-                             TextAscii(
-                                 title=_("Local destination"),
-                                 size=30,
-                                 default_value="tmp",
-                                 help=_("Local path where to put the downloaded file "
-                                        "(e.g. \'tmp\' ).")),
+                             TextAscii(title=_("Local destination"),
+                                       size=30,
+                                       default_value="tmp",
+                                       help=_("Local path where to put the downloaded file "
+                                              "(e.g. \'tmp\' ).")),
                          ])),
                 ])
             ])
@@ -528,10 +521,9 @@ class RulespecActiveChecksDns(HostRulespec):
             help=_("Check the resolution of a hostname into an IP address by a DNS server. "
                    "This check uses <tt>check_dns</tt> from the standard Nagios plugins."),
             elements=[
-                TextAscii(
-                    title=_("Queried Hostname or IP address"),
-                    allow_empty=False,
-                    help=_('The name or IPv4 address you want to query')),
+                TextAscii(title=_("Queried Hostname or IP address"),
+                          allow_empty=False,
+                          help=_('The name or IPv4 address you want to query')),
                 Dictionary(
                     title=_("Optional parameters"),
                     elements=[
@@ -576,13 +568,15 @@ class RulespecActiveChecksDns(HostRulespec):
                              totext=_("Expect Authoritative"),
                          )),
                         ("response_time",
-                         Tuple(
-                             title=_("Expected response time"),
-                             elements=[
-                                 Float(title=_("Warning if above"), unit=_("sec"), default_value=1),
-                                 Float(
-                                     title=_("Critical if above"), unit=_("sec"), default_value=2),
-                             ])),
+                         Tuple(title=_("Expected response time"),
+                               elements=[
+                                   Float(title=_("Warning if above"),
+                                         unit=_("sec"),
+                                         default_value=1),
+                                   Float(title=_("Critical if above"),
+                                         unit=_("sec"),
+                                         default_value=2),
+                               ])),
                         ("timeout",
                          Integer(
                              title=_("Seconds before connection times out"),
@@ -713,19 +707,17 @@ class RulespecActiveChecksSql(HostRulespec):
                         ]),
                 ),
                 ("levels",
-                 Tuple(
-                     title=_("Upper levels for first output item"),
-                     elements=[
-                         Float(title=_("Warning if above")),
-                         Float(title=_("Critical if above"))
-                     ])),
+                 Tuple(title=_("Upper levels for first output item"),
+                       elements=[
+                           Float(title=_("Warning if above")),
+                           Float(title=_("Critical if above"))
+                       ])),
                 ("levels_low",
-                 Tuple(
-                     title=_("Lower levels for first output item"),
-                     elements=[
-                         Float(title=_("Warning if below")),
-                         Float(title=_("Critical if below"))
-                     ])),
+                 Tuple(title=_("Lower levels for first output item"),
+                       elements=[
+                           Float(title=_("Warning if below")),
+                           Float(title=_("Critical if below"))
+                       ])),
                 ("perfdata",
                  FixedValue(
                      title=_("Performance Data"),
@@ -774,20 +766,22 @@ class RulespecActiveChecksTcp(HostRulespec):
                                  "If this parameter is not set, the service is named <tt>TCP Port [PORT NUMBER]</tt>"
                              ))),
                         ("hostname",
-                         TextAscii(
-                             title=_("DNS Hostname"),
-                             allow_empty=False,
-                             help=_("If you specify a hostname here, then a dynamic DNS lookup "
-                                    "will be done instead of using the IP address of the host "
-                                    "as configured in your host properties."))),
+                         TextAscii(title=_("DNS Hostname"),
+                                   allow_empty=False,
+                                   help=_(
+                                       "If you specify a hostname here, then a dynamic DNS lookup "
+                                       "will be done instead of using the IP address of the host "
+                                       "as configured in your host properties."))),
                         ("response_time",
-                         Tuple(
-                             title=_("Expected response time"),
-                             elements=[
-                                 Float(title=_("Warning if above"), unit="ms", default_value=100.0),
-                                 Float(
-                                     title=_("Critical if above"), unit="ms", default_value=200.0),
-                             ])),
+                         Tuple(title=_("Expected response time"),
+                               elements=[
+                                   Float(title=_("Warning if above"),
+                                         unit="ms",
+                                         default_value=100.0),
+                                   Float(title=_("Critical if above"),
+                                         unit="ms",
+                                         default_value=200.0),
+                               ])),
                         ("timeout",
                          Integer(
                              title=_("Seconds before connection times out"),
@@ -795,13 +789,12 @@ class RulespecActiveChecksTcp(HostRulespec):
                              default_value=10,
                          )),
                         ("refuse_state",
-                         DropdownChoice(
-                             title=_("State for connection refusal"),
-                             choices=[
-                                 ('crit', _("CRITICAL")),
-                                 ('warn', _("WARNING")),
-                                 ('ok', _("OK")),
-                             ])),
+                         DropdownChoice(title=_("State for connection refusal"),
+                                        choices=[
+                                            ('crit', _("CRITICAL")),
+                                            ('warn', _("WARNING")),
+                                            ('ok', _("OK")),
+                                        ])),
                         ("send_string", TextAscii(title=_("String to send"), size=30)),
                         ("escape_send_string",
                          FixedValue(
@@ -817,26 +810,23 @@ class RulespecActiveChecksTcp(HostRulespec):
                              valuespec=TextAscii(size=30),
                          )),
                         ("expect_all",
-                         FixedValue(
-                             value=True,
-                             totext=_("expect all"),
-                             title=_("Expect <b>all</b> of those strings in the response"))),
+                         FixedValue(value=True,
+                                    totext=_("expect all"),
+                                    title=_("Expect <b>all</b> of those strings in the response"))),
                         ("jail",
-                         FixedValue(
-                             value=True,
-                             title=_("Hide response from socket"),
-                             help=_("As soon as you configure expected strings in "
-                                    "the response the check will output the response - "
-                                    "as long as you do not hide it with this option"),
-                             totext=_("hide response"))),
+                         FixedValue(value=True,
+                                    title=_("Hide response from socket"),
+                                    help=_("As soon as you configure expected strings in "
+                                           "the response the check will output the response - "
+                                           "as long as you do not hide it with this option"),
+                                    totext=_("hide response"))),
                         ("mismatch_state",
-                         DropdownChoice(
-                             title=_("State for expected string mismatch"),
-                             choices=[
-                                 ('crit', _("CRITICAL")),
-                                 ('warn', _("WARNING")),
-                                 ('ok', _("OK")),
-                             ])),
+                         DropdownChoice(title=_("State for expected string mismatch"),
+                                        choices=[
+                                            ('crit', _("CRITICAL")),
+                                            ('warn', _("WARNING")),
+                                            ('ok', _("OK")),
+                                        ])),
                         ("delay",
                          Integer(
                              title=_("Seconds to wait before polling"),
@@ -857,10 +847,9 @@ class RulespecActiveChecksTcp(HostRulespec):
                             ),
                         ),
                         ("ssl",
-                         FixedValue(
-                             value=True,
-                             totext=_("use SSL"),
-                             title=_("Use SSL for the connection."))),
+                         FixedValue(value=True,
+                                    totext=_("use SSL"),
+                                    title=_("Use SSL for the connection."))),
                         (
                             "cert_days",
                             Transform(
@@ -868,25 +857,22 @@ class RulespecActiveChecksTcp(HostRulespec):
                                     title=_("SSL certificate validation"),
                                     help=_("Minimum number of days a certificate has to be valid"),
                                     elements=[
-                                        Integer(
-                                            title=_("Warning at or below"),
-                                            minvalue=0,
-                                            unit=_("days")),
-                                        Integer(
-                                            title=_("Critical at or below"),
-                                            minvalue=0,
-                                            unit=_("days")),
+                                        Integer(title=_("Warning at or below"),
+                                                minvalue=0,
+                                                unit=_("days")),
+                                        Integer(title=_("Critical at or below"),
+                                                minvalue=0,
+                                                unit=_("days")),
                                     ],
                                 ),
                                 forth=transform_cert_days,
                             ),
                         ),
                         ("quit_string",
-                         TextAscii(
-                             title=_("Final string to send"),
-                             help=_("String to send server to initiate a clean close of "
-                                    "the connection"),
-                             size=30)),
+                         TextAscii(title=_("Final string to send"),
+                                   help=_("String to send server to initiate a clean close of "
+                                          "the connection"),
+                                   size=30)),
                     ]),
             ])
 
@@ -944,14 +930,13 @@ class RulespecActiveChecksUniserv(HostRulespec):
 def _ip_address_family_element():
     return (
         "address_family",
-        DropdownChoice(
-            title=_("IP Address Family"),
-            choices=[
-                (None, _("Primary Address Family")),
-                ('ipv4', _("Enforce IPv4")),
-                ('ipv6', _("Enforce IPv6")),
-            ],
-            default_value=None),
+        DropdownChoice(title=_("IP Address Family"),
+                       choices=[
+                           (None, _("Primary Address Family")),
+                           ('ipv4', _("Enforce IPv4")),
+                           ('ipv6', _("Enforce IPv6")),
+                       ],
+                       default_value=None),
     )
 
 
@@ -973,20 +958,18 @@ class RulespecActiveChecksHttp(HostRulespec):
         return Integer(title=_("TCP Port"), minvalue=1, maxvalue=65535, default_value=default)
 
     def _proxyspec(self):
-        return Dictionary(
-            title=_("Use proxy"),
-            elements=[
-                ("address", TextAscii(title=_("Proxy server address"))),
-                ("port", self._portspec(80)),
-                ("auth",
-                 Tuple(
-                     title=_("Proxy basic authorization"),
-                     elements=[
-                         TextAscii(title=_("Username"), size=12, allow_empty=False),
-                         IndividualOrStoredPassword(title=_("Password"),),
-                     ])),
-            ],
-            required_keys=["address"])
+        return Dictionary(title=_("Use proxy"),
+                          elements=[
+                              ("address", TextAscii(title=_("Proxy server address"))),
+                              ("port", self._portspec(80)),
+                              ("auth",
+                               Tuple(title=_("Proxy basic authorization"),
+                                     elements=[
+                                         TextAscii(title=_("Username"), size=12, allow_empty=False),
+                                         IndividualOrStoredPassword(title=_("Password"),),
+                                     ])),
+                          ],
+                          required_keys=["address"])
 
     def _hostspec(self):
         return Dictionary(
@@ -1003,11 +986,10 @@ class RulespecActiveChecksHttp(HostRulespec):
                 ("port", self._portspec(443)),
                 _ip_address_family_element(),
                 ("virthost",
-                 TextAscii(
-                     title=_("Virtual host"),
-                     help=_("Set this in order to specify the name of the"
-                            " virtual host for the query."),
-                     allow_empty=False)),
+                 TextAscii(title=_("Virtual host"),
+                           help=_("Set this in order to specify the name of the"
+                                  " virtual host for the query."),
+                           allow_empty=False)),
             ],
         )
 
@@ -1068,18 +1050,15 @@ class RulespecActiveChecksHttp(HostRulespec):
                                            forth=lambda x: x is True and "auto" or x,
                                        )),
                                       ("response_time",
-                                       Tuple(
-                                           title=_("Expected response time"),
-                                           elements=[
-                                               Float(
-                                                   title=_("Warning if above"),
-                                                   unit="ms",
-                                                   default_value=100.0),
-                                               Float(
-                                                   title=_("Critical if above"),
-                                                   unit="ms",
-                                                   default_value=200.0),
-                                           ])),
+                                       Tuple(title=_("Expected response time"),
+                                             elements=[
+                                                 Float(title=_("Warning if above"),
+                                                       unit="ms",
+                                                       default_value=100.0),
+                                                 Float(title=_("Critical if above"),
+                                                       unit="ms",
+                                                       default_value=200.0),
+                                             ])),
                                       ("timeout",
                                        Integer(
                                            title=_("Seconds before connection times out"),
@@ -1105,21 +1084,22 @@ class RulespecActiveChecksHttp(HostRulespec):
                                           ),
                                       ),
                                       ("auth",
-                                       Tuple(
-                                           title=_("Authorization"),
-                                           help=_("Credentials for HTTP Basic Authentication"),
-                                           elements=[
-                                               TextAscii(
-                                                   title=_("Username"), size=12, allow_empty=False),
-                                               IndividualOrStoredPassword(title=_("Password"),)
-                                           ])),
+                                       Tuple(title=_("Authorization"),
+                                             help=_("Credentials for HTTP Basic Authentication"),
+                                             elements=[
+                                                 TextAscii(title=_("Username"),
+                                                           size=12,
+                                                           allow_empty=False),
+                                                 IndividualOrStoredPassword(title=_("Password"),)
+                                             ])),
                                       (
                                           "onredirect",
                                           DropdownChoice(
                                               title=_("How to handle redirect"),
                                               choices=[
                                                   ('ok', _("Make check OK")),
-                                                  ('warning', _("Make check WARNING")),
+                                                  ('warning',
+                                                   _("Make check WARNING")),
                                                   ('critical', _("Make check CRITICAL")),
                                                   ('follow', _("Follow the redirection")),
                                                   ('sticky',
@@ -1149,22 +1129,19 @@ class RulespecActiveChecksHttp(HostRulespec):
                                       (
                                           "expect_regex",
                                           Transform(
-                                              Tuple(
-                                                  orientation="vertical",
-                                                  show_titles=False,
-                                                  elements=[
-                                                      RegExp(
-                                                          label=_("Regular expression: "),
-                                                          mode=RegExp.infix,
-                                                      ),
-                                                      Checkbox(label=_("Case insensitive")),
-                                                      Checkbox(
-                                                          label=_(
-                                                              "return CRITICAL if found, OK if not")
-                                                      ),
-                                                      Checkbox(
-                                                          label=_("Multiline string matching")),
-                                                  ]),
+                                              Tuple(orientation="vertical",
+                                                    show_titles=False,
+                                                    elements=[
+                                                        RegExp(
+                                                            label=_("Regular expression: "),
+                                                            mode=RegExp.infix,
+                                                        ),
+                                                        Checkbox(label=_("Case insensitive")),
+                                                        Checkbox(label=_(
+                                                            "return CRITICAL if found, OK if not")),
+                                                        Checkbox(
+                                                            label=_("Multiline string matching")),
+                                                    ]),
                                               forth=lambda x: len(x) == 3 and tuple(
                                                   list(x) + [False]) or x,
                                               title=_("Regular expression to expect in content"),
@@ -1182,25 +1159,23 @@ class RulespecActiveChecksHttp(HostRulespec):
                                                    ),
                                                    size=40,
                                                ),
-                                               TextAscii(
-                                                   title=_("Content-Type"),
-                                                   default_value="text/html"),
+                                               TextAscii(title=_("Content-Type"),
+                                                         default_value="text/html"),
                                            ])),
                                       ("method",
-                                       DropdownChoice(
-                                           title=_("HTTP Method"),
-                                           default_value="GET",
-                                           choices=[
-                                               ("GET", "GET"),
-                                               ("POST", "POST"),
-                                               ("OPTIONS", "OPTIONS"),
-                                               ("TRACE", "TRACE"),
-                                               ("PUT", "PUT"),
-                                               ("DELETE", "DELETE"),
-                                               ("HEAD", "HEAD"),
-                                               ("CONNECT", "CONNECT"),
-                                               ("PROPFIND", "PROPFIND"),
-                                           ])),
+                                       DropdownChoice(title=_("HTTP Method"),
+                                                      default_value="GET",
+                                                      choices=[
+                                                          ("GET", "GET"),
+                                                          ("POST", "POST"),
+                                                          ("OPTIONS", "OPTIONS"),
+                                                          ("TRACE", "TRACE"),
+                                                          ("PUT", "PUT"),
+                                                          ("DELETE", "DELETE"),
+                                                          ("HEAD", "HEAD"),
+                                                          ("CONNECT", "CONNECT"),
+                                                          ("PROPFIND", "PROPFIND"),
+                                                      ])),
                                       ("no_body",
                                        FixedValue(
                                            value=True,
@@ -1210,12 +1185,11 @@ class RulespecActiveChecksHttp(HostRulespec):
                                             ),
                                            totext=_("don't wait for body"))),
                                       ("page_size",
-                                       Tuple(
-                                           title=_("Page size to expect"),
-                                           elements=[
-                                               Integer(title=_("Minimum"), unit=_("Bytes")),
-                                               Integer(title=_("Maximum"), unit=_("Bytes")),
-                                           ])),
+                                       Tuple(title=_("Page size to expect"),
+                                             elements=[
+                                                 Integer(title=_("Minimum"), unit=_("Bytes")),
+                                                 Integer(title=_("Maximum"), unit=_("Bytes")),
+                                             ])),
                                       ("max_age",
                                        Age(
                                            title=_("Maximum age"),
@@ -1257,14 +1231,12 @@ class RulespecActiveChecksHttp(HostRulespec):
                                                   help=_("Minimum number of days a certificate"
                                                          " has to be valid."),
                                                   elements=[
-                                                      Integer(
-                                                          title=_("Warning at or below"),
-                                                          minvalue=0,
-                                                          unit=_("days")),
-                                                      Integer(
-                                                          title=_("Critical at or below"),
-                                                          minvalue=0,
-                                                          unit=_("days")),
+                                                      Integer(title=_("Warning at or below"),
+                                                              minvalue=0,
+                                                              unit=_("days")),
+                                                      Integer(title=_("Critical at or below"),
+                                                              minvalue=0,
+                                                              unit=_("days")),
                                                   ],
                                               ),
                                               forth=transform_cert_days,
@@ -1376,11 +1348,10 @@ class RulespecActiveChecksLdap(HostRulespec):
                       "a caret (<tt>^</tt>), the service description will not be prefixed with <tt>LDAP</tt>."
                      ),
                     allow_empty=False),
-                TextAscii(
-                    title=_("Base DN"),
-                    help=_("LDAP base, e.g. ou=Development, o=tribe29 GmbH, c=de"),
-                    allow_empty=False,
-                    size=60),
+                TextAscii(title=_("Base DN"),
+                          help=_("LDAP base, e.g. ou=Development, o=tribe29 GmbH, c=de"),
+                          allow_empty=False,
+                          size=60),
                 Dictionary(
                     title=_("Optional parameters"),
                     elements=[
@@ -1451,14 +1422,15 @@ class RulespecActiveChecksLdap(HostRulespec):
                              default_value="v2",
                          )),
                         ("response_time",
-                         Tuple(
-                             title=_("Expected response time"),
-                             elements=[
-                                 Float(
-                                     title=_("Warning if above"), unit="ms", default_value=1000.0),
-                                 Float(
-                                     title=_("Critical if above"), unit="ms", default_value=2000.0),
-                             ])),
+                         Tuple(title=_("Expected response time"),
+                               elements=[
+                                   Float(title=_("Warning if above"),
+                                         unit="ms",
+                                         default_value=1000.0),
+                                   Float(title=_("Critical if above"),
+                                         unit="ms",
+                                         default_value=2000.0),
+                               ])),
                         ("timeout",
                          Integer(
                              title=_("Seconds before connection times out"),
@@ -1566,23 +1538,20 @@ class RulespecActiveChecksSmtp(HostRulespec):
                                      title=_("Minimum Certificate Age"),
                                      help=_("Minimum number of days a certificate has to be valid"),
                                      elements=[
-                                         Integer(
-                                             title=_("Warning at or below"),
-                                             minvalue=0,
-                                             unit=_("days")),
-                                         Integer(
-                                             title=_("Critical at or below"),
-                                             minvalue=0,
-                                             unit=_("days")),
+                                         Integer(title=_("Warning at or below"),
+                                                 minvalue=0,
+                                                 unit=_("days")),
+                                         Integer(title=_("Critical at or below"),
+                                                 minvalue=0,
+                                                 unit=_("days")),
                                      ],
                                  ),
                                  forth=transform_cert_days,
                              )),
                             ("starttls",
-                             FixedValue(
-                                 True,
-                                 totext=_("STARTTLS enabled."),
-                                 title=_("Use STARTTLS for the connection."))),
+                             FixedValue(True,
+                                        totext=_("STARTTLS enabled."),
+                                        title=_("Use STARTTLS for the connection."))),
                             ("auth",
                              Tuple(
                                  title=_("Enable SMTP AUTH (LOGIN)"),
@@ -1602,18 +1571,17 @@ class RulespecActiveChecksSmtp(HostRulespec):
                                      ),
                                  ])),
                             ("response_time",
-                             Tuple(
-                                 title=_("Expected response time"),
-                                 elements=[
-                                     Float(
-                                         title=_("Warning if above"),
-                                         unit=_("sec"),
-                                     ),
-                                     Float(
-                                         title=_("Critical if above"),
-                                         unit=_("sec"),
-                                     ),
-                                 ])),
+                             Tuple(title=_("Expected response time"),
+                                   elements=[
+                                       Float(
+                                           title=_("Warning if above"),
+                                           unit=_("sec"),
+                                       ),
+                                       Float(
+                                           title=_("Critical if above"),
+                                           unit=_("sec"),
+                                       ),
+                                   ])),
                             ("timeout",
                              Integer(
                                  title=_("Seconds before connection times out"),
@@ -1685,12 +1653,14 @@ class RulespecActiveChecksDiskSmb(HostRulespec):
                      maxvalue=65535,
                  )),
                 ("levels",
-                 Tuple(
-                     title=_("Levels for used disk space"),
-                     elements=[
-                         Percentage(title=_("Warning if above"), default_value=85, allow_int=True),
-                         Percentage(title=_("Critical if above"), default_value=95, allow_int=True),
-                     ])),
+                 Tuple(title=_("Levels for used disk space"),
+                       elements=[
+                           Percentage(title=_("Warning if above"), default_value=85,
+                                      allow_int=True),
+                           Percentage(title=_("Critical if above"),
+                                      default_value=95,
+                                      allow_int=True),
+                       ])),
                 ("auth",
                  Tuple(
                      title=_("Authorization"),
@@ -1731,12 +1701,11 @@ class RulespecCustomChecks(HostRulespec):
              ),
             elements=[
                 ("service_description",
-                 TextUnicode(
-                     title=_("Service description"),
-                     help=_("Please make sure that this is unique per host "
-                            "and does not collide with other services."),
-                     allow_empty=False,
-                     default_value=_("Customcheck"))),
+                 TextUnicode(title=_("Service description"),
+                             help=_("Please make sure that this is unique per host "
+                                    "and does not collide with other services."),
+                             allow_empty=False,
+                             default_value=_("Customcheck"))),
                 (
                     "command_line",
                     PluginCommandLine(),
@@ -1789,11 +1758,10 @@ class RulespecCustomChecks(HostRulespec):
                               default_value=3,
                           )),
                          ("output",
-                          TextUnicode(
-                              title=_("Plugin output in case of absent updates"),
-                              size=40,
-                              allow_empty=False,
-                              default_value=_("Check result did not arrive in time"))),
+                          TextUnicode(title=_("Plugin output in case of absent updates"),
+                                      size=40,
+                                      allow_empty=False,
+                                      default_value=_("Check result did not arrive in time"))),
                      ],
                  )),
             ],
@@ -1827,109 +1795,107 @@ class RulespecActiveChecksBiAggr(HostRulespec):
 
     @property
     def valuespec(self):
-        return Transform(
-            Dictionary(
-                title=_("Check State of BI Aggregation"),
-                help=
-                _("Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
-                  "several states to a single BI aggregation, which you want to show up as a single "
-                  "service."),
-                elements=[
-                    ("base_url",
-                     TextAscii(
-                         title=_("Base URL (OMD Site)"),
-                         help=
-                         _("The base URL to the monitoring instance. For example <tt>http://mycheckmk01/mysite</tt>. "
-                           "You can use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL to "
-                           "make them be replaced by the hosts values."),
-                         size=60,
-                         allow_empty=False)),
-                    ("aggregation_name",
-                     TextAscii(
-                         title=_("Aggregation Name"),
-                         help=
-                         _("The name of the aggregation to fetch. It will be added to the service description. You can "
-                           "use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to "
-                           "make them be replaced by the hosts values. The aggregation name is the title in the "
-                           "top-level-rule of your BI pack."),
-                         allow_empty=False)),
-                    ("credentials",
-                     CascadingDropdown(
-                         choices=
-                         [("automation", _("Use the credentials of the 'automation' user")),
-                          ("configured", _("Use the following credentials"),
-                           Tuple(elements=[
-                               TextAscii(
-                                   title=_("Automation Username"),
-                                   allow_empty=True,
-                                   help=
-                                   _("The name of the automation account to use for fetching the BI aggregation via HTTP. Note: You may "
-                                     "also set credentials of a standard user account, though it is disadvised. "
-                                     "Using the credentials of a standard user also requires a valid authentication method set in the "
-                                     "optional parameters.")),
-                               IndividualOrStoredPassword(
-                                   title=_("Automation Secret"),
-                                   help=_("Valid automation secret for the automation user"),
-                                   allow_empty=False),
-                           ]))],
-                         help=_(
-                             "Here you can configured the credentials to be used. Keep in mind that the <tt>automation</tt> user need "
-                             "to exist if you choose this option"),
-                         title=_("Login credentials"),
-                         default_value="automation")),
-                    ("optional",
-                     Dictionary(
-                         title=_("Optional parameters"),
-                         elements=[
-                             ("auth_mode",
-                              DropdownChoice(
-                                  title=_('Authentication Mode'),
-                                  default_value='cookie',
-                                  choices=[
-                                      ('cookie', _('Form (Cookie) based')),
-                                      ('basic', _('HTTP Basic')),
-                                      ('digest', _('HTTP Digest')),
-                                      ('kerberos', _('Kerberos')),
-                                  ],
-                              )),
-                             ("timeout",
-                              Integer(
-                                  title=_("Seconds before connection times out"),
-                                  unit=_("sec"),
-                                  default_value=60,
-                              )),
-                             ("in_downtime",
-                              RadioChoice(
-                                  title=_("State, if BI aggregate is in scheduled downtime"),
-                                  orientation="vertical",
-                                  choices=[
-                                      (None, _("Use normal state, ignore downtime")),
-                                      ("ok", _("Force to be OK")),
-                                      ("warn", _("Force to be WARN, if aggregate is not OK")),
-                                  ])),
-                             ("acknowledged",
-                              RadioChoice(
-                                  title=_("State, if BI aggregate is acknowledged"),
-                                  orientation="vertical",
-                                  choices=[
-                                      (None, _("Use normal state, ignore acknowledgement")),
-                                      ("ok", _("Force to be OK")),
-                                      ("warn", _("Force to be WARN, if aggregate is not OK")),
-                                  ])),
-                             ("track_downtimes",
-                              Checkbox(
-                                  title=_("Track downtimes"),
-                                  label=_("Automatically track downtimes of aggregation"),
+        return Transform(Dictionary(
+            title=_("Check State of BI Aggregation"),
+            help=_(
+                "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
+                "several states to a single BI aggregation, which you want to show up as a single "
+                "service."),
+            elements=[
+                ("base_url",
+                 TextAscii(
+                     title=_("Base URL (OMD Site)"),
+                     help=
+                     _("The base URL to the monitoring instance. For example <tt>http://mycheckmk01/mysite</tt>. "
+                       "You can use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL to "
+                       "make them be replaced by the hosts values."),
+                     size=60,
+                     allow_empty=False)),
+                ("aggregation_name",
+                 TextAscii(
+                     title=_("Aggregation Name"),
+                     help=
+                     _("The name of the aggregation to fetch. It will be added to the service description. You can "
+                       "use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to "
+                       "make them be replaced by the hosts values. The aggregation name is the title in the "
+                       "top-level-rule of your BI pack."),
+                     allow_empty=False)),
+                ("credentials",
+                 CascadingDropdown(
+                     choices=[
+                         ("automation", _("Use the credentials of the 'automation' user")),
+                         ("configured", _("Use the following credentials"),
+                          Tuple(elements=[
+                              TextAscii(
+                                  title=_("Automation Username"),
+                                  allow_empty=True,
                                   help=
-                                  _("If this is active, the check will automatically go into downtime "
-                                    "whenever the aggregation does. This downtime is also cleaned up "
-                                    "automatically when the aggregation leaves downtime. "
-                                    "Downtimes you set manually for this check are unaffected."),
-                              )),
-                         ])),
-                ],
-                optional_keys=False),
-            forth=self.transform_from_disk)
+                                  _("The name of the automation account to use for fetching the BI aggregation via HTTP. Note: You may "
+                                    "also set credentials of a standard user account, though it is disadvised. "
+                                    "Using the credentials of a standard user also requires a valid authentication method set in the "
+                                    "optional parameters.")),
+                              IndividualOrStoredPassword(
+                                  title=_("Automation Secret"),
+                                  help=_("Valid automation secret for the automation user"),
+                                  allow_empty=False),
+                          ]))
+                     ],
+                     help=_(
+                         "Here you can configured the credentials to be used. Keep in mind that the <tt>automation</tt> user need "
+                         "to exist if you choose this option"),
+                     title=_("Login credentials"),
+                     default_value="automation")),
+                ("optional",
+                 Dictionary(
+                     title=_("Optional parameters"),
+                     elements=[
+                         ("auth_mode",
+                          DropdownChoice(
+                              title=_('Authentication Mode'),
+                              default_value='cookie',
+                              choices=[
+                                  ('cookie', _('Form (Cookie) based')),
+                                  ('basic', _('HTTP Basic')),
+                                  ('digest', _('HTTP Digest')),
+                                  ('kerberos', _('Kerberos')),
+                              ],
+                          )),
+                         ("timeout",
+                          Integer(
+                              title=_("Seconds before connection times out"),
+                              unit=_("sec"),
+                              default_value=60,
+                          )),
+                         ("in_downtime",
+                          RadioChoice(title=_("State, if BI aggregate is in scheduled downtime"),
+                                      orientation="vertical",
+                                      choices=[
+                                          (None, _("Use normal state, ignore downtime")),
+                                          ("ok", _("Force to be OK")),
+                                          ("warn", _("Force to be WARN, if aggregate is not OK")),
+                                      ])),
+                         ("acknowledged",
+                          RadioChoice(title=_("State, if BI aggregate is acknowledged"),
+                                      orientation="vertical",
+                                      choices=[
+                                          (None, _("Use normal state, ignore acknowledgement")),
+                                          ("ok", _("Force to be OK")),
+                                          ("warn", _("Force to be WARN, if aggregate is not OK")),
+                                      ])),
+                         ("track_downtimes",
+                          Checkbox(
+                              title=_("Track downtimes"),
+                              label=_("Automatically track downtimes of aggregation"),
+                              help=_(
+                                  "If this is active, the check will automatically go into downtime "
+                                  "whenever the aggregation does. This downtime is also cleaned up "
+                                  "automatically when the aggregation leaves downtime. "
+                                  "Downtimes you set manually for this check are unaffected."),
+                          )),
+                     ])),
+            ],
+            optional_keys=False),
+                         forth=self.transform_from_disk)
 
 
 @rulespec_registry.register
@@ -1957,10 +1923,9 @@ class RulespecActiveChecksFormSubmit(HostRulespec):
               "from the requested pages, changes vars and submits them to check the response "
               "afterwards."),
             elements=[
-                TextUnicode(
-                    title=_("Name"),
-                    help=_("The name will be used in the service description"),
-                    allow_empty=False),
+                TextUnicode(title=_("Name"),
+                            help=_("The name will be used in the service description"),
+                            allow_empty=False),
                 Dictionary(
                     title=_("Check the URL"),
                     elements=[
@@ -1997,10 +1962,9 @@ class RulespecActiveChecksFormSubmit(HostRulespec):
                              default_value=80,
                          )),
                         ("ssl",
-                         FixedValue(
-                             value=True,
-                             totext=_("use SSL/HTTPS"),
-                             title=_("Use SSL/HTTPS for the connection."))),
+                         FixedValue(value=True,
+                                    totext=_("use SSL/HTTPS"),
+                                    title=_("Use SSL/HTTPS for the connection."))),
                         ("timeout",
                          Integer(
                              title=_("Seconds before connection times out"),
@@ -2031,12 +1995,11 @@ class RulespecActiveChecksFormSubmit(HostRulespec):
                              size=40,
                          )),
                         ("num_succeeded",
-                         Tuple(
-                             title=_("Multiple Hosts: Number of successful results"),
-                             elements=[
-                                 Integer(title=_("Warning if equal or below")),
-                                 Integer(title=_("Critical if equal or below")),
-                             ])),
+                         Tuple(title=_("Multiple Hosts: Number of successful results"),
+                               elements=[
+                                   Integer(title=_("Warning if equal or below")),
+                                   Integer(title=_("Critical if equal or below")),
+                               ])),
                     ]),
             ])
 
@@ -2067,10 +2030,9 @@ class RulespecActiveChecksNotifyCount(HostRulespec):
               "This plugin queries livestatus to extract the notification related log entries from the "
               "log file of your monitoring core."),
             elements=[
-                TextUnicode(
-                    title=_("Service Description"),
-                    help=_("The name that will be used in the service description"),
-                    allow_empty=False),
+                TextUnicode(title=_("Service Description"),
+                            help=_("The name that will be used in the service description"),
+                            allow_empty=False),
                 Integer(
                     title=_("Interval to monitor"),
                     label=_("notifications within last"),
@@ -2078,17 +2040,15 @@ class RulespecActiveChecksNotifyCount(HostRulespec):
                     minvalue=1,
                     default_value=60,
                 ),
-                Dictionary(
-                    title=_("Optional parameters"),
-                    elements=[
-                        ("num_per_contact",
-                         Tuple(
-                             title=_("Thresholds for Notifications per Contact"),
-                             elements=[
-                                 Integer(title=_("Warning if above"), default_value=20),
-                                 Integer(title=_("Critical if above"), default_value=50),
-                             ])),
-                    ]),
+                Dictionary(title=_("Optional parameters"),
+                           elements=[
+                               ("num_per_contact",
+                                Tuple(title=_("Thresholds for Notifications per Contact"),
+                                      elements=[
+                                          Integer(title=_("Warning if above"), default_value=20),
+                                          Integer(title=_("Critical if above"), default_value=50),
+                                      ])),
+                           ]),
             ])
 
 
@@ -2132,26 +2092,24 @@ class RulespecActiveChecksTraceroute(HostRulespec):
                              title=_("Router (FQDN, IP-Address)"),
                              allow_empty=False,
                          ),
-                         DropdownChoice(
-                             title=_("How"),
-                             choices=[
-                                 ('W', _("WARN - if this router is not being used")),
-                                 ('C', _("CRIT - if this router is not being used")),
-                                 ('w', _("WARN - if this router is being used")),
-                                 ('c', _("CRIT - if this router is being used")),
-                             ]),
+                         DropdownChoice(title=_("How"),
+                                        choices=[
+                                            ('W', _("WARN - if this router is not being used")),
+                                            ('C', _("CRIT - if this router is not being used")),
+                                            ('w', _("WARN - if this router is being used")),
+                                            ('c', _("CRIT - if this router is being used")),
+                                        ]),
                      ]),
                      title=_("Router that must or must not be used"),
                      add_label=_("Add Condition"),
                  )),
                 ("method",
-                 DropdownChoice(
-                     title=_("Method of probing"),
-                     choices=[
-                         (None, _("UDP (default behaviour of tcpdump)")),
-                         ("icmp", _("ICMP Echo Request")),
-                         ("tcp", _("TCP SYN")),
-                     ])),
+                 DropdownChoice(title=_("Method of probing"),
+                                choices=[
+                                    (None, _("UDP (default behaviour of tcpdump)")),
+                                    ("icmp", _("ICMP Echo Request")),
+                                    ("tcp", _("TCP SYN")),
+                                ])),
             ],
             optional_keys=False,
         )
@@ -2230,8 +2188,8 @@ class RulespecActiveChecksMailLoop(HostRulespec):
                      title=_('SMTP Authentication'),
                      elements=[
                          TextAscii(title=_('Username'), allow_empty=False, size=24),
-                         IndividualOrStoredPassword(
-                             title=_('Password'), allow_empty=False, size=12),
+                         IndividualOrStoredPassword(title=_('Password'), allow_empty=False,
+                                                    size=12),
                      ],
                  )),
             ] + _mail_receiving_params() + [
@@ -2245,12 +2203,11 @@ class RulespecActiveChecksMailLoop(HostRulespec):
                      unit=_('sec'),
                  )),
                 ("duration",
-                 Tuple(
-                     title=_("Loop duration"),
-                     elements=[
-                         Age(title=_("Warning at")),
-                         Age(title=_("Critical at")),
-                     ])),
+                 Tuple(title=_("Loop duration"),
+                       elements=[
+                           Age(title=_("Warning at")),
+                           Age(title=_("Critical at")),
+                       ])),
                 ('delete_messages',
                  FixedValue(
                      True,
@@ -2287,12 +2244,11 @@ class RulespecActiveChecksMail(HostRulespec):
                    'to the Event Console.'),
             required_keys=['service_description', 'fetch'],
             elements=[('service_description',
-                       TextUnicode(
-                           title=_('Service description'),
-                           help=_('Please make sure that this is unique per host '
-                                  'and does not collide with other services.'),
-                           allow_empty=False,
-                           default_value="Email"))] + _mail_receiving_params() +
+                       TextUnicode(title=_('Service description'),
+                                   help=_('Please make sure that this is unique per host '
+                                          'and does not collide with other services.'),
+                                   allow_empty=False,
+                                   default_value="Email"))] + _mail_receiving_params() +
             [
                 ('connect_timeout',
                  Integer(
@@ -2348,29 +2304,28 @@ class RulespecActiveChecksMail(HostRulespec):
                                             match=lambda x: x and
                                             (x == 'spool:' and 2 or x.startswith('spool:') and 3 or
                                              1) or 0),
-                                        Tuple(
-                                            title=_("Send events to remote syslog host"),
-                                            elements=[
-                                                DropdownChoice(
-                                                    choices=[
-                                                        ('udp', _('UDP')),
-                                                        ('tcp', _('TCP')),
-                                                    ],
-                                                    title=_("Protocol"),
-                                                ),
-                                                TextAscii(
-                                                    title=_("Address"),
-                                                    allow_empty=False,
-                                                ),
-                                                Integer(
-                                                    title=_("Port"),
-                                                    allow_empty=False,
-                                                    default_value=514,
-                                                    minvalue=1,
-                                                    maxvalue=65535,
-                                                    size=6,
-                                                ),
-                                            ]),
+                                        Tuple(title=_("Send events to remote syslog host"),
+                                              elements=[
+                                                  DropdownChoice(
+                                                      choices=[
+                                                          ('udp', _('UDP')),
+                                                          ('tcp', _('TCP')),
+                                                      ],
+                                                      title=_("Protocol"),
+                                                  ),
+                                                  TextAscii(
+                                                      title=_("Address"),
+                                                      allow_empty=False,
+                                                  ),
+                                                  Integer(
+                                                      title=_("Port"),
+                                                      allow_empty=False,
+                                                      default_value=514,
+                                                      minvalue=1,
+                                                      maxvalue=65535,
+                                                      size=6,
+                                                  ),
+                                              ]),
                                     ],
                                 )),
                             ('match_subject',
@@ -2471,37 +2426,34 @@ class RulespecActiveChecksMailboxes(HostRulespec):
         return Dictionary(
             title=_('Check IMAP Mailboxes'),
             help=_('This check monitors count and age of mails in mailboxes.'),
-            elements=[('service_description',
-                       TextUnicode(
-                           title=_('Service description'),
-                           help=_('Please make sure that this is unique per host '
-                                  'and does not collide with other services.'),
-                           allow_empty=False,
-                           default_value="Mailboxes")), ('imap_parameters', _imap_parameters()),
-                      ('connect_timeout',
-                       Integer(
-                           title=_('Connect Timeout'),
-                           minvalue=1,
-                           default_value=10,
-                           unit=_('sec'),
-                       )),
-                      ('age',
-                       Tuple(
-                           title=_("Message Age"),
-                           elements=[Age(title=_("Warning at")),
-                                     Age(title=_("Critical at"))])),
-                      ('count',
-                       Tuple(
-                           title=_("Message Count"),
-                           elements=[
-                               Integer(title=_("Warning at")),
-                               Integer(title=_("Critical at"))
-                           ])),
-                      ('mailboxes',
-                       ListOfStrings(
-                           title=_('Check only the listed mailboxes'),
-                           help=_('By default, all mailboxes are checked with these parameters. '
-                                  'If you specify mailboxes here, only those are monitored.')))],
+            elements=[
+                ('service_description',
+                 TextUnicode(title=_('Service description'),
+                             help=_('Please make sure that this is unique per host '
+                                    'and does not collide with other services.'),
+                             allow_empty=False,
+                             default_value="Mailboxes")), ('imap_parameters', _imap_parameters()),
+                ('connect_timeout',
+                 Integer(
+                     title=_('Connect Timeout'),
+                     minvalue=1,
+                     default_value=10,
+                     unit=_('sec'),
+                 )),
+                ('age',
+                 Tuple(title=_("Message Age"),
+                       elements=[Age(title=_("Warning at")),
+                                 Age(title=_("Critical at"))])),
+                ('count',
+                 Tuple(title=_("Message Count"),
+                       elements=[Integer(title=_("Warning at")),
+                                 Integer(title=_("Critical at"))])),
+                ('mailboxes',
+                 ListOfStrings(title=_('Check only the listed mailboxes'),
+                               help=_(
+                                   'By default, all mailboxes are checked with these parameters. '
+                                   'If you specify mailboxes here, only those are monitored.')))
+            ],
             required_keys=['service_description', 'imap_parameters'],
         )
 
@@ -2550,12 +2502,11 @@ class RulespecActiveChecksBySsh(HostRulespec):
                                  "You can specify a hostname or IP address different from IP address "
                                  "of the host as configured in your host properties."))),
                         ('port',
-                         Integer(
-                             title=_("SSH Port"),
-                             help=_("Default is 22."),
-                             minvalue=1,
-                             maxvalue=65535,
-                             default_value=22)),
+                         Integer(title=_("SSH Port"),
+                                 help=_("Default is 22."),
+                                 minvalue=1,
+                                 maxvalue=65535,
+                                 default_value=22)),
                         ("ip_version",
                          Alternative(
                              title=_("IP-Version"),
@@ -2571,11 +2522,13 @@ class RulespecActiveChecksBySsh(HostRulespec):
                              default_value=10,
                          )),
                         ("logname",
-                         TextAscii(
-                             title=_("Username"), help=_("SSH user name on remote host"), size=30)),
+                         TextAscii(title=_("Username"),
+                                   help=_("SSH user name on remote host"),
+                                   size=30)),
                         ("identity",
-                         TextAscii(
-                             title=_("Keyfile"), help=_("Identity of an authorized key"), size=30)),
+                         TextAscii(title=_("Keyfile"),
+                                   help=_("Identity of an authorized key"),
+                                   size=30)),
                         ("accept_new_host_keys",
                          FixedValue(
                              True,
@@ -2702,17 +2655,14 @@ class RulespecActiveChecksElasticsearch(HostRulespec):
                      default_value=60,
                  )),
                 ('count',
-                 Tuple(
-                     title=_("Thresholds on message count"),
-                     elements=[
-                         Integer(
-                             title=_("Warning at or above"),
-                             unit=_("log messages"),
-                             allow_empty=False),
-                         Integer(
-                             title=_("Critical at or above"),
-                             unit=_("log messages"),
-                             allow_empty=False)
-                     ])),
+                 Tuple(title=_("Thresholds on message count"),
+                       elements=[
+                           Integer(title=_("Warning at or above"),
+                                   unit=_("log messages"),
+                                   allow_empty=False),
+                           Integer(title=_("Critical at or above"),
+                                   unit=_("log messages"),
+                                   allow_empty=False)
+                       ])),
             ],
         )

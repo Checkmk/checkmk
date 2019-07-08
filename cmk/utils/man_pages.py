@@ -351,8 +351,8 @@ def print_man_page_browser(cat=()):
     subtree_names = _manpage_catalog_subtree_names(_manpage_catalog, cat)
 
     if entries and subtree_names:
-        sys.stderr.write(
-            "ERROR: Catalog path %s contains man pages and subfolders.\n" % ("/".join(cat)))
+        sys.stderr.write("ERROR: Catalog path %s contains man pages and subfolders.\n" %
+                         ("/".join(cat)))
 
     if entries:
         _manpage_browse_entries(cat, entries)
@@ -395,9 +395,8 @@ def _manpage_browser_folder(cat, subtrees):
     choices = [(str(n + 1), t[0]) for n, t in enumerate(titles)]
 
     while True:
-        x = _dialog_menu(
-            _("Man Page Browser"), _manpage_display_header(cat), choices, "0", _("Enter"),
-            cat and _("Back") or _("Quit"))
+        x = _dialog_menu(_("Man Page Browser"), _manpage_display_header(cat), choices, "0",
+                         _("Enter"), cat and _("Back") or _("Quit"))
         if x[0]:
             index = int(x[1])
             subcat = titles[index - 1][1]
@@ -415,9 +414,8 @@ def _manpage_browse_entries(cat, entries):
     choices = [(str(n + 1), c[0]) for n, c in enumerate(checks)]
 
     while True:
-        x = _dialog_menu(
-            _("Man Page Browser"), _manpage_display_header(cat), choices, "0", _("Show Manpage"),
-            _("Back"))
+        x = _dialog_menu(_("Man Page Browser"), _manpage_display_header(cat), choices, "0",
+                         _("Show Manpage"), _("Back"))
         if x[0]:
             index = int(x[1]) - 1
             name = checks[index][1]
@@ -551,8 +549,8 @@ def load_man_page(name):
                     current_section.append((current_variable, restofline.lstrip()))
 
             except Exception as e:
-                raise MKGeneralException(
-                    "Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e))
+                raise MKGeneralException("Syntax error in %s line %d (%s).\n" %
+                                         (path, lineno + 1, e))
 
     header = {}
     for key, value in man_page['header']:
@@ -705,8 +703,8 @@ class ConsoleManPageRenderer(ManPageRenderer):
     def _print_subheader(self, line):
         self._print_empty_line()
         self.output.write(self._subheader_color + " " + tty.underline + line.upper() +
-                          self._normal_color + (" " * (self.width - 1 - len(line))) + tty.normal +
-                          "\n")
+                          self._normal_color + (" " *
+                                                (self.width - 1 - len(line))) + tty.normal + "\n")
 
     def _print_line(self, line, attr=None, no_markup=False):
         if attr is None:

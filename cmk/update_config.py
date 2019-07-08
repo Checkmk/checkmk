@@ -139,12 +139,11 @@ def parse_arguments(args):
     # type: (List[str]) -> argparse.Namespace
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--debug', action='store_true', help='Debug mode: raise Python exceptions')
-    p.add_argument(
-        '-v',
-        '--verbose',
-        action='count',
-        default=0,
-        help='Verbose mode (use multiple times for more output)')
+    p.add_argument('-v',
+                   '--verbose',
+                   action='count',
+                   default=0,
+                   help='Verbose mode (use multiple times for more output)')
 
     arguments = p.parse_args(args)
     return arguments

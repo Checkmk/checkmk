@@ -631,8 +631,8 @@ def process_logfile(logfile, patterns, opt, status):
 
         out_line = "%s %s" % (level, line[:-1])
         if sys.stdout.isatty():
-            out_line = "%s%s%s" % (TTY_COLORS[level], out_line.replace("\1", "\nCONT:"),
-                                   TTY_COLORS['normal'])
+            out_line = "%s%s%s" % (TTY_COLORS[level], out_line.replace(
+                "\1", "\nCONT:"), TTY_COLORS['normal'])
         warnings_and_errors.append("%s\n" % out_line)
 
     new_offset = log_iter.get_position()

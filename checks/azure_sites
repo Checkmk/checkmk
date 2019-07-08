@@ -44,8 +44,13 @@ def check_azure_sites(_item, params, resource):
 
     for key, cmk_key, displ, use_rate in _AZURE_SITES_METRICS:
         levels = params.get("%s_levels" % cmk_key, (None, None))
-        mcheck = check_azure_metric(
-            resource, key, cmk_key, displ, levels=levels, minv=0, use_rate=use_rate)
+        mcheck = check_azure_metric(resource,
+                                    key,
+                                    cmk_key,
+                                    displ,
+                                    levels=levels,
+                                    minv=0,
+                                    use_rate=use_rate)
         if mcheck:
             yield mcheck
 

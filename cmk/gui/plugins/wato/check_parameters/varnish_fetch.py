@@ -58,62 +58,61 @@ class RulespecCheckgroupParametersVarnishFetch(CheckParameterRulespecWithoutItem
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("1xx",
-                 Tuple(
-                     title=_("Upper levels for \"fetch no body (1xx)\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("204",
-                 Tuple(
-                     title=_("Upper levels for \"fetch no body (204)\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("304",
-                 Tuple(
-                     title=_("Upper levels for \"fetch no body (304)\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("bad",
-                 Tuple(
-                     title=_("Upper levels for \"fetch had bad headers\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("eof",
-                 Tuple(
-                     title=_("Upper levels for \"fetch EOF\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("failed",
-                 Tuple(
-                     title=_("Upper levels for \"fetch failed\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("zero",
-                 Tuple(
-                     title=_("Upper levels for \"fetch zero length\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("1xx",
+             Tuple(
+                 title=_("Upper levels for \"fetch no body (1xx)\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("204",
+             Tuple(
+                 title=_("Upper levels for \"fetch no body (204)\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("304",
+             Tuple(
+                 title=_("Upper levels for \"fetch no body (304)\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("bad",
+             Tuple(
+                 title=_("Upper levels for \"fetch had bad headers\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("eof",
+             Tuple(
+                 title=_("Upper levels for \"fetch EOF\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("failed",
+             Tuple(
+                 title=_("Upper levels for \"fetch failed\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("zero",
+             Tuple(
+                 title=_("Upper levels for \"fetch zero length\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+        ],)

@@ -64,19 +64,18 @@ cpu_util_common_dict = Dictionary(
                  "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!"
              ))),
         ("core_util_time",
-         Tuple(
-             title=_("Levels over an extended time period on a single core CPU utilization"),
-             elements=[
-                 Percentage(title=_("High utilization at "), default_value=100.0),
-                 Age(title=_("Warning after "), default_value=5 * 60),
-                 Age(title=_("Critical after "), default_value=15 * 60),
-             ],
-             help=_("A single thread fully utilizing a single core (potentially due to a bug) "
-                    "may go unnoticed when only monitoring the total utilization of the CPU. "
-                    "With this configuration, check_mk will alert if a single core is "
-                    "exceeding a utilization threshold over an extended period of time."
-                    "This is currently only supported on linux and windows agents "
-                    "as well as devices monitored through the host-resource mib"))),
+         Tuple(title=_("Levels over an extended time period on a single core CPU utilization"),
+               elements=[
+                   Percentage(title=_("High utilization at "), default_value=100.0),
+                   Age(title=_("Warning after "), default_value=5 * 60),
+                   Age(title=_("Critical after "), default_value=15 * 60),
+               ],
+               help=_("A single thread fully utilizing a single core (potentially due to a bug) "
+                      "may go unnoticed when only monitoring the total utilization of the CPU. "
+                      "With this configuration, check_mk will alert if a single core is "
+                      "exceeding a utilization threshold over an extended period of time."
+                      "This is currently only supported on linux and windows agents "
+                      "as well as devices monitored through the host-resource mib"))),
         ("average",
          Integer(
              title=_("Averaging for total CPU utilization"),

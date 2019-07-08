@@ -84,11 +84,10 @@ class RoleManagement(object):
         config.roles.update(self._roles)
 
         store.mkdir(watolib.multisite_dir())
-        store.save_to_mk_file(
-            watolib.multisite_dir() + "roles.mk",
-            "roles",
-            self._roles,
-            pprint_value=config.wato_pprint_config)
+        store.save_to_mk_file(watolib.multisite_dir() + "roles.mk",
+                              "roles",
+                              self._roles,
+                              pprint_value=config.wato_pprint_config)
 
         hooks.call("roles-saved", self._roles)
 
@@ -120,8 +119,8 @@ class ModeRoles(RoleManagement, WatoMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(
-            _("Matrix"), watolib.folder_preserving_link([("mode", "role_matrix")]), "matrix")
+        html.context_button(_("Matrix"), watolib.folder_preserving_link([("mode", "role_matrix")]),
+                            "matrix")
 
     def action(self):
         if html.request.var("_delete"):
@@ -140,8 +139,9 @@ class ModeRoles(RoleManagement, WatoMode):
                 self._rename_user_role(delid, None)  # Remove from existing users
                 del self._roles[delid]
                 self._save_roles()
-                watolib.add_change(
-                    "edit-roles", _("Deleted role '%s'") % delid, sites=config.get_login_sites())
+                watolib.add_change("edit-roles",
+                                   _("Deleted role '%s'") % delid,
+                                   sites=config.get_login_sites())
             elif c is False:
                 return ""
 
@@ -172,10 +172,9 @@ class ModeRoles(RoleManagement, WatoMode):
 
                 self._roles[newid] = new_role
                 self._save_roles()
-                watolib.add_change(
-                    "edit-roles",
-                    _("Created new role '%s'") % newid,
-                    sites=config.get_login_sites())
+                watolib.add_change("edit-roles",
+                                   _("Created new role '%s'") % newid,
+                                   sites=config.get_login_sites())
 
     def page(self):
         with table_element("roles") as table:
@@ -215,8 +214,8 @@ class ModeRoles(RoleManagement, WatoMode):
                     HTML(", ").join([
                         html.render_a(
                             user.get("alias", user_id),
-                            watolib.folder_preserving_link([("mode", "edit_user"), ("edit",
-                                                                                    user_id)]))
+                            watolib.folder_preserving_link([("mode", "edit_user"),
+                                                            ("edit", user_id)]))
                         for (user_id, user) in users.items()
                         if rid in user["roles"]
                     ]))
@@ -255,8 +254,8 @@ class ModeEditRole(RoleManagement, WatoMode):
         return _("Edit user role %s") % self._role_id
 
     def buttons(self):
-        html.context_button(
-            _("All Roles"), watolib.folder_preserving_link([("mode", "roles")]), "back")
+        html.context_button(_("All Roles"), watolib.folder_preserving_link([("mode", "roles")]),
+                            "back")
 
     def action(self):
         if html.form_submitted("search"):
@@ -312,8 +311,9 @@ class ModeEditRole(RoleManagement, WatoMode):
             self._rename_user_role(self._role_id, new_id)
 
         self._save_roles()
-        watolib.add_change(
-            "edit-roles", _("Modified user role '%s'") % new_id, sites=config.get_login_sites())
+        watolib.add_change("edit-roles",
+                           _("Modified user role '%s'") % new_id,
+                           sites=config.get_login_sites())
         return "roles"
 
     def page(self):
@@ -417,8 +417,11 @@ class ModeRoleMatrix(WatoMode):
         role_list = sorted(userdb.load_roles().items(), key=lambda a: (a[1]["alias"], a[0]))
 
         for section in permission_section_registry.get_sorted_sections():
-            html.begin_foldable_container(
-                "perm_matrix", section.name, section.name == "general", section.title, indent=True)
+            html.begin_foldable_container("perm_matrix",
+                                          section.name,
+                                          section.name == "general",
+                                          section.title,
+                                          indent=True)
 
             with table_element(section.name) as table:
 

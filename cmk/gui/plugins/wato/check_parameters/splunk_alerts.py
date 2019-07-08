@@ -57,14 +57,13 @@ class RulespecCheckgroupParametersSplunkAlerts(CheckParameterRulespecWithoutItem
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("alerts",
-                 Tuple(
-                     title=_("Upper levels for number of alerts"),
-                     elements=[
-                         Integer(title=_("Warning at"), minvalue=0),
-                         Integer(title=_("Critical at"), minvalue=0),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("alerts",
+             Tuple(
+                 title=_("Upper levels for number of alerts"),
+                 elements=[
+                     Integer(title=_("Warning at"), minvalue=0),
+                     Integer(title=_("Critical at"), minvalue=0),
+                 ],
+             )),
+        ],)

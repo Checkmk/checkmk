@@ -78,15 +78,14 @@ def handle_acknowledgement():
         if werk["compatible"] == "incomp_unack":
             acknowledge_werk(werk)
             html.message(
-                _("Werk %s - %s has been acknowledged.") % (render_werk_id(werk, with_link=True),
-                                                            render_werk_title(werk)))
+                _("Werk %s - %s has been acknowledged.") %
+                (render_werk_id(werk, with_link=True), render_werk_title(werk)))
             html.reload_sidebar()
             load_werks()  # reload ack states after modification
 
     elif html.request.var("_ack_all"):
-        if html.confirm(
-                _("Do you really want to acknowledge <b>all</b> incompatible werks?"),
-                method="GET"):
+        if html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
+                        method="GET"):
             num = len(unacknowledged_incompatible_werks())
             acknowledge_all_werks()
             html.message(_("%d incompatible Werks have been acknowledged.") % num)
@@ -129,14 +128,15 @@ def page_werk():
     werk_table_row(_("Component"), translator.component_of(werk))
     werk_table_row(_("Date"), render_werk_date(werk))
     werk_table_row(_("Check_MK Version"), werk["version"])
-    werk_table_row(
-        _("Level"), translator.level_of(werk), css="werklevel werklevel%d" % werk["level"])
-    werk_table_row(
-        _("Class"), translator.class_of(werk), css="werkclass werkclass%s" % werk["class"])
-    werk_table_row(
-        _("Compatibility"),
-        translator.compatibility_of(werk),
-        css="werkcomp werkcomp%s" % werk["compatible"])
+    werk_table_row(_("Level"),
+                   translator.level_of(werk),
+                   css="werklevel werklevel%d" % werk["level"])
+    werk_table_row(_("Class"),
+                   translator.class_of(werk),
+                   css="werkclass werkclass%s" % werk["class"])
+    werk_table_row(_("Compatibility"),
+                   translator.compatibility_of(werk),
+                   css="werkcomp werkcomp%s" % werk["compatible"])
     werk_table_row(_("Description"), render_werk_description(werk), css="nowiki")
 
     html.close_table()
@@ -227,15 +227,15 @@ def _werk_table_option_entries():
              size=4,
          ), ""),
         ("compatibility", "single",
-         DropdownChoice(
-             title=_("Compatibility"),
-             choices=[
-                 (["compat", "incomp_ack", "incomp_unack"], _("Compatible and incompatible Werks")),
-                 (["compat"], _("Compatible Werks")),
-                 (["incomp_ack", "incomp_unack"], _("Incompatible Werks")),
-                 (["incomp_unack"], _("Unacknowledged incompatible Werks")),
-                 (["incomp_ack"], _("Acknowledged incompatible Werks")),
-             ]), ["compat", "incomp_ack", "incomp_unack"]),
+         DropdownChoice(title=_("Compatibility"),
+                        choices=[
+                            (["compat", "incomp_ack",
+                              "incomp_unack"], _("Compatible and incompatible Werks")),
+                            (["compat"], _("Compatible Werks")),
+                            (["incomp_ack", "incomp_unack"], _("Incompatible Werks")),
+                            (["incomp_unack"], _("Unacknowledged incompatible Werks")),
+                            (["incomp_ack"], _("Acknowledged incompatible Werks")),
+                        ]), ["compat", "incomp_ack", "incomp_unack"]),
         ("component", "single",
          DropdownChoice(
              title=_("Component"),
@@ -258,13 +258,12 @@ def _werk_table_option_entries():
             size=41,
         ), ""),
         ("version", "single",
-         Tuple(
-             title=_("Check_MK Version"),
-             orientation="float",
-             elements=[
-                 TextAscii(label=_("from:"), size=12),
-                 TextAscii(label=_("to:"), size=12),
-             ]), ("", "")),
+         Tuple(title=_("Check_MK Version"),
+               orientation="float",
+               elements=[
+                   TextAscii(label=_("from:"), size=12),
+                   TextAscii(label=_("to:"), size=12),
+               ]), ("", "")),
         ("grouping", "single",
          DropdownChoice(
              title=_("Group Werks by"),
@@ -288,8 +287,8 @@ def render_unacknowleged_werks():
     werks = unacknowledged_incompatible_werks()
     if werks and may_acknowledge():
         html.begin_context_buttons()
-        html.context_button(
-            _("Acknowledge all"), html.makeactionuri([("_ack_all", "1")]), "werk_ack")
+        html.context_button(_("Acknowledge all"), html.makeactionuri([("_ack_all", "1")]),
+                            "werk_ack")
         html.end_context_buttons()
 
     if werks and not html.request.has_var("show_unack"):
@@ -298,9 +297,8 @@ def render_unacknowleged_werks():
             _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks))
         html.br()
         html.br()
-        html.a(
-            _("Show unacknowledged incompatible werks"),
-            href=html.makeuri_contextless([("show_unack", "1"), ("wo_compatibility", "3")]))
+        html.a(_("Show unacknowledged incompatible werks"),
+               href=html.makeuri_contextless([("show_unack", "1"), ("wo_compatibility", "3")]))
         html.close_div()
 
 
@@ -338,9 +336,11 @@ def render_werks_table():
                       if werk_matches_options(werk, werk_table_options))
     groups = itertools.groupby(werklist, key=grouper)
     for group_title, werks in itertools.islice(groups, werk_table_options["group_limit"]):
-        with table_element(
-                title=group_title, limit=None, searchable=False, sortable=False,
-                css="werks") as table:
+        with table_element(title=group_title,
+                           limit=None,
+                           searchable=False,
+                           sortable=False,
+                           css="werks") as table:
             for werk in werks:
                 number_of_werks += 1
                 render_werks_table_row(table, translator, werk)
@@ -355,10 +355,9 @@ def render_werks_table_row(table, translator, werk):
     table.cell(_("Date"), render_werk_date(werk), css="number narrow")
     table.cell(_("Class"), translator.class_of(werk), css="werkclass werkclass%s" % werk["class"])
     table.cell(_("Level"), translator.level_of(werk), css="werklevel werklevel%d" % werk["level"])
-    table.cell(
-        _("Compatibility"),
-        translator.compatibility_of(werk),
-        css="werkcomp werkcomp%s" % werk["compatible"])
+    table.cell(_("Compatibility"),
+               translator.compatibility_of(werk),
+               css="werkcomp werkcomp%s" % werk["compatible"])
     table.cell(_("Component"), translator.component_of(werk), css="nowrap")
     table.cell(_("Title"), render_werk_title(werk))
 
@@ -419,8 +418,11 @@ def _render_werk_table_options():
 
         werk_table_options.setdefault(name, value)
 
-    html.begin_foldable_container(
-        "werks", "options", isopen=True, title=_("Searching and Filtering"), indent=False)
+    html.begin_foldable_container("werks",
+                                  "options",
+                                  isopen=True,
+                                  title=_("Searching and Filtering"),
+                                  indent=False)
     html.begin_form("werks")
     html.hidden_field("wo_set", "set")
     html.begin_floating_options("werks", is_open=True)
@@ -499,8 +501,8 @@ def render_werk_description(werk):
     if in_list:
         html_code += "</ul>"
 
-    html_code = html_code.replace("<script>", "&lt;script&gt;").replace(
-        "</script>", "&lt;/script&gt;")
+    html_code = html_code.replace("<script>",
+                                  "&lt;script&gt;").replace("</script>", "&lt;/script&gt;")
 
     html_code += "</p>"
     return html_code

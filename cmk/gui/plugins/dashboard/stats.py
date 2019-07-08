@@ -105,17 +105,16 @@ class DashletStats(Dashlet):
         total = sum([x[1] for x in pies])
 
         html.open_div(class_="stats")
-        html.canvas(
-            '',
-            class_="pie",
-            id_="%s_stats" % pie_id,
-            width=pie_diameter,
-            height=pie_diameter,
-            style="float: left")
+        html.canvas('',
+                    class_="pie",
+                    id_="%s_stats" % pie_id,
+                    width=pie_diameter,
+                    height=pie_diameter,
+                    style="float: left")
         html.img(html.theme_url("images/globe.png"), class_="globe")
 
-        html.open_table(
-            class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []), style="float:left")
+        html.open_table(class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []),
+                        style="float:left")
 
         table_entries = pies
         while len(table_entries) < 6:

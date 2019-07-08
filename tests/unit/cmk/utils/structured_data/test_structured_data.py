@@ -611,28 +611,29 @@ def test_structured_data_StructuredDataTree_copy(tree):
 
 
 @pytest.mark.parametrize("tree_start,tree_edges", [
-    (tree_old_addresses, [(tree_old_arrays, ["hardware", "networking"], [
-        ("get_sub_attributes", ["hardware", "memory", "arrays", 0]),
-        ("get_sub_numeration", ["hardware", "memory", "arrays", 0, "devices"]),
-        ("get_sub_numeration", ["hardware", "memory", "arrays", 1, "others"]),
+    (tree_old_addresses, [
+        (tree_old_arrays, ["hardware", "networking"], [
+            ("get_sub_attributes", ["hardware", "memory", "arrays", 0]),
+            ("get_sub_numeration", ["hardware", "memory", "arrays", 0, "devices"]),
+            ("get_sub_numeration", ["hardware", "memory", "arrays", 1, "others"]),
+        ]),
+        (tree_new_memory, ["hardware", "networking"], [
+            ("get_sub_attributes", ["hardware", "memory"]),
+        ]),
+        (tree_new_interfaces, ["hardware", "networking", "software"], [
+            ("get_sub_numeration", ["hardware", "components", "backplanes"]),
+            ("get_sub_numeration", ["hardware", "components", "chassis"]),
+            ("get_sub_numeration", ["hardware", "components", "containers"]),
+            ("get_sub_numeration", ["hardware", "components", "fans"]),
+            ("get_sub_numeration", ["hardware", "components", "modules"]),
+            ("get_sub_numeration", ["hardware", "components", "others"]),
+            ("get_sub_numeration", ["hardware", "components", "psus"]),
+            ("get_sub_numeration", ["hardware", "components", "sensors"]),
+            ("get_sub_attributes", ["hardware", "system"]),
+            ("get_sub_attributes", ["software", "applications", "check_mk", "cluster"]),
+            ("get_sub_attributes", ["software", "os"]),
+        ])
     ]),
-                          (tree_new_memory, ["hardware", "networking"], [
-                              ("get_sub_attributes", ["hardware", "memory"]),
-                          ]),
-                          (tree_new_interfaces, ["hardware", "networking", "software"], [
-                              ("get_sub_numeration", ["hardware", "components", "backplanes"]),
-                              ("get_sub_numeration", ["hardware", "components", "chassis"]),
-                              ("get_sub_numeration", ["hardware", "components", "containers"]),
-                              ("get_sub_numeration", ["hardware", "components", "fans"]),
-                              ("get_sub_numeration", ["hardware", "components", "modules"]),
-                              ("get_sub_numeration", ["hardware", "components", "others"]),
-                              ("get_sub_numeration", ["hardware", "components", "psus"]),
-                              ("get_sub_numeration", ["hardware", "components", "sensors"]),
-                              ("get_sub_attributes", ["hardware", "system"]),
-                              ("get_sub_attributes",
-                               ["software", "applications", "check_mk", "cluster"]),
-                              ("get_sub_attributes", ["software", "os"]),
-                          ])]),
 ])
 def test_structured_data_StructuredDataTree_merge_with_get_sub_children(tree_start, tree_edges):
     tree_start = tree_start.copy()
@@ -694,10 +695,10 @@ def test_structured_data_StructuredDataTree_filtered_tree(tree, paths, unavail):
     (tree_new_interfaces, [(['networking', 'interfaces'], None)], [Container], 3178),
     (tree_new_interfaces, [(['networking', 'interfaces'], [])], [Container], 3178),
     (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status'])], [Container], 326),
-    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'FOOBAR'])], [Container],
-     326),
-    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status'])],
-     [Container], 652),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'FOOBAR'])], [Container
+                                                                                        ], 326),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status'])
+                          ], [Container], 652),
     (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status', 'FOOBAR'])
                           ], [Container], 652),
 ])

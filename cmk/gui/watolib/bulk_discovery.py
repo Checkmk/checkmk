@@ -81,8 +81,8 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
         selection_elements = []
 
     selection_elements += [
-        Checkbox(
-            label=_("Only include hosts that failed on previous discovery"), default_value=False),
+        Checkbox(label=_("Only include hosts that failed on previous discovery"),
+                 default_value=False),
         Checkbox(label=_("Only include hosts with a failed discovery check"), default_value=False),
         Checkbox(label=_("Exclude hosts where the agent is unreachable"), default_value=False),
     ]
@@ -105,18 +105,16 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
              )),
             ("selection", Tuple(title=_("Selection"), elements=selection_elements)),
             ("performance",
-             Tuple(
-                 title=_("Performance options"),
-                 elements=[
-                     Checkbox(label=_("Use cached data if present"), default_value=True),
-                     Checkbox(label=_("Do full SNMP scan for SNMP devices"), default_value=True),
-                     Integer(label=_("Number of hosts to handle at once"), default_value=10),
-                 ])),
+             Tuple(title=_("Performance options"),
+                   elements=[
+                       Checkbox(label=_("Use cached data if present"), default_value=True),
+                       Checkbox(label=_("Do full SNMP scan for SNMP devices"), default_value=True),
+                       Integer(label=_("Number of hosts to handle at once"), default_value=10),
+                   ])),
             ("error_handling",
-             Checkbox(
-                 title=_("Error handling"),
-                 label=_("Ignore errors in single check plugins"),
-                 default_value=True)),
+             Checkbox(title=_("Error handling"),
+                      label=_("Ignore errors in single check plugins"),
+                      default_value=True)),
         ],
         optional_keys=[],
     )
@@ -201,8 +199,10 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         timeout = html.request.request_timeout - 2
 
-        counts, failed_hosts = check_mk_automation(
-            task.site_id, "inventory", arguments, timeout=timeout)
+        counts, failed_hosts = check_mk_automation(task.site_id,
+                                                   "inventory",
+                                                   arguments,
+                                                   timeout=timeout)
 
         return counts, failed_hosts
 
@@ -214,8 +214,9 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
             folder = Folder.folder(task.folder_path)
             for hostname in task.host_names:
                 self._process_service_counts_for_host(counts[hostname])
-                msg = self._process_discovery_result_for_host(
-                    folder.host(hostname), failed_hosts.get(hostname, False), counts[hostname])
+                msg = self._process_discovery_result_for_host(folder.host(hostname),
+                                                              failed_hosts.get(hostname, False),
+                                                              counts[hostname])
                 job_interface.send_progress_update("%s: %s" % (hostname, msg))
 
     def _process_service_counts_for_host(self, host_counts):

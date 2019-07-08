@@ -586,8 +586,11 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
         this_time = timestamp
 
     if not params.get("aggregate"):
-        return check_if_common_single(
-            item, params, info, has_nodeinfo=has_nodeinfo, timestamp=this_time)
+        return check_if_common_single(item,
+                                      params,
+                                      info,
+                                      has_nodeinfo=has_nodeinfo,
+                                      timestamp=this_time)
 
     # If this item is in an ifgroup create a pseudo interface and
     # pass its data to the common instance.
@@ -697,11 +700,10 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
             ("outerr", interface.ifOutErrors),
         ]:
             try:
-                get_rate(
-                    "if.%s.%s.%s" % (name, item, if_member_item),
-                    this_time,
-                    saveint(counter),
-                    onwrap=RAISE)
+                get_rate("if.%s.%s.%s" % (name, item, if_member_item),
+                         this_time,
+                         saveint(counter),
+                         onwrap=RAISE)
             except MKCounterWrapped:
                 wrapped = True
                 # continue, other counters might wrap as well
@@ -775,14 +777,13 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
     # If applicable, signal the check_if_common_single if the counter of the
     # given interface has wrapped. Actually a wrap of the if group itself is unlikely,
     # however any counter wrap of one of its members causes the accumulation being invalid
-    return check_if_common_single(
-        item,
-        params, [group_entry],
-        wrapped,
-        has_nodeinfo=has_nodeinfo,
-        group_members=group_members,
-        group_name=group_name,
-        timestamp=this_time)
+    return check_if_common_single(item,
+                                  params, [group_entry],
+                                  wrapped,
+                                  has_nodeinfo=has_nodeinfo,
+                                  group_members=group_members,
+                                  group_name=group_name,
+                                  timestamp=this_time)
 
 
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
@@ -980,16 +981,17 @@ def check_if_common_single(item,
 
             try:
                 if node is None:
-                    rate = get_rate(
-                        "if.%s.%s" % (name, item), this_time, saveint(counter), onwrap=RAISE)
+                    rate = get_rate("if.%s.%s" % (name, item),
+                                    this_time,
+                                    saveint(counter),
+                                    onwrap=RAISE)
                     if force_counter_wrap:
                         raise MKCounterWrapped("Forced counter wrap")
                 else:  # clustered check needs one counter per variable, item AND NODE
-                    rate = get_rate(
-                        "if.%s.%s.%s" % (node, name, item),
-                        this_time,
-                        saveint(counter),
-                        onwrap=RAISE)
+                    rate = get_rate("if.%s.%s.%s" % (node, name, item),
+                                    this_time,
+                                    saveint(counter),
+                                    onwrap=RAISE)
                     if force_counter_wrap:
                         raise MKCounterWrapped("Forced counter wrap")
                 rates.append(rate)
@@ -1042,13 +1044,12 @@ def check_if_common_single(item,
                     title = what.title()
 
                 # Check bandwidth thresholds incl. prediction
-                result = check_levels(
-                    traffic,
-                    dsname,
-                    params,
-                    statemarkers=True,
-                    human_readable_func=format_value,
-                    infoname=title)
+                result = check_levels(traffic,
+                                      dsname,
+                                      params,
+                                      statemarkers=True,
+                                      human_readable_func=format_value,
+                                      infoname=title)
                 state = max(state, result[0])
                 infotext += ", " + result[1]
                 perfdata += result[2]

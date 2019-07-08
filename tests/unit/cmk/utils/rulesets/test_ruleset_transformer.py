@@ -680,11 +680,10 @@ def _generate_id(val):
         None,
     ],
 )
-@pytest.mark.parametrize(
-    "case",
-    NON_BINARY_HOST_RULESET + BINARY_HOST_RULESET + NON_BINARY_SERVICE_RULESET +
-    BINARY_SERVICE_RULESET,
-    ids=_generate_id)
+@pytest.mark.parametrize("case",
+                         NON_BINARY_HOST_RULESET + BINARY_HOST_RULESET +
+                         NON_BINARY_SERVICE_RULESET + BINARY_SERVICE_RULESET,
+                         ids=_generate_id)
 def test_transform(case, rule_options):
     rule_spec = case.old
     if rule_options is not None:

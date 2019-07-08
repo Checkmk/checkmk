@@ -61,14 +61,13 @@ class RulespecCheckgroupParametersClusterStatus(CheckParameterRulespecWithoutIte
         return Dictionary(
             elements=[
                 ("type",
-                 DropdownChoice(
-                     title=_("Cluster type"),
-                     help=_("Expected cluster type."),
-                     choices=[
-                         ("active_standby", _("active / standby")),
-                         ("active_active", _("active / active")),
-                     ],
-                     default_value="active_standby")),
+                 DropdownChoice(title=_("Cluster type"),
+                                help=_("Expected cluster type."),
+                                choices=[
+                                    ("active_standby", _("active / standby")),
+                                    ("active_active", _("active / active")),
+                                ],
+                                default_value="active_standby")),
                 ("v11_2_states",
                  Dictionary(
                      title=_("Interpretation of failover cluster state"),

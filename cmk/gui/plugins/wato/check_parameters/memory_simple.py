@@ -71,23 +71,19 @@ class RulespecCheckgroupParametersMemorySimple(CheckParameterRulespecWithItem):
                          title=_("Levels for memory usage"),
                          choices=[
                              ("perc_used", _("Percentual levels for used memory"),
-                              Tuple(
-                                  elements=[
-                                      Percentage(
-                                          title=_("Warning at a memory usage of"),
-                                          default_value=80.0,
-                                          maxvalue=None),
-                                      Percentage(
-                                          title=_("Critical at a memory usage of"),
-                                          default_value=90.0,
-                                          maxvalue=None)
-                                  ],)),
+                              Tuple(elements=[
+                                  Percentage(title=_("Warning at a memory usage of"),
+                                             default_value=80.0,
+                                             maxvalue=None),
+                                  Percentage(title=_("Critical at a memory usage of"),
+                                             default_value=90.0,
+                                             maxvalue=None)
+                              ],)),
                              ("abs_free", _("Absolute levels for free memory"),
-                              Tuple(
-                                  elements=[
-                                      Filesize(title=_("Warning below")),
-                                      Filesize(title=_("Critical below"))
-                                  ],)),
+                              Tuple(elements=[
+                                  Filesize(title=_("Warning below")),
+                                  Filesize(title=_("Critical below"))
+                              ],)),
                              ("ignore", _("Do not impose levels")),
                          ],
                      )),

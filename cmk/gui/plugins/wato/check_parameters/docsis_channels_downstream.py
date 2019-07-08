@@ -59,18 +59,17 @@ class RulespecCheckgroupParametersDocsisChannelsDownstream(CheckParameterRulespe
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("power",
-                 Tuple(
-                     title=_("Transmit Power"),
-                     help=_("The operational transmit power"),
-                     elements=[
-                         Float(title=_("warning at or below"), unit="dBmV", default_value=5.0),
-                         Float(title=_("critical at or below"), unit="dBmV", default_value=1.0),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("power",
+             Tuple(
+                 title=_("Transmit Power"),
+                 help=_("The operational transmit power"),
+                 elements=[
+                     Float(title=_("warning at or below"), unit="dBmV", default_value=5.0),
+                     Float(title=_("critical at or below"), unit="dBmV", default_value=1.0),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

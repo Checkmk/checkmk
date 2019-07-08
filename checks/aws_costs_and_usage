@@ -70,11 +70,10 @@ def check_aws_costs_and_usage_summary(item, params, parsed):
             amounts_by_metrics[(timeperiod, title, unit, key)] += costs
 
     for (timeperiod, title, unit, key), costs in amounts_by_metrics.iteritems():
-        yield check_levels(
-            costs,
-            "aws_costs_%s" % key,
-            params.get('levels_%s' % key, (None, None)),
-            infoname="(%s) Total %s %s" % (timeperiod, title, unit))
+        yield check_levels(costs,
+                           "aws_costs_%s" % key,
+                           params.get('levels_%s' % key, (None, None)),
+                           infoname="(%s) Total %s %s" % (timeperiod, title, unit))
 
 
 check_info['aws_costs_and_usage'] = {
@@ -115,11 +114,10 @@ def check_aws_costs_and_usage_per_service(item, params, parsed):
 
     for title, metric_name, key in AWSCostAndUageMetrics:
         costs, unit = data[metric_name]
-        yield check_levels(
-            costs,
-            "aws_costs_%s" % key,
-            params.get('levels_%s' % key, (None, None)),
-            infoname="(%s) %s %s" % (timeperiod, title, unit))
+        yield check_levels(costs,
+                           "aws_costs_%s" % key,
+                           params.get('levels_%s' % key, (None, None)),
+                           infoname="(%s) %s %s" % (timeperiod, title, unit))
 
 
 check_info['aws_costs_and_usage.per_service'] = {

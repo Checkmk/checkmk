@@ -58,8 +58,9 @@ class HTTPSConfigurableConnection(HTTPSConnection):
             if self.__ca_file == HTTPSConfigurableConnection.IGNORE:
                 self.sock = ssl.wrap_socket(self.sock, cert_reqs=ssl.CERT_NONE)
             else:
-                self.sock = ssl.wrap_socket(
-                    self.sock, ca_certs=self.__ca_file, cert_reqs=ssl.CERT_REQUIRED)
+                self.sock = ssl.wrap_socket(self.sock,
+                                            ca_certs=self.__ca_file,
+                                            cert_reqs=ssl.CERT_REQUIRED)
 
 
 class HTTPSAuthHandler(urllib2.HTTPSHandler):
@@ -150,11 +151,13 @@ def output_containers(opener, headers):
 
 def output_alerts(opener, headers):
     write_title("alerts")
-    obj = send_request(
-        opener, "alerts", headers, parameters={
-            'resolved': "false",
-            'acknowledged': "false"
-        })
+    obj = send_request(opener,
+                       "alerts",
+                       headers,
+                       parameters={
+                           'resolved': "false",
+                           'acknowledged': "false"
+                       })
 
     writer = gen_csv_writer()
     writer.writerow(["timestamp", "message", "severity"])

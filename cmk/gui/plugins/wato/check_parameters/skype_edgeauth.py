@@ -65,16 +65,13 @@ class RulespecCheckgroupParametersSkypeEdgeauth(CheckParameterRulespecWithoutIte
                      title=_("Bad Requests Received"),
                      elements=[
                          ("upper",
-                          Tuple(
-                              elements=[
-                                  Integer(
-                                      title=_("Warning at"), unit=_("per second"),
+                          Tuple(elements=[
+                              Integer(title=_("Warning at"), unit=_("per second"),
                                       default_value=20),
-                                  Integer(
-                                      title=_("Critical at"),
+                              Integer(title=_("Critical at"),
                                       unit=_("per second"),
                                       default_value=40),
-                              ],)),
+                          ],)),
                      ],
                      optional_keys=[],
                  )),

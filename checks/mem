@@ -266,12 +266,11 @@ def check_mem_linux(_no_item, params, info):
 
     # RAM
     meminfo["MemUsed"] = meminfo["MemTotal"] - meminfo["MemFree"] - meminfo["Caches"]
-    yield check_mem_levels(
-        "RAM",
-        meminfo["MemUsed"],
-        meminfo["MemTotal"],
-        params.get("levels_ram"),
-        show_percentage=not meminfo["SwapTotal"])
+    yield check_mem_levels("RAM",
+                           meminfo["MemUsed"],
+                           meminfo["MemTotal"],
+                           params.get("levels_ram"),
+                           show_percentage=not meminfo["SwapTotal"])
 
     # Swap - but only if available
     meminfo["SwapUsed"] = meminfo["SwapTotal"] - meminfo["SwapFree"]
@@ -282,44 +281,40 @@ def check_mem_linux(_no_item, params, info):
     # Total virtual memory
     meminfo["TotalTotal"] = meminfo["MemTotal"] + meminfo["SwapTotal"]
     meminfo["TotalUsed"] = meminfo["MemUsed"] + meminfo["SwapUsed"]
-    r = check_mem_levels(
-        "Total virtual memory",
-        meminfo["TotalUsed"],
-        meminfo["TotalTotal"],
-        params.get("levels_virtual"),
-        show_percentage=True)
+    r = check_mem_levels("Total virtual memory",
+                         meminfo["TotalUsed"],
+                         meminfo["TotalTotal"],
+                         params.get("levels_virtual"),
+                         show_percentage=True)
     if r[0] or meminfo["SwapTotal"]:
         yield r  # only display if there is swap or status is non-OK
 
     # Total memory / in relation to RAM
-    r = check_mem_levels(
-        "RAM + Swap",
-        meminfo["TotalUsed"],
-        meminfo["TotalTotal"],
-        params.get("levels_total"),
-        of_what="RAM",
-        of_value=meminfo["MemTotal"])
+    r = check_mem_levels("RAM + Swap",
+                         meminfo["TotalUsed"],
+                         meminfo["TotalTotal"],
+                         params.get("levels_total"),
+                         of_what="RAM",
+                         of_value=meminfo["MemTotal"])
     if r[0]:
         yield r  # only display if non-OK
 
     # Shared memory
     if "Shmem" in meminfo:
-        r = check_mem_levels(
-            "Shared memory",
-            meminfo["Shmem"],
-            meminfo["MemTotal"],
-            params.get("levels_shm"),
-            of_what="RAM")
+        r = check_mem_levels("Shared memory",
+                             meminfo["Shmem"],
+                             meminfo["MemTotal"],
+                             params.get("levels_shm"),
+                             of_what="RAM")
         if r[0]:
             yield r  # only display if non-OK
 
     # Page tables
-    r = check_mem_levels(
-        "Page tables",
-        meminfo["PageTables"],
-        meminfo["MemTotal"],
-        params.get("levels_pagetables"),
-        of_what="RAM")
+    r = check_mem_levels("Page tables",
+                         meminfo["PageTables"],
+                         meminfo["MemTotal"],
+                         params.get("levels_pagetables"),
+                         of_what="RAM")
     if r[0]:
         yield r  # only display if non-OK
 
@@ -331,45 +326,41 @@ def check_mem_linux(_no_item, params, info):
        + meminfo.get("Bounce", 0) \
        + meminfo.get("WritebackTmp", 0)
 
-    r = check_mem_levels(
-        "Disk Writeback",
-        meminfo["Pending"],
-        meminfo["MemTotal"],
-        params.get("levels_writeback"),
-        of_what="RAM")
+    r = check_mem_levels("Disk Writeback",
+                         meminfo["Pending"],
+                         meminfo["MemTotal"],
+                         params.get("levels_writeback"),
+                         of_what="RAM")
     if r[0]:
         yield r  # only display if non-OK
 
     # Committed memory
-    r = check_mem_levels(
-        "Committed",
-        meminfo["Committed_AS"],
-        meminfo["TotalTotal"],
-        params.get("levels_committed"),
-        of_what="RAM + Swap")
+    r = check_mem_levels("Committed",
+                         meminfo["Committed_AS"],
+                         meminfo["TotalTotal"],
+                         params.get("levels_committed"),
+                         of_what="RAM + Swap")
     if r[0]:
         yield r  # only display if non-OK
 
     # Commit limit
     if "CommitLimit" in meminfo:
-        r = check_mem_levels(
-            "Commit Limit",
-            meminfo["TotalTotal"] - meminfo["CommitLimit"],
-            meminfo["TotalTotal"],
-            params.get("levels_commitlimit"),
-            of_what="RAM + Swap")
+        r = check_mem_levels("Commit Limit",
+                             meminfo["TotalTotal"] - meminfo["CommitLimit"],
+                             meminfo["TotalTotal"],
+                             params.get("levels_commitlimit"),
+                             of_what="RAM + Swap")
         if r[0]:
             yield r  # only display if non-OK
 
     # Available Memory
     if "MemAvailable" in meminfo:
-        r = check_mem_levels(
-            "RAM available",
-            meminfo["MemTotal"] - meminfo["MemAvailable"],
-            meminfo["MemTotal"],
-            params.get("levels_available"),
-            of_what="RAM",
-            show_free=True)
+        r = check_mem_levels("RAM available",
+                             meminfo["MemTotal"] - meminfo["MemAvailable"],
+                             meminfo["MemTotal"],
+                             params.get("levels_available"),
+                             of_what="RAM",
+                             show_free=True)
         if r[0]:
             yield r  # only display if non-OK
 
@@ -377,24 +368,22 @@ def check_mem_linux(_no_item, params, info):
     # newer kernel version report wrong data,
     # i.d. both VmallocUsed and Chunk equal zero
     if not (meminfo["VmallocUsed"] == 0 and meminfo["VmallocChunk"] == 0):
-        r = check_mem_levels(
-            "Largest Free VMalloc Chunk",
-            meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
-            meminfo["VmallocTotal"],
-            params.get("levels_vmalloc"),
-            of_what="VMalloc Area",
-            show_free=True)
+        r = check_mem_levels("Largest Free VMalloc Chunk",
+                             meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
+                             meminfo["VmallocTotal"],
+                             params.get("levels_vmalloc"),
+                             of_what="VMalloc Area",
+                             show_free=True)
         if r[0]:
             yield r  # only display if non-OK
 
     # HardwareCorrupted
     if "HardwareCorrupted" in meminfo:
-        r = check_mem_levels(
-            "Hardware Corrupted",
-            meminfo["HardwareCorrupted"],
-            meminfo["MemTotal"],
-            params.get("levels_hardwarecorrupted"),
-            of_what="RAM")
+        r = check_mem_levels("Hardware Corrupted",
+                             meminfo["HardwareCorrupted"],
+                             meminfo["MemTotal"],
+                             params.get("levels_hardwarecorrupted"),
+                             of_what="RAM")
         if r[0]:
             yield r  # only display if non-OK
 
@@ -582,8 +571,11 @@ def check_mem_windows(_no_item, params, info):
         # Do averaging, if configured, just for matching the levels
         if "average" in params:
             average_min = params["average"]
-            used_kb = get_average(
-                "mem.win.%s" % paramname, now, used_kb, average_min, initialize_zero=False)
+            used_kb = get_average("mem.win.%s" % paramname,
+                                  now,
+                                  used_kb,
+                                  average_min,
+                                  initialize_zero=False)
             used_mb = used_kb / 1024.0
             perc = 100.0 * used_kb / total_kb
             infotext += ", %d min average: %s (%s)" % (average_min,

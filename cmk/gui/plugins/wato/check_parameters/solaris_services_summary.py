@@ -57,11 +57,10 @@ class RulespecCheckgroupParametersSolarisServicesSummary(CheckParameterRulespecW
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('maintenance_state',
-                 MonitoringState(
-                     title=_("State if 'maintenance' services are found"),
-                     default_value=0,
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('maintenance_state',
+             MonitoringState(
+                 title=_("State if 'maintenance' services are found"),
+                 default_value=0,
+             )),
+        ],)

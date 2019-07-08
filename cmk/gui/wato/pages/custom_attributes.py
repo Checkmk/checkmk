@@ -60,11 +60,10 @@ def _update_host_custom_attrs():
 
 def load_custom_attrs_from_mk_file(lock):
     filename = os.path.join(watolib.multisite_dir(), "custom_attrs.mk")
-    vars_ = store.load_mk_file(
-        filename, {
-            'wato_user_attrs': [],
-            'wato_host_attrs': [],
-        }, lock=lock)
+    vars_ = store.load_mk_file(filename, {
+        'wato_user_attrs': [],
+        'wato_host_attrs': [],
+    }, lock=lock)
 
     attrs = {}
     for what in ["user", "host"]:
@@ -255,15 +254,15 @@ class ModeEditCustomAttr(WatoMode):
         html.help(
             _('This attribute is only visibile on the edit host and folder pages by default, but '
               'you can also make it visible in the host overview tables of WATO.'))
-        html.checkbox(
-            'show_in_table',
-            self._attr.get('show_in_table', False),
-            label=_("Show the setting of the attribute in the WATO host list table"))
+        html.checkbox('show_in_table',
+                      self._attr.get('show_in_table', False),
+                      label=_("Show the setting of the attribute in the WATO host list table"))
 
         forms.section(_('Add to monitoring configuration'))
         html.help(self._macro_help)
-        html.checkbox(
-            'add_custom_macro', self._attr.get('add_custom_macro', False), label=self._macro_label)
+        html.checkbox('add_custom_macro',
+                      self._attr.get('add_custom_macro', False),
+                      label=self._macro_label)
 
         forms.end()
         html.show_localization_hint()
@@ -318,10 +317,9 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
     def _add_extra_form_sections(self):
         forms.section(_('Editable by Users'))
         html.help(_('It is possible to let users edit their custom attributes.'))
-        html.checkbox(
-            'user_editable',
-            self._attr.get('user_editable', True),
-            label=_("Users can change this attribute in their personal settings"))
+        html.checkbox('user_editable',
+                      self._attr.get('user_editable', True),
+                      label=_("Users can change this attribute in their personal settings"))
 
     def title(self):
         if self._new:
@@ -329,8 +327,8 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return _("Edit User Attribute")
 
     def buttons(self):
-        html.context_button(
-            _("Back"), watolib.folder_preserving_link([("mode", "user_attrs")]), "back")
+        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "user_attrs")]),
+                            "back")
 
 
 @mode_registry.register
@@ -378,8 +376,8 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         return _("Edit Host Attribute")
 
     def buttons(self):
-        html.context_button(
-            _("Back"), watolib.folder_preserving_link([("mode", "host_attrs")]), "back")
+        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "host_attrs")]),
+                            "back")
 
 
 class ModeCustomAttrs(WatoMode):
@@ -470,8 +468,8 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
 
     def buttons(self):
         html.context_button(_("Users"), watolib.folder_preserving_link([("mode", "users")]), "back")
-        html.context_button(
-            _("New attribute"), watolib.folder_preserving_link([("mode", "edit_user_attr")]), "new")
+        html.context_button(_("New attribute"),
+                            watolib.folder_preserving_link([("mode", "edit_user_attr")]), "new")
 
 
 @mode_registry.register
@@ -495,10 +493,10 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         return _("Custom Host Attributes")
 
     def buttons(self):
-        html.context_button(
-            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
-        html.context_button(
-            _("New attribute"), watolib.folder_preserving_link([("mode", "edit_host_attr")]), "new")
+        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
+                            "back")
+        html.context_button(_("New attribute"),
+                            watolib.folder_preserving_link([("mode", "edit_host_attr")]), "new")
 
     def get_attributes(self):
         return self._attrs

@@ -970,17 +970,15 @@ class TimeperiodValuespec(ValueSpec):
         if is_active:
             value = self._get_timeperiod_value(value)
             self._get_timeperiod_valuespec().render_input(varprefix, value)
-            html.buttonlink(
-                toggle_url,
-                _("%s timespecific parameters") % mode,
-                class_=["toggle_timespecific_parameter"])
+            html.buttonlink(toggle_url,
+                            _("%s timespecific parameters") % mode,
+                            class_=["toggle_timespecific_parameter"])
         else:
             value = self._get_timeless_value(value)
             r = self._enclosed_valuespec.render_input(varprefix, value)
-            html.buttonlink(
-                toggle_url,
-                _("%s timespecific parameters") % mode,
-                class_=["toggle_timespecific_parameter"])
+            html.buttonlink(toggle_url,
+                            _("%s timespecific parameters") % mode,
+                            class_=["toggle_timespecific_parameter"])
             return r
 
     def value_to_text(self, value):
@@ -1024,9 +1022,8 @@ class TimeperiodValuespec(ValueSpec):
         return Dictionary(
             elements=[
                 (self.tp_default_value_key,
-                 Transform(
-                     self._enclosed_valuespec,
-                     title=_("Default parameters when no timeperiod matches"))),
+                 Transform(self._enclosed_valuespec,
+                           title=_("Default parameters when no timeperiod matches"))),
                 (self.tp_values_key,
                  ListOf(
                      Tuple(elements=[

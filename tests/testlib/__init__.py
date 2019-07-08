@@ -69,8 +69,8 @@ def virtualenv_path():
 
 
 def current_branch_name():
-    branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).split(
-        "\n", 1)[0]
+    branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref",
+                                           "HEAD"]).split("\n", 1)[0]
     return branch_name.decode("utf-8")
 
 
@@ -413,8 +413,8 @@ class Site(object):
 
         #print "last_check_before", last_check_before, "schedule_ts", schedule_ts
 
-        self.live.command(
-            "[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" % (schedule_ts, hostname, state, output))
+        self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" %
+                          (schedule_ts, hostname, state, output))
         self._wait_for_next_check(hostname, last_check_before, schedule_ts, wait_timeout,
                                   expected_state)
 
@@ -431,13 +431,12 @@ class Site(object):
         self.live.command("[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
                           (schedule_ts, hostname, service_description.encode("utf-8"), schedule_ts))
 
-        self._wait_for_next_check(
-            hostname,
-            last_check_before,
-            schedule_ts,
-            wait_timeout,
-            expected_state,
-            service_description=service_description)
+        self._wait_for_next_check(hostname,
+                                  last_check_before,
+                                  schedule_ts,
+                                  wait_timeout,
+                                  expected_state,
+                                  service_description=service_description)
 
     def _wait_for_next_check(self,
                              hostname,
@@ -552,8 +551,8 @@ class Site(object):
         if not self._is_running_as_site_user():
             p = self.execute(["rm", "-rf", self.path(rel_path)])
             if p.wait() != 0:
-                raise Exception(
-                    "Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait()))
+                raise Exception("Failed to delete directory %s. Exit-Code: %d" %
+                                (rel_path, p.wait()))
         else:
             shutil.rmtree(self.path(rel_path))
 
@@ -662,14 +661,14 @@ class Site(object):
 
         execute("sudo /bin/cp -a %s %s" % (src_path, self.version.version_path()))
 
-        execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" % (src_version, new_version_name,
-                                                          self.version.version_path()))
+        execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
+                (src_version, new_version_name, self.version.version_path()))
 
         execute("sudo sed -i \"s|%s|%s|g\" %s/lib/python/omdlib/__init__.py" %
                 (src_version, new_version_name, self.version.version_path()))
 
-        execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" % (src_version, new_version_name,
-                                                                     self.version.version_path()))
+        execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" %
+                (src_version, new_version_name, self.version.version_path()))
 
         # we should use self.version.version_path() in the RPATH, but that is limited to
         # 32 bytes and our versions exceed this limit. We need to use some hack to make
@@ -677,8 +676,8 @@ class Site(object):
         if not os.path.exists("/omd/v"):
             execute("sudo /bin/ln -s /omd/versions /omd/v")
 
-        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python" % (self.version.version_directory(),
-                                                                 self.version.version_path()))
+        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python" %
+                (self.version.version_directory(), self.version.version_path()))
 
     def _update_with_f12_files(self):
         paths = [
@@ -1176,14 +1175,16 @@ class WebSession(requests.Session):
         self._check_resources(soup, response, "img", "src", ["image/png"])
         self._check_resources(soup, response, "script", "src",
                               ["application/javascript", "text/javascript"])
-        self._check_resources(
-            soup, response, "link", "href", ["text/css"], filters=[("rel", "stylesheet")])
-        self._check_resources(
-            soup,
-            response,
-            "link",
-            "href", ["image/vnd.microsoft.icon"],
-            filters=[("rel", "shortcut icon")])
+        self._check_resources(soup,
+                              response,
+                              "link",
+                              "href", ["text/css"],
+                              filters=[("rel", "stylesheet")])
+        self._check_resources(soup,
+                              response,
+                              "link",
+                              "href", ["image/vnd.microsoft.icon"],
+                              filters=[("rel", "shortcut icon")])
 
     def _check_resources(self, soup, response, tag, attr, allowed_mime_types, filters=None):
         parsed_url = urlparse(response.url)
@@ -1255,14 +1256,13 @@ class CMKWebSession(WebSession):
         assert "_password" in login_page
         assert "_login" in login_page
 
-        r = self.post(
-            "login.py",
-            data={
-                "filled_in": "login",
-                "_username": username,
-                "_password": password,
-                "_login": "Login",
-            })
+        r = self.post("login.py",
+                      data={
+                          "filled_in": "login",
+                          "_username": username,
+                          "_password": password,
+                          "_login": "Login",
+                      })
         auth_cookie = r.cookies.get("auth_%s" % self.site.id)
         assert auth_cookie
         assert auth_cookie.startswith("%s:" % username)
@@ -1279,17 +1279,16 @@ class CMKWebSession(WebSession):
         if lang:
             assert "value=\"" + lang + "\"" in profile_page
 
-        r = self.post(
-            "user_profile.py",
-            data={
-                "filled_in": "profile",
-                "_set_lang": "on",
-                "ua_start_url_use": "0",
-                "ua_ui_theme_use": "0",
-                "language": lang,
-                "_save": "Save",
-            },
-            add_transid=True)
+        r = self.post("user_profile.py",
+                      data={
+                          "filled_in": "profile",
+                          "_set_lang": "on",
+                          "ua_start_url_use": "0",
+                          "ua_ui_theme_use": "0",
+                          "language": lang,
+                          "_save": "Save",
+                      },
+                      add_transid=True)
 
         if lang == "":
             assert "Successfully updated" in r.text, "Body: %s" % r.text
@@ -1348,17 +1347,16 @@ class CMKWebSession(WebSession):
         if attributes is None:
             attributes = {}
 
-        result = self._api_request(
-            "webapi.py?action=add_host", {
-                "request": json.dumps({
-                    "hostname": hostname,
-                    "folder": folder,
-                    "attributes": attributes or {},
-                    "create_folders": create_folders,
-                    "nodes": cluster_nodes,
-                }),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=add_host", {
+            "request": json.dumps({
+                "hostname": hostname,
+                "folder": folder,
+                "attributes": attributes or {},
+                "create_folders": create_folders,
+                "nodes": cluster_nodes,
+            }),
+        },
+                                   expect_error=expect_error)
 
         assert result is None
 
@@ -1481,15 +1479,14 @@ class CMKWebSession(WebSession):
         if attributes is None:
             attributes = {}
 
-        result = self._api_request(
-            "webapi.py?action=add_folder", {
-                "request": json.dumps({
-                    "folder": folder_path,
-                    "attributes": attributes or {},
-                    "create_parent_folders": create_folders,
-                }),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=add_folder", {
+            "request": json.dumps({
+                "folder": folder_path,
+                "attributes": attributes or {},
+                "create_parent_folders": create_folders,
+            }),
+        },
+                                   expect_error=expect_error)
 
         assert result is None
 
@@ -1541,13 +1538,12 @@ class CMKWebSession(WebSession):
         assert not self.folder_exists(folder_path)
 
     def get_ruleset(self, ruleset_name):
-        result = self._api_request(
-            "webapi.py?action=get_ruleset&output_format=python", {
-                "request": json.dumps({
-                    "ruleset_name": ruleset_name,
-                }),
-            },
-            output_format="python")
+        result = self._api_request("webapi.py?action=get_ruleset&output_format=python", {
+            "request": json.dumps({
+                "ruleset_name": ruleset_name,
+            }),
+        },
+                                   output_format="python")
 
         assert isinstance(result, dict)
         assert "ruleset" in result
@@ -1629,16 +1625,15 @@ class CMKWebSession(WebSession):
         return result
 
     def get_all_sites(self):
-        result = self._api_request(
-            "webapi.py?action=get_all_sites&output_format=python", {}, output_format="python")
+        result = self._api_request("webapi.py?action=get_all_sites&output_format=python", {},
+                                   output_format="python")
         assert result is not None
         return result
 
     def delete_site(self, site_id):
-        result = self._api_request(
-            "webapi.py?action=delete_site&output_format=python",
-            {"request": json.dumps({"site_id": site_id})},
-            output_format="python")
+        result = self._api_request("webapi.py?action=delete_site&output_format=python",
+                                   {"request": json.dumps({"site_id": site_id})},
+                                   output_format="python")
 
         assert result is None
 
@@ -1652,9 +1647,9 @@ class CMKWebSession(WebSession):
         request_object = {"groupname": group_name}
         request_object.update(attributes)
 
-        result = self._api_request(
-            "webapi.py?action=add_%sgroup" % group_type, {"request": json.dumps(request_object)},
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=add_%sgroup" % group_type,
+                                   {"request": json.dumps(request_object)},
+                                   expect_error=expect_error)
 
         assert result is None
 
@@ -1662,19 +1657,18 @@ class CMKWebSession(WebSession):
         request_object = {"groupname": group_name}
         request_object.update(attributes)
 
-        result = self._api_request(
-            "webapi.py?action=edit_%sgroup" % group_type, {"request": json.dumps(request_object)},
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=edit_%sgroup" % group_type,
+                                   {"request": json.dumps(request_object)},
+                                   expect_error=expect_error)
 
         assert result is None
 
     def delete_group(self, group_type, group_name, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=delete_%sgroup" % group_type,
-            {"request": json.dumps({
-                "groupname": group_name,
-            })},
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=delete_%sgroup" % group_type,
+                                   {"request": json.dumps({
+                                       "groupname": group_name,
+                                   })},
+                                   expect_error=expect_error)
 
         assert result is None
 
@@ -1714,11 +1708,10 @@ class CMKWebSession(WebSession):
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
     def bulk_discovery_start(self, request, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=bulk_discovery_start", {
-                "request": json.dumps(request),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=bulk_discovery_start", {
+            "request": json.dumps(request),
+        },
+                                   expect_error=expect_error)
         assert isinstance(result, dict)
         return result
 
@@ -1728,38 +1721,34 @@ class CMKWebSession(WebSession):
         return result
 
     def get_user_sites(self, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=get_user_sites", {
-                "request": json.dumps({}),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=get_user_sites", {
+            "request": json.dumps({}),
+        },
+                                   expect_error=expect_error)
         assert isinstance(result, list)
         return result
 
     def get_host_names(self, request, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=get_host_names", {
-                "request": json.dumps(request),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=get_host_names", {
+            "request": json.dumps(request),
+        },
+                                   expect_error=expect_error)
         assert isinstance(result, list)
         return result
 
     def get_metrics_of_host(self, request, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=get_metrics_of_host", {
-                "request": json.dumps(request),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=get_metrics_of_host", {
+            "request": json.dumps(request),
+        },
+                                   expect_error=expect_error)
         assert isinstance(result, dict)
         return result
 
     def get_graph_recipes(self, request, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=get_graph_recipes", {
-                "request": json.dumps(request),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=get_graph_recipes", {
+            "request": json.dumps(request),
+        },
+                                   expect_error=expect_error)
         assert isinstance(result, list)
         return result
 
@@ -1790,24 +1779,22 @@ class CMKWebSession(WebSession):
         self.site.wait_for_core_reloaded(old_t)
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=get_graph", {
-                "request": json.dumps({
-                    "specification": [
-                        "template",
-                        {
-                            "service_description": service_description,
-                            "site": self.site.id,
-                            "graph_index": graph_index,
-                            "host_name": hostname,
-                        }
-                    ],
-                    "data_range": {
-                        "time_range": [time.time() - 3600, time.time()]
+        result = self._api_request("webapi.py?action=get_graph", {
+            "request": json.dumps({
+                "specification": [
+                    "template", {
+                        "service_description": service_description,
+                        "site": self.site.id,
+                        "graph_index": graph_index,
+                        "host_name": hostname,
                     }
-                }),
-            },
-            expect_error=expect_error)
+                ],
+                "data_range": {
+                    "time_range": [time.time() - 3600, time.time()]
+                }
+            }),
+        },
+                                   expect_error=expect_error)
 
         assert isinstance(result, dict)
         assert "start_time" in result
@@ -1876,19 +1863,18 @@ class CMKEventConsole(CMKWebSession):
             "wato.py?folder=&mode=mkeventd_edit_configvar&site=&varname=remote_status").text
         assert "Save" in html
 
-        html = web.post(
-            "wato.py",
-            data={
-                "filled_in": "value_editor",
-                "ve_use": "on",
-                "ve_value_0": self.status_port,
-                "ve_value_2_use": "on",
-                "ve_value_2_value_0": "127.0.0.1",
-                "save": "Save",
-                "varname": "remote_status",
-                "mode": "mkeventd_edit_configvar",
-            },
-            add_transid=True).text
+        html = web.post("wato.py",
+                        data={
+                            "filled_in": "value_editor",
+                            "ve_use": "on",
+                            "ve_value_0": self.status_port,
+                            "ve_value_2_use": "on",
+                            "ve_value_2_value_0": "127.0.0.1",
+                            "save": "Save",
+                            "varname": "remote_status",
+                            "mode": "mkeventd_edit_configvar",
+                        },
+                        add_transid=True).text
         assert "%d, no commands, 127.0.0.1" % self.status_port in html
 
     def activate_changes(self, web):
@@ -1999,21 +1985,21 @@ class WatchLog(object):
             timeout = self._default_timeout
 
         if not self._check_for_line(match_for, timeout):
-            raise Exception(
-                "Did not find %r in %s after %d seconds" % (match_for, self._log_path(), timeout))
+            raise Exception("Did not find %r in %s after %d seconds" %
+                            (match_for, self._log_path(), timeout))
 
     def check_not_logged(self, match_for, timeout=None):
         if timeout is None:
             timeout = self._default_timeout
 
         if self._check_for_line(match_for, timeout):
-            raise Exception(
-                "Found %r in %s after %d seconds" % (match_for, self._log_path(), timeout))
+            raise Exception("Found %r in %s after %d seconds" %
+                            (match_for, self._log_path(), timeout))
 
     def _check_for_line(self, match_for, timeout):
         timeout_at = time.time() + timeout
-        sys.stdout.write(
-            "Start checking for matching line at %d until %d\n" % (time.time(), timeout_at))
+        sys.stdout.write("Start checking for matching line at %d until %d\n" %
+                         (time.time(), timeout_at))
         while time.time() < timeout_at:
             #print "read till timeout %0.2f sec left" % (timeout_at - time.time())
             line = self._log.readline()

@@ -136,9 +136,8 @@ class ModePredefinedConditions(SimpleListMode):
     def _show_action_cell(self, table, ident):
         super(ModePredefinedConditions, self)._show_action_cell(table, ident)
 
-        html.icon_button(
-            self._search_url(ident),
-            _("Show rules using this %s") % self._mode_type.name_singular(), "search")
+        html.icon_button(self._search_url(ident),
+                         _("Show rules using this %s") % self._mode_type.name_singular(), "search")
 
     def _search_url(self, ident):
         return html.makeuri_contextless([("mode", "rulesets"),
@@ -152,8 +151,8 @@ class ModePredefinedConditions(SimpleListMode):
         table.cell(_("Conditions"))
         html.open_ul(class_="conditions")
         html.open_li()
-        html.write("%s: %s" % (_("Folder"), Folder.folder(
-            entry["conditions"]["host_folder"]).alias_path()))
+        html.write("%s: %s" %
+                   (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()))
         html.close_li()
         html.close_ul()
         html.write(vs_conditions().value_to_text(entry["conditions"]))

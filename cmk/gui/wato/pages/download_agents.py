@@ -59,9 +59,9 @@ class ModeDownloadAgents(WatoMode):
     def buttons(self):
         global_buttons()
         if watolib.has_agent_bakery():
-            html.context_button(
-                _("Baked agents"), watolib.folder_preserving_link([("mode", "agents")]),
-                "download_agents")
+            html.context_button(_("Baked agents"),
+                                watolib.folder_preserving_link([("mode", "agents")]),
+                                "download_agents")
         html.context_button(_("Release Notes"), "version.py", "mk")
 
     def page(self):

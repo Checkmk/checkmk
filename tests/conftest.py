@@ -51,12 +51,12 @@ def pytest_addoption(parser):
     if "-T" in options:
         return
 
-    parser.addoption(
-        "-T",
-        action="store",
-        metavar="TYPE",
-        default=None,
-        help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types.keys()))
+    parser.addoption("-T",
+                     action="store",
+                     metavar="TYPE",
+                     default=None,
+                     help="Run tests of the given TYPE. Available types are: %s" %
+                     ", ".join(test_types.keys()))
 
 
 def pytest_configure(config):
@@ -244,12 +244,11 @@ def _get_site_object():
     def reuse_site():
         return os.environ.get("REUSE", "1") == "1"
 
-    return testlib.Site(
-        site_id=_site_id(),
-        version=site_version(),
-        edition=site_edition(),
-        reuse=reuse_site(),
-        branch=site_branch())
+    return testlib.Site(site_id=_site_id(),
+                        version=site_version(),
+                        edition=site_edition(),
+                        reuse=reuse_site(),
+                        branch=site_branch())
 
 
 def _site_id():

@@ -61,11 +61,8 @@ def cme_path():
 
 
 def virtualenv_path():
-    try:
-        venv = subprocess.check_output(["pipenv", "--bare", "--venv"])
-        return pathlib.Path(venv.decode("utf-8").rstrip("\n"))
-    except subprocess.CalledProcessError:
-        return None
+    venv = subprocess.check_output(["pipenv", "--bare", "--venv"])
+    return pathlib.Path(venv.decode("utf-8").rstrip("\n"))
 
 
 def current_branch_name():

@@ -400,12 +400,14 @@ class TagConfig(object):
         response.update(self.aux_tag_list.get_tag_ids())
         return response
 
-    def get_tag_ids_with_group_prefix(self):
+    def get_tag_ids_by_group(self):
+        """Returns a set of (tag_group_id, tag_id) pairs"""
         response = set()
         for tag_group in self.tag_groups:
-            response.update(["%s/%s" % (tag_group.id, tag) for tag in tag_group.get_tag_ids()])
+            response.update([(tag_group.id, tag) for tag in tag_group.get_tag_ids()])
 
-        response.update(self.aux_tag_list.get_tag_ids())
+        response.update(
+            [(aux_tag_id, aux_tag_id) for aux_tag_id in self.aux_tag_list.get_tag_ids()])
         return response
 
     def get_tag_or_aux_tag(self, tag_id):

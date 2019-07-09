@@ -42,6 +42,7 @@ $(PYTHON_COMPILE): $(PYTHON_PATCHING) bin/gcc bin/g++
 	    --prefix="" \
 	    --enable-shared \
 	    --enable-unicode=ucs4 \
+	    --with-ensurepip=install \
 	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
 	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
 	cd $(PYTHON_DIR) ; $(PATH_VAR) ; $(MAKE) -j2
@@ -101,7 +102,7 @@ bin/g++:
 # Cleanup unused stuff: We ship 2to3 from Python3 and we don't need some example proxy.
 	$(RM) $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,2to3 smtpd.py)
 # Fix python interpreter for kept scripts
-	$(SED) -i '1s|^#!.*/python2\.7$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,idle pydoc python2.7-config)
+	$(SED) -i '1s|^#!.*/python2\.7$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,easy_install easy_install-2.7 idle pip pip2 pip2.7 pydoc python2.7-config)
 	install -m 644 $(addprefix $(PACKAGE_DIR)/$(PYTHON)/sitecustomize,.py .pyc) $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
 	$(TOUCH) $(PYTHON_INSTALL)
 

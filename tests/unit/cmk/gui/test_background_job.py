@@ -92,25 +92,25 @@ def test_start_job():
     job.set_function(job.execute_hello)
 
     status = job.get_status()
-    assert status["state"] == background_job.JobStatus.state_initialized
+    assert status["state"] == background_job.JobStatusStates.INITIALIZED
 
     job.start()
-    testlib.wait_until(job.is_running, timeout=5, interval=0.1)
+    testlib.wait_until(job.is_active, timeout=5, interval=0.1)
 
     with pytest.raises(background_job.BackgroundJobAlreadyRunning):
         job.start()
-    assert job.is_running()
+    assert job.is_active()
 
     job.finish_hello_event.set()
 
     testlib.wait_until(lambda: job.get_status()["state"] not in [
-        background_job.JobStatus.state_initialized, background_job.JobStatus.state_running
+        background_job.JobStatusStates.INITIALIZED, background_job.JobStatusStates.RUNNING
     ],
                        timeout=5,
                        interval=0.1)
 
     status = job.get_status()
-    assert status["state"] == background_job.JobStatus.state_finished
+    assert status["state"] == background_job.JobStatusStates.FINISHED
 
     output = "\n".join(status["loginfo"]["JobProgressUpdate"])
     assert "Initialized background job" in output
@@ -127,12 +127,12 @@ def test_stop_job():
                        interval=0.1)
 
     status = job.get_status()
-    assert status["state"] == background_job.JobStatus.state_running
+    assert status["state"] == background_job.JobStatusStates.RUNNING
 
     job.stop()
 
     status = job.get_status()
-    assert status["state"] == background_job.JobStatus.state_stopped
+    assert status["state"] == background_job.JobStatusStates.STOPPED
 
     output = "\n".join(status["loginfo"]["JobProgressUpdate"])
     assert "Job was stopped" in output

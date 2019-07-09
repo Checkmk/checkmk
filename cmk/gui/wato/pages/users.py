@@ -96,7 +96,7 @@ class ModeUsers(WatoMode):
                                 watolib.folder_preserving_link([("mode", "user_attrs")]),
                                 "custom_attr")
         if userdb.sync_possible():
-            if not self._job_snapshot.is_running():
+            if not self._job_snapshot.is_active():
                 html.context_button(_("Sync users"), html.makeactionuri([("_sync", 1)]),
                                     "replicate")
                 html.context_button(_("Last sync result"), self._job.detail_url(),
@@ -168,14 +168,14 @@ class ModeUsers(WatoMode):
             # Skip if snapshot doesnt exists
             pass
 
-        elif self._job_snapshot.is_running():
+        elif self._job_snapshot.is_active():
             # Still running
             html.message(
                 HTML(_("User synchronization currently running: ")) + self._job_details_link())
             url = html.makeuri([])
             html.immediate_browser_redirect(2, url)
 
-        elif self._job_snapshot.state() == gui_background_job.background_job.JobStatus.state_finished \
+        elif self._job_snapshot.state() == gui_background_job.background_job.JobStatusStates.FINISHED \
              and not self._job_snapshot.acknowledged_by():
             # Just finished, auto-acknowledge
             userdb.UserSyncBackgroundJob().acknowledge(config.user.id)
@@ -201,7 +201,7 @@ class ModeUsers(WatoMode):
             filename="wato.py")
 
     def _show_job_info(self):
-        if self._job_snapshot.is_running():
+        if self._job_snapshot.is_active():
             html.h3(_("Current status of synchronization process"))
             html.set_browser_reload(0.8)
         else:

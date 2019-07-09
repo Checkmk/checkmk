@@ -137,6 +137,7 @@ catalog_titles = {
             "safenet"     : "SafeNet",
             "salesforce"  : "Salesforce",
             "symantec"    : "Symantec",
+            "seh"         : "SEH",
             "servertech"  : "Server Technology",
             "siemens"     : "Siemens",
             "sophos"      : "Sophos",

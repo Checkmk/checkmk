@@ -179,13 +179,7 @@ export function cascading_change(oSelect, varprefix, count) {
 
 export function textarea_resize(oArea, theme)
 {
-    var delimiter;
-    if (theme == "facelift") {
-        delimiter = 16;
-    } else {
-        delimiter = 6;
-    }
-    oArea.style.height = (oArea.scrollHeight - delimiter) + "px";
+    oArea.style.height = (oArea.scrollHeight - 6) + "px";
 }
 
 export function listof_add(varprefix, magic, style)

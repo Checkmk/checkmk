@@ -253,7 +253,7 @@ def test_tag_config_get_tag_ids(test_cfg):
 
 
 def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
-    assert test_cfg.get_tag_ids_by_group() == set([
+    assert test_cfg.get_tag_ids_by_group() == {
         ('bla', 'bla'),
         ('criticality', 'critical'),
         ('criticality', 'offline'),
@@ -264,7 +264,7 @@ def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
         ('networking', 'wan'),
         ('none_choice', None),
         ('none_choice', 'none_val'),
-    ])
+    }
 
 
 def test_tag_config_get_tag_or_aux_tag(test_cfg):

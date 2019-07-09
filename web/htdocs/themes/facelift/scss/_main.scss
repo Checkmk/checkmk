@@ -1345,7 +1345,8 @@ div.info {
   }
 }
 
-body.main a, body.main .popup_menu span, body.main .popup_menu a {
+body.main a, body.main .popup_menu span, body.main .popup_menu a,
+body.main a:link, body.main a:visited {
   color: $theme-color-text;
 }
 

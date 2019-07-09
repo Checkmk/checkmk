@@ -105,6 +105,12 @@ Cluster-Mode specific:
  volume-get-iter
  vserver-get-iter
  quota-report-iter
+
+Additionally you may need to make further adjustments for the Ontap 9.5:
+ * Give access for HTTPs
+ * Give access to ONtapi
+ * Create a role for the command ''statistics' on the Ontap 9.5:
+     sec log role create -role netapp-monitoring-role -cmddirname \"statistics\" -access readonly
 """)
 
 # NetApp credentials

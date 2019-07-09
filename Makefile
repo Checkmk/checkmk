@@ -363,6 +363,7 @@ setup:
 	    valgrind \
 	    direnv \
 	    python-pip \
+            python3.7 \
 	    chrpath \
 	    enchant \
 	    ksh \

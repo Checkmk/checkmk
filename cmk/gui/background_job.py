@@ -34,7 +34,6 @@ import signal
 import sys
 import time
 import traceback
-from enum import Enum
 
 import psutil  # type: ignore
 from pathlib2 import Path
@@ -142,7 +141,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
 
     def _handle_sigterm(self, signum, frame):
         self._logger.debug("Received SIGTERM")
-        status = self._jobstatus.get_status_from_file()
+        status = self._jobstatus.get_status()
         if not status.get("stoppable", True):
             self._logger.warning("Skip termination of background job (Job ID: %s, PID: %d)",
                                  self._job_parameters["job_id"], os.getpid())
@@ -165,19 +164,19 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
                                  self._job_parameters["job_id"])
             self._jobstatus.update_status({
                 "pid": self.pid,
-                "state": JobStatusStates.RUNNING,
+                "state": JobStatus.state_running,
             })
 
             # The actual function call
             self._execute_function()
 
             # Final status update
-            job_status = self._jobstatus.get_status_from_file()
+            job_status = self._jobstatus.get_status()
 
             if job_status.get("loginfo", {}).get("JobException"):
-                final_state = JobStatusStates.EXCEPTION
+                final_state = JobStatus.state_exception
             else:
-                final_state = JobStatusStates.FINISHED
+                final_state = JobStatus.state_finished
 
             self._jobstatus.update_status({
                 "state": final_state,
@@ -185,11 +184,11 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
             })
         except MKTerminate:
             self._logger.warning("Job was stopped")
-            self._jobstatus.update_status({"state": JobStatusStates.STOPPED})
+            self._jobstatus.update_status({"state": JobStatus.state_stopped})
         except Exception:
             self._logger.error("Exception while preparing background function environment",
                                exc_info=True)
-            self._jobstatus.update_status({"state": JobStatusStates.EXCEPTION})
+            self._jobstatus.update_status({"state": JobStatus.state_exception})
 
     def initialize_environment(self):
         """Setup environment (Logging, Livestatus handles, etc.)"""
@@ -286,7 +285,7 @@ class BackgroundJob(object):
         return self._job_id
 
     def get_title(self):
-        return self._jobstatus.get_status_from_file().get("title", _("Background job"))
+        return self._jobstatus.get_status().get("title", _("Background job"))
 
     def get_work_dir(self):
         return self._work_dir
@@ -298,10 +297,22 @@ class BackgroundJob(object):
         return self.exists()
 
     def is_stoppable(self):
-        return self._jobstatus.get_status_from_file().get("stoppable", True)
+        return self._jobstatus.get_status().get("stoppable", True)
 
-    def _verify_running(self, job_status):
-        if job_status["state"] == JobStatusStates.INITIALIZED:
+    def is_running(self):
+        if not self.exists():
+            return False
+
+        job_status = self.get_status()
+
+        if job_status["state"] in [
+                JobStatus.state_finished,
+                JobStatus.state_exception,
+                JobStatus.state_stopped,
+        ]:
+            return False
+
+        if job_status["state"] == JobStatus.state_initialized:
             # The process was created a millisecond ago
             # The child process however, did not have time to update the statefile with its PID
             # We consider this scenario as OK, if the start time was recent enough
@@ -320,18 +331,11 @@ class BackgroundJob(object):
 
         return False
 
-    def is_active(self):
-        if not self.exists():
-            return False
-
-        job_status = self.get_status()
-        return job_status["is_active"] and self._verify_running(job_status)
-
     def update_status(self, new_data):
         self._jobstatus.update_status(new_data)
 
     def stop(self):
-        if not self.is_active():
+        if not self.is_running():
             raise MKGeneralException(_("Job already finished"))
 
         if not self.is_stoppable():
@@ -339,15 +343,15 @@ class BackgroundJob(object):
 
         self._terminate_processes()
 
-        job_status = self._jobstatus.get_status_from_file()
+        job_status = self._jobstatus.get_status()
         duration = time.time() - job_status["started"]
         self._jobstatus.update_status({
-            "state": JobStatusStates.STOPPED,
+            "state": self._jobstatus.state_stopped,
             "duration": duration,
         })
 
     def delete(self):
-        if not self.is_stoppable() and self.is_active():
+        if not self.is_stoppable() and self.is_running():
             raise MKGeneralException(_("Cannot delete job. Job cannot be stopped."))
 
         self._terminate_processes()
@@ -411,22 +415,18 @@ class BackgroundJob(object):
         return True
 
     def get_status(self):
-        status = self._jobstatus.get_status_from_file()
+        status = self._jobstatus.get_status()
 
         # Some dynamic stuff
-        if status.get("state", "") == JobStatusStates.RUNNING and status["pid"] is not None:
+        if status.get("state", "") == JobStatus.state_running and status["pid"] is not None:
             try:
                 p = psutil.Process(status["pid"])
                 if not self._is_correct_process(status, p):
-                    status["state"] = JobStatusStates.STOPPED
+                    status["state"] = JobStatus.state_stopped
                 else:
                     status["duration"] = time.time() - status["started"]
             except (psutil.NoSuchProcess, psutil.AccessDenied):
-                status["state"] = JobStatusStates.STOPPED
-
-        if "state" not in status:
-            status["state"] = JobStatusStates.INITIALIZED
-            status["started"] = time.time()
+                status["state"] = JobStatus.state_stopped
 
         return status
 
@@ -441,14 +441,14 @@ class BackgroundJob(object):
             cmk.utils.store.release_lock(self._job_initializiation_lock)
 
     def _start(self):
-        if self.is_active():
+        if self.is_running():
             raise BackgroundJobAlreadyRunning(_("Background Job %s already running") % self._job_id)
 
         self._prepare_work_dir()
 
         # Start processes
         initial_status = {
-            "state": JobStatusStates.INITIALIZED,
+            "state": JobStatus.state_initialized,
             "statusfile": str(Path(self._job_id) / BackgroundJobDefines.jobstatus_filename),
             "started": time.time(),
             "duration": 0.0,
@@ -489,8 +489,6 @@ class BackgroundJob(object):
             #daemon.closefrom(3)
             store.release_all_locks()
 
-            self._jobstatus.update_status({"ppid": os.getpid()})
-
             p = self._background_process_class(job_parameters)
             p.start()
         except Exception as e:
@@ -499,15 +497,13 @@ class BackgroundJob(object):
         os._exit(0)
 
 
-class JobStatusStates(Enum):
-    INITIALIZED = "initialized"
-    RUNNING = "running"
-    FINISHED = "finished"
-    STOPPED = "stopped"
-    EXCEPTION = "exception"
-
-
 class JobStatus(object):
+    state_initialized = "initialized"
+    state_running = "running"
+    state_finished = "finished"
+    state_stopped = "stopped"
+    state_exception = "exception"
+
     def __init__(self, work_dir):
         super(JobStatus, self).__init__()
         self._work_dir = work_dir
@@ -517,20 +513,13 @@ class JobStatus(object):
         self._result_message_path = Path(work_dir) / BackgroundJobDefines.result_message_filename
         self._exceptions_path = Path(work_dir) / BackgroundJobDefines.exceptions_filename
 
-    def get_status_from_file(self):
-        if not self._jobstatus_path.exists():  # pylint: disable=no-member
-            data = {}
-            data["state"] = "initialized"
-        else:
-            try:
-                # Read this data with an explicit lock
-                # This prevents a race condition where an empty jobstatus.mk file is read
-                data = store.load_data_from_file(str(self._jobstatus_path), default={}, lock=True)
-            finally:
-                cmk.utils.store.release_lock(str(self._jobstatus_path))
+    def get_status(self):
+        data = store.load_data_from_file(str(self._jobstatus_path), default={})
 
-        data["state"] = JobStatusStates(data["state"])
+        data.setdefault("state", JobStatus.state_initialized)
+        data.setdefault("duration", 0.0)
         data.setdefault("pid", None)
+
         data["loginfo"] = {}
         for field_id, field_path in [("JobProgressUpdate", self._progress_update_path),
                                      ("JobResult", self._result_message_path),
@@ -540,14 +529,6 @@ class JobStatus(object):
             else:
                 data["loginfo"][field_id] = []
 
-        map_substate_to_active = {
-            JobStatusStates.INITIALIZED: True,
-            JobStatusStates.RUNNING: True,
-            JobStatusStates.FINISHED: False,
-            JobStatusStates.STOPPED: False,
-            JobStatusStates.EXCEPTION: False
-        }
-        data["is_active"] = map_substate_to_active[data["state"]]
         return data
 
     def statusfile_exists(self):
@@ -560,8 +541,6 @@ class JobStatus(object):
         if params:
             try:
                 status = store.load_data_from_file(str(self._jobstatus_path), {}, lock=True)
-                if "state" in params:
-                    params["state"] = params["state"].value
                 status.update(params)
                 store.save_mk_file(str(self._jobstatus_path), self._format_value(status))
             finally:
@@ -580,7 +559,8 @@ class BackgroundJobManager(object):
     def get_running_job_ids(self, job_class):
         all_jobs = self.get_all_job_ids(job_class)
         return [
-            job_id for job_id in all_jobs if BackgroundJob(job_id, logger=self._logger).is_active()
+            job_id for job_id in all_jobs
+            if BackgroundJob(job_id, logger=self._logger).is_running()
         ]
 
     # Checks for running jobs in the jobs default basedir
@@ -612,7 +592,7 @@ class BackgroundJobManager(object):
 
                 for entry in all_jobs[-1:0:-1]:
                     job_id, job_status = entry
-                    if job_status["state"] == JobStatusStates.RUNNING:
+                    if job_status["state"] == JobStatus.state_running:
                         continue
 
                     if len(all_jobs) > max_count or (time.time() - job_status["started"] > max_age):

@@ -135,7 +135,7 @@ class ModeBackgroundJobDetails(WatoMode):
 
         job_manager = gui_background_job.GUIBackgroundJobManager()
         job_manager.show_job_details_from_snapshot(job_snapshot)
-        if job_snapshot.is_active():
+        if job_snapshot.is_running():
             html.immediate_browser_redirect(1, "")
 
     def action(self):

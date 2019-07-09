@@ -31,6 +31,7 @@ $(PYTHON3_BUILD): $(PYTHON3_UNPACK)
 	    --prefix="" \
 	    --enable-shared \
 	    --enable-unicode=ucs4 \
+	    --with-ensurepip=install \
 	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
 	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
 	cd $(PYTHON3_DIR) ; $(MAKE) -j2
@@ -46,7 +47,7 @@ $(PYTHON3_INSTALL): $(PYTHON3_BUILD)
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
 	$(MAKE) -j1 -C $(PYTHON3_DIR) DESTDIR=$(DESTDIR)$(OMD_ROOT) install
 # Fix python interpreter
-	$(SED) -i '1s|^#!.*/python3\.7$$|#!/usr/bin/env python3|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,2to3-3.7 easy_install-3.7 idle3.7 pip3 pip3.7 pydoc3.7 pyvenv-3.7)
+	$(SED) -i '1s|^#!.*/python3\.7$$|#!/usr/bin/env python3|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,2to3-3.7 easy_install-3.7 idle3.7 pip3 pip3.7 pydoc3.7 python3.7m-config pyvenv-3.7)
 	$(TOUCH) $(PYTHON3_INSTALL)
 
 Python3-clean:

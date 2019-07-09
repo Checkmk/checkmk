@@ -1,0 +1,161 @@
+throttle(['Gerrit']){
+node {
+    def WORKSPACE = pwd()
+    
+    try {
+        stage("Auschecken: Check_MK") {
+            checkout([$class: 'GitSCM',
+                branches: [
+                    [name: '${GERRIT_PATCHSET_REVISION}']
+                ],
+                browser: [
+                    $class: 'GitWeb',
+                    repoUrl: 'https://review.lan.mathias-kettner.de/git/?p=check_mk.git'
+                ],
+                doGenerateSubmoduleConfigurations: false,
+                extensions: [[
+                    $class: 'CloneOption',
+                    honorRefspec: true,
+                    reference: '/home/gerrit/gerrit_data/git/check_mk.git',
+                    noTags: true,
+                    shallow: false
+                ]],
+                submoduleCfg: [],
+                userRemoteConfigs: [
+                    [
+                        credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6',
+                        url: 'ssh://jenkins@review.lan.mathias-kettner.de:29418/check_mk',
+                        refspec: "${GERRIT_REFSPEC}"
+                    ]
+                ]
+            ])
+        }
+        
+        CHANGED_FILES = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION} | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()
+        GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        CHANGED_PYTHON_FILES = sh(script: "tests/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        print "Changed python files: ${CHANGED_PYTHON_FILES}"
+
+        stage("Python typing") {
+            if (CHANGED_PYTHON_FILES != "") {
+                dir("tests/static") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-mypy"
+                }
+            } else {
+                println "No python files changed. Skipping."
+            }
+        }
+        
+        
+        stage("Python format") {
+            if (CHANGED_PYTHON_FILES != "") {
+                dir('tests') {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-format-python"
+                }
+            } else {
+                println "No python files changed. Skipping."
+            }
+        }
+        
+        stage("Python futurize") {
+            if (CHANGED_PYTHON_FILES != "") {
+                dir('tests') {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-python-futurize"
+                }
+            } else {
+                println "No python files changed. Skipping."
+            }
+        }
+        
+        stage("Python linting") {
+            if (CHANGED_PYTHON_FILES != "") {
+                dir('tests') {
+                    withEnv(["WORKDIR=${WORKSPACE}/tmp",
+                         'PYLINT_ARGS=--output-format=cmk_parseable']) {
+                        sh 'if [ -d "${WORKDIR}" ]; then rm -rf "${WORKDIR}"; fi'
+                        sh 'mkdir "${WORKDIR}"'
+                        sh ". /bauwelt/bin/bw-setup-jenkins-env && make -C .. --what-if Pipfile.lock .venv && make test-pylint"
+                    }
+                }
+            } else {
+                println "No python files changed. Skipping."
+            }
+        }
+        
+        stage("Python Unit tests") {
+            if (CHANGED_PYTHON_FILES != "") {
+                dir('tests') {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit.xml'\""]) {
+                        sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit"
+                    }
+                }
+            } else {
+                println "No python files changed. Skipping."
+            }
+        }
+        
+        stage("Shell format") {
+            dir('tests') {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-format-shell"
+            }
+        }
+        
+        stage("Cppcheck") {
+            dir("livestatus/src") {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+            }
+            dir("enterprise/core/src") {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+            }
+        }
+
+        stage("Clang-Tidy") {
+            dir("livestatus/src") {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+            }
+            dir("enterprise/core/src") {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+            }
+        }
+
+        stage("IWYU") {
+            dir("livestatus/src") {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+            }
+            dir("enterprise/core/src") {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+            }
+        }
+
+        stage("NEB/CMC Unit Tests") {
+            dir("livestatus/src/test") {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+            }
+            dir("enterprise/core/src/test") {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+            }
+        }
+
+    } catch (e) {
+        currentBuild.result = "FAILED"
+        throw e
+    } finally {
+        step([
+            $class: 'WarningsPublisher',
+            canComputeNew: false, 
+            canResolveRelativePaths: false,
+            canRunOnFailed: true,
+            defaultEncoding: '',
+            excludePattern: '',
+            healthy: '',
+            includePattern: '',
+            messagesPattern: '',
+            consoleParsers: [[parserName: 'GNU Make + GNU C Compiler (gcc)'], [parserName: 'Clang (LLVM based)'], [parserName: 'PyLint']],
+            unHealthy: '',
+            defaultEncoding: 'UTF-8',
+            failedTotalAll: '0',
+            unstableTotalAll: '0'
+        ])
+    }
+}
+}

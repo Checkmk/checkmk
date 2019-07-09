@@ -1110,7 +1110,8 @@ td.if_state {
   box-shadow: none;
 }
 
-table.data.single tr.data td.invtree table td.if_state {
+table.data.single tr.data td.invtree table td.if_state,
+table.data tr.data td.if_state {
   &.if_state_up {
     background-color: $theme-color-state-success-background;
   }

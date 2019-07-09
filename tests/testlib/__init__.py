@@ -1547,11 +1547,10 @@ class CMKWebSession(WebSession):
         assert result is None
 
     def get_hosttags(self):
-        result = self._api_request(
-            "webapi.py?action=get_hosttags&output_format=python", {
-                "request": json.dumps({}),
-            },
-            output_format="python")
+        result = self._api_request("webapi.py?action=get_hosttags&output_format=python", {
+            "request": json.dumps({}),
+        },
+                                   output_format="python")
 
         assert isinstance(result, dict)
         assert "aux_tags" in result
@@ -1559,11 +1558,10 @@ class CMKWebSession(WebSession):
         return result
 
     def set_hosttags(self, request):
-        result = self._api_request(
-            "webapi.py?action=set_hosttags&output_format=python", {
-                "request": json.dumps(request),
-            },
-            output_format="python")
+        result = self._api_request("webapi.py?action=set_hosttags&output_format=python", {
+            "request": json.dumps(request),
+        },
+                                   output_format="python")
 
         assert result is None
 

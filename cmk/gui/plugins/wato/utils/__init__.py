@@ -2194,7 +2194,7 @@ class WatoBackgroundProcess(gui_background_job.GUIBackgroundProcess):
     def initialize_environment(self):
         super(WatoBackgroundProcess, self).initialize_environment()
 
-        if self._jobstatus.get_status().get("lock_wato"):
+        if self._jobstatus.get_status_from_file().get("lock_wato"):
             cmk.utils.store.release_all_locks()
             lock_exclusive()
 

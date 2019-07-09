@@ -170,7 +170,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         job_status = self._get_job_status()
 
         html.h3(_("Job status"))
-        if job_status["is_running"]:
+        if job_status["is_active"]:
             html.immediate_browser_redirect(0.8, html.makeuri([]))
 
         job = FetchAgentOutputBackgroundJob(self._request)

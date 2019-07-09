@@ -199,8 +199,9 @@ input.button:not([type=text]),
 input.button:not([type=password]) {
   &[disabled="disabled"], &:disabled {
     &, &:hover, &:active {
-      background-color: #497e95;
-      border-color: #497e95;
+      cursor: initial;
+      background-color: #13d389;
+      filter: grayscale(100%);
     }
 
     &:active {

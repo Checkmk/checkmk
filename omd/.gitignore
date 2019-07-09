@@ -5,7 +5,7 @@
 .werks/.my_ids
 .werks/werks
 ChangeLog
-Python-[0-9].[0-9].[0-9][0-9]/
+Python-[23].[0-9].[0-9]*/
 bin/
 boost_[0-9]_[0-9][0-9]_[0-9]/
 build-helper/
@@ -20,7 +20,7 @@ omd-*.tar.gz
 omd.spec
 openhardwaremonitor-[0-9].[0-9].[0-9]/
 patch-stamp
-python-modules-1.[67].0i1.cme/
+python*-modules-1.[67].0i1.cme/
 re2-20[12][0-9]-[01][0-9]-[0-3][0-9]/
 rpm.buildroot
 rpm.topdir

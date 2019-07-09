@@ -599,7 +599,7 @@ def test_bulk_discovery_unknown_host(web):
 def _wait_for_bulk_discovery_job(web):
     def job_completed():
         status = web.bulk_discovery_status()
-        return status["job"]["state"] != "initialized" and status["is_running"] is False
+        return status["job"]["state"] != "initialized" and status["is_active"] is False
 
     wait_until(job_completed, timeout=15, interval=1)
 
@@ -613,7 +613,7 @@ def test_bulk_discovery_start_with_defaults(web, local_test_hosts):
     _wait_for_bulk_discovery_job(web)
 
     status = web.bulk_discovery_status()
-    assert status["is_running"] is False
+    assert status["is_active"] is False
     assert status["job"]["state"] == "finished"
     assert "discovery successful" in status["job"]["result_msg"]
     assert "discovery started" in status["job"]["output"]
@@ -636,7 +636,7 @@ def test_bulk_discovery_start_with_parameters(web, local_test_hosts):
     _wait_for_bulk_discovery_job(web)
 
     status = web.bulk_discovery_status()
-    assert status["is_running"] is False
+    assert status["is_active"] is False
     assert status["job"]["state"] == "finished"
 
 
@@ -654,7 +654,7 @@ def test_bulk_discovery_start_multiple_with_subdir(web, local_test_hosts):
     _wait_for_bulk_discovery_job(web)
 
     status = web.bulk_discovery_status()
-    assert status["is_running"] is False
+    assert status["is_active"] is False
     assert status["job"]["state"] == "finished"
 
 

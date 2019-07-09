@@ -93,7 +93,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
 
         super(RenameHostsBackgroundJob, self).__init__(self.job_prefix, **kwargs)
 
-        if self.is_running():
+        if self.is_active():
             raise MKGeneralException(_("Another renaming operation is currently in progress"))
 
     def _back_url(self):

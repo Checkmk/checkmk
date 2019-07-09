@@ -228,10 +228,10 @@ plugins:
 
     async_start: yes # start plugins asynchronous, this is normal mode. 
 
-    # folders are scanned top -> down
+    # folders are scanned left -> right, order is important
     # duplicated files will be removed
-    folders: ['@core', '@user' ]       # folder in ProgramData/CheckMK/agent/plugins
-
+    folders: ['@user', '@core' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
+    
     # example: mk_inventory.vbs
     # plugin is executed asynchronous
     # and is only updated every 3600 seconds

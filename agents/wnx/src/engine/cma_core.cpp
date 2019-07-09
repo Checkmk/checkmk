@@ -269,10 +269,12 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
         });
 
     } else {
-        //
-        XLOG::d("Wait on Timeout or Broken {}", path().u8string());
+        // process was either stopped or failed(timeout)
+        auto failed = minibox_.failed();
         unregisterProcess();
-        failures_++;
+        XLOG::d("Sync Plugin stopped '{}' Stopped: {} Failed: {}",
+                path().u8string(), !failed, failed);
+        if (failed) failures_++;
     }
 
     minibox_.clean();
@@ -343,10 +345,12 @@ void PluginEntry::threadCore(const std::wstring& Id) {
                         wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
         });
     } else {
-        // timeout or break signaled
+        // process was either stopped or failed(timeout)
+        auto failed = minibox_.failed();
         unregisterProcess();
-        XLOG::t("Failed waiting or Broken in {}", path().u8string());
-        failures_++;
+        XLOG::d("Async Plugin stopped '{}' Stopped: {} Failed: {}",
+                path().u8string(), !failed, failed);
+        if (failed) failures_++;
     }
 
     XLOG::d()("Thread OFF: {}", path().u8string());
@@ -384,14 +388,14 @@ std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
     if (failed()) return {};
 
     // check is valid parameters
-    if (cache_age_ < cma::cfg::kMinimumCacheAge) {
+    if (cacheAge() < cma::cfg::kMinimumCacheAge) {
         XLOG::l("Plugin '{}' requested to be async, but has no valid cache age",
                 path().u8string());
         return {};
     }
     // check data are ready and new enough
     bool data_ok = false;
-    seconds allowed_age(cache_age_);
+    seconds allowed_age(cacheAge());
     auto data_age = getDataAge();
     bool going_to_be_old = false;
     {
@@ -433,14 +437,14 @@ void PluginEntry::restartIfRequired() {
     using namespace std::chrono;
 
     // check is valid parameters
-    if (cache_age_ < cma::cfg::kMinimumCacheAge) {
+    if (cacheAge() < cma::cfg::kMinimumCacheAge) {
         XLOG::l(
             "Plugin '{}' requested to be async restarted, but has no valid cache age",
             path().u8string());
         return;
     }
     // check data are ready and new enough
-    seconds allowed_age(cache_age_);
+    seconds allowed_age(cacheAge());
     auto data_age = getDataAge();
     {
         std::lock_guard l(data_lock_);
@@ -464,7 +468,7 @@ void PluginEntry::restartIfRequired() {
 // after starting box
 bool PluginEntry::registerProcess(uint32_t Id) {
     if (failed()) {
-        XLOG::d("RETRY FAILED!!!!!!!!!!! {}", retry_, failed());
+        XLOG::d("RETRY FAILED!!!!!!!!!!! {}", retry(), failed());
         process_id_ = 0;
     } else {
         process_id_ = Id;
@@ -496,7 +500,7 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
     auto diff =
         std::chrono::duration_cast<std::chrono::seconds>(now - start_time_)
             .count();
-    if (diff > timeout_) {
+    if (diff > static_cast<int64_t>(timeout())) {
         XLOG::d("Process '{}' timeout in {} when set {}", path().u8string(),
                 diff, timeout());
     } else if (Data.empty()) {
@@ -512,12 +516,12 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
     data_time_ = std::chrono::steady_clock::now();
     auto legacy_time = time(0);
 
-    if (cache_age_ > cma::cfg::kMinimumCacheAge) {
+    if (cacheAge() > cma::cfg::kMinimumCacheAge) {
         data_.clear();
         if (local_)
             HackPluginDataRemoveCR(data_, Data);
         else
-            HackPluginDataWithCacheInfo(data_, Data, legacy_time, cache_age_);
+            HackPluginDataWithCacheInfo(data_, Data, legacy_time, cacheAge());
     } else  // "sync plugin"
     {
         // or "failed to hack"
@@ -588,11 +592,16 @@ void ApplyExeUnitToPluginMap(
         auto p = out.second.path();
 
         for (auto& unit : Units) {
-            if (MatchNameOrAbsolutePath(unit.pattern(), p)) {
-                // string is match stop scanning exe units
+            if (!MatchNameOrAbsolutePath(unit.pattern(), p)) continue;
+
+            // string is match stop scanning exe units
+            if (unit.run())
                 out.second.applyConfigUnit(unit, Local);
-                break;
+            else {
+                XLOG::d.t("Run is 'NO' for the '{}'", p.u8string());
+                out.second.removeFromExecution();
             }
+            break;
         }
     }
 }
@@ -608,6 +617,11 @@ void RemoveDuplicatedPlugins(PluginMap& Out, bool CheckExists) {
     std::error_code ec;
     for (auto it = Out.begin(); it != Out.end();) {
         fs::path p = it->first;
+
+        if (it->second.path().empty()) {
+            it = Out.erase(it);
+            continue;
+        }
 
         if (CheckExists && !fs::exists(p, ec)) {
             it = Out.erase(it);

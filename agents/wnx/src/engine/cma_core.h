@@ -243,6 +243,8 @@ public:
         return false;
     }
 
+    bool const failed() const noexcept { return failed_; }
+
     // add content of file to the Buf
     template <typename T>
     bool appendFileContent(T& Buf, HANDLE h, size_t Count) const noexcept {
@@ -305,6 +307,8 @@ public:
                     continue;
                 }
             }
+
+            if (Timeout < kGrane) failed_ = true;
 
             if (KillWhatLeft) {
                 process_->kill(true);
@@ -449,7 +453,8 @@ private:
     wtools::AppRunner* process_;  // #TODO ? replace with unique_ptr ?
     uint32_t proc_id_;
     std::condition_variable cv_stop_;
-    bool stop_set_;
+    bool stop_set_ = false;
+    bool failed_ = false;
 };
 
 }  // namespace cma
@@ -509,7 +514,7 @@ public:
 
     auto failures() const { return failures_; }
 
-    auto failed() const { return retry_ && (failures_ > retry_); }
+    auto failed() const { return retry() && (failures_ > retry()); }
 
     auto running() const {
         std::lock_guard lk(lock_);
@@ -522,13 +527,13 @@ public:
 
     // looks as not used
     std::vector<char> cache() const {
-        if (cache_age_ == 0) return {};
+        if (cacheAge() == 0) return {};
 
         auto now = std::chrono::steady_clock::now();
         auto diff =
             std::chrono::duration_cast<std::chrono::seconds>(now - data_time_)
                 .count();
-        if (diff > cache_age_) return {};
+        if (diff > cacheAge()) return {};
 
         std::lock_guard l(data_lock_);
         return data_;
@@ -548,21 +553,22 @@ public:
 
     template <typename T>
     void applyConfigUnit(const T& Unit, bool Local) {
-        bool reset_failure = false;
-
-        if (retry_ != Unit.retry() || cache_age_ != Unit.cacheAge() ||
-            timeout_ != Unit.timeout() || async_ != Unit.async()) {
-            XLOG::t("Important params changed, reset retry");
-            reset_failure = true;
+        if (retry() != Unit.retry() || timeout() != Unit.timeout()) {
+            XLOG::t("Important params changed, reset retry '{}'",
+                    path_.u8string());
+            failures_ = 0;
         }
 
         retry_ = Unit.retry();
         cache_age_ = Unit.cacheAge();
         timeout_ = Unit.timeout();
-        if (async_ != Unit.async()) {
+        bool planned_async = Unit.async() || Unit.cacheAge() > 0;
+
+        if (defined() && async() != planned_async) {
             XLOG::d.t("Plugin '{}' changes this mode to '{}'",
                       path().u8string(), Unit.async() ? "ASYNC" : "SYNC");
-            if (async_) {
+            failures_ = 0;
+            if (async()) {
                 // clearing data from async mode
                 async_ = false;
                 breakAsync();
@@ -571,19 +577,15 @@ public:
                 data_.clear();
             }
         }
-        async_ = Unit.async();
-
-        // post processing
-        if (!async_ && cache_age_) {
-            XLOG::d.t("Plugin '{}' forced as async", path().u8string());
-            async_ = true;
+        async_ = planned_async;
+        if (async()) {
+            if (cacheAge() < cma::cfg::kMinimumCacheAge)
+                cache_age_ = cma::cfg::kMinimumCacheAge;
+        } else {
+            cache_age_ = 0;
         }
-
-        if (async_ && cache_age_ < cma::cfg::kMinimumCacheAge)
-            cache_age_ = cma::cfg::kMinimumCacheAge;
-
-        if (reset_failure) failures_ = 0;
         local_ = Local;
+        defined_ = true;
     }
 
     bool isGoingOld() const {
@@ -615,6 +617,8 @@ public:
     // with cache age
     bool isRealAsync() const noexcept { return async() || cacheAge(); }
 
+    void removeFromExecution() noexcept { path_ = ""; }
+
 protected:
     auto getDataAge() const {
         auto current_time = std::chrono::steady_clock::now();
@@ -638,9 +642,9 @@ protected:
 
     uint32_t process_id_ = 0;
     std::chrono::steady_clock::time_point start_time_;  // for timeout
-    int failures_;
+    int failures_ = 0;
 
-    bool local_;  // if set then we have deal with local groups
+    bool local_ = false;  // if set then we have deal with local groups
 
     // async part
     mutable std::mutex data_lock_;  // cache() and time to control
@@ -651,12 +655,13 @@ protected:
 
     mutable std::mutex lock_;  // thread control
     std::unique_ptr<std::thread> main_thread_;
-    bool thread_on_;          // get before start thread, released inside thread
-    bool data_is_going_old_;  // when plugin finds data obsolete
+    bool thread_on_ = false;  // get before start thread, released inside thread
+    bool data_is_going_old_ = false;  // when plugin finds data obsolete
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class PluginTest;
     FRIEND_TEST(PluginTest, ApplyConfig);
+    FRIEND_TEST(PluginTest, TimeoutCalc);
 #endif
 };
 }  // namespace cma

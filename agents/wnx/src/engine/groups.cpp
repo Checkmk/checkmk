@@ -225,7 +225,7 @@ std::string ReplacePredefinedMarkers(const std::string Path) {
 }
 
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
-                          const std::vector<YAML::Node>& Yaml) {
+                          const std::vector<YAML::Node>& Yaml) noexcept {
     for (const auto& entry : Yaml) {
         try {
             // --exception control start --
@@ -238,9 +238,17 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
                 entry[vars::kPluginTimeout].as<int>(kDefaultPluginTimeout);
             auto cache_age =
                 entry[vars::kPluginCacheAge].as<int>(async ? 3600 : 0);
+            if (cache_age && !async) {
+                XLOG::d.t(
+                    "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
+                    pattern, cache_age);
+                async = true;
+            }
 
-            ExeUnit.emplace_back(pattern, async, timeout, cache_age, retry,
-                                 run);
+            if (async)
+                ExeUnit.emplace_back(pattern, timeout, cache_age, retry, run);
+            else
+                ExeUnit.emplace_back(pattern, timeout, retry, run);
             // --exception control end  --
         } catch (const std::exception& e) {
             XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,

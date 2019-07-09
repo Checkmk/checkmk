@@ -111,7 +111,7 @@ class RulespecCheckgroupParametersSystemdServices(CheckParameterRulespecWithItem
                      size=40,
                      mode=RegExp.infix,
                  ),
-                 title=_("Exclude service with matching provided regex pattern"),
+                 title=_("Exclude services by matching provided regex patterns"),
                  help=_(
                      '<p>You can optionally define one or multiple regular expressions'
                      'where a matching case will result in the exclusion of the concerning service(s).'

@@ -628,7 +628,7 @@ class Site(object):
                 assert os.path.exists("/omd/sites/%s" % self.id)
 
                 self._set_number_of_helpers()
-                self._enabled_liveproxyd_debug_logging()
+                #self._enabled_liveproxyd_debug_logging()
                 self._enable_mkeventd_debug_logging()
 
             self._install_test_python_modules()

@@ -669,3 +669,29 @@ table.cmc_stats {
     margin-bottom: 5px;
   }
 }
+
+/*
+ * Snapin dashlets in dashboard
+ */
+body.main {
+  #side_content {
+    top: 0;
+    height: auto;
+    padding-top: 4px;
+    padding-left: 4px;
+  }
+
+  div.snapin:last-child {
+    margin-bottom: 0;
+  }
+
+  div.snapin {
+    padding: 0;
+    margin: 0;
+  }
+
+  body.side {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}

@@ -544,7 +544,9 @@ export function listofmultiple_add(varprefix) {
 
     // Update select2 to make the disabled attribute be recognized by the dropdown
     // (See https://github.com/select2/select2/issues/3347)
-    $(choice).select2();
+    var choice_select2 = $(choice).select2();
+    // Unselect the choosen option
+    choice_select2.val(null).trigger("change");
 
     // make the filter visible
     var row = document.getElementById(varprefix + "_" + ident + "_row");
@@ -552,9 +554,6 @@ export function listofmultiple_add(varprefix) {
 
     // Change the field names to used ones
     listofmultiple_toggle_fields(row, varprefix, true);
-
-    // Set value emtpy after adding one element
-    choice.value = "";
 
     // Add it to the list of active elements
     var active = document.getElementById(varprefix + "_active");

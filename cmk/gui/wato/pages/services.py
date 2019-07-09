@@ -44,7 +44,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
-from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates  # pylint: disable=unused-import
+from cmk.gui.background_job import BackgroundProcessInterface, JobStatus  # pylint: disable=unused-import
 from cmk.gui.gui_background_job import job_registry
 
 from cmk.gui.pages import page_registry, AjaxPage
@@ -335,8 +335,8 @@ def _get_check_table_from_remote(request):
 
         return DiscoveryResult(
             job_status={
-                "is_active": False,
-                "state": JobStatusStates.INITIALIZED,
+                "is_running": False,
+                "state": JobStatus.state_initialized,
             },
             check_table=check_table,
             check_table_created=time.time(),
@@ -382,13 +382,13 @@ def execute_discovery_job(request):
     based on the currently cached data"""
     job = ServiceDiscoveryBackgroundJob(request.host.name())
 
-    if not job.is_active() and request.options.action in [
+    if not job.is_running() and request.options.action in [
             DiscoveryAction.SCAN, DiscoveryAction.REFRESH
     ]:
         job.set_function(job.discover, request)
         job.start()
 
-    if job.is_active() and request.options.action == DiscoveryAction.STOP:
+    if job.is_running() and request.options.action == DiscoveryAction.STOP:
         job.stop()
 
     r = job.get_result(request)
@@ -472,7 +472,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         # tupe: (StartDiscoveryRequest) -> DiscoveryResult
         """Executed from the outer world to report about the job state"""
         job_status = self.get_status()
-        job_status["is_active"] = self.is_active()
+        job_status["is_running"] = self.is_running()
 
         # TODO: Use the correct time. This is difficult because cmk_base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
@@ -548,7 +548,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         page_code = renderer.render(discovery_result, request)
 
         return {
-            "is_finished": not self._is_active(discovery_result),
+            "is_finished": not self._is_running(discovery_result),
             "job_state": discovery_result.job_status["state"],
             "message": self._get_status_message(discovery_result),
             "body": page_code,
@@ -559,8 +559,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     def _get_status_message(self, discovery_result):
         # type: (DiscoveryResult) -> Optional[Text]
-        if discovery_result.job_status["state"] == JobStatusStates.INITIALIZED:
-            if self._is_active(discovery_result):
+        if discovery_result.job_status["state"] == JobStatus.state_initialized:
+            if self._is_running(discovery_result):
                 return _("Initializing discovery...")
             return _("No discovery information available. Please perform a full scan.")
 
@@ -570,19 +570,19 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "duration"]
         finished_txt = cmk.utils.render.date_and_time(finished_time)
 
-        if discovery_result.job_status["state"] == JobStatusStates.RUNNING:
+        if discovery_result.job_status["state"] == JobStatus.state_running:
             return _("%s running for %s") % (job_title, duration_txt)
 
-        if discovery_result.job_status["state"] == JobStatusStates.EXCEPTION:
+        if discovery_result.job_status["state"] == JobStatus.state_exception:
             return _("%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)") % \
                                 (job_title, duration_txt, "\n".join(discovery_result.job_status["loginfo"]["JobException"]))
 
         messages = []
-        if discovery_result.job_status["state"] == JobStatusStates.STOPPED:
+        if discovery_result.job_status["state"] == JobStatus.state_stopped:
             messages.append(
                 _("%s was stopped after %s at %s.") % (job_title, duration_txt, finished_txt))
 
-        elif discovery_result.job_status["state"] == JobStatusStates.FINISHED:
+        elif discovery_result.job_status["state"] == JobStatus.state_finished:
             messages.append(
                 _("%s finished after %s at %s.") % (job_title, duration_txt, finished_txt))
 
@@ -644,13 +644,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             and html.transaction_manager.check_transaction():
             return False
 
-        if self._is_active(previous_discovery_result):
+        if self._is_running(previous_discovery_result):
             return False
 
         return True
 
-    def _is_active(self, discovery_result):
-        return discovery_result.job_status["is_active"]
+    def _is_running(self, discovery_result):
+        return discovery_result.job_status["is_running"]
 
     def _get_check_table(self):
         # type: () -> DiscoveryResult
@@ -938,7 +938,7 @@ class DiscoveryPageRenderer(object):
 
     def _show_discovery_details(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> None
-        if not discovery_result.check_table and self._is_active(discovery_result):
+        if not discovery_result.check_table and self._is_running(discovery_result):
             html.show_info(_("Discovered no service yet."))
             return
 
@@ -990,8 +990,8 @@ class DiscoveryPageRenderer(object):
             html.hidden_fields()
             html.end_form()
 
-    def _is_active(self, discovery_result):
-        return discovery_result.job_status["is_active"]
+    def _is_running(self, discovery_result):
+        return discovery_result.job_status["is_running"]
 
     def _get_group_header(self, entry):
         map_icons = {
@@ -1033,7 +1033,7 @@ class DiscoveryPageRenderer(object):
                 "fix_all",
                 _("Fix all missing/vanished"),
                 self._start_js_call(fix_all_options),
-                disabled=self._is_active(discovery_result),
+                disabled=self._is_running(discovery_result),
             )
 
         if already_has_services \
@@ -1046,7 +1046,7 @@ class DiscoveryPageRenderer(object):
                 "refresh",
                 _("Automatic refresh (tabula rasa)"),
                 self._start_js_call(refresh_options),
-                disabled=self._is_active(discovery_result),
+                disabled=self._is_running(discovery_result),
             )
 
         scan_options = self._options._replace(action=DiscoveryAction.SCAN)
@@ -1054,14 +1054,14 @@ class DiscoveryPageRenderer(object):
             "scan",
             _("Full scan"),
             self._start_js_call(scan_options),
-            disabled=self._is_active(discovery_result),
+            disabled=self._is_running(discovery_result),
         )
 
         if already_has_services:
             self._show_checkbox_button(discovery_result)
             self._show_parameters_button(discovery_result)
 
-        if self._is_active(discovery_result):
+        if self._is_running(discovery_result):
             stop_options = self._options._replace(action=DiscoveryAction.STOP)
             html.jsbutton(
                 "stop",
@@ -1082,7 +1082,7 @@ class DiscoveryPageRenderer(object):
             "show_checkboxes",
             checkbox_title,
             self._start_js_call(checkbox_options),
-            disabled=self._is_active(discovery_result),
+            disabled=self._is_running(discovery_result),
         )
 
     def _show_parameters_button(self, discovery_result):
@@ -1098,7 +1098,7 @@ class DiscoveryPageRenderer(object):
             "show_parameters",
             params_title,
             self._start_js_call(params_options),
-            disabled=self._is_active(discovery_result),
+            disabled=self._is_running(discovery_result),
         )
 
     def _start_js_call(self, options, request_vars=None):
@@ -1162,7 +1162,7 @@ class DiscoveryPageRenderer(object):
                                     "update_source": source,
                                 }),
             title=_("Move %s to %s services") % (label, target),
-            disabled=self._is_active(discovery_result),
+            disabled=self._is_running(discovery_result),
         )
 
     def _bulk_action_colspan(self):
@@ -1267,7 +1267,7 @@ class DiscoveryPageRenderer(object):
             return
 
         css_classes = ["service_checkbox"]
-        if self._is_active(discovery_result):
+        if self._is_running(discovery_result):
             css_classes.append("disabled")
 
         table.cell(
@@ -1290,7 +1290,7 @@ class DiscoveryPageRenderer(object):
             return
 
         button_classes = ["service_button"]
-        if self._is_active(discovery_result):
+        if self._is_running(discovery_result):
             button_classes.append("disabled")
 
         table_source, check_type, checkgroup, item, _paramstring, _params, \

@@ -16,9 +16,9 @@ Python3-install: $(PYTHON3_INSTALL)
 
 # Environment variables
 ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
-	PYTHON_ENABLE_OPTIMIZATIONS := --enable-optimizations
+PYTHON_ENABLE_OPTIMIZATIONS := --enable-optimizations
 else
-	PYTHON_ENABLE_OPTIMIZATIONS :=
+PYTHON_ENABLE_OPTIMIZATIONS :=
 endif
 
 $(PYTHON3_BUILD): $(PYTHON3_UNPACK)
@@ -45,9 +45,8 @@ $(PYTHON3_INSTALL): $(PYTHON3_BUILD)
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
 	$(MAKE) -j1 -C $(PYTHON3_DIR) DESTDIR=$(DESTDIR)$(OMD_ROOT) install
-# Cleanup some unused stuff
-	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/idle
-	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/smtpd.py
+# Fix python interpreter
+	$(SED) -i '1s|^#!.*/python3\.7$$|#!/usr/bin/env python3|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,2to3-3.7 easy_install-3.7 idle3.7 pip3 pip3.7 pydoc3.7 pyvenv-3.7)
 	$(TOUCH) $(PYTHON3_INSTALL)
 
 Python3-clean:

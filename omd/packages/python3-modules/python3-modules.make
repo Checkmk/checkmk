@@ -17,7 +17,7 @@ PYTHON3_MODULES_LIST :=
 # Modules needed because of own packed python (would be available in OS)
 PYTHON3_MODULES_LIST += setuptools-41.0.1.zip  # needed by rrdtool bindings
 PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz
-PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz 
+PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz
 
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_BUILD) $(FREETDS_BUILD) $(PYTHON3_MODULES_UNPACK)
 	set -e ; cd $(PYTHON3_MODULES_DIR) ; \
@@ -87,8 +87,8 @@ $(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_BUILD)
 		    --install-purelib=/lib/python3 ; \
 		cd .. ; \
 	    done
-# Cleanup some unwanted files (example scripts)
-	rm -f $(DESTDIR)$(OMD_ROOT)/bin/*.py || true
+# Fix python interpreter
+	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,easy_install easy_install-3.7)
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES)-skel:

@@ -1839,6 +1839,13 @@ class DictHostTagCondition(Transform):
 
     def _get_tag_group_choice(self, tag_group):
         tag_choices = tag_group.get_tag_choices()
+
+        if len(tag_choices) == 1:
+            return self._single_tag_choice(tag_group_id=tag_group.id,
+                                           choice_title=tag_group.choice_title,
+                                           tag_id=tag_group.tags[0].id,
+                                           title=tag_group.tags[0].title)
+
         tag_id_choice = ListOf(
             valuespec=DropdownChoice(choices=tag_choices,),
             style=ListOf.Style.FLOATING,
@@ -1878,20 +1885,28 @@ class DictHostTagCondition(Transform):
             seen.add(tag_id)
 
     def _get_aux_tag_choice(self, aux_tag):
-        return (aux_tag.id,
-                Tuple(
-                    title=aux_tag.choice_title,
-                    elements=[
-                        self._is_or_is_not(label=aux_tag.choice_title + " ",),
-                        FixedValue(
-                            aux_tag.id,
-                            title=_u(aux_tag.title),
-                            totext=_u(aux_tag.title),
-                        )
-                    ],
-                    show_titles=False,
-                    orientation="horizontal",
-                ))
+        return self._single_tag_choice(tag_group_id=aux_tag.id,
+                                       choice_title=aux_tag.choice_title,
+                                       tag_id=aux_tag.id,
+                                       title=aux_tag.title)
+
+    def _single_tag_choice(self, tag_group_id, choice_title, tag_id, title):
+        return (
+            tag_group_id,
+            Tuple(
+                title=choice_title,
+                elements=[
+                    self._is_or_is_not(label=choice_title + " ",),
+                    FixedValue(
+                        tag_id,
+                        title=_u(title),
+                        totext=_u(title),
+                    )
+                ],
+                show_titles=False,
+                orientation="horizontal",
+            ),
+        )
 
     def _tag_choice(self, tag_group):
         return Tuple(

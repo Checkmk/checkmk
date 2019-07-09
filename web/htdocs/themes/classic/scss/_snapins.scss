@@ -559,3 +559,113 @@ div.spacertop {
         font-size: 9pt;
     }
 }
+
+/*
+ * Micro Core Stats (CMC) snapin
+ */
+#snapin_cmc_stats {
+    color: white;
+
+  select {
+    margin-bottom: 2px;
+  }
+}
+
+table.cmc_stats {
+  width: 228px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
+  border-style: solid;
+  border-width: 1.5px;
+  border-radius: 2px;
+
+  td {
+    padding: 0 2px;
+    font-size: 11px;
+
+    &.right {
+      padding: 0;
+      padding-right: 1px;
+      text-align: right;
+      white-space: nowrap;
+    }
+  }
+}
+
+/*
+ * Reports snapin
+ */
+#snapin_reports {
+  i {
+    color: #000;
+  }
+
+  input {
+    padding: 3px;
+    font-size: 9px;
+    text-align: center;
+  }
+
+  div.timerange {
+    margin-bottom: 10px;
+    color: #fff;
+
+    table {
+      display: inline-block;
+
+      td {
+	font-size: 11px;
+
+	&.tuple_td:nth-of-type(2) {
+	  padding-left: 8px;
+	}
+
+	&.tuple_left {
+	  padding-right: 4px;
+	}
+      }
+
+      span.title {
+        padding: 0;
+      }
+    }
+  }
+
+  select {
+    float: left;
+    width: 230px;
+    margin-top: 3px;
+    margin-bottom: 5px;
+  }
+}
+
+/*
+ * Snapin dashlets in dashboard
+ */
+body.main {
+  #side_content {
+    top: 0;
+    height: auto;
+    padding-top: 4px;
+    padding-left: 4px;
+  }
+
+  div.snapin:last-child {
+    margin-bottom: 0;
+  }
+
+  div.snapin div.content {
+    background-color: #508aa1;
+    background-image: none;
+  }
+
+  div.snapin {
+    padding: 0;
+    margin: 0;
+  }
+
+  body.side {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}

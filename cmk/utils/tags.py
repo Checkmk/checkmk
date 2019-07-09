@@ -406,8 +406,8 @@ class TagConfig(object):
         for tag_group in self.tag_groups:
             response.update([(tag_group.id, tag) for tag in tag_group.get_tag_ids()])
 
-        response.update(
-            [(aux_tag_id, aux_tag_id) for aux_tag_id in self.aux_tag_list.get_tag_ids()])
+        response.update([(aux_tag_id, aux_tag_id) for aux_tag_id in self.aux_tag_list.get_tag_ids()
+                        ])
         return response
 
     def get_tag_or_aux_tag(self, tag_id):

@@ -1,0 +1,13 @@
+Title: Fix blocked liveproxy after executing livestatus commands
+Level: 2
+Component: liveproxy
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1562656166
+Class: fix
+
+The 1.6.0b3 release introduced an regression which made the liveproxyd treat
+channels to sites as blocked after executing a livestatus command. When
+executing multiple commands this resulted in a busy site and finally GUI
+timeouts, because all channels were blocked.

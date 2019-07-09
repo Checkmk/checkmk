@@ -14,6 +14,8 @@
 .metadata
 .mypy_cache
 .ropeproject
+.venv-2.7
+.venv-3.7
 GPATH
 GRTAGS
 GTAGS
@@ -41,6 +43,8 @@ depcomp
 install-sh
 missing
 mk-livestatus-*.tar.gz
+Pipfile
+Pipfile.lock
 stamp-h1
 tags
 tests/web/data/*

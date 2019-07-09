@@ -508,32 +508,44 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
-Pipfile.lock: Pipfile
-	$(PIPENV) lock
-# TODO: Can be removed if pipenv fixes this issue.
+# TODO: The line: sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
+# can be removed if pipenv fixes this issue.
 # See: https://github.com/pypa/pipenv/issues/3140
 #      https://github.com/pypa/pipenv/issues/3026
 # The recent pipenv version 2018.10.13 has a bug that places wrong markers in the
 # Pipfile.lock. This leads to an error when installing packages with this
 # markers and prints an error message. Example:
 # Ignoring pyopenssl: markers 'extra == "security"' don't match your environment
-	sed -i "/\"markers\": \"extra == /d" Pipfile.lock
 # TODO: pipenv and make don't really cooperate nicely: Locking alone already
 # creates a virtual environment with setuptools/pip/wheel. This could lead to a
 # wrong up-to-date status of it later, so let's remove it here. What we really
 # want is a check if the contents of .venv match the contents of Pipfile.lock.
 # We should do this via some move-if-change Kung Fu, but for now rm suffices.
+virtual-envs/%/Pipfile.lock: virtual-envs/%/Pipfile
+	cd virtual-envs/$*/; \
+	$(PIPENV) lock; \
+	sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
 	rm -rf .venv
 
-.venv: Pipfile.lock
 # Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
 # mode installs the dependencies exactly as speciefied in the Pipfile.lock.
 # This is extremely fast since the dependencies do not have to be resolved.
-	$(RM) -r .venv
 # Cleanup partially created pipenv. This makes us able to automatically repair
 # broken virtual environments which may have been caused by network issues.
-	($(PIPENV) sync --dev) || ($(RM) -r .venv ; exit 1)
+virtual-envs/%/.venv: virtual-envs/%/Pipfile.lock
+	cd virtual-envs/$*/; \
+	$(RM) -r .venv; \
+	($(PIPENV) sync --dev) || ($(RM) -r .venv ; exit 1); \
 	touch .venv
+
+.venv-%: virtual-envs/%/.venv
+	rm -rf {Pipfile,Pipfile.lock,.venv*}
+	ln -s virtual-envs/$*/{Pipfile,Pipfile.lock,.venv} .
+	touch $@
+
+# This is for compatibility: The target .venv should always refer to 2.7
+# .venv is a PHONY target, so it will be remade, even if .venv is 'up to date'
+.venv: .venv-2.7
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

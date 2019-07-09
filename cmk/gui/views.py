@@ -597,7 +597,7 @@ def _register_host_tag_painters():
             "columns": ["host_custom_variables"],
         }
         cls = type(
-            "HostTagPainter%s" % tag_group.id.title(),
+            "HostTagPainter%s" % str(tag_group.id).title(),
             (Painter,),
             {
                 "_ident": ident,
@@ -622,7 +622,7 @@ def _paint_host_tag(row, tgid):
 def _register_host_tag_sorters():
     for tag_group in config.tags.tag_groups:
         register_sorter(
-            "host_tag_" + tag_group.id, {
+            "host_tag_" + str(tag_group.id), {
                 "_tag_group_id": tag_group.id,
                 "title": _("Host tag:") + ' ' + tag_group.title,
                 "columns": ["host_custom_variables"],

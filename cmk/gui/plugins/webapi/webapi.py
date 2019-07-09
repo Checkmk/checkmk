@@ -805,22 +805,23 @@ class APICallHosttags(APICallCollection):
             validate_config_hash(request["configuration_hash"], hosttags_dict)
             del request["configuration_hash"]
 
-        # Check for conflicts with existing configuration
-        # Tags may be either specified grouped in a host/folder configuration, e.g agent/cmk-agent,
-        # or specified as the plain id in rules. We need to check both variants..
-        used_tags = self._get_used_grouped_tags()
-        used_tags.update(self._get_used_rule_tags())
-
         changed_hosttags_config = cmk.utils.tags.TagConfig()
         changed_hosttags_config.parse_config(request)
         changed_hosttags_config.validate_config()
 
-        new_tags = changed_hosttags_config.get_tag_ids()
-        new_tags.update(changed_hosttags_config.get_tag_ids_with_group_prefix())
+        self._verify_no_used_tags_missing(changed_hosttags_config)
 
-        # Remove the builtin hoststags from the list of used_tags
-        builtin_config = cmk.utils.tags.BuiltinTagConfig()
-        used_tags.discard(builtin_config.get_tag_ids_with_group_prefix())
+        tag_config_file.save(changed_hosttags_config.get_dict_format())
+        watolib.add_change("edit-hosttags", _("Updated host tags through Web-API"))
+
+    def _verify_no_used_tags_missing(self, changed_hosttags_config):
+        # Check for conflicts with existing configuration
+        used_tags = self._get_used_tags_from_hosts_and_folders()
+        used_tags.update(self._get_used_tags_from_rules())
+        # Skip builtin tags during validation
+        used_tags.difference_update(cmk.utils.tags.BuiltinTagConfig().get_tag_ids_by_group())
+
+        new_tags = changed_hosttags_config.get_tag_ids_by_group()
 
         missing_tags = used_tags - new_tags
         if missing_tags:
@@ -828,37 +829,39 @@ class APICallHosttags(APICallCollection):
                 None,
                 _("Unable to apply new hosttag configuration. The following tags "
                   "are still in use, but not mentioned in the updated "
-                  "configuration: %s") % ", ".join(missing_tags))
+                  "configuration: %s") % ", ".join([":".join(p) for p in missing_tags]))
 
-        tag_config_file.save(changed_hosttags_config.get_dict_format())
-        watolib.add_change("edit-hosttags", _("Updated host tags through Web-API"))
-
-    def _get_used_grouped_tags(self):
-        used_tags = set([])
+    def _get_used_tags_from_hosts_and_folders(self):
+        used_tags = set()
 
         # This requires a lot of computation power..
         for folder in watolib.Folder.all_folders().values():
             for attr_name, value in folder.attributes().items():
                 if attr_name.startswith("tag_"):
-                    used_tags.add("%s/%s" % (attr_name[4:], value))
+                    used_tags.add((attr_name[4:], value))
 
         for host in watolib.Host.all().values():
-            # NOTE: Do not use tags() function
             for attr_name, value in host.attributes().items():
                 if attr_name.startswith("tag_"):
-                    used_tags.add("%s/%s" % (attr_name[4:], value))
+                    used_tags.add((attr_name[4:], value))
         return used_tags
 
-    def _get_used_rule_tags(self):
+    def _get_used_tags_from_rules(self):
+        used_tags = set()
+
         all_rulesets = watolib.AllRulesets()
         all_rulesets.load()
-        used_tags = set()
         for ruleset in all_rulesets.get_rulesets().itervalues():
             for _folder, _rulenr, rule in ruleset.get_rules():
-                for tag_spec in rule.tag_specs:
-                    used_tags.add(tag_spec.lstrip("!"))
+                for tag_group_id, tag_spec in rule.conditions.host_tags.items():
+                    if isinstance(tag_spec, dict):
+                        if "$ne" in tag_spec:
+                            used_tags.add((tag_group_id, tag_spec["$ne"]))
+                            continue
+                        raise NotImplementedError()
 
-        used_tags.discard(None)
+                    used_tags.add((tag_group_id, tag_spec))
+
         return used_tags
 
 

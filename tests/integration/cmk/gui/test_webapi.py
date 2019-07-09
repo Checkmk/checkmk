@@ -1059,3 +1059,52 @@ def test_get_graph_recipes(web, graph_test_config):
                 u'unit': u's'
             },
         ]
+
+
+def test_get_hosttags(web):
+    host_tags = web.get_hosttags()
+    assert isinstance(host_tags["configuration_hash"], str)
+    assert host_tags["aux_tags"] == []
+
+    assert isinstance(host_tags["tag_groups"], list)
+    assert host_tags["tag_groups"][0]["id"] == "criticality"
+
+
+def test_set_hosttags(web):
+    original_host_tags = web.get_hosttags()
+
+    location_tag_group = {
+        'id': 'location',
+        'tags': [{
+            'aux_tags': [],
+            'id': 'munich',
+            'title': 'Munich'
+        }, {
+            'aux_tags': [],
+            'id': 'essen',
+            'title': 'Essen'
+        }, {
+            'aux_tags': [],
+            'id': 'berlin',
+            'title': 'Berlin'
+        }],
+        'title': 'Location',
+    }
+    host_tags = copy.deepcopy(original_host_tags)
+    host_tags["tag_groups"].append(location_tag_group)
+
+    try:
+        web.set_hosttags(
+            request={
+                "aux_tags": host_tags["aux_tags"],
+                "tag_groups": host_tags["tag_groups"],
+                "configuration_hash": host_tags["configuration_hash"],
+            })
+
+        new_host_tags = web.get_hosttags()
+        assert location_tag_group in new_host_tags["tag_groups"]
+    finally:
+        web.set_hosttags(request={
+            "aux_tags": original_host_tags["aux_tags"],
+            "tag_groups": original_host_tags["tag_groups"],
+        })

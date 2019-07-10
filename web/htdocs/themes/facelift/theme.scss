@@ -21,14 +21,14 @@
 // but that is simply not possible at the moment using SCSS. Hack around this
 // using symlinks in the git during development and replace the links with empty
 // files during the build procedure of other editions.
-@import "../classic/scss/cee/_graphs.scss";
-@import "../classic/scss/cee/_reporting.scss";
+@import "../facelift/scss/cee/_graphs.scss";
+@import "../facelift/scss/cee/_reporting.scss";
 @if $ENTERPRISE = "yes" {
   @include graphs;
   @include reporting;
 }
 
-@import "../classic/scss/cme/_managed.scss";
+@import "../facelift/scss/cme/_managed.scss";
 @if $MANAGED = "yes" {
   @include managed;
 }

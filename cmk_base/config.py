@@ -35,7 +35,7 @@ import py_compile
 import struct
 import sys
 import itertools
-from typing import Generator, Pattern, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
+from typing import Pattern, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
 from pathlib2 import Path
 import six
@@ -843,7 +843,7 @@ def get_final_service_description(hostname, description):
 
 
 def service_ignored(hostname, check_plugin_name, description):
-    # type: (str, str, Text) -> bool
+    # type: (str, Optional[str], Optional[Text]) -> bool
     if check_plugin_name and check_plugin_name in ignored_checktypes:
         return True
 

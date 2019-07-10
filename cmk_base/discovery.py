@@ -28,7 +28,7 @@ import os
 import socket
 import time
 import signal
-from typing import Callable, List, Text, Optional, Dict, Tuple  # pylint: disable=unused-import
+from typing import Iterator, Callable, List, Text, Optional, Dict, Tuple  # pylint: disable=unused-import
 from pathlib2 import Path
 
 from cmk.utils.regex import regex
@@ -794,10 +794,11 @@ def _get_host_sections_for_discovery(sources, use_caches):
 
 
 def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name, on_error):
+    # type: (data_sources.MultiHostSections, str, Optional[str], str, str) -> Iterator[Tuple]
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_plugin_name, None):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
-        return []
+        return
 
     discovery_function = _get_discovery_function_of(check_plugin_name)
 
@@ -812,7 +813,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
             if cmk.utils.debug.enabled() or on_error == "raise":
                 x = e.exc_info()
                 if x[0] == item_state.MKCounterWrapped:
-                    return []
+                    return
                 else:
                     # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
                     # exception which need to lead to a skipped check instead of a crash
@@ -823,28 +824,28 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
                 console.warning("Exception while parsing agent section '%s': %s\n" %
                                 (section_name, e))
 
-            return []
+            return
 
         if section_content is None:  # No data for this check type
-            return []
+            return
 
         # In case of SNMP checks but missing agent response, skip this check.
         # Special checks which still need to be called even with empty data
         # may declare this.
         if not section_content and cmk_base.check_utils.is_snmp_check(check_plugin_name) \
            and not config.check_info[check_plugin_name]["handle_empty_info"]:
-            return []
+            return
 
         # Now do the actual discovery
         discovered_items = _execute_discovery_function(discovery_function, section_content)
-        return _validate_discovered_items(hostname, check_plugin_name, discovered_items)
+        for entry in _validate_discovered_items(hostname, check_plugin_name, discovered_items):
+            yield entry
     except Exception as e:
         if on_error == "warn":
             console.warning("  Exception in discovery function of check type '%s': %s" %
                             (check_plugin_name, e))
         elif on_error == "raise":
             raise
-    return []
 
 
 def _get_discovery_function_of(check_plugin_name):
@@ -879,7 +880,7 @@ def _execute_discovery_function(discovery_function, section_content):
 
 
 def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
-    results = []
+    # type: (str, str, List) -> Iterator[Tuple]
     for entry in discovered_items:
         if not isinstance(entry, tuple):
             console.error("%s: Check %s returned invalid discovery data (entry not a tuple): %r\n" %
@@ -909,8 +910,7 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
                           (hostname, check_plugin_name))
             continue
 
-        results.append((item, paramstring))
-    return results
+        yield (item, paramstring)
 
 
 DiscoveredServicesTable = Dict[Tuple[str, str], Tuple[str, str]]

@@ -2590,7 +2590,7 @@ class RulespecActiveChecksElasticsearch(HostRulespec):
                 ("protocol",
                  DropdownChoice(
                      title=_("Protocol"),
-                     help=_("Here you cand define which protocol to use, default is https."),
+                     help=_("Here you can define which protocol to use, default is https."),
                      choices=[
                          ("http", "HTTP"),
                          ("https", "HTTPS"),

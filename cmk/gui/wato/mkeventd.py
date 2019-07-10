@@ -1586,7 +1586,8 @@ class ModeEventConsoleRules(EventConsoleMode):
 
         if html.request.has_var("_delete"):
             nr = int(html.request.var("_delete"))
-            rule = self._rules[nr]
+            rules = self._rules
+            rule = rules[nr]
             c = wato_confirm(
                 _("Confirm rule deletion"),
                 _("Do you really want to delete the rule <b>%s</b> <i>%s</i>?") %
@@ -1612,6 +1613,7 @@ class ModeEventConsoleRules(EventConsoleMode):
                 from_pos = html.get_integer_input("_move")
                 to_pos = html.get_integer_input("_index")
 
+                rules = self._rules
                 if type_ == ec.RulePackType.unmodified_mkp:
                     ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
                     rules = self._rule_packs[self._rule_pack_nr]['rules']

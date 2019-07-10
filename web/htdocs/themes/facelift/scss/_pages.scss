@@ -498,7 +498,7 @@ table.data {
     font-size: $theme-font-size-main;
     font-weight: $theme-font-weight-bold;
     letter-spacing: $theme-letter-spacing-table;
-    color: $theme-color-table-header-text;
+    color: $theme-color-text;
     text-align: left;
     text-transform: uppercase;
     background: transparent;
@@ -620,7 +620,7 @@ table.data {
     }
   }
 
-  tr td.gap {
+  tr td.gap, tr td.fillup {
     background: $theme-color-background;
     border: 1px solid $theme-color-background;
   }

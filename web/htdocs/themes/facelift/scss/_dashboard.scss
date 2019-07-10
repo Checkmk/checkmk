@@ -696,13 +696,17 @@ div#dashboard.grid {
 body.main.dashlet {
   tr.data {
     > td {
-      border-bottom: none;
       padding-top: 2px;
       padding-bottom: 2px;
+      border-bottom: none;
 
       &.state {
 	border-top-color: white !important;
       }
+    }
+
+    &:last-of-type > td {
+      border-bottom: 1px solid #cccfdb;
     }
 
     &:nth-child(2) > td.state {

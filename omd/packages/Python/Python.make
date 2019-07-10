@@ -18,9 +18,9 @@ Python-install: $(PYTHON_INSTALL)
 PATH_VAR := PATH="$(abspath bin):$$PATH"
 
 ifeq (0,$(shell gcc -Xlinker --help | grep -q -e "-plugin"; echo $$?))
-	PYTHON_ENABLE_OPTIMIZATIONS := --enable-optimizations
+PYTHON_ENABLE_OPTIMIZATIONS := --enable-optimizations
 else
-	PYTHON_ENABLE_OPTIMIZATIONS :=
+PYTHON_ENABLE_OPTIMIZATIONS :=
 endif
 
 CC_COMPILERS = gcc-9 clang-8 gcc-8 gcc-7 clang-6.0 clang-5.0 gcc-6 clang-4.0 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang
@@ -42,6 +42,7 @@ $(PYTHON_COMPILE): $(PYTHON_PATCHING) bin/gcc bin/g++
 	    --prefix="" \
 	    --enable-shared \
 	    --enable-unicode=ucs4 \
+	    --with-ensurepip=install \
 	    $(PYTHON_ENABLE_OPTIMIZATIONS) \
 	    LDFLAGS="-Wl,--rpath,$(OMD_ROOT)/lib"
 	cd $(PYTHON_DIR) ; $(PATH_VAR) ; $(MAKE) -j2
@@ -98,15 +99,11 @@ bin/g++:
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
 	$(PATH_VAR) ; $(MAKE) -j1 -C $(PYTHON_DIR) DESTDIR=$(DESTDIR)$(OMD_ROOT) install
-# Cleanup some unused stuff
-	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/idle
+# Cleanup unused stuff: We don't need some example proxy.
 	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/smtpd.py
 # Fix python interpreter for kept scripts
-	$(SED) -i "1s|^#!.*python|#!$(OMD_ROOT)/bin/python|" \
-	    $(DESTDIR)$(OMD_ROOT)/bin/pydoc \
-	    $(DESTDIR)$(OMD_ROOT)/bin/python2.7-config \
-	    $(DESTDIR)$(OMD_ROOT)/bin/2to3
-	install -m 644 $(PACKAGE_DIR)/$(PYTHON)/sitecustomize.py $(PACKAGE_DIR)/$(PYTHON)/sitecustomize.pyc $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
+	$(SED) -i '1s|^#!.*/python2\.7$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,easy_install easy_install-2.7 idle pip pip2 pip2.7 pydoc python2.7-config)
+	install -m 644 $(addprefix $(PACKAGE_DIR)/$(PYTHON)/sitecustomize,.py .pyc) $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
 	$(TOUCH) $(PYTHON_INSTALL)
 
 Python-skel:

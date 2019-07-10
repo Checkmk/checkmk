@@ -20,9 +20,8 @@ PYTHON_MODULES_PATCHES  := $(wildcard $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/*
 
 PYTHON_MODULES_LIST :=
 
-# Modules needed because of own packed python (would be available in OS)
-PYTHON_MODULES_LIST += setuptools-40.6.2.zip  # needed by rrdtool bindings
-PYTHON_MODULES_LIST += setuptools_scm-3.1.0.tar.gz
+PYTHON_MODULES_LIST += setuptools_scm-3.1.0.tar.gz # needed by various setup.py
+PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 
 # Modules really needed on all platforms
 PYTHON_MODULES_LIST += pysphere-0.1.7.zip
@@ -34,7 +33,6 @@ PYTHON_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi
 PYTHON_MODULES_LIST += pysmi-0.3.2.tar.gz # needed by EC (for trap translation)
 PYTHON_MODULES_LIST += pysnmp-4.4.4.tar.gz # needed by EC (for trap translation)
 PYTHON_MODULES_LIST += snmpsim-0.4.6.tar.gz # needed by SNMP integration tests
-PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed for pymssql on some older platforms
 PYTHON_MODULES_LIST += pymssql-2.1.3.tar.gz # needed for check_sql (together with freetds)
 
 LEGACY_LDAP=0
@@ -60,7 +58,6 @@ PYTHON_MODULES_LIST += pycparser-2.19.tar.gz # needed for cffi and azure
 PYTHON_MODULES_LIST += enum34-1.1.6.tar.gz # needed for cffi
 PYTHON_MODULES_LIST += cffi-1.11.5.tar.gz # needed by e.g. Pillow
 PYTHON_MODULES_LIST += Pillow-5.3.0.tar.gz # needed by reportlab (pillow>=2.4.0)
-PYTHON_MODULES_LIST += pip-18.1.tar.gz # needed by reportlab (pip>=1.4.1)
 PYTHON_MODULES_LIST += reportlab-3.5.9.tar.gz # needed by reporting
 PYTHON_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by reporting
 

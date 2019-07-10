@@ -23,6 +23,7 @@ yapf = "*"  # used for editor integration and the format-python Makefile target
 
 [packages]
 setuptools_scm = "==3.1.0"
+setuptools-git = "==1.2"
 pysphere = "==0.1.7"
 pyasn1 = "==0.4.4"
 pyasn1-modules = "==0.2.2"
@@ -32,7 +33,6 @@ ply = "==3.11"
 pysmi = "==0.3.2"
 pysnmp = "==4.4.4"
 snmpsim = "==0.4.6"
-setuptools-git = "==1.2"
 pymssql = "==2.1.3"
 python-ldap = "==3.1.0"
 simplejson = "==3.16.0"
@@ -102,7 +102,6 @@ fancycompleter = "==0.8"
 wmctrl = "==0.3"
 pdbpp = "==0.10.0"
 PySnooper = "==0.0.31"
-future = "==0.17.1"
 
 [requires]
 python_version = "2.7"

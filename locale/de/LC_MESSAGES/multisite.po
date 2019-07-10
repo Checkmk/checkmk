@@ -1609,6 +1609,14 @@ msgstr ""
 "Ansichten anzeigen. Sie müssen die Service Description des Services eingeben, "
 "für den die Daten angezeigt werden sollen."
 
+#, python-format
+msgid ""
+"A label key can be used only once per object. The Label key \"%s\" is used "
+"twice."
+msgstr ""
+"Eine Label-ID kann nur einmal pro Objekt verwendet werden. Die Label-ID \"%s"
+"\" wird zweimal verwendet."
+
 msgid "A large clock showing the current time of the web server"
 msgstr "Große Uhr die aktuelle Zeit des Webservers zeigt"
 
@@ -5625,9 +5633,8 @@ msgstr "Report auf Basis von Servicezeiten erstellen"
 msgid "Base state computation on hard states"
 msgstr "Zustandsberechnung auf hartem Zustand basieren"
 
-#, fuzzy
 msgid "Base state computation on soft and hard states"
-msgstr "Zustandsberechnung auf hartem Zustand basieren"
+msgstr "Berechnung auf Basis von Soft- und Hardzuständen"
 
 msgid "Based on"
 msgstr "Basiert auf"
@@ -6184,16 +6191,15 @@ msgstr ""
 "Passwort den Nutzern anderer Kontakgruppen freizugeben, damit diese das "
 "Passwort nutzen können."
 
-#, fuzzy
 msgid ""
 "By default only the members of the owner contact group are permitted to use a "
 "a predefined condition. It is possible to share it with other groups of users "
 "to make them able to use a predefined condition in rules."
 msgstr ""
-"Standardmäßig sind nur Mitglieder der Kontaktgruppe, die als Besitzer "
-"eingetragen ist, berechtigt ein Passwort zu ändern. Es ist möglich ein "
-"Passwort den Nutzern anderer Kontakgruppen freizugeben, damit diese das "
-"Passwort nutzen können."
+"Standardmäßig dürfen nur die Mitglieder der Eigentümer-Kontaktgruppe eine "
+"vordefinierte Bedingung verwenden. Es ist möglich, diese mit anderen "
+"Benutzergruppen zu teilen, um ihnen die Verwendung einer vordefinierten "
+"Bedingung in Regeln zu ermöglichen."
 
 msgid ""
 "By default the network topology view shows you the parent / child relations "
@@ -6484,6 +6490,10 @@ msgid "CPU request"
 msgstr "Anfragen"
 
 msgid "CPU rescale maximum load"
+msgstr "Neuskalierung der maximalen CPU-Last"
+
+#, fuzzy
+msgid "CPU rescale maximum load is Unspecified."
 msgstr "Neuskalierung der maximalen CPU-Last"
 
 #, fuzzy
@@ -8414,9 +8424,8 @@ msgstr "Durchschnitt erzeugen über die letzten"
 msgid "Compute range accoring to displayed data"
 msgstr "Automatisch mit den angezeigten Werten skalieren"
 
-#, fuzzy
 msgid "Condition type"
-msgstr "Verbindungstyp"
+msgstr "Bedingungsart"
 
 msgid "Conditions"
 msgstr "Bedingungen"
@@ -10170,9 +10179,9 @@ msgstr "Angepasste Lokalisierungen"
 msgid "Custom notification"
 msgstr "manueller Alarm"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Custom notification table for user %s"
-msgstr "Benutzer-Alarmtabelle von Benutzer"
+msgstr "Benutzer-Alarmtabelle von Benutzer %s"
 
 msgid "Custom notification table of this user"
 msgstr "Benutzer-Alarmtabelle diese Benutzers"
@@ -10204,6 +10213,10 @@ msgstr "Individuelle Zustände"
 
 msgid "Custom time range"
 msgstr "Zeitspanne"
+
+#, fuzzy
+msgid "Custom title"
+msgstr "Angepasster Titel"
 
 #, python-format
 msgid "Custom variable: %s"
@@ -11567,9 +11580,8 @@ msgstr ""
 "Veraltetes WATO-Modul: Als Funktion implementiert. Dieses muss als Kindklasse "
 "von WatoMode neu implementiert werden."
 
-#, fuzzy
 msgid "Deprecated rulesets"
-msgstr "Überholte Regelsätze"
+msgstr "Veraltete Regelsätze"
 
 msgid "Deprecations"
 msgstr "Überholte Einstellungen"
@@ -12830,9 +12842,9 @@ msgstr "Wollen Sie Regel mit der ID <b>%s</b> wirklich löschen?"
 msgid "Do you really want to delete the selected %d MIBs?"
 msgstr "Wollen Sie %d ausgewählte MIBs wirklich löschen?"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Do you really want to delete the tag group '%s'?"
-msgstr "Wollen Sie die Host-Merkmalgruppe '%s' wirklich löschen?"
+msgstr "Möchten Sie die Tag-Gruppe'%s' wirklich löschen?"
 
 #, python-format
 msgid ""
@@ -17553,6 +17565,12 @@ msgstr ""
 "erzeugten Service verwendet wird. Dem resultierenden Item wird immer "
 "'Elasticsearch Query' vorangestellt."
 
+#, fuzzy
+msgid "Here you can define which protocol to use, default is https."
+msgstr ""
+"Hier können Sie festlegen, welches Protokoll verwendet werden soll. Der "
+"Standardwert ist https."
+
 msgid ""
 "Here you can deploy a plugin for monitoring the quarantine queue, tasks and "
 "updates of Kaspersky Anti Virus."
@@ -17830,11 +17848,6 @@ msgid ""
 msgstr ""
 "Hier kann spezifiziert werden, welcher Service Level verwendet wird, wenn die "
 "Nachricht schon einen Service Level enthält."
-
-msgid "Here you cand define which protocol to use, default is https."
-msgstr ""
-"Hier können Sie festlegen, welches Protokoll verwendet werden soll. Der "
-"Standardwert ist https."
 
 msgid ""
 "Here you get feedback about recent agent rollouts. If you e.g. restrict a new "
@@ -19328,6 +19341,12 @@ msgstr ""
 "der Ausgabe des Checks angezeigt."
 
 msgid ""
+"If a new logfile is found we usually skip to its end to avoid processing "
+"ancient log messages. You can enable this flag to start processing the file "
+"from the beginning and see all messages that may already be present."
+msgstr ""
+
+msgid ""
 "If a select is set to <i>don't change</i> then currenty not all selected "
 "hosts share the same setting for this attribute. If you leave that selection, "
 "all hosts will keep their individual settings."
@@ -19366,6 +19385,10 @@ msgstr ""
 "aktiviert, wenn das Entwerten von HTML-Code in Pluginausgaben deaktiviert "
 "ist. Dies kann evtl. Cross-Site-Scripting ermöglichen, alls ein Angreifer "
 "Check-Ergebnisse einschleusen kann."
+
+#, fuzzy
+msgid "If available, the following metric will be shown"
+msgstr "Die folgenden Services ausschließen"
 
 #, python-brace-format
 msgid ""
@@ -19678,7 +19701,6 @@ msgstr ""
 "Informationen über die Kompilierung von BI-Aggregationen. Diese enthält "
 "statistische und Detailinformationen für jeden Kompiliervorgang."
 
-#, fuzzy
 msgid ""
 "If this option is enabled, the GUI reads the configured HTTP header variable "
 "from the incoming HTTP request and simply takes the string in this variable "
@@ -19695,7 +19717,9 @@ msgstr ""
 "Anfragen von gesicherten IP-Adressen aus kommen (Apache <tt>Allow from</tt>), "
 "wie z.B. Proxy-Servern. Ein Benutzer mit Zugang zu dieser Seite kann den "
 "Header einfach fälschen. Diese Option kann nützlich sein in Umgebungen mit "
-"Reverse-Proxys."
+"Reverse-Proxys. Ab Version 1.6 und auf allen Plattformen mit Apache 2.4+ "
+"dürfen nur noch A-Z, a-z, 0-9 und minus (-) für den Variablennamen verwendet "
+"werden."
 
 msgid ""
 "If this option is enabled, the check monitors the list of forwarded logfiles "
@@ -21588,9 +21612,9 @@ msgstr "Ungültiger Aufruf: Das Profil fehlt."
 msgid "Invalid call: The snapshot is missing."
 msgstr "Ungültiger Aufruf: Sicherung fehlt."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid certificate file: %s"
-msgstr "Ungültige Zertifikatsdatei"
+msgstr "Ungültige Zertifikatsdatei: %s"
 
 msgid "Invalid check parameter"
 msgstr "Ungültiger Check-Parameter"
@@ -25277,6 +25301,10 @@ msgstr "Messmethode"
 #, fuzzy
 msgid "Metric Name"
 msgstr "Metrikname"
+
+#, fuzzy
+msgid "Metric not found"
+msgstr "Daten nicht gefunden"
 
 msgid "Metrics"
 msgstr "Metriken"
@@ -30903,6 +30931,14 @@ msgstr "Prozessname wie bei der Erkennung festgelegt"
 msgid "Process name for usage in the Nagios service description"
 msgstr "Prozessname zur Verwendung in der Nagios Servicebeschreibung"
 
+#, fuzzy
+msgid "Process new logiles from the beginning"
+msgstr "Logs von Anfang an auslesen"
+
+#, fuzzy
+msgid "Process preexisting log messages"
+msgstr "Bearbeitungszeit pro Nachricht"
+
 msgid "Process stored SNMP walks with agent simulator"
 msgstr "Verarbeite gespeicherte SNMP Walks mit dem Agent-Simulator"
 
@@ -31994,9 +32030,9 @@ msgstr "Parents entfernt"
 msgid "Removed rule_pack %s from MKP export"
 msgstr "Das Regelpaket %s steht nicht mehr für den MKP-Export zur Verfügung"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Removed tag group %s (%s)"
-msgstr "Hostmerkmal-Gruppe %s (%s) entfernt"
+msgstr "Die Tag-Gruppe %s (%s) wurde entfernt."
 
 #, python-format
 msgid "Removed the %s '%s'"
@@ -32483,9 +32519,8 @@ msgstr "%sAntwortzeit"
 msgid "Restart"
 msgstr "Neustart"
 
-#, fuzzy
 msgid "Restart count"
-msgstr "Wiederholversuche"
+msgstr "Anzahl der Neustarts"
 
 msgid "Restore"
 msgstr "Wiederherstellen"
@@ -35066,9 +35101,8 @@ msgstr "Zeige Graphen-Titel eingebettet im Graphen"
 msgid "Show icon linking to WATO parameter editor for services"
 msgstr "Bei Services Symbol mit Link zum Parameter-Editor anzeigen"
 
-#, fuzzy
 msgid "Show in WATO host table"
-msgstr "Zeige in Tabelle"
+msgstr "In WATO-Host-Tabelle anzeigen"
 
 msgid "Show in column"
 msgstr "In Spalte anzeigen"
@@ -35094,6 +35128,10 @@ msgstr "Legende anzeigen"
 
 msgid "Show margin round the graph"
 msgstr "Zeige Rand um den Graphen"
+
+#, fuzzy
+msgid "Show metric"
+msgstr "Neue Metrik hinzufügen"
 
 #, fuzzy
 msgid "Show number of groups"
@@ -35355,9 +35393,8 @@ msgstr "Simuliere SNMP (Verwende gesp. SNMP Walk)"
 msgid "Simulation mode"
 msgstr "Simulationsmodus"
 
-#, fuzzy
 msgid "Simultaneous multithreading"
-msgstr "Simultane Aktivierung von Änderungen"
+msgstr "Gleichzeitiges Multithreading"
 
 msgid "Simultanous activation of changes"
 msgstr "Simultane Aktivierung von Änderungen"
@@ -35587,6 +35624,10 @@ msgstr "Hosts mit nicht leeren Parents überspringen (auch wenn vererbt)"
 
 msgid "Skip hosts with explicit parent definitions (even if empty)"
 msgstr "Hosts mit expliziten Parent-Zuordnungen überspringen (auch wenn leer!)"
+
+#, fuzzy
+msgid "Skip preexisting log messages"
+msgstr "Übrige Nachrichten stillschweigend auslassen"
 
 msgid "Skip the following SIDs (if found)"
 msgstr "Überspringen Sie die folgenden SIDs (falls gefunden)"
@@ -36558,6 +36599,11 @@ msgstr "Aktivierung gestartet (Instanzen: %s)"
 
 msgid "Starting from period number"
 msgstr "Starte bei Periode"
+
+msgid ""
+"Starting from version 1.6.0 this value must be configured. Read Werk #6646 "
+"for further information."
+msgstr ""
 
 msgid "Starting up"
 msgstr "Starting up"
@@ -38315,6 +38361,9 @@ msgstr ""
 msgid "The Event Console is currently not running."
 msgstr "Die Event Console läuft zur Zeit nicht."
 
+msgid "The Event Console is disabled (\"omd config\")."
+msgstr "Die Eventkonsole ist deaktiviert (\"omd config\")."
+
 #, python-format
 msgid ""
 "The Event Console view '%s' can not be rendered. The Event Console is "
@@ -38879,16 +38928,17 @@ msgstr ""
 "Sie können das Attribut der Kontakt-Definition im Monitoring hinzufügen und "
 "es so für Alarme nutzbar machen."
 
-#, fuzzy
 msgid ""
 "The attribute can be added to the host definition in order to use it as "
 "custom host attribute (sometimes called monitoring macro) in different "
 "places, for example as in check commands or notifications. You can also only "
 "display this attribute in the status GUI when enabling this option."
 msgstr ""
-"Sie können das Attribut der Host-Definition im Monitoring hinzufügen und es "
-"so als Monitoring-Makro an verschiedenen Stellen nutzen, z.B.  in Check-"
-"Befehlen oder Alarmen."
+"Das Attribut kann der Hostdefinition hinzugefügt werden, um es als "
+"benutzerdefiniertes Hostattribut (manchmal auch Monitoring-Makro genannt) an "
+"verschiedenen Stellen zu verwenden, z.B. in Check-Befehlen oder "
+"Benachrichtigungen. Sie können dieses Attribut nur dann in der Status-GUI "
+"anzeigen, wenn Sie diese Option aktivieren."
 
 msgid "The attribute does not exist."
 msgstr "Das Attribut existiert nicht."
@@ -46642,16 +46692,16 @@ msgstr "Unbekannte Instanz %s"
 msgid "Unknown site (%s)"
 msgstr "Unbekannte Instanz (%s)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unknown tag %s"
-msgstr "Unbekanntes Hostmerkmal %s"
+msgstr "Unbekanntes Tag %s"
 
 msgid "Unknown tag group"
 msgstr "Unbekannte Merkmalsgruppe %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unknown tag group %s"
-msgstr "Unbekannte Merkmalsgruppe %s"
+msgstr "Unbekannte Tag-Gruppe %s"
 
 msgid "Unknown user"
 msgstr "Unbekannter Nutzer: %s"
@@ -46689,6 +46739,10 @@ msgstr "Unreclaimable-Speicher"
 
 msgid "Unregistered"
 msgstr "Unregistriert"
+
+#, fuzzy
+msgid "Unspecified."
+msgstr "Nicht klassifiziert"
 
 #, python-format
 msgid "Unsupported context type '%s'"
@@ -51070,11 +51124,11 @@ msgstr ""
 "Sie können Instanzspezifische globale Konfigurationsvariablen in nicht "
 "verteilten Umgebungen nicht konfigurieren."
 
-#, fuzzy, python-format
+#, python-format
 msgid "You can not delete this %s because it is <a href=\"%s\">in use</a>."
 msgstr ""
-"Sie können dieses Sicherungszuel nicht löschen, das es von diesen Sicherungs-"
-"Jobs verwendet wird: %s"
+"Sie können diese %s nicht löschen, da sie <a href=\"%s\" >in Verwendung ist</"
+"a>."
 
 #, python-format
 msgid ""
@@ -51826,13 +51880,12 @@ msgstr ""
 "Sie müssen Mitglied mindestens einer Kontakgruppe sein um ein Passwort "
 "anlegen zu können."
 
-#, fuzzy
 msgid ""
 "You need to be member of at least one contact group to be able to create a "
 "predefined condition."
 msgstr ""
-"Sie müssen Mitglied mindestens einer Kontakgruppe sein um ein Passwort "
-"anlegen zu können."
+"Sie müssen Mitglied in mindestens einer Kontaktgruppe sein, um eine "
+"vordefinierte Bedingung anlegen zu können."
 
 msgid "You need to change your password."
 msgstr "Sie müssen Ihr Kenntwort ändern"

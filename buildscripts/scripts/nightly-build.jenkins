@@ -87,27 +87,32 @@ node {
                         ])
                     }
 
+                    THEME_LIST = ["classic", "facelift"]
                     switch(EDITION) {
                         case 'raw':
                             AGENT_LIST = ["windows", "windows-legacy"]
                             sh 'rm -rf enterprise managed'
                             // Workaround since scss does not support conditional includes
-                            sh '''
-                                rm -rf web/htdocs/themes/classic/scss/{cme,cee}
-                                mkdir -p web/htdocs/themes/classic/scss/{cme,cee}
-                                echo '@mixin graphs {}' > web/htdocs/themes/classic/scss/cee/_graphs.scss
-                                echo '@mixin reporting {}' > web/htdocs/themes/classic/scss/cee/_reporting.scss
-                                echo '@mixin managed {}' > web/htdocs/themes/classic/scss/cme/_managed.scss
-                            '''
+                            THEME_LIST.each { THEME ->
+                                sh '''
+                                    rm -rf web/htdocs/themes/${THEME}/scss/{cme,cee}
+                                    mkdir -p web/htdocs/themes/${THEME}/scss/{cme,cee}
+                                    echo '@mixin graphs {}' > web/htdocs/themes/${THEME}/scss/cee/_graphs.scss
+                                    echo '@mixin reporting {}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
+                                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
+                                '''
+                            }
                             break
                         case 'enterprise':
                             sh 'rm -rf  managed'
                             // Workaround since scss does not support conditional includes
-                            sh '''
-                                rm -rf web/htdocs/themes/classic/scss/cme
-                                mkdir -p web/htdocs/themes/classic/scss/cme
-                                echo '@mixin managed {}' > web/htdocs/themes/classic/scss/cme/_managed.scss
-                            '''
+                            THEME_LIST.each { THEME ->
+                                sh '''
+                                    rm -rf web/htdocs/themes/${THEME}/scss/cme
+                                    mkdir -p web/htdocs/themes/${THEME}/scss/cme
+                                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
+                                '''
+                            }
                             break
                     }
                     if (DEMO == 'yes;') {
@@ -116,7 +121,7 @@ node {
                         sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{Core,State}.cc'''
                     }
                     sh "make NEW_VERSION=${CMK_VERS} setversion"
-                    
+
                     stash name: 'WinDep', include: 'agents/wnx/**/*, agents/windows/dependencies/**/*, agents/windows/plugins/**/*, omd/packages/googletest/*, omd/packages/simpleini/*'
                 }
             }

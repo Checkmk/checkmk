@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# example output
-
 factory_settings["nimble_latency_default_levels"] = {
     "0.1": (0, 20),
     "0.2": (0, 20),
@@ -42,53 +40,98 @@ factory_settings["nimble_latency_default_levels"] = {
     "1000": (2, 20),
 }
 
+NimbleReadsType = "reads"
+NimbleWritesType = "writes"
 
-def inventory_nimble_latency(info):
+
+def parse_nimble_read_latency(info):
+    parsed = {}
     for line in info:
-        if line[1] == "1":
-            yield (line[0], {})
-
-
-def check_nimble_read_latency(item, params, info):
-    timestamp = time.time()
-    for line in info:
-        if line[0] == item:
-            counter_base = "nimble_read_latency.%s." % item
-            names = {
-                "0-0.1 ms": ("0.1", int(line[3])),
-                "0.1-0.2 ms": ("0.2", int(line[4])),
-                "0.2-0.5 ms": ("0.5", int(line[5])),
-                "0.5-1.0 ms": ("1", int(line[6])),
-                "1-2 ms": ("2", int(line[7])),
-                "2-5 ms": ("5", int(line[8])),
-                "5-10 ms": ("10", int(line[9])),
-                "10-20 ms": ("20", int(line[10])),
-                "20-50 ms": ("50", int(line[11])),
-                "50-100 ms": ("100", int(line[12])),
-                "100-200 ms": ("200", int(line[13])),
-                "200-500 ms": ("500", int(line[14])),
-                "500+ ms": ("1000", int(line[15])),
-            }
-            total_reads = get_rate(counter_base + "total", timestamp, int(line[2]))
-            yield 0, "Total Reads: %d" % total_reads
-            for key, value in names.iteritems():
-                counter = get_rate(counter_base + value[0], timestamp, value[1])
-                state, state_count = params[value[0]]
-                if counter > state_count:
-                    yield state, "%s: %d" % (key, counter)
-                else:
+        vol_name = line[0]
+        for ty, start_idx in [
+            (NimbleReadsType, 1),
+            (NimbleWritesType, 15),
+        ]:
+            values = line[start_idx:start_idx + 14]
+            for key, title, value_str in zip([
+                    "total",
+                    "0.1",
+                    "0.2",
+                    "0.5",
+                    "1",
+                    "2",
+                    "5",
+                    "10",
+                    "20",
+                    "50",
+                    "100",
+                    "200",
+                    "500",
+                    "1000",
+            ], [
+                    "Total",
+                    "0-0.1 ms",
+                    "0.1-0.2 ms",
+                    "0.2-0.5 ms",
+                    "0.5-1.0 ms",
+                    "1-2 ms",
+                    "2-5 ms",
+                    "5-10 ms",
+                    "10-20 ms",
+                    "20-50 ms",
+                    "50-100 ms",
+                    "100-200 ms",
+                    "200-500 ms",
+                    "500+ ms",
+            ], values):
+                try:
+                    value = int(value_str)
+                except ValueError:
                     continue
+                inst = parsed.setdefault(vol_name, {}).setdefault(ty, {})
+                inst[(key, title)] = value
+    return parsed
+
+
+def inventory_nimble_latency(parsed, ty):
+    for vol_name, vol_attrs in parsed.iteritems():
+        if ty in vol_attrs:
+            yield vol_name, {}
+
+
+def _check_nimble_latency(item, params, data, ty):
+    ty_data = data.get(ty)
+    if ty_data is None:
+        return
+
+    timestamp = time.time()
+    for (key, title), value in ty_data.iteritems():
+        rate = get_rate("nimble_%s_latency.%s.%s" % (ty, item, key), timestamp, value)
+        if key == "total":
+            yield 0, '%s: %s' % (title, rate)
+            continue
+
+        state, state_count = params[key]
+        if rate > state_count:
+            yield state, "%s: %d" % (title, rate)
+        else:
+            continue
+
+
+@get_parsed_item_data
+def check_nimble_latency_reads(item, params, data):
+    return _check_nimble_latency(item, params, data, NimbleReadsType)
 
 
 check_info['nimble_latency'] = {
-    'inventory_function': inventory_nimble_latency,
-    'check_function': check_nimble_read_latency,
+    'parse_function': parse_nimble_read_latency,
+    'inventory_function': lambda parsed: inventory_nimble_latency(parsed, NimbleReadsType),
+    'check_function': check_nimble_latency_reads,
     'service_description': 'Volume %s Read IO',
     'snmp_info': (
         '.1.3.6.1.4.1.37447.1.2.1',
         [
             "3",  # NIMBLE-MIB::volName
-            "10",  # NIMBLE-MIB::volOnline
             "13",  # NIMBLE-MIB::volIoReads
             "21",  # NIMBLE-MIB::volIoReadLatency0uTo100u
             "22",  # NIMBLE-MIB::volIoReadLatency100uTo200u
@@ -125,40 +168,14 @@ check_info['nimble_latency'] = {
 }
 
 
-def check_nimble_write_latency(item, params, info):
-    timestamp = time.time()
-    for line in info:
-        if line[0] == item:
-            counter_base = "nimble_write_latency.%s." % item
-            names = {
-                "0-0.1 ms": ("0.1", int(line[17])),
-                "0.1-0.2 ms": ("0.2", int(line[18])),
-                "0.2-0.5 ms": ("0.5", int(line[19])),
-                "0.5-1.0 ms": ("1", int(line[20])),
-                "1-2 ms": ("2", int(line[21])),
-                "2-5 ms": ("5", int(line[22])),
-                "5-10 ms": ("10", int(line[23])),
-                "10-20 ms": ("20", int(line[24])),
-                "20-50 ms": ("50", int(line[25])),
-                "50-100 ms": ("100", int(line[26])),
-                "100-200 ms": ("200", int(line[27])),
-                "200-500 ms": ("500", int(line[28])),
-                "500+ ms": ("1000", int(line[29])),
-            }
-            total_writes = get_rate(counter_base + "total", timestamp, int(line[16]))
-            yield 0, "Total Writes: %d" % total_writes
-            for key, value in names.iteritems():
-                counter = get_rate(counter_base + value[0], timestamp, value[1])
-                state, state_count = params[value[0]]
-                if counter > state_count:
-                    yield state, "%s: %d" % (key, counter)
-                else:
-                    continue
+@get_parsed_item_data
+def check_nimble_latency_writes(item, params, data):
+    return _check_nimble_latency(item, params, data, NimbleWritesType)
 
 
 check_info['nimble_latency.write'] = {
-    'inventory_function': inventory_nimble_latency,
-    'check_function': check_nimble_write_latency,
+    'inventory_function': lambda parsed: inventory_nimble_latency(parsed, NimbleWritesType),
+    'check_function': check_nimble_latency_writes,
     'service_description': 'Volume %s Write IO',
     'group': "nimble_latency",
     'default_levels_variable': "nimble_latency_default_levels",

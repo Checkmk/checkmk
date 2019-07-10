@@ -268,7 +268,7 @@ $(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
 # Cleanup some unwanted files (example scripts)
 	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/*.py
 # Fix python interpreter for kept scripts
-	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,chardetect easy_install easy_install-2.7 fakebmc jirashell pbr pip pip2 pip2.7 pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc)
+	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,chardetect fakebmc jirashell pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc)
 	$(TOUCH) $@
 
 $(PYTHON_MODULES)-skel:

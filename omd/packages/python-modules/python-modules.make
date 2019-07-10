@@ -266,17 +266,9 @@ $(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
 		cd .. ; \
 	    done
 # Cleanup some unwanted files (example scripts)
-	rm -f $(DESTDIR)$(OMD_ROOT)/bin/*.py || true
+	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/*.py
 # Fix python interpreter for kept scripts
-	for F in $(DESTDIR)$(OMD_ROOT)/bin/easy_install \
-		 $(DESTDIR)$(OMD_ROOT)/bin/easy_install-2.7 \
-		 $(DESTDIR)$(OMD_ROOT)/bin/libsmi2pysnmp \
-		 $(DESTDIR)$(OMD_ROOT)/bin/pip \
-		; do \
-	    if [ -f $$F ]; then \
-		sed -i "1s|^#!.*python|#!/usr/bin/env python|" $$F; \
-	    fi ; \
-	done
+	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,chardetect easy_install easy_install-2.7 fakebmc jirashell pbr pip pip2 pip2.7 pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc)
 	$(TOUCH) $@
 
 $(PYTHON_MODULES)-skel:

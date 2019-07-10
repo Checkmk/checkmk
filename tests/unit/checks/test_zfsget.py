@@ -1,4 +1,5 @@
 import pytest
+from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
 
 pytestmark = pytest.mark.checks
 
@@ -226,5 +227,6 @@ pytestmark = pytest.mark.checks
     ])
 def test_zfsget_discovery(check_manager, info, expected_discovery_result):
     check_zfsget = check_manager.get_check("zfsget")
-    discovery_result = check_zfsget.run_discovery(check_zfsget.run_parse(info))
-    assert discovery_result == expected_discovery_result
+    discovery_result = DiscoveryResult(check_zfsget.run_discovery(check_zfsget.run_parse(info)))
+    assertDiscoveryResultsEqual("zfsget", discovery_result,
+                                DiscoveryResult(expected_discovery_result))

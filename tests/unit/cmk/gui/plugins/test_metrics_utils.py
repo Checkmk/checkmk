@@ -97,3 +97,30 @@ def test_normalize_perf_data(perf_data, check_command, result):
 ])
 def test_reverse_translation_metric_name(canonical_name, perf_data_names):
     assert utils.reverse_translate_metric_name, (canonical_name) == perf_data_names
+
+
+@pytest.mark.parametrize(
+    "metric_names, check_command, graph_ids",
+    [
+        ([u'user', u'system', u'wait', u'util'
+         ], 'check_mk-kernel.util', ['util_average_1', 'cpu_utilization_5']),  # TODO: drop first
+        ([u'util1', u'util15'], None, ['util_average_2']),
+        ([u'util'], None, ['util_average_1']),
+        ([u'util', u'util_average'], None, ['util_average_1']),
+        ([u'user', u'util_numcpu_as_max'], None, ['cpu_utilization_numcpus']),
+        ([u'user', u'system', u'idle', u'nice'], None, ['cpu_utilization_3']),
+        ([u'user', u'system', u'idle', u'io_wait'
+         ], None, ['cpu_utilization_4', 'cpu_utilization_5']),  # TODO: drop 5
+        ([u'user', u'system', u'io_wait'], None, ['cpu_utilization_5']),
+        ([u'user', u'system', u'io_wait', 'guest', 'steal'
+         ], 'check_mk-statgrab_cpu', ['cpu_utilization_7']),
+        ([u'user', u'system', u'interrupt'], None, ['cpu_utilization_8']),
+        ([u'user', u'system', u'wait', u'util', u'cpu_entitlement', u'cpu_entitlement_util'
+         ], 'check_mk-lparstat_aix.cpu_util',
+         ['util_average_1', 'cpu_utilization_5', 'cpu_entitlement']),  # TODO: drop first
+    ])
+def test_get_graph_templates(load_plugins, metric_names, check_command, graph_ids):
+    perfdata = [(n, 0, u'', None, None, None, None) for n in metric_names]
+    translated_metrics = utils.translate_metrics(perfdata, check_command)
+    templates = utils.get_graph_templates(translated_metrics)
+    assert set(graph_ids) == set(t['id'] for t in templates)

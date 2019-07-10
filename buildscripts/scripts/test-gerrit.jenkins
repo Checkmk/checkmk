@@ -1,34 +1,9 @@
 throttle(['Gerrit']){
 node {
-    def WORKSPACE = pwd()
-    
+    def WORKSPACE = pwd() 
     try {
         stage("Auschecken: Check_MK") {
-            checkout([$class: 'GitSCM',
-                branches: [
-                    [name: '${GERRIT_PATCHSET_REVISION}']
-                ],
-                browser: [
-                    $class: 'GitWeb',
-                    repoUrl: 'https://review.lan.mathias-kettner.de/git/?p=check_mk.git'
-                ],
-                doGenerateSubmoduleConfigurations: false,
-                extensions: [[
-                    $class: 'CloneOption',
-                    honorRefspec: true,
-                    reference: '/home/gerrit/gerrit_data/git/check_mk.git',
-                    noTags: true,
-                    shallow: false
-                ]],
-                submoduleCfg: [],
-                userRemoteConfigs: [
-                    [
-                        credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6',
-                        url: 'ssh://jenkins@review.lan.mathias-kettner.de:29418/check_mk',
-                        refspec: "${GERRIT_REFSPEC}"
-                    ]
-                ]
-            ])
+            checkout(scm)
         }
         
         CHANGED_FILES = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION} | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()

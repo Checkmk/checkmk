@@ -526,6 +526,11 @@ class JobStatus(object):
                 # Read this data with an explicit lock
                 # This prevents a race condition where an empty jobstatus.mk file is read
                 data = store.load_data_from_file(str(self._jobstatus_path), default={}, lock=True)
+
+                # Repair broken/invalid files
+                if "state" not in data:
+                    data["state"] = "initialized"
+                    data["started"] = time.time()
             finally:
                 cmk.utils.store.release_lock(str(self._jobstatus_path))
 

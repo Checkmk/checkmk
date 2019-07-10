@@ -1,0 +1,54 @@
+Title: Rename metric name in Filesystem checks from mount point to fs_used
+Level: 3
+Component: core
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1562765663
+
+Filesystem Nagios check plug-in stored the filesystem usage of every mount
+points in the RRD databases under the path of each mount point. Checkmk
+assigned to every mount point a service, still it kept naming the
+filesystem usage with the mount point path for compatibility. Our graphing
+system learned to deal with this unpractical convention, however new
+features in Checkmk performing bulk access to data can't.
+
+<ul>
+
+<li>All sites created with Checkm 1.6.0 onwards will automatically use the
+new naming convention and don't need to be migrated</li>
+
+<li> The migration is not mandatory, your Checkmk instance will continue
+working under the legacy mode until you migrate.</li>
+
+<li>If you use CRE, you don't need to de the migration</li>
+
+<li>If you don't plan to do bulk access to data as required by the Historic
+Data Views for filesystems (see Werk #7445), you don't need to migrate your
+RRD databases.</li>
+
+<li>If you want to use the Historic Data Views for Capacity Management on
+Filesystems, you need to do migration.</li>
+
+</ul>
+
+The incorporation of Historic Data Views, for Capacity Management,
+requieres querying the filesystem usage of all host in a given time
+window. It becomes prohibitive expensive to do such request since first
+every service is queried for its mount point name and then every RRD is
+individually queried again for the mount point name data.
+
+In this werk we provide a migration script that would edit all meta data
+files describing the RRDs that receive output from all our supported
+filesystem checks. It will also set a flag in your config so that
+Filesystem check plug-ins start delivering usage perfomance data under the
+static name of fs_used.
+
+You are advised to do a backup of your RRD files and journal files before
+performing the migration and your Checkmk instance needs to be stopped
+during the migration.
+
+Migration is one way and needs to be performed once per site any rollback
+has to be done from your own backup.

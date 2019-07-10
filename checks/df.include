@@ -43,6 +43,7 @@ filesystem_default_levels = {}  # can also be dropped some day in future
 
 # Filesystems to ignore (shouldn't be sent by agent anyway)
 inventory_df_exclude_mountpoints = ['/dev']
+df_use_fs_used_as_metric_name = False
 
 # Grouping of filesystems into groups that are monitored as one entity
 # Example:
@@ -364,8 +365,7 @@ def df_check_filesystem_single(mountpoint,
     elif used_mb >= warn_mb:
         status = 1
 
-    # TODO: In some future version use a fixed name as perf variable
-    perf_var = mountpoint.replace(" ", "_")
+    perf_var = "fs_used" if df_use_fs_used_as_metric_name else mountpoint.replace(" ", "_")
     perfdata = [(perf_var, used_mb, warn_mb, crit_mb, 0, size_mb), ('fs_size', size_mb)]
 
     if show_levels == "always" or \

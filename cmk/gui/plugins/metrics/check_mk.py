@@ -6453,6 +6453,9 @@ df_translation = {
         "name": "fs_used",
         "scale": MB
     },
+    "fs_used": {
+        "scale": MB
+    },
     "fs_size": {
         "scale": MB
     },
@@ -6503,6 +6506,7 @@ check_metrics["check_mk-fast_lta_silent_cubes.capacity"] = df_translation
 check_metrics["check_mk-fast_lta_volumes"] = df_translation
 check_metrics["check_mk-libelle_business_shadow.archive_dir"] = df_translation
 check_metrics["check_mk-netapp_api_volumes"] = df_translation
+check_metrics["check_mk-netapp_api_luns"] = df_translation
 check_metrics["check_mk-netapp_api_qtree_quota"] = df_translation
 check_metrics["check_mk-emc_datadomain_fs"] = df_translation
 check_metrics["check_mk-emc_isilon_quota"] = df_translation
@@ -6532,6 +6536,9 @@ for protocol in ["nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
 check_metrics["check_mk-netapp_api_volumes"] = {
     "~(?!%s).*$" % "|".join(df_netapp_perfvarnames): {
         "name": "fs_used",
+        "scale": MB
+    },
+    "fs_used": {
         "scale": MB
     },
     "fs_size": {

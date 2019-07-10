@@ -242,9 +242,6 @@ div.view_form {
 '-------------------------------------------------------------------------*/
 
 
-td.fillup {
-    background-color: #eee;
-}
 td.groupheader {
     margin: 0;
     padding: 0;
@@ -252,11 +249,12 @@ td.groupheader {
 
 table.data tr.data > td.gap,
 table.data tr > td.last_col,
-table.data tr > th.last_col {
+table.data tr > th.last_col,
+td.fillup{
     border-right: 0;
 }
 
-td.gap, table.data .checkbox_hover.gap {
+td.gap, table.data .checkbox_hover.gap, td.fillup {
     background-image: url("images/contentframe_background.jpg");
     background-attachment: fixed;
     background-repeat: repeat;
@@ -433,6 +431,7 @@ table.data.single td.gap {
     border-left-style: none;
     border-right-style: none;
 }
+
 table.data.single td.age,
 table.data.single td.number,
 table.data.single td.count {

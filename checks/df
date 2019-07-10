@@ -131,6 +131,13 @@ def parse_df(info):
             else:
                 mountpoint = " ".join(line[6:]).replace('\\', '/')  # Windows \ is replaced with /
 
+            #Always exclude filesystems below dockers local storage area
+            #and also exclude docker mounts in containers which are reported
+            #by the agent when the agent is executed in the container context
+            if (mountpoint.startswith("/var/lib/docker/") or
+                    mountpoint in ("/etc/resolv.conf", "/etc/hostname", "/etc/hosts")):
+                continue
+
             # exclude filesystems without size
             try:
                 if int(line[2]) == 0:
@@ -197,8 +204,27 @@ def parse_df(info):
     return parse_blocks_subsection(blocks_subsection), parse_inodes_subsection(inodes_subsection)
 
 
+def _filter_by_exclude_rule(inv_rule_excludes, iterable):
+    """exclude these mount points (/tmp, /proc, whatever user wants)"""
+    for df_block in iterable:
+        if df_block[0] not in inv_rule_excludes:
+            yield df_block
+
+
+def _filter_by_type(volume_info, ignore_fs_types, never_ignore_mountpoints, iterable):
+    for df_block in iterable:
+        if (df_block[0] in never_ignore_mountpoints or
+                volume_info[df_block[0]]["fs_type"] not in ignore_fs_types):
+            yield df_block
+
+
+def _get_item_list_from_blocks(df_blocks):
+    """return the mountpoint"""  # TODO: fix this. Should include optional description
+    return [df_block[0] for df_block in df_blocks]
+
+
 def inventory_df(parsed):
-    def is_mountpoint(inventory_entry):
+    def is_single_mountpoint(inventory_entry):
         return "patterns" not in inventory_entry[1]
 
     inventory_options = host_extra_conf_merged(host_name(), inventory_df_rules)
@@ -208,21 +234,16 @@ def inventory_df(parsed):
 
     (df_blocks, volume_info), _ = parsed
 
-    mplist = []
-    for line in _filter_docker_filesystems(df_blocks):
+    filtered_blocks = _filter_by_exclude_rule(inventory_df_exclude_mountpoints, df_blocks)
+    filtered_blocks = _filter_by_type(volume_info, ignore_fs_types, never_ignore_mountpoints,
+                                      filtered_blocks)
 
-        mountpoint = line[0]
-        if mountpoint in inventory_df_exclude_mountpoints:
-            continue  # exclude this mount point (/tmp, /proc, whatever user wants)
-        if volume_info[mountpoint][
-                "fs_type"] in ignore_fs_types and mountpoint not in never_ignore_mountpoints:
-            continue  # ignore this filesystem type
-        mplist.append(mountpoint)
+    mplist = _get_item_list_from_blocks(filtered_blocks)
 
     if include_volume_name:
         inventory = []
         for entry in df_inventory(mplist):
-            if is_mountpoint(entry):
+            if is_single_mountpoint(entry):
                 mountpoint, params = entry
                 item = "%s %s" % (volume_info[mountpoint]["volume_name"], mountpoint)
                 inventory.append((item, params))
@@ -236,7 +257,6 @@ def inventory_df(parsed):
 def check_df(item, params, parsed):
     (df_blocks, volume_info), df_inodes = parsed
 
-    df_blocks = _filter_docker_filesystems(df_blocks)
     volume_and_mp_to_mp = {
         ("%s %s" % (volume_info[mp]["volume_name"], mp)): mp for mp in volume_info
     }
@@ -244,16 +264,6 @@ def check_df(item, params, parsed):
     if item in volume_and_mp_to_mp and "patterns" not in params and item not in volume_info:
         mountpoint = volume_and_mp_to_mp[item]
     return df_check_filesystem_list(mountpoint, params, df_blocks, df_inodes)
-
-
-# Always exclude filesystems below dockers local storage area
-# And also exclude docker mounts in containers which are reported
-# by the agent when the agent is executed in the container context
-def _filter_docker_filesystems(df_blocks):
-    return [
-        e for e in df_blocks if not e[0].startswith("/var/lib/docker/") and
-        e[0] not in ["/etc/resolv.conf", "/etc/hostname", "/etc/hosts"]
-    ]
 
 
 check_info['df'] = {

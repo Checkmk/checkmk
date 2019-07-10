@@ -330,7 +330,7 @@ df_params = {
         u"/home",
         df_params,
         info_df_lnx,
-        [(3, 'filesystem not found', None)],
+        [],
     ),
 ])
 def test_df_check_with_parse(check_manager, item, params, info, expected_result):

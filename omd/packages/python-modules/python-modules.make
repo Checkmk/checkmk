@@ -20,8 +20,8 @@ PYTHON_MODULES_PATCHES  := $(wildcard $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/*
 
 PYTHON_MODULES_LIST :=
 
-# Modules needed because of own packed python (would be available in OS)
-PYTHON_MODULES_LIST += setuptools_scm-3.1.0.tar.gz
+PYTHON_MODULES_LIST += setuptools_scm-3.1.0.tar.gz # needed by various setup.py
+PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 
 # Modules really needed on all platforms
 PYTHON_MODULES_LIST += pysphere-0.1.7.zip
@@ -33,7 +33,6 @@ PYTHON_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi
 PYTHON_MODULES_LIST += pysmi-0.3.2.tar.gz # needed by EC (for trap translation)
 PYTHON_MODULES_LIST += pysnmp-4.4.4.tar.gz # needed by EC (for trap translation)
 PYTHON_MODULES_LIST += snmpsim-0.4.6.tar.gz # needed by SNMP integration tests
-PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed for pymssql on some older platforms
 PYTHON_MODULES_LIST += pymssql-2.1.3.tar.gz # needed for check_sql (together with freetds)
 
 LEGACY_LDAP=0

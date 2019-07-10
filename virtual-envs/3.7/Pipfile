@@ -24,9 +24,8 @@ pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker f
 yapf = "*"  # used for editor integration and the format-python Makefile target
 
 [packages]
-setuptools = "==41.0.1"
-setuptools_scm = "==3.3.3"
-setuptools-git = "==1.2"
+setuptools_scm = "==3.3.3"  # needed by various setup.py
+setuptools-git = "==1.2"  # needed by various setup.py
 
 [requires]
 python_version = "3.7"

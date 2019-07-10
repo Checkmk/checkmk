@@ -78,7 +78,7 @@ checks = {
              ]
          ),
          (u'/home', {'trend_range': 24, 'show_levels': 'onmagic', 'inodes_levels': (10.0, 5.0), 'magic_normsize': 20, 'show_inodes': 'onlow', 'levels': (80.0, 90.0), 'show_reserved': False, 'levels_low': (50.0, 60.0), 'trend_perfdata': True},
-             [(3, 'filesystem not found', [])]
+             []
          ),
          (u'/', {'inodes_levels': (90.0, 5.0), 'show_inodes': 'onlow'},
              [(1, '75.8% used (103.92 of 137.13 GB), trend: 0.00 B / 24 hours, ' \

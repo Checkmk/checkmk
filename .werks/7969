@@ -1,0 +1,10 @@
+Title: Fix broken agent baking when Linux remote alert handlers are enabled
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0b4
+Date: 1562759428
+Class: fix
+
+

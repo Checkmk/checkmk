@@ -21,10 +21,12 @@ else
 PYTHON_ENABLE_OPTIMIZATIONS :=
 endif
 
-$(PYTHON3_BUILD): $(PYTHON3_UNPACK)
-# The build with PGO/LTO
-# enables is mainly sequential, so a high build parallelism doesn't really
-# help. Therefore we use just -j2.
+$(PYTHON3_BUILD): $(PACKAGE_DIR)/$(PYTHON3)/sitecustomize.pyc
+	$(TOUCH) $(PYTHON3_BUILD)
+
+$(PYTHON3_COMPILE): $(PYTHON3_UNPACK)
+# The build with PGO/LTO enabled is mainly sequential, so a high build
+# parallelism doesn't really help. Therefore we use just -j2.
 	cd $(PYTHON3_DIR) ; \
 	$(TEST) "$(DISTRO_NAME)" = "SLES" && sed -i 's,#include <panel.h>,#include <ncurses/panel.h>,' Modules/_curses_panel.c ; \
 	./configure \
@@ -41,13 +43,20 @@ $(PYTHON3_BUILD): $(PYTHON3_UNPACK)
 	$(MAKE) -j1 -C $(PYTHON3_DIR) DESTDIR=$(PACKAGE_PYTHON3_DESTDIR) install
 	$(TOUCH) $(PYTHON3_COMPILE)
 
-$(PYTHON3_INSTALL): $(PYTHON3_BUILD) 
+$(PACKAGE_DIR)/$(PYTHON3)/sitecustomize.pyc: $(PACKAGE_DIR)/$(PYTHON3)/sitecustomize.py $(PYTHON3_COMPILE)
+	export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH)" ; \
+	export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS)" ; \
+	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
+	$(PACKAGE_PYTHON3_EXECUTABLE) -m py_compile $<
+
+.NOTPARALLEL $(PYTHON3_INSTALL): $(PYTHON3_BUILD)
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
 	$(MAKE) -j1 -C $(PYTHON3_DIR) DESTDIR=$(DESTDIR)$(OMD_ROOT) install
 # Fix python interpreter
 	$(SED) -i '1s|^#!.*/python3\.7$$|#!/usr/bin/env python3|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,2to3-3.7 easy_install-3.7 idle3.7 pip3 pip3.7 pydoc3.7 python3.7m-config pyvenv-3.7)
+	install -m 644 $(addprefix $(PACKAGE_DIR)/$(PYTHON3)/sitecustomize,.py .pyc) $(DESTDIR)$(OMD_ROOT)/lib/python3.7/
 	$(TOUCH) $(PYTHON3_INSTALL)
 
 Python3-clean:

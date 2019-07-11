@@ -845,7 +845,7 @@ bool ReplaceInString(std::string& InOut, const std::string Marker,
 
 class PluginInfo {
 public:
-    PluginInfo() : defined_(false) {}
+    PluginInfo() {}
 
     // Async:
     PluginInfo(int timeout, int age, int retry)
@@ -893,7 +893,7 @@ struct Plugins : public Group {
 public:
     // describes how should certain modules executed
     struct ExeUnit : public cma::cfg::PluginInfo {
-        ExeUnit() {}
+        ExeUnit() = default;
         // Sync
         ExeUnit(std::string_view Pattern, int Timeout, int Retry, bool Run)
             : PluginInfo(Timeout, Retry)  //
@@ -931,6 +931,7 @@ public:
     private:
         void validateAndFix() {
             if (cacheAge() >= kMinimumCacheAge) return;
+            if (cacheAge() == 0) return;  // this is special case
 
             if (!async_ && cacheAge() == 0) return;
 

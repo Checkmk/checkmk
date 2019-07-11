@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "common/cfg_info.h"
+#include "logger.h"
 #include "tools/_xlog.h"
 
 namespace cma::srv {
@@ -19,12 +20,9 @@ namespace cma::srv {
 bool AsyncAnswer::isAnswerOlder(std::chrono::milliseconds Milli) const {
     using namespace std::chrono;
     auto tp = steady_clock::now();
-    std::lock_guard lk(lock_);
-    if (std::chrono::duration_cast<std::chrono::milliseconds>(tp - tp_id_) >
-        Milli)
-        return true;
 
-    return false;
+    std::lock_guard lk(lock_);
+    return duration_cast<milliseconds>(tp - tp_id_) > Milli;
 }
 
 void AsyncAnswer::dropAnswer() {
@@ -81,18 +79,19 @@ AsyncAnswer::DataBlock AsyncAnswer::getDataAndClear() {
         dropDataNoLock();
         return v;
     } catch (const std::exception& e) {
-        xlog::l(XLOG_FLINE + " - no-no-no %s", e.what());
+        XLOG::l(XLOG_FLINE + " - no-no-no '{}'", e.what());
         dropDataNoLock();
         return {};
     }
 }
 
-bool AsyncAnswer::prepareAnswer(std::string Ip) {
+bool AsyncAnswer::prepareAnswer(std::string_view Ip) noexcept {
     std::lock_guard lk(lock_);
-    if (external_ip_ != "" || awaiting_segments_ || received_segments_) {
-        // #TODO check IP and add to list #ERROR here
+
+    if (!external_ip_.empty() || awaiting_segments_ != 0 ||
+        received_segments_ != 0)
         return false;
-    }
+
     dropDataNoLock();
     external_ip_ = Ip;
     awaiting_segments_ = 0;
@@ -124,12 +123,13 @@ bool AsyncAnswer::addSegment(
 
     try {
         segments_.push_back({SectionName, Data.size()});
+
         // reserve + array math
         if (order_ == Order::plugins_last && SectionName == "plugins") {
             plugins_ = Data;
         } else if (order_ == Order::plugins_last && SectionName == "local") {
             local_ = Data;
-        } else if (Data.size()) {
+        } else if (!Data.empty()) {
             if (!AddVectorGracefully(data_, Data)) segments_.back().length_ = 0;
         }
     } catch (const std::exception& e) {

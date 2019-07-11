@@ -18,6 +18,8 @@
 #include "section_header.h"  // we have logging here
 
 namespace cma {
+// we are counting threads in to have control exit/stop/wait
+std::atomic<int> PluginEntry::thread_count_ = 0;
 
 namespace tools {
 
@@ -225,6 +227,8 @@ void TryToHackStringWithCachedInfo(std::string& in_string,
     }
 }
 
+static bool ConfigRemoveSlashR = false;
+
 // see header about description
 bool HackPluginDataWithCacheInfo(std::vector<char>& Out,
                                  const std::vector<char>& OriginalData,
@@ -239,11 +243,11 @@ bool HackPluginDataWithCacheInfo(std::vector<char>& Out,
     size_t data_count = 0;
     auto to_insert = fmt::format(":cached({},{})", LegacyTime, CacheAge);
     for (auto& t : table) {
-        // 1. remove \r
-        if (t.back() == '\r')
-            t.back() = '\n';
-        else
-            t.push_back('\n');
+        if (ConfigRemoveSlashR) {
+            while (t.back() == '\r') t.pop_back();
+        }
+
+        t.push_back('\n');
 
         // 2. try hack header if required
         if (LegacyTime && CacheAge) TryToHackStringWithCachedInfo(t, to_insert);
@@ -451,6 +455,9 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
 
 void PluginEntry::threadCore(const std::wstring& Id) {
     // pre entry
+    // thread counters block
+    thread_count_++;
+    ON_OUT_OF_SCOPE(thread_count_--);
     std::unique_lock lk(lock_);
     if (!thread_on_) {
         XLOG::l(XLOG::kBp)("Attempt to start without resource acquiring");
@@ -538,7 +545,7 @@ std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
     if (failed()) return {};
 
     // check is valid parameters
-    if (cacheAge() < cma::cfg::kMinimumCacheAge) {
+    if (cacheAge() < cma::cfg::kMinimumCacheAge && cacheAge() != 0) {
         XLOG::l("Plugin '{}' requested to be async, but has no valid cache age",
                 path().u8string());
         return {};
@@ -666,12 +673,9 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
     data_time_ = std::chrono::steady_clock::now();
     auto legacy_time = time(0);
 
-    if (cacheAge() > cma::cfg::kMinimumCacheAge) {
+    if (cacheAge() > 0) {
         data_.clear();
-        if (local_)
-            HackPluginDataRemoveCR(data_, Data);
-        else
-            HackPluginDataWithCacheInfo(data_, Data, legacy_time, cacheAge());
+        HackPluginDataWithCacheInfo(data_, Data, legacy_time, cacheAge());
     } else  // "sync plugin"
     {
         // or "failed to hack"
@@ -794,6 +798,21 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
     RemoveDuplicatedPlugins(Out, CheckExists);
 }
 
+namespace provider::config {
+bool G_AsyncPluginWithoutCacheAge_RunAsync = true;
+
+bool IsRunAsync(const PluginEntry& plugin) noexcept {
+    auto run_async = plugin.async();
+
+    if (G_AsyncPluginWithoutCacheAge_RunAsync) return run_async;
+
+    if (run_async && plugin.cacheAge() == 0)
+        return config::G_AsyncPluginWithoutCacheAge_RunAsync;
+
+    return run_async;
+}
+}  // namespace provider::config
+
 // #TODO simplify THIS TRASH, SK!
 std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
     using namespace std;
@@ -814,7 +833,9 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
         auto& entry_name = entry_pair.first;
         auto& entry = entry_pair.second;
 
-        if (entry.async()) continue;
+        // check that out plugin is ging to run as async
+        auto run_async = cma::provider::config::IsRunAsync(entry);
+        if (run_async) continue;
 
         XLOG::d.t("Executing '{}'", entry.path().u8string());
 
@@ -889,6 +910,36 @@ void RunDetachedPlugins(PluginMap& plugins_map, int& start_count) {
     return;
 }
 
+// To get data from async plugins with cache_age=0
+void PickupAsync0data(int timeout, PluginMap& plugins, std::vector<char>& out,
+                      std::vector<std::pair<bool, std::string>>& async_0s) {
+    timeout = std::max(timeout, 10);
+    if (timeout)
+        XLOG::d.i(
+            "Picking up [{}] async-0"
+            "plugins with timeout [{}]",
+            async_0s.size(), timeout);
+
+    // pickup 0 async
+    // plugin.first - status
+    // plygin.second - name
+    size_t async_count = 0;
+    for (int i = 0; i < timeout; i++) {
+        for (auto& plugin : async_0s) {
+            if (plugin.first) continue;
+
+            const auto e = GetEntrySafe(plugins, plugin.second);
+            if (e && !e->running()) {
+                cma::tools::AddVector(out, e->data());
+                plugin.first = false;
+                async_count++;
+            }
+        }
+        if (async_count >= async_0s.size()) break;
+        cma::tools::sleep(1000);
+    }
+}
+
 std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
                                   bool StartImmediately) {
     using namespace std;
@@ -900,20 +951,39 @@ std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
     DataBlock out;
     // async part
     int count = 0;
+    // int timeout = 0;
+    // std::vector<std::pair<bool, std::string>> async_0s;
     for (auto& entry_pair : Plugins) {
         auto& entry_name = entry_pair.first;
         auto& entry = entry_pair.second;
 
         if (!entry.async()) continue;
 
+        auto run_async = cma::provider::config::IsRunAsync(entry);
+        if (!run_async) continue;
+
         if (IsDetachedPlugin(entry.path())) continue;
 
         auto ret = entry.getResultsAsync(StartImmediately);
         if (ret.size()) ++count;
         cma::tools::AddVector(out, ret);
+
+        /*
+                if (provider::config::G_AsyncPluginWithoutCacheAge_RunAsync) {
+                    if (entry.cacheAge() == 0) {
+                        timeout = std::max(timeout, entry.timeout());
+                        async_0s.emplace_back(false, entry_name);
+                    }
+                }
+        */
     }
 
     Count = count;
+    /*
+        if (provider::config::G_AsyncPluginWithoutCacheAge_RunAsync) {
+            PickupAsync0data(timeout, Plugins, out, async_0s);
+        }
+    */
 
     return out;
 }

@@ -117,6 +117,7 @@ bool OnStart(AppType Type, YamlCacheOp UpdateCacheOnSuccess,
         cfg_files.push_back(ConfigFile);
     }
 
+    XLOG::setup::ChangeDebugLogLevel(LogLevel::kLogDebug);
     S_ConfigLoaded = cfg::InitializeMainConfig(cfg_files, YamlCacheOp::update);
 
     if (S_ConfigLoaded) {

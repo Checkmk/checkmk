@@ -294,10 +294,6 @@ class AutomationRenameHosts(Automation):
 
         try:
             for oldname, newname in renamings:
-                # Autochecks: simply read and write out the file again. We do
-                # not store a host name here anymore - but old versions did.
-                # by rewriting we get rid of the host name.
-                actions += self._rename_host_autochecks(oldname, newname)
                 actions += self._rename_host_files(oldname, newname)
         finally:
             # Start monitoring again
@@ -329,23 +325,11 @@ class AutomationRenameHosts(Automation):
         code = os.system(command)  # nosec
         return not code
 
-    def _rename_host_autochecks(self, oldname, newname):
-        actions = []
-        acpath = cmk.utils.paths.autochecks_dir + "/" + oldname + ".mk"
-        if os.path.exists(acpath):
-            old_autochecks = discovery.parse_autochecks_file(oldname)
-            out = file(cmk.utils.paths.autochecks_dir + "/" + newname + ".mk", "w")
-            out.write("[\n")
-            for ct, item, paramstring in old_autochecks:
-                out.write("  (%r, %r, %s),\n" % (ct, item, paramstring))
-            out.write("]\n")
-            out.close()
-            os.remove(acpath)  # Remove old file
-            actions.append("autochecks")
-        return actions
-
     def _rename_host_files(self, oldname, newname):
         actions = []
+
+        if self._rename_host_file(cmk.utils.paths.autochecks_dir, oldname + ".mk", newname + ".mk"):
+            actions.append("autochecks")
 
         # Rename temporary files of the host
         for d in ["cache", "counters"]:

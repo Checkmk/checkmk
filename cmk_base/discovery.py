@@ -1413,50 +1413,60 @@ def _save_autochecks_file(hostname, items):
 
 def set_autochecks_of(host_config, new_items):
     # type: (config.HostConfig, Dict[Tuple[str, check_table.Item], str]) -> None
-    # A Cluster does not have an autochecks file
-    # All of its services are located in the nodes instead
-    # So we cycle through all nodes remove all clustered service
-    # and add the ones we've got from stdin
+    """Merge existing autochecks with the given autochecks for a host and save it
 
-    hostname = host_config.hostname
+    This function is able to handle cluster hosts.
+
+    A Cluster does not have an autochecks file. All of its services are located
+    in the nodes instead. For clusters we cycle through all nodes remove all
+    clustered service and add the ones we've got as input.
+    """
+    if host_config.is_cluster:
+        _set_autochecks_of_cluster(host_config, new_items)
+        return
+
+    new_autochecks = []  # type: check_table.AutocheckTable
+    existing = parse_autochecks_file(host_config.hostname)
+
+    # write new autochecks file, but take paramstrings from existing ones
+    # for those checks which are kept
+    for ct, item, paramstring in existing:
+        if (ct, item) in new_items:
+            new_autochecks.append((ct, item, paramstring))
+            del new_items[(ct, item)]
+
+    for (ct, item), paramstring in new_items.items():
+        new_autochecks.append((ct, item, paramstring))
+
+    # write new autochecks file for that host
+    _save_autochecks_file(host_config.hostname, new_autochecks)
+
+
+def _set_autochecks_of_cluster(host_config, new_items):
+    # type: (config.HostConfig, Dict[Tuple[str, check_table.Item], str]) -> None
+    if not host_config.nodes:
+        return
+
     config_cache = config.get_config_cache()
 
     new_autochecks = []  # type: check_table.AutocheckTable
-    if host_config.is_cluster:
-        if not host_config.nodes:
-            return
-
-        for node in host_config.nodes:
-            existing = parse_autochecks_file(node)
-            for check_plugin_name, item, paramstring in existing:
-                descr = config.service_description(node, check_plugin_name, item)
-                if hostname != config_cache.host_of_clustered_service(node, descr):
-                    new_autochecks.append((check_plugin_name, item, paramstring))
-
-            for (check_plugin_name, item), paramstring in new_items.items():
+    for node in host_config.nodes:
+        existing = parse_autochecks_file(node)
+        for check_plugin_name, item, paramstring in existing:
+            descr = config.service_description(node, check_plugin_name, item)
+            if host_config.hostname != config_cache.host_of_clustered_service(node, descr):
                 new_autochecks.append((check_plugin_name, item, paramstring))
 
-            # write new autochecks file for that host
-            _save_autochecks_file(node, new_autochecks)
-
-        # Check whether or not the cluster host autocheck files are still
-        # existant. Remove them. The autochecks are only stored in the nodes
-        # autochecks files these days.
-        _remove_autochecks_file(hostname)
-    else:
-        existing = parse_autochecks_file(hostname)
-        # write new autochecks file, but take paramstrings from existing ones
-        # for those checks which are kept
-        for ct, item, paramstring in existing:
-            if (ct, item) in new_items:
-                new_autochecks.append((ct, item, paramstring))
-                del new_items[(ct, item)]
-
-        for (ct, item), paramstring in new_items.items():
-            new_autochecks.append((ct, item, paramstring))
+        for (check_plugin_name, item), paramstring in new_items.items():
+            new_autochecks.append((check_plugin_name, item, paramstring))
 
         # write new autochecks file for that host
-        _save_autochecks_file(hostname, new_autochecks)
+        _save_autochecks_file(node, new_autochecks)
+
+    # Check whether or not the cluster host autocheck files are still existant.
+    # Remove them. The autochecks are only stored in the nodes autochecks files
+    # these days.
+    _remove_autochecks_file(host_config.hostname)
 
 
 def remove_autochecks_of(host_config):

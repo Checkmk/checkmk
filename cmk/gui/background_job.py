@@ -34,7 +34,6 @@ import signal
 import sys
 import time
 import traceback
-from enum import Enum
 
 import psutil  # type: ignore
 from pathlib2 import Path
@@ -499,7 +498,7 @@ class BackgroundJob(object):
         os._exit(0)
 
 
-class JobStatusStates(Enum):
+class JobStatusStates(object):
     INITIALIZED = "initialized"
     RUNNING = "running"
     FINISHED = "finished"
@@ -534,7 +533,6 @@ class JobStatus(object):
             finally:
                 cmk.utils.store.release_lock(str(self._jobstatus_path))
 
-        data["state"] = JobStatusStates(data["state"])
         data.setdefault("pid", None)
         data["loginfo"] = {}
         for field_id, field_path in [("JobProgressUpdate", self._progress_update_path),
@@ -565,8 +563,6 @@ class JobStatus(object):
         if params:
             try:
                 status = store.load_data_from_file(str(self._jobstatus_path), {}, lock=True)
-                if "state" in params:
-                    params["state"] = params["state"].value
                 status.update(params)
                 store.save_mk_file(str(self._jobstatus_path), self._format_value(status))
             finally:

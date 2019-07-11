@@ -134,7 +134,7 @@ class APICallBulkDiscovery(APICallCollection):
         return {
             "is_active": job.is_active(),
             "job": {
-                "state": status["state"].value,
+                "state": status["state"],
                 "result_msg": "\n".join(status["loginfo"]["JobResult"]),
                 "output": "\n".join(status["loginfo"]["JobProgressUpdate"]),
             },

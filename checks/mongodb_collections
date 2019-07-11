@@ -46,7 +46,7 @@ def parse_mongodb_collections(info):
         data = parsed.setdefault("%s %s" % (db_name, collection), {})
         if key in required_keys_int:
             try:
-                data[key] = int(value)
+                data[key] = int(float(value))
             except ValueError:
                 pass
     return parsed

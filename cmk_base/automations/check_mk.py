@@ -231,7 +231,13 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
 
-        discovery.set_autochecks_of(host_config, new_items)
+        new_services = []
+        for (check_plugin_name, item), paramstr in new_items.items():
+            descr = config.service_description(hostname, check_plugin_name, item)
+            new_services.append(
+                discovery.DiscoveredService(check_plugin_name, item, descr, paramstr))
+
+        discovery.set_autochecks_of(host_config, new_services)
         self._trigger_discovery_check(host_config)
         return None
 

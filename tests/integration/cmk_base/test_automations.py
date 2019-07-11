@@ -235,7 +235,7 @@ def test_automation_set_autochecks(test_cfg, site):
         assert os.path.exists(autochecks_file)
 
         data = discovery.parse_autochecks_file("blablahost")
-        services = [((s[0], s[1]), s[2]) for s in data]
+        services = [((s.check_plugin_name, s.item), s.paramstr) for s in data]
         assert sorted(services) == [
             (('df', u'xxx'), "'bla'"),
             (('uptime', None), 'None'),

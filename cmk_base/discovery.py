@@ -150,12 +150,6 @@ def do_discovery(hostnames, check_plugin_names, only_new):
 def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,
                       only_new, on_error):
     # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, List[check_table.CheckPluginName], bool, str) -> None
-    if not check_plugin_names and not only_new:
-        # do not even read old file
-        old_items = []  # type: check_table.AutocheckTable
-    else:
-        old_items = parse_autochecks_file(hostname)
-
     if not check_plugin_names:
         # In 'multi_host_sections = _get_host_sections_for_discovery(..)'
         # we've already discovered the right check plugin names.
@@ -184,29 +178,32 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
     #    --> just add new services
     #        only_new is True
 
+    result = []  # type: List[DiscoveredService]
+
+    if not check_plugin_names and not only_new:
+        existing_services = []  # type: List[DiscoveredService]
+    else:
+        existing_services = parse_autochecks_file(hostname)
+
     # Parse old items into a dict (ct, item) -> paramstring
-    result = {}
-    for check_plugin_name, item, paramstring in old_items:
+    for existing_service in existing_services:
         # Take over old items if -I is selected or if -II
         # is selected with --checks= and the check type is not
         # one of the listed ones
-        if only_new or (check_plugin_names and check_plugin_name not in check_plugin_names):
-            result[(check_plugin_name, item)] = paramstring
+        if only_new or (check_plugin_names and
+                        existing_service.check_plugin_name not in check_plugin_names):
+            result.append(existing_service)
 
     stats = {}  # type: Dict[str, int]
     num_services = 0
     for discovered_service in discovered_services:
-        if (discovered_service.check_plugin_name, discovered_service.item) not in result:
-            result[(discovered_service.check_plugin_name,
-                    discovered_service.item)] = discovered_service.paramstr
+        if discovered_service not in result:
+            result.append(discovered_service)
             stats.setdefault(discovered_service.check_plugin_name, 0)
             stats[discovered_service.check_plugin_name] += 1
             num_services += 1
 
-    final_items = []  # type: check_table.AutocheckTable
-    for (check_plugin_name, item), paramstring in result.items():
-        final_items.append((check_plugin_name, item, paramstring))
-    _save_autochecks_file(hostname, sorted(final_items))
+    _save_autochecks_file(hostname, result)
 
     found_check_plugin_names = sorted(stats.keys())
 
@@ -281,24 +278,23 @@ def discover_on_host(config_cache,
                                       on_error=on_error)
 
         # Create new list of checks
-        new_items = {}  # type: Dict[Tuple[str, check_table.Item], str]
+        new_items = []  # type: List[DiscoveredService]
         for check_source, discovered_service in services.values():
             if check_source in ("custom", "legacy", "active", "manual"):
-                continue  # this is not an autocheck or ignored and currently not checked
-                # Note discovered checks that are shadowed by manual checks will vanish
-                # that way.
-
-            table_id = discovered_service.check_plugin_name, discovered_service.item
+                # This is not an autocheck or ignored and currently not
+                # checked. Note: Discovered checks that are shadowed by manual
+                # checks will vanish that way.
+                continue
 
             if check_source == "new":
                 if mode in ("new", "fixall", "refresh") and service_filter(
                         hostname, discovered_service.check_plugin_name, discovered_service.item):
                     counts["self_new"] += 1
-                    new_items[table_id] = discovered_service.paramstr
+                    new_items.append(discovered_service)
 
             elif check_source in ("old", "ignored"):
                 # keep currently existing valid services in any case
-                new_items[table_id] = discovered_service.paramstr
+                new_items.append(discovered_service)
                 counts["self_kept"] += 1
 
             elif check_source == "vanished":
@@ -306,7 +302,7 @@ def discover_on_host(config_cache,
                 # otherwise fix it: remove ignored and non-longer existing services
                 if mode not in ("fixall", "remove") or not service_filter(
                         hostname, discovered_service.check_plugin_name, discovered_service.item):
-                    new_items[table_id] = discovered_service.paramstr
+                    new_items.append(discovered_service)
                     counts["self_kept"] += 1
                 else:
                     counts["self_removed"] += 1
@@ -314,7 +310,7 @@ def discover_on_host(config_cache,
             elif check_source.startswith("clustered_"):
                 # Silently keep clustered services
                 counts[check_source] += 1
-                new_items[table_id] = discovered_service.paramstr
+                new_items.append(discovered_service)
 
             else:
                 raise MKGeneralException("Unknown check source '%s'" % check_source)
@@ -1004,24 +1000,10 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
                             ("new", discovered_service))
 
     # Match with existing items -> "old" and "vanished"
-    old_items = parse_autochecks_file(hostname)
-    for check_plugin_name, item, paramstring in old_items:
-        try:
-            description = config.service_description(hostname, check_plugin_name, item)
-        except Exception as e:
-            if on_error == "raise":
-                raise
-            elif on_error == "warn":
-                console.error("Invalid service description: %s\n" % e)
-            else:
-                continue  # ignore
-
-        existing_service = DiscoveredService(check_plugin_name, item, description, paramstring)
-
-        if (check_plugin_name, item) not in services:
-            services[(check_plugin_name, item)] = ("vanished", existing_service)
-        else:
-            services[(check_plugin_name, item)] = ("old", existing_service)
+    for existing_service in parse_autochecks_file(hostname):
+        table_id = existing_service.check_plugin_name, existing_service.item
+        check_source = "vanished" if table_id not in services else "old"
+        services[table_id] = check_source, existing_service
 
     return services
 
@@ -1292,15 +1274,11 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 #   '----------------------------------------------------------------------'
 
 
-# Read autochecks, but do not compute final check parameters,
-# also return a forth column with the raw string of the parameters.
-# Returns a table with three columns:
-# 1. check_plugin_name
-# 2. item
-# 3. parameter string, not yet evaluated!
 # TODO: use store.load_data_from_file()
+# TODO: External call sites!
 def parse_autochecks_file(hostname):
-    # type: (str) -> check_table.AutocheckTable
+    # type: (str) -> List[DiscoveredService]
+    """Read autochecks, but do not compute final check parameters"""
     def split_python_tuple(line):
         quote = None
         bracklev = 0
@@ -1335,7 +1313,7 @@ def parse_autochecks_file(hostname):
         return []
 
     lineno = 0
-    table = []
+    services = []  # type: List[DiscoveredService]
     for line in file(path):
         lineno += 1
         try:
@@ -1375,12 +1353,20 @@ def parse_autochecks_file(hostname):
             if isinstance(item, str):
                 item = config.decode_incoming_string(item)
 
-            table.append((eval(checktypestring), item, paramstring))
+            check_plugin_name = eval(checktypestring)
         except:
             if cmk.utils.debug.enabled():
                 raise
             raise Exception("Invalid line %d in autochecks file %s" % (lineno, path))
-    return table
+
+        try:
+            description = config.service_description(hostname, check_plugin_name, item)
+        except Exception:
+            continue  # ignore
+
+        services.append(DiscoveredService(check_plugin_name, item, description, paramstring))
+
+    return services
 
 
 def _has_autochecks(hostname):
@@ -1398,67 +1384,67 @@ def _remove_autochecks_file(hostname):
 
 
 def _save_autochecks_file(hostname, items):
-    # type: (str, check_table.AutocheckTable) -> None
+    # type: (str, List[DiscoveredService]) -> None
     if not os.path.exists(cmk.utils.paths.autochecks_dir):
         os.makedirs(cmk.utils.paths.autochecks_dir)
 
     filepath = Path(cmk.utils.paths.autochecks_dir) / ("%s.mk" % hostname)
     content = []
     content.append("[")
-    for check_plugin_name, item, paramstring in items:
-        content.append("  (%r, %r, %s)," % (check_plugin_name, item, paramstring))
+    for discovered_service in sorted(items, key=lambda s: (s.check_plugin_name, s.item)):
+        content.append("  (%r, %r, %s)," % (discovered_service.check_plugin_name,
+                                            discovered_service.item, discovered_service.paramstr))
     content.append("]\n")
     store.save_file(str(filepath), "\n".join(content))
 
 
 def set_autochecks_of(host_config, new_items):
-    # type: (config.HostConfig, Dict[Tuple[str, check_table.Item], str]) -> None
-    """Merge existing autochecks with the given autochecks for a host and save it
-
-    This function is able to handle cluster hosts.
-
-    A Cluster does not have an autochecks file. All of its services are located
-    in the nodes instead. For clusters we cycle through all nodes remove all
-    clustered service and add the ones we've got as input.
-    """
+    # type: (config.HostConfig, List[DiscoveredService]) -> None
+    """Merge existing autochecks with the given autochecks for a host and save it"""
     if host_config.is_cluster:
         _set_autochecks_of_cluster(host_config, new_items)
-        return
+    else:
+        _set_autochecks_of_real_hosts(host_config, new_items)
 
-    new_autochecks = []  # type: check_table.AutocheckTable
-    existing = parse_autochecks_file(host_config.hostname)
+
+def _set_autochecks_of_real_hosts(host_config, new_items):
+    # type: (config.HostConfig, List[DiscoveredService]) -> None
+    new_autochecks = []  # type: List[DiscoveredService]
 
     # write new autochecks file, but take paramstrings from existing ones
     # for those checks which are kept
-    for ct, item, paramstring in existing:
-        if (ct, item) in new_items:
-            new_autochecks.append((ct, item, paramstring))
-            del new_items[(ct, item)]
+    for existing_service in parse_autochecks_file(host_config.hostname):
+        # TODO: Need to implement a list class that realizes in / not in correctly
+        if existing_service in new_items:
+            new_autochecks.append(existing_service)
 
-    for (ct, item), paramstring in new_items.items():
-        new_autochecks.append((ct, item, paramstring))
+    for discovered_service in new_items:
+        if discovered_service not in new_autochecks:
+            new_autochecks.append(discovered_service)
 
     # write new autochecks file for that host
     _save_autochecks_file(host_config.hostname, new_autochecks)
 
 
 def _set_autochecks_of_cluster(host_config, new_items):
-    # type: (config.HostConfig, Dict[Tuple[str, check_table.Item], str]) -> None
+    # type: (config.HostConfig, List[DiscoveredService]) -> None
+    """A Cluster does not have an autochecks file. All of its services are located
+    in the nodes instead. For clusters we cycle through all nodes remove all
+    clustered service and add the ones we've got as input."""
     if not host_config.nodes:
         return
 
     config_cache = config.get_config_cache()
 
-    new_autochecks = []  # type: check_table.AutocheckTable
+    new_autochecks = []  # type: List[DiscoveredService]
     for node in host_config.nodes:
-        existing = parse_autochecks_file(node)
-        for check_plugin_name, item, paramstring in existing:
-            descr = config.service_description(node, check_plugin_name, item)
-            if host_config.hostname != config_cache.host_of_clustered_service(node, descr):
-                new_autochecks.append((check_plugin_name, item, paramstring))
+        for existing_service in parse_autochecks_file(node):
+            if host_config.hostname != config_cache.host_of_clustered_service(
+                    node, existing_service.description):
+                new_autochecks.append(existing_service)
 
-        for (check_plugin_name, item), paramstring in new_items.items():
-            new_autochecks.append((check_plugin_name, item, paramstring))
+        for discovered_service in new_items:
+            new_autochecks.append(discovered_service)
 
         # write new autochecks file for that host
         _save_autochecks_file(node, new_autochecks)
@@ -1484,14 +1470,15 @@ def remove_autochecks_of(host_config):
 
 def _remove_autochecks_of_host(hostname):
     # type: (str) -> int
-    old_items = parse_autochecks_file(hostname)
     removed = 0
-    new_items = []
+    new_items = []  # type: List[DiscoveredService]
     config_cache = config.get_config_cache()
-    for check_plugin_name, item, paramstring in old_items:
-        descr = config.service_description(hostname, check_plugin_name, item)
-        if hostname != config_cache.host_of_clustered_service(hostname, descr):
-            new_items.append((check_plugin_name, item, paramstring))
+
+    old_items = parse_autochecks_file(hostname)
+    for existing_service in old_items:
+        if hostname != config_cache.host_of_clustered_service(hostname,
+                                                              existing_service.description):
+            new_items.append(existing_service)
         else:
             removed += 1
     _save_autochecks_file(hostname, new_items)

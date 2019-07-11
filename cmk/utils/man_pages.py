@@ -36,7 +36,10 @@ import sys
 import StringIO
 import subprocess
 
-from pathlib2 import Path
+try:
+    from pathlib import Path  # type: ignore
+except ImportError:
+    from pathlib2 import Path
 
 import cmk.utils.debug
 import cmk.utils.paths

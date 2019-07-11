@@ -33,7 +33,10 @@ import ctypes.util
 from contextlib import contextmanager
 from typing import Generator  # pylint: disable=unused-import
 
-from pathlib2 import Path  # pylint: disable=unused-import
+try:
+    from pathlib import Path  # type: ignore  # pylint: disable=unused-import
+except ImportError:
+    from pathlib2 import Path  # pylint: disable=unused-import
 
 import cmk.utils.store
 from cmk.utils.exceptions import MKGeneralException

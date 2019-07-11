@@ -16,6 +16,7 @@
 #include "common/cfg_info.h"
 #include "providers/plugins.h"
 #include "read_file.h"
+#include "test_tools.h"
 
 namespace cma {  // to become friendly for wtools classes
 
@@ -712,7 +713,7 @@ TEST(PluginTest, GeneratePluginEntry) {
         EXPECT_EQ(pm.size(), 1);
         e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1");
         ASSERT_NE(nullptr, e);
-        EXPECT_EQ(e->async(), true);
+        EXPECT_EQ(e->async(), false);
         EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
         EXPECT_EQ(e->timeout(), x2[0].timeout());
         EXPECT_EQ(e->cacheAge(), x2[0].cacheAge());
@@ -1257,6 +1258,61 @@ TEST(PluginTest, SyncStartSimulation_Long) {
             EXPECT_EQ(table[1], SecondLine);
         }
     }
+}
+
+TEST(CmaMain, Config) {
+    EXPECT_EQ(TheMiniBox::StartMode::job, GetStartMode("abc.exe"));
+    std::filesystem::path path = ".";
+
+    EXPECT_EQ(TheMiniBox::StartMode::updater,
+              GetStartMode(path / cfg::files::kAgentUpdater));
+    auto str = (path / cfg::files::kAgentUpdater).wstring();
+    cma::tools::WideUpper(str);
+
+    EXPECT_EQ(TheMiniBox::StartMode::updater, GetStartMode(str));
+}
+
+TEST(CmaMain, MiniBoxStartMode) {
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [source, target] = tst::CreateInOut();
+    auto path = target / "a.bat";
+
+    CreatePluginInTemp(path, 0, "aaa");
+
+    for (auto mode :
+         {TheMiniBox::StartMode::job, TheMiniBox::StartMode::updater}) {
+        TheMiniBox mb;
+
+        auto started = mb.start(L"x", path, mode);
+        ASSERT_TRUE(started);
+
+        auto pid = mb.getProcessId();
+        std::vector<char> accu;
+        auto success = mb.waitForEnd(std::chrono::seconds(3), true);
+        ASSERT_TRUE(success);
+        // we have probably data, try to get and and store
+        mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
+                              uint32_t Code, const std::vector<char>& Data) {
+            auto data = wtools::ConditionallyConvertFromUTF16(Data);
+
+            cma::tools::AddVector(accu, data);
+        });
+
+        EXPECT_TRUE(!accu.empty());
+    }
+}
+
+TEST(PluginTest, DebugInit) {
+    std::vector<cma::cfg::Plugins::ExeUnit> exe_units_valid_SYNC_local = {
+        //       Async  Timeout CacheAge              Retry  Run
+        // clang-format off
+    {"*.cmd", false, 10,     0, 3,     true},
+    {"*",     false, 10,     0, 3,     false},
+        // clang-format on
+    };
+    EXPECT_EQ(0, exe_units_valid_SYNC_local[0].cacheAge());
+    EXPECT_FALSE(exe_units_valid_SYNC_local[0].async());
 }
 
 }  // namespace cma

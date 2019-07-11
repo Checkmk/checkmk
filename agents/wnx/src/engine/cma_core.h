@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 
 #include "cfg.h"
 #include "common/wtools.h"
@@ -165,7 +166,7 @@ public:
         try {
             // now exec
             auto ar = new wtools::AppRunner;
-            proc_id_ = ar->goExec(exec_, false, true, true);
+            proc_id_ = ar->goExecAsJob(exec_);
             if (proc_id_) {
                 process_ = ar;
                 return true;
@@ -181,8 +182,9 @@ public:
 
         return false;
     }
-
-    bool start(const std::wstring Id, const std::filesystem::path ExeFile) {
+    enum class StartMode { job, updater };
+    bool start(std::wstring_view Id, std::filesystem::path ExeFile,
+               StartMode start_mode) {
         int count = 0;
         std::lock_guard lk(lock_);
         if (process_) return false;
@@ -194,7 +196,18 @@ public:
             // now exec
             auto ar = new wtools::AppRunner;
             auto exec = cma::ConstructCommandToExec(exec_);
-            proc_id_ = ar->goExec(exec, false, true, true);
+            XLOG::d.t("Exec app '{}', mode [{}]", wtools::ConvertToUTF8(exec),
+                      static_cast<int>(start_mode));
+
+            switch (start_mode) {
+                case StartMode::job:
+                    proc_id_ = ar->goExecAsJob(exec);
+                    break;
+                case StartMode::updater:
+                    proc_id_ = ar->goExecAsUpdater(exec);
+                    break;
+            }
+
             if (proc_id_) {
                 process_ = ar;
                 return true;
@@ -271,58 +284,13 @@ public:
         return true;
     }
 
+    // very special, only used for cmk-updater
+    bool waitForUpdater(std::chrono::milliseconds Timeout);
+
     // With kGrane interval tries to check running processes
     // returns true if all processes ended
     // returns false on timeout or break;
-    bool waitForEnd(std::chrono::milliseconds Timeout, bool KillWhatLeft) {
-        using namespace std::chrono;
-        if (stop_set_) return false;
-        ON_OUT_OF_SCOPE(readWhatLeft());
-
-        constexpr std::chrono::milliseconds kGrane = 250ms;
-        auto waiting_processes = getProcessId();
-        auto read_handle = getReadHandle();
-        for (;;) {
-            auto ready = checkProcessExit(waiting_processes);
-            {
-                auto buf = readFromHandle<std::vector<char>>(read_handle);
-                if (buf.size()) appendResult(read_handle, buf);
-            }
-
-            if (ready) return true;
-
-            if (Timeout >= kGrane) {
-                std::unique_lock lk(lock_);
-                auto stop_time = std::chrono::steady_clock::now() + kGrane;
-                auto stopped = cv_stop_.wait_until(
-                    lk, stop_time, [this]() -> bool { return stop_set_; });
-
-                if (stopped || stop_set_) {
-                    XLOG::d(
-                        "Plugin '{}' signaled to be stopped [{}] [{}] left timeout [{}ms]!",
-                        wtools::ConvertToUTF8(exec_), stopped, stop_set_,
-                        Timeout.count());
-                } else {
-                    Timeout -= kGrane;
-                    continue;
-                }
-            }
-
-            if (Timeout < kGrane) failed_ = true;
-
-            if (KillWhatLeft) {
-                process_->kill(true);
-                // cma::tools::win::KillProcess(waiting_processes, -1);
-                XLOG::d("Process '{}' [{}] killed",
-                        wtools::ConvertToUTF8(exec_),
-                        waiting_processes);  // not normal situation
-            }
-
-            return false;
-        }
-
-        // never here
-    }
+    bool waitForEnd(std::chrono::milliseconds Timeout, bool KillWhatLeft);
 
     // normally kill process and associated data
     // also removes and resets other resources
@@ -357,7 +325,6 @@ public:
         cv_stop_.notify_one();
     }
 
-private:
     // get handle to read data from stdio
     HANDLE getReadHandle() {
         std::vector<HANDLE> handles;
@@ -367,6 +334,7 @@ private:
         return h;
     }
 
+private:
     // called AFTER process finished!
     void readWhatLeft() {
         using namespace std;
@@ -394,7 +362,7 @@ private:
     }
 
     // check processes for exit
-    // updates object with exic code
+    // updates object with exit code
     // returns true if process  exists or not accessible
     bool checkProcessExit(const uint32_t pid) {
         auto proc_string = formatProcessInLog(pid, exec_);
@@ -664,16 +632,17 @@ protected:
     FRIEND_TEST(PluginTest, TimeoutCalc);
 #endif
 };
-}  // namespace cma
 
-namespace cma {
+TheMiniBox::StartMode GetStartMode(const std::filesystem::path& filepath);
+
 // #TODO estimate class usage
-using PluginMap = std::unordered_map<std::string, PluginEntry>;
+using PluginMap = std::unordered_map<std::string, cma::PluginEntry>;
 
 const PluginEntry* GetEntrySafe(const PluginMap& Pm, const std::string& Key);
 PluginEntry* GetEntrySafe(PluginMap& Pm, const std::string& Key);
 
 void InsertInPluginMap(PluginMap& Out, const PathVector& FoundFiles);
+
 void FilterPluginMap(PluginMap& Out, const PathVector& FoundFiles);
 void ApplyExeUnitToPluginMap(
     PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
@@ -694,4 +663,5 @@ std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
 constexpr std::chrono::seconds kRestartInterval{60};
 
 void RunDetachedPlugins(PluginMap& plugins_map, int& start_count);
+
 }  // namespace cma

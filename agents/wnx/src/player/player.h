@@ -43,7 +43,7 @@ public:
             // now exec all
             for (auto& exec : exec_array_) {
                 auto ar = new wtools::AppRunner;
-                auto started = ar->goExec(exec, false, true, true);
+                auto started = ar->goExecAsJob(exec);
                 if (started)
                     processes_.push_back(ar);
                 else
@@ -69,7 +69,7 @@ public:
             // now exec all
             for (auto& exec : exec_array_) {
                 auto ar = new wtools::AppRunner;
-                auto started = ar->goExec(exec, false, true, true);
+                auto started = ar->goExecAsJob(exec);
                 if (started)
                     processes_.push_back(ar);
                 else

@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <tuple>
 
 #include "tools/_raii.h"
@@ -71,7 +72,7 @@ inline bool RunDetachedCommand(const std::string& Command) {
 // returns process id
 // used during auto update
 inline uint32_t RunStdCommand(
-    const std::wstring& Command,  // full command with arguments
+    std::wstring_view Command,   // full command with arguments
     bool Wait,                   // important flag! set false  when you are sure
     BOOL InheritHandle = FALSE,  // not optimal, but default
     HANDLE Stdio = 0,            // when we want to catch output
@@ -92,7 +93,7 @@ inline uint32_t RunStdCommand(
     memset(&pi, 0, sizeof(pi));
 
     if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t*>(Command.c_str()),  // win32!
+                         const_cast<wchar_t*>(Command.data()),  // win32!
                          nullptr,        // security attribute
                          nullptr,        // thread attribute
                          InheritHandle,  // handle inheritance

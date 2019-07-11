@@ -1,0 +1,37 @@
+Title: Historic data views and painters for capacity management
+Level: 2
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1562860030
+Class: feature
+
+Capacity management allows you to work with the service metrics historical
+data. When configuring a view you can select for a column the "Service
+Historic Metrics" option from the drop-down menu, available for the "All
+hosts" and "All services" data-sources.
+
+This customizable painter allows you to select, which service metric you
+want to analyze, over which time range should data be recovered from your
+RRD database, how data is to be consolidated and aggregated. Finally, you
+need to label this column to your best convenience.
+
+Some ideas you might want to consider when creating your views:
+
+List all your hosts Peak CPU utilization, over the last week, and also last
+month. Maybe you want also to create a new column corresponding to the to
+the times a new version of your software was deployed. Time ranges are
+completely flexible, and you can keep adding columns for any time window
+you prefer.
+
+Analyze over the same time window, the peak, average and minimum CPU
+utilization of all your hosts over the last week or last month.
+
+You can also get data from different services at the same time. For example
+showing CPU utilization, used memory and disk IO averaged over the last
+week.
+
+One last note. Because you will be querying from the RRD data of many hosts
+at the same time, query time will increase linearly with the volume of data
+you are processing.

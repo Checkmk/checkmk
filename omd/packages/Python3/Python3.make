@@ -10,6 +10,8 @@ PYTHON3_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-unpack
 
 .PHONY: Python3 Python3-install Python3-skel Python3-clean upstream
 
+.NOTPARALLEL: $(PYTHON3_INSTALL)
+
 Python3: $(PYTHON3_BUILD)
 
 Python3-install: $(PYTHON3_INSTALL)
@@ -49,7 +51,7 @@ $(PACKAGE_DIR)/$(PYTHON3)/sitecustomize.pyc: $(PACKAGE_DIR)/$(PYTHON3)/sitecusto
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
 	$(PACKAGE_PYTHON3_EXECUTABLE) -m py_compile $<
 
-.NOTPARALLEL $(PYTHON3_INSTALL): $(PYTHON3_BUILD)
+$(PYTHON3_INSTALL): $(PYTHON3_BUILD)
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used

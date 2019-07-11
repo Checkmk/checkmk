@@ -10,7 +10,7 @@ PYTHON_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-patching
 
 .PHONY: Python Python-install Python-skel Python-clean upstream
 
-.NOTPARALLEL: $(PYTHON_INSTALL):
+.NOTPARALLEL: $(PYTHON_INSTALL)
 
 Python: $(PYTHON_BUILD)
 

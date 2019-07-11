@@ -1,6 +1,8 @@
 # This file initializes the py.test environment
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
+
 import pytest
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
@@ -17,7 +19,10 @@ import pwd
 import shutil
 import sys
 import tempfile
-from pathlib2 import Path
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
 import testlib
 
 #
@@ -278,6 +283,6 @@ fake_version_and_paths()
 def site(request):
     site_obj = _get_site_object()
     yield site_obj
-    print ""
-    print "Cleanup site processes after test execution..."
+    print("")
+    print("Cleanup site processes after test execution...")
     site_obj.stop()

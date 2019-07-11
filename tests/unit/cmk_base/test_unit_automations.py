@@ -14,7 +14,6 @@ def test_registered_automations(site):
         'delete-hosts',
         'diag-host',
         'get-agent-output',
-        'get-autochecks',
         'get-check-information',
         'get-check-manpage',
         'get-configuration',

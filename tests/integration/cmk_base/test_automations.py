@@ -1,10 +1,14 @@
 # pylint: disable=redefined-outer-name
 import re
+import os
 import ast
 import subprocess
 import pytest  # type: ignore
 
 from testlib import web, repo_path  # pylint: disable=unused-import
+
+import cmk_base.discovery as discovery
+import cmk.utils.paths
 
 
 @pytest.fixture(scope="module")
@@ -214,23 +218,6 @@ def test_automation_try_discovery_host(test_cfg, site):
     assert isinstance(data["check_table"], list)
 
 
-def test_automation_get_autochecks_unknown_host(test_cfg, site):
-    data = _execute_automation(site, "get-autochecks", args=["unknown-host"])
-    assert data == []
-
-
-def test_automation_get_autochecks_known_host(test_cfg, site):
-    data = _execute_automation(site, "get-autochecks", args=["modes-test-host"])
-
-    assert isinstance(data, list)
-    for entry in data:
-        assert len(entry) == 4
-        checktype, item, _resolved_paramstring, paramstring = entry
-        assert isinstance(checktype, str)
-        assert item is None or isinstance(item, unicode)
-        assert isinstance(paramstring, str)
-
-
 def test_automation_set_autochecks(test_cfg, site):
     new_items = {
         ("df", "xxx"): "'bla'",
@@ -244,10 +231,15 @@ def test_automation_set_autochecks(test_cfg, site):
                                    stdin=repr(new_items))
         assert data is None
 
-        data = _execute_automation(site, "get-autochecks", args=["blablahost"])
+        autochecks_file = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, "blablahost")
+        assert os.path.exists(autochecks_file)
 
-        assert sorted(data) == sorted([('df', u'xxx', 'bla', "'bla'"),
-                                       ('uptime', None, None, 'None')])
+        data = discovery.parse_autochecks_file("blablahost")
+        services = [((s[0], s[1]), s[2]) for s in data]
+        assert sorted(services) == [
+            (('df', u'xxx'), "'bla'"),
+            (('uptime', None), 'None'),
+        ]
 
         assert site.file_exists("var/check_mk/autochecks/blablahost.mk")
     finally:

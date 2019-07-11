@@ -239,23 +239,6 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 automations.register(AutomationSetAutochecks())
 
 
-# TODO: Is this automation still needed?
-class AutomationGetAutochecks(Automation):
-    cmd = "get-autochecks"
-    needs_config = True
-    needs_checks = True  # TODO: Can we change this?
-
-    def execute(self, args):
-        hostname = args[0]
-        result = []
-        for ct, item, paramstring in discovery.parse_autochecks_file(hostname):
-            result.append((ct, item, discovery.resolve_paramstring(ct, paramstring), paramstring))
-        return result
-
-
-automations.register(AutomationGetAutochecks())
-
-
 class AutomationRenameHosts(Automation):
     cmd = "rename-hosts"
     needs_config = True

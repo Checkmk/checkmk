@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 import pytest  # type: ignore
 
 from pathlib2 import Path
@@ -15,6 +16,15 @@ import cmk_base.discovery as discovery
 @pytest.fixture(autouse=True)
 def autochecks_dir(monkeypatch, tmp_path):
     monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
+
+
+@pytest.fixture()
+def test_config(monkeypatch):
+    config.load_checks(check_api.get_check_api_context,
+                       ["checks/df", "checks/cpu", "checks/chrony", "checks/lnx_if"])
+
+    ts = Scenario().add_host("host")
+    return ts.apply(monkeypatch)
 
 
 @pytest.mark.parametrize(
@@ -118,13 +128,7 @@ def autochecks_dir(monkeypatch, tmp_path):
             ],
         ),
     ])
-def test_read_autochecks_of(monkeypatch, autochecks_content, expected_result):
-    config.load_checks(check_api.get_check_api_context,
-                       ["checks/df", "checks/cpu", "checks/chrony", "checks/lnx_if"])
-
-    ts = Scenario().add_host("host")
-    ts.apply(monkeypatch)
-
+def test_read_autochecks_of(test_config, autochecks_content, expected_result):
     autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(autochecks_content)
@@ -192,12 +196,19 @@ def test_parse_autochecks_file_not_existing():
             ],
         ),
     ])
-def test_parse_autochecks_file(autochecks_content, expected_result):
+def test_parse_autochecks_file(test_config, autochecks_content, expected_result):
     autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(autochecks_content)
 
-    assert discovery.parse_autochecks_file("host") == expected_result
+    parsed = discovery.parse_autochecks_file("host")
+    assert len(parsed) == len(expected_result)
+
+    for index, service in enumerate(parsed):
+        expected = expected_result[index]
+        assert service.check_plugin_name == expected[0]
+        assert service.item == expected[1]
+        assert service.paramstr == expected[2]
 
 
 def test_has_autochecks():
@@ -217,13 +228,13 @@ def test_remove_autochecks_file():
 @pytest.mark.parametrize("items,expected_content", [
     ([], "[\n]\n"),
     ([
-        ('df', u'/xyz', "None"),
-        ('df', u'/', "{}"),
-        ('cpu.loads', None, "cpuload_default_levels"),
+        discovery.DiscoveredService('df', u'/xyz', u"Filesystem /xyz", "None"),
+        discovery.DiscoveredService('df', u'/', u"Filesystem /", "{}"),
+        discovery.DiscoveredService('cpu.loads', None, "CPU load", "cpuload_default_levels"),
     ], """[
-  ('df', u'/xyz', None),
-  ('df', u'/', {}),
   ('cpu.loads', None, cpuload_default_levels),
+  ('df', u'/', {}),
+  ('df', u'/xyz', None),
 ]\n"""),
 ])
 def test_save_autochecks_file(items, expected_content):

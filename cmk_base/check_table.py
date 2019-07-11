@@ -40,8 +40,6 @@ Item = Optional[Text]
 CheckParameters = Union[None, Dict, Tuple]
 CheckPluginName = str
 CheckTable = Dict[Tuple[CheckPluginName, Item], Tuple[Any, Text, List[Text]]]
-Autocheck = Tuple[CheckPluginName, Item, str]
-AutocheckTable = List[Autocheck]
 
 # Add WATO-configured explicit checks to (possibly empty) checks
 # statically defined in checks.

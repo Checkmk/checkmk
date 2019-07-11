@@ -10,6 +10,8 @@ PYTHON3_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-unpack
 
 # HACK!
 PYTHON3_PACKAGE_DIR := $(PACKAGE_DIR)/Python3
+PYTHON3_SITECUSTOMIZE_SOURCE := $(PYTHON3_PACKAGE_DIR)/sitecustomize.py
+PYTHON3_SITECUSTOMIZE_COMPILED := $(PYTHON3_PACKAGE_DIR)/__pycache__/sitecustomize.cpython-37.pyc
 
 .PHONY: Python3 Python3-install Python3-skel Python3-clean upstream
 
@@ -26,7 +28,7 @@ else
 PYTHON_ENABLE_OPTIMIZATIONS :=
 endif
 
-$(PYTHON3_BUILD): $(PYTHON3_PACKAGE_DIR)/sitecustomize.pyc
+$(PYTHON3_BUILD): $(PYTHON3_SITECUSTOMIZE_COMPILED)
 	$(TOUCH) $(PYTHON3_BUILD)
 
 $(PYTHON3_COMPILE): $(PYTHON3_UNPACK)
@@ -48,7 +50,7 @@ $(PYTHON3_COMPILE): $(PYTHON3_UNPACK)
 	$(MAKE) -j1 -C $(PYTHON3_DIR) DESTDIR=$(PACKAGE_PYTHON3_DESTDIR) install
 	$(TOUCH) $(PYTHON3_COMPILE)
 
-$(PYTHON3_PACKAGE_DIR)/sitecustomize.pyc: $(PYTHON3_PACKAGE_DIR)/sitecustomize.py $(PYTHON3_COMPILE)
+$(PYTHON3_SITECUSTOMIZE_COMPILED): $(PYTHON3_SITECUSTOMIZE_SOURCE) $(PYTHON3_COMPILE)
 	export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH)" ; \
 	export LDFLAGS="$(PACKAGE_PYTHON3_LDFLAGS)" ; \
 	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
@@ -61,7 +63,8 @@ $(PYTHON3_INSTALL): $(PYTHON3_BUILD)
 	$(MAKE) -j1 -C $(PYTHON3_DIR) DESTDIR=$(DESTDIR)$(OMD_ROOT) install
 # Fix python interpreter
 	$(SED) -i '1s|^#!.*/python3\.7$$|#!/usr/bin/env python3|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,2to3-3.7 easy_install-3.7 idle3.7 pip3 pip3.7 pydoc3.7 python3.7m-config pyvenv-3.7)
-	install -m 644 $(addprefix $(PYTHON3_PACKAGE_DIR)/sitecustomize,.py .pyc) $(DESTDIR)$(OMD_ROOT)/lib/python3.7/
+	install -m 644 $(PYTHON3_SITECUSTOMIZE_SOURCE) $(DESTDIR)$(OMD_ROOT)/lib/python3.7/
+	install -m 644 $(PYTHON3_SITECUSTOMIZE_COMPILED) $(DESTDIR)$(OMD_ROOT)/lib/python3.7/__pycache__
 	$(TOUCH) $(PYTHON3_INSTALL)
 
 Python3-clean:

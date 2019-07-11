@@ -1,0 +1,16 @@
+Title: Fixed wrong check interval for "Check_MK HW/SW Inventory" service
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1562856099
+Class: fix
+
+Sites created with one of the previous 1.6 releases were using a check interval
+of 1 minute instead of the intended 1 day. The problem was that the sample
+configuration, which is created during site creation, created a wrong rule in
+the ruleset "Normal check interval for service checks". This could be fixed by
+creating the rule manually.
+
+Sites created with 1.6.b4 or newer will now use the intended check interval again.

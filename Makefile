@@ -532,6 +532,7 @@ virtual-envs/%/Pipfile.lock: virtual-envs/%/Pipfile
 # This is extremely fast since the dependencies do not have to be resolved.
 # Cleanup partially created pipenv. This makes us able to automatically repair
 # broken virtual environments which may have been caused by network issues.
+.PRECIOUS: virtual-envs/%/.venv
 virtual-envs/%/.venv: virtual-envs/%/Pipfile.lock
 	cd virtual-envs/$*/; \
 	$(RM) -r .venv; \

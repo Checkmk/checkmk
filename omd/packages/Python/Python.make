@@ -10,6 +10,8 @@ PYTHON_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-patching
 
 .PHONY: Python Python-install Python-skel Python-clean upstream
 
+.NOTPARALLEL: $(PYTHON_INSTALL)
+
 Python: $(PYTHON_BUILD)
 
 Python-install: $(PYTHON_INSTALL)
@@ -94,7 +96,7 @@ bin/g++:
 	$(RM) bin/g++ ; \
 	$(LN) -s "$$CXX" bin/g++
 
-.NOTPARALLEL $(PYTHON_INSTALL): $(PYTHON_BUILD)
+$(PYTHON_INSTALL): $(PYTHON_BUILD)
 # Install python files (needed by dependent packages like mod_python,
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used

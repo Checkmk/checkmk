@@ -32,7 +32,8 @@ are just for optical output purposes."""
 
 import time
 import math
-from typing import Tuple  # pylint: disable=unused-import
+from datetime import timedelta
+from typing import Tuple, Union  # pylint: disable=unused-import
 
 from cmk.utils.i18n import _
 
@@ -52,7 +53,7 @@ def date(timestamp):
 
 
 def date_and_time(timestamp):
-    return time.strftime(_("%Y-%m-%d %H:%M:%S"), time.localtime(timestamp))
+    return "%s %s" % (date(timestamp), time_of_day(timestamp))
 
 
 def time_of_day(timestamp):
@@ -60,12 +61,12 @@ def time_of_day(timestamp):
 
 
 def timespan(seconds):
-    hours, secs = divmod(seconds, 3600)
-    mins, secs = divmod(secs, 60)
-    return "%d:%02d:%02d" % (hours, mins, secs)
+    # type: (Union[float, int]) -> str
+    return str(timedelta(seconds=int(seconds)))
 
 
 def time_since(timestamp):
+    # type: (int) -> str
     return timespan(time.time() - timestamp)
 
 
@@ -109,24 +110,6 @@ class Age(object):
                 return "%.1f %s" % (years, _("y"))
 
             return "%.0f %s" % (years, _("y"))
-
-    # OLD LOGIC:
-    #
-    #def __str__(self):
-    #    if self.__secs < 240:
-    #        return "%d sec" % self.__secs
-    #    mins = self.__secs / 60
-    #    if mins < 120:
-    #        return "%d min" % mins
-    #    hours, mins = divmod(mins, 60)
-    #    if hours < 12 and mins > 0:
-    #        return "%d hours %d min" % (hours, mins)
-    #    elif hours < 48:
-    #        return "%d hours" % hours
-    #    days, hours = divmod(hours, 24)
-    #    if days < 7 and hours > 0:
-    #        return "%d days %d hours" % (days, hours)
-    #    return "%d days" % days
 
     def __float__(self):
         return float(self.__secs)

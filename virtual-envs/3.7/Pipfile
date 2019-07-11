@@ -26,6 +26,9 @@ yapf = "*"  # used for editor integration and the format-python Makefile target
 [packages]
 setuptools_scm = "==3.3.3"  # needed by various setup.py
 setuptools-git = "==1.2"  # needed by various setup.py
+typing = "==3.7.4"  # direct dependency
+six = "==1.12.0"  # direct dependency, indirect via python-dateutil
+python-dateutil = "==2.8.0"  # direct dependency
 
 [requires]
 python_version = "3.7"

@@ -37,7 +37,10 @@ import tempfile
 import time
 from typing import Dict, List  # pylint: disable=unused-import
 
-import pathlib2 as pathlib
+try:
+    from pathlib import Path  # type: ignore
+except ImportError:
+    from pathlib2 import Path
 
 import cmk.utils.log
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
@@ -97,11 +100,11 @@ def lock_exclusive():
 
 
 def mkdir(path, mode=0o770):
-    pathlib.Path(path).mkdir(mode=mode, exist_ok=True)
+    Path(path).mkdir(mode=mode, exist_ok=True)
 
 
 def makedirs(path, mode=0o770):
-    pathlib.Path(path).mkdir(mode=mode, exist_ok=True, parents=True)
+    Path(path).mkdir(mode=mode, exist_ok=True, parents=True)
 
 
 #.

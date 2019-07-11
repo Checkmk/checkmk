@@ -502,9 +502,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             'extra_service_conf': {
                 'check_interval': [{
                     'condition': {
-                        'service_description': {
+                        'service_description': [{
                             '$regex': 'Check_MK HW/SW Inventory$'
-                        }
+                        }]
                     },
                     'value': 1440,
                     'options': {

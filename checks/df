@@ -218,15 +218,23 @@ def _filter_by_type(volume_info, ignore_fs_types, never_ignore_mountpoints, iter
             yield df_block
 
 
+def _format_with_description(description, mountpoint):
+    """
+    TODO: maybe do this only if description != mountpoint
+    """
+    return "%s %s" % (description, mountpoint)
+
+
 def _get_item_list_from_blocks(df_blocks):
     """return the mountpoint"""  # TODO: fix this. Should include optional description
     return [df_block[0] for df_block in df_blocks]
 
 
-def inventory_df(parsed):
-    def is_single_mountpoint(inventory_entry):
-        return "patterns" not in inventory_entry[1]
+def _is_grouped_item(params):
+    return "patterns" in params
 
+
+def inventory_df(parsed):
     inventory_options = host_extra_conf_merged(host_name(), inventory_df_rules)
     include_volume_name = inventory_options.get("include_volume_name", False)
     ignore_fs_types = inventory_options.get("ignore_fs_types", inventory_df_exclude_fs)
@@ -240,30 +248,27 @@ def inventory_df(parsed):
 
     mplist = _get_item_list_from_blocks(filtered_blocks)
 
+    inventory = df_inventory(mplist)
     if include_volume_name:
-        inventory = []
-        for entry in df_inventory(mplist):
-            if is_single_mountpoint(entry):
-                mountpoint, params = entry
-                item = "%s %s" % (volume_info[mountpoint]["volume_name"], mountpoint)
-                inventory.append((item, params))
-            else:
-                inventory.append(entry)
-    else:
-        inventory = df_inventory(mplist)
+        for idx, (mountpoint, params) in enumerate(inventory):
+            if _is_grouped_item(params):
+                continue
+            item = _format_with_description(volume_info[mountpoint]["volume_name"], mountpoint)
+            inventory[idx] = (item, params)
+
     return inventory
 
 
 def check_df(item, params, parsed):
     (df_blocks, volume_info), df_inodes = parsed
 
-    volume_and_mp_to_mp = {
-        ("%s %s" % (volume_info[mp]["volume_name"], mp)): mp for mp in volume_info
-    }
-    mountpoint = item
-    if item in volume_and_mp_to_mp and "patterns" not in params and item not in volume_info:
-        mountpoint = volume_and_mp_to_mp[item]
-    return df_check_filesystem_list(mountpoint, params, df_blocks, df_inodes)
+    if item in volume_info or _is_grouped_item(params):
+        return df_check_filesystem_list(item, params, df_blocks, df_inodes)
+
+    iter_name_mp = ((volume_info[mp]["volume_name"], mp) for mp in volume_info)
+    for name, mountpoint in iter_name_mp:
+        if item == _format_with_description(name, mountpoint):
+            return df_check_filesystem_list(mountpoint, params, df_blocks, df_inodes)
 
 
 check_info['df'] = {

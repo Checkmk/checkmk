@@ -28,7 +28,7 @@ import os
 import socket
 import time
 import signal
-from typing import Iterator, Callable, List, Text, Optional, Dict, Tuple  # pylint: disable=unused-import
+from typing import Union, Iterator, Callable, List, Text, Optional, Dict, Tuple  # pylint: disable=unused-import
 from pathlib2 import Path
 
 from cmk.utils.regex import regex
@@ -67,6 +67,18 @@ _marked_host_discovery_timeout = 120
 #   +----------------------------------------------------------------------+
 #   |  Functions for command line options -I and -II                       |
 #   '----------------------------------------------------------------------'
+
+DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.
+                                     Item], Tuple[str, str]]
+
+
+class DiscoveredService(object):
+    def __init__(self, check_plugin_name, item, description, paramstr):
+        # type: (check_table.CheckPluginName, check_table.Item, Text, str) -> None
+        self.check_plugin_name = check_plugin_name
+        self.item = item
+        self.description = description
+        self.paramstr = paramstr
 
 
 # Function implementing cmk -I and cmk -II. This is directly
@@ -137,8 +149,10 @@ def do_discovery(hostnames, check_plugin_names, only_new):
 
 def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,
                       only_new, on_error):
+    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, List[check_table.CheckPluginName], bool, str) -> None
     if not check_plugin_names and not only_new:
-        old_items = []  # do not even read old file
+        # do not even read old file
+        old_items = []  # type: check_table.AutocheckTable
     else:
         old_items = parse_autochecks_file(hostname)
 
@@ -153,11 +167,11 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
 
     console.step("Executing discovery plugins (%d)" % len(check_plugin_names))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(check_plugin_names))
-    new_items = _discover_services(hostname,
-                                   ipaddress,
-                                   sources,
-                                   multi_host_sections,
-                                   on_error=on_error)
+    discovered_services = _discover_services(hostname,
+                                             ipaddress,
+                                             sources,
+                                             multi_host_sections,
+                                             on_error=on_error)
 
     # There are three ways of how to merge existing and new discovered checks:
     # 1. -II without --checks=
@@ -179,19 +193,20 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
         if only_new or (check_plugin_names and check_plugin_name not in check_plugin_names):
             result[(check_plugin_name, item)] = paramstring
 
-    stats, num_services = {}, 0
-    for check_plugin_name, item, paramstring in new_items:
-        if (check_plugin_name, item) not in result:
-            result[(check_plugin_name, item)] = paramstring
-            stats.setdefault(check_plugin_name, 0)
-            stats[check_plugin_name] += 1
+    stats = {}  # type: Dict[str, int]
+    num_services = 0
+    for discovered_service in discovered_services:
+        if (discovered_service.check_plugin_name, discovered_service.item) not in result:
+            result[(discovered_service.check_plugin_name,
+                    discovered_service.item)] = discovered_service.paramstr
+            stats.setdefault(discovered_service.check_plugin_name, 0)
+            stats[discovered_service.check_plugin_name] += 1
             num_services += 1
 
-    final_items = []
+    final_items = []  # type: check_table.AutocheckTable
     for (check_plugin_name, item), paramstring in result.items():
         final_items.append((check_plugin_name, item, paramstring))
-    final_items.sort()
-    _save_autochecks_file(hostname, final_items)
+    _save_autochecks_file(hostname, sorted(final_items))
 
     found_check_plugin_names = stats.keys()
     found_check_plugin_names.sort()
@@ -220,6 +235,7 @@ def discover_on_host(config_cache,
                      use_caches,
                      on_error="ignore",
                      service_filter=None):
+    # type: (config.ConfigCache, config.HostConfig, str, bool, bool, str, Callable) -> Tuple[Dict[str, int], Optional[str]]
     hostname = host_config.hostname
     counts = {
         "self_new": 0,
@@ -266,7 +282,7 @@ def discover_on_host(config_cache,
                                       on_error=on_error)
 
         # Create new list of checks
-        new_items = {}
+        new_items = {}  # type: Dict[Tuple[str, check_table.Item], str]
         for (check_plugin_name, item), (check_source, paramstring) in services.items():
             if check_source in ("custom", "legacy", "active", "manual"):
                 continue  # this is not an autocheck or ignored and currently not checked
@@ -735,17 +751,18 @@ def schedule_discovery_check(hostname):
 # "warn"   -> output a warning on stderr
 # "raise"  -> let the exception come through
 def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error):
+    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> List[DiscoveredService]
     # Set host name for host_name()-function (part of the Check API)
     # (used e.g. by ps-discovery)
     check_api_utils.set_hostname(hostname)
 
-    discovered_services = []
+    discovered_services = []  # type: List[DiscoveredService]
     try:
         for check_plugin_name in sources.get_check_plugin_names():
             try:
-                for item, paramstring in _execute_discovery(multi_host_sections, hostname,
-                                                            ipaddress, check_plugin_name, on_error):
-                    discovered_services.append((check_plugin_name, item, paramstring))
+                discovered_services += list(
+                    _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name,
+                                       on_error))
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as e:
@@ -754,17 +771,17 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
                 elif on_error == "warn":
                     console.error("Discovery of '%s' failed: %s\n" % (check_plugin_name, e))
 
-        check_table_formatted = {}
-        for (check_type, item, _paramstring) in discovered_services:
-            check_table_formatted[(check_type,
-                                   item)] = (None,
-                                             config.service_description(hostname, check_type, item))
+        check_table_formatted = {}  # type: check_table.CheckTable
+        for discovered_service in discovered_services:
+            check_table_formatted[(discovered_service.check_plugin_name,
+                                   discovered_service.item)] = (None,
+                                                                discovered_service.description, [])
 
         check_table_formatted = check_table.remove_duplicate_checks(check_table_formatted)
-        for entry in discovered_services[:]:
-            check_type, item = entry[:2]
-            if (check_type, item) not in check_table_formatted:
-                discovered_services.remove(entry)
+        for discovered_service in discovered_services[:]:
+            if (discovered_service.check_plugin_name,
+                    discovered_service.item) not in check_table_formatted:
+                discovered_services.remove(discovered_service)
 
         return discovered_services
 
@@ -796,7 +813,7 @@ def _get_host_sections_for_discovery(sources, use_caches):
 
 
 def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name, on_error):
-    # type: (data_sources.MultiHostSections, str, Optional[str], str, str) -> Iterator[Tuple]
+    # type: (data_sources.MultiHostSections, str, Optional[str], str, str) -> Iterator[DiscoveredService]
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_plugin_name, None):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
@@ -840,8 +857,9 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
 
         # Now do the actual discovery
         discovered_items = _execute_discovery_function(discovery_function, section_content)
-        for entry in _validate_discovered_items(hostname, check_plugin_name, discovered_items):
-            yield entry
+        for discovered_service in _validate_discovered_items(hostname, check_plugin_name,
+                                                             discovered_items):
+            yield discovered_service
     except Exception as e:
         if on_error == "warn":
             console.warning("  Exception in discovery function of check type '%s': %s" %
@@ -882,7 +900,7 @@ def _execute_discovery_function(discovery_function, section_content):
 
 
 def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
-    # type: (str, str, List) -> Iterator[Tuple]
+    # type: (str, check_table.CheckPluginName, List) -> Iterator[DiscoveredService]
     for entry in discovered_items:
         if not isinstance(entry, tuple):
             console.error("%s: Check %s returned invalid discovery data (entry not a tuple): %r\n" %
@@ -912,10 +930,12 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
                           (hostname, check_plugin_name))
             continue
 
-        yield (item, paramstring)
-
-
-DiscoveredServicesTable = Dict[Tuple[str, str], Tuple[str, str]]
+        yield DiscoveredService(
+            check_plugin_name=check_plugin_name,
+            item=item,
+            description=description,
+            paramstr=paramstring,
+        )
 
 
 # Creates a table of all services that a host has or could have according
@@ -983,9 +1003,11 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
     sources.enforce_check_plugin_names(check_plugin_names)
 
     # Handle discovered services -> "new"
-    new_items = _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error)
-    for check_plugin_name, item, paramstring in new_items:
-        services.setdefault((check_plugin_name, item), ("new", paramstring))
+    discovered_services = _discover_services(hostname, ipaddress, sources, multi_host_sections,
+                                             on_error)
+    for discovered_service in discovered_services:
+        services.setdefault((discovered_service.check_plugin_name, discovered_service.item),
+                            ("new", discovered_service.paramstr))
 
     # Match with existing items -> "old" and "vanished"
     old_items = parse_autochecks_file(hostname)
@@ -1257,6 +1279,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 # 3. parameter string, not yet evaluated!
 # TODO: use store.load_data_from_file()
 def parse_autochecks_file(hostname):
+    # type: (str) -> check_table.AutocheckTable
     def split_python_tuple(line):
         quote = None
         bracklev = 0
@@ -1340,10 +1363,12 @@ def parse_autochecks_file(hostname):
 
 
 def _has_autochecks(hostname):
+    # type: (str) -> bool
     return os.path.exists(cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk")
 
 
 def _remove_autochecks_file(hostname):
+    # type: (str) -> None
     filepath = cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk"
     try:
         os.remove(filepath)
@@ -1352,6 +1377,7 @@ def _remove_autochecks_file(hostname):
 
 
 def _save_autochecks_file(hostname, items):
+    # type: (str, check_table.AutocheckTable) -> None
     if not os.path.exists(cmk.utils.paths.autochecks_dir):
         os.makedirs(cmk.utils.paths.autochecks_dir)
 
@@ -1365,6 +1391,7 @@ def _save_autochecks_file(hostname, items):
 
 
 def set_autochecks_of(host_config, new_items):
+    # type: (config.HostConfig, Dict[Tuple[str, check_table.Item], str]) -> None
     # A Cluster does not have an autochecks file
     # All of its services are located in the nodes instead
     # So we cycle through all nodes remove all clustered service
@@ -1373,9 +1400,12 @@ def set_autochecks_of(host_config, new_items):
     hostname = host_config.hostname
     config_cache = config.get_config_cache()
 
+    new_autochecks = []  # type: check_table.AutocheckTable
     if host_config.is_cluster:
+        if not host_config.nodes:
+            return
+
         for node in host_config.nodes:
-            new_autochecks = []
             existing = parse_autochecks_file(node)
             for check_plugin_name, item, paramstring in existing:
                 descr = config.service_description(node, check_plugin_name, item)
@@ -1396,7 +1426,6 @@ def set_autochecks_of(host_config, new_items):
         existing = parse_autochecks_file(hostname)
         # write new autochecks file, but take paramstrings from existing ones
         # for those checks which are kept
-        new_autochecks = []
         for ct, item, paramstring in existing:
             if (ct, item) in new_items:
                 new_autochecks.append((ct, item, paramstring))

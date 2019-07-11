@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Code for computing the table of checks of hosts."""
 
-from typing import TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List  # pylint: disable=unused-import
+from typing import Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List  # pylint: disable=unused-import
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -37,6 +37,7 @@ import cmk_base.autochecks
 import cmk_base.check_api_utils as check_api_utils
 
 Item = Optional[Text]
+CheckParameters = Union[None, Dict, Tuple]
 CheckPluginName = str
 CheckTable = Dict[Tuple[CheckPluginName, Item], Tuple[Any, Text, List[Text]]]
 Autocheck = Tuple[CheckPluginName, Item, str]

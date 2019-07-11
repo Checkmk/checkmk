@@ -2,6 +2,8 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
+
 import os
 import glob
 import pwd
@@ -99,7 +101,7 @@ class APIError(Exception):
 def InterProcessLock(filename):
     fd = None
     try:
-        print "[%0.2f] Getting lock: %s" % (time.time(), filename)
+        print("[%0.2f] Getting lock: %s" % (time.time(), filename))
         # Need to unset umask here to get the permissions we need because
         # os.open() mode is using the given mode not as absolute mode, but
         # respects the umask "mode & ~umask" (See "man 2 open").
@@ -126,11 +128,11 @@ def InterProcessLock(filename):
                 os.close(fd)
                 fd = fd_new
 
-        print "[%0.2f] Have lock: %s" % (time.time(), filename)
+        print("[%0.2f] Have lock: %s" % (time.time(), filename))
         yield
         fcntl.flock(fd, fcntl.LOCK_UN)
     finally:
-        print "[%0.2f] Released lock: %s" % (time.time(), filename)
+        print("[%0.2f] Released lock: %s" % (time.time(), filename))
         if fd:
             os.close(fd)
 
@@ -276,12 +278,12 @@ class CMKVersion(object):
 
     def install(self):
         if os.path.exists(self._build_system_package_path()):
-            print "Install from build system package (%s)" % self._build_system_package_path()
+            print("Install from build system package (%s)" % self._build_system_package_path())
             package_path = self._build_system_package_path()
             self._install_package(package_path)
 
         else:
-            print "Install from download portal"
+            print("Install from download portal")
             package_path = self._download_package()
             self._install_package(package_path)
             os.unlink(package_path)
@@ -289,7 +291,7 @@ class CMKVersion(object):
     def _download_package(self):
         temp_package_path = "/tmp/%s" % self.package_name()
 
-        print self.package_url()
+        print(self.package_url())
         response = requests.get(  # nosec
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
@@ -302,13 +304,13 @@ class CMKVersion(object):
         # manager task being active. Try to wait for other task to finish. Sure
         # this is not race free, but hope it's sufficient.
         while os.system("sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1") >> 8 == 0:
-            print "Waiting for other dpkg process to complete..."
+            print("Waiting for other dpkg process to complete...")
             time.sleep(1)
 
         # Improve the protection against other test runs installing packages
         with InterProcessLock("/tmp/cmk-test-install-version"):
             cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
-            print cmd
+            print(cmd)
             sys.stdout.flush()
             if os.system(cmd) >> 8 != 0:  # nosec
                 raise Exception("Failed to install package: %s" % package_path)
@@ -462,7 +464,7 @@ class Site(object):
             "WaitCondition: state = %d\n" \
             "WaitTrigger: check\n" % (table, filt, wait_obj, wait_timeout*1000, last_check_before, expected_state))
 
-        print "processing check result took %0.2f seconds" % (time.time() - schedule_ts)
+        print("processing check result took %0.2f seconds" % (time.time() - schedule_ts))
 
         assert last_check > last_check_before, \
                 "Check result not processed within %d seconds (last check before reschedule: %d, " \
@@ -613,14 +615,14 @@ class Site(object):
                 raise Exception("The site %s already exists." % self.id)
 
             if not self.exists():
-                print "[%0.2f] Creating site '%s'" % (time.time(), self.id)
+                print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
                 p = subprocess.Popen([
                     "/usr/bin/sudo", "/usr/bin/omd", "-V",
                     self.version.version_directory(), "create", "--admin-password", "cmk",
                     "--apache-reload", self.id
                 ])
                 exit_code = p.wait()
-                print "[%0.2f] Executed create command" % time.time()
+                print("[%0.2f] Executed create command" % time.time())
                 assert exit_code == 0
                 assert os.path.exists("/omd/sites/%s" % self.id)
 
@@ -646,12 +648,12 @@ class Site(object):
         new_version_name = "%s-%s" % (src_version, os.environ["BUILD_NUMBER"])
         self.version = CMKVersion(new_version_name, self.version.edition(), self.version._branch)
 
-        print "Copy CMK '%s' to '%s'" % (src_path, self.version.version_path())
+        print("Copy CMK '%s' to '%s'" % (src_path, self.version.version_path()))
         assert not os.path.exists(self.version.version_path()), \
             "New version path '%s' already exists" % self.version.version_path()
 
         def execute(cmd):
-            print "Executing: %s" % cmd
+            print("Executing: %s" % cmd)
             rc = os.system(cmd) >> 8  # nosec
             if rc != 0:
                 raise Exception("Failed to execute '%s'. Exit code: %d" % (cmd, rc))
@@ -716,19 +718,19 @@ class Site(object):
             ]
 
         # Prevent build problems of livestatus
-        print "Cleanup git files"
+        print("Cleanup git files")
         assert os.system("sudo git clean -xfd -e .venv") >> 8 == 0
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                print "Executing .f12 in \"%s\"..." % path
+                print("Executing .f12 in \"%s\"..." % path)
                 sys.stdout.flush()
                 assert os.system(  # nosec
                     "cd \"%s\" ; "
                     "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
                     "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
                     "bash -x .f12" % (path, self.id)) >> 8 == 0
-                print "Executing .f12 in \"%s\" DONE" % path
+                print("Executing .f12 in \"%s\" DONE" % path)
                 sys.stdout.flush()
 
     def _set_number_of_helpers(self):
@@ -790,7 +792,7 @@ class Site(object):
 
         for site_id in os.listdir("/omd/sites"):
             if site_id != self.id and site_id.startswith(cleanup_pattern):
-                print "Cleaning up old site: %s" % site_id
+                print("Cleaning up old site: %s" % site_id)
                 self.rm(site_id)
 
     def start(self):
@@ -802,7 +804,7 @@ class Site(object):
                 if i > 10:
                     self.execute(["/usr/bin/omd", "status"]).wait()
                     raise Exception("Could not start site %s" % self.id)
-                print "The site %s is not running yet, sleeping... (round %d)" % (self.id, i)
+                print("The site %s is not running yet, sleeping... (round %d)" % (self.id, i))
                 sys.stdout.flush()
                 time.sleep(0.2)
 
@@ -810,17 +812,17 @@ class Site(object):
         if not self.is_running():
             return  # Nothing to do
 
-        print "= BEGIN PROCESSES BEFORE ======================================="
+        print("= BEGIN PROCESSES BEFORE =======================================")
         os.system("ps -fwwu %s" % self.id)  # nosec
-        print "= END PROCESSES BEFORE ======================================="
+        print("= END PROCESSES BEFORE =======================================")
 
         stop_exit_code = self.omd("stop")
         if stop_exit_code != 0:
-            print "omd stop exit code: %d" % stop_exit_code
+            print("omd stop exit code: %d" % stop_exit_code)
 
-        print "= BEGIN PROCESSES AFTER STOP ======================================="
+        print("= BEGIN PROCESSES AFTER STOP =======================================")
         os.system("ps -fwwu %s" % self.id)  # nosec
-        print "= END PROCESSES AFTER STOP ======================================="
+        print("= END PROCESSES AFTER STOP =======================================")
 
         try:
             i = 0
@@ -828,13 +830,13 @@ class Site(object):
                 i += 1
                 if i > 10:
                     raise Exception("Could not stop site %s" % self.id)
-                print "The site %s is still running, sleeping... (round %d)" % (self.id, i)
+                print("The site %s is still running, sleeping... (round %d)" % (self.id, i))
                 sys.stdout.flush()
                 time.sleep(0.2)
         except:
-            print "= BEGIN PROCESSES AFTER WAIT ======================================="
+            print("= BEGIN PROCESSES AFTER WAIT =======================================")
             os.system("ps -fwwu %s" % self.id)  # nosec
-            print "= END PROCESSES AFTER WAIT ======================================="
+            print("= END PROCESSES AFTER WAIT =======================================")
             raise
 
     def exists(self):
@@ -846,19 +848,19 @@ class Site(object):
 
     def set_config(self, key, val, with_restart=False):
         if self.get_config(key) == val:
-            print "omd config: %s is already at %r" % (key, val)
+            print("omd config: %s is already at %r" % (key, val))
             return
 
         if with_restart:
-            print "Stopping site"
+            print("Stopping site")
             self.stop()
 
-        print "omd config: Set %s to %r" % (key, val)
+        print("omd config: Set %s to %r" % (key, val))
         assert self.omd("config", "set", key, val) == 0
 
         if with_restart:
             self.start()
-            print "Started site"
+            print("Started site")
 
     def set_core(self, core):
         self.set_config("CORE", core, with_restart=True)
@@ -868,7 +870,7 @@ class Site(object):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        print stderr
+        print(stderr)
         return stdout.strip()
 
     # These things are needed to make the site basically being setup. So this
@@ -894,7 +896,7 @@ class Site(object):
 
     def init_wato(self):
         if not self._missing_but_required_wato_files():
-            print "WATO is already initialized -> Skipping initializiation"
+            print("WATO is already initialized -> Skipping initializiation")
             return
 
         web = CMKWebSession(self)
@@ -978,7 +980,7 @@ class Site(object):
 
         cmd = "cd %s && " % pipes.quote(cmk_path())
         cmd += env_var_str + subprocess.list2cmdline(cmd_parts)
-        print cmd
+        print(cmd)
         args = ["/usr/bin/sudo", "--", "/bin/su", "-l", self.id, "-c", cmd]
         return subprocess.call(args)
 
@@ -1022,7 +1024,7 @@ class Site(object):
         while port in used_ports:
             port += 1
 
-        print "Livestatus ports already in use: %r, using port: %d" % (used_ports, port)
+        print("Livestatus ports already in use: %r, using port: %d" % (used_ports, port))
         return port
 
     # Problem: The group change only affects new sessions of the test_user
@@ -1131,8 +1133,8 @@ class WebSession(requests.Session):
                    response.url, response.headers.get('Location', "None"))
 
         if response.history:
-            #print "Followed redirect (%d) %s -> %s" % \
-            #    (response.history[0].status_code, response.history[0].url, response.url)
+            #print("Followed redirect (%d) %s -> %s" % \
+            #    (response.history[0].status_code, response.history[0].url, response.url))
             if not allow_redirect_to_login:
                 assert "check_mk/login.py" not in response.url, \
                        "Followed redirect (%d) %s -> %s" % \
@@ -1160,7 +1162,7 @@ class WebSession(requests.Session):
     def _find_errors(self, body, allow_errors):
         matches = re.search('<div class=error>(.*?)</div>', body, re.M | re.DOTALL)
         if allow_errors and matches:
-            print "Found error message, but it's allowed: %s" % matches.groups()
+            print("Found error message, but it's allowed: %s" % matches.groups())
         else:
             assert not matches, "Found error message: %s" % matches.groups()
 
@@ -1896,7 +1898,7 @@ class CMKEventConsole(CMKWebSession):
     def activate_changes(self, web):
         old_t = web.site.live.query_value(
             "GET eventconsolestatus\nColumns: status_config_load_time\n")
-        #print "Old config load time: %s" % old_t
+        #print("Old config load time: %s" % old_t)
         assert old_t > time.time() - 86400
 
         super(CMKEventConsole, self).activate_changes(allow_foreign_changes=True)
@@ -1904,7 +1906,7 @@ class CMKEventConsole(CMKWebSession):
         def config_reloaded():
             new_t = web.site.live.query_value(
                 "GET eventconsolestatus\nColumns: status_config_load_time\n")
-            #print "New config load time: %s" % new_t
+            #print("New config load time: %s" % new_t)
             return new_t > old_t
 
         reload_time, timeout = time.time(), 10
@@ -2017,7 +2019,7 @@ class WatchLog(object):
         sys.stdout.write("Start checking for matching line at %d until %d\n" %
                          (time.time(), timeout_at))
         while time.time() < timeout_at:
-            #print "read till timeout %0.2f sec left" % (timeout_at - time.time())
+            #print("read till timeout %0.2f sec left" % (timeout_at - time.time()))
             line = self._log.readline()
             if line:
                 sys.stdout.write("PROCESS LINE: %r\n" % line)

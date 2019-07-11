@@ -194,25 +194,20 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
                         existing_service.check_plugin_name not in check_plugin_names):
             result.append(existing_service)
 
-    stats = {}  # type: Dict[str, int]
-    num_services = 0
+    services_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
     for discovered_service in discovered_services:
         if discovered_service not in result:
             result.append(discovered_service)
-            stats.setdefault(discovered_service.check_plugin_name, 0)
-            stats[discovered_service.check_plugin_name] += 1
-            num_services += 1
+            services_per_plugin.setdefault(discovered_service.check_plugin_name, 0)
+            services_per_plugin[discovered_service.check_plugin_name] += 1
 
     _save_autochecks_file(hostname, result)
 
-    found_check_plugin_names = sorted(stats.keys())
-
-    if found_check_plugin_names:
-        for check_plugin_name in found_check_plugin_names:
-            console.verbose(
-                "%s%3d%s %s\n" %
-                (tty.green + tty.bold, stats[check_plugin_name], tty.normal, check_plugin_name))
-        console.section_success("Found %d services" % num_services)
+    if services_per_plugin:
+        for check_plugin_name, count in sorted(services_per_plugin.items()):
+            console.verbose("%s%3d%s %s\n" %
+                            (tty.green + tty.bold, count, tty.normal, check_plugin_name))
+        console.section_success("Found %d services" % sum(services_per_plugin.values()))
     else:
         console.section_success("Found nothing%s" % (only_new and " new" or ""))
 

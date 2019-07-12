@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import ast
 import os
 import socket
 import time
@@ -1308,99 +1309,82 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 #   '----------------------------------------------------------------------'
 
 
-# TODO: use store.load_data_from_file()
-# TODO: External call sites!
 def parse_autochecks_file(hostname):
     # type: (str) -> List[DiscoveredService]
     """Read autochecks, but do not compute final check parameters"""
-    def split_python_tuple(line):
-        quote = None
-        bracklev = 0
-        backslash = False
-        for i, c in enumerate(line):
-            if backslash:
-                backslash = False
-                continue
-            elif c == '\\':
-                backslash = True
-            elif c == quote:
-                quote = None  # end of quoted string
-            elif c in ['"', "'"] and not quote:
-                quote = c  # begin of quoted string
-            elif quote:
-                continue
-            elif c in ['(', '{', '[']:
-                bracklev += 1
-            elif c in [')', '}', ']']:
-                bracklev -= 1
-            elif bracklev > 0:
-                continue
-            elif c == ',':
-                value = line[0:i]
-                rest = line[i + 1:]
-                return value.strip(), rest
-
-        return line.strip(), None
-
     path = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
     if not os.path.exists(path):
         return []
 
-    lineno = 0
     services = []  # type: List[DiscoveredService]
-    for line in file(path):
-        lineno += 1
-        try:
-            line = line.strip()
-            if not line.startswith("("):
+
+    try:
+        tree = ast.parse(open(path).read())
+    except SyntaxError:
+        if cmk.utils.debug.enabled():
+            raise
+        raise MKGeneralException("Unable to parse autochecks file %s" % (path))
+
+    for child in ast.iter_child_nodes(tree):
+        # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
+        if not isinstance(child, ast.Expr) and isinstance(child.value, ast.List):  # type: ignore
+            continue  # We only care about top level list
+
+        # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
+        for entry in child.value.elts:  # type: ignore
+            if not isinstance(entry, ast.Tuple):
                 continue
 
-            # drop everything after potential '#' (from older versions)
-            i = line.rfind('#')
-            if i > 0:  # make sure # is not contained in string
-                rest = line[i:]
-                if '"' not in rest and "'" not in rest:
-                    line = line[:i].strip()
-
-            if line.endswith(","):
-                line = line[:-1]
-            line = line[1:-1]  # drop brackets
-
-            # First try old format - with hostname
-            parts = []
-            while True:
-                try:
-                    part, line = split_python_tuple(line)
-                    parts.append(part)
-                except:
-                    break
-            if len(parts) == 4:
-                parts = parts[1:]  # drop hostname, legacy format with host in first column
-            elif len(parts) != 3:
-                raise Exception("Invalid number of parts: %d (%r)" % (len(parts), parts))
-
-            checktypestring, itemstring, paramstring = parts
-
-            item = eval(itemstring)
-            # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
-            # items from existing autocheck files for compatibility. TODO remove this one day
-            if isinstance(item, str):
-                item = config.decode_incoming_string(item)
-
-            check_plugin_name = eval(checktypestring)
-        except:
-            if cmk.utils.debug.enabled():
-                raise
-            raise Exception("Invalid line %d in autochecks file %s" % (lineno, path))
-
-        try:
-            description = config.service_description(hostname, check_plugin_name, item)
-        except Exception:
-            continue  # ignore
-
-        services.append(DiscoveredService(check_plugin_name, item, description, paramstring))
+            service = _parse_autocheck_entry(hostname, entry)
+            if service:
+                services.append(service)
 
     return services
+
+
+def _parse_autocheck_entry(hostname, entry):
+    # type: (str, ast.Tuple) -> Optional[DiscoveredService]
+    # drop hostname, legacy format with host in first column
+    parts = entry.elts[1:] if len(entry.elts) == 4 else entry.elts
+
+    if len(parts) != 3:
+        raise Exception("Invalid autocheck: Wrong length %d instead of 3" % len(parts))
+    ast_check_plugin_name, ast_item, ast_paramstr = parts
+
+    if not isinstance(ast_check_plugin_name, ast.Str):
+        raise Exception("Invalid autocheck: Wrong check plugin type: %r" % ast_check_plugin_name)
+    check_plugin_name = ast_check_plugin_name.s
+
+    item = None  # type: check_table.Item
+    if isinstance(ast_item, ast.Str):
+        item = ast_item.s
+    elif isinstance(ast_item, ast.Num):
+        item = int(ast_item.n)
+    elif isinstance(ast_item, ast.Name) and ast_item.id == "None":
+        item = None
+    else:
+        raise Exception("Invalid autocheck: Wrong item type: %r" % ast_item)
+
+    # With Check_MK 1.2.7i3 items are now defined to be unicode
+    # strings. Convert items from existing autocheck files for
+    # compatibility.
+    if isinstance(item, str):
+        item = config.decode_incoming_string(item)
+
+    if isinstance(ast_paramstr, ast.Name):
+        # Keep check variable names as they are: No evaluation of check parameters
+        paramstr = ast_paramstr.id
+    else:
+        # Other structures, like dicts, lists and so on should also be loaded as repr() str
+        # instead of an interpreted structure
+        paramstr = repr(eval(compile(ast.Expression(ast_paramstr), filename="<ast>", mode="eval")))
+
+    try:
+        description = config.service_description(hostname, check_plugin_name, item)
+    except Exception:
+        return None  # ignore
+
+    return DiscoveredService(check_plugin_name, item, description, paramstr)
 
 
 def _has_autochecks(hostname):

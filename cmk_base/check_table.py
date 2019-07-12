@@ -36,8 +36,8 @@ import cmk_base.check_utils
 import cmk_base.autochecks
 import cmk_base.check_api_utils as check_api_utils
 
-Item = Optional[Text]
-CheckParameters = Union[None, Dict, Tuple]
+Item = Union[Text, None, int]
+CheckParameters = Union[None, Dict, Tuple, List, str]
 CheckPluginName = str
 CheckTable = Dict[Tuple[CheckPluginName, Item], Tuple[Any, Text, List[Text]]]
 

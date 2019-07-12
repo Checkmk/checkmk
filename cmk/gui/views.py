@@ -2173,6 +2173,7 @@ def do_actions(view, what, action_rows, backurl):
 
     if message:
         if html.output_format == "html":  # sorry for this hack
+            backurl += "&filled_in=filter"
             message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
             if html.request.var("show_checkboxes") == "1":
                 html.request.del_var("selection")

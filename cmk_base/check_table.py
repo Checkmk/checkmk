@@ -33,13 +33,10 @@ import cmk_base
 import cmk_base.config as config
 import cmk_base.item_state as item_state
 import cmk_base.check_utils
-import cmk_base.autochecks
 import cmk_base.check_api_utils as check_api_utils
-
-Item = Union[Text, None, int]
-CheckParameters = Union[None, Dict, Tuple, List, str]
-CheckPluginName = str
-CheckTable = Dict[Tuple[CheckPluginName, Item], Tuple[Any, Text, List[Text]]]
+from cmk_base.check_utils import (  # pylint: disable=unused-import
+    Item, CheckParameters, CheckPluginName, CheckTable,
+)
 
 # Add WATO-configured explicit checks to (possibly empty) checks
 # statically defined in checks.

@@ -17,7 +17,7 @@ PYTHON3_MODULES_LIST :=
 PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += typing-3.7.4.tar.gz # direct dependency
-PYTHON3_MODULES_LIST += six-1.12.0.tar.gz # direct dependency
+PYTHON3_MODULES_LIST += six-1.12.0.tar.gz # direct dependency, indirect via python-dateutil
 PYTHON3_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
 
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_BUILD) $(FREETDS_BUILD) $(PYTHON3_MODULES_UNPACK)

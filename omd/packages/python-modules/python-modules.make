@@ -22,6 +22,9 @@ PYTHON_MODULES_LIST :=
 
 PYTHON_MODULES_LIST += setuptools_scm-3.1.0.tar.gz # needed by various setup.py
 PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
+PYTHON_MODULES_LIST += typing-3.7.4.tar.gz # direct dependency
+PYTHON_MODULES_LIST += six-1.12.0.tar.gz # direct dependency, indirect via python-dateutil
+PYTHON_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
 
 # Modules really needed on all platforms
 PYTHON_MODULES_LIST += pysphere-0.1.7.zip
@@ -101,7 +104,6 @@ PYTHON_MODULES_LIST += psutil-5.4.7.tar.gz # needed for mkbench
 # 0.9.8i. Again, cryptography has a bug here and assumes it from 0.9.8g onwards,
 # so we need to patch one more time.
 
-PYTHON_MODULES_LIST += six-1.11.0.tar.gz
 PYTHON_MODULES_LIST += ipaddress-1.0.22.tar.gz
 
 PYTHON_MODULES_LIST += netifaces-0.10.7.tar.gz # needed for LDAP (nearest DC detection)
@@ -144,11 +146,9 @@ PYTHON_MODULES_LIST += tinkerforge-2.1.19.tar.gz
 PYTHON_MODULES_LIST += bcrypt-3.1.4.tar.gz
 PYTHON_MODULES_LIST += PyNaCl-1.3.0.tar.gz
 
-PYTHON_MODULES_LIST += typing-3.6.6.tar.gz
 PYTHON_MODULES_LIST += scandir-1.9.0.tar.gz
 PYTHON_MODULES_LIST += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
-PYTHON_MODULES_LIST += python-dateutil-2.7.5.tar.gz
 PYTHON_MODULES_LIST += python-snap7-0.10.tar.gz
 # Added for azure special agent
 PYTHON_MODULES_LIST += PyJWT-1.6.4.tar.gz

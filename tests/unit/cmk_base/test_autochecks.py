@@ -35,7 +35,7 @@ def test_config(monkeypatch):
         (u"", []),
         (u"@", []),
         (u"[abc123]", []),
-        # Handle old format
+        # Tuple: Handle old format
         (u"""[
   ('hostxyz', 'df', '/', {}),
 ]""", [
@@ -51,7 +51,7 @@ def test_config(monkeypatch):
                 'trend_range': 24
             }),
         ]),
-        # Convert non unicode item
+        # Tuple: Convert non unicode item
         (
             u"""[
   ('df', '/', {}),
@@ -70,7 +70,7 @@ def test_config(monkeypatch):
                 }),
             ],
         ),
-        # Allow non string items
+        # Tuple: Allow non string items
         (
             u"""[
   ('df', 123, {}),
@@ -89,20 +89,78 @@ def test_config(monkeypatch):
                 }),
             ],
         ),
-        # Exception on invalid check type
+        # Tuple: Exception on invalid check type
         (
             u"""[
   (123, 'abc', {}),
 ]""",
             MKGeneralException,
         ),
-        # Regular processing
+        # Tuple: Regular processing
         (
             u"""[
   ('df', u'/', {}),
   ('cpu.loads', None, cpuload_default_levels),
   ('chrony', None, {}),
   ('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
+]""",
+            [
+                ('df', u'/', {
+                    'inodes_levels': (10.0, 5.0),
+                    'levels': (80.0, 90.0),
+                    'levels_low': (50.0, 60.0),
+                    'magic_normsize': 20,
+                    'show_inodes': 'onlow',
+                    'show_levels': 'onmagic',
+                    'show_reserved': False,
+                    'trend_perfdata': True,
+                    'trend_range': 24
+                }),
+                ('cpu.loads', None, (5.0, 10.0)),
+                ('chrony', None, {
+                    'alert_delay': (300, 3600),
+                    'ntp_levels': (10, 200.0, 500.0)
+                }),
+                ('lnx_if', u'2', {
+                    'errors': (0.01, 0.1),
+                    'speed': 10000000,
+                    'state': ['1']
+                }),
+            ],
+        ),
+        # Dict: Allow non string items
+        (
+            u"""[
+  {'check_plugin_name': 'df', 'item': 123, 'parameters': {}},
+]""",
+            [
+                ('df', 123, {
+                    'inodes_levels': (10.0, 5.0),
+                    'levels': (80.0, 90.0),
+                    'levels_low': (50.0, 60.0),
+                    'magic_normsize': 20,
+                    'show_inodes': 'onlow',
+                    'show_levels': 'onmagic',
+                    'show_reserved': False,
+                    'trend_perfdata': True,
+                    'trend_range': 24
+                }),
+            ],
+        ),
+        # Dict: Exception on invalid check type
+        (
+            u"""[
+  {'check_plugin_name': 123, 'item': 'abc', 'parameters': {}},
+]""",
+            MKGeneralException,
+        ),
+        # Dict: Regular processing
+        (
+            u"""[
+  {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}},
+  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels},
+  {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}},
+  {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}},
 ]""",
             [
                 ('df', u'/', {
@@ -157,13 +215,13 @@ def test_parse_autochecks_file_not_existing():
         (u"", []),
         (u"@", MKGeneralException),
         (u"[abc123]", []),
-        # Handle old format
+        # Tuple: Handle old format
         (u"""[
   ('hostxyz', 'df', '/', {}),
 ]""", [
             ('df', u'/', '{}'),
         ]),
-        # Convert non unicode item
+        # Tuple: Convert non unicode item
         (
             u"""[
           ('df', '/', {}),
@@ -172,7 +230,7 @@ def test_parse_autochecks_file_not_existing():
                 ('df', u'/', "{}"),
             ],
         ),
-        # Allow non string items
+        # Tuple: Allow non string items
         (
             u"""[
           ('df', 123, {}),
@@ -181,7 +239,7 @@ def test_parse_autochecks_file_not_existing():
                 ('df', 123, "{}"),
             ],
         ),
-        # Regular processing
+        # Tuple: Regular processing
         (
             u"""[
           ('df', u'/', {}),
@@ -190,6 +248,34 @@ def test_parse_autochecks_file_not_existing():
           ('cpu.loads', None, cpuload_default_levels),
           ('chrony', None, {}),
           ('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
+        ]""",
+            [
+                ('df', u'/', '{}'),
+                ('df', u'/xyz', "'lala'"),
+                ('df', u'/zzz', "['abc', 'xyz']"),
+                ('cpu.loads', None, 'cpuload_default_levels'),
+                ('chrony', None, '{}'),
+                ('lnx_if', u'2', "{'state': ['1'], 'speed': 10000000}"),
+            ],
+        ),
+        # Dict: Allow non string items
+        (
+            u"""[
+          {'check_plugin_name': 'df', 'item': 123, 'parameters': {}},
+        ]""",
+            [
+                ('df', 123, "{}"),
+            ],
+        ),
+        # Dict: Regular processing
+        (
+            u"""[
+          {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}},
+          {'check_plugin_name': 'df', 'item': u'/xyz', 'parameters': "lala"},
+          {'check_plugin_name': 'df', 'item': u'/zzz', 'parameters': ['abc', 'xyz']},
+          {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels},
+          {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}},
+          {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}},
         ]""",
             [
                 ('df', u'/', '{}'),
@@ -247,9 +333,9 @@ def test_remove_autochecks_file():
         discovery.DiscoveredService('df', u'/', u"Filesystem /", "{}"),
         discovery.DiscoveredService('cpu.loads', None, "CPU load", "cpuload_default_levels"),
     ], """[
-  ('cpu.loads', None, cpuload_default_levels),
-  ('df', u'/', {}),
-  ('df', u'/xyz', None),
+  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels},
+  {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}},
+  {'check_plugin_name': 'df', 'item': u'/xyz', 'parameters': None},
 ]\n"""),
 ])
 def test_save_autochecks_file(items, expected_content):

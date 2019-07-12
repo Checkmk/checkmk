@@ -154,7 +154,7 @@ def test_parse_autochecks_file_not_existing():
     [
         (u"[]", []),
         (u"", []),
-        (u"@", []),
+        (u"@", MKGeneralException),
         (u"[abc123]", []),
         # Handle old format
         (u"""[
@@ -184,12 +184,16 @@ def test_parse_autochecks_file_not_existing():
         (
             u"""[
           ('df', u'/', {}),
+          ('df', u'/xyz', "lala"),
+          ('df', u'/zzz', ['abc', 'xyz']),
           ('cpu.loads', None, cpuload_default_levels),
           ('chrony', None, {}),
           ('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
         ]""",
             [
                 ('df', u'/', '{}'),
+                ('df', u'/xyz', "'lala'"),
+                ('df', u'/zzz', "['abc', 'xyz']"),
                 ('cpu.loads', None, 'cpuload_default_levels'),
                 ('chrony', None, '{}'),
                 ('lnx_if', u'2', "{'state': ['1'], 'speed': 10000000}"),
@@ -200,6 +204,11 @@ def test_parse_autochecks_file(test_config, autochecks_content, expected_result)
     autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(autochecks_content)
+
+    if expected_result is MKGeneralException:
+        with pytest.raises(MKGeneralException):
+            discovery.parse_autochecks_file("host")
+        return
 
     parsed = discovery.parse_autochecks_file("host")
     assert len(parsed) == len(expected_result)

@@ -34,9 +34,15 @@ from cmk.utils.exceptions import MKGeneralException
 class ABCDiscoveredLabels(collections.MutableMapping, object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args):
         super(ABCDiscoveredLabels, self).__init__()
-        self._labels = kwargs
+        self._labels = {}
+        for entry in args:
+            self.add_label(entry)
+
+    @abc.abstractmethod
+    def add_label(self, label):
+        raise NotImplementedError()
 
     def is_empty(self):
         return not self._labels
@@ -62,13 +68,14 @@ class ABCDiscoveredLabels(collections.MutableMapping, object):
 
 class DiscoveredHostLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single host during runtime"""
-    def __init__(self, inventory_tree, **kwargs):
-        super(DiscoveredHostLabels, self).__init__(**kwargs)
+    def __init__(self, inventory_tree, *args):
+        super(DiscoveredHostLabels, self).__init__(*args)
         self._inventory_tree = inventory_tree
 
     # TODO: Once we redesign the hw/sw inventory plugin API check if we can move it to the
     # inventory API.
-    def add_label(self, key, value, plugin_name):
+    # TODO: Cleanup these different argument
+    def add_label(self, key, value, plugin_name):  # pylint: disable=arguments-differ
         """Add a label to the collection of discovered labels and inventory tree
 
         Add it to the inventory tree for debugging purposes
@@ -135,13 +142,9 @@ class DiscoveredServiceLabelsOfHost(object):
         super(DiscoveredServiceLabelsOfHost, self).__init__()
         self._service_labels = kwargs  # type: Dict[Text, DiscoveredServiceLabels]
 
-    def add_label(self, service_desc, label):
-        # type: (Text, ServiceLabel) -> None
-        if service_desc not in self._service_labels:
-            service_labels = self._service_labels[service_desc] = DiscoveredServiceLabels()
-        else:
-            service_labels = self._service_labels[service_desc]
-        service_labels.add_label(label)
+    def add_labels(self, service_desc, service_labels):
+        # type: (Text, DiscoveredServiceLabels) -> None
+        self._service_labels[service_desc] = service_labels
 
     def to_dict(self):
         return {

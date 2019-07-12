@@ -130,24 +130,6 @@ def test_service_label_validation():
         ServiceLabel(u"äbc", "übc")
 
 
-def test_discovered_service_labels_of_host():
-    def discovery_function():
-        yield ServiceLabel(u"bla", u"blub")
-        yield ServiceLabel(u"blä", u"huh")
-
-    labels = DiscoveredServiceLabelsOfHost()
-
-    for label in discovery_function():
-        labels.add_label("CPU load", label)
-
-    assert labels.to_dict() == {
-        "CPU load": {
-            u"bla": u"blub",
-            u"blä": u"huh",
-        },
-    }
-
-
 @pytest.fixture()
 def discovered_service_labels_dir(tmp_path, monkeypatch):
     path = tmp_path / "var" / "check_mk" / "discovered_service_labels"
@@ -159,7 +141,7 @@ def test_discovered_service_labels_store_save(discovered_service_labels_dir):
     store = DiscoveredServiceLabelsStore("host")
 
     labels = DiscoveredServiceLabelsOfHost()
-    labels.add_label(u"CPU load", ServiceLabel(u"xyz", u"äbc"))
+    labels.add_labels(u"CPU load", DiscoveredServiceLabels(ServiceLabel(u"xyz", u"äbc")))
     label_dict = labels.to_dict()
 
     assert not store.file_path.exists()  # pylint: disable=no-member

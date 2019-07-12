@@ -21,7 +21,13 @@ TEST(Wtools, ScanProcess) {
     std::vector<std::string> names;
 
     wtools::ScanProcessList([&names](const PROCESSENTRY32& entry) -> auto {
-        names.push_back(wtools::ConvertToUTF8(entry.szExeFile));
+        names.emplace_back(wtools::ConvertToUTF8(entry.szExeFile));
+        if (names.back() == "watest32.exe" || names.back() == "watest64.exe") {
+            XLOG::l.w(
+                "Suspicious '{}' pid: [{}] parentpid: [{}] current pid [{}]",
+                names.back(), entry.th32ProcessID, entry.th32ParentProcessID,
+                ::GetCurrentProcessId());
+        }
         return true;
     });
     EXPECT_TRUE(!names.empty());

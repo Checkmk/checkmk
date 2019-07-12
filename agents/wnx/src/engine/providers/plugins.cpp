@@ -159,11 +159,25 @@ void PluginsProvider::updateSectionStatus() {
     section_last_output_ = out;
 }
 
+namespace config {
+// set behavior of the output
+// i future may be controlled using yml
+bool G_LocalNoSendIfEmptyBody = true;
+bool G_LocalSendEmptyAtEnd = false;
+};  // namespace config
 // local body empty
 void LocalProvider::updateSectionStatus() {
+    std::string body;
+    gatherAllData(body);
+
+    if (config::G_LocalNoSendIfEmptyBody && body.empty()) {
+        section_last_output_ = "";
+        return;
+    }
+
     std::string out = cma::section::MakeLocalHeader();
-    gatherAllData(out);
-    out += cma::section::MakeEmptyHeader();
+    out += body;
+    if (config::G_LocalSendEmptyAtEnd) out += cma::section::MakeEmptyHeader();
     section_last_output_ = out;
 }
 

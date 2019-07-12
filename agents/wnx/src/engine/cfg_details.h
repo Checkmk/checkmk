@@ -193,8 +193,8 @@ class ConfigInfo {
                     data_.clear();
                 }
             } catch (const std::exception& e) {
-                XLOG::l(XLOG::kBp)(
-                    XLOG_FLINE + " exception in the yaml file: '{}'", e.what());
+                XLOG::l.crit("Can't load yaml file '{}', exception: '{}'",
+                             path_.u8string(), e.what());
                 bad_ = true;
             } catch (...) {
                 XLOG::l(XLOG::kBp)(XLOG_FLINE + " exception bad");

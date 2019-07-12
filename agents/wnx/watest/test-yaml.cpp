@@ -196,6 +196,9 @@ TEST(AgentConfig, AggregateMap) {
             "    - pattern: '*'\n"
             "      timeout: 60\n"
             "      run: no\n";
+        {
+            // individual testing
+        }
 
         {
             YAML::Node target = YAML::Load(empty);
@@ -1260,7 +1263,7 @@ static std::string node_ok =
 
     ;
 
-static YAML::Node generateTestNode() {
+static YAML::Node generateTestNode(const std::string& node_text) {
     try {
         return YAML::Load(node_text);
     } catch (const std::exception& e) {
@@ -1273,7 +1276,7 @@ static YAML::Node generateTestNode() {
 TEST(AgentConfig, NodeCleanup) {
     ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
     {
-        const auto node_base = generateTestNode();
+        const auto node_base = generateTestNode(node_text);
         YAML::Node node = YAML::Clone(node_base);
         ASSERT_TRUE(node.IsMap());
         auto expected_count = RemoveInvalidNodes(node);
@@ -1287,6 +1290,71 @@ TEST(AgentConfig, NodeCleanup) {
 
         expected_count = RemoveInvalidNodes(node);
         EXPECT_EQ(expected_count, 0);
+    }
+}
+static std::string node_plugins_execution =
+    "plugins:\n"
+    "  execution:\n"  // expected clean
+    "  - pattern: a_1\n"
+    "    async: yes\n"
+    "    cache_age: 1\n"
+    "    run: yes\n"  // expected array
+    "  - pattern: a_0\n"
+    "    async: yes\n"
+    "    run: yes\n"  // expected array
+    "  - pattern: a_2600\n"
+    "    async: yes\n"
+    "    cache_age: 2600\n"
+    "    run: yes\n"  // expected array
+    "  - pattern: s_eq_a_2600\n"
+    "    cache_age: 2600\n"
+    "  - pattern: s_2\n"
+    "    cache_age: 0\n"
+    "    retry_count: 1\n"
+    "    run: no\n"
+
+    ;
+
+TEST(AgentConfig, PluginsExecutionParams) {
+    ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
+    {
+        const auto node_base = generateTestNode(node_plugins_execution);
+        auto node = YAML::Clone(node_base);
+        ASSERT_TRUE(node.IsMap());
+        auto node_plugins = node["plugins"];
+        ASSERT_TRUE(node.IsMap());
+        ASSERT_TRUE(node_plugins[vars::kPluginsExecution].IsSequence());
+
+        auto units =
+            GetArray<YAML::Node>(node_plugins[vars::kPluginsExecution]);
+
+        std::vector<Plugins::ExeUnit> exe_units;
+        LoadExeUnitsFromYaml(exe_units, units);
+        EXPECT_EQ(exe_units.size(), 5);
+
+        EXPECT_EQ(exe_units[0].pattern(), "a_1");
+        EXPECT_EQ(exe_units[0].cacheAge(), kMinimumCacheAge);
+        EXPECT_EQ(exe_units[0].async(), true);
+
+        EXPECT_EQ(exe_units[1].pattern(), "a_0");
+        EXPECT_EQ(exe_units[1].cacheAge(), 0);
+        EXPECT_EQ(exe_units[1].async(), true);
+
+        EXPECT_EQ(exe_units[2].pattern(), "a_2600");
+        EXPECT_EQ(exe_units[2].cacheAge(), 2600);
+        EXPECT_EQ(exe_units[2].async(), true);
+        for (int i = 0; i < 4; i++) {
+            EXPECT_TRUE(exe_units[2].run());
+            EXPECT_EQ(exe_units[2].retry(), 0);
+        }
+
+        EXPECT_EQ(exe_units[3].pattern(), "s_eq_a_2600");
+        EXPECT_EQ(exe_units[3].cacheAge(), 2600);
+        EXPECT_EQ(exe_units[3].async(), true);
+
+        EXPECT_EQ(exe_units[4].pattern(), "s_2");
+        EXPECT_EQ(exe_units[4].run(), false);
+        EXPECT_EQ(exe_units[4].retry(), 1);
     }
 }
 }  // namespace cma::cfg

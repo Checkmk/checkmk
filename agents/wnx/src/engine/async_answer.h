@@ -38,8 +38,7 @@ public:
     //
     bool isAnswerInUse() const {
         std::lock_guard lk(lock_);
-        return external_ip_ != "" || segments_.size() || awaiting_segments_ ||
-               received_segments_;
+        return isAnswerInUseNoLock();
     }
 
     void dropAnswer();  // owner does it, reset all to initial state
@@ -60,8 +59,7 @@ public:
     // #TODO gtest
     auto getAllClear() {}
 
-    // #TODO gtest
-    bool prepareAnswer(std::string Ip);
+    bool prepareAnswer(std::string_view Ip) noexcept;
 
     // Reporting Function, which called by the sections
     // #TODO gtest
@@ -95,6 +93,11 @@ public:
     }
 
 private:
+    bool isAnswerInUseNoLock() const {
+        return !external_ip_.empty() || !segments_.empty() ||
+               awaiting_segments_ != 0 || received_segments_ != 0;
+    }
+
     struct SegmentInfo {
         std::string name_;
         size_t length_;

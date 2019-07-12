@@ -32,6 +32,12 @@ inline void sleep(int Milliseconds) noexcept {
                                   milliseconds(Milliseconds));
 }
 
+template <typename T, typename B>
+inline void sleep(std::chrono::duration<T, B> dur) noexcept {
+    using namespace std::chrono;
+    std::this_thread::sleep_until(steady_clock::now() + dur);
+}
+
 // gtest [+]
 inline bool IsEqual(std::string_view Left, std::string_view Right) {
     return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
@@ -165,7 +171,7 @@ inline void AddDirSymbol(std::wstring& Dir) {
     Dir = p.wstring();
 }
 
-// useful tools to combine to buffers
+// to combine to buffers
 // #TODO test!
 template <typename T>
 inline void AddVector(std::vector<char>& Accu, const T& Add) noexcept {

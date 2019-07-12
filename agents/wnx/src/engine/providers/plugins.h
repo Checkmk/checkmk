@@ -16,6 +16,12 @@
 namespace cma {
 
 namespace provider {
+namespace config {
+// set behavior of the output
+// i future may be controlled using yml
+extern bool G_LocalNoSendIfEmptyBody;
+extern bool G_LocalSendEmptyAtEnd;
+};  // namespace config
 
 class PluginsProvider : public Asynchronous {
 public:

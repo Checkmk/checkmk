@@ -1283,7 +1283,7 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
     bool bakery_ok = false;
     bool user_ok = false;
     try {
-        if (Yd[1].exists()) {
+        if (Yd[1].exists() && !Yd[1].bad()) {
             auto bakery = YAML::LoadFile(Yd[1].path_.u8string());
             // special cases for plugins and folder
             PreMergeSections(bakery, node);
@@ -1297,7 +1297,7 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
     }
 
     try {
-        if (Yd[2].exists()) {
+        if (Yd[2].exists() && !Yd[2].bad()) {
             auto user = YAML::LoadFile(Yd[2].path_.u8string());
             // special cases for plugins and folder
             PreMergeSections(user, node);
@@ -1306,7 +1306,7 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
             user_ok = true;
         }
     } catch (...) {
-        XLOG::l.bp("Bakery {} is bad", Yd[1].path_.u8string());
+        XLOG::l.bp("User {} is bad", Yd[2].path_.u8string());
     }
 
     std::lock_guard lk(lock_);
@@ -1320,10 +1320,20 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
 
     yaml_ = node;
 
-    XLOG::d.t(
-        "Loaded Config's root: '{}' size={} bakery: '{}' size={} user: '{}' size={}",
-        Yd[0].path_.u8string(), Yd[0].data().size(), Yd[1].path_.u8string(),
-        Yd[1].data().size(), Yd[2].path_.u8string(), Yd[2].data().size());
+    XLOG::d.i(
+        "Loaded Config Files\n"
+        "    root:   '{}' size={} {}\n"
+        "    bakery: '{}' size={} {}\n"
+        "    user:   '{}' size={} {}",
+        //
+        Yd[0].path_.u8string(), Yd[0].data().size(),
+        Yd[0].bad() ? "[FAIL]" : "[OK]",
+        //
+        Yd[1].path_.u8string(), Yd[1].data().size(),
+        Yd[1].bad() ? "[FAIL]" : "[OK]",
+        //
+        Yd[2].path_.u8string(), Yd[2].data().size(),
+        Yd[2].bad() ? "[FAIL]" : "[OK]");
 
     // setting up paths  to the other files
     root_yaml_path_ = Yd[0].path_;

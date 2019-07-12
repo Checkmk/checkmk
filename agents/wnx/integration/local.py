@@ -7,6 +7,7 @@ import os
 import platform
 import pytest
 import re
+import time
 import subprocess
 import sys
 import shutil
@@ -144,6 +145,8 @@ def make_yaml_config():
     yml = yaml.safe_load("""
 global:
   enabled: true
+  logging:
+    debug: true
   port: %d
 """ % port)
     return yml
@@ -180,7 +183,17 @@ def actual_output(write_config, wait_agent):
         # Override wait_agent in tests to wait for async processes to start.
         wait_agent()
 
-        telnet = telnetlib.Telnet(host, port)  # nosec
+        for _ in range(0, 5):
+            try:
+                telnet = telnetlib.Telnet(host, port)  # nosec
+                break
+            except Exception as error:
+                # print('No connect, waiting for agent')
+                time.sleep(1)
+
+        if telnet is None:
+            raise (ConnectionRefusedError("can't connect"))
+
         result = telnet.read_all().decode()
 
         yield result.splitlines()
@@ -222,8 +235,10 @@ def local_test(expected_output, actual_output, testfile, test_name=None, test_cl
             pytest.skip('WMI timeout, better luck next time')
         # Uncomment for debug prints:
         # if re.match(expected, actual) is None:
-        #     print 'DEBUG: actual output\r\n', '\r\n'.join(actual_output)
-        #     print 'DEBUG: expected output\r\n', '\r\n'.join(expected_output)
+        #    print("ups: %s" % actual)
+        #     print( 'DEBUG: actual output\r\n', '\r\n'.join(actual_output))
+        #     print('DEBUG: expected output\r\n', '\r\n'.join(expected_output))
+        # print("EXPECTED: %s\n ACTUAL  : %s\n" % (expected, actual))
 
         assert re.match(expected,
                         actual) is not None, "\nExpected '%s'\nActual   '%s'" % (expected, actual)

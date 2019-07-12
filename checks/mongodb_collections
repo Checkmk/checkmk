@@ -46,6 +46,10 @@ def parse_mongodb_collections(info):
         data = parsed.setdefault("%s %s" % (db_name, collection), {})
         if key in required_keys_int:
             try:
+                # Observed in the wild (on MongoDB 2.4.10, we don't know about other versions):
+                # For some collections, these integer values are represented with a trailing .0
+                # This does not appear to have any significance, but would throw a ValueError
+                # when casting directly to int.
                 data[key] = int(float(value))
             except ValueError:
                 pass

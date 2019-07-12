@@ -842,7 +842,7 @@ def view_editor_specs(ds_name, general_properties=True):
                                    title=_('Automatic page reload'),
                                    unit=_('seconds'),
                                    minvalue=0,
-                                   help=_('Leave this empty or at 0 for no automatic reload.'),
+                                   help=_('Set to \"0\" to disable the automatic reload.'),
                                )),
                               ('layout',
                                DropdownChoice(

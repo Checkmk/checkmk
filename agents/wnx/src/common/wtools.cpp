@@ -25,34 +25,41 @@
 
 namespace wtools {
 
-uint32_t AppRunner::goExec(std::wstring CommandLine, bool Wait,
-                           bool InheritHandle, bool PipeOutput) noexcept {
+void AppRunner::prepareResources(std::wstring_view command_line,
+                                 bool create_pipe) noexcept {
+    if (create_pipe) {
+        stdio_.create();
+        stderr_.create();
+    }
+
+    cmd_line_ = command_line;
+    job_handle_ = nullptr;
+    process_handle_ = nullptr;
+}
+
+void AppRunner::cleanResources() noexcept {
+    job_handle_ = nullptr;
+    process_handle_ = nullptr;
+    stdio_.shutdown();
+    stderr_.shutdown();
+}
+
+// returns PID or 0,
+uint32_t AppRunner::goExecAsJob(std::wstring_view CommandLine) noexcept {
     try {
         if (process_id_) {
             XLOG::l.bp("Attempt to reuse AppRunner");
             return 0;
         }
-        if (PipeOutput) {
-            stdio_.create();
-            stderr_.create();
-        }
-        cmd_line_ = CommandLine;
-        job_handle_ = nullptr;
-        process_handle_ = nullptr;
 
-        if (use_job_) {
-            auto [pid, jh, ph] = cma::tools::RunStdCommandAsJob(
-                CommandLine.c_str(), InheritHandle, stdio_.getWrite(),
-                stderr_.getWrite());
-            // store data to reuse
-            process_id_ = pid;
-            job_handle_ = jh;
-            process_handle_ = ph;
+        prepareResources(CommandLine, true);
 
-        } else
-            process_id_ = cma::tools::RunStdCommand(
-                CommandLine.c_str(), Wait, InheritHandle, stdio_.getWrite(),
-                stderr_.getWrite());
+        auto [pid, jh, ph] = cma::tools::RunStdCommandAsJob(
+            CommandLine.data(), true, stdio_.getWrite(), stderr_.getWrite());
+        // store data to reuse
+        process_id_ = pid;
+        job_handle_ = jh;
+        process_handle_ = ph;
 
         // check and return on success
         if (process_id_) return process_id_;
@@ -60,12 +67,37 @@ uint32_t AppRunner::goExec(std::wstring CommandLine, bool Wait,
         // failure s here
         XLOG::l(XLOG_FLINE + " Failed RunStd: [{}]*", GetLastError());
 
-        job_handle_ = nullptr;
-        process_handle_ = nullptr;
-        stdio_.shutdown();
-        stderr_.shutdown();
+        cleanResources();
 
         return 0;
+    } catch (const std::exception& e) {
+        XLOG::l.crit(XLOG_FLINE + " unexpected exception: '{}'", e.what());
+    }
+    return 0;
+}
+
+// returns process id
+uint32_t AppRunner::goExecAsUpdater(std::wstring_view CommandLine) noexcept {
+    try {
+        if (process_id_) {
+            XLOG::l.bp("Attempt to reuse AppRunner");
+            return 0;
+        }
+        prepareResources(CommandLine, true);
+
+        process_id_ = cma::tools::RunStdCommand(
+            CommandLine, false, true, stdio_.getWrite(), stderr_.getWrite(),
+            CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS);
+
+        // check and return on success
+        if (process_id_) return process_id_;
+
+        // failure s here
+        XLOG::l(XLOG_FLINE + " Failed RunStd: [{}]*", GetLastError());
+
+        cleanResources();
+        return 0;
+
     } catch (const std::exception& e) {
         XLOG::l.crit(XLOG_FLINE + " unexpected exception: '{}'", e.what());
     }

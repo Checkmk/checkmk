@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import cmk.utils.cpu_tracking as cpu_tracking
+import cmk_base.cpu_tracking as cpu_tracking
 
 
 def test_cpu_tracking_initial_times():

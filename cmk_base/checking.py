@@ -37,7 +37,6 @@ import six
 import cmk
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
-import cmk.utils.cpu_tracking as cpu_tracking
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.regex import regex
 import cmk.utils.debug
@@ -46,6 +45,7 @@ import cmk_base.utils
 import cmk_base.crash_reporting
 import cmk_base.console as console
 import cmk_base.config as config
+import cmk_base.cpu_tracking as cpu_tracking
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.item_state as item_state

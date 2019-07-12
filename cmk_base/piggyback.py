@@ -182,6 +182,7 @@ def store_piggyback_raw_data(source_host, piggybacked_raw_data):
 
 
 def _store_status_file_of(status_file_path, piggyback_file_paths):
+    store.makedirs(os.path.dirname(status_file_path))
     with tempfile.NamedTemporaryFile("w",
                                      dir=os.path.dirname(status_file_path),
                                      prefix=".%s.new" % os.path.basename(status_file_path),

@@ -227,17 +227,17 @@ def test_parse_autochecks_file(test_config, autochecks_content, expected_result)
 
 
 def test_has_autochecks():
-    assert discovery._has_autochecks("host") is False
-    discovery._save_autochecks_file("host", [])
-    assert discovery._has_autochecks("host") is True
+    assert autochecks.has_autochecks("host") is False
+    autochecks.save_autochecks_file("host", [])
+    assert autochecks.has_autochecks("host") is True
 
 
 def test_remove_autochecks_file():
-    assert discovery._has_autochecks("host") is False
-    discovery._save_autochecks_file("host", [])
-    assert discovery._has_autochecks("host") is True
-    discovery._remove_autochecks_file("host")
-    assert discovery._has_autochecks("host") is False
+    assert autochecks.has_autochecks("host") is False
+    autochecks.save_autochecks_file("host", [])
+    assert autochecks.has_autochecks("host") is True
+    autochecks.remove_autochecks_file("host")
+    assert autochecks.has_autochecks("host") is False
 
 
 @pytest.mark.parametrize("items,expected_content", [
@@ -253,7 +253,7 @@ def test_remove_autochecks_file():
 ]\n"""),
 ])
 def test_save_autochecks_file(items, expected_content):
-    discovery._save_autochecks_file("host", items)
+    autochecks.save_autochecks_file("host", items)
 
     autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("host.mk")
     with autochecks_file.open("r", encoding="utf-8") as f:  # pylint: disable=no-member

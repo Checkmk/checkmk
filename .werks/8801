@@ -1,0 +1,13 @@
+Title: oracle_crs_res, oracle_crs_version, oracle_crs_voting: Fixed error in parameters view
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1562929488
+
+The mentioned checks are not configurable at the moment. Yet the checks
+expected a ruleset and gave an error. With this fix the checks are still
+not configurable but do not expect to have a corresponding ruleset anymore.

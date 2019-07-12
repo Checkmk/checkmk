@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c1bb6cdae66331859601ffaf8b148e3fbeb380184cac1beb531e886283578a43"
+            "sha256": "707b94903e8daf085b2d472492cbe928041a6a04cdb923c06ef67e267fa9c05c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -53,15 +53,6 @@
             ],
             "index": "pypi",
             "version": "==1.12.0"
-        },
-        "typing": {
-            "hashes": [
-                "sha256:38566c558a0a94d6531012c8e917b1b8518a41e418f7f15f00e129cc80162ad3",
-                "sha256:53765ec4f83a2b720214727e319607879fec4acde22c4fbb54fa2604e79e44ce",
-                "sha256:84698954b4e6719e912ef9a42a2431407fe3755590831699debda6fba92aac55"
-            ],
-            "index": "pypi",
-            "version": "==3.7.4"
         }
     },
     "develop": {
@@ -143,12 +134,12 @@
         },
         "compiledb": {
             "hashes": [
-                "sha256:45a492d4b5ee4e0d893df0bb6019f11013980edc666fd13471934369a61def66",
-                "sha256:766750ea0a9326e0eccb0bb5b31c19acf3e29d006e6e100e7812b3c492449e83",
-                "sha256:af6e54f49c03a578851b3a88e5df908fc6ef15898c48bc40b59deea02881367a"
+                "sha256:06bb47dd1fa04de3a12720379ff382d40441074476db7c16a27e2ad79b7e966e",
+                "sha256:339a7047f824eb1293ca7984a9382e2c49aff08dd2356cbe134d2615002f26f3",
+                "sha256:9e6513c52a000ca538110f61cf2bd0179c511777dd786f0deda3368007b9e38e"
             ],
             "index": "pypi",
-            "version": "==0.10.0"
+            "version": "==0.10.1"
         },
         "coverage": {
             "hashes": [
@@ -620,11 +611,11 @@
         },
         "yapf": {
             "hashes": [
-                "sha256:34f6f80c446dcb2c44bd644c4037a2024b6645e293a4c9c4521983dd0bb247a1",
-                "sha256:613deba14233623ff3432d9d5032631b5f600be97b39f66932cbe67648bfa8ea"
+                "sha256:02ace10a00fa2e36c7ebd1df2ead91dbfbd7989686dc4ccbdc549e95d19f5780",
+                "sha256:6f94b6a176a7c114cfa6bad86d40f259bbe0f10cf2fa7f2f4b3596fc5802a41b"
             ],
             "index": "pypi",
-            "version": "==0.27.0"
+            "version": "==0.28.0"
         },
         "zipp": {
             "hashes": [

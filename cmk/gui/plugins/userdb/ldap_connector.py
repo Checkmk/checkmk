@@ -1947,7 +1947,6 @@ class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 class LDAPBuiltinAttributePlugin(LDAPAttributePlugin):
     """Base class for all builtin based sync plugins"""
-
     @property
     def is_builtin(self):
         return True
@@ -1955,7 +1954,6 @@ class LDAPBuiltinAttributePlugin(LDAPAttributePlugin):
 
 class LDAPUserAttributePlugin(LDAPAttributePlugin):
     """Base class for all custom user attribute based sync plugins"""
-
     @property
     def is_builtin(self):
         return False
@@ -2228,7 +2226,6 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
     This is done by increasing the auth serial of the user. In first instance, it must parse
     the pw-changed field, then check whether or not a date has been stored in the user before
     and then maybe increase the serial."""
-
     @property
     def ident(self):
         return "auth_expire"
@@ -2438,7 +2435,6 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
 @ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
     """Populate user attributes based on group memberships within LDAP"""
-
     @property
     def ident(self):
         return "groups_to_attributes"

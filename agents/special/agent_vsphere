@@ -915,7 +915,6 @@ def get_pattern(pattern, line):
 # TODO: Refactor to requests
 class ESXConnection(object):
     """Encapsulates the API calls to the ESX system"""
-
     @staticmethod
     def _connect_to_server(address, no_cert, debug):
         """Initialize server connection"""

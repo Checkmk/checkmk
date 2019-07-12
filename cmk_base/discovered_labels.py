@@ -59,7 +59,6 @@ class ABCDiscoveredLabels(collections.MutableMapping, object):
 
 class DiscoveredHostLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single host during runtime"""
-
     def __init__(self, inventory_tree, **kwargs):
         super(DiscoveredHostLabels, self).__init__(**kwargs)
         self._inventory_tree = inventory_tree

@@ -485,7 +485,6 @@ class ResultDistributor(object):
     Mediator which distributes results from sections
     in order to reduce queries to AWS account.
     """
-
     def __init__(self):
         self._colleagues = []
 
@@ -2783,7 +2782,6 @@ class AWSSectionsUSEast(AWSSections):
     Some clients like CostExplorer only work with US East region:
     https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
     """
-
     def init_sections(self, services, region, config):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')

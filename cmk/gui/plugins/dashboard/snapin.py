@@ -38,7 +38,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class SnapinDashlet(IFrameDashlet):
     """Dashlet that displays a sidebar snapin"""
-
     @classmethod
     def type_name(cls):
         return "snapin"

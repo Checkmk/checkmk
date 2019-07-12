@@ -326,7 +326,6 @@ class Perfometers(object):
 class MetricometerRenderer(object):
     __metaclass__ = abc.ABCMeta
     """Abstract base class for all metricometer renderers"""
-
     @classmethod
     def type_name(cls):
         raise NotImplementedError()

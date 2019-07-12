@@ -81,7 +81,6 @@ def flatten(d, separator="."):
     with no nested dicts or lists and each element is a path using the
     specified separator
     """
-
     def flatten_int(d, separator="."):
         result = []
         if isinstance(d, list):

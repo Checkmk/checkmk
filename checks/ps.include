@@ -470,7 +470,6 @@ def cpu_rate(counter, now, lifetime):
 
 class ProcessAggregator(object):
     """Collects information about all instances of monitored processes"""
-
     def __init__(self, cpu_cores, params):
         self.cpu_cores = cpu_cores
         self.params = params

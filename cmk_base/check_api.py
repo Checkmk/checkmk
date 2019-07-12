@@ -595,7 +595,6 @@ def get_parsed_item_data(check_function):
     cmk_base returning 3 (UNKN state) with an item not found message
     (see cmk_base/checking.py).
     """
-
     @functools.wraps(check_function)
     def wrapped_check_function(item, params, parsed):
         if not isinstance(parsed, dict):
@@ -687,7 +686,6 @@ def discover(selector=None, default_params=None):
 
             check_info["chk"] = {'inventory_function': inventory_thecheck}
     """
-
     def roller(parsed):
         if isinstance(parsed, dict):
             return parsed.iteritems()

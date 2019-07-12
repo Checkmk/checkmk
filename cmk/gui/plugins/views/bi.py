@@ -119,7 +119,6 @@ class RowTableBIHostAggregations(RowTable):
 class DataSourceBIHostnameAggregations(DataSource):
     """Similar to host aggregations, but the name of the aggregation
     is used to join the host table rather then the affected host"""
-
     @property
     def ident(self):
         return "bi_hostname_aggregations"
@@ -153,7 +152,6 @@ class RowTableBIHostnameAggregations(RowTable):
 @data_source_registry.register
 class DataSourceBIHostnameByGroupAggregations(DataSource):
     """The same but with group information"""
-
     @property
     def ident(self):
         return "bi_hostnamebygroup_aggregations"

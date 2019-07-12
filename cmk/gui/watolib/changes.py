@@ -166,7 +166,6 @@ class ActivateChangesWriter(object):
 
 class SiteChanges(object):
     """Manage persisted changes of a single site"""
-
     def __init__(self, site_id):
         super(SiteChanges, self).__init__()
         self._site_id = site_id

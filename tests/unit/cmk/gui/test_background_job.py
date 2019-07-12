@@ -103,11 +103,11 @@ def test_start_job():
 
     job.finish_hello_event.set()
 
-    testlib.wait_until(lambda: job.get_status()["state"] not in [
-        background_job.JobStatusStates.INITIALIZED, background_job.JobStatusStates.RUNNING
-    ],
-                       timeout=5,
-                       interval=0.1)
+    testlib.wait_until(
+        lambda: job.get_status()["state"] not in
+        [background_job.JobStatusStates.INITIALIZED, background_job.JobStatusStates.RUNNING],
+        timeout=5,
+        interval=0.1)
 
     status = job.get_status()
     assert status["state"] == background_job.JobStatusStates.FINISHED

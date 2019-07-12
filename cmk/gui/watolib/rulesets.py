@@ -187,7 +187,6 @@ class RulesetCollection(object):
     """Abstract class for holding a collection of rulesets. The most basic
     specific class is the FolderRulesets class which cares about all rulesets
     configured in a folder."""
-
     def __init__(self):
         super(RulesetCollection, self).__init__()
         # A dictionary containing all ruleset objects of the collection.

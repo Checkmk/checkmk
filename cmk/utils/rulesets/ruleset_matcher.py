@@ -76,7 +76,6 @@ class RulesetMatcher(object):
     kept for performance reasons. Especially the service rulset matching is
     done very often in large setups. Be careful when working here.
     """
-
     def __init__(self, tag_to_group_map, host_tag_lists, host_paths, labels, all_configured_hosts,
                  clusters_of, nodes_of):
         super(RulesetMatcher, self).__init__()
@@ -233,7 +232,6 @@ class RulesetMatcher(object):
 class RulesetOptimizer(object):
     """Performs some precalculations on the configured rulesets to improve the
     processing performance"""
-
     def __init__(self, ruleset_matcher, host_tag_lists, host_paths, labels, all_configured_hosts,
                  clusters_of, nodes_of):
         super(RulesetOptimizer, self).__init__()
@@ -678,7 +676,6 @@ class RulesetToDictTransformer(object):
     """Transforms all rules in the given ruleset from the pre 1.6 tuple format to the dict format
     This is done in place to keep the references to the ruleset working.
     """
-
     def __init__(self, tag_to_group_map):
         super(RulesetToDictTransformer, self).__init__()
         self._tag_groups = tag_to_group_map

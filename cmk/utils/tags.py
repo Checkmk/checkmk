@@ -317,7 +317,6 @@ class TagGroup(object):
 class TagConfig(object):
     """Container object encapsulating a whole set of configured
     tag groups with auxiliary tags"""
-
     def __init__(self):
         super(TagConfig, self).__init__()
         self._initialize()

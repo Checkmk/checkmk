@@ -38,7 +38,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class ViewDashlet(IFrameDashlet):
     """Dashlet that displays a Check_MK view"""
-
     @classmethod
     def type_name(cls):
         return "view"

@@ -7,7 +7,6 @@ from cmk_base.item_state import MKCounterWrapped
 
 class Tuploid(object):
     """Base class for values with (potentially variadic) tuple representations"""
-
     def __eq__(self, other_value):
         if isinstance(other_value, self.__class__):
             return other_value.tuple == self.tuple
@@ -28,7 +27,6 @@ class Tuploid(object):
 
 class PerfValue(Tuploid):
     """Represents a single perf value"""
-
     def __init__(self, key, value, warn=None, crit=None, minimum=None, maximum=None):
         # assign first, so __repr__ won't crash
         self.key = key
@@ -96,7 +94,6 @@ class BasicCheckResult(Tuploid):
     facilities to match it against conditions, such as 'Status is...' or
     'Infotext contains...'
     """
-
     def __init__(self, status, infotext, perfdata=None):
         """We perform some basic consistency checks during initialization"""
         # assign first, so __repr__ won't crash
@@ -172,7 +169,6 @@ class CheckResult(object):
     -The check's code is being run, and doesn't disappear in the yield-APIs
      generator-induced laziness.
     """
-
     def __init__(self, result):
         """
         Initializes a list of subresults using BasicCheckResult.
@@ -255,7 +251,6 @@ def assertCheckResultsEqual(actual, expected):
 
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery (or in oldspeak: inventory) function."""
-
     def __init__(self, entry):
         self.item, self.default_params = entry
         ti = type(self.item)
@@ -336,7 +331,6 @@ class BasicItemState(object):
     We assert that we have exactly two values,
     where the first one is either float or int.
     """
-
     def __init__(self, *args):
         if len(args) == 1:
             args = args[0]
@@ -439,7 +433,6 @@ class assertMKCounterWrapped(object):
 
     See for example 'test_statgrab_cpu_check.py'.
     """
-
     def __init__(self, msg=None):
         self.msg = msg
 
@@ -485,7 +478,6 @@ class MockHostExtraConf(object):
 
     See for example 'test_df_check.py'.
     """
-
     def __init__(self, check, mock_config, target="host_extra_conf"):
         self.target = target
         self.context = None
@@ -522,7 +514,6 @@ class ImmutablesChangedError(AssertionError):
 
 class Immutables(object):
     """Store some data and ensure it is not changed"""
-
     def __init__(self):
         self.refs = {}
         self.copies = {}

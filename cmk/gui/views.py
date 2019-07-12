@@ -141,7 +141,6 @@ multisite_sorters = {}
 @visual_type_registry.register
 class VisualTypeViews(VisualType):
     """Register the views as a visual type"""
-
     @property
     def ident(self):
         return "views"
@@ -203,7 +202,6 @@ class PermissionSectionViews(PermissionSection):
 
 class View(object):
     """Manages processing of a single view, e.g. during rendering"""
-
     def __init__(self, view_name, view_spec):
         # type: (str, Dict) -> None
         super(View, self).__init__()

@@ -59,7 +59,6 @@ class MkpRulePackProxy(UserDict.DictMixin):
     A newly created instance is not yet connected to a specific rule pack.
     This is achieved via the method bind_to.
     """
-
     def __init__(self, rule_pack_id):
         # Ideally the 'id_' would not be necessary and the proxy object would
         # be bound to it's referenced object upon initialization. Unfortunately,
@@ -405,7 +404,6 @@ def rule_pack_id_to_mkp(package_info):
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
-
     def mkp_of(rule_pack_file):
         # type: (str) -> Any
         """Find the MKP for the given file"""

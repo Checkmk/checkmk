@@ -30,7 +30,6 @@ class Incident(object):
     to the environment in the calling script:
     EC_ID, EC_PHASE, EC_HOST, EC_CONTACT, EC_TEXT, EC_STATE, EC_COMMENT
     """
-
     class Source:
         Notification, EventConsole = range(2)
 
@@ -246,7 +245,6 @@ class Renderer(object):
     Determines how the collected data from an incident is
     displayed to the user
     """
-
     def __init__(self, settings):
         super(Renderer, self).__init__()
 
@@ -490,7 +488,6 @@ class InterfaceGLPI(TicketInterface):
             if ticket['name'].endswith(self.__format_ticket_id(ticket_id)):
                 return ticket['id']
     """
-
     def add_ticket_comment(self, ticket_id, message):
         log.info("sess %s, tick %s, cont %s", self.__session, ticket_id, message)
         response = self.__server.glpi.addTicketFollowup({

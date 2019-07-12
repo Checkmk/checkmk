@@ -200,7 +200,6 @@ def parse_azure(info):
 
 def discover_azure_by_metrics(*desired_metrics):
     """Return a discovery function, that will discover if any of the metrics are found"""
-
     def discovery_function(parsed):
         for name, resource in parsed.iteritems():
             metr = resource.get('metrics', {})

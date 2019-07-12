@@ -625,7 +625,6 @@ def IndividualOrStoredPassword(*args, **kwargs):
 def HTTPProxyReference():
     """Use this valuespec in case you want the user to configure a HTTP proxy
     The configured value is is used for preparing requests to work in a proxied environment."""
-
     def _global_proxy_choices():
         settings = watolib.ConfigDomainCore().load()
         return [(p["ident"], p["title"]) for p in settings.get("http_proxies", {}).values()]
@@ -1928,7 +1927,6 @@ class DictHostTagCondition(Transform):
 
 class HostTagCondition(ValueSpec):
     """ValueSpec for editing a tag-condition"""
-
     def render_input(self, varprefix, value):
         self._render_condition_editor(varprefix, value)
 

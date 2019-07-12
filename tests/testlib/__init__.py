@@ -1961,7 +1961,6 @@ class CMKEventConsoleStatus(object):
 
 class WatchLog(object):
     """Small helper for integration tests: Watch a sites log file"""
-
     def __init__(self, site, rel_path, default_timeout=5):
         self._site = site
         self._rel_path = rel_path

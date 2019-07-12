@@ -36,7 +36,6 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObjec
 
 class LabelManager(object):
     """Helper class to manage access to the host and service labels"""
-
     def __init__(self, explicit_host_labels, host_label_rules):
         # type: (Dict, List) -> None
         super(LabelManager, self).__init__()

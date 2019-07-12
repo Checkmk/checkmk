@@ -50,7 +50,6 @@ class Request(object):
     and provides some low level functions to the application for accessing these
     information. These should be basic HTTP request handling things and no application
     specific mechanisms."""
-
     def __init__(self, wsgi_environ):
         super(Request, self).__init__()
         self._logger = log.logger.getChild("http.Request")

@@ -67,7 +67,6 @@ class TimeSeries(object):
     - The Series describes the interval [start; end[
     - Start has no associated value to it.
     """
-
     def __init__(self, data):
         self.start = data[0]
         self.end = data[1]

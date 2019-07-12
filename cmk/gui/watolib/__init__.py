@@ -565,7 +565,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
     """This is not really the correct place for such kind of action, but the best place we could
     find to execute it only for new created sites."""
-
     @classmethod
     def ident(cls):
         return "acknowledge_initial_werks"
@@ -581,7 +580,6 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
 @sample_config_generator_registry.register
 class ConfigGeneratorAutomationUser(SampleConfigGenerator):
     """Create the default Checkmk "automation" user"""
-
     @classmethod
     def ident(cls):
         return "create_automation_user"

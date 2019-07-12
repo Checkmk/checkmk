@@ -62,7 +62,6 @@ from cmk.gui.exceptions import (
 
 class Application(object):
     """The Check_MK GUI WSGI entry point"""
-
     def __init__(self, environ, start_response):
         self._environ = environ
         self._start_response = start_response

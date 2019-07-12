@@ -380,6 +380,19 @@ def translate_metrics(perf_data, check_command):
 # TODO: Refactor evaluate and all helpers into single class
 
 
+def split_expression(expression):
+    if "#" in expression:
+        expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
+    else:
+        explicit_color = None
+
+    if "@" in expression:
+        expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
+    else:
+        explicit_unit_name = None
+    return expression, explicit_unit_name, explicit_color
+
+
 # Evaluates an expression, returns a triple of value, unit and color.
 # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
 # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
@@ -393,27 +406,18 @@ def translate_metrics(perf_data, check_command):
 def evaluate(expression, translated_metrics):
     if isinstance(expression, (float, int)):
         return _evaluate_literal(expression, translated_metrics)
-    else:
-        if "#" in expression:
-            expression, explicit_color = expression.rsplit("#",
-                                                           1)  # drop appended color information
-        else:
-            explicit_color = None
 
-        if "@" in expression:
-            expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
-        else:
-            explicit_unit_name = None
+    expression, explicit_unit_name, explicit_color = split_expression(expression)
 
-        value, unit, color = _evaluate_rpn(expression, translated_metrics)
+    value, unit, color = _evaluate_rpn(expression, translated_metrics)
 
-        if explicit_color:
-            color = "#" + explicit_color
+    if explicit_color:
+        color = "#" + explicit_color
 
-        if explicit_unit_name:
-            unit = unit_info[explicit_unit_name]
+    if explicit_unit_name:
+        unit = unit_info[explicit_unit_name]
 
-        return value, unit, color
+    return value, unit, color
 
 
 def _evaluate_rpn(expression, translated_metrics):
@@ -575,12 +579,7 @@ def replace_expressions(text, translated_metrics):
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
     def eval_to_string(match):
         expression = match.group()[2:-1]
-        unit_name = None
-        if "@" in expression:
-            expression, unit_name = expression.split("@")
         value, unit, _color = evaluate(expression, translated_metrics)
-        if unit_name:
-            unit = unit_info[unit_name]
         if value is not None:
             return unit["render"](value)
         return _("n/a")

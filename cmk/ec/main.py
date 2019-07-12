@@ -4048,6 +4048,9 @@ def load_configuration(settings, logger, slave_status):
         logger.getChild("StatusServer").setLevel(levels["cmk.mkeventd.StatusServer"])
         logger.getChild("lock").setLevel(levels["cmk.mkeventd.lock"])
 
+    if config.get("translate_snmptraps") is True:
+        config["translate_snmptraps"] = (True, {})  # convert from pre-1.6.0 format
+
     # Are we a replication slave? Parts of the configuration
     # will be overridden by values from the master.
     update_slave_status(slave_status, settings, config)

@@ -99,7 +99,6 @@ class AsyncMapper(object):  # pylint: disable=too-few-public-methods
                   a tuple (err, value). If err is falsey, value will we be
                   yielded (default: (1, None)).
     '''
-
     def __init__(self, timeout=None, debug=False, fallback=lambda x: (1, None)):
         super(AsyncMapper, self).__init__()
         self.timeout = timeout

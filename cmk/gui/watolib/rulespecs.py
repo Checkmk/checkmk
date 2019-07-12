@@ -478,7 +478,6 @@ class Rulespec(object):
 
 class ABCHostRulespec(object):
     """Base class for all rulespecs managing host rule sets"""
-
     @property
     def is_for_services(self):
         return False
@@ -511,7 +510,6 @@ class ABCHostRulespec(object):
 
 class ABCServiceRulespec(object):
     """Base class for all rulespecs managing service rule sets"""
-
     @property
     def is_for_services(self):
         return True
@@ -550,7 +548,6 @@ class ABCServiceRulespec(object):
 
 class ABCBinaryRulespec(Rulespec):
     """Base class for all rulespecs that create a binary host/service rule list"""
-
     @property
     def valuespec(self):
         return None
@@ -576,7 +573,6 @@ class BinaryServiceRulespec(ABCServiceRulespec, ABCBinaryRulespec):
 
 class ABCValueRulespec(Rulespec):
     """Base class for all rulespecs that create a host/service list with values"""
-
     @abc.abstractproperty
     def valuespec(self):
         # type: () -> ValueSpec
@@ -609,7 +605,6 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
     These have to be named checkgroup_parameters:<name-of-checkgroup>. These
     parameters affect the discovered services only, not the manually configured
     checks."""
-
     @abc.abstractproperty
     def check_group_name(self):
         raise NotImplementedError()
@@ -664,7 +659,6 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
     These have to be named checkgroup_parameters:<name-of-checkgroup>. These
     parameters affect the discovered services only, not the manually configured
     checks."""
-
     @abc.abstractproperty
     def check_group_name(self):
         raise NotImplementedError()
@@ -697,7 +691,6 @@ class ManualCheckParameterRulespec(HostRulespec):
     """Base class for all rulespecs managing manually configured checks
 
     These have to be named static_checks:<name-of-checkgroup>"""
-
     @abc.abstractproperty
     def check_group_name(self):
         raise NotImplementedError()

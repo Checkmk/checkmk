@@ -36,8 +36,8 @@
 memcached_aggregates = [
     ('bytes_percent',
      lambda readings: float(readings['bytes']) / float(readings['limit_maxbytes'])),
-    ('cache_hit_rate', lambda readings: float(readings['cmd_get']) > 0 and (float(readings[
-        'get_hits']) / float(readings['cmd_get'])) or 1.0)
+    ('cache_hit_rate', lambda readings: float(readings['cmd_get']) > 0 and
+     (float(readings['get_hits']) / float(readings['cmd_get'])) or 1.0)
 ]
 
 

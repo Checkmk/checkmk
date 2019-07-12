@@ -53,7 +53,6 @@ from .abstract import CheckMKAgentDataSource
 
 class ProgramDataSource(CheckMKAgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
-
     def _cpu_tracking_id(self):
         return "ds"
 

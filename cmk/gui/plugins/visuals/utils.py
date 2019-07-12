@@ -341,7 +341,6 @@ class FilterTristate(Filter):
 
 class FilterTime(Filter):
     """Filter for setting time ranges, e.g. on last_state_change and last_check"""
-
     def __init__(self, info, column):
         self.column = column
         self.ranges = [

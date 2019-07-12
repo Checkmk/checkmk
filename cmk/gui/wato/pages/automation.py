@@ -81,7 +81,6 @@ class ModeAutomation(AjaxPage):
     This page is accessible without regular login. The request is authenticated using the given
     login secret that has previously been exchanged during "site login" (see above).
     """
-
     def __init__(self):
         super(ModeAutomation, self).__init__()
 

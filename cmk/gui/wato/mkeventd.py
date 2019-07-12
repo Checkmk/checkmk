@@ -3561,9 +3561,9 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
             # Transform old values:
             # 0 -> normal logging
             # 1 -> verbose logging
-            forth=lambda x: {
-                "cmk.mkeventd": (cmk.utils.log.INFO if x == 0 else cmk.utils.log.VERBOSE)
-            } if x in (0, 1) else x,
+            forth=lambda x:
+            {"cmk.mkeventd": (cmk.utils.log.INFO if x == 0 else cmk.utils.log.VERBOSE)}
+            if x in (0, 1) else x,
         )
 
     def _ec_log_level_elements(self):

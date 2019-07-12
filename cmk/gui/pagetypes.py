@@ -1197,7 +1197,6 @@ class PublishTo(CascadingDropdown):
 
 class ContactGroupChoice(DualListChoice):
     """A multiple selection of contact groups that are part of the current active config"""
-
     def __init__(self, with_foreign_groups=True, **kwargs):
         super(ContactGroupChoice, self).__init__(choices=self._load_groups, **kwargs)
         self._with_foreign_groups = with_foreign_groups

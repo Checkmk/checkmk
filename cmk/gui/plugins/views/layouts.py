@@ -92,7 +92,6 @@ class LayoutSingleDataset(Layout):
     """Layout designed for showing one single dataset with the column
     headers left and the values on the right. It is able to handle
     more than on dataset however."""
-
     @property
     def ident(self):
         return "dataset"
@@ -390,7 +389,6 @@ def try_to_match_group(row):
 class LayoutBalancedBoxes(GroupedBoxesLayout):
     """The boxed layout is useful in views with a width > 1, boxes are
     stacked in columns and can have different sizes."""
-
     @property
     def ident(self):
         return "boxed"
@@ -414,7 +412,6 @@ class LayoutBalancedBoxes(GroupedBoxesLayout):
 @layout_registry.register
 class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
     """Same as balanced boxes layout but adds a CSS class graph to the box"""
-
     @property
     def ident(self):
         return "boxed_graph"
@@ -438,7 +435,6 @@ class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
 @layout_registry.register
 class LayoutTiled(Layout):
     """The tiled layout puts each dataset into one box with a fixed size"""
-
     @property
     def ident(self):
         return "tiled"
@@ -572,7 +568,6 @@ class LayoutTable(Layout):
     """Most common layout: render all datasets in one big table. Groups
     are shown in what seems to be separate tables but they share the
     width of the columns."""
-
     @property
     def ident(self):
         return "table"
@@ -758,7 +753,6 @@ class LayoutMatrix(Layout):
     It create a matrix whose columns are single datasets and whole rows
     are entities with the same value in all those datasets. Typicall
     The columns are hosts and the rows are services."""
-
     @property
     def ident(self):
         return "matrix"

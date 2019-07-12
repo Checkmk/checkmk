@@ -375,7 +375,6 @@ def is_alias_used(my_what, my_name, my_alias):
 @host_attribute_registry.register
 class HostAttributeContactGroups(ABCHostAttribute):
     """Attribute needed for folder permissions"""
-
     def __init__(self):
         ABCHostAttribute.__init__(self)
         self._contactgroups = None

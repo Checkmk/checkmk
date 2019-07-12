@@ -47,7 +47,6 @@ class TagConfigFile(WatoSimpleConfigFile):
     When saving the configuration it also writes out the tags.mk for
     the cmk_base world.
     """
-
     def __init__(self):
         file_path = Path(multisite_dir()) / "tags.mk"
         super(TagConfigFile, self).__init__(config_file_path=file_path, config_variable="wato_tags")

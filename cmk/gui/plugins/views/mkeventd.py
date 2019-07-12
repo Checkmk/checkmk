@@ -1095,7 +1095,6 @@ class PainterHistoryAddinfo(Painter):
 @permission_registry.register
 class PermissionECUpdateEvent(Permission):
     """Acknowledge and update comment and contact"""
-
     @property
     def section(self):
         return mkeventd.PermissionSectionEventConsole
@@ -1120,7 +1119,6 @@ class PermissionECUpdateEvent(Permission):
 @permission_registry.register
 class PermissionECUpdateComment(Permission):
     """Sub-Permissions for Changing Comment, Contact and Acknowledgement"""
-
     @property
     def section(self):
         return mkeventd.PermissionSectionEventConsole
@@ -1145,7 +1143,6 @@ class PermissionECUpdateComment(Permission):
 @permission_registry.register
 class PermissionECUpdateContact(Permission):
     """Sub-Permissions for Changing Comment, Contact and Acknowledgement"""
-
     @property
     def section(self):
         return mkeventd.PermissionSectionEventConsole

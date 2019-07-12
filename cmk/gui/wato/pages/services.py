@@ -164,7 +164,6 @@ class ModeDiscovery(WatoMode):
     starts a the discovery data update process. Additional processing is done by
     ModeAjaxServiceDiscovery()
     """
-
     @classmethod
     def name(cls):
         return "inventory"
@@ -346,7 +345,6 @@ def _get_check_table_from_remote(request):
 @automation_command_registry.register
 class AutomationServiceDiscoveryJob(AutomationCommand):
     """Is called by _get_check_table() to execute the background job on a remote site"""
-
     def command_name(self):
         return "service-discovery-job"
 

@@ -6,7 +6,6 @@ import cmk_base.check_api as check_api
 
 class CheckHandler(object):
     """Collect the info on all checks"""
-
     def __init__(self):
         config.load_all_checks(check_api.get_check_api_context)
         self.info = copy.deepcopy(config.check_info)

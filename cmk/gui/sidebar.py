@@ -164,7 +164,6 @@ def transform_old_quicksearch_match_plugins():
 
 class UserSidebarConfig(object):
     """Manages the configuration of the users sidebar"""
-
     def __init__(self, user, default_config):
         super(UserSidebarConfig, self).__init__()
         self._user = user
@@ -294,7 +293,6 @@ class SnapinVisibility(Enum):
 
 class UserSidebarSnapin(object):
     """An instance of a snapin that is configured in the users sidebar"""
-
     @staticmethod
     def from_config(cfg):
         # type: (Dict[str, Type[cmk.gui.plugins.sidebar.SidebarSnapin]]) -> UserSidebarSnapin

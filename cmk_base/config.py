@@ -3130,7 +3130,6 @@ def get_config_cache():
 # configuration settings are not held in cmk_base.config namespace anymore.
 class CEEConfigCache(ConfigCache):
     """Encapsulates the CEE specific functionality"""
-
     def rrd_config_of_service(self, hostname, description):
         # type: (str, Text) -> Optional[Dict]
         return self.get_service_ruleset_value(hostname,
@@ -3199,7 +3198,6 @@ class CEEConfigCache(ConfigCache):
 # configuration settings are not held in cmk_base.config namespace anymore.
 class CEEHostConfig(HostConfig):
     """Encapsulates the CEE specific functionality"""
-
     @property
     def rrd_config(self):
         # type: () -> Optional[Dict]

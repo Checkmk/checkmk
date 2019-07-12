@@ -350,7 +350,6 @@ def page_user_profile(change_pw=False):
 @page_registry.register_page("wato_ajax_profile_repl")
 class ModeAjaxProfileReplication(AjaxPage):
     """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
-
     def page(self):
         request = self.webapi_request()
 

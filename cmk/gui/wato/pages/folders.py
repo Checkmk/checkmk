@@ -780,7 +780,6 @@ def delete_host_after_confirm(delname):
 @page_registry.register_page("ajax_popup_move_to_folder")
 class ModeAjaxPopupMoveToFolder(AjaxPage):
     """Renders the popup menu contents for either moving a host or a folder to another folder"""
-
     def _from_vars(self):
         self._what = html.request.var("what")
         if self._what not in ["host", "folder"]:

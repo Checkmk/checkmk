@@ -966,7 +966,6 @@ class Url(TextAscii):
 
 class HTTPUrl(Url):
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
-
     def __init__(self, **kwargs):
         kwargs.setdefault("show_as_link", True)
         super(HTTPUrl, self).__init__(allowed_schemes=["http", "https"],
@@ -4238,7 +4237,6 @@ class TextOrRegExpUnicode(TextOrRegExp):
 
 class Labels(ValueSpec):
     """Valuespec to render and input a collection of object labels"""
-
     class World(Enum):
         CONFIG = "config"
         CORE = "core"
@@ -4295,7 +4293,6 @@ class Labels(ValueSpec):
 @page_registry.register_page("ajax_autocomplete_labels")
 class PageAutocompleteLabels(AjaxPage):
     """Return all known labels to support tagify label input dropdown completion"""
-
     def page(self):
         request = html.get_request()
         return _encode_labels_for_tagify(

@@ -42,8 +42,8 @@ check_info["f5_bigip_cluster_status"] = {
 
 check_info["f5_bigip_cluster_status.v11_2"] = {
     "inventory_function": lambda info: [],
-    "check_function": lambda x, y, z: (3, "This check is deprecated. Please perform a re-discovery."
-                                      ),
+    "check_function": lambda x, y, z:
+                      (3, "This check is deprecated. Please perform a re-discovery."),
     "service_description": "BIG-IP Cluster Status",
     "node_info": True,
     "group": "cluster_status",

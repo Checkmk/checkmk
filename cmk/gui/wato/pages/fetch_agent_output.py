@@ -213,7 +213,6 @@ class ABCAutomationFetchAgentOutput(AutomationCommand):
 @automation_command_registry.register
 class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._start_fetch() to execute the background job on a remote site"""
-
     def command_name(self):
         return "fetch-agent-output-start"
 
@@ -233,7 +232,6 @@ def start_fetch_agent_job(request):
 @automation_command_registry.register
 class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._get_job_status() to execute the background job on a remote site"""
-
     def command_name(self):
         return "fetch-agent-output-get-status"
 

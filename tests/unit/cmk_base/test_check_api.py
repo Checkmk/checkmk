@@ -106,8 +106,8 @@ def test_discover_single(parsed, result):
         ("two", {}),
         ("three", {}),
     ]),
-    ([['one', 5, 3], ['two', 0, 0], ['three', 2, 8]
-     ], lambda line: line[0].upper() if line[1] > 0 else False, [
+    ([['one', 5, 3], ['two', 0, 0], ['three', 2, 8]], lambda line: line[0].upper()
+     if line[1] > 0 else False, [
          ("ONE", {}),
          ("THREE", {}),
      ]),

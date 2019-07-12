@@ -159,7 +159,6 @@ def report_exception_to_server(exc, location):
 
 class MKDockerClient(docker.DockerClient):
     '''a docker.DockerClient that caches containers and node info'''
-
     def __init__(self, config):
         super(MKDockerClient, self).__init__(config['base_url'], version=config['api_version'])
         all_containers = self.containers.list(all=True)
@@ -182,7 +181,6 @@ class AgentDispatcher(object):
     Once it comes to plugins and custom configuration the user needs to use
     a little more complex setup. Have a look at the documentation.
     '''
-
     @staticmethod
     def iter_socket(sock, descriptor):
         header = sock.recv(8)
@@ -270,7 +268,6 @@ class AgentDispatcher(object):
 
 def time_it(func):
     '''Decorator to time the function'''
-
     @functools.wraps(func)
     def wrapped(*args, **kwargs):
         before = time.time()
@@ -304,7 +301,6 @@ def set_version_info(client):
 
 def skippable(section):
     '''Decorator to skip the section, if configured to do so'''
-
     @functools.wraps(section)
     def wrapped(client, config):
         section_name = section.func_name.replace('section_', 'docker_')

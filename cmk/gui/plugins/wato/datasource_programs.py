@@ -388,8 +388,8 @@ class RulespecSpecialAgentsVsphere(HostRulespec):
                            "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
                            "your connection settings here."),
                          forth=lambda a: dict([("skip_placeholder_vms", True), ("ssl", False),
-                                               ("use_pysphere", False), ("spaces", "underscore")] +
-                                              a.items()))
+                                               ("use_pysphere", False),
+                                               ("spaces", "underscore")] + a.items()))
 
 
 @rulespec_registry.register

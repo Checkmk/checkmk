@@ -52,7 +52,6 @@ def with_unused_counter_removal(plugin_name):
     The decorated parse function will clean up all couters for that plugin which are more
     than ten times older than the youngest one to avoid growing up the item state.
     '''
-
     def is_plugin_counter_with_age(ident, value):
         if not isinstance(value, tuple):
             return False

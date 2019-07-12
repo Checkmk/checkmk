@@ -35,7 +35,6 @@ def parse_ucs_c_rack_server_topsystem(info):
     Input: Single line info with a rack server topsystem information.
     Output: Returns dict with dn, address, current time, mode and name as keys (with corresponding values).
     """
-
     def format_data_and_time(date_and_time):
         """Converts date and time and returns in time format.
 

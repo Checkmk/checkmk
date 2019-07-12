@@ -174,8 +174,9 @@ def _register_custom_user_icons_and_actions(user_icons_and_actions):
                 "type": classmethod(lambda cls: "custom_icon"),
                 "sort_index": lambda self: self._icon_spec.get("sort_index", 15),
                 "toplevel": lambda self: self._icon_spec.get("toplevel", False),
-                "render": lambda self, *args: (self._icon_spec["icon"], self._icon_spec.get(
-                    "title"), self._icon_spec.get("url")),
+                "render": lambda self, *args:
+                          (self._icon_spec["icon"], self._icon_spec.get("title"),
+                           self._icon_spec.get("url")),
             })
 
         icon_and_action_registry.register(icon_class)

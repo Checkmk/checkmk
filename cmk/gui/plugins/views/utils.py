@@ -636,7 +636,6 @@ class DataSource(object):
 
 class DataSourceLivestatus(DataSource):
     """Base class for all simple data sources which 1:1 base on a livestatus table"""
-
     @property
     def table(self):
         return RowTableLivestatus(self.ident)

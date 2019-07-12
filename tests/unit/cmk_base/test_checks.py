@@ -66,8 +66,8 @@ def _check_plugins():
 
 @pytest.fixture()
 def patch_mgmt_board_plugins(monkeypatch):
-    monkeypatch.setattr(config,
-                        "_get_management_board_precedence", lambda c, _: _check_plugins()[c])
+    monkeypatch.setattr(config, "_get_management_board_precedence",
+                        lambda c, _: _check_plugins()[c])
     monkeypatch.setattr(cmk_base.check_utils, "is_snmp_check", lambda c: c.startswith("snmp_"))
 
 

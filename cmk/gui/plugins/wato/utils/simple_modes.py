@@ -155,7 +155,6 @@ class SimpleWatoModeBase(WatoMode):
 
 class SimpleListMode(SimpleWatoModeBase):
     """Base class for list modes"""
-
     @abc.abstractmethod
     def _table_title(self):
         # type: () -> str

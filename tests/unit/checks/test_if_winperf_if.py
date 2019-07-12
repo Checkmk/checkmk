@@ -412,8 +412,8 @@ def test_winperf_if_inventory_group_patterns(check_manager, monkeypatch, setting
     check = check_manager.get_check("winperf_if")
     monkeypatch.setitem(check.context, "host_name", lambda: "test-host")
     monkeypatch.setitem(check.context, "host_extra_conf", lambda _, __: settings)
-    monkeypatch.setitem(check.context,
-                        "_prepare_if_group_patterns_from_conf", lambda: group_patterns)
+    monkeypatch.setitem(check.context, "_prepare_if_group_patterns_from_conf",
+                        lambda: group_patterns)
     parsed = check.run_parse(info)
 
     actual_discovery = check.run_discovery(parsed)

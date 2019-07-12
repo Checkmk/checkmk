@@ -1009,8 +1009,8 @@ class EventServer(ECServerThread):
             if self._snmptrap is not None and self._snmptrap.fileno() in readable:
                 try:
                     message, sender_address = self._snmptrap.recvfrom(65535)
-                    self.process_raw_data(lambda: self._snmp_trap_engine.process_snmptrap(
-                        message, sender_address))
+                    self.process_raw_data(
+                        lambda: self._snmp_trap_engine.process_snmptrap(message, sender_address))
                 except Exception:
                     self._logger.exception(
                         'Exception handling a SNMP trap from "%s". Skipping this one' %

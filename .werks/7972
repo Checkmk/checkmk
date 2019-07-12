@@ -1,0 +1,10 @@
+Title: Fix possible error when checking on command line with missing piggyback_sources directory
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1562925703
+Class: fix
+
+

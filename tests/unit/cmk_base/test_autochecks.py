@@ -147,7 +147,7 @@ def test_read_autochecks_of(test_config, autochecks_content, expected_result):
 
 
 def test_parse_autochecks_file_not_existing():
-    assert discovery.parse_autochecks_file("host") == []
+    assert autochecks.parse_autochecks_file("host") == []
 
 
 @pytest.mark.parametrize(
@@ -208,10 +208,10 @@ def test_parse_autochecks_file(test_config, autochecks_content, expected_result)
 
     if expected_result is MKGeneralException:
         with pytest.raises(MKGeneralException):
-            discovery.parse_autochecks_file("host")
+            autochecks.parse_autochecks_file("host")
         return
 
-    parsed = discovery.parse_autochecks_file("host")
+    parsed = autochecks.parse_autochecks_file("host")
     assert len(parsed) == len(expected_result)
 
     for index, service in enumerate(parsed):

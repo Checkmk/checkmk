@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import ast
 import os
 import socket
 import time
@@ -48,12 +47,14 @@ import cmk_base.item_state as item_state
 import cmk_base.checking as checking
 import cmk_base.data_sources as data_sources
 import cmk_base.check_table as check_table
+import cmk_base.autochecks as autochecks
 import cmk_base.core
-from cmk_base.exceptions import MKParseFunctionError
 import cmk_base.cleanup
 import cmk_base.check_utils
 import cmk_base.decorator
 import cmk_base.snmp_scan as snmp_scan
+from cmk_base.exceptions import MKParseFunctionError
+from cmk_base.check_utils import DiscoveredService
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
@@ -68,44 +69,6 @@ _marked_host_discovery_timeout = 120
 #   +----------------------------------------------------------------------+
 #   |  Functions for command line options -I and -II                       |
 #   '----------------------------------------------------------------------'
-
-
-class DiscoveredService(object):
-    __slots__ = ["_check_plugin_name", "_item", "_description", "_paramstr"]
-
-    def __init__(self, check_plugin_name, item, description, paramstr):
-        # type: (check_table.CheckPluginName, check_table.Item, Text, str) -> None
-        self._check_plugin_name = check_plugin_name
-        self._item = item
-        self._description = description
-        self._paramstr = paramstr
-
-    @property
-    def check_plugin_name(self):
-        return self._check_plugin_name
-
-    @property
-    def item(self):
-        return self._item
-
-    @property
-    def description(self):
-        return self._description
-
-    @property
-    def paramstr(self):
-        return self._paramstr
-
-    def __eq__(self, other):
-        """Is used during service discovery list computation to detect and replace duplicates
-        For this the paramstr needs to be ignored."""
-        return self.check_plugin_name == other.check_plugin_name and self.item == other.item
-
-    def __hash__(self):
-        """Is used during service discovery list computation to detect and replace duplicates
-        For this the paramstr needs to be ignored."""
-        return hash((self.check_plugin_name, self.item))
-
 
 DiscoveredServicesTable = Dict[Tuple[check_table.CheckPluginName, check_table.
                                      Item], Tuple[str, DiscoveredService]]
@@ -213,7 +176,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
     if not check_plugin_names and not only_new:
         existing_services = []  # type: List[DiscoveredService]
     else:
-        existing_services = parse_autochecks_file(hostname)
+        existing_services = autochecks.parse_autochecks_file(hostname)
 
     # Parse old items into a dict (ct, item) -> paramstring
     for existing_service in existing_services:
@@ -1025,7 +988,7 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
                             ("new", discovered_service))
 
     # Match with existing items -> "old" and "vanished"
-    for existing_service in parse_autochecks_file(hostname):
+    for existing_service in autochecks.parse_autochecks_file(hostname):
         table_id = existing_service.check_plugin_name, existing_service.item
         check_source = "vanished" if table_id not in services else "old"
         services[table_id] = check_source, existing_service
@@ -1309,84 +1272,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 #   '----------------------------------------------------------------------'
 
 
-def parse_autochecks_file(hostname):
-    # type: (str) -> List[DiscoveredService]
-    """Read autochecks, but do not compute final check parameters"""
-    path = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
-    if not os.path.exists(path):
-        return []
-
-    services = []  # type: List[DiscoveredService]
-
-    try:
-        tree = ast.parse(open(path).read())
-    except SyntaxError:
-        if cmk.utils.debug.enabled():
-            raise
-        raise MKGeneralException("Unable to parse autochecks file %s" % (path))
-
-    for child in ast.iter_child_nodes(tree):
-        # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
-        if not isinstance(child, ast.Expr) and isinstance(child.value, ast.List):  # type: ignore
-            continue  # We only care about top level list
-
-        # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
-        for entry in child.value.elts:  # type: ignore
-            if not isinstance(entry, ast.Tuple):
-                continue
-
-            service = _parse_autocheck_entry(hostname, entry)
-            if service:
-                services.append(service)
-
-    return services
-
-
-def _parse_autocheck_entry(hostname, entry):
-    # type: (str, ast.Tuple) -> Optional[DiscoveredService]
-    # drop hostname, legacy format with host in first column
-    parts = entry.elts[1:] if len(entry.elts) == 4 else entry.elts
-
-    if len(parts) != 3:
-        raise Exception("Invalid autocheck: Wrong length %d instead of 3" % len(parts))
-    ast_check_plugin_name, ast_item, ast_paramstr = parts
-
-    if not isinstance(ast_check_plugin_name, ast.Str):
-        raise Exception("Invalid autocheck: Wrong check plugin type: %r" % ast_check_plugin_name)
-    check_plugin_name = ast_check_plugin_name.s
-
-    item = None  # type: check_table.Item
-    if isinstance(ast_item, ast.Str):
-        item = ast_item.s
-    elif isinstance(ast_item, ast.Num):
-        item = int(ast_item.n)
-    elif isinstance(ast_item, ast.Name) and ast_item.id == "None":
-        item = None
-    else:
-        raise Exception("Invalid autocheck: Wrong item type: %r" % ast_item)
-
-    # With Check_MK 1.2.7i3 items are now defined to be unicode
-    # strings. Convert items from existing autocheck files for
-    # compatibility.
-    if isinstance(item, str):
-        item = config.decode_incoming_string(item)
-
-    if isinstance(ast_paramstr, ast.Name):
-        # Keep check variable names as they are: No evaluation of check parameters
-        paramstr = ast_paramstr.id
-    else:
-        # Other structures, like dicts, lists and so on should also be loaded as repr() str
-        # instead of an interpreted structure
-        paramstr = repr(eval(compile(ast.Expression(ast_paramstr), filename="<ast>", mode="eval")))
-
-    try:
-        description = config.service_description(hostname, check_plugin_name, item)
-    except Exception:
-        return None  # ignore
-
-    return DiscoveredService(check_plugin_name, item, description, paramstr)
-
-
 def _has_autochecks(hostname):
     # type: (str) -> bool
     return os.path.exists(cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk")
@@ -1431,7 +1316,7 @@ def _set_autochecks_of_real_hosts(host_config, new_items):
 
     # write new autochecks file, but take paramstrings from existing ones
     # for those checks which are kept
-    for existing_service in parse_autochecks_file(host_config.hostname):
+    for existing_service in autochecks.parse_autochecks_file(host_config.hostname):
         # TODO: Need to implement a list class that realizes in / not in correctly
         if existing_service in new_items:
             new_autochecks.append(existing_service)
@@ -1456,7 +1341,7 @@ def _set_autochecks_of_cluster(host_config, new_items):
 
     new_autochecks = []  # type: List[DiscoveredService]
     for node in host_config.nodes:
-        for existing_service in parse_autochecks_file(node):
+        for existing_service in autochecks.parse_autochecks_file(node):
             if host_config.hostname != config_cache.host_of_clustered_service(
                     node, existing_service.description):
                 new_autochecks.append(existing_service)
@@ -1492,7 +1377,7 @@ def _remove_autochecks_of_host(hostname):
     new_items = []  # type: List[DiscoveredService]
     config_cache = config.get_config_cache()
 
-    old_items = parse_autochecks_file(hostname)
+    old_items = autochecks.parse_autochecks_file(hostname)
     for existing_service in old_items:
         if hostname != config_cache.host_of_clustered_service(hostname,
                                                               existing_service.description):

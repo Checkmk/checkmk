@@ -30,7 +30,51 @@
 #  along with Check_MK. If not, email to mk@mathias-kettner.de
 #  or write to the postal address provided at www.mathias-kettner.de
 
+from typing import Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List  # pylint: disable=unused-import
+
 import cmk_base
+
+Item = Union[Text, None, int]
+CheckParameters = Union[None, Dict, Tuple, List, str]
+CheckPluginName = str
+CheckTable = Dict[Tuple[CheckPluginName, Item], Tuple[Any, Text, List[Text]]]
+
+
+class DiscoveredService(object):
+    __slots__ = ["_check_plugin_name", "_item", "_description", "_paramstr"]
+
+    def __init__(self, check_plugin_name, item, description, paramstr):
+        # type: (CheckPluginName, Item, Text, str) -> None
+        self._check_plugin_name = check_plugin_name
+        self._item = item
+        self._description = description
+        self._paramstr = paramstr
+
+    @property
+    def check_plugin_name(self):
+        return self._check_plugin_name
+
+    @property
+    def item(self):
+        return self._item
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def paramstr(self):
+        return self._paramstr
+
+    def __eq__(self, other):
+        """Is used during service discovery list computation to detect and replace duplicates
+        For this the paramstr needs to be ignored."""
+        return self.check_plugin_name == other.check_plugin_name and self.item == other.item
+
+    def __hash__(self):
+        """Is used during service discovery list computation to detect and replace duplicates
+        For this the paramstr needs to be ignored."""
+        return hash((self.check_plugin_name, self.item))
 
 
 def section_name_of(check_plugin_name):

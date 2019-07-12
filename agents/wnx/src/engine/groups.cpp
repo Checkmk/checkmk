@@ -17,6 +17,7 @@
 namespace cma::cfg {
 
 Global::Global() {
+    XLOG::l.t("Global init");
     setDefaults();
     calcDerivatives();
     setupEnvironment();
@@ -81,9 +82,9 @@ void Global::loadFromMainConfig() {
 
         std::string default_debug = tgt::IsDebug() ? "yes" : "no";
         auto debug_level = GetVal(logging, vars::kLogDebug, default_debug);
-        if (debug_level == "" || debug_level == "no")
+        if (debug_level.empty() || debug_level == "no")
             debug_level_ = LogLevel::kLogBase;
-        else if (debug_level == "yes")
+        else if (debug_level == "yes" || debug_level == "true")
             debug_level_ = LogLevel::kLogDebug;
         else if (debug_level == "all")
             debug_level_ = LogLevel::kLogAll;
@@ -140,7 +141,7 @@ void Global::calcDerivatives() {
     logfile_dir_ = dir;
     if (!public_log_) logfile_dir_ = logfile_dir_ / "Logs";
 
-    if (log_file_name_ == "") log_file_name_ = kDefaultLogFileName;
+    if (log_file_name_.empty()) log_file_name_ = kDefaultLogFileName;
     logfile_ = logfile_dir_ / log_file_name_;
     logfile_as_string_ = logfile_.u8string();
     logfile_as_wide_ = logfile_.wstring();
@@ -236,8 +237,7 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
             auto retry = entry[vars::kPluginRetry].as<int>(0);
             auto timeout =
                 entry[vars::kPluginTimeout].as<int>(kDefaultPluginTimeout);
-            auto cache_age =
-                entry[vars::kPluginCacheAge].as<int>(async ? 3600 : 0);
+            auto cache_age = entry[vars::kPluginCacheAge].as<int>(0);
             if (cache_age && !async) {
                 XLOG::d.t(
                     "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",

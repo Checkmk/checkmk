@@ -491,7 +491,10 @@ int ExecShowConfig(std::string_view sec) {
     int i = 0;
     for (auto f : file_table) {
         XLOG::SendStringToStdio(markers[i++], XLOG::Colors::white);
-        XLOG::SendStringToStdio(f + "\n");
+        if (f.empty())
+            XLOG::SendStringToStdio(" [missing]\n");
+        else
+            XLOG::SendStringToStdio(f + "\n");
     }
 
     XLOG::setup::ColoredOutputOnStdio(false);

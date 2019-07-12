@@ -475,16 +475,22 @@ public:
     // stop with asyncing
     void breakAsync();
 
-    auto local() const {
+    bool local() const {
         std::lock_guard lk(lock_);
         return local_;
     }
 
-    auto failures() const { return failures_; }
+    int failures() const {
+        std::lock_guard lk(lock_);
+        return failures_;
+    }
 
-    auto failed() const { return retry() && (failures_ > retry()); }
+    bool failed() const {
+        std::lock_guard lk(lock_);
+        return retry_ && failures_ > retry_;
+    }
 
-    auto running() const {
+    bool running() const {
         std::lock_guard lk(lock_);
         return thread_on_ && main_thread_;
     }
@@ -517,7 +523,10 @@ public:
     std::filesystem::path path() const { return path_; }
 
     // stored data from plugin
-    std::vector<char> data() const { return data_; }
+    std::vector<char> data() const {
+        std::lock_guard lk(data_lock_);
+        return data_;
+    }
 
     template <typename T>
     void applyConfigUnit(const T& Unit, bool Local) {
@@ -547,7 +556,7 @@ public:
         }
         async_ = planned_async;
         if (async()) {
-            if (cacheAge() < cma::cfg::kMinimumCacheAge)
+            if (cacheAge() && cacheAge() < cma::cfg::kMinimumCacheAge)
                 cache_age_ = cma::cfg::kMinimumCacheAge;
         } else {
             cache_age_ = 0;
@@ -572,14 +581,6 @@ public:
         return no_data && no_thread;
     }
 
-    void markAsForRestart() {
-        XLOG::l.i("markAsForRestart {}", path().u8string());
-        std::lock_guard lk(lock_);
-        data_is_going_old_ = true;
-    }
-
-    void restartAsyncThreadIfFinished(const std::wstring& Id);
-
     // cache_age means always async, we have no guarantee that
     // invariant is ok 100% time, because bakery delivers us sync plugins
     // with cache age
@@ -587,7 +588,21 @@ public:
 
     void removeFromExecution() noexcept { path_ = ""; }
 
+    static int threadCount() noexcept { return thread_count_.load(); }
+
 protected:
+    void resetData() {
+        std::lock_guard lk(data_lock_);
+        return data_.clear();
+    }
+    void restartAsyncThreadIfFinished(const std::wstring& Id);
+
+    void markAsForRestart() {
+        XLOG::l.i("markAsForRestart {}", path().u8string());
+        std::lock_guard lk(lock_);
+        data_is_going_old_ = true;
+    }
+
     auto getDataAge() const {
         auto current_time = std::chrono::steady_clock::now();
         return current_time - data_time_;
@@ -626,10 +641,14 @@ protected:
     bool thread_on_ = false;  // get before start thread, released inside thread
     bool data_is_going_old_ = false;  // when plugin finds data obsolete
 
+    static std::atomic<int> thread_count_;
+
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class PluginTest;
     FRIEND_TEST(PluginTest, ApplyConfig);
     FRIEND_TEST(PluginTest, TimeoutCalc);
+    FRIEND_TEST(PluginTest, AsyncStartSimulation_Long);
+    FRIEND_TEST(PluginTest, Async0DataPickup);
 #endif
 };
 
@@ -663,5 +682,10 @@ std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
 constexpr std::chrono::seconds kRestartInterval{60};
 
 void RunDetachedPlugins(PluginMap& plugins_map, int& start_count);
+namespace provider::config {
+extern bool G_AsyncPluginWithoutCacheAge_RunAsync;
+
+bool IsRunAsync(const PluginEntry& plugin) noexcept;
+}  // namespace provider::config
 
 }  // namespace cma

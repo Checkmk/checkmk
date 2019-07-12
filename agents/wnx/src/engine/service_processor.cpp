@@ -353,15 +353,40 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     return static_cast<int>(vf_.size());
 }
 
+// tested indirectly in integration
+// gtest is required
+template <typename T, typename B>
+void WaitForAsyncPluginThreads(std::chrono::duration<T, B> allowed_wait) {
+    using namespace std::chrono;
+
+    cma::tools::sleep(500ms);  // giving a bit time to start threads
+    auto count = cma::PluginEntry::threadCount();
+    XLOG::d.i("Waiting for async threads [{}]", count);
+    constexpr auto grane = 500ms;
+    auto wait_time = allowed_wait;
+
+    // waiting is like a polling
+    // we do not want to loose time on test method
+    while (wait_time >= 0ms) {
+        int count = cma::PluginEntry::threadCount();
+        if (count == 0) break;
+
+        cma::tools::sleep(grane);
+        wait_time -= grane;
+    }
+    count = cma::PluginEntry::threadCount();
+    XLOG::d.i("Left async threads [{}] after waiting {}ms", count,
+              (allowed_wait - wait_time).count());
+}
+
 // test function to be used when no real connection
 void ServiceProcessor::sendDebugData() {
     XLOG::l.i("Started without IO. Debug mode");
 
-    // #TODO replace with normal code
-    cma::tools::sleep(2000);  // a bit of time to finish async plugins
     auto tp = openAnswer("127.0.0.1");
     if (!tp) return;
     auto started = startProviders(tp.value(), "");
+    cma::tools::sleep(2000);  // a bit of time to finish async plugins
     auto block = getAnswer(started);
     block.emplace_back('\0');  // yes, we need this for printf
     auto count = printf("%s", block.data());
@@ -400,6 +425,7 @@ cma::ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
 // ex_port may be nullptr(command line test, for example)
 // makes a mail slot + starts IO on TCP
 void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
+    using namespace std::chrono;
     // Periodically checks if the service is stopping.
     // mail slot name selector "service" or "not service"
     auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
@@ -418,9 +444,12 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
 
         // check that we have something for testing
         if (ex_port == nullptr) {
+            // wait for async plugins
+            WaitForAsyncPluginThreads(20000ms);
             sendDebugData();
             return;
         }
+        WaitForAsyncPluginThreads(5000ms);
 
         cma::rt::Device rt_device;
         for (;;) {

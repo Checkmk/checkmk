@@ -33,6 +33,7 @@
 from typing import Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List  # pylint: disable=unused-import
 
 import cmk_base
+from cmk_base.discovered_labels import DiscoveredServiceLabels
 
 Item = Union[Text, None, int]
 CheckParameters = Union[None, Dict, Tuple, List, str]
@@ -41,14 +42,15 @@ CheckTable = Dict[Tuple[CheckPluginName, Item], Tuple[Any, Text, List[Text]]]
 
 
 class DiscoveredService(object):
-    __slots__ = ["_check_plugin_name", "_item", "_description", "_paramstr"]
+    __slots__ = ["_check_plugin_name", "_item", "_description", "_paramstr", "_service_labels"]
 
-    def __init__(self, check_plugin_name, item, description, paramstr):
-        # type: (CheckPluginName, Item, Text, str) -> None
+    def __init__(self, check_plugin_name, item, description, paramstr, service_labels=None):
+        # type: (CheckPluginName, Item, Text, CheckParameters, DiscoveredServiceLabels) -> None
         self._check_plugin_name = check_plugin_name
         self._item = item
         self._description = description
         self._paramstr = paramstr
+        self._service_labels = service_labels or DiscoveredServiceLabels()
 
     @property
     def check_plugin_name(self):
@@ -65,6 +67,10 @@ class DiscoveredService(object):
     @property
     def paramstr(self):
         return self._paramstr
+
+    @property
+    def service_labels(self):
+        return self._service_labels
 
     def __eq__(self, other):
         """Is used during service discovery list computation to detect and replace duplicates

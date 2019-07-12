@@ -69,8 +69,8 @@ def format_plugin_output(output, row=None, shall_escape=True):
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
         # handling for the HTML code produced by check_http when "clickable URL" option is active.
         output = re.sub(
-            "(?:&lt;A HREF=&quot;)?" + http_url +
-            "(?: target=&quot;_blank&quot;&gt;)?", lambda p: str(
+            "(?:&lt;A HREF=&quot;)?" + http_url + "(?: target=&quot;_blank&quot;&gt;)?",
+            lambda p: str(
                 html.render_icon_button(
                     p.group(1).replace('&quot;', ''),
                     p.group(1).replace('&quot;', ''), "link")), output)

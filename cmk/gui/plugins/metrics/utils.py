@@ -43,7 +43,6 @@ from cmk.utils.memoize import MemoizeCache
 class AutomaticDict(OrderedDict):
     """Dictionary class with the ability of appending items like provided
     by a list."""
-
     def __init__(self, list_identifier=None, start_index=None):
         OrderedDict.__init__(self)
         self._list_identifier = list_identifier or "item"
@@ -574,7 +573,6 @@ def get_graph_range(graph_template, translated_metrics):
 
 def replace_expressions(text, translated_metrics):
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
-
     def eval_to_string(match):
         expression = match.group()[2:-1]
         unit_name = None
@@ -888,7 +886,6 @@ def fade_color(rgb, v):
 
 def darken_color(rgb, v):
     """Make a color darker. v ranges from 0 (not darker) to 1 (black)"""
-
     def darken(x, v):
         return x * (1.0 - v)
 
@@ -897,7 +894,6 @@ def darken_color(rgb, v):
 
 def lighten_color(rgb, v):
     """Make a color lighter. v ranges from 0 (not lighter) to 1 (white)"""
-
     def lighten(x, v):
         return x + ((1.0 - x) * v)
 

@@ -142,7 +142,6 @@ class MutexScanRegistry(object):
     meaning that the fallback function will only be evaluated if all of the
     scan functions registered earlier return something falsey.
     """
-
     def __init__(self):
         super(MutexScanRegistry, self).__init__()
         self._specific_scans = []

@@ -400,9 +400,9 @@ class RulespecCheckgroupParametersLogwatchEc(CheckParameterRulespecWithoutItem):
                                             ],
                                         ),
                                     ],
-                                    match=lambda x: 4 if isinstance(x, tuple) else (
-                                        0 if not x else (2 if x == 'spool:' else (3 if x.startswith(
-                                            'spool:') else 1)))),
+                                    match=lambda x: 4 if isinstance(x, tuple) else
+                                    (0 if not x else (2 if x == 'spool:' else
+                                                      (3 if x.startswith('spool:') else 1)))),
                                 # migrate old (tcp, address, port) tuple to new dict
                                 forth=lambda v: (v[0], {
                                     "address": v[1],

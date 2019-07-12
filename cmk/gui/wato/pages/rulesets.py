@@ -1399,7 +1399,6 @@ class EditRuleMode(WatoMode):
 
 class VSExplicitConditions(Transform):
     """Valuespec for editing a set of explicit rule conditions"""
-
     def __init__(self, rulespec, **kwargs):
         self._rulespec = rulespec
         super(VSExplicitConditions, self).__init__(

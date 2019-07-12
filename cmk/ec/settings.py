@@ -125,7 +125,6 @@ FileDescriptor = NamedTuple('FileDescriptor', [('value', int)])
 
 class ECArgumentParser(ArgumentParser):
     """An argument parser for the event console"""
-
     def __init__(self, prog, version, paths, port_numbers):
         # type: (str, str, Paths, PortNumbers) -> None
         super(ECArgumentParser, self).__init__(prog=prog,

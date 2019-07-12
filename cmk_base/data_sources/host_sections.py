@@ -49,7 +49,6 @@ class HostSections(object):
         4. cache_info:              Agent cache information
                                     (dict section name -> (cached_at, cache_interval))
     """
-
     def __init__(self,
                  sections=None,
                  cache_info=None,
@@ -89,7 +88,6 @@ class MultiHostSections(object):
     """Container object for wrapping the host sections of a host being processed
     or multiple hosts when a cluster is processed. Also holds the functionality for
     merging these information together for a check"""
-
     def __init__(self):
         super(MultiHostSections, self).__init__()
         self._config_cache = config.get_config_cache()

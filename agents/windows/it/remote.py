@@ -96,14 +96,12 @@ def actual_output(write_config, wait_agent):
 
 class DuplicateSectionError(Exception):
     """Raised when a section is multiply-created."""
-
     def __init__(self, section):
         super(DuplicateSectionError, self).__init__(self, 'Section %r already exists' % section)
 
 
 class NoSectionError(Exception):
     """Raised when no section matches a requested option."""
-
     def __init__(self, section):
         super(NoSectionError, self).__init__(self, 'No section: %r' % (section))
 
@@ -111,7 +109,6 @@ class NoSectionError(Exception):
 class IniWriter(ConfigParser.RawConfigParser):
     """Writer for Windows ini files. Simplified version of RawConfigParser but
     supports multiple values for a single key."""
-
     def add_section(self, section):
         """Create a new section in the configuration.
 

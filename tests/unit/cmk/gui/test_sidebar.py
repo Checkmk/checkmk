@@ -128,9 +128,8 @@ def test_load_default_config(monkeypatch):
 
 
 def test_load_legacy_list_user_config(monkeypatch):
-    monkeypatch.setattr(
-        sidebar.UserSidebarConfig,
-        "_user_config", lambda x: [("tactical_overview", "open"), ("views", "closed")])
+    monkeypatch.setattr(sidebar.UserSidebarConfig, "_user_config",
+                        lambda x: [("tactical_overview", "open"), ("views", "closed")])
 
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
     assert user_config.folded is False
@@ -141,8 +140,8 @@ def test_load_legacy_list_user_config(monkeypatch):
 
 
 def test_load_legacy_off_user_config(monkeypatch):
-    monkeypatch.setattr(sidebar.UserSidebarConfig,
-                        "_user_config", lambda x: [("search", "off"), ("views", "closed")])
+    monkeypatch.setattr(sidebar.UserSidebarConfig, "_user_config", lambda x: [("search", "off"),
+                                                                              ("views", "closed")])
 
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
     assert user_config.folded is False

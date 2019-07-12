@@ -37,7 +37,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class FailedNotificationsDashlet(Dashlet):
     """Dashlet notifying users in case of failure to send notifications"""
-
     @classmethod
     def type_name(cls):
         return "notify_failed_notifications"

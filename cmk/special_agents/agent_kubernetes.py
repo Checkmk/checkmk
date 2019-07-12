@@ -785,7 +785,6 @@ class PiggybackGroup(object):
     """
     A group of elements where an element is e.g. a piggyback host.
     """
-
     def __init__(self):
         # type: () -> None
         super(PiggybackGroup, self).__init__()
@@ -825,7 +824,6 @@ class PiggybackHost(object):
     """
     An element that bundles a collection of sections.
     """
-
     def __init__(self):
         # type: () -> None
         super(PiggybackHost, self).__init__()
@@ -850,7 +848,6 @@ class Section(object):
     """
     An agent section.
     """
-
     def __init__(self):
         # type: () -> None
         super(Section, self).__init__()
@@ -876,7 +873,6 @@ class ApiData(object):
     """
     Contains the collected API data.
     """
-
     def __init__(self, api_client):
         # type: (client.ApiClient) -> None
         super(ApiData, self).__init__()

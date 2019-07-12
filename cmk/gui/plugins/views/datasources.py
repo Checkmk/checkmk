@@ -208,7 +208,6 @@ class DataSourceHostGroups(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceMergedHostGroups(DataSourceLivestatus):
     """Merged groups across sites"""
-
     @property
     def ident(self):
         return "merged_hostgroups"
@@ -260,7 +259,6 @@ class DataSourceServiceGroups(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceMergedServiceGroups(DataSource):
     """Merged groups across sites"""
-
     @property
     def ident(self):
         return "merged_servicegroups"

@@ -773,7 +773,6 @@ class TimeoutManager(object):
     first try to write anything to the client) which will result in an
     exception.
     """
-
     def enable_timeout(self, duration):
         def handle_request_timeout(signum, frame):
             raise RequestTimeout(
@@ -803,7 +802,6 @@ class TimeoutManager(object):
 class TransactionManager(object):
     """Manages the handling of transaction IDs used by the GUI to prevent against
     performing the same action multiple times."""
-
     def __init__(self, request):
         super(TransactionManager, self).__init__()
         self._request = request

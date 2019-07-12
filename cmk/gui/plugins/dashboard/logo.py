@@ -36,7 +36,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class MKLogoDashlet(Dashlet):
     """Dashlet that displays the Check_MK logo"""
-
     @classmethod
     def type_name(cls):
         return "mk_logo"

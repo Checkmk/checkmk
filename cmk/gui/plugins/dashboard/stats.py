@@ -218,7 +218,6 @@ if (cmk.dashboard.has_canvas_support()) {
 @dashlet_registry.register
 class HostStatsDashlet(DashletStats):
     """Dashlet that displays statistics about host states as globe and a table"""
-
     @classmethod
     def type_name(cls):
         return "hoststats"
@@ -272,7 +271,6 @@ class HostStatsDashlet(DashletStats):
 @dashlet_registry.register
 class ServiceStatsDashlet(DashletStats):
     """Dashlet that displays statistics about service states as globe and a table"""
-
     @classmethod
     def type_name(cls):
         return "servicestats"

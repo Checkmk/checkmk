@@ -741,7 +741,6 @@ def collect_attributes(for_what, new, do_validate=True, varprefix=""):
 
 class ABCHostAttributeText(ABCHostAttribute):
     """A simple text attribute. It is stored in a Python unicode string"""
-
     @property
     def _allow_empty(self):
         return True
@@ -787,7 +786,6 @@ class ABCHostAttributeText(ABCHostAttribute):
 
 class ABCHostAttributeValueSpec(ABCHostAttribute):
     """An attribute using the generic ValueSpec mechanism"""
-
     @abc.abstractmethod
     def valuespec(self):
         raise NotImplementedError()
@@ -820,7 +818,6 @@ class ABCHostAttributeFixedText(ABCHostAttributeText):
     It can be used to store context information from other
     systems (e.g. during an import of a host database from
     another system)."""
-
     def render_input(self, varprefix, value):
         if value is not None:
             html.hidden_field(varprefix + "attr_" + self.name(), value)
@@ -832,7 +829,6 @@ class ABCHostAttributeFixedText(ABCHostAttributeText):
 
 class ABCHostAttributeNagiosText(ABCHostAttributeText):
     """A text attribute that is stored in a Nagios custom macro"""
-
     @abc.abstractmethod
     def nagios_name(self):
         raise NotImplementedError()
@@ -849,7 +845,6 @@ class ABCHostAttributeEnum(ABCHostAttribute):
     Enumlist is a list of pairs of keyword / title. The type of value is
     string.  In all cases where no value is defined or the value is not in the
     enumlist, the default value is being used."""
-
     @abc.abstractproperty
     def _enumlist(self):
         raise NotImplementedError()
@@ -890,7 +885,6 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec):
 
 class ABCHostAttributeHostTagList(ABCHostAttributeTag):
     """A selection dropdown for a host tag"""
-
     def valuespec(self):
         choices = self._tag_group.get_tag_choices()
         return DropdownChoice(
@@ -912,7 +906,6 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag):
 
 class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag):
     """A checkbox for a host tag group"""
-
     def valuespec(self):
         choice = self._tag_group.get_tag_choices()[0]
         return Checkbox(

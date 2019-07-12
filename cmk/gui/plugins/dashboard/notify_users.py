@@ -40,7 +40,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class NotifyUsersDashlet(Dashlet):
     """Dashlet that displays GUI notifications for users"""
-
     @classmethod
     def type_name(cls):
         return "notify_users"

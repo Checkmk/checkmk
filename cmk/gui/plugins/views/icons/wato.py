@@ -78,7 +78,6 @@ class WatoIcon(Icon):
 @icon_and_action_registry.register
 class DownloadAgentOutputIcon(Icon):
     """Action for downloading the current agent output."""
-
     @classmethod
     def ident(cls):
         return "download_agent_output"
@@ -96,7 +95,6 @@ class DownloadAgentOutputIcon(Icon):
 @icon_and_action_registry.register
 class DownloadSnmpWalkIcon(Icon):
     """Action for downloading the current snmp output."""
-
     @classmethod
     def ident(cls):
         return "download_snmp_walk"

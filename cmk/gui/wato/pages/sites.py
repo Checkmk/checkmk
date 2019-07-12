@@ -740,7 +740,6 @@ class ModeDistributedMonitoring(WatoMode):
 @page_registry.register_page("wato_ajax_fetch_site_status")
 class ModeAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
-
     def page(self):
         config.user.need_permission("wato.sites")
 
@@ -813,7 +812,6 @@ ReplicationStatus = NamedTuple("ReplicationStatus", [
 
 class ReplicationStatusFetcher(object):
     """Helper class to retrieve the replication status of all relevant sites"""
-
     def __init__(self):
         super(ReplicationStatusFetcher, self).__init__()
         self._logger = logger.getChild("replication-status")

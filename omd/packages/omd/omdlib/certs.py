@@ -40,7 +40,6 @@ CA_CERT_NOT_AFTER = CERT_NOT_AFTER
 
 class CertificateAuthority(object):
     """Management of the site local CA and certificates issued by it"""
-
     def __init__(self, ca_path, ca_name):
         # type: (Path, str) -> None
         super(CertificateAuthority, self).__init__()

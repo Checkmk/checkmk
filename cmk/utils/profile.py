@@ -80,7 +80,6 @@ Examples:
   @cmk.utils.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=True)
   @cmk.utils.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=False)
 """
-
     def decorate(f):
         def wrapper(*args, **kwargs):
             filepath = "%s/%s_%s.profile" % \

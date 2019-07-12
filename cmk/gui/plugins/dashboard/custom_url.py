@@ -40,7 +40,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class URLDashlet(IFrameDashlet):
     """Dashlet that displays a custom webpage"""
-
     @classmethod
     def type_name(cls):
         return "url"

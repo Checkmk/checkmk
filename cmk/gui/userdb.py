@@ -365,7 +365,6 @@ def transform_userdb_automatic_sync(val):
 
 class UserSelection(DropdownChoice):
     """Dropdown for choosing a multisite user"""
-
     def __init__(self, **kwargs):
         only_contacts = kwargs.get("only_contacts", False)
         only_automation = kwargs.get("only_automation", False)

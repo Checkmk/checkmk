@@ -159,7 +159,6 @@ indent_blank_lines=False
 #       'key2': value1 +
 #               value2,
 #   }
-# LOCAL CHANGE from "False" to "True"
 indent_dictionary_value=True
 
 # The number of columns to use for indentation.
@@ -228,6 +227,10 @@ space_between_ending_comma_and_closing_bracket=False
 
 # Split before arguments
 split_all_comma_separated_values=False
+
+# Split before arguments, but do not split all subexpressions recursively
+# (unless needed).
+split_all_top_level_comma_separated_values=False
 
 # Split before arguments if the argument list is terminated by a
 # comma.

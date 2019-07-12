@@ -100,7 +100,6 @@ class WithPermissions(object):
 
 class WithPermissionsAndAttributes(WithPermissions):
     """Base class containing a couple of generic permission checking functions, used for Host and Folder"""
-
     def __init__(self):
         super(WithPermissionsAndAttributes, self).__init__()
         self._attributes = {}
@@ -146,7 +145,6 @@ class WithPermissionsAndAttributes(WithPermissions):
 
 class BaseFolder(WithPermissionsAndAttributes):
     """Base class of SearchFolder and Folder. Implements common methods"""
-
     def hosts(self):
         raise NotImplementedError()
 
@@ -1660,7 +1658,6 @@ def validate_host_uniqueness(varname, host_name):
 
 class SearchFolder(BaseFolder):
     """A virtual folder representing the result of a search."""
-
     @staticmethod
     def criteria_from_html_vars():
         crit = {".name": html.request.var("host_search_host")}

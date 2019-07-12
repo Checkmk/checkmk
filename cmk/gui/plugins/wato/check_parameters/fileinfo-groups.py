@@ -73,16 +73,16 @@ class RulespecFileinfoGroups(HostRulespec):
                         title=_("Name of group"),
                         size=10,
                     ),
-                    Transform(
-                        Tuple(
-                            show_titles=True,
-                            orientation="vertical",
-                            elements=[
-                                TextAscii(title=_("Include Pattern"), size=40),
-                                TextAscii(title=_("Exclude Pattern"), size=40),
-                            ],
-                        ),
-                        forth=lambda params: isinstance(params, str) and (params, '') or params),
+                    Transform(Tuple(
+                        show_titles=True,
+                        orientation="vertical",
+                        elements=[
+                            TextAscii(title=_("Include Pattern"), size=40),
+                            TextAscii(title=_("Exclude Pattern"), size=40),
+                        ],
+                    ),
+                              forth=lambda params: isinstance(params, str) and
+                              (params, '') or params),
                 ],
             ),
             title=_('File Grouping Patterns'),

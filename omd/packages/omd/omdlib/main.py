@@ -4241,7 +4241,6 @@ class RootContext(AbstractSiteContext):
 
 class VersionInfo(object):
     """Provides OMD version/platform specific infos"""
-
     def __init__(self, version):
         self._version = version
 

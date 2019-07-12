@@ -71,7 +71,6 @@ def time_since(timestamp):
 
 class Age(object):
     """Format time difference seconds into approximated human readable text"""
-
     def __init__(self, secs):
         super(Age, self).__init__()
         self.__secs = secs

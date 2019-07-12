@@ -369,7 +369,6 @@ class IFrameDashlet(Dashlet):
 
 class DashletRegistry(cmk.utils.plugin_registry.ClassRegistry):
     """The management object for all available plugins."""
-
     def plugin_base_class(self):
         return Dashlet
 

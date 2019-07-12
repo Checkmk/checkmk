@@ -212,7 +212,7 @@ public:
         return answer_.addSegment(Name, Tp, std::vector<uint8_t>());
     }
 
-    void resetOhm() noexcept;
+    static void resetOhm() noexcept;
 
 private:
     std::vector<uint8_t> makeTestString(const char* Text) {

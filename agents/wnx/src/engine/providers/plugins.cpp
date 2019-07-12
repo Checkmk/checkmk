@@ -78,9 +78,22 @@ void PluginsProvider::updateTimeout() noexcept {
         XLOG::t("Timeout for '{}' is updated to [{}]", cfg_name_, timeout_);
 }
 
+static void LogExecuteExtensions(std::string_view title,
+                                 const std::vector<std::string>& arr) {
+    std::string formatted_string = "[";
+    for (const auto& s : arr) {
+        formatted_string += s;
+        formatted_string += ",";
+    }
+    if (arr.size()) formatted_string.pop_back();
+    formatted_string += "]";
+
+    XLOG::d.i("{} {}", title, formatted_string);
+}
+
 void PluginsProvider::loadConfig() {
     using namespace cma::cfg;
-    XLOG::t(XLOG_FUNC + " entering");
+    XLOG::t(XLOG_FUNC + " entering '{}'", uniq_name_);
 
     // this is a copy...
     auto folder_vector =
@@ -93,8 +106,13 @@ void PluginsProvider::loadConfig() {
 
     // linking all files, execute and extensions
     auto files = cma::GatherAllFiles(pv);
+    XLOG::d.t("Found [{}] files to execute", files.size());
     auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
+    LogExecuteExtensions("Allowed Extensions:", execute);
+    if (execute.size() == 0) XLOG::l("No allowed extensions. This is strange.");
+
     cma::FilterPathByExtension(files, execute);
+    XLOG::d.t("Left [{}] files to execute", files.size());
 
     auto yaml_units =
         GetArray<YAML::Node>(cfg_name_, cma::cfg::vars::kPluginsExecution);
@@ -103,6 +121,7 @@ void PluginsProvider::loadConfig() {
     std::vector<Plugins::ExeUnit> exe_units;
     LoadExeUnitsFromYaml(exe_units, yaml_units);
     UpdatePluginMap(pm_, local_, files, exe_units, true);
+    XLOG::d.t("Left [{}] files to execute in '{}'", pm_.size(), uniq_name_);
 
     // calculating timeout(may change in every kick)
     updateTimeout();

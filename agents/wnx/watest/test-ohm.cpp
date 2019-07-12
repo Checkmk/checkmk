@@ -46,10 +46,21 @@ TEST(SectionProviderOhm, ReadData) {
 
     if (cma::tools::win::IsElevated()) {
         std::string out;
-        for (auto i = 0; i < 30; ++i) {
+        for (auto i = 0; i < 50; ++i) {
             out = ohm.generateContent(section::kUseEmbeddedName, true);
             if (!out.empty()) break;
-            xlog::sendStringToStdio(".", Colors::yellow);
+            XLOG::SendStringToStdio(".", Colors::yellow);
+            if (i == 20) {
+                XLOG::SendStringToStdio(" reset OHM ", Colors::red);
+                oprocess.stop();
+                XLOG::SendStringToStdio(".", Colors::red);
+                cma::srv::ServiceProcessor::resetOhm();
+                XLOG::SendStringToStdio(".", Colors::red);
+                wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
+                XLOG::SendStringToStdio(".", Colors::red);
+                oprocess.start(ohm_exe.wstring());
+                XLOG::SendStringToStdio(".", Colors::red);
+            }
             ::Sleep(500);
         }
         xlog::sendStringToStdio("\n", Colors::yellow);

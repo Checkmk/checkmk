@@ -69,8 +69,13 @@ static void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
     fs::path p = name;
     pm.emplace(std::make_pair(name, p));
     auto it = pm.find(name);
-    cma::cfg::PluginInfo e = {async, timeout, cache_age, 1};
-    it->second.applyConfigUnit(e, false);
+    if (async || cache_age) {
+        cma::cfg::PluginInfo e = {timeout, cache_age, 1};
+        it->second.applyConfigUnit(e, false);
+    } else {
+        cma::cfg::PluginInfo e = {timeout, 1};
+        it->second.applyConfigUnit(e, false);
+    }
 }
 
 TEST(PluginTest, TimeoutCalc) {
@@ -82,10 +87,34 @@ TEST(PluginTest, TimeoutCalc) {
             << "empty should has 0 timeout";
     }
 
+    {
+        // test failures on parameter change
+        PluginMap pm;
+        InsertEntry(pm, "a1", 5, true, 0);
+        auto entry = GetEntrySafe(pm, "a1");
+        ASSERT_TRUE(entry != nullptr);
+        EXPECT_EQ(entry->failures(), 0);
+        entry->failures_++;
+        InsertEntry(pm, "a1", 5, true, 200);
+        EXPECT_EQ(entry->failures(), 1);
+        InsertEntry(pm, "a1", 3, true, 200);
+        EXPECT_EQ(entry->failures(), 0);
+        entry->failures_++;
+        InsertEntry(pm, "a1", 3, true, 250);
+        EXPECT_EQ(entry->failures(), 1);
+        InsertEntry(pm, "a1", 3, false, 0);
+        EXPECT_EQ(entry->failures(), 0);
+    }
+
     // test async
     {
         PluginMap pm;
         InsertEntry(pm, "a1", 5, true, 0);
+        {
+            auto& e = pm.at("a1");
+            EXPECT_TRUE(e.defined());
+            EXPECT_TRUE(e.async());
+        }
         EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginType::all));
         EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginType::async));
         EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::sync));
@@ -102,8 +131,18 @@ TEST(PluginTest, TimeoutCalc) {
         EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::all));
         EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
         EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::sync));
+        {
+            auto& e = pm.at("a4");
+            EXPECT_TRUE(e.defined());
+            EXPECT_TRUE(e.async());
+        }
 
         InsertEntry(pm, "a4", 100, false, 0);  // sync
+        {
+            auto& e = pm.at("a4");
+            EXPECT_TRUE(e.defined());
+            EXPECT_FALSE(e.async());
+        }
         EXPECT_EQ(100, FindMaxTimeout(pm, provider::PluginType::all));
         EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
         EXPECT_EQ(100, FindMaxTimeout(pm, provider::PluginType::sync));
@@ -122,6 +161,11 @@ TEST(PluginTest, TimeoutCalc) {
         EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::sync));
 
         InsertEntry(pm, "a3", 25, false, 100);
+        {
+            auto& e = pm.at("a3");
+            EXPECT_TRUE(e.defined());
+            EXPECT_TRUE(e.async());
+        }
         EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::all));
         EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
         EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::sync));
@@ -242,7 +286,7 @@ TEST(PluginTest, ApplyConfig) {
     EXPECT_EQ(pe.failed(), true);
 
     {
-        cma::cfg::PluginInfo e = {true, 10, 1, 1};
+        cma::cfg::PluginInfo e = {10, 1, 1};
         pe.applyConfigUnit(e, false);
         EXPECT_EQ(pe.failures(), 0);
         EXPECT_EQ(pe.async(), true);
@@ -261,7 +305,7 @@ TEST(PluginTest, ApplyConfig) {
         pe.data_.resize(10);
         pe.failures_ = 5;
         EXPECT_EQ(pe.data().size(), 10);
-        cma::cfg::PluginInfo e = {false, 10, 0, 11};
+        cma::cfg::PluginInfo e = {10, 11};
         pe.applyConfigUnit(e, true);
         EXPECT_EQ(pe.failures(), 0);
         EXPECT_EQ(pe.async(), false);
@@ -342,7 +386,7 @@ TEST(PluginTest, ExeUnitCtor) {
         int tout = 1;
         int age = 0;
         int retr = 2;
-        Plugins::ExeUnit e("Plugin", as, tout, age, retr, true);
+        Plugins::ExeUnit e("Plugin", tout, retr, true);
         EXPECT_EQ(e.async(), as);
         EXPECT_EQ(e.retry(), retr);
         EXPECT_EQ(e.timeout(), tout);
@@ -356,7 +400,7 @@ TEST(PluginTest, ExeUnitCtor) {
         int tout = 1;
         int age = 120;
         int retr = 2;
-        Plugins::ExeUnit e("Plugin", as, tout, age, retr, true);
+        Plugins::ExeUnit e("Plugin", tout, age, retr, true);
         EXPECT_EQ(e.async(), as);
         EXPECT_EQ(e.cacheAge(), age);
     }
@@ -367,19 +411,8 @@ TEST(PluginTest, ExeUnitCtor) {
         int tout = 1;
         int age = cma::cfg::kMinimumCacheAge - 1;
         int retr = 2;
-        Plugins::ExeUnit e("Plugin", as, tout, age, retr, true);
+        Plugins::ExeUnit e("Plugin", tout, age, retr, true);
         EXPECT_EQ(e.async(), as);
-        EXPECT_EQ(e.cacheAge(), cma::cfg::kMinimumCacheAge);
-    }
-
-    // sync but with cache age
-    {
-        bool as = false;
-        int tout = 1;
-        int age = cma::cfg::kMinimumCacheAge - 1;
-        int retr = 2;
-        Plugins::ExeUnit e("Plugin", as, tout, age, retr, true);
-        EXPECT_EQ(e.async(), true);
         EXPECT_EQ(e.cacheAge(), cma::cfg::kMinimumCacheAge);
     }
 }
@@ -616,17 +649,29 @@ TEST(PluginTest, GeneratePluginEntry) {
             InsertInPluginMap(pm, pv_main);
             EXPECT_EQ(pm.size(), pv_main.size());
             ApplyExeUnitToPluginMap(pm, exe_units_base, true);
-            auto e_0 = GetEntrySafe(pm, pv_main[0].u8string());
-            ASSERT_NE(nullptr, e_0);
-            EXPECT_EQ(e_0->local(), true);
-
-            auto e_3 = GetEntrySafe(pm, pv_main[3].u8string());
-            ASSERT_NE(nullptr, e_3);
-            EXPECT_EQ(e_3->local(), true);
-
-            auto e_5 = GetEntrySafe(pm, pv_main[4].u8string());
-            ASSERT_NE(nullptr, e_5);
-            EXPECT_EQ(e_5->local(), true);
+            {
+                int indexes[] = {0, 3, 5};
+                for (auto i : indexes) {
+                    auto e_5 = GetEntrySafe(pm, pv_main[i].u8string());
+                    ASSERT_NE(nullptr, e_5) << "bad at index " << i << "\n";
+                    EXPECT_FALSE(e_5->path().empty())
+                        << "bad at index " << i << "\n";
+                    EXPECT_EQ(e_5->local(), TRUE)
+                        << "bad at index " << i << "\n";
+                }
+            }
+            {
+                // bad files
+                int indexes[] = {1, 2, 4};
+                for (auto i : indexes) {
+                    auto e_5 = GetEntrySafe(pm, pv_main[i].u8string());
+                    ASSERT_NE(nullptr, e_5) << "bad at index " << i << "\n";
+                    EXPECT_TRUE(e_5->path().empty())
+                        << "bad at index " << i << "\n";
+                    EXPECT_EQ(e_5->local(), false)
+                        << "bad at index " << i << "\n";
+                }
+            }
         }
 
         PluginMap pm;
@@ -667,7 +712,7 @@ TEST(PluginTest, GeneratePluginEntry) {
         EXPECT_EQ(pm.size(), 1);
         e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1");
         ASSERT_NE(nullptr, e);
-        EXPECT_EQ(e->async(), false);
+        EXPECT_EQ(e->async(), true);
         EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
         EXPECT_EQ(e->timeout(), x2[0].timeout());
         EXPECT_EQ(e->cacheAge(), x2[0].cacheAge());
@@ -877,6 +922,11 @@ TEST(PluginTest, RemoveDuplicatedPlugins) {
     RemoveDuplicatedPlugins(x, false);
     EXPECT_TRUE(x.size() == 2);
 
+    x.emplace(std::make_pair("c:\\123\\ax.bb", ""));
+    EXPECT_TRUE(x.size() == 3);
+    RemoveDuplicatedPlugins(x, false);
+    EXPECT_TRUE(x.size() == 2);
+
     x.emplace(std::make_pair("c:\\123\\another\\a.bb", "c:\\123\a.bb"));
     x.emplace(std::make_pair("c:\\123\\another\\aa.bb", "c:\\123\\aa.bb"));
     x.emplace(std::make_pair("c:\\123\\aa.bb", "c:\\123\\aa.bb"));
@@ -911,6 +961,7 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
         EXPECT_EQ(true, accu.empty());
         EXPECT_TRUE(entry.running());
         entry.breakAsync();
+        EXPECT_EQ(entry.failures(), 0);
     }
 
     UpdatePluginMap(pm, false, as_vp, exe_units_valid, false);

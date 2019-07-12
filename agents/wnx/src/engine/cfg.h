@@ -845,21 +845,48 @@ bool ReplaceInString(std::string& InOut, const std::string Marker,
 
 class PluginInfo {
 public:
-    PluginInfo() {}
-    PluginInfo(bool Async, int Timeout, int Age, int Retry)
-        : async_(Async), timeout_(Timeout), cache_age_(Age), retry_(Retry) {}
-    auto async() const { return async_; }
-    auto timeout() const { return timeout_; }
-    auto cacheAge() const { return cache_age_; }
-    auto retry() const { return retry_; }
+    PluginInfo() : defined_(false) {}
+
+    // Async:
+    PluginInfo(int timeout, int age, int retry)
+        : async_(true)
+        , timeout_(timeout)
+        , cache_age_(age)
+        , retry_(retry)
+        , defined_(true) {
+        // validation
+    }
+
+    // Sync:
+    PluginInfo(int timeout, int retry)
+        : async_(false)
+        , timeout_(timeout)
+        , cache_age_(0)
+        , retry_(retry)
+        , defined_(true) {}
+    bool async() const noexcept { return async_; }
+    int timeout() const noexcept { return timeout_; }
+    int cacheAge() const noexcept { return cache_age_; }
+    int retry() const noexcept { return retry_; }
+    bool defined() const noexcept { return defined_; }
 
 protected:
-    bool async_;
+    // used only during testing
+    void debugInit(bool async, int timeout, int cache_age, int retry) {
+        async_ = async;
+        timeout_ = timeout;
+        cache_age_ = cache_age;
+        retry_ = retry;
+        defined_ = true;
+    }
 
-    int timeout_;    // from the config file, #TODO use chrono
-    int cache_age_;  // from the config file, #TODO use chrono
+    bool defined_ = false;
+    bool async_ = false;
 
-    int retry_;
+    int timeout_ = 0;    // from the config file, #TODO use chrono
+    int cache_age_ = 0;  // from the config file, #TODO use chrono
+
+    int retry_ = 0;
 };
 
 struct Plugins : public Group {
@@ -867,11 +894,27 @@ public:
     // describes how should certain modules executed
     struct ExeUnit : public cma::cfg::PluginInfo {
         ExeUnit() {}
-        ExeUnit(const std::string Pattern, bool Async, int Timeout, int Age,
-                int Retry, bool Run)
-            : PluginInfo(Async, Timeout, Age, Retry)  //
-            , pattern_(Pattern)                       //
+        // Sync
+        ExeUnit(std::string_view Pattern, int Timeout, int Retry, bool Run)
+            : PluginInfo(Timeout, Retry)  //
+            , pattern_(Pattern)           //
+            , run_(Run) {}
+
+        // Async
+        ExeUnit(std::string_view Pattern, int Timeout, int Age, int Retry,
+                bool Run)
+            : PluginInfo(Timeout, Age, Retry)  //
+            , pattern_(Pattern)                //
             , run_(Run) {
+            validateAndFix();
+        }
+
+        // Only For Testing Automation with Initializer Lists
+        ExeUnit(std::string_view Pattern, bool Async, int Timeout, int Age,
+                int Retry, bool Run)
+            : pattern_(Pattern)  //
+            , run_(Run) {
+            debugInit(Async, Timeout, Age, Retry);
             // validation
             if (!async_ && cache_age_ != 0) {
                 XLOG::d(
@@ -879,18 +922,22 @@ public:
                     pattern_, async_, cache_age_);
                 async_ = true;
             }
-            if (async_ && cache_age_ < kMinimumCacheAge) {
-                XLOG::t(
-                    "Plugin Entry {} has too low cache_age: {}. Setting at {}",
-                    pattern_, cache_age_, kMinimumCacheAge);
-                cache_age_ = kMinimumCacheAge;
-            }
+            validateAndFix();
         }
 
-        auto pattern() const { return pattern_; }
-        auto run() const { return run_; }
+        auto pattern() const noexcept { return pattern_; }
+        auto run() const noexcept { return run_; }
 
     private:
+        void validateAndFix() {
+            if (cacheAge() >= kMinimumCacheAge) return;
+
+            XLOG::t(
+                "Plugin Entry '{}' has too low cache_age: [{}]. Setting at [{}]",
+                pattern_, cacheAge(), kMinimumCacheAge);
+            cache_age_ = kMinimumCacheAge;
+        }
+
         const std::string pattern_;
         bool run_;
     };
@@ -962,7 +1009,7 @@ private:
 };
 
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
-                          const std::vector<YAML::Node>& Yaml);
+                          const std::vector<YAML::Node>& Yaml) noexcept;
 
 // used to setup on start and forever. These environment variables are stable
 void SetupPluginEnvironment();

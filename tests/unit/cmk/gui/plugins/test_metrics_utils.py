@@ -120,3 +120,31 @@ def test_get_graph_templates(load_plugins, metric_names, check_command, graph_id
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     templates = utils.get_graph_templates(translated_metrics)
     assert set(graph_ids) == set(t['id'] for t in templates)
+
+
+def test_replace_expression():
+    perfdata = [(n, len(n), u'', 120, 240, 0, 25) for n in ['load1']]
+    translated_metrics = utils.translate_metrics(perfdata, 'check_mk-cpu.loads')
+    assert utils.replace_expressions("CPU Load - %(load1:max@count) CPU Cores",
+                                     translated_metrics) == 'CPU Load - 25.0  CPU Cores'
+
+
+@pytest.mark.parametrize("text, out", [
+    ('fs_size', ('fs_size', None, None)),
+    ('if_in_octets,8,*@bits/s', ('if_in_octets,8,*', 'bits/s', None)),
+    ('fs_size,fs_used,-#e3fff9', ('fs_size,fs_used,-', None, 'e3fff9')),
+    ('fs_size,fs_used,-@kb#e3fff9', ('fs_size,fs_used,-', 'kb', 'e3fff9')),
+])
+def test_extract_rpn(text, out):
+    assert utils.split_expression(text) == out
+
+
+def test_evaluate():
+    perfdata = [(n, len(n), u'', 120, 240, 0, 24) for n in ['in', 'out']]
+    translated_metrics = utils.translate_metrics(perfdata, 'check_mk-openvpn_clients')
+    assert utils.evaluate("if_in_octets,8,*@bits/s",
+                          translated_metrics) == (16.0, utils.unit_info['bits/s'], '#00e060')
+    perfdata = [(n, len(n), u'', None, None, None, None) for n in ['/', 'fs_size']]
+    translated_metrics = utils.translate_metrics(perfdata, 'check_mk-df')
+    assert utils.evaluate("fs_size,fs_used,-#e3fff9",
+                          translated_metrics) == (6291456, utils.unit_info['bytes'], '#e3fff9')

@@ -144,11 +144,11 @@ plugins:
     enabled: yes
     # default value, you may dsiable all scripts in local with no
     run: yes
-    # folder: default or 'c:\myfolder\'  or whatever your want
-    folder: 
-        - default   # special keyword to use default location 
-        - c:\__mydlx  # 
-        - c:\__zx     # 
+
+    # folders are scanned left -> right
+    # duplicated files will be removed
+    folders: ['@user', '@core' ]       # folder in ProgramData/CheckMK/agent/plugins
+
     # example: the windows_updates.vbs
     # plugin is executed asynchronous
     # and is only updated every 3600 seconds

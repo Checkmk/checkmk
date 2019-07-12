@@ -356,6 +356,9 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
 // test function to be used when no real connection
 void ServiceProcessor::sendDebugData() {
     XLOG::l.i("Started without IO. Debug mode");
+
+    // #TODO replace with normal code
+    cma::tools::sleep(2000);  // a bit of time to finish async plugins
     auto tp = openAnswer("127.0.0.1");
     if (!tp) return;
     auto started = startProviders(tp.value(), "");

@@ -1,9 +1,0 @@
-diff -Nur dest/cryptography-1.5.3.orig/src/cryptography/hazmat/bindings/openssl/binding.py dest/cryptography-1.5.3/src/cryptography/hazmat/bindings/openssl/binding.py
---- dest/cryptography-1.5.3.orig/src/cryptography/hazmat/bindings/openssl/binding.py	2016-11-06 05:07:11.000000000 +0100
-+++ dest/cryptography-1.5.3/src/cryptography/hazmat/bindings/openssl/binding.py	2017-02-03 13:37:01.610399000 +0100
-@@ -233,4 +233,4 @@
- # is per module so this approach will not work.
- Binding.init_static_locks()
- 
--_verify_openssl_version(Binding.lib.SSLeay())
-+#_verify_openssl_version(Binding.lib.SSLeay())

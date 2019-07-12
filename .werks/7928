@@ -1,0 +1,11 @@
+Title: zfsget: whitespace in name discovery bugfix
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1562915713
+
+The check does not crash anymore if a mountpoint/name containes a whitspace. Multiple whitespaces in a mountpoint can now be possible.

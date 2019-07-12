@@ -29,14 +29,12 @@ import socket
 import time
 import signal
 from typing import Union, Iterator, Callable, List, Text, Optional, Dict, Tuple  # pylint: disable=unused-import
-from pathlib2 import Path
 
 from cmk.utils.regex import regex
 import cmk.utils.tty as tty
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
-import cmk.utils.store as store
 
 import cmk_base.crash_reporting
 import cmk_base.config as config
@@ -117,7 +115,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             # Usually we disable SNMP scan if cmk -I is used without a list of
             # explicity hosts. But for host that have never been service-discovered
             # yet (do not have autochecks), we enable SNMP scan.
-            do_snmp_scan = not use_caches or not _has_autochecks(hostname)
+            do_snmp_scan = not use_caches or not autochecks.has_autochecks(hostname)
 
             sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names,
                                                  do_snmp_scan, on_error)
@@ -137,7 +135,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
     # existant. Remove them. The autochecks are only stored in the nodes
     # autochecks files these days.
     for hostname in cluster_hosts:
-        _remove_autochecks_file(hostname)
+        autochecks.remove_autochecks_file(hostname)
 
 
 def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,
@@ -194,7 +192,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
             services_per_plugin.setdefault(discovered_service.check_plugin_name, 0)
             services_per_plugin[discovered_service.check_plugin_name] += 1
 
-    _save_autochecks_file(hostname, result)
+    autochecks.save_autochecks_file(hostname, result)
 
     if services_per_plugin:
         for check_plugin_name, count in sorted(services_per_plugin.items()):
@@ -243,7 +241,8 @@ def discover_on_host(config_cache,
         # checks of the host, so that _get_host_services() does show us the
         # new discovered check parameters.
         if mode == "refresh":
-            counts["self_removed"] += remove_autochecks_of(host_config)  # this is cluster-aware!
+            counts["self_removed"] += autochecks.remove_autochecks_of(
+                host_config)  # this is cluster-aware!
 
         if host_config.is_cluster:
             ipaddress = None
@@ -302,7 +301,7 @@ def discover_on_host(config_cache,
 
             else:
                 raise MKGeneralException("Unknown check source '%s'" % check_source)
-        set_autochecks_of(host_config, new_items)
+        autochecks.set_autochecks_of(host_config, new_items)
 
     except MKTimeout:
         raise  # let general timeout through
@@ -1257,132 +1256,3 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                       discovered_service.description, exitcode, output, perfdata))
 
     return table
-
-
-#.
-#   .--Autochecks----------------------------------------------------------.
-#   |            _         _             _               _                 |
-#   |           / \  _   _| |_ ___   ___| |__   ___  ___| | _____          |
-#   |          / _ \| | | | __/ _ \ / __| '_ \ / _ \/ __| |/ / __|         |
-#   |         / ___ \ |_| | || (_) | (__| | | |  __/ (__|   <\__ \         |
-#   |        /_/   \_\__,_|\__\___/ \___|_| |_|\___|\___|_|\_\___/         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Reading, parsing, writing, modifying autochecks files               |
-#   '----------------------------------------------------------------------'
-
-
-def _has_autochecks(hostname):
-    # type: (str) -> bool
-    return os.path.exists(cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk")
-
-
-def _remove_autochecks_file(hostname):
-    # type: (str) -> None
-    filepath = cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk"
-    try:
-        os.remove(filepath)
-    except OSError:
-        pass
-
-
-def _save_autochecks_file(hostname, items):
-    # type: (str, List[DiscoveredService]) -> None
-    if not os.path.exists(cmk.utils.paths.autochecks_dir):
-        os.makedirs(cmk.utils.paths.autochecks_dir)
-
-    filepath = Path(cmk.utils.paths.autochecks_dir) / ("%s.mk" % hostname)
-    content = []
-    content.append("[")
-    for discovered_service in sorted(items, key=lambda s: (s.check_plugin_name, s.item)):
-        content.append("  (%r, %r, %s)," % (discovered_service.check_plugin_name,
-                                            discovered_service.item, discovered_service.paramstr))
-    content.append("]\n")
-    store.save_file(str(filepath), "\n".join(content))
-
-
-def set_autochecks_of(host_config, new_items):
-    # type: (config.HostConfig, List[DiscoveredService]) -> None
-    """Merge existing autochecks with the given autochecks for a host and save it"""
-    if host_config.is_cluster:
-        _set_autochecks_of_cluster(host_config, new_items)
-    else:
-        _set_autochecks_of_real_hosts(host_config, new_items)
-
-
-def _set_autochecks_of_real_hosts(host_config, new_items):
-    # type: (config.HostConfig, List[DiscoveredService]) -> None
-    new_autochecks = []  # type: List[DiscoveredService]
-
-    # write new autochecks file, but take paramstrings from existing ones
-    # for those checks which are kept
-    for existing_service in autochecks.parse_autochecks_file(host_config.hostname):
-        # TODO: Need to implement a list class that realizes in / not in correctly
-        if existing_service in new_items:
-            new_autochecks.append(existing_service)
-
-    for discovered_service in new_items:
-        if discovered_service not in new_autochecks:
-            new_autochecks.append(discovered_service)
-
-    # write new autochecks file for that host
-    _save_autochecks_file(host_config.hostname, new_autochecks)
-
-
-def _set_autochecks_of_cluster(host_config, new_items):
-    # type: (config.HostConfig, List[DiscoveredService]) -> None
-    """A Cluster does not have an autochecks file. All of its services are located
-    in the nodes instead. For clusters we cycle through all nodes remove all
-    clustered service and add the ones we've got as input."""
-    if not host_config.nodes:
-        return
-
-    config_cache = config.get_config_cache()
-
-    new_autochecks = []  # type: List[DiscoveredService]
-    for node in host_config.nodes:
-        for existing_service in autochecks.parse_autochecks_file(node):
-            if host_config.hostname != config_cache.host_of_clustered_service(
-                    node, existing_service.description):
-                new_autochecks.append(existing_service)
-
-        for discovered_service in new_items:
-            new_autochecks.append(discovered_service)
-
-        # write new autochecks file for that host
-        _save_autochecks_file(node, new_autochecks)
-
-    # Check whether or not the cluster host autocheck files are still existant.
-    # Remove them. The autochecks are only stored in the nodes autochecks files
-    # these days.
-    _remove_autochecks_file(host_config.hostname)
-
-
-def remove_autochecks_of(host_config):
-    # type: (config.HostConfig) -> int
-    """Remove all autochecks of a host while being cluster-aware!"""
-    removed = 0
-    if host_config.nodes:
-        for node_name in host_config.nodes:
-            removed += _remove_autochecks_of_host(node_name)
-    else:
-        removed += _remove_autochecks_of_host(host_config.hostname)
-
-    return removed
-
-
-def _remove_autochecks_of_host(hostname):
-    # type: (str) -> int
-    removed = 0
-    new_items = []  # type: List[DiscoveredService]
-    config_cache = config.get_config_cache()
-
-    old_items = autochecks.parse_autochecks_file(hostname)
-    for existing_service in old_items:
-        if hostname != config_cache.host_of_clustered_service(hostname,
-                                                              existing_service.description):
-            new_items.append(existing_service)
-        else:
-            removed += 1
-    _save_autochecks_file(hostname, new_items)
-    return removed

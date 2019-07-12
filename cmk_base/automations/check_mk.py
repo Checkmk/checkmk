@@ -51,7 +51,7 @@ import cmk_base.discovery as discovery
 import cmk_base.check_table as check_table
 from cmk_base.automations import automations, Automation, MKAutomationError
 import cmk_base.check_utils
-import cmk_base.autochecks
+import cmk_base.autochecks as autochecks
 import cmk_base.nagios_utils
 from cmk_base.core_factory import create_core
 import cmk_base.check_api_utils as check_api_utils
@@ -237,7 +237,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             new_services.append(
                 discovery.DiscoveredService(check_plugin_name, item, descr, paramstr))
 
-        discovery.set_autochecks_of(host_config, new_services)
+        autochecks.set_autochecks_of(host_config, new_services)
         self._trigger_discovery_check(host_config)
         return None
 
@@ -599,19 +599,18 @@ class AutomationAnalyseServices(Automation):
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         if host_config.is_cluster:
-            autochecks = []
+            services = []
             for node in host_config.nodes:
-                for check_plugin_name, item, paramstring in cmk_base.autochecks.read_autochecks_of(
-                        node):
+                for check_plugin_name, item, paramstring in autochecks.read_autochecks_of(node):
                     descr = config.service_description(node, check_plugin_name, item)
                     if hostname == config_cache.host_of_clustered_service(node, descr):
-                        autochecks.append((check_plugin_name, item, paramstring))
+                        services.append((check_plugin_name, item, paramstring))
         else:
-            autochecks = cmk_base.autochecks.read_autochecks_of(hostname)
+            services = autochecks.read_autochecks_of(hostname)
 
         # 2. Load all autochecks of the host in question and try to find
         # our service there
-        for entry in autochecks:
+        for entry in services:
             ct, item, params = entry  # new format without host name
 
             if (ct, item) not in table:

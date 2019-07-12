@@ -23,31 +23,41 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+"""Caring about persistance of the discovered services (aka autochecks)
 
-from typing import Optional, List  # pylint: disable=unused-import
+This is a sub module of cmk_base.discovery.
+"""
+
+from typing import Tuple, Optional, List  # pylint: disable=unused-import
 import os
 import sys
 import ast
-
+from pathlib2 import Path
 import six
 
 import cmk.utils.debug
 import cmk.utils.paths
+import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.config as config
 import cmk_base.console
-from cmk_base.check_utils import DiscoveredService, Item  # pylint: disable=unused-import
+from cmk_base.check_utils import (  # pylint: disable=unused-import
+    CheckPluginName, CheckParameters, DiscoveredService, Item,
+)
 
 
-# Read automatically discovered checks of one host.
-# Returns a table with three columns:
-# 1. check_plugin_name
-# 2. item
-# 3. parameters evaluated!
 # TODO: use store.load_data_from_file()
 # TODO: Common code with parse_autochecks_file? Cleanup.
 def read_autochecks_of(hostname):
+    # type: (str) -> List[Tuple[CheckPluginName, Item, CheckParameters]]
+    """Read automatically discovered checks of one host.
+
+    Returns a table with three columns:
+    1. check_plugin_name
+    2. item
+    3. parameters (evaluated!)
+    """
     basedir = cmk.utils.paths.autochecks_dir
     filepath = basedir + '/' + hostname + '.mk'
 
@@ -57,7 +67,9 @@ def read_autochecks_of(hostname):
     check_config = config.get_check_variables()
     try:
         cmk_base.console.vverbose("Loading autochecks from %s\n", filepath)
-        autochecks_raw = eval(file(filepath).read(), check_config, check_config)
+        autochecks_raw = eval(
+            file(filepath).read(), check_config,
+            check_config)  # type: List[Tuple[CheckPluginName, Item, CheckParameters]]
     except SyntaxError as e:
         cmk_base.console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)
         if cmk.utils.debug.enabled():
@@ -74,7 +86,7 @@ def read_autochecks_of(hostname):
     autochecks = []
     for entry in autochecks_raw:
         if len(entry) == 4:  # old format where hostname is at the first place
-            entry = entry[1:]
+            entry = entry[1:]  # type: ignore
         check_plugin_name, item, parameters = entry
 
         # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
@@ -168,3 +180,123 @@ def _parse_autocheck_entry(hostname, entry):
         return None  # ignore
 
     return DiscoveredService(check_plugin_name, item, description, paramstr)
+
+
+def set_autochecks_of(host_config, new_items):
+    # type: (config.HostConfig, List[DiscoveredService]) -> None
+    """Merge existing autochecks with the given autochecks for a host and save it"""
+    if host_config.is_cluster:
+        _set_autochecks_of_cluster(host_config, new_items)
+    else:
+        _set_autochecks_of_real_hosts(host_config, new_items)
+
+
+def _set_autochecks_of_real_hosts(host_config, new_items):
+    # type: (config.HostConfig, List[DiscoveredService]) -> None
+    new_autochecks = []  # type: List[DiscoveredService]
+
+    # write new autochecks file, but take paramstrings from existing ones
+    # for those checks which are kept
+    for existing_service in parse_autochecks_file(host_config.hostname):
+        # TODO: Need to implement a list class that realizes in / not in correctly
+        if existing_service in new_items:
+            new_autochecks.append(existing_service)
+
+    for discovered_service in new_items:
+        if discovered_service not in new_autochecks:
+            new_autochecks.append(discovered_service)
+
+    # write new autochecks file for that host
+    save_autochecks_file(host_config.hostname, new_autochecks)
+
+
+def _set_autochecks_of_cluster(host_config, new_items):
+    # type: (config.HostConfig, List[DiscoveredService]) -> None
+    """A Cluster does not have an autochecks file. All of its services are located
+    in the nodes instead. For clusters we cycle through all nodes remove all
+    clustered service and add the ones we've got as input."""
+    if not host_config.nodes:
+        return
+
+    config_cache = config.get_config_cache()
+
+    new_autochecks = []  # type: List[DiscoveredService]
+    for node in host_config.nodes:
+        for existing_service in parse_autochecks_file(node):
+            if host_config.hostname != config_cache.host_of_clustered_service(
+                    node, existing_service.description):
+                new_autochecks.append(existing_service)
+
+        for discovered_service in new_items:
+            new_autochecks.append(discovered_service)
+
+        # write new autochecks file for that host
+        save_autochecks_file(node, new_autochecks)
+
+    # Check whether or not the cluster host autocheck files are still existant.
+    # Remove them. The autochecks are only stored in the nodes autochecks files
+    # these days.
+    remove_autochecks_file(host_config.hostname)
+
+
+def has_autochecks(hostname):
+    # type: (str) -> bool
+    return os.path.exists(cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk")
+
+
+def save_autochecks_file(hostname, items):
+    # type: (str, List[DiscoveredService]) -> None
+    if not os.path.exists(cmk.utils.paths.autochecks_dir):
+        os.makedirs(cmk.utils.paths.autochecks_dir)
+
+    filepath = Path(cmk.utils.paths.autochecks_dir) / ("%s.mk" % hostname)
+    content = []
+    content.append("[")
+    for discovered_service in sorted(items, key=lambda s: (s.check_plugin_name, s.item)):
+        content.append("  (%r, %r, %s)," % (discovered_service.check_plugin_name,
+                                            discovered_service.item, discovered_service.paramstr))
+    content.append("]\n")
+    store.save_file(str(filepath), "\n".join(content))
+
+
+def remove_autochecks_file(hostname):
+    # type: (str) -> None
+    filepath = cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk"
+    try:
+        os.remove(filepath)
+    except OSError:
+        pass
+
+
+def remove_autochecks_of(host_config):
+    # type: (config.HostConfig) -> int
+    """Remove all autochecks of a host while being cluster-aware
+
+    Cluster aware means that the autocheck files of the nodes are handled. Instead
+    of removing the whole file the file is loaded and only the services associated
+    with the given cluster are removed."""
+    removed = 0
+    if host_config.nodes:
+        for node_name in host_config.nodes:
+            removed += _remove_autochecks_of_host(node_name)
+    else:
+        removed += _remove_autochecks_of_host(host_config.hostname)
+
+    return removed
+
+
+def _remove_autochecks_of_host(hostname):
+    # type: (str) -> int
+    removed = 0
+    new_items = []  # type: List[DiscoveredService]
+    config_cache = config.get_config_cache()
+
+    old_items = parse_autochecks_file(hostname)
+    for existing_service in old_items:
+        if hostname != config_cache.host_of_clustered_service(hostname,
+                                                              existing_service.description):
+            new_items.append(existing_service)
+        else:
+            removed += 1
+    save_autochecks_file(hostname, new_items)
+    return removed

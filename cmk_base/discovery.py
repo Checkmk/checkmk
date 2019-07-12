@@ -1119,22 +1119,32 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
         services = _get_discovered_services(node, node_ipaddress, node_sources, multi_host_sections,
                                             on_error)
         for check_source, discovered_service in services.values():
-            if host_config.hostname == config_cache.host_of_clustered_service(
+            if host_config.hostname != config_cache.host_of_clustered_service(
                     node, discovered_service.description):
-                table_id = discovered_service.check_plugin_name, discovered_service.item
-                if table_id not in cluster_items:
-                    cluster_items[table_id] = (check_source, discovered_service)
-                else:
-                    first_check_source, first_discovered_service = cluster_items[table_id]
-                    if first_check_source == "old":
-                        pass
-                    elif check_source == "old":
-                        cluster_items[table_id] = (check_source, discovered_service)
-                    elif first_check_source == "vanished" and check_source == "new":
-                        cluster_items[table_id] = ("old", first_discovered_service)
-                    elif check_source == "vanished" and first_check_source == "new":
-                        cluster_items[table_id] = ("old", discovered_service)
-                    # In all other cases either both must be "new" or "vanished" -> let it be
+                continue  # not part of this host
+
+            table_id = discovered_service.check_plugin_name, discovered_service.item
+            if table_id not in cluster_items:
+                cluster_items[table_id] = (check_source, discovered_service)
+                continue
+
+            first_check_source, first_discovered_service = cluster_items[table_id]
+            if first_check_source == "old":
+                continue
+
+            if check_source == "old":
+                cluster_items[table_id] = (check_source, discovered_service)
+                continue
+
+            if first_check_source == "vanished" and check_source == "new":
+                cluster_items[table_id] = ("old", first_discovered_service)
+                continue
+
+            if check_source == "vanished" and first_check_source == "new":
+                cluster_items[table_id] = ("old", discovered_service)
+                continue
+
+            # In all other cases either both must be "new" or "vanished" -> let it be
 
     # Now add manual and active serivce and handle ignored services
     return _merge_manual_services(host_config, cluster_items, on_error)

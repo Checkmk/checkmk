@@ -932,6 +932,8 @@ public:
         void validateAndFix() {
             if (cacheAge() >= kMinimumCacheAge) return;
 
+            if (!async_ && cacheAge() == 0) return;
+
             XLOG::t(
                 "Plugin Entry '{}' has too low cache_age: [{}]. Setting at [{}]",
                 pattern_, cacheAge(), kMinimumCacheAge);

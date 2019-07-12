@@ -272,8 +272,10 @@ public:
     }
 
     // returns process id
-    uint32_t goExec(std::wstring CommandLine, bool Wait, bool InheritHandle,
-                    bool PipeOutput) noexcept;
+    uint32_t goExecAsJob(std::wstring_view CommandLine) noexcept;
+
+    // returns process id
+    uint32_t goExecAsUpdater(std::wstring_view CommandLine) noexcept;
 
     void kill(bool KillTreeToo) {
         auto proc_id = process_id_.exchange(0);
@@ -327,7 +329,9 @@ public:
     }
 
 private:
-    const bool use_job_ = true;
+    void prepareResources(std::wstring_view command_line,
+                          bool create_pipe) noexcept;
+    void cleanResources() noexcept;
     void setExitCode(uint32_t Code) { exit_code_ = Code; }
     std::wstring cmd_line_;
     std::atomic<uint32_t> process_id_;
@@ -339,6 +343,10 @@ private:
     // output
     std::vector<char> data_;
     uint32_t exit_code_;
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+    friend class Wtools;
+    FRIEND_TEST(Wtools, AppRunner);
+#endif
 };
 
 class ServiceController {

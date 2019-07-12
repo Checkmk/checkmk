@@ -106,7 +106,7 @@ void PluginsProvider::loadConfig() {
 
     // linking all files, execute and extensions
     auto files = cma::GatherAllFiles(pv);
-    XLOG::d.t("Found [{}] files to execute", files.size());
+    XLOG::t("Found [{}] files to execute", files.size());
     auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
     LogExecuteExtensions("Allowed Extensions:", execute);
     if (execute.size() == 0) XLOG::l("No allowed extensions. This is strange.");

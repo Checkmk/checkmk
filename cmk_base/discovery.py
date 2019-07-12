@@ -52,7 +52,7 @@ import cmk_base.check_utils
 import cmk_base.decorator
 import cmk_base.snmp_scan as snmp_scan
 from cmk_base.exceptions import MKParseFunctionError
-from cmk_base.check_utils import DiscoveredService
+from cmk_base.check_utils import DiscoveredService, DiscoveredServiceLabels
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
@@ -885,19 +885,26 @@ def _execute_discovery_function(discovery_function, section_content):
 def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
     # type: (str, check_table.CheckPluginName, List) -> Iterator[DiscoveredService]
     for entry in discovered_items:
-        if not isinstance(entry, tuple):
+        if isinstance(entry, check_api_utils.Service):
+            item = entry.item
+            paramstring = entry.parameters
+            service_labels = entry.service_labels
+
+        elif isinstance(entry, tuple):
+            service_labels = DiscoveredServiceLabels()
+            if len(entry) == 2:  # comment is now obsolete
+                item, paramstring = entry
+            elif len(entry) == 3:  # allow old school
+                item, __, paramstring = entry
+            else:
+                # we really don't want longer tuples (or 1-tuples).
+                console.error(
+                    "%s: Check %s returned invalid discovery data (not 2 or 3 elements): %r\n" %
+                    (hostname, check_plugin_name, repr(entry)))
+                continue
+        else:
             console.error("%s: Check %s returned invalid discovery data (entry not a tuple): %r\n" %
                           (hostname, check_plugin_name, repr(entry)))
-            continue
-
-        if len(entry) == 2:  # comment is now obsolete
-            item, paramstring = entry
-        elif len(entry) == 3:  # allow old school
-            item, __, paramstring = entry
-        else:  # we really don't want longer tuples (or 1-tuples).
-            console.error(
-                "%s: Check %s returned invalid discovery data (not 2 or 3 elements): %r\n" %
-                (hostname, check_plugin_name, repr(entry)))
             continue
 
         # Check_MK 1.2.7i3 defines items to be unicode strings. Convert non unicode
@@ -918,6 +925,7 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
             item=item,
             description=description,
             paramstr=paramstring,
+            service_labels=service_labels,
         )
 
 

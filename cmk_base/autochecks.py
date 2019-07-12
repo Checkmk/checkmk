@@ -28,7 +28,7 @@
 This is a sub module of cmk_base.discovery.
 """
 
-from typing import Tuple, Optional, List  # pylint: disable=unused-import
+from typing import Any, Dict, Union, Tuple, Optional, List  # pylint: disable=unused-import
 import os
 import sys
 import ast
@@ -85,9 +85,10 @@ def read_autochecks_of(hostname):
     # the user. Also merge with default levels for modern dictionary based checks.
     autochecks = []
     for entry in autochecks_raw:
-        if len(entry) == 4:  # old format where hostname is at the first place
-            entry = entry[1:]  # type: ignore
-        check_plugin_name, item, parameters = entry
+        if isinstance(entry, tuple):
+            check_plugin_name, item, parameters = _load_pre_16_tuple_autocheck(entry)
+        else:
+            check_plugin_name, item, parameters = _load_dict_autocheck(entry)
 
         # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
         # items from existing autocheck files for compatibility. TODO remove this one day
@@ -102,6 +103,28 @@ def read_autochecks_of(hostname):
                            config.compute_check_parameters(hostname, check_plugin_name, item,
                                                            parameters)))
     return autochecks
+
+
+def _load_pre_16_tuple_autocheck(entry):
+    # type: (Tuple[CheckPluginName, Item, CheckParameters]) -> Tuple[CheckPluginName, Item, CheckParameters]
+    if len(entry) == 4:  # old format where hostname is at the first place
+        entry = entry[1:]  # type: ignore
+    check_plugin_name, item, parameters = entry
+    return check_plugin_name, item, parameters
+
+
+def _load_dict_autocheck(entry):
+    # type: (Dict) -> Tuple[CheckPluginName, Item, CheckParameters]
+    return entry["check_plugin_name"], entry["item"], entry["parameters"]
+
+
+def resolve_paramstring(check_plugin_name, paramstring):
+    # type: (str, str) -> CheckParameters
+    """Translates a parameter string (read from autochecks) to it's final value
+    (according to the current configuration)"""
+    check_context = config.get_check_context(check_plugin_name)
+    # TODO: Can't we simply access check_context[paramstring]?
+    return eval(paramstring, check_context, check_context)
 
 
 def parse_autochecks_file(hostname):
@@ -127,7 +150,7 @@ def parse_autochecks_file(hostname):
 
         # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"
         for entry in child.value.elts:  # type: ignore
-            if not isinstance(entry, ast.Tuple):
+            if not isinstance(entry, (ast.Tuple, ast.Dict)):
                 continue
 
             service = _parse_autocheck_entry(hostname, entry)
@@ -138,13 +161,13 @@ def parse_autochecks_file(hostname):
 
 
 def _parse_autocheck_entry(hostname, entry):
-    # type: (str, ast.Tuple) -> Optional[DiscoveredService]
-    # drop hostname, legacy format with host in first column
-    parts = entry.elts[1:] if len(entry.elts) == 4 else entry.elts
-
-    if len(parts) != 3:
-        raise Exception("Invalid autocheck: Wrong length %d instead of 3" % len(parts))
-    ast_check_plugin_name, ast_item, ast_paramstr = parts
+    # type: (str, Union[ast.Tuple, ast.Dict]) -> Optional[DiscoveredService]
+    if isinstance(entry, ast.Tuple):
+        ast_check_plugin_name, ast_item, ast_paramstr = _parse_pre_16_tuple_autocheck_entry(entry)
+    elif isinstance(entry, ast.Dict):
+        ast_check_plugin_name, ast_item, ast_paramstr = _parse_dict_autocheck_entry(entry)
+    else:
+        raise Exception("Invalid autocheck: Wrong type: %r" % entry)
 
     if not isinstance(ast_check_plugin_name, ast.Str):
         raise Exception("Invalid autocheck: Wrong check plugin type: %r" % ast_check_plugin_name)
@@ -180,6 +203,28 @@ def _parse_autocheck_entry(hostname, entry):
         return None  # ignore
 
     return DiscoveredService(check_plugin_name, item, description, paramstr)
+
+
+def _parse_pre_16_tuple_autocheck_entry(entry):
+    # type: (ast.Tuple) -> Union[List, Tuple]
+    # drop hostname, legacy format with host in first column
+    parts = entry.elts[1:] if len(entry.elts) == 4 else entry.elts
+
+    if len(parts) != 3:
+        raise Exception("Invalid autocheck: Wrong length %d instead of 3" % len(parts))
+    return parts
+
+
+def _parse_dict_autocheck_entry(entry):
+    # type: (ast.Dict) -> Tuple
+    values = {}  # type: Dict[str, Any]
+    for index, key in enumerate(entry.keys):
+        if isinstance(key, ast.Str):
+            values[key.s] = entry.values[index]
+
+    if len(values) != 3:
+        raise Exception("Invalid autocheck: Wrong length %d instead of 3" % len(values))
+    return values["check_plugin_name"], values["item"], values["parameters"]
 
 
 def set_autochecks_of(host_config, new_items):
@@ -253,8 +298,9 @@ def save_autochecks_file(hostname, items):
     content = []
     content.append("[")
     for discovered_service in sorted(items, key=lambda s: (s.check_plugin_name, s.item)):
-        content.append("  (%r, %r, %s)," % (discovered_service.check_plugin_name,
-                                            discovered_service.item, discovered_service.paramstr))
+        content.append("  {'check_plugin_name': %r, 'item': %r, 'parameters': %s}," %
+                       (discovered_service.check_plugin_name, discovered_service.item,
+                        discovered_service.paramstr))
     content.append("]\n")
     store.save_file(str(filepath), "\n".join(content))
 

@@ -52,7 +52,8 @@ import cmk_base.check_utils
 import cmk_base.decorator
 import cmk_base.snmp_scan as snmp_scan
 from cmk_base.exceptions import MKParseFunctionError
-from cmk_base.check_utils import DiscoveredService, DiscoveredServiceLabels
+from cmk_base.check_utils import DiscoveredService
+from cmk_base.discovered_labels import DiscoveredServiceLabels
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
@@ -1120,15 +1121,6 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
     return _merge_manual_services(host_config, cluster_items, on_error)
 
 
-def resolve_paramstring(check_plugin_name, paramstring):
-    # type: (str, str) -> check_table.CheckParameters
-    """Translates a parameter string (read from autochecks) to it's final value
-    (according to the current configuration)"""
-    check_context = config.get_check_context(check_plugin_name)
-    # TODO: Can't we simply access check_context[paramstring]?
-    return eval(paramstring, check_context, check_context)
-
-
 # TODO: Can't we reduce the duplicate code here? Check out the "checking" code
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     # type: (str, bool, bool, str) -> List[Tuple[str, str, Optional[str], check_table.Item, str, check_table.CheckParameters, Text, Optional[int], Text, List[Tuple]]]
@@ -1161,8 +1153,8 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             # apply check_parameters
             try:
                 if isinstance(discovered_service.paramstr, str):
-                    params = resolve_paramstring(discovered_service.check_plugin_name,
-                                                 discovered_service.paramstr)
+                    params = autochecks.resolve_paramstring(discovered_service.check_plugin_name,
+                                                            discovered_service.paramstr)
                 else:
                     params = discovered_service.paramstr
             except Exception:
@@ -1248,8 +1240,8 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             perfdata = []
 
         if check_source == "active":
-            params = resolve_paramstring(discovered_service.check_plugin_name,
-                                         discovered_service.paramstr)
+            params = autochecks.resolve_paramstring(discovered_service.check_plugin_name,
+                                                    discovered_service.paramstr)
 
         if check_source in ["legacy", "active", "custom"]:
             checkgroup = None

@@ -192,9 +192,9 @@ def actual_output(write_config, wait_agent):
                 time.sleep(1)
 
         if telnet is None:
-            raise (ConnectionRefusedError("can't connect"))
+            raise ConnectionRefusedError("can't connect")
 
-        result = telnet.read_all().decode()
+        result = telnet.read_all().decode(encoding='cp1252')
 
         yield result.splitlines()
     finally:

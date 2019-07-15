@@ -157,8 +157,7 @@ class HostCheckTable(object):
         elif self.filter_mode == "only_clustered" and svc_is_mine:
             return {}
 
-        check_table[(service.check_plugin_name, service.item)] = (service.parameters,
-                                                                  service.description)
+        check_table[(service.check_plugin_name, service.item)] = service
 
         return check_table
 
@@ -213,6 +212,7 @@ def get_check_table(hostname,
                     skip_autochecks=False,
                     filter_mode=None,
                     skip_ignored=True):
+    # type: (str, bool, bool, bool, Optional[str], bool) -> CheckTable
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
@@ -282,30 +282,28 @@ def remove_duplicate_checks(check_table):
     have_with_tcp = {}  # type: Dict[Text, Tuple[CheckPluginName, Item]]
     have_with_snmp = {}  # type: Dict[Text, Tuple[CheckPluginName, Item]]
     without_duplicates = {}  # type: CheckTable
-    for key, value in check_table.iteritems():
-        checkname = key[0]
-        descr = value[1]
-        if cmk_base.check_utils.is_snmp_check(checkname):
-            if descr in have_with_tcp:
+    for key, service in check_table.iteritems():
+        if cmk_base.check_utils.is_snmp_check(service.check_plugin_name):
+            if service.description in have_with_tcp:
                 continue
-            have_with_snmp[descr] = key
+            have_with_snmp[service.description] = key
         else:
-            if descr in have_with_snmp:
-                snmp_key = have_with_snmp[descr]
+            if service.description in have_with_snmp:
+                snmp_key = have_with_snmp[service.description]
                 del without_duplicates[snmp_key]
-                del have_with_snmp[descr]
-            have_with_tcp[descr] = key
-        without_duplicates[key] = value
+                del have_with_snmp[service.description]
+            have_with_tcp[service.description] = key
+        without_duplicates[key] = service
     return without_duplicates
 
 
 def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
     # type: (str, bool, Optional[str], bool) -> List[str]
     return [
-        e[0] for e in get_check_table(hostname,
-                                      remove_duplicates=remove_duplicates,
-                                      filter_mode=filter_mode,
-                                      skip_ignored=skip_ignored)
+        s.check_plugin_name for s in get_check_table(hostname,
+                                                     remove_duplicates=remove_duplicates,
+                                                     filter_mode=filter_mode,
+                                                     skip_ignored=skip_ignored).values()
     ]
 
 
@@ -316,15 +314,12 @@ def _get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None,
     # the service dependencies.
     # TODO: Use the Service objects from get_check_table once it returns these objects
     is_cmc = config.is_cmc()
-    unsorted = [
-        (Service(check_plugin_name, item, description,
-                 parameters), [] if is_cmc else config.service_depends_on(hostname, description))
-        for ((check_plugin_name, item),
-             (parameters, description)) in get_check_table(hostname,
-                                                           remove_duplicates=remove_duplicates,
-                                                           filter_mode=filter_mode,
-                                                           skip_ignored=skip_ignored).items()
-    ]
+    unsorted = [(service,
+                 [] if is_cmc else config.service_depends_on(hostname, service.description))
+                for service in get_check_table(hostname,
+                                               remove_duplicates=remove_duplicates,
+                                               filter_mode=filter_mode,
+                                               skip_ignored=skip_ignored).values()]
 
     unsorted.sort(key=lambda x: x[0].description)
 

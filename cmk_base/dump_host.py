@@ -116,16 +116,15 @@ def dump_host(hostname):
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
 
     table_data = []
-    for (checktype, item), (params,
-                            description) in sorted(check_table.get_check_table(hostname).items(),
-                                                   key=lambda s: s[1][0]):
+    for service in sorted(check_table.get_check_table(hostname).values(),
+                          key=lambda s: s.description):
         table_data.append([
-            checktype,
-            cmk_base.utils.make_utf8(item),
-            _evaluate_params(params),
-            cmk_base.utils.make_utf8(description),
+            service.check_plugin_name,
+            cmk_base.utils.make_utf8(service.item),
+            _evaluate_params(service.parameters),
+            cmk_base.utils.make_utf8(service.description),
             cmk_base.utils.make_utf8(",".join(
-                config_cache.servicegroups_of_service(hostname, description)))
+                config_cache.servicegroups_of_service(hostname, service.description)))
         ])
 
     tty.print_table(headers, colors, table_data, "  ")

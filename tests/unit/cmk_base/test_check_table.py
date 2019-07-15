@@ -15,44 +15,73 @@ from cmk_base.check_utils import Service
         # Skip the autochecks automatically for ping hosts
         ("ping-host", {}),
         ("no-autochecks", {
-            ('smart.temp', '/dev/sda'): ({
-                'levels': (35, 40)
-            }, u'Temperature SMART /dev/sda'),
+            ('smart.temp', '/dev/sda'): Service(
+                check_plugin_name="smart.temp",
+                item=u"/dev/sda",
+                parameters={'levels': (35, 40)},
+                description=u'Temperature SMART /dev/sda',
+            ),
         }),
         # Static checks overwrite the autocheck definitions
         ("autocheck-overwrite", {
-            ('smart.temp', '/dev/sda'): ({
-                'levels': (35, 40)
-            }, u'Temperature SMART /dev/sda'),
-            ('smart.temp', '/dev/sdb'): ({
-                'is_autocheck': True
-            }, u'Temperature SMART /dev/sdb'),
+            ('smart.temp', '/dev/sda'): Service(
+                check_plugin_name="smart.temp",
+                item=u"/dev/sda",
+                parameters={'levels': (35, 40)},
+                description=u'Temperature SMART /dev/sda',
+            ),
+            ('smart.temp', '/dev/sdb'): Service(
+                check_plugin_name='smart.temp',
+                item=u'/dev/sdb',
+                parameters={'is_autocheck': True},
+                description=u'Temperature SMART /dev/sdb',
+            ),
         }),
         ("ignore-not-existing-checks", {}),
         ("ignore-disabled-rules", {
-            ('smart.temp', 'ITEM2'): ({
-                'levels': (35, 40)
-            }, u'Temperature SMART ITEM2'),
+            ('smart.temp', 'ITEM2'): Service(
+                check_plugin_name='smart.temp',
+                item=u"ITEM2",
+                parameters={'levels': (35, 40)},
+                description=u'Temperature SMART ITEM2',
+            ),
         }),
         ("static-check-overwrite", {
-            ('smart.temp', '/dev/sda'): ({
-                'levels': (35, 40),
-                'rule': 1
-            }, u'Temperature SMART /dev/sda')
+            ('smart.temp', '/dev/sda'): Service(
+                check_plugin_name="smart.temp",
+                item=u"/dev/sda",
+                parameters={
+                    'levels': (35, 40),
+                    'rule': 1
+                },
+                description=u'Temperature SMART /dev/sda',
+            )
         }),
         ("node1", {
-            ('smart.temp', 'auto-not-clustered'): ({}, u'Temperature SMART auto-not-clustered'),
-            ('smart.temp', 'static-node1'): ({
-                'levels': (35, 40)
-            }, u'Temperature SMART static-node1'),
+            ('smart.temp', 'auto-not-clustered'): Service(
+                check_plugin_name="smart.temp",
+                item=u"auto-not-clustered",
+                parameters={},
+                description=u'Temperature SMART auto-not-clustered',
+            ),
+            ('smart.temp', 'static-node1'): Service(check_plugin_name="smart.temp",
+                                                    item=u"static-node1",
+                                                    parameters={'levels': (35, 40)},
+                                                    description=u'Temperature SMART static-node1'),
         }),
         ("cluster1", {
-            ('smart.temp', 'static-cluster'): ({
-                'levels': (35, 40)
-            }, u'Temperature SMART static-cluster'),
-            ('smart.temp', 'auto-clustered'): ({
-                'levels': (35, 40)
-            }, u'Temperature SMART auto-clustered'),
+            ('smart.temp', 'static-cluster'): Service(
+                check_plugin_name="smart.temp",
+                item=u"static-cluster",
+                parameters={'levels': (35, 40)},
+                description=u'Temperature SMART static-cluster',
+            ),
+            ('smart.temp', 'auto-clustered'): Service(
+                check_plugin_name="smart.temp",
+                item=u"auto-clustered",
+                parameters={'levels': (35, 40)},
+                description=u'Temperature SMART auto-clustered',
+            ),
         }),
     ])
 def test_get_check_table(monkeypatch, hostname, expected_result):

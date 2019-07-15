@@ -280,27 +280,27 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
         return result
 
-    host_checks = check_table.get_check_table(hostname, remove_duplicates=True).items()
-    host_checks.sort()  # Create deterministic order
+    services = check_table.get_check_table(hostname, remove_duplicates=True).values()
     have_at_least_one_service = False
     used_descriptions = {}
-    for ((checkname, item), (params, description)) in host_checks:
-        if checkname not in config.check_info:
+    for service in sorted(services, lambda s: (s.check_plugin_name, s.item)):
+        if service.check_plugin_name not in config.check_info:
             continue  # simply ignore missing checks
 
-        description = config.get_final_service_description(hostname, description)
+        description = config.get_final_service_description(hostname, service.description)
         # Make sure, the service description is unique on this host
         if description in used_descriptions:
             cn, it = used_descriptions[description]
-            core_config.warning("ERROR: Duplicate service description '%s' for host '%s'!\n"
-                                " - 1st occurrance: checktype = %s, item = %r\n"
-                                " - 2nd occurrance: checktype = %s, item = %r\n" %
-                                (description, hostname, cn, it, checkname, item))
+            core_config.warning(
+                "ERROR: Duplicate service description '%s' for host '%s'!\n"
+                " - 1st occurrance: checktype = %s, item = %r\n"
+                " - 2nd occurrance: checktype = %s, item = %r\n" %
+                (description, hostname, cn, it, service.check_plugin_name, service.item))
             continue
 
         else:
-            used_descriptions[description] = (checkname, item)
-        if config.check_info[checkname].get("has_perfdata", False):
+            used_descriptions[description] = (service.check_plugin_name, service.item)
+        if config.check_info[service.check_plugin_name].get("has_perfdata", False):
             template = config.passive_service_template_perf
         else:
             template = config.passive_service_template
@@ -312,17 +312,18 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             "use": template,
             "host_name": hostname,
             "service_description": description,
-            "check_command": "check_mk-%s" % checkname,
+            "check_command": "check_mk-%s" % service.check_plugin_name,
         }
 
         service_spec.update(
             core_config.get_cmk_passive_service_attributes(config_cache, host_config, description,
-                                                           checkname, params, check_mk_attrs))
+                                                           service.check_plugin_name,
+                                                           service.parameters, check_mk_attrs))
         service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
 
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
-        cfg.checknames_to_define.add(checkname)
+        cfg.checknames_to_define.add(service.check_plugin_name)
         have_at_least_one_service = True
 
     # Active check for check_mk

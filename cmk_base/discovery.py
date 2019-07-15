@@ -759,8 +759,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
         check_table_formatted = {}  # type: check_table.CheckTable
         for discovered_service in discovered_services:
             check_table_formatted[(discovered_service.check_plugin_name,
-                                   discovered_service.item)] = (None,
-                                                                discovered_service.description)
+                                   discovered_service.item)] = discovered_service
 
         check_table_formatted = check_table.remove_duplicate_checks(check_table_formatted)
         for discovered_service in discovered_services[:]:
@@ -1012,21 +1011,12 @@ def _merge_manual_services(host_config, services, on_error):
 
     # Find manual checks. These can override discovered checks -> "manual"
     manual_items = check_table.get_check_table(hostname, skip_autochecks=True)
-    for (check_plugin_name, item), (params, descr) in manual_items.items():
-        # TODO: Reduce this duplication
-        try:
-            description = config.service_description(hostname, check_plugin_name, item)
-        except Exception as e:
-            if on_error == "raise":
-                raise
-            elif on_error == "warn":
-                console.error("Invalid service description: %s\n" % e)
-            else:
-                continue  # ignore
-
-        services[(check_plugin_name, item)] = ('manual',
-                                               DiscoveredService(check_plugin_name, item,
-                                                                 description, repr(params)))
+    for service in manual_items.values():
+        services[(service.check_plugin_name,
+                  service.item)] = ('manual',
+                                    DiscoveredService(service.check_plugin_name,
+                                                      service.item, service.description,
+                                                      repr(service.parameters)))
 
     # Add custom checks -> "custom"
     for entry in host_config.custom_checks:

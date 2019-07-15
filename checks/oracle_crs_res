@@ -151,5 +151,4 @@ check_info['oracle_crs_res'] = {
     "check_function"          : check_oracle_crs_res,
     "inventory_function"      : inventory_oracle_crs_res,
     "service_description"     : "ORA-GI %s Resource",
-    "group"                   : "oracle_crs_res",
 }

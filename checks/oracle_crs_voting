@@ -33,7 +33,7 @@ def inventory_oracle_crs_voting(info):
     inventory = []
     return [ ('', None) for line in info ]
 
-def check_oracle_crs_voting(item, params, info):
+def check_oracle_crs_voting(_no_item, _no_params, info):
     # state = -1 => no data for Service
     state = -1
     infotext = ''
@@ -67,5 +67,4 @@ check_info['oracle_crs_voting'] = {
     "check_function"          : check_oracle_crs_voting,
     "inventory_function"      : inventory_oracle_crs_voting,
     "service_description"     : "ORA-GI Voting",
-    "group"                   : "oracle_crs_voting",
 }

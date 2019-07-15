@@ -250,10 +250,10 @@ def get_precompiled_check_table(hostname,
          During check execution will update the check parameters once more with
          checking.determine_check_params() right before execution the check.
     """
-    host_checks = get_sorted_check_table(hostname,
-                                         remove_duplicates,
-                                         filter_mode=filter_mode,
-                                         skip_ignored=skip_ignored)
+    host_checks = _get_sorted_check_table(hostname,
+                                          remove_duplicates,
+                                          filter_mode=filter_mode,
+                                          skip_ignored=skip_ignored)
     precomp_table = []
     for check_plugin_name, item, params, description in host_checks:
         # make these globals available to the precompile function
@@ -305,11 +305,8 @@ def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, 
     ]
 
 
-# remove_duplicates: Automatically remove SNMP based checks
-# if there already is a TCP based one with the same
-# description. E.g: df vs hr_fs.
 # TODO: Clean this up!
-def get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
+def _get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
     # Convert from dictionary into simple tuple list. Then sort
     # it according to the service dependencies.
     is_cmc = config.is_cmc()

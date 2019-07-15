@@ -206,14 +206,14 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     if belongs_to_cluster:
         filter_mode = "include_clustered"
 
-    table = check_table.get_precompiled_check_table(hostname,
-                                                    remove_duplicates=True,
-                                                    filter_mode=filter_mode)
+    services = check_table.get_precompiled_check_table(hostname,
+                                                       remove_duplicates=True,
+                                                       filter_mode=filter_mode)
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
     if only_check_plugin_names is None:
-        only_check_plugins = set([e[0] for e in table])
+        only_check_plugins = set([service.check_plugin_name for service in services])
     else:
         only_check_plugins = set(only_check_plugin_names)
 
@@ -226,23 +226,24 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     if belongs_to_cluster:
         pos_match = set()
         neg_match = set()
-        for check_plugin_name, item, params, description in table:
-            if hostname != config_cache.host_of_clustered_service(hostname, description):
-                pos_match.add(check_plugin_name)
+        for service in services:
+            if hostname != config_cache.host_of_clustered_service(hostname, service.description):
+                pos_match.add(service.check_plugin_name)
             else:
-                neg_match.add(check_plugin_name)
+                neg_match.add(service.check_plugin_name)
         only_check_plugins -= (pos_match - neg_match)
 
-    for check_plugin_name, item, params, description in table:
-        if only_check_plugins is not None and check_plugin_name not in only_check_plugins:
+    for service in services:
+        if only_check_plugins is not None and service.check_plugin_name not in only_check_plugins:
             continue
 
         if belongs_to_cluster and hostname != config_cache.host_of_clustered_service(
-                hostname, description):
+                hostname, service.description):
             continue
 
         success = execute_check(config_cache, multi_host_sections, hostname, ipaddress,
-                                check_plugin_name, item, params, description)
+                                service.check_plugin_name, service.item, service.parameters,
+                                service.description)
         if success:
             num_success += 1
         elif success is None:
@@ -251,7 +252,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
             # - add to missing sections
             continue
         else:
-            missing_sections.add(cmk_base.check_utils.section_name_of(check_plugin_name))
+            missing_sections.add(cmk_base.check_utils.section_name_of(service.check_plugin_name))
 
     import cmk_base.inventory as inventory
     inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,

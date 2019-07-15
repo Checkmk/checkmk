@@ -224,6 +224,7 @@ def get_precompiled_check_table(hostname,
                                 remove_duplicates=True,
                                 filter_mode=None,
                                 skip_ignored=True):
+    # type: (str, bool, Optional[str], bool) -> List[Service]
     """The precompiled check table is somehow special compared to the regular check table.
 
     a) It is sorted by the service dependencies (which are only relevant for Nagios). The
@@ -254,16 +255,19 @@ def get_precompiled_check_table(hostname,
                                           remove_duplicates,
                                           filter_mode=filter_mode,
                                           skip_ignored=skip_ignored)
-    precomp_table = []
-    for check_plugin_name, item, params, description in host_checks:
+    services = []  # type: List[Service]
+    for service in host_checks:
         # make these globals available to the precompile function
-        check_api_utils.set_service(check_plugin_name, description)
-        item_state.set_item_state_prefix(check_plugin_name, item)
+        check_api_utils.set_service(service.check_plugin_name, service.description)
+        item_state.set_item_state_prefix(service.check_plugin_name, service.item)
 
-        params = get_precompiled_check_parameters(hostname, item, params, check_plugin_name)
-        precomp_table.append(
-            (check_plugin_name, item, params, description))  # deps not needed while checking
-    return precomp_table
+        precompiled_parameters = get_precompiled_check_parameters(hostname, service.item,
+                                                                  service.parameters,
+                                                                  service.check_plugin_name)
+        services.append(
+            Service(service.check_plugin_name, service.item, service.description,
+                    precompiled_parameters, service.service_labels))
+    return services
 
 
 def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
@@ -307,32 +311,36 @@ def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, 
 
 # TODO: Clean this up!
 def _get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
-    # Convert from dictionary into simple tuple list. Then sort
-    # it according to the service dependencies.
+    # type: (str, bool, Optional[str], bool) -> List[Service]
+    # Convert from dictionary into simple tuple list. Then sort it according to
+    # the service dependencies.
+    # TODO: Use the Service objects from get_check_table once it returns these objects
     is_cmc = config.is_cmc()
-    unsorted = [(checkname, item, params, descr,
-                 [] if is_cmc else config.service_depends_on(hostname, descr))
-                for ((checkname, item),
-                     (params, descr)) in get_check_table(hostname,
-                                                         remove_duplicates=remove_duplicates,
-                                                         filter_mode=filter_mode,
-                                                         skip_ignored=skip_ignored).items()]
+    unsorted = [
+        (Service(check_plugin_name, item, description,
+                 parameters), [] if is_cmc else config.service_depends_on(hostname, description))
+        for ((check_plugin_name, item),
+             (parameters, description)) in get_check_table(hostname,
+                                                           remove_duplicates=remove_duplicates,
+                                                           filter_mode=filter_mode,
+                                                           skip_ignored=skip_ignored).items()
+    ]
 
-    unsorted.sort(key=lambda x: x[3])
+    unsorted.sort(key=lambda x: x[0].description)
 
-    ordered = []
+    ordered = []  # type: List[Service]
     while len(unsorted) > 0:
-        unsorted_descrs = set([entry[3] for entry in unsorted])
+        unsorted_descrs = set([entry[0].description for entry in unsorted])
         left = []
         at_least_one_hit = False
         for check in unsorted:
             deps_fulfilled = True
-            for dep in check[4]:  # deps
+            for dep in check[1]:  # dependencies
                 if dep in unsorted_descrs:
                     deps_fulfilled = False
                     break
             if deps_fulfilled:
-                ordered.append(check[:-1])
+                ordered.append(check[0])
                 at_least_one_hit = True
             else:
                 left.append(check)

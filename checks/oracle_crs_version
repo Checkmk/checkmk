@@ -28,12 +28,7 @@
 def inventory_oracle_crs_version(info):
     return [ ('', None) for line in info ]
 
-<<<<<<< HEAD
-def check_oracle_crs_version(item, params, info):
-=======
-
 def check_oracle_crs_version(_no_item, _no_params, info):
->>>>>>> e27df99404... 8801 FIX oracle_crs_res, oracle_crs_version, oracle_crs_voting: Fixed error in parameters view
     for line in info:
         return (0, line[0])
 

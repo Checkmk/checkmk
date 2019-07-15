@@ -100,22 +100,7 @@ class HostCheckTable(object):
 
         # Now add checks a cluster might receive from its nodes
         if self._host_config.is_cluster:
-            for node in self._host_config.nodes or []:
-                # TODO: Cleanup this to work exactly like the logic above (for a single host)
-                node_config = self._config_cache.get_host_config(node)
-                node_checks = self._get_static_check_entries(node_config)
-                if not skip_autochecks:
-                    node_checks += self._config_cache.get_autochecks_of(node)
-
-                for service in node_checks:
-                    if hostname == self._config_cache.host_of_clustered_service(
-                            node, service.description):
-                        cluster_params = config.compute_check_parameters(
-                            hostname, service.check_plugin_name, service.item, service.parameters)
-                        cluster_service = Service(service.check_plugin_name, service.item,
-                                                  service.description, cluster_params,
-                                                  service.service_labels)
-                        check_table.update(self._handle_service(cluster_service))
+            check_table.update(self._get_clustered_services(hostname, skip_autochecks))
 
         # Remove dependencies to non-existing services
         all_descr = {
@@ -208,6 +193,30 @@ class HostCheckTable(object):
 
         self._is_checkname_valid_cache[checkname] = passed
         return passed
+
+    def _get_clustered_services(self, hostname, skip_autochecks):
+        # type: (str, bool) -> CheckTable
+        check_table = {}  # type: CheckTable
+        for node in self._host_config.nodes or []:
+            # TODO: Cleanup this to work exactly like the logic above (for a single host)
+            node_config = self._config_cache.get_host_config(node)
+            node_checks = self._get_static_check_entries(node_config)
+            if not skip_autochecks:
+                node_checks += self._config_cache.get_autochecks_of(node)
+
+            for service in node_checks:
+                if self._config_cache.host_of_clustered_service(node,
+                                                                service.description) != hostname:
+                    continue
+
+                cluster_params = config.compute_check_parameters(hostname,
+                                                                 service.check_plugin_name,
+                                                                 service.item, service.parameters)
+                cluster_service = Service(service.check_plugin_name, service.item,
+                                          service.description, cluster_params,
+                                          service.service_labels)
+                check_table.update(self._handle_service(cluster_service))
+        return check_table
 
 
 def get_check_table(hostname,

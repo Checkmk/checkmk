@@ -852,8 +852,8 @@ OPTIONS:
 """)
 
 
-def output(ln):
-    vsphere_output.append(ln)
+def output(line):
+    vsphere_output.append(line)
 
 
 def write_output(lines, fetch_agent, address, opt):
@@ -918,12 +918,12 @@ def get_pattern(pattern, line):
 class ESXConnection(object):
     """Encapsulates the API calls to the ESX system"""
     @staticmethod
-    def _connect_to_server(address, no_cert, debug):
+    def _connect_to_server(address, no_cert_check, debug):
         """Initialize server connection"""
         try:
             netloc = ":".join(map(str, address))
 
-            if no_cert:
+            if no_cert_check:
                 try:
                     import ssl
                     server_handle = httplib.HTTPSConnection(
@@ -957,7 +957,7 @@ class ESXConnection(object):
         self._user = user
         self._secret = secret
         self.tracefile = opt.tracefile
-        self._server_handle = self._connect_to_server(address, opt.no_cert, opt.debug)
+        self._server_handle = self._connect_to_server(address, opt.no_cert_check, opt.debug)
 
         self._host_cookie_path = Path("%s/agents/agent_vsphere/cookie.%s" %
                                       (cmk.utils.paths.tmp_dir, address[0]))
@@ -1622,7 +1622,7 @@ def fetch_data(connection, opt):
     ###########################
     # Licenses
     ###########################
-    if "licenses" in opt.query_objects:
+    if "licenses" in opt.modules:
         licenses_response = connection.query_server(telegram_list["licensesused"])
         output_licenses(licenses_response)
 
@@ -1632,19 +1632,19 @@ def fetch_data(connection, opt):
     # We need the datastore info later on in the virtualmachines and counter sections
     datastores = fetch_datastores(connection)
 
-    if "datastore" in opt.query_objects:
+    if "datastore" in opt.modules:
         output_datastores(datastores)
 
     ###########################
     # Counters
     ###########################
-    if "counters" in opt.query_objects:
+    if "counters" in opt.modules:
         process_counters(connection, hostsystems, datastores, opt)
 
     ###########################
     # Hostsystem
     ###########################
-    if "hostsystem" in opt.query_objects:
+    if "hostsystem" in opt.modules:
         hostsystems_properties, hostsystems_sensors = fetch_hostsystem_data(connection)
         output_hostsystems(hostsystems_properties, hostsystems_sensors, opt)
 
@@ -1652,7 +1652,7 @@ def fetch_data(connection, opt):
     # Virtual machines
     ###########################
     vm_esx_host = {}
-    if "virtualmachine" in opt.query_objects:
+    if "virtualmachine" in opt.modules:
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
         output_virtual_machines(vms, opt)
 
@@ -1672,7 +1672,7 @@ def fetch_data(connection, opt):
     vm_piggy_data = {}
     host_piggy_data = {}
 
-    if "hostsystem" in opt.query_objects:
+    if "hostsystem" in opt.modules:
         if opt.host_pwr_display != "vm":  # handled later on..
             if opt.direct and opt.hostname:
                 for hostname, data in hostsystems_properties.items():
@@ -1690,7 +1690,7 @@ def fetch_data(connection, opt):
                         host_piggy_data.setdefault(converted_hostname, []).append(host_info)
                     output(host_info)
 
-    if "virtualmachine" in opt.query_objects:
+    if "virtualmachine" in opt.modules:
         for key in vms:
             data = vms[key]
             running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
@@ -1704,7 +1704,7 @@ def fetch_data(connection, opt):
                 host_piggy_data.setdefault(running_on, []).append(vm_info)
             output(vm_info)
 
-    if ("virtualmachine" in opt.query_objects and "hostsystem" in opt.query_objects and
+    if ("virtualmachine" in opt.modules and "hostsystem" in opt.modules and
             opt.host_pwr_display == "vm"):
 
         for key in vms:
@@ -1765,8 +1765,11 @@ class Opt(object):
         self.snapshot_display = None
         self.vm_piggyname = "alias"
         self.spaces = "underscore"
-        self.no_cert = False
-        self.query_objects = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
+        self.no_cert_check = False
+        self.modules = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
+        self.host_address = None
+        self.user = None
+        self.secret = None
 
 
 def main():
@@ -1780,10 +1783,6 @@ def main():
     ]
 
     opt = Opt()
-
-    host_address = None
-    g_user = None
-    g_secret = None
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -1805,15 +1804,15 @@ def main():
         elif o in ['-p', '--port']:
             opt.port = a
         elif o in ['--no-cert-check']:
-            opt.no_cert = True
+            opt.no_cert_check = True
         elif o == '--pysphere':
             opt.pysphere = True
         elif o in ['-u', '--user']:
-            g_user = a
+            opt.user = a
         elif o in ['-s', '--secret']:
-            g_secret = a
+            opt.secret = a
         elif o in ['-i', '--modules']:
-            opt.query_objects = a.split(',')
+            opt.modules = a.split(',')
         elif o in ['-t', '--timeout']:
             opt.timeout = int(a)
         elif o in ['-H', '--hostname']:
@@ -1840,7 +1839,7 @@ def main():
         sys.exit(call_legacy_pysphere())
 
     if len(args) == 1:
-        host_address = args[0]
+        opt.host_address = args[0]
     elif not args:
         sys.stderr.write("ERROR: No host given.\n")
         sys.exit(1)
@@ -1862,10 +1861,10 @@ def main():
 
     if opt.tracefile:
         opt.tracefile.write("Tracefile %s Host address: %s\n" %
-                            (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
+                            (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), opt.host_address))
 
     try:
-        esx_connection = ESXConnection((host_address, opt.port), g_user, g_secret, opt)
+        esx_connection = ESXConnection((opt.host_address, opt.port), opt.user, opt.secret, opt)
 
         # If the data aquisition fails, e.g. invalid cookie we try another run
         for _run_count in [0, 1]:
@@ -1890,7 +1889,7 @@ def main():
         sys.stderr.write("%s\n" % exc)
         sys.exit(0 if opt.agent else 1)
 
-    write_output(vsphere_output, opt.agent, host_address, opt)
+    write_output(vsphere_output, opt.agent, opt.host_address, opt)
 
 
 if __name__ == "__main__":

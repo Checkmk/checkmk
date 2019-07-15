@@ -105,6 +105,8 @@ $(PYTHON_INSTALL): $(PYTHON_BUILD)
 	$(RM) $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,2to3 smtpd.py)
 # Fix python interpreter for kept scripts
 	$(SED) -i '1s|^#!.*/python2\.7$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,easy_install easy_install-2.7 idle pip pip2 pip2.7 pydoc python2.7-config)
+# Fix pip configuration
+	$(SED) -i '/^import re$$/i import os\nos.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "True"\nos.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python")' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,pip pip2 pip2.7)
 	install -m 644 $(addprefix $(PACKAGE_DIR)/$(PYTHON)/sitecustomize,.py .pyc) $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
 	$(TOUCH) $(PYTHON_INSTALL)
 

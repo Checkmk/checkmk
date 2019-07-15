@@ -63,6 +63,8 @@ $(PYTHON3_INSTALL): $(PYTHON3_BUILD)
 	$(MAKE) -j1 -C $(PYTHON3_DIR) DESTDIR=$(DESTDIR)$(OMD_ROOT) install
 # Fix python interpreter
 	$(SED) -i '1s|^#!.*/python3\.7$$|#!/usr/bin/env python3|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,2to3-3.7 easy_install-3.7 idle3.7 pip3 pip3.7 pydoc3.7 python3.7m-config pyvenv-3.7)
+# Fix pip3 configuration
+	$(SED) -i '/^import re$$/i import os\nos.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "True"\nos.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python3")' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,pip3 pip3.7)
 	install -m 644 $(PYTHON3_SITECUSTOMIZE_SOURCE) $(DESTDIR)$(OMD_ROOT)/lib/python3.7/
 	install -m 644 $(PYTHON3_SITECUSTOMIZE_COMPILED) $(DESTDIR)$(OMD_ROOT)/lib/python3.7/__pycache__
 	$(TOUCH) $(PYTHON3_INSTALL)

@@ -12,6 +12,7 @@ import cmk_base.config as config
 import cmk_base.check_api as check_api
 import cmk_base.autochecks as autochecks
 import cmk_base.discovery as discovery
+from cmk_base.check_utils import Service
 from cmk_base.discovered_labels import (
     DiscoveredServiceLabels,
     ServiceLabel,
@@ -43,25 +44,8 @@ def test_config(monkeypatch):
         (u"""[
   ('hostxyz', 'df', '/', {}),
 ]""", [
-            ('df', u'/', {
-                'inodes_levels': (10.0, 5.0),
-                'levels': (80.0, 90.0),
-                'levels_low': (50.0, 60.0),
-                'magic_normsize': 20,
-                'show_inodes': 'onlow',
-                'show_levels': 'onmagic',
-                'show_reserved': False,
-                'trend_perfdata': True,
-                'trend_range': 24
-            }),
-        ]),
-        # Tuple: Convert non unicode item
-        (
-            u"""[
-  ('df', '/', {}),
-]""",
-            [
-                ('df', u'/', {
+            Service(
+                'df', u'/', u"", {
                     'inodes_levels': (10.0, 5.0),
                     'levels': (80.0, 90.0),
                     'levels_low': (50.0, 60.0),
@@ -72,6 +56,25 @@ def test_config(monkeypatch):
                     'trend_perfdata': True,
                     'trend_range': 24
                 }),
+        ]),
+        # Tuple: Convert non unicode item
+        (
+            u"""[
+  ('df', '/', {}),
+]""",
+            [
+                Service(
+                    'df', u'/', u"", {
+                        'inodes_levels': (10.0, 5.0),
+                        'levels': (80.0, 90.0),
+                        'levels_low': (50.0, 60.0),
+                        'magic_normsize': 20,
+                        'show_inodes': 'onlow',
+                        'show_levels': 'onmagic',
+                        'show_reserved': False,
+                        'trend_perfdata': True,
+                        'trend_range': 24
+                    }),
             ],
         ),
         # Tuple: Allow non string items
@@ -80,17 +83,18 @@ def test_config(monkeypatch):
   ('df', 123, {}),
 ]""",
             [
-                ('df', 123, {
-                    'inodes_levels': (10.0, 5.0),
-                    'levels': (80.0, 90.0),
-                    'levels_low': (50.0, 60.0),
-                    'magic_normsize': 20,
-                    'show_inodes': 'onlow',
-                    'show_levels': 'onmagic',
-                    'show_reserved': False,
-                    'trend_perfdata': True,
-                    'trend_range': 24
-                }),
+                Service(
+                    'df', 123, u"", {
+                        'inodes_levels': (10.0, 5.0),
+                        'levels': (80.0, 90.0),
+                        'levels_low': (50.0, 60.0),
+                        'magic_normsize': 20,
+                        'show_inodes': 'onlow',
+                        'show_levels': 'onmagic',
+                        'show_reserved': False,
+                        'trend_perfdata': True,
+                        'trend_range': 24
+                    }),
             ],
         ),
         # Tuple: Exception on invalid check type
@@ -109,23 +113,24 @@ def test_config(monkeypatch):
   ('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
 ]""",
             [
-                ('df', u'/', {
-                    'inodes_levels': (10.0, 5.0),
-                    'levels': (80.0, 90.0),
-                    'levels_low': (50.0, 60.0),
-                    'magic_normsize': 20,
-                    'show_inodes': 'onlow',
-                    'show_levels': 'onmagic',
-                    'show_reserved': False,
-                    'trend_perfdata': True,
-                    'trend_range': 24
-                }),
-                ('cpu.loads', None, (5.0, 10.0)),
-                ('chrony', None, {
+                Service(
+                    'df', u'/', u"", {
+                        'inodes_levels': (10.0, 5.0),
+                        'levels': (80.0, 90.0),
+                        'levels_low': (50.0, 60.0),
+                        'magic_normsize': 20,
+                        'show_inodes': 'onlow',
+                        'show_levels': 'onmagic',
+                        'show_reserved': False,
+                        'trend_perfdata': True,
+                        'trend_range': 24
+                    }),
+                Service('cpu.loads', None, u"", (5.0, 10.0)),
+                Service('chrony', None, u"", {
                     'alert_delay': (300, 3600),
                     'ntp_levels': (10, 200.0, 500.0)
                 }),
-                ('lnx_if', u'2', {
+                Service('lnx_if', u'2', u"", {
                     'errors': (0.01, 0.1),
                     'speed': 10000000,
                     'state': ['1']
@@ -138,17 +143,18 @@ def test_config(monkeypatch):
   {'check_plugin_name': 'df', 'item': 123, 'parameters': {}, 'service_labels': {}},
 ]""",
             [
-                ('df', 123, {
-                    'inodes_levels': (10.0, 5.0),
-                    'levels': (80.0, 90.0),
-                    'levels_low': (50.0, 60.0),
-                    'magic_normsize': 20,
-                    'show_inodes': 'onlow',
-                    'show_levels': 'onmagic',
-                    'show_reserved': False,
-                    'trend_perfdata': True,
-                    'trend_range': 24
-                }),
+                Service(
+                    'df', 123, u"", {
+                        'inodes_levels': (10.0, 5.0),
+                        'levels': (80.0, 90.0),
+                        'levels_low': (50.0, 60.0),
+                        'magic_normsize': 20,
+                        'show_inodes': 'onlow',
+                        'show_levels': 'onmagic',
+                        'show_reserved': False,
+                        'trend_perfdata': True,
+                        'trend_range': 24
+                    }),
             ],
         ),
         # Dict: Exception on invalid check type
@@ -167,23 +173,24 @@ def test_config(monkeypatch):
   {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {}},
 ]""",
             [
-                ('df', u'/', {
-                    'inodes_levels': (10.0, 5.0),
-                    'levels': (80.0, 90.0),
-                    'levels_low': (50.0, 60.0),
-                    'magic_normsize': 20,
-                    'show_inodes': 'onlow',
-                    'show_levels': 'onmagic',
-                    'show_reserved': False,
-                    'trend_perfdata': True,
-                    'trend_range': 24
-                }),
-                ('cpu.loads', None, (5.0, 10.0)),
-                ('chrony', None, {
+                Service(
+                    'df', u'/', u"", {
+                        'inodes_levels': (10.0, 5.0),
+                        'levels': (80.0, 90.0),
+                        'levels_low': (50.0, 60.0),
+                        'magic_normsize': 20,
+                        'show_inodes': 'onlow',
+                        'show_levels': 'onmagic',
+                        'show_reserved': False,
+                        'trend_perfdata': True,
+                        'trend_range': 24
+                    }),
+                Service('cpu.loads', None, u"", (5.0, 10.0)),
+                Service('chrony', None, u"", {
                     'alert_delay': (300, 3600),
                     'ntp_levels': (10, 200.0, 500.0)
                 }),
-                ('lnx_if', u'2', {
+                Service('lnx_if', u'2', u"", {
                     'errors': (0.01, 0.1),
                     'speed': 10000000,
                     'state': ['1']
@@ -204,8 +211,10 @@ def test_read_autochecks_of(test_config, autochecks_content, expected_result):
     result = autochecks.read_autochecks_of("host")
     assert result == expected_result
 
-    # Check that all items are unicode strings
-    assert all(not isinstance(e[1], str) for e in result)
+    # Check that there are no str items (None, int, ...)
+    assert all(not isinstance(s.item, str) for s in result)
+    # All desriptions need to be unicode
+    assert all(isinstance(s.description, unicode) for s in result)
 
 
 def test_parse_autochecks_file_not_existing():

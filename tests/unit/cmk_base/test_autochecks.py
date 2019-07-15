@@ -1,4 +1,5 @@
 # pylint: disable=redefined-outer-name
+import ast
 import pytest  # type: ignore
 
 from pathlib2 import Path
@@ -217,7 +218,12 @@ def test_parse_autochecks_file(test_config, autochecks_content, expected_result)
         expected = expected_result[index]
         assert service.check_plugin_name == expected[0]
         assert service.item == expected[1]
-        assert service.paramstr == expected[2]
+
+        if isinstance(service.paramstr, str) and service.paramstr.startswith("{"):
+            # Work around random dict key sorting
+            assert ast.literal_eval(service.paramstr) == ast.literal_eval(expected[2])
+        else:
+            assert service.paramstr == expected[2]
 
 
 def test_has_autochecks():

@@ -287,39 +287,40 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         if service.check_plugin_name not in config.check_info:
             continue  # simply ignore missing checks
 
-        description = config.get_final_service_description(hostname, service.description)
         # Make sure, the service description is unique on this host
-        if description in used_descriptions:
-            cn, it = used_descriptions[description]
+        if service.description in used_descriptions:
+            cn, it = used_descriptions[service.description]
             core_config.warning(
                 "ERROR: Duplicate service description '%s' for host '%s'!\n"
                 " - 1st occurrance: checktype = %s, item = %r\n"
                 " - 2nd occurrance: checktype = %s, item = %r\n" %
-                (description, hostname, cn, it, service.check_plugin_name, service.item))
+                (service.description, hostname, cn, it, service.check_plugin_name, service.item))
             continue
 
         else:
-            used_descriptions[description] = (service.check_plugin_name, service.item)
+            used_descriptions[service.description] = (service.check_plugin_name, service.item)
         if config.check_info[service.check_plugin_name].get("has_perfdata", False):
             template = config.passive_service_template_perf
         else:
             template = config.passive_service_template
 
         # Services Dependencies for autochecks
-        outfile.write(get_dependencies(hostname, description).encode("utf-8"))
+        outfile.write(get_dependencies(hostname, service.description).encode("utf-8"))
 
         service_spec = {
             "use": template,
             "host_name": hostname,
-            "service_description": description,
+            "service_description": service.description,
             "check_command": "check_mk-%s" % service.check_plugin_name,
         }
 
         service_spec.update(
-            core_config.get_cmk_passive_service_attributes(config_cache, host_config, description,
+            core_config.get_cmk_passive_service_attributes(config_cache, host_config,
+                                                           service.description,
                                                            service.check_plugin_name,
                                                            service.parameters, check_mk_attrs))
-        service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
+        service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname,
+                                                   service.description))
 
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 

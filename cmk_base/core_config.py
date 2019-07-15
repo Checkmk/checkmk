@@ -38,6 +38,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
+from cmk_base.check_utils import Service  # pylint: disable=unused-import
 
 
 class MonitoringCore(object):
@@ -310,12 +311,12 @@ def active_check_arguments(hostname, description, args):
 #   '----------------------------------------------------------------------'
 
 
-def get_cmk_passive_service_attributes(config_cache, host_config, description, checkname, params,
-                                       check_mk_attrs):
-    attrs = get_service_attributes(host_config.hostname, description, config_cache, checkname,
-                                   params)
+def get_cmk_passive_service_attributes(config_cache, host_config, service, check_mk_attrs):
+    # type: (config.ConfigCache, config.HostConfig, Service, Dict) -> Dict
+    attrs = get_service_attributes(host_config.hostname, service.description, config_cache,
+                                   service.check_plugin_name, service.parameters)
 
-    value = host_config.snmp_check_interval(config_cache.section_name_of(checkname))
+    value = host_config.snmp_check_interval(config_cache.section_name_of(service.check_plugin_name))
     if value is not None:
         attrs["check_interval"] = value
     else:

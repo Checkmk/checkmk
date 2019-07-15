@@ -1,12 +1,12 @@
 # encoding: utf-8
 import pytest  # type: ignore
-import socket
 from testlib.base import Scenario
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk_base.config as config
 import cmk_base.core_config as core_config
 import cmk_base.check_api as check_api
+from cmk_base.check_utils import Service
 
 
 def test_active_check_arguments(mocker):
@@ -78,9 +78,9 @@ def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
     host_config = config_cache.get_host_config(hostname)
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
+    service = Service("cpu.loads", None, "CPU load", {})
     service_spec = core_config.get_cmk_passive_service_attributes(config_cache, host_config,
-                                                                  "CPU load", "cpu.loads", {},
-                                                                  check_mk_attrs)
+                                                                  service, check_mk_attrs)
     assert service_spec == result
 
 

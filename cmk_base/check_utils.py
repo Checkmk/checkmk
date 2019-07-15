@@ -32,6 +32,8 @@
 
 from typing import Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List  # pylint: disable=unused-import
 
+from cmk.utils.exceptions import MKGeneralException
+
 import cmk_base
 from cmk_base.discovered_labels import DiscoveredServiceLabels
 
@@ -41,15 +43,15 @@ CheckPluginName = str
 CheckTable = Dict[Tuple[CheckPluginName, Item], Tuple[Any, Text, List[Text]]]
 
 
-class DiscoveredService(object):
-    __slots__ = ["_check_plugin_name", "_item", "_description", "_paramstr", "_service_labels"]
+class Service(object):
+    __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
 
-    def __init__(self, check_plugin_name, item, description, paramstr, service_labels=None):
+    def __init__(self, check_plugin_name, item, description, parameters, service_labels=None):
         # type: (CheckPluginName, Item, Text, CheckParameters, DiscoveredServiceLabels) -> None
         self._check_plugin_name = check_plugin_name
         self._item = item
         self._description = description
-        self._paramstr = paramstr
+        self._parameters = parameters
         self._service_labels = service_labels or DiscoveredServiceLabels()
 
     @property
@@ -65,8 +67,8 @@ class DiscoveredService(object):
         return self._description
 
     @property
-    def paramstr(self):
-        return self._paramstr
+    def parameters(self):
+        return self._parameters
 
     @property
     def service_labels(self):
@@ -74,13 +76,35 @@ class DiscoveredService(object):
 
     def __eq__(self, other):
         """Is used during service discovery list computation to detect and replace duplicates
-        For this the paramstr needs to be ignored."""
+        For this the parameters and similar need to be ignored."""
         return self.check_plugin_name == other.check_plugin_name and self.item == other.item
 
     def __hash__(self):
         """Is used during service discovery list computation to detect and replace duplicates
-        For this the paramstr needs to be ignored."""
+        For this the parameters and similar need to be ignored."""
         return hash((self.check_plugin_name, self.item))
+
+
+class DiscoveredService(Service):
+    """Special form of Service() which holds the unresolved textual representation of the check parameters"""
+    __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
+
+    def __init__(self, check_plugin_name, item, description, paramstr, service_labels=None):
+        # type: (CheckPluginName, Item, Text, CheckParameters, DiscoveredServiceLabels) -> None
+        super(DiscoveredService, self).__init__(check_plugin_name=check_plugin_name,
+                                                item=item,
+                                                description=description,
+                                                parameters=paramstr,
+                                                service_labels=service_labels)
+
+    @property
+    def parameters(self):
+        raise MKGeneralException(
+            "Can not get the resolved parameters from a DiscoveredService object")
+
+    @property
+    def paramstr(self):
+        return self._parameters
 
 
 def section_name_of(check_plugin_name):

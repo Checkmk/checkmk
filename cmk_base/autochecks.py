@@ -47,21 +47,15 @@ from cmk_base.discovered_labels import (
     ServiceLabel,
 )
 from cmk_base.check_utils import (  # pylint: disable=unused-import
-    CheckPluginName, CheckParameters, DiscoveredService, Item,
+    CheckPluginName, CheckParameters, DiscoveredService, Item, Service,
 )
 
 
 # TODO: use store.load_data_from_file()
 # TODO: Common code with parse_autochecks_file? Cleanup.
 def read_autochecks_of(hostname):
-    # type: (str) -> List[Tuple[CheckPluginName, Item, CheckParameters]]
-    """Read automatically discovered checks of one host.
-
-    Returns a table with three columns:
-    1. check_plugin_name
-    2. item
-    3. parameters (evaluated!)
-    """
+    # type: (str) -> List[Service]
+    """Read automatically discovered checks of one host"""
     basedir = cmk.utils.paths.autochecks_dir
     filepath = basedir + '/' + hostname + '.mk'
 
@@ -85,8 +79,6 @@ def read_autochecks_of(hostname):
             raise
         return []
 
-    # Exchange inventorized check parameters with those configured by
-    # the user. Also merge with default levels for modern dictionary based checks.
     autochecks = []
     for entry in autochecks_raw:
         if isinstance(entry, tuple):
@@ -104,10 +96,20 @@ def read_autochecks_of(hostname):
             raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
                                      "The check type must be a string." % (entry, hostname))
 
-        _x = service_labels  # TODO: Process the service labels
-        autochecks.append((check_plugin_name, item,
-                           config.compute_check_parameters(hostname, check_plugin_name, item,
-                                                           parameters)))
+        try:
+            description = config.service_description(hostname, check_plugin_name, item)
+        except Exception:
+            continue  # ignore
+
+        autochecks.append(
+            Service(
+                check_plugin_name=check_plugin_name,
+                item=item,
+                description=description,
+                parameters=config.compute_check_parameters(hostname, check_plugin_name, item,
+                                                           parameters),
+                service_labels=service_labels,
+            ))
     return autochecks
 
 

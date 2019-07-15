@@ -601,30 +601,28 @@ class AutomationAnalyseServices(Automation):
         if host_config.is_cluster:
             services = []
             for node in host_config.nodes:
-                for check_plugin_name, item, paramstring in autochecks.read_autochecks_of(node):
-                    descr = config.service_description(node, check_plugin_name, item)
-                    if hostname == config_cache.host_of_clustered_service(node, descr):
-                        services.append((check_plugin_name, item, paramstring))
+                for service in autochecks.read_autochecks_of(node):
+                    if hostname == config_cache.host_of_clustered_service(
+                            node, service.description):
+                        services.append(services)
         else:
             services = autochecks.read_autochecks_of(hostname)
 
         # 2. Load all autochecks of the host in question and try to find
         # our service there
-        for entry in services:
-            ct, item, params = entry  # new format without host name
-
-            if (ct, item) not in table:
+        for service in services:
+            if (service.check_plugin_name, service.item) not in table:
                 continue  # this is a removed duplicate or clustered service
 
-            descr = config.service_description(hostname, ct, item)
-            if descr == servicedesc:
-                dlv = config.check_info[ct].get("default_levels_variable")
-                if dlv:
-                    fs = config.factory_settings.get(dlv, None)
+            if service.description == servicedesc:
+                default_levels_variable = config.check_info[service.check_plugin_name].get(
+                    "default_levels_variable")
+                if default_levels_variable:
+                    factory_settings = config.factory_settings.get(default_levels_variable, None)
                 else:
-                    fs = None
+                    factory_settings = None
 
-                check_parameters = config.compute_check_parameters(hostname, ct, item, params)
+                check_parameters = service.parameters
                 if isinstance(check_parameters, cmk_base.config.TimespecificParamList):
                     check_parameters = cmk_base.checking.determine_check_params(check_parameters)
                     check_parameters = {
@@ -636,11 +634,11 @@ class AutomationAnalyseServices(Automation):
 
                 return {
                     "origin": "auto",
-                    "checktype": ct,
-                    "checkgroup": config.check_info[ct].get("group"),
-                    "item": item,
-                    "inv_parameters": params,
-                    "factory_settings": fs,
+                    "checktype": service.check_plugin_name,
+                    "checkgroup": config.check_info[service.check_plugin_name].get("group"),
+                    "item": service.item,
+                    "inv_parameters": service.parameters,
+                    "factory_settings": factory_settings,
                     "parameters": check_parameters,
                 }
 

@@ -315,10 +315,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         }
 
         service_spec.update(
-            core_config.get_cmk_passive_service_attributes(config_cache, host_config,
-                                                           service.description,
-                                                           service.check_plugin_name,
-                                                           service.parameters, check_mk_attrs))
+            core_config.get_cmk_passive_service_attributes(config_cache, host_config, service,
+                                                           check_mk_attrs))
         service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname,
                                                    service.description))
 

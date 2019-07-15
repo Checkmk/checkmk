@@ -35,8 +35,8 @@ def test_discovered_service_eq():
     assert s1 not in [s4]
     assert s1 in [s5]
 
-    assert s1 in set([s1])
-    assert s1 in set([s2])
-    assert s1 not in set([s3])
-    assert s1 not in set([s4])
-    assert s1 in set([s5])
+    assert s1 in {s1}
+    assert s1 in {s2}
+    assert s1 not in {s3}
+    assert s1 not in {s4}
+    assert s1 in {s5}

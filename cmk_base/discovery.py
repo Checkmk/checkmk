@@ -759,7 +759,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
         for discovered_service in discovered_services:
             check_table_formatted[(discovered_service.check_plugin_name,
                                    discovered_service.item)] = (None,
-                                                                discovered_service.description, [])
+                                                                discovered_service.description)
 
         check_table_formatted = check_table.remove_duplicate_checks(check_table_formatted)
         for discovered_service in discovered_services[:]:
@@ -1011,7 +1011,7 @@ def _merge_manual_services(host_config, services, on_error):
 
     # Find manual checks. These can override discovered checks -> "manual"
     manual_items = check_table.get_check_table(hostname, skip_autochecks=True)
-    for (check_plugin_name, item), (params, descr, _unused_deps) in manual_items.items():
+    for (check_plugin_name, item), (params, descr) in manual_items.items():
         # TODO: Reduce this duplication
         try:
             description = config.service_description(hostname, check_plugin_name, item)

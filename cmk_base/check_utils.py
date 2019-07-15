@@ -40,7 +40,7 @@ from cmk_base.discovered_labels import DiscoveredServiceLabels
 Item = Union[Text, None, int]
 CheckParameters = Union[None, Dict, Tuple, List, str]
 CheckPluginName = str
-CheckTable = Dict[Tuple[CheckPluginName, Item], Tuple[Any, Text, List[Text]]]
+CheckTable = Dict[Tuple[CheckPluginName, Item], Tuple[Any, Text]]
 
 
 class Service(object):

@@ -17,42 +17,42 @@ from cmk_base.check_utils import Service
         ("no-autochecks", {
             ('smart.temp', '/dev/sda'): ({
                 'levels': (35, 40)
-            }, u'Temperature SMART /dev/sda', []),
+            }, u'Temperature SMART /dev/sda'),
         }),
         # Static checks overwrite the autocheck definitions
         ("autocheck-overwrite", {
             ('smart.temp', '/dev/sda'): ({
                 'levels': (35, 40)
-            }, u'Temperature SMART /dev/sda', []),
+            }, u'Temperature SMART /dev/sda'),
             ('smart.temp', '/dev/sdb'): ({
                 'is_autocheck': True
-            }, u'Temperature SMART /dev/sdb', []),
+            }, u'Temperature SMART /dev/sdb'),
         }),
         ("ignore-not-existing-checks", {}),
         ("ignore-disabled-rules", {
             ('smart.temp', 'ITEM2'): ({
                 'levels': (35, 40)
-            }, u'Temperature SMART ITEM2', []),
+            }, u'Temperature SMART ITEM2'),
         }),
         ("static-check-overwrite", {
             ('smart.temp', '/dev/sda'): ({
                 'levels': (35, 40),
                 'rule': 1
-            }, u'Temperature SMART /dev/sda', [])
+            }, u'Temperature SMART /dev/sda')
         }),
         ("node1", {
-            ('smart.temp', 'auto-not-clustered'): ({}, u'Temperature SMART auto-not-clustered', []),
+            ('smart.temp', 'auto-not-clustered'): ({}, u'Temperature SMART auto-not-clustered'),
             ('smart.temp', 'static-node1'): ({
                 'levels': (35, 40)
-            }, u'Temperature SMART static-node1', []),
+            }, u'Temperature SMART static-node1'),
         }),
         ("cluster1", {
             ('smart.temp', 'static-cluster'): ({
                 'levels': (35, 40)
-            }, u'Temperature SMART static-cluster', []),
+            }, u'Temperature SMART static-cluster'),
             ('smart.temp', 'auto-clustered'): ({
                 'levels': (35, 40)
-            }, u'Temperature SMART auto-clustered', []),
+            }, u'Temperature SMART auto-clustered'),
         }),
     ])
 def test_get_check_table(monkeypatch, hostname, expected_result):

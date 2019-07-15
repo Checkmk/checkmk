@@ -40,7 +40,6 @@ from cmk_base.discovered_labels import DiscoveredServiceLabels
 Item = Union[Text, None, int]
 CheckParameters = Union[None, Dict, Tuple, List, str]
 CheckPluginName = str
-CheckTable = Dict[Tuple[CheckPluginName, Item], Tuple[Any, Text]]
 
 
 class Service(object):
@@ -83,6 +82,9 @@ class Service(object):
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""
         return hash((self.check_plugin_name, self.item))
+
+
+CheckTable = Dict[Tuple[CheckPluginName, Item], Service]
 
 
 class DiscoveredService(Service):

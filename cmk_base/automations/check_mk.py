@@ -1474,7 +1474,9 @@ class AutomationGetServiceConfigurations(Automation):
     def _get_config_for_host(self, host_config):
         # type: (config.HostConfig) -> Dict[str, List[Tuple[str, Text, Any]]]
         return {
-            "checks": check_table.get_check_table(host_config.hostname, remove_duplicates=True),
+            "checks": [(s.check_plugin_name, s.description, s.parameters)
+                       for s in check_table.get_check_table(host_config.hostname,
+                                                            remove_duplicates=True).values()],
             "active_checks": self._get_active_checks(host_config)
         }
 

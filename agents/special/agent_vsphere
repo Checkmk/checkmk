@@ -1772,8 +1772,7 @@ class Opt(object):
         self.secret = None
 
 
-def main():
-    global vsphere_output  # Guess what's TODO.
+def parse_arguments(argv):
 
     short_options = "hi:u:s:Dat:H:Pp:S:"
     long_options = [
@@ -1785,7 +1784,7 @@ def main():
     opt = Opt()
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+        opts, args = getopt.getopt(argv[1:], short_options, long_options)
     except getopt.GetoptError as exc:
         sys.stderr.write("%s\n" % exc)
         sys.exit(1)
@@ -1834,10 +1833,6 @@ def main():
             usage()
             sys.exit(0)
 
-    # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
-    if opt.pysphere:
-        sys.exit(call_legacy_pysphere())
-
     if len(args) == 1:
         opt.host_address = args[0]
     elif not args:
@@ -1846,6 +1841,21 @@ def main():
     else:
         sys.stderr.write("ERROR: Please specify exactly one host.\n")
         sys.exit(1)
+
+    return opt
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    global vsphere_output  # Guess what's TODO.
+
+    opt = parse_arguments(argv)
+
+    # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
+    if opt.pysphere:
+        sys.exit(call_legacy_pysphere())
 
     vsphere_output = []
 

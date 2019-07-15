@@ -35,8 +35,7 @@ import cmk_base.item_state as item_state
 import cmk_base.check_utils
 import cmk_base.check_api_utils as check_api_utils
 from cmk_base.check_utils import (  # pylint: disable=unused-import
-    Item, CheckParameters, CheckPluginName, CheckTable,
-)
+    Item, CheckParameters, CheckPluginName, CheckTable, Service)
 
 # Add WATO-configured explicit checks to (possibly empty) checks
 # statically defined in checks.
@@ -94,11 +93,10 @@ class HostCheckTable(object):
         # in search (single host) or that might match the host.
         if not skip_autochecks:
             for service in self._config_cache.get_autochecks_of(hostname):
-                check_table.update(
-                    self._handle_entry(service.check_plugin_name, service.item, service.parameters))
+                check_table.update(self._handle_service(service))
 
-        for checkname, item, params in self._get_static_check_entries(self._host_config):
-            check_table.update(self._handle_entry(checkname, item, params))
+        for service in self._get_static_check_entries(self._host_config):
+            check_table.update(self._handle_service(service))
 
         # Now add checks a cluster might receive from its nodes
         if self._host_config.is_cluster:
@@ -107,20 +105,21 @@ class HostCheckTable(object):
                 node_config = self._config_cache.get_host_config(node)
                 node_checks = self._get_static_check_entries(node_config)
                 if not skip_autochecks:
-                    node_checks += [(s.check_plugin_name, s.item, s.parameters)
-                                    for s in self._config_cache.get_autochecks_of(node)]
+                    node_checks += self._config_cache.get_autochecks_of(node)
 
-                for checkname, item, params in node_checks:
-                    descr = config.service_description(node, checkname, item)
-
-                    if hostname == self._config_cache.host_of_clustered_service(node, descr):
+                for service in node_checks:
+                    if hostname == self._config_cache.host_of_clustered_service(
+                            node, service.description):
                         cluster_params = config.compute_check_parameters(
-                            hostname, checkname, item, params)
-                        check_table.update(self._handle_entry(checkname, item, cluster_params))
+                            hostname, service.check_plugin_name, service.item, service.parameters)
+                        cluster_service = Service(service.check_plugin_name, service.item,
+                                                  service.description, cluster_params,
+                                                  service.service_labels)
+                        check_table.update(self._handle_service(cluster_service))
 
         # Remove dependencies to non-existing services
         all_descr = set(
-            [descr for ((checkname, item), (params, descr, deps)) in check_table.iteritems()])
+            [descr for ((_checkname, _item), (_params, descr, _deps)) in check_table.iteritems()])
         for (_checkname, _item), (_params, _descr, deps) in check_table.iteritems():
             deeps = deps[:]
             del deps[:]
@@ -136,20 +135,22 @@ class HostCheckTable(object):
         return check_table
 
     def _get_static_check_entries(self, host_config):
-        # type: (config.HostConfig) -> List[Tuple[str, Text, Any]]
-        entries = []  # type: List[Tuple[str, Text, Any]]
-        for _checkgroup_name, checkname, item, params in host_config.static_checks:
+        # type: (config.HostConfig) -> List[Service]
+        entries = []  # type: List[Service]
+        for _checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
             # Make sure, that for dictionary based checks at least those keys
             # defined in the factory settings are present in the parameters
             # TODO: Isn't this done during checking for all checks in more generic code?
-            if isinstance(params, dict) and checkname in config.check_info:
-                def_levels_varname = config.check_info[checkname].get("default_levels_variable")
+            if isinstance(params, dict) and check_plugin_name in config.check_info:
+                def_levels_varname = config.check_info[check_plugin_name].get(
+                    "default_levels_variable")
                 if def_levels_varname:
                     for key, value in config.factory_settings.get(def_levels_varname, {}).items():
                         if key not in params:
                             params[key] = value
 
-            entries.append((checkname, item, params))
+            descr = config.service_description(host_config.hostname, check_plugin_name, item)
+            entries.append(Service(check_plugin_name, item, descr, params))
 
         # Note: We need to reverse the order of the static_checks. This is
         # because users assume that earlier rules have precedence over later
@@ -157,23 +158,23 @@ class HostCheckTable(object):
         # a host with the same combination of check type and item.
         return list(reversed(entries))
 
-    def _handle_entry(self, checkname, item, params):
-        # type: (str, Text, Any) -> CheckTable
+    def _handle_service(self, service):
+        # type: (Service) -> CheckTable
         check_table = {}  # type: CheckTable
         hostname = self._host_config.hostname
 
-        if not self._is_checkname_valid(checkname):
+        if not self._is_checkname_valid(service.check_plugin_name):
             return {}
 
-        descr = config.service_description(hostname, checkname, item)
-        if self.skip_ignored and config.service_ignored(hostname, checkname, descr):
+        if self.skip_ignored and config.service_ignored(hostname, service.check_plugin_name,
+                                                        service.description):
             return {}
 
         if not self._host_config.part_of_clusters:
             svc_is_mine = True
         else:
             svc_is_mine = hostname == self._config_cache.host_of_clustered_service(
-                hostname, descr, part_of_clusters=self._host_config.part_of_clusters)
+                hostname, service.description, part_of_clusters=self._host_config.part_of_clusters)
 
         if self.filter_mode is None and not svc_is_mine:
             return {}
@@ -181,8 +182,9 @@ class HostCheckTable(object):
         elif self.filter_mode == "only_clustered" and svc_is_mine:
             return {}
 
-        deps = config.service_depends_on(hostname, descr)
-        check_table[(checkname, item)] = (params, descr, deps)
+        deps = config.service_depends_on(hostname, service.description)
+        check_table[(service.check_plugin_name, service.item)] = (service.parameters,
+                                                                  service.description, deps)
 
         return check_table
 

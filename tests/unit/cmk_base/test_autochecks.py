@@ -12,6 +12,10 @@ import cmk_base.config as config
 import cmk_base.check_api as check_api
 import cmk_base.autochecks as autochecks
 import cmk_base.discovery as discovery
+from cmk_base.discovered_labels import (
+    DiscoveredServiceLabels,
+    ServiceLabel,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -131,7 +135,7 @@ def test_config(monkeypatch):
         # Dict: Allow non string items
         (
             u"""[
-  {'check_plugin_name': 'df', 'item': 123, 'parameters': {}},
+  {'check_plugin_name': 'df', 'item': 123, 'parameters': {}, 'service_labels': {}},
 ]""",
             [
                 ('df', 123, {
@@ -150,17 +154,17 @@ def test_config(monkeypatch):
         # Dict: Exception on invalid check type
         (
             u"""[
-  {'check_plugin_name': 123, 'item': 'abc', 'parameters': {}},
+  {'check_plugin_name': 123, 'item': 'abc', 'parameters': {}, 'service_labels': {}},
 ]""",
             MKGeneralException,
         ),
         # Dict: Regular processing
         (
             u"""[
-  {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}},
-  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels},
-  {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}},
-  {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}},
+  {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {}},
+  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {}},
+  {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}, 'service_labels': {}},
+  {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {}},
 ]""",
             [
                 ('df', u'/', {
@@ -261,7 +265,7 @@ def test_parse_autochecks_file_not_existing():
         # Dict: Allow non string items
         (
             u"""[
-          {'check_plugin_name': 'df', 'item': 123, 'parameters': {}},
+          {'check_plugin_name': 'df', 'item': 123, 'parameters': {}, 'service_labels': {}},
         ]""",
             [
                 ('df', 123, "{}"),
@@ -270,12 +274,12 @@ def test_parse_autochecks_file_not_existing():
         # Dict: Regular processing
         (
             u"""[
-          {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}},
-          {'check_plugin_name': 'df', 'item': u'/xyz', 'parameters': "lala"},
-          {'check_plugin_name': 'df', 'item': u'/zzz', 'parameters': ['abc', 'xyz']},
-          {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels},
-          {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}},
-          {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}},
+          {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {}},
+          {'check_plugin_name': 'df', 'item': u'/xyz', 'parameters': "lala", 'service_labels': {u"x": u"y"}},
+          {'check_plugin_name': 'df', 'item': u'/zzz', 'parameters': ['abc', 'xyz'], 'service_labels': {u"x": u"y"}},
+          {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u"x": u"y"}},
+          {'check_plugin_name': 'chrony', 'item': None, 'parameters': {}, 'service_labels': {u"x": u"y"}},
+          {'check_plugin_name': 'lnx_if', 'item': u'2', 'parameters': {'state': ['1'], 'speed': 10000000}, 'service_labels': {u"x": u"y"}},
         ]""",
             [
                 ('df', u'/', '{}'),
@@ -329,13 +333,16 @@ def test_remove_autochecks_file():
 @pytest.mark.parametrize("items,expected_content", [
     ([], "[\n]\n"),
     ([
-        discovery.DiscoveredService('df', u'/xyz', u"Filesystem /xyz", "None"),
-        discovery.DiscoveredService('df', u'/', u"Filesystem /", "{}"),
-        discovery.DiscoveredService('cpu.loads', None, "CPU load", "cpuload_default_levels"),
+        discovery.DiscoveredService('df', u'/xyz', u"Filesystem /xyz", "None",
+                                    DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
+        discovery.DiscoveredService('df', u'/', u"Filesystem /", "{}",
+                                    DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
+        discovery.DiscoveredService('cpu.loads', None, "CPU load", "cpuload_default_levels",
+                                    DiscoveredServiceLabels(ServiceLabel(u"x", u"y"))),
     ], """[
-  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels},
-  {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}},
-  {'check_plugin_name': 'df', 'item': u'/xyz', 'parameters': None},
+  {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u'x': u'y'}},
+  {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {u'x': u'y'}},
+  {'check_plugin_name': 'df', 'item': u'/xyz', 'parameters': None, 'service_labels': {u'x': u'y'}},
 ]\n"""),
 ])
 def test_save_autochecks_file(items, expected_content):

@@ -2932,10 +2932,13 @@ class ConfigCache(object):
         return match_object
 
     def get_autochecks_of(self, hostname):
+        # type: (str) -> List[cmk_base.check_utils.Service]
         try:
             return self._autochecks_cache[hostname]
         except KeyError:
-            result = cmk_base.autochecks.read_autochecks_of(hostname)
+            # Cleanup this local import
+            import cmk_base.autochecks as autochecks
+            result = autochecks.read_autochecks_of(hostname)
             self._autochecks_cache[hostname] = result
             return result
 

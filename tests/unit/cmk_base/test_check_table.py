@@ -3,6 +3,7 @@ from testlib.base import Scenario
 import cmk_base.config as config
 import cmk_base.check_api as check_api
 import cmk_base.check_table as check_table
+from cmk_base.check_utils import Service
 
 
 # TODO: This misses a lot of cases
@@ -56,17 +57,18 @@ import cmk_base.check_table as check_table
     ])
 def test_get_check_table(monkeypatch, hostname, expected_result):
     autochecks = {
-        "ping-host": [("smart.temp", "bla", {})],
+        "ping-host": [Service("smart.temp", "bla", u'Temperature SMART bla', {})],
         "autocheck-overwrite": [
-            ('smart.temp', '/dev/sda', {
-                "is_autocheck": True
-            }),
-            ('smart.temp', '/dev/sdb', {
-                "is_autocheck": True
-            }),
+            Service('smart.temp', '/dev/sda', u'Temperature SMART /dev/sda',
+                    {"is_autocheck": True}),
+            Service('smart.temp', '/dev/sdb', u'Temperature SMART /dev/sdb',
+                    {"is_autocheck": True}),
         ],
-        "ignore-not-existing-checks": [("bla.blub", "ITEM", {}),],
-        "node1": [("smart.temp", "auto-clustered", {}), ("smart.temp", "auto-not-clustered", {})],
+        "ignore-not-existing-checks": [Service("bla.blub", "ITEM", u'Blub ITEM', {}),],
+        "node1": [
+            Service("smart.temp", "auto-clustered", u"Temperature SMART auto-clustered", {}),
+            Service("smart.temp", "auto-not-clustered", u'Temperature SMART auto-not-clustered', {})
+        ],
     }
 
     ts = Scenario().add_host(hostname, tags={"criticality": "test"})

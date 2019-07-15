@@ -93,8 +93,9 @@ class HostCheckTable(object):
         # Now process all entries that are specific to the host
         # in search (single host) or that might match the host.
         if not skip_autochecks:
-            for checkname, item, params in self._config_cache.get_autochecks_of(hostname):
-                check_table.update(self._handle_entry(checkname, item, params))
+            for service in self._config_cache.get_autochecks_of(hostname):
+                check_table.update(
+                    self._handle_entry(service.check_plugin_name, service.item, service.parameters))
 
         for checkname, item, params in self._get_static_check_entries(self._host_config):
             check_table.update(self._handle_entry(checkname, item, params))
@@ -106,7 +107,8 @@ class HostCheckTable(object):
                 node_config = self._config_cache.get_host_config(node)
                 node_checks = self._get_static_check_entries(node_config)
                 if not skip_autochecks:
-                    node_checks += self._config_cache.get_autochecks_of(node)
+                    node_checks += [(s.check_plugin_name, s.item, s.parameters)
+                                    for s in self._config_cache.get_autochecks_of(node)]
 
                 for checkname, item, params in node_checks:
                     descr = config.service_description(node, checkname, item)
@@ -119,7 +121,7 @@ class HostCheckTable(object):
         # Remove dependencies to non-existing services
         all_descr = set(
             [descr for ((checkname, item), (params, descr, deps)) in check_table.iteritems()])
-        for (checkname, item), (params, descr, deps) in check_table.iteritems():
+        for (_checkname, _item), (_params, _descr, deps) in check_table.iteritems():
             deeps = deps[:]
             del deps[:]
             for d in deeps:

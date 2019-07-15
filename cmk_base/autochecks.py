@@ -66,7 +66,7 @@ def read_autochecks_of(hostname):
     try:
         cmk_base.console.vverbose("Loading autochecks from %s\n", filepath)
         autochecks_raw = eval(
-            file(filepath).read(), check_config,
+            file(filepath).read().decode("utf-8"), check_config,
             check_config)  # type: List[Tuple[CheckPluginName, Item, CheckParameters]]
     except SyntaxError as e:
         cmk_base.console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)

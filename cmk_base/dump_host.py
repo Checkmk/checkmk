@@ -111,19 +111,24 @@ def dump_host(hostname):
         console.output("\n  ".join(agenttypes) + "\n")
 
     console.output(tty.yellow + "Services:" + tty.normal + "\n")
-    check_items = check_table.get_sorted_check_table(hostname)
 
     headers = ["checktype", "item", "params", "description", "groups"]
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
 
-    tty.print_table(headers, colors, [[
-        checktype,
-        cmk_base.utils.make_utf8(item),
-        _evaluate_params(params),
-        cmk_base.utils.make_utf8(description),
-        cmk_base.utils.make_utf8(",".join(
-            config_cache.servicegroups_of_service(hostname, description)))
-    ] for checktype, item, params, description in check_items], "  ")
+    table_data = []
+    for (checktype, item), (params,
+                            description) in sorted(check_table.get_check_table(hostname).items(),
+                                                   key=lambda s: s[1][0]):
+        table_data.append([
+            checktype,
+            cmk_base.utils.make_utf8(item),
+            _evaluate_params(params),
+            cmk_base.utils.make_utf8(description),
+            cmk_base.utils.make_utf8(",".join(
+                config_cache.servicegroups_of_service(hostname, description)))
+        ])
+
+    tty.print_table(headers, colors, table_data, "  ")
 
 
 def _evaluate_params(params):

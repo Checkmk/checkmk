@@ -42,6 +42,10 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.config as config
 import cmk_base.console
+from cmk_base.discovered_labels import (
+    DiscoveredServiceLabels,
+    ServiceLabel,
+)
 from cmk_base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, CheckParameters, DiscoveredService, Item,
 )
@@ -87,8 +91,9 @@ def read_autochecks_of(hostname):
     for entry in autochecks_raw:
         if isinstance(entry, tuple):
             check_plugin_name, item, parameters = _load_pre_16_tuple_autocheck(entry)
+            service_labels = DiscoveredServiceLabels()
         else:
-            check_plugin_name, item, parameters = _load_dict_autocheck(entry)
+            check_plugin_name, item, parameters, service_labels = _load_dict_autocheck(entry)
 
         # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
         # items from existing autocheck files for compatibility. TODO remove this one day
@@ -99,6 +104,7 @@ def read_autochecks_of(hostname):
             raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
                                      "The check type must be a string." % (entry, hostname))
 
+        _x = service_labels  # TODO: Process the service labels
         autochecks.append((check_plugin_name, item,
                            config.compute_check_parameters(hostname, check_plugin_name, item,
                                                            parameters)))
@@ -114,8 +120,11 @@ def _load_pre_16_tuple_autocheck(entry):
 
 
 def _load_dict_autocheck(entry):
-    # type: (Dict) -> Tuple[CheckPluginName, Item, CheckParameters]
-    return entry["check_plugin_name"], entry["item"], entry["parameters"]
+    # type: (Dict) -> Tuple[CheckPluginName, Item, CheckParameters, DiscoveredServiceLabels]
+    labels = DiscoveredServiceLabels()
+    for label_id, label_value in entry["service_labels"].items():
+        labels.add_label(ServiceLabel(label_id, label_value))
+    return entry["check_plugin_name"], entry["item"], entry["parameters"], labels
 
 
 def resolve_paramstring(check_plugin_name, paramstring):
@@ -164,8 +173,10 @@ def _parse_autocheck_entry(hostname, entry):
     # type: (str, Union[ast.Tuple, ast.Dict]) -> Optional[DiscoveredService]
     if isinstance(entry, ast.Tuple):
         ast_check_plugin_name, ast_item, ast_paramstr = _parse_pre_16_tuple_autocheck_entry(entry)
+        ast_service_labels = ast.Dict()
     elif isinstance(entry, ast.Dict):
-        ast_check_plugin_name, ast_item, ast_paramstr = _parse_dict_autocheck_entry(entry)
+        ast_check_plugin_name, ast_item, ast_paramstr, ast_service_labels = \
+            _parse_dict_autocheck_entry(entry)
     else:
         raise Exception("Invalid autocheck: Wrong type: %r" % entry)
 
@@ -202,7 +213,12 @@ def _parse_autocheck_entry(hostname, entry):
     except Exception:
         return None  # ignore
 
-    return DiscoveredService(check_plugin_name, item, description, paramstr)
+    return DiscoveredService(
+        check_plugin_name,
+        item,
+        description,
+        paramstr,
+        service_labels=_parse_discovered_service_label_from_ast(ast_service_labels))
 
 
 def _parse_pre_16_tuple_autocheck_entry(entry):
@@ -222,9 +238,26 @@ def _parse_dict_autocheck_entry(entry):
         if isinstance(key, ast.Str):
             values[key.s] = entry.values[index]
 
-    if len(values) != 3:
-        raise Exception("Invalid autocheck: Wrong length %d instead of 3" % len(values))
-    return values["check_plugin_name"], values["item"], values["parameters"]
+    if set(values.keys()) != {"check_plugin_name", "item", "parameters", "service_labels"}:
+        raise MKGeneralException("Invalid autocheck: Wrong keys found: %r" % values.keys())
+
+    return values["check_plugin_name"], values["item"], values["parameters"], values[
+        "service_labels"]
+
+
+def _parse_discovered_service_label_from_ast(ast_service_labels):
+    # type: (ast.Dict) -> DiscoveredServiceLabels
+    labels = DiscoveredServiceLabels()
+
+    # mypy does not get the types of the ast objects here
+    if not hasattr(ast_service_labels, "keys"):  # # type: ignore
+        return labels
+
+    for key, value in zip(ast_service_labels.keys, ast_service_labels.values):
+        # mypy does not get the types of the ast objects here
+        labels.add_label(ServiceLabel(key.s, value.s))  # type: ignore
+
+    return labels
 
 
 def set_autochecks_of(host_config, new_items):
@@ -298,9 +331,10 @@ def save_autochecks_file(hostname, items):
     content = []
     content.append("[")
     for discovered_service in sorted(items, key=lambda s: (s.check_plugin_name, s.item)):
-        content.append("  {'check_plugin_name': %r, 'item': %r, 'parameters': %s}," %
-                       (discovered_service.check_plugin_name, discovered_service.item,
-                        discovered_service.paramstr))
+        content.append(
+            "  {'check_plugin_name': %r, 'item': %r, 'parameters': %s, 'service_labels': %r}," %
+            (discovered_service.check_plugin_name, discovered_service.item,
+             discovered_service.paramstr, discovered_service.service_labels.to_dict()))
     content.append("]\n")
     store.save_file(str(filepath), "\n".join(content))
 

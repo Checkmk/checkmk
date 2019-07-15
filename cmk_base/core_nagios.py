@@ -284,7 +284,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
     host_checks.sort()  # Create deterministic order
     have_at_least_one_service = False
     used_descriptions = {}
-    for ((checkname, item), (params, description, deps)) in host_checks:
+    for ((checkname, item), (params, description)) in host_checks:
         if checkname not in config.check_info:
             continue  # simply ignore missing checks
 
@@ -305,17 +305,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
         else:
             template = config.passive_service_template
 
-        # Services Dependencies
-        for dep in deps:
-            outfile.write(
-                _format_nagios_object(
-                    "servicedependency", {
-                        "use": config.service_dependency_template,
-                        "host_name": hostname,
-                        "service_description": dep,
-                        "dependent_host_name": hostname,
-                        "dependent_service_description": description,
-                    }).encode("utf-8"))
+        # Services Dependencies for autochecks
+        outfile.write(get_dependencies(hostname, description).encode("utf-8"))
 
         service_spec = {
             "use": template,

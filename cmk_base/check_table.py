@@ -102,16 +102,6 @@ class HostCheckTable(object):
         if self._host_config.is_cluster:
             check_table.update(self._get_clustered_services(hostname, skip_autochecks))
 
-        # Remove dependencies to non-existing services
-        all_descr = set(
-            [descr for ((_checkname, _item), (_params, descr, _deps)) in check_table.iteritems()])
-        for (_checkname, _item), (_params, _descr, deps) in check_table.iteritems():
-            deeps = deps[:]
-            del deps[:]
-            for d in deeps:
-                if d in all_descr:
-                    deps.append(d)
-
         if not skip_autochecks and use_cache:
             check_table_cache[table_cache_id] = check_table
 
@@ -167,9 +157,8 @@ class HostCheckTable(object):
         elif self.filter_mode == "only_clustered" and svc_is_mine:
             return {}
 
-        deps = config.service_depends_on(hostname, service.description)
         check_table[(service.check_plugin_name, service.item)] = (service.parameters,
-                                                                  service.description, deps)
+                                                                  service.description)
 
         return check_table
 
@@ -237,7 +226,9 @@ def get_precompiled_check_table(hostname,
                                 skip_ignored=True):
     """The precompiled check table is somehow special compared to the regular check table.
 
-    a) It is sorted by the service dependencies (which are only relevant for Nagios)
+    a) It is sorted by the service dependencies (which are only relevant for Nagios). The
+       sorting is important here to send the state updates to Nagios in the correct order.
+       Sending the updates in this order gives Nagios a consistent state in a shorter time.
     b) More important: Some special checks pre-compue a new set of parameters
        using a plugin specific precompile_params function. It's purpose is to
        perform time consuming ruleset evaluations once without the need to perform
@@ -321,12 +312,14 @@ def get_needed_check_names(hostname, remove_duplicates=False, filter_mode=None, 
 def get_sorted_check_table(hostname, remove_duplicates=False, filter_mode=None, skip_ignored=True):
     # Convert from dictionary into simple tuple list. Then sort
     # it according to the service dependencies.
-    unsorted = [(checkname, item, params, descr, deps)
+    is_cmc = config.is_cmc()
+    unsorted = [(checkname, item, params, descr,
+                 [] if is_cmc else config.service_depends_on(hostname, descr))
                 for ((checkname, item),
-                     (params, descr, deps)) in get_check_table(hostname,
-                                                               remove_duplicates=remove_duplicates,
-                                                               filter_mode=filter_mode,
-                                                               skip_ignored=skip_ignored).items()]
+                     (params, descr)) in get_check_table(hostname,
+                                                         remove_duplicates=remove_duplicates,
+                                                         filter_mode=filter_mode,
+                                                         skip_ignored=skip_ignored).items()]
 
     unsorted.sort(key=lambda x: x[3])
 

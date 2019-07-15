@@ -191,11 +191,33 @@ class BIManagement(object):
                     "contact_groups": pack["contact_groups"],
                 }
 
+                self._add_missing_aggr_ids()
         except Exception as e:
             if config.debug:
                 raise
 
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
+
+    def _add_missing_aggr_ids(self):
+        # Determine existing IDs
+        used_aggr_ids = set()
+        for pack_id, pack in self._packs.iteritems():
+            used_aggr_ids.update({x["ID"] for x in pack["aggregations"] if "ID" in x})
+
+        # Compute missing IDs
+        new_id = ""
+        for pack_id, pack in self._packs.iteritems():
+            aggr_id_counter = 0
+            for aggregation in pack["aggregations"]:
+                if "ID" not in aggregation:
+                    while True:
+                        aggr_id_counter += 1
+                        new_id = "%s_aggr_%d" % (pack_id, aggr_id_counter)
+                        if new_id in used_aggr_ids:
+                            continue
+                        break
+                    used_aggr_ids.add(new_id)
+                    aggregation["ID"] = new_id
 
     def save_config(self):
         output = self.generate_bi_config_file_content(self._packs)
@@ -242,7 +264,7 @@ class BIManagement(object):
     def _convert_aggregation_to_bi(self, aggr):
         node = self._convert_node_to_bi(aggr["node"])
         option_keys = [
-            ("id", ""),
+            ("ID", None),
             ("use_layout_id", ""),
             ("hard_states", False),
             ("downtime_aggr_warn", False),
@@ -304,8 +326,6 @@ class BIManagement(object):
         else:
             # Legacy configuration
             options = {}
-            options["id"] = ""
-            options["use_layout"] = ""
             if aggr[0] == self._bi_constants["DISABLED"]:
                 options["disabled"] = True
                 aggr = aggr[1:]
@@ -799,7 +819,7 @@ class ModeBI(WatoMode, BIManagement):
             optional_keys=False,
             render="form",
             elements=cme_elements +
-            [("id",
+            [("ID",
               TextAscii(
                   title=_("Aggregation ID"),
                   help=_(
@@ -1326,7 +1346,7 @@ class ModeBIAggregations(ModeBI):
                     delete_url = html.makeactionuri([("_del_aggr", aggregation_id)])
                     html.icon_button(delete_url, _("Delete this aggregation"), "delete")
 
-                table.text_cell(_("Nr."), aggregation_id + 1, css="number")
+                table.text_cell(_("ID"), aggregation.get("ID"))
 
                 if cmk.is_managed_edition():
                     table.text_cell(_("Customer"))
@@ -1723,6 +1743,14 @@ class ModeBIEditAggregation(ModeBI):
     def buttons(self):
         html.context_button(_("Abort"), html.makeuri([("mode", "bi_aggregations")]), "abort")
 
+    def _get_aggregations_by_id(self):
+        ids = {}
+        for _pack, settings in self._packs.iteritems():
+            for aggregation in settings["aggregations"]:
+                if "ID" in aggregation:
+                    ids[aggregation["ID"]] = (settings["title"], aggregation)
+        return ids
+
     def action(self):
         self.must_be_contact_for_pack()
         if html.check_transaction():
@@ -1731,6 +1759,15 @@ class ModeBIEditAggregation(ModeBI):
             if len(new_aggr["groups"]) == 0:
                 raise MKUserError('rule_p_groups_0',
                                   _("Please define at least one aggregation group"))
+
+            aggr_id = new_aggr["ID"]
+            aggregation_ids = self._get_aggregations_by_id()
+            if aggr_id in aggregation_ids and aggregation_ids[aggr_id][
+                    1] != self._edited_aggregation:
+                raise MKUserError(
+                    "aggr_p_id",
+                    "This aggregation id is already used in pack %s" % aggregation_ids[aggr_id][0])
+
             if self._new:
                 self._pack["aggregations"].append(new_aggr)
                 self._add_change(
@@ -2190,144 +2227,6 @@ bi_aggregation_functions["count_ok"] = {
 }
 
 #.
-#   .--Example Configuration-----------------------------------------------.
-#   |               _____                           _                      |
-#   |              | ____|_  ____ _ _ __ ___  _ __ | | ___                 |
-#   |              |  _| \ \/ / _` | '_ ` _ \| '_ \| |/ _ \                |
-#   |              | |___ >  < (_| | | | | | | |_) | |  __/                |
-#   |              |_____/_/\_\__,_|_| |_| |_| .__/|_|\___|                |
-#   |                                        |_|                           |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-bi_example = '''
-aggregation_rules["host"] = (
-  "Host $HOSTNAME$",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "general",      [ "$HOSTNAME$" ] ),
-      ( "performance",  [ "$HOSTNAME$" ] ),
-      ( "filesystems",  [ "$HOSTNAME$" ] ),
-      ( "networking",   [ "$HOSTNAME$" ] ),
-      ( "applications", [ "$HOSTNAME$" ] ),
-      ( "logfiles",     [ "$HOSTNAME$" ] ),
-      ( "hardware",     [ "$HOSTNAME$" ] ),
-      ( "other",        [ "$HOSTNAME$" ] ),
-  ]
-)
-
-aggregation_rules["general"] = (
-  "General State",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", HOST_STATE ),
-      ( "$HOSTNAME$", "Uptime" ),
-      ( "checkmk",    [ "$HOSTNAME$" ] ),
-  ]
-)
-
-aggregation_rules["filesystems"] = (
-  "Disk & Filesystems",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "Disk|MD" ),
-      ( "multipathing", [ "$HOSTNAME$" ]),
-      ( FOREACH_SERVICE, "$HOSTNAME$", "fs_(.*)", "filesystem", [ "$HOSTNAME$", "$1$" ] ),
-      ( FOREACH_SERVICE, "$HOSTNAME$", "Filesystem(.*)", "filesystem", [ "$HOSTNAME$", "$1$" ] ),
-  ]
-)
-
-aggregation_rules["filesystem"] = (
-  "$FS$",
-  [ "HOSTNAME", "FS" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "fs_$FS$$" ),
-      ( "$HOSTNAME$", "Filesystem$FS$$" ),
-      ( "$HOSTNAME$", "Mount options of $FS$$" ),
-  ]
-)
-
-aggregation_rules["multipathing"] = (
-  "Multipathing",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "Multipath" ),
-  ]
-)
-
-aggregation_rules["performance"] = (
-  "Performance",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "CPU|Memory|Vmalloc|Kernel|Number of threads" ),
-  ]
-)
-
-aggregation_rules["hardware"] = (
-  "Hardware",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "IPMI|RAID" ),
-  ]
-)
-
-aggregation_rules["networking"] = (
-  "Networking",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "NFS|Interface|TCP" ),
-  ]
-)
-
-aggregation_rules["checkmk"] = (
-  "Check_MK",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-       ( "$HOST$", "Check_MK|Uptime" ),
-  ]
-)
-
-aggregation_rules["logfiles"] = (
-  "Logfiles",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "LOG" ),
-  ]
-)
-aggregation_rules["applications"] = (
-  "Applications",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "ASM|ORACLE|proc" ),
-  ]
-)
-
-aggregation_rules["other"] = (
-  "Other",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", REMAINING ),
-  ]
-)
-
-host_aggregations += [
-  ( DISABLED, "Hosts", FOREACH_HOST, [ "tcp" ], ALL_HOSTS, "host", ["$HOSTNAME$"] ),
-]
-'''
-
-#.
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
 #   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
@@ -2465,3 +2364,135 @@ class BIHostRenamer(BIManagement):
                 if watolib.rename_host_in_list(node[1][1], oldname, newname):
                     renamed = 1
         return renamed
+
+
+#.
+#   .--Example Configuration-----------------------------------------------.
+#   |               _____                           _                      |
+#   |              | ____|_  ____ _ _ __ ___  _ __ | | ___                 |
+#   |              |  _| \ \/ / _` | '_ ` _ \| '_ \| |/ _ \                |
+#   |              | |___ >  < (_| | | | | | | |_) | |  __/                |
+#   |              |_____/_/\_\__,_|_| |_| |_| .__/|_|\___|                |
+#   |                                        |_|                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+bi_example = """
+bi_packs['default'] = {
+ 'aggregations': [],
+ 'contact_groups': [],
+ 'host_aggregations': [({'disabled': True,
+                         'downtime_aggr_warn': False,
+                         'hard_states': False,
+                         'id': 'default_aggregation',
+                         'use_layout_id': None},
+                        [u'Hosts'],
+                        FOREACH_HOST,
+                        ['tcp'],
+                        ALL_HOSTS,
+                        'host',
+                        ['$HOSTNAME$'])],
+ 'id': 'default',
+ 'public': True,
+ 'rules': {'applications': {'aggregation': 'worst',
+                            'nodes': [('$HOSTNAME$',
+                                       'ASM|ORACLE|proc')],
+                            'params': ['HOSTNAME'],
+                            'title': 'Applications'},
+           'checkmk': {'aggregation': 'worst',
+                       'nodes': [('$HOST$',
+                                  'Check_MK|Uptime')],
+                       'params': ['HOSTNAME'],
+                       'title': 'Check_MK'},
+           'filesystem': {'aggregation': 'worst',
+                          'nodes': [('$HOSTNAME$',
+                                     'fs_$FS$$'),
+                                    ('$HOSTNAME$',
+                                     'Filesystem$FS$$'),
+                                    ('$HOSTNAME$',
+                                     'Mount options of $FS$$')],
+                          'params': ['HOSTNAME',
+                                     'FS'],
+                          'title': '$FS$'},
+           'filesystems': {'aggregation': 'worst',
+                           'nodes': [('$HOSTNAME$',
+                                      'Disk|MD'),
+                                     ('multipathing',
+                                      ['$HOSTNAME$']),
+                                     (FOREACH_SERVICE,
+                                      [],
+                                      '$HOSTNAME$',
+                                      'fs_(.*)',
+                                      'filesystem',
+                                      ['$HOSTNAME$',
+                                       '$1$']),
+                                     (FOREACH_SERVICE,
+                                      [],
+                                      '$HOSTNAME$',
+                                      'Filesystem(.*)',
+                                      'filesystem',
+                                      ['$HOSTNAME$',
+                                       '$1$'])],
+                           'params': ['HOSTNAME'],
+                           'title': 'Disk & Filesystems'},
+           'general': {'aggregation': 'worst',
+                       'nodes': [('$HOSTNAME$',
+                                  HOST_STATE),
+                                 ('$HOSTNAME$',
+                                  'Uptime'),
+                                 ('checkmk',
+                                  ['$HOSTNAME$'])],
+                       'params': ['HOSTNAME'],
+                       'title': 'General State'},
+           'hardware': {'aggregation': 'worst',
+                        'nodes': [('$HOSTNAME$',
+                                   'IPMI|RAID')],
+                        'params': ['HOSTNAME'],
+                        'title': 'Hardware'},
+           'host': {'aggregation': 'worst',
+                    'nodes': [('general',
+                               ['$HOSTNAME$']),
+                              ('performance',
+                               ['$HOSTNAME$']),
+                              ('filesystems',
+                               ['$HOSTNAME$']),
+                              ('networking',
+                               ['$HOSTNAME$']),
+                              ('applications',
+                               ['$HOSTNAME$']),
+                              ('logfiles',
+                               ['$HOSTNAME$']),
+                              ('hardware',
+                               ['$HOSTNAME$']),
+                              ('other',
+                               ['$HOSTNAME$'])],
+                    'params': ['HOSTNAME'],
+                    'title': 'Host $HOSTNAME$'},
+           'logfiles': {'aggregation': 'worst',
+                        'nodes': [('$HOSTNAME$',
+                                   'LOG')],
+                        'params': ['HOSTNAME'],
+                        'title': 'Logfiles'},
+           'multipathing': {'aggregation': 'worst',
+                            'nodes': [('$HOSTNAME$',
+                                       'Multipath')],
+                            'params': ['HOSTNAME'],
+                            'title': 'Multipathing'},
+           'networking': {'aggregation': 'worst',
+                          'nodes': [('$HOSTNAME$',
+                                     'NFS|Interface|TCP')],
+                          'params': ['HOSTNAME'],
+                          'title': 'Networking'},
+           'other': {'aggregation': 'worst',
+                     'nodes': [('$HOSTNAME$',
+                                REMAINING)],
+                     'params': ['HOSTNAME'],
+                     'title': 'Other'},
+           'performance': {'aggregation': 'worst',
+                           'nodes': [('$HOSTNAME$',
+                                      'CPU|Memory|Vmalloc|Kernel|Number of threads')],
+                           'params': ['HOSTNAME'],
+                           'title': 'Performance'}},
+ 'title': u'Default Pack'
+}
+"""

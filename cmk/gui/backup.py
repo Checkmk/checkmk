@@ -1322,7 +1322,13 @@ class BackupTargetLocal(BackupTargetType):
         self.verify_target_is_ready()
 
         for path in glob.glob("%s/*/mkbackup.info" % self._params["path"]):
-            info = self._load_backup_info(path)
+            try:
+                info = self._load_backup_info(path)
+            except IOError as e:
+                if e.errno == errno.EACCES:
+                    continue  # Silently skip not permitted files
+                raise
+
             backups[info["backup_id"]] = info
 
         return backups

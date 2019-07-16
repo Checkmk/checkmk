@@ -1,0 +1,12 @@
+Title: Fix empty service views in mobile GUI
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1563282637
+Class: fix
+
+An exception like this was shown in all mobile service views:
+
+sequence item 0: expected string, HTML found

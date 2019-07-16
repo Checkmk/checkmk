@@ -48,6 +48,13 @@ bool UseAlternateDirs(std::wstring_view base) {
     return true;
 }
 
+static void LogFolders() {
+    auto root_dir = details::G_ConfigInfo.getRootDir();
+    auto data_dir = details::G_ConfigInfo.getDataDir();
+    XLOG::l.t("Using root = '{}' and data = '{}' folders ", root_dir.u8string(),
+              data_dir.u8string());
+}
+
 bool DetermineWorkingFolders(AppType Type) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
@@ -62,9 +69,7 @@ bool DetermineWorkingFolders(AppType Type) {
             else {
                 if (!UseAlternateDirs(cma_test_dir)) return false;
             }
-            XLOG::l.t("Using root = '{}' and user = '{}' folders ",
-                      details::G_ConfigInfo.getRootDir().u8string(),
-                      details::G_ConfigInfo.getUserDir().u8string());
+            LogFolders();
         } break;
 
         case AppType::srv:
@@ -77,9 +82,7 @@ bool DetermineWorkingFolders(AppType Type) {
                 cma::tools::win::GetEnv(L"REMOTE_MACHINE");
 
             if (!UseAlternateDirs(remote_machine_string)) return false;
-            XLOG::l.t("Using root = '{}' and user = '{}' folders ",
-                      details::G_ConfigInfo.getRootDir().u8string(),
-                      details::G_ConfigInfo.getUserDir().u8string());
+            LogFolders();
 
         } break;
         case AppType::automatic:

@@ -1,5 +1,5 @@
 DOKUWIKI = dokuwiki
-DOKUWIKI_VERS = 2016-06-26e
+DOKUWIKI_VERS = 2018-04-22b
 DOKUWIKI_DIR = $(DOKUWIKI)-$(DOKUWIKI_VERS)
 
 DOKUWIKI_BUILD := $(BUILD_HELPER_DIR)/$(DOKUWIKI_DIR)-build
@@ -16,7 +16,7 @@ $(DOKUWIKI): $(DOKUWIKI_BUILD)
 $(DOKUWIKI)-install: $(DOKUWIKI_INSTALL)
 $(DOKUWIKI)-skel: $(DOKUWIKI_SKEL)
 
-$(DOKUWIKI_UNPACK_ADDITIONAL): $(DOKUWIKI_UNPACK) 
+$(DOKUWIKI_UNPACK_ADDITIONAL): $(DOKUWIKI_UNPACK)
 	$(TAR_GZ) $(PACKAGE_DIR)/$(DOKUWIKI)/template-arctictut.tgz -C $(DOKUWIKI_DIR)/lib/tpl/
 	$(LN) -sf $(DOKUWIKI_DIR)/lib/images/fileicons/pdf.png $(DOKUWIKI_DIR)/lib/tpl/arctictut/images/tool-pdf.png
 	$(TAR_GZ) $(PACKAGE_DIR)/$(DOKUWIKI)/template-vector.tgz -C $(DOKUWIKI_DIR)/lib/tpl/
@@ -40,8 +40,6 @@ $(DOKUWIKI_INSTALL): $(DOKUWIKI_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
 	cp $(PACKAGE_DIR)/$(DOKUWIKI)/preload.php $(DOKUWIKI_DIR)/inc/
 	cp -r $(PACKAGE_DIR)/$(DOKUWIKI)/authmultisite $(DOKUWIKI_DIR)/lib/plugins/
-#	touch $(DOKUWIKI_DIR)/conf $(DOKUWIKI_DIR)/data
-#	rm -r $(DOKUWIKI_DIR)/conf $(DOKUWIKI_DIR)/data
 	cp -r $(DOKUWIKI_DIR) $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DOKUWIKI_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
@@ -49,15 +47,6 @@ $(DOKUWIKI_INSTALL): $(DOKUWIKI_BUILD)
 	install -m 644 $(DOKUWIKI_DIR)/VERSION $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 755 $(PACKAGE_DIR)/$(DOKUWIKI)/DOKUWIKI_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
-
-#install:
-#	$(MAKE) DESTDIR=$(DESTDIR) -C $(DOKUWIKI_DIR) -j 1 install
-#	# fix path for plugin
-#	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
-#	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
-#	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
-#	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
-#	rm -rf $(DESTDIR)$(OMD_ROOT)/var
 
 $(DOKUWIKI_SKEL): $(DOKUWIKI_INSTALL)
 	$(MKDIR) $(SKEL)/etc/dokuwiki

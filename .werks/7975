@@ -1,0 +1,13 @@
+Title: Update Dokuwiki to 2018-04-22b
+Level: 1
+Component: packages
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1563288040
+
+Updated dokuwiki shipped with Checkmk to version 2018-04-22b. Also updated
+the shipped plugins (bookcreator, changes, include, indexmenu, pagelist)
+to the current versions.

@@ -51,8 +51,6 @@ from pathlib2 import Path
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
-vsphere_output = []
-
 
 class MKQueryServerException(Exception):
     pass
@@ -906,13 +904,9 @@ def parse_arguments(argv):
     return parser.parse_args(argv[1:])
 
 
-def output(line):
-    vsphere_output.append(line)
-
-
-def write_output(lines, fetch_agent, address, opt):
-    if fetch_agent:
-        win_agent_output = get_agent_info_tcp(address, opt)
+def write_output(lines, opt):
+    if opt.agent:
+        win_agent_output = get_agent_info_tcp(opt.host_address, opt.timeout, opt.debug)
         sys.stdout.write(win_agent_output)
 
     for line in lines:
@@ -920,7 +914,7 @@ def write_output(lines, fetch_agent, address, opt):
     sys.stdout.flush()
 
 
-def get_agent_info_tcp(address, opt):
+def get_agent_info_tcp(address, timeout, debug):
     raw_response = ""
     try:
         # TODO: gethostbyname() automatically detects IP addresses and does
@@ -932,7 +926,7 @@ def get_agent_info_tcp(address, opt):
             ipaddress = socket.gethostbyname(address)
         soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            soc.settimeout(opt.timeout)
+            soc.settimeout(timeout)
         except AttributeError:
             pass  # some old Python versions lack settimeout(). Better ignore than fail
         soc.connect((ipaddress, 6556))
@@ -950,7 +944,7 @@ def get_agent_info_tcp(address, opt):
         soc.close()
         return raw_response
     except Exception:
-        if opt.debug:
+        if debug:
             raise
     return raw_response
 
@@ -1680,10 +1674,10 @@ def get_sections_clusters(connection, vm_esx_host):
 
 
 def fetch_data(connection, opt):
-    # pylint: disable=too-many-branches,too-many-statements,too-many-locals
-    output("<<<esx_systeminfo>>>")
-    for entry in connection.system_info.items():
-        output("%s %s" % entry)
+    output = []
+
+    output.append("<<<esx_systeminfo>>>")
+    output += ["%s %s" % entry for entry in connection.system_info.items()]
 
     #############################
     # Determine available host systems
@@ -1694,8 +1688,7 @@ def fetch_data(connection, opt):
     # Licenses
     ###########################
     if "licenses" in opt.modules:
-        for line in get_section_licenses(connection):
-            output(line)
+        output += get_section_licenses(connection)
 
     ###########################
     # Datastores
@@ -1703,24 +1696,20 @@ def fetch_data(connection, opt):
     # We need the datastore info later on in the virtualmachines and counter sections
     datastores = fetch_datastores(connection)
     if "datastore" in opt.modules:
-        for line in get_section_datastores(datastores):
-            output(line)
+        output += get_section_datastores(datastores)
 
     ###########################
     # Counters
     ###########################
     if "counters" in opt.modules:
-        for line in get_section_counters(connection, hostsystems, datastores, opt):
-            output(line)
+        output += get_section_counters(connection, hostsystems, datastores, opt)
 
     ###########################
     # Hostsystem
     ###########################
     if "hostsystem" in opt.modules:
         hostsystems_properties, hostsystems_sensors = fetch_hostsystem_data(connection)
-        for line in get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
-                                                    opt):
-            output(line)
+        output += get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors, opt)
 
     ###########################
     # Virtual machines
@@ -1728,18 +1717,15 @@ def fetch_data(connection, opt):
     vm_esx_host = {}
     if "virtualmachine" in opt.modules:
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
-        for line in get_section_vm(vms, opt):
-            output(line)
+        output += get_section_vm(vms, opt)
 
         used_hostsystems = hostsystems if opt.snapshot_display == 'esxhost' else None
-        for line in get_sections_aggregated_snapshots(vms, used_hostsystems):
-            output(line)
+        output += get_sections_aggregated_snapshots(vms, used_hostsystems)
 
     if not opt.direct:
-        for line in get_sections_clusters(connection, vm_esx_host):
-            output(line)
+        output += get_sections_clusters(connection, vm_esx_host)
 
-    output("<<<esx_vsphere_objects:sep(9)>>>")
+    output.append("<<<esx_vsphere_objects:sep(9)>>>")
 
     # the piggybacked data is printed later on, because it looks quite messy...
     vm_piggy_data = {}
@@ -1749,7 +1735,7 @@ def fetch_data(connection, opt):
         if opt.host_pwr_display != "vm":  # handled later on..
             if opt.direct and opt.hostname:
                 for hostname, data in hostsystems_properties.items():
-                    output(
+                    output.append(
                         "hostsystem\t%s\t\t%s" %
                         (opt.hostname, hostsystems_properties[hostname]["runtime.powerState"][0]))
             else:
@@ -1761,7 +1747,7 @@ def fetch_data(connection, opt):
                         hostsystems_properties[hostname]["runtime.powerState"][0])
                     if opt.host_pwr_display == "esxhost" and not opt.direct:
                         host_piggy_data.setdefault(converted_hostname, []).append(host_info)
-                    output(host_info)
+                    output.append(host_info)
 
     if "virtualmachine" in opt.modules:
         for key in vms:
@@ -1775,7 +1761,7 @@ def fetch_data(connection, opt):
                 vm_piggy_data.setdefault(vm_name, []).append(vm_info)
             elif opt.vm_pwr_display == "esxhost" and not opt.direct:
                 host_piggy_data.setdefault(running_on, []).append(vm_info)
-            output(vm_info)
+            output.append(vm_info)
 
     if ("virtualmachine" in opt.modules and "hostsystem" in opt.modules and
             opt.host_pwr_display == "vm"):
@@ -1794,13 +1780,12 @@ def fetch_data(connection, opt):
 
     for entries in [host_piggy_data, vm_piggy_data]:
         for key, values in entries.items():
-            output("<<<<%s>>>>" % key)
-            output("<<<esx_vsphere_objects:sep(9)>>>")
-            output("\n".join(values))
-    output("<<<<>>>>")
+            output += ["<<<<%s>>>>" % key, "<<<esx_vsphere_objects:sep(9)>>>", "\n".join(values)]
+    output.append("<<<<>>>>")
 
-    for line in get_section_systemtime(connection, opt):
-        output(line)
+    output += get_section_systemtime(connection, opt)
+
+    return output
 
 
 def call_legacy_pysphere():
@@ -1826,15 +1811,11 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    global vsphere_output  # Guess what's TODO.
-
     opt = parse_arguments(argv)
 
     # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
     if opt.pysphere:
         sys.exit(call_legacy_pysphere())
-
-    vsphere_output = []
 
     socket.setdefaulttimeout(opt.timeout)
 
@@ -1857,16 +1838,13 @@ def main(argv=None):
         for _run_count in [0, 1]:
             # Note: If the cookie fails inbetween these calls, we also start a second run
             try:
-                fetch_data(esx_connection, opt)
-                break
+                vsphere_output = fetch_data(esx_connection, opt)
             except MKQueryServerException:
                 # There was a problem during the query.
                 # It is possible that the server cookie got invalid.
-                # We are delete the cookie and start a second run
-                vsphere_output = []  # Reset current output
+                # We delete the cookie and start a second run
                 esx_connection.delete_server_cookie()
                 esx_connection.login()
-                continue  # do a second run
             except Exception:
                 if opt.debug:
                     raise
@@ -1876,7 +1854,7 @@ def main(argv=None):
         sys.stderr.write("%s\n" % exc)
         sys.exit(0 if opt.agent else 1)
 
-    write_output(vsphere_output, opt.agent, opt.host_address, opt)
+    write_output(vsphere_output, opt)
 
 
 if __name__ == "__main__":

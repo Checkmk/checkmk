@@ -361,7 +361,7 @@ TEST(FileInfoTest, YmlCheck) {
     auto enabled = GetVal(groups::kFileInfo, vars::kEnabled, false);
     EXPECT_TRUE(enabled);
     auto paths = GetArray<std::string>(groups::kFileInfo, vars::kFileInfoPath);
-    EXPECT_EQ(paths.size(), 2);
+    EXPECT_EQ(paths.size(), 0);
 }
 
 TEST(FileInfoTest, Reality) {

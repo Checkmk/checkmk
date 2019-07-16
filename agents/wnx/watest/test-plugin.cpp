@@ -522,7 +522,7 @@ TEST(PluginTest, FilesAndFolders) {
         EXPECT_EQ(exe_units[2].async(), false);
         EXPECT_EQ(exe_units[2].cacheAge(), 0);
 
-        EXPECT_EQ(exe_units[0].timeout(), 30);
+        EXPECT_EQ(exe_units[0].timeout(), 60);
         EXPECT_EQ(exe_units[0].cacheAge(), 0);
         EXPECT_EQ(exe_units[0].async(), false);
         EXPECT_EQ(exe_units[0].retry(), 0);

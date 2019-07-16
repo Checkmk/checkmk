@@ -63,6 +63,7 @@ import cmk_base.check_api_utils as check_api_utils
 import cmk_base.cleanup
 import cmk_base.piggyback as piggyback
 import cmk_base.snmp_utils
+from cmk_base.discovered_labels import DiscoveredServiceLabels  # pylint: disable=unused-import
 
 # TODO: Prefix helper functions with "_".
 
@@ -2800,7 +2801,8 @@ class ConfigCache(object):
             tags.update(entry)
         return tags
 
-    def labels_of_service(self, hostname, svc_desc):
+    def labels_of_service(self, hostname, svc_desc, discovered_labels):
+        # type: (str, Text, DiscoveredServiceLabels) -> Dict[Text, Text]
         """Returns the effective set of service labels from all available sources
 
         1. Discovered labels
@@ -2808,12 +2810,15 @@ class ConfigCache(object):
 
         Last one wins.
         """
-        return self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc)
+        return self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc,
+                                             discovered_labels.to_dict())
 
-    def label_sources_of_service(self, hostname, svc_desc):
+    def label_sources_of_service(self, hostname, svc_desc, discovered_labels):
+        # type: (str, Text, DiscoveredServiceLabels) -> Dict[Text, str]
         """Returns the effective set of service label keys with their source identifier instead of the value
         Order and merging logic is equal to labels_of_service()"""
-        return self.labels.label_sources_of_service(self.ruleset_matcher, hostname, svc_desc)
+        return self.labels.label_sources_of_service(self.ruleset_matcher, hostname, svc_desc,
+                                                    discovered_labels.to_dict())
 
     def extra_attributes_of_service(self, hostname, description):
         # type: (str, Text) -> Dict[str, Any]

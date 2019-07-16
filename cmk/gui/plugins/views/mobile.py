@@ -819,9 +819,9 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
             html.close_p()
 
             if len(rendered_cells) > 1:
-                content = " &middot; ".join(
+                content = HTML(" &middot; ").join(
                     [rendered_cell[1] for rendered_cell in rendered_cells[1:num_columns + 1]])
-                html.h3(HTML(content))
+                html.h3(content)
 
                 for rendered_cell, cell in zip(rendered_cells[num_columns + 1:],
                                                cells[num_columns + 1:]):

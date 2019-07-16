@@ -22,5 +22,6 @@ openhardwaremonitor-[0-9].[0-9].[0-9]/
 patch-stamp
 python-modules-1.6.0*.cme/
 re2-20[12][0-9]-[01][0-9]-[0-3][0-9]/
+dokuwiki-20[12][0-9]-[01][0-9]-[0-3][0-9][a-z]/
 rpm.buildroot
 rpm.topdir

@@ -349,10 +349,10 @@ TEST(AgentConfig, SmartMerge) {
 
         // empty node is ignored
         sz = gl[vars::kSectionsDisabled].size();
-        ASSERT_EQ(sz, 3);
+        ASSERT_EQ(sz, 0);
 
         auto sections_disabled = GetInternalArray(gl, vars::kSectionsDisabled);
-        ASSERT_EQ(sections_disabled.size(), 3);
+        ASSERT_EQ(sections_disabled.size(), 0);
 
         std::swap(cfgs[1], cfgs[0]);
         // prepare and check data
@@ -374,7 +374,7 @@ TEST(AgentConfig, SmartMerge) {
         sections_enabled = GetInternalArray(gl, vars::kSectionsEnabled);
         ASSERT_EQ(sections_enabled.size(), 20);
 
-        ASSERT_EQ(gl[vars::kSectionsDisabled].size(), 3);
+        ASSERT_EQ(gl[vars::kSectionsDisabled].size(), 0);
     }
 }
 
@@ -735,7 +735,7 @@ TEST(AgentConfig, WorkScenario) {
     EXPECT_TRUE(password == "secret");
 
     auto name = GetVal(groups::kGlobal, vars::kName, std::string(""));
-    EXPECT_TRUE(name != "");
+    EXPECT_TRUE(name.empty()) << "name should absent";
 
     auto ipv6 = GetVal(groups::kGlobal, vars::kIpv6, true);
     EXPECT_TRUE(!ipv6);
@@ -744,7 +744,7 @@ TEST(AgentConfig, WorkScenario) {
     EXPECT_TRUE(async);
 
     auto flush = GetVal(groups::kGlobal, vars::kSectionFlush, true);
-    EXPECT_TRUE(!flush);
+    EXPECT_TRUE(flush) << "flush should absent";
 
     auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
     EXPECT_TRUE(execute.size() > 3);
@@ -765,7 +765,7 @@ TEST(AgentConfig, WorkScenario) {
 
         auto sections_disabled =
             GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
-        EXPECT_EQ(sections_disabled.size(), 3);
+        EXPECT_EQ(sections_disabled.size(), 0) << "no disabled sections";
     }
 
     {
@@ -976,7 +976,7 @@ TEST(AgentConfig, FunctionalityCheck) {
 
     details::KillDefaultConfig();
     EXPECT_NE(global.enabledSections().size(), 0);
-    EXPECT_NE(global.disabledSections().size(), 0);
+    EXPECT_EQ(global.disabledSections().size(), 0);
     details::LoadGlobal();
     EXPECT_TRUE(global.enabledSections().size() == 0);
     EXPECT_TRUE(global.disabledSections().size() == 0);
@@ -994,7 +994,7 @@ TEST(AgentConfig, FunctionalityCheck) {
                 std::string(cma::cfg::kDefaultLogFileName));
 
     EXPECT_TRUE(global.enabledSections().size() != 0);
-    EXPECT_TRUE(global.disabledSections().size() != 0);
+    EXPECT_TRUE(global.disabledSections().size() == 0);
 
     EXPECT_TRUE(global.realtimePort() == cma::cfg::kDefaultRealtimePort);
     EXPECT_TRUE(global.realtimeTimeout() == cma::cfg::kDefaultRealtimeTimeout);
@@ -1075,7 +1075,7 @@ TEST(AgentConfig, SectionLoader) {
     p.loadFromMainConfig(groups::kLocal);
     EXPECT_TRUE(p.enabledInConfig());
     EXPECT_TRUE(p.existInConfig());
-    EXPECT_EQ(p.unitsCount(), 2);
+    EXPECT_EQ(p.unitsCount(), 1);
     EXPECT_TRUE(p.foldersCount() == 1) << "1 Folder is predefined and fixed";
 }
 
@@ -1128,9 +1128,7 @@ TEST(AgentConfig, GlobalTest) {
     EXPECT_TRUE(groups::global.allowedSection("services"));
 
     EXPECT_TRUE(!groups::global.isSectionDisabled("winperf_any"));
-    EXPECT_TRUE(groups::global.isSectionDisabled("winperf_xxx"));
     EXPECT_TRUE(!groups::global.allowedSection("_logfiles"));
-    EXPECT_TRUE(groups::global.isSectionDisabled("_logfiles"));
 
     auto val = groups::global.getWmiTimeout();
     EXPECT_TRUE((val >= 1) && (val < 100));

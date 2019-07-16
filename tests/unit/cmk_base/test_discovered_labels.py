@@ -7,15 +7,11 @@ import pytest  # type: ignore
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree
-from cmk.utils.labels import (
-    DiscoveredHostLabelsStore,
-    DiscoveredServiceLabelsStore,
-)
+from cmk.utils.labels import DiscoveredHostLabelsStore
 
 from cmk_base.discovered_labels import (
     DiscoveredHostLabels,
     DiscoveredServiceLabels,
-    DiscoveredServiceLabelsOfHost,
     ServiceLabel,
 )
 
@@ -128,24 +124,3 @@ def test_service_label_validation():
 
     with pytest.raises(MKGeneralException, match="Invalid label value"):
         ServiceLabel(u"äbc", "übc")
-
-
-@pytest.fixture()
-def discovered_service_labels_dir(tmp_path, monkeypatch):
-    path = tmp_path / "var" / "check_mk" / "discovered_service_labels"
-    monkeypatch.setattr(cmk.utils.paths, "discovered_service_labels_dir", path)
-    return path
-
-
-def test_discovered_service_labels_store_save(discovered_service_labels_dir):
-    store = DiscoveredServiceLabelsStore("host")
-
-    labels = DiscoveredServiceLabelsOfHost()
-    labels.add_labels(u"CPU load", DiscoveredServiceLabels(ServiceLabel(u"xyz", u"äbc")))
-    label_dict = labels.to_dict()
-
-    assert not store.file_path.exists()  # pylint: disable=no-member
-
-    store.save(label_dict)
-    assert store.file_path.exists()  # pylint: disable=no-member
-    assert store.load() == label_dict

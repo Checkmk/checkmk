@@ -90,10 +90,6 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
                       Counter::commands);
     addCounterColumns("livechecks", "checks executed via livecheck",
                       Counter::livechecks);
-    addCounterColumns(
-        "livecheck_overflows",
-        "times a check could not be executed because no livecheck helper was free",
-        Counter::livecheck_overflows);
 
     // Nagios program status data
     addColumn(std::make_unique<IntPointerColumn>(

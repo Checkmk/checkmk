@@ -964,7 +964,6 @@ class ESXConnection(object):
         self._server_cookie = None
 
         self.system_info = self._fetch_systeminfo()
-        self._server_cookie = self.login()
 
     def _fetch_systeminfo(self):
         """Retrieve basic data, which requires no login"""
@@ -1060,7 +1059,6 @@ class ESXConnection(object):
         self._server_handle.endheaders()
 
     def login(self):
-        # type: () -> Optional[Text]
         if self._host_cookie_path.exists():
             # The cookie access time is required to determine the agents check interval
             # This is required later on by the performancecounters. Depending on the
@@ -1070,7 +1068,8 @@ class ESXConnection(object):
             os.utime(str(self._host_cookie_path),
                      None)  # Touch the cookie file, whenever it is accessed
 
-            return self._host_cookie_path.open(encoding="utf-8").read()
+            self._server_cookie = self._host_cookie_path.open(encoding="utf-8").read()
+            return
 
         payload = telegram_list["login"]
         payload_params = {"username": encode_url(self._user), "password": encode_url(self._secret)}
@@ -1087,7 +1086,8 @@ class ESXConnection(object):
             with self._host_cookie_path.open("w", encoding="utf-8") as f_handle:
                 f_handle.write(server_cookie)
 
-        return server_cookie
+        self._server_cookie = server_cookie
+        return
 
     def delete_server_cookie(self):
         try:
@@ -1861,6 +1861,7 @@ if __name__ == "__main__":
         for _run_count in [0, 1]:
             # Note: If the cookie fails inbetween these calls, we also start a second run
             try:
+                esx_connection.login()
                 fetch_data(esx_connection)
                 break
             except MKQueryServerException:
@@ -1869,7 +1870,6 @@ if __name__ == "__main__":
                 # We are delete the cookie and start a second run
                 vsphere_output = []  # Reset current output
                 esx_connection.delete_server_cookie()
-                esx_connection.login()
                 continue  # do a second run
             except Exception:
                 if opt_debug:

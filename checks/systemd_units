@@ -67,7 +67,6 @@ def parse_systemd_units(info):
 
     if not info:
         return {}
-
     iter_info = iter(info)
     target_states = {}
 
@@ -96,17 +95,18 @@ def parse_systemd_units(info):
                 row.pop(0)
             line = ' '.join(row)
             for unit_marker in _SYSTEMD_UNITS:
-                if unit_marker in line:
-                    utype = unit_marker.strip('. ')
+                utype = unit_marker.strip(' ')
+                if utype in row[0]:
+                    unit_type = unit_marker.strip('. ')
                     name, remains = line.split(unit_marker, 1)
                     if "@" in name:
                         pos = name.find("@")
                         temp = name[:pos + 1]
                     else:
                         temp = name
-                    state = target_states.get("%s.%s" % (temp, utype), "unknown")
+                    state = target_states.get("%s.%s" % (temp, unit_type), "unknown")
                     load, active, sub, descr = remains.split(' ', 3)
-                    unit = UnitEntry(name, utype, load, active, sub, descr, state)
+                    unit = UnitEntry(name, unit_type, load, active, sub, descr, state)
                     parsed.setdefault(unit.type, {})[unit.name] = unit
                     break
     return parsed
@@ -195,19 +195,61 @@ def discovery_systemd_units_services_summary(parsed):
         yield 'Summary', {}
 
 
-def services_split(services, blacklist):
-    excluded = []
+def _services_split(services, blacklist):
     included = []
+    excluded = []
     disabled = []
+    activating = []
+    static = []
     compiled_patterns = [regex(p) for p in blacklist]
     for service in services:
-        if service.state in ["disabled", "indirect"]:
-            disabled.append(service)
-        elif any(expr.match(service.name) for expr in compiled_patterns):
+        if any(expr.match(service.name) for expr in compiled_patterns):
             excluded.append(service)
+            continue
+        if service.active == "activating":
+            activating.append(service)
+        elif service.state in ["disabled", "indirect"]:
+            disabled.append(service)
+        elif service.state == "static":
+            static.append(service)
         else:
             included.append(service)
-    return included, excluded, disabled
+    return included, excluded, disabled, static, activating
+
+
+def _check_activating_state(activating_services, params):
+    previous_state = get_item_state("activating", {})
+    now = int(time.time())
+    current_state = {}
+    for service in activating_services:
+        activating_since = previous_state.get(service.name, now)
+        current_state[service.name] = activating_since
+        elapsed_time = now - activating_since
+        levels = params.get("activating_levels")
+        yield check_levels(elapsed_time,
+                           None,
+                           levels,
+                           human_readable_func=get_age_human_readable,
+                           infoname="Service '%s' activating for" % service.name)
+
+        set_item_state("activating", current_state)
+
+
+def _check_non_ok_services(systemd_services, params, output_string):
+    servicenames_by_status = {}
+    for service in systemd_services:
+        servicenames_by_status.setdefault(service.active, []).append(service.name)
+
+    for status, service_names in sorted(servicenames_by_status.iteritems()):
+        state = params["states"].get(status, params["states_default"])
+        if state == 0:
+            continue
+
+        count = len(service_names)
+        services_text = ", ".join(sorted(service_names))
+        info = output_string % (count, "" if count == 1 else "s", status, services_text)
+
+        yield state, info
 
 
 def check_systemd_units_services_summary(_no_item, params, parsed):
@@ -215,20 +257,19 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
     blacklist = params.get('ignored', [])
     yield 0, "%d services in total" % len(services)
 
-    services, excluded, disabled = services_split(services, blacklist)
+    included, excluded, disabled, static, activating = _services_split(services, blacklist)
 
-    all_states = sorted(set(s.active for s in services))
+    included_template = "%d service%s %s (%s)"
+    for subresult in _check_non_ok_services(included, params, included_template):
+        yield subresult
 
-    for active_state in all_states:
-        state = params["states"].get(active_state, params["states_default"])
-        if state == 0:
-            continue
+    static_template = "%d static service%s %s (%s)"
+    for subresult in _check_non_ok_services(static, params, static_template):
+        yield subresult
 
-        service_names = sorted(s.name for s in services if s.active == active_state)
-        cnt = len(service_names)
-        service_names = ", ".join(service_names)
-        yield state, "%d service%s %s (%s)" % (cnt, '' if cnt == 1 else 's', active_state,
-                                               service_names)
+    for subresult in _check_activating_state(activating, params):
+        yield subresult
+
     if excluded:
         yield 0, "%d ignored services" % len(excluded)
     if disabled:

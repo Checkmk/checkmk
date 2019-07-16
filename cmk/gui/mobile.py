@@ -39,6 +39,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.log import logger
 
 
 def mobile_html_head(title, ready_code=""):
@@ -291,6 +292,7 @@ def page_view():
         view_renderer = MobileViewRenderer(view)
         views.show_view(view, view_renderer)
     except Exception as e:
+        logger.exception()
         if config.debug:
             raise
         html.write("ERROR showing view: %s" % html.attrencode(e))
@@ -362,6 +364,7 @@ class MobileViewRenderer(views.ViewRenderer):
                     layout.render(rows, view_spec, group_cells, cells, num_columns,
                                   show_checkboxes and not html.do_actions())
                 except Exception as e:
+                    logger.exception()
                     html.write(_("Error showing view: %s") % e)
             html.close_div()
             jqm_page_navfooter(navbar, 'data', page_id)

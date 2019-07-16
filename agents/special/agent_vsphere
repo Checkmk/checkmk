@@ -1161,7 +1161,7 @@ def encode_url(text):
     return text
 
 
-def output_aggregated_snapshots(vms, hostsystems=None):
+def get_sections_aggregated_snapshots(vms, hostsystems):
 
     aggregated = {}
     for data in vms.itervalues():
@@ -1173,14 +1173,16 @@ def output_aggregated_snapshots(vms, hostsystems=None):
         if snapshots is not None:
             aggregated.setdefault(running_on, []).append(snapshots)
 
+    section_lines = []
     for piggytarget, sn_list in aggregated.iteritems():
-        output('<<<<%s>>>>' % piggytarget)
-        output('<<<esx_vsphere_vm>>>')
-        output('snapshot.rootSnapshotList %s' % '|'.join(sn_list))
-        output('<<<<>>>>')
+        section_lines += [
+            '<<<<%s>>>>' % piggytarget, '<<<esx_vsphere_vm>>>',
+            'snapshot.rootSnapshotList %s' % '|'.join(sn_list), '<<<<>>>>'
+        ]
+    return section_lines
 
 
-def section_systemtime(connection, opt):
+def get_section_systemtime(connection, opt):
     try:
         response = connection.query_server(telegram_list["systemtime"])
         elements = get_pattern('<returnval>(.*)</returnval>', response)
@@ -1188,11 +1190,11 @@ def section_systemtime(connection, opt):
             naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
             utc = naive.replace(tzinfo=tz.tzutc())
             localtime = utc.astimezone(tz.tzlocal())
-            output("<<<systemtime>>>")
-            output(localtime.strftime("%s"))
+            return ["<<<systemtime>>>", localtime.strftime("%s")]
     except Exception:
         if opt.debug:
             raise
+    return []
 
 
 def find_host(search_hostname, hostsystems_properties):
@@ -1434,15 +1436,16 @@ def eval_systeminfo_other(_hostname, _current_propname, otherinfo_propset):
     return properties, sensors
 
 
-def output_datastores(datastores):
-    output("<<<esx_vsphere_datastores:sep(9)>>>")
+def get_section_datastores(datastores):
+    section_lines = ["<<<esx_vsphere_datastores:sep(9)>>>"]
     for key in sorted(datastores.keys()):
         data = datastores[key]
-        output("[%s]" % data.get("name"))
+        section_lines.append("[%s]" % data.get("name"))
         for ds_key in sorted(data.keys()):
             if ds_key == "name":
                 continue
-            output("%s\t%s" % (ds_key.split(".")[1], data[ds_key]))
+            section_lines.append("%s\t%s" % (ds_key.split(".")[1], data[ds_key]))
+    return section_lines
 
 
 def fetch_hostsystem_data(connection):
@@ -1479,30 +1482,37 @@ def fetch_hostsystem_data(connection):
     return hostsystems_properties, hostsystems_sensors
 
 
-def output_hostsystems(hostsystems_properties, hostsystems_sensors, opt):
-    # TODO: improve error handling: check if multiple results and opt.direct
+def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors, opt):
+    # TODO: improve error handling: check if multiple results
+    section_lines = []
     for hostname, properties in hostsystems_properties.items():
         if not opt.direct:
-            output("<<<<%s>>>>" % convert_hostname(properties["name"][0], opt))
+            section_lines.append("<<<<%s>>>>" % convert_hostname(properties["name"][0], opt))
 
-        output("<<<esx_vsphere_hostsystem>>>")
+        section_lines.append("<<<esx_vsphere_hostsystem>>>")
         for key in sorted(properties.keys()):
-            output("%s %s" % (key, " ".join(properties[key])))
+            section_lines.append("%s %s" % (key, " ".join(properties[key])))
 
-        output("<<<esx_vsphere_sensors:sep(59)>>>")
+        section_lines.append("<<<esx_vsphere_sensors:sep(59)>>>")
         for key in sorted(hostsystems_sensors[hostname].keys()):
             data = hostsystems_sensors[hostname][key]
             if data["key"].lower() in ["green", "unknown"]:
                 continue
-            output('%s;%s;%s;%s;%s;%s;%s;%s;%s' %
-                   (data["name"].replace(";", "_"), data.get(
-                       "baseUnits", ""), data.get("currentReading", ""), data.get("sensorType", ""),
-                    data.get("unitModifier", ""), data.get("rateUnits", ""), data["key"],
-                    data["label"], data["summary"].replace(";", "_")))
+            section_lines.append('%s;%s;%s;%s;%s;%s;%s;%s;%s' %
+                                 (data["name"].replace(";", "_"), data.get("baseUnits", ""),
+                                  data.get("currentReading", ""), data.get("sensorType", ""),
+                                  data.get("unitModifier", ""), data.get("rateUnits", ""),
+                                  data["key"], data["label"], data["summary"].replace(";", "_")))
+
+    if not opt.direct:
+        section_lines.append("<<<<>>>>")
+
+    return section_lines
 
 
-def output_licenses(licenses_response):
-    output("<<<esx_vsphere_licenses:sep(9)>>>")
+def get_section_licenses(connection):
+    section_lines = ["<<<esx_vsphere_licenses:sep(9)>>>"]
+    licenses_response = connection.query_server(telegram_list["licensesused"])
     root_node = minidom.parseString(licenses_response)
     licenses_node = root_node.getElementsByTagName("LicenseManagerLicenseInfo")
     for license_node in licenses_node:
@@ -1511,19 +1521,19 @@ def output_licenses(licenses_response):
             continue
         name = license_node.getElementsByTagName("name")[0].firstChild.data
         used = license_node.getElementsByTagName("used")[0].firstChild.data
-        output("%s\t%s %s" % (name, used, total))
+        section_lines.append("%s\t%s %s" % (name, used, total))
+    return section_lines
 
 
-def process_counters(connection, hostsystems, datastores, opt):
+def get_section_counters(connection, hostsystems, datastores, opt):
+    section_lines = []
+
     net_extra_info = fetch_extra_interface_counters(connection, opt)
     counters_syntax = fetch_counters_syntax(connection)
     max_samples = get_max_samples(connection)
 
     counter_data_payload = telegram_list["perfcounterdata"]
     for host in hostsystems.keys():
-        if not opt.direct:
-            output("<<<<%s>>>>" % convert_hostname(hostsystems[host], opt))
-
         ### TODO: check if this host supports perfdata
         ### TODO: try to get esx hosts perfdata from vCenter
         counter_avail = telegram_list["perfcounteravail"]
@@ -1567,7 +1577,6 @@ def process_counters(connection, hostsystems, datastores, opt):
                     "value": "#".join(values)
                 }
 
-        output("<<<esx_vsphere_counters:sep(124)>>>")
         counters_output = {}
         for key in sorted(counters_value.keys()):
             value = counters_value[key]
@@ -1579,15 +1588,19 @@ def process_counters(connection, hostsystems, datastores, opt):
         for key, values in datastores.items():
             counters_output[("datastore", "name", key)] = (values.get("name"), "string")
 
-        for key in sorted(counters_output.keys()):
-            value = counters_output[key]
-            output("%s.%s|%s|%s|%s" % (key + value))
+        if not opt.direct:
+            section_lines.append("<<<<%s>>>>" % convert_hostname(hostsystems[host], opt))
+        section_lines.append("<<<esx_vsphere_counters:sep(124)>>>")
+        section_lines += [
+            "%s.%s|%s|%s|%s" % (key + value) for key, value in sorted(counters_output.items())
+        ]
 
-        for line in net_extra_info:
-            output(line)
+        section_lines += net_extra_info  # TODO: explain why this is sent to every host
 
     if not opt.direct:
-        output('<<<<>>>>')
+        section_lines.append('<<<<>>>>')
+
+    return section_lines
 
 
 def fetch_virtual_machines(connection, hostsystems, datastores, opt):
@@ -1625,20 +1638,19 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     return vms, vm_esx_host
 
 
-def output_virtual_machines(vms, opt):
+def get_section_vm(vms, opt):
+    section_lines = []
     for key in sorted(vms.keys()):
         data = vms[key]
         if data.get("name"):
-            output("<<<<%s>>>>" % convert_hostname(key, opt))
-            output("<<<esx_vsphere_vm>>>")
+            section_lines += ["<<<<%s>>>>" % convert_hostname(key, opt), "<<<esx_vsphere_vm>>>"]
             for entry in sorted(data.items()):
-                output("%s %s" % entry)
+                section_lines.append("%s %s" % entry)
+    return section_lines
 
 
-def process_clusters(connection, vm_esx_host, opt):
-    if opt.direct:
-        return
-
+def get_sections_clusters(connection, vm_esx_host):
+    section_lines = []
     response = connection.query_server(telegram_list["datacenters"])
     datacenters = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>', response)
     for datacenter in datacenters:
@@ -1648,7 +1660,7 @@ def process_clusters(connection, vm_esx_host, opt):
             '<objects><obj type="ClusterComputeResource">(.*?)</obj>.*?string">(.*?)</val></propSet></objects>',
             response)
 
-        output("<<<esx_vsphere_clusters:sep(9)>>>")
+        section_lines.append("<<<esx_vsphere_clusters:sep(9)>>>")
         for cluster in clusters:
             response = connection.query_server(telegram_list["esxhostsofcluster"],
                                                payload_params={"clustername": cluster[0]})
@@ -1658,12 +1670,17 @@ def process_clusters(connection, vm_esx_host, opt):
                 response)
             for host in hosts:
                 cluster_vms.extend(vm_esx_host.get(host, []))
-            output("%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)))
-            output("%s\tvms\t%s\t%s" %
-                   (datacenter, cluster[1], "\t".join(map(convert_hostname, cluster_vms))))
+            section_lines += [
+                "%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)),
+                "%s\tvms\t%s\t%s" %
+                (datacenter, cluster[1], "\t".join(map(convert_hostname, cluster_vms))),
+            ]
+
+    return section_lines
 
 
 def fetch_data(connection, opt):
+    # pylint: disable=too-many-branches,too-many-statements,too-many-locals
     output("<<<esx_systeminfo>>>")
     for entry in connection.system_info.items():
         output("%s %s" % entry)
@@ -1677,30 +1694,33 @@ def fetch_data(connection, opt):
     # Licenses
     ###########################
     if "licenses" in opt.modules:
-        licenses_response = connection.query_server(telegram_list["licensesused"])
-        output_licenses(licenses_response)
+        for line in get_section_licenses(connection):
+            output(line)
 
     ###########################
     # Datastores
     ###########################
     # We need the datastore info later on in the virtualmachines and counter sections
     datastores = fetch_datastores(connection)
-
     if "datastore" in opt.modules:
-        output_datastores(datastores)
+        for line in get_section_datastores(datastores):
+            output(line)
 
     ###########################
     # Counters
     ###########################
     if "counters" in opt.modules:
-        process_counters(connection, hostsystems, datastores, opt)
+        for line in get_section_counters(connection, hostsystems, datastores, opt):
+            output(line)
 
     ###########################
     # Hostsystem
     ###########################
     if "hostsystem" in opt.modules:
         hostsystems_properties, hostsystems_sensors = fetch_hostsystem_data(connection)
-        output_hostsystems(hostsystems_properties, hostsystems_sensors, opt)
+        for line in get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
+                                                    opt):
+            output(line)
 
     ###########################
     # Virtual machines
@@ -1708,17 +1728,16 @@ def fetch_data(connection, opt):
     vm_esx_host = {}
     if "virtualmachine" in opt.modules:
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
-        output_virtual_machines(vms, opt)
+        for line in get_section_vm(vms, opt):
+            output(line)
 
-        if opt.snapshot_display == 'esxhost':
-            output_aggregated_snapshots(vms, hostsystems)
-        elif opt.snapshot_display == 'vCenter':
-            output_aggregated_snapshots(vms)
+        used_hostsystems = hostsystems if opt.snapshot_display == 'esxhost' else None
+        for line in get_sections_aggregated_snapshots(vms, used_hostsystems):
+            output(line)
 
-    # TODO: Where is the related piggyback open tag?
-    output("<<<<>>>>")
-
-    process_clusters(connection, vm_esx_host, opt)
+    if not opt.direct:
+        for line in get_sections_clusters(connection, vm_esx_host):
+            output(line)
 
     output("<<<esx_vsphere_objects:sep(9)>>>")
 
@@ -1780,7 +1799,8 @@ def fetch_data(connection, opt):
             output("\n".join(values))
     output("<<<<>>>>")
 
-    section_systemtime(connection, opt)
+    for line in get_section_systemtime(connection, opt):
+        output(line)
 
 
 def call_legacy_pysphere():

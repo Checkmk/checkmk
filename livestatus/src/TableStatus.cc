@@ -97,8 +97,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
 
     // Nagios program status data
     addColumn(std::make_unique<IntPointerColumn>(
-        "nagios_pid", "The process ID of the Nagios main process",
-        &nagios_pid));
+        "nagios_pid", "The process ID of the monitoring core", &nagios_pid));
     addColumn(std::make_unique<IntPointerColumn>(
         "enable_notifications",
         "Whether notifications are enabled in general (0/1)",
@@ -119,10 +118,6 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "accept_passive_host_checks",
         "Whether passive host checks are accepted in general (0/1)",
         &accept_passive_host_checks));
-    addColumn(std::make_unique<IntPointerColumn>(
-        "enable_event_handlers",
-        "Whether event handlers are activated in general (0/1)",
-        &enable_event_handlers));
     addColumn(std::make_unique<IntPointerColumn>(
         "obsess_over_services",
         "Whether Nagios will obsess over service checks and run the ocsp_command (0/1)",
@@ -147,6 +142,10 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "process_performance_data",
         "Whether processing of performance data is activated in general (0/1)",
         &process_performance_data));
+    addColumn(std::make_unique<IntPointerColumn>(
+        "enable_event_handlers",
+        "Whether event handlers are activated in general (0/1)",
+        &enable_event_handlers));
     addColumn(std::make_unique<IntPointerColumn>(
         "check_external_commands",
         "Whether Nagios checks for external commands at its command pipe (0/1)",

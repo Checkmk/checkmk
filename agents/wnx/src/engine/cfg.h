@@ -872,9 +872,10 @@ public:
 
 protected:
     // used only during testing
-    void debugInit(bool async, int timeout, int cache_age, int retry) {
-        async_ = async;
-        timeout_ = timeout;
+    void debugInit(bool async_value, int timeout_value, int cache_age,
+                   int retry) {
+        async_ = async_value;
+        timeout_ = timeout_value;
         cache_age_ = cache_age;
         retry_ = retry;
         defined_ = true;

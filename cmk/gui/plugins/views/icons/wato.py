@@ -100,7 +100,7 @@ class DownloadSnmpWalkIcon(Icon):
         return "download_snmp_walk"
 
     def host_columns(self):
-        return ["filename"]
+        return ["filename", "check_type"]
 
     def default_sort_index(self):
         return 50

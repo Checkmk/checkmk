@@ -15,13 +15,9 @@ discovery = {
 }
 
 checks = {
-    '': [
-        ('regular.txt', {}, [(0, 'Size: 4242 B, Age: 37 h', [
-            ('size', 4242, None, None, None, None),
-            ('age', 136683, None, None, None, None),
-        ])]),
-        ('missinf_file.txt', {}, [(3, 'File not found', [])]),
-        ('not_readable.txt', {}, [(1, 'File stat failed', [])]),
-        ('stat_failes.txt', {}, [(1, 'File stat failed', [])]),
-    ],
+    '': [('regular.txt', {}, [(0, 'Size: 4242 B', [('size', 4242, None, None, None, None)]),
+                              (0, 'Age: 37 h', [('age', 136683, None, None, None, None)])]),
+         ('missinf_file.txt', {}, [(3, 'File not found', [])]),
+         ('not_readable.txt', {}, [(1, 'File stat failed', [])]),
+         ('stat_failes.txt', {}, [(1, 'File stat failed', [])])],
 }

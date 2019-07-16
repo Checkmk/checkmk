@@ -129,9 +129,7 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
             exclusion_is_regex = True
             exclusion = exclusion[1:]
 
-        inclusion_tmp = fileinfo_process_date(inclusion, reftime)
-        if inclusion != inclusion_tmp:
-            inclusion = inclusion_tmp
+        inclusion = fileinfo_process_date(inclusion, reftime)
 
         matches = []
         num_perc_s = 0
@@ -375,14 +373,16 @@ def check_fileinfo_groups(_item, params, parsed):
                 ("size", file_stat.size),
             ]:
                 skip_ok_files = params.get('shorten_multiline_output', False)
-                for state, _, __, ___ in _fileinfo_check_file(value, params, key):
-                    if skip_ok_files and not state:
-                        continue
-                    files_matching.setdefault(file_stat.name, {
-                        "size": file_stat.size,
-                        "age": age,
-                        "states": [],
-                    })["states"].append(state)
+                levels = params.get("max" + key,
+                                    (None, None)) + params.get("min" + key, (None, None))
+                state, _, _ = check_levels(value, key, levels)
+                if skip_ok_files and not state:
+                    continue
+                files_matching.setdefault(file_stat.name, {
+                    "size": file_stat.size,
+                    "age": age,
+                    "states": [],
+                })["states"].append(state)
 
     if age_oldest is None:
         age_oldest = 0
@@ -401,7 +401,8 @@ def check_fileinfo_groups(_item, params, parsed):
     if files_stat_failed:
         yield 1, "Files with unknown stat: %s" % ", ".join(files_stat_failed)
 
-    yield _fileinfo_check_function(check_definition, params, outof_range_txt)
+    for res in _fileinfo_check_function(check_definition, params, outof_range_txt):
+        yield res
 
     for res in _fileinfo_check_conjunctions(check_definition, params):
         yield res
@@ -425,44 +426,31 @@ def check_fileinfo_groups(_item, params, parsed):
 
 def _fileinfo_check_function(check_definition, params, outof_range_txt):
     infotexts = []
-    states = [0]
-    perfdata = []
+    states = []
+    allperfdata = []
     for title, key, value, verbfunc in check_definition:
         if value in [None, ""]:
             continue
-        infotext = "%s: %s" % (title, verbfunc(value))
-        warn, crit = None, None
-        for state, warn, crit, comp_text in _fileinfo_check_file(value, params, key):
-            if not state:
-                continue
-            infotext += " (warn/crit %s %s/%s)" % (comp_text, verbfunc(warn), verbfunc(crit))
-            states.append(state)
+        levels = params.get("max" + key, (None, None)) + params.get("min" + key, (None, None))
+        state, infotext, perfdata = check_levels(value,
+                                                 key,
+                                                 levels,
+                                                 human_readable_func=verbfunc,
+                                                 infoname=title)
+        states.append(state)
         infotexts.append(infotext)
-        perfdata.append((key, value, warn, crit))
+
+        # because strings go into infos but not into perfdata
+        if isinstance(value, (long, int)):
+            allperfdata.append(perfdata)
+        else:
+            allperfdata.append([])
 
     if outof_range_txt:
-        states = [0]
         infotexts = [outof_range_txt] + infotexts
-    return max(states), ", ".join(infotexts), perfdata
-
-
-def _fileinfo_check_file(value, params, key):
-    if not isinstance(value, (long, int)):
-        # because strings go into infos but not into perfdata
-        return []
-    results = []
-    for how, comp_text, cfunc in [
-        ("min", "below", lambda a, b: a < b),
-        ("max", "at", lambda a, b: a > b),
-    ]:
-        state = 0
-        warn, crit = params.get(how + key, (None, None))
-        if crit is not None and cfunc(value, crit):
-            state = 2
-        elif warn is not None and cfunc(value, warn):
-            state = 1
-        results.append((state, warn, crit, comp_text))
-    return results
+        states = [0] * (len(states) + 1)
+        allperfdata = [[]] + allperfdata
+    return zip(states, infotexts, allperfdata)
 
 
 def inventory_fileinfo(parsed):

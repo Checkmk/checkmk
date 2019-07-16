@@ -1,6 +1,7 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from pathlib2 import Path
 import pytest  # type: ignore
 from testlib.base import Scenario
 
@@ -10,6 +11,7 @@ import cmk.utils.paths
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
 import cmk_base.check_api as check_api
+from cmk_base.discovered_labels import DiscoveredServiceLabels
 
 
 def test_duplicate_hosts(monkeypatch):
@@ -1293,36 +1295,49 @@ def test_labels_of_service(monkeypatch):
     ts.add_host("test-host", tags={"agent": "no-agent"})
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.labels_of_service("xyz", "CPU load") == {}
-    assert config_cache.label_sources_of_service("xyz", "CPU load") == {}
+    assert config_cache.labels_of_service("xyz", "CPU load", DiscoveredServiceLabels()) == {}
+    assert config_cache.label_sources_of_service("xyz", "CPU load", DiscoveredServiceLabels()) == {}
 
-    assert config_cache.labels_of_service("test-host", "CPU load") == {
+    assert config_cache.labels_of_service("test-host", "CPU load", DiscoveredServiceLabels()) == {
         "label1": "val1",
         "label2": "val2",
     }
-    assert config_cache.label_sources_of_service("test-host", "CPU load") == {
-        "label1": "ruleset",
-        "label2": "ruleset",
-    }
+    assert config_cache.label_sources_of_service("test-host", "CPU load",
+                                                 DiscoveredServiceLabels()) == {
+                                                     "label1": "ruleset",
+                                                     "label2": "ruleset",
+                                                 }
 
 
-def test_host_labels_of_service_discovered_labels(monkeypatch, tmp_path):
+def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
+    config.load_checks(check_api.get_check_api_context, ["checks/cpu"])
+
     ts = Scenario().add_host("test-host")
 
-    monkeypatch.setattr(cmk.utils.paths, "discovered_service_labels_dir", tmp_path)
-    host_file = (tmp_path / "test-host").with_suffix(".mk")
-    with host_file.open(mode="wb") as f:
-        f.write(repr({u"CPU load": {u"äzzzz": u"eeeeez"}}) + "\n")
+    monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
+    autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("test-host.mk")
+    with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+        f.write(u"""[
+    {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u'äzzzz': u'eeeeez'}},
+]""")
 
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.labels_of_service("xyz", u"CPU load") == {}
-    assert config_cache.label_sources_of_service("xyz", u"CPU load") == {}
+    service = config_cache.get_autochecks_of("test-host")[0]
+    assert service.description == u"CPU load"
 
-    assert config_cache.labels_of_service("test-host", u"CPU load") == {u"äzzzz": u"eeeeez"}
-    assert config_cache.label_sources_of_service("test-host", u"CPU load") == {
-        u"äzzzz": u"discovered"
-    }
+    assert config_cache.labels_of_service("xyz", u"CPU load", DiscoveredServiceLabels()) == {}
+    assert config_cache.label_sources_of_service("xyz", u"CPU load",
+                                                 DiscoveredServiceLabels()) == {}
+
+    assert config_cache.labels_of_service("test-host", service.description,
+                                          service.service_labels) == {
+                                              u"äzzzz": u"eeeeez"
+                                          }
+    assert config_cache.label_sources_of_service("test-host", service.description,
+                                                 service.service_labels) == {
+                                                     u"äzzzz": u"discovered"
+                                                 }
 
 
 @pytest.mark.parametrize("hostname,result", [

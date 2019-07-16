@@ -84,7 +84,6 @@ inventory_output_dir = _omd_path("var/check_mk/inventory")
 inventory_archive_dir = _omd_path("var/check_mk/inventory_archive")
 status_data_dir = _omd_path("tmp/check_mk/status_data")
 discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_labels"))
-discovered_service_labels_dir = Path(_omd_path("var/check_mk/discovered_service_labels"))
 piggyback_dir = Path(tmp_dir) / "piggyback"
 piggyback_source_dir = Path(tmp_dir) / "piggyback_sources"
 

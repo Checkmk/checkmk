@@ -139,6 +139,7 @@ DiscoveryOptions = NamedTuple("DiscoveryOptions", [
     ("action", str),
     ("show_checkboxes", bool),
     ("show_parameters", bool),
+    ("show_discovered_labels", bool),
     ("ignore_errors", bool),
 ])
 
@@ -188,11 +189,14 @@ class ModeDiscovery(WatoMode):
             show_checkboxes = False
 
         show_parameters = not config.user.load_file("parameter_column", False)
+        show_discovered_labels = not config.user.load_file("discovery_show_discovered_labels",
+                                                           False)
 
         self._options = DiscoveryOptions(
             action=action,
             show_checkboxes=show_checkboxes,
             show_parameters=show_parameters,
+            show_discovered_labels=show_discovered_labels,
             ignore_errors=bool(html.request.var("ignoreerrors")),
         )
 
@@ -291,7 +295,15 @@ def _get_check_table(request):
     if config.site_is_local(request.host.site_id()):
         return execute_discovery_job(request)
 
-    return _get_check_table_from_remote(request)
+    discovery_result = _get_check_table_from_remote(request)
+    discovery_result.check_table = _add_missing_service_labels(discovery_result.check_table)
+    return discovery_result
+
+
+# 1.6.0b4 introduced the service labels column which might be missing when
+# fetching information from remote sites.
+def _add_missing_service_labels(check_table):
+    return [(e + ({},) if len(e) < 11 else e) for e in check_table]
 
 
 def _get_check_table_from_remote(request):
@@ -664,6 +676,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         if show_parameters != self._options.show_parameters:
             config.user.save_file("parameter_column", not self._options.show_parameters)
 
+        show_discovered_labels = not config.user.load_file("discovery_show_discovered_labels",
+                                                           False)
+        if show_discovered_labels != self._options.show_discovered_labels:
+            config.user.save_file("discovery_show_discovered_labels",
+                                  not self._options.show_discovered_labels)
+
     def _handle_action(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> DiscoveryResult
         config.user.need_permission("wato.services")
@@ -687,7 +705,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         ), set(), set()
         apply_changes = False
         for table_source, check_type, _checkgroup, item, paramstring, _params, \
-            descr, _state, _output, _perfdata in discovery_result.check_table:
+            descr, _state, _output, _perfdata, service_labels in discovery_result.check_table:
 
             table_target = self._get_table_target(request, table_source, check_type, item)
 
@@ -709,14 +727,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
             if table_source == DiscoveryState.UNDECIDED:
                 if table_target == DiscoveryState.MONITORED:
-                    autochecks_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
                     saved_services.add(descr)
                 elif table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.VANISHED:
                 if table_target != DiscoveryState.REMOVED:
-                    autochecks_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -726,7 +744,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
                 ]:
-                    autochecks_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
 
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -744,7 +762,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
                 ]:
-                    autochecks_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -753,7 +771,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     DiscoveryState.CLUSTERED_NEW,
                     DiscoveryState.CLUSTERED_OLD,
             ]:
-                autochecks_to_save[(check_type, item)] = paramstring
+                autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
                 saved_services.add(descr)
 
             elif table_source in [
@@ -765,7 +783,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 # for adding, removing, etc. of this service on the cluster. Therefore we
                 # do not allow any operation for this clustered service on the related node.
                 # We just display the clustered service state (OLD, NEW, VANISHED).
-                autochecks_to_save[(check_type, item)] = paramstring
+                autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
                 saved_services.add(descr)
 
         if apply_changes:
@@ -1058,6 +1076,7 @@ class DiscoveryPageRenderer(object):
         if already_has_services:
             self._show_checkbox_button(discovery_result)
             self._show_parameters_button(discovery_result)
+            self._show_discovered_labels_button(discovery_result)
 
         if self._is_active(discovery_result):
             stop_options = self._options._replace(action=DiscoveryAction.STOP)
@@ -1094,6 +1113,22 @@ class DiscoveryPageRenderer(object):
 
         html.jsbutton(
             "show_parameters",
+            params_title,
+            self._start_js_call(params_options),
+            disabled=self._is_active(discovery_result),
+        )
+
+    def _show_discovered_labels_button(self, discovery_result):
+        # type: (DiscoveryResult) -> None
+        if self._options.show_discovered_labels:
+            params_options = self._options._replace(show_discovered_labels=False)
+            params_title = _("Hide discovered labels")
+        else:
+            params_options = self._options._replace(show_discovered_labels=True)
+            params_title = _("Show discovered labels")
+
+        html.jsbutton(
+            "show_discovered_labels",
             params_title,
             self._start_js_call(params_options),
             disabled=self._is_active(discovery_result),
@@ -1167,13 +1202,15 @@ class DiscoveryPageRenderer(object):
         colspan = 5
         if self._options.show_parameters:
             colspan += 1
+        if self._options.show_discovered_labels:
+            colspan += 1
         if self._options.show_checkboxes:
             colspan += 1
         return colspan
 
     def _show_check_row(self, table, discovery_result, request, check, show_bulk_actions):
         table_source, check_type, checkgroup, item, _paramstring, params, \
-            descr, state, output, _perfdata = check
+            descr, state, output, _perfdata, service_labels = check
 
         statename = short_service_state_name(state, "")
         if statename == "":
@@ -1205,6 +1242,10 @@ class DiscoveryPageRenderer(object):
         if self._options.show_parameters:
             table.cell(_("Check parameters"))
             self._show_check_parameters(table_source, check_type, checkgroup, params)
+
+        if self._options.show_discovered_labels:
+            table.cell(_("Discovered labels"))
+            self._show_discovered_labels(service_labels)
 
     def _show_status_detail(self, table_source, check_type, item, descr, output):
         if table_source not in [
@@ -1255,6 +1296,14 @@ class DiscoveryPageRenderer(object):
             paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
             html.write_text(paramtext)
 
+    def _show_discovered_labels(self, service_labels):
+        label_code = cmk.gui.view_utils.render_labels(
+            service_labels,
+            "service",
+            with_links=False,
+            label_sources={k: "discovered" for k in service_labels.keys()})
+        html.write(label_code)
+
     def _show_bulk_checkbox(self, table, discovery_result, request, check_type, item,
                             show_bulk_actions):
         if not self._options.show_checkboxes or not config.user.may("wato.services"):
@@ -1292,7 +1341,7 @@ class DiscoveryPageRenderer(object):
             button_classes.append("disabled")
 
         table_source, check_type, checkgroup, item, _paramstring, _params, \
-            descr, _state, _output, _perfdata = check
+            descr, _state, _output, _perfdata, _service_labels = check
         checkbox_name = DiscoveryPageRenderer.checkbox_name(check_type, item)
 
         num_buttons = 0

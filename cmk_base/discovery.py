@@ -1112,9 +1112,14 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
     return _merge_manual_services(host_config, cluster_items, on_error)
 
 
+CheckPreviewEntry = Tuple[str, str, Optional[str], check_table.Item, str, check_table.
+                          CheckParameters, Text, Optional[int], Text, List[Tuple]]
+CheckPreviewTable = List[CheckPreviewEntry]
+
+
 # TODO: Can't we reduce the duplicate code here? Check out the "checking" code
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
-    # type: (str, bool, bool, str) -> List[Tuple[str, str, Optional[str], check_table.Item, str, check_table.CheckParameters, Text, Optional[int], Text, List[Tuple]]]
+    # type: (str, bool, bool, str) -> CheckPreviewTable
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     config_cache = config.get_config_cache()
@@ -1135,7 +1140,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
     services = _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_error)
 
-    table = []
+    table = []  # type: CheckPreviewTable
     for check_source, discovered_service in services.values():
         params = None
         exitcode = None
@@ -1241,6 +1246,14 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 check_source = "%s_ignored" % check_source
         else:
             checkgroup = config.check_info[discovered_service.check_plugin_name]["group"]
+
+        if isinstance(params, cmk_base.config.TimespecificParamList):
+            params = {
+                "tp_computed_params": {
+                    "params": checking.determine_check_params(params),
+                    "computed_at": time.time(),
+                }
+            }
 
         table.append((check_source, discovered_service.check_plugin_name, checkgroup,
                       discovered_service.item, discovered_service.parameters_unresolved, params,

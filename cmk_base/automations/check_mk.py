@@ -189,27 +189,10 @@ class AutomationTryDiscovery(Automation):
 
         data_sources.abstract.DataSource.set_may_use_cache_file(use_caches)
         hostname = args[0]
-        table = discovery.get_check_preview(hostname,
-                                            use_caches=use_caches,
-                                            do_snmp_scan=do_snmp_scan,
-                                            on_error=on_error)
-
-        # Content of one row
-        # check_source, check_plugin_name, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata
-
-        now = time.time()
-        for idx, row in enumerate(table):
-            params = row[5]
-            # This isinstance check is also done within determine check_params,
-            # but the explicit check here saves performance
-            if isinstance(params, cmk_base.config.TimespecificParamList):
-                new_params = cmk_base.checking.determine_check_params(params)
-                # Since the row is a tuple, we cannot simply replace an entry..
-                new_row = list(row)
-                new_row[5] = {"tp_computed_params": {"params": new_params, "computed_at": now}}
-                table[idx] = tuple(new_row)
-
-        return table
+        return discovery.get_check_preview(hostname,
+                                           use_caches=use_caches,
+                                           do_snmp_scan=do_snmp_scan,
+                                           on_error=on_error)
 
 
 automations.register(AutomationTryDiscovery())

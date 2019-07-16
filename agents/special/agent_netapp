@@ -101,6 +101,7 @@ OPTIONS:
   --nocounters volumes          (clustermode only), skip counters for the given element
                                 right now only "volumes" is supported
   --legacy                      Legacy mode with NaServer.py/NaElements.py (not configurable via WATO)
+  --http                        Connect with HTTP instead of HTTPS
 
 Required user permissions
 #########################
@@ -189,10 +190,12 @@ class ErrorMessages(object):
 
 
 class NetAppConnection(object):
-    def __init__(self, hostname, user, password):
+    def __init__(self, hostname, user, password, http=False, port=443):
         self.hostname = hostname
         self.user = user
         self.password = password
+        self.http = http
+        self.port = port
         self.vfiler = None
 
         self.status = None
@@ -246,9 +249,15 @@ class NetAppConnection(object):
             print "######## START QUERY ########"
             print prettify(root_node.get_node())
 
+        if opt_http:
+            proto = 'http'
+        else:
+            proto = 'https'
+
+        url = '%s://%s:%d/servlets/netapp.servlets.admin.XMLrequest_filer' % (proto, self.hostname, self.port)
+
         req = requests.Request('POST',
-                               "https://%s/servlets/netapp.servlets.admin.XMLrequest_filer" %
-                               self.hostname,
+                               url,
                                data=request_message,
                                headers=self.headers,
                                auth=(self.user, self.password))
@@ -1446,7 +1455,7 @@ def connect(host_address):
             if opt_dump_xml:
                 server.set_debug_style("NA_PRINT_DONT_PARSE")
         else:
-            server = NetAppConnection(host_address, opt_user, opt_secret)
+            server = NetAppConnection(host_address, opt_user, opt_secret, opt_http, opt_port)
             if opt_debug:
                 print "Running in optimized mode"
                 server.debug = True
@@ -1480,14 +1489,16 @@ opt_debug = False
 opt_dump_xml = False
 opt_no_counters = []
 opt_legacy = False
+opt_http = False
+opt_port = 443
 section_errors = []
 
 
 def main():
-    global opt_user, opt_secret, opt_timeout, opt_debug, opt_dump_xml, opt_no_counters, opt_legacy
+    global opt_user, opt_secret, opt_timeout, opt_debug, opt_dump_xml, opt_no_counters, opt_legacy, opt_http, opt_port
 
-    short_options = 'hu:s:t:o'
-    long_options = ['help', 'debug', 'user=', 'secret=', 'timeout=', 'xml', "nocounters=", "legacy"]
+    short_options = 'hu:s:t:oip:'
+    long_options = ['help', 'debug', 'user=', 'secret=', 'timeout=', 'xml', "nocounters=", "legacy", 'http', 'port=']
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -1510,6 +1521,10 @@ def main():
             opt_dump_xml = True
         elif o in ['-t', '--timeout']:
             opt_timeout = int(a)
+        elif o in ['--http']:
+            opt_http = True
+        elif o in ['-p', '--port']:
+            opt_port = int(a)
         elif o in ['-h', '--help']:
             usage()
             return 0

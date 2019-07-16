@@ -39,7 +39,6 @@ enum class Counter {
     log_messages,
     commands,
     livechecks,
-    livecheck_overflows,
     overflows
 };
 

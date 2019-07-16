@@ -71,7 +71,6 @@ DEFAULT_CFG_FILE = os.path.join(os.getenv('MK_CONFDIR', ''), "docker.cfg")
 
 DEFAULT_CFG_SECTION = {
     "base_url": "unix://var/run/docker.sock",
-    "api_version": "auto",
     "skip_sections": "",
     "container_id": "short",
 }
@@ -164,8 +163,10 @@ def report_exception_to_server(exc, location):
 
 class MKDockerClient(docker.DockerClient):
     '''a docker.DockerClient that caches containers and node info'''
+    API_VERSION = "auto"
+
     def __init__(self, config):
-        super(MKDockerClient, self).__init__(config['base_url'], version=config['api_version'])
+        super(MKDockerClient, self).__init__(config['base_url'], version=MKDockerClient.API_VERSION)
         all_containers = self.containers.list(all=True)
         if config['container_id'] == "name":
             self.all_containers = {c.attrs["Name"].lstrip('/'): c for c in all_containers}

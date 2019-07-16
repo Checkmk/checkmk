@@ -906,8 +906,8 @@ def parse_arguments(argv):
 
 def write_output(lines, opt):
     if opt.agent:
-        win_agent_output = get_agent_info_tcp(opt.host_address, opt.timeout, opt.debug)
-        sys.stdout.write(win_agent_output)
+        for chunk in get_agent_info_tcp(opt.host_address, opt.timeout, opt.debug):
+            sys.stdout.write(chunk)
 
     for line in lines:
         sys.stdout.write((line.encode("utf-8") if isinstance(line, unicode) else line) + "\n")
@@ -915,7 +915,6 @@ def write_output(lines, opt):
 
 
 def get_agent_info_tcp(address, timeout, debug):
-    raw_response = ""
     try:
         # TODO: gethostbyname() automatically detects IP addresses and does
         # *not* contact any nameserver in that case. So the following two
@@ -934,19 +933,15 @@ def get_agent_info_tcp(address, timeout, debug):
             soc.setblocking(1)
         except AttributeError:
             pass
-        raw_response = ""
         while True:
             received = soc.recv(4096, socket.MSG_WAITALL)
-            if received:
-                raw_response += received
-            else:
+            if not received:
                 break
+            yield received
         soc.close()
-        return raw_response
     except Exception:
         if debug:
             raise
-    return raw_response
 
 
 # Create a search pattern for the get_pattern function

@@ -29,7 +29,7 @@ static void LoadTestConfig(YAML::Node Node) {
         "    - '*' : warn context\n");
 }
 
-constexpr int LogWatchSections_Main = 2;
+constexpr int LogWatchSections_Main = 1;
 constexpr int LogWatchSections_Test = 5;
 
 TEST(LogWatchEventTest, Consts) {
@@ -132,7 +132,7 @@ TEST(LogWatchEventTest, Config) {
 
         // data to be tested against
         const RawLogWatchData base[LogWatchSections_Test] = {
-            {false, "", cma::cfg::EventLevels::kOff, false},
+            //{false, "", cma::cfg::EventLevels::kOff, false},
             {true, "*", cma::cfg::EventLevels::kWarn, false},
         };
 

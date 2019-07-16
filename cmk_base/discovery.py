@@ -1113,7 +1113,7 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
 
 
 CheckPreviewEntry = Tuple[str, str, Optional[str], check_table.Item, str, check_table.
-                          CheckParameters, Text, Optional[int], Text, List[Tuple]]
+                          CheckParameters, Text, Optional[int], Text, List[Tuple], Dict[Text, Text]]
 CheckPreviewTable = List[CheckPreviewEntry]
 
 
@@ -1257,6 +1257,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
         table.append((check_source, discovered_service.check_plugin_name, checkgroup,
                       discovered_service.item, discovered_service.parameters_unresolved, params,
-                      discovered_service.description, exitcode, output, perfdata))
+                      discovered_service.description, exitcode, output, perfdata,
+                      discovered_service.service_labels.to_dict()))
 
     return table

@@ -60,7 +60,10 @@ import cmk_base.parent_scan
 import cmk_base.notify as notify
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
-from cmk_base.discovered_labels import DiscoveredServiceLabels
+from cmk_base.discovered_labels import (
+    DiscoveredServiceLabels,
+    ServiceLabel,
+)
 
 
 class DiscoveryAutomation(Automation):
@@ -216,10 +219,16 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         host_config = config_cache.get_host_config(hostname)
 
         new_services = []
-        for (check_plugin_name, item), paramstr in new_items.items():
+        for (check_plugin_name, item), (paramstr, raw_service_labels) in new_items.items():
             descr = config.service_description(hostname, check_plugin_name, item)
+
+            service_labels = DiscoveredServiceLabels()
+            for label_id, label_value in raw_service_labels.iteritems():
+                service_labels.add_label(ServiceLabel(label_id, label_value))
+
             new_services.append(
-                discovery.DiscoveredService(check_plugin_name, item, descr, paramstr))
+                discovery.DiscoveredService(check_plugin_name, item, descr, paramstr,
+                                            service_labels))
 
         autochecks.set_autochecks_of(host_config, new_services)
         self._trigger_discovery_check(host_config)

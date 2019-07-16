@@ -133,7 +133,7 @@ multisite_icons_and_actions['download_agent_output'] = {
 }
 
 multisite_icons_and_actions['download_snmp_walk'] = {
-    'host_columns'    : [ "filename" ],
+    'host_columns'    : [ "filename", "check_type" ],
     'paint'           : paint_download_snmp_walk,
     'toplevel'        : False,
     'sort_index'      : 50,

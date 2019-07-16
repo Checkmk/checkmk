@@ -1,0 +1,12 @@
+Title: Fix traceback for builtin icon visibility
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p20
+Date: 1563263497
+Class: fix
+
+If the "Builtin icon visibility" was configured for
+download_agent_output, but not for download_snmp_walk
+the action menu showed a traceback.

@@ -1,10 +1,10 @@
+#
 # Default Check MK configuration file
-# Copyright Mathias Kettner GmbH
-# version 10009
-# tag '06.05.2019'
+#
 
-# global must be presented
-# IMPORTANT notes
+# Copyright Mathias Kettner GmbH
+
+# version 10011
 
 # @user -> is ProgramData/CheckMK/Agent/plugins
 # @core -> is Program Files(x86)/check_mk_service/plugins
@@ -12,13 +12,9 @@
 # @local -> is ProgramData/CheckMK/Agent/local
 
 # 1. use http://www.yamllint.com/ for example to validate your yamllint
-# 2. Windows filenames contains backslash \, ergo you have to write either "c:\\windows" or 'c:\windows' 
+# 2. Windows filenames may contain backslash \, ergo you have to write either "c:\\windows" or 'c:\windows' 
 
 global:
-    # use name to have mor clear logs just for user
-    # Descriptive name of the configuration file
-    name: Config File Example from Check MK distribution
-
     # section may be fully disabled
     enabled: yes
 
@@ -27,13 +23,10 @@ global:
     # source adresses in their ipv6-mapped form. I.e. if
     # 192.168.56.0/24 is listed, connections from ::ffff:c0a8:3800/120
     # are also possible
-    _only_from: # 127.0.0.1 192.168.56.0/24 ::1
+    only_from: # 127.0.0.1 192.168.56.0/24 ::1
 
     # Change port where the agent is listening ( default 6556 )
     port: 6556
-
-    # New parameter
-    lock: no # [-] use port exclusively by own process
 
     # Disable ipv6 support. By default, ipv4 is always supported
     # and ipv6 is enabled additionally if supported by the system.
@@ -47,32 +40,43 @@ global:
 
     # Do only execute programs and scripts with
     # the following suffixes (in local and plugins).
-    # Per default all extensions except txt and dir
-    # are being executed.
     execute: [exe, bat, vbs, cmd, ps1]
 
-    # Run sync scripts in parallel (to each other). Default is "sequential",
-    # which means the scripts are run asynchronously to the agent itself but
-    # one after the other. Setting this to parallel may improve the delay before
-    # new data is reported but may also lead to the agent having more noticable
-    # impact on the system performance
-    # BAD PLACE and duplicates same flag in plugins
+    # Run sync scripts in parallel (to each other). Default is "async"
     async: yes
 
     # Just output certain sections
+    # Output order is random with exception check_mk, always first and systemtime, always last`
     sections: 
-        - check_mk mrpe skype spool 
-        - [plugins, local]
-        - winperf uptime systemtime df mem services 
-        - [msexch, dotnet_clrmemory, wmi_webservices, wmi_cpuload]
-        - ps fileinfo logwatch openhardwaremonitor 
+        - check_mk 
+        - mrpe 
+        - skype 
+        - spool 
+        - plugins
+        - local
+        - winperf 
+        - uptime 
+        - systemtime 
+        - df 
+        - mem 
+        - services 
+        - msexch
+        - dotnet_clrmemory
+        - wmi_webservices
+        - wmi_cpuload
+        - ps 
+        - fileinfo 
+        - logwatch 
+        - openhardwaremonitor 
     
-    # forced to not use
-    disabled_sections: [_logfiles, winperf_xxx, badname]
+    # sections to be skipped
+    disabled_sections: []
 
-    #realtime data description
+    #realtime data
     realtime:
+        # by default we do not send realtime data to server
         enabled: no
+
         # specifies how long (in seconds) realtime updates are sent to
         # the last monitoring system that requested an update.
         # this should be longer than the request frequency (usually
@@ -82,36 +86,36 @@ global:
         # no matter if this timeout is "too high" or how many monitoring
         # systems are querying the agent.
         timeout: 90
+
+        # Default port for realtime data
+        port: 6559
+
         # enable/disable encryption of regular agent output (default: disabled) 
         # yes or no
-        port: 6559
         encrypted: no
+
         # passphrase for encrypted communication.
         passphrase: this is my password
-        # which sections are realtime
+
+        # which sections are provided in realtime
         run: [mem, df, winperf_processor]
 
-    # by default the agent flushes the socket for each agent section.
-    # this is mostly for debugging purposes in case the agent is slow
-    # to respond.
-    # Disabling this may (very) slightly reduce network traffic.
-    section_flush: no
-
-    # In seconds. Windows may be slow during WMI, increase the value when you have problems
-    # Legacy agent is 2.5 seconds, this is not enough
+    # Windows may be slow during WMI, increase the value when you have problems
+    # In seconds 
     wmi_timeout: 3 
 
-    # -------------------------------------------------------------- 
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     logging:
         # windows /logs/name or public/name, default is yes
         public: yes
-        # name of file log, default is check_mk.log
+        # name of file log, default(if file value is absent) is check_mk.log
         file : 
+
         # log in file also internal debug messages, recommended when we have problems
-        # allowed no, yes and all. Default yes!
+        # Allowed: no, yes and all. Default: yes, this is different from the Legacy Agent settings
         debug: yes
+
         # you may send logging messages in realtime in windows debug sink, default is yes
         windbg: yes
 
@@ -120,7 +124,9 @@ global:
 
 ps:
     enabled: yes
+    # This is required for the additional ps feature below.
     use_wmi: yes
+    # Include the whole path of a process and its arguments in the process list.
     full_path: yes
 
 winperf:
@@ -144,127 +150,55 @@ winperf:
         - 234: phydisk
         - 510: if
         - 238: processor
-        #- 638: tcp_conn
-        #- Terminal Services: ts_sessions
 
 logfiles:
     enabled: no
-    ## Define textfiles to be monitored
-    ## observer
-    view:
-        - name: My usual log for daily use with my friends # this is name of the check
-          observe:
-              - 'C:\tmp': # this is folder
-                  # below list of file to view on location
-                  - 'logfiles\message_*.log' 
-                  - 'logfile\my*.log'
-              - 'D:\log': #this is folder
-                  - 'sample1.txt'
-                  - 'sample2.txt'
-              - 'c:\Windows\Logs\setupapi.log'
-          patterns:
-              ok:     'Successfully logged in*'
-              crit:   'Error in*'
-              warn:   'Unable to contact*'
-              ignore: 'Backup * saved'
-        - name: My special logs
-          observe: 
-              - 'C:\tmp\memo.udf':
-          patterns:
-              ok:     '*mail sent*'
-              warn:   '*overdue*'
-        - name: My interesting logs
-          description: > 
-                this is my description which I can add to almost any iten 
-                item ib the config file and see it in the log
-          observe: 
-              - 'C:\tmp\memo.crit':
-          # below is default
-          rotated: no     
-          context: yes      
-          from_start: no
-          patterns:
-              ok:     '*mail sent*'
-              warn:   '*overdue*'
+    # Define textfiles to be monitored
+    # We do not support logfiles monitoring at he moment
+    # Please, use plugin mk_logwatch
 
 fileinfo:
     enabled: yes
-    path:
-        - ''  # empty strings will be ignored
-        - '--' # all string without "C:\" or "\\" at start will be ignored too for security reason
-        # - 'c:\a\a' # generates missing| string
-        # - 'c:\Users\Public\*.log' # real string to process
-        # - "this\\is\\not\\recommended\\" # double quoating uses escape sequences
-        # - 'c:\Users\Public\**\Desktop.ini' works, 8 files to control
-        # - 'c:\Windows\Resources\**\aero\aero*.*' works too, you will get two files in 'c:\Windows\Resources\Themes\aero\'
-        # - 'c:\dev\shared_public\*.*' # typical test folder, provided during development
+    path: []
 
 logwatch:
     enabled: yes
     
-    sendall: no   # this is MANDATORY
+    sendall: no   # this value is MANDATORY, yes is useful only for debugging
     vista_api: no # this is RECOMMENDED
 
     logfile: # entries in the windows eventlog
-        # Format is sequence 
-        # - 'EventLogName': <crit|warn|all|off> + [context|nocontext]
-        # end of documentation
-        #- 'Application': crit context # example
-        #- 'System': warn nocontext    # another example
-        #- 'YourOwn': all nocontext    # yet another example
-        - '': warn nocontext # allowed crit, warn, all, off
         - '*': warn nocontext # This is default params for not missing entries
 
 plugins:
-    # scripts in plugin
     enabled: yes
 
-    # default value, you may disable all scripts in local with no
-    player: '' # [-] when empty we wil use default value, i.e. our player
+    player: ''   # internal value, do not change this
 
     max_wait: 60 # max timeout for every sync plugin. Agen will gather plugins data no more than max_wait time.
                  # this is useful to terminate badly written or hanging plugins   
 
 
-    async_start: yes # start plugins asynchronous, this is normal mode. 
+    async_start: yes # start plugins asynchronous, this is default
 
     # folders are scanned left -> right, order is important
     # duplicated files will be removed
     folders: ['@user', '@core' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
-    
-    # example: mk_inventory.vbs
-    # plugin is executed asynchronous
-    # and is only updated every 3600 seconds
-    # it may fail (timeout / error) up to 3 times before the last known data is discarded
-    # we will look for a folder in core(Program Files/Check_mk/plugins), if not found in
-    # ProgramData, if not found in __mdlx, etc/
-    # after config change fail count will be reset
+
+    # what to execute    
     execution:
-        # execution pattern for  windows-updates.vbs:
-        # all parameters below are DEFAULT set for every entry
-        #- pattern     : '@user\mk_inventory.vbs'  # Plugin name or absolute path . * and ? are allowed
-        #  run         : yes                 # execute this plugin if plugin found
-        #  async       : yes                 # async plugin is a bit special. Normally you will get delayed data.
-        #  timeout     : 120                 # after 120 seconds process will be killed.
-        #  cache_age   : 3600                # only combined with async, upto 3600 seconds we may reuse plugin output
-        #  retry_count : 3                   # failure on start plugin, before stopping
-        #  cmd_line    : ''                  # [-] command line
-        #  description : 'In free form'      # [-] will be stored in the log
-        #
-        #  pattern     : '@user\win_license.bat'   # Plugin name. * and ? are allowed
-        #  run         : no                  # do not execute this plugin even if plugin found
 
-        - pattern     : '@user\*.*'         # in the ProgramData folder. DO NOT REMOVE THIS ENTRY
-          timeout     : 30                  # after 30 seconds process will be killed.
-          run         : yes                 # ALL FOUND files ARE DISABLED this Current Default Behavior
+        # Default behavior as in 1.5
+        - pattern     : '@user\*.*'         # Look for executable files in the ProgramData folder. 
+          timeout     : 60                  # in seconds, after expiring timeout, process will be killed.
+          run         : yes                 # ALL FOUND files ARE ENABLED
 
-        - pattern     : '@core\*.*'         # in the ProgramFiles folder. DO NOT REMOVE THIS ENTRY
-          timeout     : 30                  # after 30 seconds process will be killed.
-          run         : no                  # ALL FOUND files ARE DISABLED this Default Behavior
+        - pattern     : '@core\*.*'         # Look for files in the ProgramFiles folder.
+          timeout     : 60                  # in seconds, after expiring timeout, process will be killed.
+          run         : no                  # ALL FOUND files ARE DISABLED
 
-        - pattern     : '*'                 # This is safety entry. Try not use plugins outside your predefined folder
-          run         : no                  # ALL FOUND files ARE DISABLED this Current Default Behavior
-                                            # set this parameter to yes to change behavior like Legacy Agent 
+        - pattern     : '*'                 # This is safety entry. 
+          run         : no                  # ALL other FOUND files ARE DISABLED TOO.
 
 # The same as plugins with same parameters
 # But: used folder local
@@ -272,35 +206,30 @@ local:
     # scripts in plugin
     enabled: yes
 
-    # default value, you may disable all scripts in local with no
-    player: '' # [-] when empty we wil use default value, i.e. our player
+    player: ''   # default value
 
-    max_wait: 60 # max timeout for every sync plugin. Agen will gather plugins data no more than max_wait time.
+    max_wait: 60 # max timeout for every sync plugin. Agent will gather plugins data no more than max_wait time.
                  # this is useful to terminate badly written or hanging plugins   
 
 
-    async_start: true # start plugins asynchronous, this is normal mode. 
+    async_start: true # start plugins asynchronous, this is default 
 
     execution:
-        # execution pattern for  windows-updates.vbs:
         # all parameters below are DEFAULT set for every entry
-        - pattern     : 'test_me.bat'   # [+] Plugin name. * and ? are allowed
-          timeout     : 10              # [+] after 10 seconds process will be killed.
-          run         : yes             # [+] execute this plugin.
 
-        - pattern     : '*.*'           # in the user folder. DO NOT REMOVE THIS ENTRY
-          timeout     : 10              # [+] after 10 seconds process will be killed.
-          run         : yes             # ALL FOUND files ARE DISABLED this Current Default Behavior
+        - pattern     : '*.*'           # in the local folder.
+          timeout     : 60              # in seconds, after expiring timeout all processes matching the pattern will be killed.
+          run         : yes             # ALL FOUND files ARE ENABLEDr
 
 
 mrpe:
     enabled: yes
 
-    # 60 is default, this is safe value, because mrpe checks are relative fast ergo
+    # 60 is default, this is safe value, because mrpe checks are relative fast ->
     # hitting this timeout is virtually not possible
     timeout: 60
 
-    # entries and cfg are the same as in the Legacy agent
+    # entries and cfg have  the same format as in the Legacy agent
     config:
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
         # - include user_name = @data\mrpe_checks.cfg

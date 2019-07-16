@@ -99,6 +99,8 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntPointerColumn>(
         "nagios_pid", "The process ID of the monitoring core", &nagios_pid));
     addColumn(std::make_unique<IntPointerColumn>(
+        "core_pid", "The process ID of the monitoring core", &nagios_pid));
+    addColumn(std::make_unique<IntPointerColumn>(
         "enable_notifications",
         "Whether notifications are enabled in general (0/1)",
         &enable_notifications));
@@ -235,6 +237,15 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
         -1, -1, -1, 0, mc, StatusSpecialIntColumn::Type::mk_inventory_last));
+    addColumn(std::make_unique<StatusSpecialIntColumn>(
+        "num_queued_notifications",
+        "The number of queued notifications which have not yet been delivered to the notification helper",
+        -1, -1, -1, 0, mc,
+        StatusSpecialIntColumn::Type::num_queued_notifications));
+    addColumn(std::make_unique<StatusSpecialIntColumn>(
+        "num_queued_alerts",
+        "The number of queued alerts which have not yet been delivered to the alert helper",
+        -1, -1, -1, 0, mc, StatusSpecialIntColumn::Type::num_queued_alerts));
 }
 
 void TableStatus::addCounterColumns(const std::string &name,

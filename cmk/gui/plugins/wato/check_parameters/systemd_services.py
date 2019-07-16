@@ -34,6 +34,8 @@ from cmk.gui.valuespec import (
     RegExpUnicode,
     RegExp,
     TextAscii,
+    Tuple,
+    Integer,
 )
 
 from cmk.gui.plugins.wato import (
@@ -113,8 +115,8 @@ class RulespecCheckgroupParametersSystemdServices(CheckParameterRulespecWithItem
                  ),
                  title=_("Exclude services matching provided regex patterns"),
                  help=_(
-                     '<p>You can optionally define one or multiple regular expressions'
-                     'where a matching case will result in the exclusion of the concerning service(s).'
+                     '<p>You can optionally define one or multiple regular expressions '
+                     'where a matching case will result in the exclusion of the concerning service(s). '
                      'This allows to ignore services which are known to fail beforehand. </p>'),
                  add_label=_("Add pattern"),
              )),
@@ -139,6 +141,16 @@ class RulespecCheckgroupParametersSystemdServices(CheckParameterRulespecWithItem
                  title=_("Monitoring state if a monitored service is not found at all."),
                  default_value=2,
              )),
+            ("activating_levels",
+             Tuple(
+                 title=_("Define a tolerating time period for activating services"),
+                 help=
+                 _("Choose time levels (in seconds) for which a service is allowed to be in an 'activating' state"
+                  ),
+                 elements=[
+                     Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
+                     Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
+                 ])),
         ],)
 
     @property

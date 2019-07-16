@@ -359,7 +359,8 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds Timeout,
         if (buf.size()) appendResult(read_handle, buf);
 
         if (ready) {
-            XLOG::d.t("Received [{}] bytes", buf.size());
+            XLOG::t("Minibox is ready after receiving [{}] bytes from '{}'",
+                    buf.size(), wtools::ConvertToUTF8(cmd_));
             return true;
         }
 
@@ -904,7 +905,7 @@ void RunDetachedPlugins(PluginMap& plugins_map, int& start_count) {
             continue;
         };
     }
-    XLOG::l.i("Detached started: [{}]", count);
+    XLOG::t.i("Detached started: [{}]", count);
     start_count = count;
 
     return;

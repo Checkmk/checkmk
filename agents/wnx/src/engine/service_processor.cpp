@@ -224,7 +224,7 @@ void ServiceProcessor::preStart() {
 }
 
 void ServiceProcessor::detachedPluginsStart() {
-    XLOG::l.i("Detached Start");
+    XLOG::t.i("Detached Start");
     auto& plugins = plugins_provider_.getEngine();
     plugins.detachedStart();
 }
@@ -258,7 +258,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
 
     auto& ohm_engine = ohm_provider_.getEngine();
     if (!ohm_engine.isAllowedByCurrentConfig()) {
-        XLOG::d.i("OHM starting skipped due to config");
+        XLOG::t.i("OHM starting skipped due to config");
         return false;
     }
 

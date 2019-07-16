@@ -208,6 +208,7 @@ private:
         // this is the only entry point
         // based on the code example from asio
         void run_accept(cma::world::SinkFunc sink, ExternalPort* Port) {
+            XLOG::t.i("Accepting connection");
             acceptor_.async_accept(socket_, [this, sink,
                                              Port](std::error_code ec) {
                 if (ec.value()) {
@@ -223,7 +224,7 @@ private:
                             std::make_shared<AsioSession>(std::move(socket_));
 
                         // only_from checking
-                        // we are doping it always
+                        // we are doing this always
                         if (cma::cfg::groups::global.isIpAddressAllowed(ip))
                             sink(x, Port);
                         else {

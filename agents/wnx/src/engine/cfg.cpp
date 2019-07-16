@@ -5,6 +5,7 @@
 #include <direct.h>  // known path
 #include <shellapi.h>
 #include <shlobj.h>  // known path
+#include <versionhelpers.h>
 #include <windows.h>
 
 #include <atomic>
@@ -1021,7 +1022,7 @@ void ConfigInfo::initAll(
 // normally used to reload configs or testing
 void ConfigInfo::cleanAll() {
     std::lock_guard lk(lock_);
-    XLOG::l.t(XLOG_FUNC + " !");
+    XLOG::t(XLOG_FUNC + " !");
     exe_command_paths_.resize(0);  // root/utils, root/plugins etc
     config_dirs_.resize(0);        // root und data
 
@@ -1055,7 +1056,7 @@ void ConfigInfo::initEnvironment() {
     p /= "msiexec.exe";
     std::error_code ec;
     if (fs::exists(p, ec)) {
-        XLOG::l.i("Found msiexec {}", p.u8string());
+        XLOG::t.i("Found msiexec {}", p.u8string());
         path_to_msi_exec_ = p.wstring();
     } else
         XLOG::l.crit(
@@ -1274,6 +1275,81 @@ static void PreMergeSections(YAML::Node target, YAML::Node source) {
     MergeStringSequence(tgt_local, src_local, vars::kPluginsFolders);
 }
 
+static bool Is64BitWindows() {
+#if defined(_WIN64)
+    return true;  // 64-bit programs run only on Win64
+#elif defined(_WIN32)
+    // 32-bit programs run on both 32-bit and 64-bit Windows
+    // so must sniff
+    BOOL f64 = FALSE;
+    return IsWow64Process(GetCurrentProcess(), &f64) && f64;
+#else
+    return false;  // Win64 does not support Win16
+#endif
+}
+
+// Scott Meyer method to have a safe singleton
+// static variables with block scope created only once
+class InfoStrings {
+public:
+    static InfoStrings& get() {
+        static InfoStrings instance;
+        return instance;
+    }
+
+    const std::string agentString() const noexcept { return agent_string_; }
+    const std::string osString() const noexcept { return os_string_; }
+
+private:
+    InfoStrings() {
+        agent_string_ = makeAgentInfoString();
+        os_string_ = makeOsInfoString();
+    }
+
+    // generates short info about agent(version, build, environment)
+    // required to correctly identify client in log
+    static std::string makeAgentInfoString() noexcept {
+        constexpr std::string_view build_bits =
+            tgt::Is64bit() ? "64bit" : "32bit";
+        constexpr std::string_view debug = tgt::IsDebug() ? "debug" : "release";
+        constexpr std::string_view version = CHECK_MK_VERSION;
+        constexpr std::string_view build_date = __DATE__;
+        constexpr std::string_view build_time = __TIME__;
+        return fmt::format("[{},{},{},{},{}]", version, build_bits, debug,
+                           build_date, build_time);
+    }
+
+    // generates short info about OS
+    // required to correctly identify client in log
+    static std::string_view GetWindowsId() noexcept {
+        if (IsWindows10OrGreater()) return "10";
+        if (IsWindows8Point1OrGreater()) return "8.1";
+        if (IsWindows8OrGreater()) return "8";
+        if (IsWindows7SP1OrGreater()) return "7SP";
+        if (IsWindows7OrGreater()) return "7";
+        if (IsWindowsVistaSP2OrGreater()) return "VistaSp2";
+        if (IsWindowsVistaSP1OrGreater()) return "VistaSp1";
+        if (IsWindowsVistaOrGreater()) return "VistaSp";
+        return "XP";
+    }
+
+    static std::string makeOsInfoString() noexcept {
+        const std::string_view server =
+            IsWindowsServer() ? "server" : "desktop";
+        const std::string_view bits_count = Is64BitWindows() ? "64" : "32";
+
+        const std::string_view os_id = GetWindowsId();
+
+        return fmt::format("Win{}-{} {}", os_id, bits_count, server);
+    }
+
+    ~InfoStrings() = default;
+    InfoStrings(const InfoStrings&) = delete;
+    InfoStrings& operator=(const InfoStrings&) = delete;
+    std::string agent_string_;
+    std::string os_string_;
+};
+
 // node is typical config from the root
 // we will load all others configs and try to merge
 // success ALWAYS
@@ -1321,10 +1397,11 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
     yaml_ = node;
 
     XLOG::d.i(
-        "Loaded Config Files\n"
+        "Loaded Config Files by Agent {} @ '{}'\n"
         "    root:   '{}' size={} {}\n"
         "    bakery: '{}' size={} {}\n"
         "    user:   '{}' size={} {}",
+        InfoStrings::get().agentString(), InfoStrings::get().osString(),
         //
         Yd[0].path_.u8string(), Yd[0].data().size(),
         Yd[0].bad() ? "[FAIL]" : "[OK]",
@@ -1339,8 +1416,6 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
     root_yaml_path_ = Yd[0].path_;
     bakery_yaml_path_ = Yd[1].path_;
     user_yaml_path_ = Yd[2].path_;
-    fs::path temp_folder = "c:\\dev\\shared";
-    auto path = temp_folder / "out";
 
     aggregated_ = true;
     ok_ = true;

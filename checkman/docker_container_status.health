@@ -7,15 +7,17 @@ description:
  Monitors the health status of docker containers, as reported via
  the HEALTHCHECK API. A Status of "healthy" is treated as OK,
  "starting" as WARN, "unhealthy" as CRIT.
+ The Plugin additionally displays the last reported output of the health test
+ and the configured health test command itself.
 
  To make this check work the agent plugin {{mk_docker.py}} has to be installed.
  If you are using agent bakery rules, you must enable "Piggybacked docker containers".
  If you are configuring the plugin via the configuration file, make sure you do not skip th
- section "docker_containers_client" (the default setting is fine).
+ section "docker_container_status" (the default setting is fine).
 
 item:
  None
 
 inventory:
- One check per container is discovered if HEALTHCHECK has been
- implemented for this container.
+ One service is discovered for every active container (running or restart policy 'always')
+ that has a health test configured.

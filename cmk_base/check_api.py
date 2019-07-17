@@ -202,6 +202,17 @@ def savefloat(f):
         return 0.0
 
 
+class as_float(float):
+    """Extends the float representation for Infinities in such way that
+    they can be parsed by eval"""
+    def __repr__(self):
+        if self > sys.float_info.max:
+            return '1e309'
+        if self < -1 * sys.float_info.max:
+            return '-1e309'
+        return super(as_float, self).__repr__()
+
+
 # Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()
 def service_extra_conf(hostname, service, ruleset):
     return _config.get_config_cache().service_extra_conf(hostname, service, ruleset)

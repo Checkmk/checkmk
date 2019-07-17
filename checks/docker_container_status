@@ -24,6 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+RESTART_POLICIES_TO_DISCOVER = ("always",)
+
+HEALTH_STATUS_MAP = {
+    "healthy": 0,
+    "starting": 1,
+    "unhealthy": 2,
+}
+
+
+def _is_active_container(parsed):
+    '''return wether container is or should be running'''
+    if parsed.get("Status") == "running":
+        return True
+    restart_policy_name = parsed.get("RestartPolicy", {}).get("Name")
+    return restart_policy_name in RESTART_POLICIES_TO_DISCOVER
+
 
 def parse_docker_container_status(info):
     '''process the first line to a JSON object
@@ -57,26 +73,41 @@ def parse_docker_container_status(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_docker_container_status_health(parsed):
-    if "Health" in parsed:
-        yield None, None
+def discover_docker_container_status_health(parsed):
+    if not _is_active_container(parsed):
+        return
+    # Only discover if a healthcheck is configured.
+    # Stopped containers may have the 'Health' key anyway, so that's no criteria.
+    if "Healthcheck" in parsed:
+        yield None, {}
 
 
 def check_docker_container_status_health(_no_item, _no_params, parsed):
-    health_status = parsed.get("Health", {}).get("Status")
+    if parsed.get("Status") != "running":
+        raise MKCounterWrapped("Container is not running")
 
-    if health_status == "healthy":
-        return 0, "Healthy"
-    elif health_status == "starting":
-        return 1, "Starting"
-    elif health_status == "unhealthy":
+    health = parsed.get("Health", {})
+
+    health_status = health.get("Status", "unknown")
+    state = HEALTH_STATUS_MAP.get(health_status, 3)
+    yield state, "Health status: %s" % health_status.title()
+
+    last_log = health.get("Log", [{}])[-1]
+    health_report = last_log.get("Output", "no output").strip()
+    if health_report:
+        yield int(last_log.get("ExitCode") != 0), "Last health report: %s" % health_report
+
+    if state == 2:
         failing_streak = parsed.get("Health", {}).get("FailingStreak", "not found")
-        return 2, "Unhealthy - Failing Streak: %d" % failing_streak
-    return 3, "Health Status '%s' unknown" % health_status
+        yield 2, "Failing streak: %s" % failing_streak
+
+    health_test = parsed.get("Healthcheck", {}).get("Test")
+    if health_test:
+        yield 0, "Health test: %r" % ' '.join(health_test)
 
 
 check_info["docker_container_status.health"] = {
-    "inventory_function": inventory_docker_container_status_health,
+    "inventory_function": discover_docker_container_status_health,
     "check_function": check_docker_container_status_health,
     "service_description": "Docker container health",
     'includes': ['docker.include', 'legacy_docker.include'],
@@ -95,6 +126,11 @@ check_info["docker_container_status.health"] = {
 #   '----------------------------------------------------------------------'
 
 
+def discover_docker_container_status(parsed):
+    if _is_active_container(parsed):
+        yield None, {}
+
+
 @append_deprecation_warning  # pylint: disable=undefined-variable
 def check_docker_container_status(_no_item, _no_params, parsed):
     status = parsed.get("Status", "unknown")
@@ -108,7 +144,7 @@ def check_docker_container_status(_no_item, _no_params, parsed):
 
 check_info['docker_container_status'] = {
     'parse_function': parse_docker_container_status,
-    'inventory_function': discover_single,
+    'inventory_function': discover_docker_container_status,
     'check_function': check_docker_container_status,
     'service_description': 'Docker container status',
     'includes': ['docker.include', 'legacy_docker.include'],

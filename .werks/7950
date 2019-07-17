@@ -1,0 +1,14 @@
+Title: docker_container_status: Improved discovery and health check
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1563346763
+Class: feature
+
+The docker container status check now only discovers containers that either should be
+running (restart policy set to 'always') or actually are running.
+
+For the subset of those that have a health check set up, the service 'Docker container health' is discoverd.
+It now also reports the last reported health test output and the health test command.

@@ -195,6 +195,13 @@ class RulespecSpecialAgentsKubernetes(HostRulespec):
                 ],
                 optional_keys=["port", "url-prefix", "path-prefix"],
                 title=_(u"Kubernetes"),
+                help=_(
+                    "This rule selects the Kubenetes special agent for an existing Checkmk host. "
+                    "If you want to monitor multiple Kubernetes clusters "
+                    "we strongly recommend to set up "
+                    "<a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation\">Piggyback translation rules</a> "
+                    "to avoid name collisions. Otherwise e.g. Pods with the same name in "
+                    "different Kubernetes clusters cannot be distinguished."),
             ),
             forth=self._transform,
         )

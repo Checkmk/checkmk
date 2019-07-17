@@ -150,6 +150,16 @@ class RulespecSpecialAgentsKubernetes(HostRulespec):
                         title=_("Token"),
                         allow_empty=False,
                     )),
+                    ("no-cert-check",
+                     Alternative(title=_("SSL certificate verification"),
+                                 elements=[
+                                     FixedValue(False, title=_("Verify the certificate"),
+                                                totext=""),
+                                     FixedValue(True,
+                                                title=_("Ignore certificate errors (unsecure)"),
+                                                totext=""),
+                                 ],
+                                 default_value=False)),
                     ("infos",
                      ListChoice(choices=[
                          ("nodes", _("Nodes")),
@@ -182,24 +192,18 @@ class RulespecSpecialAgentsKubernetes(HostRulespec):
                              "manage Kubernetes clusters. If no prefix is given \"/\" will be used."
                          ),
                          allow_empty=False)),
-                    ("no-cert-check",
-                     Alternative(title=_("Disable certificate verification"),
-                                 elements=[
-                                     FixedValue(False, title=_("Deactivated"), totext=""),
-                                     FixedValue(True, title=_("Activated"), totext=""),
-                                 ],
-                                 default_value=False)),
                 ],
-                optional_keys=["port", "url-prefix", "path-prefix", "no-cert-check"],
+                optional_keys=["port", "url-prefix", "path-prefix"],
                 title=_(u"Kubernetes"),
             ),
-            forth=self._transform_infos,
+            forth=self._transform,
         )
 
-    def _transform_infos(self, value):
-        if 'infos' in value:
-            return value
-        value['infos'] = ['nodes']
+    def _transform(self, value):
+        if 'infos' not in value:
+            value['infos'] = ['nodes']
+        if 'no-cert-check' not in value:
+            value['no-cert-check'] = False
         return value
 
 

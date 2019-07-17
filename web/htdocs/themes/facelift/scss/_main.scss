@@ -1129,7 +1129,10 @@ div.graph {
   border: 1px solid $theme-color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  margin-top: 5px;
+
+  &.preview {
+    padding: 4px !important;
+  }
 }
 
 div.content {
@@ -1207,7 +1210,7 @@ div.graph_with_timeranges {
   }
 
   table.timeranges > tbody > tr > td {
-    padding: 0 8px 8px;
+    padding: 0 8px 4px;
     border: none solid $theme-color-white;
 
     &:first-child {
@@ -1218,6 +1221,14 @@ div.graph_with_timeranges {
       border-left: none solid;
     }
   }
+}
+
+table.data td > div:first-child div.graph_with_timeranges {
+  margin-top: 8px;
+}
+
+table.data td > div:last-child div.graph_with_timeranges {
+  margin-bottom: 8px;
 }
 
 td.agent_config table.rulesets td {

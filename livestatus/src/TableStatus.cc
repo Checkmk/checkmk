@@ -75,6 +75,12 @@ int dummy_int = 0;
 }  // namespace
 #endif  // NAGIOS4
 
+namespace {
+// NOTE: We have a FixedDoubleColumn, but this lives somewhere else, and this is
+// only a temporary hack.
+double dummy_double{0};
+}  // namespace
+
 TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addCounterColumns("neb_callbacks", "NEB callbacks", Counter::neb_callbacks);
     addCounterColumns("requests", "requests to Livestatus", Counter::requests);
@@ -227,6 +233,32 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
         &g_livestatus_threads));
+
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "average_latency_generic",
+        "The average latency for executing active checks (i.e. the time the start of the execution is behind the schedule)",
+        &dummy_double));
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "average_latency_cmk",
+        "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
+        &dummy_double));
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "average_latency_real_time",
+        "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
+        &dummy_double));
+
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "helper_usage_generic",
+        "The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        &dummy_double));
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "helper_usage_cmk",
+        "The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        &dummy_double));
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "helper_usage_real_time",
+        "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        &dummy_double));
 
     // Special stuff for Check_MK
     addColumn(std::make_unique<StatusSpecialIntColumn>(

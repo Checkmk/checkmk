@@ -299,58 +299,60 @@ private:
 }  // namespace
 
 void start_threads() {
-    if (g_thread_running == 0) {
-        auto logger = fl_core->loggerLivestatus();
-        logger->setLevel(fl_livestatus_log_level);
-        logger->setUseParentHandlers(false);
-        try {
-            logger->setHandler(
-                std::make_unique<LivestatusHandler>(fl_paths._logfile));
-        } catch (const generic_error &ex) {
-            Warning(fl_logger_nagios) << ex;
-        }
-
-        update_status();
-        Informational(fl_logger_nagios)
-            << "starting main thread and " << g_livestatus_threads
-            << " client threads";
-
-        pthread_atfork(livestatus_count_fork, nullptr,
-                       livestatus_cleanup_after_fork);
-
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        size_t defsize;
-        if (pthread_attr_getstacksize(&attr, &defsize) == 0) {
-            Debug(fl_logger_nagios) << "default stack size is " << defsize;
-        }
-        if (pthread_attr_setstacksize(&attr, g_thread_stack_size) != 0) {
-            Warning(fl_logger_nagios)
-                << "cannot set thread stack size to " << g_thread_stack_size;
-        } else {
-            Debug(fl_logger_nagios)
-                << "setting thread stack size to " << g_thread_stack_size;
-        }
-
-        fl_thread_info.resize(g_livestatus_threads + 1);
-        for (auto &info : fl_thread_info) {
-            ptrdiff_t idx = &info - &fl_thread_info[0];
-            if (idx == 0) {
-                // start thread that listens on socket
-                info.name = "main";
-                pthread_create(&info.id, nullptr, main_thread, &info);
-                // Our current thread (i.e. the main one, confusing terminology)
-                // needs thread-local infos for logging, too.
-                tl_info = &info;
-            } else {
-                info.name = "client " + std::to_string(idx);
-                pthread_create(&info.id, &attr, client_thread, &info);
-            }
-        }
-
-        g_thread_running = 1;
-        pthread_attr_destroy(&attr);
+    if (g_thread_running == 1) {
+        return;
     }
+
+    auto logger = fl_core->loggerLivestatus();
+    logger->setLevel(fl_livestatus_log_level);
+    logger->setUseParentHandlers(false);
+    try {
+        logger->setHandler(
+            std::make_unique<LivestatusHandler>(fl_paths._logfile));
+    } catch (const generic_error &ex) {
+        Warning(fl_logger_nagios) << ex;
+    }
+
+    update_status();
+    Informational(fl_logger_nagios)
+        << "starting main thread and " << g_livestatus_threads
+        << " client threads";
+
+    pthread_atfork(livestatus_count_fork, nullptr,
+                   livestatus_cleanup_after_fork);
+
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    size_t defsize;
+    if (pthread_attr_getstacksize(&attr, &defsize) == 0) {
+        Debug(fl_logger_nagios) << "default stack size is " << defsize;
+    }
+    if (pthread_attr_setstacksize(&attr, g_thread_stack_size) != 0) {
+        Warning(fl_logger_nagios)
+            << "cannot set thread stack size to " << g_thread_stack_size;
+    } else {
+        Debug(fl_logger_nagios)
+            << "setting thread stack size to " << g_thread_stack_size;
+    }
+
+    fl_thread_info.resize(g_livestatus_threads + 1);
+    for (auto &info : fl_thread_info) {
+        ptrdiff_t idx = &info - &fl_thread_info[0];
+        if (idx == 0) {
+            // start thread that listens on socket
+            info.name = "main";
+            pthread_create(&info.id, nullptr, main_thread, &info);
+            // Our current thread (i.e. the main one, confusing terminology)
+            // needs thread-local infos for logging, too.
+            tl_info = &info;
+        } else {
+            info.name = "client " + std::to_string(idx);
+            pthread_create(&info.id, &attr, client_thread, &info);
+        }
+    }
+
+    g_thread_running = 1;
+    pthread_attr_destroy(&attr);
 }
 
 void terminate_threads() {

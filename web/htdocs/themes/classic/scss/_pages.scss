@@ -1346,6 +1346,22 @@ table.data tr.notification_context table {
    margin-top: 3px;
 }
 
+table.data tr.ac_test_details td {
+  padding: 8px;
+
+  p, ul, table {
+    margin: 8px 0;
+
+    &:first-child:not(:last-child) {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
 td.sla_spec table td,
 td.invtree table td,
 td.agent_config table.rulesets table td,

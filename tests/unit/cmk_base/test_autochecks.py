@@ -318,11 +318,12 @@ def test_parse_autochecks_file(test_config, autochecks_content, expected_result)
         assert service.check_plugin_name == expected[0]
         assert service.item == expected[1]
 
-        if isinstance(service.paramstr, str) and service.paramstr.startswith("{"):
+        if isinstance(service.parameters_unresolved,
+                      str) and service.parameters_unresolved.startswith("{"):
             # Work around random dict key sorting
-            assert ast.literal_eval(service.paramstr) == ast.literal_eval(expected[2])
+            assert ast.literal_eval(service.parameters_unresolved) == ast.literal_eval(expected[2])
         else:
-            assert service.paramstr == expected[2]
+            assert service.parameters_unresolved == expected[2]
 
 
 def test_has_autochecks():

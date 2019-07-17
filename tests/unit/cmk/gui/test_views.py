@@ -4058,7 +4058,7 @@ def test_legacy_register_painter(monkeypatch):
             "options": ["opt1"],
             "printable": False,
             "paint": rendr,
-            "groupby": lambda row: "xyz",
+            "groupby": "xyz",
         })
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()

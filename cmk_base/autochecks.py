@@ -129,13 +129,13 @@ def _load_dict_autocheck(entry):
     return entry["check_plugin_name"], entry["item"], entry["parameters"], labels
 
 
-def resolve_paramstring(check_plugin_name, paramstring):
+def resolve_paramstring(check_plugin_name, parameters_unresolved):
     # type: (str, str) -> CheckParameters
     """Translates a parameter string (read from autochecks) to it's final value
     (according to the current configuration)"""
     check_context = config.get_check_context(check_plugin_name)
     # TODO: Can't we simply access check_context[paramstring]?
-    return eval(paramstring, check_context, check_context)
+    return eval(parameters_unresolved, check_context, check_context)
 
 
 def parse_autochecks_file(hostname):
@@ -174,10 +174,11 @@ def parse_autochecks_file(hostname):
 def _parse_autocheck_entry(hostname, entry):
     # type: (str, Union[ast.Tuple, ast.Dict]) -> Optional[DiscoveredService]
     if isinstance(entry, ast.Tuple):
-        ast_check_plugin_name, ast_item, ast_paramstr = _parse_pre_16_tuple_autocheck_entry(entry)
+        ast_check_plugin_name, ast_item, ast_parameters_unresolved = _parse_pre_16_tuple_autocheck_entry(
+            entry)
         ast_service_labels = ast.Dict()
     elif isinstance(entry, ast.Dict):
-        ast_check_plugin_name, ast_item, ast_paramstr, ast_service_labels = \
+        ast_check_plugin_name, ast_item, ast_parameters_unresolved, ast_service_labels = \
             _parse_dict_autocheck_entry(entry)
     else:
         raise Exception("Invalid autocheck: Wrong type: %r" % entry)
@@ -202,13 +203,14 @@ def _parse_autocheck_entry(hostname, entry):
     if isinstance(item, str):
         item = config.decode_incoming_string(item)
 
-    if isinstance(ast_paramstr, ast.Name):
+    if isinstance(ast_parameters_unresolved, ast.Name):
         # Keep check variable names as they are: No evaluation of check parameters
-        paramstr = ast_paramstr.id
+        parameters_unresolved = ast_parameters_unresolved.id
     else:
         # Other structures, like dicts, lists and so on should also be loaded as repr() str
         # instead of an interpreted structure
-        paramstr = repr(eval(compile(ast.Expression(ast_paramstr), filename="<ast>", mode="eval")))
+        parameters_unresolved = repr(
+            eval(compile(ast.Expression(ast_parameters_unresolved), filename="<ast>", mode="eval")))
 
     try:
         description = config.service_description(hostname, check_plugin_name, item)
@@ -219,7 +221,7 @@ def _parse_autocheck_entry(hostname, entry):
         check_plugin_name,
         item,
         description,
-        paramstr,
+        parameters_unresolved,
         service_labels=_parse_discovered_service_label_from_ast(ast_service_labels))
 
 
@@ -275,7 +277,7 @@ def _set_autochecks_of_real_hosts(host_config, new_items):
     # type: (config.HostConfig, List[DiscoveredService]) -> None
     new_autochecks = []  # type: List[DiscoveredService]
 
-    # write new autochecks file, but take paramstrings from existing ones
+    # write new autochecks file, but take parameters_unresolved from existing ones
     # for those checks which are kept
     for existing_service in parse_autochecks_file(host_config.hostname):
         # TODO: Need to implement a list class that realizes in / not in correctly
@@ -336,7 +338,7 @@ def save_autochecks_file(hostname, items):
         content.append(
             "  {'check_plugin_name': %r, 'item': %r, 'parameters': %s, 'service_labels': %r}," %
             (discovered_service.check_plugin_name, discovered_service.item,
-             discovered_service.paramstr, discovered_service.service_labels.to_dict()))
+             discovered_service.parameters_unresolved, discovered_service.service_labels.to_dict()))
     content.append("]\n")
     store.save_file(str(filepath), "\n".join(content))
 

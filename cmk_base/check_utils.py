@@ -88,15 +88,19 @@ CheckTable = Dict[Tuple[CheckPluginName, Item], Service]
 
 
 class DiscoveredService(Service):
+    __slots__ = []  # type: List[str]
     """Special form of Service() which holds the unresolved textual representation of the check parameters"""
-    __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
-
-    def __init__(self, check_plugin_name, item, description, paramstr, service_labels=None):
+    def __init__(self,
+                 check_plugin_name,
+                 item,
+                 description,
+                 parameters_unresolved,
+                 service_labels=None):
         # type: (CheckPluginName, Item, Text, CheckParameters, DiscoveredServiceLabels) -> None
         super(DiscoveredService, self).__init__(check_plugin_name=check_plugin_name,
                                                 item=item,
                                                 description=description,
-                                                parameters=paramstr,
+                                                parameters=parameters_unresolved,
                                                 service_labels=service_labels)
 
     @property
@@ -105,7 +109,15 @@ class DiscoveredService(Service):
             "Can not get the resolved parameters from a DiscoveredService object")
 
     @property
-    def paramstr(self):
+    def parameters_unresolved(self):
+        """Returns the unresolved check parameters discovered for this service
+
+        The reason for this hack is some old check API behaviour: A check may return the name of
+        a default levels variable (as string), for example "cpu_utilization_default_levels".
+        The user is allowed to override the value of this variable in his configuration and
+        the check needs to evaluate this variable after config loading or during check
+        execution. The parameter must not be resolved during discovery.
+        """
         return self._parameters
 
 

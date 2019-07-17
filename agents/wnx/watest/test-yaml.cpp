@@ -190,7 +190,7 @@ TEST(AgentConfig, AggregateMap) {
             "    - pattern: '@user\\*.*'\n"
             "      timeout: 60\n"
             "      run: yes\n"
-            "    - pattern: '@core\\*.*'\n"
+            "    - pattern: '@builtin\\*.*'\n"
             "      timeout: 60\n"
             "      run: no\n"
             "    - pattern: '*'\n"
@@ -232,7 +232,7 @@ TEST(AgentConfig, AggregateMap) {
             "      cache_age: 14400\n"
             "      async: yes\n"
             "      timeout: 600\n"
-            "    - pattern: '@core\\*.*'\n"  // override
+            "    - pattern: '@builtin\\*.*'\n"  // override
             "      timeout: 31\n"
             "      run: no\n";
         std::string src =
@@ -240,7 +240,7 @@ TEST(AgentConfig, AggregateMap) {
             "    - pattern: '@user\\*.*'\n"
             "      timeout: 60\n"
             "      run: yes\n"
-            "    - pattern: '@core\\*.*'\n"
+            "    - pattern: '@builtin\\*.*'\n"
             "      timeout: 60\n"
             "      run: no\n"
             "    - pattern: '*'\n"
@@ -262,7 +262,8 @@ TEST(AgentConfig, AggregateMap) {
         ASSERT_EQ(select(0, vars::kPluginPattern),
                   "@user\\windows_updates.vbs");
 
-        EXPECT_EQ(select(1, vars::kPluginPattern), "@core\\*.*");
+        EXPECT_EQ(select(1, vars::kPluginPattern),
+                  std::string(yml_var::kBuiltin) + "\\*.*");
         EXPECT_EQ(select(1, vars::kPluginTimeout), "31");
 
         // merged from bakery(or system)
@@ -421,7 +422,7 @@ TEST(AgentConfig, Aggregate) {
                        "      cache_age: 14400\n"
                        "      async: yes\n"
                        "      timeout: 600\n"
-                       "    - pattern: '@core\\*.*'\n"  // override
+                       "    - pattern: '@builtin\\*.*'\n"  // override
                        "      timeout: 31\n"
                        "      run: no\n"
                        "winperf:\n"

@@ -11,7 +11,7 @@
 # section global must be presented
 
 # @user -> is ProgramData/CheckMK/Agent/plugins
-# @core -> is Program Files(x86)/check_mk_service/plugins
+# @builtin -> is Program Files(x86)/check_mk_service/plugins
 # @data -> is ProgramData/CheckMK/Agent/
 # @local -> is ProgramData/CheckMK/Agent/local
 
@@ -222,7 +222,7 @@ plugins:
 
     # folders are scanned left -> right, order is important
     # all files from folders are gathered and verified, duplicated files will be removed
-    # folders: ['@user', '@core' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
+    # folders: ['@user', '@builtin' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
 
     _execution:
         # execution pattern for  windows-updates.vbs:
@@ -242,7 +242,7 @@ plugins:
           timeout     : 30                  # after 30 seconds process will be killed. 60 sec is default in check_mk.yml
           run         : yes                 # ALL FOUND files will be started. This is default value
 
-        - pattern     : '@core\*.*'         # in the ProgramFiles folder. DO NOT REMOVE THIS ENTRY
+        - pattern     : '@builtin\*.*'         # in the ProgramFiles folder. DO NOT REMOVE THIS ENTRY
           timeout     : 30                  # after 30 seconds process will be killed. 60 sec is default in check_mk.yml
           run         : no                  # No run, i.e disabled.
 

@@ -148,6 +148,12 @@ TEST(PlayerTest, ConfigFolders) {
     }
 
     {
+        std::string s = "@builtin\\";
+        auto result = cma::cfg::ReplacePredefinedMarkers(s);
+        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+    }
+
+    {
         std::string s = "@user\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetUserPluginsDir()) + "\\");

@@ -151,7 +151,7 @@ constexpr const wchar_t* kFileInstallDir = L"install";    // from here!
 // ProgramData/CheckMK/Agent
 constexpr const wchar_t* kUserBin = L"bin";  // owned by agent legacy for OHM
 
-constexpr const wchar_t* kCache = L"cache";             // owned by agent
+constexpr const wchar_t* kBackup = L"backup";           // owned by agent
 constexpr const wchar_t* kUserPlugins = L"plugins";     // owned by user
 constexpr const wchar_t* kLocal = L"local";             // owned by user
 constexpr const wchar_t* kAgentMrpe = L"mrpe";          // owned by user
@@ -165,6 +165,7 @@ constexpr const wchar_t* kSpool = L"spool";    // owned by user/sys plugins
 constexpr const wchar_t* kTemp = L"tmp";       // owned by user plugins
 constexpr const wchar_t* kUpdate = L"update";  // owned by agent
 constexpr const wchar_t* kMrpe = L"mrpe";      // owned by user(!) for mrpe
+constexpr const wchar_t* kLog = L"log";        // owned by agent
 
 };  // namespace dirs
 namespace envs {

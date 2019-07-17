@@ -197,34 +197,6 @@ void WinPerf::loadFromMainConfig() {
     }
 }
 
-bool ReplaceInString(std::string& InOut, const std::string Marker,
-                     const std::string Replace) {
-    auto pos = InOut.find(Marker);
-    if (pos != std::string::npos) {
-        InOut.replace(pos, Marker.length(), Replace);
-        return true;
-    }
-    return false;
-}
-
-std::string ReplacePredefinedMarkers(const std::string Path) {
-    auto f = Path;
-    const std::pair<const std::string, const std::wstring> pairs[] = {
-        {vars::kPluginCoreFolder, GetSystemPluginsDir()},
-        {vars::kPluginUserFolder, GetUserPluginsDir()},
-        {vars::kLocalUserFolder, GetLocalDir()},
-        {vars::kProgramDataFolder, GetUserDir()}
-
-    };
-
-    for (const auto& p : pairs) {
-        if (ReplaceInString(f, p.first, wtools::ConvertToUTF8(p.second)))
-            return f;
-    }
-
-    return f;
-}
-
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
                           const std::vector<YAML::Node>& Yaml) noexcept {
     for (const auto& entry : Yaml) {

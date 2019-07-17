@@ -207,7 +207,7 @@ TEST(RealtimeTest, Base_Long) {
 
         context.stop();
         if (first.joinable()) first.join();
-        EXPECT_TRUE(TestTable.size() > 3);
+        EXPECT_GT(TestTable.size(), static_cast<size_t>(3));
 
         for (auto packet : TestTable) {
             auto d = reinterpret_cast<const char*>(packet.data());

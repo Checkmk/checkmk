@@ -1,4 +1,4 @@
-DISTRO_CODE       = stretch
+DISTRO_CODE       = buster 
 BUILD_PACKAGES    =
 BUILD_PACKAGES   += build-essential
 BUILD_PACKAGES   += dpatch
@@ -43,7 +43,7 @@ BUILD_PACKAGES   += libgsf-1-dev # needed for msitools
 BUILD_PACKAGES   += librrd-dev # needed for CMC
 BUILD_PACKAGES   += libffi-dev # needed for pyOpenSSL (and dependant) compilations
 BUILD_PACKAGES   += libkrb5-dev # Needed for pykerberos
-BUILD_PACKAGES   += libssl1.0-dev # Needed for net-snmp (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=828449)
+BUILD_PACKAGES   += libssl1.1-dev # Needed for net-snmp (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=828449)
 BUILD_PACKAGES   += flex # needed for heirloom-pkgtools
 BUILD_PACKAGES   += openssh-client # needed for check_by_ssh
 OS_PACKAGES       =
@@ -57,12 +57,12 @@ OS_PACKAGES      += fping
 OS_PACKAGES      += graphviz
 OS_PACKAGES      += apache2
 OS_PACKAGES      += libdbi1
-OS_PACKAGES      += libevent-2.0-5
+OS_PACKAGES      += libevent-2.1-6
 OS_PACKAGES      += libgd3
 OS_PACKAGES      += libltdl7
 OS_PACKAGES      += libnet-snmp-perl
 OS_PACKAGES      += libpango1.0-0
-OS_PACKAGES      += libperl5.24
+OS_PACKAGES      += libperl5.28
 OS_PACKAGES      += libreadline7
 OS_PACKAGES      += libsnmp-perl
 OS_PACKAGES      += libuuid1
@@ -88,7 +88,8 @@ OS_PACKAGES      += libglib2.0-0 # needed by msitools/Agent Bakery
 OS_PACKAGES      += cpio # needed for Agent bakery (solaris pkgs)
 OS_PACKAGES      += poppler-utils # needed for preview of PDF in reporting
 OS_PACKAGES       += libffi6 # needed for pyOpenSSL and dependant
-OS_PACKAGES      += libssl1.0.2 # Needed for net-snmp (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=828449)
+OS_PACKAGES      += libssl1.1 # Needed for net-snmp (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=828449)
+OS_PACKAGES      += libnl-3-200
 USERADD_OPTIONS   =
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = aptitude -y update ; aptitude -y install

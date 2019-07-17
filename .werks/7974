@@ -1,0 +1,10 @@
+Title: Fix broken view grouping by HW/SW inventory columns
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1563284888
+Class: fix
+
+

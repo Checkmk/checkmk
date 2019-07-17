@@ -2,6 +2,15 @@
 #pragma once
 namespace cma::cfg {
 
+namespace yml_var {
+constexpr const std::string_view kBuiltin = "@builtin";
+constexpr const std::string_view kCore = "@core";
+constexpr const std::string_view kLocal = "@local";
+constexpr const std::string_view kUser = "@user";
+constexpr const std::string_view kData = "@data";
+
+};  // namespace yml_var
+
 namespace groups {
 constexpr const char* const kGlobal = "global";
 constexpr const char* const kWinPerf = "winperf";
@@ -59,10 +68,12 @@ const char* const kPluginsExecution = "execution";        // seq
 const char* const kPluginMaxWait = "max_wait";            // int
 const char* const kPluginAsyncStart = "async_start";      // bool
 
-const char* const kLocalUserFolder = "@local";   // to be replaced
-const char* const kPluginUserFolder = "@user";   // to be replaced
-const char* const kPluginCoreFolder = "@core";   // to be replaced
-const char* const kProgramDataFolder = "@data";  // to be replaced
+// to be replaced
+constexpr std::string_view kLocalUserFolder = yml_var::kLocal;
+constexpr std::string_view kPluginUserFolder = yml_var::kUser;
+constexpr std::string_view kPluginCoreFolder = yml_var::kCore;
+constexpr std::string_view kPluginBuiltinFolder = yml_var::kBuiltin;
+constexpr std::string_view kProgramDataFolder = yml_var::kData;
 
 // plugins.execution
 const char* const kPluginPattern = "pattern";     // string

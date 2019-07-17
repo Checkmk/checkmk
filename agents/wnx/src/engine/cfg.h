@@ -835,14 +835,18 @@ timeout.
     timeout : 240
 */
 
-// @core -> c:\Program Files (x86)\check_mk_service\plugins
+// @builtin -> c:\Program Files (x86)\check_mk_service\plugins
 // @user -> c:\ProgramData\CheckMK\agent\plugins
 // @data ->c:\ProgramData\CheckMK\agent
-std::string ReplacePredefinedMarkers(const std::string Path);
-// mini tool
-bool ReplaceInString(std::string& InOut, const std::string Marker,
-                     const std::string Replace);
+std::string ReplacePredefinedMarkers(std::string_view work_path);
 
+// replaces one value with other
+bool ReplaceInString(std::string& InOut, std::string_view Marker,
+                     std::string_view Replace);
+
+bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
+                       const std::string& key_name,
+                       std::string_view subkey_name, std::string_view marker);
 class PluginInfo {
 public:
     PluginInfo() {}

@@ -201,6 +201,9 @@
     <ClInclude Include="..\common\wnx_version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\common\cfg_yaml.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

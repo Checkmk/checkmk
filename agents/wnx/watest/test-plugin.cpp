@@ -16,9 +16,11 @@
 #include "common/cfg_info.h"
 #include "providers/plugins.h"
 #include "read_file.h"
+#include "service_processor.h"
 #include "test_tools.h"
 
 namespace cma {  // to become friendly for wtools classes
+constexpr auto G_EndOfString = tgt::IsWindows() ? "\r\n" : "\n";
 
 constexpr const char* SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
 
@@ -267,20 +269,31 @@ TEST(PluginTest, ConfigFolders) {
     using namespace cma::cfg;
     using namespace wtools;
     cma::OnStart(cma::AppType::test);
+
     {
-        std::string s = "@core\\";
+        std::string s(yml_var::kCore);
+        s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
     }
 
     {
-        std::string s = "@user\\";
+        std::string s(yml_var::kBuiltin);
+        s += "\\";
+        auto result = cma::cfg::ReplacePredefinedMarkers(s);
+        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+    }
+
+    {
+        std::string s(yml_var::kUser);
+        s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetUserPluginsDir()) + "\\");
     }
 
     {
-        std::string s = "@data\\";
+        std::string s(yml_var::kData);
+        s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetUserDir()) + "\\");
     }
@@ -906,7 +919,7 @@ static auto GenerateCachedHeader(const std::string& UsualHeader,
 
 static auto ParsePluginOut(const std::vector<char>& Data) {
     std::string out(Data.begin(), Data.end());
-    auto table = cma::tools::SplitString(out, "\n");
+    auto table = cma::tools::SplitString(out, G_EndOfString);
     auto sz = table.size();
     auto first_line = sz > 0 ? table[0] : "";
     auto second_line = sz > 1 ? table[1] : "";
@@ -1144,7 +1157,7 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
         EXPECT_FALSE(still_running->running());
     }
 
-    // pinging and restaring
+    // pinging and restarting
     {
         auto ready = GetEntrySafe(pm, as_files[0].u8string());
         ASSERT_NE(nullptr, ready);
@@ -1195,7 +1208,7 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
             EXPECT_FALSE(ready->running());
         }
 
-        ::Sleep(5000);
+        cma::srv::WaitForAsyncPluginThreads(5000ms);
         {
             auto accu_new = ready->getResultsAsync(false);
             ASSERT_TRUE(!accu_new.empty());
@@ -1284,13 +1297,13 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
 
         auto data = ready->getResultsAsync(true);
         EXPECT_TRUE(data.empty());
-        ::Sleep(5000);
+        cma::srv::WaitForAsyncPluginThreads(5000ms);
         data = ready->getResultsAsync(true);
         EXPECT_TRUE(!data.empty());
         std::string out(data.begin(), data.end());
-        auto table = cma::tools::SplitString(out, "\n");
+        auto table = cma::tools::SplitString(out, G_EndOfString);
         ASSERT_EQ(table.size(), 2);
-        EXPECT_EQ(table[0], "<<<async2>>>");
+        EXPECT_TRUE(table[0].find("<<<async2:cached(") != std::string::npos);
     }
 }
 
@@ -1358,8 +1371,6 @@ std::string TestConvertToString(std::vector<char> accu) {
     std::string str(accu.begin(), accu.end());
     return str;
 }
-
-constexpr auto G_EndOfString = tgt::IsWindows() ? "\r\n" : "\n";
 
 TEST(PluginTest, Async0DataPickup) {
     using namespace cma::cfg;

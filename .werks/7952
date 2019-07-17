@@ -1,0 +1,12 @@
+Title: mk_docker.py: Add base_url to bakery rule config options
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1563428010
+
+Users with non-default setups can now provide the base URL for docker API engine calls.
+By default we are trying to connect via the unix socket at unix://var/run/docker.sock.

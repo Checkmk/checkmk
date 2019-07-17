@@ -1,0 +1,10 @@
+Title: netapp_api_fan: Allow to summarize individual services into one
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1563360789
+Class: feature
+
+The check functionality is extended by allowing the user to group individual fan monitoring services into one comprehensive service. This service will display the total number of fan units and additionally highlight the non OK units.

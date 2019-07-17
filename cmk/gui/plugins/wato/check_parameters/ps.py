@@ -535,7 +535,7 @@ class RulespecInventoryProcessesRules(HostRulespec):
                          help=
                          _("Here you can select default parameters that are being set "
                            "for detected services. Note: the preferred way for setting parameters is to use "
-                           "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
+                           "the rule set <a href='wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset'> "
                            "State and Count of Processes</a> instead. "
                            "A change there will immediately be active, while a change in this rule "
                            "requires a re-discovery of the services."),
@@ -743,7 +743,7 @@ class RulespecDiscoveryHRProcessesRules(HostRulespec):
                      help=
                      _("Here you can select default parameters that are being set "
                        "for detected services. Note: the preferred way for setting parameters is to use "
-                       "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
+                       "the rule set <a href='wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset'> "
                        "State and Count of Processes</a> instead. "
                        "A change there will immediately be active, while a change in this rule "
                        "requires a re-discovery of the services."),

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+import ast
 import math
 import pytest  # type: ignore
 from testlib.base import Scenario
 
-import cmk_base.check_api as check_api
+from cmk_base import check_api
 import cmk_base.config as config
 import cmk_base.check_api_utils as check_api_utils
 
@@ -263,3 +264,13 @@ def test_get_effective_service_level(monkeypatch):
     assert check_api.get_effective_service_level() == 10
     check_api_utils.set_hostname("testhost3")
     assert check_api.get_effective_service_level() == 0
+
+
+def test_as_float():
+    assert check_api.as_float('8.00') == 8.0
+    assert str(check_api.as_float('inf')) == 'inf'
+
+    strrep = str(list(map(check_api.as_float, ("8", "-inf", '1e-351'))))
+    assert strrep == '[8.0, -1e309, 0.0]'
+
+    assert ast.literal_eval(strrep) == [8.0, float('-inf'), 0.0]

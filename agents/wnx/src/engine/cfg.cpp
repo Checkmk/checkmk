@@ -517,7 +517,7 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
     // should be more clear defined in cfg_info
     auto dir_list = {dirs::kBakery,         // config file(s)
                      dirs::kUserBin,        // placeholder for ohm
-                     dirs::kCache,          // cached data from agent
+                     dirs::kBackup,         // backed up files
                      dirs::kState,          // state folder
                      dirs::kSpool,          // keine Ahnung
                      dirs::kUserPlugins,    // user plugins
@@ -526,6 +526,7 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
                      dirs::kInstall,        // for installing data
                      dirs::kUpdate,         // for incoming MSI
                      dirs::kMrpe,           // for incoming mrpe tests
+                     dirs::kLog,            // logs are located here
                      dirs::kPluginConfig};  //
 
     for (auto dir : dir_list) {
@@ -1610,6 +1611,75 @@ int RemoveInvalidNodes(YAML::Node node) {
         ++counter;
     }
     return counter;
+}
+
+bool ReplaceInString(std::string& in_out, std::string_view marker,
+                     std::string_view value) {
+    auto pos = in_out.find(marker);
+    if (pos != std::string::npos) {
+        in_out.replace(pos, marker.length(), value);
+        return true;
+    }
+    return false;
+}
+
+std::string ReplacePredefinedMarkers(std::string_view work_path) {
+    const std::pair<const std::string_view, const std::wstring> pairs[] = {
+        // core:
+        {vars::kPluginCoreFolder, GetSystemPluginsDir()},
+        {vars::kPluginBuiltinFolder, GetSystemPluginsDir()},
+        // pd:
+        {vars::kPluginUserFolder, GetUserPluginsDir()},
+        {vars::kLocalUserFolder, GetLocalDir()},
+        {vars::kProgramDataFolder, GetUserDir()}
+
+    };
+
+    std::string f(work_path);
+    for (const auto& [marker, path] : pairs) {
+        if (ReplaceInString(f, marker, wtools::ConvertToUTF8(path))) return f;
+    }
+
+    return f;
+}
+
+// converts "any/relative/path" into "@user\\any\\relative\\path"
+// return false if yaml is not suitable for patching
+bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
+                       const std::string& key_name,
+                       std::string_view subkey_name, std::string_view marker) {
+    namespace fs = std::filesystem;
+    if (group_name.empty() || key_name.empty() || subkey_name.empty() ||
+        marker.empty()) {
+        XLOG::l(XLOG_FUNC + " Problems with parameter '{}' '{}' '{}' '{}'",
+                group_name, key_name, subkey_name, marker);
+        return false;
+    }
+    auto group = Yaml[group_name];
+    if (!group.IsDefined()) return false;
+    if (!group.IsMap()) return false;
+
+    auto key = group[key_name];
+    if (!key.IsDefined() || !key.IsSequence()) return false;
+
+    auto sz = key.size();
+    const std::string name(subkey_name);
+    for (size_t k = 0; k < sz; ++k) {
+        auto node = key[k][name];
+        if (!node.IsDefined() || !node.IsScalar()) continue;
+
+        auto entry = node.as<std::string>();
+        if (entry.empty()) continue;
+
+        fs::path path = entry;
+        auto p = path.lexically_normal();
+        if (p.u8string()[0] == fs::path::preferred_separator) continue;
+        if (p.u8string()[0] == marker[0]) continue;
+        if (p.is_relative()) {
+            key[k][name] = std::string(marker) + "\\" + entry;
+        }
+    }
+    return true;
 }
 
 }  // namespace cma::cfg

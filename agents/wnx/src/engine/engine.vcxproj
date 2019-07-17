@@ -233,6 +233,7 @@
     <ClInclude Include="..\..\include\tools\_xdbg.h" />
     <ClInclude Include="..\..\include\tools\_xlog.h" />
     <ClInclude Include="..\common\cfg_info.h" />
+    <ClInclude Include="..\common\cfg_yaml.h" />
     <ClInclude Include="..\common\mailslot_transport.h" />
     <ClInclude Include="..\common\version.h" />
     <ClInclude Include="..\common\wnx_version.h" />

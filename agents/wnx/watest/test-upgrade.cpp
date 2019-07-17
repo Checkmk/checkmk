@@ -173,6 +173,73 @@ TEST(UpgradeTest, CreateProtocol) {
     EXPECT_EQ(table.size(), 3);
 }
 
+static std::string for_patch =
+    "plugins:\n"
+    "  execution:\n"
+    "    - pattern: 'test1'\n"
+    "      timeout: 60\n"
+    "      run: yes\n"
+    "    - pattern: 'a\\test2'\n"
+    "      timeout: 60\n"
+    "      run: no\n"
+    "    - pattern: '\\test2'\n"
+    "      timeout: 60\n"
+    "      run: no\n"
+    "    - pattern: '/test3'\n"
+    "      timeout: 60\n"
+    "      run: no\n"
+    //
+    ;
+
+TEST(UpgradeTest, PatchRelativePath) {
+    auto yaml = YAML::Load(for_patch);
+    auto ret = PatchRelativePath(yaml, groups::kLocal, vars::kPluginsExecution,
+                                 vars::kPluginPattern,
+                                 cma::cfg::vars::kPluginUserFolder);
+    EXPECT_FALSE(ret);
+
+    ret = PatchRelativePath(yaml, groups::kPlugins, vars::kPluginAsyncStart,
+                            vars::kPluginPattern,
+                            cma::cfg::vars::kPluginUserFolder);
+    EXPECT_FALSE(ret);
+
+    ret = PatchRelativePath(yaml, groups::kPlugins, vars::kPluginsExecution,
+                            vars::kPluginRetry,
+                            cma::cfg::vars::kPluginUserFolder);
+
+    EXPECT_TRUE(ret) << "invalid subkey is allowed";
+
+    ret = PatchRelativePath(yaml, groups::kPlugins, vars::kPluginsExecution,
+                            vars::kPluginPattern,
+                            cma::cfg::vars::kPluginUserFolder);
+    ASSERT_TRUE(ret);
+    auto seq = yaml[groups::kPlugins][vars::kPluginsExecution];
+    ASSERT_TRUE(seq.IsSequence());
+    ASSERT_EQ(seq.size(), 4);
+
+    EXPECT_EQ(seq[0][vars::kPluginPattern].as<std::string>(),
+              std::string(cma::cfg::vars::kPluginUserFolder) + "\\test1");
+    EXPECT_EQ(seq[1][vars::kPluginPattern].as<std::string>(),
+              std::string(cma::cfg::vars::kPluginUserFolder) + "\\a\\test2");
+    EXPECT_EQ(seq[2][vars::kPluginPattern].as<std::string>(), "\\test2");
+    EXPECT_EQ(seq[3][vars::kPluginPattern].as<std::string>(), "/test3");
+
+    ret = PatchRelativePath(yaml, groups::kPlugins, vars::kPluginsExecution,
+                            vars::kPluginPattern,
+                            cma::cfg::vars::kPluginUserFolder);
+    ASSERT_TRUE(ret);
+    seq = yaml[groups::kPlugins][vars::kPluginsExecution];
+    ASSERT_TRUE(seq.IsSequence());
+    ASSERT_EQ(seq.size(), 4);
+
+    EXPECT_EQ(seq[0][vars::kPluginPattern].as<std::string>(),
+              std::string(cma::cfg::vars::kPluginUserFolder) + "\\test1");
+    EXPECT_EQ(seq[1][vars::kPluginPattern].as<std::string>(),
+              std::string(cma::cfg::vars::kPluginUserFolder) + "\\a\\test2");
+    EXPECT_EQ(seq[2][vars::kPluginPattern].as<std::string>(), "\\test2");
+    EXPECT_EQ(seq[3][vars::kPluginPattern].as<std::string>(), "/test3");
+}
+
 std::filesystem::path ConstructBakeryYmlPath(std::filesystem::path pd_dir) {
     auto bakery_yaml = pd_dir / dirs::kBakery / files::kDefaultMainConfigName;
     bakery_yaml += files::kDefaultBakeryExt;

@@ -89,9 +89,6 @@ just to signal that real build script was not called -->
     <Feature Id="providers" Title="Providers Folder" Level="1">
       <ComponentRef Id="providers"/>
     </Feature>
-    <Feature Id="bin" Title="Local Folder" Level="1">
-      <ComponentRef Id="bin"/>
-    </Feature>
     <Feature Id="utils" Title="Utils Folder" Level="1">
       <ComponentRef Id="utils"/>
     </Feature>
@@ -103,7 +100,7 @@ just to signal that real build script was not called -->
 
       <ComponentRef Id="clean_update"/>
       <ComponentRef Id="clean_cache"/>
-      <ComponentRef Id="clean_config"/>
+      <ComponentRef Id="clean_install"/>
       <ComponentRef Id="clean_bakery"/>
       <ComponentRef Id="clean_state"/>
       <ComponentRef Id="clean_spool"/>
@@ -119,13 +116,6 @@ just to signal that real build script was not called -->
           </Component>
           <Directory Id="providers" Name="providers">
             <Component Id="providers" Guid="{E639320D-8326-49BC-84E4-4D9218333E3F}"
-              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-              Win64="no" Location="either">
-              <CreateFolder/>
-            </Component>
-          </Directory>
-          <Directory Id="bin" Name="bin">
-            <Component Id="bin" Guid="{AC275C27-1AEF-4967-8DF0-33DC9343397B}"
               SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
               Win64="no" Location="either">
               <CreateFolder/>
@@ -179,10 +169,10 @@ just to signal that real build script was not called -->
               </Component>
             </Directory>
 
-            <Directory Id="ConfigFolder" Name="config">
-              <Component Id="clean_config" Guid="{1D6B56F5-DC84-42CD-B026-EB29B15518D4}">
-                <RemoveFile Id="clean_config" On ="uninstall" Name="*.*"/>
-                <RemoveFolder Id ="RemoveConfigFolder" On ="uninstall" />
+            <Directory Id="InstallFolder" Name="install">
+              <Component Id="clean_install" Guid="{1D6B56F5-DC84-42CD-B026-EB29B15518D5}">
+                <RemoveFile Id="clean_install" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveInstallFolder" On ="uninstall" />
               </Component>
             </Directory>
             

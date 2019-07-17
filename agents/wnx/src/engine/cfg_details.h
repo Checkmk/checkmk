@@ -93,8 +93,8 @@ public:
         return data_ / dirs::kPluginConfig;
     }
 
-    inline std::filesystem::path getCache() const {
-        return data_ / dirs::kCache;
+    inline std::filesystem::path getBackup() const {
+        return data_ / dirs::kBackup;
     }
 
     inline std::filesystem::path getUpdate() const {
@@ -283,7 +283,7 @@ public:
 
     auto getCacheDir() const {
         std::lock_guard lk(lock_);
-        return folders_.getCache();
+        return folders_.getBackup();
     }
 
     auto getStateDir() const {

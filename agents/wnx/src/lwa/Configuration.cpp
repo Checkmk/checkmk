@@ -995,27 +995,6 @@ void AddKeyedPattern(YAML::Node Node, const std::string Key,
     Node.push_back(node);
 }
 
-// converts "*" intp "@user\\*"
-void PatchRelativePath(YAML::Node Yaml, const std::string &Group,
-                       const std::string &Key, const std::string &Name,
-                       const std::string &Marker) {
-    auto group = Yaml[Group];
-    if (group.IsDefined() && group.IsMap()) {
-        auto key = group[Key];
-        if (key.IsDefined() && key.IsSequence()) {
-            auto sz = key.size();
-            for (size_t k = 0; k < sz; ++k) {
-                if (key[k][Name].IsDefined() && key[k][Name].IsScalar()) {
-                    auto entry = key[k][Name].as<std::string>();
-                    std::filesystem::path p = entry;
-                    if (p.is_relative())
-                        key[k][Name] = std::string(Marker) + "\\" + entry;
-                }
-            }
-        }
-    }
-}
-
 YAML::Node Parser::emitYaml() noexcept {
     if (!pi_) return {};
 

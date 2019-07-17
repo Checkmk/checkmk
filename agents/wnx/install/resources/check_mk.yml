@@ -7,7 +7,7 @@
 # version 10011
 
 # @user -> is ProgramData/CheckMK/Agent/plugins
-# @core -> is Program Files(x86)/check_mk_service/plugins
+# @builtin -> is Program Files(x86)/check_mk_service/plugins
 # @data -> is ProgramData/CheckMK/Agent/
 # @local -> is ProgramData/CheckMK/Agent/local
 
@@ -183,7 +183,7 @@ plugins:
 
     # folders are scanned left -> right, order is important
     # duplicated files will be removed
-    folders: ['@user', '@core' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
+    folders: ['@user', '@builtin' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
 
     # what to execute    
     execution:
@@ -193,7 +193,7 @@ plugins:
           timeout     : 60                  # in seconds, after expiring timeout, process will be killed.
           run         : yes                 # ALL FOUND files ARE ENABLED
 
-        - pattern     : '@core\*.*'         # Look for files in the ProgramFiles folder.
+        - pattern     : '@builtin\*.*'         # Look for files in the ProgramFiles folder.
           timeout     : 60                  # in seconds, after expiring timeout, process will be killed.
           run         : no                  # ALL FOUND files ARE DISABLED
 

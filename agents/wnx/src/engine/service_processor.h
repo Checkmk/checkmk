@@ -603,7 +603,33 @@ private:
     friend class ServiceControllerTest;
     FRIEND_TEST(ServiceControllerTest, StartStopExe);
 #endif
-};  // namespace cma::srv
+};
+
+// tested indirectly in integration
+// gtest is required
+template <typename T, typename B>
+void WaitForAsyncPluginThreads(std::chrono::duration<T, B> allowed_wait) {
+    using namespace std::chrono;
+
+    cma::tools::sleep(500ms);  // giving a bit time to start threads
+    auto count = cma::PluginEntry::threadCount();
+    XLOG::d.i("Waiting for async threads [{}]", count);
+    constexpr auto grane = 500ms;
+    auto wait_time = allowed_wait;
+
+    // waiting is like a polling
+    // we do not want to loose time on test method
+    while (wait_time >= 0ms) {
+        int count = cma::PluginEntry::threadCount();
+        if (count == 0) break;
+
+        cma::tools::sleep(grane);
+        wait_time -= grane;
+    }
+    count = cma::PluginEntry::threadCount();
+    XLOG::d.i("Left async threads [{}] after waiting {}ms", count,
+              (allowed_wait - wait_time).count());
+}
 
 }  // namespace cma::srv
 

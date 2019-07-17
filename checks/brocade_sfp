@@ -45,10 +45,10 @@ def parse_brocade_sfp(info):
             "phystate"          : int(fcport_info[1]),
             "opstate"           : int(fcport_info[2]),
             "admstate"          : int(fcport_info[3]),
-            "voltage"           : float(values[1]) / 1000, # mV -> V
-            "current"           : float(values[2]) / 1000, # mA -> A
-            "rx_power"          : float(values[3]),        # dBm
-            "tx_power"          : float(values[4]),        # dBm
+            "voltage"           : as_float(values[1]) / 1000, # mV -> V
+            "current"           : as_float(values[2]) / 1000, # mA -> A
+            "rx_power"          : as_float(values[3]),        # dBm
+            "tx_power"          : as_float(values[4]),        # dBm
             "is_isl"            : bool(port_index in isl_ports),
         }
 

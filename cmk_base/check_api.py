@@ -207,6 +207,18 @@ def savefloat(f):
         return 0.0
 
 
+class as_float(float):
+    """Extends the float representation for Infinities in such way that
+    they can be parsed by eval"""
+
+    def __repr__(self):
+        if self > sys.float_info.max:
+            return '1e309'
+        if self < -1 * sys.float_info.max:
+            return '-1e309'
+        return super(as_float, self).__repr__()
+
+
 # The function no_discovery_possible is as stub function used for
 # those checks that do not support inventory. It must be known before
 # we read in all the checks

@@ -935,7 +935,7 @@ def register_painter(ident, spec):
             "columns": property(lambda s: s._spec["columns"]),
             "render": lambda self, row, cell: spec["paint"](row),
             "short_title": property(lambda s: s._spec.get("short", s.title)),
-            "group_by": property(lambda s: s._spec.get("groupby")),
+            "group_by": lambda self, row: self._spec.get("groupby"),
             "parameters": property(lambda s: s._spec.get("params")),
             "painter_options": property(lambda s: s._spec.get("options", [])),
             "printable": property(lambda s: s._spec.get("printable", True)),

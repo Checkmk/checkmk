@@ -347,6 +347,8 @@ function sap_hana_check_alerts () {
     local instance_user="$3"
     local remote_hostname
     local alerts_last_check
+    local query_output
+    local query_hdbsql_output
 
     #TODO similiar to logwatch
     remote_hostname=$(echo "$REMOTE" | tr ':' '_')
@@ -356,21 +358,25 @@ function sap_hana_check_alerts () {
     else
         alerts_last_check="$MK_VARDIR/sap_hana_alerts_${sid}_${instance}.$remote_hostname.last_checked"
     fi
+
     if [ -r "$alerts_last_check" ]; then
-        mk_hdbsql "$sid" "$instance" "$instance_user" "$(query_logwatch_alerts_last_check "$alerts_last_check")" \
-               | sed -e "s/^/W /" -e 's/^W \([^;]*;[0-9]*;1;.*\)/O \1/' \
-                     -e 's/^W \([^;]*;[0-9]*;[23];.*\)/W \1/' \
-                     -e 's/^W \([^;]*;[0-9]*;[45];.*\)/C \1/'
+        query_output=$(query_logwatch_alerts_last_check "$alerts_last_check")
     else
-        mk_hdbsql "$sid" "$instance" "$instance_user" "$(query_logwatch_no_alerts)" \
-               | sed -e "s/^/W /" -e 's/^W \([^;]*;[0-9]*;1;.*\)/O \1/' \
-                     -e 's/^W \([^;]*;[0-9]*;[23];.*\)/W \1/' \
-                     -e 's/^W \([^;]*;[0-9]*;[45];.*\)/C \1/'
+        query_output=$(query_logwatch_no_alerts)
     fi
 
+    query_hdbsql_output=$(mk_hdbsql "$sid" "$instance" "$instance_user" "$query_output")
     # shellcheck disable=SC2181
     if [ $? = 0 ]; then
         date +"%Y-%m-%d %H:%M:%S" > "$alerts_last_check" #2016-11-09 16:14:16.410000000
+    fi
+
+    if [ -n "$query_hdbsql_output" ]; then
+        echo "$query_hdbsql_output" | \
+            sed -e "s/^/W /" \
+                -e 's/^W \([^;]*;[0-9]*;1;.*\)/O \1/' \
+                -e 's/^W \([^;]*;[0-9]*;[23];.*\)/W \1/' \
+                -e 's/^W \([^;]*;[0-9]*;[45];.*\)/C \1/'
     fi
 }
 

@@ -35,6 +35,7 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <cstddef>
@@ -43,6 +44,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 #include "ChronoUtils.h"
 #include "ClientQueue.h"
@@ -112,28 +114,45 @@ static ClientQueue *fl_client_queue = nullptr;
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 
 /* simple statistics data for TableStatus */
+extern host *host_list;
 extern service *service_list;
 extern int log_initial_states;
 
 int g_num_hosts;
 int g_num_services;
+double g_average_active_latency;
 
 static NagiosCore *fl_core = nullptr;
 
-void count_hosts() {
-    extern host *host_list;
-    g_num_hosts = 0;
-    for (host *h = host_list; h != nullptr; h = h->next) {
-        g_num_hosts++;
-    }
-}
+namespace {
+void update_status() {
+    double active_latency{0};
+    int num_active_checks{0};
 
-void count_services() {
-    g_num_services = 0;
-    for (service *s = service_list; s != nullptr; s = s->next) {
-        g_num_services++;
+    int num_hosts = 0;
+    for (host *h = host_list; h != nullptr; h = h->next) {
+        num_hosts++;
+        if (h->check_type == HOST_CHECK_ACTIVE) {
+            num_active_checks++;
+            active_latency += h->latency;
+        }
     }
+
+    int num_services = 0;
+    for (service *s = service_list; s != nullptr; s = s->next) {
+        num_services++;
+        if (s->check_type == SERVICE_CHECK_ACTIVE) {
+            num_active_checks++;
+            active_latency += s->latency;
+        }
+    }
+
+    // batch all the global updates
+    g_num_hosts = num_hosts;
+    g_num_services = num_services;
+    g_average_active_latency = active_latency / std::max(num_active_checks, 1);
 }
+}  // namespace
 
 void *voidp;
 
@@ -169,9 +188,14 @@ void livestatus_cleanup_after_fork() {
 void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     auto logger = fl_core->loggerLivestatus();
+    auto last_update_status = std::chrono::system_clock::now();
     while (!fl_should_terminate) {
         do_statistics();
-
+        auto now = std::chrono::system_clock::now();
+        if (now - last_update_status >= std::chrono::seconds(5)) {
+            update_status();
+            last_update_status = now;
+        }
         Poller poller;
         poller.addFileDescriptor(g_unix_socket, PollEvents::in);
         int retval = poller.poll(std::chrono::milliseconds(2500));
@@ -275,9 +299,6 @@ private:
 }  // namespace
 
 void start_threads() {
-    count_hosts();
-    count_services();
-
     if (g_thread_running == 0) {
         auto logger = fl_core->loggerLivestatus();
         logger->setLevel(fl_livestatus_log_level);
@@ -289,6 +310,7 @@ void start_threads() {
             Warning(fl_logger_nagios) << ex;
         }
 
+        update_status();
         Informational(fl_logger_nagios)
             << "starting main thread and " << g_livestatus_threads
             << " client threads";

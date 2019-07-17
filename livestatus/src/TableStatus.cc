@@ -60,6 +60,7 @@ extern int check_external_commands;
 extern int interval_length;
 extern int g_num_hosts;
 extern int g_num_services;
+extern double g_average_active_latency;
 extern int g_livestatus_threads;
 extern int g_num_queued_connections;
 extern std::atomic_int32_t g_livestatus_active_connections;
@@ -237,7 +238,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<DoublePointerColumn>(
         "average_latency_generic",
         "The average latency for executing active checks (i.e. the time the start of the execution is behind the schedule)",
-        &dummy_double));
+        &g_average_active_latency));
     addColumn(std::make_unique<DoublePointerColumn>(
         "average_latency_cmk",
         "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",

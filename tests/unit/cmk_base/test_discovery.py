@@ -17,7 +17,7 @@ def test_discovered_service_init():
     assert s.check_plugin_name == "abc"
     assert s.item == u"Item"
     assert s.description == u"ABC Item"
-    assert s.paramstr == "None"
+    assert s.parameters_unresolved == "None"
     assert s.service_labels == {}
 
     s = discovery.DiscoveredService("abc", u"Item", u"ABC Item", "None", {u"läbel": u"lübel"})

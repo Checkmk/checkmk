@@ -177,7 +177,7 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
     else:
         existing_services = autochecks.parse_autochecks_file(hostname)
 
-    # Parse old items into a dict (ct, item) -> paramstring
+    # Parse old items into a dict (ct, item) -> parameters_unresolved
     for existing_service in existing_services:
         # Take over old items if -I is selected or if -II
         # is selected with --checks= and the check type is not
@@ -888,15 +888,15 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
     for entry in discovered_items:
         if isinstance(entry, check_api_utils.Service):
             item = entry.item
-            paramstring = entry.parameters
+            parameters_unresolved = entry.parameters
             service_labels = entry.service_labels
 
         elif isinstance(entry, tuple):
             service_labels = DiscoveredServiceLabels()
             if len(entry) == 2:  # comment is now obsolete
-                item, paramstring = entry
+                item, parameters_unresolved = entry
             elif len(entry) == 3:  # allow old school
-                item, __, paramstring = entry
+                item, __, parameters_unresolved = entry
             else:
                 # we really don't want longer tuples (or 1-tuples).
                 console.error(
@@ -925,7 +925,7 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
             check_plugin_name=check_plugin_name,
             item=item,
             description=description,
-            paramstr=paramstring,
+            parameters_unresolved=parameters_unresolved,
             service_labels=service_labels,
         )
 
@@ -1143,14 +1143,15 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         if check_source not in ['legacy', 'active', 'custom']:
             # apply check_parameters
             try:
-                if isinstance(discovered_service.paramstr, str):
-                    params = autochecks.resolve_paramstring(discovered_service.check_plugin_name,
-                                                            discovered_service.paramstr)
+                if isinstance(discovered_service.parameters_unresolved, str):
+                    params = autochecks.resolve_paramstring(
+                        discovered_service.check_plugin_name,
+                        discovered_service.parameters_unresolved)
                 else:
-                    params = discovered_service.paramstr
+                    params = discovered_service.parameters_unresolved
             except Exception:
                 raise MKGeneralException("Invalid check parameter string '%s'" %
-                                         discovered_service.paramstr)
+                                         discovered_service.parameters_unresolved)
 
             check_api_utils.set_service(discovered_service.check_plugin_name,
                                         discovered_service.description)
@@ -1232,7 +1233,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
         if check_source == "active":
             params = autochecks.resolve_paramstring(discovered_service.check_plugin_name,
-                                                    discovered_service.paramstr)
+                                                    discovered_service.parameters_unresolved)
 
         if check_source in ["legacy", "active", "custom"]:
             checkgroup = None
@@ -1242,7 +1243,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             checkgroup = config.check_info[discovered_service.check_plugin_name]["group"]
 
         table.append((check_source, discovered_service.check_plugin_name, checkgroup,
-                      discovered_service.item, discovered_service.paramstr, params,
+                      discovered_service.item, discovered_service.parameters_unresolved, params,
                       discovered_service.description, exitcode, output, perfdata))
 
     return table

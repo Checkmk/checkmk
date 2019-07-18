@@ -283,7 +283,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
     services = check_table.get_check_table(hostname, remove_duplicates=True).values()
     have_at_least_one_service = False
     used_descriptions = {}
-    for service in sorted(services, lambda s: (s.check_plugin_name, s.item)):
+    for service in sorted(services, key=lambda s: (s.check_plugin_name, s.item)):
         if service.check_plugin_name not in config.check_info:
             continue  # simply ignore missing checks
 

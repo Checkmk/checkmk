@@ -220,8 +220,10 @@ def test_automation_try_discovery_host(test_cfg, site):
 
 def test_automation_set_autochecks(test_cfg, site):
     new_items = {
-        ("df", "xxx"): "'bla'",
-        ("uptime", None): None,
+        ("df", "xxx"): ("'bla'", {
+            u"xyz": u"123"
+        }),
+        ("uptime", None): (None, {}),
     }
 
     try:
@@ -235,10 +237,13 @@ def test_automation_set_autochecks(test_cfg, site):
         assert os.path.exists(autochecks_file)
 
         data = autochecks.parse_autochecks_file("blablahost")
-        services = [((s.check_plugin_name, s.item), s.paramstr) for s in data]
+        services = [((s.check_plugin_name, s.item), s.parameters_unresolved,
+                     s.service_labels.to_dict()) for s in data]
         assert sorted(services) == [
-            (('df', u'xxx'), "'bla'"),
-            (('uptime', None), 'None'),
+            (('df', u'xxx'), "'bla'", {
+                u"xyz": u"123"
+            }),
+            (('uptime', None), 'None', {}),
         ]
 
         assert site.file_exists("var/check_mk/autochecks/blablahost.mk")
@@ -425,8 +430,7 @@ def test_automation_get_service_configurations(test_cfg, site):
     assert isinstance(data, dict)
     assert data["checkgroup_of_checks"]
     assert data["hosts"]["modes-test-host"]
-    print data["hosts"]["modes-test-host"]
-    assert data["hosts"]["modes-test-host"]["checks"][("cpu.loads", None)][1] == "CPU load"
+    assert ('cpu.loads', u'CPU load', (5.0, 10.0)) in data["hosts"]["modes-test-host"]["checks"]
 
 
 # TODO: rename-hosts

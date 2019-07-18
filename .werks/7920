@@ -1,0 +1,11 @@
+Title: agent_ucs_bladecenter:Handles lowercased first letter of attribute names (UCS-B series)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1563461139
+
+

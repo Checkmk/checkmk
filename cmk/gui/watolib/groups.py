@@ -281,16 +281,23 @@ def find_usages_of_group(name, group_type):
     return usages
 
 
-# Check if a group is currently in use and cannot be deleted
-# Returns a list of occurrances.
-# Possible usages:
-# - 1. rules: host to contactgroups, services to contactgroups
-# - 2. user memberships
 def find_usages_of_contact_group(name):
-    # Part 1: Rules
-    used_in = _find_usages_of_group_in_rules(name, ['host_contactgroups', 'service_contactgroups'])
+    """Check if a group is currently in use and cannot be deleted
+    Returns a list of occurrances.
+    """
+    global_config = load_configuration_settings()
 
-    # Is the contactgroup assigned to a user?
+    used_in = _find_usages_of_group_in_rules(name, ['host_contactgroups', 'service_contactgroups'])
+    used_in += _find_usages_of_contact_group_in_users(name)
+    used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
+    used_in += _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config)
+
+    return used_in
+
+
+def _find_usages_of_contact_group_in_users(name):
+    """Is the contactgroup assigned to a user?"""
+    used_in = []
     users = userdb.load_users()
     entries = users.items()
     for userid, user in sorted(entries, key=lambda x: x[1].get("alias", x[0])):
@@ -298,10 +305,12 @@ def find_usages_of_contact_group(name):
         if name in cgs:
             used_in.append(('%s: %s' % (_('User'), user.get('alias', userid)),
                             folder_preserving_link([('mode', 'edit_user'), ('edit', userid)])))
+    return used_in
 
-    global_config = load_configuration_settings()
 
-    # Used in default_user_profile?
+def _find_usages_of_contact_group_in_default_user_profile(name, global_config):
+    """Used in default_user_profile?"""
+    used_in = []
     config_variable = config_variable_registry['default_user_profile']()
     domain = config_variable.domain()
     configured = global_config.get('default_user_profile', {})
@@ -311,8 +320,12 @@ def find_usages_of_contact_group(name):
         used_in.append(('%s' % (_('Default User Profile')),
                         folder_preserving_link([('mode', 'edit_configvar'),
                                                 ('varname', 'default_user_profile')])))
+    return used_in
 
-    # Is the contactgroup used in mkeventd notify (if available)?
+
+def _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config):
+    """Is the contactgroup used in mkeventd notify (if available)?"""
+    used_in = []
     if 'mkeventd_notify_contactgroup' in config_variable_registry:
         config_variable = config_variable_registry['mkeventd_notify_contactgroup']()
         domain = config_variable.domain()
@@ -323,7 +336,6 @@ def find_usages_of_contact_group(name):
             used_in.append(('%s' % (config_variable.valuespec().title()),
                             folder_preserving_link([('mode', 'edit_configvar'),
                                                     ('varname', 'mkeventd_notify_contactgroup')])))
-
     return used_in
 
 

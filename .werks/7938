@@ -1,0 +1,31 @@
+Title: Unify status table columns in NEB and CMC.
+Level: 1
+Component: livestatus
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1563457925
+
+<ul>
+<li>Added <tt>average_latency_cmk</tt> and <tt>average_latency_real_time</tt>
+columns, always containing zero.</li>
+<li>Added <tt>average_latency_generic</tt> column, containing the average
+latency of all active host/service checks.</li>
+<li>Added <tt>core_pid</tt> column as an alias for <tt>nagios_pid</tt>.</li>
+<li>Added <tt>has_event_handlers</tt> column.</li>
+<li>Added <tt>helper_usage_generic</tt>, <tt>helper_usage_cmk</tt>, and
+<tt>helper_usage_real_time</tt> columns, always containing zero.</li>
+<li>Added <tt>livestatus_overflows</tt> and <tt>livestatus_overflows_rate</tt>
+columns. The NEB queues accepted connections, so we never have overflows here.
+Nevertheless, we provide these columns for consistency with CMC, and they always
+contain zero.</li>
+<li>Added <tt>livestatus_usage</tt> column.</li>
+<li>Added <tt>num_queued_alerts</tt> column, always containing zero.</li>
+<li>Added <tt>num_queued_notifications</tt> column, always containing zero.</li>
+<li>Removed <tt>livecheck_overflows</tt> and <tt>livecheck_overflows_rate</tt>
+columns from both NEB and CMC. They were unused for more than 6 years, they
+never really worked well, and simply contain zero for ages. To reduce confusion,
+those columns are gone now.</li>
+</ul>

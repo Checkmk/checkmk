@@ -1,0 +1,10 @@
+Title: Duplicated livestatus query limit exceeded
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1563467731
+Class: fix
+
+

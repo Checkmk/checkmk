@@ -99,15 +99,12 @@ def get_host_list_links(site, hosts):
     return entries
 
 
-def row_limit_exceeded(rows, limit):
-    return limit is not None and len(rows) >= limit + 1
+def row_limit_exceeded(row_count, limit):
+    return limit is not None and row_count >= limit + 1
 
 
-def query_limit_exceeded_with_warn(rows, limit, user_config):
+def query_limit_exceeded_warn(limit, user_config):
     """Compare query reply against limits, warn in the GUI about incompleteness"""
-    if not row_limit_exceeded(rows, limit):
-        return False
-
     text = _("Your query produced more than %d results. ") % limit
 
     if html.get_ascii_input("limit",
@@ -123,7 +120,6 @@ def query_limit_exceeded_with_warn(rows, limit, user_config):
     text += " " + _(
         "<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
     html.show_warning(text)
-    return True
 
 
 def render_labels(labels, object_type, with_links, label_sources):

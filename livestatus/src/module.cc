@@ -46,6 +46,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include "Average.h"
 #include "ChronoUtils.h"
 #include "ClientQueue.h"
 #include "InputBuffer.h"
@@ -122,6 +123,7 @@ int g_num_hosts;
 int g_num_services;
 bool g_any_event_handler_enabled;
 double g_average_active_latency;
+Average g_avg_livestatus_usage;
 
 static NagiosCore *fl_core = nullptr;
 
@@ -158,6 +160,9 @@ void update_status() {
     g_num_services = num_services;
     g_any_event_handler_enabled = any_event_handler_enabled;
     g_average_active_latency = active_latency / std::max(num_active_checks, 1);
+    g_avg_livestatus_usage.update(
+        static_cast<double>(g_livestatus_active_connections) /
+        g_livestatus_threads);
 }
 }  // namespace
 

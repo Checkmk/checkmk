@@ -27,6 +27,7 @@
 #include <ctime>
 #include <memory>
 #include "AtomicInt32PointerColumn.h"
+#include "Average.h"
 #include "BoolPointerColumn.h"
 #include "Column.h"
 #include "DoublePointerColumn.h"
@@ -63,6 +64,7 @@ extern int g_num_hosts;
 extern int g_num_services;
 extern bool g_any_event_handler_enabled;
 extern double g_average_active_latency;
+extern Average g_avg_livestatus_usage;
 extern int g_livestatus_threads;
 extern int g_num_queued_connections;
 extern std::atomic_int32_t g_livestatus_active_connections;
@@ -242,6 +244,10 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
         &g_livestatus_threads));
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "livestatus_usage",
+        "The average usage of the livestatus connection slots, ranging from 0.0 (0%) up to 1.0 (100%)",
+        &g_avg_livestatus_usage._average));
 
     addColumn(std::make_unique<DoublePointerColumn>(
         "average_latency_generic",

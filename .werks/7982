@@ -1,0 +1,10 @@
+Title: Fix "N/A" being displayed in some host tag columns
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1563464283
+Class: fix
+
+

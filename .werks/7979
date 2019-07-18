@@ -1,0 +1,19 @@
+Title: Setting host tags correctly after editing hosts
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p20
+Date: 1563435268
+
+When editing the tags of a host they were not applied correctly to the configuration
+right after saving. When opening the host edit dialog a second time and saving the
+host again without a change, the host tags were saved correctly.
+
+This issue could results in unexpected rule matching because the host dialog always
+showed the correct value while the rule matching code did not receive the intended
+tag configuration.
+
+This issue was introduced with 1.5.0b1 by #5886.

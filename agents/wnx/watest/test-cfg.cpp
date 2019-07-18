@@ -53,6 +53,60 @@ std::string wato_ini =
 
 extern void SetTestInstallationType(InstallationType);
 
+namespace details {
+TEST(CmaCfg, LogFileLocation) {
+    namespace fs = std::filesystem;
+    //
+    cma::OnStartTest();
+    fs::path expected = GetUserDir();
+    expected /= dirs::kLog;
+
+    {
+        // default config to data/log
+        fs::path dflt = details::GetDefaultLogPath();
+        EXPECT_TRUE(!dflt.empty());
+        EXPECT_TRUE(cma::tools::IsEqual(dflt.u8string(), expected.u8string()));
+    }
+
+    {
+        // empty data to user/public
+        auto& user = details::G_ConfigInfo.folders_.data_;
+        auto old_user = user;
+        ON_OUT_OF_SCOPE(details::G_ConfigInfo.folders_.data_ = old_user);
+        user.clear();
+        fs::path dflt = details::GetDefaultLogPath();
+        EXPECT_TRUE(!dflt.empty());
+        EXPECT_TRUE(cma::tools::IsEqual(dflt.u8string(), "c:\\Users\\public"));
+    }
+
+    {
+        // empty gives us default to the data/log
+        fs::path dflt = details::ConvertLocationToLogPath("");
+        EXPECT_TRUE(!dflt.empty());
+        EXPECT_TRUE(cma::tools::IsEqual(dflt.u8string(), expected.u8string()));
+    }
+
+    {
+        // empty without user gives us default to the public/user
+        auto& user = details::G_ConfigInfo.folders_.data_;
+        auto old_user = user;
+        ON_OUT_OF_SCOPE(details::G_ConfigInfo.folders_.data_ = old_user);
+        user.clear();
+
+        fs::path dflt = details::ConvertLocationToLogPath("");
+        EXPECT_TRUE(!dflt.empty());
+        EXPECT_TRUE(cma::tools::IsEqual(dflt.u8string(), "c:\\Users\\public"));
+    }
+
+    {
+        // non empty gives us the dir
+        fs::path dflt = details::ConvertLocationToLogPath("c:\\Windows\\Logs");
+        EXPECT_TRUE(!dflt.empty());
+        EXPECT_TRUE(cma::tools::IsEqual(dflt.u8string(), "c:\\Windows\\Logs"));
+    }
+}
+}  // namespace details
+
 TEST(CmaCfg, SmallFoos) {
     auto s = GetTimeString();
     EXPECT_TRUE(!s.empty());

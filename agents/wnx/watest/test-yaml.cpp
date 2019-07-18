@@ -790,8 +790,10 @@ TEST(AgentConfig, WorkScenario) {
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
         EXPECT_EQ(logging.size(), 5);
 
-        auto public_log = GetVal(logging, vars::kLogPublic, false);
-        EXPECT_TRUE(public_log);
+        auto log_location =
+            GetVal(logging, vars::kLogLocation, std::string(""));
+
+        EXPECT_TRUE(log_location.empty());
 
         auto debug = GetVal(logging, vars::kLogDebug, std::string("xxx"));
         EXPECT_TRUE(debug == "yes" || debug == "all");
@@ -1087,7 +1089,7 @@ TEST(AgentConfig, GlobalTest) {
 
     Global g;
     g.loadFromMainConfig();
-    g.public_log_ = false;
+    g.yaml_log_path_ = "C:\\Windows\\Logs\\";
     g.calcDerivatives();
     auto fname = g.fullLogFileNameAsString();
     EXPECT_EQ(fname, std::string("C:\\Windows\\Logs\\") + kDefaultLogFileName);
@@ -1114,11 +1116,14 @@ TEST(AgentConfig, GlobalTest) {
     } else {
         xlog::l("skipping write test: program is not elevated");
     }
-    g.public_log_ = true;
+    g.yaml_log_path_ = "";
     g.calcDerivatives();
     g.setupEnvironment();
     fname = g.fullLogFileNameAsString();
-    EXPECT_EQ(fname, std::string("C:\\Users\\Public\\") + kDefaultLogFileName);
+    std::filesystem::path dir = GetUserDir();
+    dir /= dirs::kLog;
+    EXPECT_TRUE(
+        cma::tools::IsEqual(fname, (dir / kDefaultLogFileName).u8string()));
 
     EXPECT_TRUE(groups::global.allowedSection("check_mk"));
     EXPECT_TRUE(groups::global.allowedSection("winperf"));

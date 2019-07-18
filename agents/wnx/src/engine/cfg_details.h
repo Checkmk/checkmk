@@ -124,6 +124,9 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class AgentConfig;
     FRIEND_TEST(AgentConfig, FoldersTest);
+
+    friend class CmaCfg;
+    FRIEND_TEST(CmaCfg, LogFileLocation);
 #endif
 };
 
@@ -404,9 +407,15 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class StartTest;
     FRIEND_TEST(StartTest, CheckStatus);
+
+    friend class CmaCfg;
+    FRIEND_TEST(CmaCfg, LogFileLocation);
 #endif
 };
 extern ConfigInfo G_ConfigInfo;
+
+std::filesystem::path ConvertLocationToLogPath(std::string_view location);
+std::filesystem::path GetDefaultLogPath();
 
 }  // namespace details
 }  // namespace cma::cfg

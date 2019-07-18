@@ -54,12 +54,12 @@ const char* const kRtEnabled = "enabled";    // bool
 const char* const kSectionsEnabled = "sections";            // seq
 const char* const kSectionsDisabled = "disabled_sections";  // seq
 
-const char* const kLogging = "logging";    // map
-const char* const kLogPublic = "public";   // bool
-const char* const kLogDebug = "debug";     // string no, yes, all
-const char* const kLogWinDbg = "windbg";   // bool
-const char* const kLogEvent = "eventlog";  // bool
-const char* const kLogFile = "file";       // string
+const char* const kLogging = "logging";       // map
+const char* const kLogLocation = "location";  // bool
+const char* const kLogDebug = "debug";        // string no, yes, all
+const char* const kLogWinDbg = "windbg";      // bool
+const char* const kLogEvent = "eventlog";     // bool
+const char* const kLogFile = "file";          // string
 
 // group plugins
 const char* const kPluginsFolders = "folders";            // seq

@@ -120,18 +120,22 @@ extern int log_initial_states;
 
 int g_num_hosts;
 int g_num_services;
+bool g_any_event_handler_enabled;
 double g_average_active_latency;
 
 static NagiosCore *fl_core = nullptr;
 
 namespace {
 void update_status() {
+    bool any_event_handler_enabled{false};
     double active_latency{0};
     int num_active_checks{0};
 
     int num_hosts = 0;
     for (host *h = host_list; h != nullptr; h = h->next) {
         num_hosts++;
+        any_event_handler_enabled =
+            any_event_handler_enabled || (h->event_handler_enabled > 0);
         if (h->check_type == HOST_CHECK_ACTIVE) {
             num_active_checks++;
             active_latency += h->latency;
@@ -141,6 +145,8 @@ void update_status() {
     int num_services = 0;
     for (service *s = service_list; s != nullptr; s = s->next) {
         num_services++;
+        any_event_handler_enabled =
+            any_event_handler_enabled || (s->event_handler_enabled > 0);
         if (s->check_type == SERVICE_CHECK_ACTIVE) {
             num_active_checks++;
             active_latency += s->latency;
@@ -150,6 +156,7 @@ void update_status() {
     // batch all the global updates
     g_num_hosts = num_hosts;
     g_num_services = num_services;
+    g_any_event_handler_enabled = any_event_handler_enabled;
     g_average_active_latency = active_latency / std::max(num_active_checks, 1);
 }
 }  // namespace

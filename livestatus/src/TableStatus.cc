@@ -27,6 +27,7 @@
 #include <ctime>
 #include <memory>
 #include "AtomicInt32PointerColumn.h"
+#include "BoolPointerColumn.h"
 #include "Column.h"
 #include "DoublePointerColumn.h"
 #include "IntPointerColumn.h"
@@ -60,6 +61,7 @@ extern int check_external_commands;
 extern int interval_length;
 extern int g_num_hosts;
 extern int g_num_services;
+extern bool g_any_event_handler_enabled;
 extern double g_average_active_latency;
 extern int g_livestatus_threads;
 extern int g_num_queued_connections;
@@ -260,6 +262,11 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "helper_usage_real_time",
         "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         &dummy_double));
+
+    addColumn(std::make_unique<BoolPointerColumn>(
+        "has_event_handlers",
+        "Whether or not at alert handler rules are configured (0/1)",
+        &g_any_event_handler_enabled));
 
     // Special stuff for Check_MK
     addColumn(std::make_unique<StatusSpecialIntColumn>(

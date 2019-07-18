@@ -2675,7 +2675,7 @@ class FilterHostLabels(ABCLabelFilter):
 
     @property
     def title(self):
-        return _("Labels")
+        return _("Host labels")
 
 
 @filter_registry.register
@@ -2690,7 +2690,7 @@ class FilterServiceLabels(ABCLabelFilter):
 
     @property
     def title(self):
-        return _("Labels")
+        return _("Service labels")
 
 
 class ABCFilterCustomAttribute(Filter):

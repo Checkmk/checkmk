@@ -809,6 +809,60 @@ bool UpdateProtocolFile(std::wstring_view new_location,
     return true;
 }
 
+std::filesystem::path FindOwnDatFile() {
+    namespace fs = std::filesystem;
+    fs::path dat = GetRootDir();
+    dat /= dirs::kFileInstallDir;
+    dat /= files::kDatFile;
+    std::error_code ec;
+    if (fs::exists(dat, ec)) return dat;
+
+    return {};
+}
+
+// This Function writes new hast from the dat
+// into old ini file to prevent further updates with 1.5 cmk-update-agent.exe
+void PatchIniWithDatHash() {
+    namespace fs = std::filesystem;
+    auto ini = FindOldIni();
+    if (ini.empty()) {
+        XLOG::l.t("INI file not found, patching is not required");
+        return;
+    }
+
+    auto old_hash = GetOldHash(ini);
+    if (ini.empty()) {
+        XLOG::l.t("Hash in INI file '{}' not found, patching is not required",
+                  old_hash);
+        return;
+    }
+
+    XLOG::l.t("Patching of the ini '{}' initiated, old hash is '{}' ",
+              ini.u8string(), old_hash);
+    auto dat = FindOwnDatFile();
+    if (dat.empty()) {
+        XLOG::l("DAT file '{}' absent, this is bad", dat.u8string());
+        return;
+    }
+
+    auto new_hash = GetNewHash(dat);
+    if (new_hash.empty()) {
+        XLOG::l("Hash in DAT file '{} absent, this is bad too", dat.u8string());
+        return;
+    }
+    XLOG::t("Hash is '{}' ", new_hash);
+
+    auto ret = PatchIniHash(ini, new_hash);
+    if (!ret) {
+        XLOG::l("Failed to patch hash '{}' in INI '{}'", new_hash,
+                ini.u8string());
+        return;
+    }
+
+    auto ini_hash = GetOldHash(ini);
+    XLOG::d.t("Now hash in '{}'is '{}'", ini.u8string(), ini_hash);
+}
+
 // The only API entry DIRECTLY used in production
 bool UpgradeLegacy(Force force_upgrade) {
     XLOG::l.i("Starting upgrade(migration) process...");
@@ -839,6 +893,7 @@ bool UpgradeLegacy(Force force_upgrade) {
         return true;
     }
     XLOG::l.i("Legacy Agent is found in '{}'", wtools::ConvertToUTF8(path));
+    PatchIniWithDatHash();
 
     auto success = FindStopDeactivateLegacyAgent();
     if (!success) {
@@ -1096,6 +1151,103 @@ std::filesystem::path CreateBakeryYamlFromIni(
     XLOG::l.i("File '{}' is successfully converted", ini_file.u8string());
 
     return yaml_file;
+}
+
+std::filesystem::path FindOldIni() {
+    std::filesystem::path path = FindLegacyAgent();
+    if (path.empty()) {
+        XLOG::d.t("Legacy Agent is not found");
+        return {};
+    }
+    return path / files::kIniFile;
+}
+
+std::string GetNewHash(const std::filesystem::path& dat) noexcept {
+    try {
+        auto yml = YAML::LoadFile(dat.u8string());
+        auto hash = GetVal(yml, kHashName.data(), std::string());
+        if (hash == cma::cfg::kBuidlHashValue) {
+            XLOG::l.t("Hash is from packaged agent, ignoring");
+            return {};
+        }
+
+        return hash;
+
+    } catch (const std::exception& e) {
+        XLOG::l("can't load '{}', hash not known, exception '{}'",
+                dat.u8string(), e.what());
+        return {};
+    }
+}
+
+std::string ReadHash(std::fstream& ifs) noexcept {
+    try {
+        char old_hash[17];
+        ifs.read(old_hash, sizeof(old_hash) - 1);
+        old_hash[sizeof(old_hash) - 1] = 0;
+        if (strlen(old_hash) != 16) {
+            XLOG::l("Bad hash in the ini");
+            return {};
+        }
+        return old_hash;
+    } catch (const std::exception& e) {
+        XLOG::l("Exception'{}' when reading hash", e.what());
+    }
+    return {};
+}
+
+std::string GetOldHash(const std::filesystem::path& ini) noexcept {
+    try {
+        std::fstream ifs;
+        ifs.open(ini,
+                 std::fstream::binary | std::fstream::in | std::fstream::out);
+
+        std::string str((std::istreambuf_iterator<char>(ifs)),
+                        std::istreambuf_iterator<char>());
+
+        const std::string_view marker = "# agent hash: ";
+        auto pos = str.find(marker);
+
+        if (pos == std::string::npos) return {};
+
+        ifs.seekp(pos + marker.size());
+
+        return ReadHash(ifs);
+    } catch (const std::exception& e) {
+        XLOG::l("IO failed during reading hash from '{}', exception '{}' ",
+                e.what());
+        return {};
+    }
+}
+
+bool PatchIniHash(const std::filesystem::path& ini,
+                  const std::string& hash) noexcept {
+    try {
+        std::fstream ifs;
+        ifs.open(ini,
+                 std::fstream::binary | std::fstream::in | std::fstream::out);
+
+        std::string str((std::istreambuf_iterator<char>(ifs)),
+                        std::istreambuf_iterator<char>());
+
+        const std::string_view marker = "# agent hash: ";
+        auto pos = str.find(marker);
+
+        if (pos == std::string::npos) return false;
+
+        ifs.seekp(pos + marker.size());
+
+        auto ret = ReadHash(ifs);
+        if (ret.empty()) return false;
+
+        ifs.seekp(pos + marker.size());
+        ifs.write(hash.c_str(), 16);
+        return true;
+    } catch (const std::exception& e) {
+        XLOG::l("IO failed during patching ini '{}' hash, exception '{}' ",
+                e.what());
+        return false;
+    }
 }
 
 }  // namespace cma::cfg::upgrade

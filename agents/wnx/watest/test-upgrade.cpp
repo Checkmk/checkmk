@@ -17,6 +17,60 @@
 
 namespace cma::cfg::upgrade {
 
+TEST(UpgradeTest, PatchIniHash) {
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    const std::string old_expected = "b53c5b77c595ba7e";
+    const std::string new_expected = "13dd8be2f9ad5894";
+    const std::string ini_name = "check_mk.hash.ini";
+    const std::string dat_name = "checkmk.hash.dat";
+    {
+        fs::path dir = cma::cfg::GetUserDir();
+        auto ini = dir / ini_name;
+        auto old_hash = GetOldHash(ini);
+        ASSERT_TRUE(!old_hash.empty());
+        ASSERT_EQ(old_hash, old_expected);
+
+        auto dat = dir / dat_name;
+        auto new_hash = GetNewHash(dat);
+        ASSERT_TRUE(!new_hash.empty());
+        ASSERT_EQ(new_hash, new_expected);
+    }
+
+    {
+        fs::path dir = cma::cfg::GetUserDir();
+        auto ini = dir / ini_name;
+        tst::SafeCleanTempDir();
+        auto [source, target] = tst::CreateInOut();
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+        auto dat = dir / dat_name;
+        auto new_hash = GetNewHash(dat);
+
+        fs::copy_file(ini, target / ini_name,
+                      fs::copy_options::overwrite_existing, ec);
+        fs::copy_file(dat, target / dat_name,
+                      fs::copy_options::overwrite_existing, ec);
+        auto ret = PatchIniHash(ini, new_hash);
+        EXPECT_TRUE(ret);
+
+        auto old_hash = GetOldHash(ini);
+        ASSERT_TRUE(!old_hash.empty());
+        ASSERT_EQ(old_hash, new_expected);
+    }
+
+#if 0
+    //
+    auto ini = FindOldIni();
+    std::error_code ec;
+    ASSERT_FALSE(ini.empty() || !fs::exists(ini, ec))
+        << "legacy agent must be installed";
+
+#endif
+    // std::string GetNewHash();
+    // bool InjectHashIntoIni(std::filesystem::path ini, std::string hash);
+}
+
 std::string nullfile = "";
 std::string commentfile =
     "# This file is managed via WATO, do not edit manually or you \n";

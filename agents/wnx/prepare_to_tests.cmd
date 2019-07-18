@@ -22,7 +22,7 @@ powershell Write-Host "Installation simulation Root Folder: plugins, ohm, yml"  
 copy ..\windows\plugins\*.*         	%root%\plugins\ > nul || powershell Write-Host "Failed plugins copy" -Foreground Red	&& exit 3
 copy .\test_files\ohm\cli\*.*       	%user_dir%\bin\ > nul || powershell Write-Host "Failed ohm copy. Try to kill Open Hardware Monitor: taskkill /F /IM OpenhardwareMonitorCLI.exe" -Foreground Yellow
 copy .\install\resources\check_mk.yml  	%root%\ > nul         || powershell Write-Host "Failed check_mk.yml copy" -Foreground Red	&& exit 5
-copy .\install\resources\check_mk.ini  	%root%\ > nul         || powershell Write-Host "Failed check_mk.ini copy" -Foreground Red	&& exit 5
+copy .\install\resources\check_mk.ini  	%root%\ > nul         || powershell Write-Host "Failed check_mk.ini copy" -Foreground Red	&& exit 55
 
 powershell Write-Host "1. Test machine preparation: Shared Folder"  -Foreground Green
 set shared_fldr=c:\dev\shared_public
@@ -37,4 +37,6 @@ powershell Write-Host "3. Test machine preparation: User Folder"  -Foreground Gr
 copy .\test_files\config\*.cfg      	%user_dir% > nul      || powershell Write-Host "Failed test cfgs copy" -Foreground Red	&& exit 8 
 copy .\test_files\config\*.test.ini 	%user_dir% > nul	  || powershell Write-Host "Failed test inis copy" -Foreground Red	&& exit 9
 copy .\test_files\config\*.test.out 	%user_dir% > nul	  || powershell Write-Host "Failed test outs copy" -Foreground Red	&& exit 10
-copy .\test_files\cap\*.test.cap 	    %user_dir% > nul      || powershell Write-Host "Failed test caps copy" -Foreground Red	&& exit 10
+copy .\test_files\cap\*.test.cap 	    %user_dir% > nul      || powershell Write-Host "Failed test caps copy" -Foreground Red	&& exit 11
+copy .\test_files\unit_test\*.ini 	    %user_dir% > nul      || powershell Write-Host "Failed test ini copy" -Foreground Red	&& exit 12
+copy .\test_files\unit_test\*.dat 	    %user_dir% > nul      || powershell Write-Host "Failed test dat copy" -Foreground Red	&& exit 13

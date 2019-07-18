@@ -1,0 +1,11 @@
+Title: check_mk: Don't crash upon missing hostname
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1563364611
+Class: fix
+
+The check_mk service no longer crashes if the host the linux agent is run on does not
+provide the 'hostname' command.

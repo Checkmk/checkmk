@@ -201,7 +201,7 @@ def filesize(size):
 #   '----------------------------------------------------------------------'
 
 
-def percent(perc, precision=2, drop_zeroes=True):
+def percent(perc, drop_zeroes=True):
     """Renders a given number as percentage string"""
     if perc > 0:
         perc_precision = max(1, 2 - int(round(math.log(perc, 10))))

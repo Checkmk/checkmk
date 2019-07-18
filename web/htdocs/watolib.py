@@ -2978,6 +2978,7 @@ class CREHost(WithPermissionsAndAttributes):
         self._attributes = attributes
         self._cluster_nodes = cluster_nodes
         affected_sites = list(set(affected_sites + [self.site_id()]))
+        self.drop_caches()
         self.folder().save_hosts()
         add_change("edit-host", _("Modified host %s.") % self.name(),
             obj=self, sites=affected_sites)

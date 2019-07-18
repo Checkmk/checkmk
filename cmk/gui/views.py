@@ -592,7 +592,7 @@ def _register_host_tag_painters():
         spec = {
             "title": _("Host tag:") + ' ' + long_title,
             "short": tag_group.title,
-            "columns": ["host_custom_variables"],
+            "columns": ["host_tags"],
         }
         cls = type(
             "HostTagPainter%s" % str(tag_group.id).title(),
@@ -623,7 +623,7 @@ def _register_host_tag_sorters():
             "host_tag_" + str(tag_group.id), {
                 "_tag_group_id": tag_group.id,
                 "title": _("Host tag:") + ' ' + tag_group.title,
-                "columns": ["host_custom_variables"],
+                "columns": ["host_tags"],
                 "cmp": lambda self, r1, r2: _cmp_host_tag(r1, r2, self._spec["_tag_group_id"]),
             })
 

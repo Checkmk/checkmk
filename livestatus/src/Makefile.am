@@ -44,6 +44,7 @@ liblivestatus_a_SOURCES = \
         AndingFilter.cc \
         AttributeListAsIntColumn.cc \
         AttributeListColumn.cc \
+        Average.cc \
         BlobColumn.cc \
         ClientQueue.cc \
         Column.cc \

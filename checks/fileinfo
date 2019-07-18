@@ -413,7 +413,7 @@ def check_fileinfo_groups(_item, params, parsed):
     if any(exclude_patterns):
         long_output.append("Exclude patterns: %s" % ", ".join(exclude_patterns))
 
-    for filename, attrs in files_matching.iteritems():
+    for filename, attrs in sorted(files_matching.iteritems(), key=lambda x: x[0]):
         long_output.append("[%s] Age: %s, Size: %s%s" % \
                           (filename, get_age_human_readable(attrs["age"]),
                            get_filesize_human_readable(attrs["size"]),

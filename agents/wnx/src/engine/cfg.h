@@ -19,6 +19,7 @@ bool IsTest();
 }  // namespace cma
 
 namespace cma::cfg {
+constexpr std::string_view kBuidlHashValue = "DEFADEFADEFA";
 // bit mask
 enum LoadCfgStatus {
     kAllFailed = -2,    // root config not found

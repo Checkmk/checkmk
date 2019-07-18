@@ -32,6 +32,7 @@ constexpr std::string_view kExecParamShowAll = "-showall";  // logging sub param
 constexpr std::string_view kCvtParam = "convert";    // convert ini to yaml
 constexpr std::string_view kCvtParamShow = "-show";  // logging sub param
 constexpr const wchar_t* kSkypeParam = L"skype";     // hidden
+constexpr std::string_view kPatchHashParam = "patch_hash";      // hidden
 constexpr std::string_view kStopLegacyParam = "stop_legacy";    //
 constexpr std::string_view kStartLegacyParam = "start_legacy";  //
 

@@ -112,6 +112,7 @@ bool OnStart(AppType Type, YamlCacheOp UpdateCacheOnSuccess,
 
     // false is possible only for watest
     if (!cfg::DetermineWorkingFolders(Type)) return false;
+    groups::global.updateLogNamesByDefault();
 
     // load default configuration files
     auto cfg_files = cfg::DefaultConfigArray(Type);

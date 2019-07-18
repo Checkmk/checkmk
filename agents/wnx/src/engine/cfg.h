@@ -566,9 +566,9 @@ public:
         return realtime_encrypt_ ? password_ : "";
     }
 
-    bool publicLog() const {
+    std::filesystem::path logPath() const {
         std::lock_guard lk(lock_);
-        return public_log_;
+        return yaml_log_path_;
     }
     int debugLogLevel() const {
         std::lock_guard lk(lock_);
@@ -638,9 +638,12 @@ public:
         return {};
     }
 
+    void updateLogNamesByDefault();
+
 private:
     // called from ctor or loader
     void calcDerivatives();
+    void updateLogNames(std::filesystem::path log_path);
     void setDefaults();
 
     // check contents of only_from from the yml and fills array correct
@@ -713,11 +716,11 @@ private:
     int realtime_port_;
     std::vector<std::string> realtime_sections_;
 
-    // wmi hlobal
+    // wmi global
     int wmi_timeout_;
 
     // log
-    bool public_log_;
+    std::filesystem::path yaml_log_path_;
     int debug_level_;  // 0, 1, 2
 
     bool windbg_;

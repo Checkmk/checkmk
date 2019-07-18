@@ -166,6 +166,29 @@ namespace details {
 ConfigInfo G_ConfigInfo;
 // store boot fixed data
 uint64_t RegisteredPerformanceFreq = wtools::QueryPerformanceFreq();
+
+std::filesystem::path GetDefaultLogPath() {
+    std::filesystem::path dir = GetUserDir();
+    if (dir.empty()) {
+        auto rfid = cma::cfg::kPublicFolderId;
+        return cma::tools::win::GetSomeSystemFolder(rfid);
+    }
+
+    return dir / dirs::kLog;
+}
+
+std::filesystem::path ConvertLocationToLogPath(std::string_view location) {
+    if (location.empty()) return GetDefaultLogPath();
+
+    std::error_code ec;
+    if (!std::filesystem::is_directory(location, ec)) {
+        XLOG::l("The log location '{}' is not valid, falling back to default",
+                location);
+        return GetDefaultLogPath();
+    }
+
+    return location;
+}
 }  // namespace details
 
 // stores EVERYTHING which can be configured
@@ -463,7 +486,7 @@ bool Folders::setRoot(const std::wstring& ServiceValidName,  // look in registry
     emplace_parent(service_path_new);
 
     // working folder
-    if (full.size() == 0) {
+    if (full.empty()) {
         error_code ec;
         fs::path work_dir = RootFolder;
         if (fs::exists(work_dir, ec))
@@ -471,14 +494,14 @@ bool Folders::setRoot(const std::wstring& ServiceValidName,  // look in registry
     }
 
     // Current exe path used for tests
-    if (full.size() == 0) {
+    if (full.empty()) {
         error_code ec;
         auto cur_dir = fs::current_path(ec);
         if (ec.value() == 0 && fs::exists(cur_dir, ec))
             full.emplace_back(cur_dir.lexically_normal());
     }
 
-    if (full.size() == 0) {
+    if (full.empty()) {
         XLOG::l(XLOG_FUNC + " Parameters are invalid");
         return false;
     }
@@ -1001,8 +1024,9 @@ void ConfigInfo::initAll(
         IsInstallProtocolExists(root);
 
     folders_.createDataFolderStructure(AgentDataFolder);
+
     if (folders_.getData().empty())
-        XLOG::l("Data folder is empty.This is bad.");
+        XLOG::l.crit("Data folder is empty.This is bad.");
     else
         UpdateInstallProtocolFile(exists_install_protocol, install_file);
 

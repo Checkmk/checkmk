@@ -78,7 +78,10 @@ void Global::loadFromMainConfig() {
         realtime_sections_ = GetInternalArray(realtime, vars::kRtRun);
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
 
-        public_log_ = GetVal(logging, vars::kLogPublic, true);
+        auto yml_log_location =
+            GetVal(logging, vars::kLogLocation, std::string());
+        yaml_log_path_ =
+            cma::cfg::details::ConvertLocationToLogPath(yml_log_location);
 
         std::string default_debug = tgt::IsDebug() ? "yes" : "no";
         auto debug_level = GetVal(logging, vars::kLogDebug, default_debug);
@@ -127,24 +130,41 @@ void Global::setDefaults() {
     realtime_sections_ = {};
 
     // log
-    public_log_ = true;
     debug_level_ = tgt::IsDebug() ? LogLevel::kLogDebug : LogLevel::kLogBase;
     windbg_ = true;
     event_log_ = true;
     log_file_name_ = kDefaultLogFileName;
 }
 
+void Global::updateLogNames(std::filesystem::path log_path) {
+    if (log_path.empty()) XLOG::d.i("log_path is empty");
+
+    logfile_dir_ = log_path;
+
+    logfile_dir_ =
+        cma::cfg::details::ConvertLocationToLogPath(logfile_dir_.u8string());
+
+    if (log_file_name_.empty()) log_file_name_ = kDefaultLogFileName;
+
+    logfile_ = logfile_dir_ / log_file_name_;
+    logfile_as_string_ = logfile_.u8string();
+    logfile_as_wide_ = logfile_.wstring();
+}
+
+// may be called only during start
+void Global::updateLogNamesByDefault() {
+    //
+    updateLogNames({});
+}
 // optimization
 void Global::calcDerivatives() {
+#if 0
     auto rfid = public_log_ ? cma::cfg::kPublicFolderId : kWindowsFolderId;
     const auto dir = cma::tools::win::GetSomeSystemFolder(rfid);
     logfile_dir_ = dir;
     if (!public_log_) logfile_dir_ = logfile_dir_ / "Logs";
-
-    if (log_file_name_.empty()) log_file_name_ = kDefaultLogFileName;
-    logfile_ = logfile_dir_ / log_file_name_;
-    logfile_as_string_ = logfile_.u8string();
-    logfile_as_wide_ = logfile_.wstring();
+#endif
+    updateLogNames(yaml_log_path_);
 }
 
 // transfer global data into app environment

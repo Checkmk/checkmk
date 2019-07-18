@@ -1,0 +1,12 @@
+Title: mk_docker.py: Bakery now allows to skip individual sections
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0b4
+Date: 1563449741
+Class: feature
+
+The agent bakery rule now allows users to select and deselect individual sections.
+Users that have been using the mk_docker.py plugin from the 1.6.0 <tt>beta</tt> releases
+before <tt>1.6.0b4</tt> need to update their bakery rule and redeploy the plugin.

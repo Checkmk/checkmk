@@ -99,8 +99,14 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
                       Counter::commands);
     addCounterColumns("livechecks", "checks executed via livecheck",
                       Counter::livechecks);
+    // NOTE: The NEB queues accepted connections, so we never have overflows
+    // here. Nevertheless, we provide these columns for consistency with CMC,
+    // always returning zero.
+    addCounterColumns(
+        "livestatus_overflows",
+        "times a Livestatus connection could not be immediately accepted because all threads where busy",
+        Counter::overflows);
 
-    // Nagios program status data
     addColumn(std::make_unique<IntPointerColumn>(
         "nagios_pid", "The process ID of the monitoring core", &nagios_pid));
     addColumn(std::make_unique<IntPointerColumn>(

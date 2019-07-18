@@ -438,6 +438,10 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::ExecCap();
     }
 
+    if (param == wtools::ConvertToUTF16(kPatchHashParam)) {
+        return cma::srv::ExecPatchHash();
+    }
+
     if (param == wtools::ConvertToUTF16(kShowConfigParam)) {
         std::wstring second_param = argc > 2 ? Argv[2] : L"";
         return cma::srv::ExecShowConfig(wtools::ConvertToUTF8(second_param));

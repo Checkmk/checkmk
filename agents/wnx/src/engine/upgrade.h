@@ -21,6 +21,8 @@ constexpr std::string_view kBakeryMarker =
 enum class Force { no, yes };
 bool UpgradeLegacy(Force force_upgrade = Force::no);
 
+void PatchIniWithDatHash();  // the part of engine
+
 // optionally move protocol file from old location to new one
 // return true if location are different
 bool UpdateProtocolFile(std::wstring_view new_location,
@@ -121,6 +123,15 @@ bool IsIgnoredFile(const std::filesystem::path& filename);
 
 std::filesystem::path ConstructProtocolFileName(
     const std::filesystem::path& dir) noexcept;
+
+// API to fix hash in 1.5 agent
+constexpr std::string_view kHashName = "hash";
+std::filesystem::path FindOldIni();
+std::string GetNewHash(const std::filesystem::path& dat) noexcept;
+std::string GetOldHash(const std::filesystem::path& ini) noexcept;
+bool PatchIniHash(const std::filesystem::path& ini,
+                  const std::string& hash) noexcept;
+
 }  // namespace cma::cfg::upgrade
 
 #endif  // upgrade_h__

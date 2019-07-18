@@ -469,6 +469,18 @@ int ExecCap() {
     return 0;
 }
 
+// on -cap
+int ExecPatchHash() {
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::EnableDebugLog(true);
+    XLOG::setup::EnableTraceLog(true);
+    XLOG::l.i("Patching...");
+    cma::cfg::upgrade::PatchIniWithDatHash();
+    XLOG::l.i("End of!");
+    return 0;
+}
+
 int ExecShowConfig(std::string_view sec) {
     XLOG::setup::ColoredOutputOnStdio(true);
     using namespace cma::cfg;

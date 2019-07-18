@@ -26,27 +26,31 @@
 
 
 def parse_emka_modules(info):
-    map_module_types = { # basModuleCoIx == 0
-        "0"  : "vacant",
-        "8"  : "U8, keypad",
-        "9"  : "U9, card module (proximity)",
-        "10" : "U10, phone module (modem)",
-        "11" : "U11/U32, up to 8 handles / single point latches",
-        "12" : "U12/U33, up to 2 handles / single point latches",
-        "13" : "U13, 4 sensors and 4 relays",
-        "14" : "U14, communication module",
-        "15" : "fultifunction module M15",
-        "16" : "fultifunction module M16", }
+    # basModuleCoIx == 0
+    map_module_types = {
+        "0": "vacant",
+        "8": "U8, keypad",
+        "9": "U9, card module (proximity)",
+        "10": "U10, phone module (modem)",
+        "11": "U11/U32, up to 8 handles / single point latches",
+        "12": "U12/U33, up to 2 handles / single point latches",
+        "13": "U13, 4 sensors and 4 relays",
+        "14": "U14, communication module",
+        "15": "fultifunction module M15",
+        "16": "fultifunction module M16",
+    }
 
-    map_component_types = { # independent of module type, basModuleCoIx > 0
-        "1" : "alarm",
-        "2" : "handle",
-        "3" : "sensor",
-        "4" : "relay",
-        "5" : "keypad",
-        "6" : "card_terminal",
-        "7" : "phone_modem",
-        "8" : "analogous_output", }
+    # independent of module type, basModuleCoIx > 0
+    map_component_types = {
+        "1": "alarm",
+        "2": "handle",
+        "3": "sensor",
+        "4": "relay",
+        "5": "keypad",
+        "6": "card_terminal",
+        "7": "phone_modem",
+        "8": "analogous_output",
+    }
 
     parsed = {"basic_components": {}}
     for oidend, status, ty, mod_info, remark in info[0]:
@@ -138,7 +142,7 @@ def parse_emka_modules(info):
         def scale_f(x, m=m, a=a):
             return float(x) * m + a
 
-        location = str(chr(oidend[0]))
+        location = str(chr(int(oidend.split('.', 1)[0])))
         for sensor, attrs in parsed.get("sensor", {}).items():
             if attrs["_location_"].endswith(".%s" % location):
                 parsed.setdefault(sensor_ty, {})
@@ -227,7 +231,7 @@ check_info['emka_modules'] = {
                                     BINARY("18"),   # ELM2-MIB::coSensorScaling
                               ])],
     'snmp_scan_function'    : lambda oid: "emka" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-                              oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.13595.1"),
+                              oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.13595"),
 }
 
 #.
@@ -278,8 +282,9 @@ check_info["emka_modules.alarm"] = {
 
 
 def inventory_emka_modules_handle(parsed):
-    for entry in parsed.get("handle", {}):
-        yield entry, None
+    for entry, spec in parsed.get("handle", {}).iteritems():
+        if 'value' in spec:
+            yield entry, None
 
 
 def check_emka_modules_handle(item, params, parsed):

@@ -1,0 +1,12 @@
+Title: EMKA checks did not recognize devices with recent sysObjectID
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1563442764
+
+EMKA devices changes their sysObjectId and thus were not recognized by our
+snmp_scan. Now we scan for both sysObjectIds to recognize the devices.

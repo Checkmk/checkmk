@@ -51,6 +51,10 @@ def inventory_netapp_api_volumes(parsed):
         yield volume, {}
 
 
+def _create_key(protocol, mode, field):
+    return "_".join([protocol, mode, field])
+
+
 # Cannot use decorator get_parsed_item_data for this check function due to the
 # specific error message for legacy checks with a UUID as item
 def check_netapp_api_volumes(item, params, parsed):
@@ -77,16 +81,16 @@ def check_netapp_api_volumes(item, params, parsed):
     base = {}
 
     perf_protocols = params.get("perfdata", [])
-    for protocol in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]:
-        if protocol[:-1] not in perf_protocols:
+    for protocol in ["", "nfs", "cifs", "san", "fcp", "iscsi"]:
+        if protocol not in perf_protocols:
             continue
-        for mode in ["read_", "write_", "other_"]:
+        for mode in ["read", "write", "other"]:
             for field, format_text in [
                 ("data", None),
                 ("ops", "%s: %.2f 1/s"),
                 ("latency", "%s: %.2f ms"),
             ]:
-                key = protocol + mode + field
+                key = _create_key(protocol, mode, field)
                 value = volume.get(key)
                 if value is not None:
                     value = int(value)
@@ -104,7 +108,7 @@ def check_netapp_api_volumes(item, params, parsed):
                             else:
                                 base[key] = float(delta)
 
-                        if protocol == "" and mode in ["read_", "write_"]:
+                        if protocol == "" and mode in ["read", "write"]:
                             if field == "latency":
                                 # See https://library.netapp.com/ecmdocs/ECMP1608437/html/GUID-04407796-688E-489D-901C-A6C9EAC2A7A2.html
                                 # for scaling issues:
@@ -134,7 +138,7 @@ def check_netapp_api_volumes(item, params, parsed):
                                     divisor = 1.0
                                 else:
                                     divisor = 1000.0
-                                delta = delta / (divisor * base[protocol + mode + "ops"])
+                                delta = delta / (divisor * base[_create_key(protocol, mode, "ops")])
                             if format_text:
                                 infotexts.append(format_text % (key, delta))
                             else:

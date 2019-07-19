@@ -4593,13 +4593,13 @@ metric_info["emcvnx_dedupl_shared_capacity"] = {
 metric_info["docker_all_containers"] = {
     "title": _("Number of containers"),
     "unit": "count",
-    "color": "11/a",
+    "color": "43/a",
 }
 
 metric_info["docker_running_containers"] = {
     "title": _("Running containers"),
     "unit": "count",
-    "color": "21/a",
+    "color": "31/a",
 }
 
 metric_info["ready_containers"] = {
@@ -4611,13 +4611,13 @@ metric_info["ready_containers"] = {
 metric_info["docker_paused_containers"] = {
     "title": _("Paused containers"),
     "unit": "count",
-    "color": "31/a",
+    "color": "24/a",
 }
 
 metric_info["docker_stopped_containers"] = {
     "title": _("Stopped containers"),
     "unit": "count",
-    "color": "41/a",
+    "color": "14/a",
 }
 
 metric_info["docker_count"] = {
@@ -9208,6 +9208,16 @@ perfometer_info.append({
     "color": "16/a",
 })
 
+perfometer_info.append({
+    "type": "linear",
+    "segments": [
+        "docker_running_containers",
+        "docker_paused_containers",
+        "docker_stopped_containers",
+    ],
+    "total": "docker_all_containers",
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -9484,6 +9494,16 @@ graph_info["replicas"] = {
         ("total_replicas", "line"),
     ],
     "scalars": ["ready_replicas:crit",]
+}
+
+graph_info["docker_containers"] = {
+    "title": _("Docker Containers"),
+    "metrics": [
+        ("docker_running_containers", "area"),
+        ("docker_paused_containers", "stack"),
+        ("docker_stopped_containers", "stack"),
+        ("docker_all_containers", "line"),
+    ],
 }
 
 graph_info["used_cpu_time"] = {

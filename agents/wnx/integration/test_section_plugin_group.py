@@ -50,14 +50,16 @@ def testconfig(request, testconfig_sections):
     if request.param == 'sync':
         testconfig_sections[name] = {
             "execution": [{
-                "pattern": ("@user\\" if name == "plugins" else "") + Globals.pluginname,
+                "pattern":
+                    ("$CUSTOM_PLUGINS_PATH$\\" if name == "plugins" else "") + Globals.pluginname,
                 "run": True,
                 "async": False
             }]
         }
     else:
         plugin_cfg = {
-            "pattern": ("@user\\" if name == "plugins" else "") + Globals.pluginname,
+            "pattern":
+                ("$CUSTOM_PLUGINS_PATH$\\" if name == "plugins" else "") + Globals.pluginname,
             "run": True,
             "async": True,
             "timeout": 10,

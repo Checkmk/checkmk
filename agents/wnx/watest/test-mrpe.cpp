@@ -89,7 +89,7 @@ TEST(SectionProviderMrpe, SmallApi) {
 
     {
         auto [user, path] =
-            cma::provider::parseIncludeEntry("sk = @data\\mrpe_checks.cfg");
+            cma::provider::parseIncludeEntry("sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
         EXPECT_EQ(user, "sk");
         EXPECT_EQ(path.u8string(),
                   wtools::ConvertToUTF8(cma::cfg::GetUserDir()) + "\\" +
@@ -119,10 +119,10 @@ TEST(SectionProviderMrpe, ConfigLoad) {
     replaceYamlSeq(
         groups::kMrpe, vars::kMrpeConfig,
         {"check = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",
-         "include sk = @data\\mrpe_checks.cfg",  // reference
-         "Include=@data\\mrpe_checks.cfg",       // valid without space
-         "includes = @data\\mrpe_checks.cfg",    // invalid
-         "includ = @data\\mrpe_checks.cfg",      // invalid
+         "include sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // reference
+         "Include=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",       // valid without space
+         "includes = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",    // invalid
+         "includ = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",      // invalid
          "chck = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",  // invalid
          "check = 'c:\\windows\\system32\\mode.com' CON CP /STATUS"});  // valid
 
@@ -132,8 +132,8 @@ TEST(SectionProviderMrpe, ConfigLoad) {
     ASSERT_EQ(mrpe.includes_.size(), 2);
     mrpe.parseConfig();
     ASSERT_EQ(mrpe.includes_.size(), 2);
-    EXPECT_EQ(mrpe.includes_[0], "sk = @data\\mrpe_checks.cfg");
-    EXPECT_EQ(mrpe.includes_[1], "=@data\\mrpe_checks.cfg");
+    EXPECT_EQ(mrpe.includes_[0], "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
+    EXPECT_EQ(mrpe.includes_[1], "=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
     ASSERT_EQ(mrpe.checks_.size(), 2);
     EXPECT_EQ(mrpe.checks_[0],
               "Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS");

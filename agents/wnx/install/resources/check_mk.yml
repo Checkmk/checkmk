@@ -6,10 +6,10 @@
 
 # version 10011
 
-# @user -> is ProgramData/CheckMK/Agent/plugins
-# @builtin -> is Program Files(x86)/check_mk_service/plugins
-# @data -> is ProgramData/CheckMK/Agent/
-# @local -> is ProgramData/CheckMK/Agent/local
+# $CUSTOM_PLUGINS_PATH$  -> is ProgramData/CheckMK/Agent/plugins
+# $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/check_mk_service/plugins
+# $CUSTOM_AGENT_PATH$    -> is ProgramData/CheckMK/Agent/
+# $CUSTOM_LOCAL_PATH$    -> is ProgramData/CheckMK/Agent/local
 
 # 1. use http://www.yamllint.com/ for example to validate your yamllint
 # 2. Windows filenames may contain backslash \, ergo you have to write either "c:\\windows" or 'c:\windows' 
@@ -107,7 +107,7 @@ global:
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     logging:
-        # folder with log file, empty is default which means '@data\log'
+        # folder with log file, empty is default which means '$CUSTOM_AGENT_PATH$\log'
         location: 
         # name of file log, default(if file value is absent) is check_mk.log
         file : 
@@ -183,17 +183,17 @@ plugins:
 
     # folders are scanned left -> right, order is important
     # duplicated files will be removed
-    folders: ['@user', '@builtin' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
+    folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
 
     # what to execute    
     execution:
 
         # Default behavior as in 1.5
-        - pattern     : '@user\*.*'         # Look for executable files in the ProgramData folder. 
+        - pattern     : '$CUSTOM_PLUGINS_PATH$\*.*'         # Look for executable files in the ProgramData folder. 
           timeout     : 60                  # in seconds, after expiring timeout, process will be killed.
           run         : yes                 # ALL FOUND files ARE ENABLED
 
-        - pattern     : '@builtin\*.*'         # Look for files in the ProgramFiles folder.
+        - pattern     : '$BUILTIN_PLUGINS_PATH$\*.*'         # Look for files in the ProgramFiles folder.
           timeout     : 60                  # in seconds, after expiring timeout, process will be killed.
           run         : no                  # ALL FOUND files ARE DISABLED
 
@@ -232,6 +232,6 @@ mrpe:
     # entries and cfg have  the same format as in the Legacy agent
     config:
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
-        # - include user_name = @data\mrpe_checks.cfg
-        # - include = @data\mrpe_checks.cfg
+        # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
+        # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 

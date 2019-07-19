@@ -10,10 +10,10 @@
 
 # section global must be presented
 
-# @user -> is ProgramData/CheckMK/Agent/plugins
-# @builtin -> is Program Files(x86)/check_mk_service/plugins
-# @data -> is ProgramData/CheckMK/Agent/
-# @local -> is ProgramData/CheckMK/Agent/local
+# $CUSTOM_PLUGINS_PATH$  -> is ProgramData/CheckMK/Agent/plugins
+# $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/check_mk_service/plugins
+# $CUSTOM_AGENT_PATH$    -> is ProgramData/CheckMK/Agent/
+# $CUSTOM_LOCAL_PATH$    -> is ProgramData/CheckMK/Agent/local
 
 # 1. use http://www.yamllint.com/ for example to validate your yamllint
 # 2. Windows filenames contains backslash \, ergo you have to write either "c:\\windows" or 'c:\windows' 
@@ -143,7 +143,7 @@ global:
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     _logging:
-        # folder with log file, empty is default which means '@data\log'
+        # folder with log file, empty is default which means '$CUSTOM_AGENT_PATH$\log'
         location: 
         # name of file log, default is check_mk.log
         file : 
@@ -222,12 +222,12 @@ plugins:
 
     # folders are scanned left -> right, order is important
     # all files from folders are gathered and verified, duplicated files will be removed
-    # folders: ['@user', '@builtin' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
+    # folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
 
     _execution:
         # execution pattern for  windows-updates.vbs:
         # all parameters below are DEFAULT set for every entry
-        #- pattern     : '@user\mk_inventory.vbs'  # Plugin name or absolute path . * and ? are allowed
+        #- pattern     : '$CUSTOM_PLUGINS_PATH$\mk_inventory.vbs'  # Plugin name or absolute path . * and ? are allowed
         #  run         : yes                 # execute this plugin if plugin found
         #  async       : yes                 # agent will not wait for async plugins. Normally you will get data later.
         #  timeout     : 120                 # after 120 seconds process will be killed.
@@ -235,14 +235,14 @@ plugins:
     #                                    # default value is 0. Minimum positive value is 120.
         #  retry_count : 3                   # failure on start plugin, before stopping, default 0 which means never stop attempts 
         #  cmd_line    : ''                  # reserved for future use
-        #  pattern     : '@user\win_license.bat'   # Plugin name. * and ? are allowed
+        #  pattern     : '$CUSTOM_PLUGINS_PATH$\win_license.bat'   # Plugin name. * and ? are allowed
         #  run         : no                  # do not execute this plugin even if plugin found
 
-        - pattern     : '@user\*.*'         # in the ProgramData folder. DO NOT REMOVE THIS ENTRY
+        - pattern     : '$CUSTOM_PLUGINS_PATH$\*.*'         # in the ProgramData folder. DO NOT REMOVE THIS ENTRY
           timeout     : 30                  # after 30 seconds process will be killed. 60 sec is default in check_mk.yml
           run         : yes                 # ALL FOUND files will be started. This is default value
 
-        - pattern     : '@builtin\*.*'         # in the ProgramFiles folder. DO NOT REMOVE THIS ENTRY
+        - pattern     : '$BUILTIN_PLUGINS_PATH$\*.*'         # in the ProgramFiles folder. DO NOT REMOVE THIS ENTRY
           timeout     : 30                  # after 30 seconds process will be killed. 60 sec is default in check_mk.yml
           run         : no                  # No run, i.e disabled.
 
@@ -281,6 +281,6 @@ mrpe:
     # entries and cfg are the same as in the Legacy agent
     config:
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
-        # - include user_name = @data\mrpe_checks.cfg
-        # - include = @data\mrpe_checks.cfg
+        # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
+        # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 

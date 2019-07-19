@@ -639,8 +639,8 @@ TEST(UpgradeTest, CopyFoldersApi) {
     EXPECT_FALSE(IsFileNonCompatible("cmk_update_agent.exe"));
     EXPECT_FALSE(IsFileNonCompatible("c:\\cmk_update_agent.exe"));
 
-    EXPECT_TRUE(IsPathProgramData("Checkmk/Agent"));
-    EXPECT_TRUE(IsPathProgramData("c:\\Checkmk/Agent"));
+    EXPECT_TRUE(IsPathProgramData("checkmk/agent"));
+    EXPECT_TRUE(IsPathProgramData("c:\\Checkmk/agent"));
     EXPECT_TRUE(IsPathProgramData("c:\\Checkmk\\Agent"));
 
     EXPECT_FALSE(IsPathProgramData("Checkmk_Agent"));

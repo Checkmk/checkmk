@@ -212,7 +212,7 @@ void ServiceProcessor::preLoadConfig() {
 void ServiceProcessor::preStart() {
     XLOG::l.i("Pre Start actions");
     cma::cfg::SetupPluginEnvironment();
-    conditionallyStartOhm();
+    ohm_started_ = conditionallyStartOhm();
 
     auto& plugins = plugins_provider_.getEngine();
     plugins.preStart();
@@ -374,8 +374,8 @@ void ServiceProcessor::prepareAnswer(const std::string& ip_from,
                                      cma::rt::Device& rt_device) {
     cma::OnStartApp();
     cma::cfg::SetupRemoteHostEnvironment(ip_from);
-    conditionallyStartOhm();  // start may happen when
-                              // config changed
+    ohm_started_ = conditionallyStartOhm();  // start may happen when
+                                             // config changed
 
     detachedPluginsStart();  // cmk agent update
     informDevice(rt_device, ip_from);
@@ -419,7 +419,7 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
         // check that we have something for testing
         if (ex_port == nullptr) {
             // wait for async plugins
-            WaitForAsyncPluginThreads(20000ms);
+            WaitForAsyncPluginThreads(5000ms);
             sendDebugData();
             return;
         }

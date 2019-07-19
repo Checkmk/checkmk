@@ -8,17 +8,18 @@ just to signal that real build script was not called -->
 <?define ProductVersion = "2.0.0.0"?>
 <?endif ?>
 
-<?define CompanyName = "Mathias Kettner GmbH"?>
-<?define ProductName = "Check MK Service"?>
+<?define CompanyName = "tribe29 GmbH"?>
+<?define ProductName = "Checkmk Agent 1.6"?>
 <?define ProductId = "{C3BDE55B-4C42-48D0-8792-B1DE5174C202}"?>
 <?define ProductUpgradeCode = "83F434E9-EA96-4881-AA93-E21B27285C05"?>
 <!-- IMPORTANT NOTE 1: If you change architecture, please change the package code TOO -->
 <!-- IMPORTANT NOTE 2: Fix msi-update after fixing this code: msi-info uses this code to patch msi itself-->
 <?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1D7E"?>
-<?define FolderName = "check_mk_service"?>
+<?define CompanyFolderName = "checkmk"?>
+<?define ServiceFolderName = "service"?>
 <?define ServiceName = "CheckMkService"?>
 <?define ServiceDisplayName = "Check MK Service"?>
-<?define ServiceDescription = "Check MK monitoring and management service for Windows"?>
+<?define ServiceDescription = "Check MK monitoring and management Service"?>
 <?define ServiceStart = "demand"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -54,13 +55,13 @@ just to signal that real build script was not called -->
     -->
 
     <!-- Help Link in the Control Panel -->
-    <Property Id="ARPHELPLINK" Value="https://tribe29.com" />
+    <Property Id="ARPHELPLINK" Value="https://checkmk.com" />
     <!-- Support Link in the Control Panel -->
-    <Property Id="ARPURLINFOABOUT" Value="https://tribe29.com" />
+    <Property Id="ARPURLINFOABOUT" Value="https://checkmk.com" />
     
     <!-- Other links
-    <Property Id="ARPURLUPDATEINFO" Value="https://tribe29.com" />
-    <Property Id="ARPAUTHORIZEDCDFPREFIX" Value="https://tribe29.com/ARPAUTHORIZEDCDFPREFIX" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://checkmk.com" />
+    <Property Id="ARPAUTHORIZEDCDFPREFIX" Value="https://checkmk.com/ARPAUTHORIZEDCDFPREFIX" />
      -->
     
     <!-- 
@@ -110,43 +111,45 @@ just to signal that real build script was not called -->
 
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="$(var.FolderName)">
-          <Component Id="remove_install_protocol" Guid="{C0E6D8DD-1895-4947-80BE-A7B4F0129C60}">
-            <RemoveFile Id="RemoveInstallProtocol" On ="uninstall" Name="install.protocol"/>
-          </Component>
-          <Directory Id="providers" Name="providers">
-            <Component Id="providers" Guid="{E639320D-8326-49BC-84E4-4D9218333E3F}"
-              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-              Win64="no" Location="either">
-              <CreateFolder/>
+        <Directory Id="INSTALLFOLDER_ROOT" Name="$(var.CompanyFolderName)">
+          <Directory Id="INSTALLFOLDER_SERVICE" Name="$(var.ServiceFolderName)">
+            <Component Id="remove_install_protocol" Guid="{C0E6D8DD-1895-4947-80BE-A7B4F0129C60}">
+              <RemoveFile Id="RemoveInstallProtocol" On ="uninstall" Name="install.protocol"/>
             </Component>
-          </Directory>
-          <Directory Id="plugins" Name="plugins">
-            <Component Id="plugins" Guid="{A6E4AC5A-B0CB-461D-A8E4-4C0C8436E2E3}"
-              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-              Win64="no" Location="either">
-              <CreateFolder/>
-            </Component>
-          </Directory>
-          <Directory Id="install" Name="install">
-            <Component Id="install" Guid="{040A6E7A-CED1-4431-954D-5735AC5F28C0}"
-              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-              Win64="no" Location="either">
-              <CreateFolder/>
-            </Component>
-          </Directory>
-          <Directory Id="utils" Name="utils">
-            <Component Id="utils" Guid="{F2285297-4495-4BAD-8874-F92684E732BE}"
-              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-              Win64="no" Location="either">
-              <CreateFolder/>
-            </Component>
+            <Directory Id="providers" Name="providers">
+              <Component Id="providers" Guid="{E639320D-8326-49BC-84E4-4D9218333E3F}"
+                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                Win64="no" Location="either">
+                <CreateFolder/>
+              </Component>
+            </Directory>
+            <Directory Id="plugins" Name="plugins">
+              <Component Id="plugins" Guid="{A6E4AC5A-B0CB-461D-A8E4-4C0C8436E2E3}"
+                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                Win64="no" Location="either">
+                <CreateFolder/>
+              </Component>
+            </Directory>
+            <Directory Id="install" Name="install">
+              <Component Id="install" Guid="{040A6E7A-CED1-4431-954D-5735AC5F28C0}"
+                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                Win64="no" Location="either">
+                <CreateFolder/>
+              </Component>
+            </Directory>
+            <Directory Id="utils" Name="utils">
+              <Component Id="utils" Guid="{F2285297-4495-4BAD-8874-F92684E732BE}"
+                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                Win64="no" Location="either">
+                <CreateFolder/>
+              </Component>
+            </Directory>
           </Directory>
         </Directory>
       </Directory>
       <Directory Id="CommonAppDataFolder">
-        <Directory Id="CmkFolder" Name="CheckMK">
-          <Directory Id="UserFolder" Name="Agent">
+        <Directory Id="CmkFolder" Name="checkmk">
+          <Directory Id="UserFolder" Name="agent">
             
             <Directory Id="BakeryFolder" Name="bakery">
               <Component Id="clean_bakery" Guid="{3593E36E-BC8C-4951-8ED8-8522D6205D3A}">
@@ -204,7 +207,7 @@ just to signal that real build script was not called -->
       </Directory>
       <!--      
       <Directory Id="CommonAppDataFolder">
-        <Directory Id="PDFOLDER" Name="CheckMK">
+        <Directory Id="PDFOLDER" Name="checkmk">
           <Directory Id="pd_dir" Name="pd_dir_name">
             <Component Id="pd_dir" Guid="{A21C3961-4585-49A7-A17B-8FD2AD4E29C5}"
               SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
@@ -456,7 +459,7 @@ just to signal that real build script was not called -->
     </Feature>
 
     <Property Id="INSTALLSERVICE" Value="1" />
-    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER"/>
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER_SERVICE"/>
     <WixVariable Id="WixUILicenseRtf" Value="resources\GPL-V2.rtf" />
     <UIRef Id="CmkWixUI_InstallDir"/>
 
@@ -467,7 +470,7 @@ just to signal that real build script was not called -->
   </Product>
 
   <Fragment>
-    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER_SERVICE">
       <!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
       <!-- <Component Id="ProductComponent"> -->
       <!-- TODO: Insert files, registry keys, and other resources here. -->
@@ -558,7 +561,7 @@ just to signal that real build script was not called -->
                      ForceDeleteOnUninstall="yes">
           <RegistryValue Type="string"
                          Name="Install_Folder"
-                         Value="[INSTALLFOLDER]"/>
+                         Value="[INSTALLFOLDER_SERVICE]"/>
         </RegistryKey>
       </Component>
     </ComponentGroup>

@@ -6,10 +6,10 @@
 
 # version 10011
 
-# $CUSTOM_PLUGINS_PATH$  -> is ProgramData/CheckMK/Agent/plugins
-# $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/check_mk_service/plugins
-# $CUSTOM_AGENT_PATH$    -> is ProgramData/CheckMK/Agent/
-# $CUSTOM_LOCAL_PATH$    -> is ProgramData/CheckMK/Agent/local
+# $CUSTOM_PLUGINS_PATH$  -> is ProgramData/checkmk/agent/plugins
+# $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/check/service/plugins
+# $CUSTOM_AGENT_PATH$    -> is ProgramData/checkmk/agent/
+# $CUSTOM_LOCAL_PATH$    -> is ProgramData/checkmk/agent/local
 
 # 1. use http://www.yamllint.com/ for example to validate your yamllint
 # 2. Windows filenames may contain backslash \, ergo you have to write either "c:\\windows" or 'c:\windows' 
@@ -183,7 +183,7 @@ plugins:
 
     # folders are scanned left -> right, order is important
     # duplicated files will be removed
-    folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]       # ProgramData/CheckMK/agent/plugins & Program Files x86/check_mk_service/plugins
+    folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]       # ProgramData/checkmk/agent/plugins & Program Files x86/check/service/plugins
 
     # what to execute    
     execution:

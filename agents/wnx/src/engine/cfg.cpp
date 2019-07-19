@@ -420,7 +420,7 @@ static std::vector<std::filesystem::path> FillExternalCommandPaths() {
 
     // #TODO replace with registry reading
     wstring service_path_old = L"C:\\Program Files (x86)\\check_mk";
-    wstring service_path_new = L"C:\\Program Files (x86)\\check_mk_service";
+    wstring service_path_new = L"C:\\Program Files (x86)\\checkmk\\service";
 
     std::error_code ec;
     auto cur_dir = current_path(ec);
@@ -565,7 +565,6 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
 // if AgentDataFolder is empty(this is default behavior ) tries
 // to create folder structure in next folders:
 // 1. ProgramData/CorpName/AgentName
-// 2. Public/CorpName/AgentName
 //
 std::filesystem::path Folders::makeDefaultDataFolder(
     std::wstring_view AgentDataFolder) {

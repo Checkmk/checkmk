@@ -60,15 +60,15 @@ Hostname: SERG-DELL
 Architecture: 32bit
 WorkingDirectory: c:\\dev\\shared
 ConfigFile: c:\\dev\\shared\\check_mk.yml
-LocalConfigFile: C:\\ProgramData\\CheckMK\\Agent\\check_mk.user.yml
+LocalConfigFile: C:\\ProgramData\\checkmk\\agent\\check_mk.user.yml
 AgentDirectory: c:\\dev\\shared
-PluginsDirectory: C:\\ProgramData\\CheckMK\\Agent\\plugins
-StateDirectory: C:\\ProgramData\\CheckMK\\Agent\\state
-ConfigDirectory: C:\\ProgramData\\CheckMK\\Agent\\config
-TempDirectory: C:\\ProgramData\\CheckMK\\Agent\\tmp
-LogDirectory: C:\\ProgramData\\CheckMK\\Agent\\log
-SpoolDirectory: C:\\ProgramData\\CheckMK\\Agent\\spool
-LocalDirectory: C:\\ProgramData\\CheckMK\\Agent\\local
+PluginsDirectory: C:\\ProgramData\\checkmk\\agent\\plugins
+StateDirectory: C:\\ProgramData\\checkmk\\agent\\state
+ConfigDirectory: C:\\ProgramData\\checkmk\\agent\\config
+TempDirectory: C:\\ProgramData\\checkmk\\agent\\tmp
+LogDirectory: C:\\ProgramData\\checkmk\\agent\\log
+SpoolDirectory: C:\\ProgramData\\checkmk\\agent\\spool
+LocalDirectory: C:\\ProgramData\\checkmk\\agent\\local
 OnlyFrom: 0.0.0.0/0
 """
 

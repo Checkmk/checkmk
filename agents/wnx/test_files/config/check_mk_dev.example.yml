@@ -147,7 +147,7 @@ plugins:
 
     # folders are scanned left -> right
     # duplicated files will be removed
-    folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]       # folder in ProgramData/CheckMK/agent/plugins
+    folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]       # folder in ProgramData/checkmk/agent/plugins
 
     # example: the windows_updates.vbs
     # plugin is executed asynchronous

@@ -1898,6 +1898,11 @@ class CascadingDropdown(ValueSpec):
         self._no_preselect_title = kwargs.get("no_preselect_title", "")  # if not preselected
         self._no_preselect_error = kwargs.get("no_preselect_error", _("Please make a selection"))
 
+        # When given, this ajax page is called to render the input fields of a cascaded valuespec
+        # once the user selected this choice in case it was initially hidden.
+        self._render_sub_vs_page_name = kwargs.get("render_sub_vs_page_name")
+        self._render_sub_vs_request_vars = kwargs.get("render_sub_vs_request_vars", {})
+
     def normalize_choices(self, choices):
         new_choices = []
         for entry in choices:
@@ -2005,13 +2010,33 @@ class CascadingDropdown(ValueSpec):
                     def_val_2 = vs.default_value()
                     show = False
 
-            self._show_sub_valuespec(vp, vs, def_val_2, show)
+            if not self._render_sub_vs_page_name or show:
+                html.open_span(id_="%s_sub" % vp, style="display:%s;" % ("" if show else "none"))
+                self.show_sub_valuespec(vp, vs, def_val_2)
+                html.close_span()
+            else:
+                self._show_sub_valuespec_container(vp, val, def_val_2)
 
-    def _show_sub_valuespec(self, varprefix, vs, value, show):
-        html.open_span(id_="%s_sub" % varprefix, style="display:%s;" % ("" if show else "none"))
+    def show_sub_valuespec(self, varprefix, vs, value):
         html.help(vs.help())
         vs.render_input(varprefix, value)
-        html.close_span()
+
+    def _show_sub_valuespec_container(self, varprefix, choice_id, value):
+        html.span("", id_="%s_sub" % varprefix)
+
+        request_vars = {
+            "varprefix": varprefix,
+            "choice_id": repr(choice_id),
+            "encoded_value": repr(value),
+        }
+        request_vars.update(self._render_sub_vs_request_vars)
+
+        html.javascript("cmk.valuespecs.add_cascading_sub_valuespec_parameters(%s, %s);" %
+                        (json.dumps(varprefix),
+                         json.dumps({
+                             "page_name": self._render_sub_vs_page_name,
+                             "request_vars": request_vars,
+                         })))
 
     def value_to_text(self, value):
         choices = self.choices()

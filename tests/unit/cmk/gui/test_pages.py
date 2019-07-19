@@ -8,6 +8,7 @@ import cmk.gui.pages
 def test_registered_pages():
     assert sorted(cmk.gui.pages.page_registry.keys()) == sorted([
         'add_bookmark',
+        'ajax_cascading_render_painer_parameters',
         'ajax_activation_state',
         'ajax_add_visual',
         'ajax_autocomplete_labels',

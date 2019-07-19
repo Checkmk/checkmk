@@ -28,7 +28,8 @@
 #include "Logger.h"
 #include "pnp4nagios.h"
 
-void mk_logwatch_acknowledge(Logger *logger, const fs::path &logwatch_path,
+void mk_logwatch_acknowledge(Logger *logger,
+                             const std::filesystem::path &logwatch_path,
                              const std::string &host_name,
                              const std::string &file_name) {
     if (file_name.find('/') != std::string::npos) {
@@ -39,9 +40,10 @@ void mk_logwatch_acknowledge(Logger *logger, const fs::path &logwatch_path,
     if (logwatch_path.empty()) {
         return;
     }
-    auto path = fs::path(logwatch_path) / pnp_cleanup(host_name) / file_name;
+    auto path = std::filesystem::path(logwatch_path) / pnp_cleanup(host_name) /
+                file_name;
     std::error_code ec;
-    if (!fs::remove(path, ec)) {
+    if (!std::filesystem::remove(path, ec)) {
         generic_error ge("Cannot acknowledge mk_logfile file '" + file_name +
                          "' of host '" + host_name + "'");
         Warning(logger) << ge;

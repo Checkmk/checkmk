@@ -27,9 +27,9 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
+#include <filesystem>
 #include <string>
 #include <vector>
-#include "FileSystem.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
@@ -51,7 +51,7 @@ public:
 private:
     MonitoringCore *_mc;
 
-    fs::path getDirectory(Row row) const;
+    std::filesystem::path getDirectory(Row row) const;
     std::string getHostName(Row row) const;
 };
 

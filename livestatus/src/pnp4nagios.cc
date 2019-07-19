@@ -26,8 +26,8 @@
 #include <cstddef>
 
 #ifndef CMC
+#include <filesystem>
 #include <system_error>
-#include "FileSystem.h"
 #include "MonitoringCore.h"
 #endif
 
@@ -53,14 +53,14 @@ std::string pnp_cleanup(const std::string& name) {
 // TODO(sp) Merge this with Perfdatabase::getPNPXMLPath
 int pnpgraph_present(MonitoringCore* mc, const std::string& host,
                      const std::string& service) {
-    fs::path pnp_path = mc->pnpPath();
+    std::filesystem::path pnp_path = mc->pnpPath();
     if (pnp_path.empty()) {
         return -1;
     }
-    fs::path path =
+    std::filesystem::path path =
         pnp_path / pnp_cleanup(host) / (pnp_cleanup(service) + ".xml");
     std::error_code ec;
-    fs::status(path, ec);
+    std::filesystem::status(path, ec);
     return ec ? 0 : 1;
 }
 #endif

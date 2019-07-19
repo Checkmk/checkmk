@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+import ast
 import time
 import os
 import pprint
@@ -60,6 +61,7 @@ from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
 )
+from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import (
@@ -891,6 +893,11 @@ def view_editor_specs(ds_name, general_properties=True):
                     title=_('Column'),
                     choices=painter_choices_with_params(painters),
                     no_preselect=True,
+                    render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                    render_sub_vs_request_vars={
+                        "ds_name": ds_name,
+                        "painter_type": "painter",
+                    },
                 ),
                 DropdownChoice(
                     title=_('Link'),
@@ -906,8 +913,6 @@ def view_editor_specs(ds_name, general_properties=True):
 
         join_painters = join_painters_of_datasource(ds_name)
         if ident == 'columns' and join_painters:
-            join_painters = join_painters_of_datasource(ds_name)
-
             vs_column = Alternative(
                 elements=[
                     vs_column,
@@ -922,6 +927,11 @@ def view_editor_specs(ds_name, general_properties=True):
                                 title=_('Column'),
                                 choices=painter_choices_with_params(join_painters),
                                 no_preselect=True,
+                                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                                render_sub_vs_request_vars={
+                                    "ds_name": ds_name,
+                                    "painter_type": "join_painter",
+                                },
                             ),
                             TextUnicode(
                                 title=_('of Service'),
@@ -997,6 +1007,33 @@ def view_editor_specs(ds_name, general_properties=True):
     specs.append(column_spec('grouping', _('Grouping'), ds_name))
 
     return specs
+
+
+@page_registry.register_page("ajax_cascading_render_painer_parameters")
+class PageAjaxCascadingRenderPainterParameters(AjaxPage):
+    def page(self):
+        request = html.get_request()
+
+        if request["painter_type"] == "painter":
+            painters = painters_of_datasource(request["ds_name"])
+        elif request["painter_type"] == "join_painter":
+            painters = join_painters_of_datasource(request["ds_name"])
+        else:
+            raise NotImplementedError()
+
+        vs = CascadingDropdown(choices=painter_choices_with_params(painters))
+        sub_vs = self._get_sub_vs(vs, ast.literal_eval(request["choice_id"]))
+        value = ast.literal_eval(request["encoded_value"])
+
+        with html.plugged():
+            vs.show_sub_valuespec(request["varprefix"], sub_vs, value)
+            return {"html_code": html.drain()}
+
+    def _get_sub_vs(self, vs, choice_id):
+        for val, _title, sub_vs in vs.choices():
+            if val == choice_id:
+                return sub_vs
+        raise MKGeneralException("Invaild choice")
 
 
 def render_view_config(view, general_properties=True):

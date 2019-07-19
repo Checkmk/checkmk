@@ -162,19 +162,52 @@ function list_of_strings_add_new_field(input) {
     return new_div.getElementsByTagName("input")[0];
 }
 
+let cascading_sub_valuespec_parameters = {};
+
+export function add_cascading_sub_valuespec_parameters(varprefix, parameters) {
+    cascading_sub_valuespec_parameters[varprefix] = parameters;
+}
+
 export function cascading_change(oSelect, varprefix, count) {
     var nr = parseInt(oSelect.value);
 
     for (var i=0; i<count; i++) {
-        var oDiv = document.getElementById(varprefix + "_" + i + "_sub");
-        if (oDiv) {
-            if (nr == i) {
-                oDiv.style.display = "";
-            }
-            else
-                oDiv.style.display = "none";
+        var vp = varprefix + "_" + i;
+        var container = document.getElementById(vp + "_sub");
+        if (!container)
+            continue;
+
+        container.style.display = (nr == i) ? "" : "none";
+
+        // In case the rendering has been postponed for this cascading
+        // valuespec ask the configured AJAX page for rendering the sub
+        // valuespec input elements
+        if (nr == i && container.childElementCount == 0 && cascading_sub_valuespec_parameters.hasOwnProperty(vp)) {
+            show_cascading_sub_valuespec(vp, cascading_sub_valuespec_parameters[vp]);
         }
     }
+}
+
+function show_cascading_sub_valuespec(varprefix, parameters) {
+    var post_data = "request=" + encodeURIComponent(JSON.stringify(parameters["request_vars"]));
+
+    ajax.call_ajax(parameters["page_name"] + ".py", {
+        method: "POST",
+        post_data: post_data,
+        response_handler: function(handler_data, ajax_response) {
+            var response = JSON.parse(ajax_response);
+            if (response.result_code != 0) {
+                console.log("Error [" + response.result_code + "]: " + response.result); // eslint-disable-line
+                return;
+            }
+
+            var container = document.getElementById(handler_data.varprefix + "_sub");
+            container.innerHTML = response.result.html_code;
+        },
+        handler_data: {
+            varprefix: varprefix,
+        },
+    });
 }
 
 export function textarea_resize(oArea, theme)

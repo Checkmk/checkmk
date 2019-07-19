@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <set>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -662,7 +663,12 @@ PluginEntry* GetEntrySafe(PluginMap& Pm, const std::string& Key);
 
 void InsertInPluginMap(PluginMap& Out, const PathVector& FoundFiles);
 
+void ApplyEverythingToPluginMap(
+    PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
+    const std::vector<std::filesystem::path>& files, bool Local);
+
 void FilterPluginMap(PluginMap& Out, const PathVector& FoundFiles);
+
 void ApplyExeUnitToPluginMap(
     PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
     bool Local);
@@ -687,5 +693,14 @@ extern bool G_AsyncPluginWithoutCacheAge_RunAsync;
 
 bool IsRunAsync(const PluginEntry& plugin) noexcept;
 }  // namespace provider::config
+
+namespace tools {
+using StringSet = std::set<std::string>;
+// returns true if string added
+bool AddUniqStringToSetIgnoreCase(StringSet& cache,
+                                  const std::string value) noexcept;
+// returns true if string added
+bool AddUniqStringToSetAsIs(StringSet& cache, const std::string value) noexcept;
+}  // namespace tools
 
 }  // namespace cma

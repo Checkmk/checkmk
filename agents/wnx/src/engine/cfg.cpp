@@ -89,10 +89,22 @@ static std::vector<T> OverrideTargetIfEmpty(YAML::Node target,
     if (target_array.empty()) {
         // we override if we have good source
         // this is important for the strange case with old or bad file
+
         target = source;
         return {};
     }
     return target_array;
+}
+
+void LogNodeAsBad(YAML::Node node, std::string_view comment) {
+    if (false) {
+        YAML::Emitter emit;
+        emit << node;
+        auto emitted = emit.c_str();
+        XLOG::d.t("{}.  Type {}\n:\n{}\n:", comment, node.Type(), emitted);
+    } else {
+        XLOG::d.t("{}.  Type {}", comment, node.Type());
+    }
 }
 
 // merge source's content into the target if the content is absent in the target
@@ -107,7 +119,10 @@ bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
         // check for target. if empty, override with non empty source, leave
         auto target = target_group[name];
         auto target_array = OverrideTargetIfEmpty<std::string>(target, source);
-        if (target_array.empty()) return true;  // nothing to process
+        if (target_array.empty()) {
+            XLOG::d.t("Target '{}' is empty, overriding with source", name);
+            return true;  // nothing to process
+        }
 
         // merging
         auto source_array = GetArray<std::string>(source);
@@ -124,6 +139,22 @@ bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
     return true;
 }
 
+std::string GetMapNodeName(YAML::Node node) {
+    try {
+        if (!node.IsDefined()) return "undefined";
+        if (node.IsSequence()) return "sequence";
+        if (!node.IsMap()) return "not-map";
+
+        for (const auto& kv : node) {
+            return kv.first.as<std::string>();
+        }
+
+        return "unexpected";
+    } catch (const std::exception& e) {
+        return fmt::format("exception on node '{}'", e.what());
+    }
+}
+
 // merge source's content into the target if the content is absent in the target
 // returns false only when data-structures are invalid
 bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
@@ -137,8 +168,12 @@ bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
         // check for target, if empty override with non empty source and leave
         auto target = target_group[name];
         auto target_array = OverrideTargetIfEmpty<YAML::Node>(target, source);
-        if (target_array.empty()) return true;  // nothing to process
+        if (target_array.empty()) {
+            XLOG::t("'{}' is empty and will be overridden", name);
+            return true;  // nothing to process
+        }
 
+        XLOG::t("'{}' is not empty and will be extended", name);
         // merging
         // GetVal is used to avoid loop-breaking exceptions on strange or
         // obsolete node
@@ -672,6 +707,8 @@ void ProcessKnownConfigGroups() {
 void SetupEnvironmentFromGroups() {
     groups::global.setupEnvironment();  // at the moment only global
 }
+
+bool ReloadConfigAutomatically() { return true; }
 
 // Find any file, usually executable on one of the our paths
 // for execution
@@ -1285,18 +1322,24 @@ std::vector<ConfigInfo::YamlData> ConfigInfo::buildYamlData(
 // declares what should be merged
 static void PreMergeSections(YAML::Node target, YAML::Node source) {
     // plugins:
-    auto tgt_plugin = target[groups::kPlugins];
-    const auto src_plugin = source[groups::kPlugins];
+    {
+        auto tgt_plugin = target[groups::kPlugins];
+        const auto src_plugin = source[groups::kPlugins];
 
-    MergeStringSequence(tgt_plugin, src_plugin, vars::kPluginsFolders);
-    MergeMapSequence(tgt_plugin, src_plugin, vars::kPluginsExecution,
-                     vars::kPluginPattern);
+        MergeStringSequence(tgt_plugin, src_plugin, vars::kPluginsFolders);
+        MergeMapSequence(tgt_plugin, src_plugin, vars::kPluginsExecution,
+                         vars::kPluginPattern);
+    }
 
     // local:
-    auto tgt_local = target[groups::kLocal];
-    auto src_local = source[groups::kLocal];
+    {
+        auto tgt_local = target[groups::kLocal];
+        const auto src_local = source[groups::kLocal];
 
-    MergeStringSequence(tgt_local, src_local, vars::kPluginsFolders);
+        MergeStringSequence(tgt_local, src_local, vars::kPluginsFolders);
+        MergeMapSequence(tgt_local, src_local, vars::kPluginsExecution,
+                         vars::kPluginPattern);
+    }
 }
 
 static bool Is64BitWindows() {

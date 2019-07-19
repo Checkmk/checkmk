@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <set>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -30,16 +31,38 @@ bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
 }
 
 }  // namespace tools
+
 bool MatchNameOrAbsolutePath(const std::string& Pattern,
-                             const std::filesystem::path FullPath) {
-    auto name = FullPath.filename();
-    if (cma::tools::GlobMatch(Pattern, name.u8string())) return true;
+                             const std::filesystem::path file_full_path) {
+    namespace fs = std::filesystem;
+
+    fs::path pattern = Pattern;
+    auto name = file_full_path.filename();
+    if (!pattern.is_absolute()) {
+        if (cma::tools::GlobMatch(Pattern, name.u8string())) return true;
+    }
 
     // support for absolute path
-    auto full_name = FullPath.u8string();
+    auto full_name = file_full_path.u8string();
     if (cma::tools::GlobMatch(Pattern, full_name)) return true;
 
     return false;
+}
+
+static bool MatchPattern(const std::string& Pattern,
+                         const std::filesystem::path file_full_path) {
+    namespace fs = std::filesystem;
+
+    fs::path pattern = Pattern;
+
+    // absolute path
+    if (pattern.is_absolute())
+        return cma::tools::GlobMatch(Pattern, file_full_path.u8string());
+
+    // non absolute path we are using only name part
+    auto file_name = file_full_path.filename();
+    auto pattern_name = pattern.filename();
+    return cma::tools::GlobMatch(pattern_name.u8string(), file_name.u8string());
 }
 
 PathVector GatherAllFiles(const PathVector& Folders) {
@@ -204,6 +227,148 @@ void InsertInPluginMap(PluginMap& Out, const PathVector& FoundFiles) {
             Out.emplace(std::make_pair(ff.u8string(), ff));
         }
     }
+}
+
+using UnitMap = std::unordered_map<std::string, cma::cfg::Plugins::ExeUnit>;
+static cma::cfg::Plugins::ExeUnit* GetEntrySafe(UnitMap& Pm,
+                                                const std::string& Key) {
+    try {
+        auto& z = Pm.at(Key);
+        return &z;
+    } catch (...) {
+        return nullptr;
+    }
+}
+
+static void UpdatePluginapWithUnitMap(PluginMap& out, UnitMap& um, bool local) {
+    for (auto& [name, unit] : um) {
+        auto ptr = GetEntrySafe(out, name);
+        if (ptr) {
+            if (unit.run())
+                ptr->applyConfigUnit(unit, local);
+            else
+                ptr->removeFromExecution();
+        } else {
+            if (unit.run()) {
+                out.emplace(name, name);
+                ptr = GetEntrySafe(out, name);
+                if (ptr) ptr->applyConfigUnit(unit, local);
+            }
+        }
+    }
+
+    // remove entries with missing configuration
+    for (auto& [name, p] : out) {
+        auto ptr = GetEntrySafe(um, name);
+        if (!ptr) {
+            p.removeFromExecution();
+        }
+    }
+}
+
+namespace tools {
+bool AddUniqStringToSetIgnoreCase(std::set<std::string>& cache,
+                                  const std::string value) noexcept {
+    auto to_insert = value;
+    cma::tools::StringUpper(to_insert);
+    auto found = cache.find(to_insert);
+
+    if (found == cache.end()) {
+        cache.insert(to_insert);
+        return true;
+    }
+
+    return false;
+}
+
+bool AddUniqStringToSetAsIs(std::set<std::string>& cache,
+                            const std::string value) noexcept {
+    auto found = cache.find(value);
+
+    if (found == cache.end()) {
+        cache.insert(value);
+        return true;
+    }
+
+    return false;
+}
+}  // namespace tools
+
+static void ApplyEverythingLogResult(const std::string& format,
+                                     std::string_view file, bool local) {
+    XLOG::d.t(format, file, local ? "[local]" : "[plugins]");
+}
+
+void ApplyEverythingToPluginMap(
+    PluginMap& out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
+    const std::vector<std::filesystem::path>& found_files, bool local) {
+    UnitMap um;
+    std::set<std::string> cache;
+    auto files = found_files;
+    for (auto& unit : Units) {
+        for (auto& f : files) {
+            if (f == ".") continue;
+            if (!MatchPattern(unit.pattern(), f)) continue;
+
+            // string is match
+            auto entry_full_name = f.u8string();
+            auto ptr = GetEntrySafe(um, entry_full_name);
+            std::string fmt_string;
+            if (!ptr) {
+                // check duplicated filename
+                auto fname = f.filename().u8string();
+                auto added = tools::AddUniqStringToSetIgnoreCase(cache, fname);
+                if (added) {
+                    um.emplace(std::make_pair(entry_full_name, unit));
+                    fmt_string = "Plugin '{}' added to {}";
+                } else {
+                    fmt_string = "Skipped duplicated file by name '{}' in {}";
+                }
+            } else {
+                fmt_string = "skipped duplicated file by full name'{}' in {}";
+            }
+
+            ApplyEverythingLogResult(fmt_string, entry_full_name, local);
+
+            f = ".";
+        }
+    }
+
+    // apply config for presented
+    UpdatePluginapWithUnitMap(out, um, local);
+}
+
+// Main API
+void UpdatePluginMap(PluginMap& Out,  // output is here
+                     bool Local,      // type of plugin
+                     const PathVector& FoundFiles,
+                     const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
+                     bool CheckExists) {
+    namespace fs = std::filesystem;
+    if (FoundFiles.empty() || Units.empty()) {
+        Out.clear();  // nothing todo
+        return;
+    }
+
+    // remove from path vector not presented entries
+    auto really_found = FilterPathVector(FoundFiles, Units, CheckExists);
+
+    // remove absent entries from the map
+    FilterPluginMap(Out, really_found);
+
+    if constexpr (true) {
+        ApplyEverythingToPluginMap(Out, Units, really_found, Local);
+
+    } else {
+        // Insert new items from the map
+        InsertInPluginMap(Out, really_found);
+
+        // Apply information from ExeUnits
+        ApplyExeUnitToPluginMap(Out, Units, Local);
+    }
+
+    // last step is deletion of all duplicated names
+    RemoveDuplicatedPlugins(Out, CheckExists);
 }
 
 // hacks a string
@@ -771,34 +936,6 @@ void RemoveDuplicatedPlugins(PluginMap& Out, bool CheckExists) {
     }
 }
 
-// Main API
-void UpdatePluginMap(PluginMap& Out,  // output is here
-                     bool Local,      // type of plugin
-                     const PathVector& FoundFiles,
-                     const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-                     bool CheckExists) {
-    namespace fs = std::filesystem;
-    if (FoundFiles.empty() || Units.empty()) {
-        Out.clear();  // nothing todo
-        return;
-    }
-
-    // remove from path vector not presented entries
-    auto really_found = FilterPathVector(FoundFiles, Units, CheckExists);
-
-    // remove absent entries from the map
-    FilterPluginMap(Out, really_found);
-
-    // Insert new items from the map
-    InsertInPluginMap(Out, really_found);
-
-    // Apply information from ExeUnits
-    ApplyExeUnitToPluginMap(Out, Units, Local);
-
-    // last step is deletion of all duplicated names
-    RemoveDuplicatedPlugins(Out, CheckExists);
-}
-
 namespace provider::config {
 bool G_AsyncPluginWithoutCacheAge_RunAsync = true;
 
@@ -970,10 +1107,9 @@ std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
         cma::tools::AddVector(out, ret);
 
         /*
-                if (provider::config::G_AsyncPluginWithoutCacheAge_RunAsync) {
-                    if (entry.cacheAge() == 0) {
-                        timeout = std::max(timeout, entry.timeout());
-                        async_0s.emplace_back(false, entry_name);
+                if (provider::config::G_AsyncPluginWithoutCacheAge_RunAsync)
+           { if (entry.cacheAge() == 0) { timeout = std::max(timeout,
+           entry.timeout()); async_0s.emplace_back(false, entry_name);
                     }
                 }
         */

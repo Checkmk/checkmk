@@ -8,6 +8,7 @@
 #include <filesystem>
 
 #include "cfg.h"
+#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "glob_match.h"
 #include "test-utf-names.h"
@@ -430,6 +431,29 @@ TEST(LessTest, AllX) {
         EXPECT_TRUE(false == IsEqual("aa", "AAa"));
         EXPECT_TRUE(false == IsEqual("b", "A"));
         EXPECT_TRUE(true == IsEqual("b", "B"));
+    }
+}
+
+TEST(CmaTools, StringCache) {
+    {
+        tools::StringSet cache;
+        ASSERT_TRUE(cache.size() == 0);
+        EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "aAaaa"));
+        ASSERT_TRUE(cache.size() == 1);
+        EXPECT_FALSE(tools::AddUniqStringToSetIgnoreCase(cache, "AAaaa"));
+        ASSERT_TRUE(cache.size() == 1);
+
+        EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "bcd"));
+        ASSERT_TRUE(cache.size() == 2);
+        EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "bcd-1"));
+        ASSERT_TRUE(cache.size() == 3);
+        EXPECT_FALSE(tools::AddUniqStringToSetIgnoreCase(cache, "AAaaa"));
+        ASSERT_TRUE(cache.size() == 3);
+
+        EXPECT_FALSE(tools::AddUniqStringToSetAsIs(cache, "AAAAA"));
+        ASSERT_TRUE(cache.size() == 3);
+        EXPECT_TRUE(tools::AddUniqStringToSetAsIs(cache, "AAaaA"));
+        ASSERT_TRUE(cache.size() == 4);
     }
 }
 

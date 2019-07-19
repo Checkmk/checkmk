@@ -97,6 +97,8 @@ std::vector<std::wstring> DefaultConfigArray(AppType Type);
 void ProcessKnownConfigGroups();
 void SetupEnvironmentFromGroups();
 
+bool ReloadConfigAutomatically();
+
 // sometimes we have to reload config without
 
 // returns stored value from Windows OS
@@ -409,12 +411,14 @@ std::vector<T> GetArray(const YAML::Node& Yaml, const std::string& Name,
     return {};
 }
 
+void LogNodeAsBad(YAML::Node node, std::string_view comment);
+
 template <typename T>
 std::vector<T> GetArray(YAML::Node node) noexcept {
     try {
         if (node.IsDefined() && node.IsSequence())
             return ConvertNode2Sequence<T>(node);
-        XLOG::d.t("Invalid node type {}", node.Type());
+        LogNodeAsBad(node, "Invalid Node");
     } catch (const std::exception& e) {
         XLOG::l("Cannot read node '{}'", e.what());
     }
@@ -433,6 +437,8 @@ bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
 bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
                       const std::string& name, const std::string& key) noexcept;
 // ***********************************************************
+
+std::string GetMapNodeName(YAML::Node node);
 
 namespace details {
 void KillDefaultConfig();

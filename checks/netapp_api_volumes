@@ -72,7 +72,7 @@ def check_netapp_api_volumes(item, params, parsed):
                                                    inodes_avail, params)
 
     counter_wrapped = False
-    counters = []
+    infotexts = []
     now = time.time()
     base = {}
 
@@ -136,14 +136,14 @@ def check_netapp_api_volumes(item, params, parsed):
                                     divisor = 1000.0
                                 delta = delta / (divisor * base[protocol + mode + "ops"])
                             if format_text:
-                                counters.append(format_text % (key, delta))
+                                infotexts.append(format_text % (key, delta))
                             else:
-                                counters.append("%s: %s" % (key, get_bytes_human_readable(delta)))
+                                infotexts.append("%s: %s" % (key, get_bytes_human_readable(delta)))
                     except MKCounterWrapped:
                         counter_wrapped = True
 
     if not counter_wrapped:
-        info += ", " + ", ".join(counters)
+        info += ", " + ", ".join(infotexts)
 
     return state, info, perf
 

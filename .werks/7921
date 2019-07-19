@@ -1,0 +1,12 @@
+Title: ucs_bladecenter_if: Use port ID if port name is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1563516009
+
+Previously 'name' was always set and therefore wrong interface groups
+were created.

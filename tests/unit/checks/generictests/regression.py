@@ -58,6 +58,7 @@ class WritableDataset(object):
             'checks',
             'extra_sections',
             'mock_host_conf',
+            'mock_host_conf_merged',
             'mock_item_state',
         )
         self.checkname = init_dict.get('checkname', None)
@@ -71,6 +72,7 @@ class WritableDataset(object):
         self.checks = {}
         self.extra_sections = init_dict.get('extra_sections', {})
         self.mock_host_conf = init_dict.get('mock_host_conf', {})
+        self.mock_host_conf_merged = init_dict.get('mock_host_conf_merged', {})
         self.mock_item_state = init_dict.get('mock_item_state', {})
 
     def write(self):

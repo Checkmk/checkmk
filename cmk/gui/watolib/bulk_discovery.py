@@ -152,11 +152,11 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         job_interface.send_progress_update(_("Bulk discovery finished."))
 
         job_interface.send_progress_update(
-            _("Hosts: %d total, %d succeeded, %d skipped, %d failed") %
+            _("Hosts: %d total (%d succeeded, %d skipped, %d failed)") %
             (self._num_hosts_total, self._num_hosts_succeeded, self._num_hosts_skipped,
              self._num_hosts_failed))
         job_interface.send_progress_update(
-            _("Services: %d total, %d added, %d removed, %d kept") %
+            _("Services: %d total (%d added, %d removed, %d kept)") %
             (self._num_services_total, self._num_services_added, self._num_services_removed,
              self._num_services_kept))
 

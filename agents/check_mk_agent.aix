@@ -209,6 +209,9 @@ swap -s
 echo '<<<mpstat_aix>>>'
 mpstat -a | tail -n1
 
+echo '<<<aix_paging>>>'
+lsps -a
+
 # CPU output of Linux agent simulated
 # (thanks to Cameron Pierce)
 echo '<<<cpu>>>'

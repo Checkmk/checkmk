@@ -1977,9 +1977,10 @@ class CascadingDropdown(ValueSpec):
             html.br()
         else:
             html.nbsp()
+
         for nr, (val, title, vs) in enumerate(choices):
             if vs:
-                vp = varprefix + "_%d" % nr
+                vp = "%s_%d" % (varprefix, nr)
                 if cur_val is not None:
                     # Form already submitted once (and probably in complain state)
                     try:
@@ -1987,7 +1988,7 @@ class CascadingDropdown(ValueSpec):
                     except MKUserError:
                         def_val_2 = vs.default_value()
 
-                    disp = "" if nr == int(cur_val) else "none"
+                    show = nr == int(cur_val)
                 else:
                     # Form painted the first time
                     if nr == int(def_val):
@@ -1997,15 +1998,18 @@ class CascadingDropdown(ValueSpec):
                         else:
                             def_val_2 = vs.default_value()
 
-                        disp = ""
+                        show = True
                     else:
                         def_val_2 = vs.default_value()
-                        disp = "none"
+                        show = False
 
-                html.open_span(id_="%s_%s_sub" % (varprefix, nr), style="display:%s;" % disp)
-                html.help(vs.help())
-                vs.render_input(vp, def_val_2)
-                html.close_span()
+                self._show_sub_valuespec(vp, vs, def_val_2, show)
+
+    def _show_sub_valuespec(self, varprefix, vs, value, show):
+        html.open_span(id_="%s_sub" % varprefix, style="display:%s;" % ("" if show else "none"))
+        html.help(vs.help())
+        vs.render_input(varprefix, value)
+        html.close_span()
 
     def value_to_text(self, value):
         choices = self.choices()

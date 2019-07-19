@@ -1505,27 +1505,8 @@ class ListOfMultiple(ValueSpec):
         # Actual table of currently existing entries
         html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof", extra_css])
 
-        def render_content():
-            html.open_td(class_=["vlof_content", extra_css])
-            vs.render_input(prefix, value.get(ident))
-            html.close_td()
-
-        def render_del():
-            html.open_td(class_=["vlof_buttons", extra_css])
-            self.del_button(varprefix, ident)
-            html.close_td()
-
         for ident, vs in self._choices:
-            cls = 'unused' if ident not in value else ''
-            prefix = varprefix + '_' + ident
-            html.open_tr(id_="%s_row" % prefix, class_=cls)
-            if self._delete_style == "filter":
-                render_content()
-                render_del()
-            else:
-                render_del()
-                render_content()
-            html.close_tr()
+            self._show_choice_row(varprefix, ident, value, extra_css)
         html.close_table()
         html.br()
 
@@ -1537,6 +1518,28 @@ class ListOfMultiple(ValueSpec):
         html.javascript('cmk.valuespecs.listofmultiple_init(%s);' % json.dumps(varprefix))
         html.jsbutton(varprefix + '_add', self._add_label,
                       "cmk.valuespecs.listofmultiple_add(%s)" % json.dumps(varprefix))
+
+    def _show_choice_row(self, varprefix, ident, value, extra_css):
+        prefix = varprefix + '_' + ident
+        html.open_tr(id_="%s_row" % prefix)
+        if self._delete_style == "filter":
+            self._show_content(varprefix, ident, value, extra_css)
+            self._show_del_button(varprefix, ident)
+        else:
+            self._show_del_button(varprefix, ident)
+            self._show_content(varprefix, ident, value, extra_css)
+        html.close_tr()
+
+    def _show_content(self, varprefix, ident, value, extra_css):
+        prefix = varprefix + '_' + ident
+        html.open_td(class_=["vlof_content", extra_css])
+        self._choice_dict[ident].render_input(prefix, value.get(ident))
+        html.close_td()
+
+    def _show_del_button(self, varprefix, ident):
+        html.open_td(class_=["vlof_buttons"])
+        self.del_button(varprefix, ident)
+        html.close_td()
 
     def canonical_value(self):
         return {}

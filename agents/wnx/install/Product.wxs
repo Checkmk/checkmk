@@ -9,7 +9,7 @@ just to signal that real build script was not called -->
 <?endif ?>
 
 <?define CompanyName = "tribe29 GmbH"?>
-<?define ProductName = "Checkmk Agent 1.6"?>
+<?include version.wxi ?>
 <?define ProductId = "{C3BDE55B-4C42-48D0-8792-B1DE5174C202}"?>
 <?define ProductUpgradeCode = "83F434E9-EA96-4881-AA93-E21B27285C05"?>
 <!-- IMPORTANT NOTE 1: If you change architecture, please change the package code TOO -->

@@ -36,11 +36,13 @@ import cmk.gui.utils as utils
 from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.permissions import declare_permission
+from cmk.gui.pages import page_registry
 from cmk.gui.valuespec import (
     Dictionary,
     ListChoice,
     ValueSpec,
     ListOfMultiple,
+    ABCPageListOfMultipleGetChoice,
     FixedValue,
     IconSelector,
     TextUnicode,
@@ -1205,40 +1207,60 @@ def get_filter_headers(table, infos, context):
 #   '----------------------------------------------------------------------'
 
 
-# Implements a list of available filters for the given infos. By default no
-# filter is selected. The user may select a filter to be activated, then the
-# filter is rendered and the user can provide a default value.
 class VisualFilterList(ListOfMultiple):
-    def __init__(self, info_list, **kwargs):
-        self._infos = info_list
+    """Implements a list of available filters for the given infos. By default no
+    filter is selected. The user may select a filter to be activated, then the
+    filter is rendered and the user can provide a default value.
+    """
+    @classmethod
+    def get_choices(cls, infos, ignore):
+        return sorted(cls._get_filter_specs(infos, ignore).items(),
+                      key=lambda x: (x[1]._filter.sort_index, x[1].title()))
 
-        ignore = kwargs.get("ignore", set())
+    @classmethod
+    def _get_filters(cls, infos, ignore):
+        return {
+            fname: fspec._filter
+            for fname, fspec in cls._get_filter_specs(infos, ignore).iteritems()
+        }
 
-        # First get all filters useful for the infos, then create VisualFilter
-        # valuespecs from them and then sort them
+    @classmethod
+    def _get_filter_specs(cls, infos, ignore):
         fspecs = {}
-        self._filters = {}
-        for info in self._infos:
+        for info in infos:
             for fname, filter_ in filters_allowed_for_info(info).items():
                 if fname not in fspecs and fname not in ignore:
                     fspecs[fname] = VisualFilter(
                         fname,
                         title=filter_.title,
                     )
-                    self._filters[fname] = fspecs[fname]._filter
+        return fspecs
 
-        # Convert to list and sort them!
-        fspecs = sorted(fspecs.items(), key=lambda x: (x[1]._filter.sort_index, x[1].title()))
+    def __init__(self, info_list, **kwargs):
+        ignore = kwargs.get("ignore", set())
+        self._filters = self._get_filters(info_list, ignore)
 
         kwargs.setdefault('title', _('Filters'))
         kwargs.setdefault('add_label', _('Add filter'))
         kwargs.setdefault('del_label', _('Remove filter'))
         kwargs["delete_style"] = "filter"
 
-        ListOfMultiple.__init__(self, fspecs, **kwargs)
+        super(VisualFilterList, self).__init__(self.get_choices(info_list, ignore),
+                                               "ajax_visual_filter_list_get_choice",
+                                               page_request_vars={
+                                                   "infos": info_list,
+                                                   "ignore": list(ignore),
+                                               },
+                                               **kwargs)
 
     def filter_names(self):
         return self._filters.keys()
+
+
+@page_registry.register_page("ajax_visual_filter_list_get_choice")
+class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
+    def _get_choices(self, request):
+        return VisualFilterList.get_choices(request["infos"], set(request["ignore"]))
 
 
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get

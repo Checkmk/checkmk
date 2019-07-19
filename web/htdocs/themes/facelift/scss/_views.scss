@@ -268,19 +268,19 @@ div.floatfilter {
 }
 
 /* Improving styling of floatfilters that are contained in a ListOf() */
-table.valuespec_listof {
+table.valuespec_listof.filter {
   *.filter {
     width: 300px;
     border-spacing: 0;
   }
 
   td {
-    &.vlof_content.filter {
+    &.vlof_content {
       width: 1px;
       border-style: none;
     }
 
-    &.vlof_buttons.filter {
+    &.vlof_buttons {
       width: 1px;
       vertical-align: top;
       border-style: none;
@@ -331,7 +331,7 @@ table.nform table.valuespec_listof {
   }
 
   &.filter {
-    .vlof_content.filter .floatfilter {
+    .vlof_content .floatfilter {
       width: 400px;
       height: auto;
       background-color: $theme-color-white;

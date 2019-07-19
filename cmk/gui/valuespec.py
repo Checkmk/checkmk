@@ -1980,31 +1980,33 @@ class CascadingDropdown(ValueSpec):
             html.nbsp()
 
         for nr, (val, title, vs) in enumerate(choices):
-            if vs:
-                vp = "%s_%d" % (varprefix, nr)
-                if cur_val is not None:
-                    # Form already submitted once (and probably in complain state)
-                    try:
-                        def_val_2 = vs.from_html_vars(vp)
-                    except MKUserError:
-                        def_val_2 = vs.default_value()
+            if not vs:
+                continue
 
-                    show = nr == int(cur_val)
-                else:
-                    # Form painted the first time
-                    if nr == int(def_val):
-                        # This choice is the one choosen by the given value
-                        if isinstance(value, self._encoding_type) and len(value) == 2:
-                            def_val_2 = value[1]
-                        else:
-                            def_val_2 = vs.default_value()
+            vp = "%s_%d" % (varprefix, nr)
+            if cur_val is not None:
+                # Form already submitted once (and probably in complain state)
+                try:
+                    def_val_2 = vs.from_html_vars(vp)
+                except MKUserError:
+                    def_val_2 = vs.default_value()
 
-                        show = True
+                show = nr == int(cur_val)
+            else:
+                # Form painted the first time
+                if nr == int(def_val):
+                    # This choice is the one choosen by the given value
+                    if isinstance(value, self._encoding_type) and len(value) == 2:
+                        def_val_2 = value[1]
                     else:
                         def_val_2 = vs.default_value()
-                        show = False
 
-                self._show_sub_valuespec(vp, vs, def_val_2, show)
+                    show = True
+                else:
+                    def_val_2 = vs.default_value()
+                    show = False
+
+            self._show_sub_valuespec(vp, vs, def_val_2, show)
 
     def _show_sub_valuespec(self, varprefix, vs, value, show):
         html.open_span(id_="%s_sub" % varprefix, style="display:%s;" % ("" if show else "none"))

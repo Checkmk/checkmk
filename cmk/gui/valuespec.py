@@ -38,7 +38,7 @@
 import base64
 from enum import Enum
 import hashlib
-import ipaddress
+import ipaddress  # type: ignore
 import json
 import math
 import numbers
@@ -51,7 +51,7 @@ import types
 import urlparse
 from UserDict import DictMixin
 from StringIO import StringIO
-from PIL import Image
+from PIL import Image  # type: ignore
 
 from Cryptodome.PublicKey import RSA
 import six
@@ -1460,11 +1460,12 @@ class ListOf(ValueSpec):
         ValueSpec.custom_validate(self, value, varprefix)
 
 
-# A generic valuespec where the user can choose from a list of sub-valuespecs.
-# Each sub-valuespec can be added only once
 class ListOfMultiple(ValueSpec):
+    """A generic valuespec where the user can choose from a list of sub-valuespecs.
+    Each sub-valuespec can be added only once
+    """
     def __init__(self, choices, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(ListOfMultiple, self).__init__(**kwargs)
         self._choices = choices
         self._choice_dict = dict(choices)
         self._size = kwargs.get("size")
@@ -1473,7 +1474,8 @@ class ListOfMultiple(ValueSpec):
         self._delete_style = kwargs.get("delete_style", "default")  # or "filter"
 
     def del_button(self, varprefix, ident):
-        js = "cmk.valuespecs.listofmultiple_del('%s', '%s')" % (varprefix, ident)
+        js = "cmk.valuespecs.listofmultiple_del(%s, %s)" % (json.dumps(varprefix),
+                                                            json.dumps(ident))
         html.icon_button("#", self._del_label, "delete", onclick=js)
 
     def render_input(self, varprefix, value):
@@ -1532,9 +1534,9 @@ class ListOfMultiple(ValueSpec):
                       choices,
                       style="width: %dex" % self._size if self._size is not None else None,
                       class_="vlof_filter" if self._delete_style == "filter" else None)
-        html.javascript('cmk.valuespecs.listofmultiple_init(\'%s\');' % varprefix)
+        html.javascript('cmk.valuespecs.listofmultiple_init(%s);' % json.dumps(varprefix))
         html.jsbutton(varprefix + '_add', self._add_label,
-                      "cmk.valuespecs.listofmultiple_add('%s')" % varprefix)
+                      "cmk.valuespecs.listofmultiple_add(%s)" % json.dumps(varprefix))
 
     def canonical_value(self):
         return {}

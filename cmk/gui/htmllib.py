@@ -156,8 +156,7 @@ class Escaper(object):
         # Also repair link definitions
         text = self._unescaper_href_target.sub(r'<a href="\1" target="\2">', text)
         text = self._unescaper_href.sub(r'<a href="\1">', text)
-        text = re.sub(r'&amp;nbsp;', '&nbsp;', text)
-        return text
+        return text.replace("&amp;nbsp;", "&nbsp;")
 
 
 #.
@@ -546,29 +545,22 @@ class HTMLGenerator(OutputFunnel):
     def _render_opening_tag(self, tag_name, close_tag=False, **attrs):
         """ You have to replace attributes which are also python elements such as
             'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_'). """
-        return HTML("<%s%s%s>" % (tag_name,\
-                                    '' if not attrs else ''.join(self._render_attributes(**attrs)),\
-                                    '' if not close_tag else ' /'))
+        return HTML("<%s%s%s>" %
+                    (tag_name, '' if not attrs else ''.join(self._render_attributes(**attrs)),
+                     '' if not close_tag else ' /'))
 
     def _render_closing_tag(self, tag_name):
         return HTML("</%s>" % (tag_name))
 
     def _render_content_tag(self, tag_name, tag_content, **attrs):
-        tag = self._render_opening_tag(tag_name, **attrs)
+        open_tag = self._render_opening_tag(tag_name, **attrs)
 
-        if tag_content in ['', None]:
-            pass
+        if not tag_content:
+            tag_content = ""
+        elif not isinstance(tag_content, HTML):
+            tag_content = self.escaper.escape_text(tag_content)
 
-        else:
-            tag = tag.rstrip("\n")
-            if isinstance(tag_content, HTML):
-                tag += tag_content.lstrip(' ').rstrip('\n')
-            else:
-                tag += self.escaper.escape_text(tag_content)
-
-        tag += "</%s>" % (tag_name)
-
-        return HTML(tag)
+        return HTML("%s%s</%s>" % (open_tag, tag_content, tag_name))
 
     # This is used to create all the render_tag() and close_tag() functions
     def __getattr__(self, name):

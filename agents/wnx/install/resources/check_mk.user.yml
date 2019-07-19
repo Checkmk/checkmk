@@ -225,6 +225,23 @@ plugins:
     # folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]       # ProgramData/checkmk/agent/plugins & Program Files x86/checkmk/service/plugins
 
     _execution:
+        # *********************************************************************************************
+        # PATTERNS:
+        # patterns 1. Absolute path: 'c:\Windows\*.exe' or '$CUSTOM_PLUGINS_PATH$\win_license.bat'
+        #          2. Only Filename: 'mk_*.exe' or win_license.bat
+        #             IMPORTANT: if you use relative path, then Agent takes only filename
+        #                        'win_license.bat' and 'include\win_license.bat' are the same    
+        #
+        # PRIORITY:
+        # Most important is top-most pattern:
+        # Most important is check_mk.user.yml, next check_mk.bakery.yml amd least important is check_mk.yml
+        #
+        # DUPLICATED Plugins:
+        # Plugins with Duplicated names will not be executed:
+        # if you have '$CUSTOM_PLUGINS_PATH$\winstat_an.bat' and '$BUILTIN_PLUGINS_PATH$\winstat_an.bat'
+        # to execute only first one will run ^^^^^^^^^^^^^^                              xxxxxxxxxxxxxx 
+        #
+        # *********************************************************************************************
         # execution pattern for  windows-updates.vbs:
         # all parameters below are DEFAULT set for every entry
         #- pattern     : '$CUSTOM_PLUGINS_PATH$\mk_inventory.vbs'  # Plugin name or absolute path . * and ? are allowed
@@ -232,7 +249,7 @@ plugins:
         #  async       : yes                 # agent will not wait for async plugins. Normally you will get data later.
         #  timeout     : 120                 # after 120 seconds process will be killed.
         #  cache_age   : 3600                # only combined with async, upto 3600 seconds we may reuse plugin output
-    #                                    # default value is 0. Minimum positive value is 120.
+    #                                        # default value is 0. Minimum positive value is 120.
         #  retry_count : 3                   # failure on start plugin, before stopping, default 0 which means never stop attempts 
         #  cmd_line    : ''                  # reserved for future use
         #  pattern     : '$CUSTOM_PLUGINS_PATH$\win_license.bat'   # Plugin name. * and ? are allowed

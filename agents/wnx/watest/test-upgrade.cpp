@@ -726,7 +726,7 @@ TEST(UpgradeTest, CopyFolders) {
 
     count = CopyAllFolders(path, cma::cfg::GetTempDir(),
                            CopyFolderMode::remove_old);
-    EXPECT_GE(count, 5);
+    EXPECT_GE(count, 2);
 
     count =
         CopyAllFolders(path, cma::cfg::GetTempDir(), CopyFolderMode::keep_old);

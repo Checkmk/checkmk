@@ -299,6 +299,13 @@ TEST(PluginTest, ConfigFolders) {
     }
 
     {
+        std::string s(yml_var::kLocal);
+        s += "\\";
+        auto result = cma::cfg::ReplacePredefinedMarkers(s);
+        EXPECT_EQ(result, ConvertToUTF8(GetLocalDir()) + "\\");
+    }
+
+    {
         std::string s = "user\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, s);
@@ -816,6 +823,151 @@ TEST(PluginTest, GeneratePluginEntry) {
         ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[1].u8string()));
         ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[2].u8string()));
         ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[4].u8string()));
+    }
+}
+
+static const std::vector<cma::cfg::Plugins::ExeUnit> typical_units = {
+    //
+    {"c:\\z\\user\\*.ps1", true, 10, 0, 5, true},    // enable ps1 in user
+    {"c:\\z\\core\\*.ps1", false, 10, 0, 5, false},  // disable ps1 in core
+    {"*", true, 10, 0, 3, false},                    // enable all other
+};
+
+static const std::vector<cma::cfg::Plugins::ExeUnit> exe_units = {
+    //
+    {"*.exe", true, 10, 0, 5, true},  // enable exe in user
+    {"*", true, 10, 0, 3, false},     // disable all other
+};
+
+static const std::vector<cma::cfg::Plugins::ExeUnit> all_units = {
+    //
+    {"*.cmd", true, 10, 0, 5, false},  // enable exe in user
+    {"*", true, 9, 0, 3, true},        // disable all other
+};
+
+static const std::vector<cma::cfg::Plugins::ExeUnit> none_units = {
+    //
+    {"*.cmd", true, 10, 0, 5, true},  // enable exe in user
+    {"*", true, 10, 0, 3, false},     // disable all other
+};
+static const cma::PathVector typical_files = {
+    "c:\\z\\user\\0.ps1",  //
+    "c:\\z\\user\\1.ps1",  //
+    "c:\\z\\user\\2.exe",  //
+    "c:\\z\\user\\3.ps1",  //
+                           //
+    "c:\\z\\core\\0.ps1",  //
+    "c:\\z\\core\\1.ps1",  //
+    "c:\\z\\core\\2.exe",  //
+    "c:\\z\\core\\3.exe"   //
+};
+
+static const std::vector<cma::cfg::Plugins::ExeUnit> many_exe_units = {
+    //
+    {"*.ps1", false, 1, 0, 1, true},                 // [+] 2*ps1: 0,1
+    {"c:\\z\\user\\0.ps1", true, 99, 0, 99, true},   // [-] ignored
+    {"*.ps1", true, 99, 0, 99, true},                // [-] ignored
+    {"loc\\*.bat", false, 1, 0, 1, true},            // [+] 1*bat: 3
+    {"*.bat", true, 99, 0, 99, true},                // [-] ignored
+    {"\\\\srv\\p\\t\\*.exe", false, 1, 0, 1, true},  // [+] 1*exe: 7
+    {"*", true, 10, 0, 3, false},                    // [+] disabled 2
+};
+
+static const cma::PathVector many_files = {
+    "c:\\z\\user\\0.ps1",    //
+    "c:\\z\\user\\1.ps1",    //
+    "c:\\z\\user\\2.exe",    //
+    "c:\\z\\user\\3.bat",    //
+                             //
+    "c:\\z\\core\\0.ps1",    //
+    "c:\\z\\core\\1.ps1",    //
+    "\\\\srv\\p\\t\\2.exe",  //
+    "c:\\z\\core\\3.exe"     //
+};
+
+TEST(PluginTest, ApplyEverything) {
+    {
+        PluginMap pm;
+        ApplyEverythingToPluginMap(pm, {}, {}, false);
+        EXPECT_EQ(pm.size(), 0);
+
+        ApplyEverythingToPluginMap(pm, {}, typical_files, false);
+        EXPECT_EQ(pm.size(), 0);
+
+        ApplyEverythingToPluginMap(pm, typical_units, typical_files, false);
+        EXPECT_EQ(pm.size(), 3);
+        RemoveDuplicatedPlugins(pm, false);
+        EXPECT_EQ(pm.size(), 3);
+        {
+            int valid_entries[] = {0, 1, 3};
+            int index = 0;
+            for (auto& entry : pm) {
+                auto expected_index = valid_entries[index++];
+                auto end_path = entry.second.path();
+                auto expected_path = typical_files[expected_index];
+                EXPECT_EQ(end_path.u8string(), expected_path.u8string());
+            }
+        }
+
+        ApplyEverythingToPluginMap(pm, exe_units, typical_files, false);
+        ASSERT_EQ(pm.size(), 5);
+        RemoveDuplicatedPlugins(pm, false);
+        ASSERT_EQ(pm.size(), 2);
+        {
+            int valid_entries[] = {2, 7};
+            int index = 0;
+            for (auto& entry : pm) {
+                auto expected_index = valid_entries[index++];
+                auto end_path = entry.second.path();
+                auto expected_path = typical_files[expected_index];
+                EXPECT_EQ(end_path.u8string(), expected_path.u8string());
+                EXPECT_EQ(entry.second.cacheAge(), exe_units[0].cacheAge());
+                EXPECT_EQ(entry.second.retry(), exe_units[0].retry());
+                EXPECT_EQ(entry.second.async(), exe_units[0].async());
+                EXPECT_EQ(entry.second.timeout(), exe_units[0].timeout());
+            }
+        }
+
+        ApplyEverythingToPluginMap(pm, all_units, typical_files, false);
+        EXPECT_EQ(pm.size(), 5);
+        RemoveDuplicatedPlugins(pm, false);
+        {
+            int valid_entries[] = {2, 7, 0, 1, 3};
+            int index = 0;
+            for (auto& [name, unit] : pm) {
+                auto expected_index = valid_entries[index++];
+                auto end_path = unit.path();
+                auto expected_path = typical_files[expected_index];
+                EXPECT_EQ(end_path.u8string(), expected_path.u8string());
+                EXPECT_EQ(unit.cacheAge(), all_units[1].cacheAge());
+                EXPECT_EQ(unit.retry(), all_units[1].retry());
+                EXPECT_EQ(unit.async(), all_units[1].async());
+                EXPECT_EQ(unit.timeout(), all_units[1].timeout());
+            }
+        }
+
+        ApplyEverythingToPluginMap(pm, none_units, typical_files, false);
+        EXPECT_EQ(pm.size(), 5);
+        RemoveDuplicatedPlugins(pm, false);
+        EXPECT_EQ(pm.size(), 0);
+
+        ApplyEverythingToPluginMap(pm, many_exe_units, many_files, false);
+        EXPECT_EQ(pm.size(), 4);
+        RemoveDuplicatedPlugins(pm, false);
+        {
+            int valid_entries[] = {0, 1, 3, 6};
+            int index = 0;
+            for (auto& [name, unit] : pm) {
+                auto expected_index = valid_entries[index++];
+                auto end_path = unit.path();
+                auto expected_path = many_files[expected_index];
+                EXPECT_EQ(end_path.u8string(), expected_path.u8string());
+                EXPECT_EQ(unit.cacheAge(), many_exe_units[0].cacheAge());
+                EXPECT_EQ(unit.retry(), many_exe_units[0].retry());
+                EXPECT_EQ(unit.async(), many_exe_units[0].async());
+                EXPECT_EQ(unit.timeout(), many_exe_units[0].timeout());
+            }
+        }
     }
 }
 

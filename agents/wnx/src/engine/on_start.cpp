@@ -100,15 +100,16 @@ bool OnStart(AppType Type, YamlCacheOp UpdateCacheOnSuccess,
     if (Type == AppType::automatic) Type = AppDefaultType();
     if (Type == AppType::test) cma::details::G_Test = true;
 
-    wtools::InitWindowsCom();
-
     using namespace std;
     using namespace cma::cfg;
 
-    auto old_value = S_OnStartCalled.exchange(true);
-    if (old_value) {
+    auto already_loaded = S_OnStartCalled.exchange(true);
+    if (already_loaded && !cma::cfg::ReloadConfigAutomatically()) return true;
+
+    if (already_loaded) {
         cfg::details::KillDefaultConfig();
     }
+    wtools::InitWindowsCom();
 
     // false is possible only for watest
     if (!cfg::DetermineWorkingFolders(Type)) return false;

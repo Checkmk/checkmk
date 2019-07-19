@@ -307,7 +307,7 @@ int CheckMainService(const std::wstring &What, int Interval) {
 }  // namespace srv
 
 // Command Lines
-// -cvt watest/CheckMK/Agent/check_mk.test.ini
+// -cvt watest/checkmk/agent/check_mk.test.ini
 //
 
 // #TODO Function is over complicated

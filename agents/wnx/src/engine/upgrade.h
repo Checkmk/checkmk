@@ -29,7 +29,7 @@ bool UpdateProtocolFile(std::wstring_view new_location,
                         std::wstring_view old_location);
 
 // Intermediate API
-// accepts only "CheckMK\\Agent" ending path as program data
+// accepts only "checkmk\\agent" ending path as program data
 // return count of files copied
 enum class CopyFolderMode { keep_old, remove_old };
 int CopyAllFolders(const std::filesystem::path& LegacyRoot,

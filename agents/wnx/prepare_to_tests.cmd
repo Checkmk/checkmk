@@ -5,7 +5,7 @@ if "%1" == "" set root=%cd%\..\..\artefacts&& goto exec_me
 set root=%1
 powershell Write-Host Setting root to %root% -Foreground Green
 :exec_me
-set user_dir=%root%\%prdata%\CheckMK\Agent
+set user_dir=%root%\%prdata%\checkmk\agent
 if not exist "%root%" powershell Write-Host Making folder %root% -Foreground Yellow && mkdir %root% 2> nul
 mkdir %root%\plugins 2> nul
 if not exist "%user_dir%" powershell Write-Host Making folder %user_dir% -Foreground Yellow && mkdir %user_dir% 2> nul

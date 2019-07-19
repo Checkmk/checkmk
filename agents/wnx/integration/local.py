@@ -69,7 +69,7 @@ def create_and_fill_root_dir(root_work_dir, artefacts_dir):
 
 
 def make_user_dir(base_dir):
-    u_dir = os.path.join(base_dir, 'ProgramData', 'CheckMK', 'Agent')
+    u_dir = os.path.join(base_dir, 'ProgramData', 'checkmk', 'agent')
     try:
         os.makedirs(u_dir)
     except OSError:

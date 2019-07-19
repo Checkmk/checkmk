@@ -360,7 +360,7 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds Timeout,
 
         if (ready) {
             XLOG::t("Minibox is ready after receiving [{}] bytes from '{}'",
-                    buf.size(), wtools::ConvertToUTF8(cmd_));
+                    buf.size(), wtools::ConvertToUTF8(exec_));
             return true;
         }
 

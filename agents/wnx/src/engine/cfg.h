@@ -839,9 +839,9 @@ timeout.
     timeout : 240
 */
 
-// $BUILTIN_PLUGINS_PATH$ -> c:\Program Files (x86)\check_mk_service\plugins
-// $CUSTOM_PLUGINS_PATH$ -> c:\ProgramData\CheckMK\agent\plugins
-// $CUSTOM_AGENT_PATH$ ->c:\ProgramData\CheckMK\agent
+// $BUILTIN_PLUGINS_PATH$ -> c:\Program Files (x86)\checkmk\service\plugins
+// $CUSTOM_PLUGINS_PATH$ -> c:\ProgramData\checkmk\agent\plugins
+// $CUSTOM_AGENT_PATH$ ->c:\ProgramData\checkmk\agent
 std::string ReplacePredefinedMarkers(std::string_view work_path);
 
 // replaces one value with other

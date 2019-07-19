@@ -75,14 +75,14 @@ constexpr int kDefaultAgentMinWait = 10;  // min safe timeout
 constexpr const char* const kDefaultLogFileName = "check_mk.log";
 constexpr const char* const kDefaultAppFileName = "check_mk_agent.exe";
 constexpr char kDefaultEventLogName[] =
-    "CheckMK";  // name for windows event log
-const wchar_t* const kAppDataAppName = L"Agent";
+    "checkmk";  // name for windows event log
+const wchar_t* const kAppDataAppName = L"agent";
 const wchar_t* const kDefaultConfigCacheFileName = L"check_mk.cached.yml";
 }  // namespace cma::cfg
 
 // section with folder names, file names and some textual app defaults
 namespace cma::cfg {
-constexpr const wchar_t kAppDataCompanyName[] = L"CheckMK";
+constexpr const wchar_t kAppDataCompanyName[] = L"checkmk";
 
 // defines default behavior of the main thread
 constexpr bool IsOneShotMode() { return true; }
@@ -142,13 +142,13 @@ inline std::filesystem::path MakePathToConfigTestFiles(std::wstring Root) {
 
 // Directories
 namespace dirs {
-// Program Files/check_mk_service/
+// Program Files/checkmk/service/
 constexpr const wchar_t* kAgentPlugins = L"plugins";      // plugins from CMK
 constexpr const wchar_t* kAgentProviders = L"providers";  // only agent's exe
 constexpr const wchar_t* kAgentUtils = L"utils";          // anything to use
 constexpr const wchar_t* kFileInstallDir = L"install";    // from here!
 
-// ProgramData/CheckMK/Agent
+// ProgramData/checkmk/agent
 constexpr const wchar_t* kUserBin = L"bin";  // owned by agent legacy for OHM
 
 constexpr const wchar_t* kBackup = L"backup";           // owned by agent

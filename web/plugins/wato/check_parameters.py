@@ -16403,7 +16403,7 @@ register_check_parameters(
                                   Integer(title=_("Warning at"), unit=_("USD per day")),
                                   Integer(title=_("Critical at"), unit=_("USD per day")),
                               ]))]),
-    None,
+    TextAscii(title=_("The service name")),
     match_type='dict',
 )
 

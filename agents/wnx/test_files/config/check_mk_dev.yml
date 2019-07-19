@@ -204,7 +204,7 @@ plugins:
     # folders are scanned top -> down
     folders: 
         - core          # [-] folder with Check MK plugins(installation)
-        - user          # [-] folder in ProgramData/CheckMK/agent/plugins
+        - user          # [-] folder in ProgramData/checkmk/agent/plugins
         - "c:\__mydlx"  # [-] absolute path here
         - "c:\__zx"     # 
 

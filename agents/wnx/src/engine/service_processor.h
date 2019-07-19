@@ -213,6 +213,7 @@ public:
     }
 
     static void resetOhm() noexcept;
+    bool isOhmStarted() const noexcept { return ohm_started_; }
 
 private:
     std::vector<uint8_t> makeTestString(const char* Text) {
@@ -233,7 +234,7 @@ private:
         noexcept;
 
     // used to start OpenHardwareMonitor if conditions are ok
-    bool conditionallyStartOhm() noexcept;
+    [[nodiscard]] bool conditionallyStartOhm() noexcept;
     void mainThread(world::ExternalPort* Port) noexcept;
 
     // object data
@@ -255,6 +256,7 @@ private:
     AsyncAnswer& getAsyncAnswer() { return answer_; }
 
 private:
+    bool ohm_started_ = false;
     // support of mainThread
     void prepareAnswer(const std::string& ip_from, cma::rt::Device& rt_device);
     cma::ByteVector generateAnswer(const std::string& ip_from);

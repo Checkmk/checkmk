@@ -297,7 +297,7 @@ TEST(CapTest, CheckUnpack) {
     namespace fs = std::filesystem;
     fs::path p = GetUserPluginsDir();
     auto f_string = p.lexically_normal().wstring();
-    ASSERT_TRUE(f_string.find(L"ProgramData\\CheckMK\\Agent\\plugins"));
+    ASSERT_TRUE(f_string.find(L"ProgramData\\checkmk\\agent\\plugins"));
     for (auto& name : names) fs::remove(name, ec);
 
     fs::path cap = cma::cfg::GetUserDir();
@@ -322,7 +322,7 @@ TEST(CapTest, CheckRemove) {
     namespace fs = std::filesystem;
     fs::path p = GetUserPluginsDir();
     auto f_string = p.lexically_normal().wstring();
-    ASSERT_TRUE(f_string.find(L"ProgramData\\CheckMK\\Agent\\plugins"));
+    ASSERT_TRUE(f_string.find(L"ProgramData\\checkmk\\agent\\plugins"));
     for (auto& name : names) {
         EXPECT_TRUE(fs::exists(name, ec));
     }

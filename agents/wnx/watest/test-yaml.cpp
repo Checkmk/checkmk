@@ -73,7 +73,7 @@ TEST(AgentConfig, Folders) {
     cma::OnStart(AppType::exe);
     EXPECT_EQ(cma::cfg::details::G_ConfigInfo.getRootDir().u8string(), ".");
     EXPECT_EQ(cma::cfg::details::G_ConfigInfo.getUserDir().u8string(),
-              "ProgramData\\CheckMK\\Agent");
+              "ProgramData\\checkmk\\agent");
 }
 
 TEST(AgentConfig, MainYaml) {

@@ -34,7 +34,7 @@
 #include "Logger.h"
 
 namespace {
-time_t firstTimestampOf(const fs::path &path, Logger *logger) {
+time_t firstTimestampOf(const std::filesystem::path &path, Logger *logger) {
     std::ifstream is(path, std::ios::binary);
     if (!is) {
         generic_error ge("cannot open logfile " + path.string());
@@ -59,7 +59,8 @@ time_t firstTimestampOf(const fs::path &path, Logger *logger) {
 }
 }  // namespace
 
-Logfile::Logfile(Logger *logger, LogCache *log_cache, fs::path path, bool watch)
+Logfile::Logfile(Logger *logger, LogCache *log_cache,
+                 std::filesystem::path path, bool watch)
     : _logger(logger)
     , _log_cache(log_cache)
     , _path(std::move(path))

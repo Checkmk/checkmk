@@ -3,11 +3,17 @@
 namespace cma::cfg {
 
 namespace yml_var {
-constexpr const std::string_view kBuiltin = "@builtin";
-constexpr const std::string_view kCore = "@core";
-constexpr const std::string_view kLocal = "@local";
-constexpr const std::string_view kUser = "@user";
-constexpr const std::string_view kData = "@data";
+constexpr const std::string_view kBuiltinPlugins = "$BUILTIN_PLUGINS_PATH$";
+constexpr const std::string_view kCore = "$BUILTIN_AGENT_PATH$";
+constexpr const std::string_view kLocal = "$CUSTOM_LOCAL_PATH$ ";
+constexpr const std::string_view kUserPlugins = "$CUSTOM_PLUGINS_PATH$";
+constexpr const std::string_view kAgent = "$CUSTOM_AGENT_PATH$";
+
+constexpr const std::string_view kBuiltinOld = "@builtin";
+constexpr const std::string_view kCoreOld = "@core";
+constexpr const std::string_view kLocalOld = "@local";
+constexpr const std::string_view kUserOld = "@user";
+constexpr const std::string_view kDataOld = "@data";
 
 };  // namespace yml_var
 
@@ -70,10 +76,10 @@ const char* const kPluginAsyncStart = "async_start";      // bool
 
 // to be replaced
 constexpr std::string_view kLocalUserFolder = yml_var::kLocal;
-constexpr std::string_view kPluginUserFolder = yml_var::kUser;
+constexpr std::string_view kPluginUserFolder = yml_var::kUserPlugins;
 constexpr std::string_view kPluginCoreFolder = yml_var::kCore;
-constexpr std::string_view kPluginBuiltinFolder = yml_var::kBuiltin;
-constexpr std::string_view kProgramDataFolder = yml_var::kData;
+constexpr std::string_view kPluginBuiltinFolder = yml_var::kBuiltinPlugins;
+constexpr std::string_view kProgramDataFolder = yml_var::kAgent;
 
 // plugins.execution
 const char* const kPluginPattern = "pattern";     // string

@@ -390,7 +390,7 @@ static std::string KillTrailingCR(std::string &&message) {
 // true when copy or copy not required
 // false on error
 bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
-                       std::wstring_view target_dir,  // @user
+                       std::wstring_view target_dir,  // $CUSTOM_PLUGINS_PATH$
                        std::wstring_view source_dir)  // @root/install
     noexcept {
     namespace fs = std::filesystem;

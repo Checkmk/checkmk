@@ -78,7 +78,7 @@ global:
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     logging:
-        # folder with log file, empty is default which means '@data\log'
+        # folder with log file, empty is default which means '$CUSTOM_AGENT_PATH$\log'
         location: 
         # name of file log, default is check_mk.log
         file : 

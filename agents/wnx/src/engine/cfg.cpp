@@ -1667,8 +1667,9 @@ std::string ReplacePredefinedMarkers(std::string_view work_path) {
     return f;
 }
 
-// converts "any/relative/path" into "@user\\any\\relative\\path"
-// return false if yaml is not suitable for patching
+// converts "any/relative/path" into
+// "$CUSTOM_PLUGINS_PATH$\\any\\relative\\path" return false if yaml is not
+// suitable for patching
 bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
                        const std::string& key_name,
                        std::string_view subkey_name, std::string_view marker) {

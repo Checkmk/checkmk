@@ -22,7 +22,7 @@ void Install();
 
 // support
 bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
-                       std::wstring_view target_dir,  // @user
+                       std::wstring_view target_dir,  // $CUSTOM_PLUGINS_PATH$
                        std::wstring_view source_dir)  // @root/install
     noexcept;
 

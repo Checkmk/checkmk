@@ -104,7 +104,9 @@ def mkdir(path, mode=0o770):
 
 
 def makedirs(path, mode=0o770):
-    Path(path).mkdir(mode=mode, exist_ok=True, parents=True)
+    if not isinstance(path, Path):
+        path = Path(path)
+    path.mkdir(mode=mode, exist_ok=True, parents=True)
 
 
 #.

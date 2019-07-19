@@ -35,6 +35,7 @@
 #   -> rename to Boolean
 #   -> Add alternative rendering "dropdown"
 
+import abc
 import base64
 from enum import Enum
 import hashlib
@@ -1463,10 +1464,12 @@ class ListOfMultiple(ValueSpec):
     """A generic valuespec where the user can choose from a list of sub-valuespecs.
     Each sub-valuespec can be added only once
     """
-    def __init__(self, choices, **kwargs):
+    def __init__(self, choices, choice_page_name, **kwargs):
         super(ListOfMultiple, self).__init__(**kwargs)
         self._choices = choices
         self._choice_dict = dict(choices)
+        self._choice_page_name = choice_page_name
+        self._page_request_vars = kwargs.get("page_request_vars", {})
         self._size = kwargs.get("size")
         self._add_label = kwargs.get("add_label", _("Add element"))
         self._del_label = kwargs.get("del_label", _("Delete this entry"))
@@ -1503,9 +1506,13 @@ class ListOfMultiple(ValueSpec):
 
         # Actual table of currently existing entries
         html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof", extra_css])
+        html.open_tbody()
 
         for ident, vs in self._choices:
-            self._show_choice_row(varprefix, ident, value, extra_css)
+            if ident in value:
+                self.show_choice_row(varprefix, ident, value)
+
+        html.close_tbody()
         html.close_table()
         html.br()
 
@@ -1515,23 +1522,25 @@ class ListOfMultiple(ValueSpec):
                       style="width: %dex" % self._size if self._size is not None else None,
                       class_="vlof_filter" if self._delete_style == "filter" else None)
         html.javascript('cmk.valuespecs.listofmultiple_init(%s);' % json.dumps(varprefix))
-        html.jsbutton(varprefix + '_add', self._add_label,
-                      "cmk.valuespecs.listofmultiple_add(%s)" % json.dumps(varprefix))
+        html.jsbutton(
+            varprefix + '_add', self._add_label, "cmk.valuespecs.listofmultiple_add(%s, %s, %s)" %
+            (json.dumps(varprefix), json.dumps(
+                self._choice_page_name), json.dumps(self._page_request_vars)))
 
-    def _show_choice_row(self, varprefix, ident, value, extra_css):
+    def show_choice_row(self, varprefix, ident, value):
         prefix = varprefix + '_' + ident
         html.open_tr(id_="%s_row" % prefix)
         if self._delete_style == "filter":
-            self._show_content(varprefix, ident, value, extra_css)
+            self._show_content(varprefix, ident, value)
             self._show_del_button(varprefix, ident)
         else:
             self._show_del_button(varprefix, ident)
-            self._show_content(varprefix, ident, value, extra_css)
+            self._show_content(varprefix, ident, value)
         html.close_tr()
 
-    def _show_content(self, varprefix, ident, value, extra_css):
+    def _show_content(self, varprefix, ident, value):
         prefix = varprefix + '_' + ident
-        html.open_td(class_=["vlof_content", extra_css])
+        html.open_td(class_=["vlof_content"])
         self._choice_dict[ident].render_input(prefix, value.get(ident))
         html.close_td()
 
@@ -1573,6 +1582,21 @@ class ListOfMultiple(ValueSpec):
         for ident, val in value.items():
             self._choice_dict[ident].validate_value(val, varprefix + '_' + ident)
         ValueSpec.custom_validate(self, value, varprefix)
+
+
+class ABCPageListOfMultipleGetChoice(AjaxPage):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _get_choices(self, request):
+        raise NotImplementedError()
+
+    def page(self):
+        request = html.get_request()
+        vs = ListOfMultiple(self._get_choices(request), "unused_dummy_page")
+        with html.plugged():
+            vs.show_choice_row(request["varprefix"], request["ident"], {})
+            return {"html_code": html.drain()}
 
 
 # Same but for floating point values

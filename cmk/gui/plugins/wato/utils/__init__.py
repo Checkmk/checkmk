@@ -49,6 +49,7 @@ import cmk.gui.backup as backup
 import cmk.gui.hooks as hooks
 import cmk.gui.weblib as weblib
 import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -82,6 +83,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     Url,
     MonitoredHostname,
+    ABCPageListOfMultipleGetChoice,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (
     WatoMode,)
@@ -1766,6 +1768,7 @@ class DictHostTagCondition(Transform):
                 title=title,
                 help=help_txt,
                 choices=self._get_tag_group_choices(),
+                choice_page_name="ajax_dict_host_tag_condition_get_choice",
                 add_label=_("Add tag condition"),
                 del_label=_("Remove tag condition"),
             ),
@@ -2083,6 +2086,13 @@ class HostTagCondition(ValueSpec):
             div_is_open = deflt != "ignore"
         html.open_div(id_="%stag_sel_%s" % (varprefix, id_),
                       style="display: none;" if not div_is_open else None)
+
+
+@page_registry.register_page("ajax_dict_host_tag_condition_get_choice")
+class PageAjaxDictHostTagConditionGetChoice(ABCPageListOfMultipleGetChoice):
+    def _get_choices(self, request):
+        condition = DictHostTagCondition("Dummy title", "Dummy help")
+        return condition._get_tag_group_choices()
 
 
 def transform_simple_to_multi_host_rule_match_conditions(value):

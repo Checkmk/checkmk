@@ -550,43 +550,76 @@ export function iconselector_toggle_names(event, varprefix) {
         utils.add_class(icons, "show_names");
 }
 
-export function listofmultiple_add(varprefix) {
+export function listofmultiple_add(varprefix, choice_page_name, page_request_vars) {
     var choice = document.getElementById(varprefix + "_choice");
     var ident = choice.value;
 
     if (ident == "")
         return;
 
-    choice.options[choice.selectedIndex].disabled = true; // disable this choice
+    // disable this choice in the "add choice" select field
+    choice.options[choice.selectedIndex].disabled = true;
 
-    // Update select2 to make the disabled attribute be recognized by the dropdown
-    // (See https://github.com/select2/select2/issues/3347)
-    var choice_select2 = $(choice).select2();
-    // Unselect the choosen option
-    choice_select2.val(null).trigger("change");
+    var request = {
+        "varprefix": varprefix,
+        "ident": ident,
+    };
 
-    // make the filter visible
-    var row = document.getElementById(varprefix + "_" + ident + "_row");
-    utils.remove_class(row, "unused");
+    // Add given valuespec specific request vars
+    for (var prop in page_request_vars) {
+        if (page_request_vars.hasOwnProperty(prop)) {
+            request[prop] = page_request_vars[prop];
+        }
+    }
 
-    // Change the field names to used ones
-    listofmultiple_toggle_fields(row, varprefix, true);
+    var post_data = "request=" + encodeURIComponent(JSON.stringify(request));
 
-    // Add it to the list of active elements
-    var active = document.getElementById(varprefix + "_active");
-    if (active.value != "")
-        active.value += ";"+ident;
-    else
-        active.value = ident;
+    ajax.call_ajax(choice_page_name + ".py", {
+        method: "POST",
+        post_data: post_data,
+        response_handler: function(handler_data, ajax_response) {
+            var table = document.getElementById(varprefix + "_table");
+            var tbody = table.getElementsByTagName("tbody")[0];
+
+            var choice = document.getElementById(varprefix + "_choice");
+            var ident = choice.value;
+
+            var response = JSON.parse(ajax_response);
+            if (response.result_code != 0) {
+                console.log("Error [" + response.result_code + "]: " + response.result); // eslint-disable-line
+                return;
+            }
+
+            // Update select2 to make the disabled attribute be recognized by the dropdown
+            // (See https://github.com/select2/select2/issues/3347)
+            var choice_select2 = $(choice).select2();
+            // Unselect the choosen option
+            choice_select2.val(null).trigger("change");
+
+            var tmp_container = document.createElement("tbody");
+            tmp_container.innerHTML = response.result.html_code;
+            var new_row = tmp_container.childNodes[0];
+            if (new_row.tagName != "TR") {
+                console.log("Error: Invalid choice HTML code: " + response.result.html_code); // eslint-disable-line
+                return;
+            }
+
+            tbody.appendChild(new_row);
+
+            // Add it to the list of active elements
+            var active = document.getElementById(varprefix + "_active");
+            if (active.value != "")
+                active.value += ";"+ident;
+            else
+                active.value = ident;
+        }
+    });
 }
 
 export function listofmultiple_del(varprefix, ident) {
     // make the filter invisible
     var row = document.getElementById(varprefix + "_" + ident + "_row");
-    utils.add_class(row, "unused");
-
-    // Change the field names to unused ones
-    listofmultiple_toggle_fields(row, varprefix, false);
+    row.parentNode.removeChild(row);
 
     // Make it choosable from the dropdown field again
     var choice = document.getElementById(varprefix + "_choice");
@@ -611,29 +644,9 @@ export function listofmultiple_del(varprefix, ident) {
     active.value = l.join(";");
 }
 
-function listofmultiple_toggle_fields(root, varprefix, enable) {
-    if (root.tagName != "TR")
-        return; // only handle rows here
-    var types = ["input", "select", "textarea"];
-    for (var t in types) {
-        var fields = root.getElementsByTagName(types[t]);
-        for (var i = 0; i < fields.length; i++) {
-            fields[i].disabled = !enable;
-        }
-    }
-}
-
 export function listofmultiple_init(varprefix) {
     document.getElementById(varprefix + "_choice").value = "";
-
     listofmultiple_disable_selected_options(varprefix);
-
-    // Mark input fields of unused elements as disabled
-    var container = document.getElementById(varprefix + "_table");
-    var unused = document.getElementsByClassName("unused", container);
-    for (var i = 0; i < unused.length; i++) {
-        listofmultiple_toggle_fields(unused[i], varprefix, false);
-    }
 }
 
 // The <option> elements in the <select> field of the currently choosen

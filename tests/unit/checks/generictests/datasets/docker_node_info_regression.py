@@ -15,8 +15,8 @@ discovery = {'': [(None, {})], 'containers': [(None, {})]}
 
 checks = {
     '': [(None, {}, [(0, u'Daemon running on host klappson', [])])],
-    'containers': [(None, {}, [(0, 'containers: 0', [('containers', 0, None, None, None, None)]),
-                               (0, 'running: 0', [('running', 0, None, None, None, None)]),
-                               (0, 'paused: 0', [('paused', 0, None, None, None, None)]),
-                               (0, 'stopped: 0', [('stopped', 0, None, None, None, None)])])]
+    'containers': [(None, {}, [(0, 'Containers: 0', [('containers', 0, None, None, None, None)]),
+                               (0, 'Running: 0', [('running', 0, None, None, None, None)]),
+                               (0, 'Paused: 0', [('paused', 0, None, None, None, None)]),
+                               (0, 'Stopped: 0', [('stopped', 0, None, None, None, None)])])]
 }

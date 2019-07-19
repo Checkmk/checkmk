@@ -31,7 +31,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.0.6\n"
+"X-Generator: Poedit 2.1.1\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Bookmarks: -1,-1,1412,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: /home/mk/git/check_mk/web/htdocs\n"
@@ -176,6 +176,10 @@ msgid ""
 "characters inside groups will vanish after discovery, because processes are "
 "instanced for every matching group. Thus enforce delimiters outside the group."
 msgstr ""
+"\"%s\" ist innerhalb der regulären Ausdrucksgruppe %s nicht erlaubt. "
+"Begrenzungszeichen innerhalb von Gruppen werden nach der Serviceerkennung "
+"verschwinden, da Prozesse für jede passende Gruppe instanziiert werden. Auf "
+"diese Weise werden Begrenzungszeichen außerhalb der Gruppe durchgesetzt."
 
 msgid "# Containers"
 msgstr "# Container"
@@ -778,7 +782,7 @@ msgstr "10+ Änderungen"
 
 #, python-format
 msgid "100% is all cores at full load"
-msgstr "100% heißt: alle Kerne bei Volllast"
+msgstr "100% entspricht Volllast bei allen Kernen"
 
 msgid "10x14"
 msgstr "10x14"
@@ -842,6 +846,15 @@ msgstr "Helligkeit Siebensegmentanzeige"
 
 msgid "7-segment display uid"
 msgstr "UID Siebensegmentanzeige"
+
+msgid ""
+"<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
+"translations</a> are performed before the piggyback connector creates hosts. "
+"This can e.g. be used in a setup with multiple docker nodes to prefix "
+"containers with the name of the corresponding docker node. Otherwise name "
+"collisions may occur if containers with the same name are present on more "
+"than one docker node."
+msgstr ""
 
 #, python-format
 msgid "<b>%s for the next %d minutes</b> on"
@@ -1420,8 +1433,8 @@ msgstr ""
 "Regeln zu testen.</p>"
 
 msgid ""
-"<p>You can optionally define one or multiple regular expressionswhere a "
-"matching case will result in the exclusion of the concerning service(s).This "
+"<p>You can optionally define one or multiple regular expressions where a "
+"matching case will result in the exclusion of the concerning service(s). This "
 "allows to ignore services which are known to fail beforehand. </p>"
 msgstr ""
 
@@ -2089,7 +2102,6 @@ msgstr "Absoluter %s Speicherplatz"
 msgid "Absolute Time of Alert"
 msgstr "Absolute Zeit des Alarms"
 
-#, fuzzy
 msgid "Absolute Value"
 msgstr "Absolute Schwellen"
 
@@ -2612,9 +2624,8 @@ msgstr "Aktive Hosts"
 msgid "Active shards in percent"
 msgstr "Prozentualer Paketverlust"
 
-#, fuzzy
 msgid "Active time range"
-msgstr "Datums- & Zeitbereich"
+msgstr "Aktiver Datums- & Zeitbereich"
 
 msgid "Active unit"
 msgstr "Aktive Einheit"
@@ -2828,9 +2839,8 @@ msgstr "Neue Metrik hinzufügen"
 msgid "Add new pattern"
 msgstr "Muster hinzufügen"
 
-#, fuzzy
 msgid "Add new row"
-msgstr "Aktion hinzufügen"
+msgstr "Neue Reihe hinzufügen"
 
 msgid "Add new scalar"
 msgstr "Neue Konstante hinzufügen"
@@ -3497,9 +3507,8 @@ msgstr "Aggregationsname"
 msgid "Aggregation Properties"
 msgstr "Aggregateigenschaften"
 
-#, fuzzy
 msgid "Aggregation assignment"
-msgstr "Aggregationsname"
+msgstr "Aggregationszuordnung"
 
 msgid "Aggregation group"
 msgstr "Aggregationsgruppe"
@@ -4302,9 +4311,8 @@ msgstr "Verarbeitete Datenmenge"
 msgid "Amount of files"
 msgstr "Anzahl von Dateien"
 
-#, fuzzy
 msgid "Amount of files in notification spool"
-msgstr "Fehlgeschlagene Alarmierung bestätigen"
+msgstr "Anzahl der Dateien im Benachrichtigungsspooler"
 
 msgid "Amount of mails in queues"
 msgstr "Anzahl von Mails in den Mailqueues"
@@ -4377,15 +4385,14 @@ msgstr ""
 "können dem Check_MK-Team helfen, indem Sie einen Fehlerbericht senden. Bitte "
 "benutzen Sie das Formular unten."
 
-#, fuzzy
 msgid ""
 "An internal error occurred while processing your request. You can report this "
 "issue to your Check_MK administrator. Detailed information can be found in "
 "<tt>var/log/web.log</tt>."
 msgstr ""
-"Beim verarbeiten Ihrer Anfrage ist ein interner Fehler aufgetreten. Sie "
-"können dem Check_MK-Team helfen, indem Sie einen Fehlerbericht senden. Bitte "
-"benutzen Sie das Formular unten."
+"Bei der Bearbeitung Ihrer Anfrage ist ein interner Fehler aufgetreten. Sie "
+"können dieses Problem an Ihren Check_MK-Administrator melden. Detaillierte "
+"Informationen finden Sie unter <tt>var/log/web.log</tt>."
 
 msgid ""
 "An involuntary context switch takes place when a thread executes for the "
@@ -4494,9 +4501,9 @@ msgstr ""
 msgid "Another session is active"
 msgstr "Andere Sitzung aktiv"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Another synchronization job is already running: %s"
-msgstr "Eine andere Synchronisation läuft gerade"
+msgstr "Eine andere Synchronisation läuft gerade: %s"
 
 #, fuzzy, python-format
 msgid "Another user synchronization is already running: %s"
@@ -4749,17 +4756,14 @@ msgstr "Zuweisung SLA zu Service"
 msgid "Assign services to the following cluster:"
 msgstr "Services zu folgendem Cluster zuordnen:"
 
-#, fuzzy
 msgid "Assign to the affected hosts"
-msgstr "Aggregation: betroffene Hosts"
+msgstr "Betroffene Hosts zuordnen"
 
-#, fuzzy
 msgid "Assign to the querying host"
-msgstr "Limit für die folgenden Hosts"
+msgstr "Anfragende Hosts zuordnen"
 
-#, fuzzy
 msgid "Assign via regular expressions"
-msgstr "Ungültiger regulärer Ausdruck"
+msgstr "Zuweisung über reguläre Ausdrücke"
 
 msgid "Assignment of host & services to host, service and contacts groups."
 msgstr "Zuordnung von Host & Services zu Host-, Service- und Kontaktgruppen."
@@ -5614,6 +5618,9 @@ msgstr "Basis-OID"
 
 msgid "Base URL (OMD Site)"
 msgstr "Basis-URL (OMD Instanz)"
+
+msgid "Base URL for docker API engine"
+msgstr ""
 
 msgid "Base directory for <tt>plugins</tt> and <tt>local</tt>"
 msgstr "Basisverzeichnis für <tt>plugins</tt> und <tt>local</tt>"
@@ -6492,9 +6499,8 @@ msgstr "Anfragen"
 msgid "CPU rescale maximum load"
 msgstr "Neuskalierung der maximalen CPU-Last"
 
-#, fuzzy
 msgid "CPU rescale maximum load is Unspecified."
-msgstr "Neuskalierung der maximalen CPU-Last"
+msgstr "Skalierung der maximalen CPU-Last ist nicht spezifiziert."
 
 #, fuzzy
 msgid "CPU resources"
@@ -7118,9 +7124,9 @@ msgstr "Hostauswahl der Agentenupdate geändert"
 msgid "Changed notification rule %d"
 msgstr "Alarmierungsregel %d geändert"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Changed notification rule %d of user %s"
-msgstr "Alarmierungsregel %d von Benutzer %s gelöscht"
+msgstr "Alarmierungsregel %d von Benutzer %s geändert"
 
 msgid "Changed order of tag groups"
 msgstr "Reihenfolge der Tag-Gruppen geändert"
@@ -7679,6 +7685,12 @@ msgstr "Checkboxauswahl (Lebenszeit)"
 msgid "Checked"
 msgstr "Geprüft"
 
+#, fuzzy
+msgid "Checkmk agent: Execute the Checkmk agent within running containers"
+msgstr ""
+"Dies schließt das Ausführen des <tt>checkmk Agenten</tt> innerhalb des "
+"Containers ein"
+
 msgid "Checkpoint Firewall Connections"
 msgstr "Verbindungen von Checkpoint Firewalls"
 
@@ -7712,8 +7724,8 @@ msgstr "Name des Childhosts:"
 msgid "Child report"
 msgstr "Eingebetteter Bericht"
 
-#, python-format
-msgid "Child report is added %d times (once for each matched host)"
+#, fuzzy, python-format
+msgid "Child report is added %d times (once for each matched element)"
 msgstr ""
 "Eingebetteter Bericht wird %d mal eingefügt (1x für jeden gefundenen Host)"
 
@@ -7739,12 +7751,13 @@ msgid "Choose color set (Classic theme only)"
 msgstr "Farbschema wählen (nur für das klassische Aussehen)"
 
 msgid ""
-"Choose how to monitor the docker node. If you are experiencing performance "
-"issues, you can disable the docker disk usage info."
+"Choose how to monitor the docker node. You can uncheck individual sections, "
+"if you do not need the corresponding services. The respectice checkboxes "
+"belong to the check plugins by the name starting with 'docker_node_' (e.g. "
+"the 'Disk usage:' checkbox belongs to 'docker_node_disk_usage'). Note that "
+"the disk usage section is notoriously long running. If you are experiencing "
+"performance issues, consider disabeling it."
 msgstr ""
-"Wählen Sie, wie Sie den Dockerknoten überwachen möchten. Wenn Sie "
-"Leistungsprobleme haben, können Sie die Informationen zur Docker "
-"Festplattennutzung deaktivieren."
 
 msgid "Choose if realtime updates are sent/expected encrypted"
 msgstr "Wählen Sie, ob Echtzeitchecks verschlüsselt übertragen werden sollen"
@@ -7803,6 +7816,11 @@ msgstr "Wählen Sie das Element, das Sie anzeigen wollen."
 
 msgid "Choose the type of action to perform"
 msgstr "Wählen Sie den auszuführenden Aktionstyp"
+
+msgid ""
+"Choose time levels (in seconds) for which a service is allowed to be in an "
+"'activating' state"
+msgstr ""
 
 msgid ""
 "Choose what kind of ouput data is sent to the Check_MK server: Only count the "
@@ -8039,12 +8057,15 @@ msgstr "Klone Hosts"
 msgid "Clone report schedule entry %s"
 msgstr "Berichtsplan %s klonen"
 
-#, fuzzy
 msgid "Clone snapin"
-msgstr "Klone %s"
+msgstr "Element Klonen"
 
 msgid "Clone stored report"
 msgstr "Gespeicherten Bericht klonen"
+
+#, fuzzy, python-format
+msgid "Clone this %s"
+msgstr "Klone %s"
 
 msgid "Clone this connection in order to create a new one"
 msgstr "Eine neue Verbindung auf Basis einer Kopie von dieser anlegen"
@@ -9116,9 +9137,6 @@ msgstr "Container"
 msgid "Container ID"
 msgstr "Container-ID"
 
-msgid "Container Identifier"
-msgstr "Container Identifizierung"
-
 msgid "Container Name"
 msgstr "Containername"
 
@@ -9275,7 +9293,7 @@ msgid "Corrupted"
 msgstr "Korrupt"
 
 msgid "Corrupted files in Spool"
-msgstr ""
+msgstr "Beschädigte Dateien im Spooler"
 
 msgid "Cosmic"
 msgstr "Kosmisch"
@@ -9684,9 +9702,12 @@ msgstr ""
 "Separate Sammelalarme erzeugen für unterschiedliche Werte der folgenden "
 "Benutzermakros"
 
-#, fuzzy
 msgid "Create snapin"
-msgstr "Sicherung erzeugen"
+msgstr "Element erzeugen"
+
+#, fuzzy
+msgid "Create status and (if configured) health services"
+msgstr "Bereits konfigurierte Services"
 
 msgid "Create stored report"
 msgstr "Gespeicherten Bericht erzeugen"
@@ -9792,9 +9813,6 @@ msgstr "Sicherung %s erzeugt"
 
 msgid "Created with CheckMK Version $CHECK_MK_VERSION$"
 msgstr "Erstellt mit CheckMK Version $CHECK_MK_VERSION$"
-
-msgid "Creating all sections"
-msgstr "Alle Sektionen werden erzeugt"
 
 #, python-format
 msgid "Creating scheduled report '%s'..."
@@ -10201,9 +10219,8 @@ msgstr "Angepasste Serviceanmerkungen"
 msgid "Custom settings"
 msgstr "Individuelle Einstellungen"
 
-#, fuzzy
 msgid "Custom snapin"
-msgstr "Angepasste Links"
+msgstr "Benutzerdefiniertes Element"
 
 msgid "Custom snapins"
 msgstr "Benutzerdefinierte Snapins"
@@ -10504,6 +10521,10 @@ msgstr "DRBD wird gemeldet als"
 
 msgid "DROP"
 msgstr "DROP"
+
+#, fuzzy
+msgid "Daemon state and summarized count of containers and their states"
+msgstr "Berechnung auf Basis von Soft- und Hardzuständen"
 
 msgid "Daemon threads"
 msgstr "Daemon-Threads"
@@ -10913,13 +10934,17 @@ msgid "Default: %s"
 msgstr "Standard: %s"
 
 msgid "Deferred Files Age"
-msgstr ""
+msgstr "Alter von Verzögerte Dateien"
 
 msgid "Deferred files in Spool"
-msgstr ""
+msgstr "Verzögerte Dateien im Spooler"
 
 msgid "Define a range of syslog priorities this rule matches"
 msgstr "Definiere einen Bereich von Sylog Prioritäten auf die Regel zutrifft"
+
+#, fuzzy
+msgid "Define a tolerating time period for activating services"
+msgstr "Checkperiode für aktive Services"
 
 msgid ""
 "Define textfiles to be monitored. The full path is necessary. Glob pattern (* "
@@ -11176,9 +11201,8 @@ msgstr "Lösche Merkmalgruppe"
 msgid "Delete this unpackaged file"
 msgstr "Diese unpaketierte Datei löschen"
 
-#, fuzzy
 msgid "Delete time range"
-msgstr "Datums- & Zeitbereich"
+msgstr "Datums- & Zeitbereich löschen"
 
 msgid "Delete vanished hosts"
 msgstr "Verschwundene Hosts löschen"
@@ -11906,18 +11930,14 @@ msgid "Disable automatic user synchronization (use master site users)"
 msgstr ""
 "Keine automatische Benutzersynchronisation (nutze Nutzer der zentralen Site)"
 
-msgid "Disable certificate verification"
-msgstr "Zertifikatsprüfung deaktivieren"
-
 msgid "Disable configuration via WATO on this site"
 msgstr "WATO-Konfiguration für diese Instanz deaktivieren"
 
 msgid "Disable flap detection"
 msgstr "Schalte Flaperkennung ab"
 
-#, fuzzy
 msgid "Disable graph"
-msgstr "Deaktivierte Pfade"
+msgstr "Graph deaktivieren"
 
 msgid "Disable host notifications"
 msgstr "Schalte Hostalarme ab"
@@ -12033,6 +12053,9 @@ msgstr "Entdeckt durch ein Inventur-Plugin"
 
 msgid "Discovered host labels"
 msgstr "Entdeckte Host-Labels"
+
+msgid "Discovered labels"
+msgstr "Erkannte Host-Labels"
 
 msgid "Discovered no service yet."
 msgstr "Es wurde noch kein Service entdeckt."
@@ -12634,10 +12657,6 @@ msgstr "Phasen gleichen Zustands nicht zusammenfassen"
 msgid "Do not monitor"
 msgstr "Nicht überwachen"
 
-#, fuzzy
-msgid "Do not monitor containers as piggyback hosts"
-msgstr "Übersetzung von Hostnamen für Huckepack-Hosts"
-
 msgid "Do not offer this action as a command on open events"
 msgstr "Biete Aktion nicht als Befehl für offene Ereignisse an"
 
@@ -12956,9 +12975,6 @@ msgstr "Docker Container"
 
 msgid "Docker images"
 msgstr "Docker Images"
-
-msgid "Docker node"
-msgstr "Docker-Node"
 
 msgid "Docker node and containers"
 msgstr "Docker Node und Container"
@@ -13610,9 +13626,8 @@ msgstr "Bearbeite Verbindung %s"
 msgid "Edit site specific global settings of %s"
 msgstr "Bearbeiten von instanzspezifischen globalen Einstellungen von %s"
 
-#, fuzzy
 msgid "Edit snapin"
-msgstr "Anmerkung editieren"
+msgstr "Element editieren"
 
 msgid "Edit stored report"
 msgstr "Gespeicherten Bericht Editieren"
@@ -14727,7 +14742,7 @@ msgid "Exclude scheduled downtimes"
 msgstr "geplante Wartungszeiten ausnehmen"
 
 #, fuzzy
-msgid "Exclude service with matching provided regex pattern"
+msgid "Exclude services matching provided regex patterns"
 msgstr "Reklassifizierung des Status durch regulären Ausdruck"
 
 msgid "Exclude some sections on certain instances"
@@ -14750,9 +14765,6 @@ msgstr "Folgende Services ausschließen"
 
 msgid "Exclude times out of notification period"
 msgstr "Zeiten außerhalb der Alarmierungsperiode ausschließen"
-
-msgid "Excluded"
-msgstr "Ausgeschlossen"
 
 msgid "Exclusive Locks"
 msgstr "Exklusive Locks"
@@ -15929,6 +15941,10 @@ msgstr "Ordnerpfad fehlt"
 msgid "Folder properties"
 msgstr "Ordnereigenschaften"
 
+#, fuzzy, python-format
+msgid "Folder: %s"
+msgstr "Ordner"
+
 msgid "Folders"
 msgstr "Ordner"
 
@@ -16051,6 +16067,8 @@ msgid ""
 "For each weekday you can setup no, one or several time ranges in the format "
 "<tt>23:39</tt>, in which the time period should be active."
 msgstr ""
+"Für jeden Wochentag können Sie keine, einen oder mehrere Zeitbereiche im "
+"Format <tt>23:39</tt> einstellen, in denen der Zeitraum aktiv sein soll."
 
 msgid "For example <tt>VMware vSphere 5 Standard</tt>"
 msgstr "Zum Beispiel <tt>VMware vSphere 5 Standard</tt>"
@@ -16487,12 +16505,6 @@ msgstr "Voraussetzung erfüllt"
 msgid "Fulltext search"
 msgstr "Volltext-Suche"
 
-msgid "Fully monitor docker containers"
-msgstr "Docker Container vollständig überwachen"
-
-msgid "Fully monitor the docker node"
-msgstr "Den Docker Node vollständig überwachen"
-
 msgid "GB"
 msgstr "GB"
 
@@ -16540,6 +16552,13 @@ msgid "Gather all service instances and restrict by overall tags"
 msgstr ""
 "Sammeln Sie alle Service-Instanzen und schränken Sie sie durch globale Tags "
 "ein."
+
+msgid "Gathered container information (piggybacked)"
+msgstr ""
+
+#, fuzzy
+msgid "Gathered node information"
+msgstr "Allgemeine Informationen"
 
 msgid "Gbit/s"
 msgstr "Gbit/s"
@@ -17665,10 +17684,11 @@ msgstr ""
 "Hier sehen Sie alle Hosts, die eine negative Antwort an den Updateserver "
 "gesendet haben."
 
+#, fuzzy
 msgid ""
 "Here you can select default parameters that are being set for detected "
 "services. Note: the preferred way for setting parameters is to use the rule "
-"set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
+"set <a href='wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset'> "
 "State and Count of Processes</a> instead. A change there will immediately be "
 "active, while a change in this rule requires a re-discovery of the services."
 msgstr ""
@@ -17905,6 +17925,10 @@ msgstr "Check-Parameter verstecken"
 msgid "Hide checkboxes"
 msgstr "Checkboxen verstecken"
 
+#, fuzzy
+msgid "Hide discovered labels"
+msgstr "Entdeckte Host-Labels"
+
 msgid "Hide folders without read permissions"
 msgstr "Ordner ohne Leseberechtigung ausblenden"
 
@@ -18009,9 +18033,8 @@ msgstr "Historie der Alarme"
 msgid "History of scheduled downtimes"
 msgstr "Historie der Wartungszeiten"
 
-#, fuzzy
 msgid "History time range"
-msgstr "Zeitspanne"
+msgstr "Zeitfenster"
 
 msgid "Hits"
 msgstr "Zugriffe"
@@ -18155,9 +18178,8 @@ msgstr "Hostgruppen (Raster)"
 msgid "Host Groups (Summary)"
 msgstr "Hostgruppen (Zusammenfassung)"
 
-#, fuzzy
 msgid "Host Historic Metrics"
-msgstr "Hostmetriken"
+msgstr "Historische Host Metriken"
 
 msgid "Host IP"
 msgstr "Host-IP"
@@ -18448,6 +18470,10 @@ msgstr "Hostname"
 msgid "Host name (as sent by syslog)"
 msgstr "Hostname (durch Syslog gesetzt)"
 
+#, fuzzy
+msgid "Host name used for containers"
+msgstr "Pausierte Container"
+
 msgid "Host name:"
 msgstr "Hostname:"
 
@@ -18610,6 +18636,10 @@ msgstr "Host/Service in Wartungszeit"
 
 msgid "Host:"
 msgstr "Host:"
+
+#, fuzzy, python-format
+msgid "Host: %s"
+msgstr "Host %s"
 
 #, python-format
 msgid "Host: %s is <b>%s</b>"
@@ -20183,7 +20213,6 @@ msgstr ""
 "Sie den gespeicherten Zeitbereich des Archivs. jeder Datenpunkt benötigt 8 "
 "Byte pro gewählter Aggregation (MIN, MAX, AVERAGE)."
 
-#, fuzzy
 msgid ""
 "If you need help during configuration or experience problems, please refer to "
 "the <a target=\"_blank\" href=\"https://checkmk.com/"
@@ -20489,6 +20518,10 @@ msgstr "TLS-Fehler ignorieren"
 
 msgid "Ignore acknowledged events"
 msgstr "Quittierte Ereignisse ignorieren"
+
+#, fuzzy
+msgid "Ignore certificate errors (unsecure)"
+msgstr "Ignoriere SSL Zertifikatfehler"
 
 msgid "Ignore core restarts shorter than"
 msgstr "Neustarts des Kern ignorieren wenn kürzer als"
@@ -20829,6 +20862,10 @@ msgid ""
 "mode=edit_configvar&varname=alert_handler_event_types\">disable this</a> in "
 "most cases."
 msgstr ""
+"Im Allgemeinen führt es zu einer deutlich erhöhten Last, wenn Alert Handler "
+"so konfiguriert sind, dass sie alle Checkausführungen verarbeiten. Es wird "
+"dringend empfohlen, in den meisten Fällen zu <a href=\"wato.py?"
+"mode=edit_configvar&varname=alert_handler_event_type\">deaktivieren</a>."
 
 msgid "In notification period"
 msgstr "In Alarmierungsperiode"
@@ -20927,13 +20964,14 @@ msgstr ""
 "Anforderungskennzahlen in der AWS/S3-Konsole aktivieren. Dies ist eine "
 "kostenpflichtige Funktion"
 
+#, fuzzy
 msgid ""
 "In order to monitor docker containers the plugin <tt>mk_docker.py</tt> "
-"collects the following information of each docker container as piggyback data:"
-"<ul><li>The state, node name, labels and network information</"
-"li><li>Execution of the <tt>check_mk_agent</tt> within running containers</"
-"li></ul>Moreover you have to create piggybacked hosts in Check_MK for each "
-"docker container. The piggybacked host name is the docker container ID."
+"collects the following information of each docker container as piggyback "
+"data. The piggybacked host name is the containers' host name configured "
+"below. The respectice checkboxes belong to the check plugins by the name "
+"starting with 'docker_container_' (e.g. the 'Node Name:' checkbox belongs to "
+"'docker_container_node_name')."
 msgstr ""
 "Um Docker-Container zu überwachen, sammelt das Plugin <tt>mk_docker.py</tt> "
 "folgende Informationen von jedem Docker-Container als Huckepack-Daten:"
@@ -21226,6 +21264,9 @@ msgstr ""
 
 msgid "Information about size, age and count of files"
 msgstr "Information über Größe, Alter und Anzahl von Dateien"
+
+msgid "Information similar to 'docker system df' output"
+msgstr ""
 
 msgid "Information to be displayed in the email body"
 msgstr "Informationen, die im Rumpf der Email gezeigt werden sollen"
@@ -21845,6 +21886,23 @@ msgstr ""
 "Ungültiger vertikaler Bereich: die untere Schwelle muss unter der oberen "
 "liegen"
 
+#, fuzzy
+msgid "Inventorize containers' network configuration"
+msgstr "Vor dem Aktivieren der geänderten Konfiguration"
+
+msgid ""
+"Inventorize image information such as creation time, size, labels and the "
+"amount of containers running them."
+msgstr ""
+
+#, fuzzy
+msgid "Inventorize network configuration information"
+msgstr "Konfiguration der Event Console übereinstimmend mit '%s'"
+
+#, fuzzy
+msgid "Inventorize the labels"
+msgstr "Inventurcheck"
+
 msgid "Inventorized check"
 msgstr "Inventurcheck"
 
@@ -22462,9 +22520,8 @@ msgstr "Letzter Lauf"
 msgid "Last Scan Result"
 msgstr "Letztes Scan-Ergebnis"
 
-#, fuzzy
 msgid "Last Updated"
-msgstr "Aktualisierung"
+msgstr "Zuletzt Aktualisiert"
 
 msgid "Last bake result"
 msgstr "Letztes Back-Ergebnis"
@@ -22559,9 +22616,6 @@ msgstr ""
 "Lassen Sie dies leer bei Systemen ohne Module (die nur eine global "
 "Speicherbelegung haben)."
 
-msgid "Leave this empty or at 0 for no automatic reload."
-msgstr "Leer lassen oder <tt>0</tt> für automatisches Neuladen."
-
 msgid "Left"
 msgstr "Links"
 
@@ -22607,13 +22661,12 @@ msgstr "Länge der Outputqueue"
 msgid "Let through notifications counting from this number"
 msgstr "Alarme ab dieser Anzahl durchlassen"
 
-#, fuzzy
 msgid ""
 "Let through notifications counting from this number. The first notification "
 "always has the number 1."
 msgstr ""
 "Alarme ab dieser Laufnummer durchlassen. Bei normalen Alarmen hat die erste "
-"Nachricht die Nummer 1. Bei manuellen Alarmen ist die Nummer immer 0."
+"Nachricht die Nummer 1."
 
 msgid "Let through notifications counting upto this number"
 msgstr "Alarme bis zu dieser Anzahl durchlassen"
@@ -23833,7 +23886,8 @@ msgstr "Logwatch Event Console Weiterleitung"
 msgid "Logwatch Patterns"
 msgstr "Logwatch Muster"
 
-msgid "Long - Use the full ID"
+#, fuzzy
+msgid "Long - Use the full docker container ID"
 msgstr "Lang - Die gesamte ID verwenden"
 
 msgid "Long active sessions"
@@ -25298,7 +25352,6 @@ msgstr "Methode"
 msgid "Method of probing"
 msgstr "Messmethode"
 
-#, fuzzy
 msgid "Metric Name"
 msgstr "Metrikname"
 
@@ -25682,9 +25735,6 @@ msgstr "Alle gefundenen Instanzen überwachen"
 
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Überwache die Lanes, wenn ein Port mehrere hat"
-
-msgid "Monitor containers without executing the <tt>check_mk_agent</tt>"
-msgstr "Container überwachen, ohne den <tt>check_mk_agent</tt> auszuführen."
 
 msgid "Monitor costs and usage"
 msgstr "Überwachung von Kosten und Nutzung"
@@ -26132,7 +26182,8 @@ msgstr ""
 msgid "Name"
 msgstr "Name"
 
-msgid "Name - Use the containers name"
+#, fuzzy
+msgid "Name - Use the containers' name"
 msgstr "Name - Den Namen des Containers verwenden"
 
 msgid "Name / Description"
@@ -26620,9 +26671,8 @@ msgstr "Neues Ereignis angelegt"
 msgid "New feature"
 msgstr "Neue Funktion"
 
-#, fuzzy
 msgid "New files in Spool"
-msgstr "Name des Pools"
+msgstr "Neue Dateien im Spooler"
 
 msgid "New folder"
 msgstr "Neuer Ordner"
@@ -26652,9 +26702,8 @@ msgstr "Neue Regel: %s"
 msgid "New service group"
 msgstr "Neue Servicegruppe"
 
-#, fuzzy
 msgid "New snapin"
-msgstr "Neues Graph-Tuning"
+msgstr "Neues Element"
 
 msgid "New stored report"
 msgstr "Neuer Gespeicherter Bericht"
@@ -26995,6 +27044,9 @@ msgstr "Node-Statistiken"
 
 msgid "Node name"
 msgstr "Name des Knotens"
+
+msgid "Node name: Inventorize the nodes' name"
+msgstr ""
 
 #, fuzzy
 msgid "Node port"
@@ -28148,9 +28200,6 @@ msgstr "Älteste zuerst"
 msgid "Omit ICMP payload"
 msgstr "ICMP-Payload weglassen"
 
-msgid "Omit docker disk usage info"
-msgstr "Docker Node Festplattennutzung auslassen"
-
 msgid "Omit payload in ICMP packets"
 msgstr "ICMP-Pakete ohne Payload erzeugen"
 
@@ -29146,13 +29195,11 @@ msgstr "Textparagraph"
 msgid "Paragraph of text fetched via HTTP(s)"
 msgstr "Textparagraph, der via HTTP(s) geholt wird"
 
-#, fuzzy
 msgid "Parallel connections"
-msgstr "Maximale Anzahl paralleler Verbindungen"
+msgstr "Parallele Verbindungen"
 
-#, fuzzy
 msgid "Parallel connections load"
-msgstr "Maximale Anzahl paralleler Verbindungen"
+msgstr "Auslastung paralleler Verbindungen"
 
 msgid "Parallel pings to send"
 msgstr "Parallel zu sendende Pings"
@@ -30665,9 +30712,8 @@ msgstr "Vorhersage der 15-minütigen CPU-Last"
 msgid "Prediction for %s - %s - %s"
 msgstr "Vorhersage für %s - %s - %s"
 
-#, fuzzy
 msgid "Predictive Levels (only on CMC)"
-msgstr "Prognostizierte Schwellwerte"
+msgstr "Vorhersageschwellwerte (nur mit CMC)"
 
 msgid "Prefetch data hit ratio"
 msgstr "Prefetch data Hitrate"
@@ -31028,6 +31074,12 @@ msgstr ""
 msgid "Provide proxy settings"
 msgstr "Proxy-Einstellungen angeben"
 
+#, python-format
+msgid ""
+"Provide the base URL for docker API engine calls. By default we are trying to "
+"connect via the unix socket at %s."
+msgstr ""
+
 msgid "Provisioned IOPS SSD IO operations per second"
 msgstr "Vorgesehene IOPS-SSD-IO-Operationen pro Sekunde"
 
@@ -31270,7 +31322,7 @@ msgstr ""
 "vorhergehenden Eintrag."
 
 msgid "RRD data aggregated"
-msgstr ""
+msgstr "Aggregierte RRD Daten"
 
 msgid "RRD databases with performance data"
 msgstr "RRD-Datenbank mit Performancedaten"
@@ -31831,11 +31883,10 @@ msgid "Relative levels of active sessions."
 msgstr "Relative Schwellen für aktive Sitzungen"
 
 msgid "Relative to Population Maximum"
-msgstr ""
+msgstr "Bezogen auf die Grundgesamtheit"
 
-#, fuzzy
 msgid "Relay Log Size"
-msgstr "Seitegröße"
+msgstr "Relay Logdateigröße"
 
 msgid "Release Notes"
 msgstr "Versionshinweise"
@@ -32428,7 +32479,6 @@ msgstr "Hosts und Service Checks neu ansetzen"
 msgid "Reserved DB instances"
 msgstr "Reservierte DB-Instanzen"
 
-#, fuzzy
 msgid "Reserved filesystem space"
 msgstr "Belegter Dateisystemplatz"
 
@@ -34150,9 +34200,8 @@ msgstr "Servicegruppen (Raster)"
 msgid "Service Groups (Summary)"
 msgstr "Servicegruppen (Zusammenfassung)"
 
-#, fuzzy
 msgid "Service Historic Metrics"
-msgstr "Servicemetriken"
+msgstr "Service historische Metriken"
 
 msgid "Service Level"
 msgstr "Servicelevel"
@@ -34453,6 +34502,10 @@ msgstr "Serviceprobleme für NagStaMon"
 
 msgid "Service recovers to OK"
 msgstr "Service wiederhergestellt zu OK"
+
+#, fuzzy
+msgid "Service report for multiple services"
+msgstr "Serviceperiode für Services"
 
 msgid "Service retry check interval"
 msgstr "Wiederholungsintervall für Service-Checks"
@@ -34815,6 +34868,10 @@ msgstr ""
 msgid "Set timeouts for plugins and local checks"
 msgstr "Timeouts für Plugins und lokale Checks"
 
+#, fuzzy
+msgid "Set to \"0\" to disable the automatic reload."
+msgstr "Leer lassen oder <tt>0</tt> für automatisches Neuladen."
+
 msgid "Set upper Levels"
 msgstr "Obere Schwellwerte setzen"
 
@@ -34970,7 +35027,8 @@ msgstr "Gemeinsame Poolgröße"
 msgid "Shared with"
 msgstr "Freigegeben an"
 
-msgid "Short - Use the first 12 characters of ID"
+#, fuzzy
+msgid "Short - Use the first 12 characters of the docker container ID"
 msgstr "Kurz - Die ersten 12 Zeichen der Container ID verwenden"
 
 msgid "Short Time Intervals"
@@ -35086,6 +35144,10 @@ msgstr "Zeige die Beschreibung, falls diese gesetzt ist, ansonten den Alias"
 msgid "Show details about livestatus encryption"
 msgstr "Details zur Livestatus-Verschlüsselung anzeigen"
 
+#, fuzzy
+msgid "Show discovered labels"
+msgstr "Entdeckte Host-Labels"
+
 msgid "Show failed notifications"
 msgstr "%d fehlgeschlagene Alarmierungen"
 
@@ -35133,9 +35195,8 @@ msgstr "Zeige Rand um den Graphen"
 msgid "Show metric"
 msgstr "Neue Metrik hinzufügen"
 
-#, fuzzy
 msgid "Show number of groups"
-msgstr "Anzahl der Hops"
+msgstr "Anzahl der Gruppen anzeigen"
 
 msgid "Show only modified settings"
 msgstr "Nur geänderte Einstellungen zeigen"
@@ -35177,9 +35238,8 @@ msgstr "Zeige separates Ergebnis für jede SLA Periode"
 msgid "Show space reserved for the <tt>root</tt> user"
 msgstr "Zeige reservierten Platz für <tt>root</tt>-User"
 
-#, fuzzy
 msgid "Show stale hosts and services"
-msgstr "Alle Hosts/Services zeigen"
+msgstr "Alle veralteten Hosts und Services zeigen"
 
 msgid ""
 "Show the column for stale host and service checks in the tactical overview "
@@ -35641,12 +35701,6 @@ msgstr ""
 msgid "Skipped %s: %s"
 msgstr "%s ausgelassen: %s"
 
-msgid "Skipping disk usage info"
-msgstr "Informationen über Festplattenbelegung wird übersprungen"
-
-msgid "Skipping execution of check_mk agent"
-msgstr "Ausführung des Check_MK-Agenten überspringen"
-
 msgid "Skipping this test (Plugin is not enabled)"
 msgstr "Diesen Test auslassen (Plugin ist nicht aktiviert)"
 
@@ -35734,7 +35788,6 @@ msgstr "Element"
 msgid "Snapin Dashlet"
 msgstr "Snapin Dashlet"
 
-#, fuzzy
 msgid "Snapin type"
 msgstr "Element"
 
@@ -36768,7 +36821,6 @@ msgstr "Status falls Force Logging eingeschaltet ist:"
 msgid "State in case of Job has no log information"
 msgstr "Status des Service, falls der Job keine Log-Informationen hat"
 
-#, fuzzy
 msgid "State in case of a timeout"
 msgstr "Status bei allgemeiner Zeitüberschreitung"
 
@@ -36778,9 +36830,8 @@ msgstr "Status bei fehlenden Updates"
 msgid "State in case of connection problems"
 msgstr "Status bei Verbindungsproblemen"
 
-#, fuzzy
 msgid "State in case of empty output"
-msgstr "Status bei leerer Agentenausgabe"
+msgstr "Status bei leerer Ausgabe"
 
 msgid "State in case of logins are not possible: "
 msgstr "Status, falls Logins nicht möglich sind:"
@@ -38560,7 +38611,6 @@ msgstr ""
 "zugeordnet ist. Benutzer ohne Namenskonflikt müssen wie üblich nur ihren "
 "normalen Benutzernamen angeben."
 
-#, fuzzy
 msgid ""
 "The Livestatus Proxy Daemon is available with the Check_MK Enterprise Edition "
 "and improves the management of the inter site connections using livestatus. "
@@ -39836,6 +39886,8 @@ msgid ""
 "The given value is not allowed. You may only configure relative URLs like "
 "<tt>dashboard.py?name=my_dashboard</tt>."
 msgstr ""
+"Der angegebene Wert ist nicht erlaubt. Sie dürfen nur relative URLs wie "
+"<tt>dashboard.py?name=my_dashboard</tt> konfigurieren."
 
 #, python-format
 msgid "The global setting \"%s\" does not exist."
@@ -41195,6 +41247,10 @@ msgstr ""
 "Der Service ist nicht in einer der selektierten Servicegruppen. Für "
 "Hostalarme wird diese Bedingung ignoriert."
 
+#, fuzzy
+msgid "The service name"
+msgstr "Servicename"
+
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
 "notififcations. This is disabled by default."
@@ -41349,6 +41405,8 @@ msgid ""
 "The temporary filesystem is not mounted. Your installation may work with "
 "degraded performance."
 msgstr ""
+"Das temporäre Dateisystem ist nicht eingebunden. Ihre Installation könnte mit "
+"eingeschränkter Leistung arbeiten."
 
 msgid "The test has not been executed yet"
 msgstr "Dieser Test wurde noch nicht ausgeführt"
@@ -41495,6 +41553,10 @@ msgid ""
 "implies 80%</li><li>If your metric is in Bytes, then use 1024 for 1 KB</li></"
 "ul>"
 msgstr ""
+"Der unverarbeitete/untypisierte/Einheit-lose Wert der Metrik, wie er in der "
+"RRD-Datei gespeichert ist. Das bedeutet: <ul><li>Wenn Ihre Metrik in Prozent "
+"gemessen wird, dann bedeutet 80 -> 80%</li><li>Wenn Ihre Metrik in Bytes ist, "
+"dann verwenden Sie 1024 für 1 KB</li></ul>."
 
 msgid ""
 "The used and free levels for the memory on UNIX systems take into account the "
@@ -42620,13 +42682,6 @@ msgstr "Dieser Hostzustand ist veraltet"
 
 msgid "This id is already being used by another connection."
 msgstr "Diese ID wird bereits von einer anderen Verbindung verwendet."
-
-msgid ""
-"This includes the exectution of the <tt>check_mk_agent</tt> within running "
-"containers"
-msgstr ""
-"Dies schließt das Ausführen des <tt>checkmk Agenten</tt> innerhalb des "
-"Containers ein"
 
 msgid ""
 "This interval is applied to all new checks that go beyond the number of "
@@ -44215,6 +44270,15 @@ msgstr ""
 "den Status sammelt."
 
 msgid ""
+"This rule selects the Kubenetes special agent for an existing Checkmk host. "
+"If you want to monitor multiple Kubernetes clusters we strongly recommend to "
+"set up <a href='wato.py?"
+"mode=edit_ruleset&varname=piggyback_translation'>Piggyback translation rules</"
+"a> to avoid name collisions. Otherwise e.g. Pods with the same name in "
+"different Kubernetes clusters cannot be distinguished."
+msgstr ""
+
+msgid ""
 "This rule selects the Siemens PLC agent instead of the normal Check_MK Agent "
 "and allows monitoring of Siemens PLC using the Snap7 API. You can configure "
 "your connection settings and values to fetch here."
@@ -45215,10 +45279,16 @@ msgstr ""
 "<tt>apt</tt> auf Debian-basierten Hosts (z.B. Debian und Ubuntu) und "
 "überwacht ausstehende normale und Sicherheitsupdates."
 
+#, fuzzy
 msgid ""
 "This will deploy the agent plugin <tt>mk_docker.py</tt>. You can choose to "
 "monitor the node and/or the individual containers. This plugin requires the "
-"python library 'docker-py' to be installed on the monitored system."
+"python library 'docker-py' to be installed on the monitored system. If you "
+"want to monitor the containers of multiple docker nodes we strongly recommend "
+"to set up <a href='wato.py?"
+"mode=edit_ruleset&varname=piggyback_translation'>Piggyback translation rules</"
+"a> to avoid name collisions if containers with the same name exist on "
+"multiple docker nodes."
 msgstr ""
 "Hiermit wird das Agenten-Plugin <tt>mk_docker.py</tt> ausgerollt. Sie können "
 "den Knoten und/oder die einzelnen Container überwachen. Dieses Plugin setzt "
@@ -48433,6 +48503,10 @@ msgstr "Serverzertifikat überprüfen"
 msgid "Verify the Livestatus server certificate using the local site CA"
 msgstr "Das Serverzertifikat von Livestatus anhand der lokalen CA überprüfen"
 
+#, fuzzy
+msgid "Verify the certificate"
+msgstr "Serverzertifikat überprüfen"
+
 msgid "Veritas Cluster Server"
 msgstr "Veritas Cluster Server"
 
@@ -48606,9 +48680,8 @@ msgstr "Vista API"
 msgid "Visual levels for the availability (OK percentage)"
 msgstr "Optische Schwellen (OK-Prozentwert)"
 
-#, fuzzy
 msgid "Visualization Levels"
-msgstr "Virtualisierung"
+msgstr "Schwellwerte Virtualisierung"
 
 #, fuzzy
 msgid "Visualize this aggregation"
@@ -49023,7 +49096,6 @@ msgstr "Webgateway-Statistiken"
 msgid "Webhook URL"
 msgstr "Webhook-URL"
 
-#, fuzzy
 msgid ""
 "Webhook URL. Setup Slack Webhook <a href=\"https://my.slack.com/services/new/"
 "incoming-webhook/\" target=\"_blank\">here</a><br />For Mattermost follow the "
@@ -49031,11 +49103,13 @@ msgid ""
 "incoming.html\" target=\"_blank\">here</a><br />This URL can also be "
 "collected from the Password Store from Check_MK."
 msgstr ""
-"URL von Slack Webhook. Richten Sie hier einen <a href=\"https://my.slack.com/"
-"services/new/incoming-webhook/\" target=\"_blank\"> ein </a><br />Diese URL "
-"kann auch aus dem Passwortspeicher von Check_MK übernommen werden."
+"URL von Slack Webhook. Richten Sie <a href=\"https://my.slack.com/services/"
+"new/incoming-webhook/\" target=\"_blank\">hier</a> einen ein.<br/>Für "
+"Mattermost folgen Sie bitte der Dokumentation <a href=\"https://docs."
+"mattermost.com/developer/webhooks-incoming.html\" target=\"_blank\">hier</"
+"a><br />Diese URL kann auch aus dem Passwortspeicher von Check_MK übernommen "
+"werden."
 
-#, fuzzy
 msgid "Webhook-URL"
 msgstr "Webhook-URL"
 
@@ -49060,7 +49134,6 @@ msgstr "Woche"
 msgid "Week of creation"
 msgstr "EWoche der Erstellung"
 
-#, fuzzy
 msgid "Weekday specific times"
 msgstr "Bestimmte Tageszeiten verwenden"
 
@@ -51749,12 +51822,13 @@ msgstr ""
 "Sie haben bisher keine %sgruppe angelegt. Bitte <a href=\"wato.py?mode=edit_"
 "%s_group\">erzeugen</a> Sie zunächst mindestens eine Gruppe."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "You have not defined any virtual host trees. You can do this in the <a href="
 "\"%s\" target=\"main\">global settings</a>."
 msgstr ""
-"Sie haben keine virtuellen Hostbäume definiert. Sie können dies in den %s tun."
+"Sie haben keine virtuellen Hostbäume definiert. Sie können dies in den <a "
+"href=\"%s\" target=\"main\">globalen Einstellungen</a> tun."
 
 msgid "You have pending messages."
 msgstr "Sie haben ungelesene Nachrichten."
@@ -51838,6 +51912,10 @@ msgid ""
 "be split by these separators and the single parts are added into dedicated "
 "input fields."
 msgstr ""
+"Sie können einen Text aus Ihrer Zwischenablage, der mehrere durch \"%s\"-"
+"Zeichen getrennte Teile enthält, in das letzte Eingabefeld einfügen. Der Text "
+"wird dann durch diese Trennzeichen getrennt und die einzelnen Teile werden in "
+"eigene Eingabefelder eingefügt."
 
 msgid ""
 "You may use this option to create a much smaller partial backup of the site."
@@ -52031,7 +52109,6 @@ msgstr "Ihre Änderungen wurden gespeichert."
 msgid "Your contact groups are <b>%s</b>."
 msgstr "Ihre Kontakt-Gruppen sind <b>%s</b>."
 
-#, fuzzy
 msgid ""
 "Your crash report has been submitted (ID: ###ID###). Thanks for your "
 "participation, it is very important for the quality of Check_MK."
@@ -52660,9 +52737,8 @@ msgstr "aktiviere formatierte Ausgabe für Regeln"
 msgid "enable sounds"
 msgstr "aktiviere Tonausgabe"
 
-#, fuzzy
 msgid "enable this site"
-msgstr "Test wieder aktivieren"
+msgstr "diese Instanz aktivieren"
 
 msgid "entries"
 msgstr "Einträge"
@@ -53858,6 +53934,51 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid ""
+#~ "Choose how to monitor the docker node. If you are experiencing performance "
+#~ "issues, you can disable the docker disk usage info."
+#~ msgstr ""
+#~ "Wählen Sie, wie Sie den Dockerknoten überwachen möchten. Wenn Sie "
+#~ "Leistungsprobleme haben, können Sie die Informationen zur Docker "
+#~ "Festplattennutzung deaktivieren."
+
+#~ msgid "Container Identifier"
+#~ msgstr "Container Identifizierung"
+
+#~ msgid "Creating all sections"
+#~ msgstr "Alle Sektionen werden erzeugt"
+
+#, fuzzy
+#~ msgid "Do not monitor containers as piggyback hosts"
+#~ msgstr "Übersetzung von Hostnamen für Huckepack-Hosts"
+
+#~ msgid "Docker node"
+#~ msgstr "Docker-Node"
+
+#~ msgid "Excluded"
+#~ msgstr "Ausgeschlossen"
+
+#~ msgid "Fully monitor docker containers"
+#~ msgstr "Docker Container vollständig überwachen"
+
+#~ msgid "Fully monitor the docker node"
+#~ msgstr "Den Docker Node vollständig überwachen"
+
+#~ msgid "Monitor containers without executing the <tt>check_mk_agent</tt>"
+#~ msgstr "Container überwachen, ohne den <tt>check_mk_agent</tt> auszuführen."
+
+#~ msgid "Omit docker disk usage info"
+#~ msgstr "Docker Node Festplattennutzung auslassen"
+
+#~ msgid "Skipping disk usage info"
+#~ msgstr "Informationen über Festplattenbelegung wird übersprungen"
+
+#~ msgid "Skipping execution of check_mk agent"
+#~ msgstr "Ausführung des Check_MK-Agenten überspringen"
+
+#~ msgid "Disable certificate verification"
+#~ msgstr "Zertifikatsprüfung deaktivieren"
 
 #~ msgid "Enable performance graph for utilization of individual cores"
 #~ msgstr "Performancegraphen für Auslastung einzelner Kerne aktivieren"
@@ -55665,9 +55786,6 @@ msgstr "z/OS"
 #~ msgid "Activate missing"
 #~ msgstr "Aktiviere fehlende"
 
-#~ msgid "Already configured services"
-#~ msgstr "Bereits konfigurierte Services"
-
 #~ msgid "Automatic Agent Updates"
 #~ msgstr "Automatische Agentupdates"
 
@@ -56667,9 +56785,6 @@ msgstr "z/OS"
 
 #~ msgid "BI - Rule Tree of"
 #~ msgstr "BI -Regelbaum von"
-
-#~ msgid "Before activating the changed configuration"
-#~ msgstr "Vor dem Aktivieren der geänderten Konfiguration"
 
 #~ msgid "Bookmark List"
 #~ msgstr "Lesezeichen"

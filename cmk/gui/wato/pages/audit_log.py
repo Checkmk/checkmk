@@ -28,8 +28,6 @@
 import re
 import time
 
-from pathlib2 import Path
-
 import cmk.utils.render as render
 
 import cmk.gui.config as config
@@ -54,7 +52,7 @@ from cmk.gui.plugins.wato import WatoMode, mode_registry, wato_confirm
 
 @mode_registry.register
 class ModeAuditLog(WatoMode):
-    log_path = Path(watolib.changes.audit_log_path)
+    log_path = watolib.changes.audit_log_path
 
     @classmethod
     def name(cls):

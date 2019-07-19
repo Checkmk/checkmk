@@ -30,6 +30,8 @@ import errno
 import os
 import time
 
+import pathlib2 as pathlib
+
 import cmk.utils
 import cmk.utils.store as store
 
@@ -46,7 +48,7 @@ import cmk.gui.watolib.sidebar_reload
 from cmk.gui.plugins.watolib import config_domain_registry
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
-audit_log_path = var_dir + "log/audit.log"
+audit_log_path = pathlib.Path(var_dir, "log", "audit.log")
 
 
 def log_entry(linkinfo, action, message, user_id=None):
@@ -75,9 +77,9 @@ def log_entry(linkinfo, action, message, user_id=None):
     if user_id:
         user_id = user_id.encode("utf-8")
 
-    store.makedirs(os.path.dirname(audit_log_path))
-    with open(audit_log_path, "ab") as f:
-        os.chmod(f.name, 0660)
+    store.makedirs(audit_log_path.parent)
+    with audit_log_path.open(mode="ab") as f:
+        audit_log_path.chmod(0660)
         f.write("%d %s %s %s %s\n" %
                 (int(time.time()), link, user_id, action, message.replace("\n", "\\n")))
 

@@ -101,7 +101,9 @@ def mkdir(path, mode=0770):
 
 
 def makedirs(path, mode=0770):
-    pathlib.Path(path).mkdir(mode=mode, exist_ok=True, parents=True)
+    if not isinstance(path, pathlib.Path):
+        path = pathlib.Path(path)
+    path.mkdir(mode=mode, exist_ok=True, parents=True)
 
 
 #.

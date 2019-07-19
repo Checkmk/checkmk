@@ -142,19 +142,19 @@ TEST(PlayerTest, ConfigFolders) {
     using namespace wtools;
     cma::OnStart(cma::AppType::test);
     {
-        std::string s = "@core\\";
+        std::string s = "$BUILTIN_AGENT_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
     }
 
     {
-        std::string s = "@builtin\\";
+        std::string s = "$BUILTIN_PLUGINS_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
     }
 
     {
-        std::string s = "@user\\";
+        std::string s = "$CUSTOM_PLUGINS_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetUserPluginsDir()) + "\\");
     }

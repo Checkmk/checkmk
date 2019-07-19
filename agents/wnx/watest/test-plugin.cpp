@@ -278,21 +278,21 @@ TEST(PluginTest, ConfigFolders) {
     }
 
     {
-        std::string s(yml_var::kBuiltin);
+        std::string s(yml_var::kBuiltinPlugins);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
     }
 
     {
-        std::string s(yml_var::kUser);
+        std::string s(yml_var::kUserPlugins);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetUserPluginsDir()) + "\\");
     }
 
     {
-        std::string s(yml_var::kData);
+        std::string s(yml_var::kAgent);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetUserDir()) + "\\");

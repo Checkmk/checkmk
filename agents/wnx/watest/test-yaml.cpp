@@ -187,10 +187,10 @@ TEST(AgentConfig, AggregateMap) {
         std::string filled =
             "plugins:\n"
             "  execution:\n"
-            "    - pattern: '@user\\*.*'\n"
+            "    - pattern: '$CUSTOM_PLUGINS_PATH$\\*.*'\n"
             "      timeout: 60\n"
             "      run: yes\n"
-            "    - pattern: '@builtin\\*.*'\n"
+            "    - pattern: '$BUILTIN_PLUGINS_PATH$\\*.*'\n"
             "      timeout: 60\n"
             "      run: no\n"
             "    - pattern: '*'\n"
@@ -228,19 +228,19 @@ TEST(AgentConfig, AggregateMap) {
         // artificial but realistic data
         std::string tgt =
             "  execution:\n"
-            "    - pattern: '@user\\windows_updates.vbs'\n"  // add
+            "    - pattern: '$CUSTOM_PLUGINS_PATH$\\windows_updates.vbs'\n"  // add
             "      cache_age: 14400\n"
             "      async: yes\n"
             "      timeout: 600\n"
-            "    - pattern: '@builtin\\*.*'\n"  // override
+            "    - pattern: '$BUILTIN_PLUGINS_PATH$\\*.*'\n"  // override
             "      timeout: 31\n"
             "      run: no\n";
         std::string src =
             "  execution:\n"
-            "    - pattern: '@user\\*.*'\n"
+            "    - pattern: '$CUSTOM_PLUGINS_PATH$\\*.*'\n"
             "      timeout: 60\n"
             "      run: yes\n"
-            "    - pattern: '@builtin\\*.*'\n"
+            "    - pattern: '$BUILTIN_PLUGINS_PATH$\\*.*'\n"
             "      timeout: 60\n"
             "      run: no\n"
             "    - pattern: '*'\n"
@@ -260,14 +260,15 @@ TEST(AgentConfig, AggregateMap) {
         ASSERT_EQ(merged_yaml.size(), 4);
         // from user
         ASSERT_EQ(select(0, vars::kPluginPattern),
-                  "@user\\windows_updates.vbs");
+                  "$CUSTOM_PLUGINS_PATH$\\windows_updates.vbs");
 
         EXPECT_EQ(select(1, vars::kPluginPattern),
-                  std::string(yml_var::kBuiltin) + "\\*.*");
+                  std::string(yml_var::kBuiltinPlugins) + "\\*.*");
         EXPECT_EQ(select(1, vars::kPluginTimeout), "31");
 
         // merged from bakery(or system)
-        EXPECT_EQ(select(2, vars::kPluginPattern), "@user\\*.*");
+        EXPECT_EQ(select(2, vars::kPluginPattern),
+                  "$CUSTOM_PLUGINS_PATH$\\*.*");
         EXPECT_EQ(select(3, vars::kPluginPattern), "*");
     }
 }
@@ -407,30 +408,31 @@ TEST(AgentConfig, Aggregate) {
     ASSERT_EQ(ec.value(), 0);
     // testing merging
     {
-        CreateTestFile(cfgs[1],
-                       "bakery:\n"
-                       "  status: 'loaded'\n"
-                       "  enabled: true\n"
-                       "global:\n"
-                       "  enabled: no\n"
-                       "  name: 'test name'\n"
-                       "plugins:\n"
-                       "  enabled: true\n"
-                       "  folders:  ['c:\\Users\\Public']\n"  // add
-                       "  execution:\n"
-                       "    - pattern: ' @user\\windows_updates.vbs'\n"  // add
-                       "      cache_age: 14400\n"
-                       "      async: yes\n"
-                       "      timeout: 600\n"
-                       "    - pattern: '@builtin\\*.*'\n"  // override
-                       "      timeout: 31\n"
-                       "      run: no\n"
-                       "winperf:\n"
-                       "  counters:\n"
-                       "    - 234: if\n"
-                       "    -  638 : tcp_conn\n"
-                       "    -   9999 : the_the\n"
-                       "    - Terminal Services: ts_sessions\n");
+        CreateTestFile(
+            cfgs[1],
+            "bakery:\n"
+            "  status: 'loaded'\n"
+            "  enabled: true\n"
+            "global:\n"
+            "  enabled: no\n"
+            "  name: 'test name'\n"
+            "plugins:\n"
+            "  enabled: true\n"
+            "  folders:  ['c:\\Users\\Public']\n"  // add
+            "  execution:\n"
+            "    - pattern: ' $CUSTOM_PLUGINS_PATH$\\windows_updates.vbs'\n"  // add
+            "      cache_age: 14400\n"
+            "      async: yes\n"
+            "      timeout: 600\n"
+            "    - pattern: '$BUILTIN_PLUGINS_PATH$\\*.*'\n"  // override
+            "      timeout: 31\n"
+            "      run: no\n"
+            "winperf:\n"
+            "  counters:\n"
+            "    - 234: if\n"
+            "    -  638 : tcp_conn\n"
+            "    -   9999 : the_the\n"
+            "    - Terminal Services: ts_sessions\n");
 
         // plugins
         {

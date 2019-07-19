@@ -75,7 +75,7 @@ global:
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     logging:
-        # folder with log file, empty is default which means '@data\log'
+        # folder with log file, empty is default which means '$CUSTOM_AGENT_PATH$\log'
         location: 
         # name of file log, default is check_mk.log
         file : 
@@ -147,7 +147,7 @@ plugins:
 
     # folders are scanned left -> right
     # duplicated files will be removed
-    folders: ['@user', '@builtin' ]       # folder in ProgramData/CheckMK/agent/plugins
+    folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]       # folder in ProgramData/CheckMK/agent/plugins
 
     # example: the windows_updates.vbs
     # plugin is executed asynchronous

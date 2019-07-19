@@ -38,8 +38,8 @@ discovery = {'': [(None, {})], 'containers': [(None, {})]}
 
 checks = {
     '': [(None, {}, [(0, u'Daemon running on host voms01', [])])],
-    'containers': [(None, {}, [(0, 'containers: 42', [('containers', 42, None, None, None, None)]),
-                               (3, 'running: count not present in agent output', []),
-                               (3, 'paused: count not present in agent output', []),
-                               (3, 'stopped: count not present in agent output', [])])]
+    'containers': [(None, {}, [(0, 'Containers: 42', [('containers', 42, None, None, None, None)]),
+                               (3, 'Running: count not present in agent output', []),
+                               (3, 'Paused: count not present in agent output', []),
+                               (3, 'Stopped: count not present in agent output', [])])]
 }

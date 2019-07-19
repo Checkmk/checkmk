@@ -52,6 +52,7 @@
     <Content Include="resources\check_mk.yml" />
     <Content Include="resources\GPL-V2.rtf" />
     <Content Include="resources\readme.txt" />
+    <Content Include="version.wxi" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />

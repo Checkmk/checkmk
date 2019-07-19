@@ -164,16 +164,16 @@ table.valuespec_listof.filter {
 select.vlof_filter {
     width: 312px;
 }
-table.valuespec_listof td.vlof_content.filter {
+table.valuespec_listof.filter td.vlof_content {
     width: 1px;
     border-style: none;
 }
-table.valuespec_listof td.vlof_buttons.filter {
+table.valuespec_listof.filter td.vlof_buttons {
     width: 1px;
     border-style: none;
     vertical-align: top;
 }
-table.valuespec_listof td.vlof_buttons.filter img {
+table.valuespec_listof.filter td.vlof_buttons img {
     position: relative;
     top: 2px;
     left: -28px;

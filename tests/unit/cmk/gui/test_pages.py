@@ -1,5 +1,5 @@
 import sys
-import pytest
+import pytest  # type: ignore
 
 import cmk.gui.pages
 
@@ -15,6 +15,7 @@ def test_registered_pages():
         'ajax_backup_job_state',
         'ajax_dashlet_pos',
         'ajax_delete_user_notification',
+        'ajax_dict_host_tag_condition_get_choice',
         'ajax_graph',
         'ajax_graph_hover',
         'ajax_inv_render_tree',
@@ -37,6 +38,7 @@ def test_registered_pages():
         'ajax_start_activation',
         'ajax_switch_help',
         'ajax_userdb_sync',
+        'ajax_visual_filter_list_get_choice',
         'ajax_vs_autocomplete',
         'ajax_fetch_aggregation_data',
         'ajax_save_bi_template_layout',

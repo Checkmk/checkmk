@@ -103,7 +103,7 @@ just to signal that real build script was not called -->
       <ComponentRef Id="clean_cache"/>
       <ComponentRef Id="clean_install"/>
       <ComponentRef Id="clean_bakery"/>
-      <ComponentRef Id="clean_state"/>
+      <ComponentRef Id="clean_backup"/>
       <ComponentRef Id="clean_spool"/>
       <ComponentRef Id="clean_tmp"/>
     </Feature>
@@ -158,10 +158,10 @@ just to signal that real build script was not called -->
               </Component>
             </Directory>
             
-            <Directory Id="StateFolder" Name="state">
-              <Component Id="clean_state" Guid="{269E6BDA-4B99-4285-997E-3B3B1798E7D6}">
-                <RemoveFile Id="clean_state" On ="uninstall" Name="*.*"/>
-                <RemoveFolder Id ="RemoveStateFolder" On ="uninstall" />
+            <Directory Id="BackupFolder" Name="backup">
+              <Component Id="clean_backup" Guid="{73925DB5-076D-4E93-8138-1FDBEA4DAFC5}">
+                <RemoveFile Id="clean_backup" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveBackupFolder" On ="uninstall" />
               </Component>
             </Directory>
 

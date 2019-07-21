@@ -550,13 +550,11 @@ class AutomationAnalyseServices(Automation):
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
 
-        service_info, service_labels = self._get_service_info(config_cache, host_config,
-                                                              servicedesc)
+        service_info = self._get_service_info(config_cache, host_config, servicedesc)
         if service_info:
             service_info.update({
-                "labels": config_cache.labels_of_service(hostname, servicedesc, service_labels),
-                "label_sources": config_cache.label_sources_of_service(
-                    hostname, servicedesc, service_labels),
+                "labels": config_cache.labels_of_service(hostname, servicedesc),
+                "label_sources": config_cache.label_sources_of_service(hostname, servicedesc),
             })
         return service_info
 
@@ -635,7 +633,7 @@ class AutomationAnalyseServices(Automation):
                     "inv_parameters": service.parameters,
                     "factory_settings": factory_settings,
                     "parameters": check_parameters,
-                }, service.service_labels
+                }
 
         # 3. Classical checks
         for nr, entry in enumerate(host_config.custom_checks):
@@ -1520,18 +1518,10 @@ class AutomationGetLabelsOf(Automation):
 
         if object_type == "service":
             service_description = args[2].decode("utf-8")
-
-            service_labels = DiscoveredServiceLabels()
-            for service in config_cache.get_autochecks_of(host_name):
-                if service.description == service_description:
-                    service_labels = service.service_labels
-                    break
-
             return {
-                "labels": config_cache.labels_of_service(host_name, service_description,
-                                                         service_labels),
+                "labels": config_cache.labels_of_service(host_name, service_description),
                 "label_sources": config_cache.label_sources_of_service(
-                    host_name, service_description, service_labels),
+                    host_name, service_description),
             }
 
         raise NotImplementedError()

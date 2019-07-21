@@ -39,7 +39,6 @@ import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
 from cmk_base.check_utils import Service  # pylint: disable=unused-import
-from cmk_base.discovered_labels import DiscoveredServiceLabels
 
 
 class MonitoringCore(object):
@@ -315,8 +314,7 @@ def active_check_arguments(hostname, description, args):
 def get_cmk_passive_service_attributes(config_cache, host_config, service, check_mk_attrs):
     # type: (config.ConfigCache, config.HostConfig, Service, Dict) -> Dict
     attrs = get_service_attributes(host_config.hostname, service.description, config_cache,
-                                   service.check_plugin_name, service.parameters,
-                                   service.service_labels)
+                                   service.check_plugin_name, service.parameters)
 
     value = host_config.snmp_check_interval(config_cache.section_name_of(service.check_plugin_name))
     if value is not None:
@@ -327,25 +325,15 @@ def get_cmk_passive_service_attributes(config_cache, host_config, service, check
     return attrs
 
 
-def get_service_attributes(hostname,
-                           description,
-                           config_cache,
-                           checkname=None,
-                           params=None,
-                           service_labels=None):
-    if service_labels is None:
-        service_labels = DiscoveredServiceLabels()
-
+def get_service_attributes(hostname, description, config_cache, checkname=None, params=None):
     attrs = _extra_service_attributes(hostname, description, config_cache, checkname, params)
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
 
+    attrs.update(_get_tag_attributes(config_cache.labels_of_service(hostname, description),
+                                     "LABEL"))
     attrs.update(
-        _get_tag_attributes(config_cache.labels_of_service(hostname, description, service_labels),
-                            "LABEL"))
-    attrs.update(
-        _get_tag_attributes(
-            config_cache.label_sources_of_service(hostname, description, service_labels),
-            "LABELSOURCE"))
+        _get_tag_attributes(config_cache.label_sources_of_service(hostname, description),
+                            "LABELSOURCE"))
     return attrs
 
 

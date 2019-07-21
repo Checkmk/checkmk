@@ -28,10 +28,8 @@
 #include "mk_inventory.h"
 
 #ifdef CMC
-#include "Core.h"
 #include "Host.h"
 #include "Object.h"
-#include "RRDBackend.h"
 #include "RRDInfoCache.h"
 #include "State.h"
 #include "cmc.h"
@@ -55,11 +53,7 @@ int32_t HostSpecialIntColumn::getValue(Row row,
                            : state->_last_hard_state;
             }
             case Type::pnp_graph_present:
-                return _mc->impl<Core>()
-                               ->_rrd_backend.infoFor(object)
-                               ._names.empty()
-                           ? 0
-                           : 1;
+                return object->rrdInfo()._names.empty() ? 0 : 1;
             case Type::mk_inventory_last:
                 return static_cast<int32_t>(mk_inventory_last(
                     _mc->mkInventoryPath() + "/" + object->host()->name()));

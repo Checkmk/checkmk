@@ -40,21 +40,26 @@ from cmk.utils.exceptions import MKGeneralException
 
 class RulesetMatchObject(object):
     """Wrapper around dict to ensure the ruleset match objects are correctly created"""
-    __slots__ = ["host_name", "host_tags", "host_folder", "host_labels", "service_description"]
+    __slots__ = [
+        "host_name", "host_tags", "host_folder", "host_labels", "service_description",
+        "service_labels"
+    ]
 
     def __init__(self,
                  host_name=None,
                  host_tags=None,
                  host_folder=None,
                  host_labels=None,
-                 service_description=None):
-        # type: (Optional[str], Optional[Dict[Text, Text]], Optional[str], Optional[Dict[Text, Text]], Optional[Text]) -> None
+                 service_description=None,
+                 service_labels=None):
+        # type: (Optional[str], Optional[Dict[Text, Text]], Optional[str], Optional[Dict[Text, Text]], Optional[Text], Optional[Dict[Text, Text]]) -> None
         super(RulesetMatchObject, self).__init__()
         self.host_name = host_name
         self.host_tags = host_tags
         self.host_folder = host_folder
         self.host_labels = host_labels
         self.service_description = service_description
+        self.service_labels = service_labels
 
     def to_dict(self):
         # type: () -> Dict
@@ -70,7 +75,10 @@ class RulesetMatchObject(object):
 
     def service_cache_id(self):
         # type: () -> Tuple
-        return (self.service_description,)
+        return (
+            self.service_description,
+            hash(frozenset(self.service_labels)) if self.service_labels else None,
+        )
 
 
 class RulesetMatcher(object):
@@ -175,28 +183,49 @@ class RulesetMatcher(object):
                                                                        with_foreign_hosts,
                                                                        is_binary=is_binary)
 
-        for value, hosts, service_description_condition in optimized_ruleset:
+        for value, hosts, service_labels_condition, service_description_condition in optimized_ruleset:
             if match_object.host_name not in hosts:
                 continue
 
             if match_object.service_description is None:
                 continue
 
-            service_cache_id = (match_object.service_cache_id(), service_description_condition)
+            service_cache_id = (
+                match_object.service_cache_id(),
+                service_description_condition,
+                tuple((label_id, _tags_or_labels_cache_id(label_spec))
+                      for label_id, label_spec in service_labels_condition.iteritems()),
+            )
+
             if service_cache_id in self._service_match_cache:
                 match = self._service_match_cache[service_cache_id]
             else:
                 match = self._matches_service_conditions(service_description_condition,
-                                                         match_object.service_description)
+                                                         service_labels_condition, match_object)
                 self._service_match_cache[service_cache_id] = match
 
             if match:
                 yield value
 
-    def _matches_service_conditions(self, service_description_condition, service_description):
-        # type: (Tuple[bool, Pattern[Text]], Text) -> bool
+    def _matches_service_conditions(self, service_description_condition, service_labels_condition,
+                                    match_object):
+        # type: (Tuple[bool, Pattern[Text]], Dict[Text, Text], RulesetMatchObject) -> bool
+        if not self._matches_service_description_condition(service_description_condition,
+                                                           match_object):
+            return False
+
+        if service_labels_condition \
+           and not _matches_labels(match_object.service_labels, service_labels_condition):
+            return False
+
+        return True
+
+    def _matches_service_description_condition(self, service_description_condition, match_object):
+        # type: (Tuple[bool, Pattern[Text]], RulesetMatchObject) -> bool
         negate, pattern = service_description_condition
-        if pattern.match(service_description) is not None:
+
+        if match_object.service_description is not None \
+            and pattern.match(match_object.service_description) is not None:
             return not negate
         return negate
 
@@ -366,7 +395,7 @@ class RulesetOptimizer(object):
 
             # And now preprocess the configured patterns in the servlist
             new_rules.append(
-                (rule["value"], hosts,
+                (rule["value"], hosts, rule["condition"].get("service_labels", {}),
                  self._convert_pattern_list(rule["condition"].get("service_description"))))
 
         return new_rules

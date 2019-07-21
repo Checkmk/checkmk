@@ -11,7 +11,8 @@ import cmk.utils.paths
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
 import cmk_base.check_api as check_api
-from cmk_base.discovered_labels import DiscoveredServiceLabels
+from cmk_base.check_utils import Service
+from cmk_base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 
 def test_duplicate_hosts(monkeypatch):
@@ -1553,45 +1554,33 @@ def test_config_cache_ruleset_match_object_of_host(monkeypatch):
 
 def test_host_ruleset_match_object_of_service(monkeypatch):
     ts = Scenario()
-    ts.add_host("test-host", tags={"agent": "no-agent"})
     ts.add_host("xyz")
+    ts.add_host("test-host", tags={"agent": "no-agent"})
+    ts.set_autochecks("test-host", [
+        Service("cpu.load",
+                None,
+                "CPU load",
+                "{}",
+                service_labels=DiscoveredServiceLabels(ServiceLabel(u"abc", u"xä"),))
+    ])
     config_cache = ts.apply(monkeypatch)
 
     obj = config_cache.ruleset_match_object_of_service("xyz", "bla blä")
     assert isinstance(obj, RulesetMatchObject)
     assert obj.to_dict() == {
-        "host_folder": '/wato/',
         "host_name": "xyz",
-        "host_tags": {
-            'address_family': 'ip-v4-only',
-            'agent': 'cmk-agent',
-            'criticality': 'prod',
-            'ip-v4': 'ip-v4',
-            'networking': 'lan',
-            'piggyback': 'auto-piggyback',
-            'site': 'unit',
-            'snmp_ds': 'no-snmp',
-            'tcp': 'tcp',
-        },
         "service_description": "bla blä",
+        "service_labels": {},
     }
 
     obj = config_cache.ruleset_match_object_of_service("test-host", "CPU load")
     assert isinstance(obj, RulesetMatchObject)
     assert obj.to_dict() == {
-        "host_folder": '/wato/',
         "host_name": "test-host",
-        "host_tags": {
-            'address_family': 'ip-v4-only',
-            'agent': 'no-agent',
-            'criticality': 'prod',
-            'ip-v4': 'ip-v4',
-            'networking': 'lan',
-            'piggyback': 'auto-piggyback',
-            'site': 'unit',
-            'snmp_ds': 'no-snmp',
-        },
         "service_description": "CPU load",
+        "service_labels": {
+            u"abc": u"xä"
+        },
     }
 
 

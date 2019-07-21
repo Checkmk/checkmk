@@ -4635,13 +4635,13 @@ metric_info["docker_active"] = {
 metric_info["docker_size"] = {
     "title": _("Size"),
     "unit": "bytes",
-    "color": "31/a",
+    "color": "41/a",
 }
 
 metric_info["docker_reclaimable"] = {
     "title": _("Reclaimable"),
     "unit": "bytes",
-    "color": "41/a",
+    "color": "31/a",
 }
 
 metric_info["k8s_nodes"] = {
@@ -9218,6 +9218,13 @@ perfometer_info.append({
     "total": "docker_all_containers",
 })
 
+perfometer_info.append({
+    'type': 'logarithmic',
+    'metric': 'docker_size',
+    'half_value': GB,
+    'exponent': 2.0,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -9503,6 +9510,22 @@ graph_info["docker_containers"] = {
         ("docker_paused_containers", "stack"),
         ("docker_stopped_containers", "stack"),
         ("docker_all_containers", "line"),
+    ],
+}
+
+graph_info["docker_df"] = {
+    "title": _("Docker Disk Usage"),
+    "metrics": [
+        ("docker_size", "area"),
+        ("docker_reclaimable", "area"),
+    ],
+}
+
+graph_info["docker_df_count"] = {
+    "title": _("Docker Disk Usage Count"),
+    "metrics": [
+        ("docker_count", "area"),
+        ("docker_active", "area"),
     ],
 }
 

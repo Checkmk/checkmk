@@ -75,8 +75,7 @@ def check_df_sources_include_flag():
             logger.info("  Include file implements new fs_used as perfvalue")
 
 
-def get_hostnames():
-    config_cache = config.get_config_cache()
+def get_hostnames(config_cache):
     return config_cache.all_active_hosts()
 
 
@@ -167,9 +166,9 @@ def update_pnp_info_files(perfvar, newvar, filepath):
     update_journal(rrdfile, rrdfilenew)
 
 
-def update_service_info(hostnames, args):
+def update_service_info(config_cache, hostnames, args):
     for hostname in hostnames:
-        for check_plugin_name, item, _ in cmk_base.autochecks.read_autochecks_of(hostname):
+        for check_plugin_name, item, _ in config_cache.get_autochecks_of(hostname):
             if check_plugin_name in CHECKS_USING_DF_INCLUDE:
                 servicedesc = config.service_description(hostname, check_plugin_name, item)
                 update_files(args, hostname, servicedesc, item, 'cmc')
@@ -213,7 +212,8 @@ def main():
     if not _ask_for_confirmation_backup():
         sys.exit(1)
 
-    update_service_info(get_hostnames(), args)
+    config_cache = config.get_config_cache()
+    update_service_info(config_cache, get_hostnames(config_cache), args)
 
     if not args.dry_run:
         save_new_config()

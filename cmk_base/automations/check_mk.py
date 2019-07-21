@@ -594,12 +594,12 @@ class AutomationAnalyseServices(Automation):
         if host_config.is_cluster:
             services = []
             for node in host_config.nodes:
-                for service in autochecks.read_autochecks_of(node):
+                for service in config_cache.get_autochecks_of(node):
                     if hostname == config_cache.host_of_clustered_service(
                             node, service.description):
                         services.append(services)
         else:
-            services = autochecks.read_autochecks_of(hostname)
+            services = config_cache.get_autochecks_of(hostname)
 
         # 2. Load all autochecks of the host in question and try to find
         # our service there

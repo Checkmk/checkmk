@@ -868,11 +868,15 @@ class Rule(object):
         return any(self._get_mismatch_reasons_of_match_object(match_object, host_tags=[]))
 
     def _get_mismatch_reasons_of_match_object(self, match_object, host_tags):
-        # TODO: What about the host_label_rules and service_label_rules?
+        # TODO:
+        # - What about the host_label_rules and service_label_rules?
+        # - The autochecks_manager also needs to be available here!
+        # Both is only working with cmk_base code which has the checks and config loaded.
         label_manager = LabelManager(
             explicit_host_labels={match_object.host_name: match_object.host_labels},
             host_label_rules=[],
             service_label_rules=[],
+            autochecks_manager=None,
         )
 
         matcher = ruleset_matcher.RulesetMatcher(

@@ -214,15 +214,13 @@ class RulesetMatcher(object):
             tags = rule["condition"].get("host_tags", {})
             labels = rule["condition"].get("host_labels", {})
 
-            # TODO: Fix scope
-            if tags and not self.ruleset_optimizer._matches_host_tags([], tags):
+            if tags and not self.ruleset_optimizer.matches_host_tags([], tags):
                 continue
 
-            if labels and not self.ruleset_optimizer._matches_host_labels({}, labels):
+            if labels and not self.ruleset_optimizer.matches_host_labels({}, labels):
                 continue
 
-            # TODO: Fix scope
-            if not self.ruleset_optimizer._matches_host_name(hostlist, ""):
+            if not self.ruleset_optimizer.matches_host_name(hostlist, ""):
                 continue
 
             entries.append(rule["value"])
@@ -445,15 +443,15 @@ class RulesetOptimizer(object):
             for hostname in hosts_to_check:
                 # When no tag matching is requested, do not filter by tags. Accept all hosts
                 # and filter only by hostlist
-                if tags and not self._matches_host_tags(self._host_tag_lists[hostname], tags):
+                if tags and not self.matches_host_tags(self._host_tag_lists[hostname], tags):
                     continue
 
                 if labels:
                     host_labels = self._labels.labels_of_host(self._ruleset_matcher, hostname)
-                    if not self._matches_host_labels(host_labels, labels):
+                    if not self.matches_host_labels(host_labels, labels):
                         continue
 
-                if not self._matches_host_name(hostlist, hostname):
+                if not self.matches_host_name(hostlist, hostname):
                     continue
 
                 matching.add(hostname)
@@ -461,7 +459,7 @@ class RulesetOptimizer(object):
         self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
 
-    def _matches_host_name(self, host_entries, hostname):
+    def matches_host_name(self, host_entries, hostname):
         if not host_entries:
             return True
 
@@ -481,7 +479,7 @@ class RulesetOptimizer(object):
 
         return negate
 
-    def _matches_host_tags(self, hosttags, required_tags):
+    def matches_host_tags(self, hosttags, required_tags):
         for tag_spec in required_tags.values():
             if self._matches_tag_spec(tag_spec, hosttags) is False:
                 return False
@@ -514,7 +512,7 @@ class RulesetOptimizer(object):
 
         return True
 
-    def _matches_host_labels(self, host_labels, required_labels):
+    def matches_host_labels(self, host_labels, required_labels):
         for label_group_id, label_spec in required_labels.iteritems():
             is_not = isinstance(label_spec, dict)
             if is_not:

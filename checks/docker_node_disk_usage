@@ -39,26 +39,19 @@ def parse_docker_node_disk_usage(info):
 @get_parsed_item_data
 def check_docker_node_disk_usage(_no_item, params, data):
 
-    for param, conversion_func in (
-        ('size', get_filesize_human_readable),
-        ('reclaimable', get_filesize_human_readable),
+    for key, human_readable_func in (
+        ('size', get_bytes_human_readable),
+        ('reclaimable', get_bytes_human_readable),
         ('count', lambda x: x),
         ('active', lambda x: x),
     ):
-        value = data[param]
+        value = data[key]
 
-        warn, crit = params.get(param, (None, None))
-        if crit is not None and value >= crit:
-            status, lvl_text = 2, " (warn/crit at %s/%s)" % (warn, crit)
-        elif warn is not None and value >= warn:
-            status, lvl_text = 1, " (warn/crit at %s/%s)" % (warn, crit)
-        else:
-            status, lvl_text = 0, ""
-
-        infotext = "%s: %s%s" % (param, conversion_func(value), lvl_text)
-        perfdata = [(param, value, warn, crit)]
-
-        yield status, infotext, perfdata
+        yield check_levels(value,
+                           key,
+                           params.get(key),
+                           human_readable_func=human_readable_func,
+                           infoname=key.title())
 
 
 check_info["docker_node_disk_usage"] = {

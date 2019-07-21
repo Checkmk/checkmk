@@ -10,6 +10,7 @@ class Scenario(object):
         tag_config = cmk.utils.tags.sample_tag_config()
         self.tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         self.site_id = site_id
+        self._autochecks = {}
 
         self.config = {
             "tag_config": tag_config,
@@ -97,10 +98,16 @@ class Scenario(object):
         self.config[varname] = ruleset
         return self
 
+    def set_autochecks(self, hostname, autochecks):
+        self._autochecks[hostname] = autochecks
+
     def apply(self, monkeypatch):
         for key, value in self.config.items():
             monkeypatch.setattr(config, key, value)
 
         self.config_cache = config.get_config_cache()
         self.config_cache.initialize()
+
+        monkeypatch.setattr(self.config_cache._autochecks_manager, "_autochecks", self._autochecks)
+
         return self.config_cache

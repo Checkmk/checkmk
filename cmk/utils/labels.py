@@ -84,8 +84,8 @@ class LabelManager(object):
         # type: (str) -> Dict
         return DiscoveredHostLabelsStore(hostname).load()
 
-    def labels_of_service(self, ruleset_matcher, hostname, service_desc, discovered_labels):
-        # type: (RulesetMatcher, str, Text, Dict) -> Dict
+    def labels_of_service(self, ruleset_matcher, hostname, service_desc):
+        # type: (RulesetMatcher, str, Text) -> Dict
         """Returns the effective set of service labels from all available sources
 
         1. Discovered labels
@@ -94,18 +94,19 @@ class LabelManager(object):
         Last one wins.
         """
         labels = {}
-        labels.update(discovered_labels)
+        labels.update(self._discovered_labels_of_service(hostname, service_desc))
         labels.update(self._ruleset_labels_of_service(ruleset_matcher, hostname, service_desc))
 
         return labels
 
-    def label_sources_of_service(self, ruleset_matcher, hostname, service_desc, discovered_labels):
-        # type: (RulesetMatcher, str, Text, Dict) -> Dict[str, str]
+    def label_sources_of_service(self, ruleset_matcher, hostname, service_desc):
+        # type: (RulesetMatcher, str, Text) -> Dict[str, str]
         """Returns the effective set of host label keys with their source
         identifier instead of the value Order and merging logic is equal to
         _get_host_labels()"""
         labels = {}
-        labels.update({k: "discovered" for k in discovered_labels.keys()})
+        labels.update(
+            {k: "discovered" for k in self._discovered_labels_of_service(hostname, service_desc)})
         labels.update({
             k: "ruleset"
             for k in self._ruleset_labels_of_service(ruleset_matcher, hostname, service_desc)
@@ -117,6 +118,17 @@ class LabelManager(object):
         # type: (RulesetMatcher, str, Text) -> Dict
         match_object = RulesetMatchObject(hostname, service_description=service_desc)
         return ruleset_matcher.get_host_ruleset_merged_dict(match_object, self._service_label_rules)
+
+    def _discovered_labels_of_service(self, hostname, service_desc):
+        # type: (str, Text) -> Dict
+        # TODO: Bad things here:
+        # - Uncached and unoptimized processing of autochecks
+        # - import of cmk_base in cmk.utils -> Module scope violation
+        import cmk_base.autochecks as autochecks
+        for service in autochecks.read_autochecks_of(hostname):
+            if service.description == service_desc:
+                return service.service_labels.to_dict()
+        return {}
 
 
 class ABCDiscoveredLabelsStore(object):

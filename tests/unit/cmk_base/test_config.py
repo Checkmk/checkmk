@@ -1296,18 +1296,17 @@ def test_labels_of_service(monkeypatch):
     ts.add_host("test-host", tags={"agent": "no-agent"})
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.labels_of_service("xyz", "CPU load", DiscoveredServiceLabels()) == {}
-    assert config_cache.label_sources_of_service("xyz", "CPU load", DiscoveredServiceLabels()) == {}
+    assert config_cache.labels_of_service("xyz", "CPU load") == {}
+    assert config_cache.label_sources_of_service("xyz", "CPU load") == {}
 
-    assert config_cache.labels_of_service("test-host", "CPU load", DiscoveredServiceLabels()) == {
+    assert config_cache.labels_of_service("test-host", "CPU load") == {
         "label1": "val1",
         "label2": "val2",
     }
-    assert config_cache.label_sources_of_service("test-host", "CPU load",
-                                                 DiscoveredServiceLabels()) == {
-                                                     "label1": "ruleset",
-                                                     "label2": "ruleset",
-                                                 }
+    assert config_cache.label_sources_of_service("test-host", "CPU load") == {
+        "label1": "ruleset",
+        "label2": "ruleset",
+    }
 
 
 def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
@@ -1327,18 +1326,13 @@ def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
     service = config_cache.get_autochecks_of("test-host")[0]
     assert service.description == u"CPU load"
 
-    assert config_cache.labels_of_service("xyz", u"CPU load", DiscoveredServiceLabels()) == {}
-    assert config_cache.label_sources_of_service("xyz", u"CPU load",
-                                                 DiscoveredServiceLabels()) == {}
+    assert config_cache.labels_of_service("xyz", u"CPU load") == {}
+    assert config_cache.label_sources_of_service("xyz", u"CPU load") == {}
 
-    assert config_cache.labels_of_service("test-host", service.description,
-                                          service.service_labels) == {
-                                              u"äzzzz": u"eeeeez"
-                                          }
-    assert config_cache.label_sources_of_service("test-host", service.description,
-                                                 service.service_labels) == {
-                                                     u"äzzzz": u"discovered"
-                                                 }
+    assert config_cache.labels_of_service("test-host", service.description) == {u"äzzzz": u"eeeeez"}
+    assert config_cache.label_sources_of_service("test-host", service.description) == {
+        u"äzzzz": u"discovered"
+    }
 
 
 @pytest.mark.parametrize("hostname,result", [

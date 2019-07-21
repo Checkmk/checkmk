@@ -198,18 +198,23 @@ def test_config(monkeypatch):
             ],
         ),
     ])
-def test_read_autochecks_of(test_config, autochecks_content, expected_result):
+def test_manager_get_autochecks_of(test_config, autochecks_content, expected_result):
     autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(autochecks_content)
 
+    manager = autochecks.AutochecksManager()
+
     if expected_result is MKGeneralException:
         with pytest.raises(MKGeneralException):
-            autochecks.read_autochecks_of("host")
+            manager.get_autochecks_of("host")
         return
 
-    result = autochecks.read_autochecks_of("host")
+    result = manager.get_autochecks_of("host")
     assert result == expected_result
+
+    # Check that the ConfigCache method also returns the correct data
+    assert test_config.get_autochecks_of("host") == result
 
     # Check that there are no str items (None, int, ...)
     assert all(not isinstance(s.item, str) for s in result)

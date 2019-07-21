@@ -23,12 +23,9 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-"""Caring about persistance of the discovered services (aka autochecks)
+"""Caring about persistance of the discovered services (aka autochecks)"""
 
-This is a sub module of cmk_base.discovery.
-"""
-
-from typing import Any, Dict, Union, Tuple, Optional, List  # pylint: disable=unused-import
+from typing import Any, Dict, Union, Tuple, Text, Optional, List  # pylint: disable=unused-import
 import os
 import sys
 import ast
@@ -49,6 +46,33 @@ from cmk_base.discovered_labels import (
 from cmk_base.check_utils import (  # pylint: disable=unused-import
     CheckPluginName, CheckParameters, DiscoveredService, Item, Service,
 )
+
+
+class AutochecksManager(object):
+    """Read autochecks from the configuration
+
+    Autochecks of a host are once read and cached for the whole lifetime of the
+    AutochecksManager."""
+    def __init__(self):
+        # type: () -> None
+        self._autochecks = {}  # type: Dict[str, List[Service]]
+
+    def get_autochecks_of(self, hostname):
+        # type: (str) -> List[Service]
+        if hostname in self._autochecks:
+            return self._autochecks[hostname]
+
+        result = read_autochecks_of(hostname)
+        self._autochecks[hostname] = result
+        return result
+
+    def discovered_labels_of(self, hostname, service_desc):
+        # type: (str, Text) -> DiscoveredServiceLabels
+        for service in self.get_autochecks_of(hostname):
+            # TODO: Performance! Would be better lookup this from a dict
+            if service.description == service_desc:
+                return service.service_labels
+        return DiscoveredServiceLabels()
 
 
 # TODO: use store.load_data_from_file()

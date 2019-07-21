@@ -2623,6 +2623,7 @@ class ConfigCache(object):
             host_labels,
             host_label_rules,
             service_label_rules,
+            self._autochecks_manager,
         )
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
@@ -2663,7 +2664,9 @@ class ConfigCache(object):
         self._hosttags = {}
 
         # Autochecks cache
-        self._autochecks_cache = {}
+        # TODO: Cleanup this local import
+        import cmk_base.autochecks as autochecks
+        self._autochecks_manager = autochecks.AutochecksManager()
 
         # Caches for service_extra_conf
         self._service_match_cache = {}
@@ -2936,14 +2939,7 @@ class ConfigCache(object):
 
     def get_autochecks_of(self, hostname):
         # type: (str) -> List[cmk_base.check_utils.Service]
-        try:
-            return self._autochecks_cache[hostname]
-        except KeyError:
-            # Cleanup this local import
-            import cmk_base.autochecks as autochecks
-            result = autochecks.read_autochecks_of(hostname)
-            self._autochecks_cache[hostname] = result
-            return result
+        return self._autochecks_manager.get_autochecks_of(hostname)
 
     def section_name_of(self, section):
         try:

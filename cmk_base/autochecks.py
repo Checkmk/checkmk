@@ -62,7 +62,7 @@ class AutochecksManager(object):
         if hostname in self._autochecks:
             return self._autochecks[hostname]
 
-        result = read_autochecks_of(hostname)
+        result = self._read_autochecks_of(hostname)
         self._autochecks[hostname] = result
         return result
 
@@ -74,83 +74,84 @@ class AutochecksManager(object):
                 return service.service_labels
         return DiscoveredServiceLabels()
 
+    # TODO: use store.load_data_from_file()
+    # TODO: Common code with parse_autochecks_file? Cleanup.
+    def _read_autochecks_of(self, hostname):
+        # type: (str) -> List[Service]
+        """Read automatically discovered checks of one host"""
+        basedir = cmk.utils.paths.autochecks_dir
+        filepath = basedir + '/' + hostname + '.mk'
 
-# TODO: use store.load_data_from_file()
-# TODO: Common code with parse_autochecks_file? Cleanup.
-def read_autochecks_of(hostname):
-    # type: (str) -> List[Service]
-    """Read automatically discovered checks of one host"""
-    basedir = cmk.utils.paths.autochecks_dir
-    filepath = basedir + '/' + hostname + '.mk'
+        if not os.path.exists(filepath):
+            return []
 
-    if not os.path.exists(filepath):
-        return []
-
-    check_config = config.get_check_variables()
-    try:
-        cmk_base.console.vverbose("Loading autochecks from %s\n", filepath)
-        autochecks_raw = eval(
-            file(filepath).read().decode("utf-8"), check_config,
-            check_config)  # type: List[Tuple[CheckPluginName, Item, CheckParameters]]
-    except SyntaxError as e:
-        cmk_base.console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)
-        if cmk.utils.debug.enabled():
-            raise
-        return []
-    except Exception as e:
-        cmk_base.console.verbose("Error in file %s:\n%s\n", filepath, e, stream=sys.stderr)
-        if cmk.utils.debug.enabled():
-            raise
-        return []
-
-    autochecks = []
-    for entry in autochecks_raw:
-        if isinstance(entry, tuple):
-            check_plugin_name, item, parameters = _load_pre_16_tuple_autocheck(entry)
-            service_labels = DiscoveredServiceLabels()
-        else:
-            check_plugin_name, item, parameters, service_labels = _load_dict_autocheck(entry)
-
-        # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
-        # items from existing autocheck files for compatibility. TODO remove this one day
-        if isinstance(item, str):
-            item = config.decode_incoming_string(item)
-
-        if not isinstance(check_plugin_name, six.string_types):
-            raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
-                                     "The check type must be a string." % (entry, hostname))
-
+        check_config = config.get_check_variables()
         try:
-            description = config.service_description(hostname, check_plugin_name, item)
-        except Exception:
-            continue  # ignore
+            cmk_base.console.vverbose("Loading autochecks from %s\n", filepath)
+            autochecks_raw = eval(
+                file(filepath).read().decode("utf-8"), check_config,
+                check_config)  # type: List[Tuple[CheckPluginName, Item, CheckParameters]]
+        except SyntaxError as e:
+            cmk_base.console.verbose("Syntax error in file %s: %s\n",
+                                     filepath,
+                                     e,
+                                     stream=sys.stderr)
+            if cmk.utils.debug.enabled():
+                raise
+            return []
+        except Exception as e:
+            cmk_base.console.verbose("Error in file %s:\n%s\n", filepath, e, stream=sys.stderr)
+            if cmk.utils.debug.enabled():
+                raise
+            return []
 
-        autochecks.append(
-            Service(
-                check_plugin_name=check_plugin_name,
-                item=item,
-                description=description,
-                parameters=config.compute_check_parameters(hostname, check_plugin_name, item,
-                                                           parameters),
-                service_labels=service_labels,
-            ))
-    return autochecks
+        autochecks = []
+        for entry in autochecks_raw:
+            if isinstance(entry, tuple):
+                check_plugin_name, item, parameters = self._load_pre_16_tuple_autocheck(entry)
+                service_labels = DiscoveredServiceLabels()
+            else:
+                check_plugin_name, item, parameters, service_labels = self._load_dict_autocheck(
+                    entry)
 
+            # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
+            # items from existing autocheck files for compatibility. TODO remove this one day
+            if isinstance(item, str):
+                item = config.decode_incoming_string(item)
 
-def _load_pre_16_tuple_autocheck(entry):
-    # type: (Tuple[CheckPluginName, Item, CheckParameters]) -> Tuple[CheckPluginName, Item, CheckParameters]
-    if len(entry) == 4:  # old format where hostname is at the first place
-        entry = entry[1:]  # type: ignore
-    check_plugin_name, item, parameters = entry
-    return check_plugin_name, item, parameters
+            if not isinstance(check_plugin_name, six.string_types):
+                raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
+                                         "The check type must be a string." % (entry, hostname))
 
+            try:
+                description = config.service_description(hostname, check_plugin_name, item)
+            except Exception:
+                continue  # ignore
 
-def _load_dict_autocheck(entry):
-    # type: (Dict) -> Tuple[CheckPluginName, Item, CheckParameters, DiscoveredServiceLabels]
-    labels = DiscoveredServiceLabels()
-    for label_id, label_value in entry["service_labels"].items():
-        labels.add_label(ServiceLabel(label_id, label_value))
-    return entry["check_plugin_name"], entry["item"], entry["parameters"], labels
+            autochecks.append(
+                Service(
+                    check_plugin_name=check_plugin_name,
+                    item=item,
+                    description=description,
+                    parameters=config.compute_check_parameters(hostname, check_plugin_name, item,
+                                                               parameters),
+                    service_labels=service_labels,
+                ))
+        return autochecks
+
+    def _load_pre_16_tuple_autocheck(self, entry):
+        # type: (Tuple[CheckPluginName, Item, CheckParameters]) -> Tuple[CheckPluginName, Item, CheckParameters]
+        if len(entry) == 4:  # old format where hostname is at the first place
+            entry = entry[1:]  # type: ignore
+        check_plugin_name, item, parameters = entry
+        return check_plugin_name, item, parameters
+
+    def _load_dict_autocheck(self, entry):
+        # type: (Dict) -> Tuple[CheckPluginName, Item, CheckParameters, DiscoveredServiceLabels]
+        labels = DiscoveredServiceLabels()
+        for label_id, label_value in entry["service_labels"].items():
+            labels.add_label(ServiceLabel(label_id, label_value))
+        return entry["check_plugin_name"], entry["item"], entry["parameters"], labels
 
 
 def resolve_paramstring(check_plugin_name, parameters_unresolved):

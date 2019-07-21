@@ -218,7 +218,7 @@ class RulesetMatcher(object):
             if tags and not self.ruleset_optimizer._matches_host_tags([], tags):
                 continue
 
-            if labels and not self.ruleset_optimizer._matches_host_labels([], labels):
+            if labels and not self.ruleset_optimizer._matches_host_labels({}, labels):
                 continue
 
             # TODO: Fix scope

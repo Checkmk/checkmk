@@ -30,7 +30,7 @@ import itertools
 import pprint
 import json
 import re
-from typing import Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
+from typing import Dict, Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
 
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -1411,6 +1411,7 @@ class VSExplicitConditions(Transform):
                            (_("Host labels"), "condition explicit", ["host_labels"]),
                            (_("Explicit hosts"), "condition explicit", ["explicit_hosts"]),
                            (self._service_title(), "condition explicit", ["explicit_services"]),
+                           (_("Service labels"), "condition explicit", ["service_labels"]),
                        ],
                        optional_keys=["explicit_hosts", "explicit_services"],
                        **kwargs),
@@ -1433,7 +1434,7 @@ class VSExplicitConditions(Transform):
         return elements
 
     def _to_valuespec(self, conditions):
-        # type: (RuleConditions) -> dict
+        # type: (RuleConditions) -> Dict
         explicit = {
             "folder_path": conditions.host_folder,
             "host_tags": conditions.host_tags,
@@ -1451,9 +1452,13 @@ class VSExplicitConditions(Transform):
             if explicit_services is not None:
                 explicit["explicit_services"] = explicit_services
 
+            if self._allow_label_conditions():
+                explicit["service_labels"] = conditions.service_labels
+
         return explicit
 
     def _allow_label_conditions(self):
+        """Rulesets that influence the labels of hosts or services must not use label conditions"""
         return self._rulespec.name not in [
             "host_label_rules",
             "service_label_rules",
@@ -1464,7 +1469,12 @@ class VSExplicitConditions(Transform):
         if not self._rulespec.item_type:
             return []
 
-        return [("explicit_services", self._vs_explicit_services())]
+        elements = [("explicit_services", self._vs_explicit_services())]
+
+        if self._allow_label_conditions():
+            elements.append(("service_labels", self._vs_service_label_condition()))
+
+        return elements
 
     def _service_title(self):
         item_type = self._rulespec.item_type
@@ -1486,9 +1496,11 @@ class VSExplicitConditions(Transform):
         # type: (dict) -> RuleConditions
 
         service_description = None
+        service_labels = None
         if self._rulespec.item_type:
             service_description = self._condition_list_from_valuespec(
                 explicit.get("explicit_services"), is_service=True)
+            service_labels = explicit["service_labels"] if self._allow_label_conditions() else {}
 
         return RuleConditions(
             host_folder=explicit["folder_path"],
@@ -1497,6 +1509,7 @@ class VSExplicitConditions(Transform):
             host_name=self._condition_list_from_valuespec(explicit.get("explicit_hosts"),
                                                           is_service=False),
             service_description=service_description,
+            service_labels=service_labels,
         )
 
     def _condition_list_from_valuespec(self, conditions, is_service):
@@ -1536,6 +1549,13 @@ class VSExplicitConditions(Transform):
         return LabelCondition(
             title=_("Host labels"),
             help_txt=_("Use this condition to select hosts based on the configured host labels."),
+        )
+
+    def _vs_service_label_condition(self):
+        return LabelCondition(
+            title=_("Service labels"),
+            help_txt=_(
+                "Use this condition to select services based on the configured service labels."),
         )
 
     def _vs_host_tag_condition(self):
@@ -1697,9 +1717,10 @@ class RuleConditionRenderer(object):
         # type: (Rulespec, RuleConditions) -> List[Text]
         rendered = []  # type: List[Text]
         rendered += list(self._tag_conditions(conditions))
-        rendered += list(self._label_conditions(conditions))
+        rendered += list(self._host_label_conditions(conditions))
         rendered += list(self._host_conditions(conditions))
         rendered += list(self._service_conditions(rulespec, conditions))
+        rendered += list(self._service_label_conditions(conditions))
         return rendered
 
     def _tag_conditions(self, conditions):
@@ -1745,18 +1766,25 @@ class RuleConditionRenderer(object):
 
         return HTML(_("Host has the tag <tt>%s</tt>")) % tag_id
 
-    def _label_conditions(self, conditions):
+    def _host_label_conditions(self, conditions):
         # type: (RuleConditions) -> Generator
-        if not conditions.host_labels:
+        return self._label_conditions(conditions.host_labels, "host", _("Host"))
+
+    def _service_label_conditions(self, conditions):
+        # type: (RuleConditions) -> Generator
+        return self._label_conditions(conditions.service_labels, "service", _("Service"))
+
+    def _label_conditions(self, label_conditions, object_type, object_title):
+        if not label_conditions:
             return
 
-        labels_html = (self._single_label_condition(label_id, label_spec)
-                       for label_id, label_spec in conditions.host_labels.iteritems())
+        labels_html = (self._single_label_condition(object_type, label_id, label_spec)
+                       for label_id, label_spec in label_conditions.iteritems())
         yield HTML(
-            _("Host matching labels: %s") %
-            html.render_i(_("and"), class_="label_operator").join(labels_html))
+            _("%s matching labels: %s") %
+            (object_title, html.render_i(_("and"), class_="label_operator").join(labels_html)))
 
-    def _single_label_condition(self, label_id, label_spec):
+    def _single_label_condition(self, object_type, label_id, label_spec):
         negate = False
         label_value = label_spec
         if isinstance(label_spec, dict):
@@ -1767,7 +1795,7 @@ class RuleConditionRenderer(object):
                 raise NotImplementedError()
 
         labels_html = cmk.gui.view_utils.render_labels({label_id: label_value},
-                                                       "host",
+                                                       object_type,
                                                        with_links=False,
                                                        label_sources={})
         if not negate:
@@ -1976,7 +2004,7 @@ class ModeNewRule(EditRuleMode):
 
     def _set_rule(self):
         host_name_conditions = None
-        service_conditions = None
+        service_description_conditions = None
 
         if html.request.has_var("_new_host_rule"):
             hostname = html.request.var("host")
@@ -1987,7 +2015,7 @@ class ModeNewRule(EditRuleMode):
                 item = watolib.mk_eval(
                     html.request.var("item")) if html.request.has_var("item") else None
                 if item is not None:
-                    service_conditions = [{"$regex": "%s$" % escape_regex_chars(item)}]
+                    service_description_conditions = [{"$regex": "%s$" % escape_regex_chars(item)}]
 
         self._rule = watolib.Rule.create(self._folder, self._ruleset)
         self._rule.update_conditions(
@@ -1996,7 +2024,8 @@ class ModeNewRule(EditRuleMode):
                 host_tags={},
                 host_labels={},
                 host_name=host_name_conditions,
-                service_description=service_conditions,
+                service_description=service_description_conditions,
+                service_labels={},
             ))
 
     def _save_rule(self):

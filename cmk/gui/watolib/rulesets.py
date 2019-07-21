@@ -26,7 +26,7 @@
 
 import re
 import pprint
-from typing import Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
+from typing import Text, Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
 
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -66,13 +66,15 @@ class RuleConditions(object):
                  host_tags=None,
                  host_labels=None,
                  host_name=None,
-                 service_description=None):
-        # type: (str, Dict[str, str], Dict[str, str], Optional[Union[Dict[str, List[str]], List[str]]], Optional[List[str]]) -> None
+                 service_description=None,
+                 service_labels=None):
+        # type: (str, Dict[str, str], Dict[str, str], Optional[Union[Dict[str, List[str]], List[str]]], Optional[List[str]], Dict[str, str]) -> None
         self.host_folder = host_folder
         self.host_tags = host_tags or {}
         self.host_labels = host_labels or {}
         self.host_name = host_name
         self.service_description = service_description
+        self.service_labels = service_labels or {}
 
     def from_config(self, conditions):
         self.host_folder = conditions.get("host_folder", self.host_folder)
@@ -80,6 +82,7 @@ class RuleConditions(object):
         self.host_labels = conditions.get("host_labels", {})
         self.host_name = conditions.get("host_name")
         self.service_description = conditions.get("service_description")
+        self.service_labels = conditions.get("service_labels", {})
         return self
 
     def to_config_with_folder_macro(self):
@@ -126,6 +129,9 @@ class RuleConditions(object):
 
         if self.service_description is not None:
             cfg["service_description"] = self.service_description
+
+        if self.service_labels:
+            cfg["service_labels"] = self.service_labels
 
         return cfg
 
@@ -825,12 +831,14 @@ class Rule(object):
         if host is None:
             raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
 
+        service_labels = None  # TOOD: Need to get the service labels
         match_object = ruleset_matcher.RulesetMatchObject(
             host_name=hostname,
             host_folder=host_folder.path_for_rule_matching(),
             host_tags=host.tag_groups(),
             host_labels=host.labels(),
             service_description=service_description,
+            service_labels=service_labels,
         )
 
         for reason in self._get_mismatch_reasons_of_match_object(match_object, host.tags()):

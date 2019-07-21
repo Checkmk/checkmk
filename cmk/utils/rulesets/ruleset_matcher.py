@@ -217,7 +217,7 @@ class RulesetMatcher(object):
             if tags and not self.ruleset_optimizer.matches_host_tags([], tags):
                 continue
 
-            if labels and not self.ruleset_optimizer.matches_host_labels({}, labels):
+            if labels and not _matches_labels({}, labels):
                 continue
 
             if not self.ruleset_optimizer.matches_host_name(hostlist, ""):
@@ -448,7 +448,7 @@ class RulesetOptimizer(object):
 
                 if labels:
                     host_labels = self._labels.labels_of_host(self._ruleset_matcher, hostname)
-                    if not self.matches_host_labels(host_labels, labels):
+                    if not _matches_labels(host_labels, labels):
                         continue
 
                 if not self.matches_host_name(hostlist, hostname):
@@ -509,17 +509,6 @@ class RulesetOptimizer(object):
         matches = tag_spec in hosttags
         if matches == is_not:
             return False
-
-        return True
-
-    def matches_host_labels(self, host_labels, required_labels):
-        for label_group_id, label_spec in required_labels.iteritems():
-            is_not = isinstance(label_spec, dict)
-            if is_not:
-                label_spec = label_spec["$ne"]
-
-            if (host_labels.get(label_group_id) == label_spec) is is_not:
-                return False
 
         return True
 
@@ -660,6 +649,18 @@ class RulesetOptimizer(object):
             group_ref = tuple(sorted(self._hosttags_without_folder[hostname]))
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref
+
+
+def _matches_labels(object_labels, required_labels):
+    for label_group_id, label_spec in required_labels.iteritems():
+        is_not = isinstance(label_spec, dict)
+        if is_not:
+            label_spec = label_spec["$ne"]
+
+        if (object_labels.get(label_group_id) == label_spec) is is_not:
+            return False
+
+    return True
 
 
 def parse_negated_condition_list(entries):

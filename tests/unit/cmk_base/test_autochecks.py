@@ -203,7 +203,7 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
     with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(autochecks_content)
 
-    manager = autochecks.AutochecksManager()
+    manager = test_config._autochecks_manager
 
     if expected_result is MKGeneralException:
         with pytest.raises(MKGeneralException):

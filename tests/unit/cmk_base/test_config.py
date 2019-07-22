@@ -1510,48 +1510,6 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
     assert host_config is cache.get_host_config("xyz")
 
 
-def test_config_cache_ruleset_match_object_of_host(monkeypatch):
-    ts = Scenario()
-    ts.add_host("test-host", tags={"agent": "no-agent"})
-    ts.add_host("xyz")
-    config_cache = ts.apply(monkeypatch)
-
-    ruleset_match_object = config_cache.ruleset_match_object_of_host("xyz")
-    assert isinstance(ruleset_match_object, RulesetMatchObject)
-    assert ruleset_match_object.to_dict() == {
-        "host_folder": '/wato/',
-        "host_tags": {
-            'address_family': 'ip-v4-only',
-            'agent': 'cmk-agent',
-            'criticality': 'prod',
-            'ip-v4': 'ip-v4',
-            'networking': 'lan',
-            'piggyback': 'auto-piggyback',
-            'site': 'unit',
-            'snmp_ds': 'no-snmp',
-            'tcp': 'tcp',
-        },
-        "host_name": "xyz",
-    }
-
-    ruleset_match_object = config_cache.ruleset_match_object_of_host("test-host")
-    assert isinstance(ruleset_match_object, RulesetMatchObject)
-    assert ruleset_match_object.to_dict() == {
-        "host_folder": '/wato/',
-        "host_name": "test-host",
-        "host_tags": {
-            'address_family': 'ip-v4-only',
-            'agent': 'no-agent',
-            'criticality': 'prod',
-            'ip-v4': 'ip-v4',
-            'networking': 'lan',
-            'piggyback': 'auto-piggyback',
-            'site': 'unit',
-            'snmp_ds': 'no-snmp',
-        }
-    }
-
-
 def test_host_ruleset_match_object_of_service(monkeypatch):
     ts = Scenario()
     ts.add_host("xyz")

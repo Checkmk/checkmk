@@ -2914,18 +2914,6 @@ class ConfigCache(object):
         except KeyError:
             return {}
 
-    # TODO: Move to HostConfig? Is currently not possible to have this in HostConfig because
-    # the constructor executes rule matching functions. Moved the computation to this place
-    # to prevent dependency issues for the moment.
-    def ruleset_match_object_of_host(self, hostname):
-        # type: (str) -> RulesetMatchObject
-        """Construct the dictionary object that is needed to match this host to rulesets"""
-        return RulesetMatchObject(
-            host_name=hostname,
-            host_folder=self._host_paths.get(hostname, "/"),
-            host_tags=self.tags_of_host(hostname),
-        )
-
     def ruleset_match_object_of_service(self, hostname, svc_desc):
         # type: (str, Text) -> RulesetMatchObject
         """Construct the object that is needed to match this service to rulesets

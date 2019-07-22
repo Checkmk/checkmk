@@ -533,33 +533,12 @@ class RulesetOptimizer(object):
 
         return (
             tuple(sorted(host_parts)),
-            tuple((tag_id, self._tags_or_labels_cache_id(tag_spec))
+            tuple((tag_id, _tags_or_labels_cache_id(tag_spec))
                   for tag_id, tag_spec in tags.iteritems()),
-            tuple((label_id, self._tags_or_labels_cache_id(label_spec))
+            tuple((label_id, _tags_or_labels_cache_id(label_spec))
                   for label_id, label_spec in labels.iteritems()),
             rule_path,
         )
-
-    def _tags_or_labels_cache_id(self, tag_or_label_spec):
-        if isinstance(tag_or_label_spec, dict):
-            if "$ne" in tag_or_label_spec:
-                return "!%s" % tag_or_label_spec["$ne"]
-
-            if "$or" in tag_or_label_spec:
-                return ("$or",
-                        tuple(
-                            self._tags_or_labels_cache_id(sub_tag_or_label_spec)
-                            for sub_tag_or_label_spec in tag_or_label_spec["$or"]))
-
-            if "$nor" in tag_or_label_spec:
-                return ("$nor",
-                        tuple(
-                            self._tags_or_labels_cache_id(sub_tag_or_label_spec)
-                            for sub_tag_or_label_spec in tag_or_label_spec["$nor"]))
-
-            raise NotImplementedError("Invalid tag / label spec: %r" % tag_or_label_spec)
-
-        return tag_or_label_spec
 
     # TODO: Generalize this optimization: Build some kind of key out of the tag conditions
     # (positive, negative, ...). Make it work with the new tag group based "$or" handling.
@@ -649,6 +628,28 @@ class RulesetOptimizer(object):
             group_ref = tuple(sorted(self._hosttags_without_folder[hostname]))
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref
+
+
+def _tags_or_labels_cache_id(tag_or_label_spec):
+    if isinstance(tag_or_label_spec, dict):
+        if "$ne" in tag_or_label_spec:
+            return "!%s" % tag_or_label_spec["$ne"]
+
+        if "$or" in tag_or_label_spec:
+            return ("$or",
+                    tuple(
+                        _tags_or_labels_cache_id(sub_tag_or_label_spec)
+                        for sub_tag_or_label_spec in tag_or_label_spec["$or"]))
+
+        if "$nor" in tag_or_label_spec:
+            return ("$nor",
+                    tuple(
+                        _tags_or_labels_cache_id(sub_tag_or_label_spec)
+                        for sub_tag_or_label_spec in tag_or_label_spec["$nor"]))
+
+        raise NotImplementedError("Invalid tag / label spec: %r" % tag_or_label_spec)
+
+    return tag_or_label_spec
 
 
 def _matches_labels(object_labels, required_labels):

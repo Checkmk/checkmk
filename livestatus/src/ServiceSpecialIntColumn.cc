@@ -58,14 +58,11 @@ int32_t ServiceSpecialIntColumn::getValue(
     if (auto svc = columnData<service>(row)) {
         switch (_type) {
             case Type::real_hard_state:
-                if (svc->current_state == 0) {
+                if (svc->current_state == STATE_OK) {
                     return 0;
                 }
-                if (svc->state_type == HARD_STATE) {
-                    return svc->current_state;
-                }
-                return svc->last_hard_state;
-
+                return svc->state_type == HARD_STATE ? svc->current_state
+                                                     : svc->last_hard_state;
             case Type::pnp_graph_present:
                 return pnpgraph_present(_mc, svc->host_ptr->name,
                                         svc->description);

@@ -210,7 +210,7 @@ function show_cascading_sub_valuespec(varprefix, parameters) {
     });
 }
 
-export function textarea_resize(oArea, theme)
+export function textarea_resize(oArea)
 {
     oArea.style.height = (oArea.scrollHeight - 6) + "px";
 }

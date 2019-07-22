@@ -366,7 +366,7 @@ ZERO = _item_state.ZERO
 MKCounterWrapped = _item_state.MKCounterWrapped
 
 
-def _normalize_bounds(levels):
+def _normalize_levels(levels):
     if len(levels) == 2:  # upper warn and crit
         warn_upper, crit_upper = levels[0], levels[1]
         warn_lower, crit_lower = None, None
@@ -378,8 +378,8 @@ def _normalize_bounds(levels):
     return warn_upper, crit_upper, warn_lower, crit_lower
 
 
-def _check_boundaries(value, levels, human_readable_func, unit_info):
-    warn_upper, crit_upper, warn_lower, crit_lower = _normalize_bounds(levels)
+def _do_check_levels(value, levels, human_readable_func, unit_info):
+    warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
         return 2, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func, unit_info)
@@ -478,7 +478,7 @@ def check_levels(value,
 
     # Pair of numbers -> static levels
     elif isinstance(params, tuple):
-        levels = map(scale_value, _normalize_bounds(params))
+        levels = map(scale_value, _normalize_levels(params))
         ref_value = None
 
     # Dictionary -> predictive levels
@@ -506,7 +506,7 @@ def check_levels(value,
         if predictive_levels_msg:
             infotext += " (%s)" % predictive_levels_msg
 
-    state, levelstext = _check_boundaries(value, levels, human_readable_func, unit_info)
+    state, levelstext = _do_check_levels(value, levels, human_readable_func, unit_info)
     infotext += levelstext
     if statemarkers:
         infotext += state_markers[state]

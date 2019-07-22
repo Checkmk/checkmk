@@ -154,8 +154,8 @@ def esx_vsphere_get_average(values):
 def esx_vsphere_counters_get_item_mapping(parsed):
     map_instance_to_item = {}
     for counter in [
-            "read", "write", "datastoreReadIops", "datastoreWriteIops",
-            "sizeNormalizedDatastoreLatency"
+            "read", "write", "datastoreReadIops", "datastoreWriteIops", "totalReadLatency",
+            "totalWriteLatency", "sizeNormalizedDatastoreLatency"
     ]:
         for instance in parsed.get("datastore." + counter, {}).keys():
             map_instance_to_item[instance] = instance
@@ -183,8 +183,9 @@ def check_esx_vsphere_counters_datastoreio(item, params, parsed):
         ("write_throughput", lambda x: int(esx_vsphere_get_average(x)), "datastore.write", 1024),
         ("read_ios", lambda x: int(esx_vsphere_get_average(x)), "datastore.datastoreReadIops", 1),
         ("write_ios", lambda x: int(esx_vsphere_get_average(x)), "datastore.datastoreWriteIops", 1),
-        ("latency", lambda x: max(map(int, x)), "datastore.sizeNormalizedDatastoreLatency",
-         1 / 1000000.0)
+        ("read_latency", lambda x: max(map(int, x)), "datastore.totalReadLatency", 1e-3),
+        ("write_latency", lambda x: max(map(int, x)), "datastore.totalWriteLatency", 1e-3),
+        ("latency", lambda x: max(map(int, x)), "datastore.sizeNormalizedDatastoreLatency", 1e-6),
     ]:
         field_data = parsed.get(name, {})
 

@@ -754,8 +754,8 @@ COUNTER_IDS = (
     # 655361,  # datastore.numberWriteAveraged
     655362,  # datastore.read
     655363,  # datastore.write
-    # 655364,  # datastore.totalReadLatency
-    # 655365,  # datastore.totalWriteLatency
+    655364,  # datastore.totalReadLatency
+    655365,  # datastore.totalWriteLatency
     655366,  # datastore.sizeNormalizedDatastoreLatency
     # 655367,  # datastore.datastoreIops
     # 655368,  # datastore.datastoreReadBytes

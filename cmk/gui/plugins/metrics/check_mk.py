@@ -2041,6 +2041,18 @@ metric_info["disk_latency"] = {
     "color": "#c04080",
 }
 
+metric_info["disk_read_latency"] = {
+    "title": _("Disk read latency"),
+    "unit": "s",
+    "color": "#40c080",
+}
+
+metric_info["disk_write_latency"] = {
+    "title": _("Disk write latency"),
+    "unit": "s",
+    "color": "#4080c0",
+}
+
 metric_info["read_latency"] = {
     "title": _("Read latency"),
     "unit": "s",
@@ -9552,6 +9564,12 @@ graph_info["threadpool"] = {
     ],
 }
 
+graph_info["disk_rw_latency"] = {
+    "title": _("Disk latency"),
+    "metrics": [("disk_read_latency", "area"), ("disk_write_latency", "-area")],
+}
+
+# TODO: is this still used?
 graph_info["disk_latency"] = {
     "title": _("Disk latency"),
     "metrics": [("read_latency", "area"), ("write_latency", "-area")],

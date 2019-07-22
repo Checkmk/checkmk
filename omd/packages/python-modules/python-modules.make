@@ -25,6 +25,7 @@ PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 PYTHON_MODULES_LIST += typing-3.7.4.tar.gz # direct dependency
 PYTHON_MODULES_LIST += six-1.12.0.tar.gz # direct dependency, indirect via python-dateutil
 PYTHON_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
+PYTHON_MODULES_LIST += Werkzeug-0.15.5.tar.gz # direct dependency
 
 # Modules really needed on all platforms
 PYTHON_MODULES_LIST += pysphere-0.1.7.zip
@@ -157,7 +158,6 @@ PYTHON_MODULES_LIST += oauthlib-2.1.0.tar.gz
 PYTHON_MODULES_LIST += requests-oauthlib-1.0.0.tar.gz
 PYTHON_MODULES_LIST += configparser-3.5.1.tar.gz
 # Added for the GUI
-PYTHON_MODULES_LIST += Werkzeug-0.14.1.tar.gz
 PYTHON_MODULES_LIST += passlib-1.7.1.tar.gz
 # Added for AWS special agent
 PYTHON_MODULES_LIST += docutils-0.14.tar.gz

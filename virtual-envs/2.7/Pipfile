@@ -29,6 +29,7 @@ setuptools-git = "==1.2"  # needed by various setup.py
 typing = "==3.7.4"  # direct dependency
 six = "==1.12.0"  # direct dependency, indirect via python-dateutil
 python-dateutil = "==2.8.0"  # direct dependency
+Werkzeug = "==0.15.5"  # direct dependency
 pysphere = "==0.1.7"
 pyasn1 = "==0.4.4"
 pyasn1-modules = "==0.2.2"
@@ -81,7 +82,6 @@ adal = "==1.2.0"
 oauthlib = "==2.1.0"
 requests-oauthlib = "==1.0.0"
 configparser = "==3.5.1"
-Werkzeug = "==0.14.1"
 passlib = "==1.7.1"
 docutils = "==0.14"
 futures = "==3.2.0"

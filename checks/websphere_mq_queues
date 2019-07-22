@@ -66,23 +66,22 @@ def parse_websphere_mq_queues(info):
         if len(line) < 2:
             continue
 
-        queue_name = line[1]
-        parsed.setdefault(queue_name, {})
-        parsed[queue_name].setdefault('cur_depth', int(line[0]))
+        inst = parsed.setdefault(line[1], {})
+        inst.setdefault('cur_depth', int(line[0]))
 
         if len(line) >= 3:
             if line[2].isdigit():
-                parsed[queue_name].setdefault('max_depth', int(line[2]))
+                inst.setdefault('max_depth', int(line[2]))
 
             if len(line) > 3:
                 for what in "".join(line[3:-1]).replace(" ", "").split(')'):
                     if "(" in what:
                         key, val = what.split('(')
-                        parsed[queue_name].setdefault(key, val)
+                        inst.setdefault(key, val)
 
                 try:
-                    parsed[queue_name].setdefault(
-                        "time_on_client", time.mktime(time.strptime(line[-1], "%Y_%m_%d-%H_%M_%S")))
+                    inst.setdefault("time_on_client",
+                                    time.mktime(time.strptime(line[-1], "%Y_%m_%d-%H_%M_%S")))
                 except ValueError:
                     pass
 

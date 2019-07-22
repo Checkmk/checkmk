@@ -62,6 +62,16 @@ def get_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
     return piggyback_data
 
 
+def get_source_and_piggyback_hosts():
+    """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
+    # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
+    for piggyback_dir in cmk.utils.paths.piggyback_dir.glob("*"):  # pylint: disable=no-member
+        piggybacked_host = piggyback_dir.name
+        for source_host, _piggyback_file_path in get_piggyback_files(
+                cmk_base.config.piggyback_max_cachefile_age, piggybacked_host):
+            yield source_host, piggybacked_host
+
+
 def has_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
     return get_piggyback_files(piggyback_max_cachefile_age, hostname) != []
 

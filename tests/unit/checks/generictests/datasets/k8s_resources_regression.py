@@ -17,7 +17,7 @@ checks = {
         (0, 'Limit: 0.500', [('k8s_cpu_limit', 0.5)]),
         (0, 'Allocatable: 0.940', [('k8s_cpu_allocatable', 0.9400000000000001)]),
         (0, 'Capacity: 1.000', [('k8s_cpu_capacity', 1.0)]),
-        (0, 'Usage: 21.3%', [('k8s_cpu_usage', 100.0 * 0.200 / 0.940)]),
+        (0, 'Usage: 21.28%', [('k8s_cpu_usage', 100.0 * 0.200 / 0.940)]),
     ])],
     'memory': [(None, {}, [
         (0, 'Request: 0.00 B', [('k8s_memory_request', 0.0)]),

@@ -113,7 +113,7 @@ unit_info["%"] = {
     "title": _("%"),
     "description": _("Percentage (0...100)"),
     "symbol": _("%"),
-    "render": cmk.utils.render.percent,
+    "render": lambda v: cmk.utils.render.percent(v, scientific_notation=True),
 }
 
 unit_info["s"] = {
@@ -269,7 +269,7 @@ unit_info["ppm"] = {
 unit_info["%/m"] = {
     "title": _("Percent Per Meter"),
     "symbol": _("%/m"),
-    "render": lambda v: cmk.utils.render.percent(v) + _("/m"),
+    "render": lambda v: cmk.utils.render.percent(v, scientific_notation=True) + _("/m"),
 }
 
 unit_info["bar"] = {

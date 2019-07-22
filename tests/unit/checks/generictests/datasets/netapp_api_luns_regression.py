@@ -30,7 +30,7 @@ checks = {
         'trend_range': 24,
         'levels': (80.0, 90.0),
         'trend_perfdata': True
-    }, [(1, '83.6% used (501.91 of 600.04 GB), trend: 0.00 B / 24 hours',
+    }, [(1, '83.65% used (501.91 of 600.04 GB), trend: 0.00 B / 24 hours',
          [('crm_dblogs_lu01', 513958.37890625, 491551.34765625, 552995.2661132812, 0,
            614439.1845703125), ('fs_size', 614439.1845703125, None, None, None, None),
           ('growth', 0.0, None, None, None, None), ('trend', 0, None, None, 0,
@@ -40,7 +40,7 @@ checks = {
              'trend_range': 24,
              'levels': (80.0, 90.0),
              'trend_perfdata': True
-         }, [(1, '89.5% used (2.15 of 2.40 TB), trend: 0.00 B / 24 hours',
+         }, [(1, '89.53% used (2.15 of 2.40 TB), trend: 0.00 B / 24 hours',
               [('crm_dbprod_lu01', 2253024.93359375, 2013308.47265625, 2264972.0317382812, 0,
                 2516635.5908203125), ('fs_size', 2516635.5908203125, None, None, None, None),
                ('growth', 0.0, None, None, None, None),
@@ -50,7 +50,7 @@ checks = {
              'trend_range': 24,
              'levels': (80.0, 90.0),
              'trend_perfdata': True
-         }, [(1, '83.4% used (542.04 of 650.06 GB), trend: 0.00 B / 24 hours',
+         }, [(1, '83.38% used (542.04 of 650.06 GB), trend: 0.00 B / 24 hours',
               [('crm_dbtemp_lu01', 555052.578125, 532529.6484375, 599095.8544921875, 0,
                 665662.060546875), ('fs_size', 665662.060546875, None, None, None, None),
                ('growth', 0.0, None, None, None, None),

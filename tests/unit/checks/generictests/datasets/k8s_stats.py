@@ -28,7 +28,7 @@ checks = {
         'show_reserved': False,
         'trend_perfdata': True,
         'trend_range': 24
-    }, [(0, '37.6% used (10.87 of 28.89 GB), trend: 0.00 B / 24 hours',
+    }, [(0, '37.63% used (10.87 of 28.89 GB), trend: 0.00 B / 24 hours',
          [(u'/dev/sda1', 11133.41015625, 23668.284375, 26626.819921875, 0, 29585.35546875),
           ('fs_size', 29585.35546875, None, None, None, None),
           ('growth', 0.0, None, None, None, None), ('trend', 0, None, None, 0, 1232.72314453125),
@@ -43,7 +43,7 @@ checks = {
                'show_reserved': False,
                'trend_perfdata': True,
                'trend_range': 24
-           }, [(0, '38.2% used (3.73 of 9.76 GB), trend: 0.00 B / 24 hours',
+           }, [(0, '38.21% used (3.73 of 9.76 GB), trend: 0.00 B / 24 hours',
                 [(u'shm', 3817.31640625, 7991.828125, 8990.806640625, 0, 9989.78515625),
                  ('fs_size', 9989.78515625, None, None, None, None),
                  ('growth', 0.0, None, None, None, None),

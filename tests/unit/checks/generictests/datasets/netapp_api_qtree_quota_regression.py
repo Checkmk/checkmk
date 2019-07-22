@@ -97,7 +97,7 @@ checks = {
              'show_reserved': False,
              'levels_low': (50.0, 60.0),
              'trend_perfdata': True
-         }, [(0, '5.0% used (1.51 of 30.00 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '5.02% used (1.51 of 30.00 GB), trend: 0.00 B / 24 hours',
               [('FD-MIS-Drop$', 1543.28515625, 24576.0, 27648.0, 0, 30720.0),
                ('fs_size', 30720.0, None, None, None, None), ('growth', 0.0, None, None, None,
                                                               None),
@@ -127,7 +127,7 @@ checks = {
              'show_reserved': False,
              'levels_low': (50.0, 60.0),
              'trend_perfdata': True
-         }, [(0, '0.837% used (42.86 MB of 5.00 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '0.84% used (42.86 MB of 5.00 GB), trend: 0.00 B / 24 hours',
               [('fd-interface-BCLONE', 42.85546875, 4096.0, 4608.0, 0, 5120.0),
                ('fs_size', 5120.0, None, None, None, None), ('growth', 0.0, None, None, None, None),
                ('trend', 0, None, None, 0, 213.33333333333334)])]),
@@ -141,7 +141,7 @@ checks = {
              'show_reserved': False,
              'levels_low': (50.0, 60.0),
              'trend_perfdata': True
-         }, [(0, '18.4% used (940.89 MB of 5.00 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '18.38% used (940.89 MB of 5.00 GB), trend: 0.00 B / 24 hours',
               [('fd-interface-BOFA', 940.88671875, 4096.0, 4608.0, 0, 5120.0),
                ('fs_size', 5120.0, None, None, None, None), ('growth', 0.0, None, None, None, None),
                ('trend', 0, None, None, 0, 213.33333333333334)])]),
@@ -155,7 +155,7 @@ checks = {
              'show_reserved': False,
              'levels_low': (50.0, 60.0),
              'trend_perfdata': True
-         }, [(0, '33.3% used (5.00 of 15.00 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '33.33% used (5.00 of 15.00 GB), trend: 0.00 B / 24 hours',
               [('fd-interface-BPROD', 5119.0859375, 12288.0, 13824.0, 0, 15360.0),
                ('fs_size', 15360.0, None, None, None, None), ('growth', 0.0, None, None, None,
                                                               None),
@@ -170,7 +170,7 @@ checks = {
              'show_reserved': False,
              'levels_low': (50.0, 60.0),
              'trend_perfdata': True
-         }, [(0, '0.00916% used (96.00 kB of 1.00 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '0.009% used (96.00 kB of 1.00 GB), trend: 0.00 B / 24 hours',
               [('fd-interface-BRM', 0.09375, 819.2, 921.6, 0, 1024.0),
                ('fs_size', 1024.0, None, None, None, None), ('growth', 0.0, None, None, None, None),
                ('trend', 0, None, None, 0, 42.666666666666664)])]),
@@ -184,7 +184,7 @@ checks = {
              'show_reserved': False,
              'levels_low': (50.0, 60.0),
              'trend_perfdata': True
-         }, [(0, '0.0453% used (4.64 MB of 10.00 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '0.05% used (4.64 MB of 10.00 GB), trend: 0.00 B / 24 hours',
               [('fd-interface-BTEST', 4.640625, 8192.0, 9216.0, 0, 10240.0),
                ('fs_size', 10240.0, None, None, None, None), ('growth', 0.0, None, None, None,
                                                               None),
@@ -199,7 +199,7 @@ checks = {
              'show_reserved': False,
              'levels_low': (50.0, 60.0),
              'trend_perfdata': True
-         }, [(0, '45.0% used (4.50 of 10.00 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '45.02% used (4.50 of 10.00 GB), trend: 0.00 B / 24 hours',
               [('fd-interface-LEGACY', 4609.8828125, 8192.0, 9216.0, 0, 10240.0),
                ('fs_size', 10240.0, None, None, None, None), ('growth', 0.0, None, None, None,
                                                               None),
@@ -214,7 +214,7 @@ checks = {
              'show_reserved': False,
              'levels_low': (50.0, 60.0),
              'trend_perfdata': True
-         }, [(0, '61.9% used (6.19 of 10.00 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '61.87% used (6.19 of 10.00 GB), trend: 0.00 B / 24 hours',
               [('fd-interface-TCLONE', 6335.41015625, 8192.0, 9216.0, 0, 10240.0),
                ('fs_size', 10240.0, None, None, None, None), ('growth', 0.0, None, None, None,
                                                               None),

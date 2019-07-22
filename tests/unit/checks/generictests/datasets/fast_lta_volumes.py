@@ -15,7 +15,7 @@ discovery = {'': [(u'Archiv_Test', {})]}
 checks = {'': [(u'Archiv_Test',
                 {},
                 [(0,
-                  '1% used (9.31 of 931.32 GB), trend: 0.00 B / 24 hours',
+                  '1.0% used (9.31 of 931.32 GB), trend: 0.00 B / 24 hours',
                   [(u'Archiv_Test',
                     9536.7431640625,
                     762939.453125,

@@ -269,6 +269,7 @@ is_cmc = _config.is_cmc
 
 get_age_human_readable = lambda secs: str(render.Age(secs))
 get_bytes_human_readable = render.fmt_bytes
+get_percent_human_readable = render.percent
 quote_shell_string = _utils.quote_shell_string
 
 
@@ -333,16 +334,6 @@ def get_relative_date_human_readable(timestamp):
     if timestamp > now:
         return "in " + get_age_human_readable(timestamp - now)
     return get_age_human_readable(now - timestamp) + " ago"
-
-
-# TODO: Replace by some render.* function / move to render module?
-def get_percent_human_readable(perc, precision=2):
-    """Format perc (0 <= perc <= 100 + x) so that precision
-    digits are being displayed. This avoids a "0.00%" for
-    very small numbers."""
-    if abs(perc) > 4:
-        return "%.1f%%" % perc
-    return "%.3g%%" % perc
 
 
 #

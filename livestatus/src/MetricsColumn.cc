@@ -30,7 +30,7 @@
 #include <iterator>
 #include "Metric.h"
 #include "Object.h"
-#include "RRDInfoCache.h"
+#include "RRDInfo.h"
 #include "State.h"
 #include "cmc.h"
 #endif

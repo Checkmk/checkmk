@@ -27,7 +27,7 @@
 
 #ifdef CMC
 #include "Object.h"
-#include "RRDInfoCache.h"
+#include "RRDInfo.h"
 #include "State.h"
 #include "cmc.h"
 #else

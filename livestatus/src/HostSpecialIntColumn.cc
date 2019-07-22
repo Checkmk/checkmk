@@ -63,22 +63,17 @@ int32_t HostSpecialIntColumn::getValue(Row row,
     if (auto hst = columnData<host>(row)) {
         switch (_type) {
             case Type::real_hard_state:
-                if (hst->current_state == 0) {
+                if (hst->current_state == HOST_UP) {
                     return 0;
                 }
-                if (hst->state_type == HARD_STATE) {
-                    return hst->current_state;
-                }
-                return hst->last_hard_state;
-
+                return hst->state_type == HARD_STATE ? hst->current_state
+                                                     : hst->last_hard_state;
             case Type::pnp_graph_present:
                 return pnpgraph_present(_mc, hst->name,
                                         dummy_service_description());
-
-            case Type::mk_inventory_last: {
+            case Type::mk_inventory_last:
                 return static_cast<int32_t>(mk_inventory_last(
                     _mc->mkInventoryPath() + "/" + hst->name));
-            }
         }
     }
 #endif

@@ -122,13 +122,14 @@ def check_websphere_mq_queues(item, params, parsed):
                                human_readable_func=get_percent_human_readable,
                                infoname="Of max. %d messages" % max_depth)
 
-        if data.get("time_on_client") and \
-           "LGETDATE" in data and "LGETTIME" in data:
+        if data.get("time_on_client") and "LGETDATE" in data and "LGETTIME" in data:
+            lgetdate = data["LGETDATE"]
+            lgettime = data["LGETTIME"]
 
             params = params.get("messages_not_processed", {})
 
-            if cur_depth and data["LGETDATE"] and data["LGETTIME"]:
-                time_str = "%s %s" % (data['LGETDATE'], data['LGETTIME'])
+            if cur_depth and lgetdate and lgettime:
+                time_str = "%s %s" % (lgetdate, lgettime)
                 time_diff  = data["time_on_client"] - \
                     time.mktime(time.strptime(time_str, "%Y-%m-%d %H.%M.%S"))
 

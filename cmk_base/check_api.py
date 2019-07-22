@@ -407,7 +407,8 @@ def check_levels(value,
                  scale=1.0,
                  statemarkers=False,
                  human_readable_func=None,
-                 infoname=None):
+                 infoname=None,
+                 boundaries=None):
     """Generic function for checking a value against levels
 
     This also supports predictive levels.
@@ -450,6 +451,7 @@ def check_levels(value,
                          - get_timestamp_human_readable
                          - get_relative_date_human_readable
     infoname: Perf value name for infotext like a title.
+    boundaries: Add minimum and maximum to performance data.
     """
     unit_info = ""
     if unit.startswith('/'):
@@ -512,7 +514,11 @@ def check_levels(value,
         infotext += state_markers[state]
 
     if dsname:
-        perfdata = [(dsname, value, levels[0], levels[1])]
+        if isinstance(boundaries, tuple) and len(boundaries) == 2:
+            min_, max_ = map(scale_value, boundaries)
+            perfdata = [(dsname, value, levels[0], levels[1], min_, max_)]
+        else:
+            perfdata = [(dsname, value, levels[0], levels[1])]
         if ref_value:
             perfdata.append(('predict_' + dsname, ref_value))
     else:

@@ -85,10 +85,10 @@ def check_netapp_api_volumes(item, params, parsed):
         if protocol not in perf_protocols:
             continue
         for mode in ["read", "write", "other"]:
-            for field, format_text in [
-                ("data", None),
-                ("ops", "%s: %.2f 1/s"),
-                ("latency", "%s: %.2f ms"),
+            for field, format_func in [
+                ("data", get_bytes_human_readable),
+                ("ops", lambda x: "%.2f 1/s" % x),
+                ("latency", lambda x: "%s: %.2f ms" % x),
             ]:
                 key = _create_key(protocol, mode, field)
                 value = volume.get(key)
@@ -139,10 +139,7 @@ def check_netapp_api_volumes(item, params, parsed):
                                 else:
                                     divisor = 1000.0
                                 delta = delta / (divisor * base[_create_key(protocol, mode, "ops")])
-                            if format_text:
-                                infotexts.append(format_text % (key, delta))
-                            else:
-                                infotexts.append("%s: %s" % (key, get_bytes_human_readable(delta)))
+                            infotexts.append("%s: %s" % (key, format_func(delta)))
                     except MKCounterWrapped:
                         counter_wrapped = True
 

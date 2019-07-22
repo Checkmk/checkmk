@@ -102,47 +102,25 @@ def check_websphere_mq_queues(item, params, parsed):
             }
 
         data = parsed[item]
+
         cur_depth = data['cur_depth']
-        infotext = "%d" % cur_depth
+        yield check_levels(cur_depth,
+                           "queue",
+                           params.get("message_count", (None, None)),
+                           human_readable_func=lambda x: "%d" % x,
+                           infoname="Messages in queue")
 
-        max_depth = None
-        if data.get('max_depth'):
-            state_perc = 0
-            max_depth = data['max_depth']
-            infotext += "/%d" % max_depth
-
+        max_depth = data.get('max_depth')
+        if max_depth:
+            # Just for ordering:
+            # 1. message count
+            # 2. message count percent
             used_perc = float(cur_depth) / max_depth * 100
-            info_perc = "%.1f%%" % used_perc
-
-            if params.get("message_count_perc"):
-                warn_perc, crit_perc = params['message_count_perc']
-                if used_perc >= crit_perc:
-                    state_perc = 2
-                elif used_perc >= warn_perc:
-                    state_perc = 1
-
-        state = 0
-        infotext += " messages in queue"
-        perfdata = [("queue", cur_depth, None, None, None, max_depth)]
-
-        if params.get("message_count"):
-            warn, crit = params['message_count']
-            if cur_depth >= crit:
-                state = 2
-            elif cur_depth >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %d/%d)" % (warn, crit)
-
-            perfdata = [("queue", cur_depth, warn, crit, None, max_depth)]
-
-        yield state, infotext, perfdata
-
-        if max_depth is not None:
-            if state_perc:
-                info_perc += " (warn/crit at %s%%/%s%%)" % (warn_perc, crit_perc)
-
-            yield state_perc, info_perc
+            yield check_levels(used_perc,
+                               None,
+                               params.get("message_count_perc", (None, None)),
+                               human_readable_func=get_percent_human_readable,
+                               infoname="Of max. %d messages" % max_depth)
 
         if data.get("time_on_client") and \
            "LGETDATE" in data and "LGETTIME" in data:

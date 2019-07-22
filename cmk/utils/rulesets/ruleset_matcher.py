@@ -68,6 +68,10 @@ class RulesetMatchObject(object):
         kwargs = ", ".join(["%s=%r" % e for e in self.to_dict().iteritems()])
         return "RulesetMatchObject(%s)" % kwargs
 
+    def service_cache_id(self):
+        # type: () -> Tuple
+        return (self.service_description,)
+
 
 class RulesetMatcher(object):
     """Performing matching on host / service rulesets
@@ -171,27 +175,27 @@ class RulesetMatcher(object):
                                                                        with_foreign_hosts,
                                                                        is_binary=is_binary)
 
-        for value, hosts, service_conditions in optimized_ruleset:
+        for value, hosts, service_description_condition in optimized_ruleset:
             if match_object.host_name not in hosts:
                 continue
 
             if match_object.service_description is None:
                 continue
 
-            descr_cache_id = match_object.service_description, service_conditions
-            if descr_cache_id in self._service_match_cache:
-                match = self._service_match_cache[descr_cache_id]
+            service_cache_id = (match_object.service_cache_id(), service_description_condition)
+            if service_cache_id in self._service_match_cache:
+                match = self._service_match_cache[service_cache_id]
             else:
-                match = self._matches_service_conditions(service_conditions,
+                match = self._matches_service_conditions(service_description_condition,
                                                          match_object.service_description)
-                self._service_match_cache[descr_cache_id] = match
+                self._service_match_cache[service_cache_id] = match
 
             if match:
                 yield value
 
-    def _matches_service_conditions(self, service_conditions, service_description):
+    def _matches_service_conditions(self, service_description_condition, service_description):
         # type: (Tuple[bool, Pattern[Text]], Text) -> bool
-        negate, pattern = service_conditions
+        negate, pattern = service_description_condition
         if pattern.match(service_description) is not None:
             return not negate
         return negate

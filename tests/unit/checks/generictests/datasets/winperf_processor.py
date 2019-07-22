@@ -63,7 +63,7 @@ checks = {
     'util': [(None, {
         'levels': (90, 95)
     }, [
-        (2, 'Total CPU: 100.0% (warn/crit at 90.0%/95.0%)', [
+        (2, 'Total CPU: 100% (warn/crit at 90.0%/95.0%)', [
             ('util', 99.99983122362869, 90, 95, 0, 4),
         ]),
         (0, 'user perc: 0.0 %', [

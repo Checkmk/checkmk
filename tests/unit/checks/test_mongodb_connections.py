@@ -10,13 +10,13 @@ pytestmark = pytest.mark.checks
         ([("current", "1"), ("available", "1"), ("totalCreated", "1")
          ], 0, 'Used connections: 1', 'connections', 1, 0, 'Used percentage: 50.0%'),
         ([("current", "10"), ("available", "200"), ("totalCreated", "25007")
-         ], 0, 'Used connections: 10', 'connections', 10, 0, 'Used percentage: 4.8%'),
+         ], 0, 'Used connections: 10', 'connections', 10, 0, 'Used percentage: 4.76%'),
         ([("current", 1.1), ("available", "1"), ("totalCreated", "1")
          ], 0, 'Used connections: 1', 'connections', 1, 0, 'Used percentage: 50.0%'),
         ([("current", "10"), ("available", 200.1), ("totalCreated", "25007")
-         ], 0, 'Used connections: 10', 'connections', 10, 0, 'Used percentage: 4.8%'),
+         ], 0, 'Used connections: 10', 'connections', 10, 0, 'Used percentage: 4.76%'),
         ([("current", "10"), ("available", "200"), ("totalCreated", 25007.1)
-         ], 0, 'Used connections: 10', 'connections', 10, 0, 'Used percentage: 4.8%'),
+         ], 0, 'Used connections: 10', 'connections', 10, 0, 'Used percentage: 4.76%'),
         ([("current", "a"), ("available", "10"), ("totalCreated", "257")], 3, '', '', -1, -1, ''),
         ([("current", "1"), ("available", "a"), ("totalCreated", "257")], 3, '', '', -1, -1, ''),
         ([("current", "1"), ("available", "10"), ("totalCreated", "a")], 3, '', '', -1, -1, ''),

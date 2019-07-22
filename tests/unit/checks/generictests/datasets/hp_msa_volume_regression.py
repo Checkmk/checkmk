@@ -57,7 +57,7 @@ checks = {
             'levels_low': (50.0, 60.0),
             'trend_perfdata': True
         }, [(0, u'A (RAID0)', []),
-            (0, '24.8% used (23.06 of 93.13 GB), trend: 0.00 B / 24 hours',
+            (0, '24.76% used (23.06 of 93.13 GB), trend: 0.00 B / 24 hours',
              [(u'VMFS_ISO', 23616, 76291.2, 85827.6, 0, 95364),
               ('fs_size', 95364, None, None, None, None), ('growth', 0.0, None, None, None, None),
               ('trend', 0, None, None, 0, 3973)])]),
@@ -72,7 +72,7 @@ checks = {
             'levels_low': (50.0, 60.0),
             'trend_perfdata': True
         }, [(0, u'A (RAID0)', []),
-            (0, '57.8% used (1.16 of 2.00 TB), trend: 0.00 B / 24 hours',
+            (0, '57.81% used (1.16 of 2.00 TB), trend: 0.00 B / 24 hours',
              [(u'VMFS_01', 1212896, 1678313.6, 1888102.8, 0, 2097892),
               ('fs_size', 2097892, None, None, None, None), ('growth', 0.0, None, None, None, None),
               ('trend', 0, None, None, 0, 87412)])]),
@@ -88,7 +88,7 @@ checks = {
             'trend_perfdata': True
         },
          [(0, u'A (RAID0)', []),
-          (2, '91.4% used (1.83 of 2.00 TB), (warn/crit at 80.0%/90.0%), trend: 0.00 B / 24 hours',
+          (2, '91.37% used (1.83 of 2.00 TB), (warn/crit at 80.0%/90.0%), trend: 0.00 B / 24 hours',
            [(u'VMFS_02', 1916852, 1678236.8, 1888016.4, 0, 2097796),
             ('fs_size', 2097796, None, None, None, None), ('growth', 0.0, None, None, None, None),
             ('trend', 0, None, None, 0, 87408)])]),
@@ -103,7 +103,7 @@ checks = {
             'levels_low': (50.0, 60.0),
             'trend_perfdata': True
         }, [(0, u'A (RAID0)', []),
-            (0, '78.8% used (322.78 of 409.72 GB), trend: 0.00 B / 24 hours',
+            (0, '78.78% used (322.78 of 409.72 GB), trend: 0.00 B / 24 hours',
              [(u'VMFS_VDI_01', 330528, 335644.8, 377600.4, 0, 419556),
               ('fs_size', 419556, None, None, None, None), ('growth', 0.0, None, None, None, None),
               ('trend', 0, None, None, 0, 17481)])])

@@ -326,7 +326,7 @@ class RulesetMode(WatoMode):
                     if ruleset.search_matching_rules:
                         num_rules = "%d/%d" % (len(ruleset.search_matching_rules), num_rules)
 
-                    html.div(num_rules,
+                    html.div("%d" % num_rules,
                              class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"])
                     if not config.wato_hide_help_in_lists and ruleset.help():
                         html.help(ruleset.help())

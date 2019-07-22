@@ -42,7 +42,7 @@ std::vector<std::string> MetricsColumn::getValue(
 #ifdef CMC
     if (auto object = columnData<Object>(row)) {
         if (object->isEnabled(State::Enable::performance_data)) {
-            auto names = object->rrdInfo()._names;
+            auto names = object->rrdInfo().names_;
             std::transform(
                 names.begin(), names.end(), std::back_inserter(metrics),
                 [](const Metric::MangledName &name) { return name.string(); });

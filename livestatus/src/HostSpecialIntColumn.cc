@@ -53,7 +53,7 @@ int32_t HostSpecialIntColumn::getValue(Row row,
                            : state->_last_hard_state;
             }
             case Type::pnp_graph_present:
-                return object->rrdInfo()._names.empty() ? 0 : 1;
+                return object->rrdInfo().names_.empty() ? 0 : 1;
             case Type::mk_inventory_last:
                 return static_cast<int32_t>(mk_inventory_last(
                     _mc->mkInventoryPath() + "/" + object->host()->name()));

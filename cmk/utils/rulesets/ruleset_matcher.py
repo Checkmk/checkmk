@@ -40,24 +40,12 @@ from cmk.utils.exceptions import MKGeneralException
 
 class RulesetMatchObject(object):
     """Wrapper around dict to ensure the ruleset match objects are correctly created"""
-    __slots__ = [
-        "host_name", "host_tags", "host_folder", "host_labels", "service_description",
-        "service_labels"
-    ]
+    __slots__ = ["host_name", "service_description", "service_labels"]
 
-    def __init__(self,
-                 host_name=None,
-                 host_tags=None,
-                 host_folder=None,
-                 host_labels=None,
-                 service_description=None,
-                 service_labels=None):
-        # type: (Optional[str], Optional[Dict[Text, Text]], Optional[str], Optional[Dict[Text, Text]], Optional[Text], Optional[Dict[Text, Text]]) -> None
+    def __init__(self, host_name=None, service_description=None, service_labels=None):
+        # type: (Optional[str], Optional[Text], Optional[Dict[Text, Text]]) -> None
         super(RulesetMatchObject, self).__init__()
         self.host_name = host_name
-        self.host_tags = host_tags
-        self.host_folder = host_folder
-        self.host_labels = host_labels
         self.service_description = service_description
         self.service_labels = service_labels
 

@@ -854,34 +854,41 @@ class Rule(object):
         if host is None:
             raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
 
-        service_labels = None  # TOOD: Need to get the service labels
+        service_labels = None  # TODO: Need to get the service labels
         match_object = ruleset_matcher.RulesetMatchObject(
             host_name=hostname,
-            host_folder=host_folder.path_for_rule_matching(),
-            host_tags=host.tag_groups(),
-            host_labels=host.labels(),
             service_description=service_description,
             service_labels=service_labels,
         )
 
-        for reason in self._get_mismatch_reasons_of_match_object(match_object, host.tags()):
+        for reason in self._get_mismatch_reasons_of_match_object(
+                match_object,
+                host_folder=host_folder.path_for_rule_matching(),
+                host_tag_list=host.tags(),
+                host_labels=host.labels()):
             yield reason
 
     def matches_item(self, item):
         match_object = ruleset_matcher.RulesetMatchObject(
             host_name=None,
-            host_folder="/",
             service_description=item,
         )
-        return any(self._get_mismatch_reasons_of_match_object(match_object, host_tags=[]))
+        return any(
+            self._get_mismatch_reasons_of_match_object(
+                match_object,
+                host_folder="/",
+                host_tag_list=[],
+                host_labels={},
+            ))
 
-    def _get_mismatch_reasons_of_match_object(self, match_object, host_tags):
+    def _get_mismatch_reasons_of_match_object(self, match_object, host_folder, host_tag_list,
+                                              host_labels):
         # TODO:
         # - What about the host_label_rules and service_label_rules?
         # - The autochecks_manager also needs to be available here!
         # Both is only working with cmk_base code which has the checks and config loaded.
         label_manager = LabelManager(
-            explicit_host_labels={match_object.host_name: match_object.host_labels},
+            explicit_host_labels={match_object.host_name: host_labels},
             host_label_rules=[],
             service_label_rules=[],
             autochecks_manager=None,
@@ -889,8 +896,8 @@ class Rule(object):
 
         matcher = ruleset_matcher.RulesetMatcher(
             tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags),
-            host_tag_lists={match_object.host_name: host_tags},
-            host_paths={match_object.host_name: match_object.host_folder},
+            host_tag_lists={match_object.host_name: host_tag_list},
+            host_paths={match_object.host_name: host_folder},
             labels=label_manager,
             all_configured_hosts={match_object.host_name},
             clusters_of={},

@@ -132,7 +132,7 @@ loaded_with_language = False
 # will be displayed.
 multisite_painter_options = {}
 multisite_layouts = {}
-multisite_commands = {}
+multisite_commands = []
 multisite_datasources = {}
 multisite_painters = {}
 multisite_sorters = {}

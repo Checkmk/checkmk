@@ -486,7 +486,7 @@ command_registry = CommandRegistry()
 def register_legacy_command(spec):
     ident = re.sub("[^a-zA-Z]", "", spec["title"]).lower()
     cls = type(
-        "LegacyCommand%s" % ident.title(), (Command,), {
+        "LegacyCommand%s" % str(ident).title(), (Command,), {
             "_ident": ident,
             "_spec": spec,
             "ident": property(lambda s: s._ident),

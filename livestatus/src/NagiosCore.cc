@@ -42,6 +42,7 @@ void NagiosPaths::dump(Logger *logger) {
     Notice(logger) << "logwatch path = '" << _mk_logwatch << "'";
     Notice(logger) << "log file path = '" << _logfile << "'";
     Notice(logger) << "mkeventd socket path = '" << _mkeventd_socket << "'";
+    Notice(logger) << "rrdcached socket path = '" << _rrdcached_socket << "'";
 }
 
 NagiosCore::NagiosCore(NagiosPaths paths, const NagiosLimits &limits,
@@ -176,6 +177,9 @@ std::string NagiosCore::logArchivePath() {
     extern char *log_archive_path;
     return log_archive_path;
 }
+std::string NagiosCore::rrdcachedSocketPath() {
+    return _paths._rrdcached_socket;
+}
 
 Encoding NagiosCore::dataEncoding() { return _data_encoding; }
 size_t NagiosCore::maxResponseSize() { return _limits._max_response_size; }
@@ -195,6 +199,8 @@ AuthorizationKind NagiosCore::groupAuthorization() const {
 }
 
 Logger *NagiosCore::loggerLivestatus() { return _logger_livestatus; }
+
+Logger *NagiosCore::loggerRRD() { return loggerLivestatus(); }
 
 Triggers &NagiosCore::triggers() { return _triggers; }
 

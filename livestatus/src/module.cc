@@ -881,12 +881,15 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
         }
     }
 
+    std::string sp{fl_paths._socket};
+    auto slash = sp.rfind('/');
+    auto prefix = slash == std::string::npos ? "" : sp.substr(0, slash + 1);
     if (fl_paths._mkeventd_socket.empty()) {
-        std::string sp{fl_paths._socket};
-        auto slash = sp.rfind('/');
-        fl_paths._mkeventd_socket =
-            (slash == std::string::npos ? "" : sp.substr(0, slash + 1)) +
-            "mkeventd/status";
+        fl_paths._mkeventd_socket = prefix + "mkeventd/status";
+    }
+    // TODO(sp) Make this configurable.
+    if (fl_paths._rrdcached_socket.empty()) {
+        fl_paths._rrdcached_socket = prefix + "rrdcached.sock";
     }
 }
 

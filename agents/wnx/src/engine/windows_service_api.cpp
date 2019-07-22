@@ -476,7 +476,7 @@ int ExecPatchHash() {
     XLOG::setup::EnableDebugLog(true);
     XLOG::setup::EnableTraceLog(true);
     XLOG::l.i("Patching...");
-    cma::cfg::upgrade::PatchIniWithDatHash();
+    cma::cfg::upgrade::PatchOldFilesWithDatHash();
     XLOG::l.i("End of!");
     return 0;
 }

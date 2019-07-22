@@ -43,6 +43,7 @@ constexpr const wchar_t* kDefaultMainConfig = L"check_mk.yml";
 
 constexpr const wchar_t* kCapFile = L"plugins.cap";
 constexpr const wchar_t* kIniFile = L"check_mk.ini";
+constexpr const wchar_t* kAuStateFile = L"cmk-update-agent.state";
 
 constexpr std::wstring_view kDatFile = L"checkmk.dat";
 constexpr std::wstring_view kUserYmlFile = L"check_mk.user.yml";

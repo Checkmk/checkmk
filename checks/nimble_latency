@@ -113,7 +113,10 @@ def _check_nimble_latency(item, params, data, ty):
 
         state, state_count = params[key]
         if rate > state_count:
-            yield state, "%s: %d" % (title, rate)
+            level_info = ""
+            if state:
+                level_info = " (level at %s)" % state_count
+            yield state, "%s: %d%s" % (title, rate, level_info)
         else:
             continue
 

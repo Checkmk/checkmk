@@ -361,6 +361,15 @@ call check_watest.cmd watest
     <None Include="..\test_files\config\check_mk_dev_malformed.yml" />
     <None Include="..\test_files\config\check_mk_dev_minimum.yml" />
     <None Include="..\test_files\config\check_mk_dev_utf16.yml" />
+    <None Include="..\test_files\unit_test\checkmk.hash.dat" />
+    <None Include="..\test_files\unit_test\check_mk.hash.ini" />
+    <Text Include="..\test_files\unit_test\cmk-update-agent.state">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </Text>
     <None Include="..\wnxtest\wnxtest.vcxproj" />
     <None Include="check_watest.cmd" />
     <None Include="packages.config" />

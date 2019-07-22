@@ -21,7 +21,7 @@ constexpr std::string_view kBakeryMarker =
 enum class Force { no, yes };
 bool UpgradeLegacy(Force force_upgrade = Force::no);
 
-void PatchIniWithDatHash();  // the part of engine
+bool PatchOldFilesWithDatHash();  // the part of engine
 
 // optionally move protocol file from old location to new one
 // return true if location are different
@@ -126,12 +126,25 @@ std::filesystem::path ConstructProtocolFileName(
 
 // API to fix hash in 1.5 agent
 constexpr std::string_view kHashName = "hash";
+constexpr std::string_view kIniHashMarker = "# agent hash: ";
+constexpr std::string_view kStateHashMarker = "'installed_aghash': '";
 std::filesystem::path FindOldIni();
+std::filesystem::path FindOldState();
 std::string GetNewHash(const std::filesystem::path& dat) noexcept;
-std::string GetOldHash(const std::filesystem::path& ini) noexcept;
+
+std::string GetOldHashFromIni(const std::filesystem::path& ini) noexcept;
+std::string GetOldHashFromState(const std::filesystem::path& state) noexcept;
+std::string GetOldHashFromFile(const std::filesystem::path& ini,
+                               std::string_view marker) noexcept;
+
+bool PatchHashInFile(const std::filesystem::path& ini, const std::string& hash,
+                     std::string_view marker) noexcept;
 bool PatchIniHash(const std::filesystem::path& ini,
                   const std::string& hash) noexcept;
-
+bool PatchStateHash(const std::filesystem::path& ini,
+                    const std::string& hash) noexcept;
+std::filesystem::path FindOwnDatFile();
+std::filesystem::path ConstructDatFileName() noexcept;
 }  // namespace cma::cfg::upgrade
 
 #endif  // upgrade_h__

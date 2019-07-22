@@ -17,19 +17,121 @@
 
 namespace cma::cfg::upgrade {
 
+extern std::filesystem::path G_LegacyAgentPresetPath;
+void SetLegacyAgentPath(std::filesystem::path path);
+
+const std::string ini_expected = "b53c5b77c595ba7e";
+const std::string ini_name = "check_mk.hash.ini";
+
+const std::string state_expected = "a71dfa65aacb1b52";
+const std::string state_name = "cmk-update-agent.state";
+
+const std::string new_expected = "13dd8be2f9ad5894";
+const std::string dat_name = "checkmk.hash.dat";
+const std::string dat_defa_name = "checkmk.defa.hash.dat";
+
+TEST(UpgradeTest, GetHash) {
+    namespace fs = std::filesystem;
+    fs::path dir = cma::cfg::GetUserDir();
+    auto ini = dir / ini_name;
+    auto state = dir / state_name;
+    EXPECT_EQ(GetOldHashFromFile(ini, kIniHashMarker), ini_expected);
+    EXPECT_EQ(GetOldHashFromFile(state, kStateHashMarker), state_expected);
+
+    EXPECT_EQ(GetOldHashFromIni(ini), ini_expected);
+    EXPECT_EQ(GetOldHashFromState(state), state_expected);
+}
+
+TEST(UpgradeTest, GetDefaHash) {
+    namespace fs = std::filesystem;
+    fs::path dir = cma::cfg::GetUserDir();
+    auto dat = dir / dat_defa_name;
+    auto new_hash = GetNewHash(dat);
+    ASSERT_TRUE(new_hash.empty());
+    ASSERT_NO_THROW(GetNewHash("<GTEST>"));
+    auto new_weird_hash = GetNewHash("<GTEST>");
+    ASSERT_TRUE(new_weird_hash.empty());
+}
+
+TEST(UpgradeTest, Integration) {
+    ASSERT_TRUE(G_LegacyAgentPresetPath.empty());
+    tst::SafeCleanTempDir();
+    auto [legacy, target] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    SetLegacyAgentPath(legacy);
+    ON_OUT_OF_SCOPE(SetLegacyAgentPath(""););
+
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    auto state_dir = legacy / dirs::kState;
+    fs::create_directories(state_dir, ec);
+    ASSERT_EQ(ec.value(), 0);
+    fs::path dir = cma::cfg::GetUserDir();
+    auto ini = dir / ini_name;
+    fs::copy_file(ini, legacy / files::kIniFile,
+                  fs::copy_options::overwrite_existing, ec);
+    auto state = dir / state_name;
+    fs::copy_file(state, legacy / dirs::kState / files::kAuStateFile,
+                  fs::copy_options::overwrite_existing, ec);
+
+    // complicated preparation to testing
+    auto dat = FindOwnDatFile();
+    auto expected_dat_file = ConstructDatFileName();
+    auto dat_save = dat.u8string() + ".sav";
+    ON_OUT_OF_SCOPE({
+        if (dat.empty())
+            fs::remove(expected_dat_file, ec);
+        else
+            fs::rename(dat_save, dat);
+    });
+    fs::path test_dat = cma::cfg::GetUserDir();
+    if (dat.empty()) {
+        // create file
+        fs::copy_file(test_dat / dat_name, expected_dat_file,
+                      fs::copy_options::overwrite_existing, ec);
+
+    } else {
+        // backup
+        fs::copy_file(dat, dat_save, fs::copy_options::overwrite_existing, ec);
+        // overwrite
+        fs::copy_file(test_dat / dat_name, dat,
+                      fs::copy_options::overwrite_existing, ec);
+    }
+
+#if 0
+    fs::path install_ini = cma::cfg::GetFileInstallDir();
+    std::error_code ec;
+    fs::create_directories(install_ini, ec);
+    install_ini /= files::kIniFile;
+
+    auto backup_file = install_ini;
+    backup_file.replace_extension("in_");
+    fs::remove(backup_file, ec);
+    fs::copy_file(install_ini, backup_file, ec);
+    ON_OUT_OF_SCOPE(fs::rename(backup_file, install_ini, ec);)
+#endif
+
+    ASSERT_TRUE(PatchOldFilesWithDatHash());
+    {
+        auto state_hash =
+            GetOldHashFromState(legacy / dirs::kState / files::kAuStateFile);
+        EXPECT_EQ(state_hash, new_expected);
+    }
+    {
+        auto ini_hash = GetOldHashFromIni(legacy / files::kIniFile);
+        EXPECT_EQ(ini_hash, new_expected);
+    }
+}
+
 TEST(UpgradeTest, PatchIniHash) {
     namespace fs = std::filesystem;
     std::error_code ec;
-    const std::string old_expected = "b53c5b77c595ba7e";
-    const std::string new_expected = "13dd8be2f9ad5894";
-    const std::string ini_name = "check_mk.hash.ini";
-    const std::string dat_name = "checkmk.hash.dat";
     {
         fs::path dir = cma::cfg::GetUserDir();
         auto ini = dir / ini_name;
-        auto old_hash = GetOldHash(ini);
+        auto old_hash = GetOldHashFromIni(ini);
         ASSERT_TRUE(!old_hash.empty());
-        ASSERT_EQ(old_hash, old_expected);
+        ASSERT_EQ(old_hash, ini_expected);
 
         auto dat = dir / dat_name;
         auto new_hash = GetNewHash(dat);
@@ -54,7 +156,56 @@ TEST(UpgradeTest, PatchIniHash) {
         auto ret = PatchIniHash(ini, new_hash);
         EXPECT_TRUE(ret);
 
-        auto old_hash = GetOldHash(ini);
+        auto old_hash = GetOldHashFromIni(ini);
+        ASSERT_TRUE(!old_hash.empty());
+        ASSERT_EQ(old_hash, new_expected);
+    }
+
+#if 0
+    //
+    auto ini = FindOldIni();
+    std::error_code ec;
+    ASSERT_FALSE(ini.empty() || !fs::exists(ini, ec))
+        << "legacy agent must be installed";
+
+#endif
+    // std::string GetNewHash();
+    // bool InjectHashIntoIni(std::filesystem::path ini, std::string hash);
+}
+TEST(UpgradeTest, PatchStateHash) {
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    {
+        fs::path dir = cma::cfg::GetUserDir();
+        auto state = dir / state_name;
+        auto old_hash = GetOldHashFromState(state);
+        ASSERT_TRUE(!old_hash.empty());
+        ASSERT_EQ(old_hash, state_expected);
+
+        auto dat = dir / dat_name;
+        auto new_hash = GetNewHash(dat);
+        ASSERT_TRUE(!new_hash.empty());
+        ASSERT_EQ(new_hash, new_expected);
+    }
+
+    {
+        fs::path dir = cma::cfg::GetUserDir();
+        auto state = dir / state_name;
+        tst::SafeCleanTempDir();
+        auto [source, target] = tst::CreateInOut();
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+        auto dat = dir / dat_name;
+        auto new_hash = GetNewHash(dat);
+
+        fs::copy_file(state, target / state_name,
+                      fs::copy_options::overwrite_existing, ec);
+        fs::copy_file(dat, target / dat_name,
+                      fs::copy_options::overwrite_existing, ec);
+        auto ret = PatchStateHash(state, new_hash);
+        EXPECT_TRUE(ret);
+
+        auto old_hash = GetOldHashFromState(state);
         ASSERT_TRUE(!old_hash.empty());
         ASSERT_EQ(old_hash, new_expected);
     }

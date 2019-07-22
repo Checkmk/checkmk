@@ -198,7 +198,7 @@ def test_discover_exceptions(parsed, selector, error):
     (-1, (3, 6, 1, 0), int, "", (2, " (warn/crit below 1/0)")),
 ])
 def test_boundaries(value, levels, representation, unit, result):
-    assert check_api._check_boundaries(value, levels, representation, unit) == result
+    assert check_api._do_check_levels(value, levels, representation, unit) == result
 
 
 @pytest.mark.parametrize("value, dsname, params, kwargs, result", [

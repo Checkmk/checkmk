@@ -1000,7 +1000,7 @@ class TextAreaUnicode(TextUnicode):
         if value is None:
             value = ""  # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
-            func = 'cmk.valuespecs.textarea_resize(this, %s);' % json.dumps(html.get_theme())
+            func = 'cmk.valuespecs.textarea_resize(this);'
             attrs = {"onkeyup": func, "onmousedown": func, "onmouseup": func, "onmouseout": func}
             if html.request.has_var(varprefix):
                 rows = len(html.request.var(varprefix).splitlines())

@@ -551,7 +551,7 @@ check_results = [
         (1, "1.00 GB virtual: (warn/crit at 1.00 GB/2.00 GB)", [("vsz", 1050360, 1073741824,
                                                                  2147483648, None, None)]),
         (0, "296.14 MB physical", [("rss", 303252, 1073741824, 2147483648, None, None)]),
-        (1, "28.9% of total RAM: (warn/crit at 25.0%/50.0%)"),
+        (1, "28.92% of total RAM: (warn/crit at 25.0%/50.0%)"),
         (0, "0.0% CPU (15 min average: 0.0%)", [("pcpu", 0.0, None, None, None, None),
                                                 ("pcpuavg", 0.0, None, None, 0, 15)]),
         (0, "running for 27 h", []),

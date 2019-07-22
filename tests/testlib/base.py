@@ -108,6 +108,7 @@ class Scenario(object):
         self.config_cache = config.get_config_cache()
         self.config_cache.initialize()
 
-        monkeypatch.setattr(self.config_cache._autochecks_manager, "_autochecks", self._autochecks)
+        # TODO: Enable in near future
+        #monkeypatch.setattr(self.config_cache._autochecks_manager, "_autochecks", self._autochecks)
 
         return self.config_cache

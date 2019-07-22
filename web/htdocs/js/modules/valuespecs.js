@@ -224,19 +224,9 @@ function listof_get_new_entry_html_code(varprefix, magic, str_count)
     return html_code.replace(re, str_count);
 }
 
-// When deleting we do not fix up indices but simply
-// remove the according list entry and add an invisible
-// input element with the name varprefix + "_deleted_%nr"
 export function listof_delete(varprefix, nr) {
     var entry = document.getElementById(varprefix + "_entry_" + nr);
-
-    var input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "_" + varprefix + "_deleted_" + nr;
-    input.value = "1";
-
-    entry.parentNode.replaceChild(input, entry);
-
+    entry.parentNode.removeChild(entry);
     listof_update_indices(varprefix);
 }
 

@@ -293,7 +293,7 @@ std::wstring GetUserDir() noexcept {
 }
 
 std::wstring GetUpgradeProtocolDir() noexcept {
-    auto dir = details::G_ConfigInfo.getUserDir() / dirs::kInstall;
+    auto dir = details::G_ConfigInfo.getUserDir() / dirs::kPluginConfig;
     return dir;
 }
 

@@ -493,7 +493,15 @@ bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
     return true;
 }
 
+// testing block
+std::filesystem::path G_LegacyAgentPresetPath = "";
+void SetLegacyAgentPath(std::filesystem::path path) {
+    G_LegacyAgentPresetPath = path;
+}
+
 std::wstring FindLegacyAgent() {
+    if (!G_LegacyAgentPresetPath.empty()) return G_LegacyAgentPresetPath;
+
     namespace fs = std::filesystem;
     auto image_path = wtools::GetRegistryValue(
         L"SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", L"ImagePath",
@@ -510,7 +518,7 @@ std::wstring FindLegacyAgent() {
     if (!cma::tools::IsValidRegularFile(p)) {
         XLOG::d(
             "Agent is found in registry '{}', but absent on the disk."
-            "Assuming that agent is installed",
+            "Assuming that agent is NOT installed",
             p.u8string());
         return {};
     }
@@ -786,6 +794,9 @@ static void InfoOnStdio(bool force) {
                             XLOG::Colors::yellow);
 }
 
+// manually tested
+// may be removed
+// just to support old betas location of protocol.upgrade
 bool UpdateProtocolFile(std::wstring_view new_location,
                         std::wstring_view old_location) {
     if (new_location == old_location) return false;
@@ -809,58 +820,161 @@ bool UpdateProtocolFile(std::wstring_view new_location,
     return true;
 }
 
-std::filesystem::path FindOwnDatFile() {
+std::filesystem::path ConstructDatFileName() noexcept {
     namespace fs = std::filesystem;
     fs::path dat = GetRootDir();
     dat /= dirs::kFileInstallDir;
     dat /= files::kDatFile;
+    return dat;
+}
+
+std::filesystem::path FindOwnDatFile() {
+    namespace fs = std::filesystem;
+    auto dat = ConstructDatFileName();
     std::error_code ec;
     if (fs::exists(dat, ec)) return dat;
-
+    XLOG::l("dat files should be located at '{}'", dat.u8string());
     return {};
 }
 
-// This Function writes new hast from the dat
-// into old ini file to prevent further updates with 1.5 cmk-update-agent.exe
-void PatchIniWithDatHash() {
-    namespace fs = std::filesystem;
+static std::filesystem::path GetHashedIniName() {
     auto ini = FindOldIni();
     if (ini.empty()) {
         XLOG::l.t("INI file not found, patching is not required");
-        return;
+        return {};
     }
 
-    auto old_hash = GetOldHash(ini);
-    if (ini.empty()) {
+    auto old_ini_hash = GetOldHashFromIni(ini);
+    if (old_ini_hash.empty()) {
         XLOG::l.t("Hash in INI file '{}' not found, patching is not required",
-                  old_hash);
-        return;
+                  old_ini_hash);
+        return {};
     }
 
     XLOG::l.t("Patching of the ini '{}' initiated, old hash is '{}' ",
-              ini.u8string(), old_hash);
+              ini.u8string(), old_ini_hash);
+    return ini;
+}
+
+static std::string GetNewHash() {
     auto dat = FindOwnDatFile();
     if (dat.empty()) {
         XLOG::l("DAT file '{}' absent, this is bad", dat.u8string());
-        return;
+        return {};
     }
 
     auto new_hash = GetNewHash(dat);
     if (new_hash.empty()) {
         XLOG::l("Hash in DAT file '{} absent, this is bad too", dat.u8string());
-        return;
+        return {};
     }
+
+    return new_hash;
+}
+
+static std::filesystem::path GetHashedStateName() {
+    auto state = FindOldState();
+    if (state.empty()) {
+        XLOG::l.t("State file not found, patching is not required");
+        return {};
+    }
+
+    auto old_state_hash = GetOldHashFromState(state);
+    if (old_state_hash.empty()) {
+        XLOG::l.t("Hash in State file '{}' not found, patching is not required",
+                  old_state_hash);
+        return {};
+    }
+
+    XLOG::l.t("Patching of the state '{}' initiated, old hash is '{}' ",
+              state.u8string(), old_state_hash);
+    return state;
+}
+
+// This Function writes new hash from the dat
+// into old ini file to prevent further updates with 1.5 cmk-update-agent.exe
+bool PatchOldFilesWithDatHash() {
+    namespace fs = std::filesystem;
+    auto ini = GetHashedIniName();
+    auto state = GetHashedStateName();
+    if (ini.empty() || state.empty()) {
+        XLOG::l.i("NO NEED TO PATCH!");
+        return false;
+    }
+
+    auto new_hash = GetNewHash();
+    if (new_hash.empty()) return false;
+
     XLOG::t("Hash is '{}' ", new_hash);
 
-    auto ret = PatchIniHash(ini, new_hash);
-    if (!ret) {
-        XLOG::l("Failed to patch hash '{}' in INI '{}'", new_hash,
-                ini.u8string());
+    {
+        auto ret = PatchIniHash(ini, new_hash);
+        if (!ret) {
+            XLOG::l("Failed to patch hash '{}' in INI '{}'", new_hash,
+                    ini.u8string());
+            return false;
+        }
+
+        auto ini_hash = GetOldHashFromIni(ini);
+        XLOG::d.t("Now hash in '{}'is '{}'", ini.u8string(), ini_hash);
+    }
+    {
+        auto ret = PatchStateHash(state, new_hash);
+        if (!ret) {
+            XLOG::l("Failed to patch hash '{}' in state '{}'", new_hash,
+                    state.u8string());
+            return false;
+        }
+
+        auto state_hash = GetOldHashFromState(state);
+        XLOG::d.t("Now hash in '{}'is '{}'", state.u8string(), state_hash);
+    }
+    return true;
+}
+
+// this function is used to copy missing state files from the Legacy Agent to
+// THIS IS MANUALLY TESTED FUNCTION. Refactor only after adding unit tests.
+// Still, this function is temporary(to fix error in b3 beta) and may be removed
+// at any moment
+void RecoverOldStateFileWithPreemtiveHashPatch() {
+    namespace fs = std::filesystem;
+    XLOG::d.t(
+        "Attempt to recover of the state file. This feature is temporary");
+
+    fs::path path = FindLegacyAgent();
+    if (path.empty()) {
+        XLOG::d.i("Agent not found, quitting recover");
         return;
     }
 
-    auto ini_hash = GetOldHash(ini);
-    XLOG::d.t("Now hash in '{}'is '{}'", ini.u8string(), ini_hash);
+    auto old_state = path / dirs::kState / files::kAuStateFile;
+    std::error_code ec;
+    if (!fs::is_regular_file(old_state, ec)) {
+        XLOG::l.i("Error [{}] accessing'{}', no need to recover, quitting",
+                  ec.value(), old_state.u8string());
+        return;
+    }
+
+    fs::path new_path = cma::cfg::GetStateDir();
+    auto new_state = new_path / files::kAuStateFile;
+    if (fs::exists(new_path, ec) && fs::exists(new_state, ec)) {
+        XLOG::l.i("'{}' and '{}' exist: no need to recover",
+                  new_path.u8string(), new_state.u8string());
+        return;
+    }
+
+    // should not damage in any case
+    PatchOldFilesWithDatHash();
+
+    fs::create_directories(new_path, ec);
+    fs::copy_file(old_state, new_state, ec);
+
+    if (ec.value()) {
+        XLOG::l.i("Error [{}] during copy from '{}' to '{}'", ec.value(),
+                  old_state.u8string(), new_state.u8string());
+        return;
+    }
+    XLOG::l.i("Recovered '{}'", new_state.u8string());
 }
 
 // The only API entry DIRECTLY used in production
@@ -877,13 +991,19 @@ bool UpgradeLegacy(Force force_upgrade) {
     InfoOnStdio(force);
 
     auto protocol_dir = cma::cfg::GetUpgradeProtocolDir();
-    auto old_protocol_dir = cma::cfg::GetRootDir();
-    UpdateProtocolFile(protocol_dir, old_protocol_dir);
+    {
+        auto old_protocol_dir_1 = cma::cfg::GetRootDir();
+        UpdateProtocolFile(protocol_dir, old_protocol_dir_1);
+
+        auto old_protocol_dir_2 = cma::cfg::GetUserInstallDir();
+        UpdateProtocolFile(protocol_dir, old_protocol_dir_2);
+    }
 
     if (IsProtocolFileExists(protocol_dir) && !force) {
         XLOG::l.i(
             "Protocol File at '{}' exists, upgrade(migration) not required",
             wtools::ConvertToUTF8(protocol_dir));
+        RecoverOldStateFileWithPreemtiveHashPatch();
         return false;
     }
 
@@ -893,7 +1013,8 @@ bool UpgradeLegacy(Force force_upgrade) {
         return true;
     }
     XLOG::l.i("Legacy Agent is found in '{}'", wtools::ConvertToUTF8(path));
-    PatchIniWithDatHash();
+
+    PatchOldFilesWithDatHash();
 
     auto success = FindStopDeactivateLegacyAgent();
     if (!success) {
@@ -1162,6 +1283,15 @@ std::filesystem::path FindOldIni() {
     return path / files::kIniFile;
 }
 
+std::filesystem::path FindOldState() {
+    std::filesystem::path path = FindLegacyAgent();
+    if (path.empty()) {
+        XLOG::d.t("Legacy Agent is not found");
+        return {};
+    }
+    return path / dirs::kState / files::kAuStateFile;
+}
+
 std::string GetNewHash(const std::filesystem::path& dat) noexcept {
     try {
         auto yml = YAML::LoadFile(dat.u8string());
@@ -1196,7 +1326,8 @@ std::string ReadHash(std::fstream& ifs) noexcept {
     return {};
 }
 
-std::string GetOldHash(const std::filesystem::path& ini) noexcept {
+std::string GetOldHashFromFile(const std::filesystem::path& ini,
+                               std::string_view marker) noexcept {
     try {
         std::fstream ifs;
         ifs.open(ini,
@@ -1205,7 +1336,6 @@ std::string GetOldHash(const std::filesystem::path& ini) noexcept {
         std::string str((std::istreambuf_iterator<char>(ifs)),
                         std::istreambuf_iterator<char>());
 
-        const std::string_view marker = "# agent hash: ";
         auto pos = str.find(marker);
 
         if (pos == std::string::npos) return {};
@@ -1215,13 +1345,21 @@ std::string GetOldHash(const std::filesystem::path& ini) noexcept {
         return ReadHash(ifs);
     } catch (const std::exception& e) {
         XLOG::l("IO failed during reading hash from '{}', exception '{}' ",
-                e.what());
+                ini.u8string(), e.what());
         return {};
     }
 }
 
-bool PatchIniHash(const std::filesystem::path& ini,
-                  const std::string& hash) noexcept {
+std::string GetOldHashFromIni(const std::filesystem::path& ini) noexcept {
+    return GetOldHashFromFile(ini, kIniHashMarker);
+}
+
+std::string GetOldHashFromState(const std::filesystem::path& state) noexcept {
+    return GetOldHashFromFile(state, kStateHashMarker);
+}
+
+bool PatchHashInFile(const std::filesystem::path& ini, const std::string& hash,
+                     std::string_view marker) noexcept {
     try {
         std::fstream ifs;
         ifs.open(ini,
@@ -1230,7 +1368,6 @@ bool PatchIniHash(const std::filesystem::path& ini,
         std::string str((std::istreambuf_iterator<char>(ifs)),
                         std::istreambuf_iterator<char>());
 
-        const std::string_view marker = "# agent hash: ";
         auto pos = str.find(marker);
 
         if (pos == std::string::npos) return false;
@@ -1248,6 +1385,16 @@ bool PatchIniHash(const std::filesystem::path& ini,
                 e.what());
         return false;
     }
+}
+
+bool PatchIniHash(const std::filesystem::path& ini,
+                  const std::string& hash) noexcept {
+    return PatchHashInFile(ini, hash, kIniHashMarker);
+}
+
+bool PatchStateHash(const std::filesystem::path& ini,
+                    const std::string& hash) noexcept {
+    return PatchHashInFile(ini, hash, kStateHashMarker);
 }
 
 }  // namespace cma::cfg::upgrade

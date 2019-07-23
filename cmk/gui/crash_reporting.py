@@ -276,7 +276,7 @@ def handle_report_form(tardata, what):
             _("Failed to send the crash report. Please download it manually and send it "
               "to <a href=\"%s\">%s</a>") % (report_url, get_crash_report_target(what)))
         html.close_div()
-        html.javascript("cmk.crash_reporting.submit('https://checkmk.com/crash_report.php', " \
+        html.javascript("cmk.crash_reporting.submit('https://crash.checkmk.com', " \
                                             "'%s');" % url_encoded_params)
     except MKUserError as e:
         action_message = "%s" % e

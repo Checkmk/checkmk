@@ -31,7 +31,6 @@ from typing import Text, Dict, Union, NamedTuple, List, Optional  # pylint: disa
 
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.labels import LabelManager
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -54,6 +53,8 @@ from cmk.gui.watolib.utils import (
     ALL_SERVICES,
     NEGATE,
 )
+
+import cmk_base.export
 
 # This macro is needed to make the to_config() methods be able to use native
 # pprint/repr for the ruleset data structures. Have a look at
@@ -854,18 +855,10 @@ class Rule(object):
         if host is None:
             raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
 
-        service_labels = None  # TODO: Need to get the service labels
-        match_object = ruleset_matcher.RulesetMatchObject(
-            host_name=hostname,
-            service_description=service_description,
-            service_labels=service_labels,
-        )
+        match_object = cmk_base.export.ruleset_match_object_of_service(
+            hostname, service_description)
 
-        for reason in self._get_mismatch_reasons_of_match_object(
-                match_object,
-                host_folder=host_folder.path_for_rule_matching(),
-                host_tag_list=host.tags(),
-                host_labels=host.labels()):
+        for reason in self._get_mismatch_reasons_of_match_object(match_object):
             yield reason
 
     def matches_item(self, item):
@@ -873,36 +866,10 @@ class Rule(object):
             host_name=None,
             service_description=item,
         )
-        return any(
-            self._get_mismatch_reasons_of_match_object(
-                match_object,
-                host_folder="/",
-                host_tag_list=[],
-                host_labels={},
-            ))
+        return any(self._get_mismatch_reasons_of_match_object(match_object))
 
-    def _get_mismatch_reasons_of_match_object(self, match_object, host_folder, host_tag_list,
-                                              host_labels):
-        # TODO:
-        # - What about the host_label_rules and service_label_rules?
-        # - The autochecks_manager also needs to be available here!
-        # Both is only working with cmk_base code which has the checks and config loaded.
-        label_manager = LabelManager(
-            explicit_host_labels={match_object.host_name: host_labels},
-            host_label_rules=[],
-            service_label_rules=[],
-            autochecks_manager=None,
-        )
-
-        matcher = ruleset_matcher.RulesetMatcher(
-            tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags),
-            host_tag_lists={match_object.host_name: host_tag_list},
-            host_paths={match_object.host_name: host_folder},
-            labels=label_manager,
-            all_configured_hosts={match_object.host_name},
-            clusters_of={},
-            nodes_of={},
-        )
+    def _get_mismatch_reasons_of_match_object(self, match_object):
+        matcher = cmk_base.export.get_ruleset_matcher()
 
         rule_dict = self.to_config()
         rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()

@@ -128,6 +128,7 @@ std::wstring GetBakeryDir() noexcept;
 std::filesystem::path GetBakeryFile() noexcept;
 std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
+std::wstring GetAuStateDir() noexcept;
 std::wstring GetPluginConfigDir() noexcept;
 std::wstring GetUpdateDir() noexcept;       // for incoming MSI
 std::wstring GetUserInstallDir() noexcept;  // storage for installed files

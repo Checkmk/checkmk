@@ -115,7 +115,8 @@ class LabelManager(object):
     def _ruleset_labels_of_service(self, ruleset_matcher, hostname, service_desc):
         # type: (RulesetMatcher, str, Text) -> Dict
         match_object = RulesetMatchObject(hostname, service_description=service_desc)
-        return ruleset_matcher.get_host_ruleset_merged_dict(match_object, self._service_label_rules)
+        return ruleset_matcher.get_service_ruleset_merged_dict(match_object,
+                                                               self._service_label_rules)
 
     def _discovered_labels_of_service(self, hostname, service_desc):
         # type: (str, Text) -> Dict

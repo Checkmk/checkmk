@@ -1,0 +1,11 @@
+Title: Service labels assigned with ruleset matched on all services of a host
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1563868672
+Class: fix
+
+The service labels rules were assigned to all services of a host instead of just
+the services matching the configured service conditions.

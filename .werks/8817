@@ -1,0 +1,11 @@
+Title: HW/SW inventory: Sort interfaces in order to avoid additional archive entries
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b4
+Date: 1563883436
+
+

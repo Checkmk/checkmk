@@ -703,7 +703,7 @@ class Ruleset(object):
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
     # of rule_folder and rule_number
-    def analyse_ruleset(self, hostname, service):
+    def analyse_ruleset(self, hostname, svc_desc_or_item, svc_desc):
         resultlist = []
         resultdict = {}
         effectiverules = []
@@ -711,7 +711,8 @@ class Ruleset(object):
             if rule.is_disabled():
                 continue
 
-            if not rule.matches_host_and_item(Folder.current(), hostname, service):
+            if not rule.matches_host_and_item(Folder.current(), hostname, svc_desc_or_item,
+                                              svc_desc):
                 continue
 
             if self.match_type() == "all":
@@ -840,23 +841,45 @@ class Rule(object):
     def is_ineffective(self):
         hosts = Host.all()
         for host_name, host in hosts.items():
-            if self.matches_host_and_item(host.folder(), host_name, service_description=None):
+            if self.matches_host_and_item(host.folder(),
+                                          host_name,
+                                          svc_desc_or_item=None,
+                                          svc_desc=None):
                 return False
         return True
 
-    def matches_host_and_item(self, host_folder, hostname, service_description):
+    def matches_host_and_item(self, host_folder, hostname, svc_desc_or_item, svc_desc):
         """Whether or not the given folder/host/item matches this rule"""
         return not any(
-            True for _r in self.get_mismatch_reasons(host_folder, hostname, service_description))
+            True
+            for _r in self.get_mismatch_reasons(host_folder, hostname, svc_desc_or_item, svc_desc))
 
-    def get_mismatch_reasons(self, host_folder, hostname, service_description):
+    def get_mismatch_reasons(self, host_folder, hostname, svc_desc_or_item, svc_desc):
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
         host = host_folder.host(hostname)
         if host is None:
             raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
 
-        match_object = cmk_base.export.ruleset_match_object_of_service(
-            hostname, service_description)
+        # BE AWARE: Depending on the service ruleset the service_description of
+        # the rules is only a check item or a full service description. For
+        # example the check parameters rulesets only use the item, and other
+        # service rulesets like disabled services ruleset use full service
+        # descriptions.
+        #
+        # The service_description attribute of the match_object must be set to
+        # either the item or the full service description, depending on the
+        # ruleset, but the labels of a service need to be gathered using the
+        # real service description.
+        if self.ruleset.item_type() == "service":
+            match_object = cmk_base.export.ruleset_match_object_of_service(
+                hostname, svc_desc_or_item)
+        elif self.ruleset.item_type() == "item":
+            match_object = cmk_base.export.ruleset_match_object_for_checkgroup_parameters(
+                hostname, svc_desc_or_item, svc_desc)
+        elif not self.ruleset.item_type():
+            match_object = ruleset_matcher.RulesetMatchObject(hostname)
+        else:
+            raise NotImplementedError()
 
         for reason in self._get_mismatch_reasons_of_match_object(match_object):
             yield reason

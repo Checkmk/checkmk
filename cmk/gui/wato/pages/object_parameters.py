@@ -337,7 +337,7 @@ class ModeObjectParameters(WatoMode):
         forms.section(html.render_a(rulespec.title, url))
 
         ruleset = all_rulesets.get(varname)
-        setting, rules = ruleset.analyse_ruleset(self._hostname, service)
+        setting, rules = ruleset.analyse_ruleset(self._hostname, service, service)
 
         html.open_table(class_="setting")
         html.open_tr()

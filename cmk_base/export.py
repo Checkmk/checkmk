@@ -44,6 +44,12 @@ def _load_config():
         _config_loaded = True
 
 
+def service_description(hostname, check_plugin_name, item):
+    # type: (str, str, Text) -> Text
+    _load_config()
+    return config.service_description(hostname, check_plugin_name, item)
+
+
 def get_ruleset_matcher():
     # type: () -> RulesetMatcher
     """Return a helper object to perform matching on Checkmk rulesets"""

@@ -1399,7 +1399,7 @@ class DiscoveryPageRenderer(object):
                                 DiscoveryState.IGNORED] \
            and config.user.may('wato.rulesets'):
             self._rulesets_button(descr)
-            self._check_parameters_button(table_source, check_type, checkgroup, item)
+            self._check_parameters_button(table_source, check_type, checkgroup, item, descr)
             num_buttons += 2
 
         while num_buttons < 4:
@@ -1445,7 +1445,7 @@ class DiscoveryPageRenderer(object):
                 ("service", descr),
             ]), _("View and edit the parameters for this service"), "rulesets")
 
-    def _check_parameters_button(self, table_source, check_type, checkgroup, item):
+    def _check_parameters_button(self, table_source, check_type, checkgroup, item, descr):
         if table_source == DiscoveryState.MANUAL:
             url = watolib.folder_preserving_link([
                 ('mode', 'edit_ruleset'),
@@ -1462,6 +1462,7 @@ class DiscoveryPageRenderer(object):
                 ("varname", ruleset_name),
                 ("host", self._host.name()),
                 ("item", watolib.mk_repr(item)),
+                ("service", watolib.mk_repr(descr)),
             ]),
 
         html.icon_button(url, _("Edit and analyze the check parameters of this service"),

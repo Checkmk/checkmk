@@ -1777,7 +1777,7 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
     config_cache = get_config_cache()
 
     # Get parameters configured via checkgroup_parameters
-    entries = _get_checkgroup_parameters(config_cache, host, checktype, item)
+    entries = _get_checkgroup_parameters(config_cache, host, checktype, item, descr)
 
     # Get parameters configured via check_parameters
     entries += config_cache.service_extra_conf(host, descr, check_parameters)
@@ -1809,7 +1809,7 @@ def _has_timespecific_params(entries):
     return False
 
 
-def _get_checkgroup_parameters(config_cache, host, checktype, item):
+def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
     checkgroup = check_info[checktype]["group"]
     if not checkgroup:
         return []
@@ -1823,7 +1823,12 @@ def _get_checkgroup_parameters(config_cache, host, checktype, item):
             return config_cache.host_extra_conf(host, rules)
 
         # checks with an item need service-specific rules
-        return config_cache.service_extra_conf(host, item, rules)
+        match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(
+            host, item, descr)
+        return list(
+            config_cache.ruleset_matcher.get_service_ruleset_values(match_object,
+                                                                    rules,
+                                                                    is_binary=False))
     except MKGeneralException as e:
         raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
 

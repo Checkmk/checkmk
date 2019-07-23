@@ -840,7 +840,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         # the host specific setting above and remove all services from the service list
         # that are fine without an additional change.
         for service in list(services):
-            value_without_host_rule = ruleset.analyse_ruleset(self._host.name(), service)[0]
+            value_without_host_rule = ruleset.analyse_ruleset(self._host.name(), service,
+                                                              service)[0]
             if (not value and value_without_host_rule in [None, False]) \
                or value == value_without_host_rule:
                 services.remove(service)

@@ -744,7 +744,7 @@ class ModeEditRuleset(WatoMode):
 
     def _match(self, match_state, rule):
         reasons = [_("This rule is disabled")] if rule.is_disabled() else \
-                  list(rule.get_mismatch_reasons(watolib.Folder.current(), self._hostname, self._item))
+                  list(rule.get_mismatch_reasons(watolib.Folder.current(), self._hostname, self._item, self._item))
         if reasons:
             return _("This rule does not match: %s") % " ".join(reasons), 'nmatch'
         ruleset = rule.ruleset

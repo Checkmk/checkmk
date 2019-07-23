@@ -63,7 +63,7 @@ TEST(UpgradeTest, Integration) {
 
     namespace fs = std::filesystem;
     std::error_code ec;
-    auto state_dir = legacy / dirs::kState;
+    auto state_dir = legacy / dirs::kAuStateLocation;
     fs::create_directories(state_dir, ec);
     ASSERT_EQ(ec.value(), 0);
     fs::path dir = cma::cfg::GetUserDir();
@@ -71,7 +71,7 @@ TEST(UpgradeTest, Integration) {
     fs::copy_file(ini, legacy / files::kIniFile,
                   fs::copy_options::overwrite_existing, ec);
     auto state = dir / state_name;
-    fs::copy_file(state, legacy / dirs::kState / files::kAuStateFile,
+    fs::copy_file(state, legacy / dirs::kAuStateLocation / files::kAuStateFile,
                   fs::copy_options::overwrite_existing, ec);
 
     // complicated preparation to testing
@@ -113,8 +113,8 @@ TEST(UpgradeTest, Integration) {
 
     ASSERT_TRUE(PatchOldFilesWithDatHash());
     {
-        auto state_hash =
-            GetOldHashFromState(legacy / dirs::kState / files::kAuStateFile);
+        auto state_hash = GetOldHashFromState(legacy / dirs::kAuStateLocation /
+                                              files::kAuStateFile);
         EXPECT_EQ(state_hash, new_expected);
     }
     {

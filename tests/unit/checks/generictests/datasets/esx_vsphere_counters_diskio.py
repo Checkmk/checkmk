@@ -6,10 +6,11 @@ checkname = 'esx_vsphere_counters'
 
 
 info = [
-    ['disk.read', '', '12', 'kiloBytesPerSecond'],
-    ['disk.numberRead', '', '1', 'number'],
-    ['disk.write', '', '51', 'kiloBytesPerSecond'],
-    ['disk.numberWrite', '', '2', 'kiloBytesPerSecond'],
+    ['disk.read', '', '11#12#13', 'kiloBytesPerSecond'],
+    ['disk.numberRead', '', '110#140#150', 'number'],
+    ['disk.write', '', '51#49#53', 'kiloBytesPerSecond'],
+    ['disk.numberWrite', '', '11#102#5', 'kiloBytesPerSecond'],
+    ['disk.deviceLatency', '', '700#900#23', 'millisecond']
 ]
 
 
@@ -33,14 +34,14 @@ checks = {
             (0, 'Write: 51.00 kB/s', [
                 ('disk_write_throughput', 52224.0, None, None, None, None),
             ]),
-            (0, 'Latency: 0.00 ms', [
-                ('disk_latency', 0.0, None, None, None, None),
+            (0, 'Latency: 900.00 ms', [
+                ('disk_latency', 0.9, None, None, None, None),
             ]),
-            (0, 'Read operations: 1.00 1/s', [
-                ('disk_read_ios', 1.0, None, None, None, None),
+            (0, 'Read operations: 133.00 1/s', [
+                ('disk_read_ios', 133.0, None, None, None, None),
             ]),
-            (0, 'Write operations: 2.00 1/s', [
-                ('disk_write_ios', 2.0, None, None, None, None),
+            (0, 'Write operations: 39.00 1/s', [
+                ('disk_write_ios', 39.0, None, None, None, None),
             ]),
         ]),
     ],

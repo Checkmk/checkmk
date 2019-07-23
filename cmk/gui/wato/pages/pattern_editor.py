@@ -68,6 +68,9 @@ class ModePatternEditor(WatoMode):
         if self._hostname and not self._host:
             raise MKUserError(None, _("This host does not exist."))
 
+        if self._item and not self._hostname:
+            raise MKUserError(None, _("You need to specify a host name to test file matching."))
+
     def title(self):
         if not self._hostname and not self._item:
             return _("Logfile Pattern Analyzer")
@@ -149,18 +152,14 @@ class ModePatternEditor(WatoMode):
         already_matched = False
         abs_rulenr = 0
         for folder, rulenr, rule in ruleset.get_rules():
-            if self._hostname or self._item:
+            # Check if this rule applies to the given host/service
+            if self._hostname:
                 service_desc = cmk_base.export.service_description(self._hostname, "logwatch",
                                                                    self._item)
 
-            # Check if this rule applies to the given host/service
-            if self._hostname:
                 # If hostname (and maybe filename) try match it
                 rule_matches = rule.matches_host_and_item(watolib.Folder.current(), self._hostname,
                                                           self._item, service_desc)
-            elif self._item:
-                # If only a filename is given
-                rule_matches = rule.matches_item(self._item, service_desc)
             else:
                 # If no host/file given match all rules
                 rule_matches = True

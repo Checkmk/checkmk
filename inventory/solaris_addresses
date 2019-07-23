@@ -36,7 +36,7 @@
 
 
 # executed before statgrab_net which provides some information
-def inv_solaris_addresses(info, params):
+def inv_solaris_addresses(info, params, inventory_tree):
     parsed = {}
     dev_name = None
     for line in info:
@@ -56,10 +56,10 @@ def inv_solaris_addresses(info, params):
             if "inet6" in line and dev_name:
                 parsed[dev_name]["ipv6"] = line[1]
 
-    node = inv_tree_list("networking.interfaces:")
+    interfaces = []
     for device, attrs in parsed.items():
         if attrs.get("phys_address"):
-            node.append({
+            interfaces.append({
                 "index": attrs.get("index"),
                 "description": device,
                 "alias": device,
@@ -68,7 +68,10 @@ def inv_solaris_addresses(info, params):
                 "port_type": 6,
             })
 
-    addresses = inv_tree_list("networking.addresses:")
+    node = inventory_tree.get_list("networking.interfaces:")
+    node.extend(sorted(interfaces, key=lambda r: r.get('name')))
+
+    addresses = inventory_tree.get_list("networking.addresses:")
     for device, attrs in parsed.items():
         address = {"device": device}
         if "IPv4" in attrs:

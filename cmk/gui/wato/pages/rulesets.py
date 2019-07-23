@@ -478,8 +478,11 @@ class ModeEditRuleset(WatoMode):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
 
         self._item = None  # type: Optional[Text]
+        self._service = None  # type: Optional[Text]
 
         # TODO: Clean this up. In which case is it used?
+        # - The calculation for the service_description is not even correct, because it does not
+        # take translations into account (see cmk_base.config.service_description()).
         check_command = html.get_ascii_input("check_command")
         if check_command:
             checks = watolib.check_mk_local_automation("get-check-information")
@@ -515,6 +518,20 @@ class ModeEditRuleset(WatoMode):
             self._hostname = hostname
         else:
             self._hostname = None
+
+        # The service argument is only needed for performing match testing of rules
+        if not self._service:
+            self._service = None
+            if html.request.has_var("service"):
+                try:
+                    self._service = watolib.mk_eval(html.request.var("service"))
+                except:
+                    pass
+
+        if self._hostname and self._rulespec.item_type == "item" and not self._service:
+            raise MKUserError(
+                "service",
+                _("Unable to analyze matching, because \"service\" parameter is missing"))
 
         self._just_edited_rule_from_vars()
 
@@ -575,7 +592,8 @@ class ModeEditRuleset(WatoMode):
                     _("Parameters"),
                     watolib.folder_preserving_link([("mode", "object_parameters"),
                                                     ("host", self._hostname),
-                                                    ("service", self._item)]), "rulesets")
+                                                    ("service", self._service or self._item)]),
+                    "rulesets")
 
         if agent_bakery:
             agent_bakery.agent_bakery_context_button(self._name)
@@ -724,6 +742,7 @@ class ModeEditRuleset(WatoMode):
             ("rulenr", rulenr),
             ("host", self._hostname),
             ("item", watolib.mk_repr(self._item)),
+            ("service", watolib.mk_repr(self._service)),
             ("rule_folder", folder.path()),
         ])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
@@ -735,6 +754,7 @@ class ModeEditRuleset(WatoMode):
             ("rulenr", rulenr),
             ("host", self._hostname),
             ("item", watolib.mk_repr(self._item)),
+            ("service", watolib.mk_repr(self._service)),
             ("rule_folder", folder.path()),
         ])
         html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
@@ -744,7 +764,7 @@ class ModeEditRuleset(WatoMode):
 
     def _match(self, match_state, rule):
         reasons = [_("This rule is disabled")] if rule.is_disabled() else \
-                  list(rule.get_mismatch_reasons(watolib.Folder.current(), self._hostname, self._item, self._item))
+                  list(rule.get_mismatch_reasons(watolib.Folder.current(), self._hostname, self._item, self._service))
         if reasons:
             return _("This rule does not match: %s") % " ".join(reasons), 'nmatch'
         ruleset = rule.ruleset
@@ -785,6 +805,8 @@ class ModeEditRuleset(WatoMode):
             vars_.append(("host", self._hostname))
         if html.request.var("item"):
             vars_.append(("item", watolib.mk_repr(self._item)))
+        if html.request.var("service"):
+            vars_.append(("service", watolib.mk_repr(self._service)))
 
         return make_action_link(vars_)
 
@@ -867,6 +889,7 @@ class ModeEditRuleset(WatoMode):
             html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
             html.hidden_field("host", self._hostname)
             html.hidden_field("item", watolib.mk_repr(self._item))
+            html.hidden_field("service", watolib.mk_repr(self._service))
             html.close_td()
             html.open_td(style="vertical-align:middle")
             html.write_text(label)
@@ -1146,6 +1169,8 @@ class EditRuleMode(WatoMode):
             ]
             if html.request.var("item"):
                 var_list.append(("item", html.request.var("item")))
+            if html.request.var("service"):
+                var_list.append(("service", html.request.var("service")))
             backurl = watolib.folder_preserving_link(var_list)
 
         else:

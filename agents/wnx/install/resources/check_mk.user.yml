@@ -6,9 +6,8 @@
 # Copyright Mathias Kettner GmbH
 # ********************************
 
-# version 10011
-
-# section global must be presented
+# The Agent will accept YML-File as a valid configuration file
+# only when the section global is presented
 
 # $CUSTOM_PLUGINS_PATH$  -> is ProgramData/checkmk/agent/plugins
 # $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/checkmk/service/plugins
@@ -179,10 +178,10 @@ winperf:
         #- 638: tcp_conn
         #- Terminal Services: ts_sessions
 
-logfiles:
+_logfiles:
     enabled: no
-    ## Define textfiles to be monitored
-    ## This section is not supported, please use mk_logwatch plugin
+    # We do not support logfiles monitoring in agent at the moment
+    # Please, use plugin mk_logwatch
 
 fileinfo:
     # enabled: yes

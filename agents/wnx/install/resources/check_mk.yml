@@ -4,8 +4,6 @@
 
 # Copyright Mathias Kettner GmbH
 
-# version 10011
-
 # $CUSTOM_PLUGINS_PATH$  -> is ProgramData/checkmk/agent/plugins
 # $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/check/service/plugins
 # $CUSTOM_AGENT_PATH$    -> is ProgramData/checkmk/agent/
@@ -151,10 +149,10 @@ winperf:
         - 510: if
         - 238: processor
 
-logfiles:
+_logfiles:
     enabled: no
     # Define textfiles to be monitored
-    # We do not support logfiles monitoring at he moment
+    # We do not support logfiles monitoring in agent at the moment
     # Please, use plugin mk_logwatch
 
 fileinfo:

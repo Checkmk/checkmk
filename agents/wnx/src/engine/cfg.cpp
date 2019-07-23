@@ -22,6 +22,7 @@
 #include "tools/_process.h"  // GetSomeFolder...
 #include "tools/_raii.h"     // on out
 #include "tools/_tgt.h"      // we need IsDebug
+#include "windows_service_api.h"
 #include "yaml-cpp/yaml.h"
 
 namespace cma {
@@ -494,61 +495,95 @@ static std::vector<std::filesystem::path> FillExternalCommandPaths() {
     return v;
 }
 
-// Typically called ONLY by ConfigInfo
-bool Folders::setRoot(const std::wstring& ServiceValidName,  // look in registry
-                      const std::wstring& RootFolder         // look in disk
-)
-
-{
-    using namespace std;
+static std::filesystem::path ExtractPathFromTheExecutable() {
     namespace fs = std::filesystem;
-    // code is a bit strange, because we have to have possibility use
-    // one of possible roots
-    // storage for paths
-    vector<fs::path> full;
-    auto emplace_parent = [&full](fs::path Path) {
-        if (Path.empty()) return;
+    std::error_code ec;
+    std::wstring cmd_line = wtools::GetArgv(0);
+    if (cmd_line.empty()) return {};  // something really bad
 
-        std::error_code ec;
-        if (fs::exists(Path, ec)) {
-            // location of the services
-            auto p = Path.parent_path();
-            full.emplace_back(p.lexically_normal());
-        } else {
-            XLOG::l("Cannot emplace back path {}, error_code: [{}] '{}'",
-                    Path.u8string(), ec.value(), ec.message());
-        }
-    };
+    fs::path exe = cma::tools::RemoveQuotes(cmd_line);
+    exe = exe.lexically_normal();
+    if (!fs::exists(exe, ec)) return {};  // something wrong probably
 
-    // Path from registry if provided(watest doesn't provide)
-    auto service_path_new = FindServiceImagePath(ServiceValidName);
-    emplace_parent(service_path_new);
+    fs::path path = FindServiceImagePath(cma::srv::kServiceName);
+    if (path == exe) return path.parent_path().lexically_normal();
 
-    // working folder
-    if (full.empty()) {
-        error_code ec;
-        fs::path work_dir = RootFolder;
-        if (fs::exists(work_dir, ec))
-            full.emplace_back(work_dir.lexically_normal());
+    return {};
+}
+
+std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept {
+    if (service_name.empty()) return {};
+
+    std::wstring key_path = L"System\\CurrentControlSet\\services\\";
+    key_path += service_name;
+    auto service_path_new =
+        wtools::GetRegistryValue(key_path, L"ImagePath", std::wstring());
+
+    return cma::tools::RemoveQuotes(service_path_new);
+}
+
+std::filesystem::path ExtractPathFromServiceName(
+    std::wstring_view service_name) noexcept {
+    namespace fs = std::filesystem;
+    fs::path service_path = FindServiceImagePath(service_name);
+    std::error_code ec;
+    if (fs::exists(service_path, ec)) {
+        // location of the services
+        auto p = service_path.parent_path();
+        return p.lexically_normal();
+    }
+
+    XLOG::l("{} doesn't exist, error_code: [{}] '{}'", service_path.u8string(),
+            ec.value(), ec.message());
+    return {};
+}
+
+// Typically called ONLY by ConfigInfo
+// tries to find best sutiable root folder
+// Order: service_name, preset_root, argv[0], cwd
+bool Folders::setRoot(const std::wstring& service_name,  // look in registry
+                      const std::wstring& preset_root    // look in disk
+) {
+    namespace fs = std::filesystem;
+
+    // Path from registry if provided
+    auto service_path_new = ExtractPathFromServiceName(service_name);
+    if (!service_path_new.empty()) {
+        // location of the services
+        root_ = service_path_new.lexically_normal();
+        XLOG::l.i("Set root '{}' from registry '{}'", root_.u8string(),
+                  wtools::ConvertToUTF8(service_name));
+        return true;
+    }
+
+    // working folder is defined
+    std::error_code ec;
+    fs::path work_dir = preset_root;
+    if (!work_dir.empty() && fs::exists(work_dir, ec)) {
+        root_ = work_dir.lexically_normal();
+        XLOG::l.i("Set root '{}' direct from folder", root_.u8string());
+        return true;
+    }
+
+    // argv[0]
+    auto ret = ExtractPathFromTheExecutable();
+    if (!ret.empty()) {
+        root_ = ret.lexically_normal();
+        XLOG::l.i("Set root '{}' from executable", root_.u8string());
+        return true;
     }
 
     // Current exe path used for tests
-    if (full.empty()) {
-        error_code ec;
-        auto cur_dir = fs::current_path(ec);
-        if (ec.value() == 0 && fs::exists(cur_dir, ec))
-            full.emplace_back(cur_dir.lexically_normal());
+    auto cur_dir = fs::current_path(ec);
+    if (ec.value() == 0 && fs::exists(cur_dir, ec)) {
+        root_ = cur_dir.lexically_normal();
+        XLOG::l.i("Set root '{}' from current path", root_.u8string());
+        return true;
     }
 
-    if (full.empty()) {
-        XLOG::l(XLOG_FUNC + " Parameters are invalid");
-        return false;
-    }
-
-    root_ = full[0].lexically_normal();
-
-    return true;
-}  // namespace cma::cfg::details
+    XLOG::l(XLOG_FUNC + " Parameters are invalid");
+    return false;
+}
 
 void Folders::createDataFolderStructure(const std::wstring& AgentDataFolder) {
     try {

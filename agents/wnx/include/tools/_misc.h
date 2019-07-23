@@ -542,6 +542,24 @@ inline auto SecondsSinceEpoch() {
     return now.count();
 }
 
+inline std::string RemoveQuotes(const std::string& in) {
+    auto val = in;
+    if (val.size() < 2) return val;
+
+    if (val.back() == '\'' || val.back() == '\"') val.pop_back();
+    if (val[0] == '\'' || val[0] == '\"') val = val.substr(1, val.size() - 1);
+    return val;
+}
+
+inline std::wstring RemoveQuotes(const std::wstring& in) {
+    auto val = in;
+    if (val.size() < 2) return val;
+
+    if (val.back() == L'\'' || val.back() == L'\"') val.pop_back();
+    if (val[0] == L'\'' || val[0] == L'\"') val = val.substr(1, val.size() - 1);
+    return val;
+}
+
 }  // namespace cma::tools
 
 namespace fmt {

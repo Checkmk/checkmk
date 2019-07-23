@@ -107,6 +107,7 @@ def parse_ceph_df(info):
 
     mps = []
     for mp, data in parsed.iteritems():
+        # http://docs.ceph.com/docs/master/rados/operations/monitoring/
         # GLOBAL section:
         #   SIZE: The overall storage capacity of the cluster.
         #   AVAIL: The amount of free space available in the cluster.

@@ -711,7 +711,7 @@ COUNTER_IDS = (
     131076,  # disk.numberRead
     131077,  # disk.numberWrite
     131078,  # disk.read
-    131079,
+    131079,  # disk.write
     # 131083,  # disk.deviceReadLatency
     # 131084,  # disk.kernelReadLatency
     # 131085,  # disk.totalReadLatency

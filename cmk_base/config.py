@@ -2922,10 +2922,29 @@ class ConfigCache(object):
         not set in the object, because the rule optimizer already processes all
         these host conditions. Adding these attributes here would be
         consequent, but create some overhead.
+
+        BE AWARE: When matching on checkgroup_parameters (Which use the check
+        item in the service_description field), you need to use the
+        ruleset_match_object_for_checkgroup_parameters()
         """
         return RulesetMatchObject(
             host_name=hostname,
             service_description=svc_desc,
+            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
+        )
+
+    def ruleset_match_object_for_checkgroup_parameters(self, hostname, item, svc_desc):
+        # type: (str, Text, Text) -> RulesetMatchObject
+        """Construct the object that is needed to match checkgroup parameters rulesets
+
+        Please note that the host attributes like host_folder and host_tags are
+        not set in the object, because the rule optimizer already processes all
+        these host conditions. Adding these attributes here would be
+        consequent, but create some overhead.
+        """
+        return RulesetMatchObject(
+            host_name=hostname,
+            service_description=item,
             service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
         )
 

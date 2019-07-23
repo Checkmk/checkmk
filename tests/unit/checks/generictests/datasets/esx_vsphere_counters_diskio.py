@@ -37,11 +37,11 @@ checks = {
             (0, 'Latency: 900.00 ms', [
                 ('disk_latency', 0.9, None, None, None, None),
             ]),
-            (0, 'Read operations: 133.00 1/s', [
-                ('disk_read_ios', 133.0, None, None, None, None),
+            (0, 'Read operations: 6.67 1/s', [
+                ('disk_read_ios', 6.666666666666667, None, None, None, None),
             ]),
-            (0, 'Write operations: 39.00 1/s', [
-                ('disk_write_ios', 39.0, None, None, None, None),
+            (0, 'Write operations: 1.97 1/s', [
+                ('disk_write_ios', 1.9666666666666668, None, None, None, None),
             ]),
         ]),
     ],

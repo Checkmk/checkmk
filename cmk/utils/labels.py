@@ -124,9 +124,6 @@ class LabelManager(object):
 
     def _discovered_labels_of_service(self, hostname, service_desc):
         # type: (str, Text) -> Dict
-        if not self._autochecks_manager:
-            # TODO: Hack needed until watolib.rulesets.Rule._get_mismatch_reasons_of_match_object() can provide a AutochecksManager instance
-            return {}
         return self._autochecks_manager.discovered_labels_of(hostname, service_desc).to_dict()
 
 

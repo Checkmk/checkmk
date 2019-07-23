@@ -70,6 +70,10 @@ class AutochecksManager(object):
 
         services = self._read_autochecks_of(hostname)
         self._autochecks[hostname] = services
+
+        for service in services:
+            self._discovered_labels_of[(hostname, service.description)] = service.service_labels
+
         return services
 
     def discovered_labels_of(self, hostname, service_desc):

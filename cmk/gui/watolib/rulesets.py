@@ -884,11 +884,6 @@ class Rule(object):
         for reason in self._get_mismatch_reasons_of_match_object(match_object):
             yield reason
 
-    def matches_item(self, svc_desc_or_item, svc_desc):
-        match_object = cmk_base.export.ruleset_match_object_for_checkgroup_parameters(
-            None, svc_desc_or_item, svc_desc)
-        return any(self._get_mismatch_reasons_of_match_object(match_object))
-
     def _get_mismatch_reasons_of_match_object(self, match_object):
         matcher = cmk_base.export.get_ruleset_matcher()
 

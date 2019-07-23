@@ -330,6 +330,10 @@ std::wstring GetStateDir() noexcept {
     return details::G_ConfigInfo.getStateDir();
 }
 
+std::wstring GetAuStateDir() noexcept {
+    return details::G_ConfigInfo.getAuStateDir();
+}
+
 std::wstring GetPluginConfigDir() noexcept {
     return details::G_ConfigInfo.getPluginConfigDir();
 }

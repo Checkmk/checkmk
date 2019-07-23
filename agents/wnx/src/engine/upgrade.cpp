@@ -955,7 +955,7 @@ void RecoverOldStateFileWithPreemtiveHashPatch() {
         return;
     }
 
-    fs::path new_path = cma::cfg::GetStateDir();
+    fs::path new_path = cma::cfg::GetAuStateDir();
     auto new_state = new_path / files::kAuStateFile;
     if (fs::exists(new_path, ec) && fs::exists(new_state, ec)) {
         XLOG::l.i("'{}' and '{}' exist: no need to recover",

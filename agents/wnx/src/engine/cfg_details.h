@@ -89,6 +89,10 @@ public:
         return data_ / dirs::kState;
     }
 
+    inline std::filesystem::path getAuState() const {
+        return data_ / dirs::kAuStateLocation;
+    }
+
     inline std::filesystem::path getPluginConfigPath() const {
         return data_ / dirs::kPluginConfig;
     }
@@ -292,6 +296,11 @@ public:
     auto getStateDir() const {
         std::lock_guard lk(lock_);
         return folders_.getState();
+    }
+
+    auto getAuStateDir() const {
+        std::lock_guard lk(lock_);
+        return folders_.getAuState();
     }
 
     auto getPluginConfigDir() const {

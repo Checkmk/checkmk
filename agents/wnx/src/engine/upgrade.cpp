@@ -847,7 +847,7 @@ static std::filesystem::path GetHashedIniName() {
     auto old_ini_hash = GetOldHashFromIni(ini);
     if (old_ini_hash.empty()) {
         XLOG::l.t("Hash in INI file '{}' not found, patching is not required",
-                  old_ini_hash);
+                  ini.u8string());
         return {};
     }
 
@@ -882,7 +882,7 @@ static std::filesystem::path GetHashedStateName() {
     auto old_state_hash = GetOldHashFromState(state);
     if (old_state_hash.empty()) {
         XLOG::l.t("Hash in State file '{}' not found, patching is not required",
-                  old_state_hash);
+                  state.u8string());
         return {};
     }
 
@@ -947,7 +947,7 @@ void RecoverOldStateFileWithPreemtiveHashPatch() {
         return;
     }
 
-    auto old_state = path / dirs::kState / files::kAuStateFile;
+    auto old_state = path / dirs::kAuStateLocation / files::kAuStateFile;
     std::error_code ec;
     if (!fs::is_regular_file(old_state, ec)) {
         XLOG::l.i("Error [{}] accessing'{}', no need to recover, quitting",
@@ -1289,7 +1289,7 @@ std::filesystem::path FindOldState() {
         XLOG::d.t("Legacy Agent is not found");
         return {};
     }
-    return path / dirs::kState / files::kAuStateFile;
+    return path / dirs::kAuStateLocation / files::kAuStateFile;
 }
 
 std::string GetNewHash(const std::filesystem::path& dat) noexcept {

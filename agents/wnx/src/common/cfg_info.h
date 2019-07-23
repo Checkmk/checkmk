@@ -161,6 +161,8 @@ constexpr const wchar_t* kBakery = L"bakery";           // owned by site
 constexpr const wchar_t* kState = L"state";             // owned by plugins
 constexpr const wchar_t* kPluginConfig = L"config";     // owned by plugins
 
+constexpr const wchar_t* kAuStateLocation = kPluginConfig;  // owned by plugins
+
 constexpr const wchar_t* kSpool = L"spool";    // owned by user/sys plugins
 constexpr const wchar_t* kTemp = L"tmp";       // owned by user plugins
 constexpr const wchar_t* kUpdate = L"update";  // owned by agent

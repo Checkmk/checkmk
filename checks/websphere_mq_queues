@@ -82,8 +82,11 @@ def parse_websphere_mq_queues(info):
                         key, val = what.split('(')
                         parsed[queue_name].setdefault(key, val)
 
-                parsed[queue_name].setdefault("time_on_client",
-                    time.mktime(time.strptime(line[-1], "%Y_%m_%d-%H_%M_%S")))
+                try:
+                    parsed[queue_name].setdefault(
+                        "time_on_client", time.mktime(time.strptime(line[-1], "%Y_%m_%d-%H_%M_%S")))
+                except ValueError:
+                    pass
 
     return parsed
 

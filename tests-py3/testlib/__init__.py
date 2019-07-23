@@ -20,9 +20,9 @@ import abc
 import json
 import fcntl
 from contextlib import contextmanager
-from urlparse import urlparse
+from urllib.parse import urlparse
 
-import pathlib2 as pathlib
+import pathlib
 import pytest  # type: ignore
 import requests  # type: ignore
 import urllib3  # type: ignore
@@ -69,8 +69,8 @@ def virtualenv_path():
 
 def current_branch_name():
     branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref",
-                                           "HEAD"]).split("\n", 1)[0]
-    return branch_name.decode("utf-8")
+                                           "HEAD"]).decode("utf-8").split("\n", 1)[0]
+    return branch_name
 
 
 def get_cmk_download_credentials():

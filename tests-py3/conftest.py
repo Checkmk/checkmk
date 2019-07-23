@@ -78,17 +78,17 @@ def pytest_collection_modifyitems(items):
             continue  # Do not modify manually set marks
 
         file_path = "%s" % item.reportinfo()[0]
-        if "tests/unit" in file_path:
+        if "tests-py3/unit" in file_path:
             ty = "unit"
-        elif "tests/git" in file_path:
+        elif "tests-py3/git" in file_path:
             ty = "unit"
-        elif "tests/packaging" in file_path:
+        elif "tests-py3/packaging" in file_path:
             ty = "packaging"
-        elif "tests/pylint" in file_path:
+        elif "tests-py3/pylint" in file_path:
             ty = "pylint"
-        elif "tests/docker" in file_path:
+        elif "tests-py3/docker" in file_path:
             ty = "docker"
-        elif "tests/integration" in file_path:
+        elif "tests-py3/integration" in file_path:
             ty = "integration"
         else:
             raise Exception("Test not TYPE marked: %r" % item)

@@ -587,7 +587,7 @@ class AutomationAnalyseServices(Automation):
                     "checktype": checktype,
                     "item": item,
                     "parameters": params,
-                }, None
+                }
 
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
@@ -645,7 +645,7 @@ class AutomationAnalyseServices(Automation):
                 }
                 if "command_line" in entry:  # Only active checks have a command line
                     result["command_line"] = entry["command_line"]
-                return result, None
+                return result
 
         # 4. Active checks
         for plugin_name, entries in host_config.active_checks:
@@ -656,9 +656,9 @@ class AutomationAnalyseServices(Automation):
                         "origin": "active",
                         "checktype": plugin_name,
                         "parameters": params,
-                    }, None
+                    }
 
-        return {}, None  # not found
+        return {}  # not found
 
 
 automations.register(AutomationAnalyseServices())

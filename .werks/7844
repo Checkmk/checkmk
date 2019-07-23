@@ -1,0 +1,11 @@
+Title: netapp-api-volumes: Fixed scaling of latency values
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p20
+Date: 1561377355
+
+

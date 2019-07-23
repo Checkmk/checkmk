@@ -457,6 +457,15 @@ int ExecMainService(StdioLog stdio_log) {
     return 0;
 }
 
+int ExecVersion() {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    std::string version =
+        fmt::format("Check_MK Agent version {}", CMK_WIN_AGENT_VERSION);
+
+    XLOG::SendStringToStdio(version, XLOG::Colors::white);
+    return 0;
+}
+
 // on -cap
 int ExecCap() {
     XLOG::setup::DuplicateOnStdio(true);

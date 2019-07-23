@@ -38,13 +38,14 @@ void PrintMain() {
     using namespace xlog::internal;
     PrintBlock("Normal Usage:\n", Colors::green, []() {
         return fmt::format(
-            "\t{1} <{2}|{3}>\n"
-            "\t{2:<{0}} - test\n"
-            "\t{3:<{0}} - usage\n",
+            "\t{1} <{2}|{3}|{4}>\n"
+            "\t{2:<{0}} - generates test output\n"
+            "\t{3:<{0}} - version of the Agent\n"
+            "\t{4:<{0}} - usage\n",
             kParamShift,
             kServiceExeName,  // service name from th project definitions
             // first Row
-            kLegacyTestParam, kHelpParam);
+            kLegacyTestParam, kVersionParam, kHelpParam);
     });
 }
 
@@ -436,6 +437,10 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     }
     if (param == wtools::ConvertToUTF16(kCapParam)) {
         return cma::srv::ExecCap();
+    }
+
+    if (param == wtools::ConvertToUTF16(kVersionParam)) {
+        return cma::srv::ExecVersion();
     }
 
     if (param == wtools::ConvertToUTF16(kPatchHashParam)) {

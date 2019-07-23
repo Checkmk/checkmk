@@ -38,59 +38,63 @@ def test_pylint(pylint_test_dir):
     # Only specify the path to python packages or modules here
     modules_or_packages = [
         # OMD
-        "omd/packages/omd/omdlib",
-        "livestatus/api/python/livestatus.py",
+        "tests-py3/pylint/conftest.py",
+        "tests-py3/pylint/test_pylint.py",
+#        "omd/packages/omd/omdlib",
+#        "livestatus/api/python/livestatus.py",
 
         # Check_MK base
-        "cmk_base",
+#        "cmk_base",
         # TODO: Check if this kind of "overlay" really works.
         # TODO: Why do we have e.g. a symlink cmk_base/cee -> enterprise/cmk_base/cee?
-        "enterprise/cmk_base/automations/cee.py",
-        "enterprise/cmk_base/cee",
-        "enterprise/cmk_base/default_config/cee.py",
-        "enterprise/cmk_base/modes/cee.py",
-        "managed/cmk_base/default_config/cme.py",
+#        "enterprise/cmk_base/automations/cee.py",
+#        "enterprise/cmk_base/cee",
+#        "enterprise/cmk_base/default_config/cee.py",
+#        "enterprise/cmk_base/modes/cee.py",
+#        "managed/cmk_base/default_config/cme.py",
 
         # cmk module level
         # TODO: This checks the whole cmk hierarchy, including things like
         # cmk.gui.plugins.cron etc. Do we really want that here?
         # TODO: Funny links there, see above.
-        "cmk",
-        "enterprise/cmk/cee",
+#        "cmk",
+#        "enterprise/cmk/cee",
 
         # GUI specific
-        "web/app/index.wsgi",
-        "enterprise/cmk/gui/cee",
-        "managed/cmk/gui/cme",
+#        "web/app/index.wsgi",
+#        "enterprise/cmk/gui/cee",
+#        "managed/cmk/gui/cme",
     ]
 
     # Add the compiled files for things that are no modules yet
-    file(pylint_test_dir + "/__init__.py", "w")
-    _compile_check_and_inventory_plugins(pylint_test_dir)
-    _compile_bakery_plugins(pylint_test_dir)
-    modules_or_packages += [
-        pylint_test_dir,
-    ]
+#    file(pylint_test_dir + "/__init__.py", "w")
+#    _compile_check_and_inventory_plugins(pylint_test_dir)
+#    _compile_bakery_plugins(pylint_test_dir)
+#    modules_or_packages += [
+#        pylint_test_dir,
+#    ]
 
     # We use our own search logic to find scripts without python extension
     search_paths = [
-        "omd/packages/omd.bin",
-        "bin",
-        "notifications",
-        "agents/plugins",
-        "agents/special",
-        "active_checks",
-        "enterprise/agents/plugins",
-        "enterprise/bin",
-        "enterprise/misc",
+#        "omd/packages/omd.bin",
+#        "bin",
+#        "notifications",
+#        "agents/plugins",
+#        "agents/special",
+#        "active_checks",
+#        "enterprise/agents/plugins",
+#        "enterprise/bin",
+#        "enterprise/misc",
     ]
 
-    for path in search_paths:
-        abs_path = cmk_path() + "/" + path
-        for fname in pylint_cmk.get_pylint_files(abs_path, "*"):
-            modules_or_packages.append(path + "/" + fname)
+#    for path in search_paths:
+#        abs_path = cmk_path() + "/" + path
+#        for fname in pylint_cmk.get_pylint_files(abs_path, "*"):
+#            modules_or_packages.append(path + "/" + fname)
 
     exit_code = pylint_cmk.run_pylint(cmk_path(), modules_or_packages)
+#    exit_code = pylint_cmk.run_pylint(cmk_path(), [])
+
     assert exit_code == 0, "PyLint found an error"
 
 

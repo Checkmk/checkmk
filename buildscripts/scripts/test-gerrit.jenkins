@@ -16,7 +16,7 @@ node {
                 extensions: [[
                     $class: 'CloneOption',
                     honorRefspec: true,
-                    reference: '/home/gerrit/gerrit_data/git/check_mk.git',
+                    #reference: '/home/gerrit/gerrit_data/git/check_mk.git',
                     noTags: true,
                     shallow: false
                 ]],

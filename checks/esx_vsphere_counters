@@ -69,37 +69,39 @@
 
 
 def inventory_esx_vsphere_counters_diskio(parsed):
-    if "disk.read" in parsed and "" in parsed["disk.read"]:
-        return [("SUMMARY", {})]
+    if "" in parsed.get("disk.read", {}):
+        yield "SUMMARY", {}
+
+
+def _concat_instance_multivalues(parsed, key):
+    all_multivalues = []
+    for data in parsed.get(key, {}).itervalues():
+        multivalues, _unit = data[0]
+        all_multivalues.extend(multivalues)
+    return all_multivalues
 
 
 def check_esx_vsphere_counters_diskio(item, params, parsed):
-    for key in ("disk.read", "disk.numberWrite"):
-        if key not in parsed:
-            raise MKCounterWrapped("Counter data is missing")
+    summary = {}
 
-    values = {}
-    values['read_throughput'] = 0
-    values['write_throughput'] = 0
-    values['read_ios'] = 0
-    values['write_ios'] = 0
-    values['latency'] = 0
+    for op_type in ("read", "write"):
+        # summed up in key ""
+        data = parsed.get("disk.%s" % op_type, {}).get("")
+        multivalues, _unit = data[0] if data else (None, None)
+        if multivalues is not None:
+            summary['%s_throughput' % op_type] = esx_vsphere_get_average(multivalues) * 1024
 
-    for what in ["read", "write"]:
-        if "disk.%s" % what in parsed and "" in parsed["disk.%s" % what]:
-            values['%s_throughput' % what] = int(
-                esx_vsphere_get_average(parsed["disk.%s" % what][""][0][0]) * 1024)
+        # sum up all instances
+        op_counts = _concat_instance_multivalues(parsed, "disk.number%s" % op_type.title())
+        if op_counts:
+            # these are absolute counts, every 20 seconds.
+            summary["%s_ios" % op_type] = esx_vsphere_get_average(op_counts) / 20
 
-        for info in parsed["disk.number%s" % what.title()].itervalues():
-            values["%s_ios" % what] += int(esx_vsphere_get_average(info[0][0]))
+    latencies = _concat_instance_multivalues(parsed, "disk.deviceLatency")
+    if latencies:
+        summary['latency'] = max(int(l) for l in latencies) / 1000.0
 
-    if "disk.deviceLatency" in parsed:
-        highest_latency = 0
-        for entry in parsed["disk.deviceLatency"].values():
-            highest_latency = max(highest_latency, max(map(int, entry[0][0])))
-        values["latency"] = highest_latency / 1000.0
-
-    return check_diskstat_dict(item, params, {"SUMMARY": values})
+    return check_diskstat_dict(item, params, {"SUMMARY": summary})
 
 
 check_info['esx_vsphere_counters.diskio'] = {

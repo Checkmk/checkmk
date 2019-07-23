@@ -1,6 +1,4 @@
-# Python 2.7.13 yields a bug concerning the LoadLibrary() function on windows,
-# see http://bugs.python.org/issue29082 . Use 2.7.12 instead.
-PYTHON_VERSION = 2.7.12
+PYTHON_VERSION = 2.7.16
 BUILD_DIR := $(shell realpath ./../../winbuild)
 PLUGINS_DIR := $(shell realpath ./../../plugins)
 
@@ -35,6 +33,7 @@ requests = $(SRC_DIR)/pip/requests-2.21.0-py2.py3-none-any.whl
 setuptools = $(SRC_DIR)/pip/setuptools-39.1.0-py2.py3-none-any.whl
 six = $(SRC_DIR)/pip/six-1.11.0-py2.py3-none-any.whl
 urllib3 = $(SRC_DIR)/pip/urllib3-1.24.1-py2.py3-none-any.whl
+wheel = $(SRC_DIR)/pip/wheel-0.33.1-py2.py3-none-any.whl
 win_inet_pton = $(SRC_DIR)/pip/win_inet_pton-1.0.1.tar.gz
 
 # This list expands to filenames and is meant to be used
@@ -63,6 +62,7 @@ PYTHON_PACKAGE_FILES = \
 	$(setuptools) \
 	$(six) \
 	$(urllib3) \
+	$(wheel) \
 	$(win_inet_pton)
 
 # This list is meant to be used as target(s) for manual download
@@ -89,6 +89,7 @@ PYTHON_PACKAGES = \
 	setuptools \
 	six \
 	urllib3 \
+	wheel \
 	win_inet_pton
 
 # Matching from filename to download-string.
@@ -117,6 +118,7 @@ $(requests) := requests==2.21.0
 $(setuptools) := setuptools==39.1.0
 $(six) := six==1.11.0
 $(urllib3) := urllib3==1.24.1
+$(wheel) := wheel==0.33.1
 $(win_inet_pton) := win_inet_pton==1.0.1
 
 

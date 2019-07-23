@@ -31,6 +31,7 @@ int ExecMainService(StdioLog stdio_log);   // on exec
 int ExecStartLegacy();                     // on start_legacy
 int ExecStopLegacy();                      // on stop_legacy
 int ExecCap();                             // on cap
+int ExecVersion();                         // on version
 int ExecPatchHash();                       // on patch_hash
 int ExecShowConfig(std::string_view sec);  // on showconfig
 int ExecUpgradeParam(bool Force);          // om upgrade

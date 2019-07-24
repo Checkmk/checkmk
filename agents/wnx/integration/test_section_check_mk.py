@@ -136,5 +136,4 @@ def expected_output():
 
 def test_section_check_mk(request, testconfig_only_from, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    print(actual_output)
     local_test(expected_output, actual_output, testfile, request.node.name)

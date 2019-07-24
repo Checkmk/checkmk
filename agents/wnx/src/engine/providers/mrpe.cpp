@@ -74,7 +74,11 @@ void MrpeProvider::addParsedConfig() {
         entries_.begin(),      // from
         entries_.end(),        // to
         [](MrpeEntry entry) {  // lambda to delete
-            return !cma::tools::IsValidRegularFile(entry.full_path_name_);
+            auto ok = cma::tools::IsValidRegularFile(entry.full_path_name_);
+            if (!ok) {
+                XLOG::d("The file '{}' is no valid", entry.full_path_name_);
+            }
+            return !ok;
         }  //
     );
 
@@ -105,8 +109,10 @@ std::pair<std::string, std::filesystem::path> parseIncludeEntry(
 
     auto include_user = table[0];
     auto potential_path = table[table.size() - 1];
+    potential_path = cma::tools::RemoveQuotes(potential_path);
     potential_path = cma::cfg::ReplacePredefinedMarkers(potential_path);
     fs::path path = potential_path;  // last is path
+    if (path.is_relative()) path = cma::cfg::GetUserDir() / path;
 
     if (!cma::tools::IsValidRegularFile(path)) {
         XLOG::d(

@@ -228,8 +228,8 @@ def percent(perc, scientific_notation=False):
 
     # 1000 < oo
     if abs(perc) > 999.5:
-        if scientific_notation and abs(perc) > 1000000:
-            result = "%.1e" % perc
+        if scientific_notation and abs(perc) >= 100000:
+            result = "%1.e" % perc
         else:
             # TODO: in python3 change to >= 999.5
             # the way python rounds x.5 changed between py2 and py3

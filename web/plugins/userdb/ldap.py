@@ -2009,7 +2009,7 @@ def synchronize_profile_to_sites(connection, user_id, profile):
 
     results = []
     start_time = time.time()
-    while time.time() - start_time < 10:
+    while time.time() - start_time < 30:
         for job in jobs[:]:
             try:
                 results.append(job.get(timeout=0.5))

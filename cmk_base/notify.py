@@ -46,6 +46,7 @@ import sys
 import time
 
 import livestatus
+from cmk.defines import core_state_names
 from cmk.regex import regex
 import cmk.paths
 from cmk.exceptions import MKGeneralException
@@ -1745,7 +1746,15 @@ def notify_bulk(dirname, uuids):
                 line = "%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1"))
                 context_lines.append(line)
 
-        call_bulk_notification_script(plugin, context_lines)
+        exitcode, output_lines = call_bulk_notification_script(plugin, context_lines)
+
+        for context in bulk_context:
+            core_notification_result_log(
+                "bulk " + (plugin or "plain email"),
+                context,
+                exitcode,
+                output_lines,
+            )
     else:
         notify_log("No valid notification file left. Skipping this bulk.")
 
@@ -1799,8 +1808,12 @@ def call_bulk_notification_script(plugin, context_lines):
 
     if exitcode:
         notify_log("ERROR: script %s --bulk returned with exit code %s" % (path, exitcode))
-    for line in (stdout_txt + stderr_txt).splitlines():
+
+    output_lines = (stdout_txt + stderr_txt).splitlines()
+    for line in output_lines:
         notify_log("%s: %s" % (plugin, line.rstrip()))
+
+    return exitcode, output_lines
 
 
 #.
@@ -1947,6 +1960,24 @@ def core_notification_log(plugin, plugin_context):
     log_message = "%s NOTIFICATION: %s;%s;%s;%s;%s" % (
         what, contact, spec, state, plugin or "plain email", output
     )
+
+    _send_livestatus_command("LOG;%s" % log_message)
+
+
+def core_notification_result_log(plugin, context, exit_code, output):
+    contact = context["CONTACTNAME"]
+    hostname = context["HOSTNAME"]
+    service = context.get("SERVICEDESC")
+    if service:
+        what = "SERVICE NOTIFICATION RESULT"
+        spec = "%s;%s" % (hostname, service)
+    else:
+        what = "HOST NOTIFICATION RESULT"
+        spec = hostname
+    state = core_state_names().get(exit_code, "")
+    comment = " -- ".join(output)
+    output = output[-1]
+    log_message = "%s: %s;%s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, output, comment)
 
     _send_livestatus_command("LOG;%s" % log_message)
 

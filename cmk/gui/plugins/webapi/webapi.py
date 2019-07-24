@@ -43,7 +43,6 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
-from cmk.gui.valuespec import Checkbox
 from cmk.gui.watolib.tags import (
     TagConfigFile,)
 from cmk.gui.watolib.groups import (
@@ -678,10 +677,6 @@ class APICallRules(APICallCollection):
 
         # Verify all rules
         rule_vs = watolib.Ruleset(ruleset_name, tag_to_group_map).rulespec.valuespec
-
-        # Binary rulesets currently don't have a valuespec attribute set.
-        if rule_vs is None:
-            rule_vs = Checkbox()
 
         for folder_path, rules in new_ruleset.items():
             for rule in rules:

@@ -17,22 +17,23 @@ def _rule(ruleset_name):
 
 
 @pytest.mark.parametrize(
-    "ruleset_name,default_value",
+    "ruleset_name,default_value,is_binary",
     [
         # non-binary host ruleset
-        ("inventory_processes_rules", None),
+        ("inventory_processes_rules", None, False),
         # binary host ruleset
-        ("only_hosts", True),
+        ("only_hosts", True, True),
         # non-binary service ruleset
-        ("checkgroup_parameters:local", None),
+        ("checkgroup_parameters:local", None, False),
         # binary service ruleset
-        ("clustered_services", True),
+        ("clustered_services", True, True),
     ])
-def test_rule_initialize(register_builtin_html, ruleset_name, default_value):
+def test_rule_initialize(register_builtin_html, ruleset_name, default_value, is_binary):
     rule = _rule(ruleset_name)
     assert isinstance(rule.conditions, rulesets.RuleConditions)
     assert rule.rule_options == {}
     assert rule.value == default_value
+    assert rule.ruleset.rulespec.is_binary_ruleset == is_binary
 
 
 def test_rule_from_config_unhandled_format():

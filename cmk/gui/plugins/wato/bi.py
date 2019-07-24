@@ -2384,7 +2384,7 @@ bi_packs['default'] = {
  'host_aggregations': [({'disabled': True,
                          'downtime_aggr_warn': False,
                          'hard_states': False,
-                         'id': 'default_aggregation',
+                         'ID': 'default_aggregation',
                          'use_layout_id': None},
                         [u'Hosts'],
                         FOREACH_HOST,

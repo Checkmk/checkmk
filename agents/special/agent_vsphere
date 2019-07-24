@@ -1160,6 +1160,42 @@ def fetch_extra_interface_counters(connection, opt):
     return net_extra_info
 
 
+def fetch_counters(connection, host, samples, counters_avail, counters_syntax):
+    ### TODO: try to get esx hosts perfdata from vCenter
+    counter_data = []
+    for entry in COUNTER_IDS:
+        for instance in counters_avail.get(entry, []):
+            counter_data.append(
+                "<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>"
+                % (entry, instance))
+    counters_value = {}
+    counter_data_response = connection.query_server(telegram_list["perfcounterdata"],
+                                                    payload_params={
+                                                        "esxhost": host,
+                                                        "counters": "".join(counter_data),
+                                                        "samples": samples
+                                                    })
+    # Python regex only supports up to 100 match groups in a regex..
+    # We are only extracting the whole value line and split it later on
+    # This is a perfect candidate for "Catastrophic Backtracking" :)
+    # Someday we should replace all of these get_pattern calls with
+    # one of these new and fancy xml parsers I've heard from
+    elements = get_pattern(
+        "<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id>(%s)" %
+        ("<value>.*?</value>" * samples), counter_data_response)
+    for entry in elements:
+        counter, instance, valuestring = entry
+        values = get_pattern("<value>(.*?)</value>", valuestring)
+        if counter in counters_syntax:
+            counters_value["%s.%s" % (counter, instance)] = {
+                "id": counter,
+                "instance": instance,
+                "value": "#".join(values)
+            }
+
+    return counters_value
+
+
 def get_max_samples(connection):
     # Determine the needed number of real-time samples
     # One real-time sample is 20 seconds
@@ -1183,41 +1219,11 @@ def get_section_counters(connection, hostsystems, datastores, opt):
     counters_syntax = fetch_counters_syntax(connection, counters_available_all)
     max_samples = get_max_samples(connection)
 
-    counter_data_payload = telegram_list["perfcounterdata"]
     for host in hostsystems:
         counters_avail = counters_available_by_host[host]
 
-        ### TODO: try to get esx hosts perfdata from vCenter
-        counter_data = []
-        for entry in COUNTER_IDS:
-            for instance in counters_avail.get(entry, []):
-                counter_data.append(
-                    "<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>"
-                    % (entry, instance))
-        counters_value = {}
-        counter_data_response = connection.query_server(counter_data_payload,
-                                                        payload_params={
-                                                            "esxhost": host,
-                                                            "counters": "".join(counter_data),
-                                                            "samples": max_samples
-                                                        })
-        # Python regex only supports up to 100 match groups in a regex..
-        # We are only extracting the whole value line and split it later on
-        # This is a perfect candidate for "Catastrophic Backtracking" :)
-        # Someday we should replace all of these get_pattern calls with
-        # one of these new and fancy xml parsers I've heard from
-        elements = get_pattern(
-            "<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id>(%s)" %
-            ("<value>.*?</value>" * max_samples), counter_data_response)
-        for entry in elements:
-            counter, instance, valuestring = entry
-            values = get_pattern("<value>(.*?)</value>", valuestring)
-            if counter in counters_syntax:
-                counters_value["%s.%s" % (counter, instance)] = {
-                    "id": counter,
-                    "instance": instance,
-                    "value": "#".join(values)
-                }
+        counters_value = fetch_counters(connection, host, max_samples, counters_avail,
+                                        counters_syntax)
 
         counters_output = {}
         for key in sorted(counters_value.keys()):

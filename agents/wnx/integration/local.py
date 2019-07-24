@@ -231,8 +231,12 @@ class YamlWriter(object):
         self._doc = yaml.safe_load(doc)
 
 
-def local_test(expected_output, actual_output, testfile, test_name=None, test_class=None):
-    comparison_data = zip(expected_output, actual_output)
+def local_test(expected_output_from_agent,
+               actual_output_from_agent,
+               current_test,
+               test_name=None,
+               test_class=None):
+    comparison_data = zip(expected_output_from_agent, actual_output_from_agent)
     for expected, actual in comparison_data:
         if actual == 'WMItimeout':
             pytest.skip('WMI timeout, better luck next time')
@@ -246,14 +250,14 @@ def local_test(expected_output, actual_output, testfile, test_name=None, test_cl
         assert re.match(expected,
                         actual) is not None, "\nExpected '%s'\nActual   '%s'" % (expected, actual)
     try:
-        assert len(actual_output) >= len(expected_output), (
+        assert len(actual_output_from_agent) >= len(expected_output_from_agent), (
             'actual output is shorter than expected:\n'
             'expected output:\n%s\nactual output:\n%s' %
-            ('\n'.join(expected_output), '\n'.join(actual_output)))
-        assert len(actual_output) <= len(expected_output), (
+            ('\n'.join(expected_output_from_agent), '\n'.join(actual_output_from_agent)))
+        assert len(actual_output_from_agent) <= len(expected_output_from_agent), (
             'actual output is longer than expected:\n'
             'expected output:\n%s\nactual output:\n%s' %
-            ('\n'.join(expected_output), '\n'.join(actual_output)))
+            ('\n'.join(expected_output_from_agent), '\n'.join(actual_output_from_agent)))
     except TypeError:
         # expected_output may be an iterator without len
-        assert len(actual_output) > 0, 'Actual output was empty'
+        assert len(actual_output_from_agent) > 0, 'Actual output was empty'

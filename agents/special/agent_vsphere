@@ -1160,14 +1160,13 @@ def fetch_extra_interface_counters(connection, opt):
     return net_extra_info
 
 
-def fetch_counters(connection, host, samples, counters_avail):
+def fetch_counters(connection, host, samples, counters_selected):
     ### TODO: try to get esx hosts perfdata from vCenter
     counter_data = []
-    for entry in COUNTER_IDS:
-        for instance in counters_avail.get(entry, []):
-            counter_data.append(
-                "<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>"
-                % (entry, instance))
+    for entry, instances in counters_selected:
+        counter_data.extend(
+            "<ns1:metricId><ns1:counterId>%s</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>"
+            % (entry, instance) for instance in instances)
 
     counter_data_response = connection.query_server(telegram_list["perfcounterdata"],
                                                     payload_params={
@@ -1219,7 +1218,9 @@ def get_section_counters(connection, hostsystems, datastores, opt):
     for host in hostsystems:
         counters_avail = counters_available_by_host[host]
 
-        counters_value = fetch_counters(connection, host, max_samples, counters_avail)
+        counters_selected = [(entry, counters_avail.get(entry, [])) for entry in COUNTER_IDS]
+
+        counters_value = fetch_counters(connection, host, max_samples, counters_selected)
 
         counters_output = {}
         for id_, instance, values in counters_value:

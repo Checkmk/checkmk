@@ -54,6 +54,8 @@ import * as dashboard from "dashboard";
 
 import * as d3 from "d3";
 import * as node_visualization from "node_visualization";
+import * as node_visualization_layout_styles from "node_visualization_layout_styles";
+import * as node_visualization_viewport from "node_visualization_viewport";
 
 // Optional import is currently not possible using the ES6 imports
 var graphs;
@@ -102,6 +104,8 @@ export default {
         graphs: graphs,
         dashboard: dashboard,
         node_visualization: node_visualization,
+        node_visualization_viewport: node_visualization_viewport,
+        node_visualization_layout_styles: node_visualization_layout_styles,
         d3: d3,
     }
 };

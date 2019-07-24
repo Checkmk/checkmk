@@ -26,6 +26,7 @@
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
 import os
+import json
 import pprint
 
 import cmk
@@ -47,6 +48,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.valuespec import (
+    ValueSpec,
     Tuple,
     Transform,
     Percentage,
@@ -2083,6 +2085,10 @@ class ModeBIEditRule(ModeBI):
                      regex_error=_("Parameters must contain only A-Z, a-z, 0-9 and _ "
                                    "and must not begin with a digit."),
                  ))),
+            ("layout_style",
+             NodeVisualizationLayoutStyle(
+                 title="BI visualization layout style",
+                 help=_("The following layout style is applied to the matching node"))),
             ("disabled",
              Checkbox(
                  title=_("Rule activation"),
@@ -2134,12 +2140,43 @@ class ModeBIEditRule(ModeBI):
                           render="form",
                           elements=elements,
                           headers=[
-                              (_("Rule Properties"),
-                               ["id", "title", "docu_url", "comment", "params", "disabled"]),
+                              (_("Rule Properties"), [
+                                  "id", "title", "docu_url", "comment", "params", "layout_style",
+                                  "disabled"
+                              ]),
                               (_("Child Node Generation"), ["nodes"]),
                               (_("Aggregation Function"), ["aggregation", "state_messages",
                                                            "icon"]),
                           ])
+
+
+class NodeVisualizationLayoutStyle(ValueSpec):
+    def __init__(self, **kwargs):
+        super(NodeVisualizationLayoutStyle, self).__init__(**kwargs)
+        self._style_type = kwargs.get("style_type", "hierarchy")
+
+    def render_input(self, varprefix, value):
+        html.div("", id_=varprefix)
+        html.javascript(
+            "let example = new cmk.node_visualization_layout_styles.LayoutStyleExampleGenerator(%s);"
+            "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value)))
+
+    def value_to_text(self, value):
+        return ""
+
+    def from_html_vars(self, varprefix):
+        value = self.default_value()
+        for key, val in html.request.itervars():
+            if key.startswith(varprefix):
+                clean_key = key[len(varprefix):]
+                if clean_key == "style_type":
+                    value[clean_key] = val
+                else:
+                    value["style_config"][clean_key] = int(val)
+        return value
+
+    def default_value(self):
+        return {"style_type": "hierarchy", "style_config": {}}
 
 
 #.

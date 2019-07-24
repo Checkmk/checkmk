@@ -29,8 +29,8 @@ import re
 import abc
 from typing import Dict  # pylint: disable=unused-import
 
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
+from cmk.utils.i18n import _
+from cmk.utils.exceptions import MKGeneralException
 
 
 def get_effective_tag_config(tag_config):
@@ -58,11 +58,10 @@ def _parse_legacy_title(title):
     return None, title
 
 
-def _validate_tag_id(tag_id, varname):
+def _validate_tag_id(tag_id):
     if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
-        raise MKUserError(
-            varname, _("Invalid tag ID. Only the characters a-z, A-Z, "
-                       "0-9, _ and - are allowed."))
+        raise MKGeneralException(
+            _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
 
 class ABCTag(object):
@@ -79,12 +78,12 @@ class ABCTag(object):
 
     def validate(self):
         if not self.id:
-            raise MKUserError("tag_id", _("Please specify a tag ID"))
+            raise MKGeneralException(_("Please specify a tag ID"))
 
-        _validate_tag_id(self.id, "tag_id")
+        _validate_tag_id(self.id)
 
         if not self.title:
-            raise MKUserError("title", _("Please supply a title for you auxiliary tag."))
+            raise MKGeneralException(_("Please supply a title for you auxiliary tag."))
 
     def parse_config(self, data):
         self._initialize()
@@ -150,9 +149,8 @@ class AuxTagList(object):
 
     def _append(self, aux_tag):
         if self.exists(aux_tag.id):
-            raise MKUserError("tag_id",
-                              _("This tag id does already exist in the list "
-                                "of auxiliary tags."))
+            raise MKGeneralException(
+                _("The tag ID \"%s\" does already exist in the list of auxiliary tags.") % aux_tag)
         self._tags.append(aux_tag)
 
     def update(self, aux_tag_id, aux_tag):
@@ -174,10 +172,11 @@ class AuxTagList(object):
 
             builtin_config = BuiltinTagConfig()
             if builtin_config.aux_tag_list.exists(aux_tag.id):
-                raise MKUserError("tag_id", _("You can not override a builtin auxiliary tag."))
+                raise MKGeneralException(
+                    _("You can not override the builtin auxiliary tag \"%s\".") % aux_tag.id)
 
             if aux_tag.id in seen:
-                raise MKUserError("tag_id", _("Duplicate tag id in auxilary tags: %s") % aux_tag.id)
+                raise MKGeneralException(_("Duplicate tag ID \"%s\" in auxilary tags") % aux_tag.id)
 
             seen.add(aux_tag.id)
 
@@ -453,7 +452,7 @@ class TagConfig(object):
                 self.tag_groups[idx] = tag_group
                 break
         else:
-            raise MKUserError("", _("Unknown tag group"))
+            raise MKGeneralException(_("Unknown tag group \"%s\"") % tag_group.id)
         self._validate_group(tag_group)
 
     def validate_config(self):
@@ -468,31 +467,33 @@ class TagConfig(object):
         seen_ids = set()
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
-                raise MKUserError("tag_id", _("The tag ID %s is used twice.") % tag_group.id)
+                raise MKGeneralException(_("The tag group ID \"%s\" is used twice.") % tag_group.id)
             seen_ids.add(tag_group.id)
 
         for aux_tag in self.aux_tag_list.get_tags():
             if aux_tag.id in seen_ids:
-                raise MKUserError("tag_id", _("The tag ID %s is used twice.") % aux_tag.id)
+                raise MKGeneralException(_("The tag ID \"%s\" is used twice.") % aux_tag.id)
             seen_ids.add(aux_tag.id)
 
     # TODO: cleanup this mess
     # This validation is quite gui specific, I do not want to introduce this into the base classes
     def _validate_group(self, tag_group):
         if not tag_group.id:
-            raise MKUserError("tag_id", _("Please specify an ID for your tag group."))
-        _validate_tag_id(tag_group.id, "tag_id")
+            raise MKGeneralException(_("Please specify an ID for your tag group."))
+        _validate_tag_id(tag_group.id)
 
         if tag_group.id == "site":
-            raise MKUserError("tag_id",
-                              _("The tag group %s is reserved for internal use.") % tag_group.id)
+            raise MKGeneralException(
+                _("The tag group \"%s\" is reserved for internal use.") % tag_group.id)
 
         builtin_config = BuiltinTagConfig()
         if builtin_config.tag_group_exists(tag_group.id):
-            raise MKUserError("tag_id", _("You can not override a builtin tag group."))
+            raise MKGeneralException(
+                _("You can not override the builtin tag group \"%s\".") % tag_group.id)
 
         if not tag_group.title:
-            raise MKUserError("title", _("Please specify a title for your tag group."))
+            raise MKGeneralException(
+                _("Please specify a title for your tag group \"%s\".") % tag_group.id)
 
         have_none_tag = False
         for nr, tag in enumerate(tag_group.tags):
@@ -501,26 +502,24 @@ class TagConfig(object):
                     tag.id = None
 
                     if len(tag_group.tags) == 1:
-                        raise MKUserError("choices_%d_id" % (nr + 1),
-                                          _("Can not use an empty tag ID with a single choice."))
+                        raise MKGeneralException(
+                            _("Can not use an empty tag ID with a single choice."))
 
                     if have_none_tag:
-                        raise MKUserError("choices_%d_id" % (nr + 1),
-                                          _("Only one tag may be empty."))
+                        raise MKGeneralException(_("Only one tag may be empty."))
 
                     have_none_tag = True
 
                 # Make sure tag ID is unique within this group
                 for (n, x) in enumerate(tag_group.tags):
                     if n != nr and x.id == tag.id:
-                        raise MKUserError(
-                            "choices_id_%d" % (nr + 1),
-                            _("Tags IDs must be unique. You've used <b>%s</b> twice.") % tag.id)
+                        raise MKGeneralException(
+                            _("Tags IDs must be unique. You've used \"%s\" twice.") % tag.id)
 
         if len(tag_group.tags) == 0:
-            raise MKUserError("id_0", _("Please specify at least one tag."))
+            raise MKGeneralException(_("Please specify at least one tag."))
         if len(tag_group.tags) == 1 and tag_group.tags[0] is None:
-            raise MKUserError("id_0", _("Tags with only one choice must have an ID."))
+            raise MKGeneralException(_("Tag groups with only one choice must have a tag ID."))
 
     def get_dict_format(self):
         result = {"tag_groups": [], "aux_tags": []}

@@ -397,7 +397,7 @@ class Rulespec(object):
 
     @abc.abstractproperty
     def valuespec(self):
-        # type: () -> Optional[ValueSpec]
+        # type: () -> ValueSpec
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -412,6 +412,11 @@ class Rulespec(object):
 
     @abc.abstractproperty
     def is_for_services(self):
+        # type: () -> bool
+        raise NotImplementedError()
+
+    @property
+    def is_binary_ruleset(self):
         # type: () -> bool
         raise NotImplementedError()
 
@@ -550,7 +555,19 @@ class ABCBinaryRulespec(Rulespec):
     """Base class for all rulespecs that create a binary host/service rule list"""
     @property
     def valuespec(self):
-        return None
+        # type: () -> ValueSpec
+        return DropdownChoice(
+            choices=[
+                (True, _("Positive match (Add matching hosts to the set)")),
+                (False, _("Negative match (Exclude matching hosts from the set)")),
+            ],
+            default_value=True,
+        )
+
+    @property
+    def is_binary_ruleset(self):
+        # type: () -> bool
+        return True
 
     @abc.abstractproperty
     def title(self):
@@ -577,6 +594,11 @@ class ABCValueRulespec(Rulespec):
     def valuespec(self):
         # type: () -> ValueSpec
         raise NotImplementedError()
+
+    @property
+    def is_binary_ruleset(self):
+        # type: () -> bool
+        return False
 
     @property
     def title(self):
@@ -701,6 +723,7 @@ class ManualCheckParameterRulespec(HostRulespec):
 
     @property
     def valuespec(self):
+        # type: () -> ValueSpec
         """Wraps the parameter together with the other needed valuespecs
 
         This should not be overridden by specific manual checks. Normally the parameter_valuespec

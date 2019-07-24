@@ -825,23 +825,18 @@ class ModeEditRuleset(WatoMode):
 
         # Value
         table.cell(_("Value"))
-        if rulespec.valuespec:
+        try:
+            value_html = rulespec.valuespec.value_to_text(value)
+        except Exception as e:
             try:
-                value_html = rulespec.valuespec.value_to_text(value)
+                reason = "%s" % e
+                rulespec.valuespec.validate_datatype(value, "")
             except Exception as e:
-                try:
-                    reason = "%s" % e
-                    rulespec.valuespec.validate_datatype(value, "")
-                except Exception as e:
-                    reason = "%s" % e
+                reason = "%s" % e
 
-                value_html = html.render_icon("alert") \
-                           + _("The value of this rule is not valid. ") \
-                           + reason
-        else:
-            title = _("This rule results in a positive outcome.") if value else _(
-                "this rule results in a negative outcome.")
-            value_html = html.render_icon("rule_%s" % ("yes" if value else "no"), title=title)
+            value_html = html.render_icon("alert") \
+                       + _("The value of this rule is not valid. ") \
+                       + reason
         html.write(value_html)
 
         # Comment
@@ -1236,11 +1231,8 @@ class EditRuleMode(WatoMode):
         self._rule.update_conditions(self._get_rule_conditions_from_vars())
 
         # VALUE
-        if self._ruleset.valuespec():
-            value = self._ruleset.valuespec().from_html_vars("ve")
-            self._ruleset.valuespec().validate_value(value, "ve")
-        else:
-            value = html.request.var("value") == "yes"
+        value = self._ruleset.valuespec().from_html_vars("ve")
+        self._ruleset.valuespec().validate_value(value, "ve")
         self._rule.value = value
 
     def _get_condition_type_from_vars(self):
@@ -1300,34 +1292,25 @@ class EditRuleMode(WatoMode):
 
         # Value
         valuespec = self._ruleset.valuespec()
-        if valuespec:
-            forms.header(valuespec.title() or _("Value"))
-            forms.section()
-            html.prevent_password_auto_completion()
-            try:
-                valuespec.validate_datatype(self._rule.value, "ve")
-                valuespec.render_input("ve", self._rule.value)
-            except Exception as e:
-                if config.debug:
-                    raise
-                else:
-                    html.show_warning(
-                        _('Unable to read current options of this rule. Falling back to '
-                          'default values. When saving this rule now, your previous settings '
-                          'will be overwritten. Problem was: %s.') % e)
+        forms.header(valuespec.title() or _("Value"))
+        forms.section()
+        html.prevent_password_auto_completion()
+        try:
+            valuespec.validate_datatype(self._rule.value, "ve")
+            valuespec.render_input("ve", self._rule.value)
+        except Exception as e:
+            if config.debug:
+                raise
+            else:
+                html.show_warning(
+                    _('Unable to read current options of this rule. Falling back to '
+                      'default values. When saving this rule now, your previous settings '
+                      'will be overwritten. Problem was: %s.') % e)
 
-                # In case of validation problems render the input with default values
-                valuespec.render_input("ve", valuespec.default_value())
+            # In case of validation problems render the input with default values
+            valuespec.render_input("ve", valuespec.default_value())
 
-            valuespec.set_focus("ve")
-        else:
-            forms.header(_("Positive / Negative"))
-            forms.section("")
-            for posneg, img in [("positive", "yes"), ("negative", "no")]:
-                val = img == "yes"
-                html.icon(title=None, icon="rule_%s" % img)
-                html.radiobutton("value", img, self._rule.value == val,
-                                 _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
+        valuespec.set_focus("ve")
 
         self._show_conditions()
 

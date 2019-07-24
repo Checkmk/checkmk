@@ -1119,8 +1119,10 @@ def get_max_samples(connection):
 
 def process_counters(connection, hostsystems, datastores):
     counters_available_by_host = fetch_available_counters(connection, hostsystems)
+    counters_available_all = reduce(lambda x, y: x.union(y),
+                                    counters_available_by_host.itervalues(), set())
     net_extra_info = fetch_extra_interface_counters(connection)
-    counters_syntax = fetch_counters_syntax(connection, COUNTER_IDS)
+    counters_syntax = fetch_counters_syntax(connection, counters_available_all)
     max_samples = get_max_samples(connection)
 
     counter_data_payload = telegram_list["perfcounterdata"]

@@ -181,11 +181,15 @@ class SimpleListMode(SimpleWatoModeBase):
         """
         raise MKUserError("_action", _("The action '%s' is not implemented") % action)
 
+    def _new_context_button_label(self):
+        # type: () -> Text
+        return _("New %s") % self._mode_type.name_singular()
+
     def buttons(self):
         global_buttons()
-        html.context_button(
-            _("New %s") % self._mode_type.name_singular(),
-            html.makeuri_contextless([("mode", self._mode_type.edit_mode_name())]), "new")
+        html.context_button(self._new_context_button_label(),
+                            html.makeuri_contextless([("mode", self._mode_type.edit_mode_name())]),
+                            "new")
 
     def action(self):
         if not html.transaction_valid():

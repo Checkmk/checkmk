@@ -1160,7 +1160,7 @@ def fetch_extra_interface_counters(connection, opt):
     return net_extra_info
 
 
-def fetch_counters(connection, host, samples, counters_avail, counters_syntax):
+def fetch_counters(connection, host, samples, counters_avail):
     ### TODO: try to get esx hosts perfdata from vCenter
     counter_data = []
     for entry in COUNTER_IDS:
@@ -1168,13 +1168,14 @@ def fetch_counters(connection, host, samples, counters_avail, counters_syntax):
             counter_data.append(
                 "<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>"
                 % (entry, instance))
-    counters_value = {}
+
     counter_data_response = connection.query_server(telegram_list["perfcounterdata"],
                                                     payload_params={
                                                         "esxhost": host,
                                                         "counters": "".join(counter_data),
                                                         "samples": samples
                                                     })
+
     # Python regex only supports up to 100 match groups in a regex..
     # We are only extracting the whole value line and split it later on
     # This is a perfect candidate for "Catastrophic Backtracking" :)
@@ -1183,15 +1184,11 @@ def fetch_counters(connection, host, samples, counters_avail, counters_syntax):
     elements = get_pattern(
         "<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id>(%s)" %
         ("<value>.*?</value>" * samples), counter_data_response)
+    counters_value = []
     for entry in elements:
-        counter, instance, valuestring = entry
+        id_, instance, valuestring = entry
         values = get_pattern("<value>(.*?)</value>", valuestring)
-        if counter in counters_syntax:
-            counters_value["%s.%s" % (counter, instance)] = {
-                "id": counter,
-                "instance": instance,
-                "value": "#".join(values)
-            }
+        counters_value.append((id_, instance, values))
 
     return counters_value
 
@@ -1222,15 +1219,15 @@ def get_section_counters(connection, hostsystems, datastores, opt):
     for host in hostsystems:
         counters_avail = counters_available_by_host[host]
 
-        counters_value = fetch_counters(connection, host, max_samples, counters_avail,
-                                        counters_syntax)
+        counters_value = fetch_counters(connection, host, max_samples, counters_avail)
 
         counters_output = {}
-        for key in sorted(counters_value.keys()):
-            value = counters_value[key]
-            desc = counters_syntax[value["id"]]
-            counters_output[(desc["group"], desc["name"], value["instance"])] = (value["value"],
-                                                                                 desc["unit"])
+        for id_, instance, values in counters_value:
+            desc = counters_syntax.get(id_)
+            if not desc:
+                continue
+            counters_output[(desc["group"], desc["name"], instance)] = ('#'.join(values),
+                                                                        desc["unit"])
 
         # Add datastore name to counters
         for key, values in datastores.items():

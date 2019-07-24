@@ -203,6 +203,7 @@ AsioSession::s_ptr ExternalPort::getSession() {
 void ExternalPort::timedWaitForSession() {
     using namespace std::chrono;
     std::unique_lock lk(wake_lock_);
+    XLOG::t("Waiting for next connection");
     wake_thread_.wait_until(lk, steady_clock::now() + wake_delay_,
                             [this]() { return !session_queue_.empty(); });
 }
@@ -223,7 +224,9 @@ void ExternalPort::processQueue(cma::world::ReplyFunc reply) noexcept {
                 if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
                     as->start(reply);
                 } else {
-                    XLOG::d("Address '{}' is not allowed, this call should happen", ip);
+                    XLOG::d(
+                        "Address '{}' is not allowed, this call should happen",
+                        ip);
                 }
             }
 

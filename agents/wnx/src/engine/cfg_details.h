@@ -30,8 +30,11 @@ public:
     // if ServiceValidName set, then we MUST find path
     // otherwise look for WorkFolder
     // otherwise current path to current exe
-    bool setRoot(const std::wstring& service_name,  // look in registry
-                 const std::wstring& preset_root);  // look in disk
+    bool setRoot(const std::wstring& service_name,    // look in registry
+                 const std::wstring& preset_root);    // look in disk
+    // deprecated API
+    bool setRootEx(const std::wstring& service_name,  // look in registry
+                   const std::wstring& preset_root);  // look in disk
 
     void createDataFolderStructure(const std::wstring& AgentDataFolder);
 

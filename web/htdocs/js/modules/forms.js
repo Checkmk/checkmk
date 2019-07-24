@@ -36,7 +36,7 @@ export function enable_dynamic_form_elements(container=null) {
 
 // html.dropdown() adds the .select2-enable class for all dropdowns
 // that should use the select2 powered dropdowns
-function enable_select2_dropdowns(container) {
+export function enable_select2_dropdowns(container) {
     let elements;
     if (!container)
         container = $(document);

@@ -1919,6 +1919,10 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
     if docu_url:
         aggregation["docu_url"] = docu_url
 
+    layout_style = rule.get("layout_style")
+    if layout_style:
+        aggregation["rule_layout_style"] = layout_style
+
     if icon:
         aggregation["icon"] = icon
 

@@ -1041,6 +1041,21 @@ class ESXConnection(object):
 #   +----------------------------------------------------------------------+
 
 
+def fetch_available_counters(connection, hostsystems):
+    counters_available_by_host = {}
+    for host in hostsystems:
+        counter_avail_response = connection.query_server(telegram_list["perfcounteravail"],
+                                                         payload_params={"esxhost": host})
+        elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)",
+                               counter_avail_response)
+
+        data = counters_available_by_host.setdefault(host, {})
+        for counter, instance in elements:
+            data.setdefault(counter, []).append(instance)
+
+    return counters_available_by_host
+
+
 def fetch_counters_syntax(connection):
     counter_syntax_payload = telegram_list["perfcountersyntax"]
     counter_data = []
@@ -1102,27 +1117,19 @@ def get_max_samples(connection):
 
 
 def process_counters(connection, hostsystems, datastores):
+    counters_available_by_host = fetch_available_counters(connection, hostsystems)
     net_extra_info = fetch_extra_interface_counters(connection)
     counters_syntax = fetch_counters_syntax(connection)
     max_samples = get_max_samples(connection)
 
     counter_data_payload = telegram_list["perfcounterdata"]
-    for host in hostsystems.keys():
+    for host in hostsystems:
         if not opt_direct:
             output("<<<<%s>>>>" % convert_hostname(hostsystems[host]))
 
-        ### TODO: check if this host supports perfdata
+        counters_avail = counters_available_by_host[host]
+
         ### TODO: try to get esx hosts perfdata from vCenter
-        counter_avail = telegram_list["perfcounteravail"]
-        counter_avail_response = connection.query_server(counter_avail,
-                                                         payload_params={"esxhost": host})
-
-        counters_avail = {}
-        elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)",
-                               counter_avail_response)
-        for counter, instance in elements:
-            counters_avail.setdefault(counter, []).append(instance)
-
         counter_data = []
         for entry in COUNTER_IDS:
             for instance in counters_avail.get(entry, []):

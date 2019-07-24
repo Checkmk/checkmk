@@ -1,0 +1,11 @@
+Title: IE: Some context buttons were not toggled correctly in some views
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p20
+Date: 1563973162
+Class: fix
+
+When using IE/Edge it could happen that, for example on the service detail page, not all context
+buttons were toggled as expected.

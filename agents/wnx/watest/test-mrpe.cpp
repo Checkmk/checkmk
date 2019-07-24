@@ -3,21 +3,15 @@
 //
 #include "pch.h"
 
-#include <time.h>
-
-#include <chrono>
-#include <filesystem>
-#include <future>
-#include <string_view>
+#include <string>  // for string
 
 #include "cfg.h"
-#include "cfg_details.h"
-#include "cma_core.h"
-#include "common/cfg_info.h"
+#include "on_start.h"  // for OnStart, AppType, AppType::test
 #include "providers/mrpe.h"
-#include "read_file.h"
+#include "system_error"  // for error_code
 #include "test_tools.h"
 
+std::string_view a;
 /*
 Typic output:
 
@@ -88,8 +82,8 @@ TEST(SectionProviderMrpe, SmallApi) {
     EXPECT_EQ(s, "a b\1\1");
 
     {
-        auto [user, path] =
-            cma::provider::parseIncludeEntry("sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
+        auto [user, path] = cma::provider::parseIncludeEntry(
+            "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
         EXPECT_EQ(user, "sk");
         EXPECT_EQ(path.u8string(),
                   wtools::ConvertToUTF8(cma::cfg::GetUserDir()) + "\\" +
@@ -98,6 +92,7 @@ TEST(SectionProviderMrpe, SmallApi) {
 }
 
 TEST(SectionProviderMrpe, ConfigLoad) {
+    ASSERT_TRUE(true);
     YamlLoaderMrpe w;
     using namespace cma::cfg;
     MrpeProvider mrpe;
@@ -120,20 +115,22 @@ TEST(SectionProviderMrpe, ConfigLoad) {
         groups::kMrpe, vars::kMrpeConfig,
         {"check = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",
          "include sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // reference
-         "Include=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",       // valid without space
-         "includes = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",    // invalid
-         "includ = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",      // invalid
+         "Include=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // valid without space
+         "include  =   'mrpe_checks.cfg'",                //
+         "includes = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // invalid
+         "includ = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",    // invalid
          "chck = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",  // invalid
          "check = 'c:\\windows\\system32\\mode.com' CON CP /STATUS"});  // valid
 
     auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
-    EXPECT_EQ(strings.size(), 7);
+    EXPECT_EQ(strings.size(), 8);
     mrpe.parseConfig();
-    ASSERT_EQ(mrpe.includes_.size(), 2);
+    ASSERT_EQ(mrpe.includes_.size(), 3);
     mrpe.parseConfig();
-    ASSERT_EQ(mrpe.includes_.size(), 2);
+    ASSERT_EQ(mrpe.includes_.size(), 3);
     EXPECT_EQ(mrpe.includes_[0], "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
     EXPECT_EQ(mrpe.includes_[1], "=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
+    EXPECT_EQ(mrpe.includes_[2], "=   'mrpe_checks.cfg'");
     ASSERT_EQ(mrpe.checks_.size(), 2);
     EXPECT_EQ(mrpe.checks_[0],
               "Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS");
@@ -141,10 +138,10 @@ TEST(SectionProviderMrpe, ConfigLoad) {
               "'c:\\windows\\system32\\mode.com' CON CP /STATUS");
 
     mrpe.addParsedConfig();
-    EXPECT_EQ(mrpe.includes_.size(), 2);
+    EXPECT_EQ(mrpe.includes_.size(), 3);
     EXPECT_EQ(mrpe.checks_.size(), 2);
-    EXPECT_EQ(mrpe.entries_.size(), 3);
-}  // namespace cma::provider
+    EXPECT_EQ(mrpe.entries_.size(), 4);
+}
 
 TEST(SectionProviderMrpe, YmlCheck) {
     using namespace cma::cfg;

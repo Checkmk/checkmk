@@ -296,6 +296,9 @@ mrpe:
 
     # entries and cfg are the same as in the Legacy agent
     config:
+        # *Relative* path are supported for checks and includes
+        # Path below is equal to '$CUSTOM_AGENT_PATH$\plugins\your_check.com'
+        # - check = Console 'plugins\your_check.com' CON CP /STATUS
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg

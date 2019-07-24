@@ -40,7 +40,8 @@ def expected_output():
 
 def test_section_df(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    actual_output_len = len(actual_output)
+    result = actual_output
+    actual_output_len = len(result)
     expected_output_len = len(expected_output)
 
     # if we have length mismatch we have to extend expected output

@@ -703,75 +703,37 @@ telegram_list = {
   </ns1:RetrievePropertiesEx>"""
 }
 
-COUNTER_IDS = (
-    # mem.*
-    # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582,
-    # 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557,
-    # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639,
-    # 65620, 65599, 65580, 65619, 65603,
-    # disk.read/write/deviceLatency/numberRead/numberWrite
-    # 131073, disk.usage'
-    131076,  # disk.numberRead
-    131077,  # disk.numberWrite
-    131078,  # disk.read
-    131079,  # disk.write
-    # 131083,  # disk.deviceReadLatency
-    # 131084,  # disk.kernelReadLatency
-    # 131085,  # disk.totalReadLatency
-    # 131086,  # disk.queueReadLatency
-    # 131087,  # disk.deviceWriteLatency
-    # 131088,  # disk.kernelWriteLatency
-    # 131089,  # disk.totalWriteLatency
-    # 131090,  # disk.queueWriteLatency
-    131091,  # disk.deviceLatency
-    # 131092,  # disk.kernelLatency
-    # 131093,  # disk.totalLatency
-    # 131094,  # disk.queueLatency
-    # 131095,  # disk.maxTotalLatency
-    # 131096,  # disk.maxQueueDepth
-    # 131097,  # disk.numberReadAveraged
-    # 131098,  # disk.numberWriteAveraged
-    196609,  # net.* (ESX > 4.1)
-    196612,
-    196613,
-    196614,
-    196615,
-    196616,
-    196617,
-    196618,
-    196619,
-    196620,
-    196621,
-    196622,
-    196623,
-    196624,
-    196625,
-    196626,
-    262144,  # sys.uptime
-    # 262151,
-    #-262168,  sys.resourceMem*
-    262171,  # sys.resourceMemConsumed (seems as this is not available in ESX 5.0
-    #                                   but we saw it on 5.1)
-    # 655360,  # datastore.numberReadAveraged
-    # 655361,  # datastore.numberWriteAveraged
-    655362,  # datastore.read
-    655363,  # datastore.write
-    655364,  # datastore.totalReadLatency
-    655365,  # datastore.totalWriteLatency
-    655366,  # datastore.sizeNormalizedDatastoreLatency
-    # 655367,  # datastore.datastoreIops
-    # 655368,  # datastore.datastoreReadBytes
-    # 655369,  # datastore.datastoreWriteBytes
-    655370,  # datastore.datastoreReadIops
-    655371,  # datastore.datastoreWriteIops
-    # 655372 , # datastore.datastoreNormalReadLatency
-    # 655373 , # datastore.datastoreNormalWriteLatency
-    # 655374 , # datastore.datastoreReadOIO
-    # 655375 , # datastore.datastoreWriteOIO
-    # 655376 , # datastore.datastoreMaxQueueDepth
-    # 655377 , # datastore.datastoreReadLoadMetric
-    # 655378 , # datastore.datastoreWriteLoadMetric
-    # 655379 , # datastore.maxTotalLatency
+REQUESTED_COUNTERS_KEYS = (
+    'disk.numberRead',
+    'disk.numberWrite',
+    'disk.read',
+    'disk.write',
+    'disk.deviceLatency',
+    'net.usage',
+    'net.packetsRx',
+    'net.packetsTx',
+    'net.received',
+    'net.transmitted',
+    'net.droppedRx',
+    'net.droppedTx',
+    'net.bytesRx',
+    'net.bytesTx',
+    'net.broadcastRx',
+    'net.broadcastTx',
+    'net.multicastRx',
+    'net.multicastTx',
+    'net.errorsRx',
+    'net.errorsTx',
+    'net.unknownProtos',
+    'sys.uptime',
+    'sys.resourceMemConsumed',
+    'datastore.read',
+    'datastore.write',
+    'datastore.totalReadLatency',
+    'datastore.totalWriteLatency',
+    'datastore.sizeNormalizedDatastoreLatency',
+    'datastore.datastoreReadIops',
+    'datastore.datastoreWriteIops',
 )
 
 
@@ -1125,6 +1087,7 @@ def fetch_counters_syntax(connection, counter_ids):
 
     return {
         id_: {
+            "key": ".".join((group, name)),
             "name": name,
             "group": group,
             "unit": unit
@@ -1161,7 +1124,6 @@ def fetch_extra_interface_counters(connection, opt):
 
 
 def fetch_counters(connection, host, samples, counters_selected):
-    ### TODO: try to get esx hosts perfdata from vCenter
     counter_data = []
     for entry, instances in counters_selected:
         counter_data.extend(
@@ -1212,19 +1174,23 @@ def get_section_counters(connection, hostsystems, datastores, opt):
     counters_available_all = reduce(lambda x, y: x.union(y),
                                     counters_available_by_host.itervalues(), set())
     net_extra_info = fetch_extra_interface_counters(connection, opt)
-    counters_syntax = fetch_counters_syntax(connection, counters_available_all)
+    counters_description = fetch_counters_syntax(connection, counters_available_all)
     max_samples = get_max_samples(connection)
 
     for host in hostsystems:
         counters_avail = counters_available_by_host[host]
 
-        counters_selected = [(entry, counters_avail.get(entry, [])) for entry in COUNTER_IDS]
+        counters_selected = [
+            (id_, instances)
+            for id_, instances in counters_avail.iteritems()
+            if counters_description.get(id_, {}).get("key") in REQUESTED_COUNTERS_KEYS
+        ]
 
         counters_value = fetch_counters(connection, host, max_samples, counters_selected)
 
         counters_output = {}
         for id_, instance, values in counters_value:
-            desc = counters_syntax.get(id_)
+            desc = counters_description.get(id_)
             if not desc:
                 continue
             counters_output[(desc["group"], desc["name"], instance)] = ('#'.join(values),

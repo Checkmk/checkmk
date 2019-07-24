@@ -192,8 +192,12 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         // Determines the positioning force with the highest weight
         // console.log("compute node positions")
         this.viewport.get_hierarchy_list().forEach(hierarchy=>{
-                hierarchy.nodes.forEach(node=>this.compute_node_position(node))
+            hierarchy.nodes.forEach(node=>this.compute_node_position(node))
         })
+    }
+
+    compute_node_positions_from_list_of_nodes(list_of_nodes) {
+        list_of_nodes.forEach(node=>this.compute_node_position(node))
     }
 
     compute_node_position(node) {

@@ -98,3 +98,22 @@ export class NodeMatcher {
     }
 }
 
+export function get_bounding_rect(list_of_coords) {
+    let rect = {
+        x_min:  10000,
+        x_max: -10000,
+        y_min:  10000,
+        y_max: -10000,
+    }
+
+    list_of_coords.forEach(coord=>{
+        rect.x_min = Math.min(coord.x, rect.x_min)
+        rect.y_min = Math.min(coord.y, rect.y_min)
+        rect.x_max = Math.max(coord.x, rect.x_max)
+        rect.y_max = Math.max(coord.y, rect.y_max)
+    })
+    rect.width = rect.x_max - rect.x_min
+    rect.height = rect.y_max - rect.y_min
+    return rect
+}
+

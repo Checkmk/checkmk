@@ -4,6 +4,10 @@ import * as node_visualization_layouting_utils from "node_visualization_layoutin
 import * as node_visualization_layout from "node_visualization_layout";
 import * as node_visualization_utils from "node_visualization_utils"
 
+import * as node_visualization_layouting from "node_visualization_layouting";
+import * as node_visualization_viewport from "node_visualization_viewport";
+
+
 export class AbstractLayoutStyle {
     constructor(layout_manager, style_config, node, selection) {
         this._layout_manager = layout_manager
@@ -73,13 +77,13 @@ export class AbstractLayoutStyle {
         return []
     }
 
-    render_options(into_selection) {
+    render_options(into_selection, varprefix="") {
         this.options_selection = into_selection
-        this._update_options_in_input_field()
+        this._update_options_in_input_field(varprefix)
     }
 
 
-    _update_options_in_input_field() {
+    _update_options_in_input_field(varprefix="") {
         if (!this.options_selection)
             return
 
@@ -97,13 +101,13 @@ export class AbstractLayoutStyle {
 
         let rows = table.selectAll("tr").data(style_options)
         rows.exit().remove()
-
         let rows_enter = rows.enter().append("tr")
         rows_enter.append("td").text(d=>d.text)
                             .classed("style_infotext", true)
         rows_enter.append("td").append("input")
                             .classed("range", true)
                             .attr("id", d=>d.id)
+                            .attr("name", d=>varprefix + d.id)
                             .attr("type", "range")
                             .attr("step", 1)
                             .attr("min", d=>d.values.min)
@@ -160,8 +164,9 @@ export class AbstractLayoutStyle {
         this.translate_coords()
 
         this.update_data()
-        this._layout_manager.compute_node_positions()
+        
 
+        this._layout_manager.compute_node_positions_from_list_of_nodes(this.style_root_node.descendants())
         this._layout_manager.viewport.update_data_of_layers()
         this._layout_manager.viewport.update_gui_of_layers()
     }
@@ -528,7 +533,8 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
     _cleanup_style_node_positioning() {
         if (this.style_root_node) {
             this.style_root_node.descendants().forEach(node=>{
-                delete node.data.node_positioning[this.id()]
+                if (node.data.node_positioning)
+                    delete node.data.node_positioning[this.id()]
             })
         }
     }
@@ -669,8 +675,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 
     _compute_node_offsets() {
         let coords = this.get_hierarchy_size()
-        d3.tree().nodeSize([this.style_config.options.node_size,
-                            this.style_config.options.layer_height])(this.style_root_node)
+        d3.tree().nodeSize([this.style_config.options.node_size,this.style_config.options.layer_height])(this.style_root_node)
 
         this._node_positions = []
         for (let idx in this.filtered_descendants) {
@@ -813,7 +818,6 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         return coords
     }
 }
-
 
 
 export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
@@ -1118,6 +1122,9 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
     }
 
     generate_overlay() {
+        if (!this._layout_manager.edit_layout)
+            return
+
         if (this._vertices.length < 2)
             return
 
@@ -1166,3 +1173,328 @@ node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutS
 node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleRadial)
 node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleFixed)
 node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleBlock)
+
+
+
+export class LayoutStyleExampleGenerator {
+    constructor(varprefix) {
+        this._varprefix = varprefix
+        this._example_generator_div = d3.select("#" + this._varprefix)
+        let options = this._example_generator_div.append("div").style("float", "left")
+
+        this._viewport_width = 600
+        this._viewport_height = 400
+
+        this._style_choice_selection = options.append("div")
+        this._options_selection = options.append("div").style("margin-top", "12px")
+        this._example_selection = options.append("div").style("margin-top", "12px")
+        this._viewport_selection = this._example_generator_div
+                                    .append("svg")
+                                    .attr("id", "viewport")
+                                    .style("float", "left")
+                                    .attr("width", this._viewport_width)
+                                    .attr("height", this._viewport_height)
+        this._example_options = {
+            total_nodes: {id: "total_nodes", values: {default: 5, min: 1, max: 50}, text: "Sample nodes", value: 5},
+            depth: {id: "depth", values: {default: 1, min: 1, max: 5}, text: "Maximum depth", value: 2}
+        }
+
+        this._style_hierarchy = null
+        this._style_instance = null
+        this._layout_manager = this._create_fake_layout_manager()
+        this._initialize_viewport_components()
+    }
+
+    _initialize_viewport_components() {
+        this._viewport_zoom = this._viewport_selection.append("g")
+        this._viewport_zoom_links = this._viewport_zoom.append("g")
+        this._viewport_zoom_nodes = this._viewport_zoom.append("g")
+        this._viewport_selection.append("rect")
+                    .attr("stroke", "grey")
+                    .attr("fill", "none")
+                    .attr("x", 4)
+                    .attr("y", 4)
+                    .attr("width", this._viewport_width-8)
+                    .attr("height",this._viewport_height-8)
+    }
+
+    _update_viewport_visibility() {
+        if (this._style_settings.style_type == "none") {
+            this._viewport_selection.style("display", "none")
+            this._example_selection.style("display", "none")
+        }
+        else {
+            this._viewport_selection.style("display", null)
+            this._example_selection.style("display", null)
+        }
+    }
+
+    create_example(style_settings) {
+        this._style_settings = style_settings
+        this._render_style_choice(this._style_choice_selection)
+        this._update_viewport_visibility()
+        this._create_example_hierarchy(this._example_options)
+        switch (this._style_settings.style_type) {
+            case "none": {
+                return
+            }
+            case LayoutStyleHierarchy.prototype.type(): {
+                this._style_instance = new LayoutStyleHierarchy(this._layout_manager, this._style_settings.style_config,
+                                                                this._style_hierarchy.descendants()[0],
+                                                                this._viewport_zoom)
+                break
+            }
+            case LayoutStyleRadial.prototype.type(): {
+                this._style_instance = new LayoutStyleRadial(this._layout_manager, this._style_settings.style_config,
+                                                             this._style_hierarchy.descendants()[0],
+                                                             this._viewport_zoom)
+                break
+            }
+            case LayoutStyleBlock.prototype.type(): {
+                this._style_instance = new LayoutStyleBlock(this._layout_manager, this._style_settings.style_config,
+                                                             this._style_hierarchy.descendants()[0],
+                                                             this._viewport_zoom)
+                break
+            }
+        }
+        this._update_example()
+    }
+
+    _update_example() {
+        this._update_nodes()
+        this._render_nodes_and_links()
+        this._style_instance.render_options(this._options_selection, this._varprefix)
+        this._render_example_settings(this._example_selection)
+    }
+
+    _render_style_choice(style_choice_selection) {
+        let style_choices = [["none", "None"]]
+        let use_styles = [LayoutStyleHierarchy, LayoutStyleRadial, LayoutStyleBlock]
+        use_styles.forEach(style=>{
+            style_choices.push([style.prototype.type(), style.prototype.description()])
+        })
+
+        style_choice_selection.selectAll("select").data([null]).enter()
+               .append("select")
+                .attr("name", this._varprefix + "style_type")
+                .on("change", ()=>this._changed_style())
+                .selectAll("option").data(style_choices).enter()
+              .append("option")
+                .property("value", d=>d[0])
+                .property("selected", d=>d[0] == this._style_settings.style_type)
+                .text(d=>d[1])
+    }
+
+    _changed_style() {
+        let new_style_id = d3.select(d3.event.target).property("value")
+        this._options_selection.selectAll("*").remove()
+        this.create_example({style_type: new_style_id, style_config: {}})
+    }
+
+    _render_example_settings(div_selection) {
+        div_selection.selectAll("#headline").data([null]).enter().append("b")
+                    .attr("id", "headline")
+                    .text("Example settings")
+
+        let table = div_selection.selectAll("table").data([null])
+        table = table.enter().append("table").merge(table)
+
+        let options = []
+        options.push(this._example_options.total_nodes)
+        if (this._style_settings.style_type != LayoutStyleBlock.prototype.type())
+            options.push(this._example_options.depth)
+
+        let rows = table.selectAll("tr").data(options)
+        rows.exit().remove()
+        let rows_enter = rows.enter().append("tr")
+        rows_enter.append("td").text(d=>d.text)
+                            .classed("style_infotext", true)
+        rows_enter.append("td").append("input")
+                            .classed("range", true)
+                            .attr("id", d=>d.id)
+                            .attr("type", "range")
+                            .attr("step", 1)
+                            .attr("min", d=>d.values.min)
+                            .attr("max", d=>d.values.max)
+                            .property("value",d=>d.value)
+                            .on("input", (d,b,c)=>{
+                                this._example_options[d.id].value = parseInt(d3.select(c[b]).property("value"))
+                                this._create_example_hierarchy(this._example_options)
+                                this._style_instance.style_root_node = this._style_hierarchy.descendants()[0]
+                                this._update_example()
+                            })
+        rows_enter.append("td").classed("text", true)
+        rows = rows_enter.merge(rows)
+        rows.select("td.text").text(d=>{return div_selection.select("input#"+d.id).property("value")})
+    }
+
+    _update_nodes() {
+        this._style_instance.update_data()
+        this._style_instance.translate_coords()
+        this._style_hierarchy.descendants().forEach(node=>{this._layout_manager.compute_node_position(node)})
+        this._center_hierarchy_nodes(this._style_hierarchy)
+    }
+
+    _render_nodes_and_links(no_transition=false) {
+        this._paint_links(this._style_hierarchy, no_transition)
+        this._paint_nodes(this._style_hierarchy, no_transition)
+    }
+
+    _center_hierarchy_nodes(hierarchy) {
+        let nodes = hierarchy.descendants()
+        let width = this._viewport_selection.attr("width") - 30
+        let height = this._viewport_selection.attr("height") - 30 
+        let bounding_rect = node_visualization_utils.get_bounding_rect(nodes)
+
+        let width_ratio = bounding_rect.width / width
+        let height_ratio = bounding_rect.height / height 
+        let ratio = Math.max(1, Math.max(width_ratio, height_ratio))
+
+        let x_offset = (width - bounding_rect.width) / 2
+        let y_offset = (height - bounding_rect.height) / 2
+
+        nodes.forEach(node=>{
+            node.x += parseInt(x_offset) - bounding_rect.x_min + 15
+            node.y += parseInt(y_offset) - bounding_rect.y_min + 15
+        })
+
+        if (ratio > 1) {
+            let rect_x = -(width-width*ratio)/2
+            let rect_y = -(height-height*ratio)/2
+            this._viewport_zoom.attr("transform", "scale(" + 1/ratio + ") translate("+rect_x+","+rect_y+")")
+            let default_scale = this._viewport_selection.selectAll("text").data([null])
+            default_scale = default_scale.enter().append("text").text("Default scale").merge(default_scale)
+            default_scale.attr("x", 10)
+                         .attr("y", 20)
+                         .text("Scale 1:" + ratio.toFixed(2))
+        }
+        else {
+            this._viewport_zoom.attr("transform", null)
+            let default_scale = this._viewport_selection.selectAll("text").remove()
+        }
+    }
+
+    _create_fake_layout_manager() {
+        return new node_visualization_layouting.LayoutManagerLayer(this._create_fake_viewport())
+    }
+
+    _create_fake_viewport() {
+        return {
+            update_data_of_layers: ()=>{},
+            update_gui_of_layers: ()=>{
+                this._update_nodes()
+                this._render_nodes_and_links(true)
+            }
+        }
+    }
+
+    _create_example_hierarchy(example_settings) {
+        let chunk = {coords: {x: 0, y: 0, width: 400, height: 400}}
+
+        let maximum_nodes = example_settings.total_nodes.value
+        let generated_nodes = 0
+
+        function _add_hierarchy_children(parent_node, cancel_delta, cancel_chance) {
+            parent_node.children = []
+            while (true) {
+                if (generated_nodes >= maximum_nodes || (cancel_chance < 1 && cancel_chance - Math.random() <= 0)) {
+                    if (parent_node.children.length == 0)
+                        delete parent_node.children
+                    return
+                }
+                let new_child = {name: "child"}
+                generated_nodes += 1
+                _add_hierarchy_children(new_child, cancel_delta, cancel_chance - cancel_delta)
+                parent_node.children.push(new_child)
+            }
+        }
+
+        let hierarchy_raw = {name: "Root node"}
+        let cancel_delta = 1 / example_settings.depth.value
+        // Maximum depth of block style is 1
+        if (this._style_settings.style_type == LayoutStyleBlock.prototype.type())
+            cancel_delta = 1
+
+        _add_hierarchy_children(hierarchy_raw, cancel_delta, 1)
+
+        let hierarchy = d3.hierarchy(hierarchy_raw)
+        hierarchy.descendants().forEach(node=>{
+            node.x = 50
+            node.y = 50
+            node.data.chunk = chunk
+            node.data.hostname = "Demohost"
+        })
+        this._style_hierarchy = hierarchy
+    }
+
+    _paint_nodes(hierarchy, no_transition) {
+        let nodes = this._viewport_zoom_nodes.selectAll(".node.alive").data(hierarchy.descendants())
+        nodes.exit()
+            .classed("alive", false)
+            .transition().duration(500)
+            .attr("opacity", 0)
+            .remove()
+
+        nodes = nodes.enter().append("circle")
+            .classed("node", true)
+            .classed("alive", true)
+            .attr("fill", "#13d389")
+            .attr("r",  d=>d.parent ? 6 : 12)
+            .attr("cx",  d=>this._viewport_width/2)
+            .attr("cy",  d=>this._viewport_height/2)
+            .attr("opacity", 1)
+            .merge(nodes)
+
+        if (no_transition)
+            nodes.attr("cx",  d=>d.x)
+                 .attr("cy",  d=>d.y)
+        else
+            nodes.transition().duration(500)
+                 .attr("cx",  d=>d.x)
+                 .attr("cy",  d=>d.y)
+    }
+
+    _paint_links(hierarchy, no_transition) {
+        let links = this._viewport_zoom_links.selectAll(".link.alive").data(hierarchy.descendants())
+        links.exit()
+            .classed("alive", false)
+            .transition().duration(500)
+            .attr("opacity", 0)
+            .remove()
+
+        links = links.enter().append("path")
+           .classed("link", true)
+           .classed("alive", true)
+           .attr("stroke-width", 2)
+           .attr("fill", "none")
+           .attr("stroke-width", 2)
+           .style("stroke", "grey")
+           .attr("opacity", 0)
+           .attr("d", d=>this.diagonal(d, d.parent))
+           .merge(links)
+
+        if (no_transition)
+            links.attr("d", d=>this.diagonal(d, d.parent))
+                 .attr("opacity", 1)
+        else
+            links.transition().duration(500)
+                .attr("d", d=>this.diagonal(d, d.parent))
+                .attr("opacity", 1)
+    }
+
+    diagonal(source, target) {
+        if (!target)
+            return
+        let s = {}
+        let d = {}
+        s.y = source.x
+        s.x = source.y
+        d.y = target.x
+        d.x = target.y
+        let path = `M ${s.y} ${s.x}
+                C ${(s.y + d.y) / 2} ${s.x},
+                  ${(s.y + d.y) / 2} ${d.x},
+                  ${d.y} ${d.x}`
+        return path
+    }
+}

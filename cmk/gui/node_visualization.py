@@ -63,6 +63,7 @@ class AjaxFetchAggregationData(AjaxPage):
             forced_layout_id = None
 
         state_data = bi.api_get_aggregation_state(filter_names=filter_names)
+
         aggregation_info = {"aggregations": {}}
 
         aggregation_layouts = BILayoutManagement.get_all_bi_aggregation_layouts()
@@ -121,6 +122,8 @@ class NodeVisualizationBIDataMapper(object):
                 "rule": node["rule_id"][1],
                 "function": node["rule_id"][2]
             }
+            if "rule_layout_style" in node:
+                node_data["rule_layout_style"] = node["rule_layout_style"]
             if "aggregation_id" in node:
                 node_data["aggregation_id"] = node["aggregation_id"]
         else:

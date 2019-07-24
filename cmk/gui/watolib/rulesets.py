@@ -472,8 +472,8 @@ class Ruleset(object):
         self._rules[folder.path()] = []
 
         self.tuple_transformer.transform_in_place(rules_config,
-                                                  is_service=bool(self.item_type()),
-                                                  is_binary=not self.valuespec())
+                                                  is_service=self.rulespec.is_for_services,
+                                                  is_binary=self.rulespec.is_binary_ruleset)
 
         for rule_config in rules_config:
             rule = Rule(folder, self)
@@ -722,8 +722,7 @@ class Rule(object):
     @classmethod
     def create(cls, folder, ruleset):
         rule = Rule(folder, ruleset)
-        if rule.ruleset.valuespec():
-            rule.value = rule.ruleset.valuespec().default_value()
+        rule.value = rule.ruleset.valuespec().default_value()
         return rule
 
     def __init__(self, folder, ruleset):
@@ -742,10 +741,7 @@ class Rule(object):
     def _initialize(self):
         self.conditions = RuleConditions(self.folder.path())
         self.rule_options = {}
-        if self.ruleset.valuespec():
-            self.value = None
-        else:
-            self.value = True
+        self.value = True if self.ruleset.rulespec.is_binary_ruleset else None
 
     def from_config(self, rule_config):
         try:
@@ -867,7 +863,7 @@ class Rule(object):
         rule_dict = self.to_config()
         rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
 
-        if self.ruleset.item_type():
+        if self.ruleset.ruleset.is_for_services:
             if matcher.is_matching_service_ruleset(match_object, [rule_dict]):
                 return
         else:
@@ -899,18 +895,14 @@ class Rule(object):
         if not _match_search_expression(search_options, "rule_comment", self.comment()):
             return False
 
-        if "rule_value" in search_options and not self.ruleset.valuespec():
-            return False
-
         value_text = None
-        if self.ruleset.valuespec():
-            try:
-                value_text = "%s" % self.ruleset.valuespec().value_to_text(self.value)
-            except Exception as e:
-                logger.exception()
-                html.show_warning(
-                    _("Failed to search rule of ruleset '%s' in folder '%s' (%r): %s") %
-                    (self.ruleset.title(), self.folder.title(), self.to_config(), e))
+        try:
+            value_text = "%s" % self.ruleset.valuespec().value_to_text(self.value)
+        except Exception as e:
+            logger.exception()
+            html.show_warning(
+                _("Failed to search rule of ruleset '%s' in folder '%s' (%r): %s") %
+                (self.ruleset.title(), self.folder.title(), self.to_config(), e))
 
         if value_text is not None and not _match_search_expression(search_options, "rule_value",
                                                                    value_text):

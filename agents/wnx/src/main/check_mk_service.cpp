@@ -315,6 +315,10 @@ int CheckMainService(const std::wstring &What, int Interval) {
 // we want to test main function too.
 // so we have main, but callable
 int MainFunction(int argc, wchar_t const *Argv[]) {
+    std::set_terminate([]() {
+        //
+        XLOG::l.bp("Win Agent is Terminated.");
+    });
     if (argc == 1) {
         // entry from the service engine
 
